@@ -356,6 +356,13 @@ public class Program {
 		}
 	}
 	
+	public static int getBCI(Quad q, jq_Method m) {
+		Map<Quad, Integer> bcMap = CodeCache.getBCMap(m);
+		Integer bci = bcMap.get(q);
+		Assertions.Assert(bci != null);
+		return bci.intValue();
+	}
+
 	public static int getLineNumber(Quad q, jq_Method m) {
 		if (m.isNative()) {
 			// may reach here because a stub containing q is

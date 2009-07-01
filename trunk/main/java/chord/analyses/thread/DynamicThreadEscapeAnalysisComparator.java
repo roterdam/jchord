@@ -13,7 +13,7 @@ import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
 
 @Chord(
-	name = "dyn-thresc-compare-java"
+	name = "dynamic-thresc-compare-java"
 )
 public class DynamicThreadEscapeAnalysisComparator extends DynamicAnalysis {
 	// map from each object to a list containing each non-null-valued

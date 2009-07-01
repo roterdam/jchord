@@ -12,12 +12,12 @@ import gnu.trove.TIntArrayList;
 import gnu.trove.TIntIntHashMap;
 
 @Chord(
-	name = "flowins-dyn-thresc-java",
+	name = "dynamic-flowins-thresc-java",
     producedNames = { "escE" },
     namesOfSigns = { "escE" },
     signs = { "E0:E0" }
 )
-public class FlowInsDynamicThreadEscapeAnalysis extends FlowSenDynamicThreadEscapeAnalysis {
+public class DynamicFlowInsThreadEscapeAnalysis extends DynamicFlowSenThreadEscapeAnalysis {
     // map from the index in domain H of each alloc site not yet known
 	// to be flow-ins. thread-escaping to the list of indices in
 	// domain E of instance field/array deref sites that should become

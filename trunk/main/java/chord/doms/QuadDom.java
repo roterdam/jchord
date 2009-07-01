@@ -29,13 +29,12 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 			Program.mapInstToMethod(q, ctnrMethod);
 		return super.set(q);
 	}
-	public String toUniqueIdString(Quad inst) {
-		/*
-		Method method = inst.getOutermostCtnrMethod();
-		Type type = method.getCtnrType();
-		return inst.getBCI() + "@" + method.getSign() + "@" + type.getName();
-		*/
-		return null; // TODO
+	public String toUniqueIdString(Quad q) {
+		if (q == null)
+			return "null";
+		jq_Method method = Program.getMethod(q);
+		jq_Class type = method.getDeclaringClass();
+		return Program.getBCI(q, method) + "@" + Program.getSign(method) + "@" + type.getName();
 	}
 	public String toXMLAttrsString(Quad q) {
 		jq_Method m = Program.getMethod(q);
