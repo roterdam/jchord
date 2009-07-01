@@ -1,0 +1,35 @@
+# Copyright (c) 2008-2009, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+
+# Author: Mayur Naik (mhn@cs.stanford.edu)
+# name=deadlock-parallel-include-dlog
+
+.include "C.dom"
+.include "A.dom"
+.include "L.dom"
+.include "N.dom"
+.include "P.dom"
+
+.bddvarorder A0xA1_L0_P0_N0_C0_N1
+
+###
+# Relations
+###
+
+NC(n:N0,c:C0) input
+NL(n:N0,l:L0) input
+PL(p:P0,l:L0) input
+mhp(c:C0,p:P0,t1:A0,t2:A1) input
+NCP(n:N0,c:C0,p:P0)
+mhn(n:N0,t1:A0,t2:A1) 
+mhpTNTN(t1:A0,n1:N0,t2:A1,n2:N1) output
+
+###
+# Constraints
+###
+
+NCP(n,c,p) :- NC(n,c), NL(n,l), PL(p,l).
+mhn(n,t1,t2) :- mhp(c,p,t1,t2), NCP(n,c,p).
+mhpTNTN(t1,n1,t2,n2) :- mhn(n1,t1,t2), mhn(n2,t2,t1).
+

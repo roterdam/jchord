@@ -1,0 +1,58 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
+package chord.rels;
+
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.ALoad;
+import joeq.Compiler.Quad.Operator.AStore;
+import joeq.Compiler.Quad.Operator.Getfield;
+import joeq.Compiler.Quad.Operator.Putfield;
+import joeq.Compiler.Quad.RegisterFactory.Register;
+import chord.doms.DomE;
+import chord.doms.DomV;
+import chord.project.Chord;
+import chord.project.ProgramRel;
+
+/**
+ * Relation containing each tuple (e,v) such that statement e
+ * accesses (reads or writes) an instance field or array element
+ * of an object denoted by local variable v.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
+@Chord(
+	name = "EV",
+	sign = "E0,V0:E0_V0"
+)
+public class RelEV extends ProgramRel {
+	public void fill() {
+		DomE domE = (DomE) doms[0];
+		DomV domV = (DomV) doms[1];
+		int numE = domE.size();
+		for (int eIdx = 0; eIdx < numE; eIdx++) {
+			Quad q = domE.get(eIdx);
+			Operator op = q.getOperator();
+			RegisterOperand bo;
+			if (op instanceof ALoad) {
+				bo = (RegisterOperand) ALoad.getBase(q);
+			} else if (op instanceof Getfield) {
+				bo = (RegisterOperand) Getfield.getBase(q);
+			} else if (op instanceof AStore) {
+				bo = (RegisterOperand) AStore.getBase(q);
+			} else if (op instanceof Putfield) {
+				bo = (RegisterOperand) Putfield.getBase(q);
+			} else
+				bo = null;
+			if (bo != null) {
+				Register b = bo.getRegister();
+				int vIdx = domV.get(b);
+				add(eIdx, vIdx);
+			}
+		}
+	}
+}

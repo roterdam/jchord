@@ -1,0 +1,403 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="chord" default="help">
+  <property name="chord.home.dir" location="."/>
+
+  <target name="ant-contrib">
+    <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar"/>
+  </target>
+
+  <target name="bddbddb-class-path">
+    <path id="bddbddb_class_path">
+      <fileset dir="lib/bddbddb" includes="*.jar"/>
+    </path>
+    <property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
+  </target>
+
+  <target name="bdd-lib-dir">
+    <property name="chord.bdd.lib.dir" location="lib"/>
+  </target>
+
+  <target name="compile-props">
+    <property name="debuglevel" value="source,lines,vars"/>
+    <property name="target" value="1.5"/>
+    <property name="source" value="1.5"/>
+  </target>
+
+  <!-- Target props-file does following things in order:
+   1. Sets chord.work.dir to current directory if it is not already set
+   2. Loads properties from file {chord.work.dir}/chord.properties, if the file exists;
+      Each relative path element in the value of any property named chord.*.path in the
+      file is converted to an absolute path element w.r.t. {chord.work.dir}
+   3. Sets chord.out.dir to {chord.work.dir}/chord_output, if it is not already set
+   4. Sets chord.classes.dir to {chord.out.dir}/classes, if it is not already set
+  -->
+  <target name="props-file" depends="ant-contrib">
+    <if>
+      <isset property="chord.work.dir"/>
+      <then/>
+      <else>
+        <property name="chord.work.dir" location="."/>
+        <echo message="WARNING: Property chord.work.dir not set; setting it to: ${chord.work.dir}"/>
+      </else>
+    </if>
+    <property name="chord.props.file" location="${chord.work.dir}/chord.properties"/>
+    <if>
+      <available file="${chord.props.file}"/>
+      <then>
+        <property file="${chord.props.file}"/>
+        <propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
+        <antfetch antfile="${basedir}/pathconvert.xml" dir="${chord.work.dir}"
+          target="pathconvert" inheritAll="false" return="${chord.path.prop.list}"/>
+      </then>
+      <else/>
+    </if>
+    <property name="chord.out.dir" location="${chord.work.dir}/chord_output/"/>
+    <property name="chord.classes.dir" location="${chord.out.dir}/classes/"/>
+  </target>
+
+  <target name="util-class-path">
+    <path id="util_class_path">
+      <pathelement location="util/classes"/>
+      <pathelement location="lib/trove-2.0.1_rc1.jar"/>
+      <pathelement location="lib/scannotation-1.0.2.jar"/>
+    </path>
+    <property name="chord.util.class.path" refid="util_class_path"/>
+  </target>
+
+  <target name="main-class-path" depends="util-class-path,bddbddb-class-path">
+    <path id="main_class_path">
+      <pathelement location="main/classes"/>
+      <pathelement path="${chord.bddbddb.class.path}"/>
+      <pathelement path="${chord.util.class.path}"/>
+      <pathelement location="lib/joeq.jar"/>
+      <pathelement location="lib/javassist.jar"/>
+      <pathelement location="lib/j2h.jar"/>
+      <pathelement location="lib/saxon9.jar"/>
+    </path>
+    <property name="chord.main.class.path" refid="main_class_path"/>
+  </target>
+
+  <target name="help">
+  <echo>
+  compile      Compile all Chord source files
+  clean        Cleanup all Chord target files generated during compilation
+  run          Run Chord
+  run-datarace Run Chord's datarace checker
+  run-deadlock Run Chord's deadlock checker
+  run-downcast Run Chord's downcast safety checker
+  run-monosite Run Chord's monomorphic call site inferer
+  j2h_xref     Convert .java files to .html with cross-references
+               Required properties:
+               - java.dir
+               - html.dir
+  j2h_fast     Convert .java files to .html without cross-references
+               Required properties:
+               - java.dir
+               - html.dir
+  solve        Run bddbddb (BDD-based Datalog solver)
+               Required properties:
+               - work.dir
+               - dlog.file
+               Optional properties:
+               - max.tuples (default=1000)
+               - max.heap   (default=1024m)
+               - noisy      (values=[yes|no], default=yes)
+  debug        Run bddbddb's interactive interpreter
+               Required properties:
+               - work.dir
+               - dlog.file
+               Optional properties:
+               - max.tuples (default=1000)
+               - max.heap   (default=1024m)
+  instr        Instrument given Java program's .class files
+               Required:
+               * chord.class.path
+                   classpath of the program to be instrumented
+               Optional:
+               * chord.work.dir (default=.)
+                   working directory during instrumentation
+               * chord.out.dir (default={chord.work.dir}/chord_output/)
+                   location to dump instrumentation map files
+               * chord.classes.dir (default={chord.out.dir}/classes/)
+                   location to dump instrumented classes
+               * chord.jdk.out.dir (default=instr_jdk/chord_output/)
+                   location of JDK instrumentation map files
+  instr-jdk    Instrument the JDK's .class files
+               Optional:
+               * chord.class.path (default=read from instr_jdk/chord.properties)
+                   classpath of JDK to be instrumented
+               * chord.work.dir (default=instr_jdk)
+                   working directory during instrumentation
+               * chord.out.dir (default={chord.work.dir}/chord_output/)
+                   location to dump instrumentation map files
+               * chord.classes.dir (default={chord.out.dir}/classes/)
+                   location to dump instrumented classes
+  </echo>
+  </target>
+
+  <target name="compile" depends="compile-props,main-class-path,ant-contrib">
+  <property environment="env"/>
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+      srcdir="util/java" destdir="util/classes" classpath="${chord.util.class.path}"/>
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+      srcdir="main/java" destdir="main/classes" classpath="${chord.main.class.path}"/>
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+        srcdir="datarace/java" destdir="datarace/classes">
+      <classpath>
+        <pathelement location="datarace/classes"/>
+        <pathelement path="${chord.main.class.path}"/>
+      </classpath>
+    </javac>
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+        srcdir="deadlock/java" destdir="deadlock/classes">
+      <classpath>
+        <pathelement location="deadlock/classes"/>
+        <pathelement path="${chord.main.class.path}"/>
+      </classpath>
+    </javac>
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+        srcdir="downcast/java" destdir="downcast/classes">
+      <classpath>
+        <pathelement location="downcast/classes"/>
+        <pathelement path="${chord.main.class.path}"/>
+      </classpath>
+    </javac>
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+        srcdir="monosite/java" destdir="monosite/classes">
+      <classpath>
+        <pathelement location="monosite/classes"/>
+        <pathelement path="${chord.main.class.path}"/>
+      </classpath>
+    </javac>
+    <if>
+      <equals arg1="${sun.arch.data.model}" arg2="32"/>
+      <then><property name="m32" value="-m32"/></then>
+      <else><property name="m32" value=""/></else>
+    </if>
+    <exec executable="make" dir="bdd">
+      <arg value="JDK_ROOT=${java.home}/.."/>
+      <arg value="M32_FLAG=${m32}"/>
+    </exec>
+    <exec executable="make" dir="agent">
+      <arg value="JDK_ROOT=${java.home}/.."/>
+      <arg value="M32_FLAG=${m32}"/>
+    </exec>
+  </target>
+
+  <target name="run" depends="main-class-path,bdd-lib-dir,props-file">
+    <mkdir dir="${chord.out.dir}"/>
+    <property name="chord.java.analysis.path" location="main/classes"/>
+    <property name="chord.dlog.analysis.path" location="main/dlog"/>
+    <property name="chord.max.heap" value="1024m"/>
+    <property name="chord.max.stack" value="32m"/>
+    <property name="chord.bddbddb.max.heap" value="1024m"/>
+    <property name="chord.bddbddb.work.dir" location="${chord.out.dir}"/>
+    <property name="chord.bddbddb.noisy" value="no"/>
+    <property name="chord.agent.lib.dir" location="lib/"/>
+    <path id="chord_boot_class_path">
+      <pathelement location="instr_jdk/chord_output/classes"/>
+      <pathelement path="${chord.main.class.path}"/>
+    </path>
+    <property name="chord.boot.class.path" refid="chord_boot_class_path"/>
+    <java classname="chord.project.Main"
+        fork="true" failonerror="true" dir="${chord.work.dir}">
+      <jvmarg value="-showversion"/>
+      <jvmarg value="-Xmx${chord.max.heap}"/>
+      <jvmarg value="-Xss${chord.max.stack}"/>
+      <syspropertyset>
+        <propertyref prefix="chord."/>
+      </syspropertyset>
+      <classpath>
+        <pathelement path="${chord.main.class.path}"/>
+        <pathelement path="${chord.java.analysis.path}"/>
+        <pathelement path="${chord.class.path}"/>
+      </classpath>
+    </java>
+  </target>
+
+  <target name="instr" depends="props-file">
+    <property name="chord.jdk.out.dir" location="instr_jdk/chord_output/"/>
+    <antcall target="instr-common"/>
+  </target>
+
+  <target name="instr-jdk-pre">
+    <property name="chord.work.dir" location="instr_jdk"/>
+  </target>
+
+  <target name="instr-jdk" depends="instr-jdk-pre,props-file">
+    <fail if="chord.jdk.out.dir"/>
+    <antcall target="instr-common"/>
+  </target>
+
+  <target name="instr-common" depends="main-class-path">
+    <fail unless="chord.class.path"/>
+    <mkdir dir="${chord.out.dir}"/>
+    <mkdir dir="${chord.classes.dir}"/>
+    <property name="chord.max.heap" value="1024m"/>
+    <java classname="chord.project.PathInstrumentor" fork="true" failonerror="true"
+        dir="${chord.work.dir}" classpath="${chord.main.class.path}">
+      <jvmarg value="-Xmx${chord.max.heap}"/>
+      <syspropertyset>
+        <propertyref prefix="chord."/>
+      </syspropertyset>
+    </java>
+  </target>
+
+  <target name="run-datarace">
+    <path id="chord_java_analysis_path">
+      <pathelement location="main/classes"/>
+      <pathelement location="datarace/classes"/>
+    </path>
+    <path id="chord_dlog_analysis_path">
+      <pathelement location="main/dlog"/>
+      <pathelement location="datarace/dlog"/>
+    </path>
+    <property name="chord.analyses" value="datarace-java"/>
+    <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
+    <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
+    <property name="chord.inst.ctxt.kind" value="co"/>
+    <property name="chord.stat.ctxt.kind" value="cc"/>
+    <antcall target="run"/>
+  </target>
+
+  <target name="run-deadlock">
+    <path id="chord_java_analysis_path">
+      <pathelement location="main/classes"/>
+      <pathelement location="deadlock/classes"/>
+    </path>
+    <path id="chord_dlog_analysis_path">
+      <pathelement location="main/dlog"/>
+      <pathelement location="deadlock/dlog"/>
+    </path>
+    <property name="chord.analyses" value="deadlock-java"/>
+    <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
+    <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
+    <property name="chord.inst.ctxt.kind" value="co"/>
+    <property name="chord.stat.ctxt.kind" value="cc"/>
+    <antcall target="run"/>
+  </target>
+
+  <target name="run-downcast">
+    <path id="chord_java_analysis_path">
+      <pathelement location="main/classes"/>
+      <pathelement location="downcast/classes"/>
+    </path>
+    <path id="chord_dlog_analysis_path">
+      <pathelement location="main/dlog"/>
+      <pathelement location="downcast/dlog"/>
+    </path>
+    <property name="chord.analyses" value="downcast-java"/>
+    <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
+    <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
+    <property name="chord.inst.ctxt.kind" value="co"/>
+    <property name="chord.stat.ctxt.kind" value="cc"/>
+    <antcall target="run"/>
+  </target>
+
+  <target name="run-monosite">
+    <path id="chord_java_analysis_path">
+      <pathelement location="main/classes"/>
+      <pathelement location="monosite/classes"/>
+    </path>
+    <path id="chord_dlog_analysis_path">
+      <pathelement location="main/dlog"/>
+      <pathelement location="monosite/dlog"/>
+    </path>
+    <property name="chord.analyses" value="monosite-java"/>
+    <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
+    <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
+    <property name="chord.inst.ctxt.kind" value="co"/>
+    <property name="chord.stat.ctxt.kind" value="cc"/>
+    <antcall target="run"/>
+  </target>
+
+  <target name="clean">
+    <delete quiet="true">
+      <fileset dir="util/classes" includes="**/*"/>
+      <fileset dir="main/classes" includes="**/*"/>
+      <fileset dir="datarace/classes" includes="**/*"/>
+      <fileset dir="deadlock/classes" includes="**/*"/>
+      <fileset dir="downcast/classes" includes="**/*"/>
+      <fileset dir="monosite/classes" includes="**/*"/>
+    </delete>
+    <exec executable="make" dir="bdd">
+        <arg value="clean"/>
+    </exec>
+    <exec executable="make" dir="agent">
+        <arg value="clean"/>
+    </exec>
+  </target>
+
+  <!-- JAVA TO HTML UTILS -->
+
+  <target name="j2h_xref">
+    <fail unless="java.dir"/>
+    <fail unless="html.dir"/>
+    <java classname="j2h" fork="true" failonerror="true">
+      <arg value="-js"/>
+      <arg file="${java.dir}"/>
+      <arg value="-d"/>
+      <arg file="${html.dir}"/>
+      <arg value="-m"/>
+      <arg value="4"/>
+      <arg value="-t"/>
+      <arg value="4"/>
+      <classpath>
+        <pathelement location="lib/j2h.jar"/>
+      </classpath>
+    </java>
+  </target>
+  
+  <target name="j2h_fast">
+    <fail unless="java.dir"/>
+    <fail unless="html.dir"/>
+    <taskdef name="java2html" classname="de.java2html.anttasks.Java2HtmlTask">
+      <classpath>
+        <pathelement location="lib/java2html.jar"/>
+      </classpath>
+    </taskdef>
+    <java2html
+      srcdir="${java.dir}"
+      destdir="${html.dir}"
+      includes="**/*.java"
+      style="eclipse"
+      showLineNumbers="true"
+      addLineAnchors="true"
+      tabs="4"/>
+  </target>
+
+  <!-- BDDBDDB UTILS -->
+
+  <target name="solve" depends="bddbddb-class-path,bdd-lib-dir">
+    <fail unless="work.dir"/>
+    <fail unless="dlog.file"/>
+    <property name="max.tuples" value="1000"/>
+    <property name="max.heap" value="1024m"/>
+    <property name="noisy" value="yes"/>
+    <java classname="net.sf.bddbddb.Solver"
+        fork="true" failonerror="true" maxmemory="${max.heap}"
+        classpath="${chord.bddbddb.class.path}">
+      <sysproperty key="java.library.path" file="${chord.bdd.lib.dir}"/>
+      <sysproperty key="basedir" file="${work.dir}"/>
+      <sysproperty key="maxtuples" value="${max.tuples}"/>
+      <sysproperty key="noisy" value="${noisy}"/>
+      <arg file="${dlog.file}"/>
+    </java>
+  </target>
+
+  <target name="debug" depends="bddbddb-class-path,bdd-lib-dir">
+    <fail unless="work.dir"/>
+    <fail unless="dlog.file"/>
+    <property name="max.tuples" value="1000"/>
+    <property name="max.heap" value="1024m"/>
+    <java classname="net.sf.bddbddb.Interactive"
+        fork="true" failonerror="true" maxmemory="${max.heap}"
+        classpath="${chord.bddbddb.class.path}">
+      <sysproperty key="java.library.path" file="${chord.bdd.lib.dir}"/>
+      <sysproperty key="basedir" file="${work.dir}"/>
+      <sysproperty key="maxtuples" value="${max.tuples}"/>
+      <arg file="${dlog.file}"/>
+    </java>
+  </target>
+  
+</project>

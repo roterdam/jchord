@@ -1,0 +1,101 @@
+Control flow graph for T.main ([Ljava/lang/String;)V:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB3)
+1   NEW                     T10 MyB,	MyB
+2   MOVE_A                  T11 MyB,	T10 MyB
+4   NULL_CHECK              T-1 <g>,	T11 MyB
+3   INVOKESPECIAL_V%            	MyB.<init> ()V,	(T11 MyB)
+5   MOVE_A                  R3 MyB,	T10 MyB
+6   NEW                     T12 MyB,	MyB
+7   MOVE_A                  T13 MyB,	T12 MyB
+9   NULL_CHECK              T-1 <g>,	T13 MyB
+8   INVOKESPECIAL_V%            	MyB.<init> ()V,	(T13 MyB)
+10  MOVE_A                  R4 MyB,	T12 MyB
+11  MOVE_I                  R14 int,	IConst: 0
+
+BB3	(in: BB2, BB4, out: BB4, BB5)
+46  PHI                     R15 int,	(R14 int, R18 int),	{ BB2, BB4 }
+30  IFCMP_I                 R15 int,	IConst: 2,	GE,	BB5
+
+BB5	(in: BB3, out: BB6)
+45  MOVE_I                  R19 int,	IConst: 0
+
+BB6	(in: BB5, BB7, out: BB7, BB8)
+47  PHI                     R20 int,	(R19 int, R21 int),	{ BB5, BB7 }
+29  IFCMP_I                 R20 int,	IConst: 2,	GE,	BB8
+
+BB8	(in: BB6, out: BB1 (EXIT))
+36  RETURN_V                
+
+BB1 (EXIT)	(in: BB8, out: <none>)
+
+BB7	(in: BB6, out: BB6)
+32  NULL_CHECK              T-1 <g>,	R3 MyB
+31  INVOKEVIRTUAL_I%        T6 int,	MyB.get ()I,	(R3 MyB)
+33  MOVE_I                  R8 int,	T6 int
+34  ADD_I                   R21 int,	R20 int,	IConst: 1
+35  GOTO                    BB6
+
+BB4	(in: BB3, out: BB3)
+37  NEW                     T16 T,	T
+38  MOVE_A                  T17 T,	T16 T
+40  NULL_CHECK              T-1 <g>,	T17 T
+39  INVOKESPECIAL_V%            	T.<init> (LMyB;LMyB;)V,	(T17 T, R3 MyB, R4 MyB)
+41  MOVE_A                  R9 T,	T16 T
+42  INVOKESTATIC_V%             	T.begin (LT;)V,	(R9 T)
+43  ADD_I                   R18 int,	R15 int,	IConst: 1
+44  GOTO                    BB3
+
+Exception handlers: []
+Register factory: Registers: 22
+Control flow graph for T.begin (LT;)V:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB1 (EXIT))
+2   NULL_CHECK              T-1 <g>,	R0 T
+1   INVOKEVIRTUAL_V%            	java.lang.Thread.start ()V,	(R0 T)
+3   RETURN_V                
+
+BB1 (EXIT)	(in: BB2, out: <none>)
+
+Exception handlers: []
+Register factory: Registers: 1
+Control flow graph for T.<init> (LMyB;LMyB;)V:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB1 (EXIT))
+2   NULL_CHECK              T-1 <g>,	R0 T
+1   INVOKESPECIAL_V%            	java.lang.Thread.<init> ()V,	(R0 T)
+3   NULL_CHECK              T-1 <g>,	R0 T
+4   PUTFIELD_A              R0 T,	.f1,	R1 MyB,	T-1 <g>
+5   NULL_CHECK              T-1 <g>,	R0 T
+6   PUTFIELD_A              R0 T,	.f2,	R2 MyB,	T-1 <g>
+7   RETURN_V                
+
+BB1 (EXIT)	(in: BB2, out: <none>)
+
+Exception handlers: []
+Register factory: Registers: 3
+Control flow graph for T.run ()V:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB1 (EXIT))
+1   NULL_CHECK              T-1 <g>,	R0 T
+2   GETFIELD_A              T4 MyB,	R0 T,	.f1,	T-1 <g>
+3   MOVE_A                  R2 MyB,	T4 MyB
+4   NULL_CHECK              T-1 <g>,	R0 T
+5   GETFIELD_A              T5 MyB,	R0 T,	.f2,	T-1 <g>
+6   MOVE_A                  R3 MyB,	T5 MyB
+7   GETSTATIC_A%            T6 PrintStream,	.out
+9   NULL_CHECK              T-1 <g>,	T6 PrintStream
+8   INVOKEVIRTUAL_V%            	java.io.PrintStream.println (Ljava/lang/Object;)V,	(T6 PrintStream, R2 MyB)
+10  GETSTATIC_A%            T7 PrintStream,	.out
+12  NULL_CHECK              T-1 <g>,	T7 PrintStream
+11  INVOKEVIRTUAL_V%            	java.io.PrintStream.println (Ljava/lang/Object;)V,	(T7 PrintStream, R3 MyB)
+13  RETURN_V                
+
+BB1 (EXIT)	(in: BB2, out: <none>)
+
+Exception handlers: []
+Register factory: Registers: 8

@@ -1,0 +1,42 @@
+# Copyright (c) 2008-2009, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+
+# Class Hierarchy Analysis (CHA)
+
+# Author: Mayur Naik (mhn@cs.stanford.edu)
+# name=cha-dlog
+
+.include "T.dom"
+.include "M.dom"
+.include "S.dom"
+
+.bddvarorder S0_M0xM1_T0_T1
+
+###
+# Relations
+###
+
+implsTT(s:T1,t:T0) input
+extnsTT(s:T1,t:T0) input
+statM(m:M) input
+initM(m:M) input
+privateM(m:M) input
+TM(t:T,m:M) input
+classT(t:T) input
+MS(m:M,s:S) input
+relevantTM(t:T,m:M) 
+relevantClassTM(t:T,m:M) 
+TS(t:T,s:S)
+cha(n:M1,t:T1,m:M0) output
+
+relevantTM(t,m) :- !initM(m), !statM(m), !privateM(m), TM(t,m).
+relevantTM(t,m) :- implsTT(t,t2), relevantTM(t2,m).
+relevantTM(t,m) :- extnsTT(t,t2), relevantTM(t2,m).
+relevantClassTM(t,m) :- relevantTM(t,m), classT(t).
+
+TS(t,s) :- TM(t,m), MS(m,s).
+
+cha(m1,t,m2) :- relevantClassTM(t,m1), MS(m1,s), MS(m2,s), TM(t,m2).
+cha(m1,t,m2) :- relevantClassTM(t,m1), MS(m1,s), !TS(t,s), extnsTT(t,t1), cha(m1,t1,m2).
+

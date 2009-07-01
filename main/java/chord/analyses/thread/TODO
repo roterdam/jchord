@@ -1,0 +1,14 @@
+do simple static thr-esc analyses - (1) flow-sen but no heap, and (2) flow-ins 0-cfa-based
+
+do dynamic 0-cfa (1) flow-sen and (2) flow-ins thr-esc analyses
+
+do datarace based on all kinds of thr-esc's
+do deadlock based on all kinds of thr-esc's
+
+think abt why this approach works (philosophy)
+
+ant -Dstatic -Ddynamic run -Dchord.analysis=...
+
+
+
+

@@ -1,0 +1,34 @@
+# name=dynamic-thresc-epilogue-dlog
+
+.include "V.dom"
+.include "Q.dom"
+.include "H.dom"
+.include "F.dom"
+.include "P.dom"
+.include "E.dom"
+
+.bddvarorder F0_E0_Q0_P0_V0_H0xH1
+
+PQ(p:P0,q:Q0) input
+PE(p:P0,e:E0) input
+EV(e:E0,v:V0) input
+QHFH_i(q:Q0,h1:H0,f:F0,h2:H1) input
+QVH_i(q:Q0,v:V0,h:H0) input
+escE(e:E0) input
+dynamic_visitedE(e:E0) input
+dynamic_escE(e:E0) input
+
+queryE(e:E0) output
+queryPV(p:P0,v:V0)
+queryQV(q:Q0,v:V0) 
+relevantQVH(q:Q0,v:V0,h:H0) 
+relevantPVH(p:P0,v:V0,h:H0) output
+
+queryE(e) :- escE(e), !dynamic_escE(e), dynamic_visitedE(e).
+queryPV(p,v) :- PE(p,e), EV(e,v).
+queryQV(q,v) :- queryPV(p,v), PQ(p,q).
+
+relevantQVH(q,v,h) :- queryQV(q,v), relevantQVH(q,v,h1), QHFH_i(q,h,_,h1).
+relevantQVH(q,v,h) :- queryQV(q,v), QVH_i(q,v,h).
+
+relevantPVH(p,v,h) :- relevantQVH(q,v,h), PQ(p,q).
