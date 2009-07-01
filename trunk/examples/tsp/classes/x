@@ -1,0 +1,400 @@
+Control flow graph for Tsp.main ([Ljava/lang/String;)V:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB3)
+1   MOVE_A                  R20 String,	AConst: "testdata"
+2   MOVE_I                  R21 int,	IConst: 0
+
+BB3	(in: BB2, out: BB4, BB5)
+	exception handlers: Type: java.lang.Exception Entry: BB7
+3   NULL_CHECK              T-1 <g>,	R0 String[]
+4   BOUNDS_CHECK            R0 String[],	IConst: 0,	T-1 <g>
+5   ALOAD_A                 T22 String,	R0 String[],	IConst: 0,	T-1 <g>
+6   MOVE_A                  R23 String,	T22 String
+8   MOVE_A                  T24 Object,	AConst: "--nop"
+9   NULL_CHECK              T-1 <g>,	R23 String
+7   INVOKEVIRTUAL_I%        T25 int,	java.lang.String.equals (Ljava/lang/Object;)Z,	(R23 String, T24 Object)
+10  IFCMP_I                 T25 int,	IConst: 0,	EQ,	BB5
+
+BB5	(in: BB3, out: BB6)
+	exception handlers: Type: java.lang.Exception Entry: BB7
+11  NULL_CHECK              T-1 <g>,	R0 String[]
+12  BOUNDS_CHECK            R0 String[],	IConst: 1,	T-1 <g>
+13  ALOAD_A                 T27 String,	R0 String[],	IConst: 1,	T-1 <g>
+14  INVOKESTATIC_I%         T28 int,	java.lang.Integer.parseInt (Ljava/lang/String;)I,	(T27 String)
+15  PUTSTATIC_I             T28 int,	.nWorkers
+
+BB4	(in: BB3, out: BB6)
+	exception handlers: Type: java.lang.Exception Entry: BB7
+16  MOVE_I                  R26 int,	IConst: 1
+17  GOTO                    BB6
+
+BB7	(in: <none>, out: BB8)
+18  GET_EXCEPTION           T30 Exception
+19  MOVE_A                  R7 Exception,	T30 Exception
+20  GETSTATIC_A%            T31 PrintStream,	.out
+22  MOVE_A                  T32 String,	AConst: "usage: java Tsp <input file> <number of threads>
+    or java Tsp --nop"
+23  NULL_CHECK              T-1 <g>,	T31 PrintStream
+21  INVOKEVIRTUAL_V%            	java.io.PrintStream.println (Ljava/lang/String;)V,	(T31 PrintStream, T32 String)
+25  MOVE_I                  T33 int,	IConst: -1
+24  INVOKESTATIC_V%             	java.lang.System.exit (I)V,	(T33 int)
+
+BB6	(in: BB4, BB5, out: BB8)
+388 PHI                     R29 int,	(R26 int, R21 int),	{ BB4, BB5 }
+26  GOTO                    BB8
+
+BB8	(in: BB6, BB7, out: BB9, BB27)
+389 PHI                     R34 int,	(R29 int, R21 int),	{ BB6, BB7 }
+27  INVOKESTATIC_V%             	java.lang.System.gc ()V,	()
+28  IFCMP_I                 R34 int,	IConst: 0,	NE,	BB27
+
+BB9	(in: BB8, out: BB10)
+29  PUTSTATIC_I%            IConst: -1,	.TourStackTop
+30  PUTSTATIC_I%            IConst: 2000000,	.MinTourLen
+31  INVOKESTATIC_I%         T35 int,	Tsp.read_tsp (Ljava/lang/String;)I,	(R23 String)
+32  PUTSTATIC_I             T35 int,	.TspSize
+33  NEW                     T36 Date,	java.util.Date
+34  MOVE_A                  T37 Date,	T36 Date
+36  NULL_CHECK              T-1 <g>,	T37 Date
+35  INVOKESPECIAL_V%            	java.util.Date.<init> ()V,	(T37 Date)
+38  NULL_CHECK              T-1 <g>,	T36 Date
+37  INVOKEVIRTUAL_L%        T38 long,	java.util.Date.getTime ()J,	(T36 Date)
+39  MOVE_L                  R9 long,	T38 long
+40  MOVE_I                  R39 int,	IConst: 0
+
+BB10	(in: BB9, BB11, out: BB11, BB12)
+390 PHI                     R40 int,	(R39 int, R47 int),	{ BB9, BB11 }
+222 IFCMP_I                 R40 int,	IConst: 5000,	GE,	BB12
+
+BB12	(in: BB10, out: BB13)
+284 GETSTATIC_A%            T48 TourElement[],	.Tours
+285 NULL_CHECK              T-1 <g>,	T48 TourElement[]
+286 BOUNDS_CHECK            T48 TourElement[],	IConst: 0,	T-1 <g>
+287 ALOAD_A                 T49 TourElement,	T48 TourElement[],	IConst: 0,	T-1 <g>
+288 NULL_CHECK              T-1 <g>,	T49 TourElement
+289 GETFIELD_A%             T50 int[],	T49 TourElement,	.prefix,	T-1 <g>
+290 GETSTATIC_I             T51 int,	.StartNode
+291 NULL_CHECK              T-1 <g>,	T50 int[]
+292 BOUNDS_CHECK            T50 int[],	IConst: 0,	T-1 <g>
+293 ASTORE_I                T51 int,	T50 int[],	IConst: 0,	T-1 <g>
+294 GETSTATIC_A%            T52 TourElement[],	.Tours
+295 NULL_CHECK              T-1 <g>,	T52 TourElement[]
+296 BOUNDS_CHECK            T52 TourElement[],	IConst: 0,	T-1 <g>
+297 ALOAD_A                 T53 TourElement,	T52 TourElement[],	IConst: 0,	T-1 <g>
+298 NULL_CHECK              T-1 <g>,	T53 TourElement
+299 PUTFIELD_I%             T53 TourElement,	.conn,	IConst: 1,	T-1 <g>
+300 GETSTATIC_A%            T54 TourElement[],	.Tours
+301 NULL_CHECK              T-1 <g>,	T54 TourElement[]
+302 BOUNDS_CHECK            T54 TourElement[],	IConst: 0,	T-1 <g>
+303 ALOAD_A                 T55 TourElement,	T54 TourElement[],	IConst: 0,	T-1 <g>
+304 NULL_CHECK              T-1 <g>,	T55 TourElement
+305 PUTFIELD_I%             T55 TourElement,	.last,	IConst: 0,	T-1 <g>
+306 GETSTATIC_A%            T56 TourElement[],	.Tours
+307 NULL_CHECK              T-1 <g>,	T56 TourElement[]
+308 BOUNDS_CHECK            T56 TourElement[],	IConst: 0,	T-1 <g>
+309 ALOAD_A                 T57 TourElement,	T56 TourElement[],	IConst: 0,	T-1 <g>
+310 NULL_CHECK              T-1 <g>,	T57 TourElement
+311 PUTFIELD_I%             T57 TourElement,	.prefix_weight,	IConst: 0,	T-1 <g>
+313 MOVE_I                  T58 int,	IConst: 0
+312 INVOKESTATIC_I%         T59 int,	TspSolver.calc_bound (I)I,	(T58 int)
+314 GETSTATIC_A%            T60 PrioQElement[],	.PrioQ
+315 NULL_CHECK              T-1 <g>,	T60 PrioQElement[]
+316 BOUNDS_CHECK            T60 PrioQElement[],	IConst: 1,	T-1 <g>
+317 ALOAD_A                 T61 PrioQElement,	T60 PrioQElement[],	IConst: 1,	T-1 <g>
+318 NULL_CHECK              T-1 <g>,	T61 PrioQElement
+319 PUTFIELD_I%             T61 PrioQElement,	.index,	IConst: 0,	T-1 <g>
+320 GETSTATIC_A%            T62 PrioQElement[],	.PrioQ
+321 NULL_CHECK              T-1 <g>,	T62 PrioQElement[]
+322 BOUNDS_CHECK            T62 PrioQElement[],	IConst: 1,	T-1 <g>
+323 ALOAD_A                 T63 PrioQElement,	T62 PrioQElement[],	IConst: 1,	T-1 <g>
+324 GETSTATIC_A%            T64 TourElement[],	.Tours
+325 NULL_CHECK              T-1 <g>,	T64 TourElement[]
+326 BOUNDS_CHECK            T64 TourElement[],	IConst: 0,	T-1 <g>
+327 ALOAD_A                 T65 TourElement,	T64 TourElement[],	IConst: 0,	T-1 <g>
+328 NULL_CHECK              T-1 <g>,	T65 TourElement
+329 GETFIELD_I%             T66 int,	T65 TourElement,	.lower_bound,	T-1 <g>
+330 NULL_CHECK              T-1 <g>,	T63 PrioQElement
+331 PUTFIELD_I%             T63 PrioQElement,	.priority,	T66 int,	T-1 <g>
+332 PUTSTATIC_I%            IConst: 1,	.PrioQLast
+333 MOVE_I                  R67 int,	IConst: 4999
+
+BB13	(in: BB12, BB14, out: BB14, BB15)
+391 PHI                     R68 int,	(R67 int, R73 int),	{ BB12, BB14 }
+221 IFCMP_I                 R68 int,	IConst: 0,	LE,	BB15
+
+BB15	(in: BB13, out: BB16)
+260 GETSTATIC_I             T74 int,	.nWorkers
+261 NEWARRAY                T75 Thread[],	T74 int,	java.lang.Thread[]
+262 MOVE_A                  R13 Thread[],	T75 Thread[]
+263 MOVE_I                  R76 int,	IConst: 0
+
+BB16	(in: BB15, BB17, out: BB17, BB18)
+392 PHI                     R77 int,	(R76 int, R81 int),	{ BB15, BB17 }
+219 GETSTATIC_I             T78 int,	.nWorkers
+220 IFCMP_I                 R77 int,	T78 int,	GE,	BB18
+
+BB18	(in: BB16, out: BB19)
+249 MOVE_I                  R82 int,	IConst: 0
+
+BB19	(in: BB18, BB20, out: BB20, BB21)
+393 PHI                     R83 int,	(R82 int, R86 int),	{ BB18, BB20 }
+217 GETSTATIC_I             T84 int,	.nWorkers
+218 IFCMP_I                 R83 int,	T84 int,	GE,	BB21
+
+BB21	(in: BB19, out: BB22)
+	exception handlers: Type: java.lang.InterruptedException Entry: BB25
+238 MOVE_I                  R87 int,	IConst: 0
+
+BB22	(in: BB21, BB23, out: BB23, BB24)
+	exception handlers: Type: java.lang.InterruptedException Entry: BB25
+394 PHI                     R88 int,	(R87 int, R91 int),	{ BB21, BB23 }
+215 GETSTATIC_I             T89 int,	.nWorkers
+216 IFCMP_I                 R88 int,	T89 int,	GE,	BB24
+
+BB24	(in: BB22, out: BB26)
+230 GOTO                    BB26
+
+BB23	(in: BB22, out: BB22)
+	exception handlers: Type: java.lang.InterruptedException Entry: BB25
+223 NULL_CHECK              T-1 <g>,	R13 Thread[]
+224 BOUNDS_CHECK            R13 Thread[],	R88 int,	T-1 <g>
+225 ALOAD_A                 T90 Thread,	R13 Thread[],	R88 int,	T-1 <g>
+227 NULL_CHECK              T-1 <g>,	T90 Thread
+226 INVOKEVIRTUAL_V%            	java.lang.Thread.join ()V,	(T90 Thread)
+228 ADD_I                   R91 int,	R88 int,	IConst: 1
+229 GOTO                    BB22
+
+BB25	(in: <none>, out: BB26)
+334 GET_EXCEPTION           T92 InterruptedException
+335 MOVE_A                  R15 InterruptedException,	T92 InterruptedException
+
+BB26	(in: BB24, BB25, out: BB27)
+336 NEW                     T93 Date,	java.util.Date
+337 MOVE_A                  T94 Date,	T93 Date
+339 NULL_CHECK              T-1 <g>,	T94 Date
+338 INVOKESPECIAL_V%            	java.util.Date.<init> ()V,	(T94 Date)
+341 NULL_CHECK              T-1 <g>,	T93 Date
+340 INVOKEVIRTUAL_L%        T95 long,	java.util.Date.getTime ()J,	(T93 Date)
+342 MOVE_L                  R16 long,	T95 long
+343 GETSTATIC_A%            T96 PrintStream,	.out
+344 NEW                     T97 StringBuilder,	java.lang.StringBuilder
+345 MOVE_A                  T98 StringBuilder,	T97 StringBuilder
+347 NULL_CHECK              T-1 <g>,	T98 StringBuilder
+346 INVOKESPECIAL_V%            	java.lang.StringBuilder.<init> ()V,	(T98 StringBuilder)
+349 MOVE_A                  T99 String,	AConst: "tsp-"
+350 NULL_CHECK              T-1 <g>,	T97 StringBuilder
+348 INVOKEVIRTUAL_A%        T100 StringBuilder,	java.lang.StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;,	(T97 StringBuilder, T99 String)
+351 GETSTATIC_I             T101 int,	.nWorkers
+353 NULL_CHECK              T-1 <g>,	T100 StringBuilder
+352 INVOKEVIRTUAL_A%        T102 StringBuilder,	java.lang.StringBuilder.append (I)Ljava/lang/StringBuilder;,	(T100 StringBuilder, T101 int)
+355 MOVE_A                  T103 String,	AConst: "	"
+356 NULL_CHECK              T-1 <g>,	T102 StringBuilder
+354 INVOKEVIRTUAL_A%        T104 StringBuilder,	java.lang.StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;,	(T102 StringBuilder, T103 String)
+357 LONG_2INT               T105 int,	R16 long
+358 LONG_2INT               T18 int,	R9 long
+359 SUB_I                   T106 int,	T105 int,	T18 int
+361 NULL_CHECK              T-1 <g>,	T104 StringBuilder
+360 INVOKEVIRTUAL_A%        T107 StringBuilder,	java.lang.StringBuilder.append (I)Ljava/lang/StringBuilder;,	(T104 StringBuilder, T106 int)
+363 NULL_CHECK              T-1 <g>,	T107 StringBuilder
+362 INVOKEVIRTUAL_A%        T108 String,	java.lang.StringBuilder.toString ()Ljava/lang/String;,	(T107 StringBuilder)
+365 NULL_CHECK              T-1 <g>,	T96 PrintStream
+364 INVOKEVIRTUAL_V%            	java.io.PrintStream.println (Ljava/lang/String;)V,	(T96 PrintStream, T108 String)
+366 GETSTATIC_A%            T109 PrintStream,	.out
+367 NEW                     T110 StringBuilder,	java.lang.StringBuilder
+368 MOVE_A                  T111 StringBuilder,	T110 StringBuilder
+370 NULL_CHECK              T-1 <g>,	T111 StringBuilder
+369 INVOKESPECIAL_V%            	java.lang.StringBuilder.<init> ()V,	(T111 StringBuilder)
+372 MOVE_A                  T112 String,	AConst: "Minimum tour length: "
+373 NULL_CHECK              T-1 <g>,	T110 StringBuilder
+371 INVOKEVIRTUAL_A%        T113 StringBuilder,	java.lang.StringBuilder.append (Ljava/lang/String;)Ljava/lang/StringBuilder;,	(T110 StringBuilder, T112 String)
+374 GETSTATIC_I%            T114 int,	.MinTourLen
+376 NULL_CHECK              T-1 <g>,	T113 StringBuilder
+375 INVOKEVIRTUAL_A%        T115 StringBuilder,	java.lang.StringBuilder.append (I)Ljava/lang/StringBuilder;,	(T113 StringBuilder, T114 int)
+378 NULL_CHECK              T-1 <g>,	T115 StringBuilder
+377 INVOKEVIRTUAL_A%        T116 String,	java.lang.StringBuilder.toString ()Ljava/lang/String;,	(T115 StringBuilder)
+380 NULL_CHECK              T-1 <g>,	T109 PrintStream
+379 INVOKEVIRTUAL_V%            	java.io.PrintStream.println (Ljava/lang/String;)V,	(T109 PrintStream, T116 String)
+381 GETSTATIC_A%            T117 PrintStream,	.out
+383 MOVE_A                  T118 String,	AConst: "Minimum tour:"
+384 NULL_CHECK              T-1 <g>,	T117 PrintStream
+382 INVOKEVIRTUAL_V%            	java.io.PrintStream.print (Ljava/lang/String;)V,	(T117 PrintStream, T118 String)
+385 GETSTATIC_I             T119 int,	.TspSize
+386 GETSTATIC_A%            T120 int[],	.MinTour
+387 INVOKESTATIC_V%             	TspSolver.MakeTourString (I[I)V,	(T119 int, T120 int[])
+
+BB27	(in: BB8, BB26, out: BB1 (EXIT))
+167 RETURN_V                
+
+BB1 (EXIT)	(in: BB27, out: <none>)
+
+BB20	(in: BB19, out: BB19)
+231 NULL_CHECK              T-1 <g>,	R13 Thread[]
+232 BOUNDS_CHECK            R13 Thread[],	R83 int,	T-1 <g>
+233 ALOAD_A                 T85 Thread,	R13 Thread[],	R83 int,	T-1 <g>
+235 NULL_CHECK              T-1 <g>,	T85 Thread
+234 INVOKEVIRTUAL_V%            	java.lang.Thread.start ()V,	(T85 Thread)
+236 ADD_I                   R86 int,	R83 int,	IConst: 1
+237 GOTO                    BB19
+
+BB17	(in: BB16, out: BB16)
+239 NEW                     T79 TspSolver,	TspSolver
+240 MOVE_A                  T80 TspSolver,	T79 TspSolver
+242 NULL_CHECK              T-1 <g>,	T80 TspSolver
+241 INVOKESPECIAL_V%            	TspSolver.<init> ()V,	(T80 TspSolver)
+243 NULL_CHECK              T-1 <g>,	R13 Thread[]
+244 BOUNDS_CHECK            R13 Thread[],	R77 int,	T-1 <g>
+245 ASTORE_CHECK            R13 Thread[],	T79 TspSolver,	T-1 <g>
+246 ASTORE_A                T79 TspSolver,	R13 Thread[],	R77 int,	T-1 <g>
+247 ADD_I                   R81 int,	R77 int,	IConst: 1
+248 GOTO                    BB16
+
+BB14	(in: BB13, out: BB13)
+250 GETSTATIC_A%            T69 int[],	.TourStack
+251 GETSTATIC_I%            T70 int,	.TourStackTop
+252 ADD_I                   T71 int,	T70 int,	IConst: 1
+253 MOVE_I                  T72 int,	T71 int
+254 PUTSTATIC_I%            T72 int,	.TourStackTop
+255 NULL_CHECK              T-1 <g>,	T69 int[]
+256 BOUNDS_CHECK            T69 int[],	T71 int,	T-1 <g>
+257 ASTORE_I                R68 int,	T69 int[],	T71 int,	T-1 <g>
+258 ADD_I                   R73 int,	R68 int,	IConst: -1
+259 GOTO                    BB13
+
+BB11	(in: BB10, out: BB10)
+264 GETSTATIC_A%            T41 TourElement[],	.Tours
+265 NEW                     T42 TourElement,	TourElement
+266 MOVE_A                  T43 TourElement,	T42 TourElement
+268 NULL_CHECK              T-1 <g>,	T43 TourElement
+267 INVOKESPECIAL_V%            	TourElement.<init> ()V,	(T43 TourElement)
+269 NULL_CHECK              T-1 <g>,	T41 TourElement[]
+270 BOUNDS_CHECK            T41 TourElement[],	R40 int,	T-1 <g>
+271 ASTORE_CHECK            T41 TourElement[],	T42 TourElement,	T-1 <g>
+272 ASTORE_A                T42 TourElement,	T41 TourElement[],	R40 int,	T-1 <g>
+273 GETSTATIC_A%            T44 PrioQElement[],	.PrioQ
+274 NEW                     T45 PrioQElement,	PrioQElement
+275 MOVE_A                  T46 PrioQElement,	T45 PrioQElement
+277 NULL_CHECK              T-1 <g>,	T46 PrioQElement
+276 INVOKESPECIAL_V%            	PrioQElement.<init> ()V,	(T46 PrioQElement)
+278 NULL_CHECK              T-1 <g>,	T44 PrioQElement[]
+279 BOUNDS_CHECK            T44 PrioQElement[],	R40 int,	T-1 <g>
+280 ASTORE_CHECK            T44 PrioQElement[],	T45 PrioQElement,	T-1 <g>
+281 ASTORE_A                T45 PrioQElement,	T44 PrioQElement[],	R40 int,	T-1 <g>
+282 ADD_I                   R47 int,	R40 int,	IConst: 1
+283 GOTO                    BB10
+
+Exception handlers: [Type: java.lang.InterruptedException Entry: BB25, Type: java.lang.Exception Entry: BB7]
+Register factory: Registers: 121
+Control flow graph for Tsp.read_tsp (Ljava/lang/String;)I:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB3)
+	exception handlers: Type: java.lang.Exception Entry: BB9
+1   NEW                     T14 BufferedReader,	java.io.BufferedReader
+2   MOVE_A                  T15 BufferedReader,	T14 BufferedReader
+3   NEW                     T16 FileReader,	java.io.FileReader
+4   MOVE_A                  T17 FileReader,	T16 FileReader
+6   NULL_CHECK              T-1 <g>,	T17 FileReader
+5   INVOKESPECIAL_V%            	java.io.FileReader.<init> (Ljava/lang/String;)V,	(T17 FileReader, R0 String)
+8   NULL_CHECK              T-1 <g>,	T15 BufferedReader
+7   INVOKESPECIAL_V%            	java.io.BufferedReader.<init> (Ljava/io/Reader;)V,	(T15 BufferedReader, T16 FileReader)
+9   MOVE_A                  R18 BufferedReader,	T14 BufferedReader
+11  NULL_CHECK              T-1 <g>,	R18 BufferedReader
+10  INVOKEVIRTUAL_A%        T19 String,	java.io.BufferedReader.readLine ()Ljava/lang/String;,	(R18 BufferedReader)
+12  INVOKESTATIC_I%         T20 int,	java.lang.Integer.parseInt (Ljava/lang/String;)I,	(T19 String)
+13  PUTSTATIC_I             T20 int,	.TspSize
+14  MOVE_I                  R21 int,	IConst: 0
+
+BB3	(in: BB2, BB7, out: BB4, BB8)
+	exception handlers: Type: java.lang.Exception Entry: BB9
+105 PHI                     R22 int,	(R21 int, R37 int),	{ BB2, BB7 }
+54  GETSTATIC_I             T23 int,	.TspSize
+55  IFCMP_I                 R22 int,	T23 int,	GE,	BB8
+
+BB8	(in: BB3, out: BB10)
+69  GOTO                    BB10
+
+BB4	(in: BB3, out: BB5)
+	exception handlers: Type: java.lang.Exception Entry: BB9
+60  NULL_CHECK              T-1 <g>,	R18 BufferedReader
+59  INVOKEVIRTUAL_A%        T24 String,	java.io.BufferedReader.readLine ()Ljava/lang/String;,	(R18 BufferedReader)
+61  MOVE_A                  R9 String,	T24 String
+62  NEW                     T25 StringTokenizer,	java.util.StringTokenizer
+63  MOVE_A                  T26 StringTokenizer,	T25 StringTokenizer
+65  MOVE_A                  T27 String,	AConst: " "
+66  NULL_CHECK              T-1 <g>,	T26 StringTokenizer
+64  INVOKESPECIAL_V%            	java.util.StringTokenizer.<init> (Ljava/lang/String;Ljava/lang/String;)V,	(T26 StringTokenizer, R9 String, T27 String)
+67  MOVE_A                  R10 StringTokenizer,	T25 StringTokenizer
+68  MOVE_I                  R28 int,	IConst: 0
+
+BB5	(in: BB4, BB6, out: BB6, BB7)
+	exception handlers: Type: java.lang.Exception Entry: BB9
+106 PHI                     R29 int,	(R28 int, R34 int),	{ BB4, BB6 }
+87  NULL_CHECK              T-1 <g>,	R10 StringTokenizer
+86  INVOKEVIRTUAL_I%        T30 int,	java.util.StringTokenizer.hasMoreElements ()Z,	(R10 StringTokenizer)
+88  IFCMP_I                 T30 int,	IConst: 0,	EQ,	BB7
+
+BB7	(in: BB5, out: BB3)
+	exception handlers: Type: java.lang.Exception Entry: BB9
+103 ADD_I                   R37 int,	R22 int,	IConst: 1
+104 GOTO                    BB3
+
+BB6	(in: BB5, out: BB5)
+	exception handlers: Type: java.lang.Exception Entry: BB9
+89  GETSTATIC_A%            T31 int[][],	.weights
+90  NULL_CHECK              T-1 <g>,	T31 int[][]
+91  BOUNDS_CHECK            T31 int[][],	R22 int,	T-1 <g>
+92  ALOAD_A                 T32 int[],	T31 int[][],	R22 int,	T-1 <g>
+93  MOVE_I                  T33 int,	R29 int
+94  ADD_I                   R34 int,	R29 int,	IConst: 1
+96  NULL_CHECK              T-1 <g>,	R10 StringTokenizer
+95  INVOKEVIRTUAL_A%        T35 Object,	java.util.StringTokenizer.nextElement ()Ljava/lang/Object;,	(R10 StringTokenizer)
+97  CHECKCAST               T36 String,	T35 Object,	java.lang.String
+98  INVOKESTATIC_I%         T13 int,	java.lang.Integer.parseInt (Ljava/lang/String;)I,	(T36 String)
+99  NULL_CHECK              T-1 <g>,	T32 int[]
+100 BOUNDS_CHECK            T32 int[],	T33 int,	T-1 <g>
+101 ASTORE_I                T13 int,	T32 int[],	T33 int,	T-1 <g>
+102 GOTO                    BB5
+
+BB9	(in: <none>, out: BB10)
+46  GET_EXCEPTION           T38 Exception
+47  MOVE_A                  R39 Exception,	T38 Exception
+49  NULL_CHECK              T-1 <g>,	R39 Exception
+48  INVOKEVIRTUAL_V%            	java.lang.Exception.printStackTrace ()V,	(R39 Exception)
+51  MOVE_I                  T40 int,	IConst: -1
+50  INVOKESTATIC_V%             	java.lang.System.exit (I)V,	(T40 int)
+
+BB10	(in: BB8, BB9, out: BB1 (EXIT))
+52  GETSTATIC_I             T41 int,	.TspSize
+53  RETURN_I                T41 int
+
+BB1 (EXIT)	(in: BB10, out: <none>)
+
+Exception handlers: [Type: java.lang.Exception Entry: BB9]
+Register factory: Registers: 42
+Control flow graph for Tsp.<clinit> ()V:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB1 (EXIT))
+1   PUTSTATIC_I             IConst: 2,	.nWorkers
+2   PUTSTATIC_I             IConst: 32,	.TspSize
+3   PUTSTATIC_I             IConst: 0,	.StartNode
+4   PUTSTATIC_I             IConst: 12,	.NodesFromEnd
+5   RETURN_V                
+
+BB1 (EXIT)	(in: BB2, out: <none>)
+
+Exception handlers: []
+Register factory: Registers: 0
+Control flow graph for Tsp.<init> ()V:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB1 (EXIT))
+2   NULL_CHECK              T-1 <g>,	R0 Tsp
+1   INVOKESPECIAL_V%            	java.lang.Object.<init> ()V,	(R0 Tsp)
+3   RETURN_V                
+
+BB1 (EXIT)	(in: BB2, out: <none>)
+
+Exception handlers: []
+Register factory: Registers: 1

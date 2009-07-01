@@ -1,0 +1,41 @@
+# Author: Mayur Naik (mhn@cs.stanford.edu)
+# name=dynamic-thresc-prologue-dlog
+
+.include "V.dom"
+.include "Q.dom"
+.include "H.dom"
+.include "F.dom"
+
+.bddvarorder F0_Q0xQ1_V0xV1_H0
+
+succ(p:Q0,q:Q1) input
+asgn(q:Q0,l:V0) input
+copy(q:Q0,l:V0,r:V1) input
+alloc(q:Q0,l:V0,h:H0) input
+getinst(q:Q0,l:V0,b:V1,f:F0) input
+putinst(q:Q0,b:V0,f:F0,r:V1) input
+getstat(q:Q0,l:V0) input
+putstat(q:Q0,l:V0) input
+use(q:Q0,v:V0) output
+def(q:Q0,v:V0) output
+live_i(q:Q0,v:V0)
+live_o(q:Q0,v:V0)
+pres(q:Q0,v:V0) output
+
+def(q,l) :- asgn(q,l).
+def(q,l) :- copy(q,l,_).
+use(q,r) :- copy(q,_,r).
+def(q,l) :- getinst(q,l,_,_).
+use(q,b) :- getinst(q,_,b,_).
+use(q,b) :- putinst(q,b,_,_).
+use(q,r) :- putinst(q,_,_,r).
+def(q,l) :- getstat(q,l).
+use(q,r) :- putstat(q,r).
+def(q,v) :- alloc(q,v,_).
+
+live_o(p,v) :- live_i(q,v), succ(p,q).
+live_i(p,v) :- live_o(p,v), !def(p,v).
+live_i(p,v) :- use(p,v).
+
+pres(q,v) :- live_o(q,v), !def(q,v).
+

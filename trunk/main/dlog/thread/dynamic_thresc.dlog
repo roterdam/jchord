@@ -1,0 +1,65 @@
+# name=dynamic-thresc-dlog
+
+.include "V.dom"
+.include "Q.dom"
+.include "H.dom"
+.include "F.dom"
+.include "E.dom"
+.include "P.dom"
+
+.bddvarorder F0_E0_Q0xQ1_P0_V0xV1_H0xH1
+
+succ(p:Q0,q:Q1) input
+copy(q:Q0,l:V0,r:V1) input
+alloc(q:Q0,l:V0,h:H0) input
+getinst(q:Q0,l:V0,b:V1,f:F0) input
+putinst(q:Q0,b:V0,f:F0,r:V1) input
+getstat(q:Q0,l:V0) input
+putstat(q:Q0,l:V0) input
+spawn(q:Q0,v:V0) input
+start(q:Q0,v:V0) input
+pres(q:Q0,v:V0) input
+PQ(p:P0,q:Q0) input
+PE(p:P0,e:E0) input
+
+QHFH_i(q:Q0,h1:H0,f:F0,h2:H1) output
+QHFH_o(q:Q0,h1:H0,f:F0,h2:H1)
+QVH_i(q:Q0,v:V0,h:H0) output
+QVH_o(q:Q0,v:V0,h:H0)
+escQH_i(q:Q0,h:H0)
+escQH_o(q:Q0,h:H0) 
+escQHtc_i(q:Q0,h:H0) 
+escQV(q:Q0,v:V0) 
+dynamic_visitedE(e:E0) output
+dynamic_escE(e:E0) output
+
+QHFH_i(_,0,_,0).
+QHFH_o(_,0,_,0).
+escQH_i(_,0).
+escQH_o(_,0).
+
+QVH_o(q,v,h) :- QVH_i(q,v,h), pres(q,v).
+QHFH_o(q,h1,f,h2) :- QHFH_i(q,h1,f,h2).
+escQH_o(q,h) :- escQH_i(q,h).
+
+QVH_i(q,v,h) :- QVH_o(p,v,h), succ(p,q).
+QHFH_i(q,g,f,h) :- QHFH_o(p,h,f,g), succ(p,q).
+escQH_i(q,h) :- escQH_o(p,h), succ(p,q).
+
+QVH_o(q,l,h) :- alloc(q,l,h).
+QVH_o(q,l,h) :- copy(q,l,r), QVH_i(q,r,h).
+QVH_o(q,l,h) :- getinst(q,l,b,f), QVH_i(q,b,g), QHFH_i(q,g,f,h).
+QHFH_o(q,g,f,h) :- putinst(q,b,f,r), QVH_i(q,b,g), QVH_i(q,r,h).
+escQH_o(q,h) :- putstat(q,l), QVH_i(q,l,h).
+QVH_o(q,l,0) :- getstat(q,l).
+QVH_i(q,v,0) :- start(q,v).
+QVH_o(q,v,0) :- spawn(q,v).
+
+escQHtc_i(q,h) :- escQH_i(q,h).
+escQHtc_i(q,h) :- escQHtc_i(q,g), QHFH_i(q,g,_,h).
+
+escQV(q,v) :- QVH_i(q,v,h), escQHtc_i(q,h).
+
+dynamic_visitedE(e) :- PQ(p,_), PE(p,e).
+dynamic_escE(e) :- escQV(q,_), PQ(p,q), PE(p,e).
+

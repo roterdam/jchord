@@ -1,0 +1,24 @@
+# Copyright (c) 2008-2009, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+
+# Author: Mayur Naik (mhn@cs.stanford.edu)
+# name=deadlock-nongrded-exclude-dlog
+
+.include "A.dom"
+.include "N.dom"
+
+.bddvarorder A0xA1_N0_N1
+
+###
+# Relations
+###
+
+guarded(t1:A0,t2:A1,n1:N0,n3:N1) output
+
+###
+# Constraints
+###
+
+guarded(t,_,_,_) :- t<0.
+

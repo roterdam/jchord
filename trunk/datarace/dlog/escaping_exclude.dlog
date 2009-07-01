@@ -1,0 +1,23 @@
+# Copyright (c) 2008-2009, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+
+# Author: Mayur Naik (mhn@cs.stanford.edu)
+# name=datarace-escaping-exclude-dlog
+
+.include "C.dom"
+.include "E.dom"
+.include "V.dom"
+
+.bddvarorder E0_V0_C0xC1
+
+###
+# Relations
+###
+
+CVC(c:C0,v:V0,o:C1) input
+EV(e:E0,v:V0) input
+CEC(c:C0,e:E0,o:C1) output
+
+CEC(c,e,o) :- EV(e,v), CVC(c,v,o).
+

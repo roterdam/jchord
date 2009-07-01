@@ -1,0 +1,25 @@
+# Copyright (c) 2008-2009, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+
+# Author: Mayur Naik (mhn@cs.stanford.edu)
+# name=transLL-dlog
+
+.include "L.dom"
+
+.bddvarorder L0xL1
+
+###
+# Relations
+###
+
+LL(l1:L0,l2:L1) input
+transLL(l1:L0,l2:L1) output
+
+###
+# Constraints
+###
+
+transLL(l1,l2) :- LL(l1,l2).
+transLL(l1,l2) :- transLL(l1,l3), transLL(l3,l2).
+

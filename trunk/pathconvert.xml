@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="pathconvert">
+  <target name="pathconvert">
+     <property file="chord.properties"/>
+     <propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
+     <for list="${chord.path.prop.list}" delimiter="," param="prop">
+       <sequential>
+         <path id="abspath">
+           <pathelement path="${@{prop}}"/>
+         </path>
+         <property name="tmp.@{prop}" refid="abspath"/>
+         <propertycopy property="@{prop}" override="true" from="tmp.@{prop}"/>
+       </sequential>
+     </for>
+  </target>
+</project>
