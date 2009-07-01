@@ -234,7 +234,7 @@
     <mkdir dir="${chord.out.dir}"/>
     <mkdir dir="${chord.classes.dir}"/>
     <property name="chord.max.heap" value="1024m"/>
-    <java classname="chord.project.PathInstrumentor" fork="true" failonerror="true"
+    <java classname="chord.project.Instrumentor" fork="true" failonerror="true"
         dir="${chord.work.dir}" classpath="${chord.main.class.path}">
       <jvmarg value="-Xmx${chord.max.heap}"/>
       <syspropertyset>

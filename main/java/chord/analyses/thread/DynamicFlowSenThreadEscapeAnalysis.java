@@ -14,12 +14,12 @@ import gnu.trove.TIntArrayList;
 import gnu.trove.TIntObjectHashMap;
 
 @Chord(
-    name = "flowsen-dyn-thresc-java",
+    name = "dynamic-flowsen-thresc-java",
     producedNames = { "escE", "visitedE" },
     namesOfSigns = { "escE", "visitedE" },
     signs = { "E0:E0", "E0:E0" }
 )
-public class FlowSenDynamicThreadEscapeAnalysis extends DynamicAnalysis {
+public class DynamicFlowSenThreadEscapeAnalysis extends DynamicAnalysis {
 	// map from each object to a list containing each non-null-valued
 	// instance field of reference type along with that value
 	protected TIntObjectHashMap/*<List>*/ objToFldObjs;

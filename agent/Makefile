@@ -14,7 +14,7 @@ ifeq (${OS},Windows_NT)
   DLL_OUTPUT_OPTION = -o$(space)
   INCLUDES = -I"$(JDK_ROOT)/include" \
              -I"$(JDK_ROOT)/include/win32"
-  DLL_NAME = $(LIB_DIR)/jvmti_agent.dll
+  DLL_NAME = $(LIB_DIR)/chord_agent.dll
 else
   ifeq (${shell uname -s},Darwin)
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
@@ -23,7 +23,7 @@ else
     LINKFLAGS = $(M32_FLAG) -dynamiclib -framework JavaVM  -single_module -undefined suppress -flat_namespace
     DLL_OUTPUT_OPTION = -o$(space)
     INCLUDES = -I$(JDK_ROOT)/Headers/
-    DLL_NAME = $(LIB_DIR)/libjvmti_agent.jnilib
+    DLL_NAME = $(LIB_DIR)/libchord_agent.jnilib
   else
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
     OBJECT_OUTPUT_OPTION = -o$(space)
@@ -32,20 +32,20 @@ else
     DLL_OUTPUT_OPTION = -o$(space)
     INCLUDES = -I. -I$(JDK_ROOT)/include \
                -I$(JDK_ROOT)/include/linux
-    DLL_NAME = $(LIB_DIR)/libjvmti_agent.so
+    DLL_NAME = $(LIB_DIR)/libchord_agent.so
   endif
 endif
 
 default: $(DLL_NAME)
 
-$(DLL_NAME): jvmti_agent.o
+$(DLL_NAME): chord_agent.o
 	$(LINK) $(LINKFLAGS) $< $(DLL_OUTPUT_OPTION)$@
 
-jvmti_agent.o: jvmti_agent.cpp
-	$(CXX) jvmti_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
+chord_agent.o: chord_agent.cpp
+	$(CXX) chord_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
 
 clean:
-	$(RM) -f jvmti_agent.o $(DLL_NAME)
+	$(RM) -f chord_agent.o $(DLL_NAME)
 
 empty := 
 space := $(empty) $(empty)
