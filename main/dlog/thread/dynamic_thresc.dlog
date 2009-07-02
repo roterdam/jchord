@@ -21,6 +21,7 @@ start(q:Q0,v:V0) input
 pres(q:Q0,v:V0) input
 PQ(p:P0,q:Q0) input
 PE(p:P0,e:E0) input
+EV(e:E0,v:V0) input
 
 QHFH_i(q:Q0,h1:H0,f:F0,h2:H1) output
 QHFH_o(q:Q0,h1:H0,f:F0,h2:H1)
@@ -60,6 +61,6 @@ escQHtc_i(q,h) :- escQHtc_i(q,g), QHFH_i(q,g,_,h).
 
 escQV(q,v) :- QVH_i(q,v,h), escQHtc_i(q,h).
 
-dynamic_visitedE(e) :- PQ(p,_), PE(p,e).
-dynamic_escE(e) :- escQV(q,_), PQ(p,q), PE(p,e).
+dynamic_visitedE(e) :- PQ(p,_), PE(p,e), EV(e,_).
+dynamic_escE(e) :- escQV(q,v), PQ(p,q), PE(p,e), EV(e,v).
 

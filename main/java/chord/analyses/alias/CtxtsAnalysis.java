@@ -411,7 +411,7 @@ public class CtxtsAnalysis extends JavaTask {
 				domC.setCtxt(newElems);
 			}
 		}
-		for (int hIdx = 0; hIdx < numH; hIdx++) {
+		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad inst = domH.get(hIdx);
 			jq_Method meth = Program.getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
@@ -462,7 +462,7 @@ public class CtxtsAnalysis extends JavaTask {
 		relCH.zero();
 		if (!isLastIter)
 			relRefinableCH.zero();
-		for (int hIdx = 0; hIdx < numH; hIdx++) {
+		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad inst = domH.get(hIdx);
 			jq_Method meth = Program.getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
@@ -555,7 +555,7 @@ public class CtxtsAnalysis extends JavaTask {
         if (domM.size() <= 1)
             return false;
         jq_Method sndMeth = domM.get(1);
-        return sndMeth == Program.getNativeThreadStartMethod();
+        return sndMeth == Program.getThreadStartMethod();
     }
 
 	private static boolean contains(Quad[] elems, Quad q) {

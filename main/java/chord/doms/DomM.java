@@ -44,7 +44,7 @@ public class DomM extends ProgramDom<jq_Method>
 		// if it exists.
 		jq_Method mainMethod = Program.getMainMethod();
 		set(mainMethod);
-		jq_Method startMethod = Program.getNativeThreadStartMethod();
+		jq_Method startMethod = Program.getThreadStartMethod();
 		if (startMethod != null)
 			set(startMethod);
 	}

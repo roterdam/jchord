@@ -68,6 +68,11 @@ public class Instrumentor {
 		ClassPool pool = new ClassPool();
 		String[] pathElems = classPath.split(File.pathSeparator);
 		for (String pathElem : pathElems) {
+			File file = new File(pathElem);
+			if (!file.exists()) {
+				System.out.println("WARNING: Ignoring: " + pathElem);
+				continue;
+			}
 			pool.appendClassPath(pathElem);
 		}
 		pool.appendSystemPath();

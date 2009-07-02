@@ -45,7 +45,6 @@ import chord.doms.DomP;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.CodeCache;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_NameAndDesc;
@@ -115,7 +114,8 @@ public class PathAnalysis implements ITask {
 			String runIdsStr = System.getProperty("chord.run.ids", "");
 	
 			String[] runIds = runIdsStr.split(",");
-			String cmd = "java -cp " + classPathName +
+			String jvmargs = System.getProperty("chord.jvmargs", "");
+			String cmd = "java " + jvmargs + " -cp " + classPathName +
    	     	" -agentlib:jvmti_agent" + // Properties.agentLibDirName +
 				"=trace_file_name=" + traceFileName +
 				" " + mainClassName + " ";
@@ -235,6 +235,29 @@ public class PathAnalysis implements ITask {
 		domQ.save();
 	}
 
+	private void eatUntil(String mStr) {
+		// eat up all lines upto and including matching method exit event
+		int numCalls = 0;
+		while (true) {
+			String line = currThread.get(currLineIdx++);
+			currThreadFullOut.println(line);
+			if (DEBUG) System.out.println("\tLINE ATE: " + line);
+			char c = line.charAt(0);
+			if (c == 'E') {
+				String mStr2 = line.substring(2);
+				if (mStr2.equals(mStr))
+					numCalls++;
+			} else if (c == 'X') {
+				String mStr2 = line.substring(2);
+				if (mStr2.equals(mStr)) {
+					if (numCalls == 0)
+						break;
+					numCalls--;
+				}
+			}	
+		}
+	}
+
 	private int frame(String methEntryLine, List<IntPair> invkArgs, int invkRet,
 			int retQidx) {
 		currThreadFullOut.println(methEntryLine);
@@ -267,26 +290,7 @@ public class PathAnalysis implements ITask {
 			cls = Program.getClass(cName);
 		if (cls == null) {
 			System.out.println(cName + " MISSING");
-			// eat up all lines upto and including matching method exit event
-			int numCalls = 0;
-			while (true) {
-				String line = currThread.get(currLineIdx++);
-				currThreadFullOut.println(line);
-				if (DEBUG) System.out.println("\tLINE ATE: " + line);
-				char c = line.charAt(0);
-				if (c == 'E') {
-					String mStr2 = line.substring(2);
-					if (mStr2.equals(mStr))
-						numCalls++;
-				} else if (c == 'X') {
-					String mStr2 = line.substring(2);
-					if (mStr2.equals(mStr)) {
-						if (numCalls == 0)
-							break;
-						numCalls--;
-					}
-				}	
-			}
+			eatUntil(mStr);
 			if (DEBUG) System.out.println("LEAVE1 frame: " + methEntryLine);
 			return retQidx;
 		}
@@ -298,10 +302,16 @@ public class PathAnalysis implements ITask {
 		int mIdx = domM.get(m);
 		Assertions.Assert(mIdx != -1);
 		int cIdx = methToNumCalls[mIdx]++;
-		TIntObjectHashMap code = methToCode[mIdx];
+		TIntObjectHashMap methCode = methToCode[mIdx];
 		List<IntPair> methArgs = null;
-		if (code == null && !m.isNative()) {
-			methToCode[mIdx] = processMethCode(m);
+		if (methCode == null) {
+			methCode = processMethCode(m);
+			if (methCode == null) {
+				eatUntil(mStr);
+				if (DEBUG) System.out.println("LEAVE2 frame: " + methEntryLine);
+				return retQidx;
+			}
+			methToCode[mIdx] = methCode;
 			methArgs = processMethArgs(m);
 			methToArgs[mIdx] = methArgs;
 		} else
@@ -344,7 +354,7 @@ public class PathAnalysis implements ITask {
 				Assertions.Assert(mStr2.equals(mStr));
 				currThreadFullOut.println(line);
 				currThreadAbbrOut.println(line);
-				if (DEBUG) System.out.println("LEAVE2 frame: " + methEntryLine);
+				if (DEBUG) System.out.println("LEAVE3 frame: " + methEntryLine);
 				return prevQidx;
 			} else {
 				if (DEBUG) System.out.println("LINE: " + line);
@@ -587,10 +597,12 @@ public class PathAnalysis implements ITask {
 	private TIntObjectHashMap processMethCode(jq_Method m) {
 		if (DEBUG) System.out.println("PROCESSING: " + m);
 		ControlFlowGraph cfg = Program.getCFG(m);
-		Assertions.Assert(cfg != null);
+		if (cfg == null)
+			return null;
 		if (DEBUG) System.out.println(cfg.fullDump());
-		Map<Quad, Integer> bcMap = CodeCache.getBCMap(m);
-		Assertions.Assert(bcMap != null);
+		Map<Quad, Integer> bcMap = Program.getBCMap(m);
+		if (bcMap == null)
+			return null;
 		TIntObjectHashMap code = new TIntObjectHashMap();
 		for (Map.Entry<Quad, Integer> e : bcMap.entrySet()) {
 			Quad q = e.getKey();
@@ -842,7 +854,7 @@ public class PathAnalysis implements ITask {
 	private void runAnalysis() {
 		Project.runTask("dynamic-thresc-prologue-dlog");
 		Project.runTask("dynamic-thresc-dlog");
-		Project.runTask("thresc-dlog");
+		Project.runTask("flowins-thresc-dlog");
 		Project.runTask("dynamic-thresc-epilogue-dlog");
 	}
 }

@@ -27,8 +27,8 @@ public class ClasspathUtils {
         for (String fileName : fileNames) {
             File file = new File(fileName);
             if (!file.exists()) {
-				throw new RuntimeException(
-					new FileNotFoundException(fileName));
+				System.out.println("WARNING: Ignoring: " + fileName);
+				continue;
             }
             try {
             	list.add(file.toURL());
