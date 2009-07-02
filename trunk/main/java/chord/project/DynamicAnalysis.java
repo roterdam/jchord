@@ -125,7 +125,7 @@ public class DynamicAnalysis implements ITask {
 		final String cmd2 = "java -cp " + Properties.bootClassPathName + // TODO
 			" -Dchord.crude.trace.file=" + crudeTraceFileName +
 			" -Dchord.final.trace.file=" + finalTraceFileName +
-			" chord.Project.TraceTransformer";
+			" chord.project.TraceTransformer";
 		for (String runId : runIds) {
 			System.out.println("XXXXX: " + runId);
 			final String args = System.getProperty("chord.args." + runId, "");
@@ -199,7 +199,7 @@ public class DynamicAnalysis implements ITask {
 		String s = dHmap.get(h);
 		int hIdx = sHmap.get(s);
 		if (hIdx == -1) {
-			System.err.println("WARNING: could not find `" + s + "` in sHmap");
+			// System.err.println("WARNING: could not find `" + s + "` in sHmap");
 		}
 		return hIdx;
 	}
@@ -207,7 +207,7 @@ public class DynamicAnalysis implements ITask {
 		String s = dFmap.get(f);
 		int fIdx = sFmap.get(s);
 		if (fIdx == -1) {
-			System.err.println("WARNING: could not find `" + s + "` in sFmap");
+			// System.err.println("WARNING: could not find `" + s + "` in sFmap");
 		}
 		return fIdx;
 	}
@@ -215,7 +215,7 @@ public class DynamicAnalysis implements ITask {
 		String s = dEmap.get(e);
 		int eIdx = sEmap.get(s);
 		if (eIdx == -1) {
-			System.err.println("WARNING: could not find `" + s + "` in sEmap");
+			// System.err.println("WARNING: could not find `" + s + "` in sEmap");
 		}
 		return eIdx;
 	}

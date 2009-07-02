@@ -92,6 +92,7 @@ public class Program {
 						classes.add(c);
 				}
 				r.close();
+				init2();
 			} else {
 				String mainClassName = Properties.mainClassName;
 				Assertions.Assert(mainClassName != null);
@@ -101,11 +102,13 @@ public class Program {
 					if (o instanceof jq_Class)
 						classes.add((jq_Class) o);
 				}
+				init2();
 				Project.runTask("ctxtins-dlog");
 				ProgramRel relReachableT =
 					(ProgramRel) Project.getTrgt("reachableT");
 				relReachableT.load();
 				classes.clear();
+				nameToClassMap = null;
 				Iterable<jq_Type> tuples = relReachableT.getAry1ValTuples();
 				for (jq_Type t : tuples) {
 					if (t instanceof jq_Class)
@@ -143,8 +146,10 @@ public class Program {
 		if (nameToClassMap == null) {
 			nameToClassMap = new HashMap<String, jq_Class>();
 			Collection<jq_Class> classes = getClasses();
-			for (jq_Class c : classes)
+			for (jq_Class c : classes) {
+				System.out.println("ADDING: " + c);
 				nameToClassMap.put(c.getName(), c);
+			}
 		}
 		return nameToClassMap.get(name);
 	}
@@ -153,64 +158,64 @@ public class Program {
 		return classes;
 	}
 
-    private static ControlFlowGraph buildStartCFG(jq_Method start) {
-    	jq_Class threadClass = start.getDeclaringClass();
+    private static void initThreadStart() {
+		jq_Method m = getThreadStartMethod();
+		if (m == null)
+			return;
+    	jq_Class threadClass = m.getDeclaringClass();
     	jq_NameAndDesc nadOfRun = new jq_NameAndDesc("run", "()V");
     	jq_Method run = threadClass.getDeclaredInstanceMethod(nadOfRun);
     	Assertions.Assert(run != null);
     	RegisterFactory rf = new RegisterFactory(0, 1);
     	Register r = rf.getOrCreateLocal(0, threadClass);
-    	ControlFlowGraph startCFG = new ControlFlowGraph(start, 1, 0, rf);
+    	ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
     	RegisterOperand ro = new RegisterOperand(r, threadClass);
     	MethodOperand mo = new MethodOperand(run);
     	Quad q = Invoke.create(0, Invoke.INVOKEVIRTUAL_V.INSTANCE, null, mo, 1);
     	Invoke.setParam(q, 0, ro);
-    	BasicBlock bb = startCFG.createBasicBlock(1, 1, 1, null);
+    	BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
     	bb.appendQuad(q);
-    	BasicBlock entry = startCFG.entry();
-    	BasicBlock exit = startCFG.exit();
+    	BasicBlock entry = cfg.entry();
+    	BasicBlock exit = cfg.exit();
     	bb.addPredecessor(entry);
     	bb.addSuccessor(exit);
     	entry.addSuccessor(bb);
     	exit.addPredecessor(bb);
-    	return startCFG;
+		System.out.println("SETTING THREAD START");
+		CodeCache.cache.setMap(m, cfg);
+		CodeCache.cache.setBCMap(m, null);
     }
 
-    private final static Map<jq_Method, ControlFlowGraph> methodToCFG =
-    	new HashMap<jq_Method, ControlFlowGraph>();
-	
+	public static Map getBCMap(jq_Method m) {
+		return CodeCache.getBCMap(m);
+	}
+
     public static ControlFlowGraph getCFG(jq_Method m) {
+
 		ControlFlowGraph cfg;
-    	if (methodToCFG.containsKey(m)) {
-    		cfg = methodToCFG.get(m);
-    	} else {
+
+		try {
+			cfg = CodeCache.getCode(m);
+			// (new EnterSSA()).visitCFG(cfg);
+		} catch (Exception ex) {
+			System.out.println("Failed to get CFG for method: " +
+				m + "; setting it to null.  Error follows.");
+			ex.printStackTrace();
+			cfg = null;
+		}
+		return cfg;
+	}
+
+	private static void init2() {
 /*
     		String nad = m.getNameAndDesc().toString();
     		if (nad.equals("equals (Ljava/lang/Object;)Z") ||
     				nad.equals("hashCode ()I") ||
     				nad.equals("toString ()Ljava/lang/String;")) {
     			cfg = null;
-    		} else
+    		}
 */
-			if (m == getNativeThreadStartMethod()) {
-				System.out.println("FOUND: " + m);
-			    cfg = buildStartCFG(m);
-			} else if (m.getBytecode() == null) {
-				cfg = null;
-			} else {
-				try {
-		    		cfg = CodeCache.getCode(m);
-		    		// (new EnterSSA()).visitCFG(cfg);
-				} catch (Exception ex) {
-					System.out.println("Failed to get CFG for method: " +
-						m + "; setting it to null.  Error follows.");
-					ex.printStackTrace();
-					cfg = null;
-				}
-		    }
-		    methodToCFG.put(m, cfg);
-		}
-		return cfg;
+		initThreadStart();
 	}
 
 	public static jq_Method getMainMethod() {
@@ -237,23 +242,14 @@ public class Program {
 		return m.getName().toString() + methodDescToStr(d);
 	}
 	
-	public static jq_Method getNativeThreadStartMethod() {
+	public static jq_Method getThreadStartMethod() {
     	jq_Class threadClass = getClass("java.lang.Thread");
 		if (threadClass == null)
 			return null;
     	jq_NameAndDesc nadOfStart = new jq_NameAndDesc("start", "()V");
     	jq_Method start = threadClass.getDeclaredInstanceMethod(nadOfStart);
-		if (start == null)
-			return null;
-		if (start.isNative())
-			return start;
-   	 	jq_NameAndDesc nadOfStart0 = new jq_NameAndDesc("start0", "()V");
-		jq_Method start0 = threadClass.getDeclaredInstanceMethod(nadOfStart0);
-		if (start0 != null) {
-			Assertions.Assert(start0.isNative());
-			return start0;
-		}
-		return null;
+		Assertions.Assert(start != null);
+		return start;
 	}
 
 	// convert the given method descriptor string to a string
@@ -357,19 +353,16 @@ public class Program {
 	}
 	
 	public static int getBCI(Quad q, jq_Method m) {
-		Map<Quad, Integer> bcMap = CodeCache.getBCMap(m);
+		Map<Quad, Integer> bcMap = getBCMap(m);
 		Integer bci = bcMap.get(q);
 		Assertions.Assert(bci != null);
 		return bci.intValue();
 	}
 
 	public static int getLineNumber(Quad q, jq_Method m) {
-		if (m.isNative()) {
-			// may reach here because a stub containing q is
-			// provided for method m
+		Map<Quad, Integer> bcMap = getBCMap(m);
+		if (bcMap == null)
 			return 0;
-		}
-		Map<Quad, Integer> bcMap = CodeCache.getBCMap(m);
 		Integer bci = bcMap.get(q);
 		if (bci != null)
 			return m.getLineNumber(bci.intValue());

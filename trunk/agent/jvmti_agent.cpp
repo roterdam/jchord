@@ -100,7 +100,24 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 
 static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 {
+    jvmtiError retval;
+
     cout << "ENTER VMDeath" << endl;
+
+    enterAgentMonitor();
+
+    retval = jvmti_env->SetEventNotificationMode(JVMTI_DISABLE,
+		JVMTI_EVENT_SINGLE_STEP, NULL);
+    assert(retval == JVMTI_ERROR_NONE);
+    retval = jvmti_env->SetEventNotificationMode(JVMTI_DISABLE,
+		JVMTI_EVENT_METHOD_ENTRY, NULL);
+    assert(retval == JVMTI_ERROR_NONE);
+    retval = jvmti_env->SetEventNotificationMode(JVMTI_DISABLE,
+		JVMTI_EVENT_METHOD_EXIT, NULL);
+    assert(retval == JVMTI_ERROR_NONE);
+
+	exitAgentMonitor();
+
     cout << "LEAVE VMDeath" << endl;
 }
 
