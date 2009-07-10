@@ -38,10 +38,11 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 	}
 	public String toXMLAttrsString(Quad q) {
 		jq_Method m = Program.getMethod(q);
-		String fileName = Program.getSourceFileName(m.getDeclaringClass());
-		int lineNumber = Program.getLineNumber(q, m);
-		return "file=\"" + fileName + "\" " + "line=\"" + lineNumber + "\" " +
-			"Mid=\"M" + domM.get(m) + "\"";
+		String file = Program.getSourceFileName(m.getDeclaringClass());
+		int line = Program.getLineNumber(q, m);
+		int mIdx = domM.get(m);
+		return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
+			"Mid=\"M" + mIdx + "\"";
 	}
 	public String toString(Quad q) {
 		return Program.toString(q);

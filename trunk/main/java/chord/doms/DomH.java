@@ -24,6 +24,7 @@ import chord.visitors.INewInstVisitor;
 )
 public class DomH extends QuadDom implements INewInstVisitor {
 	public void init() {
+		super.init();
 		set(null);
 	}
 	public void visitNewInst(Quad q) {
@@ -32,11 +33,12 @@ public class DomH extends QuadDom implements INewInstVisitor {
 	public String toXMLAttrsString(Quad q) {
 		// XXX
 		if (q == null)
-			return "null";
+			return "";
 		TypeOperand to = (q.getOperator() instanceof New) ?
 			New.getType(q) : NewArray.getType(q);
-		return super.toXMLAttrsString(q) +
-			" type=\"" + to.getType().getName() + "\"";
+		String type = to.getType().getName();
+		return super.toXMLAttrsString(q) + " type=\"" +
+			type + "\"";
 	}
 	public String toString(Quad q) {
 		// XXX

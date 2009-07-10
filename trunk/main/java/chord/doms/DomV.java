@@ -51,7 +51,7 @@ public class DomV extends ProgramDom<Register>
 		ctnrMethod = m;
 	}
 	public void visit(Register v) {
-		if (!v.getType().isPrimitiveType()) {
+		if (v.getType().isReferenceType()) {
 			varToMethodMap.put(v, ctnrMethod);
 			set(v);
 		}

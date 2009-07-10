@@ -33,7 +33,7 @@ public class DynamicAnalysis implements ITask {
 	public boolean handlesStatFldWrInst() { return false; }
 	public boolean handlesAcqLockInst() { return false; }
 	public boolean handlesForkHeadInst() { return false; }
-	public void init() {
+	public void initPass() {
 		// signals beginning of parsing of a new trace
 		// do nothing by default; subclasses can override
 	}
@@ -119,7 +119,7 @@ public class DynamicAnalysis implements ITask {
 		final String cmd = "java -Xbootclasspath/p:" + Properties.bootClassPathName +
         	" -Xverify:none " + // " -verbose" + 
 			" -cp " + classesDirName + File.pathSeparator + classPathName +
-        	" -agentlib:chord_agent" + // Properties.agentLibDirName +
+        	" -agentlib:chord_agent" +
 			"=trace_file_name=" + crudeTraceFileName +
 			" " + mainClassName + " ";
 		final String cmd2 = "java -cp " + Properties.bootClassPathName + // TODO
@@ -157,7 +157,6 @@ public class DynamicAnalysis implements ITask {
 		}
 		done();
 	}
-
 
 	private String getOrMake(String propName, String fileName) {
 		String s = System.getProperty(propName);
@@ -226,7 +225,7 @@ public class DynamicAnalysis implements ITask {
 
 	private void processTrace(String fileName) {
 		try {
-			init();
+			initPass();
 			IntBuffer buffer = new IntBuffer(1024, fileName, true);
 			int count = 0;
 			while (!buffer.isDone()) {
