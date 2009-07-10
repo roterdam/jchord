@@ -476,18 +476,6 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		IntArraySet dstEsc2 = new IntArraySet(pts);
 		Set<IntTrio> dstHeap = iDstNode.heap;
 		IntArraySet[] dstEnv = iDstNode.env;
-		// begin remove
-		for (IntTrio t : dstHeap) {
-			int h1Idx = t.idx0;
-			Assertions.Assert(!dstEsc.contains(h1Idx));
-			int h2Idx = t.idx2;
-			Assertions.Assert(!dstEsc.contains(h2Idx));
-		}
-		for (IntArraySet s : dstEnv) {
-			if (s != escPts)
-				Assertions.Assert(!s.overlaps(dstEsc));
-		}
-		// end remove
 		boolean changed;
 		do {
 			changed = false;
