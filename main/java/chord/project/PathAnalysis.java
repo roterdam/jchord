@@ -1,4 +1,4 @@
-package chord.analyses.thread;
+package chord.project;
 
 import java.io.BufferedReader;
 import java.io.PrintWriter;
@@ -29,13 +29,6 @@ import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.integer.IntQuad;
 
-import chord.project.Properties;
-import chord.project.ITask;
-import chord.project.Chord;
-import chord.project.Project;
-import chord.project.Program;
-import chord.project.ProgramRel;
-import chord.project.ProgramDom;
 import chord.doms.DomM;
 import chord.doms.DomH;
 import chord.doms.DomF;
@@ -61,7 +54,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
     name = "path-java"
 )
 public class PathAnalysis implements ITask {
-	private final static boolean DEBUG = true;
+	private final static boolean DEBUG = false;
 
     protected String name;
 	private int numThreads;
@@ -90,7 +83,8 @@ public class PathAnalysis implements ITask {
 	private Set<IntPair> startSet;
 	private Set<IntPair> PQset;
 
-	private PrintWriter currThreadFullOut, currThreadAbbrOut;
+	private PrintWriter currThreadFullOut;
+	private PrintWriter currThreadAbbrOut;
 
     public void setName(String name) {
         Assertions.Assert(name != null);
@@ -116,7 +110,7 @@ public class PathAnalysis implements ITask {
 			String[] runIds = runIdsStr.split(",");
 			String jvmargs = System.getProperty("chord.jvmargs", "");
 			String cmd = "java " + jvmargs + " -cp " + classPathName +
-   	     	" -agentlib:jvmti_agent" + // Properties.agentLibDirName +
+   	     	" -agentlib:tracing_agent" +
 				"=trace_file_name=" + traceFileName +
 				" " + mainClassName + " ";
 			for (String runId : runIds) {
@@ -479,66 +473,52 @@ public class PathAnalysis implements ITask {
 					}
 					if (op instanceof Getfield) {
 						jq_Field f = Getfield.getField(q).getField();
-            			if (f.getType().isReferenceType()) {
-							RegisterOperand bo = (RegisterOperand) Getfield.getBase(q);
-							RegisterOperand lo = Getfield.getDest(q);
-							Register b = bo.getRegister();
-							Register l = lo.getRegister();
-							int lIdx = domV.get(l);
-							int bIdx = domV.get(b);
-							int fIdx = domF.get(f);
-							if (DEBUG) System.out.println("ADDING to getinst: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
-							getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
-						}
+						RegisterOperand bo = (RegisterOperand) Getfield.getBase(q);
+						RegisterOperand lo = Getfield.getDest(q);
+						Register b = bo.getRegister();
+						Register l = lo.getRegister();
+						int lIdx = domV.get(l);
+						int bIdx = domV.get(b);
+						int fIdx = domF.get(f);
+						if (DEBUG) System.out.println("ADDING to getinst: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
+						getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
 						continue;
 					}
 					if (op instanceof ALoad) {
-						if (((ALoad) op).getType().isReferenceType()) {
-							RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
-							RegisterOperand lo = ALoad.getDest(q);
-							Register b = bo.getRegister();
-							Register l = lo.getRegister();
-							int bIdx = domV.get(b);
-							int lIdx = domV.get(l);
-							int fIdx = 0;
-							if (DEBUG) System.out.println("ADDING to getinst: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
-							getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
-						}
+						RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
+						RegisterOperand lo = ALoad.getDest(q);
+						Register b = bo.getRegister();
+						Register l = lo.getRegister();
+						int bIdx = domV.get(b);
+						int lIdx = domV.get(l);
+						int fIdx = 0;
+						if (DEBUG) System.out.println("ADDING to getinst: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
+						getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
 						continue;
 					}
 					if (op instanceof Putfield) {
 						jq_Field f = Putfield.getField(q).getField();
-						if (f.getType().isReferenceType()) {
-							Operand rx = Putfield.getSrc(q);
-							if (rx instanceof RegisterOperand) {
-								RegisterOperand bo = (RegisterOperand) Putfield.getBase(q);
-								RegisterOperand ro = (RegisterOperand) Putfield.getSrc(q);
-								Register b = bo.getRegister();
-								Register r = ro.getRegister();
-								int bIdx = domV.get(b);
-								int rIdx = domV.get(r);
-								int fIdx = domF.get(f);
-								if (DEBUG) System.out.println("ADDING to putinst: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
-								putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
-							}
-						}
+						RegisterOperand bo = (RegisterOperand) Putfield.getBase(q);
+						RegisterOperand ro = (RegisterOperand) Putfield.getSrc(q);
+						Register b = bo.getRegister();
+						Register r = ro.getRegister();
+							int bIdx = domV.get(b);
+						int rIdx = domV.get(r);
+						int fIdx = domF.get(f);
+						if (DEBUG) System.out.println("ADDING to putinst: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
+						putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
 						continue;
 					}
 					if (op instanceof AStore) {
-						if (((AStore) op).getType().isReferenceType()) {
-							Operand rx = AStore.getValue(q);
-							if (rx instanceof RegisterOperand) {
-								RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
-								RegisterOperand ro = (RegisterOperand) AStore.getValue(q);
-								Register b = bo.getRegister();
-								Register r = ro.getRegister();
-								int bIdx = domV.get(b);
-								int rIdx = domV.get(r);
-								int fIdx = 0;
-								if (DEBUG) System.out.println("ADDING to putinst: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
-								putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
-							}
-						}
+						RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
+						RegisterOperand ro = (RegisterOperand) AStore.getValue(q);
+						Register b = bo.getRegister();
+						Register r = ro.getRegister();
+						int bIdx = domV.get(b);
+						int rIdx = domV.get(r);
+						int fIdx = 0;
+						if (DEBUG) System.out.println("ADDING to putinst: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
+						putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
 						continue;
 					} 
 					if (op instanceof Getstatic) {
@@ -650,17 +630,23 @@ public class PathAnalysis implements ITask {
 		if (op instanceof Invoke)
 			return true;
 		if (op instanceof Getfield) {
-			return Getfield.getBase(q) instanceof RegisterOperand;
+			jq_Field f = Getfield.getField(q).getField();
+			return f.getType().isReferenceType() &&
+				Getfield.getBase(q) instanceof RegisterOperand;
 		}
 		if (op instanceof ALoad) {
 			// todo: check if base is a var?
-        	return true;
+			return ((ALoad) op).getType().isReferenceType();
 		}
 		if (op instanceof Putfield) {
-			return Putfield.getBase(q) instanceof RegisterOperand;
+			jq_Field f = Putfield.getField(q).getField();
+			return f.getType().isReferenceType() &&
+				Putfield.getBase(q) instanceof RegisterOperand &&
+				Putfield.getSrc(q) instanceof RegisterOperand;
 		}
 		if (op instanceof AStore) {
-			return true;
+			return (((AStore) op).getType().isReferenceType()) &&
+				AStore.getValue(q) instanceof RegisterOperand;
 		}
 		if (op instanceof Return) {
 			Assertions.Assert(!(op instanceof RETURN_P));
@@ -692,30 +678,12 @@ public class PathAnalysis implements ITask {
 	}
 
 	private void createRels() throws IOException {
-/*
-		String outDirName = Properties.outDirName;
-
-		PrintWriter writer = new PrintWriter(new FileWriter(
-			new File(outDirName, "prog.dlog")));
-
-		int numQ = domQ.size();
-		for (int i = 0; i < numQ; i++) {
-			writer.println("Q('q" + i + "').");
-		}
-
-		int numF = domF.size();
-		for (int i = 0; i < numF; i++) {
-			writer.println("F('f" + i + "').");
-		}
-*/
-	
 		ProgramRel relSucc = (ProgramRel) Project.getTrgt("succ");
 		relSucc.zero();
 		for (IntPair p : succSet) {
 			int q1 = p.idx0;
 			int q2 = p.idx1;
 			relSucc.add(q1, q2);
-			// writer.println("succ('q" + q1 + "', 'q" + q2 + "').");
 		}
 		relSucc.save();
 
@@ -725,7 +693,6 @@ public class PathAnalysis implements ITask {
 			int q = p.idx0;
 			int v = p.idx1;
 			relAsgn.add(q, v);
-			// writer.println("asgn('q" + q + "', 'v" + v + "').");
 		}
 		relAsgn.save();
 
@@ -736,7 +703,6 @@ public class PathAnalysis implements ITask {
 			int l = p.idx1;
 			int r = p.idx2;
 			relCopy.add(q, l, r);
-			// writer.println("copy('q" + q + "', 'v" + l + "', 'v" + r + "').");
 		}
 		relCopy.save();
 
@@ -747,7 +713,6 @@ public class PathAnalysis implements ITask {
 			int v = p.idx1;
 			int h = p.idx2;
 			relAlloc.add(q, v, h);
-			// writer.println("alloc('q" + q + "', 'v" + v + "', 'h" + h + "').");
 		}
 		relAlloc.save();
 
@@ -759,7 +724,6 @@ public class PathAnalysis implements ITask {
 			int b = p.idx2;
 			int f = p.idx3;
 			relGetinst.add(q, l, b, f);
-			// writer.println("getinst('q" + q + "', 'v" + l + "', 'v" + b + "', 'f" + f + "').");
 		}
 		relGetinst.save();
 
@@ -771,7 +735,6 @@ public class PathAnalysis implements ITask {
 			int f = p.idx2;
 			int r = p.idx3;
 			relPutinst.add(q, b, f, r);
-			// writer.println("putinst('q" + q + "', 'v" + b + "', 'f" + f + "', 'v" + r + "').");
 		}
 		relPutinst.save();
 
@@ -791,7 +754,6 @@ public class PathAnalysis implements ITask {
 			int q = p.idx0;
 			int v = p.idx1;
 			relPutstat.add(q, v);
-			// writer.println("putstat('q" + q + "', 'v" + v + "').");
 		}
 		relPutstat.save();
 
@@ -801,7 +763,6 @@ public class PathAnalysis implements ITask {
 			int q = p.idx0;
 			int v = p.idx1;
 			relSpawn.add(q, v);
-			// writer.println("spawn('q" + q + "', 'v" + v + "').");
 		}
 		relSpawn.save();
 
@@ -811,7 +772,6 @@ public class PathAnalysis implements ITask {
 			int q = p.idx0;
 			int v = p.idx1;
 			relStart.add(q, v);
-			// writer.println("start('q" + q + "', 'v" + v + "').");
 		}
 		relStart.save();
 
@@ -821,41 +781,10 @@ public class PathAnalysis implements ITask {
 			relPQ.add(pq.idx0, pq.idx1);
 		}
 		relPQ.save();
-		
-/*
-		{
-			ProgramRel relPres = (ProgramRel) Project.getTrgt("pres");
-			relPres.load();
-			Iterable<Pair<IntTrio, Register>> tuples = relPres.getAry2ValTuples();
-			for (Pair<IntTrio, Register> p : tuples) {
-				int q = domQ.get(p.val0);
-				int v = domV.get(p.val1);
-				writer.println("pres('q" + q + "', 'v" + v + "').");
-			}
-			relPres.close();
-		}
-
-		{
-			ProgramRel relBase = (ProgramRel) Project.getTrgt("base");
-			relBase.load();
-			Iterable<Pair<IntTrio, Register>> tuples = relBase.getAry2ValTuples();
-			for (Pair<IntTrio, Register> p : tuples) {
-				int q = domQ.get(p.val0);
-				int v = domV.get(p.val1);
-				writer.println("base('q" + q + "', 'v" + v + "').");
-			}
-			relBase.close();
-		}
-
-		writer.close();
-*/
 	}
-
-	private void runAnalysis() {
-		Project.runTask("dynamic-thresc-prologue-dlog");
-		Project.runTask("dynamic-thresc-dlog");
-		Project.runTask("flowins-thresc-dlog");
-		Project.runTask("dynamic-thresc-epilogue-dlog");
+	
+	public void runAnalysis() {
+		// do nothing
 	}
 }
 

@@ -171,10 +171,12 @@ public class Program {
     	ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
     	RegisterOperand ro = new RegisterOperand(r, threadClass);
     	MethodOperand mo = new MethodOperand(run);
-    	Quad q = Invoke.create(0, Invoke.INVOKEVIRTUAL_V.INSTANCE, null, mo, 1);
-    	Invoke.setParam(q, 0, ro);
-    	BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
-    	bb.appendQuad(q);
+    	Quad q1 = Invoke.create(0, Invoke.INVOKEVIRTUAL_V.INSTANCE, null, mo, 1);
+    	Invoke.setParam(q1, 0, ro);
+    	Quad q2 = Return.create(1, Return.RETURN_V.INSTANCE);
+    	BasicBlock bb = cfg.createBasicBlock(1, 1, 2, null);
+    	bb.appendQuad(q1);
+    	bb.appendQuad(q2);
     	BasicBlock entry = cfg.entry();
     	BasicBlock exit = cfg.exit();
     	bb.addPredecessor(entry);
@@ -191,9 +193,14 @@ public class Program {
 	}
 
     public static ControlFlowGraph getCFG(jq_Method m) {
-
+/*
+    	String nad = m.getNameAndDesc().toString();
+    	if (nad.equals("equals (Ljava/lang/Object;)Z") ||
+    		nad.equals("hashCode ()I") ||
+    		nad.equals("toString ()Ljava/lang/String;"))
+    		return null;
+*/
 		ControlFlowGraph cfg;
-
 		try {
 			cfg = CodeCache.getCode(m);
 			// (new EnterSSA()).visitCFG(cfg);
@@ -207,14 +214,6 @@ public class Program {
 	}
 
 	private static void init2() {
-/*
-    		String nad = m.getNameAndDesc().toString();
-    		if (nad.equals("equals (Ljava/lang/Object;)Z") ||
-    				nad.equals("hashCode ()I") ||
-    				nad.equals("toString ()Ljava/lang/String;")) {
-    			cfg = null;
-    		}
-*/
 		initThreadStart();
 	}
 
@@ -521,5 +520,19 @@ public class Program {
 		Utf8 u = c.getSourceFile();
 		String f= (u == null) ? "null" : u.toString();
 		return s.replace('.', '/') + u;
+	}
+	
+	public static int getNumVarsOfRefType(jq_Method m) {
+		ControlFlowGraph cfg = getCFG(m);
+		if (cfg == null)
+			return 0;
+		RegisterFactory rf = cfg.getRegisterFactory();
+		int n = 0;
+		for (Object o : rf) {
+			Register r = (Register) o;
+			if (r.getType().isReferenceType())
+				n++;
+		}
+		return n;
 	}
 }
