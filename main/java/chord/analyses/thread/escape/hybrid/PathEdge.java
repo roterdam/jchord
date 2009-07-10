@@ -1,4 +1,4 @@
-package chord.analyses.thread;
+package chord.analyses.thread.escape.hybrid;
 
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;

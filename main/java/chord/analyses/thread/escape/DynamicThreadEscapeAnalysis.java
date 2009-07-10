@@ -1,4 +1,4 @@
-package chord.analyses.thread;
+package chord.analyses.thread.escape;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -295,4 +295,10 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			}
 		}
 	}
+}
+
+class FldObj {
+    public int f;
+    public int o;
+    public FldObj(int f, int o) { this.f = f; this.o = o; }
 }

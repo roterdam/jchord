@@ -1,4 +1,4 @@
-package chord.analyses.thread;
+package chord.analyses.thread.escape.hybrid;
 
 public class SummEdge {
 	final SrcNode srcNode;

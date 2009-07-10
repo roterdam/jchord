@@ -1,4 +1,4 @@
-package chord.analyses.thread;
+package chord.analyses.thread.escape.hybrid;
 
 import gnu.trove.TObjectIntHashMap;
 
@@ -192,13 +192,13 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		}
 		System.out.println("XXXXX esc1HeapInsts");
 		for (Quad e : esc1HeapInsts)
-			System.out.println(e);
+			System.out.println(Program.toString(e));
 		System.out.println("XXXXX esc2HeapInsts");
 		for (Quad e : esc2HeapInsts)
-			System.out.println(e);
+			System.out.println(Program.toString(e));
 		System.out.println("XXXXX locHeapInsts");
 		for (Quad e : locHeapInsts)
-			System.out.println(e);
+			System.out.println(Program.toString(e));
 	}
 	private void processThread(Pair<Ctxt, jq_Method> root) {
 		System.out.println("PROCESSING THREAD: " + root);
@@ -461,8 +461,11 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
         	}
         	clrDstEnv2[i] = pts;
         }
-        DstNode clrDstNode2 =
-        	new DstNode(clrDstEnv2, tgtRetNode.heap, tgtRetEsc);
+        IntArraySet clrDstEsc = clrDstNode.esc;
+        IntArraySet clrDstEsc2 = new IntArraySet(clrDstEsc);
+        clrDstEsc2.addAll(tgtRetEsc);
+        DstNode clrDstNode2 = new DstNode(clrDstEnv2,
+        	tgtRetNode.heap, clrDstEsc2);
         SD sd2 = new SD(sd.srcNode, clrDstNode2);
         propagateToSucc(clrCM, q, bb, sd2);
         return true;
