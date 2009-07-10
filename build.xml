@@ -312,13 +312,13 @@
   </target>
 
   <target name="clean">
-    <delete quiet="true" includeemptydirs="true">
-      <fileset dir="util/classes" includes="**/*"/>
-      <fileset dir="main/classes" includes="**/*"/>
-      <fileset dir="datarace/classes" includes="**/*"/>
-      <fileset dir="deadlock/classes" includes="**/*"/>
-      <fileset dir="downcast/classes" includes="**/*"/>
-      <fileset dir="monosite/classes" includes="**/*"/>
+    <delete includeemptydirs="true">
+      <fileset dir="util/classes" includes="**/*" defaultexcludes="false"/>
+      <fileset dir="main/classes" includes="**/*" defaultexcludes="false"/>
+      <fileset dir="datarace/classes" includes="**/*" defaultexcludes="false"/>
+      <fileset dir="deadlock/classes" includes="**/*" defaultexcludes="false"/>
+      <fileset dir="downcast/classes" includes="**/*" defaultexcludes="false"/>
+      <fileset dir="monosite/classes" includes="**/*" defaultexcludes="false"/>
     </delete>
     <exec executable="make" dir="bdd">
         <arg value="clean"/>
