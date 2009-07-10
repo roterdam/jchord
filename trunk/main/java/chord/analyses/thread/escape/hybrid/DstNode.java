@@ -1,4 +1,4 @@
-package chord.analyses.thread;
+package chord.analyses.thread.escape.hybrid;
 
 import java.util.Arrays;
 import java.util.Set;
