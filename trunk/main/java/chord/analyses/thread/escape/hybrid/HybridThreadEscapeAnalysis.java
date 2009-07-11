@@ -95,6 +95,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 	private jq_Method threadStartMethod;
 	
 	public void runAnalysis() {
+		Project.resetTaskDone("hybrid-thresc-dlog");
 		Project.runTask("hybrid-thresc-dlog");
 		
 		ProgramRel relRelevantEH =
@@ -105,6 +106,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		for (Pair<Quad, Quad> tuple : tuples) {
 			Quad e = tuple.val0;
 			if (esc1HeapInsts.contains(e)) {
+				System.out.println("Deemed esc in earlier path: " + e);
 				// already proven definitely escaping
 				// in an earlier path program
 				continue;
@@ -127,7 +129,8 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			if (esc1HeapInsts.add(e)) {
 				// may have been deemed thread local
 				// in an earlier path program
-				heapInstToAllocs.remove(e);
+				if (heapInstToAllocs.remove(e) != null)
+					System.out.println("Deemed loc in earlier path: " + e);
 			}
 		}
 		relHybridEscE.close();
@@ -209,7 +212,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			Pair<Ctxt, jq_Method> cm = pair.val0;
 			PathEdge pe = pair.val1;
 			Quad q = pe.q;
-			System.out.println("\t" + pe + " m: " + cm.val1);
+			// System.out.println("\t" + pe + " m: " + cm.val1);
 			if (q == null) {
 				BasicBlock bb = pe.bb;
 				Assertions.Assert(bb.isEntry());
