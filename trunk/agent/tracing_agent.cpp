@@ -12,7 +12,11 @@ static jvmtiEnv* jvmti_env;
 
 static jlong num_otags = 1;
 
-static fstream fp;
+static fstream t_fp;
+static fstream m_fp;
+
+static map<string, int> meth_to_id_map;
+static int num_meths = 0;
 
 static jrawMonitorID lock;
 
@@ -59,7 +63,7 @@ char* get_token(char *str, char *seps, char *buf, int max)
     return str + len;
 }
 
-static char* getMethod(jmethodID method)
+static int getMethod(jmethodID method)
 {
 	jclass decl_class;
 	jvmti_env->GetMethodDeclaringClass(method, &decl_class);
@@ -82,9 +86,18 @@ static char* getMethod(jmethodID method)
 	jvmti_env->Deallocate((unsigned char*) meth_name_ptr);
 	jvmti_env->Deallocate((unsigned char*) meth_sign_ptr);
 	assert(s[n1+n2+n3] == '\0');
-	return s;
-}
 
+    map<string, int>::iterator it = meth_to_id_map.find(s);
+	int mid;
+    if (it == meth_to_id_map.end()) {
+		mid = num_meths;
+		num_meths++;
+		m_fp << s << endl;
+		meth_to_id_map[s] = mid;
+	} else
+		mid = it->second;
+    return mid;
+}
 
 static void JNICALL VMStart(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 {
@@ -128,8 +141,7 @@ static void JNICALL SingleStep(jvmtiEnv *jvmti_env, JNIEnv* jni_env,
 {
     enterAgentMonitor();
 	jlong tid = get_or_set_otag(thread);
-	// fprintf(fp, "%ld %ld\n", tid, location);
-	fp << tid << " " << location << endl;
+	t_fp << tid << " " << location << endl;
     exitAgentMonitor();
 }
 
@@ -138,10 +150,8 @@ static void JNICALL MethodEntry(jvmtiEnv *jvmti_env, JNIEnv* jni_env,
 {
     enterAgentMonitor();
 	jlong tid = get_or_set_otag(thread);
-	char* s = getMethod(method);
-	// fprintf(fp, "%ld E %s\n", tid, s);
-	fp << tid << " E " << s << endl;
-	free(s);
+	int mid = getMethod(method);
+	t_fp << tid << " E " << mid << endl;
     exitAgentMonitor();
 }
 
@@ -151,10 +161,8 @@ static void JNICALL MethodExit(jvmtiEnv *jvmti_env, JNIEnv* jni_env,
 {
     enterAgentMonitor();
 	jlong tid = get_or_set_otag(thread);
-	char* s = getMethod(method);
-	// fprintf(fp, "%ld X %s\n", tid, s);
-	fp << tid << " X " << s << endl;
-	free(s);
+	int mid = getMethod(method);
+	t_fp << tid << " X " << mid << endl;
     exitAgentMonitor();
 }
 
@@ -164,29 +172,41 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 {
     cout << "***** ENTER Agent_OnLoad" << endl;
 	if (options == NULL) {
-		cerr << "ERROR: Expected option trace_file_name=<name> to agent" << endl;
+		cerr << "ERROR: Expected options t_file_name=<name> and m_file_name=<name> to agent" << endl;
 		exit(1);
 	}
 	char* next = options;
-	string trace_file_name = "trace.txt";
+	string t_file_name = "trace.txt";
+	string m_file_name = "M.dynamic.txt";
 	while (1) {
-    	char token[1024];
+    	char token[4098];
 		next = get_token(next, (char*) ",=", token, sizeof(token));
 		if (next == NULL)
 			break;
-        if (strcmp(token, "trace_file_name") == 0) {
-            char arg[1024];
+        if (strcmp(token, "t_file_name") == 0) {
+            char arg[4098];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
             if (next == NULL) {
-                cerr << "ERROR: Cannot parse option trace_file_name=<name>: "
+                cerr << "ERROR: Cannot parse option t_file_name=<name>: "
 					<< options << endl;
 				exit(1);
             }
-			trace_file_name = string(arg);
-		} else {
-			cerr << "ERROR: Unknown option: " << token << endl;
-			exit(1);
+			t_file_name = string(arg);
+			continue;
 		}
+		if (strcmp(token, "m_file_name") == 0) {
+            char arg[4098];
+            next = get_token(next, (char*) ",=", arg, sizeof(arg));
+            if (next == NULL) {
+                cerr << "ERROR: Cannot parse option m_file_name=<name>: "
+					<< options << endl;
+				exit(1);
+            }
+			m_file_name = string(arg);
+			continue;
+		}
+		cerr << "ERROR: Unknown option: " << token << endl;
+		exit(1);
 	}
 
     jvmtiError retval;
@@ -238,9 +258,11 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 	retval = jvmti_env->GetJLocationFormat(&format);
 	assert(format == JVMTI_JLOCATION_JVMBCI);
 
-    fp.open(trace_file_name.c_str(), ios::out);
-    // cout << "Failed to open(wr) file: " << trace_file_name << endl;
+    t_fp.open(t_file_name.c_str(), ios::out | ios::binary);
+    // cout << "Failed to open(wr) file: " << t_file_name << endl;
     // exit(1);
+
+    m_fp.open(m_file_name.c_str(), ios::out);
 
     retval = jvmti_env->CreateRawMonitor("agent lock", &lock);
     assert(retval == JVMTI_ERROR_NONE);
@@ -252,8 +274,9 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *jvm)
 {
-	fp << (num_otags - 1) << endl;
-	fp.close();
+	t_fp << (num_otags - 1) << endl;
+	t_fp.close();
+    m_fp.close();
     cout << "***** ENTER Agent_OnUnload" << endl;
     cout << "***** LEAVE Agent_OnUnload" << endl;
 }

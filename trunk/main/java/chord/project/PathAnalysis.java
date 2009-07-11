@@ -64,7 +64,8 @@ public class PathAnalysis implements ITask {
 	private TIntObjectHashMap[] methToCode;
 	private List/*IntPair*/[] methToArgs;
 	private int[] methToNumCalls;
-
+	private IndexMap<String> methsMap;
+	
 	private ProgramDom<IntTrio> domQ;
 	private DomV domV;
 	private DomF domF;
@@ -104,6 +105,8 @@ public class PathAnalysis implements ITask {
 	
 			String traceFileName = (new File(Properties.outDirName,
 				Properties.traceFileName)).getAbsolutePath();
+			String methsFileName = (new File(Properties.outDirName,
+				"M.dynamic.txt")).getAbsolutePath();
 	
 			String runIdsStr = System.getProperty("chord.run.ids", "");
 	
@@ -111,13 +114,15 @@ public class PathAnalysis implements ITask {
 			String jvmargs = System.getProperty("chord.jvmargs", "");
 			String cmd = "java " + jvmargs + " -cp " + classPathName +
    	     	" -agentlib:tracing_agent" +
-				"=trace_file_name=" + traceFileName +
+				"=t_file_name=" + traceFileName +
+				",m_file_name=" + methsFileName +
 				" " + mainClassName + " ";
+			methsMap = new IndexMap<String>();
 			for (String runId : runIds) {
 				System.out.println("Run ID: " + runId);
 				String args = System.getProperty("chord.args." + runId, "");
 				ProcessExecutor.execute(cmd + args);
-				createThreads(traceFileName);
+				createThreads(traceFileName, methsFileName);
 				processThreads();
 				createRels();
 				runAnalysis();
@@ -127,9 +132,13 @@ public class PathAnalysis implements ITask {
 		}
 	}
 
-	private void createThreads(String fileName) throws IOException {
+	private void createThreads(String traceFileName,
+			String methsFileName) throws IOException {
+		methsMap = FileUtils.readFileToMap(methsFileName);
+ 		
 		List<String> trace = new ArrayList<String>();
-		BufferedReader reader = new BufferedReader(new FileReader(fileName));
+		BufferedReader reader = new BufferedReader(
+			new FileReader(traceFileName));
 		{
 			String line;
 			while ((line = reader.readLine()) != null)
@@ -229,7 +238,7 @@ public class PathAnalysis implements ITask {
 		domQ.save();
 	}
 
-	private void eatUntil(String mStr) {
+	private void eatUntil(int mId) {
 		// eat up all lines upto and including matching method exit event
 		int numCalls = 0;
 		while (true) {
@@ -238,12 +247,12 @@ public class PathAnalysis implements ITask {
 			if (DEBUG) System.out.println("\tLINE ATE: " + line);
 			char c = line.charAt(0);
 			if (c == 'E') {
-				String mStr2 = line.substring(2);
-				if (mStr2.equals(mStr))
+				int mId2 = Integer.parseInt(line.substring(2));
+				if (mId2 == mId)
 					numCalls++;
 			} else if (c == 'X') {
-				String mStr2 = line.substring(2);
-				if (mStr2.equals(mStr)) {
+				int mId2 = Integer.parseInt(line.substring(2));
+				if (mId2 == mId) {
 					if (numCalls == 0)
 						break;
 					numCalls--;
@@ -267,13 +276,14 @@ public class PathAnalysis implements ITask {
 			}
 		}
 		Assertions.Assert(methEntryLine.charAt(0) == 'E');
-		String mStr = methEntryLine.substring(2);
+		final int mId = Integer.parseInt(methEntryLine.substring(2));
+		final String mStr = methsMap.get(mId);
    		Assertions.Assert(mStr.startsWith("L"));
-		int semiColon = mStr.indexOf(';');
-		String cName = mStr.substring(1, semiColon).replace('/', '.');
-		int openParen = mStr.indexOf('(');
-		String mName = mStr.substring(semiColon + 1, openParen);
-		String mDesc = mStr.substring(openParen);
+		final int semiColon = mStr.indexOf(';');
+		final String cName = mStr.substring(1, semiColon).replace('/', '.');
+		final int openParen = mStr.indexOf('(');
+		final String mName = mStr.substring(semiColon + 1, openParen);
+		final String mDesc = mStr.substring(openParen);
 
 		jq_Class cls;
 /*
@@ -284,7 +294,7 @@ public class PathAnalysis implements ITask {
 			cls = Program.getClass(cName);
 		if (cls == null) {
 			System.out.println(cName + " MISSING");
-			eatUntil(mStr);
+			eatUntil(mId);
 			if (DEBUG) System.out.println("LEAVE1 frame: " + methEntryLine);
 			return retQidx;
 		}
@@ -301,7 +311,7 @@ public class PathAnalysis implements ITask {
 		if (methCode == null) {
 			methCode = processMethCode(m);
 			if (methCode == null) {
-				eatUntil(mStr);
+				eatUntil(mId);
 				if (DEBUG) System.out.println("LEAVE2 frame: " + methEntryLine);
 				return retQidx;
 			}
@@ -344,8 +354,8 @@ public class PathAnalysis implements ITask {
 				}
 				prevQidx = currQidx;
 			} else if (c == 'X') {
-				String mStr2 = line.substring(2);
-				Assertions.Assert(mStr2.equals(mStr));
+				int mId2 = Integer.parseInt(line.substring(2));
+				Assertions.Assert(mId2 == mId);
 				currThreadFullOut.println(line);
 				currThreadAbbrOut.println(line);
 				if (DEBUG) System.out.println("LEAVE3 frame: " + methEntryLine);
@@ -429,7 +439,10 @@ public class PathAnalysis implements ITask {
 								break;
 							}
 							currLineIdx++;
-							String m3Sign = line2.substring(line2.indexOf(';') + 1);
+
+							final int mId3 = Integer.parseInt(line2.substring(2));
+							final String mStr3 = methsMap.get(mId3);
+							final String m3Sign = mStr3.substring(mStr3.indexOf(';') + 1);
 							if (m2Sign.equals(m3Sign)) {
 								prevQidx = frame(line2, invkArgs2, invkRet2, prevQidx);
 								break;
