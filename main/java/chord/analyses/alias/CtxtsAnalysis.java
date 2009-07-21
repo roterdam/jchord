@@ -269,15 +269,7 @@ public class CtxtsAnalysis extends JavaTask {
 		if (m == mainMeth || m instanceof jq_ClassInitializer ||
 				Program.getCFG(m) == null)
 			return CTXTINS;
-        if (!m.isStatic())
-            return instCtxtKind;
-		if (statCtxtKind == CTXTINS)
-			return CTXTINS;
-		/*
-		if (m.isSynthesized())
-			return CTXTCPY;
-		*/
-		return statCtxtKind;
+        return m.isStatic() ? statCtxtKind : instCtxtKind;
 	}
 
 	public void run() {
@@ -647,6 +639,7 @@ public class CtxtsAnalysis extends JavaTask {
 			}
 			case CTXTCPY:
 			{
+            	System.out.println("REACHED CPY: " + meth);
 				Set<jq_Method> predMeths = new HashSet<jq_Method>();
 				for (Quad invk : getCallers(meth)) {
 					predMeths.add(Program.getMethod(invk));

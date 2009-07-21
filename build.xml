@@ -255,8 +255,6 @@
     <property name="chord.analyses" value="datarace-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-    <property name="chord.inst.ctxt.kind" value="co"/>
-    <property name="chord.stat.ctxt.kind" value="cc"/>
     <antcall target="run"/>
   </target>
 
@@ -272,8 +270,6 @@
     <property name="chord.analyses" value="deadlock-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-    <property name="chord.inst.ctxt.kind" value="co"/>
-    <property name="chord.stat.ctxt.kind" value="cc"/>
     <antcall target="run"/>
   </target>
 
@@ -289,8 +285,6 @@
     <property name="chord.analyses" value="downcast-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-    <property name="chord.inst.ctxt.kind" value="co"/>
-    <property name="chord.stat.ctxt.kind" value="cc"/>
     <antcall target="run"/>
   </target>
 
@@ -306,8 +300,6 @@
     <property name="chord.analyses" value="monosite-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-    <property name="chord.inst.ctxt.kind" value="co"/>
-    <property name="chord.stat.ctxt.kind" value="cc"/>
     <antcall target="run"/>
   </target>
 

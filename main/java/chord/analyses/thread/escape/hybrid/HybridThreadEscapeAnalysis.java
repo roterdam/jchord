@@ -50,6 +50,7 @@ import chord.util.ArraySet;
 import chord.util.Assertions;
 import chord.util.CompareUtils;
 import chord.util.IntArraySet;
+import chord.util.Timer;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.object.Pair;
 
@@ -174,18 +175,24 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			currHeapInst = e.getKey();
 			currAllocs = e.getValue();
 			jq_Method m = Program.getMethod(currHeapInst);
-			System.out.println("currHeapInst: " + currHeapInst +
-				" m: " + m);
-/*			if (!m.getDeclaringClass().getName().equals("T")) {
-				System.out.println("IGNORING");
+/*
+			if (!m.getDeclaringClass().getName().equals("Philo") &&
+				!m.getDeclaringClass().getName().equals("Table")) {
 				continue;
 			}
-*/			for (Quad h : currAllocs)
-				System.out.println("\t" + h);
+*/
+			System.out.println("currHeapInst: " + Program.toStringHeapInst(currHeapInst) +
+				" m: " + m);
+			for (Quad h : currAllocs)
+				System.out.println("\t" + Program.toStringNewInst(h));
 			try {
+				Timer timer = new Timer("hybrid-thresc-timer");
+				timer.init();
 				for (Pair<Ctxt, jq_Method> root : roots) {
 					processThread(root);
 				}
+				timer.done();
+				System.out.println(timer.getExecTimeStr());
 				locHeapInsts.add(currHeapInst);
 				System.out.println("XXX LOC");
 			} catch (ThrEscException ex) {
