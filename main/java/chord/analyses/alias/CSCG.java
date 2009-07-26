@@ -147,8 +147,6 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
     	jq_Method meth1 = origNode.val1;
     	Set<Quad> invks = new ArraySet<Quad>();
     	ControlFlowGraph cfg = Program.getCFG(meth1);
-    	if (cfg == null)
-    		return Collections.emptySet();
     	Ctxt ctxt1 = origNode.val0;
     	jq_Method meth2 = destNode.val1;
     	Ctxt ctxt2 = destNode.val0;

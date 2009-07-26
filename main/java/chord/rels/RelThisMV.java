@@ -33,15 +33,13 @@ public class RelThisMV extends ProgramRel {
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
-			if (!m.isStatic()) {
-				ControlFlowGraph cfg = Program.getCFG(m);
-				if (cfg != null) {
-					RegisterFactory rf = cfg.getRegisterFactory();
-					Register v = rf.get(0);
-					int vIdx = domV.get(v);
-					add(mIdx, vIdx);
-				}
-			}
+			if (m.isAbstract() || m.isStatic())
+				continue;
+			ControlFlowGraph cfg = Program.getCFG(m);
+			RegisterFactory rf = cfg.getRegisterFactory();
+			Register v = rf.get(0);
+			int vIdx = domV.get(v);
+			add(mIdx, vIdx);
 		}
 	}
 }

@@ -8,6 +8,7 @@ package chord.project;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import chord.util.Assertions;
 import chord.visitors.IClassVisitor;
 import chord.visitors.IFieldVisitor;
 import chord.visitors.IHeapInstVisitor;
@@ -90,9 +91,9 @@ public class VisitorHandler {
 					mv.visit(m);
 					if (!doCFGs)
 						continue;
-					ControlFlowGraph cfg = Program.getCFG(m);
-					if (cfg == null)
+					if (m.isAbstract())
 						continue;
+					ControlFlowGraph cfg = Program.getCFG(m);
 					if (vvs != null)
 						visitVars(cfg);
 					if (doInsts)

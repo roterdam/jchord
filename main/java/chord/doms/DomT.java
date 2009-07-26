@@ -39,9 +39,9 @@ public class DomT extends ProgramDom<jq_Type> {
 						set(t);
 					}
 					set(m.getReturnType());
-					ControlFlowGraph cfg = Program.getCFG(m);
-					if (cfg == null)
+					if (m.isAbstract())
 						continue;
+					ControlFlowGraph cfg = Program.getCFG(m);
 					RegisterFactory rf = cfg.getRegisterFactory();
 					for (Object o2 : rf) {
 						Register v = (Register) o2;

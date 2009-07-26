@@ -137,10 +137,13 @@
 
   <target name="compile" depends="compile-props,main-class-path,ant-contrib">
   <property environment="env"/>
+	<mkdir dir="util/classes"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
       srcdir="util/java" destdir="util/classes" classpath="${chord.util.class.path}"/>
+	<mkdir dir="main/classes"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
       srcdir="main/java" destdir="main/classes" classpath="${chord.main.class.path}"/>
+	<mkdir dir="datarace/classes"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
         srcdir="datarace/java" destdir="datarace/classes">
       <classpath>
@@ -148,6 +151,7 @@
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
+	<mkdir dir="deadlock/classes"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
         srcdir="deadlock/java" destdir="deadlock/classes">
       <classpath>
@@ -155,6 +159,7 @@
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
+	<mkdir dir="downcast/classes"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
         srcdir="downcast/java" destdir="downcast/classes">
       <classpath>
@@ -162,6 +167,7 @@
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
+	<mkdir dir="monosite/classes"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
         srcdir="monosite/java" destdir="monosite/classes">
       <classpath>
@@ -304,14 +310,12 @@
   </target>
 
   <target name="clean">
-    <delete includeemptydirs="true">
-      <fileset dir="util/classes" includes="**/*" defaultexcludes="false"/>
-      <fileset dir="main/classes" includes="**/*" defaultexcludes="false"/>
-      <fileset dir="datarace/classes" includes="**/*" defaultexcludes="false"/>
-      <fileset dir="deadlock/classes" includes="**/*" defaultexcludes="false"/>
-      <fileset dir="downcast/classes" includes="**/*" defaultexcludes="false"/>
-      <fileset dir="monosite/classes" includes="**/*" defaultexcludes="false"/>
-    </delete>
+    <delete dir="util/classes"/>
+    <delete dir="main/classes"/>
+    <delete dir="datarace/classes"/>
+    <delete dir="deadlock/classes"/>
+    <delete dir="downcast/classes"/>
+    <delete dir="monosite/classes"/>
     <exec executable="make" dir="bdd">
         <arg value="clean"/>
     </exec>

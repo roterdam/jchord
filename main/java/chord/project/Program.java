@@ -34,6 +34,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.RootedCHACallGraph;
 import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -94,8 +95,10 @@ public class Program {
 				RootedCHACallGraph.build(mainClassName);
 				classes = new HashSet<jq_Class>();
 				for (Object o : jq_Type.set) {
-					if (o instanceof jq_Class)
-						classes.add((jq_Class) o);
+					if (o instanceof jq_Class) {
+						jq_Class c = (jq_Class) o;
+						classes.add(c);
+					}
 				}
 				init2();
 				Project.runTask("ctxtins-dlog");
@@ -184,10 +187,48 @@ public class Program {
     }
 
 	public static Map getBCMap(jq_Method m) {
+		if (m.getBytecode() == null)
+			return null;
 		return CodeCache.getBCMap(m);
 	}
 
+	private static Map<jq_Method, ControlFlowGraph> methToCFGmap =
+		new HashMap<jq_Method, ControlFlowGraph>();
+
+	private static ControlFlowGraph getOrMakeEmptyCFG(jq_Method m) {
+		ControlFlowGraph cfg = methToCFGmap.get(m);
+		if (cfg == null) {
+			jq_Type[] argTypes = m.getParamTypes();
+			int n = argTypes.length;
+			RegisterFactory rf = new RegisterFactory(0, n);
+			for (int i = 0; i < n; i++) {
+				jq_Type t = argTypes[i];
+    			rf.getOrCreateLocal(i, t);
+			}
+			cfg = new ControlFlowGraph(m, 1, 0, rf);
+			Operator retOp;
+			Quad q;
+			if (m.getReturnType().isReferenceType()) {
+    			q = Return.create(1, Return.RETURN_V.INSTANCE);
+			} else {
+				q = Return.create(1, Return.RETURN_A.INSTANCE);
+				Return.setSrc(q, new AConstOperand(null));
+			}
+			BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
+			bb.appendQuad(q);
+			BasicBlock entry = cfg.entry();
+			BasicBlock exit = cfg.exit();
+			entry.addSuccessor(bb);
+			bb.addPredecessor(entry);
+			exit.addPredecessor(bb);
+			bb.addSuccessor(exit);
+			methToCFGmap.put(m, cfg);
+		}
+		return cfg;
+	}
+
     public static ControlFlowGraph getCFG(jq_Method m) {
+		Assertions.Assert(!m.isAbstract());
 /*
     	String nad = m.getNameAndDesc().toString();
     	if (nad.equals("equals (Ljava/lang/Object;)Z") ||
@@ -195,15 +236,21 @@ public class Program {
     		nad.equals("toString ()Ljava/lang/String;"))
     		return null;
 */
+		if (m.isNative())
+			return getOrMakeEmptyCFG(m);
 		ControlFlowGraph cfg;
 		try {
 			cfg = CodeCache.getCode(m);
 			// (new EnterSSA()).visitCFG(cfg);
+			if (cfg == null) {
+				System.out.println("Method " + m + " has empty CFG");
+				Assertions.Assert(false);
+			}
 		} catch (Exception ex) {
 			System.out.println("Failed to get CFG for method: " +
-				m + "; setting it to null.  Error follows.");
+				m + "; setting it to nop.  Error follows.");
 			ex.printStackTrace();
-			cfg = null;
+			return getOrMakeEmptyCFG(m);
 		}
 		return cfg;
 	}
@@ -549,8 +596,6 @@ public class Program {
 	
 	public static int getNumVarsOfRefType(jq_Method m) {
 		ControlFlowGraph cfg = getCFG(m);
-		if (cfg == null)
-			return 0;
 		RegisterFactory rf = cfg.getRegisterFactory();
 		int n = 0;
 		for (Object o : rf) {
@@ -559,5 +604,9 @@ public class Program {
 				n++;
 		}
 		return n;
+	}
+	public static void printClass(String name) {
+	}
+	public static void printMethod(String sign) {
 	}
 }

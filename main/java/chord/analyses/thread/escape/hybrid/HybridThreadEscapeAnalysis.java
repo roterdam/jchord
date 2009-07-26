@@ -58,6 +58,7 @@ import chord.util.tuple.object.Pair;
 	    name = "hybrid-thresc-java"
 	)
 public class HybridThreadEscapeAnalysis extends PathAnalysis {
+    private final static boolean DEBUG = false;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();
 	public final static IntArraySet emptyEsc = new IntArraySet(0);
@@ -94,6 +95,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 	private Quad currHeapInst;
 	private Set<Quad> currAllocs;
 	private jq_Method threadStartMethod;
+	private jq_Method mainMethod;
 	
 	public void runAnalysis() {
 		Project.resetTaskDone("hybrid-thresc-dlog");
@@ -140,6 +142,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 	public void run() {
 		super.run();
 		threadStartMethod = Program.getThreadStartMethod();
+		mainMethod = Program.getMainMethod();
 		domV = (DomV) Project.getTrgt("V");
 		Project.runTask(domV);
 		domF = (DomF) Project.getTrgt("F");
@@ -159,7 +162,8 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			int n = Program.getNumVarsOfRefType(m);
 			methToNumVars.put(m, n);
 			methToVar0Idx.put(m, vIdx);
-//			System.out.println(m + " numVars: " + n + " var0Idx: " + vIdx);
+			if (DEBUG)
+				System.out.println(m + " numVars: " + n + " var0Idx: " + vIdx);
 			vIdx += n;
 		}
 
@@ -175,12 +179,8 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			currHeapInst = e.getKey();
 			currAllocs = e.getValue();
 			jq_Method m = Program.getMethod(currHeapInst);
-/*
-			if (!m.getDeclaringClass().getName().equals("Philo") &&
-				!m.getDeclaringClass().getName().equals("Table")) {
+			if (!m.getDeclaringClass().getName().startsWith("test"))
 				continue;
-			}
-*/
 			System.out.println("currHeapInst: " + Program.toStringHeapInst(currHeapInst) +
 				" m: " + m);
 			for (Quad h : currAllocs)
@@ -194,10 +194,8 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 				timer.done();
 				System.out.println(timer.getExecTimeStr());
 				locHeapInsts.add(currHeapInst);
-				System.out.println("XXX LOC");
 			} catch (ThrEscException ex) {
 				esc2HeapInsts.add(currHeapInst);
-				System.out.println("XXX ESC");
 			}
 		}
 		System.out.println("XXXXX esc1HeapInsts");
@@ -219,7 +217,8 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			Pair<Ctxt, jq_Method> cm = pair.val0;
 			PathEdge pe = pair.val1;
 			Quad q = pe.q;
-			// System.out.println("\t" + pe + " m: " + cm.val1);
+			if (DEBUG)
+				System.out.println("Processing path edge: cm: " + cm + " pe: " + pe);
 			if (q == null) {
 				BasicBlock bb = pe.bb;
 				Assertions.Assert(bb.isEntry());
@@ -271,6 +270,8 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		return vIdx - methToVar0Idx.get(m);
 	}
 	private void addPathEdge(Pair<Ctxt, jq_Method> cm, PathEdge pe) {
+		if (DEBUG)
+			System.out.println("\tAdding path edge: cm: " + cm + " pe: " + pe);
 		Set<PathEdge> peSet = pathEdges.get(cm);
 		if (peSet == null) {
 			peSet = new HashSet<PathEdge>();
@@ -304,10 +305,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		addPathEdge(root, edge);
 	}
 	private BasicBlock getEntry(jq_Method m) {
-		ControlFlowGraph cfg = Program.getCFG(m);
-		if (cfg != null)
-			return cfg.entry();
-		return null;
+		return Program.getCFG(m).entry();
 	}
 	private IntArraySet getPtsFromHeap(IntArraySet pts, int fIdx,
 			Set<IntTrio> heap) {
@@ -335,6 +333,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		Quad q = pe.q;
 		jq_Method tgt = Invoke.getMethod(q).getMethod();
 		if (tgt == threadStartMethod) {
+			if (DEBUG) System.out.println("Target is thread start method");
 			SD sd = pe.sd;
 			DstNode dstNode = sd.dstNode;
 			IntArraySet[] dstEnv = dstNode.env;
@@ -355,18 +354,21 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
         int numArgs = args.length();
         jq_Method m = cm.val1;
 		for (Pair<Ctxt, jq_Method> cm2 : cscg.getTargets(cm.val0, q)) {
-	        jq_Method m2 = cm2.val1;
-	        if (Program.getCFG(m2) == null)
-	        	continue;
+			if (DEBUG) System.out.println("Target: " + cm2);
 			Set<SummEdge> seSet = summEdges.get(cm2);
 			boolean found = false;
 			if (seSet != null) {
 				for (SummEdge se : seSet) {
-					if (propagateSEtoPE(pe, cm, se))
+					if (DEBUG) System.out.println("Testing summary edge: " + se);
+					if (propagateSEtoPE(pe, cm, se)) {
+						if (DEBUG) System.out.println("Match found");
 						found = true;
+					}
 				}
 			}
 			if (!found) {
+				if (DEBUG) System.out.println("No match found");
+				jq_Method m2 = cm2.val1;
 		        int numVars = methToNumVars.get(m2);
 		        IntArraySet[] env = new IntArraySet[numVars];
 		        int mIdx = 0;
@@ -404,15 +406,20 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		RetNode retNode = new RetNode(rPts, dstNode.heap, dstNode.esc);
 		SummEdge se = new SummEdge(sd.srcNode, retNode);
 		Set<SummEdge> seSet = summEdges.get(cm);
+		if (DEBUG) System.out.println("Testing summary edge: " + se);
 		if (seSet == null) {
 			seSet = new HashSet<SummEdge>();
 			summEdges.put(cm, seSet);
 		}
 		if (!seSet.add(se)) {
 			// summary edge se already exists
+			if (DEBUG) System.out.println("Already exists");
 			return;
 		}
+		boolean flag = false;
+		if (DEBUG) System.out.println("Not found; adding");
 		for (Pair<Ctxt, Quad> ci : cscg.getCallers(cm.val0, cm.val1)) {
+			if (DEBUG) System.out.println("Caller: " + ci);
 			Ctxt c2 = ci.val0;
 			Quad q2 = ci.val1;
 			jq_Method m2 = Program.getMethod(q2);
@@ -422,10 +429,20 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 				continue;
 			peSet = new ArraySet<PathEdge>(peSet);
 			for (PathEdge pe2 : peSet) {
+				if (DEBUG) System.out.println("Testing path edge: " + pe2);
+				boolean match = false;
 				if (pe2.q == q2)
-					propagateSEtoPE(pe2, cm2, se);
+					match = propagateSEtoPE(pe2, cm2, se);
+				if (match) {
+					flag = true;
+					if (DEBUG) System.out.println("Match found");
+				} else
+					if (DEBUG) System.out.println("No match found");
 			}
 		}
+		jq_Method m = cm.val1;
+		if (m != mainMethod && m != threadStartMethod)
+			Assertions.Assert(flag);
 	}
 	private boolean propagateSEtoPE(PathEdge clrPE,
 			Pair<Ctxt, jq_Method> clrCM, SummEdge tgtSE) {
