@@ -179,24 +179,26 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			currHeapInst = e.getKey();
 			currAllocs = e.getValue();
 			jq_Method m = Program.getMethod(currHeapInst);
-			if (!m.getDeclaringClass().getName().startsWith("test"))
+			if (!m.getDeclaringClass().getName().startsWith("elevator"))
 				continue;
 			System.out.println("currHeapInst: " + Program.toStringHeapInst(currHeapInst) +
 				" m: " + m);
 			for (Quad h : currAllocs)
 				System.out.println("\t" + Program.toStringNewInst(h));
+			Timer timer = new Timer("hybrid-thresc-timer");
+			timer.init();
 			try {
-				Timer timer = new Timer("hybrid-thresc-timer");
-				timer.init();
 				for (Pair<Ctxt, jq_Method> root : roots) {
 					processThread(root);
 				}
-				timer.done();
-				System.out.println(timer.getExecTimeStr());
+				System.out.println("XXX LOC");
 				locHeapInsts.add(currHeapInst);
 			} catch (ThrEscException ex) {
+				System.out.println("XXX ESC");
 				esc2HeapInsts.add(currHeapInst);
 			}
+			timer.done();
+			System.out.println(timer.getExecTimeStr());
 		}
 		System.out.println("XXXXX esc1HeapInsts");
 		for (Quad e : esc1HeapInsts)
