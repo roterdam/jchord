@@ -33,16 +33,16 @@ public class RelMmethArg extends ProgramRel {
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
+			if (m.isAbstract())
+				continue;
 			ControlFlowGraph cfg = Program.getCFG(m);
-			if (cfg != null) {
-				RegisterFactory rf = cfg.getRegisterFactory();
-				int numArgs = m.getParamTypes().length;
-				for (int zIdx = 0; zIdx < numArgs; zIdx++) {
-					Register v = rf.get(zIdx);
-					if (v.getType().isReferenceType()) {
-						int vIdx = domV.get(v);
-						add(mIdx, zIdx, vIdx);
-					}
+			RegisterFactory rf = cfg.getRegisterFactory();
+			int numArgs = m.getParamTypes().length;
+			for (int zIdx = 0; zIdx < numArgs; zIdx++) {
+				Register v = rf.get(zIdx);
+				if (v.getType().isReferenceType()) {
+					int vIdx = domV.get(v);
+					add(mIdx, zIdx, vIdx);
 				}
 			}
 		}

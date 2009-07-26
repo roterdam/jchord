@@ -36,14 +36,14 @@ public class DomL extends ProgramDom<Inst> implements ILockInstVisitor {
 	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
+		if (m.isAbstract())
+			return;
 		ctnrMethod = m;
 		if (m.isSynchronized()) {
 			ControlFlowGraph cfg = Program.getCFG(m);
-			if (cfg != null) {
-				BasicBlock head = cfg.entry();
-				Program.mapInstToMethod(head, m);
-				set(head);
-			}
+			BasicBlock head = cfg.entry();
+			Program.mapInstToMethod(head, m);
+			set(head);
 		}
 	}
 	public void visitLockInst(Quad q) {

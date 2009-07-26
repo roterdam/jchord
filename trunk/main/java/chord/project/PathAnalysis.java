@@ -590,8 +590,6 @@ public class PathAnalysis implements ITask {
 	private TIntObjectHashMap processMethCode(jq_Method m) {
 		if (DEBUG) System.out.println("PROCESSING: " + m);
 		ControlFlowGraph cfg = Program.getCFG(m);
-		if (cfg == null)
-			return null;
 		if (DEBUG) System.out.println(cfg.fullDump());
 		Map<Quad, Integer> bcMap = Program.getBCMap(m);
 		if (bcMap == null)

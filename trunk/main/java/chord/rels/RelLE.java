@@ -49,9 +49,9 @@ public class RelLE extends ProgramRel implements IMethodVisitor {
 	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
-		ControlFlowGraph cfg = Program.getCFG(m);
-		if (cfg == null)
+		if (m.isAbstract())
 			return;
+		ControlFlowGraph cfg = Program.getCFG(m);
 		BasicBlock entry = cfg.entry();
 		TIntArrayList locks = new TIntArrayList();
 		if (m.isSynchronized()) {

@@ -267,7 +267,7 @@ public class CtxtsAnalysis extends JavaTask {
 	
 	private int getCtxtKind(jq_Method m) {
 		if (m == mainMeth || m instanceof jq_ClassInitializer ||
-				Program.getCFG(m) == null)
+				m.isAbstract())
 			return CTXTINS;
         return m.isStatic() ? statCtxtKind : instCtxtKind;
 	}
