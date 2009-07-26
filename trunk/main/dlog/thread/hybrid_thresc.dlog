@@ -37,7 +37,7 @@ QVH_i(q:Q0,v:V0,h:H0)
 QVH_o(q:Q0,v:V0,h:H0)
 escQH_i(q:Q0,h:H0)
 escQH_o(q:Q0,h:H0) 
-escQHtc_i(q:Q0,h:H0) 
+escQHtc_i(q:Q0,h:H0)
 escQV(q:Q0,v:V0) 
 hybridVisitedE(e:E0) output
 hybridEscE(e:E0) output
@@ -80,20 +80,20 @@ QHFH_o(q,h1,f,h2) :- QHFH_i(q,h1,f,h2).
 escQH_o(q,h) :- escQH_i(q,h).
 
 QVH_i(q,v,h) :- QVH_o(p,v,h), succ(p,q).
-QHFH_i(q,g,f,h) :- QHFH_o(p,h,f,g), succ(p,q).
+QHFH_i(q,h1,f,h2) :- QHFH_o(p,h1,f,h2), succ(p,q).
 escQH_i(q,h) :- escQH_o(p,h), succ(p,q).
 
 QVH_o(q,l,h) :- alloc(q,l,h).
 QVH_o(q,l,h) :- copy(q,l,r), QVH_i(q,r,h).
 QVH_o(q,l,h) :- getinst(q,l,b,f), QVH_i(q,b,g), QHFH_i(q,g,f,h).
-QHFH_o(q,g,f,h) :- putinst(q,b,f,r), QVH_i(q,b,g), QVH_i(q,r,h).
+QHFH_o(q,h1,f,h2) :- putinst(q,b,f,r), QVH_i(q,b,h1), QVH_i(q,r,h2).
 escQH_o(q,h) :- putstat(q,l), QVH_i(q,l,h).
 QVH_o(q,l,0) :- getstat(q,l).
 QVH_i(q,v,0) :- start(q,v).
 QVH_o(q,v,0) :- spawn(q,v).
 
 escQHtc_i(q,h) :- escQH_i(q,h).
-escQHtc_i(q,h) :- escQHtc_i(q,g), QHFH_i(q,g,_,h).
+escQHtc_i(q,h) :- escQHtc_i(q,h1), QHFH_i(q,h1,_,h).
 
 escQV(q,v) :- QVH_i(q,v,h), escQHtc_i(q,h).
 
