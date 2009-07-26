@@ -92,6 +92,7 @@ public class Program {
 			} else {
 				String mainClassName = Properties.mainClassName;
 				Assertions.Assert(mainClassName != null);
+				// Set<jq_Method> reachableMethods = RTA.getReachableMethods(mainClassName);
 				RootedCHACallGraph.build(mainClassName);
 				classes = new HashSet<jq_Class>();
 				for (Object o : jq_Type.set) {

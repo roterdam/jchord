@@ -13,17 +13,17 @@ public class T extends java.lang.Thread {
 	public static void main(String[] a) {
 		T t = new T();
 		B b1 = B.getNewInstance();
-		A a1 = b1.bf;	// must be rightly deemed loc; correct
+		A a1 = b1.bf;	// must be deemed loc by ap and aw; correct
 		System.out.println(a1);
 		B b2 = B.getNewInstance();
 		g = b2;
-		A a2 = b2.bf;	// must be rightly deemed esc; correct
+		A a2 = b2.bf;	// must be deemed esc by ap; correct
 		System.out.println(a2);
 
 		B b3 = B.getNewInstance();
-		A a3 = b3.bf;	// must be rightly deemed loc;
+		A a3 = b3.bf;	// must be deemed loc by ap and aw; correct
 		System.out.println(a3);
-		B b4;
+		B b4 = null;
 		if (a != null) {
 			// branch always taken
 			b4 = new B();
@@ -31,7 +31,7 @@ public class T extends java.lang.Thread {
 			// branch never taken
 			b4 = new B();
 		}
-		A a4 = b4.bf;	// must be falsely deemed esc
+		A a4 = b4.bf;	// must be deemed loc by ap but esc by aw (due to branch never taken); correct
 		System.out.println(a4);
 	}
 }
@@ -42,7 +42,7 @@ class B {
 		this(new A());
     }
 	B(A a) {
-        this.bf = a;	// must be rightly deemed loc; correct
+        this.bf = a;	// must be deemed loc by ap but esc by aw (due to branch never taken); correct
 	}
 	static B getNewInstance() {
 		return new B();
