@@ -36,9 +36,9 @@ QHFH_o(q:Q0,h1:H0,f:F0,h2:H1)
 QVH_i(q:Q0,v:V0,h:H0)
 QVH_o(q:Q0,v:V0,h:H0)
 escQH_i(q:Q0,h:H0)
-escQH_o(q:Q0,h:H0) 
+escQH_o(q:Q0,h:H0)
 escQHtc_i(q:Q0,h:H0)
-escQV(q:Q0,v:V0) 
+escQV(q:Q0,v:V0)
 hybridVisitedE(e:E0) output
 hybridEscE(e:E0) output
 
