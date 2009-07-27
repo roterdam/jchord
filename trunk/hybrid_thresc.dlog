@@ -32,9 +32,9 @@ live_o(q:Q0,v:V0)
 pres(q:Q0,v:V0) 
 
 QHFH_i(q:Q0,h1:H0,f:F0,h2:H1) output
-QHFH_o(q:Q0,h1:H0,f:F0,h2:H1) output
+QHFH_o(q:Q0,h1:H0,f:F0,h2:H1)
 QVH_i(q:Q0,v:V0,h:H0) output
-QVH_o(q:Q0,v:V0,h:H0) output
+QVH_o(q:Q0,v:V0,h:H0)
 escQH_i(q:Q0,h:H0) output
 escQH_o(q:Q0,h:H0) output
 escQHtc_i(q:Q0,h:H0) output
@@ -43,8 +43,8 @@ hybridVisitedE(e:E0) output
 hybridEscE(e:E0) output
 
 queryE(e:E0) output
-queryPV(p:P0,v:V0) output
-queryQV(q:Q0,v:V0) output
+queryPV(p:P0,v:V0)
+queryQV(q:Q0,v:V0)
 relevantQVH(q:Q0,v:V0,h:H0) output
 relevantPVH(p:P0,v:V0,h:H0) output
 relevantEH(e:E0,h:H0) output
@@ -80,20 +80,20 @@ QHFH_o(q,h1,f,h2) :- QHFH_i(q,h1,f,h2).
 escQH_o(q,h) :- escQH_i(q,h).
 
 QVH_i(q,v,h) :- QVH_o(p,v,h), succ(p,q).
-QHFH_i(q,g,f,h) :- QHFH_o(p,h,f,g), succ(p,q).
+QHFH_i(q,h1,f,h2) :- QHFH_o(p,h1,f,h2), succ(p,q).
 escQH_i(q,h) :- escQH_o(p,h), succ(p,q).
 
 QVH_o(q,l,h) :- alloc(q,l,h).
 QVH_o(q,l,h) :- copy(q,l,r), QVH_i(q,r,h).
 QVH_o(q,l,h) :- getinst(q,l,b,f), QVH_i(q,b,g), QHFH_i(q,g,f,h).
-QHFH_o(q,g,f,h) :- putinst(q,b,f,r), QVH_i(q,b,g), QVH_i(q,r,h).
+QHFH_o(q,h1,f,h2) :- putinst(q,b,f,r), QVH_i(q,b,h1), QVH_i(q,r,h2).
 escQH_o(q,h) :- putstat(q,l), QVH_i(q,l,h).
 QVH_o(q,l,0) :- getstat(q,l).
 QVH_i(q,v,0) :- start(q,v).
 QVH_o(q,v,0) :- spawn(q,v).
 
 escQHtc_i(q,h) :- escQH_i(q,h).
-escQHtc_i(q,h) :- escQHtc_i(q,g), QHFH_i(q,g,_,h).
+escQHtc_i(q,h) :- escQHtc_i(q,h1), QHFH_i(q,h1,_,h).
 
 escQV(q,v) :- QVH_i(q,v,h), escQHtc_i(q,h).
 

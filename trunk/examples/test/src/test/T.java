@@ -11,7 +11,6 @@ package test;
 public class T extends java.lang.Thread {
 	static B g;
 	public static void main(String[] a) {
-		T t = new T();
 		B b1 = B.getNewInstance();
 		A a1 = b1.bf;	// must be deemed loc by ap and aw; correct
 		System.out.println(a1);
@@ -21,8 +20,9 @@ public class T extends java.lang.Thread {
 		System.out.println(a2);
 
 		B b3 = B.getNewInstance();
-		A a3 = b3.bf;	// must be deemed loc by ap and aw; correct
+		A a3 = b3.bf;	// must be deemed esc by ap; correct for now but fix ap
 		System.out.println(a3);
+		T t = new T();
 		B b4 = null;
 		if (a != null) {
 			// branch always taken
@@ -42,7 +42,7 @@ class B {
 		this(new A());
     }
 	B(A a) {
-        this.bf = a;	// must be deemed loc by ap but esc by aw (due to branch never taken); correct
+        this.bf = a;	// must be deemed loc by ap but esc by aw (due to branch never taken); correct (*)
 	}
 	static B getNewInstance() {
 		return new B();
