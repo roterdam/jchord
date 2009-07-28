@@ -42,7 +42,6 @@ import chord.doms.DomH;
 import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.util.FileUtils;
-import chord.util.PropertyUtils;
 import chord.util.SetUtils;
 import chord.util.tuple.object.Pair;
 import chord.util.Assertions;
@@ -118,19 +117,19 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	}
 	
 	public void run() {
-		int maxIters = PropertyUtils.getIntProperty("chord.max.iters", 0);
+		int maxIters = Integer.getInteger("chord.max.iters", 0);
 		Assertions.Assert(maxIters >= 0);
 
-		boolean includeParallel = PropertyUtils.getBoolProperty(
-			"chord.include.parallel", true);
-		boolean includeEscaping = PropertyUtils.getBoolProperty(
-			"chord.include.escaping", true);
-		boolean includeNonreent = PropertyUtils.getBoolProperty(
-			"chord.include.nonreent", true);
-		boolean includeNongrded = PropertyUtils.getBoolProperty(
-			"chord.include.nongrded", true);
-		boolean printResults = PropertyUtils.getBoolProperty(
-			"chord.print.results", true);
+		boolean excludeParallel = Boolean.getBoolean(
+			"chord.exclude.parallel");
+		boolean excludeEscaping = Boolean.getBoolean(
+			"chord.exclude.escaping");
+		boolean excludeNonreent = Boolean.getBoolean(
+			"chord.exclude.nonreent");
+		boolean excludeNongrded = Boolean.getBoolean(
+			"chord.exclude.nongrded");
+		boolean printResults = System.getProperty(
+			"chord.print.results", "true").equals("true");
 
 		init();
 		
@@ -161,22 +160,22 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			relNC.save();
 			relNL.save();
 
-			if (includeParallel)
-				Project.runTask("deadlock-parallel-include-dlog");
-			else
+			if (excludeParallel)
 				Project.runTask("deadlock-parallel-exclude-dlog");
-			if (includeEscaping)
-				Project.runTask("deadlock-escaping-include-dlog");
 			else
+				Project.runTask("deadlock-parallel-include-dlog");
+			if (excludeEscaping)
 				Project.runTask("deadlock-escaping-exclude-dlog");
-			if (includeNonreent)
-				Project.runTask("deadlock-nonreent-include-dlog");
 			else
+				Project.runTask("deadlock-escaping-include-dlog");
+			if (excludeNonreent)
 				Project.runTask("deadlock-nonreent-exclude-dlog");
-			if (includeNongrded)
-				Project.runTask("deadlock-nongrded-include-dlog");
 			else
+				Project.runTask("deadlock-nonreent-include-dlog");
+			if (excludeNongrded)
 				Project.runTask("deadlock-nongrded-exclude-dlog");
+			else
+				Project.runTask("deadlock-nongrded-include-dlog");
 			Project.runTask("deadlock-dlog");
 			Project.runTask("deadlock-stats-dlog");
 			if (numIters == maxIters)

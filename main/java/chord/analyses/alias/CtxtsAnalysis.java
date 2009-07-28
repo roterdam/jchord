@@ -20,7 +20,6 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
-import chord.util.PropertyUtils;
 import chord.util.graph.IGraph;
 import chord.util.graph.MutableGraph;
 import chord.util.ArraySet;
@@ -219,14 +218,12 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 		mainMeth = Program.getMainMethod();
 		
-        maxIters = PropertyUtils.getIntProperty(
-        	"chord.max.iters", 0);
+        maxIters = Integer.getInteger("chord.max.iters", 0);
 
-        String ctxtKindStr = PropertyUtils.getStrProperty(
-        	"chord.ctxt.kind", "ci");
-        String instCtxtKindStr = PropertyUtils.getStrProperty(
+        String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
+        String instCtxtKindStr = System.getProperty(
         	"chord.inst.ctxt.kind", ctxtKindStr);
-        String statCtxtKindStr = PropertyUtils.getStrProperty(
+        String statCtxtKindStr = System.getProperty(
         	"chord.stat.ctxt.kind", ctxtKindStr);
         if (instCtxtKindStr.equals("ci")) {
         	instCtxtKind = CTXTINS;
@@ -245,9 +242,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
         } else
         	Assertions.Assert(false);
 
-		kobjK = PropertyUtils.getIntProperty("chord.kobj.k", 1);
+		kobjK = Integer.getInteger("chord.kobj.k", 1);
 		Assertions.Assert(kobjK > 0);
-		kcfaK = PropertyUtils.getIntProperty("chord.kcfa.k", 1);
+		kcfaK = Integer.getInteger("chord.kcfa.k", 1);
 		Assertions.Assert(kcfaK > 0);
 
 		if (maxIters > 0) {
