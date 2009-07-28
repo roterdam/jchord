@@ -23,6 +23,7 @@ import chord.project.ProgramDom;
 import chord.project.ProgramRel;
 import chord.project.JavaAnalysis;
 import chord.project.Properties;
+import chord.project.Utils;
 
 import chord.util.ArraySet;
 import chord.util.graph.IPathVisitor;
@@ -378,22 +379,22 @@ public class DeadlockAnalysis extends JavaAnalysis {
         domM.saveToXMLFile();
         domL.saveToXMLFile();
 
-        Project.copyFile("deadlock/web/results.dtd");
-        Project.copyFile("main/web/Olist.dtd");
-        Project.copyFile("main/web/Clist.dtd");
-        Project.copyFile("main/web/Alist.dtd");
-        Project.copyFile("main/web/Hlist.dtd");
-        Project.copyFile("main/web/Ilist.dtd");
-        Project.copyFile("main/web/Mlist.dtd");
-        Project.copyFile("main/web/Llist.dtd");
-        Project.copyFile("deadlock/web/results.xml");
-        Project.copyFile("main/web/style.css");
-        Project.copyFile("deadlock/web/group.xsl");
-        Project.copyFile("deadlock/web/paths.xsl");
-        Project.copyFile("main/web/misc.xsl");
+        Utils.copyFile("deadlock/web/results.dtd");
+        Utils.copyFile("main/web/Olist.dtd");
+        Utils.copyFile("main/web/Clist.dtd");
+        Utils.copyFile("main/web/Alist.dtd");
+        Utils.copyFile("main/web/Hlist.dtd");
+        Utils.copyFile("main/web/Ilist.dtd");
+        Utils.copyFile("main/web/Mlist.dtd");
+        Utils.copyFile("main/web/Llist.dtd");
+        Utils.copyFile("deadlock/web/results.xml");
+        Utils.copyFile("main/web/style.css");
+        Utils.copyFile("deadlock/web/group.xsl");
+        Utils.copyFile("deadlock/web/paths.xsl");
+        Utils.copyFile("main/web/misc.xsl");
 
-        Project.runSaxon("results.xml", "group.xsl");
-        Project.runSaxon("results.xml", "paths.xsl");
+        Utils.runSaxon("results.xml", "group.xsl");
+        Utils.runSaxon("results.xml", "paths.xsl");
 
         Program.HTMLizeJavaSrcFiles();
 	}

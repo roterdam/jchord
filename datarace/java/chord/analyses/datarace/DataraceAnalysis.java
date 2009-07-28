@@ -41,6 +41,7 @@ import chord.project.ProgramRel;
 import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.project.Properties;
+import chord.project.Utils;
 import chord.util.FileUtils;
 import chord.util.PropertyUtils;
 import chord.util.SetUtils;
@@ -329,26 +330,26 @@ public class DataraceAnalysis extends JavaAnalysis {
 		domF.saveToXMLFile();
 		domL.saveToXMLFile();
 
-		Project.copyFile("datarace/web/results.dtd");
-		Project.copyFile("main/web/Olist.dtd");
-		Project.copyFile("main/web/Clist.dtd");
-		Project.copyFile("main/web/Alist.dtd");
-		Project.copyFile("main/web/Hlist.dtd");
-		Project.copyFile("main/web/Ilist.dtd");
-		Project.copyFile("main/web/Mlist.dtd");
-		Project.copyFile("main/web/Elist.dtd");
-		Project.copyFile("main/web/Flist.dtd");
-		Project.copyFile("main/web/Llist.dtd");
-		Project.copyFile("datarace/web/results.xml");
-		Project.copyFile("main/web/style.css");
-		Project.copyFile("datarace/web/group.xsl");
-		Project.copyFile("datarace/web/paths.xsl");
-		Project.copyFile("datarace/web/races.xsl");
-		Project.copyFile("main/web/misc.xsl");
+		Utils.copyFile("datarace/web/results.dtd");
+		Utils.copyFile("main/web/Olist.dtd");
+		Utils.copyFile("main/web/Clist.dtd");
+		Utils.copyFile("main/web/Alist.dtd");
+		Utils.copyFile("main/web/Hlist.dtd");
+		Utils.copyFile("main/web/Ilist.dtd");
+		Utils.copyFile("main/web/Mlist.dtd");
+		Utils.copyFile("main/web/Elist.dtd");
+		Utils.copyFile("main/web/Flist.dtd");
+		Utils.copyFile("main/web/Llist.dtd");
+		Utils.copyFile("datarace/web/results.xml");
+		Utils.copyFile("main/web/style.css");
+		Utils.copyFile("datarace/web/group.xsl");
+		Utils.copyFile("datarace/web/paths.xsl");
+		Utils.copyFile("datarace/web/races.xsl");
+		Utils.copyFile("main/web/misc.xsl");
 
-		Project.runSaxon("results.xml", "group.xsl");
-		Project.runSaxon("results.xml", "paths.xsl");
-		Project.runSaxon("results.xml", "races.xsl");
+		Utils.runSaxon("results.xml", "group.xsl");
+		Utils.runSaxon("results.xml", "paths.xsl");
+		Utils.runSaxon("results.xml", "races.xsl");
 
 		Program.HTMLizeJavaSrcFiles();
 	}

@@ -687,26 +687,26 @@ public class Project {
 	}
 	
 	private static void anonJavaAnalysis(String name) {
-		System.err.println("WARNING: Java task '" + name +
+		System.err.println("WARNING: Java analysis '" + name +
 			"' is not named via a @Chord(name=\"...\") annotation; " +
 			"using its classname itself as its name.");
 	}
 	
 	private static void anonDlogAnalysis(String name) {
-		System.err.println("WARNING: Dlog task '" + name +
+		System.err.println("WARNING: Dlog analysis '" + name +
 			"' is not named via a # name=... line; " +
 			"using its filename itself as its name.");
 	}
 
 	private static void ignoreDlogAnalysis(String name) {
-		System.err.println("ERROR: Ignoring Dlog task '" + name +
-			"': Errors were reported while parsing it (see above).");
+		System.err.println("ERROR: Ignoring Dlog analysis '" + name +
+			"'; errors were found while parsing it (see above).");
 		hasNoErrors = false;
 	}
 	
 	private static void ignoreJavaAnalysis(String name) {
-		System.err.println("ERROR: Ignoring Java task '" + name +
-			"': Its @Chord annotation had errors (see above).");
+		System.err.println("ERROR: Ignoring Java analysis '" + name +
+			"'; errors were found in its @Chord annotation (see above).");
 		hasNoErrors = false;
 	}
 	
@@ -749,8 +749,8 @@ public class Project {
 			String names2, String loc1, String loc2) {
 		System.err.println("ERROR: Relation '" + relName +
 			"' declared with different domain names '" + names1 +
-			"' and '" + names2 + "' at '" + loc1 + "' and '" + loc2 +
-			"' respectively");
+			"' and '" + names2 + "' in '" + loc1 + "' and '" + loc2 +
+			"' respectively.");
 		hasNoErrors = false;
 	}
 	
@@ -758,101 +758,71 @@ public class Project {
 			String order2, String loc1, String loc2) {
 		System.err.println("WARNING: Relation '" + relName +
 			"' declared with different domain orders '" + order1 +
-			"' and '" + order2 + "' at '" + loc1 + "' and '" + loc2 +
-			"' respectively");
+			"' and '" + order2 + "' in '" + loc1 + "' and '" + loc2 +
+			"' respectively.");
 	}
 	
 	private static void inconsistentTypes(String name, String type1,
 			String type2, String loc1, String loc2) {
 		System.err.println("ERROR: '" + name +
 			"' declared with inconsistent types '" + type1 +
-			"' and '" + type2 + "' at '" + loc1 + "' and '" + loc2 +
-			"' respectively");
+			"' and '" + type2 + "' in '" + loc1 + "' and '" + loc2 +
+			"' respectively.");
 		hasNoErrors = false;
 	}
 	
 	private static void unknownSign(String name) {
 		System.err.println("ERROR: sign of relation '" + name +
-			"' unknown");
+			"' unknown.");
 		hasNoErrors = false;
 	}
 	
 	private static void unknownOrder(String name) {
 		System.err.println("ERROR: order of relation '" + name +
-			"' unknown");
+			"' unknown.");
 		hasNoErrors = false;
 	}
 	
 	private static void unknownType(String name) {
 		System.err.println("ERROR: type of target '" + name +
-			"' unknown");
+			"' unknown.");
 		hasNoErrors = false;
 	}
 	
 	private static void redefinedJavaTask(String newTaskName, String name,
 			String oldTaskName) {
-		System.err.println("ERROR: Ignoring Java task '" +
+		System.err.println("ERROR: Ignoring Java analysis '" +
 			newTaskName +
 			"': its @Chord(name=\"...\") annotation uses name '" +
 			name + "' that is also used for another task '" +
-			oldTaskName + "'");
+			oldTaskName + "'.");
 		hasNoErrors = false;
 	}
 	private static void redefinedDlogTask(String newTaskName, String name,
 			String oldTaskName) {
-		System.err.println("ERROR: Ignoring Dlog task '" +
+		System.err.println("ERROR: Ignoring Dlog analysis '" +
 			newTaskName +
 			"': its # name=\"...\" line uses name '" +
 			name + "' that is also used for another task '" +
-			oldTaskName + "'");
+			oldTaskName + "'.");
 		hasNoErrors = false;
 	}
 	
 	private static void malformedPathElem(String elem, String path,
 			String msg) {
 		System.err.println("WARNING: Ignoring malformed entry '" +
-			elem + "' in " + path + ": " + msg);
+			elem + "' in '" + path + "': " + msg + ".");
 	}
 	
 	private static void nonexistentPathElem(String elem, String path) {
 		System.err.println("WARNING: Ignoring non-existent entry '" +
-			elem + "' in " + path);
+			elem + "' in '" + path + "'.");
 	}
 	
 	private static void nonInstantiableJavaAnalysis(String name, String msg) {
 		System.err.println("ERROR: Ignoring Java analysis task '" +
-			name + "': " + msg);
+			name + "': " + msg + ".");
 		hasNoErrors = false;
 	}
 	
-	public static void copyFile(String fileName) {
-		String homeDirName = Properties.homeDirName;
-		Assertions.Assert(homeDirName != null);
-		String outDirName = Properties.outDirName;
-		Assertions.Assert(outDirName != null);
-		File srcFile = new File(homeDirName, fileName);
-		if (!srcFile.exists()) {
-			throw new RuntimeException(
-				"File named '" + fileName +
-				"' does not exist under Chord's root directory '" +
-				homeDirName + "'.");
-		}
-		File dstFile = new File(outDirName, srcFile.getName());
-		FileUtils.copy(srcFile.getAbsolutePath(),
-			dstFile.getAbsolutePath());
-	}
-
-	public static void runSaxon(String xmlFileName, String xslFileName) {
-		String outDirName = Properties.outDirName;
-		String dummyFileName = (new File(outDirName, "dummy")).getAbsolutePath();
-		xmlFileName = (new File(outDirName, xmlFileName)).getAbsolutePath();
-		xslFileName = (new File(outDirName, xslFileName)).getAbsolutePath();
-		try {
-			net.sf.saxon.Transform.main(new String[] {
-				"-o", dummyFileName, xmlFileName, xslFileName
-			});
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
-		}
-	}
 }
