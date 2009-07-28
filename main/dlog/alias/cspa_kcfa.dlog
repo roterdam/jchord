@@ -2,10 +2,10 @@
 # Copyright (c) 2006-2007, The Trustees of Stanford University.
 # All rights reserved.
 
-# Hybrid k-CFA and k-object-sensitive may alias analysis with call-graph construction
+# k-CFA may alias analysis with call-graph construction
 
 # Author: Mayur Naik (mhn@cs.stanford.edu)
-# name=ctxtsen-dlog
+# name=cspa-kcfa-dlog
 
 .include "F.dom"
 .include "H.dom"
@@ -59,9 +59,7 @@ CC(c:C,d:C) input
 CH(c:C,h:H) input
 CI(c:C,i:I) input
 epsilonM(m:M) input
-kobjSenM(m:M) input
 kcfaSenM(m:M) input
-ctxtCpyM(m:M) input
 epsilonV(v:V) input
 MV(m:M,v:V) input
 
@@ -69,7 +67,6 @@ IHM(i:I,h:H,m:M)
 reachableT(t:T)
 
 MspcMethArg(m:M,v:V) input
-MkobjSenSpcMethArg(m:M,v:V)
 
 kcfaDIC(c:C,i:I,c:C) output
 DIC(c:C,i:I,c:C) output
@@ -79,19 +76,12 @@ DVDV(c:C0,u:V0,d:C1,v:V1) output
 
 ctxtInsIHM(i:I,h:H,m:M)
 kcfaSenIHM(i:I,h:H,m:M)
-kobjSenIHM(i:I,h:H,m:M)
-
-ctxtInsICM(i:I,c:C,m:M) output
-kcfaSenICM(i:I,c:C,m:M) output
-kobjSenICM(i:I,c:C,m:M) output
 
 ctxtInsSpecIM(i:I,m:M) output
 kcfaSenSpecIM(i:I,m:M) output
-kobjSenSpecIM(i:I,m:M) output
 
 ctxtInsStatIM(i:I,m:M)
 kcfaSenStatIM(i:I,m:M)
-ctxtCpyStatIM(i:I,m:M) 
 
 reachableCI(c:C,i:I) output
 reachableCM(c:C,m:M) output
@@ -123,20 +113,13 @@ CHC(c,h,d) :- CC(c,d), CH(d,h).
 
 IHM(i,h,m2) :- virtIM(i,m1), HT(h,t), cha(m1,t,m2).
 ctxtInsIHM(i,h,m) :- IHM(i,h,m), epsilonM(m).
-kobjSenIHM(i,h,m) :- IHM(i,h,m), kobjSenM(m).
 kcfaSenIHM(i,h,m) :- IHM(i,h,m), kcfaSenM(m).
-
-ctxtInsICM(i,o,m) :- ctxtInsIHM(i,h,m), CH(o,h).
-kcfaSenICM(i,o,m) :- kcfaSenIHM(i,h,m), CH(o,h).
-kobjSenICM(i,o,m) :- kobjSenIHM(i,h,m), CH(o,h).
 
 kcfaSenSpecIM(i,m) :- specIM(i,m), kcfaSenM(m).
 ctxtInsSpecIM(i,m) :- specIM(i,m), epsilonM(m).
-kobjSenSpecIM(i,m) :- specIM(i,m), kobjSenM(m).
 
 kcfaSenStatIM(i,m) :- statIM(i,m), kcfaSenM(m).
 ctxtInsStatIM(i,m) :- statIM(i,m), epsilonM(m).
-ctxtCpyStatIM(i,m) :- statIM(i,m), ctxtCpyM(m).
 
 ###
 
@@ -154,22 +137,17 @@ DIH(c,i,h) :- DIC(c,i,o), CH(o,h).
 DI(c,i) :- DIH(c,i,_).
 
 kcfaDIC(0,i,d) :- CIC(0,i,d), MI(m,i), epsilonM(m).
-kcfaDIC(c,i,d) :- CIC(c,i,d), MI(m,i), kobjSenM(m).
-kcfaDIC(c,i,d) :- CIC(c,i,d), MI(m,i), ctxtCpyM(m).
 kcfaDIC(c,i,d) :- CIC(c,i,d), MI(m,i), kcfaSenM(m).
 
 ###
 
 CICM(c,i,0,m) :- reachableCI(c,i), ctxtInsIHM(i,h,m), DIH(c,i,h).
-CICM(c,i,o,m) :- reachableCI(c,i), kobjSenICM(i,o,m), DIC(c,i,o).
 CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenIHM(i,h,m), DIH(c,i,h), kcfaDIC(c,i,d).
 
 CICM(c,i,0,m) :- reachableCI(c,i), ctxtInsSpecIM(i,m), DI(c,i).
-CICM(c,i,o,m) :- reachableCI(c,i), kobjSenSpecIM(i,m), DIC(c,i,o).
 CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenSpecIM(i,m), DI(c,i), kcfaDIC(c,i,d).
 
 CICM(c,i,0,m) :- reachableCI(c,i), ctxtInsStatIM(i,m).
-CICM(c,i,d,m) :- reachableCI(c,i), ctxtCpyStatIM(i,m), d=c.
 CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenStatIM(i,m), kcfaDIC(c,i,d).
 
 ###

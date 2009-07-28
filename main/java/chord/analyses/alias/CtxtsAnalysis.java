@@ -155,8 +155,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	private int kobjK;
 	private int kcfaK;
-    private boolean isStartKobjSen;
-    private boolean isStartKcfaSen;
     private int instCtxtKind;
     private int statCtxtKind;
     private int maxIters;
@@ -247,12 +245,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
         } else
         	Assertions.Assert(false);
 
-        isStartKobjSen = PropertyUtils.getBoolProperty(
-            "chord.start.kobjsen", false);
-        isStartKcfaSen = PropertyUtils.getBoolProperty(
-            "chord.start.kcfasen", false);
-        Assertions.Assert(!(isStartKobjSen && isStartKcfaSen));
-
 		kobjK = PropertyUtils.getIntProperty("chord.kobj.k", 1);
 		Assertions.Assert(kobjK > 0);
 		kcfaK = PropertyUtils.getIntProperty("chord.kcfa.k", 1);
@@ -283,12 +275,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				jq_Method mVal = domM.get(mIdx);
                 methKind[mIdx] = (maxIters > 0) ? CTXTINS : getCtxtKind(mVal);
 			}
-            if (hasStartMethod()) {
-                if (isStartKobjSen)
-                    methKind[1] = KOBJSEN;
-                else if (isStartKcfaSen)
-                    methKind[1] = KCFASEN;
-            }
 			for (int mIdx = 0; mIdx < numM; mIdx++) {
 				if (methKind[mIdx] != CTXTINS) {
 					jq_Method m = domM.get(mIdx);
@@ -542,13 +528,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 		currIter++;
 	}
-
-    private boolean hasStartMethod() {
-        if (domM.size() <= 1)
-            return false;
-        jq_Method sndMeth = domM.get(1);
-        return sndMeth == Program.getThreadStartMethod();
-    }
 
 	private static boolean contains(Quad[] elems, Quad q) {
 		for (Quad e : elems) {

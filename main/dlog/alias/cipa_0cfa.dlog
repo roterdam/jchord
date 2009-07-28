@@ -5,7 +5,7 @@
 # 0-CFA-based may alias analysis with call graph construction
 
 # Author: Mayur Naik (mhn@cs.stanford.edu)
-# name=ctxtins-dlog
+# name=cipa-0cfa-dlog
 
 .include "T.dom"
 .include "F.dom"

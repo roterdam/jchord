@@ -102,7 +102,7 @@ public class Program {
 					}
 				}
 				init2();
-				Project.runTask("ctxtins-dlog");
+				Project.runTask("cipa-0cfa-dlog");
 				ProgramRel relReachableT =
 					(ProgramRel) Project.getTrgt("reachableT");
 				relReachableT.load();
