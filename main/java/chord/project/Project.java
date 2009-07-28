@@ -5,6 +5,7 @@
  */
 package chord.project;
 
+import java.io.PrintStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Collection;
+import java.util.Stack;
 
 import org.scannotation.AnnotationDB;
 
@@ -56,9 +58,63 @@ public class Project {
 		new HashMap<Set<ITask>, ITask>();
 	private static Set<ITask> doneTasks = new HashSet<ITask>();
 	private static Set<Object> doneTrgts = new HashSet<Object>();
+	private static Stack<Timer> timers = new Stack<Timer>();
+	private static Timer currTimer;
 
 	private Project() { }
 	
+	public static void main(String[] args) {
+        PrintStream outStream = null;
+        PrintStream errStream = null;
+        try {
+            String outDirName = Properties.outDirName;
+            Assertions.Assert(outDirName != null);
+            String outFileName = Properties.outFileName;
+            Assertions.Assert(outFileName != null);
+            String errFileName = Properties.outFileName;
+            Assertions.Assert(errFileName != null);
+
+            outFileName = FileUtils.getAbsolutePath(outFileName, outDirName);
+            errFileName = FileUtils.getAbsolutePath(errFileName, outDirName);
+            File outFile = new File(outFileName);
+            outStream = new PrintStream(outFile);
+            System.setOut(outStream);
+            File errFile = new File(errFileName);
+            if (errFile.equals(outFile))
+                errStream = outStream;
+            else
+                errStream = new PrintStream(errFile);
+            System.setErr(errStream);
+
+			System.out.println("ENTER: chord");
+			currTimer = new Timer("chord");
+			currTimer.init();
+
+            Properties.print();
+            Project.init();
+            Program.init();
+
+            String analyses = Properties.analyses;
+            if (analyses != null) {
+                String[] analysisNames = analyses.split(" |,|:|;");
+				for (String name : analysisNames)
+					runTask(name);
+            }
+        } catch (Throwable ex) {
+            ex.printStackTrace();
+            if (outStream != null)
+                outStream.close();
+            if (errStream != null && errStream != outStream)
+                errStream.close();
+        } finally {
+			System.out.println("LEAVE: chord");
+			if (currTimer != null) {
+				currTimer.done();
+				printCurrTimer();
+			}
+		}
+	}
+
 	public static Object getTrgt(String name) {
 		Object trgt = nameToTrgtMap.get(name);
 		if (trgt == null) {
@@ -75,13 +131,22 @@ public class Project {
 		}
 		return task;
 	}
+
+	private static void printCurrTimer() {
+		System.out.println("Exclusive time: " + currTimer.getExclusiveTimeStr());
+		System.out.println("Inclusive time: " + currTimer.getInclusiveTimeStr());
+	}
+
 	public static void runTask(ITask task) {
-		System.out.print("ENTER: " + task);
+		System.out.println("ENTER: " + task);
 		if (isTaskDone(task)) {
-			System.out.println(" ALREADY DONE.");
+			System.out.println("ALREADY DONE.");
 			return;
 		}
-		System.out.println("");
+		currTimer.pause();
+		timers.push(currTimer);
+		currTimer = new Timer(task.getName());
+		currTimer.init();
 		for (Object trgt : taskToConsumedTrgtsMap.get(task)) {
 			if (isTrgtDone(trgt))
 				continue;
@@ -89,40 +154,45 @@ public class Project {
 			if (tasks.size() != 1) {
 				throw new RuntimeException("Task producing trgt '" +
 					trgt + "' consumed by task '" + task +
-					"' not found");
+					"' not found.");
 			}
 			ITask task2 = tasks.iterator().next();
 			runTask(task2);
 		}
-        Timer timer = new Timer(task.getName());
-		System.out.println("START: " + task);
-        timer.init();
 		task.run();
-        timer.done();
-        System.out.println("LEAVE: " + task +
-            " time: " + timer.getExecTimeStr());
+        System.out.println("LEAVE: " + task);
+        currTimer.done();
+		printCurrTimer();
+		currTimer = timers.pop();
+		currTimer.resume();
 		setTaskDone(task);
 		for (Object trgt : taskToProducedTrgtsMap.get(task)) {
 			setTrgtDone(trgt);
 		}
 	}
+
 	public static ITask runTask(String name) {
 		ITask task = getTask(name);
 		runTask(task);
 		return task;
 	}
+
 	public static boolean isTrgtDone(Object trgt) {
 		return doneTrgts.contains(trgt);
 	}
+
 	public static boolean isTrgtDone(String name) {
 		return isTrgtDone(getTrgt(name));
 	}
+
 	public static void setTrgtDone(Object trgt) {
 		doneTrgts.add(trgt);
 	}
+
 	public static void setTrgtDone(String name) {
 		setTrgtDone(getTrgt(name));
 	}
+
 	public static void resetTrgtDone(Object trgt) {
 		if (doneTrgts.remove(trgt)) {
 			for (ITask task : trgtToConsumerTasksMap.get(trgt)) {
@@ -130,31 +200,40 @@ public class Project {
 			}
 		}
 	}
+
 	public static void runTasksWithVisitors(Collection<ITask> tasks) {
 		// TODO
 	}
+
 	public static void runTaskWithVisitors(ITask task) {
 		// TODO
 	}
+
 	public static void resetAll() {
 		doneTrgts.clear();
 		doneTasks.clear();
 	}
+
 	public static void resetTrgtDone(String name) {
 		resetTrgtDone(getTrgt(name));
 	}
+
 	public static boolean isTaskDone(ITask task) {
 		return doneTasks.contains(task);
 	}
+
 	public static boolean isTaskDone(String name) {
 		return isTaskDone(getTask(name));
 	}
+
 	public static void setTaskDone(ITask task) {
 		doneTasks.add(task);
 	}
+
 	public static void setTaskDone(String name) {
 		setTaskDone(getTask(name));
 	}
+
 	public static void resetTaskDone(ITask task) {
 		if (doneTasks.remove(task)) {
 			for (Object trgt : taskToProducedTrgtsMap.get(task)) {
@@ -162,6 +241,7 @@ public class Project {
 			}
 		}
 	}
+
 	public static void resetTaskDone(String name) {
 		resetTaskDone(getTask(name));
 	}
@@ -552,8 +632,7 @@ public class Project {
 			return;
 		}
 		String fileName = file.getAbsolutePath();
-		if (!fileName.endsWith(".dlog") &&
-				!fileName.endsWith(".datalog"))
+		if (!fileName.endsWith(".dlog") && !fileName.endsWith(".datalog"))
 			return;
 		DlogAnalysis task = new DlogAnalysis();
 		boolean ret = task.parse(fileName);
@@ -831,5 +910,4 @@ public class Project {
 			name + "': " + msg + ".");
 		hasNoErrors = false;
 	}
-	
 }

@@ -205,7 +205,7 @@
       <pathelement path="${chord.main.class.path}"/>
     </path>
     <property name="chord.boot.class.path" refid="chord_boot_class_path"/>
-    <java classname="chord.project.Main"
+    <java classname="chord.project.Project"
         fork="true" failonerror="true" dir="${chord.work.dir}">
       <jvmarg value="-showversion"/>
       <jvmarg value="-Xmx${chord.max.heap}"/>

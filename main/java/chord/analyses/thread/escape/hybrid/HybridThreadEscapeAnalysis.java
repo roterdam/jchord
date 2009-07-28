@@ -198,7 +198,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 				esc2HeapInsts.add(currHeapInst);
 			}
 			timer.done();
-			System.out.println(timer.getExecTimeStr());
+			System.out.println(timer.getInclusiveTimeStr());
 		}
 		System.out.println("XXXXX esc1HeapInsts");
 		for (Quad e : esc1HeapInsts)

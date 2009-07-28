@@ -26,9 +26,6 @@ public class Solver {
 	 * @param	fileName	A file containing a Datalog program.
 	 */
 	public static void run(String fileName) {
-		Timer timer = new Timer(fileName);
-		timer.init();
-		System.out.println("ENTER: Solving " + fileName);
 		String cmd =
 			"java -Xmx" + Properties.bddbddbMaxHeap +
 			" -cp " + Properties.bddbddbClassPathName +
@@ -42,8 +39,5 @@ public class Solver {
 				"' terminated with non-zero value '" +
 				ret + "'");
 		}
-		System.out.println("LEAVE: Solving " + fileName);
-		timer.done();
-		System.out.println("TIME: " + timer.getExecTimeStr());
 	}
 }
