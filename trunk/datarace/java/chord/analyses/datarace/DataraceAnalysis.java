@@ -43,7 +43,6 @@ import chord.project.Project;
 import chord.project.Properties;
 import chord.project.Utils;
 import chord.util.FileUtils;
-import chord.util.PropertyUtils;
 import chord.util.SetUtils;
 import chord.util.tuple.object.Hext;
 import chord.util.tuple.object.Pair;
@@ -111,34 +110,31 @@ public class DataraceAnalysis extends JavaAnalysis {
 	}
 
 	public void run() {
-		int maxIters = PropertyUtils.getIntProperty("chord.max.iters", 0);
+		int maxIters = Integer.getInteger("chord.max.iters", 0);
 		Assertions.Assert(maxIters >= 0);
 
-		boolean includeParallel = PropertyUtils.getBoolProperty(
-			"chord.include.parallel", true);
-		boolean includeEscaping = PropertyUtils.getBoolProperty(
-			"chord.include.escaping", true);
-		boolean includeNongrded = PropertyUtils.getBoolProperty(
-			"chord.include.nongrded", true);
-		boolean printResults = PropertyUtils.getBoolProperty(
-			"chord.print.results", true);
+		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
+		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");
+		boolean excludeNongrded = Boolean.getBoolean("chord.exclude.nongrded");
+		boolean printResults = System.getProperty(
+			"chord.print.results", "true").equals("true");
 
 		init();
 
 		for (int numIters = 0; true; numIters++) {
 			Project.runTask("datarace-prologue-dlog");
-			if (includeParallel)
-				Project.runTask("datarace-parallel-include-dlog");
-			else
+			if (excludeParallel)
 				Project.runTask("datarace-parallel-exclude-dlog");
-			if (includeEscaping)
-				Project.runTask("datarace-escaping-include-dlog");
 			else
+				Project.runTask("datarace-parallel-include-dlog");
+			if (excludeEscaping)
 				Project.runTask("datarace-escaping-exclude-dlog");
-			if (includeNongrded)
-				Project.runTask("datarace-nongrded-include-dlog");
 			else
+				Project.runTask("datarace-escaping-include-dlog");
+			if (excludeNongrded)
 				Project.runTask("datarace-nongrded-exclude-dlog");
+			else
+				Project.runTask("datarace-nongrded-include-dlog");
 			Project.runTask("datarace-dlog");
 			Project.runTask("datarace-stats-dlog");
 			if (numIters == maxIters)

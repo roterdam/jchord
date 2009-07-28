@@ -9,7 +9,6 @@ import chord.project.Chord;
 import chord.project.Project;
 import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
-import chord.util.PropertyUtils;
 import chord.util.Assertions;
 
 /**
@@ -42,7 +41,7 @@ public class DowncastAnalysis extends JavaAnalysis {
 	private ProgramRel relRefineI;
 
 	public void run() {
-		maxIters = PropertyUtils.getIntProperty("chord.max.iters", 0);
+		maxIters = Integer.getInteger("chord.max.iters", 0);
 		Assertions.Assert(maxIters >= 0);
 
 		relRefineH = (ProgramRel) Project.getTrgt("refineH");

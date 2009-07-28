@@ -13,7 +13,6 @@ import java.io.*;
 
 import chord.util.ClasspathUtils;
 import chord.util.FileUtils;
-import chord.util.PropertyUtils;
 import chord.util.IndexMap;
 import chord.util.Assertions;
 import java.net.URL;

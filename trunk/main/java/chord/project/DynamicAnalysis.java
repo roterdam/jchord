@@ -9,7 +9,6 @@ import java.lang.InterruptedException;
 import chord.util.IntBuffer;
 import chord.util.Assertions;
 import chord.util.IndexMap;
-import chord.util.PropertyUtils;
 import chord.util.ProcessExecutor;
 
 @Chord(
@@ -59,7 +58,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 
 		final String runIdsStr = System.getProperty("chord.run.ids", "");
 
-        convert = PropertyUtils.getBoolProperty("chord.convert", true);
+        convert = System.getProperty("chord.convert", "true").equals("true");
 
 		boolean initDomH = false;
 		boolean initDomE = false;
@@ -97,7 +96,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 			Fmap = dFmap;
 		}
 
-		boolean doTracePipe = PropertyUtils.getBoolProperty("chord.trace.pipe", true);
+		boolean doTracePipe = System.getProperty(
+			"chord.trace.pipe", "true").equals("true");
 
 		ProcessExecutor.execute("rm " + crudeTraceFileName);
 		ProcessExecutor.execute("rm " + finalTraceFileName);
