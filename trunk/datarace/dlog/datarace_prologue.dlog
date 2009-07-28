@@ -12,7 +12,7 @@
 .include "F.dom"
 .include "I.dom"
 
-.bddvarorder F0_E0_A0_M0xM1xI0_C0xC1xC2
+.bddvarorder F0_E0_A0_I0xM0xM1_C0xC1xC2
 
 ###
 # Relations

@@ -22,7 +22,7 @@ import chord.project.ProgramRel;
  */
 @Chord(
 	name = "ME",
-	sign = "M0,E0:M0_E0"
+	sign = "M0,E0:E0_M0"
 )
 public class RelME extends ProgramRel {
 	public void fill() {
