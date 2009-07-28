@@ -32,7 +32,7 @@ import gnu.trove.TIntArrayList;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DlogTask extends JavaTask {
+public class DlogAnalysis extends JavaAnalysis {
 	// absolute filename of the datalog program
 	private String fileName;
 	private Set<String> majorDomNames;

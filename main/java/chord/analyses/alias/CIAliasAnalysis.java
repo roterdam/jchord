@@ -14,7 +14,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.bddbddb.Rel.RelView;
 import chord.project.Chord;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
 import chord.project.Project;
 
@@ -29,7 +29,7 @@ import chord.util.SetUtils;
 	name = "ci-alias-java",
 	consumedNames = { "VH", "FH", "HFH" }
 )
-public class CIAliasAnalysis extends JavaTask {
+public class CIAliasAnalysis extends JavaAnalysis {
 	private ProgramRel relVH;
 	private ProgramRel relFH;
 	private ProgramRel relHFH;

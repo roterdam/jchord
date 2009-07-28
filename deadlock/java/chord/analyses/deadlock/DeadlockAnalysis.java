@@ -21,7 +21,7 @@ import chord.project.Project;
 import chord.project.Chord;
 import chord.project.ProgramDom;
 import chord.project.ProgramRel;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.project.Properties;
 
 import chord.util.ArraySet;
@@ -73,7 +73,7 @@ import chord.util.Assertions;
 @Chord(
 	name="deadlock-java"
 )
-public class DeadlockAnalysis extends JavaTask {
+public class DeadlockAnalysis extends JavaAnalysis {
     private DomM domM;
     private DomI domI;
     private DomA domA;

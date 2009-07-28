@@ -7,7 +7,7 @@ package chord.analyses.thread;
 
 import joeq.Class.jq_Method;
 import chord.project.Chord;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.project.Project;
 import chord.analyses.alias.Ctxt;
 import chord.doms.DomA;
@@ -30,7 +30,7 @@ import chord.util.tuple.object.Pair;
 	namesOfTypes = { "A" },
 	types = { DomA.class }
 )
-public class ForkCtxtsAnalysis extends JavaTask {
+public class ForkCtxtsAnalysis extends JavaAnalysis {
 	public void run() {
         ProgramRel relForkC =
         	(ProgramRel) Project.getTrgt("forkC");

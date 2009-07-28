@@ -30,6 +30,7 @@ import chord.util.FileUtils;
 import chord.util.StringUtils;
 import chord.util.Timer;
 import chord.util.tuple.object.Pair;
+import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.RelSign;
 
 /**
@@ -51,6 +52,8 @@ public class Project {
 	private static Map<ITask, Set<Object>> taskToConsumedTrgtsMap;
 	private static Map<Object, Set<ITask>> trgtToProducerTasksMap;
 	private static Map<Object, Set<ITask>> trgtToConsumerTasksMap;
+	private static Map<Set<ITask>, ITask> resolverMap =
+		new HashMap<Set<ITask>, ITask>();
 	private static Set<ITask> doneTasks = new HashSet<ITask>();
 	private static Set<Object> doneTrgts = new HashSet<Object>();
 
@@ -315,8 +318,7 @@ public class Project {
 		taskToConsumedTrgtsMap = new HashMap<ITask, Set<Object>>();
 		taskToProducedTrgtsMap = new HashMap<ITask, Set<Object>>();
 		for (ITask task : nameToTaskMap.values()) {
-			Set<String> consumedNames =
-				taskToConsumedNamesMap.get(task);
+			Set<String> consumedNames = taskToConsumedNamesMap.get(task);
 			Set<Object> consumedTrgts =
 				new HashSet<Object>(consumedNames.size());
 			for (String name : consumedNames) {
@@ -342,10 +344,9 @@ public class Project {
 			}
 			taskToProducedTrgtsMap.put(task, producedTrgts);
 		}
-		for (String name : nameToTrgtMap.keySet()) {
-			Object trgt = nameToTrgtMap.get(name);
-			Set<ITask> producerTasks =
-				trgtToProducerTasksMap.get(trgt);
+		for (String trgtName : nameToTrgtMap.keySet()) {
+			Object trgt = nameToTrgtMap.get(trgtName);
+			Set<ITask> producerTasks = trgtToProducerTasksMap.get(trgt);
 			int size = producerTasks.size();
 			if (size == 0) {
 				Set<ITask> consumerTasks =
@@ -355,17 +356,86 @@ public class Project {
 				for (ITask task : consumerTasks) {
 					consumerTaskNames.add(getSourceName(task));
 				}
-				undefinedTarget(name, consumerTaskNames);
+				undefinedTarget(trgtName, consumerTaskNames);
 			} else if (size > 1) {
+				ITask task2 = resolve(producerTasks);
+				if (task2 != null) {
+					Set<ITask> tasks2 = new ArraySet<ITask>(1);
+					tasks2.add(task2);
+					trgtToProducerTasksMap.put(trgt, tasks2);
+					continue;
+				}
 				List<String> producerTaskNames =
 					new ArraySet<String>(producerTasks.size());
 				for (ITask task : producerTasks) {
 					producerTaskNames.add(getSourceName(task));
 				}
-				redefinedTarget(name, producerTaskNames);
+				redefinedTarget(trgtName, producerTaskNames);
 			}
 		}
 		isInited = true;
+	}
+
+	private static ITask resolve(Set<ITask> tasks) {
+		if (resolverMap.containsKey(tasks))
+			return resolverMap.get(tasks);
+		ITask resolver = null;
+		if (tasks.size() == 4) {
+			ITask cspa0cfaDlogTask = null;
+			ITask cspaKcfaDlogTask = null;
+			ITask cspaKobjDlogTask = null;
+			ITask cspaHybridDlogTask = null;
+			for (ITask task : tasks) {
+				String name = task.getName();
+				if (name.equals("cspa-0cfa-dlog"))
+					cspa0cfaDlogTask = task;
+				else if (name.equals("cspa-kobj-dlog"))
+					cspaKobjDlogTask = task;
+				else if (name.equals("cspa-kcfa-dlog"))
+					cspaKcfaDlogTask = task;
+				else if (name.equals("cspa-hybrid-dlog"))
+					cspaHybridDlogTask = task;
+			}
+			if (cspa0cfaDlogTask != null && cspaKcfaDlogTask != null &&
+				cspaKobjDlogTask != null && cspaHybridDlogTask != null) {
+				String ctxtKindStr = System.getProperty(
+					"chord.ctxt.kind", "ci");
+				String instCtxtKindStr = System.getProperty(
+					"chord.inst.ctxt.kind", ctxtKindStr);
+				String statCtxtKindStr = System.getProperty(
+					"chord.stat.ctxt.kind", ctxtKindStr);
+				int instCtxtKind, statCtxtKind;
+				if (instCtxtKindStr.equals("ci")) {
+					instCtxtKind = CtxtsAnalysis.CTXTINS;
+				} else if (instCtxtKindStr.equals("cs")) {
+					instCtxtKind = CtxtsAnalysis.KCFASEN;
+				} else if (instCtxtKindStr.equals("co")) {
+					instCtxtKind = CtxtsAnalysis.KOBJSEN;
+				} else
+					throw new RuntimeException();
+				if (statCtxtKindStr.equals("ci")) {
+					statCtxtKind = CtxtsAnalysis.CTXTINS;
+				} else if (statCtxtKindStr.equals("cs")) {
+					statCtxtKind = CtxtsAnalysis.KCFASEN;
+				} else if (statCtxtKindStr.equals("cc")) {
+					statCtxtKind = CtxtsAnalysis.CTXTCPY;
+				} else
+					throw new RuntimeException();
+				if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
+						statCtxtKind == CtxtsAnalysis.CTXTINS)
+					resolver = cspa0cfaDlogTask;
+				else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
+						statCtxtKind == CtxtsAnalysis.CTXTCPY)
+					resolver = cspaKobjDlogTask;
+				else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
+						statCtxtKind == CtxtsAnalysis.KCFASEN)
+					resolver = cspaKcfaDlogTask;
+				else
+					resolver = cspaHybridDlogTask;
+			}
+		}
+		resolverMap.put(tasks, resolver);
+		return resolver;
 	}
 
 	private static void checkErrors() {
@@ -478,7 +548,7 @@ public class Project {
 		if (!fileName.endsWith(".dlog") &&
 				!fileName.endsWith(".datalog"))
 			return;
-		DlogTask task = new DlogTask();
+		DlogAnalysis task = new DlogAnalysis();
 		boolean ret = task.parse(fileName);
 		if (!ret) {
 			ignoreDlogAnalysis(fileName);
@@ -611,8 +681,8 @@ public class Project {
 	
 	private static String getSourceName(ITask analysis) {
 		Class clazz = analysis.getClass();
-		if (clazz == DlogTask.class)
-			return ((DlogTask) analysis).getFileName();
+		if (clazz == DlogAnalysis.class)
+			return ((DlogAnalysis) analysis).getFileName();
 		return clazz.getName();
 	}
 	

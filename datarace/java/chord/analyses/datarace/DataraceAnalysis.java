@@ -25,7 +25,7 @@ import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.Obj;
 import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
 import chord.bddbddb.Rel.RelView;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.doms.DomA;
 import chord.doms.DomL;
 import chord.doms.DomO;
@@ -75,7 +75,7 @@ import chord.util.Assertions;
 @Chord(
 	name="datarace-java"
 )
-public class DataraceAnalysis extends JavaTask {
+public class DataraceAnalysis extends JavaAnalysis {
 	private ProgramRel relRefineH;
 	private ProgramRel relRefineM;
 	private ProgramRel relRefineV;
