@@ -21,7 +21,7 @@ import chord.project.ProgramRel;
  */
 @Chord(
 	name = "PE",
-	sign = "P0,E0:P0xE0"
+	sign = "P0,E0:E0_P0"
 )
 public class RelPE extends ProgramRel {
 	public void fill() {

@@ -434,6 +434,13 @@ public class Project {
 					resolver = cspaHybridDlogTask;
 			}
 		}
+		if (resolver != null) {
+			System.out.println("Using task '" + getSourceName(resolver) +
+				"' to resolve following tasks:");
+			for (ITask task : tasks) {
+				System.out.println("\t'" + getSourceName(task) + "'");
+			}
+		}
 		resolverMap.put(tasks, resolver);
 		return resolver;
 	}
