@@ -7,7 +7,7 @@ package chord.analyses.alias;
 
 import chord.doms.DomM;
 import chord.project.Chord;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
 import chord.project.Project;
 
@@ -20,7 +20,7 @@ import chord.project.Project;
 	name = "cscg-java",
 	consumedNames = { "CICM", "CMCM", "rootCM", "reachableM" }
 )
-public class CSCGAnalysis extends JavaTask {
+public class CSCGAnalysis extends JavaAnalysis {
     protected DomM domM;
     protected ProgramRel relCICM;
 	protected ProgramRel relCMCM;

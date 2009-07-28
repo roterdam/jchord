@@ -5,7 +5,7 @@
  */
 package chord.analyses.alias;
 
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.doms.DomM;
 import chord.project.Chord;
 import chord.project.ProgramRel;
@@ -20,7 +20,7 @@ import chord.project.Project;
 	name = "cicg-java",
 	consumedNames = { "IM", "MM", "reachableM" }
 )
-public class CICGAnalysis extends JavaTask {
+public class CICGAnalysis extends JavaAnalysis {
 	private DomM domM;
 	private ProgramRel relIM;
 	private ProgramRel relMM;

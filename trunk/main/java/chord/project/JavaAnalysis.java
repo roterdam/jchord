@@ -13,7 +13,7 @@ import chord.util.Assertions;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class JavaTask implements ITask {
+public class JavaAnalysis implements ITask {
     protected String name;
     public void setName(String name) {
         Assertions.Assert(name != null);

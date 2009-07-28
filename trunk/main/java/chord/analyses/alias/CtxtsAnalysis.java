@@ -32,7 +32,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.project.Chord;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.project.Program;
 import chord.project.ProgramRel;
 import chord.project.Project;
@@ -122,7 +122,7 @@ import chord.project.Project;
 	namesOfTypes = { "C" },
 	types = { DomC.class }
 )
-public class CtxtsAnalysis extends JavaTask {
+public class CtxtsAnalysis extends JavaAnalysis {
 	private static final Set<Ctxt> emptyCtxtSet =
 		Collections.emptySet();
 	private static final Set<jq_Method> emptyMethSet =
@@ -141,10 +141,10 @@ public class CtxtsAnalysis extends JavaTask {
 	
 	private Set<Ctxt> epsilonCtxtSet;
 
-    private static final int CTXTINS = 0;  // abbr ci; must be 0
-    private static final int KOBJSEN = 1;  // abbr co
-    private static final int KCFASEN = 2;  // abbr cs
-    private static final int CTXTCPY = 3;  // abbr cc
+    public static final int CTXTINS = 0;  // abbr ci; must be 0
+    public static final int KOBJSEN = 1;  // abbr co
+    public static final int KCFASEN = 2;  // abbr cs
+    public static final int CTXTCPY = 3;  // abbr cc
 
 	private jq_Method mainMeth;
 	private boolean[] isCtxtSenI;	// indexed by domI

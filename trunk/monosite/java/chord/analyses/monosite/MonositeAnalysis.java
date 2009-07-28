@@ -7,7 +7,7 @@ package chord.analyses.monosite;
 
 import chord.project.Chord;
 import chord.project.Project;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
 import chord.util.PropertyUtils;
 import chord.util.Assertions;
@@ -34,7 +34,7 @@ import chord.util.Assertions;
 @Chord(
 	name="monosite-java"
 )
-public class MonositeAnalysis extends JavaTask {
+public class MonositeAnalysis extends JavaAnalysis {
 	private int maxIters;
 
 	private ProgramRel relRefineH;

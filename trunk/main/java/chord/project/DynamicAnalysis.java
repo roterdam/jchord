@@ -15,16 +15,7 @@ import chord.util.ProcessExecutor;
 @Chord(
     name = "dyn-java"
 )
-public class DynamicAnalysis implements ITask {
-    protected String name;
-    public void setName(String name) {
-        Assertions.Assert(name != null);
-        Assertions.Assert(this.name == null);
-        this.name = name;
-    }
-    public String getName() {
-        return name;
-    }
+public class DynamicAnalysis extends JavaAnalysis {
 	public boolean handlesObjValAsgnInst() { return false; }
 	public boolean handlesInstFldRdInst() { return false; }
 	public boolean handlesInstFldWrInst() { return false; }

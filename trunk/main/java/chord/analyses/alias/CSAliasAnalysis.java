@@ -14,7 +14,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.bddbddb.Rel.RelView;
 import chord.util.SetUtils;
 import chord.project.Chord;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
 import chord.project.Project;
 
@@ -26,7 +26,7 @@ import chord.project.Project;
 @Chord(
 	name = "cs-alias-java"
 )
-public class CSAliasAnalysis extends JavaTask {
+public class CSAliasAnalysis extends JavaAnalysis {
 	private ProgramRel relCVC;
 	private ProgramRel relFC;
 	private ProgramRel relCFC;

@@ -7,7 +7,7 @@ package chord.analyses.downcast;
 
 import chord.project.Chord;
 import chord.project.Project;
-import chord.project.JavaTask;
+import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
 import chord.util.PropertyUtils;
 import chord.util.Assertions;
@@ -33,7 +33,7 @@ import chord.util.Assertions;
 @Chord(
 	name = "downcast-java"
 )
-public class DowncastAnalysis extends JavaTask {
+public class DowncastAnalysis extends JavaAnalysis {
 	private int maxIters;
 
 	private ProgramRel relRefineH;
