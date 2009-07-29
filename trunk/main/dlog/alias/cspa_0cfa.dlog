@@ -1,0 +1,56 @@
+# Copyright (c) 2008-2009, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+
+# 0-cfa may alias analysis with call-graph construction
+
+# Author: Mayur Naik (mhn@cs.stanford.edu)
+# name=cspa-0cfa-dlog
+
+.include "F.dom"
+.include "H.dom"
+.include "I.dom"
+.include "M.dom"
+.include "T.dom"
+.include "V.dom"
+.include "Z.dom"
+.include "C.dom"
+
+.bddvarorder F0_I0xM0xM1_T0_V0xV1_T1_H0xH1xC0xC1xC2
+
+###
+# Relations
+###
+
+CH(c:C0,h:H0) input
+VH(v:V0,h:H0) input
+FH(f:F0,h:H0) input
+HFH(h1:H0,f:F0,h2:H1) input
+reachableI(i:I0) input
+reachableM(m:M0) input
+IM(i:I0,m:M0) input
+MM(m:M0,n:M1) input
+
+CVC(c1:C0,v:V0,c2:C1) output
+FC(f:F0,c:C0) output
+CFC(c1:C0,f:F0,c2:C1) output
+reachableCI(c:C0,i:I0) output
+reachableCM(c:C0,m:M0) output
+rootCM(c:C,m:M) output
+CICM(c:C0,i:I0,d:C1,m:M0) output
+CMCM(c:C0,m:M0,d:C1,n:M1) output
+
+###
+# Constraints
+###
+
+reachableCI(0,i) :- reachableI(i).
+reachableCM(0,m) :- reachableM(m).
+
+CVC(0,v,o) :- VH(v,h), CH(o,h).
+FC(f,o) :- FH(f,h), CH(o,h).
+CFC(o1,f,o2) :- HFH(h1,f,h2), CH(o1,h1), CH(o2,h2).
+CICM(0,i,0,m) :- IM(i,m).
+rootCM(0,0).
+CMCM(0,m,0,n) :- MM(m,n).
+
