@@ -9,9 +9,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -32,7 +32,6 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
-import joeq.Compiler.Quad.RootedCHACallGraph;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.MethodOperand;
@@ -62,7 +61,10 @@ import joeq.Main.Helper;
  */
 public class Program {
 	private static boolean isInited;
-	private static Set<jq_Class> classes;
+	private static List<jq_Class> loadedClasses;
+	private static List<jq_Class> preparedClasses;
+	private static List<jq_Method> reachableMethods;
+	private static List<jq_Type> reachableTypes;
 	private static Map<String, jq_Class> nameToClassMap;
 	private static jq_Method mainMethod;
 	private static boolean HTMLizedJavaSrcFiles;
@@ -75,33 +77,67 @@ public class Program {
 		try {
 			if (isInited)
 				return;
-			File file = new File(Properties.outDirName, "classes.txt");
-			if (file.exists()) {
-				classes = new HashSet<jq_Class>();
-				BufferedReader r =
-					new BufferedReader(new FileReader(file));
-				String s;
-				while ((s = r.readLine()) != null) {
-					System.out.println("Loading: " + s);
-					jq_Class c = (jq_Class) Helper.load(s);
-					if (c != null)
-						classes.add(c);
+			File classesFile = new File(Properties.outDirName, "classes.txt");
+			File methodsFile = new File(Properties.outDirName, "methods.txt");
+			if (classesFile.exists() && methodsFile.exists()) {
+				loadedClasses = new ArrayList<jq_Class>();
+				{
+					BufferedReader r =
+						new BufferedReader(new FileReader(classesFile));
+					String s;
+					while ((s = r.readLine()) != null) {
+						System.out.println("Loading: " + s);
+						jq_Class c = (jq_Class) Helper.load(s);
+						Assertions.Assert(c != null);
+						loadedClasses.add(c);
+					}
+					r.close();
 				}
-				r.close();
-				init2();
+				buildNameToClassMap();
+				reachableMethods = new ArrayList<jq_Method>();
+				{
+					BufferedReader r =
+						new BufferedReader(new FileReader(methodsFile));
+					String s;
+					while ((s = r.readLine()) != null) {
+						String[] a = s.split("@");
+						Assertions.Assert(a.length == 3);
+						jq_Class c = getClass(a[0]);
+						Assertions.Assert(c != null);
+						Assertions.Assert(c.isPrepared());
+						jq_Method m = (jq_Method) c.getDeclaredMember(
+							a[1], a[2]);
+						reachableMethods.add(m);
+					}
+					r.close();
+				}
 			} else {
 				String mainClassName = Properties.mainClassName;
 				Assertions.Assert(mainClassName != null);
-				// Set<jq_Method> reachableMethods = RTA.getReachableMethods(mainClassName);
-				RootedCHACallGraph.build(mainClassName);
-				classes = new HashSet<jq_Class>();
-				for (Object o : jq_Type.set) {
-					if (o instanceof jq_Class) {
-						jq_Class c = (jq_Class) o;
-						classes.add(c);
-					}
+				RTA rta = new RTA();
+				rta.run(mainClassName);
+				Set<jq_Class> cset = rta.getLoadedClasses();
+				loadedClasses = new ArrayList<jq_Class>(cset.size());
+				PrintWriter classesFileWriter =
+					new PrintWriter(classesFile);
+				for (jq_Class c : cset) {
+					loadedClasses.add(c);
+					classesFileWriter.println(c.getName());
 				}
-				init2();
+				classesFileWriter.close();
+				buildNameToClassMap();
+				Set<jq_Method> mset = rta.getReachableMethods();
+				reachableMethods = new ArrayList<jq_Method>(mset.size());
+				PrintWriter methodsFileWriter =
+					new PrintWriter(methodsFile);
+				for (jq_Method m : mset) {
+					reachableMethods.add(m);
+					String s = m.getDeclaringClass().getName() + "@" +
+						m.getName() + "@" + m.getDesc().toString();
+					methodsFileWriter.println(s);
+				}
+				methodsFileWriter.close();
+				/*
 				Project.runTask("cipa-0cfa-dlog");
 				ProgramRel relReachableT =
 					(ProgramRel) Project.getTrgt("reachableT");
@@ -121,7 +157,9 @@ public class Program {
 				w.close();
 				instToMethodMap.clear();
 				Project.resetAll();
+				*/
 			}
+			initThreadStart();
 			isInited = true;
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
@@ -141,22 +179,34 @@ public class Program {
 		return m;
 	}
 
-	public static jq_Class getClass(String name) {
-		if (nameToClassMap == null) {
-			nameToClassMap = new HashMap<String, jq_Class>();
-			Collection<jq_Class> classes = getClasses();
-			for (jq_Class c : classes) {
-				System.out.println("ADDING: " + c);
-				nameToClassMap.put(c.getName(), c);
+	private static void buildNameToClassMap() {
+		reachableTypes = jq_Type.list;
+		nameToClassMap = new HashMap<String, jq_Class>();
+		preparedClasses = new ArrayList<jq_Class>();
+		for (jq_Type t : reachableTypes) {
+			if (t instanceof jq_Class) {
+				jq_Class c = (jq_Class) t;
+				nameToClassMap.put(t.getName(), c);
+				if (c.isPrepared())
+					preparedClasses.add(c);
 			}
 		}
+	}
+	
+	public static jq_Class getClass(String name) {
 		return nameToClassMap.get(name);
 	}
 
-	public static Collection<jq_Class> getClasses() {
-		return classes;
+	public static List<jq_Class> getPreparedClasses() {
+		return preparedClasses;
 	}
-
+	public static List<jq_Method> getReachableMethods() { 
+		return reachableMethods;
+	}
+	public static List<jq_Type> getReachableTypes() {
+		return reachableTypes;
+	}
+	
     private static void initThreadStart() {
 		jq_Method m = getThreadStartMethod();
 		if (m == null)
@@ -254,10 +304,6 @@ public class Program {
 			return getOrMakeEmptyCFG(m);
 		}
 		return cfg;
-	}
-
-	private static void init2() {
-		initThreadStart();
 	}
 
 	public static jq_Method getMainMethod() {

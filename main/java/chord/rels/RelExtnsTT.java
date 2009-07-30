@@ -26,7 +26,7 @@ import chord.util.Assertions;
 public class RelExtnsTT extends ProgramRel {
 	public void fill() {
 		DomT domT = (DomT) doms[0];
-		for (jq_Class c : Program.getClasses()) {
+		for (jq_Class c : Program.getPreparedClasses()) {
 			// c is concrete/abstract class or interface
 			int t1Idx = domT.get(c);
 			if (c.isInterface()) {
