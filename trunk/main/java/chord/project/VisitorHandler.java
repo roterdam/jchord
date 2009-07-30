@@ -230,7 +230,7 @@ public class VisitorHandler {
 			(pivs != null) || (rivs != null) || (livs != null);
 		doCFGs = (vvs != null) || doInsts;
 		if (cvs != null) {
-			for (jq_Class c : Program.getClasses()) {
+			for (jq_Class c : Program.getPreparedClasses()) {
 				for (IClassVisitor cv : cvs)
 					cv.visit(c);
 				if (fvs != null)
