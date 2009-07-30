@@ -80,7 +80,7 @@ public class Program {
 			File classesFile = new File(Properties.outDirName, "classes.txt");
 			File methodsFile = new File(Properties.outDirName, "methods.txt");
 			if (classesFile.exists() && methodsFile.exists()) {
-				loadedClasses = new ArrayList<jq_Class>();
+				preparedClasses = new ArrayList<jq_Class>();
 				{
 					BufferedReader r =
 						new BufferedReader(new FileReader(classesFile));
@@ -89,7 +89,8 @@ public class Program {
 						System.out.println("Loading: " + s);
 						jq_Class c = (jq_Class) Helper.load(s);
 						Assertions.Assert(c != null);
-						loadedClasses.add(c);
+						c.prepare();
+						preparedClasses.add(c);
 					}
 					r.close();
 				}
@@ -105,8 +106,7 @@ public class Program {
 						jq_Class c = getClass(a[0]);
 						Assertions.Assert(c != null);
 						Assertions.Assert(c.isPrepared());
-						jq_Method m = (jq_Method) c.getDeclaredMember(
-							a[1], a[2]);
+						jq_Method m = (jq_Method) c.getDeclaredMember(a[1], a[2]);
 						reachableMethods.add(m);
 					}
 					r.close();
@@ -116,13 +116,15 @@ public class Program {
 				Assertions.Assert(mainClassName != null);
 				RTA rta = new RTA();
 				rta.run(mainClassName);
-				Set<jq_Class> cset = rta.getLoadedClasses();
-				loadedClasses = new ArrayList<jq_Class>(cset.size());
+				Set<jq_Class> cset = rta.getPreparedClasses();
+				preparedClasses = new ArrayList<jq_Class>(cset.size());
 				PrintWriter classesFileWriter =
 					new PrintWriter(classesFile);
 				for (jq_Class c : cset) {
-					loadedClasses.add(c);
-					classesFileWriter.println(c.getName());
+					String s = c.getName();
+					Assertions.Assert(!s.startsWith("joeq."));
+					preparedClasses.add(c);
+					classesFileWriter.println(s);
 				}
 				classesFileWriter.close();
 				buildNameToClassMap();
@@ -180,15 +182,18 @@ public class Program {
 	}
 
 	private static void buildNameToClassMap() {
-		reachableTypes = jq_Type.list;
+		reachableTypes = new ArrayList<jq_Type>();
+		for (Object o : jq_Type.list) {
+			jq_Type t = (jq_Type) o;
+			if (t.getName().startsWith("joeq."))
+				continue;
+			reachableTypes.add(t);
+		}
 		nameToClassMap = new HashMap<String, jq_Class>();
-		preparedClasses = new ArrayList<jq_Class>();
 		for (jq_Type t : reachableTypes) {
 			if (t instanceof jq_Class) {
 				jq_Class c = (jq_Class) t;
 				nameToClassMap.put(t.getName(), c);
-				if (c.isPrepared())
-					preparedClasses.add(c);
 			}
 		}
 	}
@@ -332,7 +337,7 @@ public class Program {
 	
 	public static jq_Method getThreadStartMethod() {
     	jq_Class threadClass = getClass("java.lang.Thread");
-		if (threadClass == null)
+		if (threadClass == null || !threadClass.isPrepared())
 			return null;
     	jq_NameAndDesc nadOfStart = new jq_NameAndDesc("start", "()V");
     	jq_Method start = threadClass.getDeclaredInstanceMethod(nadOfStart);
