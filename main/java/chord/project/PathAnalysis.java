@@ -112,7 +112,7 @@ public class PathAnalysis implements ITask {
 			String[] runIds = runIdsStr.split(",");
 			String jvmargs = System.getProperty("chord.jvmargs", "");
 			String cmd = "java " + jvmargs + " -cp " + classPathName +
-   	     	" -agentlib:tracing_agent" +
+   	     	" -agentlib:trace_agent" +
 				"=t_file_name=" + traceFileName +
 				",m_file_name=" + methsFileName +
 				" " + mainClassName + " ";

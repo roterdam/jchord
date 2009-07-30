@@ -14,7 +14,8 @@ ifeq (${OS},Windows_NT)
   DLL_OUTPUT_OPTION = -o$(space)
   INCLUDES = -I"$(JDK_ROOT)/include" \
              -I"$(JDK_ROOT)/include/win32"
-  DLL_NAME = $(LIB_DIR)/tracing_agent.dll
+  TRACE_DLL_NAME = $(LIB_DIR)/trace_agent.dll
+  INSTR_DLL_NAME = $(LIB_DIR)/instr_agent.dll
 else
   ifeq (${shell uname -s},Darwin)
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
@@ -23,7 +24,8 @@ else
     LINKFLAGS = $(M32_FLAG) -dynamiclib -framework JavaVM  -single_module -undefined suppress -flat_namespace
     DLL_OUTPUT_OPTION = -o$(space)
     INCLUDES = -I$(JDK_ROOT)/Headers/
-    DLL_NAME = $(LIB_DIR)/libtracing_agent.jnilib
+    TRACE_DLL_NAME = $(LIB_DIR)/libtrace_agent.jnilib
+    INSTR_DLL_NAME = $(LIB_DIR)/libinstr_agent.jnilib
   else
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
     OBJECT_OUTPUT_OPTION = -o$(space)
@@ -32,20 +34,27 @@ else
     DLL_OUTPUT_OPTION = -o$(space)
     INCLUDES = -I. -I$(JDK_ROOT)/include \
                -I$(JDK_ROOT)/include/linux
-    DLL_NAME = $(LIB_DIR)/libtracing_agent.so
+    TRACE_DLL_NAME = $(LIB_DIR)/libtrace_agent.so
+    INSTR_DLL_NAME = $(LIB_DIR)/libinstr_agent.so
   endif
 endif
 
-default: $(DLL_NAME)
+default: $(TRACE_DLL_NAME) $(INSTR_DLL_NAME)
 
-$(DLL_NAME): tracing_agent.o
+$(TRACE_DLL_NAME): trace_agent.o
 	$(LINK) $(LINKFLAGS) $< $(DLL_OUTPUT_OPTION)$@
 
-tracing_agent.o: tracing_agent.cpp
-	$(CXX) tracing_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
+$(INSTR_DLL_NAME): instr_agent.o
+	$(LINK) $(LINKFLAGS) $< $(DLL_OUTPUT_OPTION)$@
+
+trace_agent.o: trace_agent.cpp
+	$(CXX) trace_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
+
+instr_agent.o: instr_agent.cpp
+	$(CXX) instr_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
 
 clean:
-	$(RM) -f tracing_agent.o $(DLL_NAME)
+	$(RM) -f trace_agent.o instr_agent.o $(TRACE_DLL_NAME) $(INSTR_DLL_NAME)
 
 empty := 
 space := $(empty) $(empty)
