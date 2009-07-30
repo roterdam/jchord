@@ -3,22 +3,23 @@
  * rights reserved.
  * Licensed under the terms of the GNU GPL; see COPYING for details.
  */
+package test;
 
 /**
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class MyB {
-	private MyA bf;
-	public MyB() {
-		MyA a = new MyA();
+public class B {
+	private A bf;
+	public B() {
+		A a = new A();
 		this.bf = a;
 	}
 	public int get() {
-		MyA a = this.bf;
+		A a = this.bf;
 		return a.get();
 	}
 	public void set(int i) {
-		MyA a = this.bf;
+		A a = this.bf;
 		a.set(i);
 	}
 }

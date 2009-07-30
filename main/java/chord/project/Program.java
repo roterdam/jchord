@@ -240,6 +240,7 @@ public class Program {
 		System.out.println("SETTING THREAD START");
 		CodeCache.cache.setMap(m, cfg);
 		CodeCache.cache.setBCMap(m, null);
+		m.unsynchronize();
     }
 
 	public static Map getBCMap(jq_Method m) {

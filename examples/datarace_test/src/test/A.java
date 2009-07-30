@@ -3,13 +3,14 @@
  * rights reserved.
  * Licensed under the terms of the GNU GPL; see COPYING for details.
  */
+package test;
 
 /**
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class MyA {
+public class A {
 	private int af;
-	public MyA() {
+	public A() {
 		this.af = 0;
 	}
 	public int get() {
