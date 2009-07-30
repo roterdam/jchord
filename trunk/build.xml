@@ -208,6 +208,7 @@
     <java classname="chord.project.Project"
         fork="true" failonerror="true" dir="${chord.work.dir}">
       <jvmarg value="-showversion"/>
+      <jvmarg value="-ea"/>
       <jvmarg value="-Xmx${chord.max.heap}"/>
       <jvmarg value="-Xss${chord.max.stack}"/>
       <syspropertyset>

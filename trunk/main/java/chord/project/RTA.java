@@ -5,7 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import chord.util.Assertions;
+import chord.util.Timer;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
@@ -31,6 +31,7 @@ import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 
 public class RTA {
+	public static final boolean DEBUG = true;
 	private Set<jq_Class> preparedClasses = new HashSet<jq_Class>();
 	private Set<jq_Class> reachableAllocClasses = new HashSet<jq_Class>();
 	// all classes whose clinits and super class/interface clinits
@@ -41,7 +42,7 @@ public class RTA {
 	// worklist for methods seen so far in current iteration but
 	// whose cfg's haven't been processed yet
 	private List<jq_Method> todoMethods = new ArrayList<jq_Method>();
-	private boolean repeat;
+	private boolean repeat = true;
 	private jq_Class javaLangObject;
 	public Set<jq_Class> getPreparedClasses() {
 		return preparedClasses;
@@ -50,39 +51,45 @@ public class RTA {
 		return seenMethods;
 	}
 	public void run(String mainClassName) {
+		System.out.println("ENTER: RTA");
+		Timer timer = new Timer();
+		timer.init();
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
         jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
-        jq_NameAndDesc sign = new jq_NameAndDesc("main",
-        	"([Ljava/lang/String;)V");
+        jq_NameAndDesc sign = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
 	    prepareClass(mainClass);
         jq_Method mainMethod = mainClass.getDeclaredStaticMethod(sign);
         if (mainMethod == null) {
-            throw new RuntimeException("Class " + mainClass +
-            	" lacks a main method");
+            throw new RuntimeException("No main method in class " + mainClass);
         }
-        do {
+		for (int i = 0; repeat; i++) {
+			if (DEBUG) System.out.println("Iteration: " + i);
+			repeat = false;
          	classesAddedForClinit.clear();
         	seenMethods.clear();
-			repeat = false;
             handleClinits(mainClass);
         	handleSeenMethod(mainMethod);
 	        while (!todoMethods.isEmpty()) {
 	        	jq_Method m = todoMethods.remove(todoMethods.size() - 1);
 	        	handleTodoMethod(m);
 	        }
-        } while (repeat);
+        }
+		System.out.println("LEAVE: RTA");
+		timer.done();
+		System.out.println("Time: " + timer.getInclusiveTimeStr());
 	}
 	private void handleSeenMethod(jq_Method m) {
-		// System.out.println("m: " + m + " state: " + m.getState());
-		if (!m.isPrepared()) {
-			m.prepare();
+		assert(m.isPrepared());
+		if (seenMethods.add(m)) {
+			if (DEBUG) System.out.println("\tAdding method: " + m);
+			if (!m.isAbstract() && !m.isNative()) {
+				todoMethods.add(m);
+			}
 		}
-		if (seenMethods.add(m) && !m.isAbstract() && !m.isNative())
-			todoMethods.add(m);
 	}
 	private void handleTodoMethod(jq_Method m) {
-		// System.out.println("PROCESSING: " + m);
+		if (DEBUG) System.out.println("ENTER handleTodoMethod: " + m);
 		ControlFlowGraph cfg = CodeCache.getCode(m);
         for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
         		it.hasNext();) {
@@ -90,78 +97,87 @@ public class RTA {
         	for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
         		Quad q = it2.nextQuad();
         		Operator op = q.getOperator();
-        		if (op instanceof InvokeVirtual) {
-                    jq_Method n = Invoke.getMethod(q).getMethod();
-                    jq_Class c = n.getDeclaringClass();
-                    jq_NameAndDesc nad = n.getNameAndDesc();
-    	            for (jq_Class d : reachableAllocClasses) {
-    	            	if (d.extendsClass(c)) {
-    	            		n = d.getVirtualMethod(nad);
-    	                	Assertions.Assert(n != null);
-    	                	handleSeenMethod(n);
-    	            	}
-    	            }
-        		} else if (op instanceof InvokeInterface) {
-                    jq_Method n = Invoke.getMethod(q).getMethod();
-                    jq_Class c = n.getDeclaringClass();
-                    jq_NameAndDesc nad = n.getNameAndDesc();
-    	            for (jq_Class d : reachableAllocClasses) {
-    	                if (d.implementsInterface(c)) {
-    	                	n = d.getVirtualMethod(nad);
-    	                	Assertions.Assert(n != null);
-    	                	handleSeenMethod(n);
-    	                }
-    	            }
-        		} else if (op instanceof InvokeStatic) {
-                    jq_Method n = Invoke.getMethod(q).getMethod();
-                   	handleClass(n.getDeclaringClass());
-                    handleSeenMethod(n);
+        		if (op instanceof Invoke) {
+					if (DEBUG) System.out.println("Quad: " + q);
+					jq_Method n = Invoke.getMethod(q).getMethod();
+					jq_Class c = n.getDeclaringClass();
+					if (op instanceof InvokeVirtual) {
+						jq_NameAndDesc nad = n.getNameAndDesc();
+						for (jq_Class d : reachableAllocClasses) {
+							if (d.extendsClass(c)) {
+								n = d.getVirtualMethod(nad);
+								assert(n != null);
+								handleSeenMethod(n);
+							}
+						}
+					} else if (op instanceof InvokeInterface) {
+						jq_NameAndDesc nad = n.getNameAndDesc();
+						for (jq_Class d : reachableAllocClasses) {
+							if (d.implementsInterface(c)) {
+								n = d.getVirtualMethod(nad);
+								assert(n != null);
+								handleSeenMethod(n);
+							}
+						}
+					} else {
+						assert(op instanceof InvokeStatic);
+						handleClass(c);
+						handleSeenMethod(n);
+					}
         		} else if (op instanceof Getstatic) {
+					if (DEBUG) System.out.println("Quad: " + q);
         			jq_Class c = Getstatic.getField(q).
-        				getField().getDeclaringClass();
+						getField().getDeclaringClass();
         			handleClass(c);
         		} else if (op instanceof Putstatic) {
+					if (DEBUG) System.out.println("Quad: " + q);
         			jq_Class c = Putstatic.getField(q).
-        				getField().getDeclaringClass();
+						getField().getDeclaringClass();
         			handleClass(c);
         		} else if (op instanceof New) {
+					if (DEBUG) System.out.println("Quad: " + q);
         			jq_Class c = (jq_Class) New.getType(q).getType();
         			handleClass(c);
-        			if (reachableAllocClasses.add(c))
+        			if (reachableAllocClasses.add(c)) {
+						if (DEBUG) System.out.println("Setting repeat");
         				repeat = true;
+					}
         		}
         	}
         }
+		if (DEBUG) System.out.println("LEAVE handleTodoMethod: " + m);
 	}
+
 	private void prepareClass(jq_Class c) {
 		if (preparedClasses.add(c)) {
 	        c.prepare();
+			if (DEBUG) System.out.println("\tAdding class: " + c);
 			jq_Class d = c.getSuperclass();
 			if (d == null)
-        		Assertions.Assert(c == javaLangObject);
+        		assert(c == javaLangObject);
 			else
 				prepareClass(d);
-			jq_Class[] interfaces = c.getDeclaredInterfaces();
-			for (jq_Class i : interfaces)
+			for (jq_Class i : c.getDeclaredInterfaces())
 				prepareClass(i);
 		}
 	}
+
 	private void handleClass(jq_Class c) {
 		prepareClass(c);
 		handleClinits(c);
 	}
+
 	private void handleClinits(jq_Class c) {
-		if (!classesAddedForClinit.add(c))
-			return;
-        jq_ClassInitializer m = c.getClassInitializer();
-        // m is null for classes without class initializer method
-        if (m != null)
-        	handleSeenMethod(m);
-        jq_Class d = c.getSuperclass();
-        if (d != null)
-            handleClinits(d);
-        jq_Class[] interfaces = c.getDeclaredInterfaces();
-        for (jq_Class i : interfaces)
-        	handleClinits(i);
+		if (classesAddedForClinit.add(c)) {
+			jq_ClassInitializer m = c.getClassInitializer();
+			// m is null for classes without class initializer method
+			if (m != null)
+				handleSeenMethod(m);
+			jq_Class d = c.getSuperclass();
+			if (d != null)
+				handleClinits(d);
+			for (jq_Class i : c.getDeclaredInterfaces())
+				handleClinits(i);
+		}
 	}
 }
