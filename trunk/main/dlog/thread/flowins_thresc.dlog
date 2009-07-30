@@ -13,7 +13,7 @@
 .include "F.dom"
 .include "E.dom"
 
-.bddvarorder F0_E0_M0xP0_V0_C0xC1_Z0
+.bddvarorder C0xC1_V0_F0_E0_Z0_M0xP0
 
 ###
 # Relations
@@ -41,7 +41,7 @@ escO(o) :- FC(_,o).
 escO(o) :- MmethArg(1,0,v), CVC(_,v,o).
 escO(o2) :- CFC(o1,_,o2), escO(o1).
 
-escCPVO(c,p,v,o) :- CVC(c,v,o), MV(m,v), MP(m,p), escO(o).
+escCPVO(c,p,v,o) :- CVC(c,v,o), MV(m,v), MP(m,p), escO(o). split
 escCE(c,e) :- EV(e,v), CVC(c,v,o), escO(o).
 
 flowinsVisitedE(e) :- EV(e,v), CVC(_,v,_).
