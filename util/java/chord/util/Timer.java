@@ -21,6 +21,9 @@ public class Timer {
 	private Date lastResumeDate = null;
 	private Date doneDate = null;
 	private boolean isPaused = false;
+	public Timer() {
+		this.name = null;
+	}
 	public Timer(String name) {
 		this.name = name;
 	}
