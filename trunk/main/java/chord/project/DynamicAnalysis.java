@@ -110,7 +110,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final String cmd = "java -Xbootclasspath/p:" + Properties.bootClassPathName +
         	" -Xverify:none " + // " -verbose" + 
 			" -cp " + classesDirName + File.pathSeparator + classPathName +
-        	" -agentlib:chord_agent" +
+        	" -agentlib:instr_agent" +
 			"=trace_file_name=" + crudeTraceFileName +
 			" " + mainClassName + " ";
 		final String cmd2 = "java -cp " + Properties.bootClassPathName + // TODO
