@@ -298,7 +298,7 @@ public class Program {
 			// (new EnterSSA()).visitCFG(cfg);
 			if (cfg == null) {
 				System.out.println("Method " + m + " has empty CFG");
-				assert (false);
+				assert false;
 			}
 		} catch (Exception ex) {
 			System.out.println("Failed to get CFG for method: " +
