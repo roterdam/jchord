@@ -483,7 +483,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
                 relCtxtCpyM.add(mIdx);
                 break;
             default:
-                assert (false);
+                assert false;
             }
         }
         relEpsilonM.save();
@@ -625,7 +625,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				break;
 			}
 			default:
-				assert (false);
+				assert false;
 			}
 		}
 		process(roots, methToPredsMap);
@@ -744,7 +744,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			break;
 		}
 		default:
-			assert (false);
+			assert false;
 		}
 		return newCtxts;
 	}
