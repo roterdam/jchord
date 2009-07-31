@@ -36,8 +36,10 @@ public class Properties {
 		System.getProperty("chord.bddbddb.noisy");
 	public final static String bddLibDirName =
 		System.getProperty("chord.bdd.lib.dir");
-	public final static String agentLibDirName =
-		System.getProperty("chord.agent.lib.dir");
+	public final static String traceAgentFileName =
+		System.getProperty("chord.trace.agent.file");
+	public final static String instrAgentFileName =
+		System.getProperty("chord.instr.agent.file");
 
 	public final static String traceFileName =
 		System.getProperty("chord.trace.file", "trace.txt");
@@ -61,6 +63,7 @@ public class Properties {
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
 		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
-		System.out.println("chord.agent.lib.dir: " + agentLibDirName);
+		System.out.println("chord.trace.agent.file: " + traceAgentFileName);
+		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
 	}
 }

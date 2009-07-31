@@ -22,7 +22,6 @@ public class Utils {
 		FileUtils.copy(srcFile.getAbsolutePath(),
 			dstFile.getAbsolutePath());
 	}
-
 	public static void runSaxon(String xmlFileName, String xslFileName) {
 		String outDirName = Properties.outDirName;
 		String dummyFileName = (new File(outDirName, "dummy")).getAbsolutePath();

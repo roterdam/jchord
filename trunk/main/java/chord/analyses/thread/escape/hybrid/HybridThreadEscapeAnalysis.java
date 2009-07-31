@@ -179,8 +179,10 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			currHeapInst = e.getKey();
 			currAllocs = e.getValue();
 			jq_Method m = Program.getMethod(currHeapInst);
+/*
 			if (!m.getDeclaringClass().getName().startsWith("test"))
 				continue;
+*/
 			System.out.println("currHeapInst: " + Program.toStringHeapInst(currHeapInst) +
 				" m: " + m);
 			for (Quad h : currAllocs)
