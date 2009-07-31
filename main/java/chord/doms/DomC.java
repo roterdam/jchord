@@ -14,7 +14,6 @@ import chord.analyses.alias.Ctxt;
 import chord.project.Program;
 import chord.project.ProgramDom;
 import chord.project.Project;
-import chord.util.Assertions;
 
 /**
  * Domain of abstract contexts of methods.
@@ -56,7 +55,7 @@ public class DomC extends ProgramDom<Ctxt> {
 				int iIdx = domI.get(eVal);
 				s += "I" + iIdx;
 			} else
-				Assertions.Assert(false);
+				assert false;
 			if (i < n - 1)
 				s += " ";
 		}

@@ -7,8 +7,6 @@ package chord.analyses.alias;
 
 import java.util.Set;
 
-import chord.util.Assertions;
-
 /**
  * Representation of an abstract object.
  * <p>
@@ -20,7 +18,7 @@ import chord.util.Assertions;
 public class Obj {
 	public final Set<Ctxt> pts;
 	public Obj(Set<Ctxt> pts) {
-		Assertions.Assert(pts != null);
+		assert (pts != null);
 		this.pts = pts;
 	}
 	/**

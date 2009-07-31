@@ -23,7 +23,6 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.util.graph.IGraph;
 import chord.util.graph.MutableGraph;
 import chord.util.ArraySet;
-import chord.util.Assertions;
 import chord.bddbddb.Rel.RelView;
 import chord.doms.DomC;
 import chord.doms.DomH;
@@ -232,7 +231,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
         } else if (instCtxtKindStr.equals("co")) {
         	instCtxtKind = KOBJSEN;
         } else
-        	Assertions.Assert(false);
+        	assert false;
         if (statCtxtKindStr.equals("ci")) {
         	statCtxtKind = CTXTINS;
         } else if (statCtxtKindStr.equals("cs")) {
@@ -240,15 +239,15 @@ public class CtxtsAnalysis extends JavaAnalysis {
         } else if (statCtxtKindStr.equals("cc")) {
         	statCtxtKind = CTXTCPY;
         } else
-        	Assertions.Assert(false);
+        	assert false;
 
 		kobjK = Integer.getInteger("chord.kobj.k", 1);
-		Assertions.Assert(kobjK > 0);
+		assert (kobjK > 0);
 		kcfaK = Integer.getInteger("chord.kcfa.k", 1);
-		Assertions.Assert(kcfaK > 0);
+		assert (kcfaK > 0);
 
 		if (maxIters > 0) {
-			Assertions.Assert(instCtxtKind == KOBJSEN ||
+			assert (instCtxtKind == KOBJSEN ||
 				instCtxtKind == KCFASEN ||
 				statCtxtKind == KCFASEN);
 		}
@@ -317,7 +316,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
             Iterable<Register> vars = relRefineV.getAry1ValTuples();
             for (Register var : vars) {
                 int v = domV.get(var);
-                Assertions.Assert(!isCtxtSenV[v]);
+                assert (!isCtxtSenV[v]);
                 isCtxtSenV[v] = true;
             }
             relRefineV.close();
@@ -325,9 +324,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
             Iterable<jq_Method> meths = relRefineM.getAry1ValTuples();
             for (jq_Method meth : meths) {
                 int m = domM.get(meth);
-                Assertions.Assert(methKind[m] == CTXTINS);
+                assert (methKind[m] == CTXTINS);
                 methKind[m] = getCtxtKind(meth);
-                Assertions.Assert(methKind[m] != CTXTINS);
+                assert (methKind[m] != CTXTINS);
             }
             relRefineM.close();
 		}
@@ -432,7 +431,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		if (!isLastIter)
 			relRefinableCI.save();
 
-		Assertions.Assert(domC.size() == numC);
+		assert (domC.size() == numC);
 
 		relCH.zero();
 		if (!isLastIter)
@@ -459,7 +458,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		if (!isLastIter)
 			relRefinableCH.save();
 
-		Assertions.Assert(domC.size() == numC);
+		assert (domC.size() == numC);
 
 		relCC.save();
 
@@ -484,7 +483,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
                 relCtxtCpyM.add(mIdx);
                 break;
             default:
-                Assertions.Assert(false);
+                assert (false);
             }
         }
         relEpsilonM.save();
@@ -543,13 +542,13 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			int kind = methKind[m];
 			if (kind != CTXTINS) {
 				jq_Method meth = domM.get(m);
-				Assertions.Assert(meth != mainMeth);
-				Assertions.Assert(!(meth instanceof jq_ClassInitializer));
-				Assertions.Assert(Program.getCFG(meth) != null);
+				assert (meth != mainMeth);
+				assert (!(meth instanceof jq_ClassInitializer));
+				assert (Program.getCFG(meth) != null);
 				if (kind == KOBJSEN) {
-					Assertions.Assert(!meth.isStatic());
+					assert (!meth.isStatic());
 				} else if (kind == CTXTCPY) {
-					Assertions.Assert(meth.isStatic());
+					assert (meth.isStatic());
 				}
 			}
 		}
@@ -562,7 +561,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				jq_Method meth = domV.getMethod(var);
 				int m = domM.get(meth);
 				int kind = methKind[m];
-				Assertions.Assert(kind != CTXTINS);
+				assert (kind != CTXTINS);
 			}
 		}
 	}
@@ -626,7 +625,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				break;
 			}
 			default:
-				Assertions.Assert(false);
+				assert (false);
 			}
 		}
 		process(roots, methToPredsMap);
@@ -651,7 +650,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				}
 			}
 			for (jq_Method cle : scc) {
-				Assertions.Assert(!roots.contains(cle));
+				assert (!roots.contains(cle));
 			}
 			boolean changed = true;
 			for (int count = 0; changed; count++) {
@@ -745,7 +744,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			break;
 		}
 		default:
-			Assertions.Assert(false);
+			assert (false);
 		}
 		return newCtxts;
 	}

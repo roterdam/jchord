@@ -12,13 +12,13 @@ import java.io.FileReader;
 import java.io.PrintStream;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.NoSuchElementException;
+import java.util.StringTokenizer;
 
 import chord.util.tuple.object.*;
-
-import chord.util.Assertions;
-
-import java.util.NoSuchElementException;
 
 import net.sf.javabdd.BDD;
 import net.sf.javabdd.BDDDomain;
@@ -96,8 +96,8 @@ public class Rel {
      * @param	name	The name of this relation.
      */
 	public void setName(String name) {
-		Assertions.Assert(name != null);
-		Assertions.Assert(this.name == null);
+		assert (name != null);
+		assert (this.name == null);
 		this.name = name;
 	}
 	/**
@@ -140,9 +140,9 @@ public class Rel {
      * @param	sign	The signature of this relation.
      */
     public void setSign(RelSign sign) {
-    	Assertions.Assert(this.sign == null);
-    	Assertions.Assert(sign != null);
-		Assertions.Assert(sign.val1 != null);
+    	assert (this.sign == null);
+    	assert (sign != null);
+		assert (sign.val1 != null);
 		this.sign = sign;
 		numDoms = sign.val0.length;
 	}
@@ -171,8 +171,8 @@ public class Rel {
      * @param	doms	The domains of this relation.
      */
 	public void setDoms(Dom[] doms) {
-		Assertions.Assert(this.sign != null);
-		Assertions.Assert(numDoms == doms.length);
+		assert (this.sign != null);
+		assert (numDoms == doms.length);
 		this.doms = doms;
 	}
 	protected void initialize() {
@@ -233,21 +233,21 @@ public class Rel {
     		BufferedReader in = new BufferedReader(new FileReader(file));
 			{
     			String s = in.readLine();
-    			Assertions.Assert(s != null && s.startsWith("#"));
+    			assert (s != null && s.startsWith("#"));
     			StringTokenizer st = new StringTokenizer(s.substring(2));
     			for (int i = 0; i < numDoms; i++) {
    					String dname = st.nextToken(": ");
     				int dbits = Integer.parseInt(st.nextToken());
     				BDDDomain d = domBdds[i];
-					Assertions.Assert(d.getName().equals(dname));
-    				Assertions.Assert(d.varNum() == dbits);
+					assert (d.getName().equals(dname));
+    				assert (d.varNum() == dbits);
     			}
-				Assertions.Assert(!st.hasMoreTokens());
+				assert (!st.hasMoreTokens());
 			}
     		int[] map = null;
     		for (BDDDomain d : domBdds) {
     			String s = in.readLine();
-    			Assertions.Assert(s != null && s.startsWith("#"));
+    			assert (s != null && s.startsWith("#"));
     			StringTokenizer st = new StringTokenizer(s.substring(2));
     			int[] vars = d.vars();
     			for (int j = 0; j < vars.length; ++j) {
@@ -266,7 +266,7 @@ public class Rel {
     				}
     				map[k] = vars[j];
     			}
-    			Assertions.Assert(!st.hasMoreTokens());
+    			assert (!st.hasMoreTokens());
     		}
     		bdd = factory.load(in, map);
     		in.close();
@@ -567,7 +567,7 @@ public class Rel {
     		b.free();
     	}
     	public void select(int domIdx, Object val) {
-			Assertions.Assert(keptDoms[domIdx]);
+			assert (keptDoms[domIdx]);
     		try {
     			int idx = doms[domIdx].get(val);
     			b.restrictWith(domBdds[domIdx].ithVar(idx));
@@ -576,7 +576,7 @@ public class Rel {
     		}
     	}
     	public void select(int domIdx, int idx) {
-			Assertions.Assert(keptDoms[domIdx]);
+			assert (keptDoms[domIdx]);
     		try {
     			b.restrictWith(domBdds[domIdx].ithVar(idx));
     		} catch (BDDException ex) {
@@ -584,12 +584,12 @@ public class Rel {
     		}
     	}
     	public void delete(int domIdx) {
-			Assertions.Assert(keptDoms[domIdx]);
+			assert (keptDoms[domIdx]);
     		b.exist(domBdds[domIdx].set());
     		keptDoms[domIdx] = false;
     	}
     	public void selectAndDelete(int domIdx, Object val) {
-			Assertions.Assert(keptDoms[domIdx]);
+			assert (keptDoms[domIdx]);
     		try {
     			int idx = doms[domIdx].get(val);
     			b.restrictWith(domBdds[domIdx].ithVar(idx));
@@ -600,7 +600,7 @@ public class Rel {
     		}
     	}
     	public void selectAndDelete(int domIdx, int idx) {
-			Assertions.Assert(keptDoms[domIdx]);
+			assert (keptDoms[domIdx]);
     		try {
     			b.restrictWith(domBdds[domIdx].ithVar(idx));
     			b.exist(domBdds[domIdx].set());

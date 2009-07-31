@@ -8,7 +8,6 @@ package chord.project;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import chord.util.Assertions;
 import chord.visitors.IClassVisitor;
 import chord.visitors.IFieldVisitor;
 import chord.visitors.IHeapInstVisitor;

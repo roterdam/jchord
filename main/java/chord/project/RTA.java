@@ -80,7 +80,7 @@ public class RTA {
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
 	}
 	private void handleSeenMethod(jq_Method m) {
-		assert(m.isPrepared());
+		assert (m.isPrepared());
 		if (seenMethods.add(m)) {
 			if (DEBUG) System.out.println("\tAdding method: " + m);
 			if (!m.isAbstract() && !m.isNative()) {
@@ -106,7 +106,7 @@ public class RTA {
 						for (jq_Class d : reachableAllocClasses) {
 							if (d.extendsClass(c)) {
 								n = d.getVirtualMethod(nad);
-								assert(n != null);
+								assert (n != null);
 								handleSeenMethod(n);
 							}
 						}
@@ -115,12 +115,12 @@ public class RTA {
 						for (jq_Class d : reachableAllocClasses) {
 							if (d.implementsInterface(c)) {
 								n = d.getVirtualMethod(nad);
-								assert(n != null);
+								assert (n != null);
 								handleSeenMethod(n);
 							}
 						}
 					} else {
-						assert(op instanceof InvokeStatic);
+						assert (op instanceof InvokeStatic);
 						handleClass(c);
 						handleSeenMethod(n);
 					}
@@ -154,7 +154,7 @@ public class RTA {
 			if (DEBUG) System.out.println("\tAdding class: " + c);
 			jq_Class d = c.getSuperclass();
 			if (d == null)
-        		assert(c == javaLangObject);
+        		assert (c == javaLangObject);
 			else
 				prepareClass(d);
 			for (jq_Class i : c.getDeclaredInterfaces())

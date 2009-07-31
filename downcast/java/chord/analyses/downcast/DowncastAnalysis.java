@@ -9,7 +9,6 @@ import chord.project.Chord;
 import chord.project.Project;
 import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
-import chord.util.Assertions;
 
 /**
  * Downcast safety analysis.
@@ -42,7 +41,7 @@ public class DowncastAnalysis extends JavaAnalysis {
 
 	public void run() {
 		maxIters = Integer.getInteger("chord.max.iters", 0);
-		Assertions.Assert(maxIters >= 0);
+		assert (maxIters >= 0);
 
 		relRefineH = (ProgramRel) Project.getTrgt("refineH");
 		relRefineM = (ProgramRel) Project.getTrgt("refineM");

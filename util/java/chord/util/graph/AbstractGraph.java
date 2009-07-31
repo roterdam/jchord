@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.Collections;
 
 import chord.util.tuple.object.Pair;
-import chord.util.Assertions;
 import chord.util.IndexMap;
 
 /**
@@ -66,7 +65,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 			}
 		} while (changed);
 		int numReachableNodes = reachable.size();
-		Assertions.Assert(numReachableNodes <= numNodes);
+		assert (numReachableNodes <= numNodes);
 		return (numReachableNodes == numNodes);
 	}
 	public List<Node> getNodesInRPO() {

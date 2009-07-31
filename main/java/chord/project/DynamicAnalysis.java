@@ -7,7 +7,6 @@ import java.io.File;
 import java.lang.InterruptedException;
 
 import chord.util.IntBuffer;
-import chord.util.Assertions;
 import chord.util.IndexMap;
 import chord.util.ProcessExecutor;
 
@@ -45,11 +44,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 
 	public void run() {
 		final String mainClassName = Properties.mainClassName;
-		Assertions.Assert(mainClassName != null);
+		assert (mainClassName != null);
 		final String classPathName = Properties.classPathName;
-		Assertions.Assert(classPathName != null);
+		assert (classPathName != null);
 		final String classesDirName = Properties.classesDirName;
-		Assertions.Assert(classesDirName != null);
+		assert (classesDirName != null);
 
 		final String crudeTraceFileName =
 			getOrMake("chord.crude.trace.file", "crude_trace.txt");
@@ -176,7 +175,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				new File(Properties.outDirName, domName + ".dynamic.txt")));
 			String s;
 			while ((s = reader.readLine()) != null) {
-				Assertions.Assert(!dMap.contains(s));
+				assert (!dMap.contains(s));
 				dMap.set(s);
 			}
 			reader.close();

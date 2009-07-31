@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import chord.util.ArrayUtils;
-import chord.util.Assertions;
 import chord.util.StringUtils;
 import chord.util.tuple.object.Pair;
 
@@ -49,8 +48,8 @@ public class RelSign extends Pair<String[], String> {
 		return ArrayUtils.toString(val0, "[", ",", "]") + " " + val1;
 	}
 	private void validate() {
-		Assertions.Assert(val0 != null);
-		Assertions.Assert(!ArrayUtils.hasDuplicates(val0));
+		assert (val0 != null);
+		assert (!ArrayUtils.hasDuplicates(val0));
 		if (val1 == null)
 			return;
 		String[] domNamesFromDomOrder = val1.split("_|x");
@@ -59,7 +58,7 @@ public class RelSign extends Pair<String[], String> {
 				"Number of domains in domNames and domOrder of relSign '" +
 				this + "' do not match.");
 		}
-		Assertions.Assert(!ArrayUtils.hasDuplicates(domNamesFromDomOrder));
+		assert (!ArrayUtils.hasDuplicates(domNamesFromDomOrder));
 		for (String domName : val0) {
 			boolean found = false;
 			for (String domName2 : domNamesFromDomOrder) {

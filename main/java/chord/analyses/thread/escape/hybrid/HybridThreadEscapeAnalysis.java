@@ -13,7 +13,6 @@ import java.util.Set;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
@@ -47,7 +46,6 @@ import chord.project.Program;
 import chord.project.ProgramRel;
 import chord.project.Project;
 import chord.util.ArraySet;
-import chord.util.Assertions;
 import chord.util.CompareUtils;
 import chord.util.IntArraySet;
 import chord.util.Timer;
@@ -158,7 +156,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		while (vIdx < numV) {
 			Register v = domV.get(vIdx);
 			jq_Method m = domV.getMethod(v);
-			Assertions.Assert(!methToNumVars.containsKey(m));
+			assert (!methToNumVars.containsKey(m));
 			int n = Program.getNumVarsOfRefType(m);
 			methToNumVars.put(m, n);
 			methToVar0Idx.put(m, vIdx);
@@ -225,7 +223,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 				System.out.println("Processing path edge: cm: " + cm + " pe: " + pe);
 			if (q == null) {
 				BasicBlock bb = pe.bb;
-				Assertions.Assert(bb.isEntry());
+				assert (bb.isEntry());
 				for (Object o : bb.getSuccessors()) {
 					BasicBlock bb2 = (BasicBlock) o;
 					Quad q2 = (bb2.size() == 0) ? null : bb2.getQuad(0);
@@ -313,7 +311,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 	}
 	private IntArraySet getPtsFromHeap(IntArraySet pts, int fIdx,
 			Set<IntTrio> heap) {
-		Assertions.Assert(pts != escPts);
+		assert (pts != escPts);
 		IntArraySet pts2 = null;
 		for (IntTrio t : heap) {
 			if (t.idx1 != fIdx)
@@ -446,7 +444,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		}
 		jq_Method m = cm.val1;
 		if (m != mainMethod && m != threadStartMethod)
-			Assertions.Assert(flag);
+			assert flag;
 	}
 	private boolean propagateSEtoPE(PathEdge clrPE,
 			Pair<Ctxt, jq_Method> clrCM, SummEdge tgtSE) {
@@ -502,7 +500,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
         return true;
 	}
 	private DstNode propagateEsc(IntArraySet pts, DstNode iDstNode) {
-		Assertions.Assert(pts != escPts);
+		assert (pts != escPts);
 		IntArraySet dstEsc = iDstNode.esc;
 		IntArraySet dstEsc2 = new IntArraySet(pts);
 		Set<IntTrio> dstHeap = iDstNode.heap;
@@ -512,7 +510,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			changed = false;
 			for (IntTrio t : dstHeap) {
 				int hIdx = t.idx0;
-				Assertions.Assert(hIdx != 0);
+				assert (hIdx != 0);
 				if (dstEsc2.contains(hIdx)) {
 					int h2Idx = t.idx2;
 					if (h2Idx != 0 && dstEsc2.add(h2Idx))

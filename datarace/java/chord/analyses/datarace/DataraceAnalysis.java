@@ -47,7 +47,6 @@ import chord.util.SetUtils;
 import chord.util.tuple.object.Hext;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
-import chord.util.Assertions;
 
 /**
  * Datarace analysis.
@@ -111,7 +110,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 	public void run() {
 		int maxIters = Integer.getInteger("chord.max.iters", 0);
-		Assertions.Assert(maxIters >= 0);
+		assert (maxIters >= 0);
 
 		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
 		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");

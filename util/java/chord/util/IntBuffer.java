@@ -22,7 +22,7 @@ public class IntBuffer {
 	private int curPos;
 	private int maxPos;  // used only if isRead
 	public IntBuffer(int size, String fileName, boolean isRead) throws IOException {
-		Assertions.Assert(size %4 == 0 && size >= 4);
+		assert (size %4 == 0 && size >= 4);
 		this.size = size;
 		buffer = new byte[size];
 		if (isRead) {

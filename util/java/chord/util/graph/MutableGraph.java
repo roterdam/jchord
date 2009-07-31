@@ -11,7 +11,6 @@ import java.util.Set;
 import java.util.HashMap;
 
 import chord.util.ArraySet;
-import chord.util.Assertions;
 import chord.util.IndexMap;
 
 /**
@@ -249,7 +248,7 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 		return ret;
 	}
 	public boolean bypassNode(Node v) {
-		Assertions.Assert(v != null);
+		assert (v != null);
 		Set<Node> Pv = nodeToPreds.get(v);
 		if (Pv == null) {
 			// node v does not exist in the graph
@@ -502,8 +501,8 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 			Set<Node> preds = e.getValue();
 			for (Node u : preds) {
 				Set<Node> succs = nodeToSuccs.get(u);
-				Assertions.Assert(succs != null);
-				Assertions.Assert(succs.contains(v));
+				assert (succs != null);
+				assert (succs.contains(v));
 			}
 		}
 		for (Map.Entry<Node, Set<Node>> e : nodeToSuccs.entrySet()) {
@@ -511,33 +510,31 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 			Set<Node> succs = e.getValue();
 			for (Node w : succs) {
 				Set<Node> preds = nodeToPreds.get(w);
-				Assertions.Assert(preds != null);
-				Assertions.Assert(preds.contains(v));
+				assert (preds != null);
+				assert (preds.contains(v));
 			}
 		}
 	}
 	private void validateRoots() {
-		Assertions.Assert(roots != null);
+		assert (roots != null);
 		for (Node v : roots) {
-			Assertions.Assert(nodeToPreds.containsKey(v));
+			assert (nodeToPreds.containsKey(v));
 		}
 	}
 	private void validate(Map<Node, Set<Node>> map, String name) {
-		Assertions.Assert(map != null);
+		assert (map != null);
 		for (Map.Entry<Node, Set<Node>> e : map.entrySet()) {
 			Node v = e.getKey();
 			Set<Node> s = e.getValue();
 			if (s == null) {
-				String msg = "Map " + name + " must map node '" + v +
+				assert false : "Map " + name + " must map node '" + v +
 					"' to a non-null set (even if the set is empty).";
-				Assertions.Assert(false, msg);
 			}
 			for (Node u : s) {
 				if (!map.containsKey(u)) {
-					String msg = "Map " + name + " must contain node '" + u +
+					assert false : "Map " + name + " must contain node '" + u +
 						"' in its domain since it is contained in the set " +
 						"of nodes to which node '" + v + "' is mapped.";
-					Assertions.Assert(false, msg);
 				}
 			}
 		}

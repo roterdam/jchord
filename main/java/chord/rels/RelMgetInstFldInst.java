@@ -18,7 +18,6 @@ import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.project.Chord;
 import chord.project.ProgramRel;
-import chord.util.Assertions;
 import chord.visitors.IHeapInstVisitor;
 
 /**
@@ -66,7 +65,7 @@ public class RelMgetInstFldInst extends ProgramRel
 						// TODO
 					}
 				} else
-					Assertions.Assert(bx instanceof AConstOperand);
+					assert (bx instanceof AConstOperand);
 			}
 		}
 	}

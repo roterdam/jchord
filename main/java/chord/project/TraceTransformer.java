@@ -6,7 +6,6 @@ import java.util.ArrayList;
 
 import gnu.trove.TIntArrayList;
 
-import chord.util.Assertions;
 import chord.util.IntBuffer;
 import chord.util.tuple.integer.IntTrio;
 
@@ -22,9 +21,9 @@ public class TraceTransformer {
 
 	public void run() {
 		String rdFileName = System.getProperty("chord.crude.trace.file");
-		Assertions.Assert(rdFileName != null);
+		assert (rdFileName != null);
 		String wrFileName = System.getProperty("chord.final.trace.file");
-		Assertions.Assert(wrFileName != null);
+		assert (wrFileName != null);
 		run(rdFileName, wrFileName);
 	}
 	private void adjust() throws IOException {
@@ -65,7 +64,7 @@ public class TraceTransformer {
  			tmp = new TIntArrayList();
 			count = 0; // size of tmp
 			while (!reader.isDone()) {
-				Assertions.Assert(count == tmp.size());
+				assert (count == tmp.size());
 				if (isInNew) {
 					if (count > 5000000) {
 						System.out.print("size: " + count + " PENDING:");
@@ -77,7 +76,7 @@ public class TraceTransformer {
 						adjust();
 					}
 				} else
-					Assertions.Assert(count == 0);
+					assert (count == 0);
 				int opcode = reader.get();
 				switch (opcode) {
 				case InstKind.BEF_NEW_INST:
@@ -131,9 +130,9 @@ public class TraceTransformer {
 				}
 				}
 			}
-			Assertions.Assert(!isInNew);
-			Assertions.Assert(pending.size() == 0);
-			Assertions.Assert(tmp.size() == 0);
+			assert (!isInNew);
+			assert (pending.size() == 0);
+			assert (tmp.size() == 0);
 			writer.flush();
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
