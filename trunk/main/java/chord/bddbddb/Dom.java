@@ -10,7 +10,6 @@ import java.io.PrintWriter;
 import java.io.File;
 import java.io.IOException;
 
-import chord.util.Assertions;
 import chord.util.IndexMap;
 
 /**
@@ -50,8 +49,8 @@ import chord.util.IndexMap;
 public class Dom<T> extends IndexMap<T> {
 	protected String name;
 	public void setName(String name) {
-		Assertions.Assert(name != null);
-		Assertions.Assert(this.name == null);
+		assert (name != null);
+		assert (this.name == null);
 		this.name = name;
 	}
     public String getName() {

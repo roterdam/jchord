@@ -11,7 +11,6 @@ import chord.doms.DomT;
 import chord.project.Chord;
 import chord.project.Program;
 import chord.project.ProgramRel;
-import chord.util.Assertions;
 
 /**
  * Relation containing each tuple (s,t) such that class/interface type s
@@ -37,7 +36,7 @@ public class RelExtnsTT extends ProgramRel {
 			} else {
 				jq_Class d = c.getSuperclass();
 				if (d == null) {
-					Assertions.Assert(c.getName().equals("java.lang.Object"));
+					assert (c.getName().equals("java.lang.Object"));
 				} else {
 					int t2Idx = domT.get(d);
 					if (t2Idx != -1)

@@ -44,7 +44,6 @@ import chord.doms.DomM;
 import chord.util.FileUtils;
 import chord.util.SetUtils;
 import chord.util.tuple.object.Pair;
-import chord.util.Assertions;
 
 /**
  * Deadlock analysis.
@@ -118,7 +117,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	
 	public void run() {
 		int maxIters = Integer.getInteger("chord.max.iters", 0);
-		Assertions.Assert(maxIters >= 0);
+		assert (maxIters >= 0);
 
 		boolean excludeParallel = Boolean.getBoolean(
 			"chord.exclude.parallel");

@@ -26,7 +26,6 @@ import org.scannotation.AnnotationDB;
 
 import chord.util.ArraySet;
 import chord.util.ArrayUtils;
-import chord.util.Assertions;
 import chord.util.ClassUtils;
 import chord.util.FileUtils;
 import chord.util.StringUtils;
@@ -68,11 +67,11 @@ public class Project {
         PrintStream errStream = null;
         try {
             String outDirName = Properties.outDirName;
-            Assertions.Assert(outDirName != null);
+            assert (outDirName != null);
             String outFileName = Properties.outFileName;
-            Assertions.Assert(outFileName != null);
+            assert (outFileName != null);
             String errFileName = Properties.outFileName;
-            Assertions.Assert(errFileName != null);
+            assert (errFileName != null);
 
             outFileName = FileUtils.getAbsolutePath(outFileName, outDirName);
             errFileName = FileUtils.getAbsolutePath(errFileName, outDirName);
@@ -403,7 +402,7 @@ public class Project {
 				new HashSet<Object>(consumedNames.size());
 			for (String name : consumedNames) {
 				Object trgt = nameToTrgtMap.get(name);
-				Assertions.Assert(trgt != null, name);
+				assert (trgt != null);
 				consumedTrgts.add(trgt);
 				Set<ITask> consumerTasks =
 					trgtToConsumerTasksMap.get(trgt);
@@ -416,7 +415,7 @@ public class Project {
 				new HashSet<Object>(producedNames.size());
 			for (String name : producedNames) {
 				Object trgt = nameToTrgtMap.get(name);
-				Assertions.Assert(trgt != null, name);
+				assert (trgt != null);
 				producedTrgts.add(trgt);
 				Set<ITask> producerTasks =
 					trgtToProducerTasksMap.get(trgt);

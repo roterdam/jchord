@@ -6,24 +6,17 @@ import java.io.FileWriter;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.File;
-import java.lang.InterruptedException;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Stack;
 import java.util.HashSet;
 import java.util.Set;
 
-import gnu.trove.TIntArrayList;
 import gnu.trove.TIntObjectHashMap;
 
-import chord.util.IntBuffer;
 import chord.util.FileUtils;
-import chord.util.Assertions;
 import chord.util.IndexMap;
 import chord.util.ProcessExecutor;
-import chord.util.tuple.object.Pair;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.integer.IntQuad;
@@ -37,7 +30,6 @@ import chord.doms.DomP;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Field;
@@ -87,8 +79,8 @@ public class PathAnalysis implements ITask {
 	private PrintWriter currThreadAbbrOut;
 
     public void setName(String name) {
-        assert(name != null);
-        assert(this.name == null);
+        assert (name != null);
+        assert (this.name == null);
         this.name = name;
     }
     public String getName() {
@@ -98,9 +90,9 @@ public class PathAnalysis implements ITask {
 	public void run() {
 		try {
 			final String mainClassName = Properties.mainClassName;
-			assert(mainClassName != null);
+			assert (mainClassName != null);
 			final String classPathName = Properties.classPathName;
-			assert(classPathName != null);
+			assert (classPathName != null);
 	
 			String traceFileName = (new File(Properties.outDirName,
 				Properties.traceFileName)).getAbsolutePath();
@@ -161,7 +153,7 @@ public class PathAnalysis implements ITask {
 			if (thread.isEmpty()) {
 				// encountering thread for first time;
 				// decide whether to mark it bad (i.e. set it to null)
-				assert(a.length == 3);
+				assert (a.length == 3);
 				if (a[1].equals("X")) {
 					threads.set(tid, null);
 					System.out.println("NULLING THREAD " + (tid + 1));
@@ -171,7 +163,7 @@ public class PathAnalysis implements ITask {
 			if (a.length == 2) {
 				thread.add(a[1]);
 			} else {
-				assert(a.length == 3);
+				assert (a.length == 3);
 				thread.add(a[1] + " " + a[2]);
 			}
 		}
@@ -220,7 +212,7 @@ public class PathAnalysis implements ITask {
 				continue;
 			int numLines = currThread.size();
 			System.out.println("CURR THREAD: " + (t + 1) + " NUM LINES: " + numLines);
-			assert(numLines > 0);
+			assert (numLines > 0);
 			currLineIdx = 0;
 			if (DEBUG) {
 				currThreadFullOut = new PrintWriter(new FileWriter(
@@ -280,10 +272,10 @@ public class PathAnalysis implements ITask {
 				System.out.println();
 			}
 		}
-		assert(methEntryLine.charAt(0) == 'E');
+		assert (methEntryLine.charAt(0) == 'E');
 		final int mId = Integer.parseInt(methEntryLine.substring(2));
 		final String mStr = methsMap.get(mId);
-   		assert(mStr.startsWith("L"));
+   		assert (mStr.startsWith("L"));
 		final int semiColon = mStr.indexOf(';');
 		final String cName = mStr.substring(1, semiColon).replace('/', '.');
 		final int openParen = mStr.indexOf('(');
@@ -297,15 +289,16 @@ public class PathAnalysis implements ITask {
 		else
 */
 			cls = Program.getClass(cName);
-		if (cls == null) {
+		if (cls == null || !cls.isPrepared()) {
 			System.out.println("MISSING class: " + cName);
 			eatUntil(mId);
 			if (DEBUG) System.out.println("LEAVE1 frame: " + methEntryLine);
 			return retQidx;
 		}
 		jq_NameAndDesc nad = new jq_NameAndDesc(mName, mDesc);
+		System.out.println("Class: " + cls + " nad: " + nad);
 		jq_Method m = (jq_Method) cls.getDeclaredMember(nad);
-		assert(m != null);
+		assert (m != null);
 		int mIdx = domM.get(m);
 		if (mIdx == -1) {
 			System.out.println("MISSING method: " + m);
@@ -331,16 +324,16 @@ public class PathAnalysis implements ITask {
 			methArgs = methToArgs[mIdx];
 
 		if (invkArgs != null) {
-			assert(retQidx != -1);
+			assert (retQidx != -1);
 			if (methArgs != null) {
 				int numArgs = methArgs.size();
-				assert(numArgs == invkArgs.size());
+				assert (numArgs == invkArgs.size());
 				for (int i = 0; i < numArgs; i++) {
 					IntPair zv = methArgs.get(i);
 					int zIdx = zv.idx0;
 					int vIdx = zv.idx1;
 					IntPair zu = invkArgs.get(i);
-					assert(zu.idx0 == zIdx);
+					assert (zu.idx0 == zIdx);
 					int uIdx = zu.idx1;
 					if (DEBUG) System.out.println("ADDING to copy: " + retQidx + " " + vIdx + " " + uIdx);
 					copySet.add(new IntTrio(retQidx, vIdx, uIdx));
@@ -355,7 +348,7 @@ public class PathAnalysis implements ITask {
 			if (c == 'E') {
 				int currQidx = frame(line, null, -1, prevQidx);
 				if (prevQidx != -1) {
-					assert(currQidx != -1);
+					assert (currQidx != -1);
 					if (prevQidx != currQidx) {
 						if (DEBUG) System.out.println("ADDING to succ1: " + prevQidx + " " + currQidx);
 						succSet.add(new IntPair(prevQidx, currQidx));
@@ -364,7 +357,7 @@ public class PathAnalysis implements ITask {
 				prevQidx = currQidx;
 			} else if (c == 'X') {
 				int mId2 = Integer.parseInt(line.substring(2));
-				assert(mId2 == mId);
+				assert (mId2 == mId);
 				if (DEBUG) {
 					currThreadFullOut.println(line);
 					currThreadAbbrOut.println(line);
@@ -408,7 +401,7 @@ public class PathAnalysis implements ITask {
 					else if (mName.equals("run") && mDesc.equals("()V")) {
 						System.out.println("WARNING: Treating following quad of method " + m + " as head:\n\t" + q);
 						IntPair thisArg = methArgs.get(0);
-						assert(thisArg.idx0 == 0);
+						assert (thisArg.idx0 == 0);
 						if (DEBUG) System.out.println("ADDING to start: " + currQidx + " " + thisArg.idx1);
 						startSet.add(new IntPair(currQidx, thisArg.idx1));
 					}
@@ -443,7 +436,7 @@ public class PathAnalysis implements ITask {
 						if (m2Sign.equals("start()V") &&
 								m2.getDeclaringClass().getName().equals("java.lang.Thread")) {
 							IntPair thisArg = invkArgs2.get(0);
-							assert(thisArg.idx0 == 0);
+							assert (thisArg.idx0 == 0);
 							if (DEBUG) System.out.println("ADDING to spawn: " + currQidx + " " + thisArg.idx1);
 							spawnSet.add(new IntPair(currQidx, thisArg.idx1));
 						}
@@ -484,13 +477,13 @@ public class PathAnalysis implements ITask {
 						RegisterOperand lo = Move.getDest(q);
 						Register l = lo.getRegister();
 						int lIdx = domV.get(l);
-						assert(lIdx != -1);
+						assert (lIdx != -1);
 						Operand rx = Move.getSrc(q);
 						if (rx instanceof RegisterOperand) {
 							RegisterOperand ro = (RegisterOperand) rx;
 							Register r = ro.getRegister();
 							int rIdx = domV.get(r);
-							assert(rIdx != -1);
+							assert (rIdx != -1);
 							if (DEBUG) System.out.println("ADDING to copy: " + currQidx + " " + lIdx + " " + rIdx);
 							copySet.add(new IntTrio(currQidx, lIdx, rIdx));
 						} else {
@@ -587,7 +580,7 @@ public class PathAnalysis implements ITask {
 	private List<IntPair> processMethArgs(jq_Method m) {
 		List<IntPair> args = null;
 		ControlFlowGraph cfg = Program.getCFG(m);
-		assert(cfg != null);
+		assert (cfg != null);
 		RegisterFactory rf = cfg.getRegisterFactory();
 		int numArgs = m.getParamTypes().length;
 		for (int zIdx = 0; zIdx < numArgs; zIdx++) {
@@ -649,8 +642,8 @@ public class PathAnalysis implements ITask {
 				RegisterOperand ro = (RegisterOperand) rx;
 				return ro.getType().isReferenceType();
 			}
-			assert(rx instanceof ConstOperand);
-			assert(!(rx instanceof PConstOperand));
+			assert (rx instanceof ConstOperand);
+			assert (!(rx instanceof PConstOperand));
 			return rx instanceof AConstOperand;
 		}
 		if (op instanceof Invoke)
@@ -675,7 +668,7 @@ public class PathAnalysis implements ITask {
 				AStore.getValue(q) instanceof RegisterOperand;
 		}
 		if (op instanceof Return) {
-			assert(!(op instanceof RETURN_P));
+			assert (!(op instanceof RETURN_P));
 			return op instanceof RETURN_A;
 		}
 		if (op instanceof Getstatic) {

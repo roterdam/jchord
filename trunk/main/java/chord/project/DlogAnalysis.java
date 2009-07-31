@@ -20,7 +20,6 @@ import java.util.HashSet;
 
 import chord.bddbddb.RelSign;
 import chord.bddbddb.Solver;
-import chord.util.Assertions;
 import chord.util.StringUtils;
 
 import gnu.trove.TIntArrayList;
@@ -75,7 +74,7 @@ public class DlogAnalysis extends JavaAnalysis {
 	 * @return	true iff the Datalog analysis parses successfully.
 	 */
 	public boolean parse(String fileName) {
-		Assertions.Assert(this.fileName == null);
+		assert (this.fileName == null);
 		this.fileName = fileName;
 		majorDomNames = new HashSet<String>();
 		consumedRels = new HashMap<String, RelSign>();
@@ -165,12 +164,12 @@ public class DlogAnalysis extends JavaAnalysis {
 			TIntArrayList indices = new TIntArrayList();
 			while (!done) {
 				i = s.indexOf(':');
-				Assertions.Assert(i != -1);
+				assert (i != -1);
 				s = s.substring(i + 1);
 				i = s.indexOf(',');
 				if (i == -1) {
 					i = s.indexOf(')');
-					Assertions.Assert(i != -1);
+					assert (i != -1);
 					done = true;
 				}
 				String domName = s.substring(0, i);
@@ -238,7 +237,7 @@ public class DlogAnalysis extends JavaAnalysis {
 			else if (s.equals("output"))
 				map = producedRels;
 			else
-				Assertions.Assert(false); 
+				assert false; 
 			RelSign relSign;
 			try {
 				relSign = new RelSign(domNames, domOrder);

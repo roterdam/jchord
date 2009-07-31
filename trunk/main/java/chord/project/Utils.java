@@ -2,15 +2,14 @@ package chord.project;
 
 import java.io.File;
 
-import chord.util.Assertions;
 import chord.util.FileUtils;
 
 public class Utils {
 	public static void copyFile(String fileName) {
 		String homeDirName = Properties.homeDirName;
-		Assertions.Assert(homeDirName != null);
+		assert (homeDirName != null);
 		String outDirName = Properties.outDirName;
-		Assertions.Assert(outDirName != null);
+		assert (outDirName != null);
 		File srcFile = new File(homeDirName, fileName);
 		if (!srcFile.exists()) {
 			throw new RuntimeException(

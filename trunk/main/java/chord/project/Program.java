@@ -17,8 +17,6 @@ import java.util.Set;
 
 import com.java2html.Java2HTML;
 
-import chord.util.Assertions;
-
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
@@ -61,7 +59,6 @@ import joeq.Main.Helper;
  */
 public class Program {
 	private static boolean isInited;
-	private static List<jq_Class> loadedClasses;
 	private static List<jq_Class> preparedClasses;
 	private static List<jq_Method> reachableMethods;
 	private static List<jq_Type> reachableTypes;
@@ -88,7 +85,7 @@ public class Program {
 					while ((s = r.readLine()) != null) {
 						System.out.println("Loading: " + s);
 						jq_Class c = (jq_Class) Helper.load(s);
-						Assertions.Assert(c != null);
+						assert (c != null);
 						c.prepare();
 						preparedClasses.add(c);
 					}
@@ -102,10 +99,10 @@ public class Program {
 					String s;
 					while ((s = r.readLine()) != null) {
 						String[] a = s.split("@");
-						Assertions.Assert(a.length == 3);
+						assert (a.length == 3);
 						jq_Class c = getClass(a[0]);
-						Assertions.Assert(c != null);
-						Assertions.Assert(c.isPrepared());
+						assert (c != null);
+						assert (c.isPrepared());
 						jq_Method m = (jq_Method) c.getDeclaredMember(a[1], a[2]);
 						reachableMethods.add(m);
 					}
@@ -113,7 +110,7 @@ public class Program {
 				}
 			} else {
 				String mainClassName = Properties.mainClassName;
-				Assertions.Assert(mainClassName != null);
+				assert (mainClassName != null);
 				RTA rta = new RTA();
 				rta.run(mainClassName);
 				Set<jq_Class> cset = rta.getPreparedClasses();
@@ -122,7 +119,7 @@ public class Program {
 					new PrintWriter(classesFile);
 				for (jq_Class c : cset) {
 					String s = c.getName();
-					Assertions.Assert(!s.startsWith("joeq."));
+					assert (!s.startsWith("joeq."));
 					preparedClasses.add(c);
 					classesFileWriter.println(s);
 				}
@@ -219,7 +216,7 @@ public class Program {
     	jq_Class threadClass = m.getDeclaringClass();
     	jq_NameAndDesc nadOfRun = new jq_NameAndDesc("run", "()V");
     	jq_Method run = threadClass.getDeclaredInstanceMethod(nadOfRun);
-    	Assertions.Assert(run != null);
+    	assert (run != null);
     	RegisterFactory rf = new RegisterFactory(0, 1);
     	Register r = rf.getOrCreateLocal(0, threadClass);
     	ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
@@ -285,7 +282,7 @@ public class Program {
 	}
 
     public static ControlFlowGraph getCFG(jq_Method m) {
-		Assertions.Assert(!m.isAbstract());
+		assert (!m.isAbstract());
 /*
     	String nad = m.getNameAndDesc().toString();
     	if (nad.equals("equals (Ljava/lang/Object;)Z") ||
@@ -301,7 +298,7 @@ public class Program {
 			// (new EnterSSA()).visitCFG(cfg);
 			if (cfg == null) {
 				System.out.println("Method " + m + " has empty CFG");
-				Assertions.Assert(false);
+				assert (false);
 			}
 		} catch (Exception ex) {
 			System.out.println("Failed to get CFG for method: " +
@@ -342,7 +339,7 @@ public class Program {
 			return null;
     	jq_NameAndDesc nadOfStart = new jq_NameAndDesc("start", "()V");
     	jq_Method start = threadClass.getDeclaredInstanceMethod(nadOfStart);
-		Assertions.Assert(start != null);
+		assert (start != null);
 		return start;
 	}
 
@@ -429,7 +426,7 @@ public class Program {
 	public static void HTMLizeJavaSrcFiles() {
 		if (!HTMLizedJavaSrcFiles) {
 			String srcPathName = Properties.srcPathName;
-			Assertions.Assert(srcPathName != null);
+			assert (srcPathName != null);
 			String[] srcDirNames =
 				srcPathName.split(File.pathSeparator);
 			try {
@@ -449,7 +446,7 @@ public class Program {
 	public static int getBCI(Quad q, jq_Method m) {
 		Map<Quad, Integer> bcMap = getBCMap(m);
 		Integer bci = bcMap.get(q);
-		Assertions.Assert(bci != null);
+		assert (bci != null);
 		return bci.intValue();
 	}
 

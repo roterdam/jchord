@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.HashMap;
 
 import chord.bddbddb.RelSign;
-import chord.util.Assertions;
 import chord.util.ClassUtils;
 
 /**
@@ -45,7 +44,7 @@ public class ChordAnnotParser {
      */
 	public boolean parse() {
 		Chord chord = (Chord) type.getAnnotation(Chord.class);
-		Assertions.Assert(chord != null);
+		assert (chord != null);
 		hasNoErrors = true;
 		this.name = chord.name();
 

@@ -5,8 +5,6 @@
  */
 package chord.project;
 
-import chord.util.Assertions;
-
 /**
  * Generic implementation of a Java task (a program analysis
  * expressed in Java).
@@ -16,8 +14,8 @@ import chord.util.Assertions;
 public class JavaAnalysis implements ITask {
     protected String name;
     public void setName(String name) {
-        Assertions.Assert(name != null);
-        Assertions.Assert(this.name == null);
+        assert (name != null);
+        assert (this.name == null);
         this.name = name;
     }
     public String getName() {

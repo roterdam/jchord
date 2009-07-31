@@ -8,16 +8,15 @@ package chord.project;
 import javassist.*;
 import javassist.bytecode.Descriptor;
 import javassist.expr.*;
-import java.util.*;
-import java.io.*;
 
 import chord.util.ClasspathUtils;
 import chord.util.FileUtils;
 import chord.util.IndexMap;
-import chord.util.Assertions;
-import java.net.URL;
-import java.net.MalformedURLException;
-import org.scannotation.AnnotationDB;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 /**
  *
@@ -110,7 +109,7 @@ public class Instrumentor {
 		String s = byteIdx + "@" + methodName + methodArgs + "@" + className;
 		int n = map.size();
 		int i = map.set(s);
-		Assertions.Assert(i == n);
+		assert (i == n);
 		return i;
 	}
 
@@ -122,9 +121,9 @@ public class Instrumentor {
 		try {
 			process1(method);
 			process2(method);
-			Assertions.Assert(numH == Hmap.size());
-			Assertions.Assert(numE == Emap.size());
-			Assertions.Assert(numL == Lmap.size());
+			assert (numH == Hmap.size());
+			assert (numE == Emap.size());
+			assert (numL == Lmap.size());
 		} catch (Exception ex) {
 			System.err.println("WARNING: Ignoring instrumenting method: " + method.getLongName());
 			ex.printStackTrace();
