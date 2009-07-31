@@ -199,7 +199,27 @@
     <property name="chord.bddbddb.max.heap" value="1024m"/>
     <property name="chord.bddbddb.work.dir" location="${chord.out.dir}"/>
     <property name="chord.bddbddb.noisy" value="no"/>
-    <property name="chord.agent.lib.dir" location="lib/"/>
+    <if>
+      <os family="unix"/>
+      <then>
+        <property name="chord.trace.agent.file" location="lib/libchord_trace_agent.so"/>
+        <property name="chord.instr.agent.file" location="lib/libchord_instr_agent.so"/>
+      </then>
+      <elseif>
+        <os family="windows"/>
+        <then>
+          <property name="chord.trace.agent.file" location="lib/chord_trace_agent.dll"/>
+          <property name="chord.instr.agent.file" location="lib/chord_instr_agent.dll"/>
+        </then>
+      </elseif>
+      <elseif>
+        <os family="mac"/>
+        <then>
+          <property name="chord.trace.agent.file" location="lib/libchord_trace_agent.jnilib"/>
+          <property name="chord.instr.agent.file" location="lib/libchord_instr_agent.jnilib"/>
+        </then>
+      </elseif>
+    </if>
     <path id="chord_boot_class_path">
       <pathelement location="instr_jdk/chord_output/classes"/>
       <pathelement path="${chord.main.class.path}"/>
