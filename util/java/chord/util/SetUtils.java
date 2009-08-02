@@ -16,26 +16,38 @@ import java.util.Set;
 public class SetUtils {
 	public static final int DEFAULT_SIZE = 10;
 	public static final int THRESHOLD = 10;
-	public static <E> Set<E> newSet() {
-		return newSet(DEFAULT_SIZE);
+	public static <T> IndexSet<T> newIndexSet() {
+		return newIndexSet(DEFAULT_SIZE);
 	}
-	public static <E> Set<E> newSet(int initSize) {
-		Set<E> set;
-		if (initSize < THRESHOLD) {
-			set = new ArraySet<E>(initSize);
+	public static <T> IndexSet<T> newIndexSet(int size) {
+		IndexSet<T> set;
+		if (size < THRESHOLD) {
+			set = new ArraySet<T>(size);
 		} else {
-			set = new HashSet<E>(initSize);
+			set = new IndexHashSet<T>(size);
 		}
 		return set;
 	}
-	public static <E> Set<E> newSet(Set<E> c) {
-		Set<E> set = newSet(c.size());
+	public static <T> Set<T> newSet() {
+		return newSet(DEFAULT_SIZE);
+	}
+	public static <T> Set<T> newSet(int size) {
+		Set<T> set;
+		if (size < THRESHOLD) {
+			set = new ArraySet<T>(size);
+		} else {
+			set = new HashSet<T>(size);
+		}
+		return set;
+	}
+	public static <T> Set<T> newSet(Set<T> c) {
+		Set<T> set = newSet(c.size());
 		set.addAll(c);
 		return set;
 	}
-    public static <E> Set<E> iterableToSet(Iterable<E> c, int size) {
-		Set<E> set = newSet(size);
-        for (E e : c)
+    public static <T> Set<T> iterableToSet(Iterable<T> c, int size) {
+		Set<T> set = newSet(size);
+        for (T e : c)
             set.add(e);
         return set;
     }

@@ -12,14 +12,23 @@ import java.util.Iterator;
 
 /**
  * Array-based implementation of a set.
+ * <p>
+ * Provides O(n) membership testing as opposed to O(1) provided by a
+ * hash set.
+ * <p>
+ * This implementation must be used for small sets for which its O(n)
+ * membership testing penalty is less than the overhead of creating
+ * and maintaining a hash set.
  * 
+ * @param	<T>	The type of objects in the set.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ArraySet<T> extends ArrayList<T> implements Set<T> {
+public class ArraySet<T> extends ArrayList<T> implements IndexSet<T> {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = -2510316860750967764L;
+	private static final long serialVersionUID = 157868873529902483L;
 	public ArraySet(Collection<T> s) {
 		super(s);
 	}

@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.Collections;
 
 import chord.util.ArraySet;
-import chord.util.IndexMap;
+import chord.util.IndexHashMap;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -75,7 +75,7 @@ public class MutableLabeledGraph<Node, Label>
 		throw new RuntimeException("not impl");
 	}
 	public String toString() {
-		IndexMap<Node> map = new IndexMap<Node>(numNodes());
+		IndexHashMap<Node> map = new IndexHashMap<Node>(numNodes());
 		String s = "";
 		for (Node node : getNodes())
 			s += "Node " + map.getOrAdd(node) + ": " + node + "\n";

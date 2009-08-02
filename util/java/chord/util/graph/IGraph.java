@@ -8,7 +8,7 @@ package chord.util.graph;
 import java.util.List;
 import java.util.Set;
 
-import chord.util.IndexMap;
+import chord.util.IndexHashMap;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -188,7 +188,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * @return	A map from each node in the graph to a unique
 	 * 			arbitrary integer.
 	 */
-	public IndexMap<Node> getNodeMap();
+	public IndexHashMap<Node> getNodeMap();
 
 	public ShortestPathBuilder<Node> getShortestPathsBuilder(Node srcNode,
 		IPathVisitor<Node> visitor);

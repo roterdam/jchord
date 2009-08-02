@@ -10,7 +10,7 @@ import java.io.PrintWriter;
 import java.io.File;
 import java.io.IOException;
 
-import chord.util.IndexMap;
+import chord.util.IndexHashMap;
 
 /**
  * Generic implementation of a BDD-based domain.
@@ -46,7 +46,7 @@ import chord.util.IndexMap;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Dom<T> extends IndexMap<T> {
+public class Dom<T> extends IndexHashMap<T> {
 	protected String name;
 	public void setName(String name) {
 		assert (name != null);

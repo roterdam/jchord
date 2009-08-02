@@ -7,7 +7,7 @@ import java.io.File;
 import java.lang.InterruptedException;
 
 import chord.util.IntBuffer;
-import chord.util.IndexMap;
+import chord.util.IndexHashMap;
 import chord.util.ProcessExecutor;
 
 @Chord(
@@ -30,15 +30,15 @@ public class DynamicAnalysis extends JavaAnalysis {
 		// do nothing by default; subclasses can override
 	}
 
-	private IndexMap<String> sHmap = new IndexMap<String>();
-	private IndexMap<String> dHmap = new IndexMap<String>();
-	private IndexMap<String> sEmap = new IndexMap<String>();
-	private IndexMap<String> dEmap = new IndexMap<String>();
-	private IndexMap<String> sFmap = new IndexMap<String>();
-	private IndexMap<String> dFmap = new IndexMap<String>();
-	protected IndexMap<String> Hmap;
-	protected IndexMap<String> Emap;
-	protected IndexMap<String> Fmap;
+	private IndexHashMap<String> sHmap = new IndexHashMap<String>();
+	private IndexHashMap<String> dHmap = new IndexHashMap<String>();
+	private IndexHashMap<String> sEmap = new IndexHashMap<String>();
+	private IndexHashMap<String> dEmap = new IndexHashMap<String>();
+	private IndexHashMap<String> sFmap = new IndexHashMap<String>();
+	private IndexHashMap<String> dFmap = new IndexHashMap<String>();
+	protected IndexHashMap<String> Hmap;
+	protected IndexHashMap<String> Emap;
+	protected IndexHashMap<String> Fmap;
 
 	protected boolean convert;
 
@@ -156,8 +156,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 		return s;
 	}
 
-	private void processDom(String domName, IndexMap<String> sMap,
-			IndexMap<String> dMap) {
+	private void processDom(String domName, IndexHashMap<String> sMap,
+			IndexHashMap<String> dMap) {
 		if (convert) {
 			ProgramDom dom = (ProgramDom) Project.getTrgt(domName);
 			Project.runTask(dom);

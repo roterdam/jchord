@@ -11,7 +11,7 @@ import javassist.expr.*;
 
 import chord.util.ClasspathUtils;
 import chord.util.FileUtils;
-import chord.util.IndexMap;
+import chord.util.IndexHashMap;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,16 +23,16 @@ import java.util.Set;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor {
-	private static IndexMap<String> Hmap;
-	private static IndexMap<String> Emap;
-	private static IndexMap<String> Lmap;
-	private static IndexMap<String> Fmap;
+	private static IndexHashMap<String> Hmap;
+	private static IndexHashMap<String> Emap;
+	private static IndexHashMap<String> Lmap;
+	private static IndexHashMap<String> Fmap;
 	private static int numH, numE, numL;
 
-	private static IndexMap<String> readFileToMap(String dirName, String fileName) {
+	private static IndexHashMap<String> readFileToMap(String dirName, String fileName) {
 		File file = new File(dirName, fileName);
 		if (!file.exists())
-			return new IndexMap<String>();
+			return new IndexHashMap<String>();
 		return FileUtils.readFileToMap(file);
 	}
 
@@ -49,10 +49,10 @@ public class Instrumentor {
 		String classesDirName = System.getProperty("chord.classes.dir", ".");
 		String jdkOutDirName = System.getProperty("chord.jdk.out.dir");
 		if (jdkOutDirName == null) {
-			Hmap = new IndexMap<String>();
-			Emap = new IndexMap<String>();
-			Lmap = new IndexMap<String>();
-			Fmap = new IndexMap<String>();
+			Hmap = new IndexHashMap<String>();
+			Emap = new IndexHashMap<String>();
+			Lmap = new IndexHashMap<String>();
+			Fmap = new IndexHashMap<String>();
 		} else {
 			Hmap = readFileToMap(jdkOutDirName, "H.dynamic.txt");
 			Emap = readFileToMap(jdkOutDirName, "E.dynamic.txt");
@@ -96,7 +96,7 @@ public class Instrumentor {
 		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
 	}
 
-	private static int set(IndexMap<String> map,
+	private static int set(IndexHashMap<String> map,
 			int byteIdx, CtBehavior method) {
         String className = method.getDeclaringClass().getName();
         String methodName;
@@ -113,7 +113,7 @@ public class Instrumentor {
 		return i;
 	}
 
-	private static int set(IndexMap<String> map, Expr e, CtBehavior method) {
+	private static int set(IndexHashMap<String> map, Expr e, CtBehavior method) {
 		return set(map, e.indexOfBytecode(), method);
 	}
 

@@ -112,13 +112,13 @@ public class FileUtils {
             throw new RuntimeException(ex);
         }
     }
-	public static IndexMap<String> readFileToMap(String fileName) {
+	public static IndexHashMap<String> readFileToMap(String fileName) {
 		return readFileToMap(new File(fileName));
 	}
-	public static IndexMap<String> readFileToMap(File file) {
+	public static IndexHashMap<String> readFileToMap(File file) {
         try {
             BufferedReader in = new BufferedReader(new FileReader(file));
-            IndexMap<String> map = new IndexMap<String>();
+            IndexHashMap<String> map = new IndexHashMap<String>();
             String s;
             while ((s = in.readLine()) != null) {
                 map.getOrAdd(s);
@@ -140,7 +140,7 @@ public class FileUtils {
             throw new RuntimeException(ex);
         }
     }
-	public static void writeMapToFile(IndexMap<String> map, String fileName) {
+	public static void writeMapToFile(IndexHashMap<String> map, String fileName) {
 		try {
             PrintWriter out = new PrintWriter(fileName);
             for (String s : map) {
