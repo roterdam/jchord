@@ -12,7 +12,7 @@ import java.util.Set;
 
 import gnu.trove.TIntStack;
 import chord.util.ArraySet;
-import chord.util.IndexMap;
+import chord.util.IndexHashMap;
 
 /**
  * Algorithm for finding all simple cycles in a directed graph.
@@ -25,7 +25,7 @@ public class SimpleCyclesFinder<Node> {
 	private final IGraph<Node> graph;
 	private final IGraphEntityVisitor<Node> visitor;
 	private Map<Node, Set<Node>> nodeToSuccsMap; 
-	private IndexMap<Node> nodeIdxMap;
+	private IndexHashMap<Node> nodeIdxMap;
 	private int currNodeIdx;
 	private TIntStack markedStack;
 	private TIntStack pointStack;
@@ -52,7 +52,7 @@ public class SimpleCyclesFinder<Node> {
 		markedStack = new TIntStack();
 		pointStack = new TIntStack();
 		nodeToSuccsMap = new HashMap<Node, Set<Node>>();
-		nodeIdxMap = new IndexMap<Node>();
+		nodeIdxMap = new IndexHashMap<Node>();
 		int numNodes = 0;
 		for (Node node : graph.getNodes()) {
 			numNodes++;

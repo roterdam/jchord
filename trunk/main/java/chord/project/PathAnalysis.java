@@ -15,7 +15,7 @@ import java.util.Set;
 import gnu.trove.TIntObjectHashMap;
 
 import chord.util.FileUtils;
-import chord.util.IndexMap;
+import chord.util.IndexHashMap;
 import chord.util.ProcessExecutor;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.integer.IntPair;
@@ -55,7 +55,7 @@ public class PathAnalysis implements ITask {
 	private TIntObjectHashMap[] methToCode;
 	private List/*IntPair*/[] methToArgs;
 	private int[] methToNumCalls;
-	private IndexMap<String> methsMap;
+	private IndexHashMap<String> methsMap;
 	
 	private ProgramDom<IntTrio> domQ;
 	private DomV domV;
@@ -108,7 +108,7 @@ public class PathAnalysis implements ITask {
 				"=t_file_name=" + traceFileName +
 				",m_file_name=" + methsFileName +
 				" " + mainClassName + " ";
-			methsMap = new IndexMap<String>();
+			methsMap = new IndexHashMap<String>();
 			for (String runId : runIds) {
 				System.out.println("Run ID: " + runId);
 				String args = System.getProperty("chord.args." + runId, "");

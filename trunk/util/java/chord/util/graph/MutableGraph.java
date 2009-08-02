@@ -11,7 +11,7 @@ import java.util.Set;
 import java.util.HashMap;
 
 import chord.util.ArraySet;
-import chord.util.IndexMap;
+import chord.util.IndexHashMap;
 
 /**
  * Complete implementation of a mutable, unlabeled, directed graph
@@ -542,7 +542,7 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 	private void computeNodeToSuccsMap() {
 		Set<Node> nodes = nodeToPreds.keySet();
 		int numNodes = nodes.size();
-		IndexMap<Node> nodeToId = new IndexMap<Node>(numNodes);
+		IndexHashMap<Node> nodeToId = new IndexHashMap<Node>(numNodes);
 		int[] nodeToNumSuccs = new int[numNodes];
 		for (Node u : nodes)
 			nodeToId.getOrAdd(u);
@@ -565,7 +565,7 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 	private void computeNodeToPredsMap() {
 		Set<Node> nodes = nodeToSuccs.keySet();
 		int numNodes = nodes.size();
-		IndexMap<Node> nodeToId = new IndexMap<Node>(numNodes);
+		IndexHashMap<Node> nodeToId = new IndexHashMap<Node>(numNodes);
 		int[] nodeToNumPreds = new int[numNodes];
 		for (Node u : nodes)
 			nodeToId.getOrAdd(u);
