@@ -360,7 +360,7 @@ public class Rel {
     	 */
 		public <T> boolean contains(T val) {
 			int domIdx = getNextDomIdx(-1);
-			int idx = doms[domIdx].get(val);
+			int idx = doms[domIdx].indexOf(val);
 	        try {
 				return !b.id().andWith(
 					domBdds[domIdx].ithVar(idx)).isZero();
@@ -383,8 +383,8 @@ public class Rel {
 		public <T0, T1> boolean contains(T0 val0, T1 val1) {
 			int domIdx0 = getNextDomIdx(-1);
 			int domIdx1 = getNextDomIdx(domIdx0);
-			int idx0 = doms[domIdx0].get(val0);
-	        int idx1 = doms[domIdx1].get(val1);
+			int idx0 = doms[domIdx0].indexOf(val0);
+	        int idx1 = doms[domIdx1].indexOf(val1);
 	        try {
 	            return !b.id().andWith(
 					domBdds[domIdx0].ithVar(idx0).andWith(
@@ -413,9 +413,9 @@ public class Rel {
 			int domIdx0 = getNextDomIdx(-1);
 			int domIdx1 = getNextDomIdx(domIdx0);
 			int domIdx2 = getNextDomIdx(domIdx1);
-			int idx0 = doms[domIdx0].get(val0);
-	        int idx1 = doms[domIdx1].get(val1);
-	        int idx2 = doms[domIdx2].get(val2);
+			int idx0 = doms[domIdx0].indexOf(val0);
+	        int idx1 = doms[domIdx1].indexOf(val1);
+	        int idx2 = doms[domIdx2].indexOf(val2);
 	        try {
 	            return !b.id().andWith(
 					domBdds[domIdx0].ithVar(idx0).andWith(
@@ -450,10 +450,10 @@ public class Rel {
 			int domIdx1 = getNextDomIdx(domIdx0);
 			int domIdx2 = getNextDomIdx(domIdx1);
 			int domIdx3 = getNextDomIdx(domIdx2);
-			int idx0 = doms[domIdx0].get(val0);
-	        int idx1 = doms[domIdx1].get(val1);
-	        int idx2 = doms[domIdx2].get(val2);
-	        int idx3 = doms[domIdx3].get(val3);
+			int idx0 = doms[domIdx0].indexOf(val0);
+	        int idx1 = doms[domIdx1].indexOf(val1);
+	        int idx2 = doms[domIdx2].indexOf(val2);
+	        int idx3 = doms[domIdx3].indexOf(val3);
 	        try {
 	            return !b.id().andWith(
 					domBdds[domIdx0].ithVar(idx0).andWith(
@@ -476,11 +476,11 @@ public class Rel {
 			int domIdx2 = getNextDomIdx(domIdx1);
 			int domIdx3 = getNextDomIdx(domIdx2);
 			int domIdx4 = getNextDomIdx(domIdx3);
-			int idx0 = doms[domIdx0].get(val0);
-	        int idx1 = doms[domIdx1].get(val1);
-	        int idx2 = doms[domIdx2].get(val2);
-	        int idx3 = doms[domIdx3].get(val3);
-	        int idx4 = doms[domIdx4].get(val4);
+			int idx0 = doms[domIdx0].indexOf(val0);
+	        int idx1 = doms[domIdx1].indexOf(val1);
+	        int idx2 = doms[domIdx2].indexOf(val2);
+	        int idx3 = doms[domIdx3].indexOf(val3);
+	        int idx4 = doms[domIdx4].indexOf(val4);
 	        try {
 	            return !b.id().andWith(
 					domBdds[domIdx0].ithVar(idx0).andWith(
@@ -506,12 +506,12 @@ public class Rel {
 			int domIdx3 = getNextDomIdx(domIdx2);
 			int domIdx4 = getNextDomIdx(domIdx3);
 			int domIdx5 = getNextDomIdx(domIdx4);
-			int idx0 = doms[domIdx0].get(val0);
-	        int idx1 = doms[domIdx1].get(val1);
-	        int idx2 = doms[domIdx2].get(val2);
-	        int idx3 = doms[domIdx3].get(val3);
-	        int idx4 = doms[domIdx4].get(val4);
-	        int idx5 = doms[domIdx5].get(val5);
+			int idx0 = doms[domIdx0].indexOf(val0);
+	        int idx1 = doms[domIdx1].indexOf(val1);
+	        int idx2 = doms[domIdx2].indexOf(val2);
+	        int idx3 = doms[domIdx3].indexOf(val3);
+	        int idx4 = doms[domIdx4].indexOf(val4);
+	        int idx5 = doms[domIdx5].indexOf(val5);
 	        try {
 	            return !b.id().andWith(
 					domBdds[domIdx0].ithVar(idx0).andWith(
@@ -569,7 +569,7 @@ public class Rel {
     	public void select(int domIdx, Object val) {
 			assert (keptDoms[domIdx]);
     		try {
-    			int idx = doms[domIdx].get(val);
+    			int idx = doms[domIdx].indexOf(val);
     			b.restrictWith(domBdds[domIdx].ithVar(idx));
     		} catch (BDDException ex) {
     			checkRange(val, domIdx);
@@ -591,7 +591,7 @@ public class Rel {
     	public void selectAndDelete(int domIdx, Object val) {
 			assert (keptDoms[domIdx]);
     		try {
-    			int idx = doms[domIdx].get(val);
+    			int idx = doms[domIdx].indexOf(val);
     			b.restrictWith(domBdds[domIdx].ithVar(idx));
     			b.exist(domBdds[domIdx].set());
     			keptDoms[domIdx] = false;
@@ -619,7 +619,7 @@ public class Rel {
     	return new RelView();
     }
     protected void checkRange(Object val, int domIdx) {
-    	int idx = doms[domIdx].get(val);
+    	int idx = doms[domIdx].indexOf(val);
     	if (idx == -1)
     		throw new RuntimeException(
     			"Cannot find value '" + val +
@@ -1203,7 +1203,7 @@ public class Rel {
 	public <T0> void add(T0 val0) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
+		int idx0 = doms[0].indexOf(val0);
 		try {
 			bdd.orWith(domBdds[0].ithVar(idx0));
 		} catch (BDDException ex) {
@@ -1224,7 +1224,7 @@ public class Rel {
 	public <T0> void remove(T0 val0) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
+		int idx0 = doms[0].indexOf(val0);
 		try {
 			bdd.andWith(domBdds[0].ithVar(idx0).not());
 		} catch (BDDException ex) {
@@ -1245,7 +1245,7 @@ public class Rel {
 	public <T0> boolean contains(T0 val0) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
+		int idx0 = doms[0].indexOf(val0);
 		try {
 			return !bdd.id().andWith(domBdds[0].ithVar(idx0)).isZero();
 		} catch (BDDException ex) {
@@ -1276,8 +1276,8 @@ public class Rel {
 	public <T0,T1> void add(T0 val0, T1 val1) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
 		try {
 			bdd.orWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1304,8 +1304,8 @@ public class Rel {
 	public <T0,T1> void remove(T0 val0, T1 val1) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
 		try {
 			bdd.andWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1332,8 +1332,8 @@ public class Rel {
 	public <T0,T1> boolean contains(T0 val0, T1 val1) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-        int idx1 = doms[1].get(val1);
+		int idx0 = doms[0].indexOf(val0);
+        int idx1 = doms[1].indexOf(val1);
         try {
             return !bdd.id().andWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1370,9 +1370,9 @@ public class Rel {
 	public <T0,T1,T2> void add(T0 val0, T1 val1, T2 val2) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
-		int idx2 = doms[2].get(val2);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
+		int idx2 = doms[2].indexOf(val2);
 		try {
 			bdd.orWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1403,9 +1403,9 @@ public class Rel {
 	public <T0,T1,T2> boolean contains(T0 val0, T1 val1, T2 val2) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
-		int idx2 = doms[2].get(val2);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
+		int idx2 = doms[2].indexOf(val2);
 		try {
 			return !bdd.id().andWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1431,10 +1431,10 @@ public class Rel {
 	public <T0,T1,T2,T3> void add(T0 val0, T1 val1, T2 val2, T3 val3) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
-		int idx2 = doms[2].get(val2);
-		int idx3 = doms[3].get(val3);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
+		int idx2 = doms[2].indexOf(val2);
+		int idx3 = doms[3].indexOf(val3);
 		try {
 			bdd.orWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1469,10 +1469,10 @@ public class Rel {
 	public <T0,T1,T2,T3> boolean contains(T0 val0, T1 val1, T2 val2, T3 val3) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
-		int idx2 = doms[2].get(val2);
-		int idx3 = doms[3].get(val3);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
+		int idx2 = doms[2].indexOf(val2);
+		int idx3 = doms[3].indexOf(val3);
 		try {
 			return !bdd.id().andWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1501,11 +1501,11 @@ public class Rel {
 			T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
-		int idx2 = doms[2].get(val2);
-		int idx3 = doms[3].get(val3);
-		int idx4 = doms[4].get(val4);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
+		int idx2 = doms[2].indexOf(val2);
+		int idx3 = doms[3].indexOf(val3);
+		int idx4 = doms[4].indexOf(val4);
 		try {
 			bdd.orWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1547,11 +1547,11 @@ public class Rel {
 			T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
-		int idx2 = doms[2].get(val2);
-		int idx3 = doms[3].get(val3);
-		int idx4 = doms[4].get(val4);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
+		int idx2 = doms[2].indexOf(val2);
+		int idx3 = doms[3].indexOf(val3);
+		int idx4 = doms[4].indexOf(val4);
 		try {
 			return !bdd.id().andWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1583,12 +1583,12 @@ public class Rel {
 			T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-		int idx1 = doms[1].get(val1);
-		int idx2 = doms[2].get(val2);
-		int idx3 = doms[3].get(val3);
-		int idx4 = doms[4].get(val4);
-		int idx5 = doms[5].get(val5);
+		int idx0 = doms[0].indexOf(val0);
+		int idx1 = doms[1].indexOf(val1);
+		int idx2 = doms[2].indexOf(val2);
+		int idx3 = doms[3].indexOf(val3);
+		int idx4 = doms[4].indexOf(val4);
+		int idx5 = doms[5].indexOf(val5);
 		try {
 			bdd.orWith(
 				domBdds[0].ithVar(idx0).andWith(
@@ -1632,12 +1632,12 @@ public class Rel {
 			T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
 		if (bdd == null)
 			throw new RuntimeException("");
-		int idx0 = doms[0].get(val0);
-        int idx1 = doms[1].get(val1);
-        int idx2 = doms[2].get(val2);
-        int idx3 = doms[3].get(val3);
-        int idx4 = doms[4].get(val4);
-        int idx5 = doms[5].get(val5);
+		int idx0 = doms[0].indexOf(val0);
+        int idx1 = doms[1].indexOf(val1);
+        int idx2 = doms[2].indexOf(val2);
+        int idx3 = doms[3].indexOf(val3);
+        int idx4 = doms[4].indexOf(val4);
+        int idx5 = doms[5].indexOf(val5);
         try {
             return !bdd.id().andWith(
                 domBdds[0].ithVar(idx0).andWith(

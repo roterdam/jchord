@@ -50,13 +50,13 @@ public class DomP extends ProgramDom<Inst> {
 				int n = bb.size();
 				if (n == 0) {
 					Program.mapInstToMethod(bb, m);
-					set(bb);
+					getOrAdd(bb);
 					continue;
 				}
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();
 					Program.mapInstToMethod(q, m);
-					set(q);
+					getOrAdd(q);
 				}
 			}
 		}

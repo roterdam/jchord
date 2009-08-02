@@ -14,10 +14,10 @@ import java.util.Set;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class SetUtils {
-	public static final int DEFAULT_INIT_SIZE = 10;
+	public static final int DEFAULT_SIZE = 10;
 	public static final int THRESHOLD = 10;
 	public static <E> Set<E> newSet() {
-		return newSet(DEFAULT_INIT_SIZE);
+		return newSet(DEFAULT_SIZE);
 	}
 	public static <E> Set<E> newSet(int initSize) {
 		Set<E> set;

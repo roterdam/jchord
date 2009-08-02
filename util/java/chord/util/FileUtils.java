@@ -121,7 +121,7 @@ public class FileUtils {
             IndexMap<String> map = new IndexMap<String>();
             String s;
             while ((s = in.readLine()) != null) {
-                map.set(s);
+                map.getOrAdd(s);
             }
             in.close();
             return map;

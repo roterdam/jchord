@@ -31,7 +31,7 @@ public class RelML extends ProgramRel {
 		for (int lIdx = 0; lIdx < numL; lIdx++) {
 			Inst i = domL.get(lIdx);
 			jq_Method m = Program.getMethod(i);
-			int mIdx = domM.get(m);
+			int mIdx = domM.indexOf(m);
 			add(mIdx, lIdx);
 		}
 	}

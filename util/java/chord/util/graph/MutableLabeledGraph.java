@@ -78,15 +78,15 @@ public class MutableLabeledGraph<Node, Label>
 		IndexMap<Node> map = new IndexMap<Node>(numNodes());
 		String s = "";
 		for (Node node : getNodes())
-			s += "Node " + map.set(node) + ": " + node + "\n";
+			s += "Node " + map.getOrAdd(node) + ": " + node + "\n";
 		s += "Roots: ";
 		for (Node node : getRoots())
-			s += map.get(node) + " ";
+			s += map.indexOf(node) + " ";
 		s += "\nEdges:\n";
 		for (Node node : getNodes()) {
-			int i = map.get(node);
+			int i = map.indexOf(node);
  			for (Node node2 : getSuccs(node)) {
-				s += i + " -> " + map.get(node2) + " ";
+				s += i + " -> " + map.indexOf(node2) + " ";
 				Pair<Node, Node> edge = new Pair<Node, Node>(node, node2);
 				Set<Label> labels = nodesToLabels.get(edge);
 				if (labels == null)

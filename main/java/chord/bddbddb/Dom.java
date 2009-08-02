@@ -20,7 +20,7 @@ import chord.util.IndexMap;
  * <li>The domain is initialized by calling {@link #setName(String)}
  * which sets the name of the domain.
  * <li>The domain is next built in memory by repeatedly calling
- * {@link #set(Object)} with the argument in each call being a value
+ * {@link #getOrAdd(Object)} with the argument in each call being a value
  * to be added to the domain.  If the value already exists in the
  * domain then the call does not have any effect.  Otherwise, the
  * value is mapped to integer K in the domain where K is the number
@@ -36,7 +36,7 @@ import chord.util.IndexMap;
  * added,</li>
  * <li>{@link #get(int)}, which provides the value mapped to the
  * specified integer in the domain in memory, and</li>
- * <li>{@link #get(Object)}, which provides the integer mapped to
+ * <li>{@link #indexOf(Object)}, which provides the integer mapped to
  * the specified value in the domain in memory.</li>
  * </ul>
  * </li>

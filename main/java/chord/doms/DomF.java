@@ -29,11 +29,11 @@ public class DomF extends ProgramDom<jq_Field>
 	public void init() {
 		// Reserve index 0 for the distinguished hypothetical field 
 		// representing all array elements
-		set(null);
+		getOrAdd(null);
 	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Field f) {
-		set(f);
+		getOrAdd(f);
 	}
 	public String toXMLAttrsString(jq_Field f) {
 		String sign;

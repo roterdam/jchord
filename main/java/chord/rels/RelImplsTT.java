@@ -27,9 +27,9 @@ public class RelImplsTT extends ProgramRel {
 		DomT domT = (DomT) doms[0];
 		for (jq_Class c : Program.getPreparedClasses()) {
 			if (!c.isInterface()) {
-				int t1Idx = domT.get(c);
+				int t1Idx = domT.indexOf(c);
 				for (jq_Class d : c.getInterfaces()) {
-					int t2Idx = domT.get(d);
+					int t2Idx = domT.indexOf(d);
 					if (t2Idx != -1)
 						add(t1Idx, t2Idx);
 				}

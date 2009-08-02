@@ -545,14 +545,14 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 		IndexMap<Node> nodeToId = new IndexMap<Node>(numNodes);
 		int[] nodeToNumSuccs = new int[numNodes];
 		for (Node u : nodes)
-			nodeToId.set(u);
+			nodeToId.getOrAdd(u);
 		for (Node u : nodes) {
 			for (Node v : nodeToPreds.get(u))
-				nodeToNumSuccs[nodeToId.get(v)]++; 
+				nodeToNumSuccs[nodeToId.indexOf(v)]++; 
 		}
 		nodeToSuccs = new HashMap<Node, Set<Node>>(numNodes);
 		for (Node v : nodes) {
-			int numSuccs = nodeToNumSuccs[nodeToId.get(v)];
+			int numSuccs = nodeToNumSuccs[nodeToId.indexOf(v)];
 			nodeToSuccs.put(v, new ArraySet<Node>(numSuccs));
 		}
 		for (Node u : nodes) {
@@ -568,14 +568,14 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 		IndexMap<Node> nodeToId = new IndexMap<Node>(numNodes);
 		int[] nodeToNumPreds = new int[numNodes];
 		for (Node u : nodes)
-			nodeToId.set(u);
+			nodeToId.getOrAdd(u);
 		for (Node u : nodes) {
 			for (Node v : nodeToSuccs.get(u))
-				nodeToNumPreds[nodeToId.get(v)]++; 
+				nodeToNumPreds[nodeToId.indexOf(v)]++; 
 		}
 		nodeToPreds = new HashMap<Node, Set<Node>>(numNodes);
 		for (Node v : nodes) {
-			int numPreds = nodeToNumPreds[nodeToId.get(v)];
+			int numPreds = nodeToNumPreds[nodeToId.indexOf(v)];
 			nodeToPreds.put(v, new ArraySet<Node>(numPreds));
 		}
 		for (Node u : nodes) {

@@ -32,6 +32,6 @@ public class DomS extends ProgramDom<String>
 		implements IMethodVisitor {
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
-		set(Program.getSign(m));
+		getOrAdd(Program.getSign(m));
 	}
 }

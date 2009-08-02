@@ -125,7 +125,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 		if (nodeMap == null) {
 			nodeMap = new IndexMap<Node>();
 			for (Node node : getNodes())
-				nodeMap.set(node);
+				nodeMap.getOrAdd(node);
 		}
 		return nodeMap;
 	}
@@ -167,15 +167,15 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 		IndexMap<Node> map = new IndexMap<Node>(numNodes());
 		String s = "";
 		for (Node node : getNodes())
-			s += "Node " + map.set(node) + ": " + node + "\n";
+			s += "Node " + map.getOrAdd(node) + ": " + node + "\n";
 		s += "Roots: ";
 		for (Node node : getRoots())
-			s += map.get(node) + " ";
+			s += map.indexOf(node) + " ";
 		s += "\nEdges:\n";
 		for (Node node : getNodes()) {
-			int i = map.get(node);
+			int i = map.indexOf(node);
  			for (Node node2 : getSuccs(node))
-				 s += i + " -> " + map.get(node2) + "\n";
+				 s += i + " -> " + map.indexOf(node2) + "\n";
 		}
 		return s;
 	}

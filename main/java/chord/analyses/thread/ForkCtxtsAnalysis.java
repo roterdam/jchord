@@ -41,11 +41,11 @@ public class ForkCtxtsAnalysis extends JavaAnalysis {
         jq_Method forkMeth = domM.get(1);
         DomA domA = (DomA) Project.getTrgt("A");
         domA.clear();
-		domA.set(null);
-        domA.set(new Pair<Ctxt, jq_Method>(domC.get(0), mainMeth));
+		domA.getOrAdd(null);
+        domA.getOrAdd(new Pair<Ctxt, jq_Method>(domC.get(0), mainMeth));
         Iterable<Ctxt> tuples = relForkC.getAry1ValTuples();
         for (Ctxt ctxt : tuples) {
-            domA.set(new Pair<Ctxt, jq_Method>(ctxt, forkMeth));
+            domA.getOrAdd(new Pair<Ctxt, jq_Method>(ctxt, forkMeth));
         }
         domA.save();
         relForkC.close();
@@ -54,8 +54,8 @@ public class ForkCtxtsAnalysis extends JavaAnalysis {
         relForkACM.zero();
         for (int a = 1; a < domA.size(); a++) {
             Pair<Ctxt, jq_Method> cm = domA.get(a);
-            int c = domC.get(cm.val0);
-            int m = domM.get(cm.val1);
+            int c = domC.indexOf(cm.val0);
+            int m = domM.indexOf(cm.val1);
             relForkACM.add(a, c, m);
         }
         relForkACM.save();

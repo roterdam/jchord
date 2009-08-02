@@ -27,18 +27,18 @@ import chord.project.ProgramDom;
 public class DomT extends ProgramDom<jq_Type> {
 	public void fill() {
 		for (jq_Class c : Program.getPreparedClasses()) {
-			set(c);
+			getOrAdd(c);
 			for (Object o : c.getMembers()) {
 				if (o instanceof jq_Field) {
 					jq_Field f = (jq_Field) o;
 					jq_Type t = f.getType();
-					set(t);
+					getOrAdd(t);
 				} else {
 					jq_Method m = (jq_Method) o;
 					for (jq_Type t : m.getParamTypes()) {
-						set(t);
+						getOrAdd(t);
 					}
-					set(m.getReturnType());
+					getOrAdd(m.getReturnType());
 					if (m.isAbstract())
 						continue;
 					ControlFlowGraph cfg = Program.getCFG(m);
@@ -46,7 +46,7 @@ public class DomT extends ProgramDom<jq_Type> {
 					for (Object o2 : rf) {
 						Register v = (Register) o2;
 						jq_Type t = v.getType();
-						set(t);
+						getOrAdd(t);
 					}
 				}
 			}

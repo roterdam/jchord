@@ -167,7 +167,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				if (sMap.contains(s))
 					throw new RuntimeException(domName +
 						"smap already contains: " + s);
-				sMap.set(s);
+				sMap.getOrAdd(s);
 			}
 		}
 		try {
@@ -176,7 +176,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			String s;
 			while ((s = reader.readLine()) != null) {
 				assert (!dMap.contains(s));
-				dMap.set(s);
+				dMap.getOrAdd(s);
 			}
 			reader.close();
 		} catch (IOException ex) {
@@ -186,7 +186,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	
 	private int getHidx(int h) {
 		String s = dHmap.get(h);
-		int hIdx = sHmap.get(s);
+		int hIdx = sHmap.indexOf(s);
 		if (hIdx == -1) {
 			// System.err.println("WARNING: could not find `" + s + "` in sHmap");
 		}
@@ -194,7 +194,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	}
 	private int getFidx(int f) {
 		String s = dFmap.get(f);
-		int fIdx = sFmap.get(s);
+		int fIdx = sFmap.indexOf(s);
 		if (fIdx == -1) {
 			// System.err.println("WARNING: could not find `" + s + "` in sFmap");
 		}
@@ -202,7 +202,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	}
 	private int getEidx(int e) {
 		String s = dEmap.get(e);
-		int eIdx = sEmap.get(s);
+		int eIdx = sEmap.indexOf(s);
 		if (eIdx == -1) {
 			// System.err.println("WARNING: could not find `" + s + "` in sEmap");
 		}

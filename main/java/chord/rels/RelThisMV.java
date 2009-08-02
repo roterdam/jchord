@@ -38,7 +38,7 @@ public class RelThisMV extends ProgramRel {
 			ControlFlowGraph cfg = Program.getCFG(m);
 			RegisterFactory rf = cfg.getRegisterFactory();
 			Register v = rf.get(0);
-			int vIdx = domV.get(v);
+			int vIdx = domV.indexOf(v);
 			add(mIdx, vIdx);
 		}
 	}

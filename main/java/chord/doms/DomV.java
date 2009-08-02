@@ -53,7 +53,7 @@ public class DomV extends ProgramDom<Register>
 	public void visit(Register v) {
 		if (v.getType().isReferenceType()) {
 			varToMethodMap.put(v, ctnrMethod);
-			set(v);
+			getOrAdd(v);
 		}
 	}
 }

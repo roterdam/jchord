@@ -6,149 +6,125 @@
 package chord.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 /**
- * Utility for mapping each of N objects to a unique integer in the
- * range [0..N-1].
+ * Data structure for indexing a set of objects by the order in which
+ * the objects are added to the set.
  * <p>
- * The integers are assigned in the order in which the objects are
- * added.
+ * Maintains an array list and a hash map.
  * <p>
- * Provides O(1) access to the object given the corresponding integer
- * and vice versa.
+ * The only mutating operations are {@link #getOrAdd(Object)} and
+ * {@link #add(Object)}, in particular, objects cannot be removed.
+ * <p>
+ * Provides constant-time operations for adding a given object,
+ * testing membership of a given object, getting the index of a given
+ * object, and getting the object at a given index.
+ * <p>
+ * Provides O(1) access to the object at a given index by maintaining
+ * a list.
+ * <p>
+ * Provides O(1) access to the index of a given object by maintaining
+ * a hash map.
  * 
- * @param	<T>	The type of the objects to which the integers are
- *			assigned.
+ * @param	<T>	The type of the objects added.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class IndexMap<T> implements java.io.Serializable, Iterable<T> {
+public class IndexMap<T> extends ArrayList<T> implements Set<T> {
 	/**
 	 * 
 	 */
-	private static final long serialVersionUID = 5450801013115547255L;
-	protected final Map<T, Integer> hash;
-    protected final List<T> list;
+	private static final long serialVersionUID = 2754948912995001350L;
+	protected final Map<T, Integer> map;
     public IndexMap(int size) {
-        hash = new HashMap<T, Integer>(size);
-        list = new ArrayList<T>(size);
+        super(size);
+        map = new HashMap<T, Integer>(size);
     }
 	public IndexMap() {
-        hash = new HashMap<T, Integer>();
-        list = new ArrayList<T>();
+        map = new HashMap<T, Integer>();
 	}
-    /**
-     * Provides the total number of objects in the map.
-     * 
-     * @return	The total number of objects in the map.
-     */
-    public int size() {
-    	return list.size();
-    }
-    /**
-     * Removes all objects from the index.
-     */
     public void clear() {
-        hash.clear();
-        list.clear();
+        map.clear();
+    	super.clear();
+    }
+    public boolean contains(Object val) {
+        return map.containsKey(val);
     }
     /**
-     * Determines whether a given object is present in the map.
+     * Provides the index of a given object, if it exists, and -1
+     * otherwise.
+     * <p>
+     * Takes O(1) time.
      * 
      * @param	val	An object.
      * 
-     * @return	true iff the given object is present in the map.
+     * @return	The index of the given object, if it exists,
+     * 			and -1 otherwise.
      */
-    public boolean contains(T val) {
-        return hash.containsKey(val);
-    }
-    /**
-     * Provides the integer mapped to a given object in the map,
-     * if it exists, and -1 otherwise.
-     * 
-     * @param	val	An object.
-     * 
-     * @return	The integer mapped to the given object in the map,
-     * 			if it exists, and -1 otherwise.
-     */
-    public int get(T val) {
-    	Integer idx = hash.get(val);
+    public int indexOf(Object val) {
+    	Integer idx = map.get(val);
     	if (idx == null)
 			return -1;
         return idx.intValue();
     }
     /**
-     * Provides the object mapped to a given integer in the map,
-     * if it exists, and null otherwise.
-	 *
-     * @param	idx	An integer.
-     * 
-     * @return	The object mapped to the given integer in the map,
-     * 			if it exists, and null otherwise.
-     */
-    public T get(int idx) {
-    	try {
-    		return list.get(idx);
-    	} catch (IndexOutOfBoundsException e) {
-			return null;
-    	}
-    }
-    /**
-     * Provides the integer mapped to a given object in the map,
-     * if it exists, and maps the object to a new unique integer
-     * otherwise.
+     * Adds and indexes a given object, unless it already exists,
+     * and provides its index in both cases.
      * 
      * @param	val	An object.
      * 
-     * @return	The integer mapped to the given object in the map.
+     * @return	The index of the given object.
      */
-    public int set(T val) {
-        Integer idx = hash.get(val);
+    public int getOrAdd(T val) {
+        Integer idx = map.get(val);
         if (idx == null) {
-        	idx = new Integer(list.size());
-            hash.put(val, idx);
-            list.add(val);
+        	idx = new Integer(size());
+            map.put(val, idx);
+            super.add(val);
         }
         return idx.intValue();
     }
     /**
-     * Provides the set of all objects in the map.
+     * Adds and indexes a given object unless it already exists.
      * 
-     * @return	The set of all objects in the map.
+     * @param	val	An object.
+     * 
+     * @return	true iff the given object did not already exist
+     * 			and was successfully added and indexed.
      */
-    public Set<T> keySet() {
-    	return hash.keySet();
+    public boolean add(T val) {
+        Integer idx = map.get(val);
+        if (idx == null) {
+        	idx = new Integer(size());
+            map.put(val, idx);
+            super.add(val);
+            return true;
+        }
+        return false;
     }
-    /**
-     * Provides an iterator over the objects in the map.
-     * <p>
-     * The objects are iterated in the order in which they were
-     * added to the map or, equivalently, in increasing order of
-     * the integers assigned to the objects in the map.
-     */
-    public Iterator<T> iterator() {
-    	return list.iterator();
+    public T remove(int idx) {
+    	throw new RuntimeException();
     }
-/*
-    private class Itr implements Iterator<T> {
-    	int idx = 0;
-    	public boolean hasNext() {
-    		return idx < list.size();
-    	}
-    	public T next() {
-    		T val = list.get(idx);
-    		idx++;
-    		return val;
-    	}
-    	public void remove() {
-    		throw new UnsupportedOperationException(
-    			"remove not supported in IndexMap iterator.");
-    	}
+    public T set(int idx, T val) {
+    	throw new RuntimeException();
     }
-*/
+    public void add(int idx, T val) {
+    	throw new RuntimeException();
+    }
+    public boolean addAll(Collection<? extends T> c) {
+    	throw new RuntimeException();
+    }
+    public boolean remove(Object val) {
+    	throw new RuntimeException();
+    }
+    public boolean removeAll(Collection<?> c) {
+    	throw new RuntimeException();
+    }
+    public boolean retainAll(Collection<?> c) {
+    	throw new RuntimeException();
+    }
 }

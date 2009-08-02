@@ -23,11 +23,11 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 	public void visit(jq_Method m) {
 		ctnrMethod = m;
 	}
-	public int set(Quad q) {
+	public int getOrAdd(Quad q) {
 		// XXX
 		if (q != null)
 			Program.mapInstToMethod(q, ctnrMethod);
-		return super.set(q);
+		return super.getOrAdd(q);
 	}
 	public String toUniqueIdString(Quad q) {
 		if (q == null)
@@ -40,7 +40,7 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 		jq_Method m = Program.getMethod(q);
 		String file = Program.getSourceFileName(m.getDeclaringClass());
 		int line = Program.getLineNumber(q, m);
-		int mIdx = domM.get(m);
+		int mIdx = domM.indexOf(m);
 		return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
 			"Mid=\"M" + mIdx + "\"";
 	}

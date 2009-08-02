@@ -25,10 +25,10 @@ import chord.visitors.INewInstVisitor;
 public class DomH extends QuadDom implements INewInstVisitor {
 	public void init() {
 		super.init();
-		set(null);
+		getOrAdd(null);
 	}
 	public void visitNewInst(Quad q) {
-		set(q);
+		getOrAdd(q);
 	}
 	public String toXMLAttrsString(Quad q) {
 		// XXX
