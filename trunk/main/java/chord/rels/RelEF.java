@@ -32,7 +32,7 @@ public class RelEF extends ProgramRel {
 		for (int eIdx = 0; eIdx < numE; eIdx++) {
 			Quad e = domE.get(eIdx);
 			jq_Field f = Program.getField(e);
-			int fIdx = domF.get(f);
+			int fIdx = domF.indexOf(f);
 			if (fIdx != -1)
 				add(eIdx, fIdx);
 		}

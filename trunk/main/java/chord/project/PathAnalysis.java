@@ -299,7 +299,7 @@ public class PathAnalysis implements ITask {
 		System.out.println("Class: " + cls + " nad: " + nad);
 		jq_Method m = (jq_Method) cls.getDeclaredMember(nad);
 		assert (m != null);
-		int mIdx = domM.get(m);
+		int mIdx = domM.indexOf(m);
 		if (mIdx == -1) {
 			System.out.println("MISSING method: " + m);
 			eatUntil(mId);
@@ -389,9 +389,9 @@ public class PathAnalysis implements ITask {
 						currThreadAbbrOut.println("\t" + q);
 					}
 					Operator op = q.getOperator();
-					int currQidx = domQ.set(new IntTrio(q.getID(), mIdx, cIdx));
+					int currQidx = domQ.getOrAdd(new IntTrio(q.getID(), mIdx, cIdx));
 					if (currQidx == domQ.size() - 1) {
-						int p = domP.get(q);
+						int p = domP.indexOf(q);
 						PQset.add(new IntPair(p, currQidx));
 					}
 					if (prevQidx != -1) {
@@ -415,7 +415,7 @@ public class PathAnalysis implements ITask {
         			        RegisterOperand vo = lo.get(i);
 			                Register v = vo.getRegister();
             			    if (v.getType().isReferenceType()) {
-		        	            int vIdx = domV.get(v);
+		        	            int vIdx = domV.indexOf(v);
 								if (invkArgs2 == null)
 									invkArgs2 = new ArrayList<IntPair>();
         		    	        invkArgs2.add(new IntPair(i, vIdx));
@@ -426,7 +426,7 @@ public class PathAnalysis implements ITask {
 						if (vo != null) {
 							Register v = vo.getRegister();
 							if (v.getType().isReferenceType()) {
-								invkRet2 = domV.get(v);
+								invkRet2 = domV.indexOf(v);
 							}
 						}
 						jq_Method m2 = Invoke.getMethod(q).getMethod();
@@ -466,7 +466,7 @@ public class PathAnalysis implements ITask {
 							if (rx instanceof RegisterOperand) {
 								RegisterOperand ro = (RegisterOperand) rx;
 								Register v = ro.getRegister();
-								int methRet = domV.get(v);
+								int methRet = domV.indexOf(v);
 								if (DEBUG) System.out.println("ADDING to copy: " + currQidx + " " + invkRet + " " + methRet);
 								copySet.add(new IntTrio(currQidx, invkRet, methRet));
 							}
@@ -476,13 +476,13 @@ public class PathAnalysis implements ITask {
 					if (op instanceof Move) {
 						RegisterOperand lo = Move.getDest(q);
 						Register l = lo.getRegister();
-						int lIdx = domV.get(l);
+						int lIdx = domV.indexOf(l);
 						assert (lIdx != -1);
 						Operand rx = Move.getSrc(q);
 						if (rx instanceof RegisterOperand) {
 							RegisterOperand ro = (RegisterOperand) rx;
 							Register r = ro.getRegister();
-							int rIdx = domV.get(r);
+							int rIdx = domV.indexOf(r);
 							assert (rIdx != -1);
 							if (DEBUG) System.out.println("ADDING to copy: " + currQidx + " " + lIdx + " " + rIdx);
 							copySet.add(new IntTrio(currQidx, lIdx, rIdx));
@@ -498,9 +498,9 @@ public class PathAnalysis implements ITask {
 						RegisterOperand lo = Getfield.getDest(q);
 						Register b = bo.getRegister();
 						Register l = lo.getRegister();
-						int lIdx = domV.get(l);
-						int bIdx = domV.get(b);
-						int fIdx = domF.get(f);
+						int lIdx = domV.indexOf(l);
+						int bIdx = domV.indexOf(b);
+						int fIdx = domF.indexOf(f);
 						if (DEBUG) System.out.println("ADDING to getinst: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
 						getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
 						continue;
@@ -510,8 +510,8 @@ public class PathAnalysis implements ITask {
 						RegisterOperand lo = ALoad.getDest(q);
 						Register b = bo.getRegister();
 						Register l = lo.getRegister();
-						int bIdx = domV.get(b);
-						int lIdx = domV.get(l);
+						int bIdx = domV.indexOf(b);
+						int lIdx = domV.indexOf(l);
 						int fIdx = 0;
 						if (DEBUG) System.out.println("ADDING to getinst: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
 						getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
@@ -523,9 +523,9 @@ public class PathAnalysis implements ITask {
 						RegisterOperand ro = (RegisterOperand) Putfield.getSrc(q);
 						Register b = bo.getRegister();
 						Register r = ro.getRegister();
-							int bIdx = domV.get(b);
-						int rIdx = domV.get(r);
-						int fIdx = domF.get(f);
+							int bIdx = domV.indexOf(b);
+						int rIdx = domV.indexOf(r);
+						int fIdx = domF.indexOf(f);
 						if (DEBUG) System.out.println("ADDING to putinst: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
 						putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
 						continue;
@@ -535,8 +535,8 @@ public class PathAnalysis implements ITask {
 						RegisterOperand ro = (RegisterOperand) AStore.getValue(q);
 						Register b = bo.getRegister();
 						Register r = ro.getRegister();
-						int bIdx = domV.get(b);
-						int rIdx = domV.get(r);
+						int bIdx = domV.indexOf(b);
+						int rIdx = domV.indexOf(r);
 						int fIdx = 0;
 						if (DEBUG) System.out.println("ADDING to putinst: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
 						putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
@@ -545,7 +545,7 @@ public class PathAnalysis implements ITask {
 					if (op instanceof Getstatic) {
 						RegisterOperand lo = Getstatic.getDest(q);
 						Register l = lo.getRegister();
-						int lIdx = domV.get(l);
+						int lIdx = domV.indexOf(l);
 						if (DEBUG) System.out.println("ADDING to getstat: " + currQidx + " " + lIdx);
 						getstatSet.add(new IntPair(currQidx, lIdx));
 						continue;
@@ -553,7 +553,7 @@ public class PathAnalysis implements ITask {
 					if (op instanceof Putstatic) {
 						RegisterOperand ro = (RegisterOperand) Putstatic.getSrc(q);
 						Register r = ro.getRegister();
-						int rIdx = domV.get(r);
+						int rIdx = domV.indexOf(r);
 						if (DEBUG) System.out.println("ADDING to putstat: " + currQidx + " " + rIdx);
 						putstatSet.add(new IntPair(currQidx, rIdx));
 						continue;
@@ -562,8 +562,8 @@ public class PathAnalysis implements ITask {
 						RegisterOperand vo = (op instanceof New) ?
 							New.getDest(q) : NewArray.getDest(q);
 						Register v = vo.getRegister();
-						int vIdx = domV.get(v);
-						int hIdx = domH.get(q);
+						int vIdx = domV.indexOf(v);
+						int hIdx = domH.indexOf(q);
 						if (DEBUG) System.out.println("ADDING to alloc " + currQidx + " " + vIdx + " " + hIdx);
 						allocSet.add(new IntTrio(currQidx, vIdx, hIdx));
 						continue;
@@ -586,7 +586,7 @@ public class PathAnalysis implements ITask {
 		for (int zIdx = 0; zIdx < numArgs; zIdx++) {
 			Register v = rf.get(zIdx);
 			if (v.getType().isReferenceType()) {
-				int vIdx = domV.get(v);
+				int vIdx = domV.indexOf(v);
 				if (args == null)
 					args = new ArrayList<IntPair>();
 				args.add(new IntPair(zIdx, vIdx));

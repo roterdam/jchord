@@ -108,7 +108,7 @@ public class Instrumentor {
         String methodArgs = Descriptor.toString(method.getSignature());
 		String s = byteIdx + "@" + methodName + methodArgs + "@" + className;
 		int n = map.size();
-		int i = map.set(s);
+		int i = map.getOrAdd(s);
 		assert (i == n);
 		return i;
 	}
@@ -202,7 +202,7 @@ public class Instrumentor {
 					CtField fld = e.getField();
 					String fldCtnr = fld.getDeclaringClass().getName();
 					String fldSign = fld.getName() + "@" + fldCtnr;
-					int fIdx = Fmap.set(fldSign);
+					int fIdx = Fmap.getOrAdd(fldSign);
 					boolean isPrim = fld.getType().isPrimitive();
 					String s = isWr ? "$proceed($$);" : "$_ = $proceed();";
 					String t;

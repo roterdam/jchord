@@ -43,12 +43,12 @@ public class RelPP extends ProgramRel implements IMethodVisitor {
 			BasicBlock bq = it.nextBasicBlock();
 			int n = bq.size();
 			Inst y = (n == 0) ? bq : bq.getQuad(0);
-			int yIdx = domP.get(y);
+			int yIdx = domP.indexOf(y);
 			if (n != 0) {
 				int pIdx = yIdx;
 				for (int i = 1; i < n; i++) {
 					Quad q = bq.getQuad(i);
-					int qIdx = domP.get(q);
+					int qIdx = domP.indexOf(q);
 					add(pIdx, qIdx);
 					pIdx = qIdx;
 				}
@@ -57,7 +57,7 @@ public class RelPP extends ProgramRel implements IMethodVisitor {
 				BasicBlock bp = (BasicBlock) bo;
 				int l = bp.size();
 				Inst x = (l == 0) ? bp : bp.getQuad(l - 1);
-				int xIdx = domP.get(x);
+				int xIdx = domP.indexOf(x);
 				add(xIdx, yIdx);
 			}
 		}

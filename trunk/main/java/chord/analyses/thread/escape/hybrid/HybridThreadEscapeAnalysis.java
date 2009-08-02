@@ -268,7 +268,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 	}
 	private int getIdx(RegisterOperand ro, jq_Method m) {
 		Register r = ro.getRegister();
-		int vIdx = domV.get(r);
+		int vIdx = domV.indexOf(r);
 		return vIdx - methToVar0Idx.get(m);
 	}
 	private void addPathEdge(Pair<Ctxt, jq_Method> cm, PathEdge pe) {
@@ -606,7 +606,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 				if (bPts == escPts)
 					rPts = escPts;
 				else {
-					int fIdx = domF.get(f);
+					int fIdx = domF.indexOf(f);
 					rPts = getPtsFromHeap(bPts, fIdx, dstHeap);
 				}
 			} else
@@ -680,7 +680,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			IntArraySet[] dstEnv = iDstNode.env;
 			IntArraySet bPts = dstEnv[bIdx];
 			IntArraySet rPts = dstEnv[rIdx];
-			int fIdx = domF.get(f);
+			int fIdx = domF.indexOf(f);
 			if (bPts != escPts) {
 				Set<IntTrio> dstHeap = iDstNode.heap;
 				Set<IntTrio> dstHeap2 = new ArraySet<IntTrio>(dstHeap);
@@ -747,7 +747,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			int vIdx = getIdx(vo, m);
 			IntArraySet[] dstEnv2 = copy(dstEnv);
 			if (currAllocs.contains(q)) {
-				int hIdx = domH.get(q);
+				int hIdx = domH.indexOf(q);
 				IntArraySet pts = new IntArraySet(1);
 				pts.add(hIdx);
 				dstEnv2[vIdx] = pts;

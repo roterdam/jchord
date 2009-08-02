@@ -142,7 +142,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 				jq_Method m = Program.getMethod(i);
 				Set<Ctxt> cs = thrSenAbbrCSCG.getContexts(m);
 				for (Ctxt c : cs) {
-					domN.set(new Pair<Ctxt, Inst>(c, i));
+					domN.getOrAdd(new Pair<Ctxt, Inst>(c, i));
 				}
 			}
 			domN.save();
@@ -150,9 +150,9 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			relNC.zero();
 			relNL.zero();
 			for (Pair<Ctxt, Inst> cm : domN) {
-				int n = domN.get(cm);
-				int c = domC.get(cm.val0);
-				int l = domL.get(cm.val1);
+				int n = domN.indexOf(cm);
+				int c = domC.indexOf(cm.val0);
+				int l = domL.indexOf(cm.val1);
 				relNC.add(n, c);
 				relNL.add(n, l);
 			}
@@ -244,10 +244,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			Pair<Ctxt, Inst> n4Val = (Pair) tuple[5];
 			Ctxt c4Val = n4Val.val0;
 			Inst l4Val = n4Val.val1;
-			int l1 = domL.get(l1Val);
-			int l2 = domL.get(l2Val);
-			int l3 = domL.get(l3Val);
-			int l4 = domL.get(l4Val);
+			int l1 = domL.indexOf(l1Val);
+			int l2 = domL.indexOf(l2Val);
+			int l3 = domL.indexOf(l3Val);
+			int l4 = domL.indexOf(l4Val);
 			// require l1,l2 <= l3,l4 and if not switch
 			if (l1 > l3 || (l1 == l3 && l2 > l4)) {
 				{
@@ -270,36 +270,36 @@ public class DeadlockAnalysis extends JavaAnalysis {
 					tmp = t1Val; t1Val = t2Val; t2Val = tmp;
 				}
 			}
-			int t1 = domA.get(t1Val);
-			int t2 = domA.get(t2Val);
-			int c1 = domC.get(c1Val);
-			int c2 = domC.get(c2Val);
-			int c3 = domC.get(c3Val);
-			int c4 = domC.get(c4Val);
+			int t1 = domA.indexOf(t1Val);
+			int t2 = domA.indexOf(t2Val);
+			int c1 = domC.indexOf(c1Val);
+			int c2 = domC.indexOf(c2Val);
+			int c3 = domC.indexOf(c3Val);
+			int c4 = domC.indexOf(c4Val);
 			Ctxt t1cVal = t1Val.val0;
 			Ctxt t2cVal = t2Val.val0;
-			int t1c = domC.get(t1cVal);
-			int t2c = domC.get(t2cVal);
+			int t1c = domC.indexOf(t1cVal);
+			int t2c = domC.indexOf(t2cVal);
 			jq_Method t1mVal = t1Val.val1;
 			jq_Method t2mVal = t2Val.val1;
-			int t1m = domM.get(t1mVal);
-			int t2m = domM.get(t2mVal);
+			int t1m = domM.indexOf(t1mVal);
+			int t2m = domM.indexOf(t2mVal);
 			jq_Method m1Val = Program.getMethod(l1Val);
 			jq_Method m2Val = Program.getMethod(l2Val);
 			jq_Method m3Val = Program.getMethod(l3Val);
 			jq_Method m4Val = Program.getMethod(l4Val);
-			int m1 = domM.get(m1Val);
-			int m2 = domM.get(m2Val);
-			int m3 = domM.get(m3Val);
-			int m4 = domM.get(m4Val);
+			int m1 = domM.indexOf(m1Val);
+			int m2 = domM.indexOf(m2Val);
+			int m3 = domM.indexOf(m3Val);
+			int m4 = domM.indexOf(m4Val);
 			Obj o1Val = getPointsTo(c1, l1);
 			Obj o2Val = getPointsTo(c2, l2);
 			Obj o3Val = getPointsTo(c3, l3);
 			Obj o4Val = getPointsTo(c4, l4);
-			int o1 = domO.set(o1Val);
-			int o2 = domO.set(o2Val);
-			int o3 = domO.set(o3Val);
-			int o4 = domO.set(o4Val);
+			int o1 = domO.getOrAdd(o1Val);
+			int o2 = domO.getOrAdd(o2Val);
+			int o3 = domO.getOrAdd(o3Val);
+			int o4 = domO.getOrAdd(o4Val);
 			addToCMCMMap(t1cVal, t1mVal, c1Val, m1Val);
 			addToCMCMMap(t2cVal, t2mVal, c3Val, m3Val);
 			addToCMCMMap(c1Val , m1Val , c2Val, m2Val);
@@ -333,8 +333,8 @@ public class DeadlockAnalysis extends JavaAnalysis {
 					Ctxt ctxt = origNode.val0;
 					Set<Quad> insts = thrSenAbbrCSCG.getLabels(origNode, destNode);
 					for (Quad inst : insts) {
-						return "<elem Cid=\"C" + domC.get(ctxt) + "\" " +
-							"Iid=\"I" + domI.get(inst) + "\"/>";
+						return "<elem Cid=\"C" + domC.indexOf(ctxt) + "\" " +
+							"Iid=\"I" + domI.indexOf(inst) + "\"/>";
 					}
 					return "";
 				}
@@ -347,16 +347,16 @@ public class DeadlockAnalysis extends JavaAnalysis {
         for (CM cm1 : CMCMMap.keySet()) {
         	Ctxt ctxt1 = cm1.val0;
         	jq_Method meth1 = cm1.val1;
-            int c1 = domC.get(ctxt1);
-            int m1 = domM.get(meth1);
+            int c1 = domC.indexOf(ctxt1);
+            int m1 = domM.indexOf(meth1);
 			Set<CM> cmSet = CMCMMap.get(cm1);
 			ShortestPathBuilder<Pair<Ctxt, jq_Method>> builder =
 				new ShortestPathBuilder(thrSenAbbrCSCG, cm1, visitor);
 			for (CM cm2 : cmSet) {
 				Ctxt ctxt2 = cm2.val0;
 				jq_Method meth2 = cm2.val1;
-				int c2 = domC.get(ctxt2);
-				int m2 = domM.get(meth2);
+				int c2 = domC.indexOf(ctxt2);
+				int m2 = domM.indexOf(meth2);
 				out.println("<CMCM C1id=\"C" + c1 + "\" M1id=\"M" + m1 +
 					"\" C2id=\"C" + c2 + "\" M2id=\"M" + m2 + "\">");
            		String path = builder.getShortestPathTo(cm2);

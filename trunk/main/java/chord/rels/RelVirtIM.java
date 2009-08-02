@@ -38,7 +38,7 @@ public class RelVirtIM extends ProgramRel {
 			if (op instanceof InvokeVirtual ||
 					op instanceof InvokeInterface) {
 				jq_Method m = Invoke.getMethod(i).getMethod();
-				int mIdx = domM.get(m);
+				int mIdx = domM.indexOf(m);
 				if (mIdx != -1)
 					add(iIdx, mIdx);
 			}

@@ -27,10 +27,10 @@ public class RelExtnsTT extends ProgramRel {
 		DomT domT = (DomT) doms[0];
 		for (jq_Class c : Program.getPreparedClasses()) {
 			// c is concrete/abstract class or interface
-			int t1Idx = domT.get(c);
+			int t1Idx = domT.indexOf(c);
 			if (c.isInterface()) {
 				for (jq_Class d : c.getInterfaces()) {
-					int t2Idx = domT.get(d);
+					int t2Idx = domT.indexOf(d);
 					add(t1Idx, t2Idx);
 				}
 			} else {
@@ -38,7 +38,7 @@ public class RelExtnsTT extends ProgramRel {
 				if (d == null) {
 					assert (c.getName().equals("java.lang.Object"));
 				} else {
-					int t2Idx = domT.get(d);
+					int t2Idx = domT.indexOf(d);
 					if (t2Idx != -1)
 						add(t1Idx, t2Idx);
 				}

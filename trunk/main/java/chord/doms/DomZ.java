@@ -46,7 +46,7 @@ public class DomZ extends ProgramDom<Integer>
 	public void grow(int newSize) {
 		int oldSize = maxArgs;
 		for (int i = oldSize; i < newSize; i++)
-			set(new Integer(i));
+			getOrAdd(new Integer(i));
 		maxArgs = newSize;
 	}
 }

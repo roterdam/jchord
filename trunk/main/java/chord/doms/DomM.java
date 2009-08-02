@@ -43,14 +43,14 @@ public class DomM extends ProgramDom<jq_Method>
 		// Reserver index 1 for the start() method of java.lang.Thread
 		// if it exists.
 		jq_Method mainMethod = Program.getMainMethod();
-		set(mainMethod);
+		getOrAdd(mainMethod);
 		jq_Method startMethod = Program.getThreadStartMethod();
 		if (startMethod != null)
-			set(startMethod);
+			getOrAdd(startMethod);
 	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
-		set(m);
+		getOrAdd(m);
 	}
 	public String toXMLAttrsString(jq_Method m) {
 		jq_Class c = m.getDeclaringClass();

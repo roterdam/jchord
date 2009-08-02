@@ -61,7 +61,7 @@ public class SimpleCyclesFinder<Node> {
 			for (Node node2 : graph.getSuccs(node)) {
 				succs.add(node2);
 			}
-			nodeIdxMap.set(node);
+			nodeIdxMap.getOrAdd(node);
 		}
 		mark = new boolean[numNodes];
 		for (currNodeIdx = 0; currNodeIdx < numNodes; currNodeIdx++) {
@@ -81,7 +81,7 @@ public class SimpleCyclesFinder<Node> {
 		Iterator<Node> it = nodeToSuccsMap.get(node).iterator();
 		while (it.hasNext()) {
 			Node succNode = it.next();
-			int succNodeIdx = nodeIdxMap.get(succNode); 
+			int succNodeIdx = nodeIdxMap.indexOf(succNode); 
 			if (succNodeIdx < currNodeIdx)
 				it.remove();
 			else if (succNodeIdx == currNodeIdx) {

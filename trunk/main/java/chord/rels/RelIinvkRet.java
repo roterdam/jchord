@@ -36,7 +36,7 @@ public class RelIinvkRet extends ProgramRel {
 			if (vo != null) {
 				Register v = vo.getRegister();
 				if (v.getType().isReferenceType()) {
-					int vIdx = domV.get(v);
+					int vIdx = domV.indexOf(v);
 					add(iIdx, 0, vIdx);
 				}
 			}

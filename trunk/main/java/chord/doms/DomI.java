@@ -25,7 +25,7 @@ import chord.visitors.IInvokeInstVisitor;
 )
 public class DomI extends QuadDom implements IInvokeInstVisitor {
 	public void visitInvokeInst(Quad q) {
-		set(q);
+		getOrAdd(q);
 	}
 	public String toString(Quad q) {
 		return Program.toStringInvokeInst(q);

@@ -109,7 +109,7 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
 		return relIM.contains(invk, meth);
 	}
 	public boolean hasRoot(jq_Method meth) {
-		return domM.get(meth) == 0;
+		return domM.indexOf(meth) == 0;
 	}
 	public boolean hasNode(jq_Method meth) {
 		if (!relReachableM.isOpen())

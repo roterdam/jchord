@@ -27,7 +27,7 @@ public class DomO extends ProgramDom<Obj> {
 			return "";
 		String s = "Cids=\"";
 		for (Ctxt cVal : pts) {
-			int cIdx = domC.get(cVal);
+			int cIdx = domC.indexOf(cVal);
 			s += "C" + cIdx + " ";
 		}
 		s = s.substring(0, s.length() - 1);

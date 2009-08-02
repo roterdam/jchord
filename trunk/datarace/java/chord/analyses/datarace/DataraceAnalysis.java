@@ -189,9 +189,9 @@ public class DataraceAnalysis extends JavaAnalysis {
 			relDatarace.getAry6ValTuples();
 		for (Hext<Pair<Ctxt, jq_Method>, Ctxt, Quad,
 				  Pair<Ctxt, jq_Method>, Ctxt, Quad> tuple : tuples) {
-			int tce1 = domTCE.set(new Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>(
+			int tce1 = domTCE.getOrAdd(new Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>(
 				tuple.val0, tuple.val1, tuple.val2));
-			int tce2 = domTCE.set(new Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>(
+			int tce2 = domTCE.getOrAdd(new Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>(
 				tuple.val3, tuple.val4, tuple.val5));
 			RelView view = relRaceCEC.getView();
 			view.selectAndDelete(0, tuple.val1);
@@ -204,9 +204,9 @@ public class DataraceAnalysis extends JavaAnalysis {
 				pts.add(ctxt);
 			}
 			view.free();
-			int p = domO.set(new Obj(pts));
+			int p = domO.getOrAdd(new Obj(pts));
 			jq_Field fld = Program.getField(tuple.val2);
-			int f = domF.get(fld);
+			int f = domF.indexOf(fld);
 			out.println("<datarace Oid=\"O" + p +
 				"\" Fid=\"F" + f + "\" " +
 				"TCE1id=\"TCE" + tce1 + "\" "  +
@@ -233,17 +233,17 @@ public class DataraceAnalysis extends JavaAnalysis {
 						Pair<Ctxt, jq_Method> destNode) {
 					Set<Quad> insts = thrSenAbbrCSCG.getLabels(origNode, destNode);
 					jq_Method srcM = origNode.val1;
-					int mIdx = domM.get(srcM);
+					int mIdx = domM.indexOf(srcM);
 					Ctxt srcC = origNode.val0;
-					int cIdx = domC.get(srcC);
+					int cIdx = domC.indexOf(srcC);
 					String lockStr = "";
 					Quad inst = insts.iterator().next();
-					int iIdx = domI.get(inst);
+					int iIdx = domI.indexOf(inst);
 					RelView view = relLI.getView();
 					view.selectAndDelete(1, iIdx);
 					Iterable<Inst> locks = view.getAry1ValTuples();
 					for (Inst lock : locks) {
-						int lIdx = domL.get(lock);
+						int lIdx = domL.indexOf(lock);
 						RelView view2 = relSyncCLC.getView();
 						view2.selectAndDelete(0, cIdx);
 						view2.selectAndDelete(1, lIdx);
@@ -251,7 +251,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 						Set<Ctxt> pts = SetUtils.newSet(view2.size());
 						for (Ctxt ctxt : ctxts)
 							pts.add(ctxt);
-						int oIdx = domO.set(new Obj(pts));
+						int oIdx = domO.getOrAdd(new Obj(pts));
 						view2.free();
 						lockStr += "<lock Lid=\"L" + lIdx + "\" Mid=\"M" +
 							mIdx + "\" Oid=\"O" + oIdx + "\"/>";
@@ -269,19 +269,19 @@ public class DataraceAnalysis extends JavaAnalysis {
 			Pair<Ctxt, jq_Method> srcCM = tce.val0;
 			Ctxt methCtxt = tce.val1;
 			Quad heapInst = tce.val2;
-			int cIdx = domC.get(methCtxt);
-			int eIdx = domE.get(heapInst);
-			out.println("<TCE id=\"TCE" + domTCE.get(tce) + "\" " +
-				"Tid=\"A" + domA.get(srcCM)    + "\" " +
+			int cIdx = domC.indexOf(methCtxt);
+			int eIdx = domE.indexOf(heapInst);
+			out.println("<TCE id=\"TCE" + domTCE.indexOf(tce) + "\" " +
+				"Tid=\"A" + domA.indexOf(srcCM)    + "\" " +
 				"Cid=\"C" + cIdx + "\" " +
 				"Eid=\"E" + eIdx + "\">");
 			jq_Method dstM = Program.getMethod(heapInst);
-			int mIdx = domM.get(dstM);
+			int mIdx = domM.indexOf(dstM);
 			RelView view = relLE.getView();
 			view.selectAndDelete(1, eIdx);
 			Iterable<Inst> locks = view.getAry1ValTuples();
 			for (Inst lock : locks) {
-				int lIdx = domL.get(lock);
+				int lIdx = domL.indexOf(lock);
 				RelView view2 = relSyncCLC.getView();
 				view2.selectAndDelete(0, cIdx);
 				view2.selectAndDelete(1, lIdx);
@@ -289,7 +289,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 				Set<Ctxt> pts = SetUtils.newSet(view2.size());
 				for (Ctxt ctxt : ctxts)
 					pts.add(ctxt);
-				int oIdx = domO.set(new Obj(pts));
+				int oIdx = domO.getOrAdd(new Obj(pts));
 				view2.free();
 				out.println("<lock Lid=\"L" + lIdx + "\" Mid=\"M" +
 					mIdx + "\" Oid=\"O" + oIdx + "\"/>");

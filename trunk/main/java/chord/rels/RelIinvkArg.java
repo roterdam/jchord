@@ -39,7 +39,7 @@ public class RelIinvkArg extends ProgramRel {
 				RegisterOperand vo = l.get(zIdx);
 				Register v = vo.getRegister();
 				if (v.getType().isReferenceType()) {
-					int vIdx = domV.get(v);
+					int vIdx = domV.indexOf(v);
 					add(iIdx, zIdx, vIdx);
 				}
 			}

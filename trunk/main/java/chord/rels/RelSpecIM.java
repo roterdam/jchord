@@ -35,7 +35,7 @@ public class RelSpecIM extends ProgramRel {
 			if (op instanceof InvokeStatic) {
 				jq_Method m = InvokeStatic.getMethod(i).getMethod();
 				if (!m.isStatic()) {
-					int mIdx = domM.get(m);
+					int mIdx = domM.indexOf(m);
 					if (mIdx != -1)
 						add(iIdx, mIdx);
 				}

@@ -50,7 +50,7 @@ public class RelEV extends ProgramRel {
 				bo = null;
 			if (bo != null) {
 				Register b = bo.getRegister();
-				int vIdx = domV.get(b);
+				int vIdx = domV.indexOf(b);
 				add(eIdx, vIdx);
 			}
 		}

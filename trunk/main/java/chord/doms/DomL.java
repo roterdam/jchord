@@ -43,19 +43,19 @@ public class DomL extends ProgramDom<Inst> implements ILockInstVisitor {
 			ControlFlowGraph cfg = Program.getCFG(m);
 			BasicBlock head = cfg.entry();
 			Program.mapInstToMethod(head, m);
-			set(head);
+			getOrAdd(head);
 		}
 	}
 	public void visitLockInst(Quad q) {
 		Program.mapInstToMethod(q, ctnrMethod);
-		set(q);
+		getOrAdd(q);
 	}
 	public String toXMLAttrsString(Inst i) {
 		jq_Method m = Program.getMethod(i);
 		String fileName = Program.getSourceFileName(m.getDeclaringClass());
 		int lineNumber = Program.getLineNumber(i, m);
 		return "file=\"" + fileName + "\" " + "line=\"" + lineNumber + "\" " +
-			"Mid=\"M" + domM.get(m) + "\"";
+			"Mid=\"M" + domM.indexOf(m) + "\"";
 	}
 	public String toString(Inst q) {
 		return Program.toStringLockInst(q);

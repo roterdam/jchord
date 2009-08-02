@@ -38,7 +38,7 @@ public class ShortestPathBuilder<Node> {
 			dist[i] = numNodes;
 			prev[i] = -1;
 		}
-		origNodeIdx = map.get(origNode);
+		origNodeIdx = map.indexOf(origNode);
 		dist[origNodeIdx] = 0;
 		prev[origNodeIdx] = origNodeIdx;
  		workSet = new HashSet<Node>(numNodes);
@@ -52,15 +52,15 @@ public class ShortestPathBuilder<Node> {
 			// previously
 			return;
 		}
-		int destNodeIdx = map.get(destNode);
+		int destNodeIdx = map.indexOf(destNode);
 		while (!workSet.isEmpty()) {
 			Iterator<Node> it = workSet.iterator();
 			Node minNode = it.next();
-			int minNodeIdx = map.get(minNode);
+			int minNodeIdx = map.indexOf(minNode);
 			int minDist = dist[minNodeIdx];
 			while (it.hasNext()) {
 				Node currNode = it.next();
-				int currNodeIdx = map.get(currNode);
+				int currNodeIdx = map.indexOf(currNode);
 				int currDist = dist[currNodeIdx];
 				if (currDist < minDist) {
 					minNode = currNode;
@@ -71,7 +71,7 @@ public class ShortestPathBuilder<Node> {
 			workSet.remove(minNode);
 			for (Node succ : graph.getSuccs(minNode)) {
 				if (workSet.contains(succ)) {
-					int v = map.get(succ);
+					int v = map.indexOf(succ);
 					int alt = minDist + 1; 
 					if (alt < dist[v]) {
 						dist[v] = alt;
@@ -86,7 +86,7 @@ public class ShortestPathBuilder<Node> {
 	}
 	public String getShortestPathTo(Node destNode) {
 		findShortestPathTo(destNode);
-		int destNodeIdx = map.get(destNode);
+		int destNodeIdx = map.indexOf(destNode);
 		if (prev[destNodeIdx] == -1)
 			return null;
 		String path = "";

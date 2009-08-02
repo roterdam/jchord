@@ -30,7 +30,7 @@ public class RelPL extends ProgramRel {
 		int numL = domL.size();
 		for (int lIdx = 0; lIdx < numL; lIdx++) {
 			Inst i = domL.get(lIdx);
-			int pIdx = domP.get(i);
+			int pIdx = domP.indexOf(i);
 			add(pIdx, lIdx);
 		}
 	}

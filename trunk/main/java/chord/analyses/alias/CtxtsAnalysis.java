@@ -279,7 +279,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 					for (Object o : rf) {
 						Register v = (Register) o;
 						if (v.getType().isReferenceType()) {
-							int vIdx = domV.get(v);
+							int vIdx = domV.indexOf(v);
 							isCtxtSenV[vIdx] = true;
 						}
 					}
@@ -287,12 +287,12 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			}
 			kobjValue = new int[domH.size()];
 			for (Quad inst : domH) {
-				int h = domH.get(inst);
+				int h = domH.indexOf(inst);
 				kobjValue[h] = kobjK;
 			}
 			kcfaValue = new int[domI.size()];
 			for (Quad inst : domI) {
-				int i = domI.get(inst);
+				int i = domI.indexOf(inst);
 				kcfaValue[i] = kcfaK;
 			}
 		} else {
@@ -300,7 +300,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
             Iterable<Quad> heapInsts =
                 relRefineH.getAry1ValTuples();
             for (Quad inst : heapInsts) {
-                int hIdx = domH.get(inst);
+                int hIdx = domH.indexOf(inst);
                 kobjValue[hIdx]++;
             }
             relRefineH.close();
@@ -308,14 +308,14 @@ public class CtxtsAnalysis extends JavaAnalysis {
             Iterable<Quad> invkInsts =
                 relRefineI.getAry1ValTuples();
             for (Quad inst : invkInsts) {
-                int iIdx = domI.get(inst);
+                int iIdx = domI.indexOf(inst);
                 kcfaValue[iIdx]++;
             }
             relRefineI.close();
             relRefineV.load();
             Iterable<Register> vars = relRefineV.getAry1ValTuples();
             for (Register var : vars) {
-                int v = domV.get(var);
+                int v = domV.indexOf(var);
                 assert (!isCtxtSenV[v]);
                 isCtxtSenV[v] = true;
             }
@@ -323,7 +323,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
             relRefineM.load();
             Iterable<jq_Method> meths = relRefineM.getAry1ValTuples();
             for (jq_Method meth : meths) {
-                int m = domM.get(meth);
+                int m = domM.indexOf(meth);
                 assert (methKind[m] == CTXTINS);
                 methKind[m] = getCtxtKind(meth);
                 assert (methKind[m] != CTXTINS);
@@ -559,7 +559,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			if (isCtxtSenV[v]) {
 				Register var = domV.get(v);
 				jq_Method meth = domV.getMethod(var);
-				int m = domM.get(meth);
+				int m = domM.indexOf(meth);
 				int kind = methKind[m];
 				assert (kind != CTXTINS);
 			}
@@ -586,7 +586,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
                 Set<jq_Method> predMeths = new HashSet<jq_Method>();
                 List<Quad> clrSites = new ArrayList<Quad>();
                 for (Quad invk : getCallers(meth)) {
-                    int iIdx = domI.get(invk);
+                    int iIdx = domI.indexOf(invk);
                     isCtxtSenI[iIdx] = true;
                     predMeths.add(Program.getMethod(invk));
                     clrSites.add(invk);
@@ -699,14 +699,14 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	private Set<Ctxt> getNewCtxts(jq_Method cle) {
 		Set<Ctxt> newCtxts = new HashSet<Ctxt>();
-		int mIdx = domM.get(cle);
+		int mIdx = domM.indexOf(cle);
 		int kind = methKind[mIdx];
 		switch (kind) {
         case KCFASEN:
 		{
 			List<Quad> invks = methToClrSitesMap.get(cle);
             for (Quad invk : invks) {
-                int k = kcfaValue[domI.get(invk)];
+                int k = kcfaValue[domI.indexOf(invk)];
                 jq_Method clr = Program.getMethod(invk);
                 Set<Ctxt> clrCtxts = methToCtxtsMap.get(clr);
                 for (Ctxt oldCtxt : clrCtxts) {
@@ -722,7 +722,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		{
 			List<Quad> rcvs = methToRcvSitesMap.get(cle);
             for (Quad rcv : rcvs) {
-                int k = kobjValue[domH.get(rcv)];
+                int k = kobjValue[domH.indexOf(rcv)];
                 jq_Method clr = Program.getMethod(rcv);
                 Set<Ctxt> rcvCtxts = methToCtxtsMap.get(clr);
                 for (Ctxt oldCtxt : rcvCtxts) {

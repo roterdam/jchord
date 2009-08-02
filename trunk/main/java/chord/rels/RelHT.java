@@ -38,7 +38,7 @@ public class RelHT extends ProgramRel {
 				t = New.getType(h).getType();
 			else
 				t = NewArray.getType(h).getType();
-			int tIdx = domT.get(t);
+			int tIdx = domT.indexOf(t);
 			if (tIdx != -1)
 				add(hIdx, tIdx);
 		}

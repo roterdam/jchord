@@ -35,7 +35,7 @@ public class DomE extends QuadDom implements IHeapInstVisitor {
 			if (!(Putfield.getBase(q) instanceof RegisterOperand))
 				return;
 		}
-		set(q);
+		getOrAdd(q);
 	}
 	public String toXMLAttrsString(Quad q) {
 		Operator op = q.getOperator();

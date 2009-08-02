@@ -29,10 +29,10 @@ public class DomC extends ProgramDom<Ctxt> {
 	private DomI domI;
 	public Ctxt setCtxt(Quad[] elems) {
 		Ctxt cVal = new Ctxt(elems);
-		int cIdx = get(cVal);
+		int cIdx = indexOf(cVal);
 		if (cIdx != -1)
 			return (Ctxt) get(cIdx);
-		set(cVal);
+		getOrAdd(cVal);
 		return cVal;
 	}
 	public String toXMLAttrsString(Ctxt cVal) {
@@ -49,10 +49,10 @@ public class DomC extends ProgramDom<Ctxt> {
 			Quad eVal = elems[i];
 			Operator op = eVal.getOperator();
 			if (op instanceof New || op instanceof NewArray) {
-				int hIdx = domH.get(eVal);
+				int hIdx = domH.indexOf(eVal);
 				s += "H" + hIdx;
 			} else if (op instanceof Invoke) {
-				int iIdx = domI.get(eVal);
+				int iIdx = domI.indexOf(eVal);
 				s += "I" + iIdx;
 			} else
 				assert false;

@@ -55,7 +55,7 @@ public class RelLE extends ProgramRel implements IMethodVisitor {
 		BasicBlock entry = cfg.entry();
 		TIntArrayList locks = new TIntArrayList();
 		if (m.isSynchronized()) {
-			int lIdx = domL.get(entry);
+			int lIdx = domL.indexOf(entry);
 			locks.add(lIdx);
 		}
 		process(entry, locks);
@@ -72,7 +72,7 @@ public class RelLE extends ProgramRel implements IMethodVisitor {
 					TIntArrayList locks2 = new TIntArrayList(k + 1);
 					for (int j = 0; j < k; j++)
 						locks2.add(locks.get(j));
-					int lIdx = domL.get(q);
+					int lIdx = domL.indexOf(q);
 					locks2.add(lIdx);
 					locks = locks2;
 					k++;
@@ -84,7 +84,7 @@ public class RelLE extends ProgramRel implements IMethodVisitor {
 					locks = locks2;
 				}
 			} else if (Program.isHeapInst(op) && k > 0) {
-				int eIdx = domE.get(q);
+				int eIdx = domE.indexOf(q);
 				add(locks.get(k - 1), eIdx);
 			}
 		}
