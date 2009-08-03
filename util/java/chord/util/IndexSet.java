@@ -10,9 +10,9 @@ import java.util.Set;
  * The only mutating operation is {@link #add(Object)}, in particular,
  * objects cannot be removed.
  * <p>
- * Provides constant-time operations for adding a given object,
- * testing membership of a given object, and getting the object at a
- * given index.
+ * Provides O(1) time operations for adding a given object, getting
+ * the object at a given index, and optionally membership testing for
+ * a given object.
  * 
  * @param	<T>	The type of objects in the set.
  * 

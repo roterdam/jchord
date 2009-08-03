@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.Collections;
 
 import chord.util.tuple.object.Pair;
+import chord.util.IndexMap;
 import chord.util.IndexHashMap;
 
 /**
@@ -40,7 +41,7 @@ import chord.util.IndexHashMap;
  */
 public abstract class AbstractGraph<Node> implements IGraph<Node> {
 	private List<Node> nodesInRPO = null;
-	private IndexHashMap<Node> nodeMap = null;
+	private IndexMap<Node> nodeMap = null;
 	protected boolean cached = false;
 	protected void evictCache() {
 		nodesInRPO = null;
@@ -121,7 +122,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 			maxPathWidth, maxPathDepth);
 	}
 
-	public IndexHashMap<Node> getNodeMap() {
+	public IndexMap<Node> getNodeMap() {
 		if (nodeMap == null) {
 			nodeMap = new IndexHashMap<Node>();
 			for (Node node : getNodes())
@@ -164,7 +165,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
         return getNodes().hashCode();
     }
 	public String toString() {
-		IndexHashMap<Node> map = new IndexHashMap<Node>(numNodes());
+		IndexMap<Node> map = new IndexHashMap<Node>(numNodes());
 		String s = "";
 		for (Node node : getNodes())
 			s += "Node " + map.getOrAdd(node) + ": " + node + "\n";

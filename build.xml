@@ -120,18 +120,6 @@
                    location to dump instrumentation map files
                * chord.classes.dir (default={chord.out.dir}/classes/)
                    location to dump instrumented classes
-               * chord.jdk.out.dir (default=instr_jdk/chord_output/)
-                   location of JDK instrumentation map files
-  instr-jdk    Instrument the JDK's .class files
-               Optional:
-               * chord.class.path (default=read from instr_jdk/chord.properties)
-                   classpath of JDK to be instrumented
-               * chord.work.dir (default=instr_jdk)
-                   working directory during instrumentation
-               * chord.out.dir (default={chord.work.dir}/chord_output/)
-                   location to dump instrumentation map files
-               * chord.classes.dir (default={chord.out.dir}/classes/)
-                   location to dump instrumented classes
   </echo>
   </target>
 

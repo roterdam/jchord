@@ -17,6 +17,8 @@ import java.util.Set;
 
 import com.java2html.Java2HTML;
 
+import chord.util.IndexHashSet;
+ 
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
@@ -59,9 +61,9 @@ import joeq.Main.Helper;
  */
 public class Program {
 	private static boolean isInited;
-	private static List<jq_Class> preparedClasses;
-	private static List<jq_Method> reachableMethods;
-	private static List<jq_Type> reachableTypes;
+	private static IndexHashSet<jq_Class> preparedClasses;
+	private static IndexHashSet<jq_Method> reachableMethods;
+	private static IndexHashSet<jq_Type> reachableTypes;
 	private static Map<String, jq_Class> nameToClassMap;
 	private static jq_Method mainMethod;
 	private static boolean HTMLizedJavaSrcFiles;
@@ -77,7 +79,7 @@ public class Program {
 			File classesFile = new File(Properties.outDirName, "classes.txt");
 			File methodsFile = new File(Properties.outDirName, "methods.txt");
 			if (classesFile.exists() && methodsFile.exists()) {
-				preparedClasses = new ArrayList<jq_Class>();
+				preparedClasses = new IndexHashSet<jq_Class>();
 				{
 					BufferedReader r =
 						new BufferedReader(new FileReader(classesFile));
@@ -92,7 +94,7 @@ public class Program {
 					r.close();
 				}
 				buildNameToClassMap();
-				reachableMethods = new ArrayList<jq_Method>();
+				reachableMethods = new IndexHashSet<jq_Method>();
 				{
 					BufferedReader r =
 						new BufferedReader(new FileReader(methodsFile));
@@ -113,24 +115,18 @@ public class Program {
 				assert (mainClassName != null);
 				RTA rta = new RTA();
 				rta.run(mainClassName);
-				Set<jq_Class> cset = rta.getPreparedClasses();
-				preparedClasses = new ArrayList<jq_Class>(cset.size());
-				PrintWriter classesFileWriter =
-					new PrintWriter(classesFile);
-				for (jq_Class c : cset) {
+				preparedClasses = rta.getPreparedClasses();
+				PrintWriter classesFileWriter = new PrintWriter(classesFile);
+				for (jq_Class c : preparedClasses) {
 					String s = c.getName();
 					assert (!s.startsWith("joeq."));
-					preparedClasses.add(c);
 					classesFileWriter.println(s);
 				}
 				classesFileWriter.close();
 				buildNameToClassMap();
-				Set<jq_Method> mset = rta.getReachableMethods();
-				reachableMethods = new ArrayList<jq_Method>(mset.size());
-				PrintWriter methodsFileWriter =
-					new PrintWriter(methodsFile);
-				for (jq_Method m : mset) {
-					reachableMethods.add(m);
+				reachableMethods = rta.getReachableMethods();
+				PrintWriter methodsFileWriter = new PrintWriter(methodsFile);
+				for (jq_Method m : reachableMethods) {
 					String s = m.getDeclaringClass().getName() + "@" +
 						m.getName() + "@" + m.getDesc().toString();
 					methodsFileWriter.println(s);
@@ -179,7 +175,7 @@ public class Program {
 	}
 
 	private static void buildNameToClassMap() {
-		reachableTypes = new ArrayList<jq_Type>();
+		reachableTypes = new IndexHashSet<jq_Type>();
 		for (Object o : jq_Type.list) {
 			jq_Type t = (jq_Type) o;
 			if (t.getName().startsWith("joeq."))
@@ -199,13 +195,13 @@ public class Program {
 		return nameToClassMap.get(name);
 	}
 
-	public static List<jq_Class> getPreparedClasses() {
+	public static IndexHashSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
-	public static List<jq_Method> getReachableMethods() { 
+	public static IndexHashSet<jq_Method> getReachableMethods() { 
 		return reachableMethods;
 	}
-	public static List<jq_Type> getReachableTypes() {
+	public static IndexHashSet<jq_Type> getReachableTypes() {
 		return reachableTypes;
 	}
 	

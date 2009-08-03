@@ -21,7 +21,7 @@ import java.util.HashSet;
  * Provides O(1) membership testing for a given object by maintaining
  * a hash set.
  * 
- * @param	<T>	The type of the objects.
+ * @param	<T>	The type of objects in the set.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

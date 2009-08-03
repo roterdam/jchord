@@ -9,7 +9,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Iterator;
 
-import chord.util.IndexHashMap;
+import chord.util.IndexMap;
 
 /**
  * Algorithm for computing the shortest path between a pair of
@@ -21,7 +21,7 @@ public class ShortestPathBuilder<Node> {
 	private final IPathVisitor<Node> visitor;
 	private final IGraph<Node> graph;
 	private final int origNodeIdx;
-	private final IndexHashMap<Node> map;
+	private final IndexMap<Node> map;
 	private final int numNodes;
 	private final int[] dist;
 	private final int[] prev;

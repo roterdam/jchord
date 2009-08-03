@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Set;
 
 import chord.util.Timer;
+import chord.util.IndexHashSet;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
@@ -32,22 +33,25 @@ import joeq.Util.Templates.ListIterator;
 
 public class RTA {
 	public static final boolean DEBUG = true;
-	private Set<jq_Class> preparedClasses = new HashSet<jq_Class>();
-	private Set<jq_Class> reachableAllocClasses = new HashSet<jq_Class>();
+	private IndexHashSet<jq_Class> preparedClasses =
+		new IndexHashSet<jq_Class>();
+	private IndexHashSet<jq_Class> reachableAllocClasses =
+		new IndexHashSet<jq_Class>();
 	// all classes whose clinits and super class/interface clinits
 	// have been processed so far in current interation
 	private Set<jq_Class> classesAddedForClinit = new HashSet<jq_Class>();
 	// all methods deemed reachable so far in current iteration
-	private Set<jq_Method> seenMethods = new HashSet<jq_Method>();
+	private IndexHashSet<jq_Method> seenMethods =
+		new IndexHashSet<jq_Method>();
 	// worklist for methods seen so far in current iteration but
 	// whose cfg's haven't been processed yet
 	private List<jq_Method> todoMethods = new ArrayList<jq_Method>();
 	private boolean repeat = true;
 	private jq_Class javaLangObject;
-	public Set<jq_Class> getPreparedClasses() {
+	public IndexHashSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
-	public Set<jq_Method> getReachableMethods() {
+	public IndexHashSet<jq_Method> getReachableMethods() {
 		return seenMethods;
 	}
 	public void run(String mainClassName) {
