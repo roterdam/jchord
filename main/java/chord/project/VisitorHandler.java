@@ -8,7 +8,7 @@ package chord.project;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import chord.util.IndexSet;
+import chord.util.IndexHashSet;
 
 import chord.visitors.IClassVisitor;
 import chord.visitors.IFieldVisitor;
@@ -165,7 +165,7 @@ public class VisitorHandler {
 			}
 		}
 	}
-	private IndexSet<jq_Method> reachableMethods;
+	private IndexHashSet<jq_Method> reachableMethods;
 
 	public void visitProgram() {
 		for (ITask task : tasks) {
@@ -236,7 +236,7 @@ public class VisitorHandler {
 			(pivs != null) || (rivs != null) || (livs != null);
 		doCFGs = (vvs != null) || doInsts;
 		if (cvs != null) {
-			IndexSet<jq_Class> preparedClasses =
+			IndexHashSet<jq_Class> preparedClasses =
 				Program.getPreparedClasses();
 			for (jq_Class c : preparedClasses) {
 				for (IClassVisitor cv : cvs)
