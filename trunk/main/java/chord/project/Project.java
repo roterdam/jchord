@@ -146,7 +146,8 @@ public class Project {
 		timers.push(currTimer);
 		currTimer = new Timer(task.getName());
 		currTimer.init();
-		for (Object trgt : taskToConsumedTrgtsMap.get(task)) {
+		Set<Object> consumedTrgts = taskToConsumedTrgtsMap.get(task);
+		for (Object trgt : consumedTrgts) {
 			if (isTrgtDone(trgt))
 				continue;
 			Set<ITask> tasks = trgtToProducerTasksMap.get(trgt);
@@ -165,7 +166,10 @@ public class Project {
 		currTimer = timers.pop();
 		currTimer.resume();
 		setTaskDone(task);
-		for (Object trgt : taskToProducedTrgtsMap.get(task)) {
+		System.out.println("Task: " + task + " Class: " + task.getClass() + " hashCode: " + task.hashCode());
+		Set<Object> producedTrgts = taskToProducedTrgtsMap.get(task);
+		assert(producedTrgts != null);
+		for (Object trgt : producedTrgts) {
 			setTrgtDone(trgt);
 		}
 	}
@@ -421,6 +425,7 @@ public class Project {
 					trgtToProducerTasksMap.get(trgt);
 				producerTasks.add(task);
 			}
+			System.out.println("XXX: " + task + " class: " + task.getClass() + " hashcode: " + task.hashCode());
 			taskToProducedTrgtsMap.put(task, producedTrgts);
 		}
 		for (String trgtName : nameToTrgtMap.keySet()) {

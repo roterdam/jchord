@@ -48,6 +48,10 @@ import chord.util.IndexHashMap;
  */
 public class Dom<T> extends IndexHashMap<T> {
 	protected String name;
+	private int hashCode;
+	public Dom() {
+		hashCode = (new Object()).hashCode();
+	}
 	public void setName(String name) {
 		assert (name != null);
 		assert (this.name == null);
@@ -98,5 +102,11 @@ public class Dom<T> extends IndexHashMap<T> {
 	public void print(PrintStream out) {
 		for (int i = 0; i < size(); i++)
 			out.println(get(i));
+	}
+	public int hashCode() {
+		return hashCode;
+	}
+	public boolean equals(Object o) {
+		return this == o;
 	}
 }

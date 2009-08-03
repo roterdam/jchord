@@ -26,8 +26,9 @@ import chord.project.ProgramDom;
 )
 public class DomT extends ProgramDom<jq_Type> {
 	public void fill() {
-		for (jq_Class c : Program.getPreparedClasses()) {
-			getOrAdd(c);
+		for (jq_Type t : Program.getReachableTypes()) {
+			getOrAdd(t);
+/*
 			for (Object o : c.getMembers()) {
 				if (o instanceof jq_Field) {
 					jq_Field f = (jq_Field) o;
@@ -50,6 +51,7 @@ public class DomT extends ProgramDom<jq_Type> {
 					}
 				}
 			}
+*/
 		}
 	}
     public String toXMLAttrsString(jq_Type t) {

@@ -84,7 +84,8 @@ public class RTA {
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
 	}
 	private void handleSeenMethod(jq_Method m) {
-		assert (m.isPrepared());
+		assert m.isPrepared() : "Method " + m + " in class " +
+			m.getDeclaringClass() + " is not prepared";
 		if (seenMethods.add(m)) {
 			if (DEBUG) System.out.println("\tAdding method: " + m);
 			if (!m.isAbstract() && !m.isNative()) {

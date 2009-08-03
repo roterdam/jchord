@@ -75,9 +75,10 @@ public class IndexHashMap<T> extends ArrayList<T> implements IndexMap<T> {
     public int getOrAdd(T val) {
         Integer idx = hashMap.get(val);
         if (idx == null) {
-            super.add(val);
-        	idx = new Integer(size());
+			int i = size();
+        	idx = new Integer(i);
             hashMap.put(val, idx);
+            super.add(val);
         }
         return idx.intValue();
     }
@@ -93,9 +94,10 @@ public class IndexHashMap<T> extends ArrayList<T> implements IndexMap<T> {
     public boolean add(T val) {
         Integer idx = hashMap.get(val);
         if (idx == null) {
-            super.add(val);
-        	idx = new Integer(size());
+			int i = size();
+        	idx = new Integer(i);
             hashMap.put(val, idx);
+            super.add(val);
             return true;
         }
         return false;
