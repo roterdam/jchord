@@ -12,6 +12,10 @@ import javassist.expr.*;
 import chord.util.ClasspathUtils;
 import chord.util.FileUtils;
 import chord.util.IndexHashMap;
+import chord.util.IndexMap;
+import chord.util.IndexSet;
+
+import joeq.Class.jq_Class;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,13 +27,14 @@ import java.util.Set;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor {
-	private static IndexHashMap<String> Hmap;
-	private static IndexHashMap<String> Emap;
-	private static IndexHashMap<String> Lmap;
-	private static IndexHashMap<String> Fmap;
+	private static IndexMap<String> Hmap;
+	private static IndexMap<String> Emap;
+	private static IndexMap<String> Lmap;
+	private static IndexMap<String> Fmap;
+	private static IndexMap<String> Mmap;
 	private static int numH, numE, numL;
 
-	private static IndexHashMap<String> readFileToMap(String dirName, String fileName) {
+	private static IndexMap<String> readFileToMap(String dirName, String fileName) {
 		File file = new File(dirName, fileName);
 		if (!file.exists())
 			return new IndexHashMap<String>();
@@ -44,27 +49,12 @@ public class Instrumentor {
 	}
 
 	public static void main(String[] args) throws Exception {
-		String classPath = System.getProperty("chord.class.path", "");
-		String outDirName = System.getProperty("chord.out.dir", ".");
-		String classesDirName = System.getProperty("chord.classes.dir", ".");
-		String jdkOutDirName = System.getProperty("chord.jdk.out.dir");
-		if (jdkOutDirName == null) {
-			Hmap = new IndexHashMap<String>();
-			Emap = new IndexHashMap<String>();
-			Lmap = new IndexHashMap<String>();
-			Fmap = new IndexHashMap<String>();
-		} else {
-			Hmap = readFileToMap(jdkOutDirName, "H.dynamic.txt");
-			Emap = readFileToMap(jdkOutDirName, "E.dynamic.txt");
-			Lmap = readFileToMap(jdkOutDirName, "L.dynamic.txt");
-			Fmap = readFileToMap(jdkOutDirName, "F.dynamic.txt");
-		}
-		numH = Hmap.size();
-		numE = Emap.size();
-		numL = Lmap.size();
+		Program.init();
 
+		String fullClassPathName = Properties.classPathName +
+			File.pathSeparator + Properties.bootClassPathName;
 		ClassPool pool = new ClassPool();
-		String[] pathElems = classPath.split(File.pathSeparator);
+		String[] pathElems = fullClassPathName.split(File.pathSeparator);
 		for (String pathElem : pathElems) {
 			File file = new File(pathElem);
 			if (!file.exists()) {
@@ -74,9 +64,21 @@ public class Instrumentor {
 			pool.appendClassPath(pathElem);
 		}
 		pool.appendSystemPath();
-		Set<String> classNames = ClasspathUtils.getClassNames(classPath);
-		for (String className : classNames) {
-			CtClass clazz = pool.get(className);
+
+		Hmap = new IndexHashMap<String>();
+		Emap = new IndexHashMap<String>();
+		Lmap = new IndexHashMap<String>();
+		Fmap = new IndexHashMap<String>();
+		Mmap = new IndexHashMap<String>();
+		numH = Hmap.size();
+		numE = Emap.size();
+		numL = Lmap.size();
+
+		String classesDirName = Properties.classesDirName;
+		IndexSet<jq_Class> classes = Program.getPreparedClasses();
+
+		for (jq_Class c : classes) {
+			CtClass clazz = pool.get(c.getName());
 			CtBehavior clinit = clazz.getClassInitializer();
 			if (clinit != null) {
 				process(clinit);
@@ -90,14 +92,15 @@ public class Instrumentor {
 			clazz.writeFile(classesDirName);
 		}
 
+		String outDirName = Properties.outDirName;
 		FileUtils.writeMapToFile(Hmap, (new File(outDirName, "H.dynamic.txt")).getAbsolutePath());
 		FileUtils.writeMapToFile(Emap, (new File(outDirName, "E.dynamic.txt")).getAbsolutePath());
 		FileUtils.writeMapToFile(Lmap, (new File(outDirName, "L.dynamic.txt")).getAbsolutePath());
 		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
+		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
 	}
 
-	private static int set(IndexHashMap<String> map,
-			int byteIdx, CtBehavior method) {
+	private static int set(IndexMap<String> map, int byteIdx, CtBehavior method) {
         String className = method.getDeclaringClass().getName();
         String methodName;
         if (method instanceof CtConstructor) {
@@ -113,7 +116,23 @@ public class Instrumentor {
 		return i;
 	}
 
-	private static int set(IndexHashMap<String> map, Expr e, CtBehavior method) {
+	private static int set(CtBehavior method) {
+        String className = method.getDeclaringClass().getName();
+        String methodName;
+        if (method instanceof CtConstructor) {
+            methodName = ((CtConstructor) method).isClassInitializer() ?
+                "<clinit>" : "<init>";
+        } else
+            methodName = method.getName();
+        String methodArgs = Descriptor.toString(method.getSignature());
+		String s = methodName + methodArgs + "@" + className;
+		int n = Mmap.size();
+		int i = Mmap.getOrAdd(s);
+		assert (i == n);
+		return i;
+	}
+
+	private static int set(IndexMap<String> map, Expr e, CtBehavior method) {
 		return set(map, e.indexOfBytecode(), method);
 	}
 
@@ -133,8 +152,11 @@ public class Instrumentor {
 		}
 	}
 	private static void process1(final CtBehavior method) throws Exception {
+		set(method);
 		int mods = method.getModifiers();
 		if (Modifier.isNative(mods))
+			return;
+		if (Modifier.isAbstract(mods))
 			return;
 /*
 		if (Modifier.isSynchronized(mods)) {
@@ -163,6 +185,8 @@ public class Instrumentor {
 		int mods = method.getModifiers();
 		if (Modifier.isNative(mods))
 			return;
+		if (Modifier.isAbstract(mods))
+			return;
 /*
 		if (Modifier.isSynchronized(mods)) {
 			String syncExpr = (Modifier.isStatic(mods)) ? "$class" : "$0";
@@ -170,11 +194,13 @@ public class Instrumentor {
 				numL + "," + syncExpr + "); }");
 			numL++;
 		}
-*/
 		if (method.getName().equals("start") &&
 				method.getDeclaringClass().getName().equals("java.lang.Thread")) {
 			method.insertBefore("{ chord.project.Runtime.forkHeadInst($0); }");
 		}
+*/
+		method.insertBefore("{ chord.project.Runtime.methodEnter(); }");
+		method.insertAfter ("{ chord.project.Runtime.methodLeave(); }");
 		method.instrument(new ExprEditor() {
 			public void edit(NewExpr e) {
 				try {

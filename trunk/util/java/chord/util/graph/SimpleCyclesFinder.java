@@ -12,6 +12,7 @@ import java.util.Set;
 
 import gnu.trove.TIntStack;
 import chord.util.ArraySet;
+import chord.util.IndexMap;
 import chord.util.IndexHashMap;
 
 /**
@@ -25,7 +26,7 @@ public class SimpleCyclesFinder<Node> {
 	private final IGraph<Node> graph;
 	private final IGraphEntityVisitor<Node> visitor;
 	private Map<Node, Set<Node>> nodeToSuccsMap; 
-	private IndexHashMap<Node> nodeIdxMap;
+	private IndexMap<Node> nodeIdxMap;
 	private int currNodeIdx;
 	private TIntStack markedStack;
 	private TIntStack pointStack;

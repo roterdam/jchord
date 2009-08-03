@@ -17,6 +17,20 @@ public class Runtime {
 	private static IntBuffer buffer;
 	private static boolean trace = false;
 
+	public synchronized static void methodEnter() {
+		if (trace) {
+			trace = false;
+		}
+		trace = true;
+	}
+
+	public synchronized static void methodLeave() {
+		if (trace) {
+			trace = false;
+		}
+		trace = true;
+	}
+
 	public synchronized static void befNewInst(int hIdx) {
 		if (trace) {
 			trace = false;
