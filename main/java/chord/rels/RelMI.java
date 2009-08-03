@@ -32,6 +32,13 @@ public class RelMI extends ProgramRel {
 			Quad q = domI.get(iIdx);
 			jq_Method m = Program.getMethod(q);
 			int mIdx = domM.indexOf(m);
+			if (mIdx == -1) {
+				jq_Method n = Program.getMethod(q);
+				System.out.println("WARNING: Target method " + m +
+					" of following call site in method " + n +
+					" not found in domain M:\n\t" + q);
+				continue;
+			}
 			add(mIdx, iIdx);
 		}
 	}

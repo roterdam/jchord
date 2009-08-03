@@ -8,6 +8,8 @@ package chord.project;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import chord.util.IndexSet;
+
 import chord.visitors.IClassVisitor;
 import chord.visitors.IFieldVisitor;
 import chord.visitors.IHeapInstVisitor;
@@ -20,7 +22,6 @@ import chord.visitors.INewInstVisitor;
 import chord.visitors.IPhiInstVisitor;
 import chord.visitors.IReturnInstVisitor;
 import chord.visitors.IVarVisitor;
-
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
@@ -83,9 +84,12 @@ public class VisitorHandler {
 		}
 	}
 	private void visitMethods(jq_Class c) {
+		// TODO
 		for (Object o : c.getMembers()) {
 			if (o instanceof jq_Method) {
 				jq_Method m = (jq_Method) o;
+				if (!reachableMethods.contains(m))
+					continue;
 				for (IMethodVisitor mv : mvs) {
 					mv.visit(m);
 					if (!doCFGs)
@@ -161,6 +165,8 @@ public class VisitorHandler {
 			}
 		}
 	}
+	private IndexSet<jq_Method> reachableMethods;
+
 	public void visitProgram() {
 		for (ITask task : tasks) {
 			if (task instanceof IClassVisitor) {
@@ -224,12 +230,15 @@ public class VisitorHandler {
 				livs.add((ILockInstVisitor) task);
 			}
 		}
+		reachableMethods = Program.getReachableMethods();
 		doInsts = (ivs != null) || (hivs != null) ||
 			(iivs != null) || (nivs != null) || (mivs != null) ||
 			(pivs != null) || (rivs != null) || (livs != null);
 		doCFGs = (vvs != null) || doInsts;
 		if (cvs != null) {
-			for (jq_Class c : Program.getPreparedClasses()) {
+			IndexSet<jq_Class> preparedClasses =
+				Program.getPreparedClasses();
+			for (jq_Class c : preparedClasses) {
 				for (IClassVisitor cv : cvs)
 					cv.visit(c);
 				if (fvs != null)
