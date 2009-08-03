@@ -166,7 +166,6 @@ public class Project {
 		currTimer = timers.pop();
 		currTimer.resume();
 		setTaskDone(task);
-		System.out.println("Task: " + task + " Class: " + task.getClass() + " hashCode: " + task.hashCode());
 		Set<Object> producedTrgts = taskToProducedTrgtsMap.get(task);
 		assert(producedTrgts != null);
 		for (Object trgt : producedTrgts) {
@@ -425,7 +424,6 @@ public class Project {
 					trgtToProducerTasksMap.get(trgt);
 				producerTasks.add(task);
 			}
-			System.out.println("XXX: " + task + " class: " + task.getClass() + " hashcode: " + task.hashCode());
 			taskToProducedTrgtsMap.put(task, producedTrgts);
 		}
 		for (String trgtName : nameToTrgtMap.keySet()) {
