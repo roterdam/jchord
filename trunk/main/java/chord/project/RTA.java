@@ -4,7 +4,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
+import chord.util.ArraySet;
 import chord.util.Timer;
 import chord.util.IndexHashSet;
 
@@ -28,17 +31,18 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
+import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 
 public class RTA {
-	public static final boolean DEBUG = true;
+	public static final boolean DEBUG = false;
 	private IndexHashSet<jq_Class> preparedClasses =
 		new IndexHashSet<jq_Class>();
 	private IndexHashSet<jq_Class> reachableAllocClasses =
 		new IndexHashSet<jq_Class>();
-	// all classes whose clinits and super class/interface clinits
-	// have been processed so far in current interation
+	// all classes whose clinits and super class/interface clinits have
+	// been processed so far in current interation
 	private Set<jq_Class> classesAddedForClinit = new HashSet<jq_Class>();
 	// all methods deemed reachable so far in current iteration
 	private IndexHashSet<jq_Method> seenMethods =
@@ -46,6 +50,10 @@ public class RTA {
 	// worklist for methods seen so far in current iteration but
 	// whose cfg's haven't been processed yet
 	private List<jq_Method> todoMethods = new ArrayList<jq_Method>();
+	// invoke virtual/interface's encountered so far in current iteration
+	// that do not have a single target method
+	private Map<jq_Method, Set<Quad>> methodToOrphanInvks =
+		new HashMap<jq_Method, Set<Quad>>();
 	private boolean repeat = true;
 	private jq_Class javaLangObject;
 	public IndexHashSet<jq_Class> getPreparedClasses() {
@@ -72,6 +80,7 @@ public class RTA {
 			repeat = false;
          	classesAddedForClinit.clear();
         	seenMethods.clear();
+			methodToOrphanInvks.clear();
             handleClinits(mainClass);
         	handleSeenMethod(mainMethod);
 	        while (!todoMethods.isEmpty()) {
@@ -82,6 +91,12 @@ public class RTA {
 		System.out.println("LEAVE: RTA");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
+		for (jq_Method m : methodToOrphanInvks.keySet()) {
+			System.out.println("Orphan invokes in method " + m + ":");
+			Set<Quad> quads = methodToOrphanInvks.get(m);
+			for (Quad q : quads)
+				System.out.println("\t" + q);
+		}
 	}
 	private void handleSeenMethod(jq_Method m) {
 		assert m.isPrepared() : "Method " + m + " in class " +
@@ -93,9 +108,10 @@ public class RTA {
 			}
 		}
 	}
-	private void handleTodoMethod(jq_Method m) {
+	private void handleTodoMethod(final jq_Method m) {
 		if (DEBUG) System.out.println("ENTER handleTodoMethod: " + m);
 		ControlFlowGraph cfg = CodeCache.getCode(m);
+		Set<Quad> orphanInvks = null;
         for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
         		it.hasNext();) {
         	BasicBlock bb = it.nextBasicBlock();
@@ -104,25 +120,41 @@ public class RTA {
         		Operator op = q.getOperator();
         		if (op instanceof Invoke) {
 					if (DEBUG) System.out.println("Quad: " + q);
-					jq_Method n = Invoke.getMethod(q).getMethod();
+					MethodOperand mo = Invoke.getMethod(q);
+					mo.resolve();
+					jq_Method n = mo.getMethod();
 					jq_Class c = n.getDeclaringClass();
 					if (op instanceof InvokeVirtual) {
 						jq_NameAndDesc nad = n.getNameAndDesc();
+						boolean found = false;
 						for (jq_Class d : reachableAllocClasses) {
 							if (d.extendsClass(c)) {
+								found = true;
 								n = d.getVirtualMethod(nad);
 								assert (n != null);
 								handleSeenMethod(n);
 							}
 						}
+						if (!found) {
+							if (orphanInvks == null)
+								orphanInvks = new ArraySet<Quad>();
+							orphanInvks.add(q);
+						}
 					} else if (op instanceof InvokeInterface) {
 						jq_NameAndDesc nad = n.getNameAndDesc();
+						boolean found = false;
 						for (jq_Class d : reachableAllocClasses) {
 							if (d.implementsInterface(c)) {
+								found = true;
 								n = d.getVirtualMethod(nad);
 								assert (n != null);
 								handleSeenMethod(n);
 							}
+						}
+						if (!found) {
+							if (orphanInvks == null)
+								orphanInvks = new ArraySet<Quad>();
+							orphanInvks.add(q);
 						}
 					} else {
 						assert (op instanceof InvokeStatic);
@@ -150,6 +182,8 @@ public class RTA {
         		}
         	}
         }
+		if (orphanInvks != null)
+			methodToOrphanInvks.put(m, orphanInvks);	
 		if (DEBUG) System.out.println("LEAVE handleTodoMethod: " + m);
 	}
 
