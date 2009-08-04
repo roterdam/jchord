@@ -30,10 +30,11 @@ import java.util.Set;
 public class Instrumentor {
 	private static IndexMap<String> Hmap;
 	private static IndexMap<String> Emap;
-	private static IndexMap<String> Lmap;
+	// private static IndexMap<String> Lmap;
 	private static IndexMap<String> Fmap;
 	private static IndexMap<String> Mmap;
-	private static int numH, numE, numL;
+	private static int numH, numE;
+	// private static int numL;
 
 	private static IndexMap<String> readFileToMap(String dirName, String fileName) {
 		File file = new File(dirName, fileName);
@@ -68,12 +69,12 @@ public class Instrumentor {
 
 		Hmap = new IndexHashMap<String>();
 		Emap = new IndexHashMap<String>();
-		Lmap = new IndexHashMap<String>();
+		// Lmap = new IndexHashMap<String>();
 		Fmap = new IndexHashMap<String>();
 		Mmap = new IndexHashMap<String>();
 		numH = Hmap.size();
 		numE = Emap.size();
-		numL = Lmap.size();
+		// numL = Lmap.size();
 
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = Program.getPreparedClasses();
@@ -90,10 +91,10 @@ public class Instrumentor {
 					assert (clinit != null);
 					process(clinit);
 				} else if (mName.equals("<init>")) {
-					String desc = m.getDesc().toString();
+					String mDesc = m.getDesc().toString();
 					CtBehavior init = null;
 					for (CtBehavior x : inits) {
-						if (x.getSignature().equals(desc)) {
+						if (x.getSignature().equals(mDesc)) {
 							init = x;
 							break;
 						}
@@ -101,10 +102,10 @@ public class Instrumentor {
 					assert (init != null);
 					process(init);
 				} else {
-					String desc = m.getDesc().toString();
+					String mDesc = m.getDesc().toString();
 					CtBehavior meth = null;
 					for (CtBehavior x : meths) {
-						if (x.getSignature().equals(desc)) {
+						if (x.getSignature().equals(mDesc)) {
 							meth = x;
 							break;
 						}
@@ -119,7 +120,7 @@ public class Instrumentor {
 		String outDirName = Properties.outDirName;
 		FileUtils.writeMapToFile(Hmap, (new File(outDirName, "H.dynamic.txt")).getAbsolutePath());
 		FileUtils.writeMapToFile(Emap, (new File(outDirName, "E.dynamic.txt")).getAbsolutePath());
-		FileUtils.writeMapToFile(Lmap, (new File(outDirName, "L.dynamic.txt")).getAbsolutePath());
+		// FileUtils.writeMapToFile(Lmap, (new File(outDirName, "L.dynamic.txt")).getAbsolutePath());
 		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
 		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
 	}
@@ -133,7 +134,7 @@ public class Instrumentor {
         } else
             mName = m.getName();
         String mDesc = m.getSignature();
-		String s = byteIdx + "@" + mName + mDesc + "@" + cName;
+		String s = byteIdx + "!" + mName + ":" + mDesc + "@" + cName;
 		int n = map.size();
 		int i = map.getOrAdd(s);
 		assert (i == n);
@@ -166,13 +167,13 @@ public class Instrumentor {
 			process2(method);
 			assert (numH == Hmap.size());
 			assert (numE == Emap.size());
-			assert (numL == Lmap.size());
+			// assert (numL == Lmap.size());
 		} catch (Exception ex) {
 			System.err.println("WARNING: Ignoring instrumenting method: " + method.getLongName());
 			ex.printStackTrace();
 			numH = Hmap.size();
 			numE = Emap.size();
-			numL = Lmap.size();
+			// numL = Lmap.size();
 		}
 	}
 	private static void process1(final CtBehavior method) throws Exception {
@@ -201,7 +202,7 @@ public class Instrumentor {
 				set(Emap, e, method);
 			}
 			public void edit(MonitorEnter e) {
-				set(Lmap, e, method);
+				// set(Lmap, e, method);
 			}
 		});
 	}
@@ -304,12 +305,14 @@ public class Instrumentor {
 				}
 			}
 			public void edit(MonitorEnter e) {
+/*
 				try {
 					e.replace("{ $proceed(); chord.project.Runtime.acqLockInst(" + numL + ",$0); }");
 					numL++;
 				} catch (Exception ex) {
 					throw new RuntimeException(ex);
 				}
+*/
 			}
 		});
 	}
