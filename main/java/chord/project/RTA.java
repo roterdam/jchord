@@ -123,6 +123,8 @@ public class RTA {
 					mo.resolve();
 					jq_Method n = mo.getMethod();
 					jq_Class c = n.getDeclaringClass();
+					handleClass(c);
+					handleSeenMethod(n);
 					if (op instanceof InvokeVirtual) {
 						jq_NameAndDesc nd = n.getNameAndDesc();
 						boolean found = false;
@@ -157,8 +159,6 @@ public class RTA {
 						}
 					} else {
 						assert (op instanceof InvokeStatic);
-						handleClass(c);
-						handleSeenMethod(n);
 					}
 				} else if (op instanceof Getstatic) {
 					if (DEBUG) System.out.println("Quad: " + q);
