@@ -69,7 +69,4 @@ public class DomM extends ProgramDom<jq_Method>
 			"\" file=\"" + file +
 			"\" line=\"" + line + "\"";
 	}
-	public String toString(jq_Method m) {
-		return Program.toString(m);
-	}
 }

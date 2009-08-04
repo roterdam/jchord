@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
@@ -65,6 +66,7 @@ public class Program {
 	private static IndexHashSet<jq_Method> reachableMethods;
 	private static IndexHashSet<jq_Type> reachableTypes;
 	private static Map<String, jq_Class> nameToClassMap;
+	private static Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private static jq_Method mainMethod;
 	private static boolean HTMLizedJavaSrcFiles;
 	private static final Map<Inst, jq_Method> instToMethodMap = 
@@ -93,19 +95,21 @@ public class Program {
 					}
 					r.close();
 				}
-				buildNameToClassMap();
+				buildReachableTypes();
 				reachableMethods = new IndexHashSet<jq_Method>();
 				{
 					BufferedReader r =
 						new BufferedReader(new FileReader(methodsFile));
 					String s;
 					while ((s = r.readLine()) != null) {
-						String[] a = s.split("@");
-						assert (a.length == 3);
-						jq_Class c = getClass(a[0]);
+						int sep1 = s.indexOf(':');
+						int sep2 = s.indexOf('@', sep1 + 1);
+						String mName = s.substring(0, sep1);
+						String mDesc = s.substring(sep1 + 1, sep2);
+						String cName = s.substring(sep2 + 1);
+						jq_Class c = getPreparedClass(cName);
 						assert (c != null);
-						assert (c.isPrepared());
-						jq_Method m = (jq_Method) c.getDeclaredMember(a[1], a[2]);
+						jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
 						reachableMethods.add(m);
 					}
 					r.close();
@@ -118,18 +122,14 @@ public class Program {
 				preparedClasses = rta.getPreparedClasses();
 				PrintWriter classesFileWriter = new PrintWriter(classesFile);
 				for (jq_Class c : preparedClasses) {
-					String s = c.getName();
-					assert (!s.startsWith("joeq."));
-					classesFileWriter.println(s);
+					classesFileWriter.println(c);
 				}
 				classesFileWriter.close();
-				buildNameToClassMap();
+				buildReachableTypes();
 				reachableMethods = rta.getReachableMethods();
 				PrintWriter methodsFileWriter = new PrintWriter(methodsFile);
 				for (jq_Method m : reachableMethods) {
-					String s = m.getDeclaringClass().getName() + "@" +
-						m.getName() + "@" + m.getDesc().toString();
-					methodsFileWriter.println(s);
+					methodsFileWriter.println(m);
 				}
 				methodsFileWriter.close();
 				/*
@@ -154,7 +154,6 @@ public class Program {
 				Project.resetAll();
 				*/
 			}
-			initThreadStart();
 			isInited = true;
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
@@ -174,7 +173,7 @@ public class Program {
 		return m;
 	}
 
-	private static void buildNameToClassMap() {
+	private static void buildReachableTypes() {
 		reachableTypes = new IndexHashSet<jq_Type>();
 		for (Object o : jq_Type.list) {
 			jq_Type t = (jq_Type) o;
@@ -182,6 +181,8 @@ public class Program {
 				continue;
 			reachableTypes.add(t);
 		}
+	}
+	private static void buildNameToClassMap() {
 		nameToClassMap = new HashMap<String, jq_Class>();
 		for (jq_Type t : reachableTypes) {
 			if (t instanceof jq_Class) {
@@ -190,11 +191,20 @@ public class Program {
 			}
 		}
 	}
-	
-	public static jq_Class getClass(String name) {
-		return nameToClassMap.get(name);
+	private static void buildClassToMethodsMap() {
+		classToMethodsMap = new HashMap<jq_Class, List<jq_Method>>();
+		for (jq_Method m : reachableMethods) {
+			jq_Class c = m.getDeclaringClass();
+			assert (preparedClasses.contains(c));
+			List<jq_Method> methods = classToMethodsMap.get(c);
+			if (methods == null) {
+				methods = new ArrayList<jq_Method>();
+				classToMethodsMap.put(c, methods);
+			}
+			methods.add(m);
+		}
 	}
-
+	
 	public static IndexHashSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
@@ -204,19 +214,42 @@ public class Program {
 	public static IndexHashSet<jq_Type> getReachableTypes() {
 		return reachableTypes;
 	}
+	public static jq_Class getPreparedClass(String name) {
+		if (nameToClassMap == null)
+			buildNameToClassMap();
+		return nameToClassMap.get(name);
+	}
+	public static List<jq_Method> getReachableMethods(jq_Class c) {
+		if (classToMethodsMap == null)
+			buildClassToMethodsMap();
+		List<jq_Method> methods = classToMethodsMap.get(c);
+		if (methods == null)
+			return Collections.emptyList();
+		return methods;
+	}
+	public static jq_Method getReachableMethod(String cName,
+			String mName, String mDesc) {
+		jq_Class c = getPreparedClass(cName);
+		if (c == null)
+			return null;
+		List<jq_Method> methods = getReachableMethods(c);
+		for (jq_Method m : methods) {
+			if (m.getName().toString().equals(mName) &&
+				m.getDesc().toString().equals(mDesc))
+				return m;
+		}
+		return null;
+	}
 	
-    private static void initThreadStart() {
-		jq_Method m = getThreadStartMethod();
-		if (m == null)
-			return;
-    	jq_Class threadClass = m.getDeclaringClass();
-    	jq_NameAndDesc nadOfRun = new jq_NameAndDesc("run", "()V");
-    	jq_Method run = threadClass.getDeclaredInstanceMethod(nadOfRun);
+    private static ControlFlowGraph buildThreadStartMethodCFG(jq_Method m) {
+    	jq_Class c = m.getDeclaringClass();
+    	jq_NameAndDesc ndOfRun = new jq_NameAndDesc("run", "()V");
+    	jq_Method run = c.getDeclaredInstanceMethod(ndOfRun);
     	assert (run != null);
     	RegisterFactory rf = new RegisterFactory(0, 1);
-    	Register r = rf.getOrCreateLocal(0, threadClass);
+    	Register r = rf.getOrCreateLocal(0, c);
     	ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
-    	RegisterOperand ro = new RegisterOperand(r, threadClass);
+    	RegisterOperand ro = new RegisterOperand(r, c);
     	MethodOperand mo = new MethodOperand(run);
     	Quad q1 = Invoke.create(0, Invoke.INVOKEVIRTUAL_V.INSTANCE, null, mo, 1);
     	Invoke.setParam(q1, 0, ro);
@@ -230,13 +263,47 @@ public class Program {
     	bb.addSuccessor(exit);
     	entry.addSuccessor(bb);
     	exit.addPredecessor(bb);
-		System.out.println("SETTING THREAD START");
-		CodeCache.cache.setMap(m, cfg);
-		CodeCache.cache.setBCMap(m, null);
 		m.unsynchronize();
+		return cfg;
     }
 
+	private static ControlFlowGraph buildEmptyCFG(jq_Method m) {
+		jq_Type[] argTypes = m.getParamTypes();
+		int n = argTypes.length;
+		RegisterFactory rf = new RegisterFactory(0, n);
+		for (int i = 0; i < n; i++) {
+			jq_Type t = argTypes[i];
+    		rf.getOrCreateLocal(i, t);
+		}
+		ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
+		Operator retOp;
+		Quad q;
+		if (m.getReturnType().isReferenceType()) {
+    		q = Return.create(1, Return.RETURN_V.INSTANCE);
+		} else {
+			q = Return.create(1, Return.RETURN_A.INSTANCE);
+			Return.setSrc(q, new AConstOperand(null));
+		}
+		BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
+		bb.appendQuad(q);
+		BasicBlock entry = cfg.entry();
+		BasicBlock exit = cfg.exit();
+		bb.addPredecessor(entry);
+		bb.addSuccessor(exit);
+		entry.addSuccessor(bb);
+		exit.addPredecessor(bb);
+		return cfg;
+	}
+
+	public static boolean isThreadStartMethod(jq_Method m) {
+		return m.getName().toString().equals("start") &&
+			m.getDeclaringClass().getName().equals("java.lang.Thread") &&
+			m.getDesc().toString().equals("()V");
+	}
+
 	public static Map getBCMap(jq_Method m) {
+		if (isThreadStartMethod(m))
+			return null;
 		if (m.getBytecode() == null)
 			return null;
 		return CodeCache.getBCMap(m);
@@ -245,83 +312,46 @@ public class Program {
 	private static Map<jq_Method, ControlFlowGraph> methToCFGmap =
 		new HashMap<jq_Method, ControlFlowGraph>();
 
-	private static ControlFlowGraph getOrMakeEmptyCFG(jq_Method m) {
-		ControlFlowGraph cfg = methToCFGmap.get(m);
-		if (cfg == null) {
-			jq_Type[] argTypes = m.getParamTypes();
-			int n = argTypes.length;
-			RegisterFactory rf = new RegisterFactory(0, n);
-			for (int i = 0; i < n; i++) {
-				jq_Type t = argTypes[i];
-    			rf.getOrCreateLocal(i, t);
-			}
-			cfg = new ControlFlowGraph(m, 1, 0, rf);
-			Operator retOp;
-			Quad q;
-			if (m.getReturnType().isReferenceType()) {
-    			q = Return.create(1, Return.RETURN_V.INSTANCE);
-			} else {
-				q = Return.create(1, Return.RETURN_A.INSTANCE);
-				Return.setSrc(q, new AConstOperand(null));
-			}
-			BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
-			bb.appendQuad(q);
-			BasicBlock entry = cfg.entry();
-			BasicBlock exit = cfg.exit();
-			entry.addSuccessor(bb);
-			bb.addPredecessor(entry);
-			exit.addPredecessor(bb);
-			bb.addSuccessor(exit);
-			methToCFGmap.put(m, cfg);
-		}
-		return cfg;
-	}
-
     public static ControlFlowGraph getCFG(jq_Method m) {
 		assert (!m.isAbstract());
-/*
-    	String nad = m.getNameAndDesc().toString();
-    	if (nad.equals("equals (Ljava/lang/Object;)Z") ||
-    		nad.equals("hashCode ()I") ||
-    		nad.equals("toString ()Ljava/lang/String;"))
-    		return null;
-*/
-		if (m.isNative())
-			return getOrMakeEmptyCFG(m);
-		ControlFlowGraph cfg;
-		try {
-			cfg = CodeCache.getCode(m);
-			// (new EnterSSA()).visitCFG(cfg);
-			if (cfg == null) {
-				System.out.println("Method " + m + " has empty CFG");
-				assert false;
+		ControlFlowGraph cfg = methToCFGmap.get(m);
+		if (cfg == null) {
+			if (isThreadStartMethod(m)) {
+				cfg = buildThreadStartMethodCFG(m);
+			} else if (m.isNative()) {
+				System.out.println("WARNING: Regarding CFG of native method " +
+					m + " as no-op.");
+				cfg = buildEmptyCFG(m);
+			} else {
+				try {
+					cfg = CodeCache.getCode(m);
+					// (new EnterSSA()).visitCFG(cfg);
+					assert (cfg != null);
+				} catch (Exception ex) {
+					System.out.println("WARNING: Failed to get CFG of method " +
+						m + "; setting it to no-op.  Error follows.");
+					ex.printStackTrace();
+					cfg = buildEmptyCFG(m);
+				}
 			}
-		} catch (Exception ex) {
-			System.out.println("Failed to get CFG for method: " +
-				m + "; setting it to nop.  Error follows.");
-			ex.printStackTrace();
-			return getOrMakeEmptyCFG(m);
+			methToCFGmap.put(m, cfg);
 		}
 		return cfg;
 	}
 
 	public static jq_Method getMainMethod() {
 		if (mainMethod == null) {
-			if (Properties.mainClassName == null) {
-				throw new RuntimeException();
-			}
-			jq_Class clazz = getClass(Properties.mainClassName);
-			if (clazz == null) {
-				throw new RuntimeException();
-			}
-			jq_NameAndDesc sign = new jq_NameAndDesc(
-				"main", "([Ljava/lang/String;)V");
-			mainMethod = clazz.getDeclaredStaticMethod(sign);
-			if (mainMethod == null) {
-				throw new RuntimeException();
-			}
+			String mainClassName = Properties.mainClassName;
+			assert (mainClassName != null);
+			mainMethod = getReachableMethod(mainClassName, "main",
+				"([Ljava/lang/String;)V");
+			assert (mainMethod != null);
 		}
 		return mainMethod;
+	}
+
+	public static jq_Method getThreadStartMethod() {
+		return getReachableMethod("java.lang.Thread", "start", "()V");
 	}
 
 	public static String getSign(jq_Method m) {
@@ -329,16 +359,6 @@ public class Program {
 		return m.getName().toString() + methodDescToStr(d);
 	}
 	
-	public static jq_Method getThreadStartMethod() {
-    	jq_Class threadClass = getClass("java.lang.Thread");
-		if (threadClass == null || !threadClass.isPrepared())
-			return null;
-    	jq_NameAndDesc nadOfStart = new jq_NameAndDesc("start", "()V");
-    	jq_Method start = threadClass.getDeclaredInstanceMethod(nadOfStart);
-		assert (start != null);
-		return start;
-	}
-
 	// convert the given method descriptor string to a string
 	// denoting the comma-separated list of types of the method's
 	// arguments in human-readable form
@@ -462,31 +482,6 @@ public class Program {
 		return 0;
 	}
 	
-	public static String toString(jq_Type t) {
-		return t.getName();
-	}
-	
-	public static String toString(jq_Field f) {
-		return "<" + f.getDeclaringClass().getName() + ": " +
-			f.getType().getName() +  " " +
-			f.getName().toString() + ">";
-	}
-	
-	public static String toString(jq_Method m) {
-		String s;
-		jq_Type[] argTypes = m.getParamTypes();
-		int n = argTypes.length;
-		if (n > 0) {
-			s = argTypes[0].getName();
-			for (int i = 1; i < n; i++)
-				s += "," + argTypes[i].getName();
-		} else
-			s = "";
-		return "<" + m.getDeclaringClass().getName() + ": " +
-			m.getReturnType().getName() + " " +
-			m.getName() + "(" + s + ")>";
-	}
-
 	public static String toString(RegisterOperand op) {
 		return "<" + op.getType().getName() + " " + op.getRegister() + ">";
 	}
@@ -536,7 +531,7 @@ public class Program {
 			String b, f, r;
 			if (op instanceof Putfield) {
 				b = toString(Putfield.getBase(q)) + ".";
-				f = toString(Putfield.getField(q).getField());
+				f = Putfield.getField(q).getField().toString();
 				r = toString(Putfield.getSrc(q));
 			} else if (op instanceof AStore) {
 				b = toString(AStore.getBase(q));
@@ -544,7 +539,7 @@ public class Program {
 				r = toString(AStore.getValue(q));
 			} else {
 				b = "";
-				f = toString(Putstatic.getField(q).getField());
+				f = Putstatic.getField(q).getField().toString();
 				r = toString(Putstatic.getSrc(q));
 			}
 			s = b + f + " := " + r;
@@ -553,7 +548,7 @@ public class Program {
 			if (op instanceof Getfield) {
 				l = toString(Getfield.getDest(q));
 				b = toString(Getfield.getBase(q)) + ".";
-				f = toString(Getfield.getField(q).getField());
+				f = Getfield.getField(q).getField().toString();
 			} else if (op instanceof ALoad) {
 				l = toString(ALoad.getDest(q));
 				b = toString(ALoad.getBase(q));
@@ -561,7 +556,7 @@ public class Program {
 			} else {
 				l = toString(Getstatic.getDest(q));
 				b = "";
-				f = toString(Getstatic.getField(q).getField());
+				f = Getstatic.getField(q).getField().toString();
 			}
 			s = l + " := " + b + f;
 			
@@ -577,7 +572,7 @@ public class Program {
 		if (q instanceof Quad)
 			s = Monitor.getSrc((Quad) q).toString();
 		else
-			s = Program.toString(getMethod(q));
+			s = getMethod(q).toString();
 		return fileName + ":" + lineNumber + ": monitorenter " + s;
 	}
 

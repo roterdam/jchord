@@ -28,30 +28,6 @@ public class DomT extends ProgramDom<jq_Type> {
 	public void fill() {
 		for (jq_Type t : Program.getReachableTypes()) {
 			getOrAdd(t);
-/*
-			for (Object o : c.getMembers()) {
-				if (o instanceof jq_Field) {
-					jq_Field f = (jq_Field) o;
-					jq_Type t = f.getType();
-					getOrAdd(t);
-				} else {
-					jq_Method m = (jq_Method) o;
-					for (jq_Type t : m.getParamTypes()) {
-						getOrAdd(t);
-					}
-					getOrAdd(m.getReturnType());
-					if (m.isAbstract())
-						continue;
-					ControlFlowGraph cfg = Program.getCFG(m);
-					RegisterFactory rf = cfg.getRegisterFactory();
-					for (Object o2 : rf) {
-						Register v = (Register) o2;
-						jq_Type t = v.getType();
-						getOrAdd(t);
-					}
-				}
-			}
-*/
 		}
 	}
     public String toXMLAttrsString(jq_Type t) {
@@ -62,8 +38,5 @@ public class DomT extends ProgramDom<jq_Type> {
         return "name=\"" + name +
             "\" file=\"" + file +
             "\" line=\"" + line + "\"";
-    }
-    public String toString(jq_Type t) {
-    	return Program.toString(t);
     }
 }
