@@ -230,21 +230,7 @@
     </java>
   </target>
 
-  <target name="instr" depends="props-file">
-    <property name="chord.jdk.out.dir" location="instr_jdk/chord_output/"/>
-    <antcall target="instr-common"/>
-  </target>
-
-  <target name="instr-jdk-pre">
-    <property name="chord.work.dir" location="instr_jdk"/>
-  </target>
-
-  <target name="instr-jdk" depends="instr-jdk-pre,props-file">
-    <fail if="chord.jdk.out.dir"/>
-    <antcall target="instr-common"/>
-  </target>
-
-  <target name="instr-common" depends="main-class-path">
+  <target name="instr" depends="props-file,main-class-path">
     <fail unless="chord.class.path"/>
     <mkdir dir="${chord.out.dir}"/>
     <mkdir dir="${chord.classes.dir}"/>
