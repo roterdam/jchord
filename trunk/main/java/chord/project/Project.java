@@ -93,6 +93,10 @@ public class Project {
             Project.init();
             Program.init();
 
+			boolean doInstr = Properties.doInstr;
+			if (doInstr)
+				Instrumentor.main(new String[0]);
+
             String analyses = Properties.analyses;
             if (analyses != null) {
                 String[] analysisNames = analyses.split(" |,|:|;");

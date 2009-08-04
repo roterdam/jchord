@@ -36,23 +36,7 @@ public class Instrumentor {
 	private static int numH, numE;
 	// private static int numL;
 
-	private static IndexMap<String> readFileToMap(String dirName, String fileName) {
-		File file = new File(dirName, fileName);
-		if (!file.exists())
-			return new IndexHashMap<String>();
-		return FileUtils.readFileToMap(file);
-	}
-
-	private static List<String> readFileToList(String dirName, String fileName) {
-		File file = new File(dirName, fileName);
-		if (!file.exists())
-			return new ArrayList<String>();
-		return FileUtils.readFileToList(file);
-	}
-
 	public static void main(String[] args) throws Exception {
-		Program.init();
-
 		String fullClassPathName = Properties.classPathName +
 			File.pathSeparator + Properties.bootClassPathName;
 		ClassPool pool = new ClassPool();
@@ -85,6 +69,7 @@ public class Instrumentor {
 			CtBehavior[] inits = clazz.getDeclaredConstructors();
 			CtBehavior[] meths = clazz.getDeclaredMethods();
 			for (jq_Method m : methods) {
+				System.out.println("YYY: " + m);
 				String mName = m.getName().toString();
 				if (mName.equals("<clinit>")) {
 					CtBehavior clinit = clazz.getClassInitializer();
@@ -105,7 +90,8 @@ public class Instrumentor {
 					String mDesc = m.getDesc().toString();
 					CtBehavior meth = null;
 					for (CtBehavior x : meths) {
-						if (x.getSignature().equals(mDesc)) {
+						if (x.getName().equals(mName) &&
+							x.getSignature().equals(mDesc)) {
 							meth = x;
 							break;
 						}
@@ -150,7 +136,8 @@ public class Instrumentor {
         } else
             mName = m.getName();
         String mDesc = m.getSignature();
-		String s = mName + mDesc + "@" + cName;
+		String s = mName + ":" + mDesc + "@" + cName;
+		System.out.println("XXX: " + s);
 		int n = Mmap.size();
 		int i = Mmap.getOrAdd(s);
 		assert (i == n);

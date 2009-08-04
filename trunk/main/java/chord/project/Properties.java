@@ -40,7 +40,8 @@ public class Properties {
 		System.getProperty("chord.trace.agent.file");
 	public final static String instrAgentFileName =
 		System.getProperty("chord.instr.agent.file");
-
+	public final static boolean doInstr = System.getProperty(
+		"chord.instr", "true").equals("true");
 	public final static String traceFileName =
 		System.getProperty("chord.trace.file", "trace.txt");
 
@@ -65,5 +66,6 @@ public class Properties {
 		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
 		System.out.println("chord.trace.agent.file: " + traceAgentFileName);
 		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
+		System.out.println("chord.instr: " + doInstr);
 	}
 }
