@@ -58,9 +58,4 @@ public class DomF extends ProgramDom<jq_Field>
 			return "null";
 		return f.getName() + "@" + f.getDeclaringClass().getName();
 	}
-	public String toString(jq_Field f) {
-		if (f == null)
-			return "null";
-		return Program.toString(f);
-	}
 }

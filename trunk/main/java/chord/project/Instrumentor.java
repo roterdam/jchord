@@ -16,6 +16,7 @@ import chord.util.IndexMap;
 import chord.util.IndexSet;
 
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -79,15 +80,38 @@ public class Instrumentor {
 
 		for (jq_Class c : classes) {
 			CtClass clazz = pool.get(c.getName());
-			CtBehavior clinit = clazz.getClassInitializer();
-			if (clinit != null) {
-				process(clinit);
-			}
-			for (CtBehavior init : clazz.getDeclaredConstructors()) {
-				process(init);
-			}
-			for (CtBehavior method : clazz.getDeclaredMethods()) {
-					process(method);
+			List<jq_Method> methods = Program.getReachableMethods(c);
+			CtBehavior[] inits = clazz.getDeclaredConstructors();
+			CtBehavior[] meths = clazz.getDeclaredMethods();
+			for (jq_Method m : methods) {
+				String mName = m.getName().toString();
+				if (mName.equals("<clinit>")) {
+					CtBehavior clinit = clazz.getClassInitializer();
+					assert (clinit != null);
+					process(clinit);
+				} else if (mName.equals("<init>")) {
+					String desc = m.getDesc().toString();
+					CtBehavior init = null;
+					for (CtBehavior x : inits) {
+						if (x.getSignature().equals(desc)) {
+							init = x;
+							break;
+						}
+					}
+					assert (init != null);
+					process(init);
+				} else {
+					String desc = m.getDesc().toString();
+					CtBehavior meth = null;
+					for (CtBehavior x : meths) {
+						if (x.getSignature().equals(desc)) {
+							meth = x;
+							break;
+						}
+					}
+					assert (meth != null);
+					process(meth);
+				}
 			}
 			clazz.writeFile(classesDirName);
 		}
@@ -100,32 +124,32 @@ public class Instrumentor {
 		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
 	}
 
-	private static int set(IndexMap<String> map, int byteIdx, CtBehavior method) {
-        String className = method.getDeclaringClass().getName();
-        String methodName;
-        if (method instanceof CtConstructor) {
-            methodName = ((CtConstructor) method).isClassInitializer() ?
+	private static int set(IndexMap<String> map, int byteIdx, CtBehavior m) {
+        String cName = m.getDeclaringClass().getName();
+        String mName;
+        if (m instanceof CtConstructor) {
+            mName = ((CtConstructor) m).isClassInitializer() ?
                 "<clinit>" : "<init>";
         } else
-            methodName = method.getName();
-        String methodArgs = Descriptor.toString(method.getSignature());
-		String s = byteIdx + "@" + methodName + methodArgs + "@" + className;
+            mName = m.getName();
+        String mDesc = m.getSignature();
+		String s = byteIdx + "@" + mName + mDesc + "@" + cName;
 		int n = map.size();
 		int i = map.getOrAdd(s);
 		assert (i == n);
 		return i;
 	}
 
-	private static int set(CtBehavior method) {
-        String className = method.getDeclaringClass().getName();
-        String methodName;
-        if (method instanceof CtConstructor) {
-            methodName = ((CtConstructor) method).isClassInitializer() ?
+	private static int set(CtBehavior m) {
+        String cName = m.getDeclaringClass().getName();
+        String mName;
+        if (m instanceof CtConstructor) {
+            mName = ((CtConstructor) m).isClassInitializer() ?
                 "<clinit>" : "<init>";
         } else
-            methodName = method.getName();
-        String methodArgs = Descriptor.toString(method.getSignature());
-		String s = methodName + methodArgs + "@" + className;
+            mName = m.getName();
+        String mDesc = m.getSignature();
+		String s = mName + mDesc + "@" + cName;
 		int n = Mmap.size();
 		int i = Mmap.getOrAdd(s);
 		assert (i == n);

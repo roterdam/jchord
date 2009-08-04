@@ -289,8 +289,8 @@ public class PathAnalysis implements ITask {
 			cls = null;
 		else
 */
-			cls = Program.getClass(cName);
-		if (cls == null || !cls.isPrepared()) {
+			cls = Program.getPreparedClass(cName);
+		if (cls == null) {
 			System.out.println("MISSING class: " + cName);
 			eatUntil(mId);
 			if (DEBUG) System.out.println("LEAVE1 frame: " + methEntryLine);

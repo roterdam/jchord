@@ -56,6 +56,6 @@ public class DomA extends ProgramDom<Pair<Ctxt, jq_Method>> {
     public String toString(Pair<Ctxt, jq_Method> p) {
     	if (p == null)
     		return "null";
-    	return "<" + p.val0 + "," + Program.toString(p.val1) + ">";
+    	return "<" + p.val0 + "," + p.val1 + ">";
     }
 }

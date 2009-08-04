@@ -88,49 +88,48 @@ public class RTA {
 	        	handleTodoMethod(m);
 	        }
         }
-		System.out.println("LEAVE: RTA");
-		timer.done();
-		System.out.println("Time: " + timer.getInclusiveTimeStr());
 		for (jq_Method m : methodToOrphanInvks.keySet()) {
-			System.out.println("Orphan invokes in method " + m + ":");
+			System.out.println("WARNING: Orphan invokes in method " + m + ":");
 			Set<Quad> quads = methodToOrphanInvks.get(m);
 			for (Quad q : quads)
 				System.out.println("\t" + q);
 		}
+		System.out.println("LEAVE: RTA");
+		timer.done();
+		System.out.println("Time: " + timer.getInclusiveTimeStr());
 	}
 	private void handleSeenMethod(jq_Method m) {
-		assert m.isPrepared() : "Method " + m + " in class " +
-			m.getDeclaringClass() + " is not prepared";
+		assert m.isPrepared() : "Method " + m + " is not prepared";
 		if (seenMethods.add(m)) {
 			if (DEBUG) System.out.println("\tAdding method: " + m);
-			if (!m.isAbstract() && !m.isNative()) {
+			if (!m.isAbstract()) {
 				todoMethods.add(m);
 			}
 		}
 	}
 	private void handleTodoMethod(final jq_Method m) {
 		if (DEBUG) System.out.println("ENTER handleTodoMethod: " + m);
-		ControlFlowGraph cfg = CodeCache.getCode(m);
+		ControlFlowGraph cfg = Program.getCFG(m);
 		Set<Quad> orphanInvks = null;
-        for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-        		it.hasNext();) {
-        	BasicBlock bb = it.nextBasicBlock();
-        	for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-        		Quad q = it2.nextQuad();
-        		Operator op = q.getOperator();
-        		if (op instanceof Invoke) {
+		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+       			it.hasNext();) {
+			BasicBlock bb = it.nextBasicBlock();
+			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
+				Quad q = it2.nextQuad();
+				Operator op = q.getOperator();
+				if (op instanceof Invoke) {
 					if (DEBUG) System.out.println("Quad: " + q);
 					MethodOperand mo = Invoke.getMethod(q);
 					mo.resolve();
 					jq_Method n = mo.getMethod();
 					jq_Class c = n.getDeclaringClass();
 					if (op instanceof InvokeVirtual) {
-						jq_NameAndDesc nad = n.getNameAndDesc();
+						jq_NameAndDesc nd = n.getNameAndDesc();
 						boolean found = false;
 						for (jq_Class d : reachableAllocClasses) {
 							if (d.extendsClass(c)) {
 								found = true;
-								n = d.getVirtualMethod(nad);
+								n = d.getVirtualMethod(nd);
 								assert (n != null);
 								handleSeenMethod(n);
 							}
@@ -141,12 +140,12 @@ public class RTA {
 							orphanInvks.add(q);
 						}
 					} else if (op instanceof InvokeInterface) {
-						jq_NameAndDesc nad = n.getNameAndDesc();
+						jq_NameAndDesc nd = n.getNameAndDesc();
 						boolean found = false;
 						for (jq_Class d : reachableAllocClasses) {
 							if (d.implementsInterface(c)) {
 								found = true;
-								n = d.getVirtualMethod(nad);
+								n = d.getVirtualMethod(nd);
 								assert (n != null);
 								handleSeenMethod(n);
 							}
@@ -161,27 +160,27 @@ public class RTA {
 						handleClass(c);
 						handleSeenMethod(n);
 					}
-        		} else if (op instanceof Getstatic) {
+				} else if (op instanceof Getstatic) {
 					if (DEBUG) System.out.println("Quad: " + q);
-        			jq_Class c = Getstatic.getField(q).
+					jq_Class c = Getstatic.getField(q).
 						getField().getDeclaringClass();
-        			handleClass(c);
-        		} else if (op instanceof Putstatic) {
+					handleClass(c);
+				} else if (op instanceof Putstatic) {
 					if (DEBUG) System.out.println("Quad: " + q);
-        			jq_Class c = Putstatic.getField(q).
+					jq_Class c = Putstatic.getField(q).
 						getField().getDeclaringClass();
-        			handleClass(c);
-        		} else if (op instanceof New) {
+					handleClass(c);
+				} else if (op instanceof New) {
 					if (DEBUG) System.out.println("Quad: " + q);
-        			jq_Class c = (jq_Class) New.getType(q).getType();
-        			handleClass(c);
-        			if (reachableAllocClasses.add(c)) {
+					jq_Class c = (jq_Class) New.getType(q).getType();
+					handleClass(c);
+					if (reachableAllocClasses.add(c)) {
 						if (DEBUG) System.out.println("Setting repeat");
-        				repeat = true;
+						repeat = true;
 					}
-        		}
-        	}
-        }
+				}
+			}
+		}
 		if (orphanInvks != null)
 			methodToOrphanInvks.put(m, orphanInvks);	
 		if (DEBUG) System.out.println("LEAVE handleTodoMethod: " + m);
