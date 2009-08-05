@@ -155,12 +155,23 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void forkHeadInst(Object o) {
+	public synchronized static void threadStart(Object o) {
 		if (trace) {
 			trace = false;
 			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(InstKind.FORK_HEAD_INST);
+				buffer.put(InstKind.THREAD_START_INST);
+				buffer.put(oIdx);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void threadSpawn(Object o) {
+		if (trace) {
+			trace = false;
+			int oIdx = System.identityHashCode(o);
+			try {
+				buffer.put(InstKind.THREAD_SPAWN_INST);
 				buffer.put(oIdx);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;

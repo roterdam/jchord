@@ -21,5 +21,6 @@ public class InstKind {
 	static final int ARY_ELEM_RD_INST = 8;
 	static final int ARY_ELEM_WR_INST = 9; 
 	static final int ACQ_LOCK_INST = 10;
-	static final int FORK_HEAD_INST = 11;
+	static final int THREAD_START_INST = 11;
+	static final int THREAD_SPAWN_INST = 12;
 }

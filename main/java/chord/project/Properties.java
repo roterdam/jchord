@@ -17,7 +17,7 @@ public class Properties {
 	public static final String classPathName = System.getProperty("chord.class.path");
 	public static final String srcPathName = System.getProperty("chord.src.path");
 	public static final String bootClassPathName =
-		System.getProperty("chord.boot.class.path");
+		System.getProperty("chord.main.class.path");
 	
 	public static final String javaAnalysisPathName =
 		System.getProperty("chord.java.analysis.path");
@@ -55,7 +55,7 @@ public class Properties {
 		System.out.println("chord.main.class: " + mainClassName);
 		System.out.println("chord.class.path: " + classPathName);
 		System.out.println("chord.src.path: " + srcPathName);
-		System.out.println("chord.boot.class.path: " + bootClassPathName);
+		System.out.println("chord.main.class.path: " + bootClassPathName);
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
 		System.out.println("chord.analyses: " + analyses);

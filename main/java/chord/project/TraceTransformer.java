@@ -150,7 +150,8 @@ public class TraceTransformer {
 		case InstKind.NEW_ARRAY_INST:
 		case InstKind.ACQ_LOCK_INST:
 			return 2;
-		case InstKind.FORK_HEAD_INST:
+		case InstKind.THREAD_START_INST:
+		case InstKind.THREAD_SPAWN_INST:
 			return 1;
 		default:
 			throw new RuntimeException();

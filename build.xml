@@ -208,11 +208,6 @@
         </then>
       </elseif>
     </if>
-    <path id="chord_boot_class_path">
-      <pathelement location="instr_jdk/chord_output/classes"/>
-      <pathelement path="${chord.main.class.path}"/>
-    </path>
-    <property name="chord.boot.class.path" refid="chord_boot_class_path"/>
     <java classname="chord.project.Project"
         fork="true" failonerror="true" dir="${chord.work.dir}">
       <jvmarg value="-showversion"/>
@@ -233,7 +228,6 @@
   <target name="instr" depends="props-file,main-class-path">
     <fail unless="chord.class.path"/>
     <mkdir dir="${chord.out.dir}"/>
-    <mkdir dir="${chord.classes.dir}"/>
     <property name="chord.max.heap" value="1024m"/>
     <java classname="chord.project.Instrumentor" fork="true" failonerror="true"
         dir="${chord.work.dir}" classpath="${chord.main.class.path}">

@@ -22,7 +22,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public boolean handlesAryElemWrInst() { return false; }
 	public boolean handlesStatFldWrInst() { return false; }
 	public boolean handlesAcqLockInst() { return false; }
-	public boolean handlesForkHeadInst() { return false; }
+	public boolean handlesThreadStartInst() { return false; }
+	public boolean handlesThreadSpawnInst() { return false; }
 	public void initPass() {
 		// signals beginning of parsing of a new trace
 		// do nothing by default; subclasses can override
@@ -107,8 +108,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 
 		final String[] runIds = runIdsStr.split(",");
-		final String cmd = "java -Xbootclasspath/p:" + Properties.bootClassPathName +
-        	" -Xverify:none " + // " -verbose" + 
+		final String cmd = "java -Xbootclasspath/p:" +
+			classesDirName + File.pathSeparator + Properties.bootClassPathName +
+        	" -Xverify:none " + " -verbose" + 
 			" -cp " + classesDirName + File.pathSeparator + classPathName +
         	" -agentpath:" + Properties.instrAgentFileName +
 			"=trace_file_name=" + crudeTraceFileName +
@@ -302,11 +304,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 					}
 					break;
 				}
-				case InstKind.FORK_HEAD_INST:
+				case InstKind.THREAD_START_INST:
 				{
 					int o = buffer.get();
-					if (handlesForkHeadInst()) {
-						processForkHeadInst(o);
+					if (handlesThreadStartInst()) {
+						processThreadStartInst(o);
+					}
+					break;
+				}
+				case InstKind.THREAD_SPAWN_INST:
+				{
+					int o = buffer.get();
+					if (handlesThreadSpawnInst()) {
+						processThreadSpawnInst(o);
 					}
 					break;
 				}
@@ -326,5 +336,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void processAryElemRdInst(int eIdx, int b, int idx) { }
 	public void processAryElemWrInst(int eIdx, int b, int idx, int r) { }
 	public void processAcqLockInst(int lIdx, int l) { }
-	public void processForkHeadInst(int o) { }
+	public void processThreadStartInst(int o) { }
+	public void processThreadSpawnInst(int o) { }
 }
