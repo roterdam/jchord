@@ -16,7 +16,7 @@ public class T extends java.lang.Thread {
             T t = new T(b1, b2);
             t.start();
         }
-        for (int i = 0; true; i++) {
+        for (int i = 0; i < 10; i++) {
             int j = b1.get();
             if (j >= 1000)
                 break;

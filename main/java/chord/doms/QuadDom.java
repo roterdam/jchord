@@ -32,9 +32,12 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 	public String toUniqueIdString(Quad q) {
 		if (q == null)
 			return "null";
-		jq_Method method = Program.getMethod(q);
-		jq_Class type = method.getDeclaringClass();
-		return Program.getBCI(q, method) + "@" + Program.getSign(method) + "@" + type.getName();
+		jq_Method m = Program.getMethod(q);
+		int bci = Program.getBCI(q, m);
+		String mName = m.getName().toString();
+		String mDesc = m.getDesc().toString();
+		String cName = m.getDeclaringClass().getName();
+		return Program.toString(bci, mName, mDesc, cName);
 	}
 	public String toXMLAttrsString(Quad q) {
 		jq_Method m = Program.getMethod(q);

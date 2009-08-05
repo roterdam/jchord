@@ -56,7 +56,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final String finalTraceFileName =
 			getOrMake("chord.final.trace.file", "final_trace.txt");
 
-		final String runIdsStr = System.getProperty("chord.run.ids", "");
+		final String runIdsStr = System.getProperty("chord.run.ids", "0");
 
         convert = System.getProperty("chord.convert", "true").equals("true");
 
@@ -97,7 +97,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 
 		boolean doTracePipe = System.getProperty(
-			"chord.trace.pipe", "true").equals("true");
+			"chord.trace.pipe", "false").equals("true");
 
 		ProcessExecutor.execute("rm " + crudeTraceFileName);
 		ProcessExecutor.execute("rm " + finalTraceFileName);
@@ -189,7 +189,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		String s = dHmap.get(h);
 		int hIdx = sHmap.indexOf(s);
 		if (hIdx == -1) {
-			// System.err.println("WARNING: could not find `" + s + "` in sHmap");
+			System.err.println("WARNING: could not find `" + s + "` in sHmap");
 		}
 		return hIdx;
 	}
@@ -197,7 +197,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		String s = dFmap.get(f);
 		int fIdx = sFmap.indexOf(s);
 		if (fIdx == -1) {
-			// System.err.println("WARNING: could not find `" + s + "` in sFmap");
+			System.err.println("WARNING: could not find `" + s + "` in sFmap");
 		}
 		return fIdx;
 	}
@@ -205,7 +205,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		String s = dEmap.get(e);
 		int eIdx = sEmap.indexOf(s);
 		if (eIdx == -1) {
-			// System.err.println("WARNING: could not find `" + s + "` in sEmap");
+			System.err.println("WARNING: could not find `" + s + "` in sEmap");
 		}
 		return eIdx;
 	}
