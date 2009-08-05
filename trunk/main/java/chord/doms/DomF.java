@@ -56,6 +56,9 @@ public class DomF extends ProgramDom<jq_Field>
 	public String toUniqueIdString(jq_Field f) {
 		if (f == null)
 			return "null";
-		return f.getName() + "@" + f.getDeclaringClass().getName();
+ 		String fName = f.getName().toString();
+		String fDesc = f.getDesc().toString();
+		String cName = f.getDeclaringClass().getName();
+		return Program.toString(fName, fDesc, cName);
 	}
 }

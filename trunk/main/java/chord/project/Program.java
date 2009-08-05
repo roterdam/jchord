@@ -511,6 +511,13 @@ public class Program {
 		s += ")";
 		return location(q) + s;
 	}
+	public static String toString(int bci, String mName, String mDesc,
+			String cName) {
+		return bci + "!" + mName + ":" + mDesc + "@" + cName;
+	}
+	public static String toString(String name, String desc, String cName) {
+		return name + ":" + desc + "@" + cName;
+	}
 
 	public static String toStringNewInst(Quad q) {
 		String t, l;

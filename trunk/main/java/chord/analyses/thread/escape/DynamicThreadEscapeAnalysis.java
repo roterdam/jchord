@@ -17,7 +17,9 @@ import gnu.trove.TIntArrayList;
 // and enable user to enable isFlowSen/isFlowIns
 
 @Chord(
-	name = "dynamic-thresc-java"
+	name = "dynamic-thresc-java",
+	namesOfSigns = { "visitedE", "flowInsEscE", "flowSenEscE" },
+	signs = { "E0", "E0", "E0" }
 )
 public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	// map from each object to a list containing each non-null-valued
@@ -47,8 +49,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	// having index e in domain E is visited during the execution
 	private boolean[] isEidxVisited;
 
-	private boolean isFlowIns;
-	private boolean isFlowSen;
+	private boolean isFlowIns = true;
+	private boolean isFlowSen = true;
 
 	protected ProgramRel relVisitedE;
 	protected ProgramRel relFlowInsEscE;

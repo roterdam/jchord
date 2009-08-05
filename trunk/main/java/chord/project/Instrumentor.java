@@ -69,7 +69,6 @@ public class Instrumentor {
 			CtBehavior[] inits = clazz.getDeclaredConstructors();
 			CtBehavior[] meths = clazz.getDeclaredMethods();
 			for (jq_Method m : methods) {
-				System.out.println("YYY: " + m);
 				String mName = m.getName().toString();
 				if (mName.equals("<clinit>")) {
 					CtBehavior clinit = clazz.getClassInitializer();
@@ -101,6 +100,7 @@ public class Instrumentor {
 				}
 			}
 			clazz.writeFile(classesDirName);
+			System.out.println("Writing class: " + clazz.getName());
 		}
 
 		String outDirName = Properties.outDirName;
@@ -108,11 +108,10 @@ public class Instrumentor {
 		FileUtils.writeMapToFile(Emap, (new File(outDirName, "E.dynamic.txt")).getAbsolutePath());
 		// FileUtils.writeMapToFile(Lmap, (new File(outDirName, "L.dynamic.txt")).getAbsolutePath());
 		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
-		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
+		FileUtils.writeMapToFile(Mmap, (new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
 	}
 
-	private static int set(IndexMap<String> map, int byteIdx, CtBehavior m) {
-        String cName = m.getDeclaringClass().getName();
+	private static int set(IndexMap<String> map, int bci, CtBehavior m) {
         String mName;
         if (m instanceof CtConstructor) {
             mName = ((CtConstructor) m).isClassInitializer() ?
@@ -120,7 +119,8 @@ public class Instrumentor {
         } else
             mName = m.getName();
         String mDesc = m.getSignature();
-		String s = byteIdx + "!" + mName + ":" + mDesc + "@" + cName;
+        String cName = m.getDeclaringClass().getName();
+		String s = Program.toString(bci, mName, mDesc, cName);
 		int n = map.size();
 		int i = map.getOrAdd(s);
 		assert (i == n);
@@ -128,7 +128,6 @@ public class Instrumentor {
 	}
 
 	private static int set(CtBehavior m) {
-        String cName = m.getDeclaringClass().getName();
         String mName;
         if (m instanceof CtConstructor) {
             mName = ((CtConstructor) m).isClassInitializer() ?
@@ -136,8 +135,8 @@ public class Instrumentor {
         } else
             mName = m.getName();
         String mDesc = m.getSignature();
-		String s = mName + ":" + mDesc + "@" + cName;
-		System.out.println("XXX: " + s);
+        String cName = m.getDeclaringClass().getName();
+		String s = Program.toString(mName, mDesc, cName);
 		int n = Mmap.size();
 		int i = Mmap.getOrAdd(s);
 		assert (i == n);
@@ -206,13 +205,15 @@ public class Instrumentor {
 				numL + "," + syncExpr + "); }");
 			numL++;
 		}
+*/
 		if (method.getName().equals("start") &&
 				method.getDeclaringClass().getName().equals("java.lang.Thread")) {
 			method.insertBefore("{ chord.project.Runtime.forkHeadInst($0); }");
 		}
-*/
+/*
 		method.insertBefore("{ chord.project.Runtime.methodEnter(); }");
 		method.insertAfter ("{ chord.project.Runtime.methodLeave(); }");
+*/
 		method.instrument(new ExprEditor() {
 			public void edit(NewExpr e) {
 				try {
@@ -238,31 +239,33 @@ public class Instrumentor {
 					boolean isWr = e.isWriter();
 					boolean isStatic = e.isStatic();
 					CtField fld = e.getField();
-					String fldCtnr = fld.getDeclaringClass().getName();
-					String fldSign = fld.getName() + "@" + fldCtnr;
-					int fIdx = Fmap.getOrAdd(fldSign);
+					String fName = fld.getName();
+					String fDesc = fld.getSignature();
+					String cName = fld.getDeclaringClass().getName();
+					String s = Program.toString(fName, fDesc, cName);
+					int fIdx = Fmap.getOrAdd(s);
 					boolean isPrim = fld.getType().isPrimitive();
-					String s = isWr ? "$proceed($$);" : "$_ = $proceed();";
-					String t;
+					String s1 = isWr ? "$proceed($$);" : "$_ = $proceed();";
+					String s2;
 					String l = isPrim ? "null" : "$_";
 					String r = isPrim ? "null" : "$1";
 					if (isStatic) {
 						if (isWr) {
-							t = "chord.project.Runtime.statFldWrInst(" +
+							s2 = "chord.project.Runtime.statFldWrInst(" +
 								fIdx + "," + r + ");";
 						} else
-							t = "";
+							s2 = "";
 					} else {
 						String b = "$0";
 						if (isWr) {
-							t = "chord.project.Runtime.instFldWrInst(" +
+							s2 = "chord.project.Runtime.instFldWrInst(" +
 								numE + "," + b + "," + fIdx + "," + r + ");";
 						} else {
-							t = "chord.project.Runtime.instFldRdInst(" +
+							s2 = "chord.project.Runtime.instFldRdInst(" +
 								numE + "," + b + "," + fIdx + ");";
 						}
 					}
-					e.replace("{ " + s + " " + t + " }");
+					e.replace("{ " + s1 + " " + s2 + " }");
 					numE++;
 				} catch (Exception ex) {
 					throw new RuntimeException(ex);
@@ -272,20 +275,20 @@ public class Instrumentor {
 				try {
 					boolean isWr = e.isWriter();
 					boolean isPrim = e.getElemType().isPrimitive();
-					String s, t;
+					String s1, s2;
 					String f = "$1";
 					if (isWr) {
-						s = "$proceed($$);";
+						s1 = "$proceed($$);";
 						String r = isPrim ? "null" : "$2";
-						t = "chord.project.Runtime.aryElemWrInst(" +
+						s2 = "chord.project.Runtime.aryElemWrInst(" +
 							numE + ",$0," + f + "," + r + ");";
 					} else {
-						s = "$_ = $proceed($$);";
+						s1 = "$_ = $proceed($$);";
 						String l = isPrim ? "null" : "$_";
-						t = "chord.project.Runtime.aryElemRdInst(" +
+						s2 = "chord.project.Runtime.aryElemRdInst(" +
 							numE + ",$0," + f + ");";
 					}
-					e.replace("{ " + s + " " + t + " }");
+					e.replace("{ " + s1 + " " + s2 + " }");
 					numE++;
 				} catch (Exception ex) {
 					throw new RuntimeException(ex);

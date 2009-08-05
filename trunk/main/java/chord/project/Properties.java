@@ -41,7 +41,7 @@ public class Properties {
 	public final static String instrAgentFileName =
 		System.getProperty("chord.instr.agent.file");
 	public final static boolean doInstr = System.getProperty(
-		"chord.instr", "true").equals("true");
+		"chord.instr", "false").equals("true");
 	public final static String traceFileName =
 		System.getProperty("chord.trace.file", "trace.txt");
 
