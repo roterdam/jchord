@@ -87,10 +87,16 @@ public class TracePrinter {
 				System.out.println("G_WR " + f + " " + r);
 				break;
 			}
-			case InstKind.FORK_HEAD_INST:
+			case InstKind.THREAD_START_INST:
 			{
 				int o = buffer.get();
-				System.out.println("FORK " + o);
+				System.out.println("START " + o);
+				break;
+			}
+			case InstKind.THREAD_SPAWN_INST:
+			{
+				int o = buffer.get();
+				System.out.println("SPAWN " + o);
 				break;
 			}
 			default:

@@ -207,8 +207,9 @@ public class Instrumentor {
 		}
 */
 		if (method.getName().equals("start") &&
-				method.getDeclaringClass().getName().equals("java.lang.Thread")) {
-			method.insertBefore("{ chord.project.Runtime.forkHeadInst($0); }");
+			method.getSignature().equals("()V") &&
+			method.getDeclaringClass().getName().equals("java.lang.Thread")) {
+			method.insertBefore("{ chord.project.Runtime.threadStart($0); }");
 		}
 /*
 		method.insertBefore("{ chord.project.Runtime.methodEnter(); }");
