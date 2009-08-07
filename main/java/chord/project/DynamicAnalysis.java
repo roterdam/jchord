@@ -15,15 +15,17 @@ import chord.util.ProcessExecutor;
     name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
-	public boolean handlesObjValAsgnInst() { return false; }
-	public boolean handlesInstFldRdInst() { return false; }
-	public boolean handlesInstFldWrInst() { return false; }
-	public boolean handlesAryElemRdInst() { return false; }
-	public boolean handlesAryElemWrInst() { return false; }
-	public boolean handlesStatFldWrInst() { return false; }
-	public boolean handlesAcqLockInst() { return false; }
-	public boolean handlesThreadStartInst() { return false; }
-	public boolean handlesThreadSpawnInst() { return false; }
+	public boolean handlesNewOrNewArray() { return false; }
+	public boolean handlesInstFldRd() { return false; }
+	public boolean handlesInstFldWr() { return false; }
+	public boolean handlesAryElemRd() { return false; }
+	public boolean handlesAryElemWr() { return false; }
+	public boolean handlesStatFldWr() { return false; }
+	public boolean handlesAcqLock() { return false; }
+	public boolean handlesThreadStart() { return false; }
+	public boolean handlesThreadSpawn() { return false; }
+	public boolean handlesMethodEnter() { return false; }
+	public boolean handlesMethodLeave() { return false; }
 	public void initPass() {
 		// signals beginning of parsing of a new trace
 		// do nothing by default; subclasses can override
@@ -38,9 +40,12 @@ public class DynamicAnalysis extends JavaAnalysis {
 	private IndexMap<String> dEmap = new IndexHashMap<String>();
 	private IndexMap<String> sFmap = new IndexHashMap<String>();
 	private IndexMap<String> dFmap = new IndexHashMap<String>();
+	private IndexMap<String> sMmap = new IndexHashMap<String>();
+	private IndexMap<String> dMmap = new IndexHashMap<String>();
 	protected IndexMap<String> Hmap;
 	protected IndexMap<String> Emap;
 	protected IndexMap<String> Fmap;
+	protected IndexMap<String> Mmap;
 
 	protected boolean convert;
 
@@ -65,18 +70,22 @@ public class DynamicAnalysis extends JavaAnalysis {
 		boolean initDomE = false;
 		boolean initDomF = false;
 		boolean initDomL = false;
-		if (handlesObjValAsgnInst()) {
+		boolean initDomM = false;
+		if (handlesNewOrNewArray()) {
 			initDomH = true;
 		}
-		if (handlesInstFldRdInst() || handlesInstFldWrInst() ||
-			handlesAryElemRdInst() || handlesAryElemWrInst() ||
-			handlesStatFldWrInst()) {
+		if (handlesInstFldRd() || handlesInstFldWr() ||
+			handlesAryElemRd() || handlesAryElemWr() ||
+			handlesStatFldWr()) {
 			initDomE = true;
 			initDomF = true;
 		}
-		if (handlesAcqLockInst()) {
+		if (handlesAcqLock()) {
 			initDomL = true;
 			// TODO
+		}
+		if (handlesMethodEnter() || handlesMethodLeave()) {
+			initDomM = true;
 		}
 		if (initDomH) {
 			processDom("H", sHmap, dHmap);
@@ -87,14 +96,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 		if (initDomF) {
 			processDom("F", sFmap, dFmap);
 		}
+		if (initDomM) {
+			processDom("M", sMmap, dMmap);
+		}
 		if (convert) {
 			Hmap = sHmap;
 			Emap = sEmap;
 			Fmap = sFmap;
+			Mmap = sMmap;
 		} else {
 			Hmap = dHmap;
 			Emap = dEmap;
 			Fmap = dFmap;
+			Mmap = dMmap;
 		}
 
 		boolean doTracePipe = System.getProperty(
@@ -110,7 +124,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final String[] runIds = runIdsStr.split(",");
 		final String cmd = "java -Xbootclasspath/p:" +
 			classesDirName + File.pathSeparator + Properties.bootClassPathName +
-        	" -Xverify:none " + " -verbose" + 
+        	" -Xverify:none" + " -verbose" + 
 			" -cp " + classesDirName + File.pathSeparator + classPathName +
         	" -agentpath:" + Properties.instrAgentFileName +
 			"=trace_file_name=" + crudeTraceFileName +
@@ -211,6 +225,14 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return eIdx;
 	}
+	private int getMidx(int m) {
+		String s = dMmap.get(m);
+		int mIdx = sMmap.indexOf(s);
+		if (mIdx == -1) {
+			System.err.println("WARNING: could not find `" + s + "` in sMmap");
+		}
+		return mIdx;
+	}
 	private int getLidx(int l) {
 		// TODO
 		return 0;
@@ -225,98 +247,118 @@ public class DynamicAnalysis extends JavaAnalysis {
 				int opcode = buffer.get();
 				count++;
 				switch (opcode) {
-				case InstKind.NEW_INST:
-				case InstKind.NEW_ARRAY_INST:
+				case EventKind.NEW:
+				case EventKind.NEW_ARRAY:
 				{
 					int h = buffer.get();
 					int o = buffer.get();
-					if (handlesObjValAsgnInst()) {
+					if (handlesNewOrNewArray()) {
 						int hIdx = convert ? getHidx(h) : h;
-						processObjValAsgnInst(hIdx, o);
+						processNewOrNewArray(hIdx, o);
 					}
 					break;
 				}
-				case InstKind.ACQ_LOCK_INST:
+				case EventKind.ACQ_LOCK:
 				{
 					int l = buffer.get();
 					int o = buffer.get();
-					if (handlesAcqLockInst()) {
+					if (handlesAcqLock()) {
 						int lIdx = convert ? getLidx(l) : l;
-						processAcqLockInst(lIdx, o);
+						processAcqLock(lIdx, o);
 					}
 					break;
 				}
-				case InstKind.INST_FLD_RD_INST:
+				case EventKind.INST_FLD_RD:
 				{
 					int e = buffer.get();
 					int b = buffer.get();
 					int f = buffer.get();
-					if (handlesInstFldRdInst()) {
+					if (handlesInstFldRd()) {
 						int eIdx = convert ? getEidx(e) : e;
 						int fIdx = convert ? getFidx(f) : f;
-						processInstFldRdInst(eIdx, b, fIdx);
+						processInstFldRd(eIdx, b, fIdx);
 					}
 					break;
 				}
-				case InstKind.INST_FLD_WR_INST:
+				case EventKind.INST_FLD_WR:
 				{
 					int e = buffer.get();
 					int b = buffer.get();
 					int f = buffer.get();
 					int r = buffer.get();
-					if (handlesInstFldWrInst()) {
+					if (handlesInstFldWr()) {
 						int eIdx = convert ? getEidx(e) : e;
 						int fIdx = convert ? getFidx(f) : f;
-						processInstFldWrInst(eIdx, b, fIdx, r);
+						processInstFldWr(eIdx, b, fIdx, r);
 					}
 					break;
 				}
-				case InstKind.ARY_ELEM_RD_INST:
+				case EventKind.ARY_ELEM_RD:
 				{
 					int e = buffer.get();
 					int b = buffer.get();
 					int i = buffer.get();
-					if (handlesAryElemRdInst()) {
+					if (handlesAryElemRd()) {
 						int eIdx = convert ? getEidx(e) : e;
-						processAryElemRdInst(eIdx, b, i);
+						processAryElemRd(eIdx, b, i);
 					}
 					break;
 				}
-				case InstKind.ARY_ELEM_WR_INST:
+				case EventKind.ARY_ELEM_WR:
 				{
 					int e = buffer.get();
 					int b = buffer.get();
 					int i = buffer.get();
 					int r = buffer.get();
-					if (handlesAryElemWrInst()) {
+					if (handlesAryElemWr()) {
 						int eIdx = convert ? getEidx(e) : e;
-						processAryElemWrInst(eIdx, b, i, r);
+						processAryElemWr(eIdx, b, i, r);
 					}
 					break;
 				}
-				case InstKind.STAT_FLD_WR_INST:
+				case EventKind.STAT_FLD_WR:
 				{
 					int f = buffer.get();
 					int r = buffer.get();
-					if (handlesStatFldWrInst()) {
+					if (handlesStatFldWr()) {
 						int fIdx = convert ? getFidx(f) : f;
-						processStatFldWrInst(fIdx, r);
+						processStatFldWr(fIdx, r);
 					}
 					break;
 				}
-				case InstKind.THREAD_START_INST:
+				case EventKind.THREAD_START:
 				{
-					int o = buffer.get();
-					if (handlesThreadStartInst()) {
-						processThreadStartInst(o);
+					int t = buffer.get();
+					if (handlesThreadStart()) {
+						processThreadStart(t);
 					}
 					break;
 				}
-				case InstKind.THREAD_SPAWN_INST:
+				case EventKind.THREAD_SPAWN:
 				{
 					int o = buffer.get();
-					if (handlesThreadSpawnInst()) {
-						processThreadSpawnInst(o);
+					if (handlesThreadSpawn()) {
+						processThreadSpawn(o);
+					}
+					break;
+				}
+				case EventKind.METHOD_ENTER:
+				{
+					int t = buffer.get();
+					int m = buffer.get();
+					if (handlesMethodEnter()) {
+						int mIdx = convert ? getMidx(m) : m;
+						processMethodEnter(t, mIdx);
+					}
+					break;
+				}
+				case EventKind.METHOD_LEAVE:
+				{
+					int t = buffer.get();
+					int m = buffer.get();
+					if (handlesMethodLeave()) {
+						int mIdx = convert ? getMidx(m) : m;
+						processMethodLeave(t, mIdx);
 					}
 					break;
 				}
@@ -329,13 +371,15 @@ public class DynamicAnalysis extends JavaAnalysis {
 			throw new RuntimeException(ex);
 		}
 	}
-	public void processObjValAsgnInst(int hIdx, int o) { }
-	public void processInstFldRdInst(int eIdx, int b, int fIdx) { }
-	public void processInstFldWrInst(int eIdx, int b, int fIdx, int r) { }
-	public void processStatFldWrInst(int fIdx, int r) { }
-	public void processAryElemRdInst(int eIdx, int b, int idx) { }
-	public void processAryElemWrInst(int eIdx, int b, int idx, int r) { }
-	public void processAcqLockInst(int lIdx, int l) { }
-	public void processThreadStartInst(int o) { }
-	public void processThreadSpawnInst(int o) { }
+	public void processNewOrNewArray(int hIdx, int o) { }
+	public void processInstFldRd(int eIdx, int b, int fIdx) { }
+	public void processInstFldWr(int eIdx, int b, int fIdx, int r) { }
+	public void processStatFldWr(int fIdx, int r) { }
+	public void processAryElemRd(int eIdx, int b, int i) { }
+	public void processAryElemWr(int eIdx, int b, int i, int r) { }
+	public void processAcqLock(int lIdx, int o) { }
+	public void processThreadStart(int o) { }
+	public void processThreadSpawn(int o) { }
+	public void processMethodEnter(int t, int mIdx) { }
+	public void processMethodLeave(int t, int mIdx) { }
 }

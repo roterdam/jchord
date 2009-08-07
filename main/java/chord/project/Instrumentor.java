@@ -35,11 +35,13 @@ public class Instrumentor {
 	private static IndexMap<String> Mmap;
 	private static int numH, numE;
 	// private static int numL;
+	private static ClassPool pool;
+	private static CtClass exType;
 
 	public static void main(String[] args) throws Exception {
 		String fullClassPathName = Properties.classPathName +
 			File.pathSeparator + Properties.bootClassPathName;
-		ClassPool pool = new ClassPool();
+		pool = new ClassPool();
 		String[] pathElems = fullClassPathName.split(File.pathSeparator);
 		for (String pathElem : pathElems) {
 			File file = new File(pathElem);
@@ -50,6 +52,9 @@ public class Instrumentor {
 			pool.appendClassPath(pathElem);
 		}
 		pool.appendSystemPath();
+
+		exType = pool.get("java.lang.Throwable");
+		assert (exType != null);
 
 		Hmap = new IndexHashMap<String>();
 		Emap = new IndexHashMap<String>();
@@ -63,8 +68,19 @@ public class Instrumentor {
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = Program.getPreparedClasses();
 
+/*
+		CtClass javaLangObject = pool.get("java.lang.Object");
+		CtField guardField = CtField.make(
+			"public static boolean chord_guard = false;",
+			javaLangObject);
+		javaLangObject.addField(guardField);
+*/
+
 		for (jq_Class c : classes) {
-			CtClass clazz = pool.get(c.getName());
+			String cName = c.getName();
+			if (cName.equals("java.lang.J9VMInternals"))
+				continue;
+			CtClass clazz = pool.get(cName);
 			List<jq_Method> methods = Program.getReachableMethods(c);
 			CtBehavior[] inits = clazz.getDeclaredConstructors();
 			CtBehavior[] meths = clazz.getDeclaredMethods();
@@ -99,8 +115,8 @@ public class Instrumentor {
 					process(meth);
 				}
 			}
+			System.out.println("Writing class: " + cName);
 			clazz.writeFile(classesDirName);
-			System.out.println("Writing class: " + clazz.getName());
 		}
 
 		String outDirName = Properties.outDirName;
@@ -163,7 +179,6 @@ public class Instrumentor {
 		}
 	}
 	private static void process1(final CtBehavior method) throws Exception {
-		set(method);
 		int mods = method.getModifiers();
 		if (Modifier.isNative(mods))
 			return;
@@ -201,25 +216,25 @@ public class Instrumentor {
 /*
 		if (Modifier.isSynchronized(mods)) {
 			String syncExpr = (Modifier.isStatic(mods)) ? "$class" : "$0";
-			method.insertBefore("{ chord.project.Runtime.acqLockInst(" +
+			method.insertBefore("{ chord.project.Runtime.acqLock(" +
 				numL + "," + syncExpr + "); }");
 			numL++;
 		}
 */
+		String st;
 		if (method.getName().equals("start") &&
 			method.getSignature().equals("()V") &&
 			method.getDeclaringClass().getName().equals("java.lang.Thread")) {
-			method.insertBefore("{ chord.project.Runtime.threadStart($0); }");
-		}
-/*
-		method.insertBefore("{ chord.project.Runtime.methodEnter(); }");
-		method.insertAfter ("{ chord.project.Runtime.methodLeave(); }");
-*/
+			st = "chord.project.Runtime.threadStart($0);";
+		} else
+			st = "";
+		int mIdx = set(method);
+
 		method.instrument(new ExprEditor() {
 			public void edit(NewExpr e) {
 				try {
-					String s = "chord.project.Runtime.befNewInst(" + numH + ");";
-					String t = "chord.project.Runtime.aftNewInst(" + numH + ",$_);";
+					String s = "chord.project.Runtime.befNew(" + numH + ");";
+					String t = "chord.project.Runtime.aftNew(" + numH + ",$_);";
 					e.replace("{ " + s + " $_ = $proceed($$); " + t + " }");
 					numH++;
 				} catch (Exception ex) {
@@ -228,7 +243,7 @@ public class Instrumentor {
 			}
 			public void edit(NewArray e) {
 				try {
-					String s = "chord.project.Runtime.newArrayInst(" + numH + ",$_);";
+					String s = "chord.project.Runtime.newArray(" + numH + ",$_);";
 					e.replace("{ $_ = $proceed($$); " + s + " }");
 					numH++;
 				} catch (Exception ex) {
@@ -252,17 +267,17 @@ public class Instrumentor {
 					String r = isPrim ? "null" : "$1";
 					if (isStatic) {
 						if (isWr) {
-							s2 = "chord.project.Runtime.statFldWrInst(" +
+							s2 = "chord.project.Runtime.statFldWr(" +
 								fIdx + "," + r + ");";
 						} else
 							s2 = "";
 					} else {
 						String b = "$0";
 						if (isWr) {
-							s2 = "chord.project.Runtime.instFldWrInst(" +
+							s2 = "chord.project.Runtime.instFldWr(" +
 								numE + "," + b + "," + fIdx + "," + r + ");";
 						} else {
-							s2 = "chord.project.Runtime.instFldRdInst(" +
+							s2 = "chord.project.Runtime.instFldRd(" +
 								numE + "," + b + "," + fIdx + ");";
 						}
 					}
@@ -281,12 +296,12 @@ public class Instrumentor {
 					if (isWr) {
 						s1 = "$proceed($$);";
 						String r = isPrim ? "null" : "$2";
-						s2 = "chord.project.Runtime.aryElemWrInst(" +
+						s2 = "chord.project.Runtime.aryElemWr(" +
 							numE + ",$0," + f + "," + r + ");";
 					} else {
 						s1 = "$_ = $proceed($$);";
 						String l = isPrim ? "null" : "$_";
-						s2 = "chord.project.Runtime.aryElemRdInst(" +
+						s2 = "chord.project.Runtime.aryElemRd(" +
 							numE + ",$0," + f + ");";
 					}
 					e.replace("{ " + s1 + " " + s2 + " }");
@@ -295,10 +310,24 @@ public class Instrumentor {
 					throw new RuntimeException(ex);
 				}
 			}
+			public void edit(MethodCall e) {
+				try {
+					CtMethod m = e.getMethod();
+					if (m.getName().equals("start") &&
+						m.getSignature().equals("()V") &&
+						m.getDeclaringClass().getName().equals("java.lang.Thread")) {
+						String s = "chord.project.Runtime.threadSpawn($0);";
+						e.replace("{ $_ = $proceed($$); " + s + " }");
+					}
+				} catch (Exception ex) {
+					throw new RuntimeException(ex);
+				}
+			}
 			public void edit(MonitorEnter e) {
 /*
 				try {
-					e.replace("{ $proceed(); chord.project.Runtime.acqLockInst(" + numL + ",$0); }");
+					String s = "chord.project.Runtime.acqLock(" + numL + ",$0);";
+					e.replace("{ $proceed(); " + s + " }");
 					numL++;
 				} catch (Exception ex) {
 					throw new RuntimeException(ex);
@@ -306,6 +335,11 @@ public class Instrumentor {
 */
 			}
 		});
+
+		method.insertBefore("{ chord.project.Runtime.methodEnter(" + mIdx + "); " + st + " }");
+		// method.insertAfter ("if (chord_guard) { chord.project.Runtime.methodLeave(" + mIdx + "); }");
+		// String s = "{ chord.project.Runtime.methodLeave(" + mIdx + "); throw($e); }";
+		// method.addCatch(s, exType);
 	}
 }
 

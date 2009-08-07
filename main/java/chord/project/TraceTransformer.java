@@ -79,10 +79,10 @@ public class TraceTransformer {
 					assert (count == 0);
 				int opcode = reader.get();
 				switch (opcode) {
-				case InstKind.BEF_NEW_INST:
+				case EventKind.BEF_NEW:
 				{
 					isInNew = true;
-					tmp.add(InstKind.NEW_INST);
+					tmp.add(EventKind.NEW);
 					int tIdx = reader.get();
 					int hIdx = reader.get();
 					tmp.add(hIdx);
@@ -91,7 +91,7 @@ public class TraceTransformer {
 					count += 3;
 					break;
 				} 
-				case InstKind.AFT_NEW_INST:
+				case EventKind.AFT_NEW:
 				{
 					int tIdx = reader.get();
 					int hIdx = reader.get();
@@ -140,18 +140,20 @@ public class TraceTransformer {
 	}
 	private static int getOffset(int opcode) {
 		switch (opcode) {
-		case InstKind.ARY_ELEM_RD_INST:
-		case InstKind.INST_FLD_RD_INST:
+		case EventKind.ARY_ELEM_RD:
+		case EventKind.INST_FLD_RD:
 			return 3;
-		case InstKind.ARY_ELEM_WR_INST:
-		case InstKind.INST_FLD_WR_INST:
+		case EventKind.ARY_ELEM_WR:
+		case EventKind.INST_FLD_WR:
 			return 4;
-		case InstKind.STAT_FLD_WR_INST:
-		case InstKind.NEW_ARRAY_INST:
-		case InstKind.ACQ_LOCK_INST:
+		case EventKind.NEW_ARRAY:
+		case EventKind.METHOD_ENTER:
+		case EventKind.METHOD_LEAVE:
+		case EventKind.ACQ_LOCK:
+		case EventKind.STAT_FLD_WR:
 			return 2;
-		case InstKind.THREAD_START_INST:
-		case InstKind.THREAD_SPAWN_INST:
+		case EventKind.THREAD_START:
+		case EventKind.THREAD_SPAWN:
 			return 1;
 		default:
 			throw new RuntimeException();
