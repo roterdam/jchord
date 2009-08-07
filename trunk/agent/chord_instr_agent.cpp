@@ -39,25 +39,23 @@ static void JNICALL VMStart(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread) 
 {
     cout << "ENTER VMInit" << endl;
-	const char* name = "chord/project/Runtime";
-    jclass klass = jni_env->FindClass(name);
-    if (klass == NULL) {
-        cout << "ERROR: JNI: Cannot find class: " << name << endl;
+	const char* cName = "chord/project/Runtime";
+    jclass c = jni_env->FindClass(cName);
+	if (c == NULL) {
+		cout << "ERROR: JNI: Cannot find class: " << cName << endl;
 		exit(1);
 	}
-	const char* methodName = "open";
-	const char* methodSign = "(Ljava/lang/String;)V";
-	jmethodID method =
-		jni_env->GetStaticMethodID(klass, methodName, methodSign);
-	if (method == NULL) {
-		cout << "ERROR: JNI: Cannot get method "
-			<< methodName << methodSign
-			<< " from class: " << name << endl;
+	const char* mName = "open";
+		const char* mSign = "(Ljava/lang/String;)V";
+	jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
+	if (m == NULL) {
+		cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
+			" from class: " << cName << endl;
 		exit(1);
 	}
 	jstring str = jni_env->NewStringUTF(trace_file_name.c_str());
-	jni_env->CallStaticObjectMethod(klass, method, str);
-    cout << "LEAVE VMInit" << endl;
+	jni_env->CallStaticObjectMethod(c, m, str);
+	cout << "LEAVE VMInit" << endl;
 }
 
 

@@ -17,41 +17,55 @@ public class Runtime {
 	private static IntBuffer buffer;
 	private static boolean trace = false;
 
-	public synchronized static void methodEnter() {
-		if (trace) {
-			trace = false;
-		}
-		trace = true;
-	}
-
-	public synchronized static void methodLeave() {
-		if (trace) {
-			trace = false;
-		}
-		trace = true;
-	}
-
-	public synchronized static void befNewInst(int hIdx) {
+	public synchronized static void methodEnter(int mIdx) {
 		if (trace) {
 			trace = false;
 			Thread t = Thread.currentThread();
 			int tIdx = System.identityHashCode(t);
 			try {
-				buffer.put(InstKind.BEF_NEW_INST);
+				buffer.put(EventKind.METHOD_ENTER);
+				buffer.put(tIdx);
+				buffer.put(mIdx);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+
+	public synchronized static void methodLeave(int mIdx) {
+		if (trace) {
+			trace = false;
+			Thread t = Thread.currentThread();
+			int tIdx = System.identityHashCode(t);
+			try {
+				buffer.put(EventKind.METHOD_LEAVE);
+				buffer.put(tIdx);
+				buffer.put(mIdx);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+
+	public synchronized static void befNew(int hIdx) {
+		if (trace) {
+			trace = false;
+			Thread t = Thread.currentThread();
+			int tIdx = System.identityHashCode(t);
+			try {
+				buffer.put(EventKind.BEF_NEW);
 				buffer.put(tIdx);
 				buffer.put(hIdx);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void aftNewInst(int hIdx, Object o) {
+	public synchronized static void aftNew(int hIdx, Object o) {
 		if (trace) {
 			trace = false;
 			Thread t = Thread.currentThread();
 			int tIdx = System.identityHashCode(t);
 			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(InstKind.AFT_NEW_INST);
+				buffer.put(EventKind.AFT_NEW);
 				buffer.put(tIdx);
 				buffer.put(hIdx);
 				buffer.put(oIdx);
@@ -59,25 +73,25 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void newArrayInst(int hIdx, Object o) {
+	public synchronized static void newArray(int hIdx, Object o) {
 		if (trace) {
 			trace = false;
 			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(InstKind.NEW_ARRAY_INST);
+				buffer.put(EventKind.NEW_ARRAY);
 				buffer.put(hIdx);
 				buffer.put(oIdx);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void instFldRdInst(int eIdx, Object b,
+	public synchronized static void instFldRd(int eIdx, Object b,
 			int fIdx) {
 		if (trace) {
 			trace = false;
 			int bIdx = System.identityHashCode(b);
 			try {
-				buffer.put(InstKind.INST_FLD_RD_INST);
+				buffer.put(EventKind.INST_FLD_RD);
 				buffer.put(eIdx);
 				buffer.put(bIdx);
 				buffer.put(fIdx);
@@ -85,14 +99,14 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void instFldWrInst(int eIdx, Object b,
+	public synchronized static void instFldWr(int eIdx, Object b,
 			int fIdx, Object r) {
 		if (trace) {
 			trace = false;
 			int bIdx = System.identityHashCode(b);
 			int rIdx = System.identityHashCode(r);
 			try {
-				buffer.put(InstKind.INST_FLD_WR_INST);
+				buffer.put(EventKind.INST_FLD_WR);
 				buffer.put(eIdx);
 				buffer.put(bIdx);
 				buffer.put(fIdx);
@@ -101,13 +115,13 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void aryElemRdInst(int eIdx, Object b,
+	public synchronized static void aryElemRd(int eIdx, Object b,
 			int idx) {
 		if (trace) {
 			trace = false;
 			int bIdx = System.identityHashCode(b);
 			try {
-				buffer.put(InstKind.ARY_ELEM_RD_INST);
+				buffer.put(EventKind.ARY_ELEM_RD);
 				buffer.put(eIdx);
 				buffer.put(bIdx);
 				buffer.put(idx);
@@ -115,14 +129,14 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void aryElemWrInst(int eIdx, Object b,
+	public synchronized static void aryElemWr(int eIdx, Object b,
 			int idx, Object r) {
 		if (trace) {
 			trace = false;
 			int bIdx = System.identityHashCode(b);
 			int rIdx = System.identityHashCode(r);
 			try {
-				buffer.put(InstKind.ARY_ELEM_WR_INST);
+				buffer.put(EventKind.ARY_ELEM_WR);
 				buffer.put(eIdx);
 				buffer.put(bIdx);
 				buffer.put(idx);
@@ -131,24 +145,24 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void statFldWrInst(int fIdx, Object r) {
+	public synchronized static void statFldWr(int fIdx, Object r) {
 		if (trace) {
 			trace = false;
 			int rIdx = System.identityHashCode(r);
 			try {
-				buffer.put(InstKind.STAT_FLD_WR_INST);
+				buffer.put(EventKind.STAT_FLD_WR);
 				buffer.put(fIdx);
 				buffer.put(rIdx);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void acqLockInst(int lIdx, Object o) {
+	public synchronized static void acqLock(int lIdx, Object o) {
 		if (trace) {
 			trace = false;
 			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(InstKind.ACQ_LOCK_INST);
+				buffer.put(EventKind.ACQ_LOCK);
 				buffer.put(lIdx);
 				buffer.put(oIdx);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
@@ -160,7 +174,7 @@ public class Runtime {
 			trace = false;
 			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(InstKind.THREAD_START_INST);
+				buffer.put(EventKind.THREAD_START);
 				buffer.put(oIdx);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -171,19 +185,19 @@ public class Runtime {
 			trace = false;
 			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(InstKind.THREAD_SPAWN_INST);
+				buffer.put(EventKind.THREAD_SPAWN);
 				buffer.put(oIdx);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public static void open(String fileName) {
+	public synchronized static void open(String fileName) {
 		try {
 			buffer = new IntBuffer(1024, fileName, false);
 		} catch (IOException ex) { throw new RuntimeException(ex); }
 		trace = true;
 	}
-	public static void close() {
+	public synchronized static void close() {
 		trace = false;
 		try {
 			buffer.flush();

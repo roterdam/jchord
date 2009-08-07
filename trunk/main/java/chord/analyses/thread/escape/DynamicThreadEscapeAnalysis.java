@@ -56,14 +56,14 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	protected ProgramRel relFlowInsEscE;
 	protected ProgramRel relFlowSenEscE;
 
-	public boolean handlesObjValAsgnInst() { return true; }
-	public boolean handlesInstFldRdInst() { return true; }
-	public boolean handlesInstFldWrInst() { return true; }
-	public boolean handlesAryElemRdInst() { return true; }
-	public boolean handlesAryElemWrInst() { return true; }
-	public boolean handlesStatFldWrInst() { return true; }
-	public boolean handlesThreadStartInst() { return true; }
-	public boolean handlesThreadSpawnInst() { return true; }
+	public boolean handlesNewOrNewArray() { return true; }
+	public boolean handlesInstFldRd() { return true; }
+	public boolean handlesInstFldWr() { return true; }
+	public boolean handlesAryElemRd() { return true; }
+	public boolean handlesAryElemWr() { return true; }
+	public boolean handlesStatFldWr() { return true; }
+	public boolean handlesThreadStart() { return true; }
+	public boolean handlesThreadSpawn() { return true; }
 
 	private boolean isFirst = true;
 	private int numE;
@@ -167,7 +167,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				" numAllocEsc: " + numAllocEsc : ""));
 	}
 
-	public void processObjValAsgnInst(int hIdx, int o) {
+	public void processNewOrNewArray(int hIdx, int o) {
 		if (o != 0) {
 			objToFldObjs.remove(o);
 			escObjs.remove(o);
@@ -178,29 +178,29 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			}
 		}
 	}
-	public void processInstFldRdInst(int eIdx, int b, int fIdx) { 
+	public void processInstFldRd(int eIdx, int b, int fIdx) { 
 		processHeapRd(eIdx, b);
 	}
-	public void processInstFldWrInst(int eIdx, int b, int fIdx, int r) {
+	public void processInstFldWr(int eIdx, int b, int fIdx, int r) {
 		processHeapWr(eIdx, b, fIdx, r);
 	}
-	public void processStatFldWrInst(int fIdx, int r) { 
+	public void processStatFldWr(int fIdx, int r) { 
 		if (r != 0) {
 			markAndPropEsc(r);
 		}
 	}
-	public void processAryElemRdInst(int eIdx, int b, int idx) { 
+	public void processAryElemRd(int eIdx, int b, int idx) { 
 		processHeapRd(eIdx, b);
 	}
-	public void processAryElemWrInst(int eIdx, int b, int idx, int r) {
+	public void processAryElemWr(int eIdx, int b, int idx, int r) {
 		processHeapWr(eIdx, b, idx, r);
 	}
-	public void processThreadStartInst(int o) { 
+	public void processThreadStart(int o) { 
 		if (o != 0) {
 			markAndPropEsc(o);
 		}
 	}
-	public void processThreadSpawnInst(int o) { 
+	public void processThreadSpawn(int o) { 
 		if (o != 0) {
 			markAndPropEsc(o);
 		}

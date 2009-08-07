@@ -72,5 +72,7 @@ public class IntBuffer {
 			iStream.close();
 			iStream = null;
 		}
+		if (maxPos == -1)
+			maxPos = 0;
 	}
 }
