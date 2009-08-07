@@ -337,9 +337,9 @@ public class Instrumentor {
 		});
 
 		method.insertBefore("{ chord.project.Runtime.methodEnter(" + mIdx + "); " + st + " }");
-		// method.insertAfter ("if (chord_guard) { chord.project.Runtime.methodLeave(" + mIdx + "); }");
-		// String s = "{ chord.project.Runtime.methodLeave(" + mIdx + "); throw($e); }";
-		// method.addCatch(s, exType);
+		method.insertAfter ("if (chord_guard) { chord.project.Runtime.methodLeave(" + mIdx + "); }");
+		String s = "{ chord.project.Runtime.methodLeave(" + mIdx + "); throw($e); }";
+		method.addCatch(s, exType);
 	}
 }
 
