@@ -299,12 +299,7 @@
   </target>
 
   <target name="clean">
-    <delete dir="classes/util"/>
-    <delete dir="classes/main"/>
-    <delete dir="classes/datarace"/>
-    <delete dir="classes/deadlock"/>
-    <delete dir="classes/downcast"/>
-    <delete dir="classes/monosite"/>
+    <delete dir="classes"/>
     <exec executable="make" dir="bdd">
         <arg value="clean"/>
     </exec>
