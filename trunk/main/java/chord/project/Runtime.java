@@ -145,13 +145,12 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void statFldWr(int fIdx, Object r) {
+	public synchronized static void statFldWr(Object r) {
 		if (trace) {
 			trace = false;
 			int rIdx = System.identityHashCode(r);
 			try {
 				buffer.put(EventKind.STAT_FLD_WR);
-				buffer.put(fIdx);
 				buffer.put(rIdx);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;

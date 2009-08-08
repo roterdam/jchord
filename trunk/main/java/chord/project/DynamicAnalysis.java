@@ -22,10 +22,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public boolean handlesAryElemWr() { return false; }
 	public boolean handlesStatFldWr() { return false; }
 	public boolean handlesAcqLock() { return false; }
-	public boolean handlesThreadStart() { return false; }
-	public boolean handlesThreadSpawn() { return false; }
-	public boolean handlesMethodEnter() { return false; }
-	public boolean handlesMethodLeave() { return false; }
+	public boolean handlesThreadSpawnAndStart() { return false; }
+	public boolean handlesMethodEnterAndLeave() { return false; }
 	public void initPass() {
 		// signals beginning of parsing of a new trace
 		// do nothing by default; subclasses can override
@@ -40,10 +38,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 	private IndexMap<String> dEmap = new IndexHashMap<String>();
 	private IndexMap<String> sFmap = new IndexHashMap<String>();
 	private IndexMap<String> dFmap = new IndexHashMap<String>();
+	private IndexMap<String> sLmap = new IndexHashMap<String>();
+	private IndexMap<String> dLmap = new IndexHashMap<String>();
 	private IndexMap<String> sMmap = new IndexHashMap<String>();
 	private IndexMap<String> dMmap = new IndexHashMap<String>();
 	protected IndexMap<String> Hmap;
 	protected IndexMap<String> Emap;
+	protected IndexMap<String> Lmap;
 	protected IndexMap<String> Fmap;
 	protected IndexMap<String> Mmap;
 
@@ -74,17 +75,17 @@ public class DynamicAnalysis extends JavaAnalysis {
 		if (handlesNewOrNewArray()) {
 			initDomH = true;
 		}
-		if (handlesInstFldRd() || handlesInstFldWr() ||
-			handlesAryElemRd() || handlesAryElemWr() ||
-			handlesStatFldWr()) {
+		if (handlesInstFldRd() || handlesInstFldWr()) {
 			initDomE = true;
+			initDomF = true;
+		}
+		if (handlesAryElemRd() || handlesAryElemWr()) {
 			initDomF = true;
 		}
 		if (handlesAcqLock()) {
 			initDomL = true;
-			// TODO
 		}
-		if (handlesMethodEnter() || handlesMethodLeave()) {
+		if (handlesMethodEnterAndLeave()) {
 			initDomM = true;
 		}
 		if (initDomH) {
@@ -92,6 +93,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		if (initDomE) {
 			processDom("E", sEmap, dEmap);
+		}
+		if (initDomL) {
+			processDom("L", sLmap, dLmap);
 		}
 		if (initDomF) {
 			processDom("F", sFmap, dFmap);
@@ -102,11 +106,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 		if (convert) {
 			Hmap = sHmap;
 			Emap = sEmap;
+			Lmap = sLmap;
 			Fmap = sFmap;
 			Mmap = sMmap;
 		} else {
 			Hmap = dHmap;
 			Emap = dEmap;
+			Lmap = dLmap;
 			Fmap = dFmap;
 			Mmap = dMmap;
 		}
@@ -129,7 +135,7 @@ public class DynamicAnalysis extends JavaAnalysis {
         	" -agentpath:" + Properties.instrAgentFileName +
 			"=trace_file_name=" + crudeTraceFileName +
 			" " + mainClassName + " ";
-		final String cmd2 = "java -cp " + Properties.bootClassPathName + // TODO
+		final String cmd2 = "java -cp " + Properties.bootClassPathName +
 			" -Dchord.crude.trace.file=" + crudeTraceFileName +
 			" -Dchord.final.trace.file=" + finalTraceFileName +
 			" chord.project.TraceTransformer";
@@ -234,8 +240,12 @@ public class DynamicAnalysis extends JavaAnalysis {
 		return mIdx;
 	}
 	private int getLidx(int l) {
-		// TODO
-		return 0;
+		String s = dLmap.get(l);
+		int lIdx = sLmap.indexOf(s);
+		if (lIdx == -1) {
+			System.err.println("WARNING: could not find `" + s + "` in sLmap");
+		}
+		return lIdx;
 	}
 
 	private void processTrace(String fileName) {
@@ -318,18 +328,16 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.STAT_FLD_WR:
 				{
-					int f = buffer.get();
 					int r = buffer.get();
 					if (handlesStatFldWr()) {
-						int fIdx = convert ? getFidx(f) : f;
-						processStatFldWr(fIdx, r);
+						processStatFldWr(r);
 					}
 					break;
 				}
 				case EventKind.THREAD_START:
 				{
 					int t = buffer.get();
-					if (handlesThreadStart()) {
+					if (handlesThreadSpawnAndStart()) {
 						processThreadStart(t);
 					}
 					break;
@@ -337,7 +345,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				case EventKind.THREAD_SPAWN:
 				{
 					int o = buffer.get();
-					if (handlesThreadSpawn()) {
+					if (handlesThreadSpawnAndStart()) {
 						processThreadSpawn(o);
 					}
 					break;
@@ -346,7 +354,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				{
 					int t = buffer.get();
 					int m = buffer.get();
-					if (handlesMethodEnter()) {
+					if (handlesMethodEnterAndLeave()) {
 						int mIdx = convert ? getMidx(m) : m;
 						processMethodEnter(t, mIdx);
 					}
@@ -356,7 +364,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				{
 					int t = buffer.get();
 					int m = buffer.get();
-					if (handlesMethodLeave()) {
+					if (handlesMethodEnterAndLeave()) {
 						int mIdx = convert ? getMidx(m) : m;
 						processMethodLeave(t, mIdx);
 					}
@@ -374,7 +382,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void processNewOrNewArray(int hIdx, int o) { }
 	public void processInstFldRd(int eIdx, int b, int fIdx) { }
 	public void processInstFldWr(int eIdx, int b, int fIdx, int r) { }
-	public void processStatFldWr(int fIdx, int r) { }
+	public void processStatFldWr(int r) { }
 	public void processAryElemRd(int eIdx, int b, int i) { }
 	public void processAryElemWr(int eIdx, int b, int i, int r) { }
 	public void processAcqLock(int lIdx, int o) { }
