@@ -325,22 +325,22 @@ public class DataraceAnalysis extends JavaAnalysis {
 		domF.saveToXMLFile();
 		domL.saveToXMLFile();
 
-		Utils.copyFile("datarace/web/results.dtd");
-		Utils.copyFile("main/web/Olist.dtd");
-		Utils.copyFile("main/web/Clist.dtd");
-		Utils.copyFile("main/web/Alist.dtd");
-		Utils.copyFile("main/web/Hlist.dtd");
-		Utils.copyFile("main/web/Ilist.dtd");
-		Utils.copyFile("main/web/Mlist.dtd");
-		Utils.copyFile("main/web/Elist.dtd");
-		Utils.copyFile("main/web/Flist.dtd");
-		Utils.copyFile("main/web/Llist.dtd");
-		Utils.copyFile("datarace/web/results.xml");
-		Utils.copyFile("main/web/style.css");
-		Utils.copyFile("datarace/web/group.xsl");
-		Utils.copyFile("datarace/web/paths.xsl");
-		Utils.copyFile("datarace/web/races.xsl");
-		Utils.copyFile("main/web/misc.xsl");
+		Utils.copyFile("framework/datarace/web/results.dtd");
+		Utils.copyFile("framework/main/web/Olist.dtd");
+		Utils.copyFile("framework/main/web/Clist.dtd");
+		Utils.copyFile("framework/main/web/Alist.dtd");
+		Utils.copyFile("framework/main/web/Hlist.dtd");
+		Utils.copyFile("framework/main/web/Ilist.dtd");
+		Utils.copyFile("framework/main/web/Mlist.dtd");
+		Utils.copyFile("framework/main/web/Elist.dtd");
+		Utils.copyFile("framework/main/web/Flist.dtd");
+		Utils.copyFile("framework/main/web/Llist.dtd");
+		Utils.copyFile("framework/datarace/web/results.xml");
+		Utils.copyFile("framework/main/web/style.css");
+		Utils.copyFile("framework/datarace/web/group.xsl");
+		Utils.copyFile("framework/datarace/web/paths.xsl");
+		Utils.copyFile("framework/datarace/web/races.xsl");
+		Utils.copyFile("framework/main/web/misc.xsl");
 
 		Utils.runSaxon("results.xml", "group.xsl");
 		Utils.runSaxon("results.xml", "paths.xsl");
