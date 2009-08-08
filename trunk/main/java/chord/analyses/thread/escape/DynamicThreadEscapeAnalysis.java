@@ -7,6 +7,7 @@ import chord.project.Chord;
 import chord.project.DynamicAnalysis;
 import chord.project.ProgramRel;
 import chord.project.Project;
+import chord.project.InstrFormat;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
@@ -67,6 +68,14 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	private boolean isFirst = true;
 	private int numE;
 	private int numH;
+
+	public DynamicThreadEscapeAnalysis() {
+		InstrFormat.instrThreadSpawnAndStart = true;
+		InstrFormat.instrNewAndNewArrayInst = true;
+		InstrFormat.instrInstFldInst = true;
+		InstrFormat.instrStatFldInst = true;
+		InstrFormat.instrAryElemInst = true;
+	}
 
 	public void initPass() {
 		if (isFirst) {
