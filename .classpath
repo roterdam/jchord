@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" output="util/classes" path="util/java"/>
-	<classpathentry kind="src" output="main/classes" path="main/java"/>
-	<classpathentry kind="src" output="datarace/classes" path="datarace/java"/>
-	<classpathentry kind="src" output="monosite/classes" path="monosite/java"/>
-	<classpathentry kind="src" output="downcast/classes" path="downcast/java"/>
-	<classpathentry kind="src" output="deadlock/classes" path="deadlock/java"/>
+	<classpathentry kind="src" output="framework/util/classes" path="framework/util/java"/>
+	<classpathentry kind="src" output="framework/main/classes" path="framework/main/java"/>
+	<classpathentry kind="src" output="framework/datarace/classes" path="framework/datarace/java"/>
+	<classpathentry kind="src" output="framework/monosite/classes" path="framework/monosite/java"/>
+	<classpathentry kind="src" output="framework/downcast/classes" path="framework/downcast/java"/>
+	<classpathentry kind="src" output="framework/deadlock/classes" path="framework/deadlock/java"/>
 	<classpathentry exported="true" kind="lib" path="lib/trove-2.0.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/j2h.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/bddbddb/bddbddb.jar"/>
