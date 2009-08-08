@@ -377,19 +377,19 @@ public class DeadlockAnalysis extends JavaAnalysis {
         domM.saveToXMLFile();
         domL.saveToXMLFile();
 
-        Utils.copyFile("framework/deadlock/web/results.dtd");
-        Utils.copyFile("framework/main/web/Olist.dtd");
-        Utils.copyFile("framework/main/web/Clist.dtd");
-        Utils.copyFile("framework/main/web/Alist.dtd");
-        Utils.copyFile("framework/main/web/Hlist.dtd");
-        Utils.copyFile("framework/main/web/Ilist.dtd");
-        Utils.copyFile("framework/main/web/Mlist.dtd");
-        Utils.copyFile("framework/main/web/Llist.dtd");
-        Utils.copyFile("framework/deadlock/web/results.xml");
-        Utils.copyFile("framework/main/web/style.css");
-        Utils.copyFile("framework/deadlock/web/group.xsl");
-        Utils.copyFile("framework/deadlock/web/paths.xsl");
-        Utils.copyFile("framework/main/web/misc.xsl");
+        Utils.copyFile("src/deadlock/web/results.dtd");
+        Utils.copyFile("src/main/web/Olist.dtd");
+        Utils.copyFile("src/main/web/Clist.dtd");
+        Utils.copyFile("src/main/web/Alist.dtd");
+        Utils.copyFile("src/main/web/Hlist.dtd");
+        Utils.copyFile("src/main/web/Ilist.dtd");
+        Utils.copyFile("src/main/web/Mlist.dtd");
+        Utils.copyFile("src/main/web/Llist.dtd");
+        Utils.copyFile("src/deadlock/web/results.xml");
+        Utils.copyFile("src/main/web/style.css");
+        Utils.copyFile("src/deadlock/web/group.xsl");
+        Utils.copyFile("src/deadlock/web/paths.xsl");
+        Utils.copyFile("src/main/web/misc.xsl");
 
         Utils.runSaxon("results.xml", "group.xsl");
         Utils.runSaxon("results.xml", "paths.xsl");

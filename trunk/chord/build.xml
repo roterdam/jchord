@@ -57,7 +57,7 @@
 
   <target name="util-class-path">
     <path id="util_class_path">
-      <pathelement location="src/util/classes"/>
+      <pathelement location="classes/util"/>
       <pathelement location="lib/trove-2.0.4.jar"/>
       <pathelement location="lib/scannotation-1.0.2.jar"/>
     </path>
@@ -66,7 +66,7 @@
 
   <target name="main-class-path" depends="util-class-path,bddbddb-class-path">
     <path id="main_class_path">
-      <pathelement location="src/main/classes"/>
+      <pathelement location="classes/main"/>
       <pathelement path="${chord.bddbddb.class.path}"/>
       <pathelement path="${chord.util.class.path}"/>
       <pathelement location="lib/joeq.jar"/>
@@ -125,41 +125,41 @@
 
   <target name="compile" depends="compile-props,main-class-path,ant-contrib">
   <property environment="env"/>
-	<mkdir dir="src/util/classes"/>
+	<mkdir dir="classes/util"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-      srcdir="src/util/java" destdir="src/util/classes" classpath="${chord.util.class.path}"/>
-	<mkdir dir="src/main/classes"/>
+      srcdir="src/util/java" destdir="classes/util" classpath="${chord.util.class.path}"/>
+	<mkdir dir="classes/main"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-      srcdir="src/main/java" destdir="src/main/classes" classpath="${chord.main.class.path}"/>
-	<mkdir dir="src/datarace/classes"/>
+      srcdir="src/main/java" destdir="classes/main" classpath="${chord.main.class.path}"/>
+	<mkdir dir="classes/datarace"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/datarace/java" destdir="src/datarace/classes">
+        srcdir="src/datarace/java" destdir="classes/datarace">
       <classpath>
-        <pathelement location="src/datarace/classes"/>
+        <pathelement location="classes/datarace"/>
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
-	<mkdir dir="src/deadlock/classes"/>
+	<mkdir dir="classes/deadlock"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/deadlock/java" destdir="src/deadlock/classes">
+        srcdir="src/deadlock/java" destdir="classes/deadlock">
       <classpath>
-        <pathelement location="src/deadlock/classes"/>
+        <pathelement location="classes/deadlock"/>
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
-	<mkdir dir="src/downcast/classes"/>
+	<mkdir dir="classes/downcast"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/downcast/java" destdir="src/downcast/classes">
+        srcdir="src/downcast/java" destdir="classes/downcast">
       <classpath>
-        <pathelement location="src/downcast/classes"/>
+        <pathelement location="classes/downcast"/>
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
-	<mkdir dir="src/monosite/classes"/>
+	<mkdir dir="classes/monosite"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/monosite/java" destdir="src/monosite/classes">
+        srcdir="src/monosite/java" destdir="classes/monosite">
       <classpath>
-        <pathelement location="src/monosite/classes"/>
+        <pathelement location="classes/monosite"/>
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
@@ -180,7 +180,7 @@
 
   <target name="run" depends="main-class-path,bdd-lib-dir,props-file">
     <mkdir dir="${chord.out.dir}"/>
-    <property name="chord.java.analysis.path" location="src/main/classes"/>
+    <property name="chord.java.analysis.path" location="classes/main"/>
     <property name="chord.dlog.analysis.path" location="src/main/dlog"/>
     <property name="chord.max.heap" value="1024m"/>
     <property name="chord.max.stack" value="32m"/>
@@ -240,8 +240,8 @@
 
   <target name="run-datarace">
     <path id="chord_java_analysis_path">
-      <pathelement location="src/main/classes"/>
-      <pathelement location="src/datarace/classes"/>
+      <pathelement location="classes/main"/>
+      <pathelement location="classes/datarace"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
@@ -255,8 +255,8 @@
 
   <target name="run-deadlock">
     <path id="chord_java_analysis_path">
-      <pathelement location="src/main/classes"/>
-      <pathelement location="src/deadlock/classes"/>
+      <pathelement location="classes/masin"/>
+      <pathelement location="classes/deadlock"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
@@ -270,8 +270,8 @@
 
   <target name="run-downcast">
     <path id="chord_java_analysis_path">
-      <pathelement location="src/main/classes"/>
-      <pathelement location="src/downcast/classes"/>
+      <pathelement location="classes/main"/>
+      <pathelement location="classes/downcast"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
@@ -285,8 +285,8 @@
 
   <target name="run-monosite">
     <path id="chord_java_analysis_path">
-      <pathelement location="src/main/classes"/>
-      <pathelement location="src/monosite/classes"/>
+      <pathelement location="classes/main"/>
+      <pathelement location="classes/monosite"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
@@ -299,12 +299,12 @@
   </target>
 
   <target name="clean">
-    <delete dir="src/util/classes"/>
-    <delete dir="src/main/classes"/>
-    <delete dir="src/datarace/classes"/>
-    <delete dir="src/deadlock/classes"/>
-    <delete dir="src/downcast/classes"/>
-    <delete dir="src/monosite/classes"/>
+    <delete dir="classes/util"/>
+    <delete dir="classes/main"/>
+    <delete dir="classes/datarace"/>
+    <delete dir="classes/deadlock"/>
+    <delete dir="classes/downcast"/>
+    <delete dir="classes/monosite"/>
     <exec executable="make" dir="bdd">
         <arg value="clean"/>
     </exec>
