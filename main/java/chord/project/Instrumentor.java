@@ -6,10 +6,8 @@
 package chord.project;
 
 import javassist.*;
-import javassist.bytecode.Descriptor;
 import javassist.expr.*;
 
-import chord.util.ClasspathUtils;
 import chord.util.FileUtils;
 import chord.util.IndexHashMap;
 import chord.util.IndexMap;
@@ -19,9 +17,7 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 
 /**
  *
@@ -30,11 +26,10 @@ import java.util.Set;
 public class Instrumentor {
 	private static IndexMap<String> Hmap;
 	private static IndexMap<String> Emap;
-	// private static IndexMap<String> Lmap;
+	private static IndexMap<String> Lmap;
 	private static IndexMap<String> Fmap;
 	private static IndexMap<String> Mmap;
-	private static int numH, numE;
-	// private static int numL;
+	private static int numH, numE, numL;
 	private static ClassPool pool;
 	private static CtClass exType;
 
@@ -53,28 +48,29 @@ public class Instrumentor {
 		}
 		pool.appendSystemPath();
 
-		exType = pool.get("java.lang.Throwable");
-		assert (exType != null);
-
-		Hmap = new IndexHashMap<String>();
-		Emap = new IndexHashMap<String>();
-		// Lmap = new IndexHashMap<String>();
-		Fmap = new IndexHashMap<String>();
-		Mmap = new IndexHashMap<String>();
-		numH = Hmap.size();
-		numE = Emap.size();
-		// numL = Lmap.size();
+		if (InstrFormat.instrMethodEnterAndLeave) {
+			exType = pool.get("java.lang.Throwable");
+			assert (exType != null);
+		}
+		if (InstrFormat.needsHmap()) {
+			Hmap = new IndexHashMap<String>();
+			numH = Hmap.size();
+		}
+		if (InstrFormat.needsEmap()) {
+			Emap = new IndexHashMap<String>();
+			numE = Emap.size();
+		}
+		if (InstrFormat.needsLmap()) {
+			Lmap = new IndexHashMap<String>();
+			numL = Lmap.size();
+		}
+		if (InstrFormat.needsFmap())
+			Fmap = new IndexHashMap<String>();
+		if (InstrFormat.needsMmap())
+			Mmap = new IndexHashMap<String>();
 
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = Program.getPreparedClasses();
-
-/*
-		CtClass javaLangObject = pool.get("java.lang.Object");
-		CtField guardField = CtField.make(
-			"public static boolean chord_guard = false;",
-			javaLangObject);
-		javaLangObject.addField(guardField);
-*/
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
@@ -120,11 +116,26 @@ public class Instrumentor {
 		}
 
 		String outDirName = Properties.outDirName;
-		FileUtils.writeMapToFile(Hmap, (new File(outDirName, "H.dynamic.txt")).getAbsolutePath());
-		FileUtils.writeMapToFile(Emap, (new File(outDirName, "E.dynamic.txt")).getAbsolutePath());
-		// FileUtils.writeMapToFile(Lmap, (new File(outDirName, "L.dynamic.txt")).getAbsolutePath());
-		FileUtils.writeMapToFile(Fmap, (new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
-		FileUtils.writeMapToFile(Mmap, (new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
+		if (Hmap != null) {
+			FileUtils.writeMapToFile(Hmap,
+				(new File(outDirName, "H.dynamic.txt")).getAbsolutePath());
+		}
+		if (Emap != null) {
+			FileUtils.writeMapToFile(Emap,
+				(new File(outDirName, "E.dynamic.txt")).getAbsolutePath());
+		}
+		if (Lmap != null) {
+			FileUtils.writeMapToFile(Lmap,
+				(new File(outDirName, "L.dynamic.txt")).getAbsolutePath());
+		}
+		if (Fmap != null) {
+			FileUtils.writeMapToFile(Fmap,
+				(new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
+		}
+		if (Mmap != null) {
+			FileUtils.writeMapToFile(Mmap,
+				(new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
+		}
 	}
 
 	private static int set(IndexMap<String> map, int bci, CtBehavior m) {
@@ -167,15 +178,16 @@ public class Instrumentor {
 		try {
 			process1(method);
 			process2(method);
-			assert (numH == Hmap.size());
-			assert (numE == Emap.size());
-			// assert (numL == Lmap.size());
+			if (Hmap != null) assert (numH == Hmap.size());
+			if (Emap != null) assert (numE == Emap.size());
+			if (Lmap != null) assert (numL == Lmap.size());
 		} catch (Exception ex) {
-			System.err.println("WARNING: Ignoring instrumenting method: " + method.getLongName());
+			System.err.println("WARNING: Ignoring instrumenting method: " +
+				method.getLongName());
 			ex.printStackTrace();
-			numH = Hmap.size();
-			numE = Emap.size();
-			// numL = Lmap.size();
+			if (Hmap != null) numH = Hmap.size();
+			if (Emap != null) numE = Emap.size();
+			if (Lmap != null) numL = Lmap.size();
 		}
 	}
 	private static void process1(final CtBehavior method) throws Exception {
@@ -184,26 +196,30 @@ public class Instrumentor {
 			return;
 		if (Modifier.isAbstract(mods))
 			return;
-/*
 		if (Modifier.isSynchronized(mods)) {
-			set(Lmap, -1, method);
+			if (InstrFormat.instrAcqLockInst)
+				set(Lmap, -1, method);
 		}
-*/
 		method.instrument(new ExprEditor() {
 			public void edit(NewExpr e) {
-				set(Hmap, e, method);
+				if (Hmap != null)
+					set(Hmap, e, method);
 			}
 			public void edit(NewArray e) {
-				set(Hmap, e, method);
+				if (Hmap != null)
+					set(Hmap, e, method);
 			}
 			public void edit(FieldAccess e) {
-				set(Emap, e, method);
+				if (Emap != null)
+					set(Emap, e, method);
 			}
 			public void edit(ArrayAccess e) {
-				set(Emap, e, method);
+				if (Emap != null)
+					set(Emap, e, method);
 			}
 			public void edit(MonitorEnter e) {
-				// set(Lmap, e, method);
+				if (Lmap != null)
+					set(Lmap, e, method);
 			}
 		});
 	}
@@ -213,25 +229,16 @@ public class Instrumentor {
 			return;
 		if (Modifier.isAbstract(mods))
 			return;
-/*
-		if (Modifier.isSynchronized(mods)) {
+		if (Lmap != null && Modifier.isSynchronized(mods)) {
 			String syncExpr = (Modifier.isStatic(mods)) ? "$class" : "$0";
 			method.insertBefore("{ chord.project.Runtime.acqLock(" +
 				numL + "," + syncExpr + "); }");
 			numL++;
 		}
-*/
-		String st;
-		if (method.getName().equals("start") &&
-			method.getSignature().equals("()V") &&
-			method.getDeclaringClass().getName().equals("java.lang.Thread")) {
-			st = "chord.project.Runtime.threadStart($0);";
-		} else
-			st = "";
-		int mIdx = set(method);
-
 		method.instrument(new ExprEditor() {
 			public void edit(NewExpr e) {
+				if (Hmap == null)
+					return;
 				try {
 					String s = "chord.project.Runtime.befNew(" + numH + ");";
 					String t = "chord.project.Runtime.aftNew(" + numH + ",$_);";
@@ -242,6 +249,8 @@ public class Instrumentor {
 				}
 			}
 			public void edit(NewArray e) {
+				if (Hmap == null)
+					return;
 				try {
 					String s = "chord.project.Runtime.newArray(" + numH + ",$_);";
 					e.replace("{ $_ = $proceed($$); " + s + " }");
@@ -252,27 +261,33 @@ public class Instrumentor {
 			}
 			public void edit(FieldAccess e) {
 				try {
-					boolean isWr = e.isWriter();
 					boolean isStatic = e.isStatic();
+					if (isStatic) {
+						if (!InstrFormat.instrStatFldInst)
+							return;
+					} else {
+						if (!InstrFormat.instrInstFldInst)
+							return;
+					}
+					boolean isWr = e.isWriter();
 					CtField fld = e.getField();
-					String fName = fld.getName();
-					String fDesc = fld.getSignature();
-					String cName = fld.getDeclaringClass().getName();
-					String s = Program.toString(fName, fDesc, cName);
-					int fIdx = Fmap.getOrAdd(s);
 					boolean isPrim = fld.getType().isPrimitive();
 					String s1 = isWr ? "$proceed($$);" : "$_ = $proceed();";
 					String s2;
-					String l = isPrim ? "null" : "$_";
+					// String l = isPrim ? "null" : "$_";
 					String r = isPrim ? "null" : "$1";
 					if (isStatic) {
 						if (isWr) {
-							s2 = "chord.project.Runtime.statFldWr(" +
-								fIdx + "," + r + ");";
+							s2 = "chord.project.Runtime.statFldWr(" + r + ");";
 						} else
 							s2 = "";
 					} else {
 						String b = "$0";
+						String fName = fld.getName();
+						String fDesc = fld.getSignature();
+						String cName = fld.getDeclaringClass().getName();
+						String s = Program.toString(fName, fDesc, cName);
+						int fIdx = Fmap.getOrAdd(s);
 						if (isWr) {
 							s2 = "chord.project.Runtime.instFldWr(" +
 								numE + "," + b + "," + fIdx + "," + r + ");";
@@ -288,6 +303,8 @@ public class Instrumentor {
 				}
 			}
 			public void edit(ArrayAccess e) {
+				if (!InstrFormat.instrAryElemInst)
+					return;
 				try {
 					boolean isWr = e.isWriter();
 					boolean isPrim = e.getElemType().isPrimitive();
@@ -300,7 +317,7 @@ public class Instrumentor {
 							numE + ",$0," + f + "," + r + ");";
 					} else {
 						s1 = "$_ = $proceed($$);";
-						String l = isPrim ? "null" : "$_";
+						// String l = isPrim ? "null" : "$_";
 						s2 = "chord.project.Runtime.aryElemRd(" +
 							numE + ",$0," + f + ");";
 					}
@@ -311,6 +328,8 @@ public class Instrumentor {
 				}
 			}
 			public void edit(MethodCall e) {
+				if (!InstrFormat.instrThreadSpawnAndStart)
+					return;
 				try {
 					CtMethod m = e.getMethod();
 					if (m.getName().equals("start") &&
@@ -324,7 +343,8 @@ public class Instrumentor {
 				}
 			}
 			public void edit(MonitorEnter e) {
-/*
+				if (!InstrFormat.instrAcqLockInst)
+					return;
 				try {
 					String s = "chord.project.Runtime.acqLock(" + numL + ",$0);";
 					e.replace("{ $proceed(); " + s + " }");
@@ -332,14 +352,23 @@ public class Instrumentor {
 				} catch (Exception ex) {
 					throw new RuntimeException(ex);
 				}
-*/
 			}
 		});
-
-		method.insertBefore("{ chord.project.Runtime.methodEnter(" + mIdx + "); " + st + " }");
-		method.insertAfter ("if (chord_guard) { chord.project.Runtime.methodLeave(" + mIdx + "); }");
-		String s = "{ chord.project.Runtime.methodLeave(" + mIdx + "); throw($e); }";
-		method.addCatch(s, exType);
+		if (InstrFormat.instrThreadSpawnAndStart) {
+			if (method.getName().equals("start") &&
+				method.getSignature().equals("()V") &&
+				method.getDeclaringClass().getName().equals("java.lang.Thread")) {
+				String s = "chord.project.Runtime.threadStart($0);";
+				method.insertBefore(s);
+			}
+		}
+		if (Mmap != null) {
+			int mIdx = set(method);
+			method.insertBefore("{ chord.project.Runtime.methodEnter(" + mIdx + "); }");
+			method.insertAfter ("{ chord.project.Runtime.methodLeave(" + mIdx + "); }");
+			String s = "{ chord.project.Runtime.methodLeave(" + mIdx + "); throw($e); }";
+			method.addCatch(s, exType);
+		}
 	}
 }
 

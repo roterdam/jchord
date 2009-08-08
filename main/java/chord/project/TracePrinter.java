@@ -82,9 +82,8 @@ public class TracePrinter {
 			}
 			case EventKind.STAT_FLD_WR:
 			{
-				int f = buffer.get();
 				int r = buffer.get();
-				System.out.println("G_WR " + f + " " + r);
+				System.out.println("G_WR " + r);
 				break;
 			}
 			case EventKind.THREAD_START:

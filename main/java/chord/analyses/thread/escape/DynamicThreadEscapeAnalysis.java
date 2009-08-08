@@ -62,8 +62,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public boolean handlesAryElemRd() { return true; }
 	public boolean handlesAryElemWr() { return true; }
 	public boolean handlesStatFldWr() { return true; }
-	public boolean handlesThreadStart() { return true; }
-	public boolean handlesThreadSpawn() { return true; }
+	public boolean handlesThreadSpawnAndStart() { return true; }
 
 	private boolean isFirst = true;
 	private int numE;
@@ -184,7 +183,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public void processInstFldWr(int eIdx, int b, int fIdx, int r) {
 		processHeapWr(eIdx, b, fIdx, r);
 	}
-	public void processStatFldWr(int fIdx, int r) { 
+	public void processStatFldWr(int r) { 
 		if (r != 0) {
 			markAndPropEsc(r);
 		}

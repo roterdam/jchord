@@ -150,8 +150,8 @@ public class TraceTransformer {
 		case EventKind.METHOD_ENTER:
 		case EventKind.METHOD_LEAVE:
 		case EventKind.ACQ_LOCK:
-		case EventKind.STAT_FLD_WR:
 			return 2;
+		case EventKind.STAT_FLD_WR:
 		case EventKind.THREAD_START:
 		case EventKind.THREAD_SPAWN:
 			return 1;
