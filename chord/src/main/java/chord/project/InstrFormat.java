@@ -1,6 +1,8 @@
 package chord.project;
 
 public abstract class InstrFormat {
+	public static int numIters = 3;
+	public static boolean instrMethodAndLoopCounts;
 	/**
 	 * Controls generation of following events:
 	 * METHOD_ENTER <thread object> <mIdx>

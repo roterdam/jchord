@@ -19,6 +19,7 @@ import com.java2html.Java2HTML;
 
 import chord.util.IndexHashSet;
  
+import joeq.Util.Templates.ListIterator;
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
@@ -324,7 +325,7 @@ public class Program {
 			} else {
 				try {
 					cfg = CodeCache.getCode(m);
-					// (new EnterSSA()).visitCFG(cfg);
+					(new EnterSSA()).visitCFG(cfg);
 					assert (cfg != null);
 				} catch (Exception ex) {
 					System.out.println("WARNING: Failed to get CFG of method " +
@@ -460,8 +461,11 @@ public class Program {
 	
 	public static int getBCI(Quad q, jq_Method m) {
 		Map<Quad, Integer> bcMap = getBCMap(m);
+		if (bcMap == null)
+			return -1;
 		Integer bci = bcMap.get(q);
-		assert (bci != null);
+		if (bci == null)
+			return -1;
 		return bci.intValue();
 	}
 
@@ -470,9 +474,9 @@ public class Program {
 		if (bcMap == null)
 			return 0;
 		Integer bci = bcMap.get(q);
-		if (bci != null)
-			return m.getLineNumber(bci.intValue());
-		return 0;
+		if (bci == null)
+			return 0;
+		return m.getLineNumber(bci.intValue());
 	}
 	
 	public static int getLineNumber(Inst i, jq_Method m) {
@@ -655,5 +659,23 @@ public class Program {
 	public static void printClass(String name) {
 	}
 	public static void printMethod(String sign) {
+	}
+	public static void print() {
+		for (jq_Method m : getReachableMethods()) {
+			System.out.println(m);
+			if (!m.isAbstract()) {
+				ControlFlowGraph cfg = getCFG(m);
+				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+                		it.hasNext();) {
+					BasicBlock bb = it.nextBasicBlock();
+					for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
+						Quad q = it2.nextQuad();			
+						int bci = getBCI(q, m);
+						System.out.println("\t" + bci + "#" + q.getID());
+					}
+				}
+				System.out.println(cfg.fullDump());
+			}
+		}
 	}
 }
