@@ -15,15 +15,19 @@ import chord.util.IndexSet;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.ControlFlowGraph;
 
 import java.io.File;
 import java.util.List;
+import java.util.Set;
 
 /**
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor {
+	private static CFGLoopFinder finder = new CFGLoopFinder();
 	private static IndexMap<String> Hmap;
 	private static IndexMap<String> Emap;
 	private static IndexMap<String> Lmap;
@@ -81,7 +85,7 @@ public class Instrumentor {
 				if (mName.equals("<clinit>")) {
 					method = clazz.getClassInitializer();
 					assert (method != null);
-					process();
+					process(m);
 				} else if (mName.equals("<init>")) {
 					String mDesc = m.getDesc().toString();
 					method = null;
@@ -92,7 +96,7 @@ public class Instrumentor {
 						}
 					}
 					assert (method != null);
-					process();
+					process(m);
 				} else {
 					String mDesc = m.getDesc().toString();
 					method = null;
@@ -104,7 +108,7 @@ public class Instrumentor {
 						}
 					}
 					assert (method != null);
-					process();
+					process(m);
 				}
 			}
 			System.out.println("Writing class: " + cName);
@@ -167,7 +171,7 @@ public class Instrumentor {
 		return i;
 	}
 
-	private static void process() {
+	private static void process(jq_Method m) {
 		System.out.println("XXX " + method);
 		try {
 			int mods = method.getModifiers();
@@ -181,15 +185,11 @@ public class Instrumentor {
 					lIdx + "," + syncExpr + "); }");
 			}
 			if (InstrFormat.instrMethodAndLoopCounts) {
-				ControlFlowGraph cfg = Program.getCFG(method);
-				CFGLoopFinder finder = new CFGLoopFinder(cfg);
+				ControlFlowGraph cfg = Program.getCFG(m);
+				finder.visit(cfg);
 				Set<BasicBlock> heads = finder.getLoopHeads();
 				for (BasicBlock head : heads) {
-					
 				}
-
-	
-				// find all loops of m
 				// get bytecode index of each loop header
 				// and bytecode index of each loop exits
 			}

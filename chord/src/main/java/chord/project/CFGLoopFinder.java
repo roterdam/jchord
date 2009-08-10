@@ -8,37 +8,23 @@ import java.util.HashMap;
 import chord.util.tuple.object.Pair;
 import chord.util.ArraySet;
 
-import joeq.Util.Templates.List;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 
-public class CFGLoopFinder {
-	public final ControlFlowGraph cfg;
-    private Set<Pair<BasicBlock, BasicBlock>> backEdges;
-    private Set<BasicBlock> visitedBef;
+public class CFGLoopFinder implements ICFGVisitor {
+	public static final boolean debug = false;
+	private Set<BasicBlock> visitedBef;
     private Set<BasicBlock> visitedAft;
-	private Map<BasicBlock, Set<BasicBlock>> headToBody;
+    private Set<Pair<BasicBlock, BasicBlock>> backEdges;
+    	private Map<BasicBlock, Set<BasicBlock>> headToBody;
 	private Map<BasicBlock, Set<BasicBlock>> headToExits;
-	public CFGLoopFinder(ControlFlowGraph cfg) {
-		this.cfg = cfg;
-	}
-	public Set<BasicBlock> getLoopHeads() {
-		if (headToBody == null)
-			buildHeadToBody();
-		return headToBody.keySet();
-	}
-	public Set<BasicBlock> getLoopBody(BasicBlock head) {
-		if (headToBody == null)
-			buildHeadToBody();
-		return headToBody.get(head);
-	}
-	public Set<BasicBlock> getLoopExits(BasicBlock head) {
-		if (headToExits == null)
-			buildHeadToExits();
-		return headToExits.get(head);
-	}
-	private void buildHeadToBody() {
-		buildBackEdges();
+	public Object visit(ControlFlowGraph cfg) {
+		// build back edges
+		visitedBef = new ArraySet<BasicBlock>();
+		visitedAft = new ArraySet<BasicBlock>();
+		backEdges = new ArraySet<Pair<BasicBlock, BasicBlock>>();
+		visit(cfg.entry());
+		// build headToBody
 		headToBody = new HashMap<BasicBlock, Set<BasicBlock>>();
 		for (Pair<BasicBlock, BasicBlock> edge : backEdges) {
 			BasicBlock tail = edge.val0;
@@ -60,10 +46,7 @@ public class CFGLoopFinder {
 				}
 			}
 		}
-	}
-	private void buildHeadToExits() {
-		if (headToBody == null)
-			buildHeadToBody();
+		// build headToExits
 		headToExits = new HashMap<BasicBlock, Set<BasicBlock>>();
 		for (BasicBlock head : headToBody.keySet()) {
 			Set<BasicBlock> body = headToBody.get(head);
@@ -85,12 +68,29 @@ public class CFGLoopFinder {
 				}
 			}
 		}
+		if (debug) {
+			System.out.println(cfg.fullDump());
+			Set<BasicBlock> heads = getLoopHeads();
+			for (BasicBlock head : heads) {
+				System.out.println(head);
+				System.out.println("BODY:");
+				for (BasicBlock b : getLoopBody(head))
+					System.out.println("\t" + b);
+				System.out.println("TAILS:");
+				for (BasicBlock b : getLoopExits(head))
+					System.out.println("\t" + b);
+			}
+		}
+		return null;
 	}
-	private void buildBackEdges() {
-		visitedBef = new ArraySet<BasicBlock>();
-		visitedAft = new ArraySet<BasicBlock>();
-		backEdges = new ArraySet<Pair<BasicBlock, BasicBlock>>();
-		visit(cfg.entry());
+	public Set<BasicBlock> getLoopHeads() {
+		return headToBody.keySet();
+	}
+	public Set<BasicBlock> getLoopBody(BasicBlock head) {
+		return headToBody.get(head);
+	}
+	public Set<BasicBlock> getLoopExits(BasicBlock head) {
+		return headToExits.get(head);
 	}
     private void visit(BasicBlock curr) {
         visitedBef.add(curr);
