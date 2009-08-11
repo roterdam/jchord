@@ -201,6 +201,8 @@ public class RTA {
 	}
 
 	private void handleClass(jq_Class c) {
+		// if (c.getName().startsWith("joeq") || c.getName().startsWith("jwutil"))
+		//	throw new RuntimeException();
 		prepareClass(c);
 		handleClinits(c);
 	}
