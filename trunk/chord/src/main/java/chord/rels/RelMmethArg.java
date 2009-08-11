@@ -35,7 +35,7 @@ public class RelMmethArg extends ProgramRel {
 			jq_Method m = domM.get(mIdx);
 			if (m.isAbstract())
 				continue;
-			ControlFlowGraph cfg = Program.getCFG(m);
+			ControlFlowGraph cfg = m.getCFG();
 			RegisterFactory rf = cfg.getRegisterFactory();
 			int numArgs = m.getParamTypes().length;
 			for (int zIdx = 0; zIdx < numArgs; zIdx++) {

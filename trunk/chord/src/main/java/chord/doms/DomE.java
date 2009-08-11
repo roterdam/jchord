@@ -43,6 +43,6 @@ public class DomE extends QuadDom implements IHeapInstVisitor {
 			" rdwr=\"" + (Program.isWrHeapInst(op) ? "Wr" : "Rd") + "\"";
 	}
 	public String toString(Quad q) {
-		return Program.toStringHeapInst(q);
+		return Program.v().toStringHeapInst(q);
 	}
 }

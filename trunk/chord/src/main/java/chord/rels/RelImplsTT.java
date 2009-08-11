@@ -25,7 +25,7 @@ import chord.project.ProgramRel;
 public class RelImplsTT extends ProgramRel {
 	public void fill() {
 		DomT domT = (DomT) doms[0];
-		for (jq_Class c : Program.getPreparedClasses()) {
+		for (jq_Class c : Program.v().getPreparedClasses()) {
 			if (!c.isInterface()) {
 				int t1Idx = domT.indexOf(c);
 				for (jq_Class d : c.getInterfaces()) {

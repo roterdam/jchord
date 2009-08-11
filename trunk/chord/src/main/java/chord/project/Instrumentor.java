@@ -19,6 +19,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Set;
 
@@ -27,18 +28,20 @@ import java.util.Set;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor {
-	private static CFGLoopFinder finder = new CFGLoopFinder();
-	private static IndexMap<String> Hmap;
-	private static IndexMap<String> Emap;
-	private static IndexMap<String> Lmap;
-	private static IndexMap<String> Fmap;
-	private static IndexMap<String> Mmap;
-	private static ClassPool pool;
-	private static CtClass exType;
-	private static MyExprEditor exprEditor = new MyExprEditor();
-	private static CtBehavior method;
-
-	public static void main(String[] args) throws Exception {
+	private IndexMap<String> Hmap;
+	private IndexMap<String> Emap;
+	private IndexMap<String> Lmap;
+	private IndexMap<String> Fmap;
+	private IndexMap<String> Mmap;
+	private ClassPool pool;
+	private CtClass exType;
+	private CFGLoopFinder finder = new CFGLoopFinder();
+	private MyExprEditor exprEditor = new MyExprEditor();
+	private CtBehavior currentMethod;
+	private Program program;
+	
+	public void visit(Program program) {
+		this.program = program;
 		String fullClassPathName = Properties.classPathName +
 			File.pathSeparator + Properties.bootClassPathName;
 		pool = new ClassPool();
@@ -49,12 +52,20 @@ public class Instrumentor {
 				System.out.println("WARNING: Ignoring: " + pathElem);
 				continue;
 			}
-			pool.appendClassPath(pathElem);
+			try {
+				pool.appendClassPath(pathElem);
+			} catch (NotFoundException ex) {
+				throw new RuntimeException(ex);
+			}
 		}
 		pool.appendSystemPath();
 
 		if (InstrFormat.instrMethodEnterAndLeave) {
-			exType = pool.get("java.lang.Throwable");
+			try {
+				exType = pool.get("java.lang.Throwable");
+			} catch (NotFoundException ex) {
+				throw new RuntimeException(ex);
+			}
 			assert (exType != null);
 		}
 		if (InstrFormat.needsHmap())
@@ -69,50 +80,61 @@ public class Instrumentor {
 			Mmap = new IndexHashMap<String>();
 
 		String classesDirName = Properties.classesDirName;
-		IndexSet<jq_Class> classes = Program.getPreparedClasses();
+		IndexSet<jq_Class> classes = program.getPreparedClasses();
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
 			if (cName.equals("java.lang.J9VMInternals"))
 				continue;
 			System.out.println("YYY " + cName);
-			CtClass clazz = pool.get(cName);
-			List<jq_Method> methods = Program.getReachableMethods(c);
+			CtClass clazz;
+			try {
+				clazz = pool.get(cName);
+			} catch (NotFoundException ex) {
+				throw new RuntimeException(ex);
+			}
+			List<jq_Method> methods = program.getReachableMethods(c);
 			CtBehavior[] inits = clazz.getDeclaredConstructors();
 			CtBehavior[] meths = clazz.getDeclaredMethods();
 			for (jq_Method m : methods) {
 				String mName = m.getName().toString();
 				if (mName.equals("<clinit>")) {
-					method = clazz.getClassInitializer();
-					assert (method != null);
+					currentMethod = clazz.getClassInitializer();
+					assert (currentMethod != null);
 					process(m);
 				} else if (mName.equals("<init>")) {
 					String mDesc = m.getDesc().toString();
-					method = null;
+					currentMethod = null;
 					for (CtBehavior x : inits) {
 						if (x.getSignature().equals(mDesc)) {
-							method = x;
+							currentMethod = x;
 							break;
 						}
 					}
-					assert (method != null);
+					assert (currentMethod != null);
 					process(m);
 				} else {
 					String mDesc = m.getDesc().toString();
-					method = null;
+					currentMethod = null;
 					for (CtBehavior x : meths) {
 						if (x.getName().equals(mName) &&
 							x.getSignature().equals(mDesc)) {
-							method = x;
+							currentMethod = x;
 							break;
 						}
 					}
-					assert (method != null);
+					assert (currentMethod != null);
 					process(m);
 				}
 			}
 			System.out.println("Writing class: " + cName);
-			clazz.writeFile(classesDirName);
+			try {
+				clazz.writeFile(classesDirName);
+			} catch (CannotCompileException ex) {
+				throw new RuntimeException(ex);
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
 		}
 
 		String outDirName = Properties.outDirName;
@@ -138,16 +160,16 @@ public class Instrumentor {
 		}
 	}
 
-	private static int set2(IndexMap<String> map, int bci) {
+	private int set2(IndexMap<String> map, int bci) {
         String mName;
-        if (method instanceof CtConstructor) {
-            mName = ((CtConstructor) method).isClassInitializer() ?
+        if (currentMethod instanceof CtConstructor) {
+            mName = ((CtConstructor) currentMethod).isClassInitializer() ?
                 "<clinit>" : "<init>";
         } else
-            mName = method.getName();
-        String mDesc = method.getSignature();
-        String cName = method.getDeclaringClass().getName();
-		String s = Program.toString(bci, mName, mDesc, cName);
+            mName = currentMethod.getName();
+        String mDesc = currentMethod.getSignature();
+        String cName = currentMethod.getDeclaringClass().getName();
+		String s = program.toString(bci, mName, mDesc, cName);
 		System.out.println(s);
 		int n = map.size();
 		int i = map.getOrAdd(s);
@@ -155,37 +177,36 @@ public class Instrumentor {
 		return i;
 	}
 
-	private static int set() {
+	private int set() {
         String mName;
-        if (method instanceof CtConstructor) {
-            mName = ((CtConstructor) method).isClassInitializer() ?
+        if (currentMethod instanceof CtConstructor) {
+            mName = ((CtConstructor) currentMethod).isClassInitializer() ?
                 "<clinit>" : "<init>";
         } else
-            mName = method.getName();
-        String mDesc = method.getSignature();
-        String cName = method.getDeclaringClass().getName();
-		String s = Program.toString(mName, mDesc, cName);
+            mName = currentMethod.getName();
+        String mDesc = currentMethod.getSignature();
+        String cName = currentMethod.getDeclaringClass().getName();
+		String s = program.toString(mName, mDesc, cName);
 		int n = Mmap.size();
 		int i = Mmap.getOrAdd(s);
 		assert (i == n);
 		return i;
 	}
 
-	private static void process(jq_Method m) {
-		System.out.println("XXX " + method);
+	private void process(jq_Method m) {
 		try {
-			int mods = method.getModifiers();
+			int mods = currentMethod.getModifiers();
 			if (Modifier.isNative(mods) || Modifier.isAbstract(mods))
 				return;
 			if (Lmap != null && Modifier.isSynchronized(mods)) {
 				String syncExpr = (Modifier.isStatic(mods)) ? "$class" : "$0";
 				System.out.print("S ");
 				int lIdx = set2(Lmap, -1);
-				method.insertBefore("{ chord.project.Runtime.acqLock(" +
+				currentMethod.insertBefore("{ chord.project.Runtime.acqLock(" +
 					lIdx + "," + syncExpr + "); }");
 			}
 			if (InstrFormat.instrMethodAndLoopCounts) {
-				ControlFlowGraph cfg = Program.getCFG(m);
+				ControlFlowGraph cfg = m.getCFG();
 				finder.visit(cfg);
 				Set<BasicBlock> heads = finder.getLoopHeads();
 				for (BasicBlock head : heads) {
@@ -193,31 +214,31 @@ public class Instrumentor {
 				// get bytecode index of each loop header
 				// and bytecode index of each loop exits
 			}
-			method.instrument(exprEditor);
+			currentMethod.instrument(exprEditor);
 			if (InstrFormat.instrThreadSpawnAndStart) {
-				if (method.getName().equals("start") &&
-					method.getSignature().equals("()V") &&
-					method.getDeclaringClass().getName().equals("java.lang.Thread")) {
+				if (currentMethod.getName().equals("start") &&
+					currentMethod.getSignature().equals("()V") &&
+					currentMethod.getDeclaringClass().getName().equals("java.lang.Thread")) {
 					String s = "chord.project.Runtime.threadStart($0);";
-					method.insertBefore(s);
+					currentMethod.insertBefore(s);
 				}
 			}
 			if (Mmap != null) {
 				int mIdx = set();
-				method.insertBefore("{ chord.project.Runtime.methodEnter(" + mIdx + "); }");
-				method.insertAfter ("{ chord.project.Runtime.methodLeave(" + mIdx + "); }");
+				currentMethod.insertBefore("{ chord.project.Runtime.methodEnter(" + mIdx + "); }");
+				currentMethod.insertAfter ("{ chord.project.Runtime.methodLeave(" + mIdx + "); }");
 				String s = "{ chord.project.Runtime.methodLeave(" + mIdx + "); throw($e); }";
-				method.addCatch(s, exType);
+				currentMethod.addCatch(s, exType);
 			}
 		} catch (Exception ex) {
 			System.err.println("WARNING: Ignoring instrumenting method: " +
-				method.getLongName());
+				currentMethod.getLongName());
 			ex.printStackTrace();
 		}
 	}
 
-	static class MyExprEditor extends ExprEditor {
-		private static int set(IndexMap<String> map, Expr e) {
+	class MyExprEditor extends ExprEditor {
+		private int set(IndexMap<String> map, Expr e) {
 			return set2(map, e.indexOfOriginalBytecode());
 		}
 		public String insertBefore(int pos) {

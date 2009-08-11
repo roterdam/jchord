@@ -49,7 +49,7 @@ public class RelLL extends ProgramRel implements IMethodVisitor {
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-		ControlFlowGraph cfg = Program.getCFG(m);
+		ControlFlowGraph cfg = m.getCFG();
 		BasicBlock entry = cfg.entry();
 		TIntArrayList locks = new TIntArrayList();
 		if (m.isSynchronized()) {

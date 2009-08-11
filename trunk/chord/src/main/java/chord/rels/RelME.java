@@ -31,7 +31,7 @@ public class RelME extends ProgramRel {
 		int numE = domE.size();
 		for (int hIdx = 0; hIdx < numE; hIdx++) {
 			Quad q = domE.get(hIdx);
-			jq_Method m = Program.getMethod(q);
+			jq_Method m = Program.v().getMethod(q);
 			int mIdx = domM.indexOf(m);
 			add(mIdx, hIdx);
 		}

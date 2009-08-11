@@ -5,11 +5,7 @@
  */
 package chord.doms;
 
-import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operand.ParamListOperand;
-import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operator.Invoke;
 import chord.project.Chord;
 import chord.project.Program;
 import chord.visitors.IInvokeInstVisitor;
@@ -28,6 +24,6 @@ public class DomI extends QuadDom implements IInvokeInstVisitor {
 		getOrAdd(q);
 	}
 	public String toString(Quad q) {
-		return Program.toStringInvokeInst(q);
+		return Program.v().toStringInvokeInst(q);
 	}
 }

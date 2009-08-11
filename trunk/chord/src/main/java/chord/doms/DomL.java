@@ -40,24 +40,24 @@ public class DomL extends ProgramDom<Inst> implements ILockInstVisitor {
 			return;
 		ctnrMethod = m;
 		if (m.isSynchronized()) {
-			ControlFlowGraph cfg = Program.getCFG(m);
+			ControlFlowGraph cfg = m.getCFG();
 			BasicBlock head = cfg.entry();
-			Program.mapInstToMethod(head, m);
+			Program.v().mapInstToMethod(head, m);
 			getOrAdd(head);
 		}
 	}
 	public void visitLockInst(Quad q) {
-		Program.mapInstToMethod(q, ctnrMethod);
+		Program.v().mapInstToMethod(q, ctnrMethod);
 		getOrAdd(q);
 	}
 	public String toXMLAttrsString(Inst i) {
-		jq_Method m = Program.getMethod(i);
+		jq_Method m = Program.v().getMethod(i);
 		String fileName = Program.getSourceFileName(m.getDeclaringClass());
 		int lineNumber = Program.getLineNumber(i, m);
 		return "file=\"" + fileName + "\" " + "line=\"" + lineNumber + "\" " +
 			"Mid=\"M" + domM.indexOf(m) + "\"";
 	}
 	public String toString(Inst q) {
-		return Program.toStringLockInst(q);
+		return Program.v().toStringLockInst(q);
 	}
 }

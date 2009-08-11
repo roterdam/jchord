@@ -43,19 +43,19 @@ public class DomP extends ProgramDom<Inst> {
 			jq_Method m = domM.get(mIdx);
 			if (m.isAbstract())
 				continue;
-			ControlFlowGraph cfg = Program.getCFG(m);
+			ControlFlowGraph cfg = m.getCFG();
 			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
 					it.hasNext();) {
 				BasicBlock bb = it.nextBasicBlock();
 				int n = bb.size();
 				if (n == 0) {
-					Program.mapInstToMethod(bb, m);
+					Program.v().mapInstToMethod(bb, m);
 					getOrAdd(bb);
 					continue;
 				}
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();
-					Program.mapInstToMethod(q, m);
+					Program.v().mapInstToMethod(q, m);
 					getOrAdd(q);
 				}
 			}

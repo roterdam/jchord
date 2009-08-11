@@ -139,8 +139,8 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 
 	public void run() {
 		super.run();
-		threadStartMethod = Program.getThreadStartMethod();
-		mainMethod = Program.getMainMethod();
+		threadStartMethod = Program.v().getThreadStartMethod();
+		mainMethod = Program.v().getMainMethod();
 		domV = (DomV) Project.getTrgt("V");
 		Project.runTask(domV);
 		domF = (DomF) Project.getTrgt("F");
@@ -157,7 +157,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			Register v = domV.get(vIdx);
 			jq_Method m = domV.getMethod(v);
 			assert (!methToNumVars.containsKey(m));
-			int n = Program.getNumVarsOfRefType(m);
+			int n = m.getNumVarsOfRefType();
 			methToNumVars.put(m, n);
 			methToVar0Idx.put(m, vIdx);
 			if (DEBUG)
@@ -176,15 +176,15 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 				heapInstToAllocs.entrySet()) {
 			currHeapInst = e.getKey();
 			currAllocs = e.getValue();
-			jq_Method m = Program.getMethod(currHeapInst);
+			jq_Method m = Program.v().getMethod(currHeapInst);
 /*
 			if (!m.getDeclaringClass().getName().startsWith("test"))
 				continue;
 */
-			System.out.println("currHeapInst: " + Program.toStringHeapInst(currHeapInst) +
+			System.out.println("currHeapInst: " + Program.v().toStringHeapInst(currHeapInst) +
 				" m: " + m);
 			for (Quad h : currAllocs)
-				System.out.println("\t" + Program.toStringNewInst(h));
+				System.out.println("\t" + Program.v().toStringNewInst(h));
 			Timer timer = new Timer("hybrid-thresc-timer");
 			timer.init();
 			try {
@@ -202,13 +202,13 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 		}
 		System.out.println("XXXXX esc1HeapInsts");
 		for (Quad e : esc1HeapInsts)
-			System.out.println(Program.toString(e));
+			System.out.println(Program.v().toString(e));
 		System.out.println("XXXXX esc2HeapInsts");
 		for (Quad e : esc2HeapInsts)
-			System.out.println(Program.toString(e));
+			System.out.println(Program.v().toString(e));
 		System.out.println("XXXXX locHeapInsts");
 		for (Quad e : locHeapInsts)
-			System.out.println(Program.toString(e));
+			System.out.println(Program.v().toString(e));
 	}
 	private void processThread(Pair<Ctxt, jq_Method> root) {
 		System.out.println("PROCESSING THREAD: " + root);
@@ -299,15 +299,12 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			// arg of start method of java.lang.Thread escapes
 			env[0] = escPts;
 		}
-		BasicBlock bb = getEntry(meth);
+		BasicBlock bb = meth.getCFG().entry();
 		SrcNode srcNode = new SrcNode(env, emptyHeap);
 		DstNode dstNode = new DstNode(env, emptyHeap, emptyEsc);
 		SD sd = new SD(srcNode, dstNode);
 		PathEdge edge = new PathEdge(null, bb, sd);
 		addPathEdge(root, edge);
-	}
-	private BasicBlock getEntry(jq_Method m) {
-		return Program.getCFG(m).entry();
 	}
 	private IntArraySet getPtsFromHeap(IntArraySet pts, int fIdx,
 			Set<IntTrio> heap) {
@@ -387,7 +384,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 				SrcNode srcNode2 = new SrcNode(env, dstNode.heap);
 				DstNode dstNode2 = new DstNode(env, dstNode.heap, emptyEsc);
 				SD sd2 = new SD(srcNode2, dstNode2);
-				BasicBlock bb2 = getEntry(m2);
+				BasicBlock bb2 = m2.getCFG().entry();
 				PathEdge pe2 = new PathEdge(null, bb2, sd2);
 				addPathEdge(cm2, pe2);
 			}
@@ -424,7 +421,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 			if (DEBUG) System.out.println("Caller: " + ci);
 			Ctxt c2 = ci.val0;
 			Quad q2 = ci.val1;
-			jq_Method m2 = Program.getMethod(q2);
+			jq_Method m2 = Program.v().getMethod(q2);
 			Pair<Ctxt, jq_Method> cm2 = new Pair<Ctxt, jq_Method>(c2, m2);
 			Set<PathEdge> peSet = pathEdges.get(cm2);
 			if (peSet == null)

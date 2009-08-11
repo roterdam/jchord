@@ -22,7 +22,6 @@ import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
 import chord.doms.DomI;
 import chord.doms.DomL;
-import chord.project.Program;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 import chord.visitors.IMethodVisitor;
@@ -52,7 +51,7 @@ public class RelLI extends ProgramRel implements IMethodVisitor {
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-		ControlFlowGraph cfg = Program.getCFG(m);
+		ControlFlowGraph cfg = m.getCFG();
 		BasicBlock entry = cfg.entry();
 		TIntArrayList locks = new TIntArrayList();
 		if (m.isSynchronized()) {

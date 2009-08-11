@@ -14,7 +14,6 @@ import java.util.HashMap;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.project.Program;
 import chord.project.Project;
@@ -29,7 +28,6 @@ import chord.util.ArraySet;
 import chord.util.graph.IPathVisitor;
 import chord.util.graph.ShortestPathBuilder;
 import chord.analyses.alias.ICSCG;
-import chord.analyses.alias.CSAliasAnalysis;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.Obj;
 import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
@@ -139,7 +137,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
 			domN.clear();
 			for (Inst i : domL) {
-				jq_Method m = Program.getMethod(i);
+				jq_Method m = Program.v().getMethod(i);
 				Set<Ctxt> cs = thrSenAbbrCSCG.getContexts(m);
 				for (Ctxt c : cs) {
 					domN.getOrAdd(new Pair<Ctxt, Inst>(c, i));
@@ -284,10 +282,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			jq_Method t2mVal = t2Val.val1;
 			int t1m = domM.indexOf(t1mVal);
 			int t2m = domM.indexOf(t2mVal);
-			jq_Method m1Val = Program.getMethod(l1Val);
-			jq_Method m2Val = Program.getMethod(l2Val);
-			jq_Method m3Val = Program.getMethod(l3Val);
-			jq_Method m4Val = Program.getMethod(l4Val);
+			jq_Method m1Val = Program.v().getMethod(l1Val);
+			jq_Method m2Val = Program.v().getMethod(l2Val);
+			jq_Method m3Val = Program.v().getMethod(l3Val);
+			jq_Method m4Val = Program.v().getMethod(l4Val);
 			int m1 = domM.indexOf(m1Val);
 			int m2 = domM.indexOf(m2Val);
 			int m3 = domM.indexOf(m3Val);
@@ -394,7 +392,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
         Utils.runSaxon("results.xml", "group.xsl");
         Utils.runSaxon("results.xml", "paths.xsl");
 
-        Program.HTMLizeJavaSrcFiles();
+        Program.v().HTMLizeJavaSrcFiles();
 	}
 
 	private class CM extends Pair<Ctxt, jq_Method> {

@@ -96,7 +96,7 @@ public class VisitorHandler {
 						continue;
 					if (m.isAbstract())
 						continue;
-					ControlFlowGraph cfg = Program.getCFG(m);
+					ControlFlowGraph cfg = m.getCFG();
 					if (vvs != null)
 						visitVars(cfg);
 					if (doInsts)
@@ -230,14 +230,14 @@ public class VisitorHandler {
 				livs.add((ILockInstVisitor) task);
 			}
 		}
-		reachableMethods = Program.getReachableMethods();
+		reachableMethods = Program.v().getReachableMethods();
 		doInsts = (ivs != null) || (hivs != null) ||
 			(iivs != null) || (nivs != null) || (mivs != null) ||
 			(pivs != null) || (rivs != null) || (livs != null);
 		doCFGs = (vvs != null) || doInsts;
 		if (cvs != null) {
 			IndexHashSet<jq_Class> preparedClasses =
-				Program.getPreparedClasses();
+				Program.v().getPreparedClasses();
 			for (jq_Class c : preparedClasses) {
 				for (IClassVisitor cv : cvs)
 					cv.visit(c);

@@ -37,7 +37,7 @@ public class RelPP extends ProgramRel implements IMethodVisitor {
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-		ControlFlowGraph cfg = Program.getCFG(m);
+		ControlFlowGraph cfg = m.getCFG();
 		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
 				it.hasNext();) {
 			BasicBlock bq = it.nextBasicBlock();

@@ -30,7 +30,7 @@ public class RelMPtail extends ProgramRel
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-		ControlFlowGraph cfg = Program.getCFG(m);
+		ControlFlowGraph cfg = m.getCFG();
 		BasicBlock bx = cfg.exit();
 		add(m, bx);
 	}

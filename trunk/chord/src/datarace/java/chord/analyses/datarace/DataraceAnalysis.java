@@ -275,7 +275,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 				"Tid=\"A" + domA.indexOf(srcCM)    + "\" " +
 				"Cid=\"C" + cIdx + "\" " +
 				"Eid=\"E" + eIdx + "\">");
-			jq_Method dstM = Program.getMethod(heapInst);
+			jq_Method dstM = Program.v().getMethod(heapInst);
 			int mIdx = domM.indexOf(dstM);
 			RelView view = relLE.getView();
 			view.selectAndDelete(1, eIdx);
@@ -346,6 +346,6 @@ public class DataraceAnalysis extends JavaAnalysis {
 		Utils.runSaxon("results.xml", "paths.xsl");
 		Utils.runSaxon("results.xml", "races.xsl");
 
-		Program.HTMLizeJavaSrcFiles();
+		Program.v().HTMLizeJavaSrcFiles();
 	}
 }

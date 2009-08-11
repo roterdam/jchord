@@ -215,7 +215,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		relCtxtCpyM = (ProgramRel) Project.getTrgt("ctxtCpyM");
 		relEpsilonV = (ProgramRel) Project.getTrgt("epsilonV");
 
-		mainMeth = Program.getMainMethod();
+		mainMeth = Program.v().getMainMethod();
 		
         maxIters = Integer.getInteger("chord.max.iters", 0);
 
@@ -274,7 +274,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			for (int mIdx = 0; mIdx < numM; mIdx++) {
 				if (methKind[mIdx] != CTXTINS) {
 					jq_Method m = domM.get(mIdx);
-					ControlFlowGraph cfg = Program.getCFG(m);
+					ControlFlowGraph cfg = m.getCFG();
 					RegisterFactory rf = cfg.getRegisterFactory();
 					for (Object o : rf) {
 						Register v = (Register) o;
@@ -376,7 +376,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			if (!isCtxtSenI[iIdx])
 				continue;
 			Quad invk = domI.get(iIdx);
-			jq_Method meth = Program.getMethod(invk);
+			jq_Method meth = Program.v().getMethod(invk);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
 			int k = kcfaValue[iIdx];
 			for (Ctxt oldCtxt : ctxts) {
@@ -387,7 +387,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		}
 		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad inst = domH.get(hIdx);
-			jq_Method meth = Program.getMethod(inst);
+			jq_Method meth = Program.v().getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
 			int k = kobjValue[hIdx];
 			for (Ctxt oldCtxt : ctxts) {
@@ -411,7 +411,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			if (!isCtxtSenI[iIdx])
 				continue;
 			Quad invk = domI.get(iIdx);
-			jq_Method meth = Program.getMethod(invk);
+			jq_Method meth = Program.v().getMethod(invk);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
 			int k = kcfaValue[iIdx];
 			for (Ctxt oldCtxt : ctxts) {
@@ -438,7 +438,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			relRefinableCH.zero();
 		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad inst = domH.get(hIdx);
-			jq_Method meth = Program.getMethod(inst);
+			jq_Method meth = Program.v().getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
 			int k = kobjValue[hIdx];
 			for (Ctxt oldCtxt : ctxts) {
@@ -544,7 +544,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				jq_Method meth = domM.get(m);
 				assert (meth != mainMeth);
 				assert (!(meth instanceof jq_ClassInitializer));
-				assert (Program.getCFG(meth) != null);
 				if (kind == KOBJSEN) {
 					assert (!meth.isStatic());
 				} else if (kind == CTXTCPY) {
@@ -588,7 +587,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
                 for (Quad invk : getCallers(meth)) {
                     int iIdx = domI.indexOf(invk);
                     isCtxtSenI[iIdx] = true;
-                    predMeths.add(Program.getMethod(invk));
+                    predMeths.add(Program.v().getMethod(invk));
                     clrSites.add(invk);
                 }
                 methToClrSitesMap.put(meth, clrSites);
@@ -600,11 +599,11 @@ public class CtxtsAnalysis extends JavaAnalysis {
             {
             	Set<jq_Method> predMeths = new HashSet<jq_Method>();
                 List<Quad> rcvSites = new ArrayList<Quad>();
-				ControlFlowGraph cfg = Program.getCFG(meth);
+				ControlFlowGraph cfg = meth.getCFG();
                 Register thisVar = cfg.getRegisterFactory().get(0);
                 Iterable<Quad> pts = getPointsTo(thisVar);
                 for (Quad inst : pts) {
-                    predMeths.add(Program.getMethod(inst));
+                    predMeths.add(Program.v().getMethod(inst));
                     rcvSites.add(inst);
                 }
                 methToRcvSitesMap.put(meth, rcvSites);
@@ -617,7 +616,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
             	System.out.println("REACHED CPY: " + meth);
 				Set<jq_Method> predMeths = new HashSet<jq_Method>();
 				for (Quad invk : getCallers(meth)) {
-					predMeths.add(Program.getMethod(invk));
+					predMeths.add(Program.v().getMethod(invk));
 				}
 				methToClrMethsMap.put(meth, predMeths);
 				methToPredsMap.put(meth, predMeths);
@@ -707,7 +706,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			List<Quad> invks = methToClrSitesMap.get(cle);
             for (Quad invk : invks) {
                 int k = kcfaValue[domI.indexOf(invk)];
-                jq_Method clr = Program.getMethod(invk);
+                jq_Method clr = Program.v().getMethod(invk);
                 Set<Ctxt> clrCtxts = methToCtxtsMap.get(clr);
                 for (Ctxt oldCtxt : clrCtxts) {
 					Quad[] oldElems = oldCtxt.getElems();
@@ -723,7 +722,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			List<Quad> rcvs = methToRcvSitesMap.get(cle);
             for (Quad rcv : rcvs) {
                 int k = kobjValue[domH.indexOf(rcv)];
-                jq_Method clr = Program.getMethod(rcv);
+                jq_Method clr = Program.v().getMethod(rcv);
                 Set<Ctxt> rcvCtxts = methToCtxtsMap.get(clr);
                 for (Ctxt oldCtxt : rcvCtxts) {
 					Quad[] oldElems = oldCtxt.getElems();
