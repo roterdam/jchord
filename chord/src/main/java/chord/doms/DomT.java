@@ -6,12 +6,7 @@
 package chord.doms;
 
 import joeq.Class.jq_Class;
-import joeq.Class.jq_Field;
-import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
-import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.RegisterFactory;
-import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.project.Chord;
 import chord.project.Program;
 import chord.project.ProgramDom;
@@ -26,7 +21,7 @@ import chord.project.ProgramDom;
 )
 public class DomT extends ProgramDom<jq_Type> {
 	public void fill() {
-		for (jq_Type t : Program.getReachableTypes()) {
+		for (jq_Type t : Program.v().getReachableTypes()) {
 			getOrAdd(t);
 		}
 	}

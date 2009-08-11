@@ -44,6 +44,6 @@ public class DomH extends QuadDom implements INewInstVisitor {
 		// XXX
 		if (q == null)
 			return "null";
-		return Program.toStringNewInst(q);
+		return Program.v().toStringNewInst(q);
 	}
 }

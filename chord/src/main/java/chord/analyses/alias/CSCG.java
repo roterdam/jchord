@@ -5,7 +5,6 @@
  */
 package chord.analyses.alias;
 
-import java.util.Collections;
 import java.util.Set;
 
 import joeq.Class.jq_Method;
@@ -19,9 +18,7 @@ import joeq.Util.Templates.ListIterator;
 import chord.util.ArraySet;
 import chord.bddbddb.Rel.RelView;
 import chord.doms.DomM;
-import chord.project.Program;
 import chord.project.ProgramRel;
-import chord.project.Project;
 import chord.util.SetUtils;
 import chord.util.graph.AbstractGraph;
 import chord.util.tuple.object.Pair;
@@ -142,11 +139,14 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
     		CMs.add(cm);
     	return CMs;
     }
+    /* (non-Javadoc)
+     * @see chord.util.graph.ILabeledGraph#getLabels(java.lang.Object, java.lang.Object)
+     */
     public Set<Quad> getLabels(Pair<Ctxt, jq_Method> origNode,
     		Pair<Ctxt, jq_Method> destNode) {
     	jq_Method meth1 = origNode.val1;
     	Set<Quad> invks = new ArraySet<Quad>();
-    	ControlFlowGraph cfg = Program.getCFG(meth1);
+    	ControlFlowGraph cfg = meth1.getCFG();
     	Ctxt ctxt1 = origNode.val0;
     	jq_Method meth2 = destNode.val1;
     	Ctxt ctxt2 = destNode.val0;

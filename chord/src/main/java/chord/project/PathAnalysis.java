@@ -289,7 +289,7 @@ public class PathAnalysis implements ITask {
 			cls = null;
 		else
 */
-			cls = Program.getPreparedClass(cName);
+			cls = Program.v().getPreparedClass(cName);
 		if (cls == null) {
 			System.out.println("MISSING class: " + cName);
 			eatUntil(mId);
@@ -580,7 +580,7 @@ public class PathAnalysis implements ITask {
 
 	private List<IntPair> processMethArgs(jq_Method m) {
 		List<IntPair> args = null;
-		ControlFlowGraph cfg = Program.getCFG(m);
+		ControlFlowGraph cfg = m.getCFG();
 		assert (cfg != null);
 		RegisterFactory rf = cfg.getRegisterFactory();
 		int numArgs = m.getParamTypes().length;
@@ -598,9 +598,9 @@ public class PathAnalysis implements ITask {
 
 	private TIntObjectHashMap processMethCode(jq_Method m) {
 		if (DEBUG) System.out.println("PROCESSING: " + m);
-		ControlFlowGraph cfg = Program.getCFG(m);
+		ControlFlowGraph cfg = m.getCFG();
 		if (DEBUG) System.out.println(cfg.fullDump());
-		Map<Quad, Integer> bcMap = Program.getBCMap(m);
+		Map<Quad, Integer> bcMap = m.getBCMap();
 		if (bcMap == null)
 			return null;
 		TIntObjectHashMap code = new TIntObjectHashMap();

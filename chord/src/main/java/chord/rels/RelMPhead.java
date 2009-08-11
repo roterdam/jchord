@@ -30,7 +30,7 @@ public class RelMPhead extends ProgramRel
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-		ControlFlowGraph cfg = Program.getCFG(m);
+		ControlFlowGraph cfg = m.getCFG();
 		BasicBlock be = cfg.entry();
 		add(m, be);
 	}

@@ -42,9 +42,9 @@ public class DomM extends ProgramDom<jq_Method>
 		// Reserve index 0 for the main method of the program.
 		// Reserver index 1 for the start() method of java.lang.Thread
 		// if it exists.
-		jq_Method mainMethod = Program.getMainMethod();
+		jq_Method mainMethod = Program.v().getMainMethod();
 		getOrAdd(mainMethod);
-		jq_Method startMethod = Program.getThreadStartMethod();
+		jq_Method startMethod = Program.v().getThreadStartMethod();
 		if (startMethod != null)
 			getOrAdd(startMethod);
 	}

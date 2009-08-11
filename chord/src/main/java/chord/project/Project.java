@@ -91,12 +91,15 @@ public class Project {
 
             Properties.print();
             Project.init();
-            Program.init();
+            Program.v().init();
 
 			boolean doInstr = Properties.doInstr;
-			if (doInstr)
-				Instrumentor.main(new String[0]);
-
+			
+			if (doInstr) {
+				Instrumentor instrumentor = new Instrumentor();
+				instrumentor.visit(Program.v());
+			}
+			
             String analyses = Properties.analyses;
             if (analyses != null) {
                 String[] analysisNames = analyses.split(" |,|:|;");

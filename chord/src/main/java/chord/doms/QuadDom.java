@@ -26,13 +26,13 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 	public int getOrAdd(Quad q) {
 		// XXX
 		if (q != null)
-			Program.mapInstToMethod(q, ctnrMethod);
+			Program.v().mapInstToMethod(q, ctnrMethod);
 		return super.getOrAdd(q);
 	}
 	public String toUniqueIdString(Quad q) {
 		if (q == null)
 			return "null";
-		jq_Method m = Program.getMethod(q);
+		jq_Method m = Program.v().getMethod(q);
 		int bci = Program.getBCI(q, m);
 		String mName = m.getName().toString();
 		String mDesc = m.getDesc().toString();
@@ -40,7 +40,7 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 		return Program.toString(bci, mName, mDesc, cName);
 	}
 	public String toXMLAttrsString(Quad q) {
-		jq_Method m = Program.getMethod(q);
+		jq_Method m = Program.v().getMethod(q);
 		String file = Program.getSourceFileName(m.getDeclaringClass());
 		int line = Program.getLineNumber(q, m);
 		int mIdx = domM.indexOf(m);
@@ -48,6 +48,6 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 			"Mid=\"M" + mIdx + "\"";
 	}
 	public String toString(Quad q) {
-		return Program.toString(q);
+		return Program.v().toString(q);
 	}
 }

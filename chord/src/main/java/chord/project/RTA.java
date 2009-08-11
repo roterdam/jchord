@@ -16,17 +16,14 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_NameAndDesc;
-import joeq.Class.jq_Member;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
-import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
@@ -109,7 +106,7 @@ public class RTA {
 	}
 	private void handleTodoMethod(final jq_Method m) {
 		if (DEBUG) System.out.println("ENTER handleTodoMethod: " + m);
-		ControlFlowGraph cfg = Program.getCFG(m);
+		ControlFlowGraph cfg = m.getCFG();
 		Set<Quad> orphanInvks = null;
 		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
        			it.hasNext();) {

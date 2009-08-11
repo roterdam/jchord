@@ -35,7 +35,7 @@ public class RelThisMV extends ProgramRel {
 			jq_Method m = domM.get(mIdx);
 			if (m.isAbstract() || m.isStatic())
 				continue;
-			ControlFlowGraph cfg = Program.getCFG(m);
+			ControlFlowGraph cfg = m.getCFG();
 			RegisterFactory rf = cfg.getRegisterFactory();
 			Register v = rf.get(0);
 			int vIdx = domV.indexOf(v);

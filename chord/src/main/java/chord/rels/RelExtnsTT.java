@@ -25,7 +25,7 @@ import chord.project.ProgramRel;
 public class RelExtnsTT extends ProgramRel {
 	public void fill() {
 		DomT domT = (DomT) doms[0];
-		for (jq_Class c : Program.getPreparedClasses()) {
+		for (jq_Class c : Program.v().getPreparedClasses()) {
 			// c is concrete/abstract class or interface
 			int t1Idx = domT.indexOf(c);
 			if (c.isInterface()) {

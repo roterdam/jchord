@@ -96,7 +96,7 @@ public class Ctxt {
 			Quad q = elems[i];
 			Operator op = q.getOperator();
 			s += (op instanceof Invoke) ?
-				Program.toStringInvokeInst(q) : Program.toStringNewInst(q);
+				Program.v().toStringInvokeInst(q) : Program.v().toStringNewInst(q);
 			if (i < n - 1)
 				s += ",";
 		}

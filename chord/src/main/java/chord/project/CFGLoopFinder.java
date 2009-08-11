@@ -18,7 +18,7 @@ public class CFGLoopFinder implements ICFGVisitor {
     private Set<Pair<BasicBlock, BasicBlock>> backEdges;
     	private Map<BasicBlock, Set<BasicBlock>> headToBody;
 	private Map<BasicBlock, Set<BasicBlock>> headToExits;
-	public Object visit(ControlFlowGraph cfg) {
+	public void visit(ControlFlowGraph cfg) {
 		// build back edges
 		visitedBef = new ArraySet<BasicBlock>();
 		visitedAft = new ArraySet<BasicBlock>();
@@ -41,8 +41,10 @@ public class CFGLoopFinder implements ICFGVisitor {
 			while (!working.isEmpty()) {
 				BasicBlock curr = working.pop();
 				if (body.add(curr)) {
-					for (BasicBlock pred : curr.getPredecessors())
+					for (Object o : curr.getPredecessors()) {
+						BasicBlock pred = (BasicBlock) o;
 						working.push(pred);
+					}
 				}
 			}
 		}
@@ -52,7 +54,8 @@ public class CFGLoopFinder implements ICFGVisitor {
 			Set<BasicBlock> body = headToBody.get(head);
 			for (BasicBlock curr : body) {
 				boolean isCurrExit = false;
-				for (BasicBlock succ : curr.getSuccessors()) {
+				for (Object o : curr.getSuccessors()) {
+					BasicBlock succ = (BasicBlock) o;
 					if (!body.contains(succ)) {
 						isCurrExit = true;
 						break;
@@ -81,7 +84,6 @@ public class CFGLoopFinder implements ICFGVisitor {
 					System.out.println("\t" + b);
 			}
 		}
-		return null;
 	}
 	public Set<BasicBlock> getLoopHeads() {
 		return headToBody.keySet();
@@ -94,7 +96,8 @@ public class CFGLoopFinder implements ICFGVisitor {
 	}
     private void visit(BasicBlock curr) {
         visitedBef.add(curr);
-        for (BasicBlock succ : curr.getSuccessors()) {
+        for (Object o : curr.getSuccessors()) {
+        	BasicBlock succ = (BasicBlock) o;
             if (visitedBef.contains(succ)) {
                 if (!visitedAft.contains(succ)) {
 					Pair<BasicBlock, BasicBlock> edge =
