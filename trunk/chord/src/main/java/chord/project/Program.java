@@ -89,7 +89,11 @@ public class Program {
 					while ((s = r.readLine()) != null) {
 						System.out.println("Loading: " + s);
 						jq_Class c = (jq_Class) Helper.load(s);
-						assert (c != null);
+						if (c == null) {
+							System.out.println("WARNING: failed to load class: " + c);
+							continue;
+						}
+						// assert (c != null);
 						c.prepare();
 						preparedClasses.add(c);
 					}
