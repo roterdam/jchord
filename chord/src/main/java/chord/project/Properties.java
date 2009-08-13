@@ -36,14 +36,12 @@ public class Properties {
 		System.getProperty("chord.bddbddb.noisy");
 	public final static String bddLibDirName =
 		System.getProperty("chord.bdd.lib.dir");
-	public final static String traceAgentFileName =
-		System.getProperty("chord.trace.agent.file");
 	public final static String instrAgentFileName =
 		System.getProperty("chord.instr.agent.file");
+	public static final int instrBound =
+		Integer.getInteger("chord.instr.bound", -1);
 	public final static boolean doInstr = System.getProperty(
-		"chord.instr", "false").equals("true");
-	public final static String traceFileName =
-		System.getProperty("chord.trace.file", "trace.txt");
+			"chord.instr", "false").equals("true");
 
 	public static void print() {
 		System.out.println("chord.home.dir: " + homeDirName);
@@ -64,8 +62,8 @@ public class Properties {
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
 		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
-		System.out.println("chord.trace.agent.file: " + traceAgentFileName);
 		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
+		System.out.println("chord.instr.bound: " + instrBound);
 		System.out.println("chord.instr: " + doInstr);
 	}
 }

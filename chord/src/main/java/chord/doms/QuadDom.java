@@ -33,7 +33,7 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 		if (q == null)
 			return "null";
 		jq_Method m = Program.v().getMethod(q);
-		int bci = Program.getBCI(q, m);
+		int bci = m.getBCI(q);
 		String mName = m.getName().toString();
 		String mDesc = m.getDesc().toString();
 		String cName = m.getDeclaringClass().getName();

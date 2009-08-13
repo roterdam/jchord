@@ -14,7 +14,6 @@ ifeq (${OS},Windows_NT)
   DLL_OUTPUT_OPTION = -o$(space)
   INCLUDES = -I"$(JDK_ROOT)/include" \
              -I"$(JDK_ROOT)/include/win32"
-  TRACE_DLL_NAME = $(LIB_DIR)/chord_trace_agent.dll
   INSTR_DLL_NAME = $(LIB_DIR)/chord_instr_agent.dll
 else
   ifeq (${shell uname -s},Darwin)
@@ -24,7 +23,6 @@ else
     LINKFLAGS = $(M32_FLAG) -dynamiclib -framework JavaVM  -single_module -undefined suppress -flat_namespace
     DLL_OUTPUT_OPTION = -o$(space)
     INCLUDES = -I$(JDK_ROOT)/Headers/
-    TRACE_DLL_NAME = $(LIB_DIR)/libchord_trace_agent.jnilib
     INSTR_DLL_NAME = $(LIB_DIR)/libchord_instr_agent.jnilib
   else
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
@@ -34,27 +32,20 @@ else
     DLL_OUTPUT_OPTION = -o$(space)
     INCLUDES = -I. -I$(JDK_ROOT)/include \
                -I$(JDK_ROOT)/include/linux
-    TRACE_DLL_NAME = $(LIB_DIR)/libchord_trace_agent.so
     INSTR_DLL_NAME = $(LIB_DIR)/libchord_instr_agent.so
   endif
 endif
 
-default: $(TRACE_DLL_NAME) $(INSTR_DLL_NAME)
-
-$(TRACE_DLL_NAME): chord_trace_agent.o
-	$(LINK) $(LINKFLAGS) $< $(DLL_OUTPUT_OPTION)$@
+default: $(INSTR_DLL_NAME)
 
 $(INSTR_DLL_NAME): chord_instr_agent.o
 	$(LINK) $(LINKFLAGS) $< $(DLL_OUTPUT_OPTION)$@
-
-chord_trace_agent.o: chord_trace_agent.cpp
-	$(CXX) chord_trace_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
 
 chord_instr_agent.o: chord_instr_agent.cpp
 	$(CXX) chord_instr_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
 
 clean:
-	$(RM) -f chord_trace_agent.o chord_instr_agent.o $(TRACE_DLL_NAME) $(INSTR_DLL_NAME)
+	$(RM) -f chord_instr_agent.o $(INSTR_DLL_NAME)
 
 empty := 
 space := $(empty) $(empty)

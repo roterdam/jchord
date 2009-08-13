@@ -14,9 +14,29 @@ import java.io.IOException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Runtime {
+	private static int maxCount;
+	private static boolean[][] traceStk;
+	private static boolean[] traceStkTop;
 	private static IntBuffer buffer;
 	private static boolean trace = false;
-
+	public static int[] threadObjs;
+	public static int numThreads;
+	public static int[][] numCallsToMeth;
+	public static int[][] numItersOfLoop;
+	public static final int NUM_INIT_THREADS = 10;
+	public synchronized static void createThread(int tObj) {
+		if (trace) {
+			trace = false;
+			if (numThreads == threadObjs.length) {
+				int[] newThreadObjs = new int[2 * numThreads];
+				System.arraycopy(threadObjs, 0, newThreadObjs, 0, numThreads);
+				threadObjs = newThreadObjs;
+				threadObjs[numThreads] = tObj;
+				numThreads++;
+			}
+			trace = true;
+		}
+	}
 	public synchronized static void methodEnter(int mIdx) {
 		if (trace) {
 			trace = false;
@@ -190,9 +210,54 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void open(String fileName) {
+	private static int getTid() {
+		Thread t = Thread.currentThread();
+		int tObj = System.identityHashCode(t);
+		for (int i = 0; i < numThreads; i++) {
+			int tObj2 = threadObjs[i];
+			if (tObj2 == tObj)
+				return i;
+		}
+		throw new RuntimeException();
+	}
+	public synchronized static void methodEnterCheck(int mIdx) {
+		if (trace) {
+			trace = false;
+			int tId = getTid();
+
+			trace = true;
+		}
+	}
+	public synchronized static void methodLeaveCheck(int mIdx) {
+		if (trace) {
+			trace = false;
+			int tId = getTid();
+			
+			trace = true;
+		}
+	}
+	public synchronized static void LoopEnterCheck(int wIdx) {
+		if (trace) {
+			trace = false;
+			int tId = getTid();
+			trace = true;
+		}
+	}
+	public synchronized static void LoopLeaveCheck(int wIdx) {
+		if (trace) {
+			trace = false;
+			int tId = getTid();
+			trace = true;
+		}
+	}
+	public synchronized static void open(String fileName,
+			int numMeths, int numLoops, int c) {
 		try {
 			buffer = new IntBuffer(1024, fileName, false);
+			threadObjs = new int[NUM_INIT_THREADS];
+			numCallsToMeth = new int[numMeths][];
+			numItersOfLoop = new int[numLoops][];
+			maxCount = c;
 		} catch (IOException ex) { throw new RuntimeException(ex); }
 		trace = true;
 	}
