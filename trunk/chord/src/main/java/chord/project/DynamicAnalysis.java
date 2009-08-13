@@ -127,20 +127,26 @@ public class DynamicAnalysis extends JavaAnalysis {
 			ProcessExecutor.execute("mkfifo " + finalTraceFileName);
 		}
 
+		int numMeths = getNum("numMeths.txt");
+		int numLoops = getNum("numLoops.txt");
 		final String[] runIds = runIdsStr.split(",");
 		final String cmd = "java -Xbootclasspath/p:" +
 			classesDirName + File.pathSeparator + Properties.bootClassPathName +
         	" -Xverify:none" + " -verbose" + 
-			" -cp " + classesDirName + File.pathSeparator + classPathName +
+
+        	" -cp " + classesDirName + File.pathSeparator + classPathName +
         	" -agentpath:" + Properties.instrAgentFileName +
 			"=trace_file_name=" + crudeTraceFileName +
+			"=num_meths" + numMeths +
+			"=num_loops" + numLoops +
+			"=instr_bound" + Properties.instrBound +
 			" " + mainClassName + " ";
 		final String cmd2 = "java -cp " + Properties.bootClassPathName +
 			" -Dchord.crude.trace.file=" + crudeTraceFileName +
 			" -Dchord.final.trace.file=" + finalTraceFileName +
 			" chord.project.TraceTransformer";
 		for (String runId : runIds) {
-			System.out.println("XXXXX: " + runId);
+			System.out.println("Processing Run ID: " + runId);
 			final String args = System.getProperty("chord.args." + runId, "");
 			if (doTracePipe) {
 				Thread t1 = new Thread() {
@@ -171,6 +177,21 @@ public class DynamicAnalysis extends JavaAnalysis {
 		done();
 	}
 
+	private static int getNum(String fileName) {
+		File file = new File(Properties.classesDirName, fileName);
+		if (!file.exists())
+			return 0;
+		try {
+			BufferedReader reader = new BufferedReader(new FileReader(file));
+			String s = reader.readLine();
+			assert (s != null);
+			reader.close();
+			return Integer.parseInt(s);
+		} catch (IOException ex) { 
+			throw new RuntimeException(ex);
+		}
+	}
+	
 	private String getOrMake(String propName, String fileName) {
 		String s = System.getProperty(propName);
 		if (s == null) {

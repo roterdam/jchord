@@ -41,7 +41,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.project.Chord;
-import chord.project.PathAnalysis;
+import chord.project.DynamicAnalysis;
 import chord.project.Program;
 import chord.project.ProgramRel;
 import chord.project.Project;
@@ -55,7 +55,7 @@ import chord.util.tuple.object.Pair;
 @Chord(
 	    name = "hybrid-thresc-java"
 	)
-public class HybridThreadEscapeAnalysis extends PathAnalysis {
+public class HybridThreadEscapeAnalysis extends DynamicAnalysis {
     private final static boolean DEBUG = false;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();

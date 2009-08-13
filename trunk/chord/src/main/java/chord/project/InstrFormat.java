@@ -54,7 +54,7 @@ public abstract class InstrFormat {
 		return instrInstFldInst;
 	}
 	public static boolean needsMmap() {
-		return instrMethodEnterAndLeave;
+		return instrMethodEnterAndLeave || instrMethodAndLoopCounts;
 	}
 	public static boolean needsLmap() {
 		return instrAcqLockInst;

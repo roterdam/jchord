@@ -51,23 +51,16 @@ public class CFGLoopFinder implements ICFGVisitor {
 		// build headToExits
 		headToExits = new HashMap<BasicBlock, Set<BasicBlock>>();
 		for (BasicBlock head : headToBody.keySet()) {
+			Set<BasicBlock> exits = new ArraySet<BasicBlock>();
+			headToExits.put(head, exits);
 			Set<BasicBlock> body = headToBody.get(head);
 			for (BasicBlock curr : body) {
-				boolean isCurrExit = false;
 				for (Object o : curr.getSuccessors()) {
 					BasicBlock succ = (BasicBlock) o;
 					if (!body.contains(succ)) {
-						isCurrExit = true;
+						exits.add(curr);
 						break;
 					}
-				}
-				if (isCurrExit) {
-					Set<BasicBlock> exits = headToExits.get(head);
-					if (exits == null) {
-						exits = new ArraySet<BasicBlock>();
-						headToExits.put(head, exits);
-					}
-					exits.add(curr);
 				}
 			}
 		}
