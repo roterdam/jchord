@@ -86,6 +86,7 @@
   run-deadlock Run Chord's deadlock checker
   run-downcast Run Chord's downcast safety checker
   run-monosite Run Chord's monomorphic call site inferer
+  run-wn	   Run wait-notify pattern checker
   j2h_xref     Convert .java files to .html with cross-references
                Required properties:
                - java.dir
@@ -160,6 +161,14 @@
         srcdir="src/monosite/java" destdir="classes/monosite">
       <classpath>
         <pathelement location="classes/monosite"/>
+        <pathelement path="${chord.main.class.path}"/>
+      </classpath>
+    </javac>
+	<mkdir dir="classes/wnPatternChecker"/>
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+        srcdir="src/wnPatternChecker/java" destdir="classes/wnPatternChecker">
+      <classpath>
+        <pathelement location="classes/wnPatternChecker"/>
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
