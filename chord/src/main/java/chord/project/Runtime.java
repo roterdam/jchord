@@ -14,16 +14,20 @@ import java.io.IOException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Runtime {
-	private static int maxCount;
+/*
+	private static int instrBound;
 	private static boolean[][] traceStk;
 	private static boolean[] traceStkTop;
-	private static IntBuffer buffer;
-	private static boolean trace = false;
 	public static int[] threadObjs;
 	public static int numThreads;
 	public static int[][] numCallsToMeth;
 	public static int[][] numItersOfLoop;
 	public static final int NUM_INIT_THREADS = 10;
+*/
+
+	private static IntBuffer buffer;
+	private static boolean trace = false;
+/*
 	public synchronized static void createThread(int tObj) {
 		if (trace) {
 			trace = false;
@@ -37,6 +41,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
+*/
 	public synchronized static void methodEnter(int mIdx) {
 		if (trace) {
 			trace = false;
@@ -50,7 +55,6 @@ public class Runtime {
 			trace = true;
 		}
 	}
-
 	public synchronized static void methodLeave(int mIdx) {
 		if (trace) {
 			trace = false;
@@ -64,7 +68,6 @@ public class Runtime {
 			trace = true;
 		}
 	}
-
 	public synchronized static void befNew(int hIdx) {
 		if (trace) {
 			trace = false;
@@ -210,6 +213,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
+/*
 	private static int getTid() {
 		Thread t = Thread.currentThread();
 		int tObj = System.identityHashCode(t);
@@ -220,44 +224,39 @@ public class Runtime {
 		}
 		throw new RuntimeException();
 	}
+*/
 	public synchronized static void methodEnterCheck(int mIdx) {
 		if (trace) {
 			trace = false;
-			int tId = getTid();
-
 			trace = true;
 		}
 	}
 	public synchronized static void methodLeaveCheck(int mIdx) {
 		if (trace) {
 			trace = false;
-			int tId = getTid();
-			
 			trace = true;
 		}
 	}
-	public synchronized static void LoopEnterCheck(int wIdx) {
+	public synchronized static void loopEnterCheck(int wIdx) {
 		if (trace) {
 			trace = false;
-			int tId = getTid();
 			trace = true;
 		}
 	}
-	public synchronized static void LoopLeaveCheck(int wIdx) {
+	public synchronized static void loopLeaveCheck(int wIdx) {
 		if (trace) {
 			trace = false;
-			int tId = getTid();
 			trace = true;
 		}
 	}
 	public synchronized static void open(String fileName,
-			int numMeths, int numLoops, int c) {
+			int numMeths, int numLoops, int ib) {
 		try {
 			buffer = new IntBuffer(1024, fileName, false);
-			threadObjs = new int[NUM_INIT_THREADS];
-			numCallsToMeth = new int[numMeths][];
-			numItersOfLoop = new int[numLoops][];
-			maxCount = c;
+			// threadObjs = new int[NUM_INIT_THREADS];
+			// numCallsToMeth = new int[numMeths][];
+			// numItersOfLoop = new int[numLoops][];
+			// instrBound = ib;
 		} catch (IOException ex) { throw new RuntimeException(ex); }
 		trace = true;
 	}

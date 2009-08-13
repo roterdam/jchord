@@ -12,7 +12,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 
 public class CFGLoopFinder implements ICFGVisitor {
-	public static final boolean debug = false;
+	public static final boolean debug = true;
 	private Set<BasicBlock> visitedBef;
     private Set<BasicBlock> visitedAft;
     private Set<Pair<BasicBlock, BasicBlock>> backEdges;
@@ -58,7 +58,7 @@ public class CFGLoopFinder implements ICFGVisitor {
 				for (Object o : curr.getSuccessors()) {
 					BasicBlock succ = (BasicBlock) o;
 					if (!body.contains(succ)) {
-						exits.add(curr);
+						exits.add(succ);
 						break;
 					}
 				}

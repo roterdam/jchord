@@ -1,8 +1,7 @@
 package chord.project;
 
 public abstract class InstrFormat {
-	public static int numIters = 3;
-	public static boolean instrMethodAndLoopCounts;
+	public static int instrMethodAndLoopBound = 2;
 	/**
 	 * Controls generation of following events:
 	 * METHOD_ENTER <thread object> <mIdx>
@@ -54,7 +53,7 @@ public abstract class InstrFormat {
 		return instrInstFldInst;
 	}
 	public static boolean needsMmap() {
-		return instrMethodEnterAndLeave || instrMethodAndLoopCounts;
+		return instrMethodEnterAndLeave || instrMethodAndLoopBound > 0;
 	}
 	public static boolean needsLmap() {
 		return instrAcqLockInst;
