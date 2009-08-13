@@ -59,16 +59,17 @@ public class Instrumentor {
 			try {
 				pool.appendClassPath(pathElem);
 			} catch (NotFoundException ex) {
-				throw new RuntimeException(ex);
+				throw new ChordRuntimeException(ex);
 			}
 		}
 		pool.appendSystemPath();
 
-		if (InstrFormat.instrMethodEnterAndLeave) {
+		if (InstrFormat.instrMethodEnterAndLeave ||
+				InstrFormat.instrMethodAndLoopBound > 0) {
 			try {
 				exType = pool.get("java.lang.Throwable");
 			} catch (NotFoundException ex) {
-				throw new RuntimeException(ex);
+				throw new ChordRuntimeException(ex);
 			}
 			assert (exType != null);
 		}
@@ -80,10 +81,9 @@ public class Instrumentor {
 			Lmap = new IndexHashMap<String>();
 		if (InstrFormat.needsFmap())
 			Fmap = new IndexHashMap<String>();
-		if (InstrFormat.instrMethodAndLoopCounts ||
-			InstrFormat.instrMethodEnterAndLeave)
+		if (InstrFormat.needsMmap())
 			Mmap = new IndexHashMap<String>();
-		if (InstrFormat.instrMethodAndLoopCounts)
+		if (InstrFormat.instrMethodAndLoopBound > 0)
 			Wmap = new IndexHashMap<BasicBlock>();
 		
 		String classesDirName = Properties.classesDirName;
@@ -97,7 +97,7 @@ public class Instrumentor {
 			try {
 				clazz = pool.get(cName);
 			} catch (NotFoundException ex) {
-				throw new RuntimeException(ex);
+				throw new ChordRuntimeException(ex);
 			}
 			List<jq_Method> methods = program.getReachableMethods(c);
 			CtBehavior[] inits = clazz.getDeclaredConstructors();
@@ -107,8 +107,6 @@ public class Instrumentor {
 				String mName = m.getName().toString();
 				if (mName.equals("<clinit>")) {
 					method = clazz.getClassInitializer();
-					assert (method != null);
-					process(method, m);
 				} else if (mName.equals("<init>")) {
 					String mDesc = m.getDesc().toString();
 					for (CtBehavior x : inits) {
@@ -117,8 +115,6 @@ public class Instrumentor {
 							break;
 						}
 					}
-					assert (method != null);
-					process(method, m);
 				} else {
 					String mDesc = m.getDesc().toString();
 					for (CtBehavior x : meths) {
@@ -128,17 +124,23 @@ public class Instrumentor {
 							break;
 						}
 					}
-					assert (method != null);
+				}
+				assert (method != null);
+				try {
 					process(method, m);
+				} catch (ChordRuntimeException ex) {
+					System.err.println("WARNING: Ignoring instrumenting method: " +
+						method.getLongName());
+					ex.printStackTrace();
 				}
 			}
 			System.out.println("Writing class: " + cName);
 			try {
 				clazz.writeFile(classesDirName);
 			} catch (CannotCompileException ex) {
-				throw new RuntimeException(ex);
+				throw new ChordRuntimeException(ex);
 			} catch (IOException ex) {
-				throw new RuntimeException(ex);
+				throw new ChordRuntimeException(ex);
 			}
 		}
 
@@ -186,78 +188,88 @@ public class Instrumentor {
 		loopInstrMap.put(exitBCI, (s == null) ? sExit : s + sExit);
  	}
 	private void process(CtBehavior currentMethod, jq_Method m) {
-		try {
-			int mods = currentMethod.getModifiers();
-			if (Modifier.isNative(mods) || Modifier.isAbstract(mods))
-				return;
-			int mIdx = -1;
-			String mName;
-	        if (currentMethod instanceof CtConstructor) {
-	            mName = ((CtConstructor) currentMethod).isClassInitializer() ?
-	                "<clinit>" : "<init>";
-	        } else
-	            mName = currentMethod.getName();
-	        String mDesc = currentMethod.getSignature();
-	        String cName = currentMethod.getDeclaringClass().getName();
-			mStr = Program.toString(mName, mDesc, cName);
-			if (Mmap != null) {
-				int n = Mmap.size();
-				mIdx = Mmap.getOrAdd(mStr);
-				assert (mIdx == n);
-			}
-			Map<Quad, Integer> bcMap = m.getBCMap();
-			if (bcMap != null) {
-				if (InstrFormat.instrMethodAndLoopCounts) {
-					ControlFlowGraph cfg = m.getCFG();
-					finder.visit(cfg);
-					loopInstrMap.clear();
-					Set<BasicBlock> heads = finder.getLoopHeads();
-					for (BasicBlock head : heads) {
-						int headBCI = getBCI(head, m);
-						int wId = Wmap.getOrAdd(head);
-						processLoopEnterCheck(wId, headBCI);
-						Set<BasicBlock> exits = finder.getLoopExits(head);
-						for (BasicBlock exit : exits) {
-							int exitBCI = getBCI(exit, m);
-							processLoopLeaveCheck(wId, exitBCI);
-						}
+		int mods = currentMethod.getModifiers();
+		if (Modifier.isNative(mods) || Modifier.isAbstract(mods))
+			return;
+		int mIdx = -1;
+		String mName;
+		if (currentMethod instanceof CtConstructor) {
+			mName = ((CtConstructor) currentMethod).isClassInitializer() ?
+				"<clinit>" : "<init>";
+		} else
+			mName = currentMethod.getName();
+		String mDesc = currentMethod.getSignature();
+		String cName = currentMethod.getDeclaringClass().getName();
+		mStr = Program.toString(mName, mDesc, cName);
+		if (Mmap != null) {
+			int n = Mmap.size();
+			mIdx = Mmap.getOrAdd(mStr);
+			assert (mIdx == n);
+		}
+		Map<Quad, Integer> bcMap = m.getBCMap();
+		if (bcMap != null) {
+			if (InstrFormat.instrMethodAndLoopBound > 0) {
+				ControlFlowGraph cfg = m.getCFG();
+				finder.visit(cfg);
+				loopInstrMap.clear();
+				Set<BasicBlock> heads = finder.getLoopHeads();
+				for (BasicBlock head : heads) {
+					int headBCI = getBCI(head, m);
+					int wId = Wmap.getOrAdd(head);
+					processLoopEnterCheck(wId, headBCI);
+					Set<BasicBlock> exits = finder.getLoopExits(head);
+					for (BasicBlock exit : exits) {
+						int exitBCI = getBCI(exit, m);
+						processLoopLeaveCheck(wId, exitBCI);
 					}
 				}
+			}
+			try {
 				currentMethod.instrument(exprEditor);
-			} else {
-				System.out.println("WARNING: Skipping instrumenting body of method: " + m);
+			} catch (CannotCompileException ex) {
+				throw new RuntimeException(ex);
 			}
-			String enterStr = "";
-			String leaveStr = "";
-			if (InstrFormat.instrMethodAndLoopCounts) {
-				enterStr = enterStr + "chord.project.Runtime.methodEnterCheck(" + mIdx + "); ";
-				leaveStr = "chord.project.Runtime.methodLeaveCheck(" + mIdx + "); " + leaveStr;
-			}
-			if (InstrFormat.instrAcqLockInst && Modifier.isSynchronized(mods)) {
-				String syncExpr = (Modifier.isStatic(mods)) ? "$class" : "$0";
-				int lIdx = set(Lmap, -1);
-				enterStr += " chord.project.Runtime.acqLock(" +
-					lIdx + "," + syncExpr + ");";
-			} else if (InstrFormat.instrThreadSpawnAndStart &&
-					currentMethod.getName().equals("start") &&
-					currentMethod.getSignature().equals("()V") &&
-					currentMethod.getDeclaringClass().getName().equals("java.lang.Thread")) {
-				enterStr += "chord.project.Runtime.threadStart($0);";
-			}
-			if (InstrFormat.instrMethodEnterAndLeave) {
-				enterStr = enterStr + "chord.project.Runtime.methodEnter(" + mIdx + ");";
-				leaveStr = "chord.project.Runtime.methodLeave(" + mIdx + ");" + leaveStr;
-			}
-			if (!enterStr.equals(""))
+		} else {
+			System.out.println("WARNING: Skipping instrumenting body of method: " + m);
+		}
+		// NOTE: do not move insertBefore or insertAfter or addCatch calls to a method
+		// to before bytecode instrumentation, else bytecode instrumentation offsets
+		// could get messed up 
+		String enterStr = "";
+		String leaveStr = "";
+		if (InstrFormat.instrMethodAndLoopBound > 0) {
+			enterStr = enterStr + "chord.project.Runtime.methodEnterCheck(" + mIdx + "); ";
+			leaveStr = "chord.project.Runtime.methodLeaveCheck(" + mIdx + "); " + leaveStr;
+		}
+		if (InstrFormat.instrAcqLockInst && Modifier.isSynchronized(mods)) {
+			String syncExpr = (Modifier.isStatic(mods)) ? "$class" : "$0";
+			int lIdx = set(Lmap, -1);
+			enterStr += " chord.project.Runtime.acqLock(" +
+				lIdx + "," + syncExpr + ");";
+		} else if (InstrFormat.instrThreadSpawnAndStart &&
+				currentMethod.getName().equals("start") &&
+				currentMethod.getSignature().equals("()V") &&
+				currentMethod.getDeclaringClass().getName().equals("java.lang.Thread")) {
+			enterStr += "chord.project.Runtime.threadStart($0);";
+		}
+		if (InstrFormat.instrMethodEnterAndLeave) {
+			enterStr = enterStr + "chord.project.Runtime.methodEnter(" + mIdx + ");";
+			leaveStr = "chord.project.Runtime.methodLeave(" + mIdx + ");" + leaveStr;
+		}
+		if (!enterStr.equals("")) {
+			try {
 				currentMethod.insertBefore("{" + enterStr + "}");
-			if (!leaveStr.equals("")) {
+			} catch (CannotCompileException ex) {
+				throw new RuntimeException(ex);
+			}
+		}
+		if (!leaveStr.equals("")) {
+			try {
 				currentMethod.insertAfter("{" + leaveStr + "}");
 				currentMethod.addCatch("{" + leaveStr + "throw($e);" + "}", exType);
+			} catch (CannotCompileException ex) {
+				throw new RuntimeException(ex);
 			}
-		} catch (Exception ex) {
-			System.err.println("WARNING: Ignoring instrumenting method: " +
-				currentMethod.getLongName());
-			ex.printStackTrace();
 		}
 	}
 
@@ -273,7 +285,9 @@ public class Instrumentor {
 
 	class MyExprEditor extends ExprEditor {
 		public String insertBefore(int pos) {
-			return loopInstrMap.get(pos);
+			String s = loopInstrMap.get(pos);
+			// s may be null in which case this method won't add any instrumentation
+			return s;
 		}
 		public void edit(NewExpr e) {
 			if (Hmap == null)
@@ -283,7 +297,7 @@ public class Instrumentor {
 				String s = "chord.project.Runtime.befNew(" + hIdx + ");";
 				String t = "chord.project.Runtime.aftNew(" + hIdx + ",$_);";
 				e.replace("{ " + s + " $_ = $proceed($$); " + t + " }");
-			} catch (Exception ex) {
+			} catch (CannotCompileException ex) {
 				throw new RuntimeException(ex);
 			}
 		}
@@ -294,7 +308,7 @@ public class Instrumentor {
 				int hIdx = set(Hmap, e);
 				String s = "chord.project.Runtime.newArray(" + hIdx + ",$_);";
 				e.replace("{ $_ = $proceed($$); " + s + " }");
-			} catch (Exception ex) {
+			} catch (CannotCompileException ex) {
 				throw new RuntimeException(ex);
 			}
 		}
@@ -309,8 +323,15 @@ public class Instrumentor {
 						return;
 				}
 				boolean isWr = e.isWriter();
-				CtField fld = e.getField();
-				boolean isPrim = fld.getType().isPrimitive();
+				CtField field;
+				CtClass type;
+				try {
+					field = e.getField();
+					type = field.getType();
+				} catch (NotFoundException ex) {
+					throw new RuntimeException(ex);
+				}
+				boolean isPrim = type.isPrimitive();
 				String s1 = isWr ? "$proceed($$);" : "$_ = $proceed();";
 				String s2;
 				// String l = isPrim ? "null" : "$_";
@@ -322,12 +343,11 @@ public class Instrumentor {
 						s2 = "";
 				} else {
 					String b = "$0";
-					String fName = fld.getName();
-					String fDesc = fld.getSignature();
-					String cName = fld.getDeclaringClass().getName();
+					String fName = field.getName();
+					String fDesc = field.getSignature();
+					String cName = field.getDeclaringClass().getName();
 					String s = Program.toString(fName, fDesc, cName);
 					int fIdx = Fmap.getOrAdd(s);
-					System.out.print("E ");
 					int eIdx = set(Emap, e);
 					if (isWr) {
 						s2 = "chord.project.Runtime.instFldWr(" +
@@ -338,8 +358,8 @@ public class Instrumentor {
 					}
 				}
 				e.replace("{ " + s1 + " " + s2 + " }");
-			} catch (Exception ex) {
-				throw new RuntimeException(ex);
+			} catch (CannotCompileException ex) {
+				throw new ChordRuntimeException(ex);
 			}
 		}
 		public void edit(ArrayAccess e) {
@@ -363,23 +383,27 @@ public class Instrumentor {
 						eIdx + ",$0," + f + ");";
 				}
 				e.replace("{ " + s1 + " " + s2 + " }");
-			} catch (Exception ex) {
-				throw new RuntimeException(ex);
+			} catch (CannotCompileException ex) {
+				throw new ChordRuntimeException(ex);
 			}
 		}
 		public void edit(MethodCall e) {
 			if (!InstrFormat.instrThreadSpawnAndStart)
 				return;
+				CtMethod m;
 			try {
-				CtMethod m = e.getMethod();
-				if (m.getName().equals("start") &&
-					m.getSignature().equals("()V") &&
+				m = e.getMethod();
+			} catch (NotFoundException ex) {
+				throw new ChordRuntimeException(ex);
+			}
+			if (m.getName().equals("start") && m.getSignature().equals("()V") &&
 					m.getDeclaringClass().getName().equals("java.lang.Thread")) {
-					String s = "chord.project.Runtime.threadSpawn($0);";
+				String s = "chord.project.Runtime.threadSpawn($0);";
+				try {
 					e.replace("{ $_ = $proceed($$); " + s + " }");
+				} catch (CannotCompileException ex) {
+					throw new ChordRuntimeException(ex);
 				}
-			} catch (Exception ex) {
-				throw new RuntimeException(ex);
 			}
 		}
 		public void edit(MonitorEnter e) {
@@ -389,8 +413,8 @@ public class Instrumentor {
 				int lIdx = set(Lmap, e);
 				String s = "chord.project.Runtime.acqLock(" + lIdx + ",$0);";
 				e.replace("{ $proceed(); " + s + " }");
-			} catch (Exception ex) {
-				throw new RuntimeException(ex);
+			} catch (CannotCompileException ex) {
+				throw new ChordRuntimeException(ex);
 			}
 		}
 	}

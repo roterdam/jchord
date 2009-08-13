@@ -10,6 +10,7 @@ using namespace std;
 static jvmtiEnv* jvmti_env;
 
 static string trace_file_name;
+static int num_meths, num_loops, instr_bound;
 
 char* get_token(char *str, char *seps, char *buf, int max)
 {
@@ -46,7 +47,7 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 		exit(1);
 	}
 	const char* mName = "open";
-		const char* mSign = "(Ljava/lang/String;)V";
+	const char* mSign = "(Ljava/lang/String;III)V";
 	jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
 	if (m == NULL) {
 		cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
@@ -54,7 +55,7 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 		exit(1);
 	}
 	jstring str = jni_env->NewStringUTF(trace_file_name.c_str());
-	jni_env->CallStaticObjectMethod(c, m, str);
+	jni_env->CallStaticObjectMethod(c, m, str, num_meths, num_loops, instr_bound);
 	cout << "LEAVE VMInit" << endl;
 }
 
@@ -105,7 +106,37 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 				exit(1);
             }
 			trace_file_name = string(arg);
-			cout << "XXX: " << trace_file_name << endl;
+			cout << "trace_file_name: " << trace_file_name << endl;
+		} else if (strcmp(token, "num_meths") == 0) {
+            char arg[16];
+            next = get_token(next, (char*) ",=", arg, sizeof(arg));
+			if (next == NULL) {
+                cerr << "ERROR: Cannot parse option num_meths=<num>: "
+					<< options << endl;
+				exit(1);
+				num_meths = atoi(next);
+				cout << "num_meths: " << num_meths << endl;
+			}
+		} else if (strcmp(token, "num_loops") == 0) {
+            char arg[16];
+            next = get_token(next, (char*) ",=", arg, sizeof(arg));
+			if (next == NULL) {
+                cerr << "ERROR: Cannot parse option num_loops=<num>: "
+					<< options << endl;
+				exit(1);
+				num_loops = atoi(next);
+				cout << "num_loops: " << num_loops << endl;
+			}
+		} else if (strcmp(token, "instr_bound") == 0) {
+            char arg[16];
+            next = get_token(next, (char*) ",=", arg, sizeof(arg));
+			if (next == NULL) {
+                cerr << "ERROR: Cannot parse option num_loops=<num>: "
+					<< options << endl;
+				exit(1);
+				instr_bound = atoi(next);
+				cout << "instr_bound: " << instr_bound << endl;
+			}
 		} else {
 			cerr << "ERROR: Unknown option: " << token << endl;
 			exit(1);
