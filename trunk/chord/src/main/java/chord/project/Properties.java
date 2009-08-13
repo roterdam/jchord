@@ -39,7 +39,7 @@ public class Properties {
 	public final static String instrAgentFileName =
 		System.getProperty("chord.instr.agent.file");
 	public static final int instrBound =
-		Integer.getInteger("chord.instr.bound", -1);
+		Integer.getInteger("chord.instr.bound", 0);
 	public final static boolean doInstr = System.getProperty(
 			"chord.instr", "false").equals("true");
 

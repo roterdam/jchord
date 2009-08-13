@@ -69,14 +69,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	private int numE;
 	private int numH;
 
-	public DynamicThreadEscapeAnalysis() {
-		InstrFormat.instrThreadSpawnAndStart = true;
-		InstrFormat.instrNewAndNewArrayInst = true;
-		InstrFormat.instrInstFldInst = true;
-		InstrFormat.instrStatFldInst = true;
-		InstrFormat.instrAryElemInst = true;
-	}
-
 	public void initPass() {
 		if (isFirst) {
 			isFirst = false;

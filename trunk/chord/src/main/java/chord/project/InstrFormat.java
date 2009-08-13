@@ -1,7 +1,7 @@
 package chord.project;
 
 public abstract class InstrFormat {
-	public static int instrMethodAndLoopBound = 2;
+	public static int instrMethodAndLoopBound;
 	/**
 	 * Controls generation of following events:
 	 * METHOD_ENTER <thread object> <mIdx>
