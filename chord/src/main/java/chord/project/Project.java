@@ -94,8 +94,18 @@ public class Project {
             Program.v().init();
 
 			boolean doInstr = Properties.doInstr;
-			
 			if (doInstr) {
+				InstrFormat.instrThreadSpawnAndStart = true;
+				InstrFormat.instrNewAndNewArrayInst = true;
+				InstrFormat.instrInstFldInst = true;
+				InstrFormat.instrStatFldInst = true;
+				InstrFormat.instrAryElemInst = true;
+			}
+			int instrBound = Properties.instrBound;
+			if (instrBound > 0) {
+				InstrFormat.instrMethodAndLoopBound = instrBound;
+			}
+			if (doInstr || instrBound > 0) {
 				Instrumentor instrumentor = new Instrumentor();
 				instrumentor.visit(Program.v());
 			}
