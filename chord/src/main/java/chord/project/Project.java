@@ -33,6 +33,7 @@ import chord.util.Timer;
 import chord.util.tuple.object.Pair;
 import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.RelSign;
+import chord.instr.InstrScheme;
 
 /**
  * A project.
@@ -93,19 +94,16 @@ public class Project {
             Project.init();
             Program.v().init();
 
-			boolean doInstr = Properties.doInstr;
-			if (doInstr) {
-				InstrFormat.instrThreadSpawnAndStart = true;
-				InstrFormat.instrNewAndNewArrayInst = true;
-				InstrFormat.instrInstFldInst = true;
-				InstrFormat.instrStatFldInst = true;
-				InstrFormat.instrAryElemInst = true;
+			InstrScheme instrScheme = InstrScheme.v();
+			boolean doFullInstr = Properties.doFullInstr;
+			if (doFullInstr) {
+				instrScheme.setAllEvents();
 			}
 			int instrBound = Properties.instrBound;
 			if (instrBound > 0) {
-				InstrFormat.instrMethodAndLoopBound = instrBound;
+				instrScheme.setInstrMethodAndLoopBound(instrBound);
 			}
-			if (doInstr || instrBound > 0) {
+			if (doFullInstr || instrBound > 0) {
 				Instrumentor instrumentor = new Instrumentor();
 				instrumentor.visit(Program.v());
 			}

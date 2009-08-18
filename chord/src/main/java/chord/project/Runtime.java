@@ -6,7 +6,12 @@
  */
 package chord.project;
 
-import chord.util.IntBuffer;
+import chord.instr.EventKind;
+import chord.instr.InstrScheme;
+import chord.instr.InstrScheme.EventFormat;
+import chord.util.ByteBufferedFile;
+import chord.util.WeakIdentityHashMap;
+
 import java.io.IOException;
 
 /**
@@ -24,8 +29,13 @@ public class Runtime {
 	public static int[][] numItersOfLoop;
 	public static final int NUM_INIT_THREADS = 10;
 */
-
-	private static IntBuffer buffer;
+	private static ByteBufferedFile buffer;
+	// note: use currentId == 0 for null and currentId == 1 for hypothetical
+	// lone object of a hypothetical class all of whose instance fields are
+	// static fields in other real classes.
+	private static InstrScheme scheme;
+    private static int currentId = 2;
+    private static WeakIdentityHashMap objmap;
 	private static boolean trace = false;
 /*
 	public synchronized static void createThread(int tObj) {
@@ -42,208 +52,522 @@ public class Runtime {
 		}
 	}
 */
-	public synchronized static void methodEnter(int mIdx) {
+    private static int getObjectId(Object o) {
+    	if (o == null)
+    		return 0;
+        Object val = objmap.get(o);
+        if (val == null) {
+            val = currentId++;
+            objmap.put(o, val);
+        }
+        return (Integer) val;
+    }
+    public static long getPrimitiveId(int oId, int fId) {
+        // We must add 1 below so that we never assign to a field an
+        // identifier smaller than (1 << 32).
+    	long l = oId + 1;
+    	l = l << 32;
+    	return l + fId;
+    }
+	public synchronized static void methodEnter(int mId) {
 		if (trace) {
 			trace = false;
-			Thread t = Thread.currentThread();
-			int tIdx = System.identityHashCode(t);
 			try {
-				buffer.put(EventKind.METHOD_ENTER);
-				buffer.put(tIdx);
-				buffer.put(mIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+				buffer.putByte(EventKind.ENTER_METHOD);
+				if (ef.hasMid())
+					buffer.putInt(mId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void methodLeave(int mIdx) {
+	public synchronized static void methodLeave(int mId) {
 		if (trace) {
 			trace = false;
-			Thread t = Thread.currentThread();
-			int tIdx = System.identityHashCode(t);
 			try {
-				buffer.put(EventKind.METHOD_LEAVE);
-				buffer.put(tIdx);
-				buffer.put(mIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+				buffer.putByte(EventKind.LEAVE_METHOD);
+				if (ef.hasMid())
+					buffer.putInt(mId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void befNew(int hIdx) {
+	public synchronized static void befNew(int hId) {
 		if (trace) {
 			trace = false;
-			Thread t = Thread.currentThread();
-			int tIdx = System.identityHashCode(t);
 			try {
-				buffer.put(EventKind.BEF_NEW);
-				buffer.put(tIdx);
-				buffer.put(hIdx);
+				buffer.putByte(EventKind.BEF_NEW);
+				buffer.putInt(hId);
+				int tId = getObjectId(Thread.currentThread());
+				buffer.putInt(tId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void aftNew(int hIdx, Object o) {
+	public synchronized static void aftNew(int hId, Object o) {
 		if (trace) {
 			trace = false;
-			Thread t = Thread.currentThread();
-			int tIdx = System.identityHashCode(t);
-			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(EventKind.AFT_NEW);
-				buffer.put(tIdx);
-				buffer.put(hIdx);
-				buffer.put(oIdx);
+				buffer.putByte(EventKind.AFT_NEW);
+				buffer.putInt(hId);
+				int tId = getObjectId(Thread.currentThread());
+				buffer.putInt(tId);
+				int oId = getObjectId(o);
+				buffer.putInt(oId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void newArray(int hIdx, Object o) {
+	public synchronized static void newArray(int hId, Object o) {
 		if (trace) {
 			trace = false;
-			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(EventKind.NEW_ARRAY);
-				buffer.put(hIdx);
-				buffer.put(oIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+				buffer.putByte(EventKind.NEW_ARRAY);
+				if (hId != -1)
+					buffer.putInt(hId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void instFldRd(int eIdx, Object b,
-			int fIdx) {
+	public synchronized static void getstaticPrimitive(int eId, int fId) {
 		if (trace) {
 			trace = false;
-			int bIdx = System.identityHashCode(b);
 			try {
-				buffer.put(EventKind.INST_FLD_RD);
-				buffer.put(eIdx);
-				buffer.put(bIdx);
-				buffer.put(fIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
+				buffer.putByte(EventKind.GETSTATIC_PRIMITIVE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (fId != -1)
+					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void instFldWr(int eIdx, Object b,
-			int fIdx, Object r) {
+	public synchronized static void getstaticReference(int eId, int fId,
+			Object o) {
 		if (trace) {
 			trace = false;
-			int bIdx = System.identityHashCode(b);
-			int rIdx = System.identityHashCode(r);
 			try {
-				buffer.put(EventKind.INST_FLD_WR);
-				buffer.put(eIdx);
-				buffer.put(bIdx);
-				buffer.put(fIdx);
-				buffer.put(rIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
+				buffer.putByte(EventKind.GETSTATIC_REFERENCE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (fId != -1)
+					buffer.putInt(fId);
+				if (ef.hasOid()) {
+					int tId = getObjectId(o);
+					buffer.putInt(tId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void aryElemRd(int eIdx, Object b,
-			int idx) {
+	public synchronized static void putstaticPrimitive(int eId, int fId) {
 		if (trace) {
 			trace = false;
-			int bIdx = System.identityHashCode(b);
 			try {
-				buffer.put(EventKind.ARY_ELEM_RD);
-				buffer.put(eIdx);
-				buffer.put(bIdx);
-				buffer.put(idx);
+				EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
+				buffer.putByte(EventKind.PUTSTATIC_PRIMITIVE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (fId != -1)
+					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void aryElemWr(int eIdx, Object b,
-			int idx, Object r) {
+	public synchronized static void putstaticReference(int eId, int fId,
+			Object o) {
 		if (trace) {
 			trace = false;
-			int bIdx = System.identityHashCode(b);
-			int rIdx = System.identityHashCode(r);
 			try {
-				buffer.put(EventKind.ARY_ELEM_WR);
-				buffer.put(eIdx);
-				buffer.put(bIdx);
-				buffer.put(idx);
-				buffer.put(rIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
+				buffer.putByte(EventKind.PUTSTATIC_REFERENCE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (fId != -1)
+					buffer.putInt(fId);
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void statFldWr(Object r) {
+	public synchronized static void getfieldPrimitive(int eId,
+			Object b, int fId) {
 		if (trace) {
 			trace = false;
-			int rIdx = System.identityHashCode(r);
 			try {
-				buffer.put(EventKind.STAT_FLD_WR);
-				buffer.put(rIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
+				buffer.putByte(EventKind.GETFIELD_PRIMITIVE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasBid()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
+				if (fId != -1)
+					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void acqLock(int lIdx, Object o) {
+	public synchronized static void getfieldReference(int eId,
+			Object b, int fId, Object o) {
 		if (trace) {
 			trace = false;
-			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(EventKind.ACQ_LOCK);
-				buffer.put(lIdx);
-				buffer.put(oIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
+				buffer.putByte(EventKind.GETFIELD_REFERENCE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasBid()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
+				if (fId != -1)
+					buffer.putInt(fId);
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void threadStart(Object o) {
+	public synchronized static void putfieldPrimitive(int eId,
+			Object b, int fId) {
 		if (trace) {
 			trace = false;
-			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(EventKind.THREAD_START);
-				buffer.put(oIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
+				buffer.putByte(EventKind.PUTFIELD_PRIMITIVE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasBid()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
+				if (fId != -1)
+					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void threadSpawn(Object o) {
+	public synchronized static void putfieldReference(int eId,
+			Object b, int fId, Object o) {
 		if (trace) {
 			trace = false;
-			int oIdx = System.identityHashCode(o);
 			try {
-				buffer.put(EventKind.THREAD_SPAWN);
-				buffer.put(oIdx);
+				EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
+				buffer.putByte(EventKind.PUTFIELD_REFERENCE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasBid()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
+				if (fId != -1)
+					buffer.putInt(fId);
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-/*
-	private static int getTid() {
-		Thread t = Thread.currentThread();
-		int tObj = System.identityHashCode(t);
-		for (int i = 0; i < numThreads; i++) {
-			int tObj2 = threadObjs[i];
-			if (tObj2 == tObj)
-				return i;
+	public synchronized static void aloadPrimitive(int eId,
+			Object b, int iId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
+				buffer.putByte(EventKind.ALOAD_PRIMITIVE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasBid()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
+				if (ef.hasIid())
+					buffer.putInt(iId);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
 		}
-		throw new RuntimeException();
 	}
-*/
-	public synchronized static void methodEnterCheck(int mIdx) {
+	public synchronized static void aloadReference(int eId,
+			Object b, int iId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
+				buffer.putByte(EventKind.ALOAD_REFERENCE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasBid()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
+				if (ef.hasIid())
+					buffer.putInt(iId);
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void astorePrimitive(int eId,
+			Object b, int iId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
+				buffer.putByte(EventKind.ASTORE_PRIMITIVE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasBid()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
+				if (ef.hasIid())
+					buffer.putInt(iId);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void astoreReference(int eId,
+			Object b, int iId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
+				buffer.putByte(EventKind.ASTORE_REFERENCE);
+				if (eId != -1)
+					buffer.putInt(eId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasBid()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
+				if (ef.hasIid())
+					buffer.putInt(iId);
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void threadStart(int pId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.THREAD_START);
+				buffer.putByte(EventKind.THREAD_START);
+				if (pId != -1)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void threadJoin(int pId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.THREAD_JOIN);
+				buffer.putByte(EventKind.THREAD_JOIN);
+				if (pId != -1)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void acquireLock(int pId, Object l) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
+				buffer.putByte(EventKind.ACQUIRE_LOCK);
+				if (pId != -1)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasLid()) {
+					int lId = getObjectId(l);
+					buffer.putInt(lId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void releaseLock(int pId, Object l) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
+				buffer.putByte(EventKind.RELEASE_LOCK);
+				if (pId != -1)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasLid()) {
+					int lId = getObjectId(l);
+					buffer.putInt(lId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void wait(int pId, Object l) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.WAIT);
+				buffer.putByte(EventKind.WAIT);
+				if (pId != -1)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasLid()) {
+					int lId = getObjectId(l);
+					buffer.putInt(lId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void notify(int pId, Object l) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
+				buffer.putByte(EventKind.NOTIFY);
+				if (pId != -1)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasLid()) {
+					int lId = getObjectId(l);
+					buffer.putInt(lId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void methodEnterCheck(int mId) {
 		if (trace) {
 			trace = false;
 			trace = true;
 		}
 	}
-	public synchronized static void methodLeaveCheck(int mIdx) {
+	public synchronized static void methodLeaveCheck(int mId) {
 		if (trace) {
 			trace = false;
 			trace = true;
 		}
 	}
-	public synchronized static void loopEnterCheck(int wIdx) {
+	public synchronized static void loopEnterCheck(int wId) {
 		if (trace) {
 			trace = false;
 			trace = true;
 		}
 	}
-	public synchronized static void loopLeaveCheck(int wIdx) {
+	public synchronized static void loopLeaveCheck(int wId) {
 		if (trace) {
 			trace = false;
 			trace = true;
@@ -252,7 +576,9 @@ public class Runtime {
 	public synchronized static void open(String fileName,
 			int numMeths, int numLoops, int ib) {
 		try {
-			buffer = new IntBuffer(1024, fileName, false);
+			buffer = new ByteBufferedFile(1024, fileName, false);
+		    objmap = new WeakIdentityHashMap();
+		    scheme = InstrScheme.v();
 			// threadObjs = new int[NUM_INIT_THREADS];
 			// numCallsToMeth = new int[numMeths][];
 			// numItersOfLoop = new int[numLoops][];
@@ -267,4 +593,3 @@ public class Runtime {
 		} catch (IOException ex) { throw new RuntimeException(ex); }
 	}
 }
-

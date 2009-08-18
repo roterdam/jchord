@@ -3,11 +3,11 @@ package chord.analyses.thread.escape;
 import java.util.List;
 import java.util.ArrayList;
 
+import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.DynamicAnalysis;
 import chord.project.ProgramRel;
 import chord.project.Project;
-import chord.project.InstrFormat;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
@@ -68,6 +68,21 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	private boolean isFirst = true;
 	private int numE;
 	private int numH;
+
+    protected InstrScheme instrScheme;
+    public InstrScheme getInstrScheme() {
+    	if (instrScheme != null)
+    		return instrScheme;
+    	instrScheme = new InstrScheme();
+    	instrScheme.setNewAndNewArrayEvent(true, false, true);
+    	instrScheme.setPutstaticReferenceEvent(false, false, false, true);
+    	instrScheme.setGetfieldReferenceEvent(true, false, true, false, false);
+    	instrScheme.setPutfieldReferenceEvent(true, false, true, true, true);
+    	instrScheme.setAloadReferenceEvent(true, false, true, false, false);
+    	instrScheme.setAstoreReferenceEvent(true, false, true, true, true);
+    	instrScheme.setThreadStartEvent(false, false, true);
+    	return instrScheme;
+    }
 
 	public void initPass() {
 		if (isFirst) {
@@ -167,40 +182,35 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				" numAllocEsc: " + numAllocEsc : ""));
 	}
 
-	public void processNewOrNewArray(int hIdx, int o) {
+	public void processNewOrNewArray(int h, int t, int o) {
 		if (o != 0) {
 			objToFldObjs.remove(o);
 			escObjs.remove(o);
 			if (isFlowIns) {
 				objToHidx.remove(o);
-				if (hIdx != -1)
-					objToHidx.put(o, hIdx);
+				if (h != -1)
+					objToHidx.put(o, h);
 			}
 		}
 	}
-	public void processInstFldRd(int eIdx, int b, int fIdx) { 
-		processHeapRd(eIdx, b);
+	public void processGetfieldReference(int e, int t, int b, int f, int o) { 
+		processHeapRd(e, b);
 	}
-	public void processInstFldWr(int eIdx, int b, int fIdx, int r) {
-		processHeapWr(eIdx, b, fIdx, r);
+	public void processPutfieldReference(int e, int t, int b, int f, int o) {
+		processHeapWr(e, b, f, o);
 	}
-	public void processStatFldWr(int r) { 
-		if (r != 0) {
-			markAndPropEsc(r);
-		}
-	}
-	public void processAryElemRd(int eIdx, int b, int idx) { 
-		processHeapRd(eIdx, b);
-	}
-	public void processAryElemWr(int eIdx, int b, int idx, int r) {
-		processHeapWr(eIdx, b, idx, r);
-	}
-	public void processThreadStart(int o) { 
+	public void processPutstaticReference(int e, int t, int f, int o) { 
 		if (o != 0) {
 			markAndPropEsc(o);
 		}
 	}
-	public void processThreadSpawn(int o) { 
+	public void processAloadReference(int e, int t, int b, int i, int o) { 
+		processHeapRd(e, b);
+	}
+	public void processAstoreReference(int e, int t, int b, int i, int o) {
+		processHeapWr(e, b, i, o);
+	}
+	public void processThreadStart(int p, int t, int o) { 
 		if (o != 0) {
 			markAndPropEsc(o);
 		}

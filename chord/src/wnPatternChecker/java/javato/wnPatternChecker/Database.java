@@ -178,10 +178,9 @@ public class Database {
 	}
 	
 	public String printIIDs(List<Integer> iids){
-		ArrayList<String> iidToLineMap = WNPatternCheckerEventHandler.iidToLineMap;
 		String res = "[ ";
 		for(Integer iid : iids){
-			res += iidToLineMap.get(iid)+" ";
+			res += iid + " ";
 		}
 		res += "]";
 		return res;
