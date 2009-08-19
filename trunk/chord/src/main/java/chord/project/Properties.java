@@ -45,8 +45,6 @@ public class Properties {
 		System.getProperty("chord.bdd.lib.dir");
 	public final static String instrAgentFileName =
 		System.getProperty("chord.instr.agent.file");
-	public final static String instrSchemeFileName = System.getProperty(
-		"chord.instr.scheme.file", "scheme.ser");
 	public static final int instrBound =
 		Integer.getInteger("chord.instr.bound", 0);
 
@@ -70,7 +68,6 @@ public class Properties {
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
 		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
 		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
-		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
 		System.out.println("chord.instr.bound: " + instrBound);
 	}
 }

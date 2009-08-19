@@ -109,7 +109,8 @@ public class Instrumentor {
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 
 		if (enterAndLeaveMethodEvent.present() ||
-				scheme.getInstrMethodAndLoopBound() > 0) {
+				scheme.getInstrMethodAndLoopBound() > 0 ||
+				releaseLockEvent.present()) {
 			try {
 				exType = pool.get("java.lang.Throwable");
 			} catch (NotFoundException ex) {
@@ -287,11 +288,18 @@ public class Instrumentor {
 			enterStr = enterStr + enterMethodCheck + mId + "); ";
 			leaveStr = leaveMethodCheck + mId + "); " + leaveStr;
 		}
-		if (acquireLockEvent.present() && Modifier.isSynchronized(mods)) {
+		if (Modifier.isSynchronized(mods)) {
 			String syncExpr = Modifier.isStatic(mods) ? "$class" : "$0";
-			int pId = set(Pmap, -1);
-			enterStr += " chord.project.Runtime.acquireLock(" +
-				pId + "," + syncExpr + ");";
+			if (acquireLockEvent.present()) {
+				int pId = set(Pmap, -1);
+				String str = acquireLock + pId + "," + syncExpr + "); ";
+				enterStr = enterStr + str;
+			}
+			if (releaseLockEvent.present()) {
+				int pId = set(Pmap, -2);
+				String str = releaseLock + pId + "," + syncExpr + "); ";
+				leaveStr = str + leaveStr;
+			}
 		}
 		if (enterAndLeaveMethodEvent.present()) {
 			enterStr = enterStr + enterMethod + mId + ");";

@@ -29,93 +29,93 @@ public class InstrScheme implements Serializable {
 	 * 
 	 * NEW_AND_NEW_ARRAY:
 	 * Controls generation of the following event before thread t
-	 * executes a NEW instruction at program point p:
-	 * BEF_NEW p t
+	 * executes a NEW instruction at program point h:
+	 * BEF_NEW h t
 	 * <p>
 	 * Controls generation of the following event after thread t
-	 * executes a NEW instruction at program point p and allocates
+	 * executes a NEW instruction at program point h and allocates
 	 * new object o:
-	 * AFT_NEW p t o
+	 * AFT_NEW h t o
 	 * <p>
 	 * Note: Both above events are visible only in the crude trace
 	 * and not in the final trace.  Moreover, they are needed only
 	 * if instrOid is true.
 	 * <p>
 	 * Controls generation of the following events after thread t
-	 * executes a NEW or NEWARRAY instruction at program point p
+	 * executes a NEW or NEWARRAY instruction at program point h
 	 * and allocates new object o:
-	 * NEW p t o
-	 * NEW_ARRAY p t o
+	 * NEW h t o
+	 * NEW_ARRAY h t o
 	 *
 	 * GETSTATIC_PRIMITIVE:
 	 * Controls generation of the following event after thread t
-	 * reads primitive-typed static field f at program point p:
-	 * GETSTATIC_PRIMITIVE p t f
+	 * reads primitive-typed static field f at program point e:
+	 * GETSTATIC_PRIMITIVE e t f
 	 * 
 	 * GETSTATIC_REFERENCE:
 	 * Controls generation of the following event after thread t
 	 * reads object o from reference-typed static field f at
-	 * program point p:
-	 * GETSTATIC_REFERENCE p t f o
+	 * program point e:
+	 * GETSTATIC_REFERENCE e t f o
 	 *
 	 * PUTSTATIC_PRIMITIVE:
 	 * Controls generation of the following event after thread t
-	 * writes primitive-typed static field f at program point p:
-	 * PUTSTATIC_PRIMITIVE p t f
+	 * writes primitive-typed static field f at program point e:
+	 * PUTSTATIC_PRIMITIVE e t f
      *
      * PUTSTATIC_REFERENCE:
 	 * Controls generation of the following event after thread t
 	 * writes object o to reference-typed static field f at
-	 * program point p:
-	 * PUTSTATIC_REFERENCE p t f o
+	 * program point e:
+	 * PUTSTATIC_REFERENCE e t f o
 	 * 
 	 * GETFIELD_PRIMITIVE:
 	 * Controls generation of the following event after thread t
 	 * reads primitive-typed instance field f of object b at
-	 * program point p:
-	 * GETFIELD_PRIMITIVE p t b f
+	 * program point e:
+	 * GETFIELD_PRIMITIVE e t b f
 	 *
 	 * GETFIELD_REFERENCE:
 	 * Controls generation of the following event after thread t
 	 * reads object o from reference-typed instance field f of
-	 * object b at program point p:
-	 * GETFIELD_REFERENCE p t b f o
+	 * object b at program point e:
+	 * GETFIELD_REFERENCE e t b f o
 	 * 
 	 * PUTFIELD_PRIMITIVE:
 	 * Controls generation of the following event after thread t
 	 * writes primitive-typed instance field f of object b at
-	 * program point p:
-	 * PUTFIELD_PRIMITIVE p t b f
+	 * program point e:
+	 * PUTFIELD_PRIMITIVE e t b f
 	 *
 	 * PUTFIELD_REFERENCE:
 	 * Controls generation of the following event after thread t
 	 * writes object o to reference-typed instance field f of
-	 * object b at program point p:
-	 * PUTFIELD_REFERENCE p t b f o
+	 * object b at program point e:
+	 * PUTFIELD_REFERENCE e t b f o
 	 *
 	 * ALOAD_PRIMITIVE:
 	 * Controls generation of the following event after thread t
 	 * reads the primitive-typed i^th element of array object b at
-	 * program point p:
-	 * ALOAD_PRIMITIVE p t b i
+	 * program point e:
+	 * ALOAD_PRIMITIVE e t b i
 	 * 
 	 * ALOAD_REFERENCE:
 	 * Controls generation of the following event after thread t
 	 * reads object o from the reference-typed i^th element of
-	 * array object b at program point p:
-	 * ALOAD_REFERENCE p t b i o
+	 * array object b at program point e:
+	 * ALOAD_REFERENCE e t b i o
 	 * 
 	 * ASTORE_PRIMITIVE:
 	 * Controls generation of the following event after thread t
 	 * writes the primitive-typed i^th element of array object b at
-	 * program point p:
-	 * ASTORE_PRIMITIVE p t b i
+	 * program point e:
+	 * ASTORE_PRIMITIVE e t b i
 	 * 
 	 * ASTORE_REFERENCE:
 	 * Controls generation of the following event after thread t
 	 * writes object o to the reference-typed i^th element of array
-	 * object b at program point p:
-	 * ASTORE_REFERENCE p t b i o
+	 * object b at program point e:
+	 * ASTORE_REFERENCE e t b i o
 	 * 
 	 * THREAD_START:
 	 * Controls generation of the following event before thread t
