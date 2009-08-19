@@ -5,26 +5,36 @@ import java.io.IOException;
 import chord.instr.InstrScheme.EventFormat;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
+import chord.project.ChordRuntimeException;
 
 public class TracePrinter {
-	public static void main(String[] args) throws IOException, ReadException {
-		InstrScheme scheme = InstrScheme.v();
-		String fileName = System.getProperty("chord.trace.file");
-		ByteBufferedFile buffer = new ByteBufferedFile(1024, fileName, true);
+	public static void main(String[] args) {
+		(new TracePrinter()).run();
+	}
+	public static void run() {
+		String traceFileName = System.getProperty("chord.trace.file");
+		InstrScheme scheme = InstrScheme.load();
+		run(traceFileName, scheme);
+	}
+	public static void run(String traceFileName, InstrScheme scheme) {
+		try {
+		ByteBufferedFile buffer = new ByteBufferedFile(1024, traceFileName, true);
 		while (!buffer.isDone()) {
 			byte opcode = buffer.getByte();
 			switch (opcode) {
 			case EventKind.ENTER_METHOD:
 			{
-				int m = buffer.getInt();
-				int t = buffer.getInt();
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+				int m = ef.hasMid() ? buffer.getInt() : -1;
+				int t = ef.hasTid() ? buffer.getInt() : -1;
 				System.out.println("ENTER_METHOD " + m + " " + t);
 				break;
 			}
 			case EventKind.LEAVE_METHOD:
 			{
-				int m = buffer.getInt();
-				int t = buffer.getInt();
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+				int m = ef.hasMid() ? buffer.getInt() : -1;
+				int t = ef.hasTid() ? buffer.getInt() : -1;
 				System.out.println("LEAVE_METHOD " + m + " " + t);
 				break;
 			}
@@ -238,9 +248,14 @@ public class TracePrinter {
 				break;
 			}
 			default:
-				throw new RuntimeException("Opcode: " + opcode);
+				throw new ChordRuntimeException("Opcode: " + opcode);
 			}
 		}
+		} catch (IOException ex) {
+            throw new ChordRuntimeException(ex);
+        } catch (ReadException ex) {
+            throw new ChordRuntimeException(ex);
+        }
 	}
 }
 

@@ -24,6 +24,7 @@ import java.util.Stack;
 
 import org.scannotation.AnnotationDB;
 
+import chord.instr.InstrScheme;
 import chord.util.ArraySet;
 import chord.util.ArrayUtils;
 import chord.util.ClassUtils;
@@ -33,7 +34,6 @@ import chord.util.Timer;
 import chord.util.tuple.object.Pair;
 import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.RelSign;
-import chord.instr.InstrScheme;
 
 /**
  * A project.
@@ -94,20 +94,19 @@ public class Project {
             Project.init();
             Program.v().init();
 
-			InstrScheme instrScheme = InstrScheme.v();
-			boolean doFullInstr = Properties.doFullInstr;
-			if (doFullInstr) {
-				instrScheme.setAllEvents();
-			}
-			int instrBound = Properties.instrBound;
-			if (instrBound > 0) {
-				instrScheme.setInstrMethodAndLoopBound(instrBound);
-			}
-			if (doFullInstr || instrBound > 0) {
-				Instrumentor instrumentor = new Instrumentor();
-				instrumentor.visit(Program.v());
-			}
-			
+			DynamicAnalysis analysis = new DynamicAnalysis() {
+				InstrScheme scheme;
+				public InstrScheme getInstrScheme() {
+					if (scheme == null) {
+						scheme = new InstrScheme();
+						scheme.setAllEvents();
+					}
+					System.out.println("REACHED");
+					return scheme;
+				}
+			};
+			analysis.run();
+
             String analyses = Properties.analyses;
             if (analyses != null) {
                 String[] analysisNames = analyses.split(" |,|:|;");

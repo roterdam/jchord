@@ -69,7 +69,7 @@ public class Runtime {
     	l = l << 32;
     	return l + fId;
     }
-	public synchronized static void methodEnter(int mId) {
+	public synchronized static void enterMethod(int mId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -85,7 +85,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void methodLeave(int mId) {
+	public synchronized static void leaveMethod(int mId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -549,25 +549,25 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void methodEnterCheck(int mId) {
+	public synchronized static void enterMethodCheck(int mId) {
 		if (trace) {
 			trace = false;
 			trace = true;
 		}
 	}
-	public synchronized static void methodLeaveCheck(int mId) {
+	public synchronized static void leaveMethodCheck(int mId) {
 		if (trace) {
 			trace = false;
 			trace = true;
 		}
 	}
-	public synchronized static void loopEnterCheck(int wId) {
+	public synchronized static void enterLoopCheck(int wId) {
 		if (trace) {
 			trace = false;
 			trace = true;
 		}
 	}
-	public synchronized static void loopLeaveCheck(int wId) {
+	public synchronized static void leaveLoopCheck(int wId) {
 		if (trace) {
 			trace = false;
 			trace = true;
@@ -578,7 +578,9 @@ public class Runtime {
 		try {
 			buffer = new ByteBufferedFile(1024, fileName, false);
 		    objmap = new WeakIdentityHashMap();
-		    scheme = InstrScheme.v();
+		    // TODO scheme = InstrScheme.load();
+			scheme = new InstrScheme();
+			scheme.setAllEvents();
 			// threadObjs = new int[NUM_INIT_THREADS];
 			// numCallsToMeth = new int[numMeths][];
 			// numItersOfLoop = new int[numLoops][];

@@ -1,8 +1,16 @@
 package chord.instr;
 
-public class InstrScheme {
-	private static final InstrScheme instance = new InstrScheme();
-	public static final InstrScheme v() { return instance; }
+import java.io.Serializable;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+
+import chord.project.Properties;
+import chord.project.ChordRuntimeException;
+
+public class InstrScheme implements Serializable {
 	/**
 	 * ENTER_AND_LEAVE_METHOD:
 	 * Controls generation of the following events after/before
@@ -159,9 +167,9 @@ public class InstrScheme {
     public static final int WAIT = 18;
     public static final int NOTIFY = 19;
 
-	public static final int MAX_NUM_EVENT_FORMATS = 19;
+	public static final int MAX_NUM_EVENT_FORMATS = 20;
 
-	public class EventFormat {
+	public class EventFormat implements Serializable {
 		private boolean hasMorPorHorE;
 		private boolean hasT;
 		private boolean hasForI;
@@ -243,8 +251,12 @@ public class InstrScheme {
 	}
 
 	private int instrMethodAndLoopBound;
-	private final EventFormat[] events =
-		new EventFormat[MAX_NUM_EVENT_FORMATS];
+	private final EventFormat[] events;
+	public InstrScheme() {
+		events = new EventFormat[MAX_NUM_EVENT_FORMATS];
+		for (int i = 0; i < MAX_NUM_EVENT_FORMATS; i++)
+			events[i] = new EventFormat();
+	}
 
 	public void setInstrMethodAndLoopBound(int n) {
 		assert (n >= 0);
@@ -494,4 +506,31 @@ public class InstrScheme {
 		setWaitEvent(true, true, true);
 		setNotifyEvent(true, true, true);
 	}
+	public static InstrScheme load() {
+        String fileName = Properties.instrSchemeFileName;
+		InstrScheme scheme;
+		try {
+			ObjectInputStream stream = new ObjectInputStream(
+				new FileInputStream(fileName));
+			scheme = (InstrScheme) stream.readObject();
+			stream.close();
+		} catch (ClassNotFoundException ex) {
+			throw new ChordRuntimeException(ex);
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		}
+		return scheme;
+	}
+	public static void save(InstrScheme scheme) {
+        String fileName = Properties.instrSchemeFileName;
+		try {
+			ObjectOutputStream stream = new ObjectOutputStream(
+				new FileOutputStream(fileName));
+			stream.writeObject(scheme);
+			stream.close();
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		}
+	}
 }
+

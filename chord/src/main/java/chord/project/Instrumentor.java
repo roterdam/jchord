@@ -46,49 +46,29 @@ public class Instrumentor {
 	private MyExprEditor exprEditor = new MyExprEditor();
 	private TIntObjectHashMap<String> loopInstrMap =
 		new TIntObjectHashMap<String>();
-	private InstrScheme scheme = InstrScheme.v();
-	private final EventFormat enterAndLeaveMethodEvent =
-		scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-	private final EventFormat newAndNewArrayEvent =
-		scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
-	private final EventFormat getstaticPrimitiveEvent =
-		scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
-	private final EventFormat getstaticReferenceEvent =
-		scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
-	private final EventFormat putstaticPrimitiveEvent =
-		scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
-	private final EventFormat putstaticReferenceEvent =
-		scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
-	private final EventFormat getfieldPrimitiveEvent =
-		scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
-	private final EventFormat getfieldReferenceEvent =
-		scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
-	private final EventFormat putfieldPrimitiveEvent =
-		scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
-	private final EventFormat putfieldReferenceEvent =
-		scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
-	private final EventFormat aloadPrimitiveEvent =
-		scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
-	private final EventFormat aloadReferenceEvent =
-		scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
-	private final EventFormat astorePrimitiveEvent =
-		scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
-	private final EventFormat astoreReferenceEvent =
-		scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
-	private final EventFormat threadStartEvent =
-		scheme.getEvent(InstrScheme.THREAD_START);
-	private final EventFormat threadJoinEvent =
-		scheme.getEvent(InstrScheme.THREAD_JOIN);
-	private final EventFormat acquireLockEvent =
-		scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
-	private final EventFormat releaseLockEvent =
-		scheme.getEvent(InstrScheme.RELEASE_LOCK);
-	private final EventFormat waitEvent =
-		scheme.getEvent(InstrScheme.WAIT);
-	private final EventFormat notifyEvent =
-		scheme.getEvent(InstrScheme.NOTIFY);
+	private InstrScheme scheme;
+	private EventFormat enterAndLeaveMethodEvent;
+	private EventFormat newAndNewArrayEvent;
+	private EventFormat getstaticPrimitiveEvent;
+	private EventFormat getstaticReferenceEvent;
+	private EventFormat putstaticPrimitiveEvent;
+	private EventFormat putstaticReferenceEvent;
+	private EventFormat getfieldPrimitiveEvent;
+	private EventFormat getfieldReferenceEvent;
+	private EventFormat putfieldPrimitiveEvent;
+	private EventFormat putfieldReferenceEvent;
+	private EventFormat aloadPrimitiveEvent;
+	private EventFormat aloadReferenceEvent;
+	private EventFormat astorePrimitiveEvent;
+	private EventFormat astoreReferenceEvent;
+	private EventFormat threadStartEvent;
+	private EventFormat threadJoinEvent;
+	private EventFormat acquireLockEvent;
+	private EventFormat releaseLockEvent;
+	private EventFormat waitEvent;
+	private EventFormat notifyEvent;
 	
-	public void visit(Program program) {
+	public void visit(Program program, InstrScheme scheme) {
 		String fullClassPathName = Properties.classPathName +
 			File.pathSeparator + Properties.bootClassPathName;
 		pool = new ClassPool();
@@ -106,6 +86,27 @@ public class Instrumentor {
 			}
 		}
 		pool.appendSystemPath();
+		this.scheme = scheme;
+		enterAndLeaveMethodEvent = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
+		getstaticReferenceEvent = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
+		putstaticPrimitiveEvent = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
+		putstaticReferenceEvent = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
+		getfieldPrimitiveEvent = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
+		getfieldReferenceEvent = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
+		putfieldPrimitiveEvent = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
+		putfieldReferenceEvent = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
+		aloadPrimitiveEvent = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
+		aloadReferenceEvent = scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
+		astorePrimitiveEvent = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
+		astoreReferenceEvent = scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
+		threadStartEvent = scheme.getEvent(InstrScheme.THREAD_START);
+		threadJoinEvent = scheme.getEvent(InstrScheme.THREAD_JOIN);
+		acquireLockEvent = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
+		releaseLockEvent = scheme.getEvent(InstrScheme.RELEASE_LOCK);
+		waitEvent = scheme.getEvent(InstrScheme.WAIT);
+		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 
 		if (enterAndLeaveMethodEvent.present() ||
 				scheme.getInstrMethodAndLoopBound() > 0) {
@@ -539,7 +540,7 @@ public class Instrumentor {
 			}
 			if (eventCall != null) {
 				try {
-					e.replace("{ $proceed($$); " + eventCall + " }");
+					e.replace("{ " + eventCall + " $proceed($$); }");
 				} catch (CannotCompileException ex) {
 					throw new ChordRuntimeException(ex);
 				}
@@ -564,7 +565,7 @@ public class Instrumentor {
 				int pId = releaseLockEvent.hasPid() ? set(Pmap, e) : -1;
 				String lId = releaseLockEvent.hasLid() ? "$0" : "null";
 				String eventCall = releaseLock + pId + "," + lId + ");";
-				e.replace("{ $proceed(); " + eventCall + " }");
+				e.replace("{ " + eventCall + " $proceed(); }");
 			} catch (CannotCompileException ex) {
 				throw new ChordRuntimeException(ex);
 			}

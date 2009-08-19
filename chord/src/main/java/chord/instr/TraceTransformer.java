@@ -12,99 +12,71 @@ import chord.util.ReadException;
 import chord.util.tuple.integer.IntTrio;
 
 public class TraceTransformer {
-	private final InstrScheme scheme = InstrScheme.v();
-	private final boolean newAndNewArrayHasPid =
-		scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasPid();
-	private final boolean newAndNewArrayHasTid =
-		scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasTid();
-	private final boolean newAndNewArrayHasOid =
-		scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasOid();
-	private final int enterAndLeaveMethodNumBytes =
-		scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD).size();
-	private final int newAndNewArrayNumBytes =
-		scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).size();
-	private final int getstaticPrimitiveNumBytes =
-		scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE).size();
-	private final int getstaticReferenceNumBytes =
-		scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE).size();
-	private final int putstaticPrimitiveNumBytes =
-		scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE).size();
-	private final int putstaticReferenceNumBytes =
-		scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE).size();
-	private final int getfieldPrimitiveNumBytes =
-		scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE).size();
-	private final int getfieldReferenceNumBytes =
-		scheme.getEvent(InstrScheme.GETFIELD_REFERENCE).size();
-	private final int putfieldPrimitiveNumBytes =
-		scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE).size();
-	private final int putfieldReferenceNumBytes =
-		scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE).size();
-	private final int aloadPrimitiveNumBytes =
-		scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE).size();
-	private final int aloadReferenceNumBytes =
-		scheme.getEvent(InstrScheme.ALOAD_REFERENCE).size();
-	private final int astorePrimitiveNumBytes =
-		scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE).size();
-	private final int astoreReferenceNumBytes =
-		scheme.getEvent(InstrScheme.ASTORE_REFERENCE).size();
-	private final int threadStartNumBytes =
-		scheme.getEvent(InstrScheme.THREAD_START).size();
-	private final int threadJoinNumBytes =
-		scheme.getEvent(InstrScheme.THREAD_JOIN).size();
-	private final int acquireLockNumBytes =
-		scheme.getEvent(InstrScheme.ACQUIRE_LOCK).size();
-	private final int releaseLockNumBytes =
-		scheme.getEvent(InstrScheme.RELEASE_LOCK).size();
-	private final int waitNumBytes =
-		scheme.getEvent(InstrScheme.WAIT).size();
-	private final int notifyNumBytes =
-		scheme.getEvent(InstrScheme.NOTIFY).size();
+	public static void main(String[] args) {
+		(new TraceTransformer()).run();
+	}
+	private boolean newAndNewArrayHasHid;
+	private boolean newAndNewArrayHasTid;
+	private boolean newAndNewArrayHasOid;
+	private int enterAndLeaveMethodNumBytes;
+	private int newAndNewArrayNumBytes;
+	private int getstaticPrimitiveNumBytes;
+	private int getstaticReferenceNumBytes;
+	private int putstaticPrimitiveNumBytes;
+	private int putstaticReferenceNumBytes;
+	private int getfieldPrimitiveNumBytes;
+	private int getfieldReferenceNumBytes;
+	private int putfieldPrimitiveNumBytes;
+	private int putfieldReferenceNumBytes;
+	private int aloadPrimitiveNumBytes;
+	private int aloadReferenceNumBytes;
+	private int astorePrimitiveNumBytes;
+	private int astoreReferenceNumBytes;
+	private int threadStartNumBytes;
+	private int threadJoinNumBytes;
+	private int acquireLockNumBytes;
+	private int releaseLockNumBytes;
+	private int waitNumBytes;
+	private int notifyNumBytes;
 	private ByteBufferedFile reader, writer;
 	private boolean isInNew;
 	private TByteArrayList tmp;
 	private List<IntTrio> pending;
 	private int count;
-	public static void main(String[] args) {
-		new TraceTransformer().run();
-	}
 	public void run() {
 		String rdFileName = System.getProperty("chord.crude.trace.file");
 		assert (rdFileName != null);
 		String wrFileName = System.getProperty("chord.final.trace.file");
 		assert (wrFileName != null);
-		run(rdFileName, wrFileName);
+		InstrScheme scheme = InstrScheme.load();
+		run(rdFileName, wrFileName, scheme);
 	}
-	private void adjust() throws IOException {
-		int limit;
-		int pendingSize = pending.size();
-		if (pendingSize == 0) {
-			limit = count;
-			isInNew = false;
-		} else {
-			IntTrio trio = pending.get(0);
-			limit = trio.idx2;
-			trio.idx2 = 0;
-			for (int i = 1; i < pendingSize; i++) {
-				trio = pending.get(i);
-				trio.idx2 -= limit;
-			}
-		}
-		int j = 0;
-		for (; j < limit; j++) {
-			byte v = tmp.get(j);
-			writer.putByte(v);
-		}
-		TByteArrayList tmp2 = new TByteArrayList();
-		for (; j < count; j++) {
-			byte v = tmp.get(j);
-			tmp2.add(v);
-		}
-		tmp.clear();
-		tmp = tmp2;
-		count -= limit;
-	}
-	public void run(String rdFileName, String wrFileName) {
+	public void run(String rdFileName, String wrFileName, InstrScheme scheme) {
 		try {
+			newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasHid();
+			newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasTid();
+			newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasOid();
+			enterAndLeaveMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD).size();
+			newAndNewArrayNumBytes = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).size();
+			getstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE).size();
+			getstaticReferenceNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE).size();
+			putstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE).size();
+			putstaticReferenceNumBytes = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE).size();
+			getfieldPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE).size();
+			getfieldReferenceNumBytes = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE).size();
+			putfieldPrimitiveNumBytes = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE).size();
+			putfieldReferenceNumBytes = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE).size();
+			aloadPrimitiveNumBytes = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE).size();
+			aloadReferenceNumBytes = scheme.getEvent(InstrScheme.ALOAD_REFERENCE).size();
+			astorePrimitiveNumBytes = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE).size();
+			astoreReferenceNumBytes = scheme.getEvent(InstrScheme.ASTORE_REFERENCE).size();
+			threadStartNumBytes = scheme.getEvent(InstrScheme.THREAD_START).size();
+			threadJoinNumBytes = scheme.getEvent(InstrScheme.THREAD_JOIN).size();
+			acquireLockNumBytes = scheme.getEvent(InstrScheme.ACQUIRE_LOCK).size();
+			releaseLockNumBytes = scheme.getEvent(InstrScheme.RELEASE_LOCK).size();
+			waitNumBytes = scheme.getEvent(InstrScheme.WAIT).size();
+			notifyNumBytes = scheme.getEvent(InstrScheme.NOTIFY).size();
+
 			assert (newAndNewArrayHasOid);
 			reader = new ByteBufferedFile(1024, rdFileName, true);
 			writer = new ByteBufferedFile(1024, wrFileName, false);
@@ -132,19 +104,19 @@ public class TraceTransformer {
 				{
 					isInNew = true;
 					tmp.add(EventKind.NEW);
-					byte pIdx1 = reader.getByte();
-					byte pIdx2 = reader.getByte();
-					byte pIdx3 = reader.getByte();
-					byte pIdx4 = reader.getByte();
+					byte hIdx1 = reader.getByte();
+					byte hIdx2 = reader.getByte();
+					byte hIdx3 = reader.getByte();
+					byte hIdx4 = reader.getByte();
 					byte tIdx1 = reader.getByte();
 					byte tIdx2 = reader.getByte();
 					byte tIdx3 = reader.getByte();
 					byte tIdx4 = reader.getByte();
-					if (newAndNewArrayHasPid) {
-						tmp.add(pIdx1);
-						tmp.add(pIdx2);
-						tmp.add(pIdx3);
-						tmp.add(pIdx4);
+					if (newAndNewArrayHasHid) {
+						tmp.add(hIdx1);
+						tmp.add(hIdx2);
+						tmp.add(hIdx3);
+						tmp.add(hIdx4);
 					}
 					if (newAndNewArrayHasTid) {
 						tmp.add(tIdx1);
@@ -152,19 +124,19 @@ public class TraceTransformer {
 						tmp.add(tIdx3);
 						tmp.add(tIdx4);
 					}
-					int pIdx = ByteBufferedFile.assemble(pIdx1, pIdx2, pIdx3, pIdx4);
+					int hIdx = ByteBufferedFile.assemble(hIdx1, hIdx2, hIdx3, hIdx4);
 					int tIdx = ByteBufferedFile.assemble(tIdx1, tIdx2, tIdx3, tIdx4);
-					pending.add(new IntTrio(pIdx, tIdx, tmp.size()));
+					pending.add(new IntTrio(hIdx, tIdx, tmp.size()));
 					tmp.add((byte) 0); // dummy placeholder for obj
 					tmp.add((byte) 0); // dummy placeholder for obj
 					tmp.add((byte) 0); // dummy placeholder for obj
 					tmp.add((byte) 0); // dummy placeholder for obj
-					count += newAndNewArrayNumBytes;
+					count += newAndNewArrayNumBytes + 1;
 					break;
 				} 
 				case EventKind.AFT_NEW:
 				{
-					int pIdx = reader.getInt();
+					int hIdx = reader.getInt();
 					int tIdx = reader.getInt();
 					byte oIdx1 = reader.getByte();
 					byte oIdx2 = reader.getByte();
@@ -173,7 +145,7 @@ public class TraceTransformer {
 					int n = pending.size();
 					for (int i = 0; i < n; i++) {
 						IntTrio trio = pending.get(i);
-						if (trio.idx0 == pIdx && trio.idx1 == tIdx) {
+						if (trio.idx0 == hIdx && trio.idx1 == tIdx) {
 							int j = trio.idx2; 
 							tmp.set(j, oIdx1);
 							tmp.set(j + 1, oIdx2);
@@ -265,5 +237,34 @@ public class TraceTransformer {
 		default:
 			throw new RuntimeException();
 		}
+	}
+	private void adjust() throws IOException {
+		int limit;
+		int pendingSize = pending.size();
+		if (pendingSize == 0) {
+			limit = count;
+			isInNew = false;
+		} else {
+			IntTrio trio = pending.get(0);
+			limit = trio.idx2;
+			trio.idx2 = 0;
+			for (int i = 1; i < pendingSize; i++) {
+				trio = pending.get(i);
+				trio.idx2 -= limit;
+			}
+		}
+		int j = 0;
+		for (; j < limit; j++) {
+			byte v = tmp.get(j);
+			writer.putByte(v);
+		}
+		TByteArrayList tmp2 = new TByteArrayList();
+		for (; j < count; j++) {
+			byte v = tmp.get(j);
+			tmp2.add(v);
+		}
+		tmp.clear();
+		tmp = tmp2;
+		count -= limit;
 	}
 }

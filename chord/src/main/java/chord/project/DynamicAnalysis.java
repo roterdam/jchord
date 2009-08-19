@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.File;
 import java.lang.InterruptedException;
 
+import chord.instr.TracePrinter;
 import chord.instr.EventKind;
 import chord.instr.InstrScheme;
 import chord.instr.TraceTransformer;
@@ -17,7 +18,7 @@ import chord.util.ProcessExecutor;
 import chord.util.ReadException;
 
 @Chord(
-    name = "dyn-java"
+	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
 	private IndexMap<String> sHmap = new IndexHashMap<String>();
@@ -35,8 +36,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	protected IndexMap<String> Fmap;
 	protected IndexMap<String> Mmap;
 	protected IndexMap<String> Pmap;
-	protected InstrScheme globalInstrScheme;
-	protected InstrScheme clientInstrScheme;
+	protected InstrScheme scheme;
 	protected boolean convert;
 
 	public void initPass() {
@@ -51,9 +51,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 		throw new ChordRuntimeException();
 	}
 	public void run() {
-		globalInstrScheme = InstrScheme.v();
-		clientInstrScheme = getInstrScheme();
-		boolean needsTraceTransform = clientInstrScheme.needsTraceTransform();
+		scheme = getInstrScheme();
+		assert(scheme != null);
+		boolean needsTraceTransform = scheme.needsTraceTransform();
 		final String mainClassName = Properties.mainClassName;
 		assert (mainClassName != null);
 		final String classPathName = Properties.classPathName;
@@ -66,33 +66,33 @@ public class DynamicAnalysis extends JavaAnalysis {
 			getOrMake("chord.final.trace.file", "final_trace.txt");
 		final String runIdsStr =
 			System.getProperty("chord.run.ids", "0");
-        convert = System.getProperty(
-        	"chord.convert", "true").equals("true");
+		convert = System.getProperty(
+			"chord.convert", "false").equals("true");
 		boolean doTracePipe = System.getProperty(
 			"chord.trace.pipe", "false").equals("true");
-		if (clientInstrScheme.needsHmap())
-        	processDom("H", sHmap, dHmap);
-		if (clientInstrScheme.needsEmap())
-        	processDom("E", sEmap, dEmap);
-		if (clientInstrScheme.needsPmap())
-        	processDom("P", sPmap, dPmap);
-		if (clientInstrScheme.needsFmap())
-        	processDom("F", sFmap, dFmap);
-        if (clientInstrScheme.needsMmap())
-        	processDom("M", sMmap, dMmap);
-        if (convert) {
-        	Hmap = sHmap;
-        	Emap = sEmap;
-        	Pmap = sPmap;
-        	Fmap = sFmap;
-        	Mmap = sMmap;
-        } else {
-        	Hmap = dHmap;
-        	Emap = dEmap;
-        	Pmap = dPmap;
-        	Fmap = dFmap;
-        	Mmap = dMmap;
-        }
+		if (scheme.needsHmap())
+			processDom("H", sHmap, dHmap);
+		if (scheme.needsEmap())
+			processDom("E", sEmap, dEmap);
+		if (scheme.needsPmap())
+			processDom("P", sPmap, dPmap);
+		if (scheme.needsFmap())
+			processDom("F", sFmap, dFmap);
+		if (scheme.needsMmap())
+			processDom("M", sMmap, dMmap);
+		if (convert) {
+			Hmap = sHmap;
+			Emap = sEmap;
+			Pmap = sPmap;
+			Fmap = sFmap;
+			Mmap = sMmap;
+		} else {
+			Hmap = dHmap;
+			Emap = dEmap;
+			Pmap = dPmap;
+			Fmap = dFmap;
+			Mmap = dMmap;
+		}
 		ProcessExecutor.execute("rm " + crudeTraceFileName);
 		ProcessExecutor.execute("rm " + finalTraceFileName);
 		if (doTracePipe) {
@@ -104,9 +104,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final String[] runIds = runIdsStr.split(",");
 		final String cmd = "java -ea -Xbootclasspath/p:" +
 			classesDirName + File.pathSeparator + Properties.bootClassPathName +
-        	" -Xverify:none" + " -verbose" + 
-        	" -cp " + classesDirName + File.pathSeparator + classPathName +
-        	" -agentpath:" + Properties.instrAgentFileName +
+			" -Xverify:none" + " -verbose" + 
+			" -cp " + classesDirName + File.pathSeparator + classPathName +
+			" -agentpath:" + Properties.instrAgentFileName +
 			"=trace_file_name=" + crudeTraceFileName +
 			"=num_meths=" + numMeths +
 			"=num_loops=" + numLoops +
@@ -152,9 +152,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 			} else {
 				ProcessExecutor.execute(cmd + args);
+				// (new TracePrinter()).run(crudeTraceFileName, scheme);
+				System.out.println("DONE");
 				if (needsTraceTransform) {
-					(new TraceTransformer()).run(crudeTraceFileName, finalTraceFileName);
+					(new TraceTransformer()).run(crudeTraceFileName, finalTraceFileName, scheme);
 					processTrace(finalTraceFileName);
+					// (new TracePrinter()).run(finalTraceFileName, scheme);
+					// System.out.println("DONE");
 				} else {
 					processTrace(crudeTraceFileName);
 				}
@@ -266,915 +270,639 @@ public class DynamicAnalysis extends JavaAnalysis {
 				switch (opcode) {
 				case EventKind.ENTER_METHOD:
 				{
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-	            	if (lef.present()) {
-		                int m;
-		                if (lef.hasMid()) {
-		                	m = buffer.getInt();
-		                	if (convert)
-		                		m = getMidx(m);
-		                } else {
-		                	m = -1;
-		                	if (gef.hasMid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-						processEnterMethod(m, t);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
+					EventFormat lef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+					int m;
+					if (lef.hasMid()) {
+						m = buffer.getInt();
+						if (convert)
+							m = getMidx(m);
+					} else {
+						m = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					processEnterMethod(m, t);
 					break;
 				}
 				case EventKind.LEAVE_METHOD:
 				{
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-	            	if (lef.present()) {
-		                int m;
-		                if (lef.hasMid()) {
-		                	m = buffer.getInt();
-		                	if (convert)
-		                		m = getMidx(m);
-		                } else {
-		                	m = -1;
-		                	if (gef.hasMid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-						processLeaveMethod(m, t);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	            	break;
+					EventFormat lef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+					int m;
+					if (lef.hasMid()) {
+						m = buffer.getInt();
+						if (convert)
+							m = getMidx(m);
+					} else {
+						m = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					processLeaveMethod(m, t);
+					break;
 				}
 				case EventKind.NEW:
 				case EventKind.NEW_ARRAY:
 				{
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
-	            	if (lef.present()) {
-		                int h;
-		                if (lef.hasPid()) {
-		                	h = buffer.getInt();
-		                	if (convert)
-		                		h = getHidx(h);
-		                } else {
-		                	h = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-		                processNewOrNewArray(h, t, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
+					EventFormat lef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+					int h;
+					if (lef.hasPid()) {
+						h = buffer.getInt();
+						if (convert)
+							h = getHidx(h);
+					} else {
+						h = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processNewOrNewArray(h, t, o);
 					break;
 				}
-	            case EventKind.GETSTATIC_PRIMITIVE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int f;
-		                if (lef.hasFid()) {
-		                	f = buffer.getInt();
-		                	if (convert)
-		                		f = getFidx(f);
-		                } else {
-		                	f = -1;
-		                	if (gef.hasFid())
-		                		buffer.eatInt();
-		                }
-	                	processGetstaticPrimitive(e, t, f);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.GETSTATIC_REFERENCE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int f;
-		                if (lef.hasFid()) {
-		                	f = buffer.getInt();
-		                	if (convert)
-		                		f = getFidx(f);
-		                } else {
-		                	f = -1;
-		                	if (gef.hasFid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-		            	processGetstaticReference(e, t, f, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.PUTSTATIC_PRIMITIVE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int f;
-		                if (lef.hasFid()) {
-		                	f = buffer.getInt();
-		                	if (convert)
-		                		f = getFidx(f);
-		                } else {
-		                	f = -1;
-		                	if (gef.hasFid())
-		                		buffer.eatInt();
-		                }
-	                	processGetstaticPrimitive(e, t, f);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.PUTSTATIC_REFERENCE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int f;
-		                if (lef.hasFid()) {
-		                	f = buffer.getInt();
-		                	if (convert)
-		                		f = getFidx(f);
-		                } else {
-		                	f = -1;
-		                	if (gef.hasFid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-		            	processGetstaticReference(e, t, f, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.GETFIELD_PRIMITIVE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int b;
-		                if (lef.hasBid()) {
-		                	b = buffer.getInt();
-		                } else {
-		                	b = -1;
-		                	if (gef.hasBid())
-		                		buffer.eatInt();
-		                }
-		                int f;
-		                if (lef.hasFid()) {
-		                	f = buffer.getInt();
-		                	if (convert)
-		                		f = getFidx(f);
-		                } else {
-		                	f = -1;
-		                	if (gef.hasFid())
-		                		buffer.eatInt();
-		                }
-	                	processGetfieldPrimitive(e, t, b, f);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.GETFIELD_REFERENCE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int b;
-		                if (lef.hasBid()) {
-		                	b = buffer.getInt();
-		                } else {
-		                	b = -1;
-		                	if (gef.hasBid())
-		                		buffer.eatInt();
-		                }
-		                int f;
-		                if (lef.hasFid()) {
-		                	f = buffer.getInt();
-		                	if (convert)
-		                		f = getFidx(f);
-		                } else {
-		                	f = -1;
-		                	if (gef.hasFid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-	                	processGetfieldReference(e, t, b, f, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.PUTFIELD_PRIMITIVE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int b;
-		                if (lef.hasBid()) {
-		                	b = buffer.getInt();
-		                } else {
-		                	b = -1;
-		                	if (gef.hasBid())
-		                		buffer.eatInt();
-		                }
-		                int f;
-		                if (lef.hasFid()) {
-		                	f = buffer.getInt();
-		                	if (convert)
-		                		f = getFidx(f);
-		                } else {
-		                	f = -1;
-		                	if (gef.hasFid())
-		                		buffer.eatInt();
-		                }
-	                	processPutfieldPrimitive(e, t, b, f);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.PUTFIELD_REFERENCE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int b;
-		                if (lef.hasBid()) {
-		                	b = buffer.getInt();
-		                } else {
-		                	b = -1;
-		                	if (gef.hasBid())
-		                		buffer.eatInt();
-		                }
-		                int f;
-		                if (lef.hasFid()) {
-		                	f = buffer.getInt();
-		                	if (convert)
-		                		f = getFidx(f);
-		                } else {
-		                	f = -1;
-		                	if (gef.hasFid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-	                	processPutfieldReference(e, t, b, f, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.ALOAD_PRIMITIVE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int b;
-		                if (lef.hasBid()) {
-		                	b = buffer.getInt();
-		                } else {
-		                	b = -1;
-		                	if (gef.hasBid())
-		                		buffer.eatInt();
-		                }
-		                int i;
-		                if (lef.hasIid()) {
-		                	i = buffer.getInt();
-		                } else {
-		                	i = -1;
-		                	if (gef.hasIid())
-		                		buffer.eatInt();
-		                }
-	                	processAloadPrimitive(e, t, b, i);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.ALOAD_REFERENCE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.ALOAD_REFERENCE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.ALOAD_REFERENCE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int b;
-		                if (lef.hasBid()) {
-		                	b = buffer.getInt();
-		                } else {
-		                	b = -1;
-		                	if (gef.hasBid())
-		                		buffer.eatInt();
-		                }
-		                int i;
-		                if (lef.hasIid()) {
-		                	i = buffer.getInt();
-		                } else {
-		                	i = -1;
-		                	if (gef.hasIid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-	                	processAloadReference(e, t, b, i, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.ASTORE_PRIMITIVE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int b;
-		                if (lef.hasBid()) {
-		                	b = buffer.getInt();
-		                } else {
-		                	b = -1;
-		                	if (gef.hasBid())
-		                		buffer.eatInt();
-		                }
-		                int i;
-		                if (lef.hasIid()) {
-		                	i = buffer.getInt();
-		                } else {
-		                	i = -1;
-		                	if (gef.hasIid())
-		                		buffer.eatInt();
-		                }
-	                	processAstorePrimitive(e, t, b, i);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.ASTORE_REFERENCE:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.ASTORE_REFERENCE);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.ASTORE_REFERENCE);
-	            	if (lef.present()) {
-		                int e;
-		                if (lef.hasPid()) {
-		                	e = buffer.getInt();
-		                	if (convert)
-		                		e = getEidx(e);
-		                } else {
-		                	e = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int b;
-		                if (lef.hasBid()) {
-		                	b = buffer.getInt();
-		                } else {
-		                	b = -1;
-		                	if (gef.hasBid())
-		                		buffer.eatInt();
-		                }
-		                int i;
-		                if (lef.hasIid()) {
-		                	i = buffer.getInt();
-		                } else {
-		                	i = -1;
-		                	if (gef.hasIid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-	                	processAstoreReference(e, t, b, i, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.THREAD_START:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.THREAD_START);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.THREAD_START);
-	            	if (lef.present()) {
-		                int p;
-		                if (lef.hasPid()) {
-		                	p = buffer.getInt();
-		                	if (convert)
-		                		p = getPidx(p);
-		                } else {
-		                	p = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-	                	processWait(p, t, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.THREAD_JOIN:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.THREAD_JOIN);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.THREAD_JOIN);
-	            	if (lef.present()) {
-		                int p;
-		                if (lef.hasPid()) {
-		                	p = buffer.getInt();
-		                	if (convert)
-		                		p = getPidx(p);
-		                } else {
-		                	p = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int o;
-		                if (lef.hasOid()) {
-		                	o = buffer.getInt();
-		                } else {
-		                	o = -1;
-		                	if (gef.hasOid())
-		                		buffer.eatInt();
-		                }
-	                	processWait(p, t, o);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.ACQUIRE_LOCK:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.ACQUIRE_LOCK);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.ACQUIRE_LOCK);
-	            	if (lef.present()) {
-		                int p;
-		                if (lef.hasPid()) {
-		                	p = buffer.getInt();
-		                	if (convert)
-		                		p = getPidx(p);
-		                } else {
-		                	p = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int l;
-		                if (lef.hasLid()) {
-		                	l = buffer.getInt();
-		                } else {
-		                	l = -1;
-		                	if (gef.hasLid())
-		                		buffer.eatInt();
-		                }
-	                	processWait(p, t, l);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.RELEASE_LOCK:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.RELEASE_LOCK);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.RELEASE_LOCK);
-	            	if (lef.present()) {
-		                int p;
-		                if (lef.hasPid()) {
-		                	p = buffer.getInt();
-		                	if (convert)
-		                		p = getPidx(p);
-		                } else {
-		                	p = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int l;
-		                if (lef.hasLid()) {
-		                	l = buffer.getInt();
-		                } else {
-		                	l = -1;
-		                	if (gef.hasLid())
-		                		buffer.eatInt();
-		                }
-	                	processWait(p, t, l);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.WAIT:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.WAIT);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.WAIT);
-	            	if (lef.present()) {
-		                int p;
-		                if (lef.hasPid()) {
-		                	p = buffer.getInt();
-		                	if (convert)
-		                		p = getPidx(p);
-		                } else {
-		                	p = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int l;
-		                if (lef.hasLid()) {
-		                	l = buffer.getInt();
-		                } else {
-		                	l = -1;
-		                	if (gef.hasLid())
-		                		buffer.eatInt();
-		                }
-	                	processWait(p, t, l);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
-	            case EventKind.NOTIFY:
-	            {
-					EventFormat lef = clientInstrScheme.getEvent(InstrScheme.NOTIFY);
-					EventFormat gef = globalInstrScheme.getEvent(InstrScheme.NOTIFY);
-	            	if (lef.present()) {
-		                int p;
-		                if (lef.hasPid()) {
-		                	p = buffer.getInt();
-		                	if (convert)
-		                		p = getPidx(p);
-		                } else {
-		                	p = -1;
-		                	if (gef.hasPid())
-		                		buffer.eatInt();
-		                }
-		                int t;
-		                if (lef.hasTid()) {
-		                	t = buffer.getInt();
-		                } else {
-		                	t = -1;
-		                	if (gef.hasTid())
-		                		buffer.eatInt();
-		                }
-		                int l;
-		                if (lef.hasLid()) {
-		                	l = buffer.getInt();
-		                } else {
-		                	l = -1;
-		                	if (gef.hasLid())
-		                		buffer.eatInt();
-		                }
-	                	processNotify(p, t, l);
-	            	} else {
-	            		int n = gef.size();
-	            		buffer.eat(n);
-	            	}
-	                break;
-	            }
+				case EventKind.GETSTATIC_PRIMITIVE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int f;
+					if (lef.hasFid()) {
+						f = buffer.getInt();
+						if (convert)
+							f = getFidx(f);
+					} else {
+						f = -1;
+					}
+					processGetstaticPrimitive(e, t, f);
+					break;
+				}
+				case EventKind.GETSTATIC_REFERENCE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int f;
+					if (lef.hasFid()) {
+						f = buffer.getInt();
+						if (convert)
+							f = getFidx(f);
+					} else {
+						f = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processGetstaticReference(e, t, f, o);
+					break;
+				}
+				case EventKind.PUTSTATIC_PRIMITIVE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int f;
+					if (lef.hasFid()) {
+						f = buffer.getInt();
+						if (convert)
+							f = getFidx(f);
+					} else {
+						f = -1;
+					}
+					processPutstaticPrimitive(e, t, f);
+					break;
+				}
+				case EventKind.PUTSTATIC_REFERENCE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int f;
+					if (lef.hasFid()) {
+						f = buffer.getInt();
+						if (convert)
+							f = getFidx(f);
+					} else {
+						f = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processPutstaticReference(e, t, f, o);
+					break;
+				}
+				case EventKind.GETFIELD_PRIMITIVE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int b;
+					if (lef.hasBid()) {
+						b = buffer.getInt();
+					} else {
+						b = -1;
+					}
+					int f;
+					if (lef.hasFid()) {
+						f = buffer.getInt();
+						if (convert)
+							f = getFidx(f);
+					} else {
+						f = -1;
+					}
+					processGetfieldPrimitive(e, t, b, f);
+					break;
+				}
+				case EventKind.GETFIELD_REFERENCE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int b;
+					if (lef.hasBid()) {
+						b = buffer.getInt();
+					} else {
+						b = -1;
+					}
+					int f;
+					if (lef.hasFid()) {
+						f = buffer.getInt();
+						if (convert)
+							f = getFidx(f);
+					} else {
+						f = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processGetfieldReference(e, t, b, f, o);
+					break;
+				}
+				case EventKind.PUTFIELD_PRIMITIVE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int b;
+					if (lef.hasBid()) {
+						b = buffer.getInt();
+					} else {
+						b = -1;
+					}
+					int f;
+					if (lef.hasFid()) {
+						f = buffer.getInt();
+						if (convert)
+							f = getFidx(f);
+					} else {
+						f = -1;
+					}
+					processPutfieldPrimitive(e, t, b, f);
+					break;
+				}
+				case EventKind.PUTFIELD_REFERENCE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int b;
+					if (lef.hasBid()) {
+						b = buffer.getInt();
+					} else {
+						b = -1;
+					}
+					int f;
+					if (lef.hasFid()) {
+						f = buffer.getInt();
+						if (convert)
+							f = getFidx(f);
+					} else {
+						f = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processPutfieldReference(e, t, b, f, o);
+					break;
+				}
+				case EventKind.ALOAD_PRIMITIVE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int b;
+					if (lef.hasBid()) {
+						b = buffer.getInt();
+					} else {
+						b = -1;
+					}
+					int i;
+					if (lef.hasIid()) {
+						i = buffer.getInt();
+					} else {
+						i = -1;
+					}
+					processAloadPrimitive(e, t, b, i);
+					break;
+				}
+				case EventKind.ALOAD_REFERENCE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int b;
+					if (lef.hasBid()) {
+						b = buffer.getInt();
+					} else {
+						b = -1;
+					}
+					int i;
+					if (lef.hasIid()) {
+						i = buffer.getInt();
+					} else {
+						i = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processAloadReference(e, t, b, i, o);
+					break;
+				}
+				case EventKind.ASTORE_PRIMITIVE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int b;
+					if (lef.hasBid()) {
+						b = buffer.getInt();
+					} else {
+						b = -1;
+					}
+					int i;
+					if (lef.hasIid()) {
+						i = buffer.getInt();
+					} else {
+						i = -1;
+					}
+					processAstorePrimitive(e, t, b, i);
+					break;
+				}
+				case EventKind.ASTORE_REFERENCE:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
+					int e;
+					if (lef.hasPid()) {
+						e = buffer.getInt();
+						if (convert)
+							e = getEidx(e);
+					} else {
+						e = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int b;
+					if (lef.hasBid()) {
+						b = buffer.getInt();
+					} else {
+						b = -1;
+					}
+					int i;
+					if (lef.hasIid()) {
+						i = buffer.getInt();
+					} else {
+						i = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processAstoreReference(e, t, b, i, o);
+					break;
+				}
+				case EventKind.THREAD_START:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.THREAD_START);
+					int p;
+					if (lef.hasPid()) {
+						p = buffer.getInt();
+						if (convert)
+							p = getPidx(p);
+					} else {
+						p = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processThreadStart(p, t, o);
+					break;
+				}
+				case EventKind.THREAD_JOIN:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.THREAD_JOIN);
+					int p;
+					if (lef.hasPid()) {
+						p = buffer.getInt();
+						if (convert)
+							p = getPidx(p);
+					} else {
+						p = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int o;
+					if (lef.hasOid()) {
+						o = buffer.getInt();
+					} else {
+						o = -1;
+					}
+					processThreadJoin(p, t, o);
+					break;
+				}
+				case EventKind.ACQUIRE_LOCK:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
+					int p;
+					if (lef.hasPid()) {
+						p = buffer.getInt();
+						if (convert)
+							p = getPidx(p);
+					} else {
+						p = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int l;
+					if (lef.hasLid()) {
+						l = buffer.getInt();
+					} else {
+						l = -1;
+					}
+					processAcquireLock(p, t, l);
+					break;
+				}
+				case EventKind.RELEASE_LOCK:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
+					int p;
+					if (lef.hasPid()) {
+						p = buffer.getInt();
+						if (convert)
+							p = getPidx(p);
+						} else {
+						p = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+						} else {
+						t = -1;
+					}
+					int l;
+					if (lef.hasLid()) {
+							l = buffer.getInt();
+					} else {
+						l = -1;
+					}
+					processReleaseLock(p, t, l);
+					break;
+				}
+				case EventKind.WAIT:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.WAIT);
+					int p;
+					if (lef.hasPid()) {
+						p = buffer.getInt();
+						if (convert)
+							p = getPidx(p);
+					} else {
+						p = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int l;
+					if (lef.hasLid()) {
+						l = buffer.getInt();
+					} else {
+						l = -1;
+					}
+					processWait(p, t, l);
+					break;
+				}
+				case EventKind.NOTIFY:
+				{
+					EventFormat lef = scheme.getEvent(InstrScheme.NOTIFY);
+					int p;
+					if (lef.hasPid()) {
+						p = buffer.getInt();
+						if (convert)
+							p = getPidx(p);
+					} else {
+						p = -1;
+					}
+					int t;
+					if (lef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					int l;
+					if (lef.hasLid()) {
+						l = buffer.getInt();
+					} else {
+						l = -1;
+					}
+					processNotify(p, t, l);
+					break;
+				}
 				default:
 					throw new RuntimeException("Unknown opcode: " + opcode);
 				}
