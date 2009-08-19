@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.instr;
 
 import java.io.IOException;
@@ -7,6 +12,10 @@ import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
 import chord.project.ChordRuntimeException;
 
+/**
+ * 
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class TracePrinter {
 	public static void main(String[] args) {
 		(new TracePrinter()).run();

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.project;
 
 import java.util.Stack;
@@ -11,6 +16,10 @@ import chord.util.ArraySet;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 
+/**
+ * 
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class CFGLoopFinder implements ICFGVisitor {
 	public static final boolean debug = true;
 	private Set<BasicBlock> visitedBef;

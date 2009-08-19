@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.analyses.thread.escape.hybrid;
 
 import gnu.trove.TObjectIntHashMap;
@@ -52,6 +57,10 @@ import chord.util.Timer;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.object.Pair;
 
+/**
+ * 
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 @Chord(
 	    name = "hybrid-thresc-java"
 	)
