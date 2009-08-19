@@ -49,6 +49,30 @@ public class DBElemInfo {
 	VectorClock vc;
 	List<Integer> iids;
 	
+	public String toString() {
+		String s = "lockSet: ";
+		if (lockSet == null)
+			s += "null";
+		else {
+			for (Integer x : lockSet)
+				s += x + " ";
+		}
+		s += "notifySet: ";
+		if (notifySet == null)
+			s += "null";
+		else {
+			for (Integer x : notifySet)
+				s += x + " ";
+		}
+		s += "isReadElem: " + isReadElem + " iids: ";
+		if (iids == null)
+			s += "null";
+		else {
+			for (Integer x : iids)
+				s += x + " ";
+		}
+		return s;
+	}
 	
 	public DBElemInfo(List iids, int lock, VectorClock vc){
 		l = lock;

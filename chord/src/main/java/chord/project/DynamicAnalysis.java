@@ -61,7 +61,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	}
 	public void run() {
 		scheme = getInstrScheme();
-		String instrSchemeFileName = Properties.instrSchemeFileName;
+		String instrSchemeFileName = (new File(Properties.outDirName, "scheme.ser")).getAbsolutePath();
 		scheme.save(instrSchemeFileName);
 		Instrumentor instrumentor = new Instrumentor();
 		instrumentor.visit(Program.v(), scheme);
@@ -166,8 +166,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 			} else {
 				ProcessExecutor.execute(cmd + args);
-				// (new TracePrinter()).run(crudeTraceFileName, scheme);
-				// System.out.println("DONE");
+				(new TracePrinter()).run(crudeTraceFileName, scheme);
+				System.out.println("DONE");
 				if (needsTraceTransform) {
 					(new TraceTransformer()).run(crudeTraceFileName, finalTraceFileName, scheme);
 					processTrace(finalTraceFileName);
