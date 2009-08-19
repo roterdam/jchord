@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.instr;
 
 import java.io.IOException;
@@ -11,6 +16,10 @@ import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
 import chord.util.tuple.integer.IntTrio;
 
+/**
+ * 
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class TraceTransformer {
 	public static void main(String[] args) {
 		(new TraceTransformer()).run();

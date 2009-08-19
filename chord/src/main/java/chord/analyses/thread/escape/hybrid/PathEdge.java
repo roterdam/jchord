@@ -1,8 +1,17 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.analyses.thread.escape.hybrid;
 
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;
 
+/**
+ * 
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class PathEdge {
 	final Quad q;	// q == null => empty basic block
 	final BasicBlock bb;	// basic block of quad

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.analyses.thread.escape;
 
 import java.util.List;
@@ -17,6 +22,10 @@ import gnu.trove.TIntArrayList;
 // todo: specify output rels in @Chord annotation
 // and enable user to enable isFlowSen/isFlowIns
 
+/**
+ * 
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 @Chord(
 	name = "dynamic-thresc-java",
 	namesOfSigns = { "visitedE", "flowInsEscE", "flowSenEscE" },

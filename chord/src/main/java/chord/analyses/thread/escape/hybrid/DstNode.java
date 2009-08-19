@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.analyses.thread.escape.hybrid;
 
 import java.util.Arrays;
@@ -6,6 +11,10 @@ import java.util.Set;
 import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
 
+/**
+ * 
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class DstNode {
 	final IntArraySet[] env;
 	final Set<IntTrio> heap;
