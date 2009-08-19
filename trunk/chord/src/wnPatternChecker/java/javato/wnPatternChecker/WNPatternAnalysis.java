@@ -36,18 +36,21 @@ public class WNPatternAnalysis extends DynamicAnalysis {
     	if (instrScheme != null)
     		return instrScheme;
     	instrScheme = new InstrScheme();
+
     	instrScheme.setGetstaticPrimitiveEvent(true, true, true);
-    	instrScheme.setGetstaticReferenceEvent(true, true, false, true);
     	instrScheme.setPutstaticPrimitiveEvent(true, true, true);
-    	instrScheme.setPutstaticReferenceEvent(true, true, false, true);
     	instrScheme.setGetfieldPrimitiveEvent(true, true, true, true);
-    	instrScheme.setGetfieldReferenceEvent(true, true, false, false, true);
     	instrScheme.setPutfieldPrimitiveEvent(true, true, true, true);
-    	instrScheme.setPutfieldReferenceEvent(true, true, false, false, true);
     	instrScheme.setAloadPrimitiveEvent(true, true, true, true);
-    	instrScheme.setAloadReferenceEvent(true, true, false, false, true);
     	instrScheme.setAstorePrimitiveEvent(true, true, true, true);
+
+    	instrScheme.setGetstaticReferenceEvent(true, true, false, true);
+    	instrScheme.setPutstaticReferenceEvent(true, true, false, true);
+    	instrScheme.setGetfieldReferenceEvent(true, true, false, false, true);
+    	instrScheme.setPutfieldReferenceEvent(true, true, false, false, true);
+    	instrScheme.setAloadReferenceEvent(true, true, false, false, true);
     	instrScheme.setAstoreReferenceEvent(true, true, false, false, true);
+
     	instrScheme.setThreadStartEvent(true, true, true);
     	instrScheme.setThreadJoinEvent(true, true, true);
     	instrScheme.setAcquireLockEvent(true, true, true);
