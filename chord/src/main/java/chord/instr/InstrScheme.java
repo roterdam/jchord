@@ -515,8 +515,7 @@ public class InstrScheme implements Serializable {
 		setWaitEvent(true, true, true);
 		setNotifyEvent(true, true, true);
 	}
-	public static InstrScheme load() {
-        String fileName = Properties.instrSchemeFileName;
+	public static InstrScheme load(String fileName) {
 		InstrScheme scheme;
 		try {
 			ObjectInputStream stream = new ObjectInputStream(
@@ -530,12 +529,11 @@ public class InstrScheme implements Serializable {
 		}
 		return scheme;
 	}
-	public static void save(InstrScheme scheme) {
-        String fileName = Properties.instrSchemeFileName;
+	public void save(String fileName) {
 		try {
 			ObjectOutputStream stream = new ObjectOutputStream(
 				new FileOutputStream(fileName));
-			stream.writeObject(scheme);
+			stream.writeObject(this);
 			stream.close();
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);

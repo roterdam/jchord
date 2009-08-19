@@ -573,14 +573,15 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void open(String fileName,
-			int numMeths, int numLoops, int ib) {
+	public static void setInstrScheme(InstrScheme s) {
+		scheme = s;
+	}
+	public synchronized static void open(String traceFileName,
+			String instrSchemeFileName, int numMeths, int numLoops, int ib) {
 		try {
-			buffer = new ByteBufferedFile(1024, fileName, false);
+			buffer = new ByteBufferedFile(1024, traceFileName, false);
 		    objmap = new WeakIdentityHashMap();
-		    // TODO scheme = InstrScheme.load();
-			scheme = new InstrScheme();
-			scheme.setAllEvents();
+			scheme = InstrScheme.load(instrSchemeFileName);
 			// threadObjs = new int[NUM_INIT_THREADS];
 			// numCallsToMeth = new int[numMeths][];
 			// numItersOfLoop = new int[numLoops][];
