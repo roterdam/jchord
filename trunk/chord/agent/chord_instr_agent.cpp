@@ -10,6 +10,7 @@ using namespace std;
 static jvmtiEnv* jvmti_env;
 
 static string trace_file_name;
+static string instr_scheme_file_name;
 static int num_meths, num_loops, instr_bound;
 
 char* get_token(char *str, char *seps, char *buf, int max)
@@ -47,15 +48,16 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 		exit(1);
 	}
 	const char* mName = "open";
-	const char* mSign = "(Ljava/lang/String;III)V";
+	const char* mSign = "(Ljava/lang/String;Ljava/lang/String;III)V";
 	jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
 	if (m == NULL) {
 		cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
 			" from class: " << cName << endl;
 		exit(1);
 	}
-	jstring str = jni_env->NewStringUTF(trace_file_name.c_str());
-	jni_env->CallStaticObjectMethod(c, m, str, num_meths, num_loops, instr_bound);
+	jstring str1 = jni_env->NewStringUTF(trace_file_name.c_str());
+	jstring str2 = jni_env->NewStringUTF(instr_scheme_file_name.c_str());
+	jni_env->CallStaticObjectMethod(c, m, str1, str2, num_meths, num_loops, instr_bound);
 	cout << "LEAVE VMInit" << endl;
 }
 
@@ -98,7 +100,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 		if (next == NULL)
 			break;
         if (strcmp(token, "trace_file_name") == 0) {
-            char arg[1024];
+            char arg[8192];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
             if (next == NULL) {
                 cerr << "ERROR: Cannot parse option trace_file_name=<name>: "
@@ -106,7 +108,15 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 				exit(1);
             }
 			trace_file_name = string(arg);
-			cout << "trace_file_name: " << trace_file_name << endl;
+        } else if (strcmp(token, "instr_scheme_file_name") == 0) {
+            char arg[8192];
+            next = get_token(next, (char*) ",=", arg, sizeof(arg));
+            if (next == NULL) {
+                cerr << "ERROR: Cannot parse option instr_scheme_file_name=<name>: "
+					<< options << endl;
+				exit(1);
+            }
+			instr_scheme_file_name = string(arg);
 		} else if (strcmp(token, "num_meths") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));

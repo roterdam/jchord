@@ -85,10 +85,19 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     	instrScheme = new InstrScheme();
     	instrScheme.setNewAndNewArrayEvent(true, false, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, true);
+
+    	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setGetfieldReferenceEvent(true, false, true, false, false);
+
+    	instrScheme.setPutfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setPutfieldReferenceEvent(true, false, true, true, true);
+
+    	instrScheme.setAloadPrimitiveEvent(true, false, true, false);
     	instrScheme.setAloadReferenceEvent(true, false, true, false, false);
+
+    	instrScheme.setAstorePrimitiveEvent(true, false, true, false);
     	instrScheme.setAstoreReferenceEvent(true, false, true, true, true);
+
     	instrScheme.setThreadStartEvent(false, false, true);
     	return instrScheme;
     }
@@ -208,16 +217,30 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
 		processHeapWr(e, b, f, o);
 	}
-	public void processPutstaticReference(int e, int t, int f, int o) { 
-		if (o != 0) {
-			markAndPropEsc(o);
-		}
-	}
 	public void processAloadReference(int e, int t, int b, int i, int o) { 
 		processHeapRd(e, b);
 	}
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
 		processHeapWr(e, b, i, o);
+	}
+
+	public void processGetfieldPrimitive(int e, int t, int b, int f) { 
+		processHeapRd(e, b);
+	}
+	public void processPutfieldPrimitive(int e, int t, int b, int f) {
+		processHeapRd(e, b);
+	}
+	public void processAloadPrimitive(int e, int t, int b, int i) { 
+		processHeapRd(e, b);
+	}
+	public void processAstorePrimitive(int e, int t, int b, int i) {
+		processHeapRd(e, b);
+	}
+
+	public void processPutstaticReference(int e, int t, int f, int o) { 
+		if (o != 0) {
+			markAndPropEsc(o);
+		}
 	}
 	public void processThreadStart(int p, int t, int o) { 
 		if (o != 0) {

@@ -307,6 +307,21 @@
     <antcall target="run"/>
   </target>
 
+  <target name="run-wn">
+    <path id="chord_java_analysis_path">
+      <pathelement location="classes/main"/>
+      <pathelement location="classes/wnPatternChecker"/>
+    </path>
+    <path id="chord_dlog_analysis_path">
+      <pathelement location="src/main/dlog"/>
+      <pathelement location="src/wnPatternChecker/dlog"/>
+    </path>
+    <property name="chord.analyses" value="wn-java"/>
+    <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
+    <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
+    <antcall target="run"/>
+  </target>
+
   <target name="clean">
     <delete dir="classes"/>
     <exec executable="make" dir="bdd">

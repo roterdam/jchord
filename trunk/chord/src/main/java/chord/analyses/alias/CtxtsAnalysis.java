@@ -613,7 +613,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			}
 			case CTXTCPY:
 			{
-            	System.out.println("REACHED CPY: " + meth);
 				Set<jq_Method> predMeths = new HashSet<jq_Method>();
 				for (Quad invk : getCallers(meth)) {
 					predMeths.add(Program.v().getMethod(invk));

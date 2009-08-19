@@ -94,6 +94,7 @@ public class Project {
             Project.init();
             Program.v().init();
 
+/*
 			DynamicAnalysis analysis = new DynamicAnalysis() {
 				InstrScheme scheme;
 				public InstrScheme getInstrScheme() {
@@ -101,11 +102,11 @@ public class Project {
 						scheme = new InstrScheme();
 						scheme.setAllEvents();
 					}
-					System.out.println("REACHED");
 					return scheme;
 				}
 			};
 			analysis.run();
+*/
 
             String analyses = Properties.analyses;
             if (analyses != null) {
