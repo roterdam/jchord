@@ -26,7 +26,7 @@ import chord.util.IndexHashMap;
  * value is mapped to integer K in the domain where K is the number
  * of values already in the domain.</li>
  * <li>The domain built in memory is reflected onto disk by calling
- * {@link #save()}.</li>
+ * {@link #save(String)}.</li>
  * <li>The domain on disk can be read by a Datalog program.</li>
  * <li>The domain in memory can be read by calling any of the
  * following:

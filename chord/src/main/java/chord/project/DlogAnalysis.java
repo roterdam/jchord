@@ -283,29 +283,31 @@ public class DlogAnalysis extends JavaAnalysis {
 		Solver.run(fileName);
     }
 	/**
-	 * Provides the set of names of all domains of relations
+	 * Provides the names of all domains of relations
 	 * consumed/produced by this Datalog analysis.
 	 * 
-	 * @return	The set of names of all domains of relations
-	 * consumed/produced by this Datalog analysis.
+	 * @return	The names of all domains of relations
+	 *			consumed/produced by this Datalog analysis.
 	 */
 	public Set<String> getDomNames() {
 		return majorDomNames;
 	}
 	/**
-	 * Provides the set of names and signatures of all relations
-	 * consumed by this Datalog analysis.
+	 * Provides the names and signatures of all relations consumed
+	 * by this Datalog analysis.
 	 * 
-	 * @return
+	 * @return	The names and signatures of all relations consumed
+	 *			by this Datalog analysis.
 	 */
 	public Map<String, RelSign> getConsumedRels() {
 		return consumedRels;
 	}
 	/**
-	 * Provides the set of names and signatures of all relations
-	 * produced by this Datalog analysis.
+	 * Provides the names and signatures of all relations produced
+	 * by this Datalog analysis.
 	 * 
-	 * @return
+	 * @return	The names and signatures of all relations produced
+	 * 			by this Datalog analysis.
 	 */
 	public Map<String, RelSign> getProducedRels() {
 		return producedRels;
