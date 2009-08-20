@@ -149,11 +149,10 @@ public class VectorClock {
     }
     
     /**
-     * this function compares two vector clocks
+     * this function compares two vector clocks (author: Christos Stergiou)
      * @param vc1
      * @param vc2
      * @return -1 when vc1 <= vc2, 0 when vc1 not comparable to vc2, 1 when vc1 > vc2
-     * @author Christos Stergiou 
      */
     public int compareVectorClocks(VectorClock vc1, VectorClock vc2) {
     	boolean less = false;
