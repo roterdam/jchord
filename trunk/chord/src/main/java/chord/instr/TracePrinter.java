@@ -17,6 +17,7 @@ import chord.project.ChordRuntimeException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class TracePrinter {
+/*
 	public static void main(String[] args) {
 		(new TracePrinter()).run();
 	}
@@ -25,6 +26,7 @@ public class TracePrinter {
 		InstrScheme scheme = InstrScheme.load();
 		run(traceFileName, scheme);
 	}
+*/
 	public static void run(String traceFileName, InstrScheme scheme) {
 		try {
 		ByteBufferedFile buffer = new ByteBufferedFile(1024, traceFileName, true);

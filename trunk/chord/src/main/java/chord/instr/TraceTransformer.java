@@ -21,9 +21,6 @@ import chord.util.tuple.integer.IntTrio;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class TraceTransformer {
-	public static void main(String[] args) {
-		(new TraceTransformer()).run();
-	}
 	private boolean newAndNewArrayHasHid;
 	private boolean newAndNewArrayHasTid;
 	private boolean newAndNewArrayHasOid;
@@ -52,6 +49,10 @@ public class TraceTransformer {
 	private TByteArrayList tmp;
 	private List<IntTrio> pending;
 	private int count;
+/*
+	public static void main(String[] args) {
+		(new TraceTransformer()).run();
+	}
 	public void run() {
 		String rdFileName = System.getProperty("chord.crude.trace.file");
 		assert (rdFileName != null);
@@ -60,6 +61,7 @@ public class TraceTransformer {
 		InstrScheme scheme = InstrScheme.load();
 		run(rdFileName, wrFileName, scheme);
 	}
+*/
 	public void run(String rdFileName, String wrFileName, InstrScheme scheme) {
 		try {
 			newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasHid();
