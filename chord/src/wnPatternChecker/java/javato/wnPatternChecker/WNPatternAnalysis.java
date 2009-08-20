@@ -164,6 +164,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		}
 	}
 	private void processHeapRd(int eId, int tId, long oId) {
+		System.out.println("Rd: " + eId + " " + tId + " " + oId);
 		Stack<LockStackElemInfo> ls = (Stack<LockStackElemInfo>)(lockStack.get());
 		RdListElemInfo rdElem = new RdListElemInfo(eId, oId);
 		if(!ls.isEmpty()){
@@ -171,16 +172,17 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 			topLsElem.addToRdList(rdElem);
 		}
 	}
-	private void processHeapWr(int pId, int tId, long oId) {
+	private void processHeapWr(int eId, int tId, long oId) {
+		System.out.println("Wr: " + eId + " " + tId + " " + oId);
 		Stack<LockStackElemInfo> ls = (Stack<LockStackElemInfo>)(lockStack.get());
-		WrListElemInfo wrElem = new WrListElemInfo(pId, oId);
+		WrListElemInfo wrElem = new WrListElemInfo(eId, oId);
 		if(!ls.isEmpty()){
 			LockStackElemInfo topLsElem = ls.peek();
 			topLsElem.addToWrList(wrElem);
 		}
 		else {
 			List<Integer> iids = new LinkedList<Integer>();
-			iids.add(new Integer(pId));
+			iids.add(new Integer(eId));
 			db.addToDatabase(iids, oId, tId, new HashSet<Integer>(), new HashSet<Integer>(), tb.getVC(tId));
 		}
 	}
