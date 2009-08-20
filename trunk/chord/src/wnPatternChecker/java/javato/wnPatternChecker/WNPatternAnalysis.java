@@ -10,6 +10,8 @@ import java.util.TreeMap;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
+import chord.project.Project;
+import chord.project.ProgramDom;
 import chord.project.DynamicAnalysis;
 import chord.project.Runtime;
 
@@ -56,7 +58,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		// do nothing for now
 	}
 	public void done() {
-        db.checkForErrors();
+        db.checkForErrors(Emap, Pmap);
 	}
 
 	public void processGetstaticPrimitive(int eId, int tId, int fId) { 
@@ -175,7 +177,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		}
 	}
 	private void processHeapRd(int eId, int tId, long oId) {
-		System.out.println("Rd: " + eId + " " + tId + " " + oId);
+		// System.out.println("Rd: " + eId + " " + tId + " " + oId);
 		Stack<LockStackElemInfo> ls = getLockStack(tId);
 		RdListElemInfo rdElem = new RdListElemInfo(eId, oId);
 		if(!ls.isEmpty()){
@@ -184,7 +186,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		}
 	}
 	private void processHeapWr(int eId, int tId, long oId) {
-		System.out.println("Wr: " + eId + " " + tId + " " + oId);
+		// System.out.println("Wr: " + eId + " " + tId + " " + oId);
 		Stack<LockStackElemInfo> ls = getLockStack(tId);
 		WrListElemInfo wrElem = new WrListElemInfo(eId, oId);
 		if(!ls.isEmpty()){

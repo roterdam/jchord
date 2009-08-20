@@ -8,6 +8,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import joeq.Class.jq_Method;
+import joeq.Class.jq_Class;
+import chord.project.Program;
+import chord.util.IndexMap;
 
 import javato.utils.VectorClock;
 
@@ -101,7 +105,12 @@ public class Database {
 		return iidsListWithoutDups;
 	}
 	
-	public void checkForErrors(){
+	IndexMap<String> Emap;
+	IndexMap<String> Pmap;
+
+	public void checkForErrors(IndexMap<String> Emap, IndexMap<String> Pmap) {
+		this.Emap = Emap;
+		this.Pmap = Pmap;
 		Iterator eBaseItr = eBase.entrySet().iterator();
 		while(eBaseItr.hasNext()){
 			Map.Entry eBaseEntry = (Map.Entry)eBaseItr.next();
@@ -128,7 +137,7 @@ public class Database {
 		}
 	}
 	
-	public void checkForErrors(Long m, Integer t1, List<DBElemInfo> t1DBElems, Integer t2, 
+	private void checkForErrors(Long m, Integer t1, List<DBElemInfo> t1DBElems, Integer t2, 
 			List<DBElemInfo> t2DBElems){
 		System.out.println("REACHED: " + m);
 		System.out.println("XXX " + t1);
@@ -187,10 +196,25 @@ public class Database {
 	  
 	}
 	
-	public String printIIDs(List<Integer> iids){
+	public String printIIDs(List<Integer> iids) {
+		Program program = Program.v();
 		String res = "[ ";
 		for(Integer iid : iids){
-			res += iid + " ";
+			String s = Emap.get(iid);  // TODO: replace Emap by Pmap for wait, notify, etc.
+			int exclIdx = s.indexOf('!');
+			int colonIdx = s.indexOf(':');
+			int atIdx = s.indexOf('@');
+			int bci = Integer.parseInt(s.substring(0, exclIdx));
+			String mName = s.substring(exclIdx + 1, colonIdx);
+			String mDesc = s.substring(colonIdx + 1, atIdx);
+			String cName = s.substring(atIdx + 1); 
+			jq_Class c = program.getPreparedClass(cName);
+			assert (c != null);
+			String fileName = Program.getSourceFileName(c);
+			jq_Method m = program.getReachableMethod(cName, mName, mDesc);
+			assert (m != null);
+			int lineNum = m.getLineNumber(bci);
+			res += fileName + ":" + lineNum + " ";
 		}
 		res += "]";
 		return res;
