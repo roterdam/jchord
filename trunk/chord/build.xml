@@ -121,6 +121,7 @@
                    location to dump instrumentation map files
                * chord.classes.dir (default={chord.out.dir}/classes/)
                    location to dump instrumented classes
+  javadoc      Generate javadoc for Chord source code
   </echo>
   </target>
 
@@ -400,5 +401,19 @@
       <arg file="${dlog.file}"/>
     </java>
   </target>
-  
+  <target name="javadoc">
+    <javadoc destdir="javadoc">
+      <fileset dir="src">
+        <include name="**/*.java"/>
+      </fileset>
+      <classpath>
+        <pathelement location="lib/joeq.jar"/>
+        <pathelement location="lib/trove-2.0.4.jar"/>
+        <pathelement location="lib/bddbddb/javabdd-1.0b2.jar"/>
+        <pathelement location="lib/javassist.jar"/>
+        <pathelement location="lib/scannotation-1.0.2.jar"/>
+        <pathelement location="lib/j2h.jar"/>
+      </classpath>
+    </javadoc>
+  </target>
 </project>
