@@ -58,14 +58,6 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 	protected Map<Node, Set<Node>> nodeToSuccs;
 	/**
 	 * Constructs an empty mutable, unlabeled, directed graph.
-	 * 
-	 * @param	allNodesAreRoots	Determines whether the graph treats
-	 * 			all nodes as root nodes.  This may be necessary if, for
-	 * 			instance, a client wants to ensure that every node in
-	 * 			the graph is reachable from some root node, which in turn
-	 * 			is necessary to ensure that operations like computing
-	 * 			Strongly Connected Components to operate on the entire
-	 * 			graph instead of on a sub-graph of it.
 	 */
 	public MutableGraph() {
 		this(new ArraySet<Node>(),

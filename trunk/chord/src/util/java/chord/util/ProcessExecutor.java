@@ -23,7 +23,7 @@ public final class ProcessExecutor {
 	 * <p>
 	 * The invoking process waits till the invoked process finishes.
 	 * 
-	 * @param	A system command to be executed.
+	 * @param	cmd	A system command to be executed.
 	 * 
 	 * @return	The exit value of the invoked process.
 	 * 			By convention, 0 indicates normal termination.

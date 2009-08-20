@@ -54,12 +54,12 @@ import net.sf.javabdd.BDDFactory;
  * </ul>
  * </li>
  * <li>The relation built in memory is reflected onto disk by calling
- * {@link #save()} which also removes the relation from memory in
+ * {@link #save(String)} which also removes the relation from memory in
  * that the BDDs allocated for the relation in memory are freed).</li>
  * <li>The relation on disk can be read by a Datalog program that
  * declares the relation as an input relation.</li>
  * <li>The relation on disk can also be read by first calling
- * {@link #load()}, which loads the relation from disk into memory,
+ * {@link #load(String)}, which loads the relation from disk into memory,
  * and then calling any of the following:
  * <ul>
  * <li>{@link #size()}, which provides the number of tuples in the
@@ -166,7 +166,7 @@ public class Rel {
      * method is called.  The contents of the domains are used
      * only when the contents of this relation are initialized (by
      * calling one of methods {@link #one()}, {@link #zero()}, and
-     * {@link #load()}).
+     * {@link #load(String)}).
      * 
      * @param	doms	The domains of this relation.
      */
