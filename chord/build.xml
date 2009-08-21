@@ -29,7 +29,6 @@
       Each relative path element in the value of any property named chord.*.path in the
       file is converted to an absolute path element w.r.t. {chord.work.dir}
    3. Sets chord.out.dir to {chord.work.dir}/chord_output, if it is not already set
-   4. Sets chord.classes.dir to {chord.out.dir}/classes, if it is not already set
   -->
   <target name="props-file" depends="ant-contrib">
     <if>
@@ -52,7 +51,6 @@
       <else/>
     </if>
     <property name="chord.out.dir" location="${chord.work.dir}/chord_output/"/>
-    <property name="chord.classes.dir" location="${chord.out.dir}/classes/"/>
   </target>
 
   <target name="util-class-path">
@@ -110,17 +108,6 @@
                Optional properties:
                - max.tuples (default=1000)
                - max.heap   (default=1024m)
-  instr        Instrument given Java program's .class files
-               Required:
-               * chord.class.path
-                   classpath of the program to be instrumented
-               Optional:
-               * chord.work.dir (default=.)
-                   working directory during instrumentation
-               * chord.out.dir (default={chord.work.dir}/chord_output/)
-                   location to dump instrumentation map files
-               * chord.classes.dir (default={chord.out.dir}/classes/)
-                   location to dump instrumented classes
   javadoc      Generate javadoc for Chord source code
   </echo>
   </target>
@@ -229,19 +216,6 @@
         <pathelement path="${chord.java.analysis.path}"/>
         <pathelement path="${chord.class.path}"/>
       </classpath>
-    </java>
-  </target>
-
-  <target name="instr" depends="props-file,main-class-path">
-    <fail unless="chord.class.path"/>
-    <mkdir dir="${chord.out.dir}"/>
-    <property name="chord.max.heap" value="1024m"/>
-    <java classname="chord.project.Instrumentor" fork="true" failonerror="true"
-        dir="${chord.work.dir}" classpath="${chord.main.class.path}">
-      <jvmarg value="-Xmx${chord.max.heap}"/>
-      <syspropertyset>
-        <propertyref prefix="chord."/>
-      </syspropertyset>
     </java>
   </target>
 

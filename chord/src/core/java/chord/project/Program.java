@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.PrintWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import com.java2html.Java2HTML;
 
 import chord.util.IndexHashSet;
+import chord.util.ProcessExecutor;
  
 import joeq.Util.Templates.ListIterator;
 import joeq.UTF.Utf8;
@@ -64,75 +66,127 @@ public class Program {
 	private boolean HTMLizedJavaSrcFiles;
 	private final Map<Inst, jq_Method> instToMethodMap = 
 		new HashMap<Inst, jq_Method>();
-	
+
 	public void init() {
+		if (isInited)
+			return;
 		try {
-			if (isInited)
-				return;
-			File classesFile = new File(Properties.outDirName, "classes.txt");
-			File methodsFile = new File(Properties.outDirName, "methods.txt");
-			if (classesFile.exists() && methodsFile.exists()) {
-				preparedClasses = new IndexHashSet<jq_Class>();
-				{
-					BufferedReader r =
-						new BufferedReader(new FileReader(classesFile));
-					String s;
-					while ((s = r.readLine()) != null) {
-						System.out.println("Loading: " + s);
-						jq_Class c = (jq_Class) Helper.load(s);
-						// if (c == null) {
-						//	System.out.println("WARNING: failed to load class: " + c);
-						//	continue;
-						// }
-						assert (c != null);
-						c.prepare();
-						preparedClasses.add(c);
-					}
-					r.close();
-				}
-				buildReachableTypes();
-				reachableMethods = new IndexHashSet<jq_Method>();
-				{
-					BufferedReader r =
-						new BufferedReader(new FileReader(methodsFile));
-					String s;
-					while ((s = r.readLine()) != null) {
-						int sep1 = s.indexOf(':');
-						int sep2 = s.indexOf('@', sep1 + 1);
-						String mName = s.substring(0, sep1);
-						String mDesc = s.substring(sep1 + 1, sep2);
-						String cName = s.substring(sep2 + 1);
-						jq_Class c = getPreparedClass(cName);
-						assert (c != null);
-						jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
-						reachableMethods.add(m);
-					}
-					r.close();
-				}
-			} else {
-				String mainClassName = Properties.mainClassName;
-				assert (mainClassName != null);
-				RTA rta = new RTA();
-				rta.run(mainClassName);
-				preparedClasses = rta.getPreparedClasses();
-				PrintWriter classesFileWriter = new PrintWriter(classesFile);
-				for (jq_Class c : preparedClasses) {
-					classesFileWriter.println(c);
-				}
-				classesFileWriter.close();
-				buildReachableTypes();
-				reachableMethods = rta.getReachableMethods();
-				PrintWriter methodsFileWriter = new PrintWriter(methodsFile);
-				for (jq_Method m : reachableMethods) {
-					methodsFileWriter.println(m);
-				}
-				methodsFileWriter.close();
+			boolean filesExist =
+				(new File(Properties.bootClassesFileName)).exists() &&
+				(new File(Properties.classesFileName)).exists() &&
+				(new File(Properties.methodsFileName)).exists();
+			if (Properties.reuseScope && filesExist)
+				initFromCache();
+			else {
+				String scopeKind = Properties.scopeKind;
+				if (scopeKind.equals("rta")) {
+					initFromRTA();
+				} else if (scopeKind.equals("dynamic")) {
+					initFromDynamic();
+				} else
+					assert (false);
 			}
-			isInited = true;
-		} catch (Exception ex) {
-			throw new RuntimeException(ex);
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
 		}
+		isInited = true;
 	}
+	private void loadAndPrepare(String fileName,
+			boolean mustBeSystemClass) throws IOException {
+		BufferedReader r = new BufferedReader(new FileReader(fileName));
+		String s;
+		while ((s = r.readLine()) != null) {
+			System.out.println("Loading: " + s);
+			jq_Class c = (jq_Class) Helper.load(s);
+			assert (c != null);
+			c.prepare();
+			assert(c.isSystemClass() == mustBeSystemClass);
+			preparedClasses.add(c);
+		}
+		r.close();
+	}
+	private void initFromCache() throws IOException {
+		preparedClasses = new IndexHashSet<jq_Class>();
+		loadAndPrepare(Properties.bootClassesFileName, true);
+		loadAndPrepare(Properties.classesFileName, false);
+		buildReachableTypes();
+		reachableMethods = new IndexHashSet<jq_Method>();
+		BufferedReader r = new BufferedReader(
+			new FileReader(Properties.methodsFileName));
+		String s;
+		while ((s = r.readLine()) != null) {
+			int sep1 = s.indexOf(':');
+			int sep2 = s.indexOf('@', sep1 + 1);
+			String mName = s.substring(0, sep1);
+			String mDesc = s.substring(sep1 + 1, sep2);
+			String cName = s.substring(sep2 + 1);
+			jq_Class c = getPreparedClass(cName);
+			assert (c != null);
+			jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
+			reachableMethods.add(m);
+		}
+		r.close();
+	}
+	private void initFromRTA() throws IOException {
+		String mainClassName = Properties.mainClassName;
+		assert (mainClassName != null);
+		RTA rta = new RTA();
+		rta.run(mainClassName);
+		preparedClasses = rta.getPreparedClasses();
+		reachableMethods = rta.getReachableMethods();
+		write();
+	}
+	private void initFromDynamic() throws IOException {
+		String mainClassName = Properties.mainClassName;
+		assert (mainClassName != null);
+		String classPathName = Properties.classPathName;
+		assert (classPathName != null);
+        String[] runIDs = Properties.runIDs.split(",");
+		assert(runIDs.length > 0);
+        final String cmd = "java -ea " +
+            " -cp " + classPathName +
+            " -agentpath:" + Properties.instrAgentFileName +
+            "=boot_classes_file_name=" + Properties.bootClassesFileName +
+            "=classes_file_name=" + Properties.classesFileName +
+            " " + mainClassName + " ";
+		preparedClasses = new IndexHashSet<jq_Class>();
+        for (String runID : runIDs) {
+            System.out.println("Processing Run ID: " + runID);
+            String args = System.getProperty("chord.args." + runID, "");
+			ProcessExecutor.execute(cmd + args);
+			loadAndPrepare(Properties.bootClassesFileName, true);
+			loadAndPrepare(Properties.classesFileName, false);
+		}
+		reachableMethods = new IndexHashSet<jq_Method>();
+		for (jq_Class c : preparedClasses) {
+			for (jq_Method m : c.getDeclaredInstanceMethods()) 
+				reachableMethods.add(m);
+			for (jq_Method m : c.getDeclaredStaticMethods()) 
+				reachableMethods.add(m);
+		}
+		write();
+	}
+	private void write() throws IOException {
+		PrintWriter bootClassesFileWriter =
+			new PrintWriter(Properties.bootClassesFileName);
+		PrintWriter classesFileWriter =
+			new PrintWriter(Properties.classesFileName);
+		for (jq_Class c : preparedClasses) {
+			if (c.isSystemClass())
+				bootClassesFileWriter.println(c);
+			else
+				classesFileWriter.println(c);
+		}
+		bootClassesFileWriter.close();
+		classesFileWriter.close();
+		buildReachableTypes();
+		PrintWriter methodsFileWriter =
+			new PrintWriter(Properties.methodsFileName);
+		for (jq_Method m : reachableMethods)
+			methodsFileWriter.println(m);
+		methodsFileWriter.close();
+	}
+
 
 	public void mapInstToMethod(Inst i, jq_Method m) {
 		instToMethodMap.put(i, m);
