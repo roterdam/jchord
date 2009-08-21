@@ -95,7 +95,6 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 			jobject classloader;
 			result = jvmti_env->GetClassLoader(klass, &classloader);
 			assert(result == JVMTI_ERROR_NONE);
-			cout << "CLASS: " << class_name << " " << classloader << endl;
 			if (classloader == NULL)
 				boot_classes_out << class_name << endl;
 			else
