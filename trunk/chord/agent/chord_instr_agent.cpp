@@ -2,6 +2,7 @@
 #include <assert.h>
 using namespace std;
 #include "iostream"
+#include "fstream"
 #include "set"
 #include "map"
 #include "vector"
@@ -9,8 +10,14 @@ using namespace std;
 
 static jvmtiEnv* jvmti_env;
 
-static string trace_file_name;
-static string instr_scheme_file_name;
+#define MAX_FILE_NAME 8192
+
+static bool list_loaded_classes = false;
+static bool enable_tracing = false;
+static char trace_file_name[MAX_FILE_NAME];
+static char instr_scheme_file_name[MAX_FILE_NAME];
+static char classes_file_name[MAX_FILE_NAME];
+static char boot_classes_file_name[MAX_FILE_NAME];
 static int num_meths, num_loops, instr_bound;
 
 char* get_token(char *str, char *seps, char *buf, int max)
@@ -41,23 +48,27 @@ static void JNICALL VMStart(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread) 
 {
     cout << "ENTER VMInit" << endl;
-	const char* cName = "chord/project/Runtime";
-    jclass c = jni_env->FindClass(cName);
-	if (c == NULL) {
-		cout << "ERROR: JNI: Cannot find class: " << cName << endl;
-		exit(1);
+
+	if (enable_tracing) {
+		const char* cName = "chord/project/Runtime";
+		jclass c = jni_env->FindClass(cName);
+		if (c == NULL) {
+			cout << "ERROR: JNI: Cannot find class: " << cName << endl;
+			exit(1);
+		}
+		const char* mName = "open";
+		const char* mSign = "(Ljava/lang/String;Ljava/lang/String;III)V";
+		jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
+		if (m == NULL) {
+			cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
+				" from class: " << cName << endl;
+			exit(1);
+		}
+		jstring str1 = jni_env->NewStringUTF(trace_file_name);
+		jstring str2 = jni_env->NewStringUTF(instr_scheme_file_name);
+		jni_env->CallStaticObjectMethod(c, m, str1, str2, num_meths, num_loops, instr_bound);
 	}
-	const char* mName = "open";
-	const char* mSign = "(Ljava/lang/String;Ljava/lang/String;III)V";
-	jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
-	if (m == NULL) {
-		cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
-			" from class: " << cName << endl;
-		exit(1);
-	}
-	jstring str1 = jni_env->NewStringUTF(trace_file_name.c_str());
-	jstring str2 = jni_env->NewStringUTF(instr_scheme_file_name.c_str());
-	jni_env->CallStaticObjectMethod(c, m, str1, str2, num_meths, num_loops, instr_bound);
+
 	cout << "LEAVE VMInit" << endl;
 }
 
@@ -65,24 +76,56 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 {
     cout << "ENTER VMDeath" << endl;
-	const char* name = "chord/project/Runtime";
-    jclass klass = jni_env->FindClass(name);
-    if (klass == NULL) {
-        cout << "ERROR: JNI: Cannot find class: " << name << endl;
-		exit(1);
+
+	if (list_loaded_classes) {
+		int class_count;
+		jclass* classes;
+		jvmtiError result;
+		result = jvmti_env->GetLoadedClasses(&class_count, &classes);
+		assert(result == JVMTI_ERROR_NONE);
+		fstream boot_classes_out, classes_out;
+ 		boot_classes_out.open(boot_classes_file_name, ios::out);
+ 		classes_out.open(classes_file_name, ios::out);
+		for (int i = 0; i < class_count; i++) {
+			jclass klass = classes[i];
+			char* class_name;
+			jvmti_env->GetClassSignature(klass, &class_name, NULL);
+			if (class_name[0] == '[')
+				continue;
+			jobject classloader;
+			result = jvmti_env->GetClassLoader(klass, &classloader);
+			assert(result == JVMTI_ERROR_NONE);
+			cout << "CLASS: " << class_name << " " << classloader << endl;
+			if (classloader == NULL)
+				boot_classes_out << class_name << endl;
+			else
+				classes_out << class_name << endl;
+		}
+		boot_classes_out.close();
+		classes_out.close();
 	}
-	const char* methodName = "close";
-	const char* methodSign = "()V";
-	jmethodID method =
-		jni_env->GetStaticMethodID(klass, methodName, methodSign);
-	if (method == NULL) {
-		cout << "ERROR: JNI: Cannot get method "
-			<< methodName << methodSign
-			<< " from class: " << name << endl;
-		exit(1);
+
+	if (enable_tracing) {
+		const char* name = "chord/project/Runtime";
+	    jclass klass = jni_env->FindClass(name);
+		if (klass == NULL) {
+			cout << "ERROR: JNI: Cannot find class: " << name << endl;
+			exit(1);
+		}
+		const char* methodName = "close";
+		const char* methodSign = "()V";
+		jmethodID method =
+			jni_env->GetStaticMethodID(klass, methodName, methodSign);
+		if (method == NULL) {
+			cout << "ERROR: JNI: Cannot get method "
+				<< methodName << methodSign
+				<< " from class: " << name << endl;
+			exit(1);
+		}
+		jni_env->CallStaticObjectMethod(klass, method);
 	}
-	jni_env->CallStaticObjectMethod(klass, method);
-    cout << "LEAVE VMDeath" << endl;
+
+	cout << "LEAVE VMDeath" << endl;
 }
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
@@ -93,30 +136,43 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 		exit(1);
 	}
 	char* next = options;
-	trace_file_name = "trace.txt";
+	int loaded_class_kinds = 0;
 	while (1) {
-    	char token[1024];
+    	char token[2048];
 		next = get_token(next, (char*) ",=", token, sizeof(token));
 		if (next == NULL)
 			break;
         if (strcmp(token, "trace_file_name") == 0) {
-            char arg[8192];
-            next = get_token(next, (char*) ",=", arg, sizeof(arg));
+            next = get_token(next, (char*) ",=", trace_file_name, MAX_FILE_NAME);
             if (next == NULL) {
                 cerr << "ERROR: Cannot parse option trace_file_name=<name>: "
 					<< options << endl;
 				exit(1);
             }
-			trace_file_name = string(arg);
+			enable_tracing = true;
         } else if (strcmp(token, "instr_scheme_file_name") == 0) {
-            char arg[8192];
-            next = get_token(next, (char*) ",=", arg, sizeof(arg));
+            next = get_token(next, (char*) ",=", instr_scheme_file_name, MAX_FILE_NAME);
             if (next == NULL) {
                 cerr << "ERROR: Cannot parse option instr_scheme_file_name=<name>: "
 					<< options << endl;
 				exit(1);
             }
-			instr_scheme_file_name = string(arg);
+        } else if (strcmp(token, "classes_file_name") == 0) {
+            next = get_token(next, (char*) ",=", classes_file_name, MAX_FILE_NAME);
+            if (next == NULL) {
+                cerr << "ERROR: Cannot parse option classes_file_name=<name>: "
+					<< options << endl;
+				exit(1);
+            }
+			loaded_class_kinds++;
+        } else if (strcmp(token, "boot_classes_file_name") == 0) {
+            next = get_token(next, (char*) ",=", boot_classes_file_name, MAX_FILE_NAME);
+            if (next == NULL) {
+                cerr << "ERROR: Cannot parse option boot_classes_file_name=<name>: "
+					<< options << endl;
+				exit(1);
+            }
+			loaded_class_kinds++;
 		} else if (strcmp(token, "num_meths") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
@@ -151,6 +207,10 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 			cerr << "ERROR: Unknown option: " << token << endl;
 			exit(1);
 		}
+	}
+	if (loaded_class_kinds > 0) {
+		assert(loaded_class_kinds == 2);
+		list_loaded_classes = true;
 	}
 
     jvmtiError retval;

@@ -61,7 +61,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	}
 	public void run() {
 		scheme = getInstrScheme();
-		String instrSchemeFileName = (new File(Properties.outDirName, "scheme.ser")).getAbsolutePath();
+		final String instrSchemeFileName = Properties.instrSchemeFileName;
 		scheme.save(instrSchemeFileName);
 		Instrumentor instrumentor = new Instrumentor();
 		instrumentor.visit(Program.v(), scheme);
@@ -71,14 +71,12 @@ public class DynamicAnalysis extends JavaAnalysis {
 		assert (mainClassName != null);
 		final String classPathName = Properties.classPathName;
 		assert (classPathName != null);
+		final String bootClassesDirName = Properties.bootClassesDirName;
 		final String classesDirName = Properties.classesDirName;
-		assert (classesDirName != null);
-		final String crudeTraceFileName =
-			getOrMake("chord.crude.trace.file", "crude_trace.txt");
-		final String finalTraceFileName =
-			getOrMake("chord.final.trace.file", "final_trace.txt");
-		final String runIdsStr =
-			System.getProperty("chord.run.ids", "0");
+		final String crudeTraceFileName = Properties.crudeTraceFileName;
+		final String finalTraceFileName = Properties.finalTraceFileName;
+		final String bootClassesFileName = Properties.bootClassesFileName;
+		final String classesFileName = Properties.classesFileName;
 		convert = System.getProperty(
 			"chord.convert", "false").equals("true");
 		boolean doTracePipe = System.getProperty(
@@ -114,9 +112,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		int numMeths = getNum("numMeths.txt");
 		int numLoops = getNum("numLoops.txt");
-		final String[] runIds = runIdsStr.split(",");
+		final String[] runIDs = Properties.runIDs.split(",");
 		final String cmd = "java -ea -Xbootclasspath/p:" +
-			classesDirName + File.pathSeparator + Properties.bootClassPathName +
+			bootClassesDirName + File.pathSeparator + Properties.mainClassPathName +
 			" -Xverify:none" + " -verbose" + 
 			" -cp " + classesDirName + File.pathSeparator + classPathName +
 			" -agentpath:" + Properties.instrAgentFileName +
@@ -196,14 +194,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 	}
 	
-	private String getOrMake(String propName, String fileName) {
-		String s = System.getProperty(propName);
-		if (s == null) {
-			s = (new File(Properties.outDirName, fileName)).getAbsolutePath();
-		}
-		return s;
-	}
-
 	private void processDom(String domName, IndexMap<String> sMap,
 			IndexMap<String> dMap) {
 		if (convert) {

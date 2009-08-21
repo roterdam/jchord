@@ -70,9 +70,7 @@ public class Project {
             String outDirName = Properties.outDirName;
             assert (outDirName != null);
             String outFileName = Properties.outFileName;
-            assert (outFileName != null);
-            String errFileName = Properties.outFileName;
-            assert (errFileName != null);
+            String errFileName = Properties.errFileName;
 
             outFileName = FileUtils.getAbsolutePath(outFileName, outDirName);
             errFileName = FileUtils.getAbsolutePath(errFileName, outDirName);

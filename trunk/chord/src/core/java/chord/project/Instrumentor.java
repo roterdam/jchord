@@ -131,6 +131,7 @@ public class Instrumentor {
 		if (scheme.getInstrMethodAndLoopBound() > 0)
 			Wmap = new IndexHashMap<BasicBlock>();
 		
+		String bootClassesDirName = Properties.bootClassesDirName;
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
 
@@ -181,7 +182,8 @@ public class Instrumentor {
 			}
 			System.out.println("Writing class: " + cName);
 			try {
-				clazz.writeFile(classesDirName);
+				String dirName = c.isSystemClass() ? bootClassesDirName : classesDirName;
+				clazz.writeFile(dirName);
 			} catch (CannotCompileException ex) {
 				throw new ChordRuntimeException(ex);
 			} catch (IOException ex) {
