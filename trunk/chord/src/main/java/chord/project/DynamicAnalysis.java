@@ -125,13 +125,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 			"=instr_bound=" + Properties.instrBound +
 			" " + mainClassName + " ";
 		final String traceTransformCmd = needsTraceTransform ?
-			"java -ea -cp " + Properties.bootClassPathName +
+			"java -ea -cp " + Properties.mainClassPathName +
 			" -Dchord.crude.trace.file=" + crudeTraceFileName +
 			" -Dchord.final.trace.file=" + finalTraceFileName +
 			" chord.project.TraceTransformer" : null;
-		for (String runId : runIds) {
-			System.out.println("Processing Run ID: " + runId);
-			final String args = System.getProperty("chord.args." + runId, "");
+		for (String runID : runIDs) {
+			System.out.println("Processing Run ID: " + runID);
+			final String args = System.getProperty("chord.args." + runID, "");
 			if (doTracePipe) {
 				Thread t1 = new Thread() {
 					public void run() {

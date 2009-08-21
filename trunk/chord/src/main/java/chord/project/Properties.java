@@ -72,7 +72,7 @@ public class Properties {
 		System.out.println("chord.main.class: " + mainClassName);
 		System.out.println("chord.class.path: " + classPathName);
 		System.out.println("chord.src.path: " + srcPathName);
-		System.out.println("chord.main.class.path: " + bootClassPathName);
+		System.out.println("chord.main.class.path: " + mainClassPathName);
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
 		System.out.println("chord.analyses: " + analyses);
