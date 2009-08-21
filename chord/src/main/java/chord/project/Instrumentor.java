@@ -70,7 +70,7 @@ public class Instrumentor {
 	
 	public void visit(Program program, InstrScheme scheme) {
 		String fullClassPathName = Properties.classPathName +
-			File.pathSeparator + Properties.bootClassPathName;
+			File.pathSeparator + Properties.mainClassPathName;
 		pool = new ClassPool();
 		String[] pathElems = fullClassPathName.split(File.pathSeparator);
 		for (String pathElem : pathElems) {
