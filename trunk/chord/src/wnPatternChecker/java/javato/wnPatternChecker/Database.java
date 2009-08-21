@@ -139,6 +139,7 @@ public class Database {
 	
 	private void checkForErrors(Long m, Integer t1, List<DBElemInfo> t1DBElems, Integer t2, 
 			List<DBElemInfo> t2DBElems){
+		/***
 		System.out.println("REACHED: " + m);
 		System.out.println("XXX " + t1);
 		for (DBElemInfo x : t1DBElems)
@@ -146,13 +147,14 @@ public class Database {
 		System.out.println("YYY " + t2);
 		for (DBElemInfo x : t2DBElems)
 			System.out.println("\t" + x);
+		***/
 		assert(t1.intValue() != t2.intValue());
 		for(DBElemInfo e1 : t1DBElems){
 			if(e1.isReadElem){
-				System.out.println("1 HOLDS");
+				//System.out.println("1 HOLDS");
 				for(DBElemInfo e2 : t2DBElems){
 					if(!e2.isReadElem){
-						System.out.println("2 HOLDS");
+						//System.out.println("2 HOLDS");
 						Integer l = e1.l;
 						VectorClock vc1 = e1.vc;
 						Set<Integer> lSet = e2.lockSet;
@@ -160,7 +162,7 @@ public class Database {
 						VectorClock vc2 = e2.vc;
 						
 						if(areEventsParallel(vc1, vc2) && !lSet.contains(l)){
-							System.out.println("3 HOLDS");
+							//System.out.println("3 HOLDS");
 							ErrorInfo errInfo = new ErrorInfo(e2.iids, e1.iids, false);
 							
 							if(!(errors.contains(errInfo))){
@@ -174,7 +176,7 @@ public class Database {
 							}
 						}
 						else if(areEventsParallel(vc1, vc2) && !nSet.contains(l)){
-							System.out.println("4 HOLDS");
+							//System.out.println("4 HOLDS");
 							ErrorInfo errInfo = new ErrorInfo(e2.iids, e1.iids, true);
 							
 							if(!errors.contains(errInfo)){
