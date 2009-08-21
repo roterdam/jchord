@@ -100,6 +100,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 	}
 
 	public void processAcquireLock(int pId, int tId, int lId) {
+		System.out.println("in lock acquire...tId is "+tId+" lId is "+lId);
 		Stack<IntPair> ls = getLStack(tId);
 		boolean addToStack = true;
 		if(!ls.isEmpty()){
@@ -108,12 +109,14 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 				IntPair lsElem = lsItr.next();
 				if(lsElem.idx0 == lId){
 					lsElem.idx1 += 1;
+					//System.out.println("lock is already in stack");
 					addToStack = false;
 					break;
 				}
 			}
 		}
 		if(addToStack){
+			System.out.println("lock is added to stack");
 			IntPair lsElem = new IntPair(lId, 1);
 			ls.push(lsElem);
 			Stack<LockStackElemInfo> ls2 = getLockStack(tId);
@@ -140,6 +143,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		return ls;
 	}	
 	public void processReleaseLock(int pId, int tId, int lId) {
+		System.out.println("in lock release...tId is "+tId+" lId is "+lId);
 		Stack<IntPair> ls = getLStack(tId);
 		if(!ls.isEmpty()){
 			Iterator<IntPair> lsItr = ls.iterator();
