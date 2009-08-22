@@ -8,6 +8,8 @@
       <fileset dir="classes" includes="**/*"/>
     </delete>
     <delete dir="chord_output"/>
+    <delete file="log1"/>
+    <delete file="log2"/>
   </target>
   <target name="compile">
     <javac debug="true" debuglevel="${debuglevel}"
