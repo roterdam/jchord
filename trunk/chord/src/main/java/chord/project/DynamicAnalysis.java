@@ -31,7 +31,7 @@ import chord.util.Executor;
 	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
-	public final static boolean DEBUG = true;
+	public final static boolean DEBUG = false;
 	private IndexMap<String> sHmap = new IndexHashMap<String>();
 	private IndexMap<String> dHmap = new IndexHashMap<String>();
 	private IndexMap<String> sEmap = new IndexHashMap<String>();
@@ -140,11 +140,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 			}) : null;
 		Runnable traceProcessor = new Runnable() {
 			public void run() {
-				processTrace(finalTraceFileName);
 				if (DEBUG) {
 					(new TracePrinter()).run(finalTraceFileName, scheme);
 					System.out.println("DONE");
 				}
+				processTrace(finalTraceFileName);
 			}
 		};
 		boolean serial = doTracePipe ? false : true;
