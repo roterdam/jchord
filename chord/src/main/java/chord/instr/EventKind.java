@@ -35,4 +35,5 @@ public class EventKind {
 	public static final byte RELEASE_LOCK = 21;
 	public static final byte WAIT = 22;
 	public static final byte NOTIFY = 23;
+	public static final byte ENTER_BB = 24;
 }

@@ -21,6 +21,7 @@ import chord.util.IndexMap;
 import chord.util.IndexHashMap;
 import chord.util.ProcessExecutor;
 import chord.util.ReadException;
+import chord.util.Executor;
 
 /**
  * 
@@ -30,6 +31,7 @@ import chord.util.ReadException;
 	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
+	public final static boolean DEBUG = true;
 	private IndexMap<String> sHmap = new IndexHashMap<String>();
 	private IndexMap<String> dHmap = new IndexHashMap<String>();
 	private IndexMap<String> sEmap = new IndexHashMap<String>();
@@ -110,70 +112,59 @@ public class DynamicAnalysis extends JavaAnalysis {
 			ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
 			ProcessExecutor.execute("mkfifo " + finalTraceFileName);
 		}
-		int numMeths = getNum("numMeths.txt");
-		int numLoops = getNum("numLoops.txt");
+		final int numMeths = getNum("numMeths.txt");
+		final int numLoops = getNum("numLoops.txt");
 		final String[] runIDs = Properties.runIDs.split(",");
-		final String cmd = "java -ea -Xbootclasspath/p:" +
+		final String traceFileName = needsTraceTransform ?
+			crudeTraceFileName : finalTraceFileName;
+		final String instrProgramCmd = "java -ea -Xbootclasspath/p:" +
 			bootClassesDirName + File.pathSeparator + Properties.mainClassPathName +
 			" -Xverify:none" + " -verbose" + 
 			" -cp " + classesDirName + File.pathSeparator + classPathName +
 			" -agentpath:" + Properties.instrAgentFileName +
-			"=trace_file_name=" + crudeTraceFileName +
+			"=trace_file_name=" + traceFileName +
 			"=num_meths=" + numMeths +
 			"=num_loops=" + numLoops +
 			"=instr_scheme_file_name=" + instrSchemeFileName +
 			"=instr_bound=" + Properties.instrBound +
 			" " + mainClassName + " ";
-		final String traceTransformCmd = needsTraceTransform ?
-			"java -ea -cp " + Properties.mainClassPathName +
-			" -Dchord.crude.trace.file=" + crudeTraceFileName +
-			" -Dchord.final.trace.file=" + finalTraceFileName +
-			" chord.project.TraceTransformer" : null;
+		Runnable traceTransformer = needsTraceTransform ?
+			(new Runnable() {
+				public void run() {
+					(new TraceTransformer()).run(
+						crudeTraceFileName, finalTraceFileName, scheme);
+				if (DEBUG)
+					(new TracePrinter()).run(crudeTraceFileName, scheme);
+				System.out.println("DONE");
+				}
+			}) : null;
+		Runnable traceProcessor = new Runnable() {
+			public void run() {
+				processTrace(finalTraceFileName);
+				if (DEBUG) {
+					(new TracePrinter()).run(finalTraceFileName, scheme);
+					System.out.println("DONE");
+				}
+			}
+		};
+		boolean serial = doTracePipe ? false : true;
+		Executor executor = new Executor(serial);
 		for (String runID : runIDs) {
 			System.out.println("Processing Run ID: " + runID);
 			final String args = System.getProperty("chord.args." + runID, "");
-			if (doTracePipe) {
-				Thread t1 = new Thread() {
-					public void run() {
-						ProcessExecutor.execute(cmd + args);
-					}
-				};
-				if (needsTraceTransform) {
-					Thread t2 = new Thread() {
-						public void run() {
-							ProcessExecutor.execute(traceTransformCmd);
-						}
-					};
-					t1.start();
-					t2.start();
-					processTrace(finalTraceFileName);
-					try {
-						t1.join();
-						t2.join();
-					} catch (InterruptedException ex) {
-						throw new ChordRuntimeException(ex);
-					}
-				} else {
-					t1.start();
-					processTrace(crudeTraceFileName);
-					try {
-						t1.join();
-					} catch (InterruptedException ex) {
-						throw new ChordRuntimeException(ex);
-					}
+			Runnable instrProgram = new Runnable() {
+				public void run() {
+					ProcessExecutor.execute(instrProgramCmd + args);
 				}
-			} else {
-				ProcessExecutor.execute(cmd + args);
-				(new TracePrinter()).run(crudeTraceFileName, scheme);
-				System.out.println("DONE");
-				if (needsTraceTransform) {
-					(new TraceTransformer()).run(crudeTraceFileName, finalTraceFileName, scheme);
-					processTrace(finalTraceFileName);
-					// (new TracePrinter()).run(finalTraceFileName, scheme);
-					// System.out.println("DONE");
-				} else {
-					processTrace(crudeTraceFileName);
-				}
+			};
+			executor.execute(instrProgram);
+			if (needsTraceTransform)
+				executor.execute(traceTransformer);
+			executor.execute(traceProcessor);
+			try {
+				executor.waitForCompletion();
+			} catch (InterruptedException ex) {
+				throw new ChordRuntimeException(ex);
 			}
 		}
 		done();

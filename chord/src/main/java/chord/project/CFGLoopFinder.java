@@ -21,7 +21,7 @@ import joeq.Compiler.Quad.ControlFlowGraph;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class CFGLoopFinder implements ICFGVisitor {
-	public static final boolean debug = true;
+	public static final boolean DEBUG = false;
 	private Set<BasicBlock> visitedBef;
     private Set<BasicBlock> visitedAft;
     private Set<Pair<BasicBlock, BasicBlock>> backEdges;
@@ -73,7 +73,7 @@ public class CFGLoopFinder implements ICFGVisitor {
 				}
 			}
 		}
-		if (debug) {
+		if (DEBUG) {
 			System.out.println(cfg.fullDump());
 			Set<BasicBlock> heads = getLoopHeads();
 			for (BasicBlock head : heads) {

@@ -549,6 +549,20 @@ public class Runtime {
 			trace = true;
 		}
 	}
+	public synchronized static void enterBasicBlock(int bId) {
+		if (trace) {
+			trace = false;
+			try {
+				buffer.putByte(EventKind.ENTER_BB);
+				buffer.putInt(bId);
+				int tId = getObjectId(Thread.currentThread());
+				buffer.putInt(tId);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	
+	}
+	public synchronized static void test() { }
 	public synchronized static void enterMethodCheck(int mId) {
 		if (trace) {
 			trace = false;

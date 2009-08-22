@@ -126,7 +126,7 @@ public class Instrumentor {
 			Pmap = new IndexHashMap<String>();
 		if (scheme.needsFmap())
 			Fmap = new IndexHashMap<String>();
-		if (scheme.needsMmap())
+		if (scheme.getInstrMethodAndLoopBound() > 0 || scheme.needsMmap())
 			Mmap = new IndexHashMap<String>();
 		if (scheme.getInstrMethodAndLoopBound() > 0)
 			Wmap = new IndexHashMap<BasicBlock>();
@@ -135,9 +135,40 @@ public class Instrumentor {
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
 
+		if (scheme.getInstrMethodAndLoopBound() > 0) {
+			try {
+				CtClass threadClass = pool.get("java.lang.Thread");
+				CtField doInstr = CtField.make("public boolean doInstr = false;", threadClass);
+				threadClass.addField(doInstr);
+
+				CtMethod enterLoopCheck = CtNewMethod.make(
+					"public static void enterLoopCheck(int wId) { }",
+					threadClass);
+				threadClass.addMethod(enterLoopCheck);
+
+				CtMethod leaveLoopCheck = CtNewMethod.make(
+					"public static void leaveLoopCheck(int wId) { }",
+					threadClass);
+				threadClass.addMethod(leaveLoopCheck);
+
+				CtMethod enterMethodCheck = CtNewMethod.make(
+					"public static void enterMethodCheck(int mId) { }",
+					threadClass);
+				threadClass.addMethod(enterMethodCheck);
+
+				CtMethod leaveMethodCheck = CtNewMethod.make(
+					"public static void leaveMethodCheck(int mId) { }",
+					threadClass);
+				threadClass.addMethod(leaveMethodCheck);
+			} catch (Exception ex) {
+				throw new ChordRuntimeException(ex);
+			}
+		}
+
 		for (jq_Class c : classes) {
 			String cName = c.getName();
-			if (cName.equals("java.lang.J9VMInternals"))
+			if (cName.equals("java.lang.J9VMInternals") ||
+					cName.startsWith("java.lang.ref."))
 				continue;
 			CtClass clazz;
 			try {
@@ -224,12 +255,12 @@ public class Instrumentor {
 		}
 		throw new ChordRuntimeException();
 	}
-	private void processLoopEnterCheck(int wId, int headBCI) {
+	private void processEnterLoopCheck(int wId, int headBCI) {
 		String sHead = enterLoopCheck + wId + ");";
 		String s = loopInstrMap.get(headBCI);
 		loopInstrMap.put(headBCI, (s == null) ? sHead : sHead + s);
 	}
-	private void processLoopLeaveCheck(int wId, int exitBCI) {
+	private void processLeaveLoopCheck(int wId, int exitBCI) {
 		String sExit = leaveLoopCheck + wId + ");";
 		String s = loopInstrMap.get(exitBCI);
 		loopInstrMap.put(exitBCI, (s == null) ? sExit : s + sExit);
@@ -263,11 +294,11 @@ public class Instrumentor {
 				for (BasicBlock head : heads) {
 					int headBCI = getBCI(head, joeqMethod);
 					int wId = Wmap.getOrAdd(head);
-					processLoopEnterCheck(wId, headBCI);
+					processEnterLoopCheck(wId, headBCI);
 					Set<BasicBlock> exits = finder.getLoopExits(head);
 					for (BasicBlock exit : exits) {
 						int exitBCI = getBCI(exit, joeqMethod);
-						processLoopLeaveCheck(wId, exitBCI);
+						processLeaveLoopCheck(wId, exitBCI);
 					}
 				}
 			}
@@ -366,60 +397,64 @@ public class Instrumentor {
 			}
 		}
 		public void edit(FieldAccess e) {
+			boolean isStatic = e.isStatic();
+			CtField field;
+			CtClass type;
 			try {
-				boolean isStatic = e.isStatic();
-				CtField field;
-				CtClass type;
+				field = e.getField();
+				type = field.getType();
+			} catch (NotFoundException ex) {
+				throw new ChordRuntimeException(ex);
+			}
+			boolean isPrim = type.isPrimitive();
+			boolean isWr = e.isWriter();
+			String eventCall;
+			if (isStatic) {
+				if (!scheme.hasStaticEvent())
+					return;
+				if (isWr) {
+					eventCall = isPrim ? putstaticPrimitive(e, field) :
+						putstaticReference(e, field);
+				} else {
+					eventCall = isPrim ? getstaticPrimitive(e, field) :
+						getstaticReference(e, field);
+				}
+			} else {
+				if (!scheme.hasFieldEvent())
+					return;
+				if (isWr) {
+					eventCall = isPrim ? putfieldPrimitive(e, field) :
+						putfieldReference(e, field);
+				} else {
+					eventCall = isPrim ? getfieldPrimitive(e, field) :
+						getfieldReference(e, field);
+				}
+			}
+			if (eventCall != null) {
 				try {
-					field = e.getField();
-					type = field.getType();
-				} catch (NotFoundException ex) {
+					e.replace(eventCall);
+				} catch (CannotCompileException ex) {
 					throw new ChordRuntimeException(ex);
 				}
-				boolean isPrim = type.isPrimitive();
-				boolean isWr = e.isWriter();
-				String eventCall;
-				if (isStatic) {
-					if (!scheme.hasStaticEvent())
-						return;
-					if (isWr) {
-						eventCall = isPrim ? putstaticPrimitive(e, field) :
-							putstaticReference(e, field);
-					} else {
-						eventCall = isPrim ? getstaticPrimitive(e, field) :
-							getstaticReference(e, field);
-					}
-				} else {
-					if (!scheme.hasFieldEvent())
-						return;
-					if (isWr) {
-						eventCall = isPrim ? putfieldPrimitive(e, field) :
-							putfieldReference(e, field);
-					} else {
-						eventCall = isPrim ? getfieldPrimitive(e, field) :
-							getfieldReference(e, field);
-					}
-				}
-				e.replace(eventCall);
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
 			}
 		}
 		public void edit(ArrayAccess e) {
 			if (!scheme.hasArrayEvent())
 				return;
-			try {
-				boolean isWr = e.isWriter();
-				boolean isPrim = e.getElemType().isPrimitive();
-				String eventCall;
-				if (isWr) {
-					eventCall = isPrim ? astorePrimitive(e) : astoreReference(e);
+			boolean isWr = e.isWriter();
+			boolean isPrim = e.getElemType().isPrimitive();
+			String eventCall;
+			if (isWr) {
+				eventCall = isPrim ? astorePrimitive(e) : astoreReference(e);
 				} else {
-					eventCall = isPrim ? aloadPrimitive(e) : aloadReference(e);
+				eventCall = isPrim ? aloadPrimitive(e) : aloadReference(e);
+			}
+			if (eventCall != null) {
+				try {
+					e.replace(eventCall);
+				} catch (CannotCompileException ex) {
+					throw new ChordRuntimeException(ex);
 				}
-				e.replace(eventCall);
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
 			}
 		}
 		private int getFid(CtField field) {
@@ -430,78 +465,114 @@ public class Instrumentor {
 			return Fmap.getOrAdd(s);
 		}
 		private String getstaticPrimitive(FieldAccess e, CtField f) {
-			int eId = getstaticPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
-			int fId = getstaticPrimitiveEvent.hasFid() ? getFid(f) : -1;
-			return "{ $_ = $proceed($$); " + getstaticPrimitive + eId + "," + fId + "); }"; 
+			if (getstaticPrimitiveEvent.present()) {
+				int eId = getstaticPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				int fId = getstaticPrimitiveEvent.hasFid() ? getFid(f) : -1;
+				return "{ $_ = $proceed($$); " + getstaticPrimitive + eId + "," + fId + "); }"; 
+			}
+			return null;
 		}
 		private String getstaticReference(FieldAccess e, CtField f) {
-			int eId = getstaticReferenceEvent.hasEid() ? set(Emap, e) : -1;
-			int fId = getstaticReferenceEvent.hasFid() ? getFid(f) : -1;
-			String oId = getstaticReferenceEvent.hasOid() ? "$_" : "null";
-			return "{ $_ = $proceed($$); " + getstaticReference + eId + "," + fId + "," + oId + "); }"; 
+			if (getstaticReferenceEvent.present()) {
+				int eId = getstaticReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				int fId = getstaticReferenceEvent.hasFid() ? getFid(f) : -1;
+				String oId = getstaticReferenceEvent.hasOid() ? "$_" : "null";
+				return "{ $_ = $proceed($$); " + getstaticReference + eId + "," + fId + "," + oId + "); }"; 
+			}
+			return null;
 		}
 		private String putstaticPrimitive(FieldAccess e, CtField f) {
-			int eId = putstaticPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
-			int fId = putstaticPrimitiveEvent.hasFid() ? getFid(f) : -1;
-			return "{ $proceed($$); " + putstaticPrimitive + eId + "," + fId + "); }"; 
+			if (putstaticPrimitiveEvent.present()) {
+				int eId = putstaticPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				int fId = putstaticPrimitiveEvent.hasFid() ? getFid(f) : -1;
+				return "{ $proceed($$); " + putstaticPrimitive + eId + "," + fId + "); }"; 
+			}
+			return null;
 		}
 		private String putstaticReference(FieldAccess e, CtField f) {
-			int eId = putstaticReferenceEvent.hasEid() ? set(Emap, e) : -1;
-			int fId = putstaticReferenceEvent.hasFid() ? getFid(f) : -1;
-			String oId = putstaticReferenceEvent.hasOid() ? "$0" : "null";
-			return "{ $proceed($$); " + putstaticReference + eId + "," + fId + "," + oId + "); }"; 
+			if (putstaticReferenceEvent.present()) {
+				int eId = putstaticReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				int fId = putstaticReferenceEvent.hasFid() ? getFid(f) : -1;
+				String oId = putstaticReferenceEvent.hasOid() ? "$1" : "null";
+				return "{ $proceed($$); " + putstaticReference + eId + "," + fId + "," + oId + "); }"; 
+			}
+			return null;
 		}
 		private String getfieldPrimitive(FieldAccess e, CtField f) {
-			int eId = getfieldPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
-			String bId = getfieldPrimitiveEvent.hasBid() ? "$0" : "null";
-			int fId = getfieldPrimitiveEvent.hasFid() ? getFid(f) : -1;
-			return "{ $_ = $proceed($$); " + getfieldPrimitive + eId + "," + bId + "," + fId + "); }"; 
+			if (getfieldPrimitiveEvent.present()) {
+				int eId = getfieldPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				String bId = getfieldPrimitiveEvent.hasBid() ? "$0" : "null";
+				int fId = getfieldPrimitiveEvent.hasFid() ? getFid(f) : -1;
+				return "{ $_ = $proceed($$); " + getfieldPrimitive + eId + "," + bId + "," + fId + "); }"; 
+			}
+			return null;
 		}
 		private String getfieldReference(FieldAccess e, CtField f) {
-			int eId = getfieldReferenceEvent.hasEid() ? set(Emap, e) : -1;
-			String bId = getfieldReferenceEvent.hasOid() ? "$0" : "null";
-			int fId = getfieldReferenceEvent.hasFid() ? getFid(f) : -1;
-			String oId = getfieldReferenceEvent.hasOid() ? "$_" : "null";
-			return "{ $_ = $proceed($$); " + getfieldReference + eId + "," + bId + "," + fId + "," + oId + "); }"; 
+			if (getfieldReferenceEvent.present()) {
+				int eId = getfieldReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				String bId = getfieldReferenceEvent.hasBid() ? "$0" : "null";
+				int fId = getfieldReferenceEvent.hasFid() ? getFid(f) : -1;
+				String oId = getfieldReferenceEvent.hasOid() ? "$_" : "null";
+				return "{ $_ = $proceed($$); " + getfieldReference + eId + "," + bId + "," + fId + "," + oId + "); }"; 
+			}
+			return null;
 		}
 		private String putfieldPrimitive(FieldAccess e, CtField f) {
-			int eId = putfieldPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
-			String bId = putfieldPrimitiveEvent.hasBid() ? "$0" : "null";
-			int fId = putfieldPrimitiveEvent.hasFid() ? getFid(f) : -1;
-			return "{ $proceed($$); " + putfieldPrimitive + eId + "," + bId + "," + fId + "); }"; 
+			if (putfieldPrimitiveEvent.present()) {
+				int eId = putfieldPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				String bId = putfieldPrimitiveEvent.hasBid() ? "$0" : "null";
+				int fId = putfieldPrimitiveEvent.hasFid() ? getFid(f) : -1;
+				return "{ $proceed($$); " + putfieldPrimitive + eId + "," + bId + "," + fId + "); }"; 
+			}
+			return null;
 		}
 		private String putfieldReference(FieldAccess e, CtField f) {
-			int eId = putfieldReferenceEvent.hasEid() ? set(Emap, e) : -1;
-			String bId = putfieldReferenceEvent.hasBid() ? "$0" : "null";
-			int fId = putfieldReferenceEvent.hasFid() ? getFid(f) : -1;
-			String oId = putfieldReferenceEvent.hasOid() ? "$1" : "null";
-			return "{ $proceed($$); " + putfieldReference + eId + "," + bId + "," + fId + "," + oId + "); }"; 
+			if (putfieldReferenceEvent.present()) {
+				int eId = putfieldReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				String bId = putfieldReferenceEvent.hasBid() ? "$0" : "null";
+				int fId = putfieldReferenceEvent.hasFid() ? getFid(f) : -1;
+				String oId = putfieldReferenceEvent.hasOid() ? "$1" : "null";
+				return "{ $proceed($$); " + putfieldReference + eId + "," + bId + "," + fId + "," + oId + "); }"; 
+			}
+			return null;
 		}
 		private String aloadPrimitive(ArrayAccess e) {
-			int eId = aloadPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
-			String bId = aloadPrimitiveEvent.hasBid() ? "$0" : "null";
-			String iId = aloadPrimitiveEvent.hasIid() ? "$1" : "-1";
-			return "{ $_ = $proceed($$); " + aloadPrimitive + eId + "," + bId + "," + iId + "); }"; 
+			if (aloadPrimitiveEvent.present()) {
+				int eId = aloadPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				String bId = aloadPrimitiveEvent.hasBid() ? "$0" : "null";
+				String iId = aloadPrimitiveEvent.hasIid() ? "$1" : "-1";
+				return "{ $_ = $proceed($$); " + aloadPrimitive + eId + "," + bId + "," + iId + "); }"; 
+			}
+			return null;
 		}
 		private String aloadReference(ArrayAccess e) {
-			int eId = aloadReferenceEvent.hasEid() ? set(Emap, e) : -1;
-			String bId = aloadReferenceEvent.hasBid() ? "$0" : "null";
-			String iId = aloadReferenceEvent.hasIid() ? "$1" : "-1";
-			String oId = aloadReferenceEvent.hasOid() ? "$_" : "null";
-			return "{ $_ = $proceed($$); " + aloadReference + eId + "," + bId + "," + iId + "," + oId + "); }"; 
+			if (aloadReferenceEvent.present()) {
+				int eId = aloadReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				String bId = aloadReferenceEvent.hasBid() ? "$0" : "null";
+				String iId = aloadReferenceEvent.hasIid() ? "$1" : "-1";
+				String oId = aloadReferenceEvent.hasOid() ? "$_" : "null";
+				return "{ $_ = $proceed($$); " + aloadReference + eId + "," + bId + "," + iId + "," + oId + "); }"; 
+			}
+			return null;
 		}
 		private String astorePrimitive(ArrayAccess e) {
-			int eId = astorePrimitiveEvent.hasEid() ? set(Emap, e) : -1;
-			String bId = astorePrimitiveEvent.hasBid() ? "$0" : "null";
-			String iId = astorePrimitiveEvent.hasIid() ? "$1" : "-1";
-			return "{ $proceed($$); " + astorePrimitive + eId + "," + bId + "," + iId + "); }"; 
+			if (astorePrimitiveEvent.present()) {
+				int eId = astorePrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				String bId = astorePrimitiveEvent.hasBid() ? "$0" : "null";
+				String iId = astorePrimitiveEvent.hasIid() ? "$1" : "-1";
+				return "{ $proceed($$); " + astorePrimitive + eId + "," + bId + "," + iId + "); }"; 
+			}
+			return null;
 		}
 		private String astoreReference(ArrayAccess e) {
-			int eId = astoreReferenceEvent.hasEid() ? set(Emap, e) : -1;
-			String bId = astoreReferenceEvent.hasBid() ? "$0" : "null";
-			String iId = astoreReferenceEvent.hasIid() ? "$1" : "-1";
-			String oId = astoreReferenceEvent.hasOid() ? "$2" : "null";
-			return "{ $proceed($$); " + astoreReference + eId + "," + bId + "," + iId + "," + oId + "); }"; 
+			if (astoreReferenceEvent.present()) {
+				int eId = astoreReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				String bId = astoreReferenceEvent.hasBid() ? "$0" : "null";
+				String iId = astoreReferenceEvent.hasIid() ? "$1" : "-1";
+				String oId = astoreReferenceEvent.hasOid() ? "$2" : "null";
+				return "{ $proceed($$); " + astoreReference + eId + "," + bId + "," + iId + "," + oId + "); }"; 
+			}
+			return null;
 		}
 		public void edit(MethodCall e) {
 			CtMethod m;
@@ -581,11 +652,13 @@ public class Instrumentor {
 			}
 		}
 	}
+	private static final String threadClassName = "java.lang.Thread.";
+	private static final String enterMethodCheck = threadClassName + "enterMethodCheck(";
+	private static final String leaveMethodCheck = threadClassName + "leaveMethodCheck(";
+	private static final String enterLoopCheck = threadClassName + "enterLoopCheck(";
+	private static final String leaveLoopCheck = threadClassName + "leaveLoopCheck(";
+
 	private static final String runtimeClassName = "chord.project.Runtime.";
-	private static final String enterMethodCheck = runtimeClassName + "enterMethodCheck(";
-	private static final String leaveMethodCheck = runtimeClassName + "leaveMethodCheck(";
-	private static final String enterLoopCheck = "chord.project.Runtime.enterLoopCheck(";
-	private static final String leaveLoopCheck = "chord.project.Runtime.leaveLoopCheck(";
 	private static final String enterMethod = runtimeClassName + "enterMethod(";
 	private static final String leaveMethod = runtimeClassName + "leaveMethod(";
 	private static final String befNew = runtimeClassName + "befNew(";

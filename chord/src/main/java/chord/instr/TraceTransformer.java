@@ -245,6 +245,8 @@ public class TraceTransformer {
 			return waitNumBytes;
 		case EventKind.NOTIFY:
 			return notifyNumBytes;
+		case EventKind.ENTER_BB:
+			return 8;
 		default:
 			throw new RuntimeException();
 		}

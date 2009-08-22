@@ -258,6 +258,13 @@ public class TracePrinter {
 				System.out.println("NOTIFY " + p + " " + t + " " + l);
 				break;
 			}
+			case EventKind.ENTER_BB:
+			{
+				int p = buffer.getInt();
+				int t = buffer.getInt();
+				System.out.println("ENTER_BB " + p + " " + t);
+				break;
+			}
 			default:
 				throw new ChordRuntimeException("Opcode: " + opcode);
 			}

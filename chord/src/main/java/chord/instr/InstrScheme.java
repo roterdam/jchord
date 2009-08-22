@@ -466,8 +466,7 @@ public class InstrScheme implements Serializable {
 			events[ASTORE_REFERENCE].present();
 	}
 	public boolean needsMmap() {
-		return events[ENTER_AND_LEAVE_METHOD].hasMid() ||
-			instrMethodAndLoopBound > 0;
+		return events[ENTER_AND_LEAVE_METHOD].hasMid();
 	}
 	public boolean needsHmap() {
 		return events[NEW_AND_NEWARRAY].hasHid();
