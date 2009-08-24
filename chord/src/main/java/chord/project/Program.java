@@ -205,8 +205,6 @@ public class Program {
 		reachableTypes = new IndexHashSet<jq_Type>();
 		for (Object o : jq_Type.list) {
 			jq_Type t = (jq_Type) o;
-			// if (t.getName().startsWith("joeq."))
-			//	continue;
 			reachableTypes.add(t);
 		}
 	}

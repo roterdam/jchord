@@ -21,6 +21,7 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
+import joeq.Util.Templates.ListIterator;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,6 +40,7 @@ public class Instrumentor {
 	private IndexMap<String> Fmap;
 	private IndexMap<String> Mmap;
 	private IndexMap<BasicBlock> Wmap;
+	private IndexMap<String> Bmap;
 	private ClassPool pool;
 	private CtClass exType;
 	private String mStr;
@@ -67,7 +69,7 @@ public class Instrumentor {
 	private EventFormat releaseLockEvent;
 	private EventFormat waitEvent;
 	private EventFormat notifyEvent;
-	
+	private int instrMethodAndLoopBound;
 	public void visit(Program program, InstrScheme scheme) {
 		String fullClassPathName = Properties.classPathName +
 			File.pathSeparator + Properties.mainClassPathName;
@@ -87,6 +89,7 @@ public class Instrumentor {
 		}
 		pool.appendSystemPath();
 		this.scheme = scheme;
+		instrMethodAndLoopBound = scheme.getInstrMethodAndLoopBound();
 		enterAndLeaveMethodEvent = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
@@ -109,8 +112,7 @@ public class Instrumentor {
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 
 		if (enterAndLeaveMethodEvent.present() ||
-				scheme.getInstrMethodAndLoopBound() > 0 ||
-				releaseLockEvent.present()) {
+				instrMethodAndLoopBound > 0 || releaseLockEvent.present()) {
 			try {
 				exType = pool.get("java.lang.Throwable");
 			} catch (NotFoundException ex) {
@@ -126,44 +128,16 @@ public class Instrumentor {
 			Pmap = new IndexHashMap<String>();
 		if (scheme.needsFmap())
 			Fmap = new IndexHashMap<String>();
-		if (scheme.getInstrMethodAndLoopBound() > 0 || scheme.needsMmap())
+		if (scheme.needsMmap() || instrMethodAndLoopBound > 0)
 			Mmap = new IndexHashMap<String>();
-		if (scheme.getInstrMethodAndLoopBound() > 0)
+		if (instrMethodAndLoopBound > 0) {
 			Wmap = new IndexHashMap<BasicBlock>();
-		
+			Bmap = new IndexHashMap<String>();
+		}
+
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
-
-		if (scheme.getInstrMethodAndLoopBound() > 0) {
-			try {
-				CtClass threadClass = pool.get("java.lang.Thread");
-				CtField doInstr = CtField.make("public boolean doInstr = false;", threadClass);
-				threadClass.addField(doInstr);
-
-				CtMethod enterLoopCheck = CtNewMethod.make(
-					"public static void enterLoopCheck(int wId) { }",
-					threadClass);
-				threadClass.addMethod(enterLoopCheck);
-
-				CtMethod leaveLoopCheck = CtNewMethod.make(
-					"public static void leaveLoopCheck(int wId) { }",
-					threadClass);
-				threadClass.addMethod(leaveLoopCheck);
-
-				CtMethod enterMethodCheck = CtNewMethod.make(
-					"public static void enterMethodCheck(int mId) { }",
-					threadClass);
-				threadClass.addMethod(enterMethodCheck);
-
-				CtMethod leaveMethodCheck = CtNewMethod.make(
-					"public static void leaveMethodCheck(int mId) { }",
-					threadClass);
-				threadClass.addMethod(leaveMethodCheck);
-			} catch (Exception ex) {
-				throw new ChordRuntimeException(ex);
-			}
-		}
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
@@ -239,9 +213,13 @@ public class Instrumentor {
 			FileUtils.writeMapToFile(Fmap,
 				(new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
 		}
-		if (enterAndLeaveMethodEvent.hasMid()) {
+		if (Mmap != null) {
 			FileUtils.writeMapToFile(Mmap,
 				(new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
+		}
+		if (Bmap != null) {
+			FileUtils.writeMapToFile(Bmap,
+				(new File(outDirName, "B.dynamic.txt")).getAbsolutePath());
 		}
 	}
 
@@ -255,15 +233,24 @@ public class Instrumentor {
 		}
 		throw new ChordRuntimeException();
 	}
+	private void processEnterBasicBlock(int bId, int bci) {
+		String s = enterBasicBlock + bId + ");";
+		String t = loopInstrMap.get(bci);
+		if (t != null)
+			s = t + s;
+		loopInstrMap.put(bci, s);
+	}
 	private void processEnterLoopCheck(int wId, int headBCI) {
 		String sHead = enterLoopCheck + wId + ");";
 		String s = loopInstrMap.get(headBCI);
-		loopInstrMap.put(headBCI, (s == null) ? sHead : sHead + s);
+		assert (s != null);
+		loopInstrMap.put(headBCI, sHead + s);
 	}
 	private void processLeaveLoopCheck(int wId, int exitBCI) {
 		String sExit = leaveLoopCheck + wId + ");";
 		String s = loopInstrMap.get(exitBCI);
-		loopInstrMap.put(exitBCI, (s == null) ? sExit : s + sExit);
+		assert (s != null);
+		loopInstrMap.put(exitBCI, sExit + s);
  	}
 	private void process(CtBehavior javassistMethod, jq_Method joeqMethod) {
 		int mods = javassistMethod.getModifiers();
@@ -286,17 +273,30 @@ public class Instrumentor {
 		}
 		Map<Quad, Integer> bcMap = joeqMethod.getBCMap();
 		if (bcMap != null) {
-			if (scheme.getInstrMethodAndLoopBound() > 0) {
+			if (instrMethodAndLoopBound > 0) {
 				ControlFlowGraph cfg = joeqMethod.getCFG();
 				finder.visit(cfg);
 				loopInstrMap.clear();
+				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+						it.hasNext();) {
+					BasicBlock bb = it.nextBasicBlock();
+					if (bb.isEntry() || bb.isExit())
+						continue;
+					String bStr = bb.getID() + "!" + mStr;
+					int bId = Bmap.getOrAdd(bStr);
+					int bci = getBCI(bb, joeqMethod);
+					processEnterBasicBlock(bId, bci); 
+				}
 				Set<BasicBlock> heads = finder.getLoopHeads();
 				for (BasicBlock head : heads) {
-					int headBCI = getBCI(head, joeqMethod);
 					int wId = Wmap.getOrAdd(head);
+					int headBCI = getBCI(head, joeqMethod);
 					processEnterLoopCheck(wId, headBCI);
+				}
+				for (BasicBlock head : heads) {
 					Set<BasicBlock> exits = finder.getLoopExits(head);
 					for (BasicBlock exit : exits) {
+						int wId = Wmap.getOrAdd(exit);
 						int exitBCI = getBCI(exit, joeqMethod);
 						processLeaveLoopCheck(wId, exitBCI);
 					}
@@ -317,7 +317,7 @@ public class Instrumentor {
 		// bytecode instrumentation offsets could get messed up 
 		String enterStr = "";
 		String leaveStr = "";
-		if (scheme.getInstrMethodAndLoopBound() > 0) {
+		if (instrMethodAndLoopBound > 0) {
 			enterStr = enterStr + enterMethodCheck + mId + "); ";
 			leaveStr = leaveMethodCheck + mId + "); " + leaveStr;
 		}
@@ -652,30 +652,30 @@ public class Instrumentor {
 			}
 		}
 	}
-	private static final String threadClassName = "java.lang.Thread.";
-	private static final String enterMethodCheck = threadClassName + "enterMethodCheck(";
-	private static final String leaveMethodCheck = threadClassName + "leaveMethodCheck(";
-	private static final String enterLoopCheck = threadClassName + "enterLoopCheck(";
-	private static final String leaveLoopCheck = threadClassName + "leaveLoopCheck(";
 
 	private static final String runtimeClassName = "chord.project.Runtime.";
+	private static final String enterBasicBlock = runtimeClassName + "enterBasicBlock(";
+	private static final String enterMethodCheck = runtimeClassName + "enterMethodCheck(";
+	private static final String leaveMethodCheck = runtimeClassName + "leaveMethodCheck(";
+	private static final String enterLoopCheck = runtimeClassName + "enterLoopCheck(";
+	private static final String leaveLoopCheck = runtimeClassName + "leaveLoopCheck(";
 	private static final String enterMethod = runtimeClassName + "enterMethod(";
 	private static final String leaveMethod = runtimeClassName + "leaveMethod(";
 	private static final String befNew = runtimeClassName + "befNew(";
 	private static final String aftNew = runtimeClassName + "aftNew(";
 	private static final String newArray = runtimeClassName + "newArray(";
-	private static final String getstaticPrimitive = "chord.project.Runtime.getstaticPrimitive(";
-	private static final String putstaticPrimitive = "chord.project.Runtime.putstaticPrimitive(";
-	private static final String getstaticReference = "chord.project.Runtime.getstaticReference(";
-	private static final String putstaticReference = "chord.project.Runtime.putstaticReference(";
-	private static final String getfieldPrimitive = "chord.project.Runtime.getfieldPrimitive(";
-	private static final String putfieldPrimitive = "chord.project.Runtime.putfieldPrimitive(";
-	private static final String getfieldReference = "chord.project.Runtime.getfieldReference(";
-	private static final String putfieldReference = "chord.project.Runtime.putfieldReference(";
-	private static final String aloadPrimitive = "chord.project.Runtime.aloadPrimitive(";
-	private static final String aloadReference = "chord.project.Runtime.aloadReference(";
-	private static final String astorePrimitive = "chord.project.Runtime.astorePrimitive(";
-	private static final String astoreReference = "chord.project.Runtime.astoreReference(";
+	private static final String getstaticPrimitive = runtimeClassName + "getstaticPrimitive(";
+	private static final String putstaticPrimitive = runtimeClassName + "putstaticPrimitive(";
+	private static final String getstaticReference = runtimeClassName + "getstaticReference(";
+	private static final String putstaticReference = runtimeClassName + "putstaticReference(";
+	private static final String getfieldPrimitive = runtimeClassName + "getfieldPrimitive(";
+	private static final String putfieldPrimitive = runtimeClassName + "putfieldPrimitive(";
+	private static final String getfieldReference = runtimeClassName + "getfieldReference(";
+	private static final String putfieldReference = runtimeClassName + "putfieldReference(";
+	private static final String aloadPrimitive = runtimeClassName + "aloadPrimitive(";
+	private static final String aloadReference = runtimeClassName + "aloadReference(";
+	private static final String astorePrimitive = runtimeClassName + "astorePrimitive(";
+	private static final String astoreReference = runtimeClassName + "astoreReference(";
 	private static final String threadStart = runtimeClassName + "threadStart(";
 	private static final String threadJoin = runtimeClassName + "threadJoin(";
 	private static final String acquireLock = runtimeClassName + "acquireLock(";

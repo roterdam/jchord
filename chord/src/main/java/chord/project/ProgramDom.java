@@ -102,7 +102,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 		out.close();
 	}
 	public String toUniqueIdString(T val) {
-		return "";
+		return val == null ? "null" : val.toString();
 	}
 	public void saveToIdFile() {
 		String name = getName();

@@ -493,6 +493,9 @@ public class InstrScheme implements Serializable {
 			events[ACQUIRE_LOCK].hasPid() || events[RELEASE_LOCK].hasPid() ||
 			events[WAIT].hasPid() || events[NOTIFY].hasPid();
 	}
+	public boolean needsBmap() {
+		return instrMethodAndLoopBound > 0;
+	}
 	public boolean needsTraceTransform() {
 		return events[NEW_AND_NEWARRAY].hasOid();
 	}

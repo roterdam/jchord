@@ -53,12 +53,4 @@ public class DomF extends ProgramDom<jq_Field>
             "\" file=\"" + file +
             "\" line=\"" + line + "\"";
 	}
-	public String toUniqueIdString(jq_Field f) {
-		if (f == null)
-			return "null";
- 		String fName = f.getName().toString();
-		String fDesc = f.getDesc().toString();
-		String cName = f.getDeclaringClass().getName();
-		return Program.toString(fName, fDesc, cName);
-	}
 }
