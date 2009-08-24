@@ -54,10 +54,17 @@ public class DynamicAnalysis extends JavaAnalysis {
 	protected boolean convert;
 
 	public void initPass() {
-		// signals beginning of parsing of a new trace
+		// signals beginning of parsing of a trace
 		// do nothing by default; subclasses can override
 	}
-	public void done() {
+	public void donePass() {
+		// signals end of parsing of a trace
+		// do nothing by default; subclasses can override
+	}
+	public void initAllPasses() {
+		// do nothing by default; subclasses can override
+	}
+	public void doneAllPasses() {
 		// do nothing by default; subclasses can override
 	}
 	// subclass must override
@@ -156,6 +163,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		};
 		boolean serial = doTracePipe ? false : true;
 		Executor executor = new Executor(serial);
+		initAllPasses();
 		for (String runID : runIDs) {
 			System.out.println("Processing Run ID: " + runID);
 			final String args = System.getProperty("chord.args." + runID, "");
@@ -174,7 +182,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				throw new ChordRuntimeException(ex);
 			}
 		}
-		done();
+		doneAllPasses();
 	}
 
 	private static int getNum(String fileName) {
@@ -926,6 +934,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 					throw new RuntimeException("Unknown opcode: " + opcode);
 				}
 			}
+			donePass();
 			System.out.println("PROCESS TRACE: " + count);
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
