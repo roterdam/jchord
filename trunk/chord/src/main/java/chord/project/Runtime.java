@@ -19,16 +19,41 @@ import java.io.IOException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Runtime {
-/*
 	private static int instrBound;
-	private static boolean[][] traceStk;
-	private static boolean[] traceStkTop;
-	public static int[] threadObjs;
-	public static int numThreads;
-	public static int[][] numCallsToMeth;
-	public static int[][] numItersOfLoop;
-	public static final int NUM_INIT_THREADS = 10;
-*/
+	private static int numMeths;
+	private static int numLoops;
+	private class ThreadInfo {
+		private final static int INITIAL_STK_SIZE = 100; 
+		public int numCallsToMeth[];
+		public int numItersOfLoop[];
+		public boolean doInstr;
+		public boolean stk[];
+		public int stkSize;
+		public int stkTop;
+		public ThreadInfo() {
+			numCallsToMeth = new int[numMeths];
+			numItersOfLoop = new int[numLoops];
+			doInstr = true;
+			stk = new boolean[INITIAL_STK_SIZE];
+			stkSize = INITIAL_STK_SIZE;
+			stkTop = -1;
+		}
+		public boolean pop() {
+			assert (stkTop >= 0);
+			return stk[stkTop--];
+		}
+		public void push(boolean val) {
+			if (stkTop == stkSize - 1) {
+				int newStkSize = stkSize * 2;
+				boolean newStk[] = new boolean[newStkSize];
+				System.arraycopy(stk, 0, newStk, 0, stkSize);
+				stk = newStk;
+				stkSize = newStkSize;
+			}
+			stk[stkTop++] = val;
+		}
+			
+	}
 	private static ByteBufferedFile buffer;
 	// note: use currentId == 0 for null and currentId == 1 for hypothetical
 	// lone object of a hypothetical class all of whose instance fields are
@@ -36,22 +61,9 @@ public class Runtime {
 	private static InstrScheme scheme;
     private static int currentId = 2;
     private static WeakIdentityHashMap objmap;
+	private static WeakIdentityHashMap thrmap;
 	private static boolean trace = false;
-/*
-	public synchronized static void createThread(int tObj) {
-		if (trace) {
-			trace = false;
-			if (numThreads == threadObjs.length) {
-				int[] newThreadObjs = new int[2 * numThreads];
-				System.arraycopy(threadObjs, 0, newThreadObjs, 0, numThreads);
-				threadObjs = newThreadObjs;
-				threadObjs[numThreads] = tObj;
-				numThreads++;
-			}
-			trace = true;
-		}
-	}
-*/
+
     private static int getObjectId(Object o) {
     	if (o == null)
     		return 0;
@@ -562,10 +574,18 @@ public class Runtime {
 		}
 	
 	}
-	public synchronized static void test() { }
 	public synchronized static void enterMethodCheck(int mId) {
 		if (trace) {
 			trace = false;
+/*
+			Thread t = Thread.currentThread();
+			ThreadInfo info = threadInfoMap.get(t);
+			if (info == null) {
+				threadInfoMap.put(t, info);
+				info = new ThreadInfo();
+			} else {
+			}
+*/
 			trace = true;
 		}
 	}
@@ -584,6 +604,13 @@ public class Runtime {
 	public synchronized static void leaveLoopCheck(int wId) {
 		if (trace) {
 			trace = false;
+/*
+			Thread t = currentThread();
+			ThreadInfo info = thrmap.get(t);
+			if (info.numItersOfLoop[wId] > 0) {
+            	info.numItersOfLoop[wId] = 0;
+            info.doInstr = info.stk.pop();
+*/
 			trace = true;
 		}
 	}
@@ -591,15 +618,18 @@ public class Runtime {
 		scheme = s;
 	}
 	public synchronized static void open(String traceFileName,
-			String instrSchemeFileName, int numMeths, int numLoops, int ib) {
+			String instrSchemeFileName, int numMeths, int numLoops,
+			int instrBound) {
 		try {
 			buffer = new ByteBufferedFile(1024, traceFileName, false);
 		    objmap = new WeakIdentityHashMap();
 			scheme = InstrScheme.load(instrSchemeFileName);
-			// threadObjs = new int[NUM_INIT_THREADS];
-			// numCallsToMeth = new int[numMeths][];
-			// numItersOfLoop = new int[numLoops][];
-			// instrBound = ib;
+			if (instrBound > 0) {
+				thrmap = new WeakIdentityHashMap();
+				Runtime.instrBound = instrBound;
+				Runtime.numMeths = numMeths;
+				Runtime.numLoops = numLoops;
+			}
 		} catch (IOException ex) { throw new RuntimeException(ex); }
 		trace = true;
 	}
@@ -610,3 +640,63 @@ public class Runtime {
 		} catch (IOException ex) { throw new RuntimeException(ex); }
 	}
 }
+
+/*
+Three kinds of basic blocks:
+
+1. METHOD ENTRY BASIC BLOCK e:
+   num_nested_levs[M]++;
+   if (num_nested_levs[M] == max) {
+       push(do_instrument);
+       do_instrument = false;
+   }
+   /else/ if (do_instrument)
+       print e
+
+2. METHOD EXIT BASIC BLOCK e:
+   if (do_instrument)
+       print e
+   /else/ if (num_nested_levs[M] == max)
+       do_instrument = pop();
+   num_nested_levs[M]--;
+
+3. BASIC BLOCK p other than METHOD ENTRY or EXIT:
+    assert that p is not both the head and exit of same loop
+    if (p is exit of loop L1) {
+        if (entering from inside loop) { // figured by test last_iters_of_loop[L1] > 0
+            last_iters_of_loop[L] = 0;
+            do_instrument = pop();
+        }
+    }
+    if (p is exit of loop L2) {
+        if (entering from inside loop) {
+            ...
+        }
+    }
+    NOTE: head test below MUST come after all loop tests above, as we might be
+    leaving one loop and starting another, in which case we want do_instrument
+    to be set correctly
+    if (p is head of loop L) {
+        if (entering from outside loop) // figured by test last_iters_of_loop[L] == 0
+            push(do_instrument);
+        else if (do_instrument) {
+            last_iters_of_loop[L]++
+            if (last_iters_of_loop[L] == max)
+                do_instrument = false;
+        }
+    }
+    if (do_instrument)
+        print p;
+
+
+INVARIANTS:
+1. METHOD ENTRY or EXIT basic blocks cannot be loop head or loop exit of any loop
+2. basic block besides METHOD ENTRY or EXIT can be loop head of 1 loop,
+   and loop exit of 1 or more loops
+
+INSTRUMENTIATION:
+1. instrument METHOD ENTRY and EXIT basic blocks using method.insertBefore and
+   method.insertAfter/addCatch
+2. instrument each basic block with (loop exits + loop head + print) check above
+
+*/

@@ -13,6 +13,7 @@ import java.util.HashMap;
 import chord.util.tuple.object.Pair;
 import chord.util.ArraySet;
 
+import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 
@@ -38,6 +39,8 @@ public class CFGLoopFinder implements ICFGVisitor {
 		for (Pair<BasicBlock, BasicBlock> edge : backEdges) {
 			BasicBlock tail = edge.val0;
 			BasicBlock head = edge.val1;
+			assert (!head.isEntry());
+			assert (!head.isExit());
 			// tail->head is a back edge
 			Set<BasicBlock> body = headToBody.get(head);
 			if (body == null) {
@@ -67,6 +70,8 @@ public class CFGLoopFinder implements ICFGVisitor {
 				for (Object o : curr.getSuccessors()) {
 					BasicBlock succ = (BasicBlock) o;
 					if (!body.contains(succ)) {
+						assert (!succ.isEntry());
+						assert (!succ.isExit());
 						exits.add(succ);
 						break;
 					}
@@ -95,6 +100,12 @@ public class CFGLoopFinder implements ICFGVisitor {
 	}
 	public Set<BasicBlock> getLoopExits(BasicBlock head) {
 		return headToExits.get(head);
+	}
+	public Map<BasicBlock, Set<BasicBlock>> getHeadToExitsMap() {
+		return headToExits;
+	}
+	public Map<BasicBlock, Set<BasicBlock>> getHeadToBodyMap() {
+		return headToBody;
 	}
     private void visit(BasicBlock curr) {
         visitedBef.add(curr);

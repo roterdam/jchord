@@ -31,7 +31,7 @@ import chord.util.Executor;
 	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
-	public final static boolean DEBUG = false;
+	public final static boolean DEBUG = true;
 	private IndexMap<String> sHmap = new IndexHashMap<String>();
 	private IndexMap<String> dHmap = new IndexHashMap<String>();
 	private IndexMap<String> sEmap = new IndexHashMap<String>();
@@ -42,11 +42,14 @@ public class DynamicAnalysis extends JavaAnalysis {
 	private IndexMap<String> dMmap = new IndexHashMap<String>();
 	private IndexMap<String> sPmap = new IndexHashMap<String>();
 	private IndexMap<String> dPmap = new IndexHashMap<String>();
+	private IndexMap<String> sBmap = new IndexHashMap<String>();
+	private IndexMap<String> dBmap = new IndexHashMap<String>();
 	protected IndexMap<String> Hmap;
 	protected IndexMap<String> Emap;
 	protected IndexMap<String> Fmap;
 	protected IndexMap<String> Mmap;
 	protected IndexMap<String> Pmap;
+	protected IndexMap<String> Bmap;
 	protected InstrScheme scheme;
 	protected boolean convert;
 
@@ -93,18 +96,22 @@ public class DynamicAnalysis extends JavaAnalysis {
 			processDom("F", sFmap, dFmap);
 		if (scheme.needsMmap())
 			processDom("M", sMmap, dMmap);
+		if (scheme.needsBmap())
+			processDom("B", sBmap, dBmap);
 		if (convert) {
 			Hmap = sHmap;
 			Emap = sEmap;
 			Pmap = sPmap;
 			Fmap = sFmap;
 			Mmap = sMmap;
+			Bmap = sBmap;
 		} else {
 			Hmap = dHmap;
 			Emap = dEmap;
 			Pmap = dPmap;
 			Fmap = dFmap;
 			Mmap = dMmap;
+			Bmap = sBmap;
 		}
 		ProcessExecutor.execute("rm " + crudeTraceFileName);
 		ProcessExecutor.execute("rm " + finalTraceFileName);
@@ -128,16 +135,16 @@ public class DynamicAnalysis extends JavaAnalysis {
 			"=instr_scheme_file_name=" + instrSchemeFileName +
 			"=instr_bound=" + Properties.instrBound +
 			" " + mainClassName + " ";
-		Runnable traceTransformer = needsTraceTransform ?
-			(new Runnable() {
-				public void run() {
-					(new TraceTransformer()).run(
-						crudeTraceFileName, finalTraceFileName, scheme);
-				if (DEBUG)
+		Runnable traceTransformer = new Runnable() {
+			public void run() {
+				(new TraceTransformer()).run(
+					crudeTraceFileName, finalTraceFileName, scheme);
+				if (DEBUG) {
 					(new TracePrinter()).run(crudeTraceFileName, scheme);
-				System.out.println("DONE");
+					System.out.println("DONE");
 				}
-			}) : null;
+			}
+		};
 		Runnable traceProcessor = new Runnable() {
 			public void run() {
 				if (DEBUG) {
@@ -253,6 +260,14 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return mIdx;
 	}
+	private int getBidx(int b) {
+		String s = dBmap.get(b);
+		int bIdx = sBmap.indexOf(s);
+		if (bIdx == -1) {
+			System.err.println("WARNING: could not find `" + s + "` in sBmap");
+		}
+		return bIdx;
+	}
 
 	private void processTrace(String fileName) {
 		try {
@@ -263,6 +278,15 @@ public class DynamicAnalysis extends JavaAnalysis {
 				byte opcode = buffer.getByte();
 				count++;
 				switch (opcode) {
+				case EventKind.ENTER_BB:
+				{
+					int b = buffer.getInt();
+					if (convert)
+						b = getBidx(b);
+					int t = buffer.getInt();
+					processEnterBasicBlock(b, t);
+					break;
+				}
 				case EventKind.ENTER_METHOD:
 				{
 					EventFormat lef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
@@ -909,6 +933,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			throw new ChordRuntimeException(ex);
 		}
 	}
+	public void processEnterBasicBlock(int b, int t) { }
 	public void processEnterMethod(int m, int t) { }
 	public void processLeaveMethod(int m, int t) { }
 	public void processNewOrNewArray(int h, int t, int o) { }

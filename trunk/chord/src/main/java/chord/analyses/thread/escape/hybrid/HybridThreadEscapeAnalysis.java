@@ -64,7 +64,7 @@ import chord.util.tuple.object.Pair;
 @Chord(
 	    name = "hybrid-thresc-java"
 	)
-public class HybridThreadEscapeAnalysis extends DynamicAnalysis {
+public class HybridThreadEscapeAnalysis extends PathAnalysis {
     private final static boolean DEBUG = false;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();

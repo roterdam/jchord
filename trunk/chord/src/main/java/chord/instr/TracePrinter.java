@@ -260,9 +260,9 @@ public class TracePrinter {
 			}
 			case EventKind.ENTER_BB:
 			{
-				int p = buffer.getInt();
+				int b = buffer.getInt();
 				int t = buffer.getInt();
-				System.out.println("ENTER_BB " + p + " " + t);
+				System.out.println("ENTER_BB " + b + " " + t);
 				break;
 			}
 			default:
