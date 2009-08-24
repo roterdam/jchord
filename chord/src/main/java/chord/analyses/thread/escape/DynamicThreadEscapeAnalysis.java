@@ -32,13 +32,13 @@ import gnu.trove.TIntArrayList;
 	signs = { "E0", "E0", "E0" }
 )
 public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
+    // set of all currently escaping objects
+    private TIntHashSet escObjs;
 	// map from each object to a list containing each non-null-valued
 	// instance field of reference type along with that value
 	private TIntObjectHashMap objToFldObjs;
     // map from each object to the index in domain H of its alloc site
     private TIntIntHashMap objToHidx; 
-    // set of all currently escaping objects
-    private TIntHashSet escObjs;
     // map from the index in domain H of each alloc site not yet known
 	// to be flow-ins. thread-escaping to the list of indices in
 	// domain E of instance field/array deref sites that should become
@@ -102,74 +102,47 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     	return instrScheme;
     }
 
-	public void initPass() {
-		if (isFirst) {
-			isFirst = false;
- 			escObjs = new TIntHashSet();
-			numE = Emap.size();
-			isEidxVisited = new boolean[numE];
-			if (convert)
-				relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
-			if (isFlowIns) {
-				isEidxFlowInsEsc = new boolean[numE];
-				if (convert) {
-					relFlowInsEscE =
-						(ProgramRel) Project.getTrgt("flowInsEscE");
-				}
-			}
-			if (isFlowSen) {
-				isEidxFlowSenEsc = new boolean[numE];
-				numH = Hmap.size();
-				HidxToPendingEidxs = new TIntArrayList[numH];
-				isHidxEsc = new boolean[numH];
-				if (convert) {
- 					relFlowSenEscE =
-						(ProgramRel) Project.getTrgt("flowSenEscE");
-				}
-			}
-		} else {
-			printStats();
-			escObjs.clear();
-			if (isFlowSen) {
-				for (int i = 0; i < numH; i++)
-					HidxToPendingEidxs[i] = null;
-				for (int i = 0; i < numH; i++)
-					isHidxEsc[i] = false;
-			}
-		}
+
+	public void initAllPasses() {
+		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap();
-		if (isFlowSen)
-			objToHidx = new TIntIntHashMap();
-	}
-	public void done() {
-		if (convert) {
-			relVisitedE.zero();
-			for (int i = 0; i < numE; i++) {
-				if (isEidxVisited[i])
-					relVisitedE.add(i);
-			}
-			relVisitedE.save();
-			if (isFlowIns) {
-				relFlowInsEscE.zero();
-				for (int i = 0; i < numE; i++) {
-					if (isEidxFlowInsEsc[i])
-						relFlowInsEscE.add(i);
-				}
-				relFlowInsEscE.save();
-			}
-			if (isFlowSen) {
-				relFlowSenEscE.zero();
-				for (int i = 0; i < numE; i++) {
-					if (isEidxFlowSenEsc[i])
-						relFlowSenEscE.add(i);
-				}
-				relFlowSenEscE.save();
+		numE = Emap.size();
+		isEidxVisited = new boolean[numE];
+		if (convert)
+			relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
+		if (isFlowIns) {
+			isEidxFlowInsEsc = new boolean[numE];
+			if (convert) {
+				relFlowInsEscE =
+					(ProgramRel) Project.getTrgt("flowInsEscE");
 			}
 		}
-		printStats();
+		if (isFlowSen) {
+			isEidxFlowSenEsc = new boolean[numE];
+			numH = Hmap.size();
+			HidxToPendingEidxs = new TIntArrayList[numH];
+			isHidxEsc = new boolean[numH];
+			if (convert) {
+ 				relFlowSenEscE =
+					(ProgramRel) Project.getTrgt("flowSenEscE");
+			}
+			objToHidx = new TIntIntHashMap();
+		}
 	}
 
-	private void printStats() {
+	public void initPass() {
+		escObjs.clear();
+		objToFldObjs.clear();
+		if (isFlowSen) {
+			for (int i = 0; i < numH; i++)
+				HidxToPendingEidxs[i] = null;
+			for (int i = 0; i < numH; i++)
+				isHidxEsc[i] = false;
+			objToHidx.clear();
+		}
+	}
+
+	public void donePass() {
 		System.out.println("***** STATS *****");
 		int numVisited = 0, numFlowInsEsc = 0, numFlowSenEsc = 0,
 			numAllocEsc = 0;
@@ -198,6 +171,33 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			(isFlowSen ? " numFlowSenEsc: " + numFlowSenEsc : "") +
 			(isFlowIns ? " numFlowInsEsc: " + numFlowInsEsc +
 				" numAllocEsc: " + numAllocEsc : ""));
+	}
+
+	public void doneAllPasses() {
+		if (convert) {
+			relVisitedE.zero();
+			for (int i = 0; i < numE; i++) {
+				if (isEidxVisited[i])
+					relVisitedE.add(i);
+			}
+			relVisitedE.save();
+			if (isFlowIns) {
+				relFlowInsEscE.zero();
+				for (int i = 0; i < numE; i++) {
+					if (isEidxFlowInsEsc[i])
+						relFlowInsEscE.add(i);
+				}
+				relFlowInsEscE.save();
+			}
+			if (isFlowSen) {
+				relFlowSenEscE.zero();
+				for (int i = 0; i < numE; i++) {
+					if (isEidxFlowSenEsc[i])
+						relFlowSenEscE.add(i);
+				}
+				relFlowSenEscE.save();
+			}
+		}
 	}
 
 	public void processNewOrNewArray(int h, int t, int o) {

@@ -46,7 +46,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.project.Chord;
-import chord.project.DynamicAnalysis;
+import chord.project.JavaAnalysis;
 import chord.project.Program;
 import chord.project.ProgramRel;
 import chord.project.Project;
@@ -64,7 +64,7 @@ import chord.util.tuple.object.Pair;
 @Chord(
 	    name = "hybrid-thresc-java"
 	)
-public class HybridThreadEscapeAnalysis extends PathAnalysis {
+public class HybridThreadEscapeAnalysis extends JavaAnalysis {
     private final static boolean DEBUG = false;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();
@@ -104,50 +104,7 @@ public class HybridThreadEscapeAnalysis extends PathAnalysis {
 	private jq_Method threadStartMethod;
 	private jq_Method mainMethod;
 	
-	public void runAnalysis() {
-		Project.resetTaskDone("hybrid-thresc-dlog");
-		Project.runTask("hybrid-thresc-dlog");
-		
-		ProgramRel relRelevantEH =
-			(ProgramRel) Project.getTrgt("relevantEH");
-		relRelevantEH.load();
-		PairIterable<Quad, Quad> tuples =
-			relRelevantEH.getAry2ValTuples();
-		for (Pair<Quad, Quad> tuple : tuples) {
-			Quad e = tuple.val0;
-			if (esc1HeapInsts.contains(e)) {
-				System.out.println("Deemed esc in earlier path: " + e);
-				// already proven definitely escaping
-				// in an earlier path program
-				continue;
-			}
-			Quad h = tuple.val1;
-			Set<Quad> allocs = heapInstToAllocs.get(e);
-			if (allocs == null) {
-				allocs = new ArraySet<Quad>();
-				heapInstToAllocs.put(e, allocs);
-			}
-			allocs.add(h);
-		}
-		relRelevantEH.close();
-
-		ProgramRel relHybridEscE =
-			(ProgramRel) Project.getTrgt("hybridEscE");
-		relHybridEscE.load();
-		Iterable<Quad> tuples2 = relHybridEscE.getAry1ValTuples();
-		for (Quad e : tuples2) {
-			if (esc1HeapInsts.add(e)) {
-				// may have been deemed thread local
-				// in an earlier path program
-				if (heapInstToAllocs.remove(e) != null)
-					System.out.println("Deemed loc in earlier path: " + e);
-			}
-		}
-		relHybridEscE.close();
-	}
-
 	public void run() {
-		super.run();
 		threadStartMethod = Program.v().getThreadStartMethod();
 		mainMethod = Program.v().getMainMethod();
 		domV = (DomV) Project.getTrgt("V");
