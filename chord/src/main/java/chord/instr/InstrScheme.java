@@ -270,6 +270,8 @@ public class InstrScheme implements Serializable {
 	public void setInstrMethodAndLoopBound(int n) {
 		assert (n >= 0);
 		instrMethodAndLoopBound = n;
+		if (n > 0)
+			setEnterAndLeaveMethodEvent(true, true);
 	}
 	public int getInstrMethodAndLoopBound() {
 		return instrMethodAndLoopBound;
