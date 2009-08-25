@@ -77,38 +77,38 @@
 
   <target name="help">
   <echo>
-  compile      Compile all Chord source files
-  clean        Cleanup all Chord target files generated during compilation
+  compile      Compile Chord source code
   run          Run Chord
-  run-datarace Run Chord's datarace checker
-  run-deadlock Run Chord's deadlock checker
-  run-downcast Run Chord's downcast safety checker
-  run-monosite Run Chord's monomorphic call site inferer
-  run-wn	   Run wait-notify pattern checker
+               Optional properties:
+               - chord.work.dir (dir treated as working dir during Chord's execution; default=current dir)
+               - chord.out.dir  (default={chord.work.dir}/chord_output)
+  run-XXX      Run custom analysis XXX (e.g. datarace, deadlock, etc.)
   j2h_xref     Convert .java files to .html with cross-references
                Required properties:
-               - java.dir
-               - html.dir
+               - java.dir (dir containing Java source files)
+               - html.dir (dir to dump generated HTML files)
   j2h_fast     Convert .java files to .html without cross-references
                Required properties:
                - java.dir
                - html.dir
   solve        Run bddbddb (BDD-based Datalog solver)
                Required properties:
-               - work.dir
-               - dlog.file
+               - work.dir   (dir containing input/output BDD files)
+               - dlog.file  (file containing Datalog program)
                Optional properties:
                - max.tuples (default=1000)
                - max.heap   (default=1024m)
-               - noisy      (values=[yes|no], default=yes)
+               - noisy      ([yes|no]; default=yes)
   debug        Run bddbddb's interactive interpreter
                Required properties:
-               - work.dir
-               - dlog.file
+               - work.dir   (dir containing input/output BDD files)
+               - dlog.file  (file containing Datalog program)
                Optional properties:
                - max.tuples (default=1000)
                - max.heap   (default=1024m)
   javadoc      Generate javadoc for Chord source code
+  clean        Cleanup all generated class files
+  cleandoc     Cleanup all generated javadoc files
   </echo>
   </target>
 

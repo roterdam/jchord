@@ -31,6 +31,7 @@ public class Properties {
 	public static final String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
 	public static final String classesDirName = build("chord.classes.dir", "classes");
 
+	public static final String rootsFileName = System.getProperty("chord.roots.file");
 	public static final String mainClassName = System.getProperty("chord.main.class");
 	public static final String classPathName = System.getProperty("chord.class.path");
 	public static final String srcPathName = System.getProperty("chord.src.path");
