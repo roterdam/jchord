@@ -233,6 +233,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		int hIdx = sHmap.indexOf(s);
 		if (hIdx == -1) {
 			System.err.println("WARNING: could not find `" + s + "` in sHmap");
+			hIdx -= h;
 		}
 		return hIdx;
 	}
@@ -241,6 +242,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		int eIdx = sEmap.indexOf(s);
 		if (eIdx == -1) {
 			System.err.println("WARNING: could not find `" + s + "` in sEmap");
+			eIdx -= e;
 		}
 		return eIdx;
 	}
@@ -249,6 +251,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		int pIdx = sPmap.indexOf(s);
 		if (pIdx == -1) {
 			System.err.println("WARNING: could not find `" + s + "` in sPmap");
+			pIdx -= p;
 		}
 		return pIdx;
 	}
@@ -257,6 +260,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		int fIdx = sFmap.indexOf(s);
 		if (fIdx == -1) {
 			System.err.println("WARNING: could not find `" + s + "` in sFmap");
+			fIdx -= f;
 		}
 		return fIdx;
 	}
@@ -265,6 +269,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		int mIdx = sMmap.indexOf(s);
 		if (mIdx == -1) {
 			System.err.println("WARNING: could not find `" + s + "` in sMmap");
+			mIdx -= m;
 		}
 		return mIdx;
 	}
@@ -273,6 +278,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		int bIdx = sBmap.indexOf(s);
 		if (bIdx == -1) {
 			System.err.println("WARNING: could not find `" + s + "` in sBmap");
+			bIdx -= b;
 		}
 		return bIdx;
 	}

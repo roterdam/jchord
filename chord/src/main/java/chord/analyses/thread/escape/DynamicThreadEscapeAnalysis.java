@@ -74,7 +74,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public boolean handlesStatFldWr() { return true; }
 	public boolean handlesThreadSpawnAndStart() { return true; }
 
-	private boolean isFirst = true;
 	private int numE;
 	private int numH;
 
@@ -116,17 +115,17 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				relFlowInsEscE =
 					(ProgramRel) Project.getTrgt("flowInsEscE");
 			}
-		}
-		if (isFlowSen) {
-			isEidxFlowSenEsc = new boolean[numE];
 			numH = Hmap.size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
 			isHidxEsc = new boolean[numH];
+			objToHidx = new TIntIntHashMap();
+		}
+		if (isFlowSen) {
+			isEidxFlowSenEsc = new boolean[numE];
 			if (convert) {
  				relFlowSenEscE =
 					(ProgramRel) Project.getTrgt("flowSenEscE");
 			}
-			objToHidx = new TIntIntHashMap();
 		}
 	}
 
@@ -206,7 +205,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			escObjs.remove(o);
 			if (isFlowIns) {
 				objToHidx.remove(o);
-				if (h != -1)
+				if (h >= 0)
 					objToHidx.put(o, h);
 			}
 		}
@@ -248,7 +247,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		}
 	}
 	private void processHeapRd(int eIdx, int b) {
-		if (eIdx != -1 && b != 0) {
+		if (eIdx >= 0 && b != 0) {
 			isEidxVisited[eIdx] = true;
 			if (isFlowSen) {
 				if (!isEidxFlowSenEsc[eIdx] && escObjs.contains(b)) {
@@ -278,7 +277,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	}
 	private void processHeapWr(int eIdx, int b, int fIdx, int r) {
 		processHeapRd(eIdx, b);
-		if (b != 0 && fIdx != -1) {
+		if (b != 0 && fIdx >= 0) {
 			if (r == 0) {
 				// remove field fIdx if it is there
 				List l = (List) objToFldObjs.get(b);
