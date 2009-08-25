@@ -160,6 +160,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			for (int i = 0; i < numE; i++) {
 				if (isEidxFlowInsEsc[i])
 					numFlowInsEsc++;
+				// else if (isFlowSen && isEidxFlowSenEsc[i])
+				//	numFlowInsEsc++;
 			}
 			for (int i = 0; i < numH; i++) {
 				if (isHidxEsc[i])
