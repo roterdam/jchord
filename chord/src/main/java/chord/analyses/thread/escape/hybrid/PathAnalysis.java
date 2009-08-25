@@ -91,7 +91,7 @@ public class PathAnalysis extends DynamicAnalysis {
 	private Set<IntQuad> putinstSet;
 	private Set<IntPair> getstatSet;
 	private Set<IntPair> putstatSet;
-	private Set<IntPair> spawnSet;
+	private Set<IntPair> startSet;
 	private Set<IntPair> PQset;
 
     public void initAllPasses() {
@@ -127,7 +127,7 @@ public class PathAnalysis extends DynamicAnalysis {
 		putinstSet = new HashSet<IntQuad>();
 		getstatSet = new HashSet<IntPair>();
 		putstatSet = new HashSet<IntPair>();
-		spawnSet = new HashSet<IntPair>();
+		startSet = new HashSet<IntPair>();
 		PQset = new HashSet<IntPair>();
 	}
 
@@ -232,9 +232,9 @@ public class PathAnalysis extends DynamicAnalysis {
 		}
 		relPutstat.save();
 
-		ProgramRel relSpawn = (ProgramRel) Project.getTrgt("spawn");
+		ProgramRel relSpawn = (ProgramRel) Project.getTrgt("start");
 		relSpawn.zero();
-		for (IntPair p : spawnSet) {
+		for (IntPair p : startSet) {
 			int q = p.idx0;
 			int v = p.idx1;
 			relSpawn.add(q, v);
@@ -340,17 +340,16 @@ public class PathAnalysis extends DynamicAnalysis {
 		private Stack<InvkInfo> pendingInvks = new Stack<InvkInfo>();
 		private Stack<Frame> frames = new Stack<Frame>();
 		private Frame top;
-		// if badMidx != -1 then in eating mode until
-		// leaveMethod badMidx encountered
-		private int badMidx = -1; 
-		private int numCalls;
+		private boolean foundThreadRoot;
+		private int ignoredMethIdx;
+		private int ignoredMethNumFrames;  // > 0 means currently ignoring code
 		private int tId; // just for debugging
 		public Handler(int tId) {
 			this.tId = tId;
 		}
-		public void beginBad(int mIdx) {
-			badMidx = mIdx;
-			numCalls = 0;
+		public void beginIgnoredMeth(int mIdx) {
+			ignoredMethIdx = mIdx;
+			ignoredMethNumFrames = 1;
 		}
 		private void setCurrQidx(Quad q) {
 			currQidx = domQ.getOrAdd(new IntTrio(q.getID(), top.mIdx, top.cIdx));
@@ -363,17 +362,16 @@ public class PathAnalysis extends DynamicAnalysis {
 			}
 		}
 		public void processEnterBasicBlock(int bIdx) {
-			assert (bIdx != -1);
 			System.out.println("BB tId: " + tId + " bIdx: " + bIdx);
-			if (badMidx != -1) {
-				return;
-			}
+			assert (bIdx >= 0);
 			if (top == null) {
-				System.out.println("WARNING: naked enterBasicBlock");
+				System.out.println("Ignoring 1");
 				return;
 			}
-			// int bIdx = getBidx(bId);
-			// assert (bIdx != -1);
+			if (ignoredMethNumFrames > 0) {
+				System.out.println("Ignoring 2");
+				return;
+			}
 			BasicBlock bb = domB.get(bIdx);
 			int n = bb.size();
 			assert (n > 0);
@@ -584,7 +582,7 @@ public class PathAnalysis extends DynamicAnalysis {
 					m.getDeclaringClass().getName().equals("java.lang.Thread")) {
 				IntPair thisArg = invkArgs.get(0);
 				assert (thisArg.idx0 == 0);
-				spawnSet.add(new IntPair(currQidx, thisArg.idx1));
+				startSet.add(new IntPair(currQidx, thisArg.idx1));
 			} else {
 				InvkInfo invkInfo =
 					new InvkInfo(mSign, invkArgs, invkRet, currQidx);
@@ -605,50 +603,48 @@ public class PathAnalysis extends DynamicAnalysis {
 			}
 		}
 		public void processEnterMethod(int mIdx) {
-			assert (mIdx != -1);
+			assert (mIdx >= 0);
 			System.out.println("EM tId: " + tId + " mIdx: " + mIdx);
-			if (badMidx != -1) {
-				if (mIdx == badMidx)
-					numCalls++;
+			if (ignoredMethNumFrames > 0) {
+				System.out.println("Ignoring");
+				if (mIdx == ignoredMethIdx)
+					ignoredMethNumFrames++;
 				return;
 			}
-			// int mIdx = getMidx(mId);
-			// if (mIdx == -1) {
-			//	System.out.println("MISSING method: " + dMmap.get(mId));
-			//	beginBad(mId);
-			//	return;
-			// }
 			jq_Method m = domM.get(mIdx);
-			// System.out.println(m.getCFG().fullDump());
 			String cName = m.getDeclaringClass().getName();
 			jq_Class cls = Program.v().getPreparedClass(cName);
-/*			
-			if (cName.startsWith("java.lang.") || cName.startsWith("com.ibm."))
-				cls = null;
-*/			
 			if (cls == null) {
-				System.out.println("MISSING class: " + cName);
-				beginBad(mIdx);
+				System.out.println("Missing class: " + cName);
+				beginIgnoredMeth(mIdx);
 				return;
 			}
-			int cIdx = methToNumCalls[mIdx]++;
-			List<IntPair> methArgs = methToArgs[mIdx];
-			if (methArgs == null) {
-				methArgs = processMethArgs(m);
-				methToArgs[mIdx] = methArgs;
+			String mName = m.getName().toString();
+			String mDesc = m.getDesc().toString();
+			String mSign = mName + mDesc;
+			if (!foundThreadRoot) {
+				if (mSign.equals("main([Ljava/lang/String;)V") ||
+						mSign.equals("run()V")) {
+					System.out.println("Treating method " + m +
+					" as thread root of thread " + tId);
+					foundThreadRoot = true;
+					// TODO: add to start set
+				}
 			}
 			List<IntPair> invkArgs = null;
 			int invkRet = -1;
 			if (!pendingInvks.isEmpty()) {
 				InvkInfo invkInfo = pendingInvks.peek();
-				String mName = m.getName().toString();
-				String mDesc = m.getDesc().toString();
-				String mSign = mName + mDesc;
 				if (invkInfo.sign.equals(mSign)) {
 					pendingInvks.pop();
 					invkArgs = invkInfo.invkArgs;
 					invkRet = invkInfo.invkRet;
 					int invkQidx = invkInfo.invkQidx;
+					List<IntPair> methArgs = methToArgs[mIdx];
+					if (methArgs == null) {
+						methArgs = processMethArgs(m);
+						methToArgs[mIdx] = methArgs;
+					}
 					int numArgs = methArgs.size();
 					assert (numArgs == invkArgs.size());
 					for (int i = 0; i < numArgs; i++) {
@@ -664,22 +660,21 @@ public class PathAnalysis extends DynamicAnalysis {
 			}
 			if (top != null)
 				frames.push(top);
+			int cIdx = methToNumCalls[mIdx]++;
+			System.out.println("XXX: " + m);
 			top = new Frame(mIdx, cIdx, invkArgs, invkRet);
 		}
 		public void processLeaveMethod(int mIdx) {
-			assert (mIdx != -1);
 			System.out.println("LM tId: " + tId + " mIdx: " + mIdx);
-			if (badMidx != -1) {
-				if (mIdx == badMidx) {
-					if (numCalls == 0)
-						badMidx = -1;
-					else
-						numCalls--;
-				}
+			assert (mIdx >= 0);
+			if (top == null) {
+				System.out.println("Ignoring 1");
 				return;
 			}
-			if (top == null) {
-				System.out.println("WARNING: naked leaveMethod");
+			if (ignoredMethNumFrames > 0) {
+				System.out.println("Ignoring 2");
+				if (mIdx == ignoredMethIdx)
+					ignoredMethNumFrames--;
 				return;
 			}
 			assert (mIdx == top.mIdx);
@@ -691,4 +686,3 @@ public class PathAnalysis extends DynamicAnalysis {
 	}
 }
 
-	
