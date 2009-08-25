@@ -118,7 +118,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			Pmap = dPmap;
 			Fmap = dFmap;
 			Mmap = dMmap;
-			Bmap = sBmap;
+			Bmap = dBmap;
 		}
 		ProcessExecutor.execute("rm " + crudeTraceFileName);
 		ProcessExecutor.execute("rm " + finalTraceFileName);
