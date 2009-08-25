@@ -68,27 +68,38 @@ public class RTA {
 	public IndexHashSet<jq_Method> getReachableMethods() {
 		return seenMethods;
 	}
-	public void run(String mainClassName) {
+	public void run(List<String> rootMethodSigns) {
 		System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
-        jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
-        jq_NameAndDesc sign = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
-	    prepareClass(mainClass);
-        jq_Method mainMethod = mainClass.getDeclaredStaticMethod(sign);
-        if (mainMethod == null) {
-            throw new RuntimeException("No main method in class " + mainClass);
-        }
+		List<jq_Method> rootMethods =
+			new ArrayList<jq_Method>(rootMethodSigns.size()); 
+		for (String s : rootMethodSigns) {
+            int colonIdx = s.indexOf(':');
+            int atIdx = s.indexOf('@');
+            String mName = s.substring(0, colonIdx);
+            String mDesc = s.substring(colonIdx + 1, atIdx);
+            String cName = s.substring(atIdx + 1);
+        	jq_Class klass = (jq_Class) jq_Type.parseType(cName);
+			prepareClass(klass);
+			jq_NameAndDesc sign = new jq_NameAndDesc(mName, mDesc);
+        	jq_Method method = (jq_Method) klass.getDeclaredMember(sign);
+			assert (method != null);
+			rootMethods.add(method);
+		}
 		for (int i = 0; repeat; i++) {
 			if (DEBUG) System.out.println("Iteration: " + i);
 			repeat = false;
          	classesAddedForClinit.clear();
         	seenMethods.clear();
 			methodToOrphanInvks.clear();
-            handleClinits(mainClass);
-        	handleSeenMethod(mainMethod);
+			for (jq_Method rootMethod : rootMethods) {
+				jq_Class c = rootMethod.getDeclaringClass();
+				handleClinits(c);
+        		handleSeenMethod(rootMethod);
+			}
 	        while (!todoMethods.isEmpty()) {
 	        	jq_Method m = todoMethods.remove(todoMethods.size() - 1);
 	        	handleTodoMethod(m);
@@ -207,8 +218,6 @@ public class RTA {
 	}
 
 	private void handleClass(jq_Class c) {
-		// if (c.getName().startsWith("joeq") || c.getName().startsWith("jwutil"))
-		//	throw new RuntimeException();
 		prepareClass(c);
 		handleClinits(c);
 	}

@@ -20,6 +20,7 @@ import com.java2html.Java2HTML;
 
 import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
+import chord.util.FileUtils;
  
 import joeq.Util.Templates.ListIterator;
 import joeq.UTF.Utf8;
@@ -128,10 +129,18 @@ public class Program {
 		r.close();
 	}
 	private void initFromRTA() throws IOException {
+		String rootsFileName = Properties.rootsFileName;
 		String mainClassName = Properties.mainClassName;
-		assert (mainClassName != null);
+		assert (rootsFileName != null ^ mainClassName != null);
 		RTA rta = new RTA();
-		rta.run(mainClassName);
+		List<String> roots;
+		if (rootsFileName != null) {
+			roots = FileUtils.readFileToList(rootsFileName);
+		} else {
+			roots = new ArrayList<String>(1);
+			roots.add("main:([Ljava/lang/String;)V@" + mainClassName);
+		}
+		rta.run(roots);
 		preparedClasses = rta.getPreparedClasses();
 		reachableMethods = rta.getReachableMethods();
 		write();
