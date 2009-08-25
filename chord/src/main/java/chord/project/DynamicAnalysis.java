@@ -228,7 +228,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 	}
 	
-	private int getHidx(int h) {
+	public int getHidx(int h) {
 		String s = dHmap.get(h);
 		int hIdx = sHmap.indexOf(s);
 		if (hIdx == -1) {
@@ -236,7 +236,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return hIdx;
 	}
-	private int getEidx(int e) {
+	public int getEidx(int e) {
 		String s = dEmap.get(e);
 		int eIdx = sEmap.indexOf(s);
 		if (eIdx == -1) {
@@ -244,7 +244,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return eIdx;
 	}
-	private int getPidx(int p) {
+	public int getPidx(int p) {
 		String s = dPmap.get(p);
 		int pIdx = sPmap.indexOf(s);
 		if (pIdx == -1) {
@@ -252,7 +252,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return pIdx;
 	}
-	private int getFidx(int f) {
+	public int getFidx(int f) {
 		String s = dFmap.get(f);
 		int fIdx = sFmap.indexOf(s);
 		if (fIdx == -1) {
@@ -260,7 +260,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return fIdx;
 	}
-	private int getMidx(int m) {
+	public int getMidx(int m) {
 		String s = dMmap.get(m);
 		int mIdx = sMmap.indexOf(s);
 		if (mIdx == -1) {
@@ -268,7 +268,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return mIdx;
 	}
-	private int getBidx(int b) {
+	public int getBidx(int b) {
 		String s = dBmap.get(b);
 		int bIdx = sBmap.indexOf(s);
 		if (bIdx == -1) {

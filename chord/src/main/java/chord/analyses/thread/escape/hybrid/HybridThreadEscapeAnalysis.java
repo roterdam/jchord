@@ -87,13 +87,8 @@ public class HybridThreadEscapeAnalysis extends JavaAnalysis {
 	private Map<Pair<Ctxt, jq_Method>, Set<SummEdge>> summEdges =
 		new HashMap<Pair<Ctxt, jq_Method>, Set<SummEdge>>();
 	private MyQuadVisitor qv = new MyQuadVisitor();
-	private Map<Quad, Set<Quad>> heapInstToAllocs =
-		new HashMap<Quad, Set<Quad>>();
 	private ICSCG cscg;
 	// TODO: E -> CE in each of 3 below sets?
-	// set of heap insts deemed possibly escaping by
-	// some path-program analysis
-	private Set<Quad> esc1HeapInsts = new HashSet<Quad>();
 	// set of heap insts deemed possibly escaping by
 	// whole-program analysis
 	private Set<Quad> esc2HeapInsts = new HashSet<Quad>();
@@ -137,16 +132,15 @@ public class HybridThreadEscapeAnalysis extends JavaAnalysis {
 		Project.runTask(cscgAnalysis);
 		cscg = cscgAnalysis.getCallGraph();
 		Set<Pair<Ctxt, jq_Method>> roots = cscg.getRoots();
-		
+
+/*
 		for (Map.Entry<Quad, Set<Quad>> e :
 				heapInstToAllocs.entrySet()) {
 			currHeapInst = e.getKey();
 			currAllocs = e.getValue();
 			jq_Method m = Program.v().getMethod(currHeapInst);
-/*
 			if (!m.getDeclaringClass().getName().startsWith("test"))
 				continue;
-*/
 			System.out.println("currHeapInst: " + Program.v().toStringHeapInst(currHeapInst) +
 				" m: " + m);
 			for (Quad h : currAllocs)
@@ -175,6 +169,7 @@ public class HybridThreadEscapeAnalysis extends JavaAnalysis {
 		System.out.println("XXXXX locHeapInsts");
 		for (Quad e : locHeapInsts)
 			System.out.println(Program.v().toString(e));
+*/			
 	}
 	private void processThread(Pair<Ctxt, jq_Method> root) {
 		System.out.println("PROCESSING THREAD: " + root);

@@ -78,7 +78,7 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
     cout << "ENTER VMDeath" << endl;
 
 	if (list_loaded_classes) {
-		int class_count;
+		jint class_count;
 		jclass* classes;
 		jvmtiError result;
 		result = jvmti_env->GetLoadedClasses(&class_count, &classes);
