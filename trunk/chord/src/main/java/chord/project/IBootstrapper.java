@@ -21,11 +21,5 @@ public interface IBootstrapper {
 	 * @param m
 	 * @return
 	 */
-	public IndexSet<jq_InstanceMethod> getTargetsOfInvokeVirtual(jq_InstanceMethod m);
-	/**
-	 * 
-	 * @param m
-	 * @return
-	 */
-	public IndexSet<jq_InstanceMethod> getTargetsOfInvokeInterface(jq_InstanceMethod m);
+	public IndexSet<jq_InstanceMethod> getTargetsOfVirtualCall(jq_InstanceMethod m);
 }
