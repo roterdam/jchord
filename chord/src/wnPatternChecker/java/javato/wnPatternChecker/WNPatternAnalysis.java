@@ -58,7 +58,8 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		// do nothing for now
 	}
 	public void done() {
-        db.checkForErrors(Emap, Pmap);
+		System.out.println("in done...going to call checkForErrors");
+        	db.checkForErrors(Emap, Pmap);
 	}
 
 	public void processGetstaticPrimitive(int eId, int tId, int fId) { 
@@ -100,7 +101,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 	}
 
 	public void processAcquireLock(int pId, int tId, int lId) {
-		System.out.println("in lock acquire...tId is "+tId+" lId is "+lId);
+		//System.out.println("in lock acquire...tId is "+tId+" lId is "+lId);
 		Stack<IntPair> ls = getLStack(tId);
 		boolean addToStack = true;
 		if(!ls.isEmpty()){
@@ -109,14 +110,12 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 				IntPair lsElem = lsItr.next();
 				if(lsElem.idx0 == lId){
 					lsElem.idx1 += 1;
-					//System.out.println("lock is already in stack");
 					addToStack = false;
 					break;
 				}
 			}
 		}
 		if(addToStack){
-			System.out.println("lock is added to stack");
 			IntPair lsElem = new IntPair(lId, 1);
 			ls.push(lsElem);
 			Stack<LockStackElemInfo> ls2 = getLockStack(tId);
@@ -143,7 +142,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		return ls;
 	}	
 	public void processReleaseLock(int pId, int tId, int lId) {
-		System.out.println("in lock release...tId is "+tId+" lId is "+lId);
+		//System.out.println("in lock release...tId is "+tId+" lId is "+lId);
 		Stack<IntPair> ls = getLStack(tId);
 		if(!ls.isEmpty()){
 			Iterator<IntPair> lsItr = ls.iterator();
@@ -181,7 +180,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		}
 	}
 	private void processHeapRd(int eId, int tId, long oId) {
-		// System.out.println("Rd: " + eId + " " + tId + " " + oId);
+		//System.out.println("Rd: " + eId + " " + tId + " " + oId);
 		Stack<LockStackElemInfo> ls = getLockStack(tId);
 		RdListElemInfo rdElem = new RdListElemInfo(eId, oId);
 		if(!ls.isEmpty()){
@@ -190,7 +189,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		}
 	}
 	private void processHeapWr(int eId, int tId, long oId) {
-		// System.out.println("Wr: " + eId + " " + tId + " " + oId);
+		//System.out.println("Wr: " + eId + " " + tId + " " + oId);
 		Stack<LockStackElemInfo> ls = getLockStack(tId);
 		WrListElemInfo wrElem = new WrListElemInfo(eId, oId);
 		if(!ls.isEmpty()){
@@ -204,12 +203,15 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		}
 	}
 	public void processThreadStart(int pId, int tId, int oId) { 
+		//System.out.println("in thread start...tId is "+tId+" oId is "+oId);
 		tb.Start(tId, oId);
 	}
 	public void processThreadJoin(int pId, int tId, int oId) {
+		//System.out.println("in thread join...tId is "+tId+" oId is "+oId);
 		tb.Join(tId, oId);
 	}
 	public void processWait(int pId, int tId, int lId) { 
+		//System.out.println("in wait...tId is "+tId+" lId is "+lId);
 		Stack<LockStackElemInfo> ls = getLockStack(tId);
 		int indxL = getIndexForL(ls, lId);
 		
@@ -223,6 +225,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 		}
 	}
 	public void processNotify(int pId, int tId, int lId) { 
+		//System.out.println("in notify...tId is "+tId+" lId is "+lId);
 		Stack<LockStackElemInfo> ls = getLockStack(tId);
 		int indxL = getIndexForL(ls, lId);
 		List<WrListElemInfo> wrListForL = new LinkedList<WrListElemInfo>();
