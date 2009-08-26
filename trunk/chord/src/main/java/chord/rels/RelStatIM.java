@@ -7,6 +7,7 @@ package chord.rels;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import chord.doms.DomI;
@@ -34,7 +35,9 @@ public class RelStatIM extends ProgramRel {
 			Quad i = domI.get(iIdx);
 			Operator op = i.getOperator();
 			if (op instanceof InvokeStatic) {
-				jq_Method m = InvokeStatic.getMethod(i).getMethod();
+				MethodOperand mo = InvokeStatic.getMethod(i);
+				mo.resolve();
+				jq_Method m = mo.getMethod();
 				if (m.isStatic()) {
 					int mIdx = domM.indexOf(m);
 					if (mIdx != -1)

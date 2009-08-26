@@ -8,6 +8,7 @@ package chord.rels;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
@@ -35,9 +36,10 @@ public class RelVirtIM extends ProgramRel {
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			Quad i = domI.get(iIdx);
 			Operator op = i.getOperator();
-			if (op instanceof InvokeVirtual ||
-					op instanceof InvokeInterface) {
-				jq_Method m = Invoke.getMethod(i).getMethod();
+			if (op instanceof InvokeVirtual || op instanceof InvokeInterface) {
+				MethodOperand mo = Invoke.getMethod(i);
+				mo.resolve();
+				jq_Method m = mo.getMethod();
 				int mIdx = domM.indexOf(m);
 				if (mIdx != -1)
 					add(iIdx, mIdx);
