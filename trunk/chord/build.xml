@@ -80,8 +80,26 @@
   compile      Compile Chord source code
   run          Run Chord
                Optional properties:
-               - chord.work.dir (dir treated as working dir during Chord's execution; default=current dir)
-               - chord.out.dir  (default={chord.work.dir}/chord_output)
+               - chord.work.dir
+                 working dir while running Chord; default=ant basedir
+               - chord.out.dir
+                 dir to dump Chord's output files; default={chord.work.dir}/chord_output
+               - chord.main.class
+                 fully-qualified name of main class of program to be analyzed
+               - chord.class.path
+                 classpath of program to be analyzed; need not include system classpath
+               - chord.src.path
+                 path containing Java surce files of program to be analyzed
+               - chord.out.file
+                 file to which stdout is redirected; default={chord.out.dir/log.txt
+               - chord.err.file
+                 file to which stderr is redirected; default={chord.out.dir/log.txt
+               - chord.analyses
+                 comma-separated list of names of analyses to be run on program
+               - chord.scope.kind
+                 specifies how to compute program scope; values=[rta|dynamic]; default=rta
+               - chord.reuse.scope
+                 specifies whether to reuse scope; values=[true|false]; default=false
   run-XXX      Run custom analysis XXX (e.g. datarace, deadlock, etc.)
   j2h_xref     Convert .java files to .html with cross-references
                Required properties:
