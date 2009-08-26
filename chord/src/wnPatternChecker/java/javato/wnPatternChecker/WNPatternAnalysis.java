@@ -57,7 +57,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 	public void initPass() {
 		// do nothing for now
 	}
-	public void done() {
+	public void donePass() {
 		System.out.println("in done...going to call checkForErrors");
         	db.checkForErrors(Emap, Pmap);
 	}

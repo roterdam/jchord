@@ -325,6 +325,10 @@
     </exec>
   </target>
 
+  <target name="cleandoc">
+    <delete dir="javadoc"/>
+  </target>
+
   <!-- JAVA TO HTML UTILS -->
 
   <target name="j2h_xref">
