@@ -41,6 +41,7 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.*;
@@ -77,8 +78,6 @@ public class PathAnalysis extends DynamicAnalysis {
 	private Map<Quad, Set<Quad>> heapInstToAllocs;
 	
 	// data structures set for each run
-	private int prevQidx;
-	private int currQidx;
 	private TIntObjectHashMap<Handler> thrToHandlerMap =
 		new TIntObjectHashMap<Handler>();
 	private int[] methToNumCalls;
@@ -91,6 +90,7 @@ public class PathAnalysis extends DynamicAnalysis {
 	private Set<IntQuad> putinstSet;
 	private Set<IntPair> getstatSet;
 	private Set<IntPair> putstatSet;
+	private Set<IntPair> spawnSet;
 	private Set<IntPair> startSet;
 	private Set<IntPair> PQset;
 
@@ -116,8 +116,6 @@ public class PathAnalysis extends DynamicAnalysis {
 	public void initPass() {
 		thrToHandlerMap.clear();
 		methToNumCalls = new int[domM.size()];
-		prevQidx = -1;
-		currQidx = 0;
 		domQ.clear();
 		succSet = new HashSet<IntPair>();
 		allocSet = new HashSet<IntTrio>();
@@ -127,6 +125,7 @@ public class PathAnalysis extends DynamicAnalysis {
 		putinstSet = new HashSet<IntQuad>();
 		getstatSet = new HashSet<IntPair>();
 		putstatSet = new HashSet<IntPair>();
+		spawnSet = new HashSet<IntPair>();
 		startSet = new HashSet<IntPair>();
 		PQset = new HashSet<IntPair>();
 	}
@@ -232,14 +231,23 @@ public class PathAnalysis extends DynamicAnalysis {
 		}
 		relPutstat.save();
 
-		ProgramRel relSpawn = (ProgramRel) Project.getTrgt("start");
+		ProgramRel relSpawn = (ProgramRel) Project.getTrgt("spawn");
 		relSpawn.zero();
-		for (IntPair p : startSet) {
+		for (IntPair p : spawnSet) {
 			int q = p.idx0;
 			int v = p.idx1;
 			relSpawn.add(q, v);
 		}
 		relSpawn.save();
+
+		ProgramRel relStart = (ProgramRel) Project.getTrgt("start");
+		relStart.zero();
+		for (IntPair p : startSet) {
+			int q = p.idx0;
+			int v = p.idx1;
+			relStart.add(q, v);
+		}
+		relStart.save();
 
 		ProgramRel relPQ = (ProgramRel) Project.getTrgt("PQ");
 		relPQ.zero();
@@ -299,6 +307,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			Register v = rf.get(zIdx);
 			if (v.getType().isReferenceType()) {
 				int vIdx = domV.indexOf(v);
+				assert (vIdx != -1);
 				if (args == null)
 					args = new ArrayList<IntPair>();
 				args.add(new IntPair(zIdx, vIdx));
@@ -343,21 +352,36 @@ public class PathAnalysis extends DynamicAnalysis {
 		private boolean foundThreadRoot;
 		private int ignoredMethIdx;
 		private int ignoredMethNumFrames;  // > 0 means currently ignoring code
+		private int prevQidx, currQidx;
 		private int tId; // just for debugging
 		public Handler(int tId) {
 			this.tId = tId;
+			prevQidx = -1;
 		}
 		public void beginIgnoredMeth(int mIdx) {
 			ignoredMethIdx = mIdx;
 			ignoredMethNumFrames = 1;
 		}
+		private void setCurrQidx(BasicBlock bb) {
+			currQidx = domQ.getOrAdd(new IntTrio(-1, top.mIdx, top.cIdx));
+			if (prevQidx != -1)
+				succSet.add(new IntPair(prevQidx, currQidx));
+			prevQidx = currQidx;
+			if (currQidx == domQ.size() - 1) {
+				int p = domP.indexOf(bb);
+				assert (p != -1);
+				PQset.add(new IntPair(p, currQidx));
+			}
+		}
 		private void setCurrQidx(Quad q) {
-			currQidx = domQ.getOrAdd(new IntTrio(q.getID(), top.mIdx, top.cIdx));
+			int i = q.getID();
+			currQidx = domQ.getOrAdd(new IntTrio(i, top.mIdx, top.cIdx));
 			if (prevQidx != -1)
 				succSet.add(new IntPair(prevQidx, currQidx));
 			prevQidx = currQidx;
 			if (currQidx == domQ.size() - 1) {
 				int p = domP.indexOf(q);
+				assert (p != -1);
 				PQset.add(new IntPair(p, currQidx));
 			}
 		}
@@ -411,6 +435,11 @@ public class PathAnalysis extends DynamicAnalysis {
 			top.prevBB = bb;
 		}
 		private void processPhi(Quad q) {
+			RegisterOperand lo = Phi.getDest(q);
+			jq_Type t = lo.getType();
+			assert (t != null);
+			if (!t.isReferenceType())
+				return;
 			BasicBlockTableOperand bo = Phi.getPreds(q);
 			int n = bo.size();
 			int i = 0;
@@ -422,10 +451,11 @@ public class PathAnalysis extends DynamicAnalysis {
 			assert (i < n);
 			RegisterOperand ro = Phi.getSrc(q, i);
 			Register r = ro.getRegister();
-			int rIdx = domV.getOrAdd(r);
-			RegisterOperand lo = Phi.getDest(q);
+			int rIdx = domV.indexOf(r);
+			assert (rIdx != -1);
 			Register l = lo.getRegister();
-			int lIdx = domV.getOrAdd(l);
+			int lIdx = domV.indexOf(l);
+			assert (lIdx != -1);
 			setCurrQidx(q);
 			copySet.add(new IntTrio(currQidx, lIdx, rIdx));
 		}
@@ -433,7 +463,9 @@ public class PathAnalysis extends DynamicAnalysis {
 			RegisterOperand vo = isNew ? New.getDest(q) : NewArray.getDest(q);
 			Register v = vo.getRegister();
 			int vIdx = domV.indexOf(v);
+			assert (vIdx != -1);
 			int hIdx = domH.indexOf(q);
+			assert (hIdx != -1);
 			setCurrQidx(q);
 			allocSet.add(new IntTrio(currQidx, vIdx, hIdx));
 		}
@@ -471,6 +503,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			RegisterOperand lo = Getstatic.getDest(q);
 			Register l = lo.getRegister();
 			int lIdx = domV.indexOf(l);
+			assert (lIdx != -1);
 			setCurrQidx(q);
 			getstatSet.add(new IntPair(currQidx, lIdx));
 		}
@@ -484,6 +517,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			RegisterOperand ro = (RegisterOperand) rx;
 			Register r = ro.getRegister();
 			int rIdx = domV.indexOf(r);
+			assert (rIdx != -1);
 			setCurrQidx(q);
 			putstatSet.add(new IntPair(currQidx, rIdx));
 		}
@@ -493,7 +527,9 @@ public class PathAnalysis extends DynamicAnalysis {
 			Register b = bo.getRegister();
 			Register l = lo.getRegister();
 			int bIdx = domV.indexOf(b);
+			assert (bIdx != -1);
 			int lIdx = domV.indexOf(l);
+			assert (lIdx != -1);
 			int fIdx = 0;
 			setCurrQidx(q);
 			getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
@@ -507,7 +543,9 @@ public class PathAnalysis extends DynamicAnalysis {
 			Register r = ro.getRegister();
 			Register b = bo.getRegister();
 			int rIdx = domV.indexOf(r);
+			assert (rIdx != -1);
 			int bIdx = domV.indexOf(b);
+			assert (bIdx != -1);
 			int fIdx = 0;
 			setCurrQidx(q);
 			putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
@@ -524,8 +562,11 @@ public class PathAnalysis extends DynamicAnalysis {
 			Register b = bo.getRegister();
 			Register l = lo.getRegister();
 			int bIdx = domV.indexOf(b);
+			assert (bIdx != -1);
 			int lIdx = domV.indexOf(l);
+			assert (lIdx != -1);
 			int fIdx = domF.indexOf(f);
+			assert (fIdx != -1);
 			setCurrQidx(q);
 			getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
 		}
@@ -544,8 +585,11 @@ public class PathAnalysis extends DynamicAnalysis {
 			Register b = bo.getRegister();
 			Register r = ro.getRegister();
 			int bIdx = domV.indexOf(b);
+			assert (bIdx != -1);
 			int rIdx = domV.indexOf(r);
+			assert (rIdx != -1);
 			int fIdx = domF.indexOf(f);
+			assert (fIdx != -1);
 			setCurrQidx(q);
 			putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
 		}
@@ -558,6 +602,7 @@ public class PathAnalysis extends DynamicAnalysis {
 				Register v = vo.getRegister();
 				if (v.getType().isReferenceType()) {
 					int vIdx = domV.indexOf(v);
+					assert (vIdx != -1);
 					if (invkArgs == null)
 						invkArgs = new ArrayList<IntPair>();
 					invkArgs.add(new IntPair(i, vIdx));
@@ -571,6 +616,7 @@ public class PathAnalysis extends DynamicAnalysis {
 				Register v = vo.getRegister();
 				if (v.getType().isReferenceType()) {
 					invkRet = domV.indexOf(v);
+					assert (invkRet != -1);
 				}
 			}
 			jq_Method m = Invoke.getMethod(q).getMethod();
@@ -582,7 +628,7 @@ public class PathAnalysis extends DynamicAnalysis {
 					m.getDeclaringClass().getName().equals("java.lang.Thread")) {
 				IntPair thisArg = invkArgs.get(0);
 				assert (thisArg.idx0 == 0);
-				startSet.add(new IntPair(currQidx, thisArg.idx1));
+				spawnSet.add(new IntPair(currQidx, thisArg.idx1));
 			} else {
 				InvkInfo invkInfo =
 					new InvkInfo(mSign, invkArgs, invkRet, currQidx);
@@ -598,6 +644,7 @@ public class PathAnalysis extends DynamicAnalysis {
 				RegisterOperand ro = (RegisterOperand) rx;
 				Register v = ro.getRegister();
 				int methRet = domV.indexOf(v);
+				assert (methRet != -1);
 				setCurrQidx(q);
 				copySet.add(new IntTrio(currQidx, invkRet, methRet));
 			}
@@ -622,20 +669,13 @@ public class PathAnalysis extends DynamicAnalysis {
 			String mName = m.getName().toString();
 			String mDesc = m.getDesc().toString();
 			String mSign = mName + mDesc;
-			if (!foundThreadRoot) {
-				if (mSign.equals("main([Ljava/lang/String;)V") ||
-						mSign.equals("run()V")) {
-					System.out.println("Treating method " + m +
-					" as thread root of thread " + tId);
-					foundThreadRoot = true;
-					// TODO: add to start set
-				}
-			}
 			List<IntPair> invkArgs = null;
 			int invkRet = -1;
+			boolean found = false;
 			if (!pendingInvks.isEmpty()) {
 				InvkInfo invkInfo = pendingInvks.peek();
 				if (invkInfo.sign.equals(mSign)) {
+					found = true;
 					pendingInvks.pop();
 					invkArgs = invkInfo.invkArgs;
 					invkRet = invkInfo.invkRet;
@@ -663,6 +703,23 @@ public class PathAnalysis extends DynamicAnalysis {
 			int cIdx = methToNumCalls[mIdx]++;
 			System.out.println("XXX: " + m);
 			top = new Frame(mIdx, cIdx, invkArgs, invkRet);
+			if (!found && !foundThreadRoot) {
+				if (mSign.equals("main([Ljava/lang/String;)V") ||
+						mSign.equals("run()V")) {
+					foundThreadRoot = true;
+					System.out.println("Treating method '" + m +
+						"' as thread root of thread# " + tId);
+					List<IntPair> methArgs = methToArgs[mIdx];
+					if (methArgs == null) {
+						methArgs = processMethArgs(m);
+						methToArgs[mIdx] = methArgs;
+					}
+					IntPair thisArg = methArgs.get(0);
+					assert (thisArg.idx0 == 0);
+					setCurrQidx(m.getCFG().entry());
+					startSet.add(new IntPair(currQidx, thisArg.idx1));
+				}
+			}
 		}
 		public void processLeaveMethod(int mIdx) {
 			System.out.println("LM tId: " + tId + " mIdx: " + mIdx);
