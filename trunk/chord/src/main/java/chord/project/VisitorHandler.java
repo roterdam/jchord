@@ -43,6 +43,7 @@ import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
+import joeq.Compiler.Quad.Operator.Return.THROW_A;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.Templates.ListIterator;
@@ -150,7 +151,7 @@ public class VisitorHandler {
 						for (IPhiInstVisitor piv : pivs)
 							piv.visitPhiInst(q);
 					}
-				} else if (op instanceof Return) {
+				} else if (op instanceof Return && !(op instanceof THROW_A)) {
 					if (rivs != null) {
 						for (IReturnInstVisitor riv : rivs)
 							riv.visitReturnInst(q);
