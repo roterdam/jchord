@@ -226,6 +226,7 @@
       <jvmarg value="-ea"/>
       <jvmarg value="-Xmx${chord.max.heap}"/>
       <jvmarg value="-Xss${chord.max.stack}"/>
+      <!-- <jvmarg value="-agentlib:hprof"/> -->
       <syspropertyset>
         <propertyref prefix="chord."/>
       </syspropertyset>
@@ -309,6 +310,8 @@
     <property name="chord.analyses" value="wn-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
+    <property name="chord.scope.kind" value="dynamic"/>
+    <property name="chord.reuse.scope" value="true"/>
     <antcall target="run"/>
   </target>
 
