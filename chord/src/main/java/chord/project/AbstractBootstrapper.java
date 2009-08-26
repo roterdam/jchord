@@ -131,16 +131,10 @@ public abstract class AbstractBootstrapper implements IBootstrapper {
 					jq_Class c = n.getDeclaringClass();
 					handleClass(c);
 					handleSeenMethod(n);
-					if (op instanceof InvokeVirtual) {
-						assert (!c.isInterface());
+					if (op instanceof InvokeVirtual ||
+							op instanceof InvokeInterface) {
 						IndexSet<jq_InstanceMethod> targets =
-							getTargetsOfInvokeVirtual((jq_InstanceMethod) n);
-						for (jq_InstanceMethod o : targets)
-							handleSeenMethod(o);
-					} else if (op instanceof InvokeInterface) {
-						assert (c.isInterface());
-						IndexSet<jq_InstanceMethod> targets =
-							getTargetsOfInvokeInterface((jq_InstanceMethod) n);
+							getTargetsOfVirtualCall((jq_InstanceMethod) n);
 						for (jq_InstanceMethod o : targets)
 							handleSeenMethod(o);
 					} else

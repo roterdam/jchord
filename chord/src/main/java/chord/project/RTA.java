@@ -22,32 +22,29 @@ public class RTA extends AbstractBootstrapper {
 		new ArraySet<jq_InstanceMethod>(0);
 	private IndexHashSet<jq_Class> reachableAllocClasses =
 		new IndexHashSet<jq_Class>();
-	public IndexSet<jq_InstanceMethod> getTargetsOfInvokeVirtual(jq_InstanceMethod m) {
+	public IndexSet<jq_InstanceMethod> getTargetsOfVirtualCall(jq_InstanceMethod m) {
 		IndexSet<jq_InstanceMethod> targets = null;
 		jq_Class c = m.getDeclaringClass();
 		jq_NameAndDesc nd = m.getNameAndDesc();
-		for (jq_Class d : reachableAllocClasses) {
-			if (d.extendsClass(c)) {
-				jq_InstanceMethod n = d.getVirtualMethod(nd);
-				assert (n != null);
-				if (targets == null)
-					targets = new ArraySet<jq_InstanceMethod>();
-				targets.add(n);
+		if (c.isInterface()) {
+			for (jq_Class d : reachableAllocClasses) {
+				if (d.implementsInterface(c)) {
+					jq_InstanceMethod n = d.getVirtualMethod(nd);
+					assert (n != null);
+					if (targets == null)
+						targets = new ArraySet<jq_InstanceMethod>();
+					targets.add(n);
+				}
 			}
-		}
-		return (targets != null) ? targets : emptySet;
-	}
-	public IndexSet<jq_InstanceMethod> getTargetsOfInvokeInterface(jq_InstanceMethod m) {
-		IndexSet<jq_InstanceMethod> targets = null;
-		jq_Class c = m.getDeclaringClass();
-		jq_NameAndDesc nd = m.getNameAndDesc();
-		for (jq_Class d : reachableAllocClasses) {
-			if (d.implementsInterface(c)) {
-				jq_InstanceMethod n = d.getVirtualMethod(nd);
-				assert (n != null);
-				if (targets == null)
-					targets = new ArraySet<jq_InstanceMethod>();
-				targets.add(n);
+		} else {
+			for (jq_Class d : reachableAllocClasses) {
+				if (d.extendsClass(c)) {
+					jq_InstanceMethod n = d.getVirtualMethod(nd);
+					assert (n != null);
+					if (targets == null)
+						targets = new ArraySet<jq_InstanceMethod>();
+					targets.add(n);
+				}
 			}
 		}
 		return (targets != null) ? targets : emptySet;
