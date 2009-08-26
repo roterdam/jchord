@@ -84,7 +84,6 @@ public class VisitorHandler {
 		}
 	}
 	private void visitMethods(jq_Class c) {
-		// TODO
 		for (Object o : c.getMembers()) {
 			if (o instanceof jq_Method) {
 				jq_Method m = (jq_Method) o;
