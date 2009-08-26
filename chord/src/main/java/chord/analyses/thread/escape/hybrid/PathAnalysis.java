@@ -405,7 +405,7 @@ public class PathAnalysis extends DynamicAnalysis {
 				Operator op = q.getOperator();
 				if (op instanceof Invoke)
 					processInvoke(q);
-				else if (op instanceof Return) {
+				else if (op instanceof Return && !(op instanceof THROW_A)) {
 					assert (!(op instanceof RETURN_P));
 					if (op instanceof RETURN_A)
 						processReturn(q);
