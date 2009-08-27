@@ -22,6 +22,7 @@
 # Relations
 ###
 
+entryM(m:M0) input
 HT(h:H0,t:T1) input
 clsTF(t:T,f:F) input
 cha(n:M1,t:T1,m:M0) input
@@ -140,7 +141,7 @@ ctxtCpyStatIM(i,m) :- statIM(i,m), ctxtCpyM(m).
 
 ###
 
-reachableCM(0,0).
+reachableCM(0,m) :- entryM(m).
 reachableCM(0,m) :- clinitTM(t,m), reachableT(t).
 
 reachableCM(c,m) :- CICM(_,_,c,m).
@@ -238,7 +239,7 @@ reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 CVC(0,v,o) :- DVC(_,v,o),  epsilonV(v).
 CVC(c,v,o) :- DVC(c,v,o), !epsilonV(v).
 
-rootCM(0,0).
+rootCM(0,m) :- entryM(m).
 rootCM(0,m) :- reachableT(t), clinitTM(t,m).
 CMCM(c,m,d,n) :- CICM(c,i,d,n), MI(m,i).
 

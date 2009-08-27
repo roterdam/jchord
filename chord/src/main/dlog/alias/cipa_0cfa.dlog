@@ -21,6 +21,7 @@
 # Relations
 ###
 
+entryM(m:M) input
 VHfilter(v:V,h:H) input
 HT(h:H0,t:T1) input
 clsTF(t:T,f:F) input
@@ -75,7 +76,7 @@ clsVarAsgnInst(l:V,r:V)
 IHM(i,h,m2) :- virtIM(i,m1), HT(h,t), cha(m1,t,m2).
 
 # base cases: each root method and each class initializer is reachable
-reachableM(0).
+reachableM(m) :- entryM(m).
 reachableM(m) :- reachableT(t), clinitTM(t,m).
 # inductive case
 reachableM(m) :- IM(_,m).
@@ -132,7 +133,7 @@ reachableT(t) :- reachableM(m), MgetStatFldInst(m,_,f), staticTF(t,f).
 #    initialized.
 reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 
-rootM(1).
+rootM(m) :- entryM(m).
 rootM(m) :- reachableT(t), clinitTM(t,m).
 MM(m,n) :- IM(i,n), MI(m,i).
 

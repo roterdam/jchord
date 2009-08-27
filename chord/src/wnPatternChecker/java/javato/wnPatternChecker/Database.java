@@ -11,6 +11,7 @@ import java.util.Set;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Class;
 import chord.project.Program;
+import chord.project.MethodElem;
 import chord.util.IndexMap;
 
 import javato.utils.VectorClock;
@@ -204,17 +205,15 @@ public class Database {
 		String res = "[ ";
 		for(Integer iid : iids){
 			String s = Emap.get(iid);  // TODO: replace Emap by Pmap for wait, notify, etc.
-			int exclIdx = s.indexOf('!');
-			int colonIdx = s.indexOf(':');
-			int atIdx = s.indexOf('@');
-			int bci = Integer.parseInt(s.substring(0, exclIdx));
-			String mName = s.substring(exclIdx + 1, colonIdx);
-			String mDesc = s.substring(colonIdx + 1, atIdx);
-			String cName = s.substring(atIdx + 1); 
+			MethodElem elem = MethodElem.parse(s);
+			int bci = elem.num;
+			String mName = elem.mName;
+			String mDesc = elem.mDesc;
+			String cName = elem.cName;
 			jq_Class c = program.getPreparedClass(cName);
 			assert (c != null);
 			String fileName = Program.getSourceFileName(c);
-			jq_Method m = program.getReachableMethod(cName, mName, mDesc);
+			jq_Method m = program.getReachableMethod(mName, mDesc, cName);
 			assert (m != null);
 			int lineNum = m.getLineNumber(bci);
 			res += fileName + ":" + lineNum + " ";

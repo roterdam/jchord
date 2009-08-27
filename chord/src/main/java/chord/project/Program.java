@@ -21,6 +21,8 @@ import com.java2html.Java2HTML;
 import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
 import chord.util.FileUtils;
+import chord.util.IndexSet;
+import chord.util.ArraySet;
  
 import joeq.Class.PrimordialClassLoader;
 import joeq.Util.Templates.ListIterator;
@@ -65,6 +67,7 @@ public class Program {
 	private Map<String, jq_Class> nameToClassMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private jq_Method mainMethod;
+	private IndexSet<jq_Method> rootMethods;
 	private boolean HTMLizedJavaSrcFiles;
 	private final Map<Inst, jq_Method> instToMethodMap = 
 		new HashMap<Inst, jq_Method>();
@@ -130,22 +133,66 @@ public class Program {
 			reachableMethods.add(m);
 		}
 		r.close();
-	}
-	private void init(AbstractBootstrapper bootstrapper) throws IOException {
-		String rootsFileName = Properties.rootsFileName;
 		String mainClassName = Properties.mainClassName;
-		assert (rootsFileName != null ^ mainClassName != null);
-		List<String> roots;
-		if (rootsFileName != null) {
-			roots = FileUtils.readFileToList(rootsFileName);
+		List<String> rootsList = readRootsFile();
+		if (mainClassName != null) {
+			assert (rootsList == null);
+			mainMethod = getReachableMethod(
+				"main", "([Ljava/lang/String;)V", mainClassName);
+			assert (mainMethod != null);
 		} else {
-			roots = new ArrayList<String>(1);
-			roots.add("main:([Ljava/lang/String;)V@" + mainClassName);
+			assert (rootsList != null);
+			rootMethods = new ArraySet<jq_Method>(rootsList.size());
+			for (String root : rootsList) {
+				MethodSign sign = MethodSign.parse(root);
+				jq_Method m = getReachableMethod(sign);
+				assert (m != null);
+				rootMethods.add(m);
+			}
 		}
-		bootstrapper.run(roots);
+	}
+
+	private List<String> readRootsFile() {
+		String rootsFileName = Properties.rootsFileName;
+		if (rootsFileName == null)
+			return null;
+		return FileUtils.readFileToList(rootsFileName);
+	}
+
+	private void init(AbstractBootstrapper bootstrapper) throws IOException {
+		String mainClassName = Properties.mainClassName;
+		List<String> rootsList = readRootsFile();
+		List<MethodSign> rootMethodSigns = null;
+		MethodSign mainMethodSign;
+		if (mainClassName != null) {
+			assert (rootsList == null);
+			mainMethodSign = new MethodSign("main",
+				"([Ljava/lang/String;)V", mainClassName);
+			rootMethodSigns = new ArrayList<MethodSign>(1);
+			rootMethodSigns.add(mainMethodSign);
+		} else {
+			assert (rootsList != null);
+			mainMethodSign = null;
+			rootMethodSigns = new ArrayList<MethodSign>(rootsList.size());
+			for (String root : rootsList) {
+				MethodSign sign = MethodSign.parse(root);
+				rootMethodSigns.add(sign);
+			}
+		}
+		bootstrapper.run(rootMethodSigns);
 		preparedClasses = bootstrapper.getPreparedClasses();
 		reachableMethods = bootstrapper.getReachableMethods();
 		write();
+		if (mainMethodSign != null) {
+			mainMethod = getReachableMethod(mainMethodSign);
+		} else {
+			rootMethods = new ArraySet<jq_Method>(rootMethodSigns.size());
+			for (MethodSign sign : rootMethodSigns) {
+				jq_Method m = getReachableMethod(sign);
+				assert (m != null);
+				rootMethods.add(m);
+			}
+		}
 	}
 	private void initFromDynamic() throws IOException {
 		String mainClassName = Properties.mainClassName;
@@ -176,6 +223,8 @@ public class Program {
 				reachableMethods.add(m);
 		}
 		write();
+		mainMethod = getReachableMethod(
+			"main", "([Ljava/lang/String;)V", mainClassName);
 	}
 	private void write() throws IOException {
 		PrintWriter bootClassesFileWriter =
@@ -271,8 +320,8 @@ public class Program {
 		return methods;
 	}
 
-	public jq_Method getReachableMethod(String cName,
-			String mName, String mDesc) {
+	public jq_Method getReachableMethod(String mName,
+			String mDesc, String cName) {
 		jq_Class c = getPreparedClass(cName);
 		if (c == null)
 			return null;
@@ -285,19 +334,20 @@ public class Program {
 		return null;
 	}
 	
+	public jq_Method getReachableMethod(MethodSign sign) {
+		return getReachableMethod(sign.mName, sign.mDesc, sign.cName);
+	}
+
+	public IndexSet<jq_Method> getRootMethods() {
+		return rootMethods;
+	}
+
 	public jq_Method getMainMethod() {
-		if (mainMethod == null) {
-			String mainClassName = Properties.mainClassName;
-			assert (mainClassName != null);
-			mainMethod = getReachableMethod(mainClassName, "main",
-				"([Ljava/lang/String;)V");
-			assert (mainMethod != null);
-		}
 		return mainMethod;
 	}
 
 	public jq_Method getThreadStartMethod() {
-		return getReachableMethod("java.lang.Thread", "start", "()V");
+		return getReachableMethod("start", "()V", "java.lang.Thread");
 	}
 
 	public static String getSign(jq_Method m) {
