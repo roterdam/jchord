@@ -31,20 +31,20 @@ import chord.util.tuple.object.Pair;
 public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 		implements ICSCG {
     protected DomM domM;
-    protected ProgramRel relCICM;
-	protected ProgramRel relCMCM;
 	protected ProgramRel relRootCM;
     protected ProgramRel relReachableCM;
+    protected ProgramRel relCICM;
+	protected ProgramRel relCMCM;
     public CSCG(DomM domM,
-    		ProgramRel relCICM,
-    		ProgramRel relCMCM,
     		ProgramRel relRootCM,
-    		ProgramRel relReachableCM) {
+    		ProgramRel relReachableCM,
+    		ProgramRel relCICM,
+    		ProgramRel relCMCM) {
     	this.domM = domM;
-    	this.relCICM = relCICM;
-    	this.relCMCM = relCMCM;
     	this.relRootCM = relRootCM;
     	this.relReachableCM = relReachableCM;
+    	this.relCICM = relCICM;
+    	this.relCMCM = relCMCM;
     }
     public Set<Pair<Ctxt, jq_Method>> getNodes() {
     	if (!relReachableCM.isOpen())
@@ -200,13 +200,13 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 	 * the interface of this call graph.
 	 */
     public void free() {
-    	if (relCICM.isOpen())
-    		relCICM.close();
-    	if (relCMCM.isOpen())
-    		relCMCM.close();
     	if (relRootCM.isOpen())
     		relRootCM.close();
     	if (relReachableCM.isOpen())
     		relReachableCM.close();
+    	if (relCICM.isOpen())
+    		relCICM.close();
+    	if (relCMCM.isOpen())
+    		relCMCM.close();
     }
 }

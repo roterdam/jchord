@@ -56,4 +56,7 @@ public class DomV extends ProgramDom<Register>
 			getOrAdd(v);
 		}
 	}
+	public String toUniqueString(Register v) {
+		return v + "!" + getMethod(v);
+	}
 }

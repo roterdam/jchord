@@ -29,10 +29,10 @@ public class CSCGAnalysis extends JavaAnalysis {
     protected CSCG callGraph;
     public void run() {
     	domM = (DomM) Project.getTrgt("M");
-    	relCICM = (ProgramRel) Project.getTrgt("CICM");
-    	relCMCM = (ProgramRel) Project.getTrgt("CMCM");
     	relRootCM = (ProgramRel) Project.getTrgt("rootCM");
     	relReachableCM = (ProgramRel) Project.getTrgt("reachableCM");
+    	relCICM = (ProgramRel) Project.getTrgt("CICM");
+    	relCMCM = (ProgramRel) Project.getTrgt("CMCM");
     }
     /**
      * Provides the program's context-sensitive call graph.
@@ -41,8 +41,8 @@ public class CSCGAnalysis extends JavaAnalysis {
      */
     public ICSCG getCallGraph() {
     	if (callGraph == null) {
-    		callGraph = new CSCG(domM, relCICM, relCMCM,
-    			relRootCM, relReachableCM);
+    		callGraph = new CSCG(domM, relRootCM, relReachableCM,
+				relCICM, relCMCM);
     	}
     	return callGraph;
     }

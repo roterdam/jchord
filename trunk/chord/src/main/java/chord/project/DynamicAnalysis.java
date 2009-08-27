@@ -205,9 +205,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 		if (convert) {
 			ProgramDom dom = (ProgramDom) Project.getTrgt(domName);
 			Project.runTask(dom);
-			dom.saveToIdFile();
 			for (int i = 0; i < dom.size(); i++) {
-				String s = dom.toUniqueIdString(dom.get(i));
+				String s = dom.toUniqueString(dom.get(i));
 				if (sMap.contains(s))
 					throw new RuntimeException(domName +
 						"smap already contains: " + s);

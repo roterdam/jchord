@@ -22,6 +22,7 @@ import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
 import chord.util.FileUtils;
  
+import joeq.Class.PrimordialClassLoader;
 import joeq.Util.Templates.ListIterator;
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Class;
@@ -81,7 +82,9 @@ public class Program {
 			else {
 				String scopeKind = Properties.scopeKind;
 				if (scopeKind.equals("rta")) {
-					initFromRTA();
+					init(new RTA());
+				} else if (scopeKind.equals("cha")) {
+					init(new CHA());
 				} else if (scopeKind.equals("dynamic")) {
 					initFromDynamic();
 				} else
@@ -128,11 +131,10 @@ public class Program {
 		}
 		r.close();
 	}
-	private void initFromRTA() throws IOException {
+	private void init(AbstractBootstrapper bootstrapper) throws IOException {
 		String rootsFileName = Properties.rootsFileName;
 		String mainClassName = Properties.mainClassName;
 		assert (rootsFileName != null ^ mainClassName != null);
-		RTA rta = new RTA();
 		List<String> roots;
 		if (rootsFileName != null) {
 			roots = FileUtils.readFileToList(rootsFileName);
@@ -140,9 +142,9 @@ public class Program {
 			roots = new ArrayList<String>(1);
 			roots.add("main:([Ljava/lang/String;)V@" + mainClassName);
 		}
-		rta.run(roots);
-		preparedClasses = rta.getPreparedClasses();
-		reachableMethods = rta.getReachableMethods();
+		bootstrapper.run(roots);
+		preparedClasses = bootstrapper.getPreparedClasses();
+		reachableMethods = bootstrapper.getReachableMethods();
 		write();
 	}
 	private void initFromDynamic() throws IOException {
@@ -212,9 +214,9 @@ public class Program {
 
 	private void buildReachableTypes() {
 		reachableTypes = new IndexHashSet<jq_Type>();
-		for (Object o : jq_Type.list) {
-			jq_Type t = (jq_Type) o;
-			reachableTypes.add(t);
+		for (jq_Type t : PrimordialClassLoader.loader.getAllTypes()) {
+			if (t != null)
+				reachableTypes.add(t);
 		}
 	}
 	

@@ -28,6 +28,8 @@ public class RTA extends AbstractBootstrapper {
 		jq_NameAndDesc nd = m.getNameAndDesc();
 		if (c.isInterface()) {
 			for (jq_Class d : reachableAllocClasses) {
+				assert (!d.isInterface());
+				assert (!d.isAbstract());
 				if (d.implementsInterface(c)) {
 					jq_InstanceMethod n = d.getVirtualMethod(nd);
 					assert (n != null);
@@ -38,6 +40,8 @@ public class RTA extends AbstractBootstrapper {
 			}
 		} else {
 			for (jq_Class d : reachableAllocClasses) {
+				assert (!d.isInterface());
+				assert (!d.isAbstract());
 				if (d.extendsClass(c)) {
 					jq_InstanceMethod n = d.getVirtualMethod(nd);
 					assert (n != null);

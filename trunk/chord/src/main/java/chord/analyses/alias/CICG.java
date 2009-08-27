@@ -24,15 +24,17 @@ import chord.util.ArraySet;
  */
 public class CICG extends AbstractGraph<jq_Method> implements ICICG {
 	private DomM domM;
+	private ProgramRel relRootM;
+	private ProgramRel relReachableM;
 	private ProgramRel relIM;
 	private ProgramRel relMM;
-	private ProgramRel relReachableM;
-	public CICG(DomM domM, ProgramRel relIM, ProgramRel relMM,
-			ProgramRel relReachableM) {
+	public CICG(DomM domM, ProgramRel relRootM, ProgramRel relReachableM,
+			ProgramRel relIM, ProgramRel relMM) {
 		this.domM = domM;
+		this.relRootM = relRootM;
+		this.relReachableM = relReachableM;
 		this.relIM = relIM;
 		this.relMM = relMM;
-		this.relReachableM = relReachableM;
 	}
 	public Set<Quad> getCallers(jq_Method meth) {
 		if (!relIM.isOpen())
@@ -57,7 +59,9 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
 		return meths;
 	}
 	public int numRoots() {
-		return 1;
+		if (!relRootM.isOpen())
+			relRootM.load();
+		return relRootM.size();
 	}
 	public int numNodes() {
 		if (!relReachableM.isOpen())
@@ -71,16 +75,16 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
 		throw new UnsupportedOperationException();
 	}
 	public Set<jq_Method> getRoots() {
-		Set<jq_Method> roots = new ArraySet<jq_Method>(1);
-		roots.add(domM.get(0));
-		return roots;
+		if (!relRootM.isOpen())
+			relRootM.load();
+		Iterable<jq_Method> res = relRootM.getAry1ValTuples();
+		return SetUtils.iterableToSet(res, relRootM.size());
 	}
 	public Set<jq_Method> getNodes() {
 		if (!relReachableM.isOpen())
 			relReachableM.load();
 		Iterable<jq_Method> res = relReachableM.getAry1ValTuples();
-		return SetUtils.iterableToSet(
-			res, relReachableM.size());
+		return SetUtils.iterableToSet(res, relReachableM.size());
 	}
 	public Set<jq_Method> getPreds(jq_Method meth) {
 		if (!relMM.isOpen())
@@ -88,8 +92,7 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
 		RelView view = relMM.getView();
 		view.selectAndDelete(1, meth);
 		Iterable<jq_Method> res = view.getAry1ValTuples();
-		return SetUtils.iterableToSet(
-			res, view.size());
+		return SetUtils.iterableToSet(res, view.size());
 	}
 	public Set<jq_Method> getSuccs(jq_Method meth) {
 		if (!relMM.isOpen())
@@ -97,8 +100,7 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
 		RelView view = relMM.getView();
 		view.selectAndDelete(0, meth);
 		Iterable<jq_Method> res = view.getAry1ValTuples();
-		return SetUtils.iterableToSet(
-			res, view.size());
+		return SetUtils.iterableToSet(res, view.size());
 	}
 	public Set<Quad> getLabels(jq_Method srcMeth, jq_Method dstMeth) {
 		throw new UnsupportedOperationException();
@@ -128,12 +130,14 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
 	 * the interface of this call graph.
 	 */
 	public void free() {
+		if (relRootM.isOpen())
+			relRootM.close();
+		if (relReachableM.isOpen())
+			relReachableM.close();
 		if (relIM.isOpen())
 			relIM.close();
 		if (relMM.isOpen())
 			relMM.close();
-		if (relReachableM.isOpen())
-			relReachableM.close();
 	}
 }
 
