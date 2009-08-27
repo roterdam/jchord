@@ -47,7 +47,7 @@ public class DomB extends ProgramDom<BasicBlock>
 			getOrAdd(b);
 		}
 	}
-	public String toUniqueIdString(BasicBlock b) {
+	public String toUniqueString(BasicBlock b) {
 		return b.getID() + "!" + getMethod(b);
 	}
 	public jq_Method getMethod(BasicBlock b) {

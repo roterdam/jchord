@@ -17,19 +17,25 @@ import joeq.Class.jq_NameAndDesc;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class RTA extends AbstractBootstrapper {
+public class CHA extends AbstractBootstrapper {
 	private static final IndexSet<jq_InstanceMethod> emptySet =
 		new ArraySet<jq_InstanceMethod>(0);
-	private IndexHashSet<jq_Class> reachableAllocClasses =
-		new IndexHashSet<jq_Class>();
+	private int numPreparedClasses;
+	protected void initPass() {
+		numPreparedClasses = preparedClasses.size();
+	}
+	protected void donePass() {
+		if (preparedClasses.size() > numPreparedClasses)
+			repeat = true;
+	}
 	public IndexSet<jq_InstanceMethod> getTargetsOfVirtualCall(jq_InstanceMethod m) {
 		IndexSet<jq_InstanceMethod> targets = null;
 		jq_Class c = m.getDeclaringClass();
 		jq_NameAndDesc nd = m.getNameAndDesc();
 		if (c.isInterface()) {
-			for (jq_Class d : reachableAllocClasses) {
-				assert (!d.isInterface());
-				assert (!d.isAbstract());
+			for (jq_Class d : preparedClasses) {
+				if (d.isInterface() || d.isAbstract())
+					continue;
 				if (d.implementsInterface(c)) {
 					jq_InstanceMethod n = d.getVirtualMethod(nd);
 					assert (n != null);
@@ -39,9 +45,9 @@ public class RTA extends AbstractBootstrapper {
 				}
 			}
 		} else {
-			for (jq_Class d : reachableAllocClasses) {
-				assert (!d.isInterface());
-				assert (!d.isAbstract());
+			for (jq_Class d : preparedClasses) {
+				if (d.isInterface() || d.isAbstract())
+					continue;
 				if (d.extendsClass(c)) {
 					jq_InstanceMethod n = d.getVirtualMethod(nd);
 					assert (n != null);
@@ -52,11 +58,5 @@ public class RTA extends AbstractBootstrapper {
 			}
 		}
 		return (targets != null) ? targets : emptySet;
-	}
-	protected void processNew(jq_Class c) {
-		if (reachableAllocClasses.add(c)) {
-			if (DEBUG) System.out.println("Setting repeat");
-			repeat = true;
-		}
 	}
 }

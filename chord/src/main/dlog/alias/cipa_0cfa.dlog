@@ -46,7 +46,6 @@ classT(t:T) input
 staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
-
 reachableT(t:T) output
 IHM(i:I,h:H,m:M)
 VV(v1:V,v2:V)
@@ -54,8 +53,9 @@ VV(v1:V,v2:V)
 VH(v:V,h:H) output
 FH(f:F,h:H) output
 HFH(h1:H,f:F,h2:H) output
-reachableM(m:M) output
+rootM(m:M) output
 reachableI(i:I) output
+reachableM(m:M) output
 IM(i:I,m:M) output
 MM(m:M,n:M) output
 
@@ -121,7 +121,7 @@ clsHF(h,f) :- HT(h,t), clsTF(t,f).
 
 # 1. T is a class and an instance of T is created.
 reachableT(t) :- reachableM(m), MobjValAsgnInst(m,_,h), HT(h,t).
-# 2. T is a class and a static method declared by T is invoked.
+# 2. T is a class and a static method declared by T is invoked
 reachableT(t) :- reachableM(m), staticTM(t,m).
 # 3. A static field declared by T is assigned. 
 reachableT(t) :- reachableM(m), MputStatFldInst(m,f,_), staticTF(t,f).
@@ -132,4 +132,7 @@ reachableT(t) :- reachableM(m), MgetStatFldInst(m,_,f), staticTF(t,f).
 #    initialized.
 reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 
+rootM(1).
+rootM(m) :- reachableT(t), clinitTM(t,m).
 MM(m,n) :- IM(i,n), MI(m,i).
+

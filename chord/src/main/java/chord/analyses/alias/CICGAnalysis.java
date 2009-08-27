@@ -22,15 +22,17 @@ import chord.project.Project;
 )
 public class CICGAnalysis extends JavaAnalysis {
 	private DomM domM;
+	private ProgramRel relRootM;
+	private ProgramRel relReachableM;
 	private ProgramRel relIM;
 	private ProgramRel relMM;
-	private ProgramRel relReachableM;
 	private CICG callGraph;
 	public void run() {
 		domM = (DomM) Project.getTrgt("M");
+		relRootM = (ProgramRel) Project.getTrgt("rootM");
+		relReachableM = (ProgramRel) Project.getTrgt("reachableM");
 		relIM = (ProgramRel) Project.getTrgt("IM");
 		relMM = (ProgramRel) Project.getTrgt("MM");
-		relReachableM = (ProgramRel) Project.getTrgt("reachableM");
 	}
 	/**
 	 * Provides the program's context-insensitive call graph.
@@ -39,7 +41,8 @@ public class CICGAnalysis extends JavaAnalysis {
 	 */
 	public ICICG getCallGraph() {
 		if (callGraph == null) {
-			callGraph = new CICG(domM, relIM, relMM, relReachableM);
+			callGraph = new CICG(domM, relRootM, relReachableM,
+				relIM, relMM);
 		}
 		return callGraph;
 	}

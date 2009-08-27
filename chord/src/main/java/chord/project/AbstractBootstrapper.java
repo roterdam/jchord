@@ -83,8 +83,9 @@ public abstract class AbstractBootstrapper implements IBootstrapper {
 			rootMethods.add(method);
 		}
 		for (int i = 0; repeat; i++) {
-			if (DEBUG) System.out.println("Iteration: " + i);
+			System.out.println("Iteration: " + i);
 			repeat = false;
+			initPass();
          	classesAddedForClinit.clear();
         	seenMethods.clear();
 			for (jq_Method rootMethod : rootMethods) {
@@ -96,12 +97,16 @@ public abstract class AbstractBootstrapper implements IBootstrapper {
 	        	jq_Method m = todoMethods.remove(todoMethods.size() - 1);
 	        	handleTodoMethod(m);
 	        }
+			donePass();
         }
 		System.out.println("LEAVE: bootstrapper");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
 	}
 	
+	protected void initPass() { }
+	protected void donePass() { }
+
 	protected void processNew(jq_Class c) { }
 
 	protected void handleSeenMethod(jq_Method m) {

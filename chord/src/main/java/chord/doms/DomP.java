@@ -61,7 +61,19 @@ public class DomP extends ProgramDom<Inst> {
 			}
 		}
 	}
-	public String toString(Inst q) {
-		return q instanceof Quad ? ((Quad) q).toString_short() : q.toString();
+	public String toUniqueString(Inst i) {
+		int x;
+		if (i instanceof Quad) {
+			x = ((Quad) i).getID();
+		} else {
+			BasicBlock bb = (BasicBlock) i;
+			if (bb.isEntry())
+				x = -1;
+			else {
+				assert (bb.isExit());
+				x = -2;
+			}
+		}
+		return x + "!" + Program.v().getMethod(i);
 	}
 }

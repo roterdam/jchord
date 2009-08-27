@@ -101,25 +101,6 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 		out.println("</" + tag + ">");
 		out.close();
 	}
-	public String toUniqueIdString(T val) {
-		return val == null ? "null" : val.toString();
-	}
-	public void saveToIdFile() {
-		String name = getName();
-		String fileName = name + ".static.txt";
-		PrintWriter out;
-		try {
-			out = new PrintWriter(new FileWriter(
-				new File(Properties.outDirName, fileName)));
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
-		}
-		for (int i = 0; i < size(); i++) {
-			T val = get(i);
-			out.println(toUniqueIdString(val));
-		}
-		out.close();
-	}
 	public String toString() {
 		return name;
 	}

@@ -364,24 +364,30 @@ public class PathAnalysis extends DynamicAnalysis {
 		}
 		private void setCurrQidx(BasicBlock bb) {
 			currQidx = domQ.getOrAdd(new IntTrio(-1, top.mIdx, top.cIdx));
-			if (prevQidx != -1)
+			if (prevQidx != -1) {
+				System.out.println("Adding to succ1: " + prevQidx + " " + currQidx);
 				succSet.add(new IntPair(prevQidx, currQidx));
+			}
 			prevQidx = currQidx;
 			if (currQidx == domQ.size() - 1) {
 				int p = domP.indexOf(bb);
 				assert (p != -1);
+				System.out.println("Adding to PQset1: " + p + " " + currQidx);
 				PQset.add(new IntPair(p, currQidx));
 			}
 		}
 		private void setCurrQidx(Quad q) {
 			int i = q.getID();
 			currQidx = domQ.getOrAdd(new IntTrio(i, top.mIdx, top.cIdx));
-			if (prevQidx != -1)
+			if (prevQidx != -1) {
+				System.out.println("Adding to succ2: " + prevQidx + " " + currQidx);
 				succSet.add(new IntPair(prevQidx, currQidx));
+			}
 			prevQidx = currQidx;
 			if (currQidx == domQ.size() - 1) {
 				int p = domP.indexOf(q);
 				assert (p != -1);
+				System.out.println("Adding to PQset2: " + p + " " + currQidx);
 				PQset.add(new IntPair(p, currQidx));
 			}
 		}
@@ -457,6 +463,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			int lIdx = domV.indexOf(l);
 			assert (lIdx != -1);
 			setCurrQidx(q);
+			System.out.println("Adding to copy1: " + currQidx + " " + lIdx + " " + rIdx);
 			copySet.add(new IntTrio(currQidx, lIdx, rIdx));
 		}
 		private void processNewOrNewArray(Quad q, boolean isNew) {
@@ -467,6 +474,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			int hIdx = domH.indexOf(q);
 			assert (hIdx != -1);
 			setCurrQidx(q);
+			System.out.println("Adding to alloc: " + currQidx + " " + vIdx + " " + hIdx);
 			allocSet.add(new IntTrio(currQidx, vIdx, hIdx));
 		}
 		private void processMove(Quad q) {
@@ -492,9 +500,12 @@ public class PathAnalysis extends DynamicAnalysis {
 				Register r = ro.getRegister();
 				int rIdx = domV.indexOf(r);
 				assert (rIdx != -1);
+				System.out.println("Adding to copy2: " + currQidx + " " + lIdx + " " + rIdx);
 				copySet.add(new IntTrio(currQidx, lIdx, rIdx));
-			} else
+			} else {
+				System.out.println("Adding to asgn: " + currQidx + " " + lIdx);
 				asgnSet.add(new IntPair(currQidx, lIdx));
+			}
 		}
 		private void processGetstatic(Quad q) {
         	jq_Field f = Getstatic.getField(q).getField();
@@ -505,6 +516,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			int lIdx = domV.indexOf(l);
 			assert (lIdx != -1);
 			setCurrQidx(q);
+			System.out.println("Adding to getstat: " + currQidx + " " + lIdx);
 			getstatSet.add(new IntPair(currQidx, lIdx));
 		}
 		private void processPutstatic(Quad q) {
@@ -519,6 +531,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			int rIdx = domV.indexOf(r);
 			assert (rIdx != -1);
 			setCurrQidx(q);
+			System.out.println("Adding to putstat: " + currQidx + " " + rIdx);
 			putstatSet.add(new IntPair(currQidx, rIdx));
 		}
 		private void processAload(Quad q) {
@@ -532,6 +545,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			assert (lIdx != -1);
 			int fIdx = 0;
 			setCurrQidx(q);
+			System.out.println("Adding to getinst1: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
 			getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
 		}
 		private void processAstore(Quad q) {
@@ -548,6 +562,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			assert (bIdx != -1);
 			int fIdx = 0;
 			setCurrQidx(q);
+			System.out.println("Adding to putinst1: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
 			putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
 		}
 		private void processGetfield(Quad q) {
@@ -568,6 +583,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			int fIdx = domF.indexOf(f);
 			assert (fIdx != -1);
 			setCurrQidx(q);
+			System.out.println("Adding to getinst2: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
 			getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
 		}
 		private void processPutfield(Quad q) {
@@ -591,6 +607,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			int fIdx = domF.indexOf(f);
 			assert (fIdx != -1);
 			setCurrQidx(q);
+			System.out.println("Adding to putinst2: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
 			putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
 		}
 		private void processInvoke(Quad q) {
@@ -628,7 +645,9 @@ public class PathAnalysis extends DynamicAnalysis {
 					m.getDeclaringClass().getName().equals("java.lang.Thread")) {
 				IntPair thisArg = invkArgs.get(0);
 				assert (thisArg.idx0 == 0);
-				spawnSet.add(new IntPair(currQidx, thisArg.idx1));
+				int vIdx = thisArg.idx1;
+				System.out.println("Adding to spawn: " + currQidx + " " + vIdx);
+				spawnSet.add(new IntPair(currQidx, vIdx));
 			} else {
 				InvkInfo invkInfo =
 					new InvkInfo(mSign, invkArgs, invkRet, currQidx);
@@ -646,6 +665,7 @@ public class PathAnalysis extends DynamicAnalysis {
 				int methRet = domV.indexOf(v);
 				assert (methRet != -1);
 				setCurrQidx(q);
+				System.out.println("Adding to copy3: " + currQidx + " " + invkRet + " " + methRet);
 				copySet.add(new IntTrio(currQidx, invkRet, methRet));
 			}
 		}
@@ -694,6 +714,7 @@ public class PathAnalysis extends DynamicAnalysis {
 						IntPair zu = invkArgs.get(i);
 						assert (zu.idx0 == zIdx);
 						int uIdx = zu.idx1;
+						System.out.println("Adding to copy4: " + invkQidx + " " + vIdx + " " + uIdx);
 						copySet.add(new IntTrio(invkQidx, vIdx, uIdx));
 					}
 				}
@@ -704,20 +725,23 @@ public class PathAnalysis extends DynamicAnalysis {
 			System.out.println("XXX: " + m);
 			top = new Frame(mIdx, cIdx, invkArgs, invkRet);
 			if (!found && !foundThreadRoot) {
-				if (mSign.equals("main([Ljava/lang/String;)V") ||
-						mSign.equals("run()V")) {
+				if (mSign.equals("main([Ljava/lang/String;)V") || mSign.equals("run()V")) {
 					foundThreadRoot = true;
 					System.out.println("Treating method '" + m +
 						"' as thread root of thread# " + tId);
-					List<IntPair> methArgs = methToArgs[mIdx];
-					if (methArgs == null) {
-						methArgs = processMethArgs(m);
-						methToArgs[mIdx] = methArgs;
+					if (mSign.equals("run()V")) {
+						List<IntPair> methArgs = methToArgs[mIdx];
+						if (methArgs == null) {
+							methArgs = processMethArgs(m);
+							methToArgs[mIdx] = methArgs;
+						}
+						IntPair thisArg = methArgs.get(0);
+						assert (thisArg.idx0 == 0);
+						setCurrQidx(m.getCFG().entry());
+						int vIdx = thisArg.idx1;
+						System.out.println("Adding to start: " + currQidx + " " + vIdx);
+						startSet.add(new IntPair(currQidx, vIdx));
 					}
-					IntPair thisArg = methArgs.get(0);
-					assert (thisArg.idx0 == 0);
-					setCurrQidx(m.getCFG().entry());
-					startSet.add(new IntPair(currQidx, thisArg.idx1));
 				}
 			}
 		}

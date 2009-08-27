@@ -68,7 +68,7 @@ public class Dom<T> extends IndexHashMap<T> {
 			int size = size();
 			for (int i = 0; i < size; i++) {
 				T val = get(i);
-				out.println(toString(val));
+				out.println(toUniqueString(val));
 			}
 			out.close();
 			String domFileName = name + ".dom";
@@ -79,7 +79,7 @@ public class Dom<T> extends IndexHashMap<T> {
 			throw new RuntimeException(ex);
 		}
 	}
-    public String toString(T val) {
+    public String toUniqueString(T val) {
     	return val == null ? "null" : val.toString();
     }
 	/**
