@@ -23,9 +23,10 @@ import chord.util.tuple.integer.IntQuad;
 import chord.util.tuple.object.Pair;
 
 import chord.bddbddb.Rel.PairIterable;
-import chord.doms.DomB;
-import chord.doms.DomM;
 import chord.doms.DomH;
+import chord.doms.DomE;
+import chord.doms.DomI;
+import chord.doms.DomM;
 import chord.doms.DomF;
 import chord.doms.DomV;
 import chord.doms.DomP;
@@ -63,15 +64,23 @@ public class PathAnalysis extends DynamicAnalysis {
             return instrScheme;
         instrScheme = new InstrScheme();
         instrScheme.setInstrMethodAndLoopBound(1);
+        instrScheme.setNewAndNewArrayEvent(true, true, false);
+		instrScheme.setGetstaticPrimitiveEvent(true, true, false);
+		instrScheme.setGetstaticReferenceEvent(true, true, false, false);
+		instrScheme.setPutstaticPrimitiveEvent(true, true, false);
+		instrScheme.setPutstaticReferenceEvent(true, true, false, false);
+		instrScheme.setGetfieldPrimitiveEvent(true, true, false, false);
+		instrScheme.setGetfieldReferenceEvent(true, true, false, false, false);
+		instrScheme.setPutfieldPrimitiveEvent(true, true, false, false);
+		instrScheme.setPutfieldReferenceEvent(true, true, false, false, false);
+		instrScheme.setAloadPrimitiveEvent(true, true, false, false);
+		instrScheme.setAloadReferenceEvent(true, true, false, false, false);
+		instrScheme.setAstorePrimitiveEvent(true, true, false, false);
+		instrScheme.setAstoreReferenceEvent(true, true, false, false, false);
+		instrScheme.setMethodCallEvent(true, true);
         return instrScheme;
     }
     // data structures set once and for all
-	private DomV domV;
-	private DomF domF;
-	private DomH domH;
-	private DomM domM;
-	private DomP domP;
-	private DomB domB;
 	private List/*IntPair*/[] methToArgs;
     // set of heap insts deemed escaping in some run so far
 	private Set<Quad> escHeapInsts;
@@ -81,6 +90,10 @@ public class PathAnalysis extends DynamicAnalysis {
 	private TIntObjectHashMap<Handler> thrToHandlerMap =
 		new TIntObjectHashMap<Handler>();
 	private int[] methToNumCalls;
+	private DomH domH;
+	private DomE domE;
+	private DomI domI;
+	private DomM domM;
 	private ProgramDom<IntTrio> domQ;
 	private Set<IntPair> succSet;
 	private Set<IntTrio> allocSet;
@@ -96,18 +109,9 @@ public class PathAnalysis extends DynamicAnalysis {
 
     public void initAllPasses() {
 		domH = (DomH) Project.getTrgt("H");
-		domV = (DomV) Project.getTrgt("V");
-		domF = (DomF) Project.getTrgt("F");
+		domE = (DomE) Project.getTrgt("E");
+		domI = (DomI) Project.getTrgt("I");
 		domM = (DomM) Project.getTrgt("M");
-		domP = (DomP) Project.getTrgt("P");
-		domB = (DomB) Project.getTrgt("B");
-		domQ = (ProgramDom) Project.getTrgt("Q");
-        Project.runTask("M");
-        Project.runTask("H");
-        Project.runTask("V");
-        Project.runTask("F");
-        Project.runTask("P");
-        Project.runTask("B");
     	methToArgs = new List[domM.size()];
     	escHeapInsts = new HashSet<Quad>();
     	heapInstToAllocs = new HashMap<Quad, Set<Quad>>();
@@ -130,6 +134,7 @@ public class PathAnalysis extends DynamicAnalysis {
 		PQset = new HashSet<IntPair>();
 	}
 
+/*
 	public void processEnterMethod(int mIdx, int tId) {
 		Handler handler = thrToHandlerMap.get(tId);
 		if (handler == null) {
@@ -138,16 +143,17 @@ public class PathAnalysis extends DynamicAnalysis {
 		}
 		handler.processEnterMethod(mIdx);
 	}
-    public void processEnterBasicBlock(int bIdx, int tId) {
+    public void processStmt(int pIdx, int tId) {
 		Handler handler = thrToHandlerMap.get(tId);
 		assert (handler != null);
-		handler.processEnterBasicBlock(bIdx);
+		handler.processStmt(pIdx);
 	}
     public void processLeaveMethod(int mIdx, int tId) {
 		Handler handler = thrToHandlerMap.get(tId);
 		assert (handler != null);
 		handler.processLeaveMethod(mIdx);
 	}
+*/
 
 	public void donePass() {
 		domQ.save();
@@ -297,6 +303,7 @@ public class PathAnalysis extends DynamicAnalysis {
         relHybridEscE.close();
 	}
 
+/*
 	private List<IntPair> processMethArgs(jq_Method m) {
 		List<IntPair> args = null;
 		ControlFlowGraph cfg = m.getCFG();
@@ -320,16 +327,28 @@ public class PathAnalysis extends DynamicAnalysis {
 
 	class Frame {
 		final int mIdx;
+		// context of this method, i.e., number of times this method has
+		// been called until now in the trace across all threads
 		final int cIdx;
+		// invkArgs is null and invkRet is -1 if this method was called
+		// implicitly
 		final List<IntPair> invkArgs;
 		final int invkRet;
-		private BasicBlock prevBB;
+		// currBB and prevBB are maintained only for processing phi stmts
+		// a copy needs to be generated for phi statements and the only
+		// way to obtain the src operand of the copy is from the last bb
+		// that was seen in the trace for this thread
+		BasicBlock currBB;
+		BasicBlock prevBB;
+		final Stack<Quad> quadStk;
 		public Frame(int mIdx, int cIdx,
 				List<IntPair> invkArgs, int invkRet) {
 			this.mIdx = mIdx;
 			this.cIdx = cIdx;
 			this.invkArgs = invkArgs;
 			this.invkRet = invkRet;
+			prevBB = null;
+			quadStk = new Stack<Quad>();
 		}
 	}
 	class InvkInfo {
@@ -345,14 +364,17 @@ public class PathAnalysis extends DynamicAnalysis {
 			this.invkQidx = invkQidx;
 		}
 	}
-	class Handler {
+*/
+	class Handler { }
+/*
 		private Stack<InvkInfo> pendingInvks = new Stack<InvkInfo>();
 		private Stack<Frame> frames = new Stack<Frame>();
 		private Frame top;
 		private boolean foundThreadRoot;
 		private int ignoredMethIdx;
 		private int ignoredMethNumFrames;  // > 0 means currently ignoring code
-		private int prevQidx, currQidx;
+		private int currQidx;
+		private int prevQidx;
 		private int tId; // just for debugging
 		public Handler(int tId) {
 			this.tId = tId;
@@ -402,43 +424,62 @@ public class PathAnalysis extends DynamicAnalysis {
 				System.out.println("Ignoring 2");
 				return;
 			}
+			Stack<Quad> quadStk = top.quadStk;
+			int k = quadStk.size();
+			if (k > 0) {
+				// previous invk called a method which wasn't instrumented;
+				// drain the entire quad stack now
+				for (int i = 0; i < k; i++) {
+					Quad q = quadStk.pop();
+					processQuad(q);
+				}
+				top.prevBB = top.currBB;
+			}
 			BasicBlock bb = domB.get(bIdx);
+			top.currBB = bb;
 			int n = bb.size();
 			assert (n > 0);
-			for (int x = 0; x < n; x++) {
-				Quad q = bb.getQuad(x);
-				System.out.println("\tQuad: " + q);
-				Operator op = q.getOperator();
-				if (op instanceof Invoke)
-					processInvoke(q);
-				else if (op instanceof Return && !(op instanceof THROW_A)) {
-					assert (!(op instanceof RETURN_P));
-					if (op instanceof RETURN_A)
-						processReturn(q);
-				} else if (op instanceof Move)
-					processMove(q);
-				else if (op instanceof Getfield)
-					processGetfield(q);
-				else if (op instanceof ALoad) {
-					if (((ALoad) op).getType().isReferenceType())
-						processAload(q);
-				} else if (op instanceof Putfield)
-					processPutfield(q);
-				else if (op instanceof AStore) {
-					if (((AStore) op).getType().isReferenceType())
-						processAstore(q);
-				} else if (op instanceof Getstatic)
-					processGetstatic(q);
-				else if (op instanceof Putstatic)
-					processPutstatic(q);
-				else if (op instanceof New)
-					processNewOrNewArray(q, true);
-				else if (op instanceof NewArray)
-					processNewOrNewArray(q, false);
-				else if (op instanceof Phi)
-					processPhi(q);
+			for (int i; i < n; i++) {
+				Quad q = bb.getQuad(i);
+				System.out.println("\tPushing quad: " + q);
+				quadStk.push(q);
 			}
-			top.prevBB = bb;
+			drainQuadStk();
+		}
+		private boolean processQuad(Quad q) {
+			System.out.println("\tProcessing quad: " + q);
+			Operator op = q.getOperator();
+			if (op instanceof Invoke) {
+				processInvoke(q);
+				return true;
+			}
+			if (op instanceof Return && !(op instanceof THROW_A)) {
+				assert (!(op instanceof RETURN_P));
+				if (op instanceof RETURN_A)
+					processReturn(q);
+			} else if (op instanceof Move)
+				processMove(q);
+			else if (op instanceof Getfield)
+				processGetfield(q);
+			else if (op instanceof ALoad) {
+				if (((ALoad) op).getType().isReferenceType())
+					processAload(q);
+			} else if (op instanceof Putfield)
+				processPutfield(q);
+			else if (op instanceof AStore) {
+				if (((AStore) op).getType().isReferenceType())
+					processAstore(q);
+			} else if (op instanceof Getstatic)
+				processGetstatic(q);
+			else if (op instanceof Putstatic)
+				processPutstatic(q);
+			else if (op instanceof New)
+				processNewOrNewArray(q, true);
+			else if (op instanceof NewArray)
+				processNewOrNewArray(q, false);
+			else if (op instanceof Phi)
+				processPhi(q);
+			return false;
 		}
 		private void processPhi(Quad q) {
 			RegisterOperand lo = Phi.getDest(q);
@@ -449,6 +490,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			BasicBlockTableOperand bo = Phi.getPreds(q);
 			int n = bo.size();
 			int i = 0;
+			assert (top.prevBB != null);
 			for (; i < n; i++) {
 				BasicBlock bb = bo.get(i);
 				if (bb == top.prevBB)
@@ -761,9 +803,33 @@ public class PathAnalysis extends DynamicAnalysis {
 			assert (mIdx == top.mIdx);
 			if (frames.isEmpty())
 				top = null;
-			else
+			else {
+				boolean wasImplicit;
+				if (top.invkArgs == null) {
+					// method was implicitly called
+					wasImplicit = true;
+				} else
+					wasImplicit = false;
 				top = frames.pop();
+				if (!wasImplicit)
+					drainQuadStk();
+			}
+		}
+		private void drainQuadStk() {
+			Stack<Quad> quadStk = top.quadStk;
+			int n = quadStk.size();
+			if (n == 0)
+				return;
+			int x = 0;
+			for (; x < n; x++) {
+				Quad q = quadStk.pop();
+				if (processQuad(q))
+					break;
+			}
+			if (x >= n - 1)
+				top.prevBB = top.currBB;
 		}
 	}
+*/
 }
 

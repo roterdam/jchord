@@ -175,11 +175,12 @@ public class InstrScheme implements Serializable {
     public static final int RELEASE_LOCK = 17;
     public static final int WAIT = 18;
     public static final int NOTIFY = 19;
+    public static final int METHOD_CALL = 20;
 
-	public static final int MAX_NUM_EVENT_FORMATS = 20;
+	public static final int MAX_NUM_EVENT_FORMATS = 21;
 
 	public class EventFormat implements Serializable {
-		private boolean hasMorPorHorE;
+		private boolean hasMorP;
 		private boolean hasT;
 		private boolean hasForI;
 		private boolean hasOorL;
@@ -187,10 +188,8 @@ public class InstrScheme implements Serializable {
 		private int size;
 		public boolean present() { return size > 0; }
 		public int size() { return size; }
-		public boolean hasMid() { return hasMorPorHorE; }
-		public boolean hasPid() { return hasMorPorHorE; }
-		public boolean hasEid() { return hasMorPorHorE; }
-		public boolean hasHid() { return hasMorPorHorE; }
+		public boolean hasMid() { return hasMorP; }
+		public boolean hasPid() { return hasMorP; }
 		public boolean hasTid() { return hasT; }
 		public boolean hasFid() { return hasForI; }
 		public boolean hasIid() { return hasForI; }
@@ -198,26 +197,26 @@ public class InstrScheme implements Serializable {
 		public boolean hasLid() { return hasOorL; }
 		public boolean hasBid() { return hasB; }
 		public void setM() {
-			if (!hasMorPorHorE) {
-				hasMorPorHorE = true; 
+			if (!hasMorP) {
+				hasMorP = true; 
 				size += 4;
 			}
 		}
 		public void setP() {
-			if (!hasMorPorHorE) {
-				hasMorPorHorE = true; 
+			if (!hasMorP) {
+				hasMorP = true; 
 				size += 4;
 			}
 		}
 		public void setH() {
-			if (!hasMorPorHorE) {
-				hasMorPorHorE = true; 
+			if (!hasMorP) {
+				hasMorP = true; 
 				size += 4;
 			}
 		}
 		public void setE() {
-			if (!hasMorPorHorE) {
-				hasMorPorHorE = true; 
+			if (!hasMorP) {
+				hasMorP = true; 
 				size += 4;
 			}
 		}
@@ -287,105 +286,105 @@ public class InstrScheme implements Serializable {
 		if (hasT) e.setT();
 	}
 	public void setNewAndNewArrayEvent(
-			boolean hasH, boolean hasT, boolean hasO) {
+			boolean hasP, boolean hasT, boolean hasO) {
 		EventFormat e = events[NEW_AND_NEWARRAY];
-		if (hasH) e.setH();
+		if (hasP) e.setH();
 		if (hasT) e.setT();
 		if (hasO) e.setO();
 	}
 	public void setGetstaticPrimitiveEvent(
-			boolean hasE, boolean hasT, boolean hasF) {
+			boolean hasP, boolean hasT, boolean hasF) {
 		EventFormat e = events[GETSTATIC_PRIMITIVE];
-		if (hasE) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasF) e.setF();
 	}
 	public void setGetstaticReferenceEvent(
-			boolean hasE, boolean hasT, boolean hasF, boolean hasO) {
+			boolean hasP, boolean hasT, boolean hasF, boolean hasO) {
 		EventFormat e = events[GETSTATIC_REFERENCE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasF) e.setF();
 		if (hasO) e.setO();
 	}
 	public void setPutstaticPrimitiveEvent(
-			boolean hasE, boolean hasT, boolean hasF) {
+			boolean hasP, boolean hasT, boolean hasF) {
 		EventFormat e = events[PUTSTATIC_PRIMITIVE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasF) e.setF();
 	}
 	public void setPutstaticReferenceEvent(
-			boolean hasE, boolean hasT, boolean hasF, boolean hasO) {
+			boolean hasP, boolean hasT, boolean hasF, boolean hasO) {
 		EventFormat e = events[PUTSTATIC_REFERENCE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasF) e.setF();
 		if (hasO) e.setO();
 	}
 	public void setGetfieldPrimitiveEvent(
-			boolean hasE, boolean hasT, boolean hasB, boolean hasF) {
+			boolean hasP, boolean hasT, boolean hasB, boolean hasF) {
 		EventFormat e = events[GETFIELD_PRIMITIVE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasF) e.setF();
 	}
 	public void setGetfieldReferenceEvent(
-			boolean hasE, boolean hasT, boolean hasB, boolean hasF, boolean hasO) {
+			boolean hasP, boolean hasT, boolean hasB, boolean hasF, boolean hasO) {
 		EventFormat e = events[GETFIELD_REFERENCE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasF) e.setF();
 		if (hasO) e.setO();
 	}
 	public void setPutfieldPrimitiveEvent(
-			boolean hasE, boolean hasT, boolean hasB, boolean hasF) {
+			boolean hasP, boolean hasT, boolean hasB, boolean hasF) {
 		EventFormat e = events[PUTFIELD_PRIMITIVE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasF) e.setF();
 	}
 	public void setPutfieldReferenceEvent(
-			boolean hasE, boolean hasT, boolean hasB, boolean hasF, boolean hasO) {
+			boolean hasP, boolean hasT, boolean hasB, boolean hasF, boolean hasO) {
 		EventFormat e = events[PUTFIELD_REFERENCE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasF) e.setF();
 		if (hasO) e.setO();
 	}
 	public void setAloadPrimitiveEvent(
-			boolean hasE, boolean hasT, boolean hasB, boolean hasI) {
+			boolean hasP, boolean hasT, boolean hasB, boolean hasI) {
 		EventFormat e = events[ALOAD_PRIMITIVE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasI) e.setI();
 	}
 	public void setAloadReferenceEvent(
-			boolean hasE, boolean hasT, boolean hasB, boolean hasI, boolean hasO) {
+			boolean hasP, boolean hasT, boolean hasB, boolean hasI, boolean hasO) {
 		EventFormat e = events[ALOAD_REFERENCE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasI) e.setI();
 		if (hasO) e.setO();
 	}
 	public void setAstorePrimitiveEvent(
-			boolean hasE, boolean hasT, boolean hasB, boolean hasI) {
+			boolean hasP, boolean hasT, boolean hasB, boolean hasI) {
 		EventFormat e = events[ASTORE_PRIMITIVE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasI) e.setI();
 	}
 	public void setAstoreReferenceEvent(
-			boolean hasE, boolean hasT, boolean hasB, boolean hasI, boolean hasO) {
+			boolean hasP, boolean hasT, boolean hasB, boolean hasI, boolean hasO) {
 		EventFormat e = events[ASTORE_REFERENCE];
-		if (hasE) e.setE();
+		if (hasP) e.setE();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasI) e.setI();
@@ -433,6 +432,11 @@ public class InstrScheme implements Serializable {
 		if (hasT) e.setT();
 		if (hasL) e.setL();
 	}
+	public void setMethodCallEvent(boolean hasP, boolean hasT) {
+		EventFormat e = events[METHOD_CALL];
+		if (hasP) e.setP();
+		if (hasT) e.setT();
+	}
 	
 	public boolean hasFieldEvent() {
 		return hasGetfieldEvent() || hasPutfieldEvent();
@@ -471,16 +475,16 @@ public class InstrScheme implements Serializable {
 		return events[ENTER_AND_LEAVE_METHOD].hasMid();
 	}
 	public boolean needsHmap() {
-		return events[NEW_AND_NEWARRAY].hasHid();
+		return events[NEW_AND_NEWARRAY].hasPid();
 	}
 	public boolean needsEmap() {
 		return
-			events[GETSTATIC_PRIMITIVE].hasEid() || events[GETSTATIC_REFERENCE].hasEid() ||
-			events[PUTSTATIC_PRIMITIVE].hasEid() || events[PUTSTATIC_REFERENCE].hasEid() ||
-			events[GETFIELD_PRIMITIVE].hasEid() || events[GETFIELD_REFERENCE].hasEid() ||
-			events[PUTFIELD_PRIMITIVE].hasEid() || events[PUTFIELD_REFERENCE].hasEid() ||
-			events[ALOAD_PRIMITIVE].hasEid() || events[ALOAD_REFERENCE].hasEid() ||
-			events[ASTORE_PRIMITIVE].hasEid() || events[ASTORE_REFERENCE].hasEid();
+			events[GETSTATIC_PRIMITIVE].hasPid() || events[GETSTATIC_REFERENCE].hasPid() ||
+			events[PUTSTATIC_PRIMITIVE].hasPid() || events[PUTSTATIC_REFERENCE].hasPid() ||
+			events[GETFIELD_PRIMITIVE].hasPid() || events[GETFIELD_REFERENCE].hasPid() ||
+			events[PUTFIELD_PRIMITIVE].hasPid() || events[PUTFIELD_REFERENCE].hasPid() ||
+			events[ALOAD_PRIMITIVE].hasPid() || events[ALOAD_REFERENCE].hasPid() ||
+			events[ASTORE_PRIMITIVE].hasPid() || events[ASTORE_REFERENCE].hasPid();
 	}
 	public boolean needsFmap() {
 		return
@@ -488,6 +492,9 @@ public class InstrScheme implements Serializable {
 			events[PUTSTATIC_PRIMITIVE].hasFid() || events[PUTSTATIC_REFERENCE].hasFid() ||
 			events[GETFIELD_PRIMITIVE].hasFid() || events[GETFIELD_REFERENCE].hasFid() ||
 			events[PUTFIELD_PRIMITIVE].hasFid() || events[PUTFIELD_REFERENCE].hasFid();
+	}
+	public boolean needsImap() {
+		return events[METHOD_CALL].hasPid();
 	}
 	public boolean needsPmap() {
 		return
