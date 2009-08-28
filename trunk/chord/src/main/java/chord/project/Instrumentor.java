@@ -36,11 +36,11 @@ import java.util.Set;
 public class Instrumentor {
 	private IndexMap<String> Hmap;
 	private IndexMap<String> Emap;
+	private IndexMap<String> Imap;
 	private IndexMap<String> Pmap;
 	private IndexMap<String> Fmap;
 	private IndexMap<String> Mmap;
 	private IndexMap<BasicBlock> Wmap;
-	private IndexMap<String> Bmap;
 	private ClassPool pool;
 	private CtClass exType;
 	private String mStr;
@@ -69,6 +69,7 @@ public class Instrumentor {
 	private EventFormat releaseLockEvent;
 	private EventFormat waitEvent;
 	private EventFormat notifyEvent;
+	private EventFormat methodCallEvent;
 	private int instrMethodAndLoopBound;
 	public void visit(Program program, InstrScheme scheme) {
 		String fullClassPathName = Properties.classPathName +
@@ -110,6 +111,7 @@ public class Instrumentor {
 		releaseLockEvent = scheme.getEvent(InstrScheme.RELEASE_LOCK);
 		waitEvent = scheme.getEvent(InstrScheme.WAIT);
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
+		methodCallEvent = scheme.getEvent(InstrScheme.METHOD_CALL);
 
 		if (enterAndLeaveMethodEvent.present() ||
 				instrMethodAndLoopBound > 0 || releaseLockEvent.present()) {
@@ -124,16 +126,16 @@ public class Instrumentor {
 			Hmap = new IndexHashMap<String>();
 		if (scheme.needsEmap())
 			Emap = new IndexHashMap<String>();
+		if (scheme.needsImap())
+			Imap = new IndexHashMap<String>();
 		if (scheme.needsPmap())
 			Pmap = new IndexHashMap<String>();
 		if (scheme.needsFmap())
 			Fmap = new IndexHashMap<String>();
 		if (scheme.needsMmap() || instrMethodAndLoopBound > 0)
 			Mmap = new IndexHashMap<String>();
-		if (instrMethodAndLoopBound > 0) {
+		if (instrMethodAndLoopBound > 0)
 			Wmap = new IndexHashMap<BasicBlock>();
-			Bmap = new IndexHashMap<String>();
-		}
 
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String classesDirName = Properties.classesDirName;
@@ -205,6 +207,10 @@ public class Instrumentor {
 			FileUtils.writeMapToFile(Emap,
 				(new File(outDirName, "E.dynamic.txt")).getAbsolutePath());
 		}
+		if (Imap != null) {
+			FileUtils.writeMapToFile(Imap,
+				(new File(outDirName, "I.dynamic.txt")).getAbsolutePath());
+		}
 		if (Pmap != null) {
 			FileUtils.writeMapToFile(Pmap,
 				(new File(outDirName, "P.dynamic.txt")).getAbsolutePath());
@@ -216,10 +222,6 @@ public class Instrumentor {
 		if (Mmap != null) {
 			FileUtils.writeMapToFile(Mmap,
 				(new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
-		}
-		if (Bmap != null) {
-			FileUtils.writeMapToFile(Bmap,
-				(new File(outDirName, "B.dynamic.txt")).getAbsolutePath());
 		}
 	}
 
@@ -233,24 +235,16 @@ public class Instrumentor {
 		}
 		throw new ChordRuntimeException();
 	}
-	private void processEnterBasicBlock(int bId, int bci) {
-		String s = enterBasicBlock + bId + ");";
-		String t = loopInstrMap.get(bci);
-		if (t != null)
-			s = t + s;
-		loopInstrMap.put(bci, s);
-	}
 	private void processEnterLoopCheck(int wId, int headBCI) {
 		String sHead = enterLoopCheck + wId + ");";
 		String s = loopInstrMap.get(headBCI);
-		assert (s != null);
+		assert (s == null);
 		loopInstrMap.put(headBCI, sHead + s);
 	}
 	private void processLeaveLoopCheck(int wId, int exitBCI) {
 		String sExit = leaveLoopCheck + wId + ");";
 		String s = loopInstrMap.get(exitBCI);
-		assert (s != null);
-		loopInstrMap.put(exitBCI, sExit + s);
+		loopInstrMap.put(exitBCI, (s == null) ? sExit : sExit + s);
  	}
 	private void process(CtBehavior javassistMethod, jq_Method joeqMethod) {
 		int mods = javassistMethod.getModifiers();
@@ -277,16 +271,6 @@ public class Instrumentor {
 				ControlFlowGraph cfg = joeqMethod.getCFG();
 				finder.visit(cfg);
 				loopInstrMap.clear();
-				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-						it.hasNext();) {
-					BasicBlock bb = it.nextBasicBlock();
-					if (bb.isEntry() || bb.isExit())
-						continue;
-					String bStr = bb.getID() + "!" + mStr;
-					int bId = Bmap.getOrAdd(bStr);
-					int bci = getBCI(bb, joeqMethod);
-					processEnterBasicBlock(bId, bci); 
-				}
 				Set<BasicBlock> heads = finder.getLoopHeads();
 				for (BasicBlock head : heads) {
 					int wId = Wmap.getOrAdd(head);
@@ -466,7 +450,7 @@ public class Instrumentor {
 		}
 		private String getstaticPrimitive(FieldAccess e, CtField f) {
 			if (getstaticPrimitiveEvent.present()) {
-				int eId = getstaticPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = getstaticPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
 				int fId = getstaticPrimitiveEvent.hasFid() ? getFid(f) : -1;
 				return "{ $_ = $proceed($$); " + getstaticPrimitive + eId + "," + fId + "); }"; 
 			}
@@ -474,7 +458,7 @@ public class Instrumentor {
 		}
 		private String getstaticReference(FieldAccess e, CtField f) {
 			if (getstaticReferenceEvent.present()) {
-				int eId = getstaticReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = getstaticReferenceEvent.hasPid() ? set(Emap, e) : -1;
 				int fId = getstaticReferenceEvent.hasFid() ? getFid(f) : -1;
 				String oId = getstaticReferenceEvent.hasOid() ? "$_" : "null";
 				return "{ $_ = $proceed($$); " + getstaticReference + eId + "," + fId + "," + oId + "); }"; 
@@ -483,7 +467,7 @@ public class Instrumentor {
 		}
 		private String putstaticPrimitive(FieldAccess e, CtField f) {
 			if (putstaticPrimitiveEvent.present()) {
-				int eId = putstaticPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = putstaticPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
 				int fId = putstaticPrimitiveEvent.hasFid() ? getFid(f) : -1;
 				return "{ $proceed($$); " + putstaticPrimitive + eId + "," + fId + "); }"; 
 			}
@@ -491,7 +475,7 @@ public class Instrumentor {
 		}
 		private String putstaticReference(FieldAccess e, CtField f) {
 			if (putstaticReferenceEvent.present()) {
-				int eId = putstaticReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = putstaticReferenceEvent.hasPid() ? set(Emap, e) : -1;
 				int fId = putstaticReferenceEvent.hasFid() ? getFid(f) : -1;
 				String oId = putstaticReferenceEvent.hasOid() ? "$1" : "null";
 				return "{ $proceed($$); " + putstaticReference + eId + "," + fId + "," + oId + "); }"; 
@@ -500,7 +484,7 @@ public class Instrumentor {
 		}
 		private String getfieldPrimitive(FieldAccess e, CtField f) {
 			if (getfieldPrimitiveEvent.present()) {
-				int eId = getfieldPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = getfieldPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
 				String bId = getfieldPrimitiveEvent.hasBid() ? "$0" : "null";
 				int fId = getfieldPrimitiveEvent.hasFid() ? getFid(f) : -1;
 				return "{ $_ = $proceed($$); " + getfieldPrimitive + eId + "," + bId + "," + fId + "); }"; 
@@ -509,7 +493,7 @@ public class Instrumentor {
 		}
 		private String getfieldReference(FieldAccess e, CtField f) {
 			if (getfieldReferenceEvent.present()) {
-				int eId = getfieldReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = getfieldReferenceEvent.hasPid() ? set(Emap, e) : -1;
 				String bId = getfieldReferenceEvent.hasBid() ? "$0" : "null";
 				int fId = getfieldReferenceEvent.hasFid() ? getFid(f) : -1;
 				String oId = getfieldReferenceEvent.hasOid() ? "$_" : "null";
@@ -519,7 +503,7 @@ public class Instrumentor {
 		}
 		private String putfieldPrimitive(FieldAccess e, CtField f) {
 			if (putfieldPrimitiveEvent.present()) {
-				int eId = putfieldPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = putfieldPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
 				String bId = putfieldPrimitiveEvent.hasBid() ? "$0" : "null";
 				int fId = putfieldPrimitiveEvent.hasFid() ? getFid(f) : -1;
 				return "{ $proceed($$); " + putfieldPrimitive + eId + "," + bId + "," + fId + "); }"; 
@@ -528,7 +512,7 @@ public class Instrumentor {
 		}
 		private String putfieldReference(FieldAccess e, CtField f) {
 			if (putfieldReferenceEvent.present()) {
-				int eId = putfieldReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = putfieldReferenceEvent.hasPid() ? set(Emap, e) : -1;
 				String bId = putfieldReferenceEvent.hasBid() ? "$0" : "null";
 				int fId = putfieldReferenceEvent.hasFid() ? getFid(f) : -1;
 				String oId = putfieldReferenceEvent.hasOid() ? "$1" : "null";
@@ -538,7 +522,7 @@ public class Instrumentor {
 		}
 		private String aloadPrimitive(ArrayAccess e) {
 			if (aloadPrimitiveEvent.present()) {
-				int eId = aloadPrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = aloadPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
 				String bId = aloadPrimitiveEvent.hasBid() ? "$0" : "null";
 				String iId = aloadPrimitiveEvent.hasIid() ? "$1" : "-1";
 				return "{ $_ = $proceed($$); " + aloadPrimitive + eId + "," + bId + "," + iId + "); }"; 
@@ -547,7 +531,7 @@ public class Instrumentor {
 		}
 		private String aloadReference(ArrayAccess e) {
 			if (aloadReferenceEvent.present()) {
-				int eId = aloadReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = aloadReferenceEvent.hasPid() ? set(Emap, e) : -1;
 				String bId = aloadReferenceEvent.hasBid() ? "$0" : "null";
 				String iId = aloadReferenceEvent.hasIid() ? "$1" : "-1";
 				String oId = aloadReferenceEvent.hasOid() ? "$_" : "null";
@@ -557,7 +541,7 @@ public class Instrumentor {
 		}
 		private String astorePrimitive(ArrayAccess e) {
 			if (astorePrimitiveEvent.present()) {
-				int eId = astorePrimitiveEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = astorePrimitiveEvent.hasPid() ? set(Emap, e) : -1;
 				String bId = astorePrimitiveEvent.hasBid() ? "$0" : "null";
 				String iId = astorePrimitiveEvent.hasIid() ? "$1" : "-1";
 				return "{ $proceed($$); " + astorePrimitive + eId + "," + bId + "," + iId + "); }"; 
@@ -566,7 +550,7 @@ public class Instrumentor {
 		}
 		private String astoreReference(ArrayAccess e) {
 			if (astoreReferenceEvent.present()) {
-				int eId = astoreReferenceEvent.hasEid() ? set(Emap, e) : -1;
+				int eId = astoreReferenceEvent.hasPid() ? set(Emap, e) : -1;
 				String bId = astoreReferenceEvent.hasBid() ? "$0" : "null";
 				String iId = astoreReferenceEvent.hasIid() ? "$1" : "-1";
 				String oId = astoreReferenceEvent.hasOid() ? "$2" : "null";
@@ -619,9 +603,16 @@ public class Instrumentor {
 					eventCall = threadJoin + pId + "," + oId + ");";
 				}
 			}
+			if (methodCallEvent.present()) {
+				if (eventCall == null)
+					eventCall = "";
+				int iId = set(Imap, e);
+				eventCall += " " + methodCall + iId + ");";
+			}
 			if (eventCall != null) {
 				try {
-					e.replace("{ " + eventCall + " $proceed($$); }");
+					// NOTE: added $_ recently
+					e.replace("{ " + eventCall + " $_ = $proceed($$); }");
 				} catch (CannotCompileException ex) {
 					throw new ChordRuntimeException(ex);
 				}
@@ -682,4 +673,5 @@ public class Instrumentor {
 	private static final String releaseLock = runtimeClassName + "releaseLock(";
 	private static final String wait = runtimeClassName + "wait(";
 	private static final String notify = runtimeClassName + "notify(";
+	private static final String methodCall = runtimeClassName + "methodCall(";
 }

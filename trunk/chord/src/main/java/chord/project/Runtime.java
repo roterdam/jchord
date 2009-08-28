@@ -561,12 +561,12 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void enterBasicBlock(int bId) {
+	public synchronized static void methodCall(int pId) {
 		if (trace) {
 			trace = false;
 			try {
-				buffer.putByte(EventKind.ENTER_BB);
-				buffer.putInt(bId);
+				buffer.putByte(EventKind.METHOD_CALL);
+				buffer.putInt(pId);
 				int tId = getObjectId(Thread.currentThread());
 				buffer.putInt(tId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }

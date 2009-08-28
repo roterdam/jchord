@@ -44,6 +44,7 @@ public class TraceTransformer {
 	private int releaseLockNumBytes;
 	private int waitNumBytes;
 	private int notifyNumBytes;
+	private int methodCallNumBytes;
 	private ByteBufferedFile reader, writer;
 	private boolean isInNew;
 	private TByteArrayList tmp;
@@ -64,7 +65,7 @@ public class TraceTransformer {
 */
 	public void run(String rdFileName, String wrFileName, InstrScheme scheme) {
 		try {
-			newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasHid();
+			newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasPid();
 			newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasTid();
 			newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasOid();
 			enterAndLeaveMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD).size();
@@ -87,6 +88,7 @@ public class TraceTransformer {
 			releaseLockNumBytes = scheme.getEvent(InstrScheme.RELEASE_LOCK).size();
 			waitNumBytes = scheme.getEvent(InstrScheme.WAIT).size();
 			notifyNumBytes = scheme.getEvent(InstrScheme.NOTIFY).size();
+			methodCallNumBytes = scheme.getEvent(InstrScheme.METHOD_CALL).size();
 
 			assert (newAndNewArrayHasOid);
 			reader = new ByteBufferedFile(1024, rdFileName, true);
@@ -245,8 +247,8 @@ public class TraceTransformer {
 			return waitNumBytes;
 		case EventKind.NOTIFY:
 			return notifyNumBytes;
-		case EventKind.ENTER_BB:
-			return 8;
+		case EventKind.METHOD_CALL:
+			return methodCallNumBytes;
 		default:
 			throw new RuntimeException();
 		}

@@ -42,14 +42,14 @@ public class DynamicAnalysis extends JavaAnalysis {
 	protected IndexMap<String> dMmap = new IndexHashMap<String>();
 	protected IndexMap<String> sPmap = new IndexHashMap<String>();
 	protected IndexMap<String> dPmap = new IndexHashMap<String>();
-	protected IndexMap<String> sBmap = new IndexHashMap<String>();
-	protected IndexMap<String> dBmap = new IndexHashMap<String>();
+	protected IndexMap<String> sImap = new IndexHashMap<String>();
+	protected IndexMap<String> dImap = new IndexHashMap<String>();
 	protected IndexMap<String> Hmap;
 	protected IndexMap<String> Emap;
 	protected IndexMap<String> Fmap;
 	protected IndexMap<String> Mmap;
 	protected IndexMap<String> Pmap;
-	protected IndexMap<String> Bmap;
+	protected IndexMap<String> Imap;
 	protected InstrScheme scheme;
 	protected boolean convert;
 
@@ -103,22 +103,22 @@ public class DynamicAnalysis extends JavaAnalysis {
 			processDom("F", sFmap, dFmap);
 		if (scheme.needsMmap())
 			processDom("M", sMmap, dMmap);
-		if (scheme.needsBmap())
-			processDom("B", sBmap, dBmap);
+		if (scheme.needsImap())
+			processDom("I", sImap, dImap);
 		if (convert) {
 			Hmap = sHmap;
 			Emap = sEmap;
 			Pmap = sPmap;
 			Fmap = sFmap;
 			Mmap = sMmap;
-			Bmap = sBmap;
+			Imap = sImap;
 		} else {
 			Hmap = dHmap;
 			Emap = dEmap;
 			Pmap = dPmap;
 			Fmap = dFmap;
 			Mmap = dMmap;
-			Bmap = dBmap;
+			Imap = dImap;
 		}
 		ProcessExecutor.execute("rm " + crudeTraceFileName);
 		ProcessExecutor.execute("rm " + finalTraceFileName);
@@ -245,6 +245,15 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return eIdx;
 	}
+	public int getIidx(int i) {
+		String s = dImap.get(i);
+		int iIdx = sImap.indexOf(s);
+		if (iIdx == -1) {
+			System.err.println("WARNING: could not find `" + s + "` in sImap");
+			iIdx -= i;
+		}
+		return iIdx;
+	}
 	public int getPidx(int p) {
 		String s = dPmap.get(p);
 		int pIdx = sPmap.indexOf(s);
@@ -272,15 +281,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		return mIdx;
 	}
-	public int getBidx(int b) {
-		String s = dBmap.get(b);
-		int bIdx = sBmap.indexOf(s);
-		if (bIdx == -1) {
-			System.err.println("WARNING: could not find `" + s + "` in sBmap");
-			bIdx -= b;
-		}
-		return bIdx;
-	}
 
 	private void processTrace(String fileName) {
 		try {
@@ -291,20 +291,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 				byte opcode = buffer.getByte();
 				count++;
 				switch (opcode) {
-				case EventKind.ENTER_BB:
-				{
-					int b = buffer.getInt();
-					if (convert)
-						b = getBidx(b);
-					int t = buffer.getInt();
-					processEnterBasicBlock(b, t);
-					break;
-				}
 				case EventKind.ENTER_METHOD:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 					int m;
-					if (lef.hasMid()) {
+					if (ef.hasMid()) {
 						m = buffer.getInt();
 						if (convert)
 							m = getMidx(m);
@@ -312,7 +303,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						m = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
@@ -322,9 +313,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.LEAVE_METHOD:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 					int m;
-					if (lef.hasMid()) {
+					if (ef.hasMid()) {
 						m = buffer.getInt();
 						if (convert)
 							m = getMidx(m);
@@ -332,7 +323,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						m = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
@@ -343,9 +334,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				case EventKind.NEW:
 				case EventKind.NEW_ARRAY:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+					EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 					int h;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						h = buffer.getInt();
 						if (convert)
 							h = getHidx(h);
@@ -353,13 +344,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						h = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -369,9 +360,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.GETSTATIC_PRIMITIVE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
+					EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -379,13 +370,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int f;
-					if (lef.hasFid()) {
+					if (ef.hasFid()) {
 						f = buffer.getInt();
 						if (convert)
 							f = getFidx(f);
@@ -397,9 +388,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.GETSTATIC_REFERENCE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
+					EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -407,13 +398,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int f;
-					if (lef.hasFid()) {
+					if (ef.hasFid()) {
 						f = buffer.getInt();
 						if (convert)
 							f = getFidx(f);
@@ -421,7 +412,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						f = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -431,9 +422,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.PUTSTATIC_PRIMITIVE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
+					EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -441,13 +432,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int f;
-					if (lef.hasFid()) {
+					if (ef.hasFid()) {
 						f = buffer.getInt();
 						if (convert)
 							f = getFidx(f);
@@ -459,9 +450,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.PUTSTATIC_REFERENCE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
+					EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -469,13 +460,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int f;
-					if (lef.hasFid()) {
+					if (ef.hasFid()) {
 						f = buffer.getInt();
 						if (convert)
 							f = getFidx(f);
@@ -483,7 +474,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						f = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -493,9 +484,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.GETFIELD_PRIMITIVE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
+					EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -503,19 +494,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int b;
-					if (lef.hasBid()) {
+					if (ef.hasBid()) {
 						b = buffer.getInt();
 					} else {
 						b = -1;
 					}
 					int f;
-					if (lef.hasFid()) {
+					if (ef.hasFid()) {
 						f = buffer.getInt();
 						if (convert)
 							f = getFidx(f);
@@ -527,9 +518,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.GETFIELD_REFERENCE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
+					EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -537,19 +528,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int b;
-					if (lef.hasBid()) {
+					if (ef.hasBid()) {
 						b = buffer.getInt();
 					} else {
 						b = -1;
 					}
 					int f;
-					if (lef.hasFid()) {
+					if (ef.hasFid()) {
 						f = buffer.getInt();
 						if (convert)
 							f = getFidx(f);
@@ -557,7 +548,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						f = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -567,9 +558,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.PUTFIELD_PRIMITIVE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
+					EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -577,19 +568,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int b;
-					if (lef.hasBid()) {
+					if (ef.hasBid()) {
 						b = buffer.getInt();
 					} else {
 						b = -1;
 					}
 					int f;
-					if (lef.hasFid()) {
+					if (ef.hasFid()) {
 						f = buffer.getInt();
 						if (convert)
 							f = getFidx(f);
@@ -601,9 +592,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.PUTFIELD_REFERENCE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
+					EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -611,19 +602,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int b;
-					if (lef.hasBid()) {
+					if (ef.hasBid()) {
 						b = buffer.getInt();
 					} else {
 						b = -1;
 					}
 					int f;
-					if (lef.hasFid()) {
+					if (ef.hasFid()) {
 						f = buffer.getInt();
 						if (convert)
 							f = getFidx(f);
@@ -631,7 +622,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						f = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -641,9 +632,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.ALOAD_PRIMITIVE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
+					EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -651,19 +642,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int b;
-					if (lef.hasBid()) {
+					if (ef.hasBid()) {
 						b = buffer.getInt();
 					} else {
 						b = -1;
 					}
 					int i;
-					if (lef.hasIid()) {
+					if (ef.hasIid()) {
 						i = buffer.getInt();
 					} else {
 						i = -1;
@@ -673,9 +664,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.ALOAD_REFERENCE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
+					EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -683,25 +674,25 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int b;
-					if (lef.hasBid()) {
+					if (ef.hasBid()) {
 						b = buffer.getInt();
 					} else {
 						b = -1;
 					}
 					int i;
-					if (lef.hasIid()) {
+					if (ef.hasIid()) {
 						i = buffer.getInt();
 					} else {
 						i = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -711,9 +702,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.ASTORE_PRIMITIVE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
+					EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -721,19 +712,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int b;
-					if (lef.hasBid()) {
+					if (ef.hasBid()) {
 						b = buffer.getInt();
 					} else {
 						b = -1;
 					}
 					int i;
-					if (lef.hasIid()) {
+					if (ef.hasIid()) {
 						i = buffer.getInt();
 					} else {
 						i = -1;
@@ -743,9 +734,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.ASTORE_REFERENCE:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
+					EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
 					int e;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						e = buffer.getInt();
 						if (convert)
 							e = getEidx(e);
@@ -753,25 +744,25 @@ public class DynamicAnalysis extends JavaAnalysis {
 						e = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int b;
-					if (lef.hasBid()) {
+					if (ef.hasBid()) {
 						b = buffer.getInt();
 					} else {
 						b = -1;
 					}
 					int i;
-					if (lef.hasIid()) {
+					if (ef.hasIid()) {
 						i = buffer.getInt();
 					} else {
 						i = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -781,9 +772,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.THREAD_START:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.THREAD_START);
+					EventFormat ef = scheme.getEvent(InstrScheme.THREAD_START);
 					int p;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						p = buffer.getInt();
 						if (convert)
 							p = getPidx(p);
@@ -791,13 +782,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						p = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -807,9 +798,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.THREAD_JOIN:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.THREAD_JOIN);
+					EventFormat ef = scheme.getEvent(InstrScheme.THREAD_JOIN);
 					int p;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						p = buffer.getInt();
 						if (convert)
 							p = getPidx(p);
@@ -817,13 +808,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						p = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int o;
-					if (lef.hasOid()) {
+					if (ef.hasOid()) {
 						o = buffer.getInt();
 					} else {
 						o = -1;
@@ -833,9 +824,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.ACQUIRE_LOCK:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
+					EventFormat ef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
 					int p;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						p = buffer.getInt();
 						if (convert)
 							p = getPidx(p);
@@ -843,13 +834,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						p = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int l;
-					if (lef.hasLid()) {
+					if (ef.hasLid()) {
 						l = buffer.getInt();
 					} else {
 						l = -1;
@@ -859,9 +850,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.RELEASE_LOCK:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
+					EventFormat ef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
 					int p;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						p = buffer.getInt();
 						if (convert)
 							p = getPidx(p);
@@ -869,13 +860,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						p = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 						} else {
 						t = -1;
 					}
 					int l;
-					if (lef.hasLid()) {
+					if (ef.hasLid()) {
 							l = buffer.getInt();
 					} else {
 						l = -1;
@@ -885,9 +876,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.WAIT:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.WAIT);
+					EventFormat ef = scheme.getEvent(InstrScheme.WAIT);
 					int p;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						p = buffer.getInt();
 						if (convert)
 							p = getPidx(p);
@@ -895,13 +886,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 						p = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int l;
-					if (lef.hasLid()) {
+					if (ef.hasLid()) {
 						l = buffer.getInt();
 					} else {
 						l = -1;
@@ -911,9 +902,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				case EventKind.NOTIFY:
 				{
-					EventFormat lef = scheme.getEvent(InstrScheme.NOTIFY);
+					EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
 					int p;
-					if (lef.hasPid()) {
+					if (ef.hasPid()) {
 						p = buffer.getInt();
 						if (convert)
 							p = getPidx(p);
@@ -921,18 +912,38 @@ public class DynamicAnalysis extends JavaAnalysis {
 						p = -1;
 					}
 					int t;
-					if (lef.hasTid()) {
+					if (ef.hasTid()) {
 						t = buffer.getInt();
 					} else {
 						t = -1;
 					}
 					int l;
-					if (lef.hasLid()) {
+					if (ef.hasLid()) {
 						l = buffer.getInt();
 					} else {
 						l = -1;
 					}
 					processNotify(p, t, l);
+					break;
+				}
+				case EventKind.METHOD_CALL:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
+					int i;
+					if (ef.hasPid()) {
+						i = buffer.getInt();
+						if (convert)
+							i = getIidx(i);
+					} else {
+						i = -1;
+					}
+					int t;
+					if (ef.hasTid()) {
+						t = buffer.getInt();
+					} else {
+						t = -1;
+					}
+					processMethodCall(i, t);
 					break;
 				}
 				default:
@@ -947,7 +958,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 			throw new ChordRuntimeException(ex);
 		}
 	}
-	public void processEnterBasicBlock(int b, int t) { }
 	public void processEnterMethod(int m, int t) { }
 	public void processLeaveMethod(int m, int t) { }
 	public void processNewOrNewArray(int h, int t, int o) { }
@@ -969,4 +979,5 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void processReleaseLock(int p, int t, int l) { }
 	public void processWait(int p, int t, int l) { }
 	public void processNotify(int p, int t, int l) { }
+	public void processMethodCall(int i, int t) { }
 }

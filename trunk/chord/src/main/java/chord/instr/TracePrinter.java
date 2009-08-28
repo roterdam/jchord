@@ -51,41 +51,41 @@ public class TracePrinter {
 			}
 			case EventKind.BEF_NEW:
 			{
-				int p = buffer.getInt();
+				int h = buffer.getInt();
 				int t = buffer.getInt();
-				System.out.println("BEF_NEW " + p + " " + t);
+				System.out.println("BEF_NEW " + h + " " + t);
 				break;
 			}
 			case EventKind.AFT_NEW:
 			{
-				int p = buffer.getInt();
+				int h = buffer.getInt();
 				int t = buffer.getInt();
 				int o = buffer.getInt();
-				System.out.println("AFT_NEW " + p + " " + t + " " + o);
+				System.out.println("AFT_NEW " + h + " " + t + " " + o);
 				break;
 			}
 			case EventKind.NEW:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
-				int p = ef.hasPid() ? buffer.getInt() : -1;
+				int h = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int o = ef.hasOid() ? buffer.getInt() : -1;
-				System.out.println("NEW " + p + " " + t + " " + o);
+				System.out.println("NEW " + h + " " + t + " " + o);
 				break;
 			}
 			case EventKind.NEW_ARRAY:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
-				int p = ef.hasPid() ? buffer.getInt() : -1;
+				int h = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int o = ef.hasOid() ? buffer.getInt() : -1;
-				System.out.println("NEW_ARRAY " + p + " " + t + " " + o);
+				System.out.println("NEW_ARRAY " + h + " " + t + " " + o);
 				break;
 			}
 			case EventKind.GETSTATIC_PRIMITIVE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int f = ef.hasFid() ? buffer.getInt() : -1;
 				System.out.println("GETSTATIC_PRIMITIVE " + e + " " + t + " " + f);
@@ -94,7 +94,7 @@ public class TracePrinter {
 			case EventKind.GETSTATIC_REFERENCE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int f = ef.hasFid() ? buffer.getInt() : -1;
 				int o = ef.hasOid() ? buffer.getInt() : -1;
@@ -104,7 +104,7 @@ public class TracePrinter {
 			case EventKind.PUTSTATIC_PRIMITIVE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int f = ef.hasFid() ? buffer.getInt() : -1;
 				System.out.println("PUTSTATIC_PRIMITIVE " + e + " " + t + " " + f);
@@ -113,7 +113,7 @@ public class TracePrinter {
 			case EventKind.PUTSTATIC_REFERENCE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int f = ef.hasFid() ? buffer.getInt() : -1;
 				int o = ef.hasOid() ? buffer.getInt() : -1;
@@ -123,7 +123,7 @@ public class TracePrinter {
 			case EventKind.GETFIELD_PRIMITIVE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int b = ef.hasBid() ? buffer.getInt() : -1;
 				int f = ef.hasFid() ? buffer.getInt() : -1;
@@ -133,7 +133,7 @@ public class TracePrinter {
 			case EventKind.GETFIELD_REFERENCE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int b = ef.hasBid() ? buffer.getInt() : -1;
 				int f = ef.hasFid() ? buffer.getInt() : -1;
@@ -144,7 +144,7 @@ public class TracePrinter {
 			case EventKind.PUTFIELD_PRIMITIVE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int b = ef.hasBid() ? buffer.getInt() : -1;
 				int f = ef.hasFid() ? buffer.getInt() : -1;
@@ -154,7 +154,7 @@ public class TracePrinter {
 			case EventKind.PUTFIELD_REFERENCE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int b = ef.hasBid() ? buffer.getInt() : -1;
 				int f = ef.hasFid() ? buffer.getInt() : -1;
@@ -165,7 +165,7 @@ public class TracePrinter {
 			case EventKind.ALOAD_PRIMITIVE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int b = ef.hasBid() ? buffer.getInt() : -1;
 				int i = ef.hasIid() ? buffer.getInt() : -1;
@@ -175,7 +175,7 @@ public class TracePrinter {
 			case EventKind.ALOAD_REFERENCE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int b = ef.hasBid() ? buffer.getInt() : -1;
 				int i = ef.hasIid() ? buffer.getInt() : -1;
@@ -186,7 +186,7 @@ public class TracePrinter {
 			case EventKind.ASTORE_PRIMITIVE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int b = ef.hasBid() ? buffer.getInt() : -1;
 				int i = ef.hasIid() ? buffer.getInt() : -1;
@@ -196,7 +196,7 @@ public class TracePrinter {
 			case EventKind.ASTORE_REFERENCE:
 			{
 				EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
-				int e = ef.hasEid() ? buffer.getInt() : -1;
+				int e = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
 				int b = ef.hasBid() ? buffer.getInt() : -1;
 				int i = ef.hasIid() ? buffer.getInt() : -1;
@@ -258,11 +258,12 @@ public class TracePrinter {
 				System.out.println("NOTIFY " + p + " " + t + " " + l);
 				break;
 			}
-			case EventKind.ENTER_BB:
+			case EventKind.METHOD_CALL:
 			{
-				int b = buffer.getInt();
-				int t = buffer.getInt();
-				System.out.println("ENTER_BB " + b + " " + t);
+				EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
+				int i = ef.hasPid() ? buffer.getInt() : -1;
+				int t = ef.hasTid() ? buffer.getInt() : -1;
+				System.out.println("METHOD_CALL " + i + " " + t);
 				break;
 			}
 			default:
