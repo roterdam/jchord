@@ -36,4 +36,5 @@ public class EventKind {
 	public static final byte WAIT = 22;
 	public static final byte NOTIFY = 23;
 	public static final byte METHOD_CALL = 24;
+	public static final byte MOVE = 25;
 }

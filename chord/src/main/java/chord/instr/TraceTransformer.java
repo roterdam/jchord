@@ -45,6 +45,7 @@ public class TraceTransformer {
 	private int waitNumBytes;
 	private int notifyNumBytes;
 	private int methodCallNumBytes;
+	private int moveNumBytes;
 	private ByteBufferedFile reader, writer;
 	private boolean isInNew;
 	private TByteArrayList tmp;
@@ -89,6 +90,7 @@ public class TraceTransformer {
 			waitNumBytes = scheme.getEvent(InstrScheme.WAIT).size();
 			notifyNumBytes = scheme.getEvent(InstrScheme.NOTIFY).size();
 			methodCallNumBytes = scheme.getEvent(InstrScheme.METHOD_CALL).size();
+			moveNumBytes = scheme.getEvent(InstrScheme.MOVE).size();
 
 			assert (newAndNewArrayHasOid);
 			reader = new ByteBufferedFile(1024, rdFileName, true);
@@ -249,6 +251,8 @@ public class TraceTransformer {
 			return notifyNumBytes;
 		case EventKind.METHOD_CALL:
 			return methodCallNumBytes;
+		case EventKind.MOVE:
+			return moveNumBytes;
 		default:
 			throw new RuntimeException();
 		}
