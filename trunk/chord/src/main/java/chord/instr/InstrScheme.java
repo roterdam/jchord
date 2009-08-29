@@ -12,7 +12,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import chord.project.Properties;
 import chord.project.ChordRuntimeException;
 
 /**
@@ -154,6 +153,12 @@ public class InstrScheme implements Serializable {
 	 * calls the <tt>notify()</tt> or <tt>notifyAll()</tt> method of
 	 * <tt>java.lang.Object</tt> at program point p on object l:
 	 * NOTIFY p t l
+	 * 
+	 * METHOD_CALL:
+	 * METHOD_CALL p t
+	 * 
+	 * MOVE:
+	 * MOVE p t
 	 */
     public static final int ENTER_AND_LEAVE_METHOD = 0;
     public static final int NEW_AND_NEWARRAY = 1;
@@ -176,8 +181,9 @@ public class InstrScheme implements Serializable {
     public static final int WAIT = 18;
     public static final int NOTIFY = 19;
     public static final int METHOD_CALL = 20;
-
-	public static final int MAX_NUM_EVENT_FORMATS = 21;
+    public static final int MOVE = 21;
+    
+	public static final int MAX_NUM_EVENT_FORMATS = 22;
 
 	public class EventFormat implements Serializable {
 		private boolean hasMorP;
@@ -258,6 +264,7 @@ public class InstrScheme implements Serializable {
 		}
 	}
 
+	private boolean convert;
 	private int instrMethodAndLoopBound;
 	private final EventFormat[] events;
 	public InstrScheme() {
@@ -271,6 +278,12 @@ public class InstrScheme implements Serializable {
 		instrMethodAndLoopBound = n;
 		if (n > 0)
 			setEnterAndLeaveMethodEvent(true, true);
+	}
+	public void setConvert() {
+		convert = true;
+	}
+	public boolean isConverted() {
+		return convert;
 	}
 	public int getInstrMethodAndLoopBound() {
 		return instrMethodAndLoopBound;
@@ -437,6 +450,11 @@ public class InstrScheme implements Serializable {
 		if (hasP) e.setP();
 		if (hasT) e.setT();
 	}
+	public void setMoveEvent(boolean hasP, boolean hasT) {
+		EventFormat e = events[MOVE];
+		if (hasP) e.setP();
+		if (hasT) e.setT();
+	}
 	
 	public boolean hasFieldEvent() {
 		return hasGetfieldEvent() || hasPutfieldEvent();
@@ -500,7 +518,7 @@ public class InstrScheme implements Serializable {
 		return
 			events[THREAD_START].hasPid() || events[THREAD_JOIN].hasPid() ||
 			events[ACQUIRE_LOCK].hasPid() || events[RELEASE_LOCK].hasPid() ||
-			events[WAIT].hasPid() || events[NOTIFY].hasPid();
+			events[WAIT].hasPid() || events[NOTIFY].hasPid() || events[MOVE].hasPid();
 	}
 	public boolean needsBmap() {
 		return instrMethodAndLoopBound > 0;
@@ -525,6 +543,8 @@ public class InstrScheme implements Serializable {
 		setReleaseLockEvent(true, true, true);
 		setWaitEvent(true, true, true);
 		setNotifyEvent(true, true, true);
+		setMethodCallEvent(true, true);
+		setMoveEvent(true, true);
 	}
 	public static InstrScheme load(String fileName) {
 		InstrScheme scheme;
@@ -551,4 +571,3 @@ public class InstrScheme implements Serializable {
 		}
 	}
 }
-

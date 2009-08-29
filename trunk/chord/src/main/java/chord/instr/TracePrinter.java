@@ -266,6 +266,14 @@ public class TracePrinter {
 				System.out.println("METHOD_CALL " + i + " " + t);
 				break;
 			}
+			case EventKind.MOVE:
+			{
+				EventFormat ef = scheme.getEvent(InstrScheme.MOVE);
+				int p = ef.hasPid() ? buffer.getInt() : -1;
+				int t = ef.hasTid() ? buffer.getInt() : -1;
+				System.out.println("MOVE " + p + " " + t);
+				break;
+			}
 			default:
 				throw new ChordRuntimeException("Opcode: " + opcode);
 			}

@@ -36,7 +36,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     private TIntHashSet escObjs;
 	// map from each object to a list containing each non-null-valued
 	// instance field of reference type along with that value
-	private TIntObjectHashMap objToFldObjs;
+	private TIntObjectHashMap<List<FldObj>> objToFldObjs;
     // map from each object to the index in domain H of its alloc site
     private TIntIntHashMap objToHidx; 
     // map from the index in domain H of each alloc site not yet known
@@ -66,37 +66,29 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	protected ProgramRel relFlowInsEscE;
 	protected ProgramRel relFlowSenEscE;
 
-	public boolean handlesNewOrNewArray() { return true; }
-	public boolean handlesInstFldRd() { return true; }
-	public boolean handlesInstFldWr() { return true; }
-	public boolean handlesAryElemRd() { return true; }
-	public boolean handlesAryElemWr() { return true; }
-	public boolean handlesStatFldWr() { return true; }
-	public boolean handlesThreadSpawnAndStart() { return true; }
-
 	private int numE;
 	private int numH;
+	private boolean convert;
 
     protected InstrScheme instrScheme;
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null)
     		return instrScheme;
     	instrScheme = new InstrScheme();
+    	boolean convert = System.getProperty(
+    		"chord.convert", "false").equals("true");
+    	if (convert)
+    		instrScheme.setConvert();
     	instrScheme.setNewAndNewArrayEvent(true, false, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, true);
-
     	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setGetfieldReferenceEvent(true, false, true, false, false);
-
     	instrScheme.setPutfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setPutfieldReferenceEvent(true, false, true, true, true);
-
     	instrScheme.setAloadPrimitiveEvent(true, false, true, false);
     	instrScheme.setAloadReferenceEvent(true, false, true, false, false);
-
     	instrScheme.setAstorePrimitiveEvent(true, false, true, false);
     	instrScheme.setAstoreReferenceEvent(true, false, true, true, true);
-
     	instrScheme.setThreadStartEvent(false, false, true);
     	return instrScheme;
     }
@@ -104,8 +96,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 
 	public void initAllPasses() {
 		escObjs = new TIntHashSet();
-		objToFldObjs = new TIntObjectHashMap();
-		numE = Emap.size();
+		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
+		numE = instrumentor.getEmap().size();
 		isEidxVisited = new boolean[numE];
 		if (convert)
 			relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
@@ -115,7 +107,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				relFlowInsEscE =
 					(ProgramRel) Project.getTrgt("flowInsEscE");
 			}
-			numH = Hmap.size();
+			numH = instrumentor.getHmap().size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
 			isHidxEsc = new boolean[numH];
 			objToHidx = new TIntIntHashMap();
@@ -282,7 +274,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		if (b != 0 && fIdx >= 0) {
 			if (r == 0) {
 				// remove field fIdx if it is there
-				List l = (List) objToFldObjs.get(b);
+				List<FldObj> l = objToFldObjs.get(b);
 				if (l != null) {
 					int n = l.size();
 					for (int i = 0; i < n; i++) {
@@ -294,9 +286,9 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 					}
 				}
 			} else {
-				List l = (List) objToFldObjs.get(b);
+				List<FldObj> l = objToFldObjs.get(b);
 				if (l == null) {
-					l = new ArrayList();
+					l = new ArrayList<FldObj>();
 					objToFldObjs.put(b, l);
 				} else {
 					int n = l.size();
@@ -336,7 +328,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 					markHesc(hIdx);
 				}
         	}
-			List l = (List) objToFldObjs.get(o);
+			List<FldObj> l = objToFldObjs.get(o);
 			if (l != null) {
 				int n = l.size();
 				for (int i = 0; i < n; i++) {

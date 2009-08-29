@@ -19,6 +19,7 @@ import java.io.IOException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Runtime {
+	public static final int MISSING_FIELD_VAL = -1;
 	private static int instrBound;
 	private static int numMeths;
 	private static int numLoops;
@@ -87,7 +88,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 				buffer.putByte(EventKind.ENTER_METHOD);
-				if (ef.hasMid())
+				if (mId != MISSING_FIELD_VAL)
 					buffer.putInt(mId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -103,7 +104,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 				buffer.putByte(EventKind.LEAVE_METHOD);
-				if (ef.hasMid())
+				if (mId != MISSING_FIELD_VAL)
 					buffer.putInt(mId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -113,6 +114,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
+	// befNew event is present => h,t,o present
 	public synchronized static void befNew(int hId) {
 		if (trace) {
 			trace = false;
@@ -125,6 +127,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
+	// aftNew event is present => h,t,o present
 	public synchronized static void aftNew(int hId, Object o) {
 		if (trace) {
 			trace = false;
@@ -139,13 +142,29 @@ public class Runtime {
 			trace = true;
 		}
 	}
+	public synchronized static void New(int hId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+				buffer.putByte(EventKind.NEW);
+				if (hId != MISSING_FIELD_VAL)
+					buffer.putInt(hId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
 	public synchronized static void newArray(int hId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 				buffer.putByte(EventKind.NEW_ARRAY);
-				if (hId != -1)
+				if (hId != MISSING_FIELD_VAL)
 					buffer.putInt(hId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -165,13 +184,13 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
 				buffer.putByte(EventKind.GETSTATIC_PRIMITIVE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (fId != -1)
+				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -184,17 +203,17 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
 				buffer.putByte(EventKind.GETSTATIC_REFERENCE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (fId != -1)
+				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 				if (ef.hasOid()) {
-					int tId = getObjectId(o);
-					buffer.putInt(tId);
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
 				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -206,13 +225,13 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
 				buffer.putByte(EventKind.PUTSTATIC_PRIMITIVE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (fId != -1)
+				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -225,13 +244,13 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
 				buffer.putByte(EventKind.PUTSTATIC_REFERENCE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (fId != -1)
+				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 				if (ef.hasOid()) {
 					int oId = getObjectId(o);
@@ -248,7 +267,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
 				buffer.putByte(EventKind.GETFIELD_PRIMITIVE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -258,7 +277,7 @@ public class Runtime {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
-				if (fId != -1)
+				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -271,7 +290,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
 				buffer.putByte(EventKind.GETFIELD_REFERENCE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -281,7 +300,7 @@ public class Runtime {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
-				if (fId != -1)
+				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 				if (ef.hasOid()) {
 					int oId = getObjectId(o);
@@ -298,7 +317,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
 				buffer.putByte(EventKind.PUTFIELD_PRIMITIVE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -308,7 +327,7 @@ public class Runtime {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
-				if (fId != -1)
+				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -321,7 +340,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
 				buffer.putByte(EventKind.PUTFIELD_REFERENCE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -331,7 +350,7 @@ public class Runtime {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
-				if (fId != -1)
+				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 				if (ef.hasOid()) {
 					int oId = getObjectId(o);
@@ -348,7 +367,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
 				buffer.putByte(EventKind.ALOAD_PRIMITIVE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -371,7 +390,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
 				buffer.putByte(EventKind.ALOAD_REFERENCE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -398,7 +417,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
 				buffer.putByte(EventKind.ASTORE_PRIMITIVE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -421,7 +440,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
 				buffer.putByte(EventKind.ASTORE_REFERENCE);
-				if (eId != -1)
+				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -447,7 +466,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.THREAD_START);
 				buffer.putByte(EventKind.THREAD_START);
-				if (pId != -1)
+				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -467,7 +486,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.THREAD_JOIN);
 				buffer.putByte(EventKind.THREAD_JOIN);
-				if (pId != -1)
+				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -487,7 +506,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
 				buffer.putByte(EventKind.ACQUIRE_LOCK);
-				if (pId != -1)
+				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -507,7 +526,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
 				buffer.putByte(EventKind.RELEASE_LOCK);
-				if (pId != -1)
+				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -527,7 +546,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.WAIT);
 				buffer.putByte(EventKind.WAIT);
-				if (pId != -1)
+				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -547,7 +566,7 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
 				buffer.putByte(EventKind.NOTIFY);
-				if (pId != -1)
+				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
@@ -561,14 +580,35 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void methodCall(int pId) {
+	public synchronized static void methodCall(int iId) {
 		if (trace) {
 			trace = false;
 			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 				buffer.putByte(EventKind.METHOD_CALL);
-				buffer.putInt(pId);
-				int tId = getObjectId(Thread.currentThread());
-				buffer.putInt(tId);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	
+	}
+	public synchronized static void move(int pId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.MOVE);
+				buffer.putByte(EventKind.MOVE);
+				if (pId != MISSING_FIELD_VAL)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}

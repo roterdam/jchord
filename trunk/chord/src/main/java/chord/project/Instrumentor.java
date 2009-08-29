@@ -9,6 +9,12 @@ import gnu.trove.TIntObjectHashMap;
 import javassist.*;
 import javassist.expr.*;
 
+import chord.doms.DomE;
+import chord.doms.DomF;
+import chord.doms.DomH;
+import chord.doms.DomI;
+import chord.doms.DomM;
+import chord.doms.DomP;
 import chord.instr.InstrScheme;
 import chord.instr.InstrScheme.EventFormat;
 import chord.util.FileUtils;
@@ -20,7 +26,10 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Util.Templates.ListIterator;
 
 import java.io.File;
@@ -34,19 +43,27 @@ import java.util.Set;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor {
-	private IndexMap<String> Hmap;
-	private IndexMap<String> Emap;
-	private IndexMap<String> Imap;
-	private IndexMap<String> Pmap;
-	private IndexMap<String> Fmap;
-	private IndexMap<String> Mmap;
+	private DomF domF;
+	private DomM domM;
+	private DomH domH;
+	private DomE domE;
+	private DomI domI;
+	private DomP domP;
+	
+	protected IndexMap<String> Fmap;
+	protected IndexMap<String> Mmap;
+	protected IndexMap<String> Hmap;
+	protected IndexMap<String> Emap;
+	protected IndexMap<String> Imap;
+	protected IndexMap<String> Pmap;
+	
 	private IndexMap<BasicBlock> Wmap;
 	private ClassPool pool;
 	private CtClass exType;
 	private String mStr;
 	private CFGLoopFinder finder = new CFGLoopFinder();
 	private MyExprEditor exprEditor = new MyExprEditor();
-	private TIntObjectHashMap<String> loopInstrMap =
+	private TIntObjectHashMap<String> bciToInstrMap =
 		new TIntObjectHashMap<String>();
 	private InstrScheme scheme;
 	private EventFormat enterAndLeaveMethodEvent;
@@ -70,7 +87,9 @@ public class Instrumentor {
 	private EventFormat waitEvent;
 	private EventFormat notifyEvent;
 	private EventFormat methodCallEvent;
+	private EventFormat moveEvent;
 	private int instrMethodAndLoopBound;
+	private boolean convert;
 	public void visit(Program program, InstrScheme scheme) {
 		String fullClassPathName = Properties.classPathName +
 			File.pathSeparator + Properties.mainClassPathName;
@@ -112,9 +131,62 @@ public class Instrumentor {
 		waitEvent = scheme.getEvent(InstrScheme.WAIT);
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 		methodCallEvent = scheme.getEvent(InstrScheme.METHOD_CALL);
-
+		moveEvent = scheme.getEvent(InstrScheme.MOVE);
+		convert = scheme.isConverted();
+		
+		if (moveEvent.present())
+			assert (convert);
+		
+		if (scheme.needsFmap()) {
+			if (convert) {
+				domF = (DomF) Project.getTrgt("F");
+				Project.runTask(domF);
+				Fmap = getUniqueStringMap(domF);
+			} else
+				Fmap = new IndexHashMap<String>();
+		}
+		if (scheme.needsMmap()) {
+			if (convert) {
+				domM = (DomM) Project.getTrgt("M");
+				Project.runTask(domM);
+				Mmap = getUniqueStringMap(domM);
+			} else
+				Mmap = new IndexHashMap<String>();
+		}
+		if (scheme.needsHmap()) {
+			if (convert) {
+				domH = (DomH) Project.getTrgt("H");
+				Project.runTask(domH);
+				Hmap = getUniqueStringMap(domH);
+			} else
+				Hmap = new IndexHashMap<String>();
+		}
+		if (scheme.needsEmap()) {
+			if (convert) {
+				domE = (DomE) Project.getTrgt("E");
+				Project.runTask(domE);
+				Emap = getUniqueStringMap(domE);
+			} else
+				Emap = new IndexHashMap<String>();
+		}
+		if (scheme.needsImap()) {
+			if (convert) {
+				domI = (DomI) Project.getTrgt("I");
+				Project.runTask(domI);
+				Imap = getUniqueStringMap(domI);
+			} else
+				Imap = new IndexHashMap<String>();
+		}
+		if (scheme.needsPmap()) {
+			if (convert) {
+				domP = (DomP) Project.getTrgt("P");
+				Project.runTask(domP);
+				Pmap = getUniqueStringMap(domP);
+			} else
+				Pmap = new IndexHashMap<String>();
+		}
 		if (enterAndLeaveMethodEvent.present() ||
-				instrMethodAndLoopBound > 0 || releaseLockEvent.present()) {
+				releaseLockEvent.present()) {
 			try {
 				exType = pool.get("java.lang.Throwable");
 			} catch (NotFoundException ex) {
@@ -122,21 +194,9 @@ public class Instrumentor {
 			}
 			assert (exType != null);
 		}
-		if (scheme.needsHmap())
-			Hmap = new IndexHashMap<String>();
-		if (scheme.needsEmap())
-			Emap = new IndexHashMap<String>();
-		if (scheme.needsImap())
-			Imap = new IndexHashMap<String>();
-		if (scheme.needsPmap())
-			Pmap = new IndexHashMap<String>();
-		if (scheme.needsFmap())
-			Fmap = new IndexHashMap<String>();
-		if (scheme.needsMmap() || instrMethodAndLoopBound > 0)
-			Mmap = new IndexHashMap<String>();
 		if (instrMethodAndLoopBound > 0)
 			Wmap = new IndexHashMap<BasicBlock>();
-
+		
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
@@ -199,6 +259,14 @@ public class Instrumentor {
 		}
 
 		String outDirName = Properties.outDirName;
+		if (Fmap != null) {
+			FileUtils.writeMapToFile(Fmap,
+				(new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
+		}
+		if (Mmap != null) {
+			FileUtils.writeMapToFile(Mmap,
+				(new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
+		}
 		if (Hmap != null) {
 			FileUtils.writeMapToFile(Hmap,
 				(new File(outDirName, "H.dynamic.txt")).getAbsolutePath());
@@ -215,16 +283,26 @@ public class Instrumentor {
 			FileUtils.writeMapToFile(Pmap,
 				(new File(outDirName, "P.dynamic.txt")).getAbsolutePath());
 		}
-		if (Fmap != null) {
-			FileUtils.writeMapToFile(Fmap,
-				(new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
-		}
-		if (Mmap != null) {
-			FileUtils.writeMapToFile(Mmap,
-				(new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
-		}
 	}
 
+	public IndexMap<String> getFmap() { return Fmap; }
+	public IndexMap<String> getMmap() { return Mmap; }
+	public IndexMap<String> getHmap() { return Hmap; }
+	public IndexMap<String> getEmap() { return Emap; }
+	public IndexMap<String> getImap() { return Imap; }
+	public IndexMap<String> getPmap() { return Pmap; }
+
+	private IndexMap<String> getUniqueStringMap(ProgramDom dom) {
+		IndexMap<String> map = new IndexHashMap<String>(dom.size());
+		for (int i = 0; i < dom.size(); i++) {
+			String s = dom.toUniqueString(dom.get(i));
+			if (map.contains(s))
+				throw new RuntimeException("Map for domain " + dom +
+					" already contains: " + s);
+			map.getOrAdd(s);
+		}
+		return map;
+	}
 	private int getBCI(BasicBlock b, jq_Method m) {
 		int n = b.size();
 		for (int i = 0; i < n; i++) {
@@ -235,16 +313,19 @@ public class Instrumentor {
 		}
 		throw new ChordRuntimeException();
 	}
+	private void attachInstrToBCI(String str, int bci) {
+		String s = bciToInstrMap.get(bci);
+		bciToInstrMap.put(bci, (s == null) ? str : s + str);
+	}
 	private void processEnterLoopCheck(int wId, int headBCI) {
-		String sHead = enterLoopCheck + wId + ");";
-		String s = loopInstrMap.get(headBCI);
-		assert (s == null);
-		loopInstrMap.put(headBCI, sHead + s);
+		String sHead = enterLoopCheckCall + wId + ");";
+		String s = bciToInstrMap.get(headBCI);
+		bciToInstrMap.put(headBCI, (s == null) ? sHead : sHead + s);
 	}
 	private void processLeaveLoopCheck(int wId, int exitBCI) {
-		String sExit = leaveLoopCheck + wId + ");";
-		String s = loopInstrMap.get(exitBCI);
-		loopInstrMap.put(exitBCI, (s == null) ? sExit : sExit + s);
+		String sExit = leaveLoopCheckCall + wId + ");";
+		String s = bciToInstrMap.get(exitBCI);
+		bciToInstrMap.put(exitBCI, (s == null) ? sExit : sExit + s);
  	}
 	private void process(CtBehavior javassistMethod, jq_Method joeqMethod) {
 		int mods = javassistMethod.getModifiers();
@@ -267,22 +348,74 @@ public class Instrumentor {
 		}
 		Map<Quad, Integer> bcMap = joeqMethod.getBCMap();
 		if (bcMap != null) {
-			if (instrMethodAndLoopBound > 0) {
+			if (moveEvent.present() || instrMethodAndLoopBound > 0) {
 				ControlFlowGraph cfg = joeqMethod.getCFG();
-				finder.visit(cfg);
-				loopInstrMap.clear();
-				Set<BasicBlock> heads = finder.getLoopHeads();
-				for (BasicBlock head : heads) {
-					int wId = Wmap.getOrAdd(head);
-					int headBCI = getBCI(head, joeqMethod);
-					processEnterLoopCheck(wId, headBCI);
+				bciToInstrMap.clear();
+				if (moveEvent.present()) {
+					for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+							it.hasNext();) {
+						BasicBlock bb = it.nextBasicBlock();
+						int n = bb.size();
+						if (n == 0)
+							continue;
+						int i = 0;
+						String phiStr = "";
+						for (; i < n; i++) {
+							Quad q = bb.getQuad(i);
+							Operator op = q.getOperator();
+							if (op instanceof Phi) {
+								int pId;
+								if (moveEvent.hasPid()) {
+									pId = domP.indexOf(q);
+									assert (pId != -1);
+								} else
+									pId = Runtime.MISSING_FIELD_VAL;
+								phiStr += moveEventCall + pId + ");";
+							} else
+								break;
+						}
+						if (i > 0) {
+							int bci = getBCI(bb, joeqMethod);
+							if (bci == -1)
+								throw new ChordRuntimeException();
+							attachInstrToBCI(phiStr, bci);
+						}
+						for (; i < n; i++) {
+							Quad q = bb.getQuad(i);
+							Operator op = q.getOperator();
+							assert (!(op instanceof Phi));
+							if (op instanceof Move) {
+								int pId;
+								if (moveEvent.hasPid()) {
+									pId = domP.indexOf(q);
+									assert (pId != -1);
+								} else
+									pId = Runtime.MISSING_FIELD_VAL;
+								assert (pId != -1);
+								String moveStr = moveEventCall + pId + ");";
+								int bci = joeqMethod.getBCI(q);
+								if (bci == -1)
+									throw new ChordRuntimeException();
+								attachInstrToBCI(moveStr, bci);
+							}
+						}
+					}
 				}
-				for (BasicBlock head : heads) {
-					Set<BasicBlock> exits = finder.getLoopExits(head);
-					for (BasicBlock exit : exits) {
-						int wId = Wmap.getOrAdd(exit);
-						int exitBCI = getBCI(exit, joeqMethod);
-						processLeaveLoopCheck(wId, exitBCI);
+				if (instrMethodAndLoopBound > 0) {
+					finder.visit(cfg);
+					Set<BasicBlock> heads = finder.getLoopHeads();
+					for (BasicBlock head : heads) {
+						int wId = Wmap.getOrAdd(head);
+						int headBCI = getBCI(head, joeqMethod);
+						processEnterLoopCheck(wId, headBCI);
+					}
+					for (BasicBlock head : heads) {
+						Set<BasicBlock> exits = finder.getLoopExits(head);
+						for (BasicBlock exit : exits) {
+							int wId = Wmap.getOrAdd(exit);
+							int exitBCI = getBCI(exit, joeqMethod);
+							processLeaveLoopCheck(wId, exitBCI);
+						}
 					}
 				}
 			}
@@ -302,25 +435,27 @@ public class Instrumentor {
 		String enterStr = "";
 		String leaveStr = "";
 		if (instrMethodAndLoopBound > 0) {
-			enterStr = enterStr + enterMethodCheck + mId + "); ";
-			leaveStr = leaveMethodCheck + mId + "); " + leaveStr;
+			enterStr = enterStr + enterMethodCheckCall + mId + "); ";
+			leaveStr = leaveMethodCheckCall + mId + "); " + leaveStr;
 		}
 		if (Modifier.isSynchronized(mods)) {
 			String syncExpr = Modifier.isStatic(mods) ? "$class" : "$0";
 			if (acquireLockEvent.present()) {
 				int pId = set(Pmap, -1);
-				String str = acquireLock + pId + "," + syncExpr + "); ";
+				String str = acquireLockEventCall + pId + "," +
+					syncExpr + "); ";
 				enterStr = enterStr + str;
 			}
 			if (releaseLockEvent.present()) {
 				int pId = set(Pmap, -2);
-				String str = releaseLock + pId + "," + syncExpr + "); ";
+				String str = releaseLockEventCall + pId + "," +
+					syncExpr + "); ";
 				leaveStr = str + leaveStr;
 			}
 		}
 		if (enterAndLeaveMethodEvent.present()) {
-			enterStr = enterStr + enterMethod + mId + ");";
-			leaveStr = leaveMethod + mId + ");" + leaveStr;
+			enterStr = enterStr + enterMethodEventCall + mId + ");";
+			leaveStr = leaveMethodEventCall + mId + ");" + leaveStr;
 		}
 		if (!enterStr.equals("")) {
 			try {
@@ -344,40 +479,59 @@ public class Instrumentor {
 		return set(map, e.indexOfOriginalBytecode());
 	}
 	private int set(IndexMap<String> map, int bci) {
-		int n = map.size();
-		int i = map.getOrAdd(bci + "!" + mStr);
-		assert (i == n);
-		return i;
+		String s = bci + "!" + mStr;
+		int id;
+		if (convert) {
+			id = map.indexOf(s);
+			if (id == -1) {
+				throw new ChordRuntimeException("Element " + s +
+					" not found in map.");
+			}
+		} else {
+			int n = map.size();
+			id = map.getOrAdd(bci + "!" + mStr);
+			assert (id == n);
+		}
+		return id;
 	}
 
 	class MyExprEditor extends ExprEditor {
 		public String insertBefore(int pos) {
-			String s = loopInstrMap.get(pos);
+			String s = bciToInstrMap.get(pos);
 			// s may be null in which case this method won't
 			// add any instrumentation
 			return s;
 		}
 		public void edit(NewExpr e) {
-			if (!newAndNewArrayEvent.present())
-				return;
-			try {
-				int hId = set(Hmap, e);
-				String s = befNew + hId + ");";
-				String t = aftNew + hId + ",$_);";
-				e.replace("{ " + s + " $_ = $proceed($$); " + t + " }");
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
+			if (newAndNewArrayEvent.present()) {
+				int hId = newAndNewArrayEvent.hasPid() ? set(Hmap, e) :
+					Runtime.MISSING_FIELD_VAL;
+				String instr1, instr2;
+				if (newAndNewArrayEvent.hasOid()) {
+					instr1 = befNewEventCall + hId + ");";
+					instr2 = aftNewEventCall + hId + ",$_);";
+				} else {
+					instr1 = newEventCall + hId + ");";
+					instr2 = "";
+				}
+				try {
+					e.replace("{ " + instr1 + " $_ = $proceed($$); " +
+						instr2 + " }");
+				} catch (CannotCompileException ex) {
+					throw new ChordRuntimeException(ex);
+				}
 			}
 		}
 		public void edit(NewArray e) {
-			if (!newAndNewArrayEvent.present())
-				return;
-			try {
-				int hId = set(Hmap, e);
-				String s = newArray + hId + ",$_);";
-				e.replace("{ $_ = $proceed($$); " + s + " }");
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
+			if (newAndNewArrayEvent.present()) {
+				int hId = newAndNewArrayEvent.hasPid() ? set(Hmap, e) :
+					Runtime.MISSING_FIELD_VAL;
+				String instr = newArrayEventCall + hId + ",$_);";
+				try {
+					e.replace("{ $_ = $proceed($$); " + instr + " }");
+				} catch (CannotCompileException ex) {
+					throw new ChordRuntimeException(ex);
+				}
 			}
 		}
 		public void edit(FieldAccess e) {
@@ -392,286 +546,337 @@ public class Instrumentor {
 			}
 			boolean isPrim = type.isPrimitive();
 			boolean isWr = e.isWriter();
-			String eventCall;
+			String instr;
 			if (isStatic) {
 				if (!scheme.hasStaticEvent())
 					return;
 				if (isWr) {
-					eventCall = isPrim ? putstaticPrimitive(e, field) :
+					instr = isPrim ? putstaticPrimitive(e, field) :
 						putstaticReference(e, field);
 				} else {
-					eventCall = isPrim ? getstaticPrimitive(e, field) :
+					instr = isPrim ? getstaticPrimitive(e, field) :
 						getstaticReference(e, field);
 				}
 			} else {
 				if (!scheme.hasFieldEvent())
 					return;
 				if (isWr) {
-					eventCall = isPrim ? putfieldPrimitive(e, field) :
+					instr = isPrim ? putfieldPrimitive(e, field) :
 						putfieldReference(e, field);
 				} else {
-					eventCall = isPrim ? getfieldPrimitive(e, field) :
+					instr = isPrim ? getfieldPrimitive(e, field) :
 						getfieldReference(e, field);
 				}
 			}
-			if (eventCall != null) {
+			if (instr != null) {
 				try {
-					e.replace(eventCall);
+					e.replace(instr);
 				} catch (CannotCompileException ex) {
 					throw new ChordRuntimeException(ex);
 				}
 			}
 		}
 		public void edit(ArrayAccess e) {
-			if (!scheme.hasArrayEvent())
-				return;
-			boolean isWr = e.isWriter();
-			boolean isPrim = e.getElemType().isPrimitive();
-			String eventCall;
-			if (isWr) {
-				eventCall = isPrim ? astorePrimitive(e) : astoreReference(e);
-				} else {
-				eventCall = isPrim ? aloadPrimitive(e) : aloadReference(e);
-			}
-			if (eventCall != null) {
-				try {
-					e.replace(eventCall);
-				} catch (CannotCompileException ex) {
-					throw new ChordRuntimeException(ex);
+			if (scheme.hasArrayEvent()) {
+				boolean isWr = e.isWriter();
+				boolean isPrim = e.getElemType().isPrimitive();
+				String instr;
+				if (isWr) {
+					instr = isPrim ? astorePrimitive(e) : astoreReference(e);
+					} else {
+					instr = isPrim ? aloadPrimitive(e) : aloadReference(e);
+				}
+				if (instr != null) {
+					try {
+						e.replace(instr);
+					} catch (CannotCompileException ex) {
+						throw new ChordRuntimeException(ex);
+					}
 				}
 			}
-		}
-		private int getFid(CtField field) {
-			String fName = field.getName();
-			String fDesc = field.getSignature();
-			String cName = field.getDeclaringClass().getName();
-			String s = Program.toString(fName, fDesc, cName);
-			return Fmap.getOrAdd(s);
-		}
-		private String getstaticPrimitive(FieldAccess e, CtField f) {
-			if (getstaticPrimitiveEvent.present()) {
-				int eId = getstaticPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
-				int fId = getstaticPrimitiveEvent.hasFid() ? getFid(f) : -1;
-				return "{ $_ = $proceed($$); " + getstaticPrimitive + eId + "," + fId + "); }"; 
-			}
-			return null;
-		}
-		private String getstaticReference(FieldAccess e, CtField f) {
-			if (getstaticReferenceEvent.present()) {
-				int eId = getstaticReferenceEvent.hasPid() ? set(Emap, e) : -1;
-				int fId = getstaticReferenceEvent.hasFid() ? getFid(f) : -1;
-				String oId = getstaticReferenceEvent.hasOid() ? "$_" : "null";
-				return "{ $_ = $proceed($$); " + getstaticReference + eId + "," + fId + "," + oId + "); }"; 
-			}
-			return null;
-		}
-		private String putstaticPrimitive(FieldAccess e, CtField f) {
-			if (putstaticPrimitiveEvent.present()) {
-				int eId = putstaticPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
-				int fId = putstaticPrimitiveEvent.hasFid() ? getFid(f) : -1;
-				return "{ $proceed($$); " + putstaticPrimitive + eId + "," + fId + "); }"; 
-			}
-			return null;
-		}
-		private String putstaticReference(FieldAccess e, CtField f) {
-			if (putstaticReferenceEvent.present()) {
-				int eId = putstaticReferenceEvent.hasPid() ? set(Emap, e) : -1;
-				int fId = putstaticReferenceEvent.hasFid() ? getFid(f) : -1;
-				String oId = putstaticReferenceEvent.hasOid() ? "$1" : "null";
-				return "{ $proceed($$); " + putstaticReference + eId + "," + fId + "," + oId + "); }"; 
-			}
-			return null;
-		}
-		private String getfieldPrimitive(FieldAccess e, CtField f) {
-			if (getfieldPrimitiveEvent.present()) {
-				int eId = getfieldPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
-				String bId = getfieldPrimitiveEvent.hasBid() ? "$0" : "null";
-				int fId = getfieldPrimitiveEvent.hasFid() ? getFid(f) : -1;
-				return "{ $_ = $proceed($$); " + getfieldPrimitive + eId + "," + bId + "," + fId + "); }"; 
-			}
-			return null;
-		}
-		private String getfieldReference(FieldAccess e, CtField f) {
-			if (getfieldReferenceEvent.present()) {
-				int eId = getfieldReferenceEvent.hasPid() ? set(Emap, e) : -1;
-				String bId = getfieldReferenceEvent.hasBid() ? "$0" : "null";
-				int fId = getfieldReferenceEvent.hasFid() ? getFid(f) : -1;
-				String oId = getfieldReferenceEvent.hasOid() ? "$_" : "null";
-				return "{ $_ = $proceed($$); " + getfieldReference + eId + "," + bId + "," + fId + "," + oId + "); }"; 
-			}
-			return null;
-		}
-		private String putfieldPrimitive(FieldAccess e, CtField f) {
-			if (putfieldPrimitiveEvent.present()) {
-				int eId = putfieldPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
-				String bId = putfieldPrimitiveEvent.hasBid() ? "$0" : "null";
-				int fId = putfieldPrimitiveEvent.hasFid() ? getFid(f) : -1;
-				return "{ $proceed($$); " + putfieldPrimitive + eId + "," + bId + "," + fId + "); }"; 
-			}
-			return null;
-		}
-		private String putfieldReference(FieldAccess e, CtField f) {
-			if (putfieldReferenceEvent.present()) {
-				int eId = putfieldReferenceEvent.hasPid() ? set(Emap, e) : -1;
-				String bId = putfieldReferenceEvent.hasBid() ? "$0" : "null";
-				int fId = putfieldReferenceEvent.hasFid() ? getFid(f) : -1;
-				String oId = putfieldReferenceEvent.hasOid() ? "$1" : "null";
-				return "{ $proceed($$); " + putfieldReference + eId + "," + bId + "," + fId + "," + oId + "); }"; 
-			}
-			return null;
-		}
-		private String aloadPrimitive(ArrayAccess e) {
-			if (aloadPrimitiveEvent.present()) {
-				int eId = aloadPrimitiveEvent.hasPid() ? set(Emap, e) : -1;
-				String bId = aloadPrimitiveEvent.hasBid() ? "$0" : "null";
-				String iId = aloadPrimitiveEvent.hasIid() ? "$1" : "-1";
-				return "{ $_ = $proceed($$); " + aloadPrimitive + eId + "," + bId + "," + iId + "); }"; 
-			}
-			return null;
-		}
-		private String aloadReference(ArrayAccess e) {
-			if (aloadReferenceEvent.present()) {
-				int eId = aloadReferenceEvent.hasPid() ? set(Emap, e) : -1;
-				String bId = aloadReferenceEvent.hasBid() ? "$0" : "null";
-				String iId = aloadReferenceEvent.hasIid() ? "$1" : "-1";
-				String oId = aloadReferenceEvent.hasOid() ? "$_" : "null";
-				return "{ $_ = $proceed($$); " + aloadReference + eId + "," + bId + "," + iId + "," + oId + "); }"; 
-			}
-			return null;
-		}
-		private String astorePrimitive(ArrayAccess e) {
-			if (astorePrimitiveEvent.present()) {
-				int eId = astorePrimitiveEvent.hasPid() ? set(Emap, e) : -1;
-				String bId = astorePrimitiveEvent.hasBid() ? "$0" : "null";
-				String iId = astorePrimitiveEvent.hasIid() ? "$1" : "-1";
-				return "{ $proceed($$); " + astorePrimitive + eId + "," + bId + "," + iId + "); }"; 
-			}
-			return null;
-		}
-		private String astoreReference(ArrayAccess e) {
-			if (astoreReferenceEvent.present()) {
-				int eId = astoreReferenceEvent.hasPid() ? set(Emap, e) : -1;
-				String bId = astoreReferenceEvent.hasBid() ? "$0" : "null";
-				String iId = astoreReferenceEvent.hasIid() ? "$1" : "-1";
-				String oId = astoreReferenceEvent.hasOid() ? "$2" : "null";
-				return "{ $proceed($$); " + astoreReference + eId + "," + bId + "," + iId + "," + oId + "); }"; 
-			}
-			return null;
 		}
 		public void edit(MethodCall e) {
-			CtMethod m;
-			try {
-				m = e.getMethod();
-			} catch (NotFoundException ex) {
-				throw new ChordRuntimeException(ex);
-			}
-			String cName = m.getDeclaringClass().getName();
-			String eventCall = null;
-			if (cName.equals("java.lang.Object")) {
-				String mName = m.getName();
-				String mDesc = m.getSignature();
-				if (mName.equals("wait") && (mDesc.equals("()V") ||
-						mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
-					if (!waitEvent.present())
-						return;
-					int pId = waitEvent.hasPid() ? set(Pmap, e) : -1;
-					String lId = waitEvent.hasLid() ? "$0" : "null";
-					eventCall = wait + pId + "," + lId + ");";
-				} else if ((mName.equals("notify") ||
-						mName.equals("notifyAll")) && mDesc.equals("()V")) {
-					if (!notifyEvent.present())
-						return;
-					int pId = notifyEvent.hasPid() ? set(Pmap, e) : -1;
-					String lId = notifyEvent.hasLid() ? "$0" : "null";
-					eventCall = notify + pId + "," + lId + ");";
-				}
-			} else if (cName.equals("java.lang.Thread")) {
-				String mName = m.getName();
-				String mDesc = m.getSignature();
-				if (mName.equals("start") && mDesc.equals("()V")) {
-					if (!threadStartEvent.present())
-						return;
-					int pId = threadStartEvent.hasPid() ? set(Pmap, e) : -1;
-					String oId = threadStartEvent.hasOid() ? "$0" : "null";
-					eventCall = threadStart + pId + "," + oId + ");";
-				} else if (mName.equals("join") && (mDesc.equals("()V") ||
-						mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
-					if (!threadJoinEvent.present())
-						return;
-					int pId = threadJoinEvent.hasPid() ? set(Pmap, e) : -1;
-					String oId = threadJoinEvent.hasOid() ? "$0" : "null";
-					eventCall = threadJoin + pId + "," + oId + ");";
-				}
-			}
-			if (methodCallEvent.present()) {
-				if (eventCall == null)
-					eventCall = "";
-				int iId = set(Imap, e);
-				eventCall += " " + methodCall + iId + ");";
-			}
-			if (eventCall != null) {
+			String instr = processMethodCall(e);
+			if (instr != null) {
 				try {
 					// NOTE: added $_ recently
-					e.replace("{ " + eventCall + " $_ = $proceed($$); }");
+					e.replace("{ " + instr + " $_ = $proceed($$); }");
 				} catch (CannotCompileException ex) {
 					throw new ChordRuntimeException(ex);
 				}
 			}
 		}
 		public void edit(MonitorEnter e) {
-			if (!acquireLockEvent.present())
-				return;
-			try {
-				int pId = acquireLockEvent.hasPid() ? set(Pmap, e) : -1;
-				String lId = acquireLockEvent.hasLid() ? "$0" : "null";
-				String eventCall = acquireLock + pId + "," + lId + ");";
-				e.replace("{ $proceed(); " + eventCall + " }");
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
+			if (acquireLockEvent.present()) {
+				int pId = acquireLockEvent.hasPid() ? set(Pmap, e) :
+					Runtime.MISSING_FIELD_VAL;
+				String l = acquireLockEvent.hasLid() ? "$0" : "null";
+				String instr = acquireLockEventCall + pId + "," + l + ");";
+				try {
+					e.replace("{ $proceed(); " + instr + " }");
+				} catch (CannotCompileException ex) {
+					throw new ChordRuntimeException(ex);
+				}
 			}
 		}
 		public void edit(MonitorExit e) {
-			if (!releaseLockEvent.present())
-				return;
-			try {
-				int pId = releaseLockEvent.hasPid() ? set(Pmap, e) : -1;
-				String lId = releaseLockEvent.hasLid() ? "$0" : "null";
-				String eventCall = releaseLock + pId + "," + lId + ");";
-				e.replace("{ " + eventCall + " $proceed(); }");
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
+			if (releaseLockEvent.present()) {
+				int pId = releaseLockEvent.hasPid() ? set(Pmap, e) :
+					Runtime.MISSING_FIELD_VAL;
+				String l = releaseLockEvent.hasLid() ? "$0" : "null";
+				String instr = releaseLockEventCall + pId + "," + l + ");";
+				try {
+					e.replace("{ " + instr + " $proceed(); }");
+				} catch (CannotCompileException ex) {
+					throw new ChordRuntimeException(ex);
+				}
 			}
 		}
 	}
+	private int getFid(CtField field) {
+		String fName = field.getName();
+		String fDesc = field.getSignature();
+		String cName = field.getDeclaringClass().getName();
+		String s = Program.toString(fName, fDesc, cName);
+		return Fmap.getOrAdd(s);
+	}
+	private String getstaticPrimitive(FieldAccess e, CtField f) {
+		if (getstaticPrimitiveEvent.present()) {
+			int eId = getstaticPrimitiveEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			int fId = getstaticPrimitiveEvent.hasFid() ? getFid(f) :
+				Runtime.MISSING_FIELD_VAL;
+			return "{ $_ = $proceed($$); " + getstaticPriEventCall + eId +
+				"," + fId + "); }"; 
+		}
+		return null;
+	}
+	private String getstaticReference(FieldAccess e, CtField f) {
+		if (getstaticReferenceEvent.present()) {
+			int eId = getstaticReferenceEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			int fId = getstaticReferenceEvent.hasFid() ? getFid(f) :
+				Runtime.MISSING_FIELD_VAL;
+			String oId = getstaticReferenceEvent.hasOid() ? "$_" : "null";
+			return "{ $_ = $proceed($$); " + getstaticRefEcentCall + eId +
+				"," + fId + "," + oId + "); }"; 
+		}
+		return null;
+	}
+	private String putstaticPrimitive(FieldAccess e, CtField f) {
+		if (putstaticPrimitiveEvent.present()) {
+			int eId = putstaticPrimitiveEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			int fId = putstaticPrimitiveEvent.hasFid() ? getFid(f) :
+				Runtime.MISSING_FIELD_VAL;
+			return "{ $proceed($$); " + putstaticPriEventCall + eId +
+				"," + fId + "); }"; 
+		}
+		return null;
+	}
+	private String putstaticReference(FieldAccess e, CtField f) {
+		if (putstaticReferenceEvent.present()) {
+			int eId = putstaticReferenceEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			int fId = putstaticReferenceEvent.hasFid() ? getFid(f) :
+				Runtime.MISSING_FIELD_VAL;
+			String oId = putstaticReferenceEvent.hasOid() ? "$1" : "null";
+			return "{ $proceed($$); " + putstaticRefEventCall + eId +
+				"," + fId + "," + oId + "); }";
+		}
+		return null;
+	}
+	private String getfieldPrimitive(FieldAccess e, CtField f) {
+		if (getfieldPrimitiveEvent.present()) {
+			int eId = getfieldPrimitiveEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			String bId = getfieldPrimitiveEvent.hasBid() ? "$0" : "null";
+			int fId = getfieldPrimitiveEvent.hasFid() ? getFid(f) :
+				Runtime.MISSING_FIELD_VAL;
+			return "{ $_ = $proceed($$); " + getfieldPriEventCall +
+				eId + "," + bId + "," + fId + "); }"; 
+		}
+		return null;
+	}
+	private String getfieldReference(FieldAccess e, CtField f) {
+		if (getfieldReferenceEvent.present()) {
+			int eId = getfieldReferenceEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			String bId = getfieldReferenceEvent.hasBid() ? "$0" : "null";
+			int fId = getfieldReferenceEvent.hasFid() ? getFid(f) :
+				Runtime.MISSING_FIELD_VAL;
+			String oId = getfieldReferenceEvent.hasOid() ? "$_" : "null";
+			return "{ $_ = $proceed($$); " + getfieldReference +
+				eId + "," + bId + "," + fId + "," + oId + "); }"; 
+		}
+		return null;
+	}
+	private String putfieldPrimitive(FieldAccess e, CtField f) {
+		if (putfieldPrimitiveEvent.present()) {
+			int eId = putfieldPrimitiveEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			String bId = putfieldPrimitiveEvent.hasBid() ? "$0" : "null";
+			int fId = putfieldPrimitiveEvent.hasFid() ? getFid(f) :
+				Runtime.MISSING_FIELD_VAL;
+			return "{ $proceed($$); " + putfieldPriEventCall + eId +
+				"," + bId + "," + fId + "); }"; 
+		}
+		return null;
+	}
+	private String putfieldReference(FieldAccess e, CtField f) {
+		if (putfieldReferenceEvent.present()) {
+			int eId = putfieldReferenceEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			String bId = putfieldReferenceEvent.hasBid() ? "$0" : "null";
+			int fId = putfieldReferenceEvent.hasFid() ? getFid(f) :
+				Runtime.MISSING_FIELD_VAL;
+			String oId = putfieldReferenceEvent.hasOid() ? "$1" : "null";
+			return "{ $proceed($$); " + putfieldRefEventCall +
+				eId + "," + bId + "," + fId + "," + oId + "); }"; 
+		}
+		return null;
+	}
+	private String aloadPrimitive(ArrayAccess e) {
+		if (aloadPrimitiveEvent.present()) {
+			int eId = aloadPrimitiveEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			String bId = aloadPrimitiveEvent.hasBid() ? "$0" : "null";
+			String iId = aloadPrimitiveEvent.hasIid() ? "$1" : "-1";
+			return "{ $_ = $proceed($$); " + aloadPriEventCall +
+				eId + "," + bId + "," + iId + "); }"; 
+		}
+		return null;
+	}
+	private String aloadReference(ArrayAccess e) {
+		if (aloadReferenceEvent.present()) {
+			int eId = aloadReferenceEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			String bId = aloadReferenceEvent.hasBid() ? "$0" : "null";
+			String iId = aloadReferenceEvent.hasIid() ? "$1" : "-1";
+			String oId = aloadReferenceEvent.hasOid() ? "$_" : "null";
+			return "{ $_ = $proceed($$); " + aloadRefEventCall +
+				eId + "," + bId + "," + iId + "," + oId + "); }"; 
+		}
+		return null;
+	}
+	private String astorePrimitive(ArrayAccess e) {
+		if (astorePrimitiveEvent.present()) {
+			int eId = astorePrimitiveEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			String bId = astorePrimitiveEvent.hasBid() ? "$0" : "null";
+			String iId = astorePrimitiveEvent.hasIid() ? "$1" : "-1";
+			return "{ $proceed($$); " + astorePriEventCall +
+				eId + "," + bId + "," + iId + "); }"; 
+		}
+		return null;
+	}
+	private String astoreReference(ArrayAccess e) {
+		if (astoreReferenceEvent.present()) {
+			int eId = astoreReferenceEvent.hasPid() ? set(Emap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			String bId = astoreReferenceEvent.hasBid() ? "$0" : "null";
+			String iId = astoreReferenceEvent.hasIid() ? "$1" : "-1";
+			String oId = astoreReferenceEvent.hasOid() ? "$2" : "null";
+			return "{ $proceed($$); " + astoreRefEventCall +
+				eId + "," + bId + "," + iId + "," + oId + "); }"; 
+		}
+		return null;
+	}
+	private String processMethodCall(MethodCall e) {
+		// Part 1: add METHOD_CALL event if present
+		String instr1;
+		if (methodCallEvent.present()) {
+			int iId = methodCallEvent.hasPid() ? set(Imap, e) :
+				Runtime.MISSING_FIELD_VAL;
+			instr1 = " " + methodCallEventCall + iId + ");";
+		} else
+			instr1 = null;
+		// Part 2: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
+		// if present and applicable
+		String instr2 = null;
+		CtMethod m;
+		try {
+			m = e.getMethod();
+		} catch (NotFoundException ex) {
+			throw new ChordRuntimeException(ex);
+		}
+		String cName = m.getDeclaringClass().getName();
+		if (cName.equals("java.lang.Object")) {
+			String mName = m.getName();
+			String mDesc = m.getSignature();
+			if (mName.equals("wait") && (mDesc.equals("()V") ||
+					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
+				if (waitEvent.present()) {
+					int pId = waitEvent.hasPid() ? set(Pmap, e) :
+						Runtime.MISSING_FIELD_VAL;
+					String lId = waitEvent.hasLid() ? "$0" : "null";
+					instr2 = waitEventCall + pId + "," + lId + ");";
+				}
+			} else if ((mName.equals("notify") ||
+					mName.equals("notifyAll")) && mDesc.equals("()V")) {
+				if (notifyEvent.present()) {
+					int pId = notifyEvent.hasPid() ? set(Pmap, e) :
+						Runtime.MISSING_FIELD_VAL;
+					String lId = notifyEvent.hasLid() ? "$0" : "null";
+					instr2 = notifyEventCall + pId + "," + lId + ");";
+				}
+			}
+		} else if (cName.equals("java.lang.Thread")) {
+			String mName = m.getName();
+			String mDesc = m.getSignature();
+			if (mName.equals("start") && mDesc.equals("()V")) {
+				if (threadStartEvent.present()) {
+					int pId = threadStartEvent.hasPid() ? set(Pmap, e) :
+						Runtime.MISSING_FIELD_VAL;
+					String oId = threadStartEvent.hasOid() ? "$0" : "null";
+					instr2 = threadStartEventCall + pId + "," + oId + ");";
+				}
+			} else if (mName.equals("join") && (mDesc.equals("()V") ||
+					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
+				if (threadJoinEvent.present()) {
+					int pId = threadJoinEvent.hasPid() ? set(Pmap, e) :
+						Runtime.MISSING_FIELD_VAL;
+					String oId = threadJoinEvent.hasOid() ? "$0" : "null";
+					instr2 = threadJoinEventCall + pId + "," + oId + ");";
+				}
+			}
+		}
+		if (instr1 == null)
+			return instr2;
+		if (instr2 == null)
+			return instr1;
+		return instr1 + instr2;
+	}
 
 	private static final String runtimeClassName = "chord.project.Runtime.";
-	private static final String enterBasicBlock = runtimeClassName + "enterBasicBlock(";
-	private static final String enterMethodCheck = runtimeClassName + "enterMethodCheck(";
-	private static final String leaveMethodCheck = runtimeClassName + "leaveMethodCheck(";
-	private static final String enterLoopCheck = runtimeClassName + "enterLoopCheck(";
-	private static final String leaveLoopCheck = runtimeClassName + "leaveLoopCheck(";
-	private static final String enterMethod = runtimeClassName + "enterMethod(";
-	private static final String leaveMethod = runtimeClassName + "leaveMethod(";
-	private static final String befNew = runtimeClassName + "befNew(";
-	private static final String aftNew = runtimeClassName + "aftNew(";
-	private static final String newArray = runtimeClassName + "newArray(";
-	private static final String getstaticPrimitive = runtimeClassName + "getstaticPrimitive(";
-	private static final String putstaticPrimitive = runtimeClassName + "putstaticPrimitive(";
-	private static final String getstaticReference = runtimeClassName + "getstaticReference(";
-	private static final String putstaticReference = runtimeClassName + "putstaticReference(";
-	private static final String getfieldPrimitive = runtimeClassName + "getfieldPrimitive(";
-	private static final String putfieldPrimitive = runtimeClassName + "putfieldPrimitive(";
+	private static final String enterMethodCheckCall = runtimeClassName + "enterMethodCheck(";
+	private static final String leaveMethodCheckCall = runtimeClassName + "leaveMethodCheck(";
+	private static final String enterLoopCheckCall = runtimeClassName + "enterLoopCheck(";
+	private static final String leaveLoopCheckCall = runtimeClassName + "leaveLoopCheck(";
+	private static final String enterMethodEventCall = runtimeClassName + "enterMethod(";
+	private static final String leaveMethodEventCall = runtimeClassName + "leaveMethod(";
+	private static final String befNewEventCall = runtimeClassName + "befNew(";
+	private static final String aftNewEventCall = runtimeClassName + "aftNew(";
+	private static final String newEventCall = runtimeClassName + "new(";
+	private static final String newArrayEventCall = runtimeClassName + "newArray(";
+	private static final String getstaticPriEventCall = runtimeClassName + "getstaticPrimitive(";
+	private static final String putstaticPriEventCall = runtimeClassName + "putstaticPrimitive(";
+	private static final String getstaticRefEcentCall = runtimeClassName + "getstaticReference(";
+	private static final String putstaticRefEventCall = runtimeClassName + "putstaticReference(";
+	private static final String getfieldPriEventCall = runtimeClassName + "getfieldPrimitive(";
+	private static final String putfieldPriEventCall = runtimeClassName + "putfieldPrimitive(";
 	private static final String getfieldReference = runtimeClassName + "getfieldReference(";
-	private static final String putfieldReference = runtimeClassName + "putfieldReference(";
-	private static final String aloadPrimitive = runtimeClassName + "aloadPrimitive(";
-	private static final String aloadReference = runtimeClassName + "aloadReference(";
-	private static final String astorePrimitive = runtimeClassName + "astorePrimitive(";
-	private static final String astoreReference = runtimeClassName + "astoreReference(";
-	private static final String threadStart = runtimeClassName + "threadStart(";
-	private static final String threadJoin = runtimeClassName + "threadJoin(";
-	private static final String acquireLock = runtimeClassName + "acquireLock(";
-	private static final String releaseLock = runtimeClassName + "releaseLock(";
-	private static final String wait = runtimeClassName + "wait(";
-	private static final String notify = runtimeClassName + "notify(";
-	private static final String methodCall = runtimeClassName + "methodCall(";
+	private static final String putfieldRefEventCall = runtimeClassName + "putfieldReference(";
+	private static final String aloadPriEventCall = runtimeClassName + "aloadPrimitive(";
+	private static final String aloadRefEventCall = runtimeClassName + "aloadReference(";
+	private static final String astorePriEventCall = runtimeClassName + "astorePrimitive(";
+	private static final String astoreRefEventCall = runtimeClassName + "astoreReference(";
+	private static final String methodCallEventCall = runtimeClassName + "methodCall(";
+	private static final String threadStartEventCall = runtimeClassName + "threadStart(";
+	private static final String threadJoinEventCall = runtimeClassName + "threadJoin(";
+	private static final String waitEventCall = runtimeClassName + "wait(";
+	private static final String notifyEventCall = runtimeClassName + "notify(";
+	private static final String acquireLockEventCall = runtimeClassName + "acquireLock(";
+	private static final String releaseLockEventCall = runtimeClassName + "releaseLock(";
+	private static final String moveEventCall = runtimeClassName + "move(";
 }
