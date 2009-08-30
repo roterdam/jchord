@@ -484,8 +484,9 @@ public class Instrumentor {
 		if (convert) {
 			id = map.indexOf(s);
 			if (id == -1) {
-				throw new ChordRuntimeException("Element " + s +
-					" not found in map.");
+				// throw new ChordRuntimeException("Element " + s +
+				//	" not found in map.");
+				return -1;
 			}
 		} else {
 			int n = map.size();

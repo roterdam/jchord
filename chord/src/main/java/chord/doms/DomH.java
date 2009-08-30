@@ -40,10 +40,4 @@ public class DomH extends QuadDom implements INewInstVisitor {
 		return super.toXMLAttrsString(q) + " type=\"" +
 			type + "\"";
 	}
-	public String toString(Quad q) {
-		// XXX
-		if (q == null)
-			return "null";
-		return Program.v().toStringNewInst(q);
-	}
 }
