@@ -57,7 +57,4 @@ public class DomL extends ProgramDom<Inst> implements ILockInstVisitor {
 		return "file=\"" + fileName + "\" " + "line=\"" + lineNumber + "\" " +
 			"Mid=\"M" + domM.indexOf(m) + "\"";
 	}
-	public String toString(Inst q) {
-		return Program.v().toStringLockInst(q);
-	}
 }

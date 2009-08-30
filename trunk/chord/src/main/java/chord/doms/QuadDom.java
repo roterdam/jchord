@@ -29,7 +29,7 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 			Program.v().mapInstToMethod(q, ctnrMethod);
 		return super.getOrAdd(q);
 	}
-	public String toUniqueIdString(Quad q) {
+	public String toUniqueString(Quad q) {
 		if (q == null)
 			return "null";
 		jq_Method m = Program.v().getMethod(q);
@@ -46,8 +46,5 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 		int mIdx = domM.indexOf(m);
 		return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
 			"Mid=\"M" + mIdx + "\"";
-	}
-	public String toString(Quad q) {
-		return Program.v().toString(q);
 	}
 }

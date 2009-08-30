@@ -53,9 +53,4 @@ public class DomA extends ProgramDom<Pair<Ctxt, jq_Method>> {
 		int m = domM.indexOf(aVal.val1);
 		return "Cid=\"C" + c + "\" Mid=\"M" + m + "\"";
     }
-    public String toString(Pair<Ctxt, jq_Method> p) {
-    	if (p == null)
-    		return "null";
-    	return "<" + p.val0 + "," + p.val1 + ">";
-    }
 }
