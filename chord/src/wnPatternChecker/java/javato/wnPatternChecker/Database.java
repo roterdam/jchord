@@ -110,7 +110,7 @@ public class Database {
 	IndexMap<String> Pmap;
 
 	public void checkForErrors(IndexMap<String> Emap, IndexMap<String> Pmap) {
-		System.out.println("yes...in checkForErrors");
+		//System.out.println("yes...in checkForErrors");
 		this.Emap = Emap;
 		this.Pmap = Pmap;
 		Iterator eBaseItr = eBase.entrySet().iterator();
@@ -141,7 +141,7 @@ public class Database {
 	
 	private void checkForErrors(Long m, Integer t1, List<DBElemInfo> t1DBElems, Integer t2, 
 			List<DBElemInfo> t2DBElems){
-		
+	  	/****	
 		System.out.println("REACHED: " + m);
 		System.out.println("XXX " + t1);
 		for (DBElemInfo x : t1DBElems)
@@ -149,7 +149,7 @@ public class Database {
 		System.out.println("YYY " + t2);
 		for (DBElemInfo x : t2DBElems)
 			System.out.println("\t" + x);
-		
+		****/
 		assert(t1.intValue() != t2.intValue());
 		for(DBElemInfo e1 : t1DBElems){
 			if(e1.isReadElem){
