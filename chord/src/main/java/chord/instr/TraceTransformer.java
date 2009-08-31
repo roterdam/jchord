@@ -45,7 +45,10 @@ public class TraceTransformer {
 	private int waitNumBytes;
 	private int notifyNumBytes;
 	private int methodCallNumBytes;
-	private int moveNumBytes;
+	private int returnPrimitiveNumBytes;
+	private int returnReferenceNumBytes;
+	private int explicitThrowNumBytes;
+	private int implicitThrowNumBytes;
 	private ByteBufferedFile reader, writer;
 	private boolean isInNew;
 	private TByteArrayList tmp;
@@ -90,7 +93,10 @@ public class TraceTransformer {
 			waitNumBytes = scheme.getEvent(InstrScheme.WAIT).size();
 			notifyNumBytes = scheme.getEvent(InstrScheme.NOTIFY).size();
 			methodCallNumBytes = scheme.getEvent(InstrScheme.METHOD_CALL).size();
-			moveNumBytes = scheme.getEvent(InstrScheme.MOVE).size();
+			returnPrimitiveNumBytes = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE).size();
+			returnReferenceNumBytes = scheme.getEvent(InstrScheme.RETURN_REFERENCE).size();
+			explicitThrowNumBytes = scheme.getEvent(InstrScheme.EXPLICIT_THROW).size();
+			implicitThrowNumBytes = scheme.getEvent(InstrScheme.IMPLICIT_THROW).size();
 
 			assert (newAndNewArrayHasOid);
 			reader = new ByteBufferedFile(1024, rdFileName, true);
@@ -237,6 +243,19 @@ public class TraceTransformer {
 		case EventKind.ENTER_METHOD:
 		case EventKind.LEAVE_METHOD:
 			return enterAndLeaveMethodNumBytes;
+		case EventKind.METHOD_CALL:
+			return methodCallNumBytes;
+		case EventKind.RETURN_PRIMITIVE:
+			return returnPrimitiveNumBytes;
+		case EventKind.RETURN_REFERENCE:
+			return returnReferenceNumBytes;
+		case EventKind.EXPLICIT_THROW:
+			return explicitThrowNumBytes;
+		case EventKind.IMPLICIT_THROW:
+			return implicitThrowNumBytes;
+		case EventKind.MOVE:
+		case EventKind.ENTER_BASIC_BLOCK:
+			return 8;
 		case EventKind.THREAD_START:
 			return threadStartNumBytes;
 		case EventKind.THREAD_JOIN:
@@ -249,10 +268,6 @@ public class TraceTransformer {
 			return waitNumBytes;
 		case EventKind.NOTIFY:
 			return notifyNumBytes;
-		case EventKind.METHOD_CALL:
-			return methodCallNumBytes;
-		case EventKind.MOVE:
-			return moveNumBytes;
 		default:
 			throw new RuntimeException();
 		}

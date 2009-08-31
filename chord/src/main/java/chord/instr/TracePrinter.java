@@ -266,12 +266,53 @@ public class TracePrinter {
 				System.out.println("METHOD_CALL " + i + " " + t);
 				break;
 			}
-			case EventKind.MOVE:
+			case EventKind.RETURN_PRIMITIVE:
 			{
-				EventFormat ef = scheme.getEvent(InstrScheme.MOVE);
+				EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
 				int p = ef.hasPid() ? buffer.getInt() : -1;
 				int t = ef.hasTid() ? buffer.getInt() : -1;
+				System.out.println("RETURN_PRIMITIVE " + p + " " + t);
+				break;
+			}
+			case EventKind.RETURN_REFERENCE:
+			{
+				EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
+				int p = ef.hasPid() ? buffer.getInt() : -1;
+				int t = ef.hasTid() ? buffer.getInt() : -1;
+				int o = ef.hasOid() ? buffer.getInt() : -1;
+				System.out.println("RETURN_REFERENCE " + p + " " + t + " " + o);
+				break;
+			}
+			case EventKind.EXPLICIT_THROW:
+			{
+				EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
+				int p = ef.hasPid() ? buffer.getInt() : -1;
+				int t = ef.hasTid() ? buffer.getInt() : -1;
+				int o = ef.hasOid() ? buffer.getInt() : -1;
+				System.out.println("EXPLICIT_THROW " + p + " " + t + " " + o);
+				break;
+			}
+			case EventKind.IMPLICIT_THROW:
+			{
+				EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
+				int p = ef.hasPid() ? buffer.getInt() : -1;
+				int t = ef.hasTid() ? buffer.getInt() : -1;
+				int o = ef.hasOid() ? buffer.getInt() : -1;
+				System.out.println("IMPLICIT_THROW " + p + " " + t + " " + o);
+				break;
+			}
+			case EventKind.MOVE:
+			{
+				int p = buffer.getInt();
+				int t = buffer.getInt();
 				System.out.println("MOVE " + p + " " + t);
+				break;
+			}
+			case EventKind.ENTER_BASIC_BLOCK:
+			{
+				int b = buffer.getInt();
+				int t = buffer.getInt();
+				System.out.println("ENTER_BASIC_BLOCK " + b + " " + t);
 				break;
 			}
 			default:

@@ -105,7 +105,8 @@ public class Program {
 		while ((s = r.readLine()) != null) {
 			System.out.println("Loading: " + s);
 			jq_Class c = (jq_Class) Helper.load(s);
-			assert (c != null);
+			if (c == null)
+				continue;
 			c.prepare();
 			assert(c.isSystemClass() == mustBeSystemClass);
 			preparedClasses.add(c);

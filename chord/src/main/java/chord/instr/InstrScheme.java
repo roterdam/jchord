@@ -116,6 +116,21 @@ public class InstrScheme implements Serializable {
 	 * object b at program point e:
 	 * ASTORE_REFERENCE e t b i o
 	 * 
+	 * METHOD_CALL:
+	 * METHOD_CALL p t
+	 * 
+     * RETURN_PRIMITIVE:
+     * RETURN_PRIMITIVE p t
+     *
+     * RETURN_REFERENCE:
+     * RETURN_REFERENCE p t o
+     *
+     * THROW_EXPLICIT:
+     * THROW_EXPLICIT p t
+     *
+     * THROW_IMPLICIT:
+     * THROW_IMPLICIT t
+     *
 	 * THREAD_START:
 	 * Controls generation of the following event before thread t
 	 * calls the <tt>start()</tt> method of <tt>java.lang.Thread</tt>
@@ -153,37 +168,39 @@ public class InstrScheme implements Serializable {
 	 * calls the <tt>notify()</tt> or <tt>notifyAll()</tt> method of
 	 * <tt>java.lang.Object</tt> at program point p on object l:
 	 * NOTIFY p t l
-	 * 
-	 * METHOD_CALL:
-	 * METHOD_CALL p t
-	 * 
-	 * MOVE:
-	 * MOVE p t
 	 */
     public static final int ENTER_AND_LEAVE_METHOD = 0;
     public static final int NEW_AND_NEWARRAY = 1;
+
     public static final int GETSTATIC_PRIMITIVE = 2;
     public static final int GETSTATIC_REFERENCE = 3;
     public static final int PUTSTATIC_PRIMITIVE = 4;
     public static final int PUTSTATIC_REFERENCE = 5;
+
     public static final int GETFIELD_PRIMITIVE = 6;
     public static final int GETFIELD_REFERENCE = 7;
     public static final int PUTFIELD_PRIMITIVE = 8;
     public static final int PUTFIELD_REFERENCE = 9;
+
     public static final int ALOAD_PRIMITIVE = 10;
     public static final int ALOAD_REFERENCE = 11;
     public static final int ASTORE_PRIMITIVE = 12;
     public static final int ASTORE_REFERENCE = 13;
-    public static final int THREAD_START = 14;
-    public static final int THREAD_JOIN = 15;
-    public static final int ACQUIRE_LOCK = 16;
-    public static final int RELEASE_LOCK = 17;
-    public static final int WAIT = 18;
-    public static final int NOTIFY = 19;
-    public static final int METHOD_CALL = 20;
-    public static final int MOVE = 21;
+
+    public static final int METHOD_CALL = 14;
+    public static final int RETURN_PRIMITIVE = 15;
+    public static final int RETURN_REFERENCE = 16;
+    public static final int EXPLICIT_THROW = 17;
+    public static final int IMPLICIT_THROW = 18;
+
+    public static final int THREAD_START = 19;
+    public static final int THREAD_JOIN = 20;
+    public static final int ACQUIRE_LOCK = 21;
+    public static final int RELEASE_LOCK = 22;
+    public static final int WAIT = 23;
+    public static final int NOTIFY = 24;
     
-	public static final int MAX_NUM_EVENT_FORMATS = 22;
+	public static final int MAX_NUM_EVENT_FORMATS = 25;
 
 	public class EventFormat implements Serializable {
 		private boolean hasMorP;
@@ -209,18 +226,6 @@ public class InstrScheme implements Serializable {
 			}
 		}
 		public void setP() {
-			if (!hasMorP) {
-				hasMorP = true; 
-				size += 4;
-			}
-		}
-		public void setH() {
-			if (!hasMorP) {
-				hasMorP = true; 
-				size += 4;
-			}
-		}
-		public void setE() {
 			if (!hasMorP) {
 				hasMorP = true; 
 				size += 4;
@@ -277,7 +282,7 @@ public class InstrScheme implements Serializable {
 		assert (n >= 0);
 		instrMethodAndLoopBound = n;
 		if (n > 0)
-			setEnterAndLeaveMethodEvent(true, true);
+			setPnterAndLeaveMethodEvent(true, true);
 	}
 	public void setConvert() {
 		convert = true;
@@ -292,7 +297,7 @@ public class InstrScheme implements Serializable {
 	public EventFormat getEvent(int eventId) {
 		return events[eventId];
 	}
-	public void setEnterAndLeaveMethodEvent(
+	public void setPnterAndLeaveMethodEvent(
 			boolean hasM, boolean hasT) {
 		EventFormat e = events[ENTER_AND_LEAVE_METHOD];
 		if (hasM) e.setM();
@@ -301,7 +306,7 @@ public class InstrScheme implements Serializable {
 	public void setNewAndNewArrayEvent(
 			boolean hasP, boolean hasT, boolean hasO) {
 		EventFormat e = events[NEW_AND_NEWARRAY];
-		if (hasP) e.setH();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasO) e.setO();
 	}
@@ -315,7 +320,7 @@ public class InstrScheme implements Serializable {
 	public void setGetstaticReferenceEvent(
 			boolean hasP, boolean hasT, boolean hasF, boolean hasO) {
 		EventFormat e = events[GETSTATIC_REFERENCE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasF) e.setF();
 		if (hasO) e.setO();
@@ -323,14 +328,14 @@ public class InstrScheme implements Serializable {
 	public void setPutstaticPrimitiveEvent(
 			boolean hasP, boolean hasT, boolean hasF) {
 		EventFormat e = events[PUTSTATIC_PRIMITIVE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasF) e.setF();
 	}
 	public void setPutstaticReferenceEvent(
 			boolean hasP, boolean hasT, boolean hasF, boolean hasO) {
 		EventFormat e = events[PUTSTATIC_REFERENCE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasF) e.setF();
 		if (hasO) e.setO();
@@ -338,7 +343,7 @@ public class InstrScheme implements Serializable {
 	public void setGetfieldPrimitiveEvent(
 			boolean hasP, boolean hasT, boolean hasB, boolean hasF) {
 		EventFormat e = events[GETFIELD_PRIMITIVE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasF) e.setF();
@@ -346,7 +351,7 @@ public class InstrScheme implements Serializable {
 	public void setGetfieldReferenceEvent(
 			boolean hasP, boolean hasT, boolean hasB, boolean hasF, boolean hasO) {
 		EventFormat e = events[GETFIELD_REFERENCE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasF) e.setF();
@@ -355,7 +360,7 @@ public class InstrScheme implements Serializable {
 	public void setPutfieldPrimitiveEvent(
 			boolean hasP, boolean hasT, boolean hasB, boolean hasF) {
 		EventFormat e = events[PUTFIELD_PRIMITIVE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasF) e.setF();
@@ -363,7 +368,7 @@ public class InstrScheme implements Serializable {
 	public void setPutfieldReferenceEvent(
 			boolean hasP, boolean hasT, boolean hasB, boolean hasF, boolean hasO) {
 		EventFormat e = events[PUTFIELD_REFERENCE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasF) e.setF();
@@ -372,7 +377,7 @@ public class InstrScheme implements Serializable {
 	public void setAloadPrimitiveEvent(
 			boolean hasP, boolean hasT, boolean hasB, boolean hasI) {
 		EventFormat e = events[ALOAD_PRIMITIVE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasI) e.setI();
@@ -380,7 +385,7 @@ public class InstrScheme implements Serializable {
 	public void setAloadReferenceEvent(
 			boolean hasP, boolean hasT, boolean hasB, boolean hasI, boolean hasO) {
 		EventFormat e = events[ALOAD_REFERENCE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasI) e.setI();
@@ -389,7 +394,7 @@ public class InstrScheme implements Serializable {
 	public void setAstorePrimitiveEvent(
 			boolean hasP, boolean hasT, boolean hasB, boolean hasI) {
 		EventFormat e = events[ASTORE_PRIMITIVE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasI) e.setI();
@@ -397,10 +402,38 @@ public class InstrScheme implements Serializable {
 	public void setAstoreReferenceEvent(
 			boolean hasP, boolean hasT, boolean hasB, boolean hasI, boolean hasO) {
 		EventFormat e = events[ASTORE_REFERENCE];
-		if (hasP) e.setE();
+		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasB) e.setB();
 		if (hasI) e.setI();
+		if (hasO) e.setO();
+	}
+	public void setMethodCallEvent(boolean hasP, boolean hasT) {
+		EventFormat e = events[METHOD_CALL];
+		if (hasP) e.setP();
+		if (hasT) e.setT();
+	}
+	public void setReturnPrimitiveEvent(boolean hasP, boolean hasT) {
+		EventFormat e = events[RETURN_PRIMITIVE];
+		if (hasP) e.setP();
+		if (hasT) e.setT();
+	}
+	public void setReturnReferenceEvent(
+			boolean hasP, boolean hasT, boolean hasO) {
+		EventFormat e = events[RETURN_REFERENCE];
+		if (hasP) e.setP();
+		if (hasT) e.setT();
+		if (hasO) e.setO();
+	}
+	public void setExplicitThrowEvent(boolean hasP, boolean hasT, boolean hasO) {
+		EventFormat e = events[EXPLICIT_THROW];
+		if (hasP) e.setP();
+		if (hasT) e.setT();
+		if (hasO) e.setO();
+	}
+	public void setImplicitThrowEvent(boolean hasT, boolean hasO) {
+		EventFormat e = events[IMPLICIT_THROW];
+		if (hasT) e.setT();
 		if (hasO) e.setO();
 	}
 	public void setThreadStartEvent(
@@ -444,16 +477,6 @@ public class InstrScheme implements Serializable {
 		if (hasP) e.setP();
 		if (hasT) e.setT();
 		if (hasL) e.setL();
-	}
-	public void setMethodCallEvent(boolean hasP, boolean hasT) {
-		EventFormat e = events[METHOD_CALL];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-	}
-	public void setMoveEvent(boolean hasP, boolean hasT) {
-		EventFormat e = events[MOVE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
 	}
 	
 	public boolean hasFieldEvent() {
@@ -516,35 +539,17 @@ public class InstrScheme implements Serializable {
 	}
 	public boolean needsPmap() {
 		return
+			events[RETURN_PRIMITIVE].hasPid() || events[RETURN_REFERENCE].hasPid() ||
+			events[EXPLICIT_THROW].hasPid() || events[IMPLICIT_THROW].hasPid() ||
 			events[THREAD_START].hasPid() || events[THREAD_JOIN].hasPid() ||
 			events[ACQUIRE_LOCK].hasPid() || events[RELEASE_LOCK].hasPid() ||
-			events[WAIT].hasPid() || events[NOTIFY].hasPid() || events[MOVE].hasPid();
+			events[WAIT].hasPid() || events[NOTIFY].hasPid();
 	}
 	public boolean needsBmap() {
 		return instrMethodAndLoopBound > 0;
 	}
 	public boolean needsTraceTransform() {
 		return events[NEW_AND_NEWARRAY].hasOid();
-	}
-	public void setAllEvents() {
-		setEnterAndLeaveMethodEvent(true, true);
-		setNewAndNewArrayEvent(true, true, true);
-		setGetstaticPrimitiveEvent(true, true, true);
-		setPutstaticPrimitiveEvent(true, true, true);
-		setGetstaticReferenceEvent(true, true, true, true);
-		setPutstaticReferenceEvent(true, true, true, true);
-		setGetfieldPrimitiveEvent(true, true, true, true);
-		setPutfieldPrimitiveEvent(true, true, true, true);
-		setGetfieldReferenceEvent(true, true, true, true, true);
-		setPutfieldReferenceEvent(true, true, true, true, true);
-		setThreadStartEvent(true, true, true);
-		setThreadJoinEvent(true, true, true);
-		setAcquireLockEvent(true, true, true);
-		setReleaseLockEvent(true, true, true);
-		setWaitEvent(true, true, true);
-		setNotifyEvent(true, true, true);
-		setMethodCallEvent(true, true);
-		setMoveEvent(true, true);
 	}
 	public static InstrScheme load(String fileName) {
 		InstrScheme scheme;

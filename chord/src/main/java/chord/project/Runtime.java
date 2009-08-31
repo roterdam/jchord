@@ -82,7 +82,7 @@ public class Runtime {
     	l = l << 32;
     	return l + fId;
     }
-	public synchronized static void enterMethod(int mId) {
+	public synchronized static void enterMethodEvent(int mId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -98,7 +98,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void leaveMethod(int mId) {
+	public synchronized static void leaveMethodEvent(int mId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -115,7 +115,7 @@ public class Runtime {
 		}
 	}
 	// befNew event is present => h,t,o present
-	public synchronized static void befNew(int hId) {
+	public synchronized static void befNewEvent(int hId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -128,7 +128,7 @@ public class Runtime {
 		}
 	}
 	// aftNew event is present => h,t,o present
-	public synchronized static void aftNew(int hId, Object o) {
+	public synchronized static void aftNewEvent(int hId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -142,7 +142,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void New(int hId) {
+	public synchronized static void newEvent(int hId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -158,7 +158,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void newArray(int hId, Object o) {
+	public synchronized static void newArrayEvent(int hId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -178,7 +178,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void getstaticPrimitive(int eId, int fId) {
+	public synchronized static void getstaticPrimitiveEvent(int eId, int fId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -196,7 +196,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void getstaticReference(int eId, int fId,
+	public synchronized static void getstaticReferenceEvent(int eId, int fId,
 			Object o) {
 		if (trace) {
 			trace = false;
@@ -219,7 +219,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void putstaticPrimitive(int eId, int fId) {
+	public synchronized static void putstaticPrimitiveEvent(int eId, int fId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -237,7 +237,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void putstaticReference(int eId, int fId,
+	public synchronized static void putstaticReferenceEvent(int eId, int fId,
 			Object o) {
 		if (trace) {
 			trace = false;
@@ -260,7 +260,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void getfieldPrimitive(int eId,
+	public synchronized static void getfieldPrimitiveEvent(int eId,
 			Object b, int fId) {
 		if (trace) {
 			trace = false;
@@ -283,7 +283,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void getfieldReference(int eId,
+	public synchronized static void getfieldReferenceEvent(int eId,
 			Object b, int fId, Object o) {
 		if (trace) {
 			trace = false;
@@ -310,7 +310,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void putfieldPrimitive(int eId,
+	public synchronized static void putfieldPrimitiveEvent(int eId,
 			Object b, int fId) {
 		if (trace) {
 			trace = false;
@@ -333,7 +333,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void putfieldReference(int eId,
+	public synchronized static void putfieldReferenceEvent(int eId,
 			Object b, int fId, Object o) {
 		if (trace) {
 			trace = false;
@@ -360,7 +360,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void aloadPrimitive(int eId,
+	public synchronized static void aloadPrimitiveEvent(int eId,
 			Object b, int iId) {
 		if (trace) {
 			trace = false;
@@ -383,7 +383,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void aloadReference(int eId,
+	public synchronized static void aloadReferenceEvent(int eId,
 			Object b, int iId, Object o) {
 		if (trace) {
 			trace = false;
@@ -410,7 +410,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void astorePrimitive(int eId,
+	public synchronized static void astorePrimitiveEvent(int eId,
 			Object b, int iId) {
 		if (trace) {
 			trace = false;
@@ -433,7 +433,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void astoreReference(int eId,
+	public synchronized static void astoreReferenceEvent(int eId,
 			Object b, int iId, Object o) {
 		if (trace) {
 			trace = false;
@@ -460,7 +460,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void threadStart(int pId, Object o) {
+	public synchronized static void threadStartEvent(int pId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -480,7 +480,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void threadJoin(int pId, Object o) {
+	public synchronized static void threadJoinEvent(int pId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -500,7 +500,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void acquireLock(int pId, Object l) {
+	public synchronized static void acquireLockEvent(int pId, Object l) {
 		if (trace) {
 			trace = false;
 			try {
@@ -520,7 +520,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void releaseLock(int pId, Object l) {
+	public synchronized static void releaseLockEvent(int pId, Object l) {
 		if (trace) {
 			trace = false;
 			try {
@@ -540,7 +540,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void wait(int pId, Object l) {
+	public synchronized static void waitEvent(int pId, Object l) {
 		if (trace) {
 			trace = false;
 			try {
@@ -560,7 +560,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void notify(int pId, Object l) {
+	public synchronized static void notifyEvent(int pId, Object l) {
 		if (trace) {
 			trace = false;
 			try {
@@ -580,7 +580,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void methodCall(int iId) {
+	public synchronized static void methodCallEvent(int iId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -597,12 +597,12 @@ public class Runtime {
 		}
 	
 	}
-	public synchronized static void move(int pId) {
+	public synchronized static void returnPrimitiveEvent(int pId) {
 		if (trace) {
 			trace = false;
 			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.MOVE);
-				buffer.putByte(EventKind.MOVE);
+				EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
+				buffer.putByte(EventKind.RETURN_PRIMITIVE);
 				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
 				if (ef.hasTid()) {
@@ -614,7 +614,79 @@ public class Runtime {
 		}
 	
 	}
-	public synchronized static void enterMethodCheck(int mId) {
+	public synchronized static void returnReferenceEvent(int pId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
+				buffer.putByte(EventKind.RETURN_REFERENCE);
+				if (pId != MISSING_FIELD_VAL)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	
+	}
+	public synchronized static void explicitThrowEvent(int pId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
+				buffer.putByte(EventKind.EXPLICIT_THROW);
+				if (pId != MISSING_FIELD_VAL)
+					buffer.putInt(pId);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	
+	}
+	public synchronized static void implicitThrowEvent(Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
+				buffer.putByte(EventKind.IMPLICIT_THROW);
+				if (ef.hasTid()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasOid()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void enterBasicBlockEvent(int bId) {
+		if (trace) {
+			trace = false;
+			try {
+				buffer.putByte(EventKind.ENTER_BASIC_BLOCK);
+				buffer.putInt(bId);
+				int tId = getObjectId(Thread.currentThread());
+				buffer.putInt(tId);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void enterMethodCheckEvent(int mId) {
 		if (trace) {
 			trace = false;
 /*
@@ -629,19 +701,19 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void leaveMethodCheck(int mId) {
+	public synchronized static void leaveMethodCheckEvent(int mId) {
 		if (trace) {
 			trace = false;
 			trace = true;
 		}
 	}
-	public synchronized static void enterLoopCheck(int wId) {
+	public synchronized static void enterLoopCheckEvent(int wId) {
 		if (trace) {
 			trace = false;
 			trace = true;
 		}
 	}
-	public synchronized static void leaveLoopCheck(int wId) {
+	public synchronized static void leaveLoopCheckEvent(int wId) {
 		if (trace) {
 			trace = false;
 /*

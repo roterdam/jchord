@@ -22,13 +22,14 @@ import chord.util.IndexSet;
 )
 public class RelEntryM extends ProgramRel {
 	public void fill() {
-		IndexSet<jq_Method> roots = Program.v().getRootMethods();
-		jq_Method main = Program.v().getMainMethod();
-		assert (roots != null ^ main != null);
-		if (roots != null) {
-			for (jq_Method m : roots)
+		jq_Method mainMethod = Program.v().getMainMethod();
+		IndexSet<jq_Method> rootMethods = Program.v().getRootMethods();
+		assert (mainMethod != null ^ rootMethods != null);
+		if (mainMethod != null)
+			add(mainMethod);
+		else {
+			for (jq_Method m : rootMethods)
 				add(m);
-		} else
-			add(main);
+		}
 	}
 }

@@ -37,7 +37,7 @@ public class ProgramRel extends Rel implements ITask {
 			VisitorHandler vh = new VisitorHandler(this);
 			vh.visitProgram();
 		} else {
-			throw new RuntimeException("Relation '" + name +
+			throw new ChordRuntimeException("Relation '" + name +
 				"' must override method fill().");
 		}
 	}
