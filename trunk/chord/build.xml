@@ -221,20 +221,20 @@
       </elseif>
     </if>
     <java classname="chord.project.Project"
-        fork="true" failonerror="true" dir="${chord.work.dir}">
-      <jvmarg value="-showversion"/>
-      <jvmarg value="-ea"/>
-      <jvmarg value="-Xmx${chord.max.heap}"/>
-      <jvmarg value="-Xss${chord.max.stack}"/>
-      <!-- <jvmarg value="-agentlib:hprof"/> -->
-      <syspropertyset>
+      	fork="true" failonerror="true" dir="${chord.work.dir}">
+    <jvmarg value="-showversion"/>
+    <jvmarg value="-ea"/> 
+    <jvmarg value="-Xmx${chord.max.heap}"/>
+    <jvmarg value="-Xss${chord.max.stack}"/>
+    <!-- <jvmarg value="-agentlib:hprof=cpu=times,interval=5"/> --> 
+    <syspropertyset>
         <propertyref prefix="chord."/>
-      </syspropertyset>
-      <classpath>
+    </syspropertyset>
+    <classpath>
         <pathelement path="${chord.main.class.path}"/>
         <pathelement path="${chord.java.analysis.path}"/>
         <pathelement path="${chord.class.path}"/>
-      </classpath>
+    </classpath>
     </java>
   </target>
 
