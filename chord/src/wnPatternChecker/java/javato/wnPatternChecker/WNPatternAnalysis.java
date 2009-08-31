@@ -26,39 +26,42 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 	private ThreadBase tb = new ThreadBase();
 	public static Map<Integer, Stack<LockStackElemInfo>> lockStacks = new TreeMap<Integer, Stack<LockStackElemInfo>>();
 
-    protected InstrScheme instrScheme;
-    public InstrScheme getInstrScheme() {
-    	if (instrScheme != null)
+    	protected InstrScheme instrScheme;
+   	public InstrScheme getInstrScheme() {
+    		if (instrScheme != null)
+    			return instrScheme;
+    		instrScheme = new InstrScheme();
+
+    		instrScheme.setGetstaticPrimitiveEvent(true, true, true);
+    		instrScheme.setPutstaticPrimitiveEvent(true, true, true);
+    		instrScheme.setGetfieldPrimitiveEvent(true, true, true, true);
+    		instrScheme.setPutfieldPrimitiveEvent(true, true, true, true);
+    		instrScheme.setAloadPrimitiveEvent(true, true, true, true);
+    		instrScheme.setAstorePrimitiveEvent(true, true, true, true);
+
+    		instrScheme.setGetstaticReferenceEvent(true, true, false, true);
+    		instrScheme.setPutstaticReferenceEvent(true, true, false, true);
+    		instrScheme.setGetfieldReferenceEvent(true, true, false, false, true);
+    		instrScheme.setPutfieldReferenceEvent(true, true, false, false, true);
+    		instrScheme.setAloadReferenceEvent(true, true, false, false, true);
+    		instrScheme.setAstoreReferenceEvent(true, true, false, false, true);
+
+    		instrScheme.setThreadStartEvent(true, true, true);
+    		instrScheme.setThreadJoinEvent(true, true, true);
+    		instrScheme.setAcquireLockEvent(true, true, true);
+    		instrScheme.setReleaseLockEvent(true, true, true);
+    		instrScheme.setWaitEvent(true, true, true);
+    		instrScheme.setNotifyEvent(true, true, true);
     		return instrScheme;
-    	instrScheme = new InstrScheme();
-
-    	instrScheme.setGetstaticPrimitiveEvent(true, true, true);
-    	instrScheme.setPutstaticPrimitiveEvent(true, true, true);
-    	instrScheme.setGetfieldPrimitiveEvent(true, true, true, true);
-    	instrScheme.setPutfieldPrimitiveEvent(true, true, true, true);
-    	instrScheme.setAloadPrimitiveEvent(true, true, true, true);
-    	instrScheme.setAstorePrimitiveEvent(true, true, true, true);
-
-    	instrScheme.setGetstaticReferenceEvent(true, true, false, true);
-    	instrScheme.setPutstaticReferenceEvent(true, true, false, true);
-    	instrScheme.setGetfieldReferenceEvent(true, true, false, false, true);
-    	instrScheme.setPutfieldReferenceEvent(true, true, false, false, true);
-    	instrScheme.setAloadReferenceEvent(true, true, false, false, true);
-    	instrScheme.setAstoreReferenceEvent(true, true, false, false, true);
-
-    	instrScheme.setThreadStartEvent(true, true, true);
-    	instrScheme.setThreadJoinEvent(true, true, true);
-    	instrScheme.setAcquireLockEvent(true, true, true);
-    	instrScheme.setReleaseLockEvent(true, true, true);
-    	instrScheme.setWaitEvent(true, true, true);
-    	instrScheme.setNotifyEvent(true, true, true);
-    	return instrScheme;
-    }
+    	}
 	public void initPass() {
-		// do nothing for now
+		lStacks = new TreeMap<Integer, Stack<IntPair>>();
+		db = new Database();
+		tb = new ThreadBase();
+		lockStacks = new TreeMap<Integer, Stack<LockStackElemInfo>>();
 	}
+
 	public void donePass() {
-		System.out.println("in done...going to call checkForErrors");
         	db.checkForErrors(instrumentor.getEmap(), instrumentor.getPmap());
 	}
 
