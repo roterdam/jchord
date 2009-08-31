@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="compile">
+  <property name="debuglevel" value="source,lines,vars"/>
+  <property name="target" value="1.5"/>
+  <property name="source" value="1.5"/>
+  <target name="clean">
+    <delete quiet="true" includeemptydirs="true">
+      <fileset dir="classes" includes="**/*"/>
+    </delete>
+    <delete dir="chord_output"/>
+    <ant antfile="run.xml" target="clean"/>
+  </target>
+  <target name="compile">
+     <ant antfile="run.xml" target="war-demo"/>
+     
+     <path id="classpath">
+	     <pathelement location="build/classes/java"/>
+     </path>
+     
+     <path id="test.classpath">
+	     <pathelement location="build/classes/java"/>
+	     <pathelement location="build/classes/demo"/>
+	     <pathelement location="build/classes/test"/>
+     </path>
+
+    <ant antfile="common-build.xml" target="compile-test" inheritRefs="true"/>
+    
+    <javac debug="true" debuglevel="${debuglevel}"
+      source="${source}" target="${target}"
+      srcdir="srcTest" destdir="classes">
+      <classpath>
+	      <pathelement location="build/classes/java"/>
+	      <pathelement location="build/classes/test"/>
+      </classpath>
+    </javac>	
+  </target>
+</project>
