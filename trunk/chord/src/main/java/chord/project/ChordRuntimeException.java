@@ -14,7 +14,7 @@ public class ChordRuntimeException extends RuntimeException {
 	public ChordRuntimeException(String msg) {
 		super(msg);
 	}
-	public ChordRuntimeException(Exception ex) {
+	public ChordRuntimeException(Throwable ex) {
 		super(ex);
 	}
 }

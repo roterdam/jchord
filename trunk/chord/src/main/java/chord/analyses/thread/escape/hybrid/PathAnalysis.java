@@ -63,6 +63,7 @@ public class PathAnalysis extends DynamicAnalysis {
         if (instrScheme != null)
             return instrScheme;
         instrScheme = new InstrScheme();
+		instrScheme.setConvert();
         instrScheme.setInstrMethodAndLoopBound(1);
         instrScheme.setNewAndNewArrayEvent(true, true, false);
 		instrScheme.setGetstaticPrimitiveEvent(true, true, false);
@@ -78,7 +79,10 @@ public class PathAnalysis extends DynamicAnalysis {
 		instrScheme.setAstorePrimitiveEvent(true, true, false, false);
 		instrScheme.setAstoreReferenceEvent(true, true, false, false, false);
 		instrScheme.setMethodCallEvent(true, true);
-		instrScheme.setMoveEvent(true, true);
+		instrScheme.setReturnPrimitiveEvent(true, true);
+		instrScheme.setReturnReferenceEvent(true, true, false);
+		instrScheme.setExplicitThrowEvent(true, true, false);
+		instrScheme.setImplicitThrowEvent(true, false);
         return instrScheme;
     }
     // data structures set once and for all
@@ -118,6 +122,7 @@ public class PathAnalysis extends DynamicAnalysis {
 		domM = (DomM) Project.getTrgt("M");
 		domV = (DomV) Project.getTrgt("V");
 		domP = (DomP) Project.getTrgt("P");
+        domQ = (ProgramDom) Project.getTrgt("Q");
     	methToArgs = new List[domM.size()];
     	escHeapInsts = new HashSet<Quad>();
     	heapInstToAllocs = new HashMap<Quad, Set<Quad>>();
@@ -208,7 +213,7 @@ public class PathAnalysis extends DynamicAnalysis {
 		Handler handler = thrToHandlerMap.get(t);
 		handler.processMethodCall(i);
 	}
-	public void processPhi(int p, int t) { 
+	public void processMove(int p, int t) { 
 		Handler handler = thrToHandlerMap.get(p);
 		handler.processMove(p);
 	}
@@ -429,6 +434,7 @@ public class PathAnalysis extends DynamicAnalysis {
 			this.tId = tId;
 			prevQidx = -1;
 		}
+/*
 		public void beginIgnoredMeth(int mIdx) {
 			ignoredMethIdx = mIdx;
 			ignoredMethNumFrames = 1;
@@ -501,14 +507,12 @@ public class PathAnalysis extends DynamicAnalysis {
 			BasicBlockTableOperand bo = Phi.getPreds(q);
 			int n = bo.size();
 			int i = 0;
-			/*
 			assert (top.prevBB != null);
 			for (; i < n; i++) {
 				BasicBlock bb = bo.get(i);
 				if (bb == top.prevBB)
 					break;
 			}
-			*/
 			assert (i < n);
 			RegisterOperand ro = Phi.getSrc(q, i);
 			Register r = ro.getRegister();
@@ -724,9 +728,11 @@ public class PathAnalysis extends DynamicAnalysis {
 				copySet.add(new IntTrio(currQidx, invkRet, methRet));
 			}
 		}
+*/
 		public void processEnterMethod(int mIdx) {
-			assert (mIdx >= 0);
 			System.out.println("EM tId: " + tId + " mIdx: " + mIdx);
+/*
+			assert (mIdx >= 0);
 			if (ignoredMethNumFrames > 0) {
 				System.out.println("Ignoring");
 				if (mIdx == ignoredMethIdx)
@@ -799,9 +805,11 @@ public class PathAnalysis extends DynamicAnalysis {
 					}
 				}
 			}
+*/
 		}
 		public void processLeaveMethod(int mIdx) {
 			System.out.println("LM tId: " + tId + " mIdx: " + mIdx);
+/*
 			assert (mIdx >= 0);
 			if (top == null) {
 				System.out.println("Ignoring 1");
@@ -818,6 +826,7 @@ public class PathAnalysis extends DynamicAnalysis {
 				top = null;
 			else
 				top = frames.pop();
+*/
 		}
 		public void processNewOrNewArray(int h) {
 		}

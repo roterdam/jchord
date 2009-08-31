@@ -14,6 +14,7 @@ import chord.project.Program;
 import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.visitors.IMethodVisitor;
+import chord.util.IndexSet;
 
 /**
  * Domain of methods.
@@ -43,7 +44,14 @@ public class DomM extends ProgramDom<jq_Method>
 		// Reserver index 1 for the start() method of java.lang.Thread
 		// if it exists.
 		jq_Method mainMethod = Program.v().getMainMethod();
-		getOrAdd(mainMethod);
+		IndexSet<jq_Method> rootMethods = Program.v().getRootMethods();
+		assert (mainMethod != null ^ rootMethods != null);
+		if (mainMethod != null)
+			getOrAdd(mainMethod);
+		else {
+			for (jq_Method m : rootMethods)
+				getOrAdd(m);
+		}
 		jq_Method startMethod = Program.v().getThreadStartMethod();
 		if (startMethod != null)
 			getOrAdd(startMethod);

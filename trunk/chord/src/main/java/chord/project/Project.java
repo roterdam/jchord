@@ -92,45 +92,27 @@ public class Project {
             Project.init();
             Program.v().init();
 
-/*
-			DynamicAnalysis analysis = new DynamicAnalysis() {
-				InstrScheme scheme;
-				public InstrScheme getInstrScheme() {
-					if (scheme == null) {
-						scheme = new InstrScheme();
-						scheme.setAllEvents();
-					}
-					return scheme;
-				}
-			};
-			analysis.run();
-*/
-
             String analyses = Properties.analyses;
             if (analyses != null) {
                 String[] analysisNames = analyses.split(" |,|:|;");
 				for (String name : analysisNames)
 					runTask(name);
             }
-        } catch (Throwable ex) {
-            ex.printStackTrace();
-            if (outStream != null)
-                outStream.close();
-            if (errStream != null && errStream != outStream)
-                errStream.close();
-        } finally {
 			System.out.println("LEAVE: chord");
-			if (currTimer != null) {
-				currTimer.done();
-				printCurrTimer();
-			}
+			currTimer.done();
+			printCurrTimer();
+			outStream.close();
+			if (errStream != outStream)
+				errStream.close();
+        } catch (Throwable ex) {
+			throw new ChordRuntimeException(ex);
 		}
 	}
 
 	public static Object getTrgt(String name) {
 		Object trgt = nameToTrgtMap.get(name);
 		if (trgt == null) {
-			throw new RuntimeException("Trgt '" + name +
+			throw new ChordRuntimeException("Trgt '" + name +
 				"' not found.");
 		}
 		return trgt;
@@ -138,7 +120,7 @@ public class Project {
 	public static ITask getTask(String name) {
 		ITask task = nameToTaskMap.get(name);
 		if (task == null) {
-			throw new RuntimeException("Task '" + name +
+			throw new ChordRuntimeException("Task '" + name +
 				"' not found.");
 		}
 		return task;
@@ -165,7 +147,7 @@ public class Project {
 				continue;
 			Set<ITask> tasks = trgtToProducerTasksMap.get(trgt);
 			if (tasks.size() != 1) {
-				throw new RuntimeException("Task producing trgt '" +
+				throw new ChordRuntimeException("Task producing trgt '" +
 					trgt + "' consumed by task '" + task +
 					"' not found.");
 			}
@@ -507,7 +489,7 @@ public class Project {
 				} else if (instCtxtKindStr.equals("co")) {
 					instCtxtKind = CtxtsAnalysis.KOBJSEN;
 				} else
-					throw new RuntimeException();
+					throw new ChordRuntimeException();
 				if (statCtxtKindStr.equals("ci")) {
 					statCtxtKind = CtxtsAnalysis.CTXTINS;
 				} else if (statCtxtKindStr.equals("cs")) {
@@ -515,7 +497,7 @@ public class Project {
 				} else if (statCtxtKindStr.equals("cc")) {
 					statCtxtKind = CtxtsAnalysis.CTXTCPY;
 				} else
-					throw new RuntimeException();
+					throw new ChordRuntimeException();
 				if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
 						statCtxtKind == CtxtsAnalysis.CTXTINS)
 					resolver = cspa0cfaDlogTask;
@@ -618,7 +600,7 @@ public class Project {
 		try {
 			db.scanArchives(urls);
 		} catch (IOException ex) {
-			throw new RuntimeException(ex);
+			throw new ChordRuntimeException(ex);
 		}
 		Map<String, Set<String>> index = db.getAnnotationIndex();
 		if (index == null)
@@ -695,7 +677,7 @@ public class Project {
 		try {
 			type = Class.forName(className);
 		} catch (ClassNotFoundException ex) {
-			throw new RuntimeException(ex);
+			throw new ChordRuntimeException(ex);
 		}
 		ChordAnnotParser info = new ChordAnnotParser(type);
 		boolean ret = info.parse();
@@ -765,16 +747,16 @@ public class Project {
 			Object obj = Class.forName(className).newInstance();
 			return clazz.cast(obj);
 		} catch (InstantiationException e) {
-			throw new RuntimeException(
+			throw new ChordRuntimeException(
 				"Class '" + className + "' cannot be instantiated.");
 		} catch (IllegalAccessException e) {
-			throw new RuntimeException(
+			throw new ChordRuntimeException(
 				"Class '" + className + "' cannot be accessed.");
 		} catch (ClassNotFoundException e) {
-			throw new RuntimeException(
+			throw new ChordRuntimeException(
 				"Class '" + className + "' not found.");
 		} catch (ClassCastException e) {
-			throw new RuntimeException(
+			throw new ChordRuntimeException(
 				"Class '" + className + "' must be a subclass of " +
 				clazz.getName() + ".");
 		}

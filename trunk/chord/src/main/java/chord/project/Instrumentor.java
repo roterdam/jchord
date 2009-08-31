@@ -87,6 +87,10 @@ public class Instrumentor {
 	private EventFormat waitEvent;
 	private EventFormat notifyEvent;
 	private EventFormat methodCallEvent;
+	private EventFormat returnPrimitiveEvent;
+	private EventFormat returnReferenceEvent;
+	private EventFormat explicitThrowEvent;
+	private EventFormat implicitThrowEvent;
 	private EventFormat moveEvent;
 	private int instrMethodAndLoopBound;
 	private boolean convert;
@@ -131,10 +135,9 @@ public class Instrumentor {
 		waitEvent = scheme.getEvent(InstrScheme.WAIT);
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 		methodCallEvent = scheme.getEvent(InstrScheme.METHOD_CALL);
-		moveEvent = scheme.getEvent(InstrScheme.MOVE);
 		convert = scheme.isConverted();
 		
-		if (moveEvent.present())
+		if (instrMethodAndLoopBound > 0)
 			assert (convert);
 		
 		if (scheme.needsFmap()) {
@@ -317,12 +320,12 @@ public class Instrumentor {
 		String s = bciToInstrMap.get(bci);
 		bciToInstrMap.put(bci, (s == null) ? str : s + str);
 	}
-	private void processEnterLoopCheck(int wId, int headBCI) {
+	private void attachEnterLoopCheckToBCI(int wId, int headBCI) {
 		String sHead = enterLoopCheckCall + wId + ");";
 		String s = bciToInstrMap.get(headBCI);
 		bciToInstrMap.put(headBCI, (s == null) ? sHead : sHead + s);
 	}
-	private void processLeaveLoopCheck(int wId, int exitBCI) {
+	private void attachLeaveLoopCheckToBCI(int wId, int exitBCI) {
 		String sExit = leaveLoopCheckCall + wId + ");";
 		String s = bciToInstrMap.get(exitBCI);
 		bciToInstrMap.put(exitBCI, (s == null) ? sExit : sExit + s);
@@ -342,80 +345,85 @@ public class Instrumentor {
 		String cName = javassistMethod.getDeclaringClass().getName();
 		mStr = Program.toString(mName, mDesc, cName);
 		if (Mmap != null) {
-			int n = Mmap.size();
-			mId = Mmap.getOrAdd(mStr);
-			assert (mId == n);
+			if (convert) {
+				mId = Mmap.indexOf(mStr);
+				if (mId == -1) {
+					System.out.println("WARNING: Skipping method: " + mStr +
+						"; not found by static analysis");
+					return;
+				}
+			} else {
+				int n = Mmap.size();
+				mId = Mmap.getOrAdd(mStr);
+				assert (mId == n);
+			}
 		}
 		Map<Quad, Integer> bcMap = joeqMethod.getBCMap();
 		if (bcMap != null) {
-			if (moveEvent.present() || instrMethodAndLoopBound > 0) {
+			if (instrMethodAndLoopBound > 0) {
 				ControlFlowGraph cfg = joeqMethod.getCFG();
 				bciToInstrMap.clear();
-				if (moveEvent.present()) {
-					for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-							it.hasNext();) {
-						BasicBlock bb = it.nextBasicBlock();
-						int n = bb.size();
-						if (n == 0)
-							continue;
-						int i = 0;
-						String phiStr = "";
-						for (; i < n; i++) {
-							Quad q = bb.getQuad(i);
-							Operator op = q.getOperator();
-							if (op instanceof Phi) {
-								int pId;
-								if (moveEvent.hasPid()) {
-									pId = domP.indexOf(q);
-									assert (pId != -1);
-								} else
-									pId = Runtime.MISSING_FIELD_VAL;
-								phiStr += moveEventCall + pId + ");";
+				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+						it.hasNext();) {
+					BasicBlock bb = it.nextBasicBlock();
+					int n = bb.size();
+					if (n == 0)
+						continue;
+					int i = 0;
+					String phiStr = "";
+					for (; i < n; i++) {
+						Quad q = bb.getQuad(i);
+						Operator op = q.getOperator();
+						if (op instanceof Phi) {
+							int pId;
+							if (moveEvent.hasPid()) {
+								pId = domP.indexOf(q);
+								assert (pId != -1);
 							} else
-								break;
-						}
-						if (i > 0) {
-							int bci = getBCI(bb, joeqMethod);
+								pId = Runtime.MISSING_FIELD_VAL;
+							phiStr += moveEventCall + pId + ");";
+						} else
+							break;
+					}
+					if (i > 0) {
+						int bci = getBCI(bb, joeqMethod);
+						if (bci == -1)
+							throw new ChordRuntimeException();
+						attachInstrToBCI(phiStr, bci);
+					}
+					for (; i < n; i++) {
+						Quad q = bb.getQuad(i);
+						Operator op = q.getOperator();
+						assert (!(op instanceof Phi));
+						if (op instanceof Move) {
+							int pId;
+							if (moveEvent.hasPid()) {
+								pId = domP.indexOf(q);
+								assert (pId != -1);
+							} else
+								pId = Runtime.MISSING_FIELD_VAL;
+							assert (pId != -1);
+							String moveStr = moveEventCall + pId + ");";
+							int bci = joeqMethod.getBCI(q);
 							if (bci == -1)
 								throw new ChordRuntimeException();
-							attachInstrToBCI(phiStr, bci);
-						}
-						for (; i < n; i++) {
-							Quad q = bb.getQuad(i);
-							Operator op = q.getOperator();
-							assert (!(op instanceof Phi));
-							if (op instanceof Move) {
-								int pId;
-								if (moveEvent.hasPid()) {
-									pId = domP.indexOf(q);
-									assert (pId != -1);
-								} else
-									pId = Runtime.MISSING_FIELD_VAL;
-								assert (pId != -1);
-								String moveStr = moveEventCall + pId + ");";
-								int bci = joeqMethod.getBCI(q);
-								if (bci == -1)
-									throw new ChordRuntimeException();
-								attachInstrToBCI(moveStr, bci);
-							}
+							attachInstrToBCI(moveStr, bci);
 						}
 					}
 				}
-				if (instrMethodAndLoopBound > 0) {
-					finder.visit(cfg);
-					Set<BasicBlock> heads = finder.getLoopHeads();
-					for (BasicBlock head : heads) {
-						int wId = Wmap.getOrAdd(head);
-						int headBCI = getBCI(head, joeqMethod);
-						processEnterLoopCheck(wId, headBCI);
-					}
-					for (BasicBlock head : heads) {
-						Set<BasicBlock> exits = finder.getLoopExits(head);
-						for (BasicBlock exit : exits) {
-							int wId = Wmap.getOrAdd(exit);
-							int exitBCI = getBCI(exit, joeqMethod);
-							processLeaveLoopCheck(wId, exitBCI);
-						}
+				finder.visit(cfg);
+				Set<BasicBlock> heads = finder.getLoopHeads();
+				for (BasicBlock head : heads) {
+					int wId = Wmap.getOrAdd(head);
+					int headBCI = getBCI(head, joeqMethod);
+					attachEnterLoopCheckToBCI(wId, headBCI);
+				}
+				for (BasicBlock head : heads) {
+					Set<BasicBlock> exits = finder.getLoopExits(head);
+					for (BasicBlock exit : exits) {
+						int wId = Wmap.getOrAdd(exit);
+						int exitBCI = getBCI(exit, joeqMethod);
+						attachLeaveLoopCheckToBCI(wId, exitBCI);
 					}
 				}
 			}
@@ -501,6 +509,9 @@ public class Instrumentor {
 			String s = bciToInstrMap.get(pos);
 			// s may be null in which case this method won't
 			// add any instrumentation
+			if (s != null)
+				s = "{ " + s + " }";
+			// System.out.println("XXX: " + pos + ":" + s);
 			return s;
 		}
 		public void edit(NewExpr e) {
@@ -850,34 +861,46 @@ public class Instrumentor {
 	}
 
 	private static final String runtimeClassName = "chord.project.Runtime.";
-	private static final String enterMethodCheckCall = runtimeClassName + "enterMethodCheck(";
-	private static final String leaveMethodCheckCall = runtimeClassName + "leaveMethodCheck(";
-	private static final String enterLoopCheckCall = runtimeClassName + "enterLoopCheck(";
-	private static final String leaveLoopCheckCall = runtimeClassName + "leaveLoopCheck(";
-	private static final String enterMethodEventCall = runtimeClassName + "enterMethod(";
-	private static final String leaveMethodEventCall = runtimeClassName + "leaveMethod(";
-	private static final String befNewEventCall = runtimeClassName + "befNew(";
-	private static final String aftNewEventCall = runtimeClassName + "aftNew(";
-	private static final String newEventCall = runtimeClassName + "new(";
-	private static final String newArrayEventCall = runtimeClassName + "newArray(";
-	private static final String getstaticPriEventCall = runtimeClassName + "getstaticPrimitive(";
-	private static final String putstaticPriEventCall = runtimeClassName + "putstaticPrimitive(";
-	private static final String getstaticRefEcentCall = runtimeClassName + "getstaticReference(";
-	private static final String putstaticRefEventCall = runtimeClassName + "putstaticReference(";
-	private static final String getfieldPriEventCall = runtimeClassName + "getfieldPrimitive(";
-	private static final String putfieldPriEventCall = runtimeClassName + "putfieldPrimitive(";
-	private static final String getfieldReference = runtimeClassName + "getfieldReference(";
-	private static final String putfieldRefEventCall = runtimeClassName + "putfieldReference(";
-	private static final String aloadPriEventCall = runtimeClassName + "aloadPrimitive(";
-	private static final String aloadRefEventCall = runtimeClassName + "aloadReference(";
-	private static final String astorePriEventCall = runtimeClassName + "astorePrimitive(";
-	private static final String astoreRefEventCall = runtimeClassName + "astoreReference(";
-	private static final String methodCallEventCall = runtimeClassName + "methodCall(";
-	private static final String threadStartEventCall = runtimeClassName + "threadStart(";
-	private static final String threadJoinEventCall = runtimeClassName + "threadJoin(";
-	private static final String waitEventCall = runtimeClassName + "wait(";
-	private static final String notifyEventCall = runtimeClassName + "notify(";
-	private static final String acquireLockEventCall = runtimeClassName + "acquireLock(";
-	private static final String releaseLockEventCall = runtimeClassName + "releaseLock(";
-	private static final String moveEventCall = runtimeClassName + "move(";
+
+	private static final String enterMethodCheckCall = runtimeClassName + "enterMethodCheckEvent(";
+	private static final String leaveMethodCheckCall = runtimeClassName + "leaveMethodCheckEvent(";
+	private static final String enterLoopCheckCall = runtimeClassName + "enterLoopCheckEvent(";
+	private static final String leaveLoopCheckCall = runtimeClassName + "leaveLoopCheckEvent(";
+
+	private static final String enterMethodEventCall = runtimeClassName + "enterMethodEvent(";
+	private static final String leaveMethodEventCall = runtimeClassName + "leaveMethodEvent(";
+
+	private static final String befNewEventCall = runtimeClassName + "befNewEvent(";
+	private static final String aftNewEventCall = runtimeClassName + "aftNewEven(";
+	private static final String newEventCall = runtimeClassName + "newEvent(";
+	private static final String newArrayEventCall = runtimeClassName + "newArrayEvent(";
+
+	private static final String getstaticPriEventCall = runtimeClassName + "getstaticPrimitiveEvent(";
+	private static final String putstaticPriEventCall = runtimeClassName + "putstaticPrimitiveEvent(";
+	private static final String getstaticRefEcentCall = runtimeClassName + "getstaticReferenceEvent(";
+	private static final String putstaticRefEventCall = runtimeClassName + "putstaticReferenceEvent(";
+
+	private static final String getfieldPriEventCall = runtimeClassName + "getfieldPrimitiveEvent(";
+	private static final String putfieldPriEventCall = runtimeClassName + "putfieldPrimitiveEvent(";
+	private static final String getfieldReference = runtimeClassName + "getfieldReferenceEvent(";
+	private static final String putfieldRefEventCall = runtimeClassName + "putfieldReferenceEvent(";
+
+	private static final String aloadPriEventCall = runtimeClassName + "aloadPrimitiveEvent(";
+	private static final String aloadRefEventCall = runtimeClassName + "aloadReferenceEvent(";
+	private static final String astorePriEventCall = runtimeClassName + "astorePrimitiveEvent(";
+	private static final String astoreRefEventCall = runtimeClassName + "astoreReferenceEvent(";
+
+	private static final String methodCallEventCall = runtimeClassName + "methodCallEvent(";
+	private static final String returnPriEventCall = runtimeClassName + "returnPrimtiveEvent(";
+	private static final String returnRefEventCall = runtimeClassName + "returnReferenceEvent(";
+	private static final String explicitThrowEventCall = runtimeClassName + "explicitThrowEvent(";
+	private static final String implicitThrowEventCall = runtimeClassName + "implicitThrowEvent(";
+	private static final String moveEventCall = runtimeClassName + "moveEvent(";
+
+	private static final String threadStartEventCall = runtimeClassName + "threadStartEvent(";
+	private static final String threadJoinEventCall = runtimeClassName + "threadJoinEvent(";
+	private static final String waitEventCall = runtimeClassName + "waitEvent(";
+	private static final String notifyEventCall = runtimeClassName + "notifyEvent(";
+	private static final String acquireLockEventCall = runtimeClassName + "acquireLockEvent(";
+	private static final String releaseLockEventCall = runtimeClassName + "releaseLockEvent(";
 }

@@ -11,8 +11,8 @@ import java.io.IOException;
 import java.io.File;
 import java.lang.InterruptedException;
 
-import chord.instr.TracePrinter;
 import chord.instr.EventKind;
+import chord.instr.TracePrinter;
 import chord.instr.InstrScheme;
 import chord.instr.TraceTransformer;
 import chord.instr.InstrScheme.EventFormat;
@@ -368,12 +368,53 @@ public class DynamicAnalysis extends JavaAnalysis {
 					processMethodCall(i, t);
 					break;
 				}
-				case EventKind.MOVE:
+				case EventKind.RETURN_PRIMITIVE:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.MOVE);
+					EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
 					int p = ef.hasPid() ? buffer.getInt() : -1;
 					int t = ef.hasTid() ? buffer.getInt() : -1;
+					processReturnPrimitive(p, t);
+					break;
+				}
+				case EventKind.RETURN_REFERENCE:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
+					int p = ef.hasPid() ? buffer.getInt() : -1;
+					int t = ef.hasTid() ? buffer.getInt() : -1;
+					int o = ef.hasOid() ? buffer.getInt() : -1;
+					processReturnReference(p, t, o);
+					break;
+				}
+				case EventKind.EXPLICIT_THROW:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
+					int p = ef.hasPid() ? buffer.getInt() : -1;
+					int t = ef.hasTid() ? buffer.getInt() : -1;
+					int o = ef.hasOid() ? buffer.getInt() : -1;
+					processExplicitThrow(p, t, o);
+					break;
+				}
+				case EventKind.IMPLICIT_THROW:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
+					int p = ef.hasPid() ? buffer.getInt() : -1;
+					int t = ef.hasTid() ? buffer.getInt() : -1;
+					int o = ef.hasOid() ? buffer.getInt() : -1;
+					processImplicitThrow(p, t, o);
+					break;
+				}
+				case EventKind.MOVE:
+				{
+					int p = buffer.getInt();
+					int t = buffer.getInt();
 					processMove(p, t);
+					break;
+				}
+				case EventKind.ENTER_BASIC_BLOCK:
+				{
+					int b = buffer.getInt();
+					int t = buffer.getInt();
+					processEnterBasicBlock(b, t);
 					break;
 				}
 				default:
@@ -410,5 +451,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void processWait(int p, int t, int l) { }
 	public void processNotify(int p, int t, int l) { }
 	public void processMethodCall(int i, int t) { }
+	public void processReturnPrimitive(int p, int t) { }
+	public void processReturnReference(int p, int t, int o) { }
+	public void processExplicitThrow(int p, int t, int o) { }
+	public void processImplicitThrow(int p, int t, int o) { }
 	public void processMove(int p, int t) { }
+	public void processEnterBasicBlock(int b, int t) { }
 }
