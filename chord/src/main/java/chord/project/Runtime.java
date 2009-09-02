@@ -20,6 +20,7 @@ import java.io.IOException;
  */
 public class Runtime {
 	public static final int MISSING_FIELD_VAL = -1;
+	public static final int UNKNOWN_FIELD_VAL = -2;
 	private static int instrBound;
 	private static int numMeths;
 	private static int numLoops;
@@ -506,8 +507,9 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
 				buffer.putByte(EventKind.ACQUIRE_LOCK);
-				if (pId != MISSING_FIELD_VAL)
+				if (pId != MISSING_FIELD_VAL) {
 					buffer.putInt(pId);
+				}
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
@@ -526,8 +528,9 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
 				buffer.putByte(EventKind.RELEASE_LOCK);
-				if (pId != MISSING_FIELD_VAL)
+				if (pId != MISSING_FIELD_VAL) {
 					buffer.putInt(pId);
+				}
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
@@ -674,11 +677,23 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void enterBasicBlockEvent(int bId) {
+	public synchronized static void quadEvent(int pId) {
 		if (trace) {
 			trace = false;
 			try {
-				buffer.putByte(EventKind.ENTER_BASIC_BLOCK);
+				buffer.putByte(EventKind.QUAD);
+				buffer.putInt(pId);
+				int tId = getObjectId(Thread.currentThread());
+				buffer.putInt(tId);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void basicBlockEvent(int bId) {
+		if (trace) {
+			trace = false;
+			try {
+				buffer.putByte(EventKind.BASIC_BLOCK);
 				buffer.putInt(bId);
 				int tId = getObjectId(Thread.currentThread());
 				buffer.putInt(tId);

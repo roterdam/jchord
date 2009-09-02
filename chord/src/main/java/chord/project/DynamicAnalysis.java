@@ -29,7 +29,7 @@ import chord.util.Executor;
 	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
-	public final static boolean DEBUG = false;
+	public final static boolean DEBUG = true;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
 	
@@ -403,18 +403,18 @@ public class DynamicAnalysis extends JavaAnalysis {
 					processImplicitThrow(p, t, o);
 					break;
 				}
-				case EventKind.MOVE:
+				case EventKind.QUAD:
 				{
-					int p = buffer.getInt();
+					int q = buffer.getInt();
 					int t = buffer.getInt();
-					processMove(p, t);
+					processQuad(q, t);
 					break;
 				}
-				case EventKind.ENTER_BASIC_BLOCK:
+				case EventKind.BASIC_BLOCK:
 				{
 					int b = buffer.getInt();
 					int t = buffer.getInt();
-					processEnterBasicBlock(b, t);
+					processBasicBlock(b, t);
 					break;
 				}
 				default:
@@ -455,6 +455,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void processReturnReference(int p, int t, int o) { }
 	public void processExplicitThrow(int p, int t, int o) { }
 	public void processImplicitThrow(int p, int t, int o) { }
-	public void processMove(int p, int t) { }
-	public void processEnterBasicBlock(int b, int t) { }
+	public void processQuad(int q, int t) { }
+	public void processBasicBlock(int b, int t) { }
 }

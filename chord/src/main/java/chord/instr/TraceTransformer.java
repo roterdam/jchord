@@ -253,8 +253,8 @@ public class TraceTransformer {
 			return explicitThrowNumBytes;
 		case EventKind.IMPLICIT_THROW:
 			return implicitThrowNumBytes;
-		case EventKind.MOVE:
-		case EventKind.ENTER_BASIC_BLOCK:
+		case EventKind.QUAD:
+		case EventKind.BASIC_BLOCK:
 			return 8;
 		case EventKind.THREAD_START:
 			return threadStartNumBytes;
