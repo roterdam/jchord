@@ -301,18 +301,18 @@ public class TracePrinter {
 				System.out.println("IMPLICIT_THROW " + p + " " + t + " " + o);
 				break;
 			}
-			case EventKind.MOVE:
+			case EventKind.QUAD:
 			{
 				int p = buffer.getInt();
 				int t = buffer.getInt();
-				System.out.println("MOVE " + p + " " + t);
+				System.out.println("QUAD " + p + " " + t);
 				break;
 			}
-			case EventKind.ENTER_BASIC_BLOCK:
+			case EventKind.BASIC_BLOCK:
 			{
 				int b = buffer.getInt();
 				int t = buffer.getInt();
-				System.out.println("ENTER_BASIC_BLOCK " + b + " " + t);
+				System.out.println("BASIC_BLOCK " + b + " " + t);
 				break;
 			}
 			default:

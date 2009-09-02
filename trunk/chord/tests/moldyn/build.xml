@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="compile">
+  <property name="debuglevel" value="source,lines,vars"/>
+  <target name="clean">
+    <delete quiet="true" includeemptydirs="true">
+      <fileset dir="classes" includes="**/*"/>
+    </delete>
+    <delete dir="chord_output"/>
+  </target>
+  <target name="compile">
+    <javac debug="true" debuglevel="${debuglevel}"
+      srcdir="src" destdir="classes"/>
+  </target>
+</project>

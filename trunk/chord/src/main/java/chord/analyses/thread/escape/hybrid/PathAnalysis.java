@@ -30,12 +30,14 @@ import chord.doms.DomM;
 import chord.doms.DomF;
 import chord.doms.DomV;
 import chord.doms.DomP;
+import chord.doms.DomB;
 import chord.project.Program;
 import chord.project.Project;
 import chord.project.ProgramDom;
 import chord.project.ProgramRel;
 import chord.project.Chord;
 import chord.project.DynamicAnalysis;
+import chord.project.Instrumentor;
 import chord.instr.InstrScheme;
 
 import joeq.Class.jq_Method;
@@ -64,25 +66,10 @@ public class PathAnalysis extends DynamicAnalysis {
             return instrScheme;
         instrScheme = new InstrScheme();
 		instrScheme.setConvert();
-        instrScheme.setInstrMethodAndLoopBound(1);
-        instrScheme.setNewAndNewArrayEvent(true, true, false);
-		instrScheme.setGetstaticPrimitiveEvent(true, true, false);
-		instrScheme.setGetstaticReferenceEvent(true, true, false, false);
-		instrScheme.setPutstaticPrimitiveEvent(true, true, false);
-		instrScheme.setPutstaticReferenceEvent(true, true, false, false);
-		instrScheme.setGetfieldPrimitiveEvent(true, true, false, false);
-		instrScheme.setGetfieldReferenceEvent(true, true, false, false, false);
-		instrScheme.setPutfieldPrimitiveEvent(true, true, false, false);
-		instrScheme.setPutfieldReferenceEvent(true, true, false, false, false);
-		instrScheme.setAloadPrimitiveEvent(true, true, false, false);
-		instrScheme.setAloadReferenceEvent(true, true, false, false, false);
-		instrScheme.setAstorePrimitiveEvent(true, true, false, false);
-		instrScheme.setAstoreReferenceEvent(true, true, false, false, false);
-		instrScheme.setMethodCallEvent(true, true);
-		instrScheme.setReturnPrimitiveEvent(true, true);
-		instrScheme.setReturnReferenceEvent(true, true, false);
-		instrScheme.setExplicitThrowEvent(true, true, false);
-		instrScheme.setImplicitThrowEvent(true, false);
+		instrScheme.setInstrMethodAndLoopBound(1);
+		instrScheme.setBasicBlockEvent();
+		instrScheme.setQuadEvent();
+		instrScheme.setEnterAndLeaveMethodEvent(true, true);
         return instrScheme;
     }
     // data structures set once and for all
@@ -90,18 +77,17 @@ public class PathAnalysis extends DynamicAnalysis {
     // set of heap insts deemed escaping in some run so far
 	private Set<Quad> escHeapInsts;
 	private Map<Quad, Set<Quad>> heapInstToAllocs;
-	
+
 	// data structures set for each run
 	private TIntObjectHashMap<Handler> thrToHandlerMap =
 		new TIntObjectHashMap<Handler>();
 	private int[] methToNumCalls;
-	private DomM domM;
 	private DomF domF;
-	private DomV domV;
+	private DomM domM;
 	private DomH domH;
-	private DomE domE;
-	private DomI domI;
 	private DomP domP;
+	private DomB domB;
+	private DomV domV;
 	private ProgramDom<IntTrio> domQ;
 	private Set<IntPair> succSet;
 	private Set<IntTrio> allocSet;
@@ -116,12 +102,18 @@ public class PathAnalysis extends DynamicAnalysis {
 	private Set<IntPair> PQset;
 
     public void initAllPasses() {
-		domH = (DomH) Project.getTrgt("H");
-		domE = (DomE) Project.getTrgt("E");
-		domI = (DomI) Project.getTrgt("I");
+		domF = (DomF) Project.getTrgt("F");
+		Project.runTask(domF);
 		domM = (DomM) Project.getTrgt("M");
-		domV = (DomV) Project.getTrgt("V");
+		Project.runTask(domM);
+		domH = (DomH) Project.getTrgt("H");
+		Project.runTask(domH);
 		domP = (DomP) Project.getTrgt("P");
+		Project.runTask(domP);
+		domB = (DomB) Project.getTrgt("B");
+		Project.runTask(domB);
+		domV = (DomV) Project.getTrgt("V");
+		Project.runTask(domV);
         domQ = (ProgramDom) Project.getTrgt("Q");
     	methToArgs = new List[domM.size()];
     	escHeapInsts = new HashSet<Quad>();
@@ -146,6 +138,7 @@ public class PathAnalysis extends DynamicAnalysis {
 	}
 
 	public void processEnterMethod(int m, int t) {
+		System.out.println("T" + t + " ENTER_METHOD " + m);
 		Handler handler = thrToHandlerMap.get(t);
 		if (handler == null) {
 			handler = new Handler(t);
@@ -154,68 +147,22 @@ public class PathAnalysis extends DynamicAnalysis {
 		handler.processEnterMethod(m);
 	}
     public void processLeaveMethod(int m, int t) {
+		System.out.println("T" + t + " LEAVE_METHOD " + m);
 		Handler handler = thrToHandlerMap.get(t);
-		handler.processLeaveMethod(m);
+		if (handler != null)
+			handler.processLeaveMethod(m);
 	}
-	public void processNewOrNewArray(int h, int t, int o) {
+	public void processBasicBlock(int b, int t) {
+		System.out.println("T" + t + " BB " + b);
 		Handler handler = thrToHandlerMap.get(t);
-		handler.processNewOrNewArray(h);
+		if (handler != null)
+			handler.processBasicBlock(b);
 	}
-	public void processGetstaticPrimitive(int e, int t, int f) { 
+	public void processQuad(int p, int t) {
+		System.out.println("T" + t + " QUAD " + p);
 		Handler handler = thrToHandlerMap.get(t);
-		handler.processGetstaticPrimitive(e);
-	}
-	public void processGetstaticReference(int e, int t, int f, int o) { 
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processGetstaticReference(e);
-	}
-	public void processPutstaticPrimitive(int e, int t, int f) { 
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processPutstaticPrimitive(e);
-	}
-	public void processPutstaticReference(int e, int t, int f, int o) { 
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processPutstaticReference(e);
-	}
-	public void processGetfieldPrimitive(int e, int t, int b, int f) { 
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processGetfieldPrimitive(e);
-	}
-	public void processGetfieldReference(int e, int t, int b, int f, int o) {
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processGetfieldReference(e);
-	}
-	public void processPutfieldPrimitive(int e, int t, int b, int f) {
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processPutfieldPrimitive(e);
-	}
-	public void processPutfieldReference(int e, int t, int b, int f, int o) {
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processPutfieldReference(e);
-	}
-	public void processAloadPrimitive(int e, int t, int b, int i) {
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processAloadPrimitive(e);
-	}
-	public void processAloadReference(int e, int t, int b, int i, int o) { 
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processAloadReference(e);
-	}
-	public void processAstorePrimitive(int e, int t, int b, int i) {
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processAstorePrimitive(e);
-	}
-	public void processAstoreReference(int e, int t, int b, int i, int o) {
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processAstoreReference(e);
-	}
-	public void processMethodCall(int i, int t) { 
-		Handler handler = thrToHandlerMap.get(t);
-		handler.processMethodCall(i);
-	}
-	public void processMove(int p, int t) { 
-		Handler handler = thrToHandlerMap.get(p);
-		handler.processMove(p);
+		if (handler != null)
+			handler.processQuad(p);
 	}
 
 	public void donePass() {
@@ -287,7 +234,6 @@ public class PathAnalysis extends DynamicAnalysis {
 			int q = p.idx0;
 			int v = p.idx1;
 			relGetstat.add(q, v);
-			// writer.println("getstat('q" + q + "', 'v" + v + "').");
 		}
 		relGetstat.save();
 
@@ -372,14 +318,14 @@ public class PathAnalysis extends DynamicAnalysis {
 		assert (cfg != null);
 		RegisterFactory rf = cfg.getRegisterFactory();
 		int numArgs = m.getParamTypes().length;
-		for (int zIdx = 0; zIdx < numArgs; zIdx++) {
-			Register v = rf.get(zIdx);
+		for (int zId = 0; zId < numArgs; zId++) {
+			Register v = rf.get(zId);
 			if (v.getType().isReferenceType()) {
-				int vIdx = domV.indexOf(v);
-				assert (vIdx != -1);
+				int vId = domV.indexOf(v);
+				assert (vId != -1);
 				if (args == null)
 					args = new ArrayList<IntPair>();
-				args.add(new IntPair(zIdx, vIdx));
+				args.add(new IntPair(zId, vId));
 			}
 		}
 		if (args == null)
@@ -388,98 +334,232 @@ public class PathAnalysis extends DynamicAnalysis {
 	}
 
 	class Frame {
-		final int mIdx;
+		final int mId;
 		// context of this method, i.e., number of times this method has
-		// been called until now in the trace across all threads
-		final int cIdx;
+		// been called until now in the current run, across all threads
+		final int cId;
 		// invkArgs is null and invkRet is -1 if this method was called
 		// implicitly
 		final List<IntPair> invkArgs;
 		final int invkRet;
-		Quad lastQuad;
-		public Frame(int mIdx, int cIdx,
-				List<IntPair> invkArgs, int invkRet) {
-			this.mIdx = mIdx;
-			this.cIdx = cIdx;
+		BasicBlock prevBB;
+		BasicBlock currBB;
+		int prevXid;
+		public Frame(int mId, int cId, List<IntPair> invkArgs, int invkRet) {
+			this.mId = mId;
+			this.cId = cId;
 			this.invkArgs = invkArgs;
 			this.invkRet = invkRet;
-			lastQuad = null;
 		}
 	}
 	class InvkInfo {
 		final String sign;
 		final List<IntPair> invkArgs;
 		final int invkRet;
-		final int invkQidx;
+		final int invkQid;
 		public InvkInfo(String sign, List<IntPair> invkArgs,
-				int invkRet, int invkQidx) {
+				int invkRet, int invkQid) {
 			this.sign = sign;
 			this.invkArgs = invkArgs;
 			this.invkRet = invkRet;
-			this.invkQidx = invkQidx;
+			this.invkQid = invkQid;
 		}
 	}
 
 	class Handler {
-		private Stack<InvkInfo> pendingInvks = new Stack<InvkInfo>();
 		private Stack<Frame> frames = new Stack<Frame>();
 		private Frame top;
+		private Stack<InvkInfo> pendingInvks = new Stack<InvkInfo>();
 		private boolean foundThreadRoot;
-		private int ignoredMethIdx;
-		private int ignoredMethNumFrames;  // > 0 means currently ignoring code
-		private int currQidx;
-		private int prevQidx;
+		// ignoredMethNumFrames > 0 means currently ignoring code
+		// reachable from method with id ignoredMethId
+		private int ignoredMethId;
+		private int ignoredMethNumFrames;
+		private int prevQid;
 		private int tId; // just for debugging
 		public Handler(int tId) {
 			this.tId = tId;
-			prevQidx = -1;
+			prevQid = -1;
 		}
-/*
-		public void beginIgnoredMeth(int mIdx) {
-			ignoredMethIdx = mIdx;
+		public void beginIgnoredMeth(int mId) {
+			ignoredMethId = mId;
 			ignoredMethNumFrames = 1;
 		}
-		private void setCurrQidx(BasicBlock bb) {
-			currQidx = domQ.getOrAdd(new IntTrio(-1, top.mIdx, top.cIdx));
-			if (prevQidx != -1) {
-				System.out.println("Adding to succ1: " + prevQidx + " " + currQidx);
-				succSet.add(new IntPair(prevQidx, currQidx));
+		private int setCurrQid(BasicBlock bb) {
+			int currQid = domQ.getOrAdd(new IntTrio(-1, top.mId, top.cId));
+			if (prevQid != -1) {
+				System.out.println("Adding to succ1: " + prevQid + " " + currQid);
+				succSet.add(new IntPair(prevQid, currQid));
 			}
-			prevQidx = currQidx;
-			if (currQidx == domQ.size() - 1) {
+			prevQid = currQid;
+			if (currQid == domQ.size() - 1) {
 				int p = domP.indexOf(bb);
 				assert (p != -1);
-				System.out.println("Adding to PQset1: " + p + " " + currQidx);
-				PQset.add(new IntPair(p, currQidx));
+				System.out.println("Adding to PQset1: " + p + " " + currQid);
+				PQset.add(new IntPair(p, currQid));
 			}
+			return currQid;
 		}
-		private void setCurrQidx(Quad q) {
+		private int setCurrQid(Quad q) {
 			int i = q.getID();
-			currQidx = domQ.getOrAdd(new IntTrio(i, top.mIdx, top.cIdx));
-			if (prevQidx != -1) {
-				System.out.println("Adding to succ2: " + prevQidx + " " + currQidx);
-				succSet.add(new IntPair(prevQidx, currQidx));
+			int currQid = domQ.getOrAdd(new IntTrio(i, top.mId, top.cId));
+			if (prevQid != -1) {
+				System.out.println("Adding to succ2: " + prevQid + " " + currQid);
+				succSet.add(new IntPair(prevQid, currQid));
 			}
-			prevQidx = currQidx;
-			if (currQidx == domQ.size() - 1) {
+			prevQid = currQid;
+			if (currQid == domQ.size() - 1) {
 				int p = domP.indexOf(q);
 				assert (p != -1);
-				System.out.println("Adding to PQset2: " + p + " " + currQidx);
-				PQset.add(new IntPair(p, currQidx));
+				System.out.println("Adding to PQset2: " + p + " " + currQid);
+				PQset.add(new IntPair(p, currQid));
+			}
+			return currQid;
+		}
+		public void processEnterMethod(int mId) {
+			assert (mId >= 0);
+			if (ignoredMethNumFrames > 0) {
+				System.out.println("Ignoring");
+				if (mId == ignoredMethId)
+					ignoredMethNumFrames++;
+				return;
+			}
+			jq_Method m = domM.get(mId);
+			String cName = m.getDeclaringClass().getName();
+			jq_Class cls = Program.v().getPreparedClass(cName);
+			if (cls == null) {
+				System.out.println("Missing class: " + cName);
+				beginIgnoredMeth(mId);
+				return;
+			}
+			String mName = m.getName().toString();
+			String mDesc = m.getDesc().toString();
+			String mSign = mName + mDesc;
+			List<IntPair> invkArgs = null;
+			int invkRet = -1;
+			boolean found = false;
+			if (!pendingInvks.isEmpty()) {
+				InvkInfo invkInfo = pendingInvks.peek();
+				if (invkInfo.sign.equals(mSign)) {
+					found = true;
+					pendingInvks.pop();
+					invkArgs = invkInfo.invkArgs;
+					invkRet = invkInfo.invkRet;
+					int invkQid = invkInfo.invkQid;
+					List<IntPair> methArgs = methToArgs[mId];
+					if (methArgs == null) {
+						methArgs = processMethArgs(m);
+						methToArgs[mId] = methArgs;
+					}
+					int numArgs = methArgs.size();
+					assert (numArgs == invkArgs.size());
+					for (int i = 0; i < numArgs; i++) {
+						IntPair zv = methArgs.get(i);
+						int zId = zv.idx0;
+						int vId = zv.idx1;
+						IntPair zu = invkArgs.get(i);
+						assert (zu.idx0 == zId);
+						int uId = zu.idx1;
+						System.out.println("Adding to copy4: " + invkQid + " " + vId + " " + uId);
+						copySet.add(new IntTrio(invkQid, vId, uId));
+					}
+				}
+			}
+			if (top != null)
+				frames.push(top);
+			int cId = methToNumCalls[mId]++;
+			System.out.println("XXX: " + m);
+			top = new Frame(mId, cId, invkArgs, invkRet);
+			if (!found && !foundThreadRoot) {
+				if (mSign.equals("main([Ljava/lang/String;)V") || mSign.equals("run()V")) {
+					foundThreadRoot = true;
+					System.out.println("Treating method '" + m +
+						"' as thread root of thread# " + tId);
+					if (mSign.equals("run()V")) {
+						List<IntPair> methArgs = methToArgs[mId];
+						if (methArgs == null) {
+							methArgs = processMethArgs(m);
+							methToArgs[mId] = methArgs;
+						}
+						IntPair thisArg = methArgs.get(0);
+						assert (thisArg.idx0 == 0);
+						int currQid = setCurrQid(m.getCFG().entry());
+						int vId = thisArg.idx1;
+						System.out.println("Adding to start: " + currQid + " " + vId);
+						startSet.add(new IntPair(currQid, vId));
+					}
+				}
+			}
+		}
+		public void processLeaveMethod(int mId) {
+			assert (mId >= 0);
+			if (top == null) {
+				System.out.println("Ignoring 1");
+				return;
+			}
+			if (ignoredMethNumFrames > 0) {
+				System.out.println("Ignoring 2");
+				if (mId == ignoredMethId)
+					ignoredMethNumFrames--;
+				return;
+			}
+			assert (mId == top.mId);
+			if (frames.isEmpty())
+				top = null;
+			else
+				top = frames.pop();
+		}
+		public void processBasicBlock(int bId) {
+			if (top == null) {
+				System.out.println("Ignoring 1");
+				return;
+			}
+			if (ignoredMethNumFrames > 0) {
+				System.out.println("Ignoring 2");
+				return;
+			}
+			BasicBlock bb = domB.get(bId);
+			assert (bb != null);
+			BasicBlock currBB = top.currBB;
+			if (currBB != null) {
+				int n = currBB.size();
+				for (int i = top.prevXid; i < n; i++) {
+					Quad q = currBB.getQuad(i);
+					if (Instrumentor.isRelevant(q))
+						break;
+					processQuad(q);
+				}
+			}
+			top.prevBB = currBB;
+			top.currBB = bb;
+			top.prevXid = 0;
+		}
+		public void processQuad(int pId) {
+			if (top == null) {
+				System.out.println("Ignoring 1");
+				return;
+			}
+			if (ignoredMethNumFrames > 0) {
+				System.out.println("Ignoring 2");
+				return;
+			}
+			BasicBlock currBB = top.currBB;
+			assert (currBB != null);
+			Quad p = (Quad) domP.get(pId);
+			while (true) {
+				Quad q = currBB.getQuad(top.prevXid++);
+				processQuad(q);
+				if (p == q)
+					break;
 			}
 		}
 		private void processQuad(Quad q) {
-			System.out.println("\tProcessing quad: " + q);
 			Operator op = q.getOperator();
-			if (op instanceof Invoke) {
+			if (op instanceof Invoke)
 				processInvoke(q);
-				return;
-			}
-			if (op instanceof Return && !(op instanceof THROW_A)) {
-				assert (!(op instanceof RETURN_P));
-				if (op instanceof RETURN_A)
-					processReturn(q);
-			} else if (op instanceof Move)
+			else if (op instanceof RETURN_A)
+				processReturn(q);
+			else if (op instanceof Move)
 				processMove(q);
 			else if (op instanceof Getfield)
 				processGetfield(q);
@@ -490,13 +570,17 @@ public class PathAnalysis extends DynamicAnalysis {
 				processPutfield(q);
 			else if (op instanceof AStore) {
 				if (((AStore) op).getType().isReferenceType())
-					processAstore(q);
+						processAstore(q);
 			} else if (op instanceof Getstatic)
 				processGetstatic(q);
 			else if (op instanceof Putstatic)
 				processPutstatic(q);
 			else if (op instanceof New)
 				processNewOrNewArray(q, true);
+			else if (op instanceof NewArray)
+				processNewOrNewArray(q, false);
+			else if (op instanceof Phi)
+				processPhi(q);
 		}
 		private void processPhi(Quad q) {
 			RegisterOperand lo = Phi.getDest(q);
@@ -516,25 +600,25 @@ public class PathAnalysis extends DynamicAnalysis {
 			assert (i < n);
 			RegisterOperand ro = Phi.getSrc(q, i);
 			Register r = ro.getRegister();
-			int rIdx = domV.indexOf(r);
-			assert (rIdx != -1);
+			int rId = domV.indexOf(r);
+			assert (rId != -1);
 			Register l = lo.getRegister();
-			int lIdx = domV.indexOf(l);
-			assert (lIdx != -1);
-			setCurrQidx(q);
-			System.out.println("Adding to copy1: " + currQidx + " " + lIdx + " " + rIdx);
-			copySet.add(new IntTrio(currQidx, lIdx, rIdx));
+			int lId = domV.indexOf(l);
+			assert (lId != -1);
+			int currQid = setCurrQid(q);
+			System.out.println("Adding to copy1: " + currQid + " " + lId + " " + rId);
+			copySet.add(new IntTrio(currQid, lId, rId));
 		}
 		private void processNewOrNewArray(Quad q, boolean isNew) {
 			RegisterOperand vo = isNew ? New.getDest(q) : NewArray.getDest(q);
 			Register v = vo.getRegister();
-			int vIdx = domV.indexOf(v);
-			assert (vIdx != -1);
-			int hIdx = domH.indexOf(q);
-			assert (hIdx != -1);
-			setCurrQidx(q);
-			System.out.println("Adding to alloc: " + currQidx + " " + vIdx + " " + hIdx);
-			allocSet.add(new IntTrio(currQidx, vIdx, hIdx));
+			int vId = domV.indexOf(v);
+			assert (vId != -1);
+			int hId = domH.indexOf(q);
+			assert (hId != -1);
+			int currQid = setCurrQid(q);
+			System.out.println("Adding to alloc: " + currQid + " " + vId + " " + hId);
+			allocSet.add(new IntTrio(currQid, vId, hId));
 		}
 		private void processMove(Quad q) {
 			Operand rx = Move.getSrc(q);
@@ -552,18 +636,18 @@ public class PathAnalysis extends DynamicAnalysis {
 			}
 			RegisterOperand lo = Move.getDest(q);
 			Register l = lo.getRegister();
-			int lIdx = domV.indexOf(l);
-			assert (lIdx != -1);
-			setCurrQidx(q);
+			int lId = domV.indexOf(l);
+			assert (lId != -1);
+			int currQid = setCurrQid(q);
 			if (ro != null) {
 				Register r = ro.getRegister();
-				int rIdx = domV.indexOf(r);
-				assert (rIdx != -1);
-				System.out.println("Adding to copy2: " + currQidx + " " + lIdx + " " + rIdx);
-				copySet.add(new IntTrio(currQidx, lIdx, rIdx));
+				int rId = domV.indexOf(r);
+				assert (rId != -1);
+				System.out.println("Adding to copy2: " + currQid + " " + lId + " " + rId);
+				copySet.add(new IntTrio(currQid, lId, rId));
 			} else {
-				System.out.println("Adding to asgn: " + currQidx + " " + lIdx);
-				asgnSet.add(new IntPair(currQidx, lIdx));
+				System.out.println("Adding to asgn: " + currQid + " " + lId);
+				asgnSet.add(new IntPair(currQid, lId));
 			}
 		}
 		private void processGetstatic(Quad q) {
@@ -572,11 +656,11 @@ public class PathAnalysis extends DynamicAnalysis {
         		return;
 			RegisterOperand lo = Getstatic.getDest(q);
 			Register l = lo.getRegister();
-			int lIdx = domV.indexOf(l);
-			assert (lIdx != -1);
-			setCurrQidx(q);
-			System.out.println("Adding to getstat: " + currQidx + " " + lIdx);
-			getstatSet.add(new IntPair(currQidx, lIdx));
+			int lId = domV.indexOf(l);
+			assert (lId != -1);
+			int currQid = setCurrQid(q);
+			System.out.println("Adding to getstat: " + currQid + " " + lId);
+			getstatSet.add(new IntPair(currQid, lId));
 		}
 		private void processPutstatic(Quad q) {
         	jq_Field f = Putstatic.getField(q).getField();
@@ -587,25 +671,25 @@ public class PathAnalysis extends DynamicAnalysis {
 				return;
 			RegisterOperand ro = (RegisterOperand) rx;
 			Register r = ro.getRegister();
-			int rIdx = domV.indexOf(r);
-			assert (rIdx != -1);
-			setCurrQidx(q);
-			System.out.println("Adding to putstat: " + currQidx + " " + rIdx);
-			putstatSet.add(new IntPair(currQidx, rIdx));
+			int rId = domV.indexOf(r);
+			assert (rId != -1);
+			int currQid = setCurrQid(q);
+			System.out.println("Adding to putstat: " + currQid + " " + rId);
+			putstatSet.add(new IntPair(currQid, rId));
 		}
 		private void processAload(Quad q) {
 			RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
 			RegisterOperand lo = ALoad.getDest(q);
 			Register b = bo.getRegister();
 			Register l = lo.getRegister();
-			int bIdx = domV.indexOf(b);
-			assert (bIdx != -1);
-			int lIdx = domV.indexOf(l);
-			assert (lIdx != -1);
-			int fIdx = 0;
-			setCurrQidx(q);
-			System.out.println("Adding to getinst1: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
-			getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
+			int bId = domV.indexOf(b);
+			assert (bId != -1);
+			int lId = domV.indexOf(l);
+			assert (lId != -1);
+			int fId = 0;
+			int currQid = setCurrQid(q);
+			System.out.println("Adding to getinst1: " + currQid + " " + lId + " " + bId + " " + fId);
+			getinstSet.add(new IntQuad(currQid, lId, bId, fId));
 		}
 		private void processAstore(Quad q) {
 			Operand rx = AStore.getValue(q);
@@ -615,14 +699,14 @@ public class PathAnalysis extends DynamicAnalysis {
 			RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 			Register r = ro.getRegister();
 			Register b = bo.getRegister();
-			int rIdx = domV.indexOf(r);
-			assert (rIdx != -1);
-			int bIdx = domV.indexOf(b);
-			assert (bIdx != -1);
-			int fIdx = 0;
-			setCurrQidx(q);
-			System.out.println("Adding to putinst1: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
-			putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
+			int rId = domV.indexOf(r);
+			assert (rId != -1);
+			int bId = domV.indexOf(b);
+			assert (bId != -1);
+			int fId = 0;
+			int currQid = setCurrQid(q);
+			System.out.println("Adding to putinst1: " + currQid + " " + bId + " " + fId + " " + rId);
+			putinstSet.add(new IntQuad(currQid, bId, fId, rId));
 		}
 		private void processGetfield(Quad q) {
 			jq_Field f = Getfield.getField(q).getField();
@@ -635,15 +719,15 @@ public class PathAnalysis extends DynamicAnalysis {
 			RegisterOperand lo = Getfield.getDest(q);
 			Register b = bo.getRegister();
 			Register l = lo.getRegister();
-			int bIdx = domV.indexOf(b);
-			assert (bIdx != -1);
-			int lIdx = domV.indexOf(l);
-			assert (lIdx != -1);
-			int fIdx = domF.indexOf(f);
-			assert (fIdx != -1);
-			setCurrQidx(q);
-			System.out.println("Adding to getinst2: " + currQidx + " " + lIdx + " " + bIdx + " " + fIdx);
-			getinstSet.add(new IntQuad(currQidx, lIdx, bIdx, fIdx));
+			int bId = domV.indexOf(b);
+			assert (bId != -1);
+			int lId = domV.indexOf(l);
+			assert (lId != -1);
+			int fId = domF.indexOf(f);
+			assert (fId != -1);
+			int currQid = setCurrQid(q);
+			System.out.println("Adding to getinst2: " + currQid + " " + lId + " " + bId + " " + fId);
+			getinstSet.add(new IntQuad(currQid, lId, bId, fId));
 		}
 		private void processPutfield(Quad q) {
 			jq_Field f = Putfield.getField(q).getField();
@@ -659,15 +743,15 @@ public class PathAnalysis extends DynamicAnalysis {
 			RegisterOperand ro = (RegisterOperand) rx;
 			Register b = bo.getRegister();
 			Register r = ro.getRegister();
-			int bIdx = domV.indexOf(b);
-			assert (bIdx != -1);
-			int rIdx = domV.indexOf(r);
-			assert (rIdx != -1);
-			int fIdx = domF.indexOf(f);
-			assert (fIdx != -1);
-			setCurrQidx(q);
-			System.out.println("Adding to putinst2: " + currQidx + " " + bIdx + " " + fIdx + " " + rIdx);
-			putinstSet.add(new IntQuad(currQidx, bIdx, fIdx, rIdx));
+			int bId = domV.indexOf(b);
+			assert (bId != -1);
+			int rId = domV.indexOf(r);
+			assert (rId != -1);
+			int fId = domF.indexOf(f);
+			assert (fId != -1);
+			int currQid = setCurrQid(q);
+			System.out.println("Adding to putinst2: " + currQid + " " + bId + " " + fId + " " + rId);
+			putinstSet.add(new IntQuad(currQid, bId, fId, rId));
 		}
 		private void processInvoke(Quad q) {
 			List<IntPair> invkArgs = null;
@@ -677,11 +761,11 @@ public class PathAnalysis extends DynamicAnalysis {
 				RegisterOperand vo = lo.get(i);
 				Register v = vo.getRegister();
 				if (v.getType().isReferenceType()) {
-					int vIdx = domV.indexOf(v);
-					assert (vIdx != -1);
+					int vId = domV.indexOf(v);
+					assert (vId != -1);
 					if (invkArgs == null)
 						invkArgs = new ArrayList<IntPair>();
-					invkArgs.add(new IntPair(i, vIdx));
+					invkArgs.add(new IntPair(i, vId));
 				}
 			}
 			if (invkArgs == null)
@@ -699,178 +783,36 @@ public class PathAnalysis extends DynamicAnalysis {
 			String mName = m.getName().toString();
 			String mDesc = m.getDesc().toString();
 			String mSign = mName + mDesc;
-			setCurrQidx(q);
+			int currQid = setCurrQid(q);
 			if (mSign.equals("start()V") &&
 					m.getDeclaringClass().getName().equals("java.lang.Thread")) {
 				IntPair thisArg = invkArgs.get(0);
 				assert (thisArg.idx0 == 0);
-				int vIdx = thisArg.idx1;
-				System.out.println("Adding to spawn: " + currQidx + " " + vIdx);
-				spawnSet.add(new IntPair(currQidx, vIdx));
+				int vId = thisArg.idx1;
+				System.out.println("Adding to spawn: " + currQid + " " + vId);
+				spawnSet.add(new IntPair(currQid, vId));
 			} else {
 				InvkInfo invkInfo =
-					new InvkInfo(mSign, invkArgs, invkRet, currQidx);
+					new InvkInfo(mSign, invkArgs, invkRet, currQid);
 				pendingInvks.push(invkInfo);
 			}
 		}
 		private void processReturn(Quad q) {
 			int invkRet = top.invkRet;
-			if (invkRet == -1)
+			if (invkRet == -1) {
+				// this method was called implicitly
 				return;
+			}
 			Operand rx = Return.getSrc(q);
 			if (rx instanceof RegisterOperand) {
 				RegisterOperand ro = (RegisterOperand) rx;
 				Register v = ro.getRegister();
 				int methRet = domV.indexOf(v);
 				assert (methRet != -1);
-				setCurrQidx(q);
-				System.out.println("Adding to copy3: " + currQidx + " " + invkRet + " " + methRet);
-				copySet.add(new IntTrio(currQidx, invkRet, methRet));
+				int currQid = setCurrQid(q);
+				System.out.println("Adding to copy3: " + currQid + " " + invkRet + " " + methRet);
+				copySet.add(new IntTrio(currQid, invkRet, methRet));
 			}
-		}
-*/
-		public void processEnterMethod(int mIdx) {
-			System.out.println("EM tId: " + tId + " mIdx: " + mIdx);
-/*
-			assert (mIdx >= 0);
-			if (ignoredMethNumFrames > 0) {
-				System.out.println("Ignoring");
-				if (mIdx == ignoredMethIdx)
-					ignoredMethNumFrames++;
-				return;
-			}
-			jq_Method m = domM.get(mIdx);
-			String cName = m.getDeclaringClass().getName();
-			jq_Class cls = Program.v().getPreparedClass(cName);
-			if (cls == null) {
-				System.out.println("Missing class: " + cName);
-				beginIgnoredMeth(mIdx);
-				return;
-			}
-			String mName = m.getName().toString();
-			String mDesc = m.getDesc().toString();
-			String mSign = mName + mDesc;
-			List<IntPair> invkArgs = null;
-			int invkRet = -1;
-			boolean found = false;
-			if (!pendingInvks.isEmpty()) {
-				InvkInfo invkInfo = pendingInvks.peek();
-				if (invkInfo.sign.equals(mSign)) {
-					found = true;
-					pendingInvks.pop();
-					invkArgs = invkInfo.invkArgs;
-					invkRet = invkInfo.invkRet;
-					int invkQidx = invkInfo.invkQidx;
-					List<IntPair> methArgs = methToArgs[mIdx];
-					if (methArgs == null) {
-						methArgs = processMethArgs(m);
-						methToArgs[mIdx] = methArgs;
-					}
-					int numArgs = methArgs.size();
-					assert (numArgs == invkArgs.size());
-					for (int i = 0; i < numArgs; i++) {
-						IntPair zv = methArgs.get(i);
-						int zIdx = zv.idx0;
-						int vIdx = zv.idx1;
-						IntPair zu = invkArgs.get(i);
-						assert (zu.idx0 == zIdx);
-						int uIdx = zu.idx1;
-						System.out.println("Adding to copy4: " + invkQidx + " " + vIdx + " " + uIdx);
-						copySet.add(new IntTrio(invkQidx, vIdx, uIdx));
-					}
-				}
-			}
-			if (top != null)
-				frames.push(top);
-			int cIdx = methToNumCalls[mIdx]++;
-			System.out.println("XXX: " + m);
-			top = new Frame(mIdx, cIdx, invkArgs, invkRet);
-			if (!found && !foundThreadRoot) {
-				if (mSign.equals("main([Ljava/lang/String;)V") || mSign.equals("run()V")) {
-					foundThreadRoot = true;
-					System.out.println("Treating method '" + m +
-						"' as thread root of thread# " + tId);
-					if (mSign.equals("run()V")) {
-						List<IntPair> methArgs = methToArgs[mIdx];
-						if (methArgs == null) {
-							methArgs = processMethArgs(m);
-							methToArgs[mIdx] = methArgs;
-						}
-						IntPair thisArg = methArgs.get(0);
-						assert (thisArg.idx0 == 0);
-						setCurrQidx(m.getCFG().entry());
-						int vIdx = thisArg.idx1;
-						System.out.println("Adding to start: " + currQidx + " " + vIdx);
-						startSet.add(new IntPair(currQidx, vIdx));
-					}
-				}
-			}
-*/
-		}
-		public void processLeaveMethod(int mIdx) {
-			System.out.println("LM tId: " + tId + " mIdx: " + mIdx);
-/*
-			assert (mIdx >= 0);
-			if (top == null) {
-				System.out.println("Ignoring 1");
-				return;
-			}
-			if (ignoredMethNumFrames > 0) {
-				System.out.println("Ignoring 2");
-				if (mIdx == ignoredMethIdx)
-					ignoredMethNumFrames--;
-				return;
-			}
-			assert (mIdx == top.mIdx);
-			if (frames.isEmpty())
-				top = null;
-			else
-				top = frames.pop();
-*/
-		}
-		public void processNewOrNewArray(int h) {
-		}
-		public void processGetstaticPrimitive(int e) {
-			
-		}
-		public void processGetstaticReference(int e) {
-			
-		}
-		public void processPutstaticPrimitive(int e) {
-			
-		}
-		public void processPutstaticReference(int e) {
-			
-		}
-		public void processGetfieldPrimitive(int e) {
-			
-		}
-		public void processGetfieldReference(int e) { 
-			
-		}
-		public void processPutfieldPrimitive(int e) { 
-			
-		}
-		public void processPutfieldReference(int e) { 
-			
-		}
-		public void processAloadPrimitive(int e) { 
-			
-		}
-		public void processAloadReference(int e) { 
-			
-		}
-		public void processAstorePrimitive(int e) { 
-			
-		}
-		public void processAstoreReference(int e) { 
-			
-		}
-		public void processMethodCall(int i) { 
-			
-		}
-		public void processMove(int p) {
-			
 		}
 	}
 }

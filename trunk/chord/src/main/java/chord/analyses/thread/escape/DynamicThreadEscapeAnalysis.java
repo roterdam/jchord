@@ -5,9 +5,16 @@
  */
 package chord.analyses.thread.escape;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 
+import chord.project.ChordRuntimeException;
+import chord.project.Properties;
+import chord.util.IndexMap;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.DynamicAnalysis;
@@ -93,7 +100,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     	return instrScheme;
     }
 
-
 	public void initAllPasses() {
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
@@ -135,8 +141,11 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 
 	public void donePass() {
 		System.out.println("***** STATS *****");
-		int numVisited = 0, numFlowInsEsc = 0, numFlowSenEsc = 0,
-			numAllocEsc = 0;
+		int numVisited = 0;
+		int numFlowInsOriginalEsc = 0;
+		int numFlowInsAdjustedEsc = 0;
+		int numFlowSenEsc = 0;
+		int numAllocEsc = 0;
 		for (int i = 0; i < numE; i++) {
 			if (isEidxVisited[i])
 				numVisited++;
@@ -151,19 +160,21 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		if (isFlowIns) {
 			for (int i = 0; i < numE; i++) {
 				if (isEidxFlowInsEsc[i])
-					numFlowInsEsc++;
-				// else if (isFlowSen && isEidxFlowSenEsc[i])
-				//	numFlowInsEsc++;
+					numFlowInsOriginalEsc++;
+				else if (isFlowSen && isEidxFlowSenEsc[i])
+					numFlowInsAdjustedEsc++;
 			}
+			numFlowInsAdjustedEsc += numFlowInsOriginalEsc;
 			for (int i = 0; i < numH; i++) {
 				if (isHidxEsc[i])
 					numAllocEsc++;
 			}
 		}
 		System.out.println("numVisited: " + numVisited +
-			(isFlowSen ? " numFlowSenEsc: " + numFlowSenEsc : "") +
-			(isFlowIns ? " numFlowInsEsc: " + numFlowInsEsc +
-				" numAllocEsc: " + numAllocEsc : ""));
+			" numFlowSenEsc: " + numFlowSenEsc +
+			" numFlowInsEsc (original): " + numFlowInsOriginalEsc +
+			" numFlowInsEsc (adjusted): " + numFlowInsAdjustedEsc +
+			" numAllocEsc: " + numAllocEsc);
 	}
 
 	public void doneAllPasses() {
@@ -190,6 +201,38 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				}
 				relFlowSenEscE.save();
 			}
+		}
+
+		IndexMap<String> Emap = instrumentor.getEmap();
+		String outDirName = Properties.outDirName;
+		try {
+			PrintWriter writer = new PrintWriter(new FileWriter(
+				new File(outDirName, "visited.txt")));
+			for (int i = 0; i < numE; i++) {
+				if (isEidxVisited[i])
+					writer.println(Emap.get(i));
+			}
+			writer.close();
+			if (isFlowIns) {
+				writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "flowInsEsc.txt")));
+				for (int i = 0; i < numE; i++) {
+					if (isEidxFlowInsEsc[i])
+						writer.println(Emap.get(i));
+				}
+				writer.close();
+			}
+			if (isFlowSen) {
+				writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "flowSenEsc.txt")));
+				for (int i = 0; i < numE; i++) {
+					if (isEidxFlowSenEsc[i])
+						writer.println(Emap.get(i));
+				}
+				writer.close();
+			}
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
 		}
 	}
 

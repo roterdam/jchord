@@ -271,6 +271,8 @@ public class InstrScheme implements Serializable {
 
 	private boolean convert;
 	private int instrMethodAndLoopBound;
+	private boolean hasBasicBlockEvent;
+	private boolean hasQuadEvent;
 	private final EventFormat[] events;
 	public InstrScheme() {
 		events = new EventFormat[MAX_NUM_EVENT_FORMATS];
@@ -278,17 +280,30 @@ public class InstrScheme implements Serializable {
 			events[i] = new EventFormat();
 	}
 
-	public void setInstrMethodAndLoopBound(int n) {
-		assert (n >= 0);
-		instrMethodAndLoopBound = n;
-		if (n > 0)
-			setPnterAndLeaveMethodEvent(true, true);
-	}
 	public void setConvert() {
 		convert = true;
 	}
 	public boolean isConverted() {
 		return convert;
+	}
+
+	public void setBasicBlockEvent() {
+		hasBasicBlockEvent = true;
+	}
+	public boolean hasBasicBlockEvent() {
+		return hasBasicBlockEvent;
+	}
+
+	public void setQuadEvent() {
+		hasQuadEvent = true;
+	}
+	public boolean hasQuadEvent() {
+		return hasQuadEvent;
+	}
+
+	public void setInstrMethodAndLoopBound(int n) {
+		assert (n >= 0);
+		instrMethodAndLoopBound = n;
 	}
 	public int getInstrMethodAndLoopBound() {
 		return instrMethodAndLoopBound;
@@ -297,7 +312,7 @@ public class InstrScheme implements Serializable {
 	public EventFormat getEvent(int eventId) {
 		return events[eventId];
 	}
-	public void setPnterAndLeaveMethodEvent(
+	public void setEnterAndLeaveMethodEvent(
 			boolean hasM, boolean hasT) {
 		EventFormat e = events[ENTER_AND_LEAVE_METHOD];
 		if (hasM) e.setM();
@@ -513,7 +528,7 @@ public class InstrScheme implements Serializable {
 			events[ASTORE_REFERENCE].present();
 	}
 	public boolean needsMmap() {
-		return events[ENTER_AND_LEAVE_METHOD].hasMid();
+		return events[ENTER_AND_LEAVE_METHOD].hasMid() || instrMethodAndLoopBound > 0;
 	}
 	public boolean needsHmap() {
 		return events[NEW_AND_NEWARRAY].hasPid();
@@ -543,10 +558,11 @@ public class InstrScheme implements Serializable {
 			events[EXPLICIT_THROW].hasPid() || events[IMPLICIT_THROW].hasPid() ||
 			events[THREAD_START].hasPid() || events[THREAD_JOIN].hasPid() ||
 			events[ACQUIRE_LOCK].hasPid() || events[RELEASE_LOCK].hasPid() ||
-			events[WAIT].hasPid() || events[NOTIFY].hasPid();
+			events[WAIT].hasPid() || events[NOTIFY].hasPid() ||
+			hasQuadEvent;
 	}
 	public boolean needsBmap() {
-		return instrMethodAndLoopBound > 0;
+		return hasBasicBlockEvent;
 	}
 	public boolean needsTraceTransform() {
 		return events[NEW_AND_NEWARRAY].hasOid();

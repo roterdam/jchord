@@ -40,8 +40,8 @@ public class EventKind {
 	public static final byte EXPLICIT_THROW = 21;
 	public static final byte IMPLICIT_THROW = 22;
 
-	public static final byte MOVE = 23;
-	public static final byte ENTER_BASIC_BLOCK = 24;
+	public static final byte QUAD = 23;
+	public static final byte BASIC_BLOCK = 24;
 
 	public static final byte THREAD_START = 25;
 	public static final byte THREAD_JOIN = 26;
