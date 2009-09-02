@@ -9,11 +9,17 @@ package test;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class T extends java.lang.Thread {
+	static Object p;
+	static {
+		p = new Object();
+	}
     public static void main(String[] a) {
         B b1 = new B();
         B b2 = new B();
         for (int i = 0; i < 10; i++) {
             T t = new T(b1, b2);
+			if (i == 19)
+				throw new RuntimeException();
             t.start();
         }
         for (int i = 0; i < 10; i++) {
