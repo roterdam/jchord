@@ -35,7 +35,7 @@ public class SrcNode {
 			heap.equals(that.heap);
 	}
 	public String toString() {
-		return "env@s=" + HybridThreadEscapeAnalysis.toString(env) +
-			";heap@s=" + HybridThreadEscapeAnalysis.toString(heap);
+		return "env@s=" + ThreadEscapeFullAnalysis.toString(env) +
+			";heap@s=" + ThreadEscapeFullAnalysis.toString(heap);
 	}
 }

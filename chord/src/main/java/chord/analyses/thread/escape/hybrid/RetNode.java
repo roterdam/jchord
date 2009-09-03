@@ -39,8 +39,8 @@ public class RetNode {
 			heap.equals(that.heap);
 	}
 	public String toString() {
-		return "pts@r=" + HybridThreadEscapeAnalysis.toString(pts) +
-			";heap@r=" + HybridThreadEscapeAnalysis.toString(heap) +
-			";esc@r=" + HybridThreadEscapeAnalysis.toString(esc);
+		return "pts@r=" + ThreadEscapeFullAnalysis.toString(pts) +
+			";heap@r=" + ThreadEscapeFullAnalysis.toString(heap) +
+			";esc@r=" + ThreadEscapeFullAnalysis.toString(esc);
 	}
 }
