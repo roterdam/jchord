@@ -38,8 +38,8 @@ public class DstNode {
 			heap.equals(that.heap);
 	}
 	public String toString() {
-		return "env@d=" + HybridThreadEscapeAnalysis.toString(env) +
-			"; heap@d=" + HybridThreadEscapeAnalysis.toString(heap) +
-			"; esc@d=" + HybridThreadEscapeAnalysis.toString(esc);
+		return "env@d=" + ThreadEscapeFullAnalysis.toString(env) +
+			"; heap@d=" + ThreadEscapeFullAnalysis.toString(heap) +
+			"; esc@d=" + ThreadEscapeFullAnalysis.toString(esc);
 	}
 }

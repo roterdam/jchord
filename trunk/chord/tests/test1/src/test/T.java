@@ -45,7 +45,7 @@ class B {
 		this(new A());
     }
 	B(A a) {
-        this.bf = a;	// must be deemed loc by ap but esc by aw (due to branch never taken); correct (*)
+        this.bf = a;	// must be deemed loc by ap but esc by aw (due to branch never taken); correct
 	}
 	static B getNewInstance() {
 		return new B();
