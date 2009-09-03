@@ -85,22 +85,22 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 	}
 
 	public void processGetstaticReference(int eId, int tId, int fId, int oId) { 
-		processHeapRd(eId, tId, oId);
+		processHeapRd(eId, tId, Runtime.getPrimitiveId(1, fId));
 	}
 	public void processPutstaticReference(int eId, int tId, int fIdx, int oId) {
-		processHeapWr(eId, tId, oId);
+		processHeapWr(eId, tId, Runtime.getPrimitiveId(1, fIdx));
 	}
 	public void processGetfieldReference(int eId, int tId, int bId, int fId, int oId) { 
-		processHeapRd(eId, tId, oId);
+		processHeapRd(eId, tId, Runtime.getPrimitiveId(bId, fId));
 	}
 	public void processPutfieldReference(int eId, int tId, int bId, int fId, int oId) { 
-		processHeapWr(eId, tId, oId);
+		processHeapWr(eId, tId, Runtime.getPrimitiveId(bId, fId));
 	}
 	public void processAloadReference(int eId, int tId, int bId, int iId, int oId) {
-		processHeapRd(eId, tId, oId);
+		processHeapRd(eId, tId, Runtime.getPrimitiveId(bId, iId));
 	}
 	public void processAstoreReference(int eId, int tId, int bId, int iId, int oId) {
-		processHeapWr(eId, tId, oId);
+		processHeapWr(eId, tId, Runtime.getPrimitiveId(bId, iId));
 	}
 
 	public void processAcquireLock(int pId, int tId, int lId) {
@@ -224,7 +224,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 			rdListForL = unionOfRdLists(rdListForL, lsElem.rdList);
 		}
 		for(RdListElemInfo rdElem : rdListForL){
-			db.addToDatabase(rdElem.iids, rdElem.m, tId, lId, tb.getVC(tId));
+			db.addToDatabase(rdElem.iids, rdElem.m, tId, lId, pId, tb.getVC(tId));
 		}
 	}
 	public void processNotify(int pId, int tId, int lId) { 
