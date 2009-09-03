@@ -53,15 +53,16 @@ import chord.util.CompareUtils;
 import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.object.Pair;
+import chord.util.Timer;
 
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	    name = "hybrid-thresc-java"
+	    name = "thresc-full-java"
 	)
-public class HybridThreadEscapeAnalysis extends JavaAnalysis {
+public class ThreadEscapeFullAnalysis extends JavaAnalysis {
     private final static boolean DEBUG = false;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();
@@ -88,15 +89,19 @@ public class HybridThreadEscapeAnalysis extends JavaAnalysis {
 	// TODO: E -> CE in each of 3 below sets?
 	// set of heap insts deemed possibly escaping by
 	// whole-program analysis
-	private Set<Quad> esc2HeapInsts = new HashSet<Quad>();
+	private Set<Quad> escHeapInsts = new HashSet<Quad>();
 	// set of heap insts proven thread local by whole-program analysis
-	private Set<Quad> locHeapInsts  = new HashSet<Quad>();
+	private Set<Quad> locHeapInsts = new HashSet<Quad>();
 	private Quad currHeapInst;
 	private Set<Quad> currAllocs;
 	private jq_Method threadStartMethod;
 	private jq_Method mainMethod;
 	
 	public void run() {
+		ThreadEscapePathAnalysis analysis =
+			(ThreadEscapePathAnalysis) Project.getTrgt("thresc-path-java");
+		Project.runTask(analysis);
+		Map<Quad, Set<Quad>> heapInstToAllocs = analysis.getHeapInstToAllocsMap();
 		threadStartMethod = Program.v().getThreadStartMethod();
 		mainMethod = Program.v().getMainMethod();
 		domV = (DomV) Project.getTrgt("V");
@@ -130,15 +135,14 @@ public class HybridThreadEscapeAnalysis extends JavaAnalysis {
 		cscg = cscgAnalysis.getCallGraph();
 		Set<Pair<Ctxt, jq_Method>> roots = cscg.getRoots();
 
-/*
-		for (Map.Entry<Quad, Set<Quad>> e :
-				heapInstToAllocs.entrySet()) {
+		for (Map.Entry<Quad, Set<Quad>> e : heapInstToAllocs.entrySet()) {
 			currHeapInst = e.getKey();
 			currAllocs = e.getValue();
 			jq_Method m = Program.v().getMethod(currHeapInst);
 			if (!m.getDeclaringClass().getName().startsWith("test"))
 				continue;
-			System.out.println("currHeapInst: " + Program.v().toStringHeapInst(currHeapInst) +
+			System.out.println("currHeapInst: " +
+				Program.v().toStringHeapInst(currHeapInst) +
 				" m: " + m);
 			for (Quad h : currAllocs)
 				System.out.println("\t" + Program.v().toStringNewInst(h));
@@ -152,22 +156,19 @@ public class HybridThreadEscapeAnalysis extends JavaAnalysis {
 				locHeapInsts.add(currHeapInst);
 			} catch (ThrEscException ex) {
 				System.out.println("XXX ESC");
-				esc2HeapInsts.add(currHeapInst);
+				escHeapInsts.add(currHeapInst);
 			}
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
-		System.out.println("XXXXX esc1HeapInsts");
-		for (Quad e : esc1HeapInsts)
-			System.out.println(Program.v().toString(e));
-		System.out.println("XXXXX esc2HeapInsts");
-		for (Quad e : esc2HeapInsts)
-			System.out.println(Program.v().toString(e));
-		System.out.println("XXXXX locHeapInsts");
+		System.out.println("Full analysis escHeapInsts:");
+		for (Quad e : escHeapInsts)
+			System.out.println("\t" + Program.v().toString(e));
+		System.out.println("Full analysis locHeapInsts:");
 		for (Quad e : locHeapInsts)
-			System.out.println(Program.v().toString(e));
-*/			
+			System.out.println("\t" + Program.v().toString(e));
 	}
+
 	private void processThread(Pair<Ctxt, jq_Method> root) {
 		System.out.println("PROCESSING THREAD: " + root);
 		init(root);
