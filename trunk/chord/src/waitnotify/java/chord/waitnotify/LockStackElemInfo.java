@@ -1,4 +1,4 @@
-package javato.wnPatternChecker;
+package chord.waitnotify;
 
 import java.util.HashSet;
 import java.util.LinkedList;

@@ -1,11 +1,8 @@
-package javato.wnPatternChecker;
-
-import java.util.LinkedList;
-import java.util.List;
+package chord.waitnotify;
 
 /**
  * Copyright (c) 2007-2008,
- * Pallavi Joshi	<pallavi@cs.berkeley.edu>
+ * Koushik Sen    <ksen@cs.berkeley.edu>
  * All rights reserved.
  * <p/>
  * Redistribution and use in source and binary forms, with or without
@@ -35,30 +32,16 @@ import java.util.List;
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+public class LongCounter {
+    public long val;
 
-public class RdListElemInfo {
-	public long m;
-	public List<Integer> iids;
-	
-	public RdListElemInfo(int iid, long m){
-		iids = new LinkedList<Integer>();
-		iids.add(iid);
-		this.m = m;
-	}
-	
-	public boolean equals(Object other){
-		if(!(other instanceof RdListElemInfo)){
-			return false;
-		}
-		RdListElemInfo otherRdSetElemInfo = (RdListElemInfo)other;
-		if(m == otherRdSetElemInfo.m){
-			return true;
-		}
-		return false;
-	}
-	
-	public int hashCode(){
-		int hash = (new Long(m)).intValue();
-		return hash;
-	}
+
+    public LongCounter(long val) {
+        this.val = val;
+    }
+
+    public LongCounter inc() {
+        val++;
+        return this;
+    }
 }

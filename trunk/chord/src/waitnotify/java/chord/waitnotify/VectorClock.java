@@ -1,4 +1,4 @@
-package javato.utils;
+package chord.waitnotify;
 
 import java.util.Iterator;
 import java.util.Map;

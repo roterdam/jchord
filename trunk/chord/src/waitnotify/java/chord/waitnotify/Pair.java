@@ -1,8 +1,8 @@
-package javato.utils;
+package chord.waitnotify;
 
 /**
  * Copyright (c) 2007-2008,
- * Koushik Sen    <ksen@cs.berkeley.edu>
+ * Pallavi Joshi	<pallavi@cs.berkeley.edu>
  * All rights reserved.
  * <p/>
  * Redistribution and use in source and binary forms, with or without
@@ -32,16 +32,14 @@ package javato.utils;
  * NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-public class LongCounter {
-    public long val;
 
-
-    public LongCounter(long val) {
-        this.val = val;
-    }
-
-    public LongCounter inc() {
-        val++;
-        return this;
-    }
+public class Pair<A, B> {
+	public A fst;
+	public B snd;
+	
+	public Pair(A a, B b){
+		fst = a;
+		snd = b;
+	}
+	
 }

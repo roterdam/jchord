@@ -1,4 +1,10 @@
-package javato.wnPatternChecker;
+package chord.waitnotify;
+
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+
 
 /**
  * Copyright (c) 2007-2008,
@@ -33,13 +39,46 @@ package javato.wnPatternChecker;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-public class Pair<A, B> {
-	public A fst;
-	public B snd;
+public class WrListElemInfo {
+	public long m;
+	public Set<Integer> lockSet;
+	public Set<Integer> notifySet;
+	public List<Integer> iids;
 	
-	public Pair(A a, B b){
-		fst = a;
-		snd = b;
+	public WrListElemInfo(int iid, long m){
+		iids = new LinkedList<Integer>();
+		iids.add(iid);
+		this.m = m;
+		lockSet = new HashSet<Integer>();
+		notifySet = new HashSet<Integer>();
 	}
 	
+	
+	public void addToLockSet(int l){
+		lockSet.add(l);
+	}
+	
+	public void addToNotifySet(int l){
+		notifySet.add(l);
+	}
+	
+	public boolean equals(Object other){
+		if(!(other instanceof WrListElemInfo)){
+			return false;
+		}
+		WrListElemInfo otherWrSetElemInfo = (WrListElemInfo)other;
+		if((m == otherWrSetElemInfo.m) && (lockSet.equals(otherWrSetElemInfo.lockSet)) && 
+				(notifySet.equals(otherWrSetElemInfo.notifySet))){
+			return true;
+		}
+		return false;
+	}
+	
+	public int hashCode(){
+		int hash = 1;
+		hash = hash*31 + (new Long(m)).intValue();
+		hash = hash*31 + lockSet.hashCode();
+		hash = hash*31 + notifySet.hashCode();
+		return hash;
+	}
 }

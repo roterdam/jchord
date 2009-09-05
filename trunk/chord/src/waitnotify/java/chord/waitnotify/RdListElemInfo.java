@@ -1,13 +1,11 @@
-package javato.wnPatternChecker;
+package chord.waitnotify;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import javato.utils.VectorClock;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * Copyright (c) 2007-2008,
- * Pallavi Joshi   <pallavi@cs.berkeley.edu>
+ * Pallavi Joshi	<pallavi@cs.berkeley.edu>
  * All rights reserved.
  * <p/>
  * Redistribution and use in source and binary forms, with or without
@@ -38,31 +36,29 @@ import javato.utils.VectorClock;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-public class ThreadBase {
-	private Map<Integer, VectorClock> threadToVecClock = new HashMap<Integer, VectorClock>(); 
+public class RdListElemInfo {
+	public long m;
+	public List<Integer> iids;
 	
-	public void Start(int parent, int child){
-		VectorClock parentVC = getVC(parent);
-		VectorClock childVC = new VectorClock(parentVC);
-		threadToVecClock.put(child, childVC);
-		
-		parentVC.inc(parent);
-		childVC.inc(child);
+	public RdListElemInfo(int iid, long m){
+		iids = new LinkedList<Integer>();
+		iids.add(iid);
+		this.m = m;
 	}
 	
-	public void Join(int parent, int child){
-		VectorClock parentVC = getVC(parent);
-		VectorClock childVC = getVC(child);
-		parentVC.updateMax(childVC);
-		childVC.inc(child);
-	}
-	
-	public VectorClock getVC(int t){
-		VectorClock vc = threadToVecClock.get(t);
-		if(vc == null){
-			vc = new VectorClock();
+	public boolean equals(Object other){
+		if(!(other instanceof RdListElemInfo)){
+			return false;
 		}
-		threadToVecClock.put(t, vc);
-		return vc;
+		RdListElemInfo otherRdSetElemInfo = (RdListElemInfo)other;
+		if(m == otherRdSetElemInfo.m){
+			return true;
+		}
+		return false;
+	}
+	
+	public int hashCode(){
+		int hash = (new Long(m)).intValue();
+		return hash;
 	}
 }

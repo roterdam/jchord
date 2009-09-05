@@ -1,4 +1,4 @@
-package javato.wnPatternChecker;
+package chord.waitnotify;
 
 import java.util.HashSet;
 import java.util.Iterator;
@@ -10,6 +10,7 @@ import java.util.TreeMap;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
+import chord.project.Program;
 import chord.project.Project;
 import chord.project.ProgramDom;
 import chord.project.DynamicAnalysis;
@@ -26,45 +27,52 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 	private ThreadBase tb = new ThreadBase();
 	public static Map<Integer, Stack<LockStackElemInfo>> lockStacks = new TreeMap<Integer, Stack<LockStackElemInfo>>();
 
-    	protected InstrScheme instrScheme;
-   	public InstrScheme getInstrScheme() {
-    		if (instrScheme != null)
-    			return instrScheme;
-    		instrScheme = new InstrScheme();
-
-    		instrScheme.setGetstaticPrimitiveEvent(true, true, true);
-    		instrScheme.setPutstaticPrimitiveEvent(true, true, true);
-    		instrScheme.setGetfieldPrimitiveEvent(true, true, true, true);
-    		instrScheme.setPutfieldPrimitiveEvent(true, true, true, true);
-    		instrScheme.setAloadPrimitiveEvent(true, true, true, true);
-    		instrScheme.setAstorePrimitiveEvent(true, true, true, true);
-
-    		instrScheme.setGetstaticReferenceEvent(true, true, false, true);
-    		instrScheme.setPutstaticReferenceEvent(true, true, false, true);
-    		instrScheme.setGetfieldReferenceEvent(true, true, false, false, true);
-    		instrScheme.setPutfieldReferenceEvent(true, true, false, false, true);
-    		instrScheme.setAloadReferenceEvent(true, true, false, false, true);
-    		instrScheme.setAstoreReferenceEvent(true, true, false, false, true);
-
-    		instrScheme.setThreadStartEvent(true, true, true);
-    		instrScheme.setThreadJoinEvent(true, true, true);
-    		instrScheme.setAcquireLockEvent(true, true, true);
-    		instrScheme.setReleaseLockEvent(true, true, true);
-    		instrScheme.setWaitEvent(true, true, true);
-    		instrScheme.setNotifyEvent(true, true, true);
+    protected InstrScheme instrScheme;
+    public InstrScheme getInstrScheme() {
+    	if (instrScheme != null)
     		return instrScheme;
-    	}
+    	instrScheme = new InstrScheme();
+
+    	instrScheme.setGetstaticPrimitiveEvent(true, true, true);
+    	instrScheme.setPutstaticPrimitiveEvent(true, true, true);
+    	instrScheme.setGetfieldPrimitiveEvent(true, true, true, true);
+    	instrScheme.setPutfieldPrimitiveEvent(true, true, true, true);
+    	instrScheme.setAloadPrimitiveEvent(true, true, true, true);
+    	instrScheme.setAstorePrimitiveEvent(true, true, true, true);
+
+    	instrScheme.setGetstaticReferenceEvent(true, true, false, true);
+    	instrScheme.setPutstaticReferenceEvent(true, true, false, true);
+    	instrScheme.setGetfieldReferenceEvent(true, true, false, false, true);
+    	instrScheme.setPutfieldReferenceEvent(true, true, false, false, true);
+    	instrScheme.setAloadReferenceEvent(true, true, false, false, true);
+    	instrScheme.setAstoreReferenceEvent(true, true, false, false, true);
+
+    	instrScheme.setThreadStartEvent(true, true, true);
+    	instrScheme.setThreadJoinEvent(true, true, true);
+    	instrScheme.setAcquireLockEvent(true, true, true);
+    	instrScheme.setReleaseLockEvent(true, true, true);
+    	instrScheme.setWaitEvent(true, true, true);
+    	instrScheme.setNotifyEvent(true, true, true);
+    	return instrScheme;
+    }
 	public void initPass() {
-		lStacks = new TreeMap<Integer, Stack<IntPair>>();
-		db = new Database();
-		tb = new ThreadBase();
-		lockStacks = new TreeMap<Integer, Stack<LockStackElemInfo>>();
+		// do nothing for now
 	}
-
 	public void donePass() {
-        	db.checkForErrors(instrumentor.getEmap(), instrumentor.getPmap());
+		System.out.println("in done...going to call checkForErrors");
+        db.checkForErrors(instrumentor.getEmap(), instrumentor.getPmap());
 	}
+	public void doneAllPasses() {
+        Utils.copyFile("src/waitnotify/web/results.dtd")
+        Utils.copyFile("src/waitnotify/web/results.xml")
+        Utils.copyFile("src/waitnotify/web/results.xsl");
+        Utils.copyFile("src/main/web/Elist.dtd");
+        Utils.copyFile("src/main/web/style.css");
+        Utils.copyFile("src/main/web/misc.xsl");
 
+        Utils.runSaxon("results.xml", "errors.xsl");
+		Program.v().HTMLizeJavaSrcFiles();
+	}
 	public void processGetstaticPrimitive(int eId, int tId, int fId) { 
 		processHeapRd(eId, tId, Runtime.getPrimitiveId(1, fId));
 	}
@@ -85,22 +93,22 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 	}
 
 	public void processGetstaticReference(int eId, int tId, int fId, int oId) { 
-		processHeapRd(eId, tId, Runtime.getPrimitiveId(1, fId));
+		processHeapRd(eId, tId, oId);
 	}
 	public void processPutstaticReference(int eId, int tId, int fIdx, int oId) {
-		processHeapWr(eId, tId, Runtime.getPrimitiveId(1, fIdx));
+		processHeapWr(eId, tId, oId);
 	}
 	public void processGetfieldReference(int eId, int tId, int bId, int fId, int oId) { 
-		processHeapRd(eId, tId, Runtime.getPrimitiveId(bId, fId));
+		processHeapRd(eId, tId, oId);
 	}
 	public void processPutfieldReference(int eId, int tId, int bId, int fId, int oId) { 
-		processHeapWr(eId, tId, Runtime.getPrimitiveId(bId, fId));
+		processHeapWr(eId, tId, oId);
 	}
 	public void processAloadReference(int eId, int tId, int bId, int iId, int oId) {
-		processHeapRd(eId, tId, Runtime.getPrimitiveId(bId, iId));
+		processHeapRd(eId, tId, oId);
 	}
 	public void processAstoreReference(int eId, int tId, int bId, int iId, int oId) {
-		processHeapWr(eId, tId, Runtime.getPrimitiveId(bId, iId));
+		processHeapWr(eId, tId, oId);
 	}
 
 	public void processAcquireLock(int pId, int tId, int lId) {
@@ -224,7 +232,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 			rdListForL = unionOfRdLists(rdListForL, lsElem.rdList);
 		}
 		for(RdListElemInfo rdElem : rdListForL){
-			db.addToDatabase(rdElem.iids, rdElem.m, tId, lId, pId, tb.getVC(tId));
+			db.addToDatabase(rdElem.iids, rdElem.m, tId, lId, tb.getVC(tId));
 		}
 	}
 	public void processNotify(int pId, int tId, int lId) { 
