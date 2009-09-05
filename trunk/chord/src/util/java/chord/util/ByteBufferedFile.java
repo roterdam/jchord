@@ -159,8 +159,14 @@ public class ByteBufferedFile {
 		}
 		curPos += 8;
 	}
-	public boolean isDone() {
-		return curPos == maxPos && iStream == null;
+	public boolean isDone() throws IOException {
+		if (curPos != maxPos)
+			return false;
+		if (iStream == null)
+			return true;
+		refill();
+		return maxPos == 0;
+		// return curPos == maxPos && iStream == null;
 	}
 	private void refill() throws IOException {
 		int numMoved = 0;
