@@ -19,34 +19,35 @@ getstat(q:Q0,l:V0) input
 putstat(q:Q0,l:V0) input
 spawn(q:Q0,v:V0) input
 start(q:Q0,v:V0) input
+baseQV(q:Q0,v:V0) input
 
 PQ(p:P0,q:Q0) input
 PE(p:P0,e:E0) input
 EV(e:E0,v:V0) input
 flowinsEscE(e:E0) input
 
-use(q:Q0,v:V0)
-def(q:Q0,v:V0)
-live_i(q:Q0,v:V0)
-live_o(q:Q0,v:V0)
-pres(q:Q0,v:V0) 
+use(q:Q0,v:V0) output
+def(q:Q0,v:V0) output
+live_i(q:Q0,v:V0) output
+live_o(q:Q0,v:V0) output
+pres(q:Q0,v:V0) output
 
-QHFH_i(q:Q0,h1:H0,f:F0,h2:H1)
-QHFH_o(q:Q0,h1:H0,f:F0,h2:H1)
-QVH_i(q:Q0,v:V0,h:H0)
-QVH_o(q:Q0,v:V0,h:H0)
-escQH_i(q:Q0,h:H0)
-escQH_o(q:Q0,h:H0)
-escQHtc_i(q:Q0,h:H0)
-escQV(q:Q0,v:V0)
+QHFH_i(q:Q0,h1:H0,f:F0,h2:H1) output
+QHFH_o(q:Q0,h1:H0,f:F0,h2:H1) output
+QVH_i(q:Q0,v:V0,h:H0) output
+QVH_o(q:Q0,v:V0,h:H0) output
+escQH_i(q:Q0,h:H0) output
+escQH_o(q:Q0,h:H0) output
+escQHtc_i(q:Q0,h:H0) output
+escQV(q:Q0,v:V0) output
 hybridVisitedE(e:E0) output
 hybridEscE(e:E0) output
 
 queryE(e:E0) output
-queryPV(p:P0,v:V0)
-queryQV(q:Q0,v:V0)
-relevantQVH(q:Q0,v:V0,h:H0)
-relevantPVH(p:P0,v:V0,h:H0)
+queryPV(p:P0,v:V0) output
+queryQV(q:Q0,v:V0) output
+relevantQVH(q:Q0,v:V0,h:H0) output
+relevantPVH(p:P0,v:V0,h:H0) output
 relevantEH(e:E0,h:H0) output
 
 ###
@@ -55,9 +56,8 @@ def(q,l) :- asgn(q,l).
 def(q,l) :- copy(q,l,_).
 use(q,r) :- copy(q,_,r).
 def(q,l) :- getinst(q,l,_,_).
-use(q,b) :- getinst(q,_,b,_).
-use(q,b) :- putinst(q,b,_,_).
 use(q,r) :- putinst(q,_,_,r).
+use(q,b) :- baseQV(q,b).
 def(q,l) :- getstat(q,l).
 use(q,r) :- putstat(q,r).
 def(q,v) :- alloc(q,v,_).

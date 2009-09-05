@@ -59,7 +59,7 @@ import joeq.Compiler.Quad.BasicBlock;
     name = "thresc-path-java"
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
-	private final static boolean DEBUG = true;
+	private final static boolean DEBUG = false;
     protected InstrScheme instrScheme;
     public InstrScheme getInstrScheme() {
         if (instrScheme != null)
@@ -99,6 +99,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private Set<IntPair> putstatSet;
 	private Set<IntPair> spawnSet;
 	private Set<IntPair> startSet;
+	private Set<IntPair> baseQVset;
 	private Set<IntPair> PQset;
 
 	public Map<Quad, Set<Quad>> getHeapInstToAllocsMap() {
@@ -138,6 +139,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		putstatSet = new HashSet<IntPair>();
 		spawnSet = new HashSet<IntPair>();
 		startSet = new HashSet<IntPair>();
+		baseQVset = new HashSet<IntPair>();
 		PQset = new HashSet<IntPair>();
 	}
 
@@ -268,6 +270,13 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 		relStart.save();
 
+		ProgramRel relBaseQV = (ProgramRel) Project.getTrgt("baseQV");
+		relBaseQV.zero();
+		for (IntPair qv : baseQVset) {
+			relBaseQV.add(qv.idx0, qv.idx1);
+		}
+		relBaseQV.save();
+
 		ProgramRel relPQ = (ProgramRel) Project.getTrgt("PQ");
 		relPQ.zero();
 		for (IntPair pq : PQset) {
@@ -394,14 +403,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		private int setCurrQid(BasicBlock bb) {
 			int currQid = domQ.getOrAdd(new IntTrio(-1, top.mId, top.cId));
 			if (prevQid != -1) {
-				if (DEBUG) System.out.println("Adding to succ1: " + prevQid + " " + currQid);
 				succSet.add(new IntPair(prevQid, currQid));
 			}
 			prevQid = currQid;
 			if (currQid == domQ.size() - 1) {
 				int p = domP.indexOf(bb);
 				assert (p != -1);
-				if (DEBUG) System.out.println("Adding to PQset1: " + p + " " + currQid);
 				PQset.add(new IntPair(p, currQid));
 			}
 			return currQid;
@@ -410,14 +417,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int i = q.getID();
 			int currQid = domQ.getOrAdd(new IntTrio(i, top.mId, top.cId));
 			if (prevQid != -1) {
-				if (DEBUG) System.out.println("Adding to succ2: " + prevQid + " " + currQid);
 				succSet.add(new IntPair(prevQid, currQid));
 			}
 			prevQid = currQid;
 			if (currQid == domQ.size() - 1) {
 				int p = domP.indexOf(q);
 				assert (p != -1);
-				if (DEBUG) System.out.println("Adding to PQset2: " + p + " " + currQid);
 				PQset.add(new IntPair(p, currQid));
 			}
 			return currQid;
@@ -466,7 +471,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 						IntPair zu = invkArgs.get(i);
 						assert (zu.idx0 == zId);
 						int uId = zu.idx1;
-						if (DEBUG) System.out.println("Adding to copy4: " + invkQid + " " + vId + " " + uId);
 						copySet.add(new IntTrio(invkQid, vId, uId));
 					}
 				}
@@ -491,7 +495,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 						assert (thisArg.idx0 == 0);
 						int currQid = setCurrQid(m.getCFG().entry());
 						int vId = thisArg.idx1;
-						if (DEBUG) System.out.println("Adding to start: " + currQid + " " + vId);
 						startSet.add(new IntPair(currQid, vId));
 					}
 				}
@@ -569,15 +572,13 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				processMove(q);
 			else if (op instanceof Getfield)
 				processGetfield(q);
-			else if (op instanceof ALoad) {
-				if (((ALoad) op).getType().isReferenceType())
-					processAload(q);
-			} else if (op instanceof Putfield)
+			else if (op instanceof ALoad)
+				processAload(q);
+			else if (op instanceof Putfield)
 				processPutfield(q);
-			else if (op instanceof AStore) {
-				if (((AStore) op).getType().isReferenceType())
-						processAstore(q);
-			} else if (op instanceof Getstatic)
+			else if (op instanceof AStore)
+				processAstore(q);
+			else if (op instanceof Getstatic)
 				processGetstatic(q);
 			else if (op instanceof Putstatic)
 				processPutstatic(q);
@@ -612,7 +613,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int lId = domV.indexOf(l);
 			assert (lId != -1);
 			int currQid = setCurrQid(q);
-			if (DEBUG) System.out.println("Adding to copy1: " + currQid + " " + lId + " " + rId);
 			copySet.add(new IntTrio(currQid, lId, rId));
 		}
 		private void processNewOrNewArray(Quad q, boolean isNew) {
@@ -623,7 +623,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int hId = domH.indexOf(q);
 			assert (hId != -1);
 			int currQid = setCurrQid(q);
-			if (DEBUG) System.out.println("Adding to alloc: " + currQid + " " + vId + " " + hId);
 			allocSet.add(new IntTrio(currQid, vId, hId));
 		}
 		private void processMove(Quad q) {
@@ -649,10 +648,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				Register r = ro.getRegister();
 				int rId = domV.indexOf(r);
 				assert (rId != -1);
-				if (DEBUG) System.out.println("Adding to copy2: " + currQid + " " + lId + " " + rId);
 				copySet.add(new IntTrio(currQid, lId, rId));
 			} else {
-				if (DEBUG) System.out.println("Adding to asgn: " + currQid + " " + lId);
 				asgnSet.add(new IntPair(currQid, lId));
 			}
 		}
@@ -665,7 +662,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int lId = domV.indexOf(l);
 			assert (lId != -1);
 			int currQid = setCurrQid(q);
-			if (DEBUG) System.out.println("Adding to getstat: " + currQid + " " + lId);
 			getstatSet.add(new IntPair(currQid, lId));
 		}
 		private void processPutstatic(Quad q) {
@@ -680,83 +676,86 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int rId = domV.indexOf(r);
 			assert (rId != -1);
 			int currQid = setCurrQid(q);
-			if (DEBUG) System.out.println("Adding to putstat: " + currQid + " " + rId);
 			putstatSet.add(new IntPair(currQid, rId));
 		}
 		private void processAload(Quad q) {
+			int currQid = setCurrQid(q);
 			RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
-			RegisterOperand lo = ALoad.getDest(q);
 			Register b = bo.getRegister();
-			Register l = lo.getRegister();
 			int bId = domV.indexOf(b);
 			assert (bId != -1);
+			baseQVset.add(new IntPair(currQid, bId));
+			if (!((ALoad) q.getOperator()).getType().isReferenceType())
+				return;
+			RegisterOperand lo = ALoad.getDest(q);
+			Register l = lo.getRegister();
 			int lId = domV.indexOf(l);
 			assert (lId != -1);
 			int fId = 0;
-			int currQid = setCurrQid(q);
-			if (DEBUG) System.out.println("Adding to getinst1: " + currQid + " " + lId + " " + bId + " " + fId);
 			getinstSet.add(new IntQuad(currQid, lId, bId, fId));
 		}
 		private void processAstore(Quad q) {
+			int currQid = setCurrQid(q);
+			RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
+			Register b = bo.getRegister();
+			int bId = domV.indexOf(b);
+			assert (bId != -1);
+			baseQVset.add(new IntPair(currQid, bId));
+			if (!((AStore) q.getOperator()).getType().isReferenceType())
+				return;
 			Operand rx = AStore.getValue(q);
 			if (!(rx instanceof RegisterOperand))
 				return;
 			RegisterOperand ro = (RegisterOperand) rx;
-			RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 			Register r = ro.getRegister();
-			Register b = bo.getRegister();
 			int rId = domV.indexOf(r);
 			assert (rId != -1);
-			int bId = domV.indexOf(b);
-			assert (bId != -1);
 			int fId = 0;
-			int currQid = setCurrQid(q);
-			if (DEBUG) System.out.println("Adding to putinst1: " + currQid + " " + bId + " " + fId + " " + rId);
 			putinstSet.add(new IntQuad(currQid, bId, fId, rId));
 		}
 		private void processGetfield(Quad q) {
-			jq_Field f = Getfield.getField(q).getField();
-			if (!f.getType().isReferenceType())
-				return;
+			int currQid = setCurrQid(q);
 			Operand bx = Getfield.getBase(q);
 			if (!(bx instanceof RegisterOperand))
 				return;
 			RegisterOperand bo = (RegisterOperand) bx;
-			RegisterOperand lo = Getfield.getDest(q);
 			Register b = bo.getRegister();
-			Register l = lo.getRegister();
 			int bId = domV.indexOf(b);
 			assert (bId != -1);
+			baseQVset.add(new IntPair(currQid, bId));
+			jq_Field f = Getfield.getField(q).getField();
+			if (!f.getType().isReferenceType())
+				return;
+			RegisterOperand lo = Getfield.getDest(q);
+			Register l = lo.getRegister();
 			int lId = domV.indexOf(l);
 			assert (lId != -1);
 			int fId = domF.indexOf(f);
 			assert (fId != -1);
-			int currQid = setCurrQid(q);
-			if (DEBUG) System.out.println("Adding to getinst2: " + currQid + " " + lId + " " + bId + " " + fId);
 			getinstSet.add(new IntQuad(currQid, lId, bId, fId));
 		}
 		private void processPutfield(Quad q) {
-			jq_Field f = Putfield.getField(q).getField();
-			if (!f.getType().isReferenceType())
-				return;
+			int currQid = setCurrQid(q);
 			Operand bx = Putfield.getBase(q);
 			if (!(bx instanceof RegisterOperand))
+				return;
+			RegisterOperand bo = (RegisterOperand) bx;
+			Register b = bo.getRegister();
+			int bId = domV.indexOf(b);
+			assert (bId != -1);
+			baseQVset.add(new IntPair(currQid, bId));
+			jq_Field f = Putfield.getField(q).getField();
+			if (!f.getType().isReferenceType())
 				return;
 			Operand rx = Putfield.getSrc(q);
 			if (!(rx instanceof RegisterOperand))
 				return;
-			RegisterOperand bo = (RegisterOperand) bx;
 			RegisterOperand ro = (RegisterOperand) rx;
-			Register b = bo.getRegister();
 			Register r = ro.getRegister();
-			int bId = domV.indexOf(b);
-			assert (bId != -1);
 			int rId = domV.indexOf(r);
 			assert (rId != -1);
 			int fId = domF.indexOf(f);
 			assert (fId != -1);
-			int currQid = setCurrQid(q);
-			if (DEBUG) System.out.println("Adding to putinst2: " + currQid + " " + bId + " " + fId + " " + rId);
 			putinstSet.add(new IntQuad(currQid, bId, fId, rId));
 		}
 		private void processInvoke(Quad q) {
@@ -795,7 +794,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				IntPair thisArg = invkArgs.get(0);
 				assert (thisArg.idx0 == 0);
 				int vId = thisArg.idx1;
-				if (DEBUG) System.out.println("Adding to spawn: " + currQid + " " + vId);
 				spawnSet.add(new IntPair(currQid, vId));
 			} else {
 				InvkInfo invkInfo =
@@ -816,7 +814,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				int methRet = domV.indexOf(v);
 				assert (methRet != -1);
 				int currQid = setCurrQid(q);
-				if (DEBUG) System.out.println("Adding to copy3: " + currQid + " " + invkRet + " " + methRet);
 				copySet.add(new IntTrio(currQid, invkRet, methRet));
 			}
 		}
