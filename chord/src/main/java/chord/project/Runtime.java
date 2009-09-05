@@ -89,8 +89,9 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 				buffer.putByte(EventKind.ENTER_METHOD);
-				if (mId != MISSING_FIELD_VAL)
+				if (mId != MISSING_FIELD_VAL) {
 					buffer.putInt(mId);
+				}
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
@@ -105,8 +106,9 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 				buffer.putByte(EventKind.LEAVE_METHOD);
-				if (mId != MISSING_FIELD_VAL)
+				if (mId != MISSING_FIELD_VAL) {
 					buffer.putInt(mId);
+				}
 				if (ef.hasTid()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
