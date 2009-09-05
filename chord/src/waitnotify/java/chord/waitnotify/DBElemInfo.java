@@ -1,4 +1,4 @@
-package javato.wnPatternChecker;
+package chord.waitnotify;
 
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -39,46 +39,89 @@ import java.util.Set;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-public class WrListElemInfo {
-	public long m;
-	public Set<Integer> lockSet;
-	public Set<Integer> notifySet;
-	public List<Integer> iids;
+
+public class DBElemInfo {
+	int l;
+	Set<Integer> lockSet;
+	Set<Integer> notifySet;
+	boolean isReadElem;
+	VectorClock vc;
+	List<Integer> iids;
 	
-	public WrListElemInfo(int iid, long m){
-		iids = new LinkedList<Integer>();
-		iids.add(iid);
-		this.m = m;
-		lockSet = new HashSet<Integer>();
-		notifySet = new HashSet<Integer>();
+	public String toString() {
+		String s = "lockSet: ";
+		if (lockSet == null)
+			s += "null";
+		else {
+			for (Integer x : lockSet)
+				s += x + " ";
+		}
+		s += "notifySet: ";
+		if (notifySet == null)
+			s += "null";
+		else {
+			for (Integer x : notifySet)
+				s += x + " ";
+		}
+		s += "isReadElem: " + isReadElem + " iids: ";
+		if (iids == null)
+			s += "null";
+		else {
+			for (Integer x : iids)
+				s += x + " ";
+		}
+		return s;
+	}
+	
+	public DBElemInfo(List iids, int lock, VectorClock vc){
+		l = lock;
+		this.vc = vc; 
+		isReadElem = true;
+		this.iids = new LinkedList<Integer>(iids);
+		lockSet = null;
+		notifySet = null;
 	}
 	
 	
-	public void addToLockSet(int l){
-		lockSet.add(l);
-	}
-	
-	public void addToNotifySet(int l){
-		notifySet.add(l);
+	public DBElemInfo(List iids, Set<Integer> lSet, Set<Integer> nSet, VectorClock vc){
+		lockSet = new HashSet<Integer>(lSet);
+		notifySet = new HashSet<Integer>(nSet);
+		this.vc = vc;
+		isReadElem = false;
+		this.iids = new LinkedList<Integer>(iids);
+		l = 0;
 	}
 	
 	public boolean equals(Object other){
-		if(!(other instanceof WrListElemInfo)){
+		if(!(other instanceof DBElemInfo)){
 			return false;
 		}
-		WrListElemInfo otherWrSetElemInfo = (WrListElemInfo)other;
-		if((m == otherWrSetElemInfo.m) && (lockSet.equals(otherWrSetElemInfo.lockSet)) && 
-				(notifySet.equals(otherWrSetElemInfo.notifySet))){
-			return true;
+		DBElemInfo otherDBElem = (DBElemInfo)other;
+		if(this.isReadElem){
+			if((otherDBElem.isReadElem == true) && (otherDBElem.l == l) && (vc.equals(otherDBElem.vc))){
+				return true;
+			}
+		}
+		else{
+			if((otherDBElem.isReadElem == false) && (lockSet.equals(otherDBElem.lockSet)) && 
+					(notifySet.equals(otherDBElem.notifySet)) && (vc.equals(otherDBElem.vc))){
+				return true;
+			}
 		}
 		return false;
 	}
 	
 	public int hashCode(){
 		int hash = 1;
-		hash = hash*31 + (new Long(m)).intValue();
-		hash = hash*31 + lockSet.hashCode();
-		hash = hash*31 + notifySet.hashCode();
+		if(this.isReadElem){
+			hash = hash*31 + l;
+			hash = hash*31 + vc.hashCode();
+		}
+		else{
+			hash = hash*31 + lockSet.hashCode();
+			hash = hash*31 + notifySet.hashCode();
+			hash = hash*31 + vc.hashCode();
+		}
 		return hash;
 	}
 }

@@ -1,12 +1,12 @@
-package javato.wnPatternChecker;
+package chord.waitnotify;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
+
 
 /**
  * Copyright (c) 2007-2008,
- * Pallavi Joshi	<pallavi@cs.berkeley.edu>
+ * Pallavi Joshi   <pallavi@cs.berkeley.edu>
  * All rights reserved.
  * <p/>
  * Redistribution and use in source and binary forms, with or without
@@ -37,52 +37,31 @@ import java.util.Set;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-public class ErrorInfo {
-	List<Integer> wrIIDs;
-	List<Integer> rdIIDs;
+public class ThreadBase {
+	private Map<Integer, VectorClock> threadToVecClock = new HashMap<Integer, VectorClock>(); 
 	
-	boolean isProperLockHeld;
-	
-	public ErrorInfo(List<Integer> wrIIDsList, List<Integer> rdIIDsList, boolean isProperLockHeld){
-		assert (wrIIDsList != null);
-		assert (rdIIDsList != null);
-		wrIIDs = wrIIDsList;
-		rdIIDs = rdIIDsList;
-		this.isProperLockHeld = isProperLockHeld;
-	}
-	
-	public boolean equals(Object other){
-		//System.out.println("in equals");
-		if(!(other instanceof ErrorInfo)){
-			return false;
-		}
-		ErrorInfo otherErrInfo = (ErrorInfo)other;
-		Set<Integer> wrIIDsSet = new HashSet<Integer>(wrIIDs);
-		Set<Integer> otherWrIIDsSet = new HashSet<Integer>(otherErrInfo.wrIIDs);
-		Set<Integer> rdIIDsSet = new HashSet<Integer>(rdIIDs);
-		Set<Integer> otherRdIIDsSet = new HashSet<Integer>(otherErrInfo.rdIIDs);
+	public void Start(int parent, int child){
+		VectorClock parentVC = getVC(parent);
+		VectorClock childVC = new VectorClock(parentVC);
+		threadToVecClock.put(child, childVC);
 		
-		if(wrIIDsSet.equals(otherWrIIDsSet) && rdIIDsSet.equals(otherRdIIDsSet) && 
-				(isProperLockHeld == otherErrInfo.isProperLockHeld)){
-			return true;
-		}
-		
-		return false;
+		parentVC.inc(parent);
+		childVC.inc(child);
 	}
 	
-	public int hashCode(){
-		int hashCode = 1;
-		Set<Integer> wrIIDsSet = new HashSet<Integer>(wrIIDs);
-		hashCode = hashCode*31 + wrIIDsSet.hashCode();
-		Set<Integer> rdIIDsSet = new HashSet<Integer>(rdIIDs);
-		hashCode = hashCode*31 + rdIIDsSet.hashCode();
-		if(isProperLockHeld){
-			hashCode = hashCode*2;
-		}
-		else{
-			hashCode = hashCode*2 + 1;
-		}
-		return hashCode;
+	public void Join(int parent, int child){
+		VectorClock parentVC = getVC(parent);
+		VectorClock childVC = getVC(child);
+		parentVC.updateMax(childVC);
+		childVC.inc(child);
 	}
 	
+	public VectorClock getVC(int t){
+		VectorClock vc = threadToVecClock.get(t);
+		if(vc == null){
+			vc = new VectorClock();
+		}
+		threadToVecClock.put(t, vc);
+		return vc;
+	}
 }

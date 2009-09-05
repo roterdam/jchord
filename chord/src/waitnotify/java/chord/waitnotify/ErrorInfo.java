@@ -1,11 +1,8 @@
-package javato.wnPatternChecker;
+package chord.waitnotify;
 
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import javato.utils.VectorClock;
 
 /**
  * Copyright (c) 2007-2008,
@@ -40,89 +37,52 @@ import javato.utils.VectorClock;
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-
-public class DBElemInfo {
-	int l;
-	Set<Integer> lockSet;
-	Set<Integer> notifySet;
-	boolean isReadElem;
-	VectorClock vc;
-	List<Integer> iids;
+public class ErrorInfo {
+	List<Integer> wrIIDs;
+	List<Integer> rdIIDs;
 	
-	public String toString() {
-		String s = "lockSet: ";
-		if (lockSet == null)
-			s += "null";
-		else {
-			for (Integer x : lockSet)
-				s += x + " ";
-		}
-		s += "notifySet: ";
-		if (notifySet == null)
-			s += "null";
-		else {
-			for (Integer x : notifySet)
-				s += x + " ";
-		}
-		s += "isReadElem: " + isReadElem + " iids: ";
-		if (iids == null)
-			s += "null";
-		else {
-			for (Integer x : iids)
-				s += x + " ";
-		}
-		return s;
-	}
+	boolean isProperLockHeld;
 	
-	public DBElemInfo(List iids, int lock, VectorClock vc){
-		l = lock;
-		this.vc = vc; 
-		isReadElem = true;
-		this.iids = new LinkedList<Integer>(iids);
-		lockSet = null;
-		notifySet = null;
-	}
-	
-	
-	public DBElemInfo(List iids, Set<Integer> lSet, Set<Integer> nSet, VectorClock vc){
-		lockSet = new HashSet<Integer>(lSet);
-		notifySet = new HashSet<Integer>(nSet);
-		this.vc = vc;
-		isReadElem = false;
-		this.iids = new LinkedList<Integer>(iids);
-		l = 0;
+	public ErrorInfo(List<Integer> wrIIDsList, List<Integer> rdIIDsList, boolean isProperLockHeld){
+		assert (wrIIDsList != null);
+		assert (rdIIDsList != null);
+		wrIIDs = wrIIDsList;
+		rdIIDs = rdIIDsList;
+		this.isProperLockHeld = isProperLockHeld;
 	}
 	
 	public boolean equals(Object other){
-		if(!(other instanceof DBElemInfo)){
+		//System.out.println("in equals");
+		if(!(other instanceof ErrorInfo)){
 			return false;
 		}
-		DBElemInfo otherDBElem = (DBElemInfo)other;
-		if(this.isReadElem){
-			if((otherDBElem.isReadElem == true) && (otherDBElem.l == l) && (vc.equals(otherDBElem.vc))){
-				return true;
-			}
+		ErrorInfo otherErrInfo = (ErrorInfo)other;
+		Set<Integer> wrIIDsSet = new HashSet<Integer>(wrIIDs);
+		Set<Integer> otherWrIIDsSet = new HashSet<Integer>(otherErrInfo.wrIIDs);
+		Set<Integer> rdIIDsSet = new HashSet<Integer>(rdIIDs);
+		Set<Integer> otherRdIIDsSet = new HashSet<Integer>(otherErrInfo.rdIIDs);
+		
+		if(wrIIDsSet.equals(otherWrIIDsSet) && rdIIDsSet.equals(otherRdIIDsSet) && 
+				(isProperLockHeld == otherErrInfo.isProperLockHeld)){
+			return true;
 		}
-		else{
-			if((otherDBElem.isReadElem == false) && (lockSet.equals(otherDBElem.lockSet)) && 
-					(notifySet.equals(otherDBElem.notifySet)) && (vc.equals(otherDBElem.vc))){
-				return true;
-			}
-		}
+		
 		return false;
 	}
 	
 	public int hashCode(){
-		int hash = 1;
-		if(this.isReadElem){
-			hash = hash*31 + l;
-			hash = hash*31 + vc.hashCode();
+		int hashCode = 1;
+		Set<Integer> wrIIDsSet = new HashSet<Integer>(wrIIDs);
+		hashCode = hashCode*31 + wrIIDsSet.hashCode();
+		Set<Integer> rdIIDsSet = new HashSet<Integer>(rdIIDs);
+		hashCode = hashCode*31 + rdIIDsSet.hashCode();
+		if(isProperLockHeld){
+			hashCode = hashCode*2;
 		}
 		else{
-			hash = hash*31 + lockSet.hashCode();
-			hash = hash*31 + notifySet.hashCode();
-			hash = hash*31 + vc.hashCode();
+			hashCode = hashCode*2 + 1;
 		}
-		return hash;
+		return hashCode;
 	}
+	
 }
