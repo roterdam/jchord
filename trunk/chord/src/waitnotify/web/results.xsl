@@ -6,7 +6,7 @@
 <xsl:import href="misc.xsl"/>
 
 <xsl:template match="/">
-	<xsl:result-document href="{$m_filename}">
+	<xsl:result-document href="results.html">
 	<html>
 	<head>
 		<title>Wait Notify Errors</title>
@@ -15,16 +15,27 @@
 	<body>
 		<table class="summary">
 			<tr>
-				<td>Kind</td><td>Read access</td><td>Write access</td>
+				<td>Kind</td><td>Read accesses</td><td>Write accesses</td>
 			</tr>
 			<xsl:for-each select="results/waitNotifyErrorList/waitNotifyError">
-				<xsl:variable name="kind" select="@kind"/>
-				<xsl:variable name="e1id" select="@E1id"/>
-				<xsl:variable name="e2id" select="@E2id"/>
  				<tr>
-					<td>$kind</td>
-					<td><xsl:apply-templates select="$e1id"/></td>
-					<td><xsl:apply-templates select="$e2id"/> <br/>
+					<td><xsl:value-of select="@kind"/></td>
+					<td>
+						<xsl:for-each select="id(@e1idList)">
+							<xsl:apply-templates select="."/>
+							<xsl:if test="position()!=last()">
+								<br/>
+							</xsl:if>
+						</xsl:for-each>
+					</td>
+					<td>
+						<xsl:for-each select="id(@e2idList)">
+							<xsl:apply-templates select="."/>
+							<xsl:if test="position()!=last()">
+								<br/>
+							</xsl:if>
+						</xsl:for-each>
+					</td>
 				</tr>
 			</xsl:for-each>
 		</table>

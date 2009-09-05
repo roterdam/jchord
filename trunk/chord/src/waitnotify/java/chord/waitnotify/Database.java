@@ -51,7 +51,7 @@ import chord.util.IndexMap;
 
 public class Database {
 	private Map<Long, Map<Integer, List<DBElemInfo>>> eBase;
-	private Set<ErrorInfo> errors;
+	public Set<ErrorInfo> errors;
 	
 	public Database(){
 		eBase = new HashMap<Long, Map<Integer, List<DBElemInfo>>>();

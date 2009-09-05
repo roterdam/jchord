@@ -40,12 +40,14 @@ public class T extends java.lang.Thread {
 }
 
 class B {
+	int fi;
     A bf;
     B() {
 		this(new A());
     }
 	B(A a) {
         this.bf = a;	// must be deemed loc by ap but esc by aw (due to branch never taken); correct
+		this.fi = 0;
 	}
 	static B getNewInstance() {
 		return new B();
