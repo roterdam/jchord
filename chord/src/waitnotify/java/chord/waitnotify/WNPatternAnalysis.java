@@ -1,5 +1,8 @@
 package chord.waitnotify;
 
+import java.io.PrintWriter;
+import java.io.File;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
@@ -8,6 +11,10 @@ import java.util.Stack;
 import java.util.Map;
 import java.util.TreeMap;
 
+import chord.doms.DomM;
+import chord.project.ChordRuntimeException;
+import chord.project.Properties;
+import chord.project.Utils;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.Program;
@@ -32,6 +39,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
     	if (instrScheme != null)
     		return instrScheme;
     	instrScheme = new InstrScheme();
+		instrScheme.setConvert();
 
     	instrScheme.setGetstaticPrimitiveEvent(true, true, true);
     	instrScheme.setPutstaticPrimitiveEvent(true, true, true);
@@ -63,14 +71,53 @@ public class WNPatternAnalysis extends DynamicAnalysis {
         db.checkForErrors(instrumentor.getEmap(), instrumentor.getPmap());
 	}
 	public void doneAllPasses() {
-        Utils.copyFile("src/waitnotify/web/results.dtd")
-        Utils.copyFile("src/waitnotify/web/results.xml")
-        Utils.copyFile("src/waitnotify/web/results.xsl");
+		try {
+			PrintWriter writer = new PrintWriter(new File(
+				Properties.outDirName, "waitNotifyErrorList.xml"));
+			writer.println("<waitNotifyErrorList>");
+			for (ErrorInfo info : db.errors) {
+				List<Integer> e1idList = info.rdIIDs;
+				List<Integer> e2idList = info.wrIIDs;
+				String e1idListStr = "";
+				int n1 = e1idList.size();
+				for (int i = 0; i < n1; i++) {
+					Integer e = e1idList.get(i);
+					e1idListStr += "E" + e;
+					if (i < n1 - 1)
+						e1idListStr += " ";
+				}
+				String e2idListStr = "";
+				int n2 = e2idList.size();
+				for (int i = 0; i < n2; i++) {
+					Integer e = e2idList.get(i);
+					e2idListStr += "E" + e;
+					if (i < n2 - 1)
+						e2idListStr += " ";
+				}
+				String kind = info.isProperLockHeld ? "Missing Notify" : "Missing Lock";
+				writer.println("<waitNotifyError e1idList=\"" + e1idListStr +
+					"\" e2idList=\"" + e2idListStr + "\" kind=\"" + kind + "\"/>");
+			}
+			writer.println("</waitNotifyErrorList>");
+			writer.close();
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		}
+		DomM domM = (DomM) Project.getTrgt("M");
+		Project.runTask(domM);
+		domM.saveToXMLFile();
+        Utils.copyFile("src/main/web/Mlist.dtd");
+
+		instrumentor.getDomE().saveToXMLFile();
         Utils.copyFile("src/main/web/Elist.dtd");
+
+        Utils.copyFile("src/waitnotify/web/results.dtd");
+        Utils.copyFile("src/waitnotify/web/results.xml");
+        Utils.copyFile("src/waitnotify/web/results.xsl");
         Utils.copyFile("src/main/web/style.css");
         Utils.copyFile("src/main/web/misc.xsl");
 
-        Utils.runSaxon("results.xml", "errors.xsl");
+        Utils.runSaxon("results.xml", "results.xsl");
 		Program.v().HTMLizeJavaSrcFiles();
 	}
 	public void processGetstaticPrimitive(int eId, int tId, int fId) { 

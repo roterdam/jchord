@@ -170,11 +170,11 @@
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
-	<mkdir dir="classes/wnPatternChecker"/>
+	<mkdir dir="classes/waitnotify"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/wnPatternChecker/java" destdir="classes/wnPatternChecker">
+        srcdir="src/waitnotify/java" destdir="classes/waitnotify">
       <classpath>
-        <pathelement location="classes/wnPatternChecker"/>
+        <pathelement location="classes/waitnotify"/>
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
@@ -301,11 +301,11 @@
   <target name="run-wn">
     <path id="chord_java_analysis_path">
       <pathelement location="classes/main"/>
-      <pathelement location="classes/wnPatternChecker"/>
+      <pathelement location="classes/waitnotify"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
-      <pathelement location="src/wnPatternChecker/dlog"/>
+      <pathelement location="src/waitnotify/dlog"/>
     </path>
     <property name="chord.analyses" value="wn-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
