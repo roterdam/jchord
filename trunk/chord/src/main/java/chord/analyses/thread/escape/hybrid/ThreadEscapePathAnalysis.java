@@ -37,8 +37,8 @@ import chord.project.ProgramDom;
 import chord.project.ProgramRel;
 import chord.project.Chord;
 import chord.project.DynamicAnalysis;
-import chord.project.Instrumentor;
 import chord.instr.InstrScheme;
+import chord.instr.Instrumentor;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;

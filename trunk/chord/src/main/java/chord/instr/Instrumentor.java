@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.instr;
 
 import gnu.trove.TIntObjectHashMap;
 import javassist.*;
@@ -16,8 +16,13 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomP;
 import chord.doms.DomB;
-import chord.instr.InstrScheme;
-import chord.instr.InstrScheme.EventFormat;
+import chord.project.CFGLoopFinder;
+import chord.project.ChordRuntimeException;
+import chord.project.Program;
+import chord.project.ProgramDom;
+import chord.project.Project;
+import chord.project.Properties;
+import chord.project.Runtime;
 import chord.util.FileUtils;
 import chord.util.IndexHashMap;
 import chord.util.IndexMap;
