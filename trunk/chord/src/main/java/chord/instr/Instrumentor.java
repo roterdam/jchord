@@ -16,6 +16,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomP;
 import chord.doms.DomB;
+import chord.instr.InstrScheme.EventFormat;
 import chord.project.CFGLoopFinder;
 import chord.project.ChordRuntimeException;
 import chord.project.Program;
