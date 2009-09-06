@@ -12,6 +12,7 @@ import java.io.File;
 import java.lang.InterruptedException;
 
 import chord.instr.EventKind;
+import chord.instr.Instrumentor;
 import chord.instr.TracePrinter;
 import chord.instr.InstrScheme;
 import chord.instr.TraceTransformer;
