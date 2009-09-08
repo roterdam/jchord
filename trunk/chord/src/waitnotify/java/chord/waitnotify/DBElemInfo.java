@@ -42,6 +42,7 @@ import java.util.Set;
 
 public class DBElemInfo {
 	int l;
+	int waitIID;
 	Set<Integer> lockSet;
 	Set<Integer> notifySet;
 	boolean isReadElem;
@@ -73,8 +74,9 @@ public class DBElemInfo {
 		return s;
 	}
 	
-	public DBElemInfo(List iids, int lock, VectorClock vc){
+	public DBElemInfo(List iids, int lock, int waitIID, VectorClock vc){
 		l = lock;
+		this.waitIID = waitIID;
 		this.vc = vc; 
 		isReadElem = true;
 		this.iids = new LinkedList<Integer>(iids);
@@ -90,6 +92,7 @@ public class DBElemInfo {
 		isReadElem = false;
 		this.iids = new LinkedList<Integer>(iids);
 		l = 0;
+		waitIID = 0;
 	}
 	
 	public boolean equals(Object other){
@@ -98,7 +101,8 @@ public class DBElemInfo {
 		}
 		DBElemInfo otherDBElem = (DBElemInfo)other;
 		if(this.isReadElem){
-			if((otherDBElem.isReadElem == true) && (otherDBElem.l == l) && (vc.equals(otherDBElem.vc))){
+			if((otherDBElem.isReadElem == true) && (otherDBElem.l == l) && (otherDBElem.waitIID == waitIID) && 
+					(vc.equals(otherDBElem.vc))){
 				return true;
 			}
 		}
@@ -115,6 +119,7 @@ public class DBElemInfo {
 		int hash = 1;
 		if(this.isReadElem){
 			hash = hash*31 + l;
+			hash = hash*31 + waitIID;
 			hash = hash*31 + vc.hashCode();
 		}
 		else{
