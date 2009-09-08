@@ -1,0 +1,104 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Configuration - Proxy/Firewall</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Configuration parameters">
+  <subsection name="Default configuration">
+  <p>
+  In the jspider.properties file for a given configuration, the following lines control
+  the firewall/proxy settings (taken from a freshly installed JSpider instance):
+  </p>
+  <source>
+  # -----------------------------------------------------------------------------
+  # Proxy Configuration
+  # -----------------------------------------------------------------------------
+  # This section controls the proxy server/firewall configuration.  If you want
+  # JSpider to be able to access websites on the internet, and you have to pass
+  # a proxyserver, you can configure this here.
+  # These are general proxy settings, if some hosts are accessible without using
+  # a proxy server, you can configure not to use a proxy server for these hosts
+  # in the host-specific configuration file.
+  #
+  # PROPERTIES :
+  #  jspider.proxy.use
+  #    determines whether a proxy server should be used (true/false)
+  #    the other jspider.proxy.* settings are only applicable if
+  #    jspider.proxy.use is set to true
+  #
+  #  jspider.proxy.host
+  #    DNS name or IP address of the proxy server to use
+  #
+  #  jspider.proxy.port
+  #    port the proxy server is listening on
+  #
+  #  jspider.proxy.authenticate
+  #   whether authentication should be used (true/false)
+  #
+  #  jspider.proxy.user
+  #    user account on the proxy server to be used
+  #    only applicable if jspider.proxy.authenticate=true
+  #
+  #  jspider.proxy.password
+  #    password of the account on the proxy server
+  #    only applicable if jspider.proxy.authenticate=true
+  #
+  # -----------------------------------------------------------------------------
+
+  jspider.proxy.use=false
+  jspider.proxy.host=
+  jspider.proxy.port=
+  jspider.proxy.authenticate=false
+  jspider.proxy.user=
+  jspider.proxy.password=
+</source>
+  <p>
+  This configuration is complete when accessing only local sites with JSpider, or when
+  you have a direct internet connection that doesn't have to pass a proxy server or
+  firewall.
+  </p>
+  </subsection>
+
+  <subsection name="Configuration Parameters">
+  <p>
+  An explanation of each individual parameter:
+  </p>
+  <p>
+  <table>
+    <th>Name</th><th>Values</th><th>Description</th>
+    <tr><td>jspider.proxy.use</td><td>true,false</td><td>Determines whether a proxy server is to be used</td></tr>
+    <tr><td>jspider.proxy.host</td><td>(dns name or ip address)</td><td>DNS Name or IP Address of the proxy server machine</td></tr>
+    <tr><td>jspider.proxy.port</td><td>(port)</td><td>Port on which the proxy server is listening</td></tr>
+    <tr><td>jspider.proxy.authenticate</td><td>true,false</td><td>Whether you need to provide a login/password to the proxyserver.</td></tr>
+    <tr><td>jspider.proxy.user</td><td>(username)</td><td>Username of the account needed to authenticate on the proxy serves.
+      Only needed when jspider.proxy.authenticate is set to true</td></tr>
+    <tr><td>jspider.proxy.password</td><td>(username)</td><td>Password of the account needed to authenticate on the proxy server.
+      Only needed when jspider.proxy.authenticate is set to true</td></tr>
+  </table>
+  </p>
+  </subsection>
+  <subsection name="Example configuration">
+  <p>
+  Just to be clear, here is an (imaginary) sample configuration for someone that needs to authenticate
+  on his ISP's proxy server:
+  </p>
+  <source>
+  jspider.proxy.use=true
+  jspider.proxy.host=proxy.myisp.com
+  jspider.proxy.port=8080
+  jspider.proxy.authenticate=true
+  jspider.proxy.user=myaccount
+  jspider.proxy.password=mypassword</source>
+  <p>
+  With this configuration, a proxy server is used on proxy.myisp.com:8080, on which we login with user
+  'myaccount', password 'mypassword'.
+  </p>
+  </subsection>
+</section>
+</body>
+</document>
+

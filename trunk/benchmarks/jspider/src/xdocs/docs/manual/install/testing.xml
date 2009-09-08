@@ -1,0 +1,111 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Installing - Testing</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Testing JSpider">
+  <p>
+  In order to be sure that your JSpider installation is working fine, you can run
+  our JUnit test suite against it.
+  </p>
+  <p>
+  If you downloaded a release build, this step is somewhat unnecessary, as these builds
+  have been tested thoroughly before being released.  If you checked out JSpider from CVS,
+  however, there is always the possibility to have obtained a broken or unstable version.
+  </p>
+
+  <subsection name="Technical and Functional tests">
+  <p>
+  Before testing the code, it is good to know that JSpider comes with two sets of JUnit tests:
+  <i>Technical tests</i>, that are standard class-level JUnit tests that test the code of JSpider
+  to make sure nothing's broke.
+  </p>
+  <p>
+  In fact, if you build JSpider with ANT, these technical tests are always run, to make sure that
+  any source code momdifications a developer makes don't cause the technical tests to fail.
+  </p>
+  <p>
+  The second type of tests that comes with JSpider are <i>functional tests</i>, these are JUnit tests
+  that need a properly configured JSpider instance and an internet connection to be run.
+  This set of tests test JSpider as a whole, running various spider sessions against a dedicated sub-site
+  on j-spider.sourceforge.net (call it a 'sandbox' for the spider to run), for which the expected spider
+  results and artifacts are tested after spidering.
+  </p>
+  <p>
+  This type of test needs a built version of jspider (ant buildSimple or ant buildComplete), with the
+  configuration under 'conf/unittest' correctly configured (proxy settings, ...)
+  </p>
+
+  </subsection>
+
+  <subsection name="Running the Technical test suite">
+  <p>
+  Everytime you build JSpider, the technical test suite is run.  All these commands:
+  </p>
+  <source>
+  ant
+  (you can also use 'ant buildSimple', 'ant buildComplete' of 'ant buildDistro'
+  </source>
+  <p>
+  When the JSpider instance is build, you can re-run the technical tests by typing:
+  </p>
+  <source>
+  ant testTechnical
+  </source>
+  <p>
+  If you want to generate a nice HTML report of your test run, you can use:
+  </p>
+  <source>
+  ant generateJUnitDocs
+  </source>
+  <p>
+  Which will generate the junit report in the 'dist/prepared/doc/junit' folder.
+  </p>
+  </subsection>
+
+
+  <subsection name="Running the Functional test suite">
+  <p>
+  If you built JSpider successfully with 'ant', and you had your user.properties file
+  (copied from base.user.properties file) configured well, you're ready to test JSpider
+  in a real-life situation:
+  </p>
+  <source>
+  ant testFunctional
+  </source>
+  <p>
+  This runs a set of JUnit tests against well-known resources on j-spider.sourceforge.net,
+  allowing us to verify the expected results of the spidering with what the freshly built
+  spider reports.
+  </p>
+  <p>
+  If you want to generate a nice HTML report of your test run, you can use:
+  </p>
+  <source>
+  ant generateJUnitDocs
+  </source>
+  <p>
+  Which will generate the junit report in the 'dist/prepared/doc/junit' folder.
+  </p>
+ </subsection>
+
+  <subsection name="Running tests Interactively">
+    <p>
+    If you want to run the JUnit tests from the familiar UI, you can use:
+    </p>
+    <source>
+    ant testInteractive
+    </source>
+    <p>
+    This starts the familiar JUnit Swing UI.
+    If you type in the name of the JUnit test class, it will be run.
+    </p>
+   </subsection>
+
+</section>
+</body>
+</document>

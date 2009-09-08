@@ -1,0 +1,14 @@
+[${eventName}]
+  known urls ............. : ${event.summary.known}
+
+  visited urls ........... : ${event.summary.visited}
+  parsed urls ............ : ${event.summary.parsed}
+  parse ignored urls ..... : ${event.summary.ignoredForParsing}
+  parse error urls ....... : ${event.summary.parseErrors}
+
+  not visited urls ....... : ${event.summary.notVisited}
+  fetching ignored urls .. : ${event.summary.ignoredForFetching}
+  forbidden urls ......... : ${event.summary.forbidden}
+  fetch error urls ....... : ${event.summary.fetchErrors}
+
+  not yet  visited urls .. : ${event.summary.unvisited}

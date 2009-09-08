@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Environment Configuration - Installing an XML Parser (JDK 1.3 only)</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Installing an XML Parser (Java 1.3 only)">
+  <p>
+      JSpider needs an XML Parser in order to read some configuration files that are specified in XML.
+      As of Java 1.4 (J2SE1.4), the needed XML API’s and an implementation are already delivered by the platform.
+      For Java 1.3, you’ll need to add the XML parser to the classpath in order to use JSpider.
+  </p>
+  <subsection name="The problem">
+  <p>
+      If you don’t do this, you’ll see an exception like this when starting JSpider or JSpider-tool:
+  <source>
+      Exception in thread "main" java.lang.NoClassDefFoundError:
+        javax/xml/parsers/FactoryConfigurationError
+      (...StackTrace..)</source>
+  </p>
+  </subsection>
+  <subsection name="Installing the Xerces XML parser">
+  <p>
+      You can download a free, open source XML parser from Apache, Xerces.  You can find it at :
+<source>
+      http://xml.apache.org/dist/xerces-j/</source>
+  </p>
+  <p>
+      The CLASSPATH is a Java related environment variable that tells where the system can find needed classes.
+
+      The easiest thing to do is to add the xmlApis.jar and parserImpl.jar files to the {JSPIDER_INSTALLATION_DIR}/lib folder.
+      After that, add these libraries to the classpath:
+  </p>
+  <p>
+      Windows:
+  <source>
+      set CLASSPATH=%CLASSPATH%;../lib/xmlApis.jar
+      set CLASSPATH=%CLASSPATH%;../lib/parserImpl.jar</source>
+  </p>
+  <p>
+      Unix:
+  <source>
+      export CLASSPATH=$CLASSPATH:../lib/xmlApis.jar
+      export CLASSPATH=$CLASSPATH:../lib/parserImpl.jar</source>
+  </p>
+  <p>
+      When this is done, you can simply start JSpider from the 'bin' folder and the xml libraries should be found.
+  </p>
+  </subsection>
+</section>
+</body>
+</document>
+

@@ -1,0 +1,120 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Configuration</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Configuring JSpider">
+  <p>
+  JSpider is higly flexible and adaptable, which requires a lot of configuration.
+  This section is a reference for every piece of configuration that can be done with JSpider.
+  </p>
+
+    <subsection name="Environment Configuration">
+      <p>
+      This type of configuration is used to tell enable JSpider to exist
+      in it's environment.
+      </p>
+      <p>
+      <table>
+        <th>Name</th><th>Description</th>
+          <tr>
+            <td><a href="./env/xmljdk13.html">XML (JDK1.3)</a></td>
+            <td>
+             Explains the necessary installation of an XML parser for users of
+             JDK1.3 (From java 1.4, this is already provided by the platform).
+            </td>
+          </tr>
+        <tr>
+          <td><a href="./env/jspiderhome.html">JSPIDER_HOME</a></td>
+          <td>
+           Explains the usage of the JSPIDER_HOME environment variable to tell
+           JSpider where it can find it files.
+          </td>
+        </tr>
+      </table>
+      </p>
+    </subsection>
+
+    <subsection name="Common Configuration">
+      <p>
+      This type of configuration is common to all configuration sets.
+      </p>
+      <p>
+      <table>
+        <th>Name</th><th>Description</th>
+        <tr>
+          <td><a href="./common/logging.html">Logging</a></td>
+          <td>
+           Explains how the JSpider logging system works and can be configured.
+          </td>
+        </tr>
+      </table>
+      </p>
+    </subsection>
+
+  <subsection name="Global Configuration">
+    <p>
+    This type of configuration is global to a certain configuration set,
+    and shared by all sites/plugins/etc...
+    </p>
+    <p>
+    <table>
+      <th>Name</th><th>Description</th>
+      <tr>
+        <td><a href="./proxy.html">Proxy/Firewall</a></td>
+        <td>
+         How to configure JSpider to use a proxy server to reach some destination hosts.
+        </td>
+      </tr>
+      <tr>
+        <td><a href="./threading.html">Threading</a></td>
+        <td>
+        Determine the allocation of threads on certain types of task and monitoring of the load put on these thread pool
+        </td>
+      </tr>
+    </table>
+    </p>
+  </subsection>
+
+    <subsection name="Per-site Configuration">
+      <p>
+      This type of configuration is done on a per-site basis.  Under the /conf/sites subdirectory
+      you'll find different properties files for different sites.
+      </p>
+      <p>
+      The conf/sites.properties file contains the reference towards these configurations.
+      </p>
+      <p>
+      <table>
+        <th>Name</th><th>Description</th>
+        <tr>
+          <td><a href="./sites.html">sites.properties</a></td>
+          <td>
+           Reference for the configuration of sites.properties, the configuration file that
+           assigns a specific per-site configuration to a website.
+          </td>
+        </tr>
+          <tr>
+            <td><a href="./site-props.html">Site configuration</a></td>
+            <td>
+             Explains how to create a specific configuration for a certain site.
+            </td>
+          </tr>
+      </table>
+      </p>
+    </subsection>
+
+    <subsection name="Plugin Configuration">
+        <p>
+            TODO: To be done
+        </p>
+    </subsection>
+
+</section>
+</body>
+</document>
+

@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+<document>
+
+  <properties>
+    <title>Tasks</title>
+    <author email="gunther@javacoding.net">Gunther Van Roey</author>
+  </properties>
+
+  <body>
+    <section name="Tasks">
+      <subsection name="To be Done for Version 0-5-0-dev">
+        <p>
+          This is an (incomplete) overview of all things that are planned to be done on the short term.
+          Normally, these things will be done before the next release.
+        </p>
+        <p>
+          <ul>
+<li>jdk1.4 logging filepath could be problematic if not started from /bin (../x used)</li>
+<li>add folder-level interpretation and storage</li>
+<li>new report: XML sitemap (create DTD/Schema for this)</li>
+<li>NoURLParamsRule</li>
+<li>FilterURLParamsRule</li>
+<li>MaxResourcesPerSiteRule</li>
+<li>LimitedDepthSiteRule</li>
+<li>internal optimizations (refactoring)</li>
+<li>handle all todos that are still in the source code</li>
+<li>support decoupled eventDispatcher (per-plugin basis, async, dispatcher thread)</li>
+<li>support user Agent config on global AND site level</li>
+<li>event filtering flag on global level like on plugin level</li>
+<li>rules for fetching of robots.txt (like BaseSiteOnly -- avoid other sites at all!)</li>
+<li>support BASE HREF interpretation during html parsing</li>
+          </ul>
+        </p>
+      </subsection>
+      <subsection name="Someday">
+        <p>
+          These are a couple of goals/features planned on a longer term.
+        </p>
+        <p>
+          <ul>
+<li>object model for configuration w/ mapping from properties files</li>
+<li>object model for configuration w/mapping from xml files</li>
+<li>rules that can change an url (remove params, ...)</li>
+<li>Configuration for handling of non-HTTP protocols (ftp,news,mailto,https,gopher,...)</li>
+<li>Add HTML WelformedNess Check (While parsing?  Afterwards?)</li>
+<li>improve cookiesupport (path, time to live, ...)</li>
+<li>support setting case-sensitivity option when comparing URLs</li>
+<li>support multiple fetches of same resource (comparing timing, etc...)</li>
+<li>xml based config files</li>
+<li>custom classloading instead of putting everything on the classpath in startup scripts
+<ul>
+<li>common/core/lib*.jar</li>
+<li>common/core/classes/</li>
+<li>common/ext/lib/*.jar</li>
+<li>common/ext/classes/</li>
+</ul>
+</li>
+<li>folder common/lib/ext is also put into the classpath</li>
+<li>XML dump reporting plugin in default config</li>
+<li>velocity plugin with different set of templates</li>
+<li>new event filter NonErrorsOnlyEventFilter</li>
+          </ul>
+        </p>
+      </subsection>
+    </section>
+
+  </body>
+</document>

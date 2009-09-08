@@ -1,0 +1,158 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Common Configuration - Logging</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="JSpider Logging">
+  <subsection name="JSpider Logging system">
+  <p>
+      Logging in JSpider is normally done via Jakarta Commons-Logging, an open source wrapper implementation for logging systems.  It implements a very basic logging service itself, but has an interface that can front any Logging framework.
+      When JSpider is installed, you’re using the open source Jakarta Log4j logging framework (http://jakarta.apache.org/log4j) as the default logging system.
+      Another logging system that’s supported out-of-the box by JSpider is JDK1.4 logging (javax.util.logging)
+  </p>
+  </subsection>
+
+  <subsection name="Logged items">
+  <p>
+      Be aware that logging is only used for information about JSpider.  It’s startup procedure, eventual configuration or environmental errors, etc… are the things that are logged.
+
+      Spidering events and progression is not logged.  These type of things are dispatched via the event system.
+      Plugins can then choose to write these things events down in a file or on the console.
+
+      It’s very important to keep the distinction between what output is produced by plugins (although plugins can also log via the logging system), and what output is produced by the JSpider logging subsystem.
+
+      Try this by disabling the logging system.  Change this line in your jspider.properties file:
+      <source>
+      jspider.log.provider=
+        net.javacoding.jspider.core.logging.impl.CommonsLoggingLogProvider</source>
+
+      To this one:
+      <source>
+      jspider.log.provider=
+        net.javacoding.jspider.core.logging.impl.DevNullLogProvider</source>
+
+      And you’ll see what rests when the logging is turned off completely!
+  </p>
+  </subsection>
+
+  <subsection name="Configuration">
+  <p>
+      The class that handles the logging is specified in the jspider.properties file.  Normally, this is left on the default setting (using commons-logging, which will decide on log4j or jdk1.4 logging):
+<source>
+      jspider.log.provider=
+        net.javacoding.jspider.core.logging.impl.CommonsLoggingLogProvider</source>
+
+      You can disable the logging by changing this to:
+      <source>
+      jspider.log.provider=
+        net.javacoding.jspider.core.logging.impl.DevNullLogProvider</source>
+
+      Or simply log to the console straight away with:
+<source>
+      jspider.log.provider=
+        net.javacoding.jspider.core.logging.impl.SystemOutLogProvider</source>
+
+      While the possibility to change this is there, normally commons-logging would be preferable.
+  </p>
+  </subsection>
+
+  <subsection name="Using Log4J">
+  <p>
+      Since Log4J is the default logging system used be JSpider, you can just adapt the ‘log4j.xml’ file that configures it.
+      How to do this is beyond the scope of this user manual (although we’ll give some examples of configuration changes in a moment).
+      Please refer to the log4j information for this. See the project’s website for this information (http://jakarta.apache.org/log4j).
+  </p>
+  <p>
+      An example:
+  </p>
+  <p>
+      When you use JSpider to spider a site with it’s default configuration, you’ll end up with output on the console that starts like this:
+  <source>
+      INFO  [core.impl.PluginFactory] Loading 4 plugins.
+      INFO  [core.impl.PluginFactory] Loading plugin configuration 'console'...
+      INFO  [mod.plugin.console.ConsolePlugin] Prefix set to '[Plugin] '
+      INFO  [core.impl.PluginFactory] Plugin not configured for local event filtering
+      INFO  [core.impl.PluginFactory] Plugin Name    : Console writer JSpider module
+      INFO  [core.impl.PluginFactory] Plugin Version : v1.0
+      INFO  [core.impl.PluginFactory] Plugin Vendor  : http://www.javacoding.net
+      INFO  [core.impl.PluginFactory] Loading plugin configuration 'velocity'...
+      INFO  [core.impl.PluginFactory] Plugin uses local event filtering
+        --- continued ---</source>
+
+      Now, open the log4j.xml configuration file, and search for this piece:
+
+      <source>
+        &lt;appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+          &lt;param name="Threshold" value="INFO"/>
+          &lt;param name="Target" value="System.out"/>
+
+          &lt;layout class="org.apache.log4j.PatternLayout">
+            &lt;param name="ConversionPattern" value="%-5p [%c] %m%n"/>
+          &lt;/layout>
+        &lt;/appender></source>
+
+      Change it to (bold shows the changes):
+
+      <source>
+        &lt;appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+          &lt;param name="Threshold" value="DEBUG"/>
+          &lt;param name="Target" value="System.out"/>
+
+          &lt;layout class="org.apache.log4j.PatternLayout">
+            &lt;param name="ConversionPattern" value="%-5p {%c{1}} %m%n"/>
+          &lt;/layout>
+        &lt;/appender></source>
+    </p>
+    <p>
+      If you now start JSpider again, it will be quite more verbose, and reports
+      in a slightly different way:
+     <source>
+      INFO  {PluginFactory} Loading 4 plugins.
+      INFO  {PluginFactory} Loading plugin configuration 'console'...
+      DEBUG {PluginInstantiator} first trying to instantiate
+         via ctr with (name, config) params
+      DEBUG {ConsolePlugin} plugin 'console' prefix is '[Plugin]'
+      DEBUG {ConsolePlugin} adding space after prefix
+      INFO  {ConsolePlugin} Prefix set to '[Plugin] '
+      DEBUG {PluginInstantiator} plugin instantiated.
+      INFO  {PluginFactory} Plugin not configured for local event filtering
+      INFO  {PluginFactory} Plugin Name    : Console writer JSpider module
+      INFO  {PluginFactory} Plugin Version : v1.0
+      INFO  {PluginFactory} Plugin Vendor  : http://www.javacoding.net
+      INFO  {PluginFactory} Loading plugin configuration 'velocity'...
+      DEBUG {PluginInstantiator} first trying to instantiate
+         via ctr with (name, config) params
+      DEBUG {PluginInstantiator} plugin instantiated.
+      INFO  {PluginFactory} Plugin uses local event filtering
+      DEBUG {EventDispatcher} EventDispatcher
+         for Plugin 'Velocity Template JSpider module' configuring...
+      DEBUG {EventDispatcher} EventFilter for engine events =
+         net.javacoding.jspider.mod.eventfilter.AllowAllEventFilter
+      DEBUG {EventDispatcher} EventFilter for monitor events =
+         net.javacoding.jspider.mod.eventfilter.AllowNoneEventFilter
+      DEBUG {EventDispatcher} EventFilter for spider events =
+         net.javacoding.jspider.mod.eventfilter.AllowAllEventFilter
+      DEBUG {EventDispatcher} EventDispatcher EventDispatcher
+         for Plugin 'Velocity Template JSpider module' configured.
+        -- continued --</source>
+
+  </p>
+  </subsection>
+
+  <subsection name="Using Java 1.4 Logging (java.util.logging.*)">
+  <p>
+      You can enable JDK1.4 logging by simply removing the log4j.jar library from the JSPIDER/lib folder.  This way, the commons-logging will not find log4j anymore, and fall back to JDK 1.4 logging.
+      This is of course only possible when you’re using a VM of version 1.4 or higher.
+      You can customize the logging behaviour by adapting the confuration file ‘logging.properties’.
+      Specifics on what you can do in this file can be found on the java.sun.com site.
+  </p>
+  </subsection>
+
+</section>
+</body>
+</document>
+

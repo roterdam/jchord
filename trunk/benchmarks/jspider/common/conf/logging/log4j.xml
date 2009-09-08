@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<!--
+ Log4J XML Configuration file
+
+ $Id: log4j.xml,v 1.2 2003/03/28 17:26:17 vanrogu Exp $
+  -->
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/" debug="false">
+
+  <!-- ============================== -->
+  <!-- Append messages to the console -->
+  <!-- ============================== -->
+
+  <appender name="CONSOLE" class="org.apache.log4j.ConsoleAppender">
+    <param name="Threshold" value="INFO"/>
+    <param name="Target" value="System.out"/>
+
+    <layout class="org.apache.log4j.PatternLayout">
+      <!-- The default pattern: Date Priority [Category] Message\n -->
+      <!-- param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/-->
+      <param name="ConversionPattern" value="%-5p [%c] %m%n"/>
+    </layout>
+  </appender>
+
+
+  <!-- ============================== -->
+  <!-- Append messages to a file      -->
+  <!-- ============================== -->
+
+  <appender name="FILE" class="org.apache.log4j.FileAppender">
+    <param name="Threshold" value="INFO"/>
+    <param name="Append" value="false"/>
+    <param name="File" value="${jspider.home}/output/log4j.out"/>
+
+    <layout class="org.apache.log4j.PatternLayout">
+      <!-- The default pattern: Date Priority [Category] Message\n -->
+      <param name="ConversionPattern" value="%d{ABSOLUTE} %-5p [%c{1}] %m%n"/>
+    </layout>
+  </appender>
+
+
+  <!-- ====================== -->
+  <!-- More Appender examples -->
+  <!-- ====================== -->
+
+  <!-- Buffer events and log them asynchronously
+  <appender name="ASYNC" class="org.apache.log4j.AsyncAppender">
+    <appender-ref ref="FILE"/>
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="SMTP"/>
+  </appender>
+  -->
+
+  <!-- EMail events to an administrator
+  <appender name="SMTP" class="org.apache.log4j.net.SMTPAppender">
+    <param name="Threshold" value="ERROR"/>
+    <param name="To" value="admin@myhost.domain.com"/>
+    <param name="From" value="nobody@myhost.domain.com"/>
+    <param name="Subject" value="Errors"/>
+    <param name="SMTPHost" value="localhost"/>
+    <param name="BufferSize" value="10"/>
+    <layout class="org.apache.log4j.PatternLayout">
+      <param name="ConversionPattern" value="[%d{ABSOLUTE},%c{1}] %m%n"/>
+    </layout>
+  </appender>
+  -->
+
+  <!-- Syslog events
+  <appender name="SYSLOG" class="org.apache.log4j.net.SyslogAppender">
+    <param name="Facility" value="LOCAL7"/>
+    <param name="FacilityPrinting" value="true"/>
+    <param name="SyslogHost" value="localhost"/>
+  </appender>
+  -->
+
+  <!-- Log events to JMS (requires a topic to be created)
+  <appender name="JMS" class="org.apache.log4j.net.JMSAppender">
+    <param name="Threshold" value="ERROR"/>
+    <param name="TopicConnectionFactoryBindingName" value="java:/ConnectionFactory"/>
+    <param name="TopicBindingName" value="topic/MyErrorsTopic"/>
+  </appender>
+  -->
+
+  <!-- ================ -->
+  <!-- Limit categories -->
+  <!-- ================ -->
+
+  <!-- Increase/Decrease the priority threshold for a category
+  <category name="com.example">
+    <priority value="FATAL"/>
+  </category>
+  -->
+
+
+  <!-- ======================= -->
+  <!-- Setup the Root category -->
+  <!-- ======================= -->
+
+  <root>
+    <appender-ref ref="CONSOLE"/>
+    <appender-ref ref="FILE"/>
+  </root>
+ 
+</log4j:configuration>

@@ -1,0 +1,112 @@
+<!-- ======================================================================= -->
+<!-- == JSpider ANT Continuous Integration Build Script                   == -->
+<!-- ======================================================================= -->
+<!-- $Id: continuous.xml,v 1.10 2003/02/07 17:15:58 vanrogu Exp $ -->
+<!-- DON'T FORGET TO PUT YOUR USER.PROPERTIES NEXT TO THIS SCRIPT !!! -->
+<project name="JSpider continuous intergration script" default="integrationBuild">
+
+    <!-- ===================================================================== -->
+    <!-- == Properties                                                      == -->
+    <!-- ===================================================================== -->
+
+    <!-- load this script's properties -->
+    <property file="continuous.properties"/>
+
+
+
+    <!-- ===================================================================== -->
+    <!-- == Targets                                                         == -->
+    <!-- ===================================================================== -->
+
+    <!-- Initialization needed to run this script -->
+    <target name="init">
+        <echo>Continuous Integration Build</echo>
+        <tstamp prefix="build"/>
+        <tstamp>
+          <format property="build.timestamp.standard" pattern="yyyy/MM/dd HH:mm"/>
+          <format property="build.timestamp.folder" pattern="yyyyMMdd-HH-mm"/>
+        </tstamp>
+        <property name="build.timestamp.version" value="${build.DSTAMP}"/>
+        <property name="outputFolder" value="autobuild/build-${build.timestamp.folder}"/>
+        <copy file="base.continuous.properties" tofile="continuous.properties" overwrite="False"/>
+        <property file="continuous.properties"/>
+    </target>
+
+    <!-- removes folders from this run -->
+    <target name="cleanFolders" depends="init">
+        <delete dir="jspider-main"/>
+    </target>
+
+    <!-- creates necessary folder -->
+    <target name="prepareFolders" depends="init">
+        <delete dir="jspider-main"/>
+        <mkdir dir="autobuild"/>
+        <mkdir dir="${outputFolder}/prepared"/>
+        <mkdir dir="${outputFolder}/packages"/>
+        <mkdir dir="${outputFolder}/junit"/>
+    </target>
+
+    <!-- Fetches the project source from CVS -->
+    <target name="checkout" depends="prepareFolders">
+        <cvspass cvsroot="${cvs.root}"
+                 password="${cvs.pwd}"
+                 passfile="${cvs.passfile}"/>
+        <cvs cvsroot=":pserver:anonymous@cvs.j-spider.sourceforge.net:/cvsroot/j-spider"
+             package="jspider-main"
+             output="${outputFolder}/cvs.report"
+             passfile="${cvs.passfile}"
+             command="export"
+             tag="HEAD">
+        </cvs>
+    </target>
+
+    <!-- Does a complete distribution build -->
+    <target name="makeBuild" depends="checkout">
+        <!-- copy personal settings to be used. -->
+        <copy file="user.properties" tofile="jspider-main/user.properties"/>
+        <!-- do a distribution build on the checked out source -->
+        <ant dir="jspider-main"
+             antfile="build.xml"
+             target="buildDistro"
+             output="../${outputFolder}/ant.report"/>
+    </target>
+
+    <!-- copies artifacts of build into the log dir -->
+    <target name="backupResults" depends="makeBuild">
+        <copy todir="${outputFolder}/prepared">
+            <fileset dir="jspider-main/dist/prepared">
+              <include name="**"/>
+            </fileset>
+        </copy>
+        <copy todir="${outputFolder}/packages">
+            <fileset dir="jspider-main/dist/packaged">
+             <include name="**"/>
+            </fileset>
+        </copy>
+        <copy todir="${outputFolder}/junit">
+            <fileset dir="jspider-main/stage/doc/junit">
+                <include name="**"/>
+            </fileset>
+        </copy>
+        <copy todir="${outputFolder}">
+            <fileset dir="jspider-main/dist/prepared">
+                <include name="build.report"/>
+            </fileset>
+        </copy>
+    </target>
+
+    <!-- Does a complete integration build -->
+    <target name="integrationBuild" depends="backupResults">
+        <echo>Sending e-mail with unit test report</echo>
+        <echo>If this fails, add activation.jar and mail.jar to {ANT}/lib</echo>
+        <mail subject="JSpider Integration build JUnit report"
+              messagefile="${outputFolder}/junit/junit-noframes.html"
+              encoding="mime"
+              messagemimetype="text/html"
+              tolist="${MailLogger.success.to}"
+              from="${MailLogger.from}"
+              mailhost="${MailLogger.mailhost}"
+              failonerror="false"/>
+    </target>
+
+</project>

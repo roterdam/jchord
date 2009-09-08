@@ -1,0 +1,168 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Installing - Directly from CVS</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Preface: Installing directly from CVS">
+  <subsection name="Benifits of building directly from CVS">
+    <p>
+    You can easily download the latest binary install for JSpider.  This download
+    includes all you need to install the product on your system, to get you started
+    in minutes.
+    </p>
+    <p>
+    Building from CVS directly brings a bit more work, but gives you access to the very
+    latest additions and bugfixes to JSpider, which haven't been included in a release
+    yet.  When you build from CVS, you will be able to benifit from additions that were
+    done by developers between the latest release and the moment you check out your version.
+    </p>
+  </subsection>
+  <subsection name="Drawbacks of building directly from CVS">
+    <p>
+    As you'll be using the very latest stuff already included in the CVS repository, but not
+    yet available in a public download release, some things might be broken.
+    The whole project is tested before considering doing a new public release.  In between two
+    releases, developers work hard to fix bugs, add new features etc...  During the period
+    between two releases, some things might be unstable, or in the worst case the source couldn't
+    compile at all (which normally shouldn't happen).
+    </p>
+    <p>
+    New features are great, but you'll need documentation for them to be of use.  New features in
+    the CVS repository are not always documented.
+    </p>
+  </subsection>
+</section>
+
+<section name="Building JSpider from CVS">
+  <p>
+  This simple explanation assumes a Unix-like system to be used.  Windows equivalents
+  should be obvious.
+  </p>
+
+  <subsection name="STEP 1: Set Your Environment">
+  <p>
+  You'll need to make sure you have a console opened, and created a directory which
+  you're going to use as a local working directory to store the sources into.
+  In our example, we'll use 'work/jspider' under your user's home dir.
+  </p>
+  <source>
+  cd
+  md work
+  cd work
+  md jspider
+  cd jspider
+  </source>
+  <p>
+  Now you have yourself prepared a directory to work in.
+  </p>
+  </subsection>
+
+  <subsection name="STEP 2: Check Out the Sources">
+  <p>
+  First, you'll have to tell your CVS client where the main CVS repository is located:
+  We'll be using anonymous access to the CVS repository, which allows us
+  </p>
+  <source>
+  export CVSROOT=:pserver:anonymous@cvs.j-spider.sourceforge.net:/cvsroot/j-spider
+  </source>
+  <p>
+  Then, login on the CVS server:
+  </p>
+  <source>
+  cvs login
+  (use a blank password if prompted)
+  </source>
+  <p>
+  This way, you can make sure you haven't made a typo in the CVSROOT.
+  </p>
+  <p>
+  Now, you can check out the sources:
+  </p>
+  <source>
+  cvs export jspider-main
+  </source>
+  <p>
+   This will check out the latest version of JSpider out of the repository.  You can also check out a specific version
+   by it's name:
+  </p>
+  <source>
+  cvs export -r jspider-0-1-0-dev jspider-main
+  </source>
+  <p>
+  The given example checks out the sources for JSpider 0.1.0 DEVELOPMENT version.
+  </p>
+</subsection>
+
+<subsection name="STEP 3: Building JSpider">
+  <p>
+  First, make sure you're located in the work directory:
+  </p>
+  <source>
+  cd jspider-main
+  </source>
+  <p>
+  The present working directory should be '/home/{user}/work/jspider/jspider-main' now.
+  </p>
+  <p>
+  Building JSpider is done with ant:
+  </p>
+  <source>
+  ant
+  </source>
+  <p>
+  this runs the default ant target, which is 'buildSimple'.  It creates everything needed to run
+  JSpider and runs the technical JUnit tests (those that can run without an internet connection).
+  If you want also documentation and reports to be generated, use:
+  </p>
+  <source>
+  ant buildComplete
+  </source>
+  <p>
+  If you want to create distribution packages, you can use:
+  </p>
+  <source>
+  ant buildDistro
+  </source>
+  <p>
+  After the build has completed, you'll find a folder called 'dist/prepared' containing the binaries and needed
+  configuration files.
+  </p>
+</subsection>
+
+<subsection name="STEP 4: Testing Your Freshly Built JSpider">
+  <p>
+  Now we're ready to test JSpider.
+  Make sure youre poiting the startup script to a site that exists (the example is assuming there is a webserver
+  running on the local machine, port 80.
+  You can always stop JSpider by pressing CTRL+C or simply killing the Java VM process.
+  </p>
+  <source>
+  cd dist
+  cd prepared
+  cd bin
+  chmod a+x ./jspider.sh
+  ./jspider.sh http://localhost
+  </source>
+  <p>
+  A lot of output should go on your screen now, as JSpider traverses the site you gave it.
+  Congratulations, you've successfully built JSpider !
+  </p>
+</subsection>
+
+<subsection name="IMPORTANT REMARK: Proxy/Firewall issues">
+  <p>
+  When you need a proxy/firewall to connect to a certain host, your have to configure that in the JSpider
+  configuration files.
+  </p>
+  <p>
+  an explanation of how to do this can be found <a href="../config/proxy.html">here</a> ...
+  </p>
+ </subsection>
+</section>
+</body>
+</document>
+

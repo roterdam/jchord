@@ -1,0 +1,51 @@
+Mon Nov 05 11:53:31 PST 2007  [debug] AvalonLogSystem initialized using logfile 'velocity.log'
+Mon Nov 05 11:53:31 PST 2007   [info] ************************************************************** 
+Mon Nov 05 11:53:31 PST 2007   [info] Starting Jakarta Velocity v1.3.1
+Mon Nov 05 11:53:31 PST 2007   [info] RuntimeInstance initializing.
+Mon Nov 05 11:53:31 PST 2007   [info] Default Properties File: org/apache/velocity/runtime/defaults/velocity.properties
+Mon Nov 05 11:53:31 PST 2007   [info] Trying to use logger class org.apache.velocity.runtime.log.AvalonLogSystem
+Mon Nov 05 11:53:31 PST 2007   [info] Using logger class org.apache.velocity.runtime.log.AvalonLogSystem
+Mon Nov 05 11:53:31 PST 2007   [info] Default ResourceManager initializing. (class org.apache.velocity.runtime.resource.ResourceManagerImpl)
+Mon Nov 05 11:53:31 PST 2007   [info] Resource Loader Instantiated: org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:31 PST 2007   [info] FileResourceLoader : initialization starting.
+Mon Nov 05 11:53:31 PST 2007   [info] FileResourceLoader : adding path '/Users/ksen/work/projects/jspider/bin/../conf/default/plugins/xmldump'
+Mon Nov 05 11:53:31 PST 2007   [info] FileResourceLoader : initialization complete.
+Mon Nov 05 11:53:31 PST 2007   [info] ResourceCache : initialized. (class org.apache.velocity.runtime.resource.ResourceCacheImpl)
+Mon Nov 05 11:53:31 PST 2007   [info] Default ResourceManager initialization complete.
+Mon Nov 05 11:53:31 PST 2007   [info] Loaded System Directive: org.apache.velocity.runtime.directive.Literal
+Mon Nov 05 11:53:31 PST 2007   [info] Loaded System Directive: org.apache.velocity.runtime.directive.Macro
+Mon Nov 05 11:53:31 PST 2007   [info] Loaded System Directive: org.apache.velocity.runtime.directive.Parse
+Mon Nov 05 11:53:31 PST 2007   [info] Loaded System Directive: org.apache.velocity.runtime.directive.Include
+Mon Nov 05 11:53:31 PST 2007   [info] Loaded System Directive: org.apache.velocity.runtime.directive.Foreach
+Mon Nov 05 11:53:31 PST 2007   [info] Created: 20 parsers.
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : initialization starting.
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : adding VMs from VM library template : VM_global_library.vm
+Mon Nov 05 11:53:31 PST 2007  [error] ResourceManager : unable to find resource 'VM_global_library.vm' in any resource loader.
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : error using  VM library template VM_global_library.vm : org.apache.velocity.exception.ResourceNotFoundException: Unable to find resource 'VM_global_library.vm'
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro :  VM library template macro registration complete.
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : allowInline = true : VMs can be defined inline in templates
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : allowInlineToOverride = false : VMs defined inline may NOT replace previous VM definitions
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : allowInlineLocal = false : VMs defined inline will be  global in scope if allowed.
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : messages on  : VM system will output logging messages
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : autoload off  : VM system will not automatically reload global library macros
+Mon Nov 05 11:53:31 PST 2007   [info] Velocimacro : initialization complete.
+Mon Nov 05 11:53:31 PST 2007   [info] Velocity successfully started.
+Mon Nov 05 11:53:35 PST 2007   [info] Velocimacro : added new VM : #resource( resource indent ) : source = dump.vm
+Mon Nov 05 11:53:35 PST 2007   [info] Velocimacro : added new VM : #folder( folder indent ) : source = dump.vm
+Mon Nov 05 11:53:35 PST 2007  [error] VM #folder: error : too few arguments to macro. Wanted 2 got 0
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found dump.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found info/PARSED.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found info/PARSED.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found info/FETCH_ERROR.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found info/PARSED.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found info/FETCH_FORBIDDEN.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found info/PARSE_IGNORED.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+o] ResourceManager : found resource/EMailAddressReferenceDiscoveredEvent.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:32 PST 2007   [warn] org.apache.velocity.runtime.exception.ReferenceException: reference : template = resource/EMailAddressReferenceDiscoveredEvent.vm [line 1,column 44] : ${event.emailAddress} is not a valid reference.
+Mon Nov 05 11:53:32 PST 2007   [info] ResourceManager : found resource/ResourceParsedEvent.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:33 PST 2007   [info] ResourceManager : found resource/ResourceForbiddenEvent.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:34 PST 2007   [info] ResourceManager : found resource/ResourceFetchErrorEvent.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [warn] org.apache.velocity.runtime.exception.ReferenceException: reference : template = resource/EMailAddressReferenceDiscoveredEvent.vm [line 1,column 44] : ${event.emailAddress} is not a valid reference.
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found engine/SpideringSummaryEvent.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found dump.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader
+Mon Nov 05 11:53:35 PST 2007   [info] ResourceManager : found engine/SpideringStoppedEvent.vm with loader org.apache.velocity.runtime.resource.loader.FileResourceLoader

@@ -1,0 +1,4 @@
+[${eventName}] site: ${event.site.URL}
+<robots.txt>
+${event.robotsTXT}
+</robots.txt>

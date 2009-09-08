@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Installing</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Installing JSpider">
+  <p>
+  There are 2 ways to install JSpider on your system: downloading a binary (which is
+  the most preferrable way, as it is the easiest), and building directly from our CVS
+  repositories (which gives you access to the very latest additions, not yet included
+  in any release).
+  </p>
+
+  <subsection name="IMPORTANT NOTE for Java 1.3 - XML Parser">
+      <p>
+      JSpider needs an XML parser in order to read some of it's configuration files.
+      </p>
+      <p>
+      Starting from Java 1.4 (J2SE 1.4), the needed XML API's and an implementation
+      of these are part of the platform.
+      </p>
+      <p>
+      For Java 1.3, however, you'll have to add these yourself.  The best thing you
+      can do is to download the open source XML parser Xerces from Apache.
+      </p>
+      <p>
+      You can find this XML parser for download <a href="http://xml.apache.org/dist/xerces-j/">here</a>.
+      You'll have to put the "xml-apis.jar" and "xercesImpl.jar" on your classpath before
+      starting JSpider.
+      </p>
+  </subsection>
+
+  <subsection name="Installation instructions">
+    <p>
+      For both ways of installing JSpider, we offer installation instructions:
+    </p>
+    <p>
+    <table>
+      <th>Type</th><th>Description</th>
+      <tr>
+        <td><a href="./binaries.html">Binary downloads</a></td>
+        <td>
+         Explanation on how to install JSpider using our binary downloads.
+         For most people, this is the most preferrable way.
+        </td>
+      </tr>
+      <tr>
+        <td><a href="./cvs.html">From CVS</a></td>
+        <td>
+        Explanation on how to build and install JSpider directly from CVS.
+        </td>
+      </tr>
+    </table>
+    </p>
+    <p>
+    When you're going to build JSpider from CVS, or you're going to make changes to the
+    sources, it's maybe a good idea to have a look at out ant build script targets <a href="ant.html">here</a>...
+    </p>
+    <p>
+    When you install a new version of jspider directly from CVS, it's maybe a good idea
+    to run our JUnit test suite against it to make sure nothing's broken.  More information
+    on doing this can be found <a href="testing.html">here</a>.
+    </p>
+  </subsection>
+</section>
+</body>
+</document>
+

@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Environment Configuration - JSPIDER_HOME variable</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="JSPIDER_HOME environment variable">
+  <p>
+      In the section about the usage of JSpider, you’ve learned that
+      you can start it by launching the jspider.bat or jspider.sh startup
+      script.  Without any extra configuration, this script assumes that
+      your current working directory is {JSPIDER_INSTALL_DIR}/bin.
+  </p>
+  <p>
+      This can be problematic if you want to launch JSpider from another
+      location.
+  </p>
+  <p>
+      When JSpider is started, it will look for an environment variable
+      called JSPIDER_HOME.  If this is present, that folder is taken as
+      reference for the JSpider installation.
+  </p>
+  <p>
+      If this environment variable is not found, the value ‘..’ is assumed,
+      changing the current directory from the /bin folder to the
+      {JSPIDER_INSTALLATION_DIR} if started from /bin.
+  </p>
+  <subsection name="setting JSPIDER_HOME">
+  <p>
+      Setting JSPIDER_HOME is very easy:
+
+      On unix:
+  <source>
+      export JSPIDER_HOME=/opt/jspider</source>
+  </p>
+  <p>
+      On windows:
+  <source>
+      set JSPIDER_HOME=c:\jspider</source>
+      make sure you use the path to which you installed JSpider.
+  </p>
+  </subsection>
+</section>
+</body>
+</document>
+

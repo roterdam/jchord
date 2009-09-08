@@ -1,0 +1,16 @@
+SITES:
+
+#foreach( $site in $sites )
+  $site
+#foreach( $resource in $site.allResources )
+    $resource.URL
+#end
+#end
+
+
+
+RESOURCES:
+
+#foreach( $resource in $resources )
+  $resource
+#end

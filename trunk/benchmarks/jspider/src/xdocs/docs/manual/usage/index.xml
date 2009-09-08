@@ -1,0 +1,52 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Using JSpider</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Using JSpider">
+  <subsection name="Starting">
+  <p>
+  To start JSpider, there are two possibilities: or you set the JSPIDER_HOME environment
+  variable, or you start JSpider from within the {JSPIDER_HOME}/bin folder.
+  </p>
+  <p>
+  We'll be using the default configuration 'checkErrors' (as configured in the {JSPIDER_HOME}/conf/checkErrors),
+  as the configuration to run. This way, you'll get an overview of all the errors found on the site on the
+  screen and in a log file.
+  </p>
+  <p>
+  IMPORTANT: Don't forget to edit 'jspider.properties' in the configuration folder if you need a proxy to get to the site!
+  </p>
+  <p>Method 1:</p>
+  <source>
+  export JSPIDER_HOME=/opt/jspider   (use your pathnames)
+  /bin/jspider.sh http://localhost checkErrors  (use the website you want)</source>
+    <p>Method 2:</p>
+    <source>
+    cd bin
+    ./jspider.sh http://localhost checkErrors  (use the website you want)</source>
+  </subsection>
+  <subsection name="Choosing the right configuration">
+    <p>
+      If you copy the 'default' folder (under /conf) to another name, you can setup a
+      different JSpider configuration.
+      When starting JSpider, the default configuration is taken from /conf/default.
+    </p>
+    <p>
+    However, you can pass the wanted configuration folder.  If you use:
+    </p>
+    <source>
+  ./jspider.sh http://localhost myconfig</source>
+    <p>
+    the configuration files from /conf/myconfig are used instead of those in /conf/default
+    </p>
+
+  </subsection>
+</section>
+</body>
+</document>
+
