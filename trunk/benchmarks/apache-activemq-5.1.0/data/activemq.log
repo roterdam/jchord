@@ -1,0 +1,916 @@
+2009-09-03 15:34:46,698 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-03 15:34:46,700 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-03 15:34:46,700 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-03 15:34:46,703 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-03 15:34:46,741 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-03 15:34:46,783 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-03 15:34:50,732 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-03 15:34:50,753 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-03 15:34:50,766 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-03 15:34:51,066 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-03 15:34:51,071 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-03 15:34:51,075 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-03 15:34:51,075 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-03 15:34:51,085 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-03 15:34:51,085 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-03 15:34:51,086 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-03 15:34:51,086 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-9107-1252017290589-0:0) started
+2009-09-03 15:34:51,136 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-03 15:34:51,148 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-03 15:34:51,963 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-03 15:34:52,074 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-03 15:34:52,152 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-03 15:34:52,383 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-03 15:34:52,574 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-03 15:34:52,593 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-03 15:34:52,748 [orker: 33038931] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-03 17:21:03,577 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-03 17:21:03,579 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-03 17:21:03,579 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-03 17:21:03,582 [main           ] WARN  AMQPersistenceAdapter          - Waiting to Lock the Store /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-03 17:21:10,147 [main           ] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-9107-1252017290589-0:0) is shutting down
+2009-09-03 17:21:10,148 [main           ] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-03 17:21:11,614 [main           ] INFO  AMQPersistenceAdapter          - Aquired lock for AMQ Store/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-03 17:21:11,614 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-03 17:21:11,655 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-03 17:21:11,705 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-03 17:21:11,708 [main           ] WARN  AMQPersistenceAdapter          - The ReferenceStore is not valid - recovering ...
+2009-09-03 17:21:11,712 [main           ] INFO  KahaStore                      - Kaha Store successfully deleted data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-03 17:21:11,714 [main           ] INFO  AMQPersistenceAdapter          - Journal Recovery Started from: DataManager:(data-)
+2009-09-03 17:21:11,738 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-03 17:21:17,532 [main           ] INFO  AMQPersistenceAdapter          - Recovered 40000 operations from redo log in 5.816 seconds.
+2009-09-03 17:21:17,534 [main           ] INFO  AMQPersistenceAdapter          - Finished recovering the ReferenceStore
+2009-09-03 17:21:17,755 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-03 17:21:17,768 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-03 17:21:18,073 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-03 17:21:18,078 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-03 17:21:18,083 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-03 17:21:18,083 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-03 17:21:18,092 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-03 17:21:18,092 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-03 17:21:18,093 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-03 17:21:18,093 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-21940-1252023677554-0:0) started
+2009-09-03 17:21:18,145 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-03 17:21:18,157 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-03 17:21:18,908 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-03 17:21:19,089 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-03 17:21:19,169 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-03 17:21:19,416 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-03 17:21:19,591 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-03 17:21:19,601 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-03 17:21:19,753 [orker: 11893489] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-03 17:21:59,217 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-21940-1252023677554-0:0) is shutting down
+2009-09-03 17:21:59,219 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-03 17:21:59,756 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-03 17:21:59,756 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-03 17:22:00,082 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-03 17:22:02,083 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-03 17:22:02,094 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-03 17:22:02,142 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-21940-1252023677554-0:0) stopped
+2009-09-03 18:21:38,949 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-03 18:21:38,951 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-03 18:21:38,951 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-03 18:21:38,954 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-03 18:21:38,991 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-03 18:21:39,040 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-03 18:21:44,941 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-03 18:21:45,335 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-03 18:21:45,347 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-03 18:21:45,622 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-03 18:21:45,626 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-03 18:21:45,632 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-03 18:21:45,633 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-03 18:21:45,643 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-03 18:21:45,643 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-03 18:21:45,644 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-03 18:21:45,644 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-20207-1252027304799-0:0) started
+2009-09-03 18:21:45,697 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-03 18:21:45,709 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-03 18:21:46,420 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-03 18:21:46,532 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-03 18:21:46,607 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-03 18:21:46,879 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-03 18:21:47,052 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-03 18:21:47,062 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-03 18:21:47,220 [orker: 30860242] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-03 18:22:08,238 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-20207-1252027304799-0:0) is shutting down
+2009-09-03 18:22:08,342 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-03 18:22:09,474 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-03 18:22:09,477 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-03 18:22:09,629 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-03 18:22:09,633 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-03 18:22:09,641 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-03 18:22:11,093 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-20207-1252027304799-0:0) stopped
+2009-09-03 20:00:26,488 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-03 20:00:26,490 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-03 20:00:26,490 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-03 20:00:26,494 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-03 20:00:26,535 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-03 20:00:26,583 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [1]
+2009-09-03 20:00:26,944 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-03 20:00:27,528 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-03 20:00:27,540 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-03 20:00:27,850 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-03 20:00:27,853 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-03 20:00:27,857 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-03 20:00:27,857 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-03 20:00:27,866 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-03 20:00:27,866 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-03 20:00:27,867 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-03 20:00:27,867 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-19493-1252033226801-0:0) started
+2009-09-03 20:00:27,916 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-03 20:00:27,928 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-03 20:00:28,618 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-03 20:00:28,728 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-03 20:00:28,806 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-03 20:00:29,021 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-03 20:00:29,216 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-03 20:00:29,225 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-03 20:00:29,376 [Worker: 8036743] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-03 22:11:44,390 [main           ] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-19493-1252033226801-0:0) is shutting down
+2009-09-03 22:11:44,391 [main           ] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-04 19:02:13,537 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-04 19:02:13,539 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-04 19:02:13,539 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-04 19:02:13,543 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-04 19:02:13,582 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-04 19:02:13,629 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-04 19:02:13,631 [main           ] WARN  AMQPersistenceAdapter          - The ReferenceStore is not valid - recovering ...
+2009-09-04 19:02:13,642 [main           ] INFO  KahaStore                      - Kaha Store successfully deleted data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-04 19:02:13,644 [main           ] INFO  AMQPersistenceAdapter          - Journal Recovery Started from: DataManager:(data-)
+2009-09-04 19:02:13,668 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-04 19:02:20,325 [main           ] INFO  AMQPersistenceAdapter          - Recovered 64528 operations from redo log in 6.68 seconds.
+2009-09-04 19:02:20,325 [main           ] INFO  AMQPersistenceAdapter          - Finished recovering the ReferenceStore
+2009-09-04 19:02:20,544 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-04 19:02:20,556 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-04 19:02:20,854 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-04 19:02:20,859 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-04 19:02:20,863 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-04 19:02:20,864 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-04 19:02:20,871 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-04 19:02:20,872 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-04 19:02:20,872 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-04 19:02:20,873 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-20492-1252116140345-0:0) started
+2009-09-04 19:02:20,931 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-04 19:02:20,942 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-04 19:02:21,631 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-04 19:02:21,742 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-04 19:02:21,818 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-04 19:02:22,061 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-04 19:02:22,242 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-04 19:02:22,251 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-04 19:02:22,400 [orker: 24577551] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-04 21:18:19,980 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-20492-1252116140345-0:0) is shutting down
+2009-09-04 21:18:19,982 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-04 21:18:21,036 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-04 21:18:21,037 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-04 21:18:21,299 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-04 21:18:23,031 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-04 21:18:23,235 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-04 21:18:23,282 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-20492-1252116140345-0:0) stopped
+2009-09-06 18:07:44,299 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-06 18:07:44,308 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-06 18:07:44,308 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-06 18:07:44,312 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-06 18:07:44,365 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-06 18:07:44,434 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-06 18:07:44,766 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-06 18:07:46,708 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-06 18:07:46,720 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-06 18:07:47,031 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-06 18:07:47,034 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-06 18:07:47,039 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-06 18:07:47,047 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-06 18:07:47,057 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-06 18:07:47,058 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-06 18:07:47,058 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-06 18:07:47,059 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-13527-1252285664621-0:0) started
+2009-09-06 18:07:47,108 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-06 18:07:47,119 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-06 18:07:47,844 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-06 18:07:47,961 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-06 18:07:48,036 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-06 18:07:48,271 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-06 18:07:48,454 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-06 18:07:48,463 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-06 18:07:48,618 [orker: 32960257] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-06 18:08:26,357 [main           ] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-13527-1252285664621-0:0) is shutting down
+2009-09-06 18:08:26,358 [main           ] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-06 18:23:27,127 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-06 18:23:27,129 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-06 18:23:27,129 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-06 18:23:27,133 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-06 18:23:27,170 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-06 18:23:27,217 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-06 18:23:27,219 [main           ] WARN  AMQPersistenceAdapter          - The ReferenceStore is not valid - recovering ...
+2009-09-06 18:23:27,230 [main           ] INFO  KahaStore                      - Kaha Store successfully deleted data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-06 18:23:27,232 [main           ] INFO  AMQPersistenceAdapter          - Journal Recovery Started from: DataManager:(data-)
+2009-09-06 18:23:27,272 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-06 18:23:35,792 [main           ] INFO  AMQPersistenceAdapter          - Recovered 64528 operations from redo log in 8.56 seconds.
+2009-09-06 18:23:35,792 [main           ] INFO  AMQPersistenceAdapter          - Finished recovering the ReferenceStore
+2009-09-06 18:23:36,006 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-06 18:23:36,019 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-06 18:23:36,315 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-06 18:23:36,317 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-06 18:23:36,321 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-06 18:23:36,322 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-06 18:23:36,330 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-06 18:23:36,330 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-06 18:23:36,331 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-06 18:23:36,331 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-8975-1252286615811-0:0) started
+2009-09-06 18:23:36,380 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-06 18:23:36,390 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-06 18:23:37,110 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-06 18:23:37,219 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-06 18:23:37,294 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-06 18:23:37,581 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-06 18:23:37,772 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-06 18:23:37,781 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-06 18:23:37,926 [orker: 24577551] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-06 18:36:53,059 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-8975-1252286615811-0:0) is shutting down
+2009-09-06 18:36:53,060 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-06 18:36:53,928 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-06 18:36:53,928 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-06 18:36:54,410 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-06 18:36:56,394 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-06 18:36:58,394 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-06 18:36:58,453 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-8975-1252286615811-0:0) stopped
+2009-09-06 18:37:26,677 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-06 18:37:26,679 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-06 18:37:26,679 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-06 18:37:26,683 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-06 18:37:26,723 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-06 18:37:26,770 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-06 18:37:27,118 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-06 18:37:28,836 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-06 18:37:28,849 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-06 18:37:29,164 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-06 18:37:29,166 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-06 18:37:29,171 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-06 18:37:29,171 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-06 18:37:29,179 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-06 18:37:29,180 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-06 18:37:29,180 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-06 18:37:29,180 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-27184-1252287446974-0:0) started
+2009-09-06 18:37:29,231 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-06 18:37:29,242 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-06 18:37:29,898 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-06 18:37:30,008 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-06 18:37:30,085 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-06 18:37:30,321 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-06 18:37:30,490 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-06 18:37:30,499 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-06 18:37:30,651 [Worker: 2645268] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-06 18:39:04,344 [main           ] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-27184-1252287446974-0:0) is shutting down
+2009-09-06 18:39:04,345 [main           ] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-06 20:30:17,841 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-06 20:30:17,843 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-06 20:30:17,843 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-06 20:30:17,847 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-06 20:30:17,884 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-06 20:30:17,941 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-06 20:30:17,943 [main           ] WARN  AMQPersistenceAdapter          - The ReferenceStore is not valid - recovering ...
+2009-09-06 20:30:17,967 [main           ] INFO  KahaStore                      - Kaha Store successfully deleted data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-06 20:30:17,968 [main           ] INFO  AMQPersistenceAdapter          - Journal Recovery Started from: DataManager:(data-)
+2009-09-06 20:30:17,993 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-06 20:30:24,600 [main           ] INFO  AMQPersistenceAdapter          - Recovered 64528 operations from redo log in 6.631 seconds.
+2009-09-06 20:30:24,600 [main           ] INFO  AMQPersistenceAdapter          - Finished recovering the ReferenceStore
+2009-09-06 20:30:24,820 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-06 20:30:24,833 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-06 20:30:25,121 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-06 20:30:25,122 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-06 20:30:25,126 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-06 20:30:25,127 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-06 20:30:25,136 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-06 20:30:25,136 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-06 20:30:25,137 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-06 20:30:25,137 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-1191-1252294224620-0:0) started
+2009-09-06 20:30:25,186 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-06 20:30:25,197 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-06 20:30:25,879 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-06 20:30:25,990 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-06 20:30:26,067 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-06 20:30:26,296 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-06 20:30:26,472 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-06 20:30:26,482 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-06 20:30:26,657 [orker: 11157083] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-06 20:30:37,189 [main           ] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-1191-1252294224620-0:0) is shutting down
+2009-09-06 20:30:37,190 [main           ] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-06 20:40:29,279 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-06 20:40:29,281 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-06 20:40:29,281 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-06 20:40:29,285 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-06 20:40:29,323 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-06 20:40:29,373 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-06 20:40:29,376 [main           ] WARN  AMQPersistenceAdapter          - The ReferenceStore is not valid - recovering ...
+2009-09-06 20:40:29,384 [main           ] INFO  KahaStore                      - Kaha Store successfully deleted data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-06 20:40:29,386 [main           ] INFO  AMQPersistenceAdapter          - Journal Recovery Started from: DataManager:(data-)
+2009-09-06 20:40:29,410 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-06 20:40:37,431 [main           ] INFO  AMQPersistenceAdapter          - Recovered 64528 operations from redo log in 8.044 seconds.
+2009-09-06 20:40:37,431 [main           ] INFO  AMQPersistenceAdapter          - Finished recovering the ReferenceStore
+2009-09-06 20:40:37,645 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-06 20:40:37,657 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-06 20:40:37,951 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-06 20:40:37,955 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-06 20:40:37,959 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-06 20:40:37,959 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-06 20:40:37,967 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-06 20:40:37,968 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-06 20:40:37,968 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-06 20:40:37,969 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-24563-1252294837450-0:0) started
+2009-09-06 20:40:38,016 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-06 20:40:38,027 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-06 20:40:38,757 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-06 20:40:38,865 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-06 20:40:38,939 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-06 20:40:39,207 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-06 20:40:39,420 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-06 20:40:39,430 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-06 20:40:39,575 [orker: 11157083] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-06 21:30:08,633 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-06 21:30:08,635 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-06 21:30:08,635 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-06 21:30:08,639 [main           ] WARN  AMQPersistenceAdapter          - Waiting to Lock the Store /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:25:32,159 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:25:32,161 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:25:32,161 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:25:32,164 [main           ] WARN  AMQPersistenceAdapter          - Waiting to Lock the Store /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:25:36,544 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, null) is shutting down
+2009-09-07 00:25:36,546 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:25:36,546 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 00:25:36,546 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 00:25:36,546 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 00:25:36,546 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 00:26:41,101 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:26:41,103 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:26:41,103 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:26:41,106 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:26:41,147 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:26:41,192 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-07 00:26:41,195 [main           ] WARN  AMQPersistenceAdapter          - The ReferenceStore is not valid - recovering ...
+2009-09-07 00:26:41,203 [main           ] INFO  KahaStore                      - Kaha Store successfully deleted data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:26:41,205 [main           ] INFO  AMQPersistenceAdapter          - Journal Recovery Started from: DataManager:(data-)
+2009-09-07 00:26:41,230 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:26:43,443 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, null) is shutting down
+2009-09-07 00:26:43,444 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:26:43,444 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 00:26:43,444 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 00:26:43,444 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 00:26:43,444 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 00:26:48,080 [main           ] INFO  AMQPersistenceAdapter          - Recovered 64528 operations from redo log in 6.875 seconds.
+2009-09-07 00:26:48,080 [main           ] INFO  AMQPersistenceAdapter          - Finished recovering the ReferenceStore
+2009-09-07 00:26:53,693 [main           ] ERROR KahaPersistenceAdapter         - Failed to get destinations 
+java.io.IOException: Store has been closed.
+	at org.apache.activemq.kaha.impl.KahaStore.initialize(KahaStore.java:472)
+	at org.apache.activemq.kaha.impl.KahaStore.getMapContainerIds(KahaStore.java:256)
+	at org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter.getDestinations(KahaPersistenceAdapter.java:91)
+	at org.apache.activemq.store.amq.AMQPersistenceAdapter.getDestinations(AMQPersistenceAdapter.java:422)
+	at org.apache.activemq.broker.region.DestinationFactoryImpl.getDestinations(DestinationFactoryImpl.java:66)
+	at org.apache.activemq.broker.region.AbstractRegion.getInactiveDestinations(AbstractRegion.java:299)
+	at org.apache.activemq.broker.region.TopicRegion.getInactiveDestinations(TopicRegion.java:286)
+	at org.apache.activemq.broker.region.AbstractRegion.start(AbstractRegion.java:87)
+	at org.apache.activemq.broker.region.RegionBroker.start(RegionBroker.java:179)
+	at org.apache.activemq.broker.jmx.ManagedRegionBroker.start(ManagedRegionBroker.java:103)
+	at org.apache.activemq.broker.TransactionBroker.start(TransactionBroker.java:112)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.MutableBrokerFilter.start(MutableBrokerFilter.java:160)
+	at org.apache.activemq.broker.BrokerService.start(BrokerService.java:444)
+	at org.apache.activemq.xbean.XBeanBrokerService.afterPropertiesSet(XBeanBrokerService.java:50)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1288)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1257)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:438)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory$1.run(AbstractAutowireCapableBeanFactory.java:383)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:353)
+	at org.springframework.beans.factory.support.AbstractBeanFactory$1.getObject(AbstractBeanFactory.java:245)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:169)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:242)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:164)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:400)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:736)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:369)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:64)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:52)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createApplicationContext(XBeanBrokerFactory.java:96)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createBroker(XBeanBrokerFactory.java:52)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:71)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:54)
+	at org.apache.activemq.console.command.StartCommand.startBroker(StartCommand.java:111)
+	at org.apache.activemq.console.command.StartCommand.runTask(StartCommand.java:73)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.runTask(ShellCommand.java:129)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.main(ShellCommand.java:79)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:585)
+	at org.apache.activemq.console.Main.runTaskClass(Main.java:222)
+	at org.apache.activemq.console.Main.main(Main.java:106)
+2009-09-07 00:26:53,696 [main           ] ERROR KahaPersistenceAdapter         - Failed to get destinations 
+java.io.IOException: Store has been closed.
+	at org.apache.activemq.kaha.impl.KahaStore.initialize(KahaStore.java:472)
+	at org.apache.activemq.kaha.impl.KahaStore.getMapContainerIds(KahaStore.java:256)
+	at org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter.getDestinations(KahaPersistenceAdapter.java:91)
+	at org.apache.activemq.store.amq.AMQPersistenceAdapter.getDestinations(AMQPersistenceAdapter.java:422)
+	at org.apache.activemq.broker.region.DestinationFactoryImpl.getDestinations(DestinationFactoryImpl.java:66)
+	at org.apache.activemq.broker.region.AbstractRegion.getInactiveDestinations(AbstractRegion.java:299)
+	at org.apache.activemq.broker.region.AbstractRegion.start(AbstractRegion.java:87)
+	at org.apache.activemq.broker.region.RegionBroker.start(RegionBroker.java:180)
+	at org.apache.activemq.broker.jmx.ManagedRegionBroker.start(ManagedRegionBroker.java:103)
+	at org.apache.activemq.broker.TransactionBroker.start(TransactionBroker.java:112)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.MutableBrokerFilter.start(MutableBrokerFilter.java:160)
+	at org.apache.activemq.broker.BrokerService.start(BrokerService.java:444)
+	at org.apache.activemq.xbean.XBeanBrokerService.afterPropertiesSet(XBeanBrokerService.java:50)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1288)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1257)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:438)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory$1.run(AbstractAutowireCapableBeanFactory.java:383)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:353)
+	at org.springframework.beans.factory.support.AbstractBeanFactory$1.getObject(AbstractBeanFactory.java:245)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:169)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:242)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:164)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:400)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:736)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:369)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:64)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:52)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createApplicationContext(XBeanBrokerFactory.java:96)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createBroker(XBeanBrokerFactory.java:52)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:71)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:54)
+	at org.apache.activemq.console.command.StartCommand.startBroker(StartCommand.java:111)
+	at org.apache.activemq.console.command.StartCommand.runTask(StartCommand.java:73)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.runTask(ShellCommand.java:129)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.main(ShellCommand.java:79)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:585)
+	at org.apache.activemq.console.Main.runTaskClass(Main.java:222)
+	at org.apache.activemq.console.Main.main(Main.java:106)
+2009-09-07 00:26:53,698 [main           ] ERROR KahaPersistenceAdapter         - Failed to get destinations 
+java.io.IOException: Store has been closed.
+	at org.apache.activemq.kaha.impl.KahaStore.initialize(KahaStore.java:472)
+	at org.apache.activemq.kaha.impl.KahaStore.getMapContainerIds(KahaStore.java:256)
+	at org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter.getDestinations(KahaPersistenceAdapter.java:91)
+	at org.apache.activemq.store.amq.AMQPersistenceAdapter.getDestinations(AMQPersistenceAdapter.java:422)
+	at org.apache.activemq.broker.region.DestinationFactoryImpl.getDestinations(DestinationFactoryImpl.java:66)
+	at org.apache.activemq.broker.region.AbstractRegion.getInactiveDestinations(AbstractRegion.java:299)
+	at org.apache.activemq.broker.region.AbstractRegion.start(AbstractRegion.java:87)
+	at org.apache.activemq.broker.region.RegionBroker.start(RegionBroker.java:181)
+	at org.apache.activemq.broker.jmx.ManagedRegionBroker.start(ManagedRegionBroker.java:103)
+	at org.apache.activemq.broker.TransactionBroker.start(TransactionBroker.java:112)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.MutableBrokerFilter.start(MutableBrokerFilter.java:160)
+	at org.apache.activemq.broker.BrokerService.start(BrokerService.java:444)
+	at org.apache.activemq.xbean.XBeanBrokerService.afterPropertiesSet(XBeanBrokerService.java:50)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1288)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1257)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:438)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory$1.run(AbstractAutowireCapableBeanFactory.java:383)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:353)
+	at org.springframework.beans.factory.support.AbstractBeanFactory$1.getObject(AbstractBeanFactory.java:245)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:169)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:242)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:164)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:400)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:736)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:369)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:64)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:52)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createApplicationContext(XBeanBrokerFactory.java:96)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createBroker(XBeanBrokerFactory.java:52)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:71)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:54)
+	at org.apache.activemq.console.command.StartCommand.startBroker(StartCommand.java:111)
+	at org.apache.activemq.console.command.StartCommand.runTask(StartCommand.java:73)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.runTask(ShellCommand.java:129)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.main(ShellCommand.java:79)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:585)
+	at org.apache.activemq.console.Main.runTaskClass(Main.java:222)
+	at org.apache.activemq.console.Main.main(Main.java:106)
+2009-09-07 00:26:53,699 [main           ] ERROR KahaPersistenceAdapter         - Failed to get destinations 
+java.io.IOException: Store has been closed.
+	at org.apache.activemq.kaha.impl.KahaStore.initialize(KahaStore.java:472)
+	at org.apache.activemq.kaha.impl.KahaStore.getMapContainerIds(KahaStore.java:256)
+	at org.apache.activemq.store.kahadaptor.KahaPersistenceAdapter.getDestinations(KahaPersistenceAdapter.java:91)
+	at org.apache.activemq.store.amq.AMQPersistenceAdapter.getDestinations(AMQPersistenceAdapter.java:422)
+	at org.apache.activemq.broker.region.DestinationFactoryImpl.getDestinations(DestinationFactoryImpl.java:66)
+	at org.apache.activemq.broker.jmx.ManagedRegionBroker.buildExistingSubscriptions(ManagedRegionBroker.java:331)
+	at org.apache.activemq.broker.jmx.ManagedRegionBroker.start(ManagedRegionBroker.java:105)
+	at org.apache.activemq.broker.TransactionBroker.start(TransactionBroker.java:112)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.MutableBrokerFilter.start(MutableBrokerFilter.java:160)
+	at org.apache.activemq.broker.BrokerService.start(BrokerService.java:444)
+	at org.apache.activemq.xbean.XBeanBrokerService.afterPropertiesSet(XBeanBrokerService.java:50)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1288)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1257)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:438)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory$1.run(AbstractAutowireCapableBeanFactory.java:383)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:353)
+	at org.springframework.beans.factory.support.AbstractBeanFactory$1.getObject(AbstractBeanFactory.java:245)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:169)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:242)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:164)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:400)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:736)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:369)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:64)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:52)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createApplicationContext(XBeanBrokerFactory.java:96)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createBroker(XBeanBrokerFactory.java:52)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:71)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:54)
+	at org.apache.activemq.console.command.StartCommand.startBroker(StartCommand.java:111)
+	at org.apache.activemq.console.command.StartCommand.runTask(StartCommand.java:73)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.runTask(ShellCommand.java:129)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.main(ShellCommand.java:79)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:585)
+	at org.apache.activemq.console.Main.runTaskClass(Main.java:222)
+	at org.apache.activemq.console.Main.main(Main.java:106)
+2009-09-07 00:26:53,700 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, null) stopped
+2009-09-07 00:26:53,716 [main           ] ERROR BrokerService                  - Failed to start ActiveMQ JMS Message Broker. Reason: org.apache.activemq.broker.BrokerStoppedException: Broker has been stopped: org.apache.activemq.broker.BrokerService$2@f6f1b6
+org.apache.activemq.broker.BrokerStoppedException: Broker has been stopped: org.apache.activemq.broker.BrokerService$2@f6f1b6
+	at org.apache.activemq.broker.ErrorBroker.getBrokerName(ErrorBroker.java:79)
+	at org.apache.activemq.broker.MutableBrokerFilter.getBrokerName(MutableBrokerFilter.java:180)
+	at org.apache.activemq.broker.TransportConnector.start(TransportConnector.java:198)
+	at org.apache.activemq.broker.BrokerService.startTransportConnector(BrokerService.java:1853)
+	at org.apache.activemq.broker.BrokerService.startAllConnectors(BrokerService.java:1801)
+	at org.apache.activemq.broker.BrokerService.start(BrokerService.java:455)
+	at org.apache.activemq.xbean.XBeanBrokerService.afterPropertiesSet(XBeanBrokerService.java:50)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1288)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1257)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:438)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory$1.run(AbstractAutowireCapableBeanFactory.java:383)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:353)
+	at org.springframework.beans.factory.support.AbstractBeanFactory$1.getObject(AbstractBeanFactory.java:245)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:169)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:242)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:164)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:400)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:736)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:369)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:64)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:52)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createApplicationContext(XBeanBrokerFactory.java:96)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createBroker(XBeanBrokerFactory.java:52)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:71)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:54)
+	at org.apache.activemq.console.command.StartCommand.startBroker(StartCommand.java:111)
+	at org.apache.activemq.console.command.StartCommand.runTask(StartCommand.java:73)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.runTask(ShellCommand.java:129)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.main(ShellCommand.java:79)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:585)
+	at org.apache.activemq.console.Main.runTaskClass(Main.java:222)
+	at org.apache.activemq.console.Main.main(Main.java:106)
+2009-09-07 00:27:41,847 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:27:41,849 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:27:41,849 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:27:41,853 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:27:41,890 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:27:41,939 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-07 00:27:42,286 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:27:44,130 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, null) is shutting down
+2009-09-07 00:27:44,131 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:27:44,131 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 00:27:44,132 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 00:27:44,132 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 00:27:44,132 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 00:27:45,497 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-07 00:27:45,509 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-07 00:27:45,527 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, null) stopped
+2009-09-07 00:33:04,765 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:33:04,767 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:33:04,767 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:33:04,771 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:33:04,806 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:33:04,854 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-07 00:33:05,196 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:33:07,093 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, null) is shutting down
+2009-09-07 00:33:07,094 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:33:07,094 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 00:33:07,094 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 00:33:07,094 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 00:33:07,094 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 00:33:07,322 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, null) stopped
+2009-09-07 00:33:07,323 [main           ] ERROR BrokerService                  - Failed to start ActiveMQ JMS Message Broker. Reason: org.apache.activemq.kaha.RuntimeStoreException: The store is closed
+org.apache.activemq.kaha.RuntimeStoreException: The store is closed
+	at org.apache.activemq.kaha.impl.container.BaseContainerImpl.checkClosed(BaseContainerImpl.java:213)
+	at org.apache.activemq.kaha.impl.container.MapContainerImpl.load(MapContainerImpl.java:97)
+	at org.apache.activemq.kaha.impl.container.MapContainerImpl.size(MapContainerImpl.java:160)
+	at org.apache.activemq.store.kahadaptor.KahaReferenceStore.getMessageCount(KahaReferenceStore.java:231)
+	at org.apache.activemq.store.amq.AMQMessageStore.getMessageCount(AMQMessageStore.java:525)
+	at org.apache.activemq.broker.region.Queue.initialize(Queue.java:194)
+	at org.apache.activemq.broker.region.DestinationFactoryImpl.createDestination(DestinationFactoryImpl.java:83)
+	at org.apache.activemq.broker.region.AbstractRegion.createDestination(AbstractRegion.java:425)
+	at org.apache.activemq.broker.jmx.ManagedQueueRegion.createDestination(ManagedQueueRegion.java:56)
+	at org.apache.activemq.broker.region.AbstractRegion.addDestination(AbstractRegion.java:120)
+	at org.apache.activemq.broker.region.RegionBroker.addDestination(RegionBroker.java:263)
+	at org.apache.activemq.broker.BrokerFilter.addDestination(BrokerFilter.java:141)
+	at org.apache.activemq.advisory.AdvisoryBroker.addDestination(AdvisoryBroker.java:147)
+	at org.apache.activemq.broker.BrokerFilter.addDestination(BrokerFilter.java:141)
+	at org.apache.activemq.broker.MutableBrokerFilter.addDestination(MutableBrokerFilter.java:148)
+	at org.apache.activemq.broker.region.AbstractRegion.start(AbstractRegion.java:94)
+	at org.apache.activemq.broker.region.RegionBroker.start(RegionBroker.java:178)
+	at org.apache.activemq.broker.jmx.ManagedRegionBroker.start(ManagedRegionBroker.java:103)
+	at org.apache.activemq.broker.TransactionBroker.start(TransactionBroker.java:112)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.BrokerFilter.start(BrokerFilter.java:153)
+	at org.apache.activemq.broker.MutableBrokerFilter.start(MutableBrokerFilter.java:160)
+	at org.apache.activemq.broker.BrokerService.start(BrokerService.java:444)
+	at org.apache.activemq.xbean.XBeanBrokerService.afterPropertiesSet(XBeanBrokerService.java:50)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1288)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1257)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:438)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory$1.run(AbstractAutowireCapableBeanFactory.java:383)
+	at java.security.AccessController.doPrivileged(Native Method)
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:353)
+	at org.springframework.beans.factory.support.AbstractBeanFactory$1.getObject(AbstractBeanFactory.java:245)
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:169)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:242)
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:164)
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:400)
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:736)
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:369)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:64)
+	at org.apache.xbean.spring.context.ResourceXmlApplicationContext.<init>(ResourceXmlApplicationContext.java:52)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createApplicationContext(XBeanBrokerFactory.java:96)
+	at org.apache.activemq.xbean.XBeanBrokerFactory.createBroker(XBeanBrokerFactory.java:52)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:71)
+	at org.apache.activemq.broker.BrokerFactory.createBroker(BrokerFactory.java:54)
+	at org.apache.activemq.console.command.StartCommand.startBroker(StartCommand.java:111)
+	at org.apache.activemq.console.command.StartCommand.runTask(StartCommand.java:73)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.runTask(ShellCommand.java:129)
+	at org.apache.activemq.console.command.AbstractCommand.execute(AbstractCommand.java:57)
+	at org.apache.activemq.console.command.ShellCommand.main(ShellCommand.java:79)
+	at sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at sun.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:39)
+	at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:25)
+	at java.lang.reflect.Method.invoke(Method.java:585)
+	at org.apache.activemq.console.Main.runTaskClass(Main.java:222)
+	at org.apache.activemq.console.Main.main(Main.java:106)
+2009-09-07 00:33:25,828 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:33:25,830 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:33:25,830 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:33:25,834 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:33:25,873 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:33:25,921 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-07 00:33:26,280 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:33:27,889 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-07 00:33:27,901 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-07 00:33:28,192 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-07 00:33:28,192 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-07 00:33:28,197 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-07 00:33:28,198 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-07 00:33:28,206 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-07 00:33:28,206 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-07 00:33:28,207 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-07 00:33:28,207 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-25400-1252308806140-0:0) started
+2009-09-07 00:33:28,256 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-07 00:33:28,268 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-07 00:33:28,961 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-07 00:33:29,068 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-07 00:33:29,143 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-07 00:33:29,349 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-07 00:33:29,522 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-07 00:33:29,531 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-07 00:33:29,960 [orker: 27519670] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-07 00:33:33,445 [main           ] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-25400-1252308806140-0:0) is shutting down
+2009-09-07 00:33:33,446 [main           ] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:36:56,979 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:36:56,981 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:36:56,981 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:36:56,985 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:36:57,024 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:36:57,069 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-07 00:36:57,072 [main           ] WARN  AMQPersistenceAdapter          - The ReferenceStore is not valid - recovering ...
+2009-09-07 00:36:57,084 [main           ] INFO  KahaStore                      - Kaha Store successfully deleted data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:36:57,086 [main           ] INFO  AMQPersistenceAdapter          - Journal Recovery Started from: DataManager:(data-)
+2009-09-07 00:36:57,111 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:37:05,411 [main           ] INFO  AMQPersistenceAdapter          - Recovered 64528 operations from redo log in 8.324 seconds.
+2009-09-07 00:37:05,411 [main           ] INFO  AMQPersistenceAdapter          - Finished recovering the ReferenceStore
+2009-09-07 00:37:05,631 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-07 00:37:05,643 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-07 00:37:05,932 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-07 00:37:05,937 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-07 00:37:05,941 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-07 00:37:05,941 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-07 00:37:05,949 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-07 00:37:05,950 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-07 00:37:05,951 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-07 00:37:05,951 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-9288-1252309025430-0:0) started
+2009-09-07 00:37:06,000 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-07 00:37:06,010 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-07 00:37:06,740 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-07 00:37:06,847 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-07 00:37:06,922 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-07 00:37:07,192 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-07 00:37:07,370 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-07 00:37:07,380 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-07 00:37:07,658 [orker: 16042569] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-07 00:37:41,903 [main           ] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-9288-1252309025430-0:0) is shutting down
+2009-09-07 00:37:41,904 [main           ] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:49:54,797 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:49:54,799 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:49:54,800 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:49:54,803 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:49:54,844 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:49:54,889 [main           ] INFO  AMQPersistenceAdapter          - Active data files: []
+2009-09-07 00:49:54,892 [main           ] WARN  AMQPersistenceAdapter          - The ReferenceStore is not valid - recovering ...
+2009-09-07 00:49:54,900 [main           ] INFO  KahaStore                      - Kaha Store successfully deleted data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:49:54,902 [main           ] INFO  AMQPersistenceAdapter          - Journal Recovery Started from: DataManager:(data-)
+2009-09-07 00:49:54,927 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:50:02,223 [main           ] INFO  AMQPersistenceAdapter          - Recovered 64528 operations from redo log in 7.321 seconds.
+2009-09-07 00:50:02,224 [main           ] INFO  AMQPersistenceAdapter          - Finished recovering the ReferenceStore
+2009-09-07 00:50:02,441 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-07 00:50:02,453 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-07 00:50:02,805 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-07 00:50:02,808 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-07 00:50:02,812 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-07 00:50:02,812 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-07 00:50:02,820 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-07 00:50:02,820 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-07 00:50:02,821 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-07 00:50:02,821 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-11102-1252309802243-0:0) started
+2009-09-07 00:50:02,870 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-07 00:50:02,880 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-07 00:50:03,601 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-07 00:50:03,709 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-07 00:50:03,784 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-07 00:50:04,059 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-07 00:50:04,270 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-07 00:50:04,280 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-07 00:50:04,427 [orker: 11157083] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-07 00:50:21,825 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-11102-1252309802243-0:0) is shutting down
+2009-09-07 00:50:21,826 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:50:22,426 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-07 00:50:22,430 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 00:50:22,812 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 00:50:22,816 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 00:50:22,824 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 00:50:22,875 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-11102-1252309802243-0:0) stopped
+2009-09-07 00:50:59,446 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:50:59,448 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:50:59,448 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:50:59,451 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:50:59,488 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:50:59,536 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-07 00:50:59,900 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:51:01,586 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-07 00:51:01,598 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-07 00:51:01,904 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-07 00:51:01,907 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-07 00:51:01,912 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-07 00:51:01,912 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-07 00:51:01,921 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-07 00:51:01,921 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-07 00:51:01,922 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-07 00:51:01,922 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-23255-1252309859752-0:0) started
+2009-09-07 00:51:01,972 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-07 00:51:01,983 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-07 00:51:02,646 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-07 00:51:02,758 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-07 00:51:02,836 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-07 00:51:03,058 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-07 00:51:03,236 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-07 00:51:03,246 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-07 00:51:03,397 [Worker: 8814509] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-07 00:51:13,774 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-23255-1252309859752-0:0) is shutting down
+2009-09-07 00:51:13,775 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:51:15,398 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-07 00:51:15,401 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 00:51:15,911 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 00:51:15,915 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 00:51:15,923 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 00:51:17,347 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-23255-1252309859752-0:0) stopped
+2009-09-07 00:52:09,175 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:52:09,177 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:52:09,177 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:52:09,181 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:52:09,219 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:52:09,267 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-07 00:52:09,606 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:52:11,244 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-07 00:52:11,256 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-07 00:52:11,551 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-07 00:52:11,555 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-07 00:52:11,559 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-07 00:52:11,559 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-07 00:52:11,567 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-07 00:52:11,568 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-07 00:52:11,568 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-07 00:52:11,569 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-10674-1252309929461-0:0) started
+2009-09-07 00:52:11,616 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-07 00:52:11,628 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-07 00:52:12,366 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-07 00:52:12,473 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-07 00:52:12,548 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-07 00:52:12,790 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-07 00:52:12,966 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-07 00:52:12,975 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-07 00:52:13,122 [Worker: 5039143] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-07 00:52:21,429 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-10674-1252309929461-0:0) is shutting down
+2009-09-07 00:52:21,430 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:52:23,125 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 00:52:23,125 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-07 00:52:23,559 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 00:52:25,559 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 00:52:25,567 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 00:52:25,598 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-10674-1252309929461-0:0) stopped
+2009-09-07 00:54:06,075 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 00:54:06,077 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 00:54:06,078 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 00:54:06,081 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 00:54:06,127 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 00:54:06,175 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-07 00:54:06,518 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 00:54:08,814 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-07 00:54:08,826 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-07 00:54:09,124 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-07 00:54:09,126 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-07 00:54:09,132 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-07 00:54:09,132 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-07 00:54:09,140 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-07 00:54:09,141 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-07 00:54:09,141 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-07 00:54:09,142 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-1090-1252310046372-0:0) started
+2009-09-07 00:54:09,191 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-07 00:54:09,202 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-07 00:54:09,892 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-07 00:54:10,002 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-07 00:54:10,080 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-07 00:54:10,340 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-07 00:54:10,528 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-07 00:54:10,537 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-07 00:54:10,687 [Worker: 1491648] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-07 00:54:15,820 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-1090-1252310046372-0:0) is shutting down
+2009-09-07 00:54:15,821 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 00:54:16,471 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-07 00:54:16,472 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 00:54:17,131 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 00:54:17,138 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 00:54:17,142 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 00:54:17,526 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-1090-1252310046372-0:0) stopped
+2009-09-07 01:38:59,358 [main           ] INFO  BrokerService                  - Using Persistence Adapter: AMQPersistenceAdapter(/home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data)
+2009-09-07 01:38:59,360 [main           ] INFO  BrokerService                  - ActiveMQ 5.1.0 JMS Message Broker (localhost) is starting
+2009-09-07 01:38:59,360 [main           ] INFO  BrokerService                  - For help or more information please see: http://activemq.apache.org/
+2009-09-07 01:38:59,364 [main           ] INFO  AMQPersistenceAdapter          - AMQStore starting using directory: /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data
+2009-09-07 01:38:59,406 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/state
+2009-09-07 01:38:59,453 [main           ] INFO  AMQPersistenceAdapter          - Active data files: [2, 1]
+2009-09-07 01:38:59,841 [main           ] INFO  KahaStore                      - Kaha Store using data directory /home/pallavi/jchord/benchmarks/apache-activemq-5.1.0/data/kr-store/data
+2009-09-07 01:39:01,502 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: tcp://potus:61616
+2009-09-07 01:39:01,514 [main           ] INFO  TransportConnector             - Connector openwire Started
+2009-09-07 01:39:01,835 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: ssl://potus:61617
+2009-09-07 01:39:01,838 [main           ] INFO  TransportConnector             - Connector ssl Started
+2009-09-07 01:39:01,842 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: stomp://potus:61613
+2009-09-07 01:39:01,843 [main           ] INFO  TransportConnector             - Connector stomp Started
+2009-09-07 01:39:01,851 [main           ] INFO  TransportServerThreadSupport   - Listening for connections at: xmpp://potus:61222
+2009-09-07 01:39:01,851 [main           ] INFO  TransportConnector             - Connector xmpp Started
+2009-09-07 01:39:01,852 [main           ] INFO  NetworkConnector               - Network Connector default-nc Started
+2009-09-07 01:39:01,852 [main           ] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-21699-1252312739698-0:0) started
+2009-09-07 01:39:01,902 [main           ] INFO  log                            - Logging to org.slf4j.impl.JCLLoggerAdapter(org.mortbay.log) via org.mortbay.log.Slf4jLog
+2009-09-07 01:39:01,913 [main           ] INFO  log                            - jetty-6.1.9
+2009-09-07 01:39:02,622 [main           ] INFO  WebConsoleStarter              - ActiveMQ WebConsole initialized.
+2009-09-07 01:39:02,732 [main           ] INFO  /admin                         - Initializing Spring FrameworkServlet 'dispatcher'
+2009-09-07 01:39:02,809 [main           ] INFO  log                            - ActiveMQ Console at http://0.0.0.0:8161/admin
+2009-09-07 01:39:03,089 [main           ] INFO  log                            - ActiveMQ Web Demos at http://0.0.0.0:8161/demo
+2009-09-07 01:39:03,298 [main           ] INFO  log                            - RESTful file access application at http://0.0.0.0:8161/fileserver
+2009-09-07 01:39:03,307 [main           ] INFO  log                            - Started SelectChannelConnector@0.0.0.0:8161
+2009-09-07 01:39:03,457 [orker: 12928596] INFO  FailoverTransport              - Successfully connected to tcp://localhost:61616
+2009-09-07 05:00:26,458 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ Message Broker (localhost, ID:potus-21699-1252312739698-0:0) is shutting down
+2009-09-07 05:00:26,459 [MQ ShutdownHook] INFO  NetworkConnector               - Network Connector default-nc Stopped
+2009-09-07 05:00:27,513 [0:0:0:0:1:61616] WARN  FailoverTransport              - Transport failed to tcp://localhost:61616 , attempting to automatically reconnect due to: java.io.EOFException
+2009-09-07 05:00:27,514 [MQ ShutdownHook] INFO  TransportConnector             - Connector openwire Stopped
+2009-09-07 05:00:28,488 [MQ ShutdownHook] INFO  TransportConnector             - Connector ssl Stopped
+2009-09-07 05:00:30,300 [MQ ShutdownHook] INFO  TransportConnector             - Connector stomp Stopped
+2009-09-07 05:00:32,300 [MQ ShutdownHook] INFO  TransportConnector             - Connector xmpp Stopped
+2009-09-07 05:00:32,335 [MQ ShutdownHook] INFO  BrokerService                  - ActiveMQ JMS Message Broker (localhost, ID:potus-21699-1252312739698-0:0) stopped
