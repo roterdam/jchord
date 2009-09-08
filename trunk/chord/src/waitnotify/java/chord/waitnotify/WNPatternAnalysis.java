@@ -279,7 +279,7 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 			rdListForL = unionOfRdLists(rdListForL, lsElem.rdList);
 		}
 		for(RdListElemInfo rdElem : rdListForL){
-			db.addToDatabase(rdElem.iids, rdElem.m, tId, lId, tb.getVC(tId));
+			db.addToDatabase(rdElem.iids, rdElem.m, tId, lId, pId, tb.getVC(tId));
 		}
 	}
 	public void processNotify(int pId, int tId, int lId) { 
