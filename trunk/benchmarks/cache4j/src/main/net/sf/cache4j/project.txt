@@ -1,0 +1,3 @@
+project=cache4j
+version=0.4
+copyright=Copyright (c) 2006, Yuriy Stepovoy. All rights reserved. <a href="mailto:stepovoy@gmail.com">email: stepovoy@gmail.com</a>
