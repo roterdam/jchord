@@ -52,6 +52,8 @@ import chord.util.IndexMap;
 public class Database {
 	private Map<Long, Map<Integer, List<DBElemInfo>>> eBase;
 	public Set<ErrorInfo> errors;
+	private IndexMap<String> Emap;
+	private IndexMap<String> Pmap;
 	
 	public Database(){
 		eBase = new HashMap<Long, Map<Integer, List<DBElemInfo>>>();
@@ -65,8 +67,8 @@ public class Database {
 		addToDBElemInfoList(tValueInMValueInEBase, elem, iids);
 	}
 	
-	public void addToDatabase(List iids, long m, int t, int l, VectorClock vc){
-		DBElemInfo elem = new DBElemInfo(iids, l, new VectorClock(vc));
+	public void addToDatabase(List iids, long m, int t, int l, int waitIID, VectorClock vc){
+		DBElemInfo elem = new DBElemInfo(iids, l, waitIID, new VectorClock(vc));
 		
 		List<DBElemInfo> tValueInMValueInEBase = getValueForTInValueForMInEBase(m, t);
 		addToDBElemInfoList(tValueInMValueInEBase, elem, iids);	
@@ -105,11 +107,8 @@ public class Database {
 		return iidsListWithoutDups;
 	}
 	
-	IndexMap<String> Emap;
-	IndexMap<String> Pmap;
-
 	public void checkForErrors(IndexMap<String> Emap, IndexMap<String> Pmap) {
-		System.out.println("yes...in checkForErrors");
+		//System.out.println("yes...in checkForErrors");
 		this.Emap = Emap;
 		this.Pmap = Pmap;
 		Iterator eBaseItr = eBase.entrySet().iterator();
@@ -140,7 +139,15 @@ public class Database {
 	
 	private void checkForErrors(Long m, Integer t1, List<DBElemInfo> t1DBElems, Integer t2, 
 			List<DBElemInfo> t2DBElems){
-		
+	  	/****	
+		System.out.println("REACHED: " + m);
+		System.out.println("XXX " + t1);
+		for (DBElemInfo x : t1DBElems)
+			System.out.println("\t" + x);
+		System.out.println("YYY " + t2);
+		for (DBElemInfo x : t2DBElems)
+			System.out.println("\t" + x);
+		****/
 		assert(t1.intValue() != t2.intValue());
 		for(DBElemInfo e1 : t1DBElems){
 			if(e1.isReadElem){
@@ -160,10 +167,10 @@ public class Database {
 							
 							if(!(errors.contains(errInfo))){
 								System.err.println("-----------------------------ERROR-----------------------------");
-								System.err.println("Writes to memory at "+printIIDs(e2.iids)+
-										" without holding the right " +
-										"lock.  Reads of the same memory involved in the computation of the " +
-										"condition of the wait are at "+printIIDs(e1.iids));
+								System.err.println("Wait is at "+iidToString(e1.waitIID, false)+". Reads involved in the "+ 
+								  "computation of the condition of the wait are at "+printIIDs(e1.iids, true)+". Writes to"+ 
+								  " the same memory at "+printIIDs(e2.iids, true)+" are done without holding the right "+
+								  "lock");
 								System.err.println("---------------------------------------------------------------");
 								errors.add(errInfo);
 							}
@@ -174,11 +181,11 @@ public class Database {
 							
 							if(!errors.contains(errInfo)){
 								System.err.println("-----------------------------ERROR-----------------------------");
-								System.err.println("Writes to memory at "+printIIDs(e2.iids)+
-										" holding the right lock " +
-										"but without a notification on it before releasing it. Reads of the same " +
-										"memory involved in the computation of the condition of the wait are at "+
-										printIIDs(e1.iids));
+								System.err.println("Wait is at "+iidToString(e1.waitIID, false)+". Reads involved in the "+ 
+										"computation of the condition of the wait are at "+printIIDs(e1.iids, true)+
+										". Writes to the same memory at "+printIIDs(e2.iids, true)+" are done "+
+										"holding the right lock, but without a notification on it before releasing "+
+										"it");
 								System.err.println("---------------------------------------------------------------");
 								errors.add(errInfo);
 							}
@@ -191,25 +198,39 @@ public class Database {
 	  
 	}
 	
-	public String printIIDs(List<Integer> iids) {
-		Program program = Program.v();
+	public String printIIDs(List<Integer> iids, boolean useEmap) {
 		String res = "[ ";
 		for(Integer iid : iids){
-			String s = Emap.get(iid);  // TODO: replace Emap by Pmap for wait, notify, etc.
-			MethodElem elem = MethodElem.parse(s);
-			int bci = elem.num;
-			String mName = elem.mName;
-			String mDesc = elem.mDesc;
-			String cName = elem.cName;
-			jq_Class c = program.getPreparedClass(cName);
-			assert (c != null);
-			String fileName = Program.getSourceFileName(c);
-			jq_Method m = program.getReachableMethod(mName, mDesc, cName);
-			assert (m != null);
-			int lineNum = m.getLineNumber(bci);
-			res += fileName + ":" + lineNum + " ";
+			String iidStr = iidToString(iid, useEmap);
+			res += iidStr + " ";
 		}
 		res += "]";
+		return res;
+	}
+
+	private String iidToString(int iid, boolean useEmap){
+		String s;
+		String res = "";
+		Program program = Program.v();
+		if(useEmap){
+			s = Emap.get(iid);
+		}
+		else{
+			s = Pmap.get(iid);
+		}
+	
+		MethodElem elem = MethodElem.parse(s);
+		int bci = elem.num;
+		String mName = elem.mName;
+		String mDesc = elem.mDesc;
+		String cName = elem.cName;
+		jq_Class c = program.getPreparedClass(cName);
+		assert (c != null);
+		String fileName = Program.getSourceFileName(c);
+		jq_Method m = program.getReachableMethod(mName, mDesc, cName);
+		assert (m != null);
+		int lineNum = m.getLineNumber(bci);
+		res += fileName + ":" + lineNum ;
 		return res;
 	}
 	
