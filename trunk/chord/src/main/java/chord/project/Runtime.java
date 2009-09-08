@@ -24,7 +24,7 @@ public class Runtime {
 	private static int instrBound;
 	private static int numMeths;
 	private static int numLoops;
-	private class ThreadInfo {
+	private static class ThreadInfo {
 		private final static int INITIAL_STK_SIZE = 100; 
 		public int numCallsToMeth[];
 		public int numItersOfLoop[];
@@ -52,7 +52,7 @@ public class Runtime {
 				stk = newStk;
 				stkSize = newStkSize;
 			}
-			stk[stkTop++] = val;
+			stk[++stkTop] = val;
 		}
 			
 	}
@@ -65,6 +65,9 @@ public class Runtime {
     private static WeakIdentityHashMap objmap;
 	private static WeakIdentityHashMap thrmap;
 	private static boolean trace = false;
+
+	private static boolean hasEnterAndLeaveMethodEvent;
+	private static boolean hasEnterAndLeaveLoopEvent;
 
     private static int getObjectId(Object o) {
     	if (o == null)
@@ -89,10 +92,9 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 				buffer.putByte(EventKind.ENTER_METHOD);
-				if (mId != MISSING_FIELD_VAL) {
+				if (mId != MISSING_FIELD_VAL)
 					buffer.putInt(mId);
-				}
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
@@ -106,10 +108,41 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
 				buffer.putByte(EventKind.LEAVE_METHOD);
-				if (mId != MISSING_FIELD_VAL) {
+				if (mId != MISSING_FIELD_VAL)
 					buffer.putInt(mId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
 				}
-				if (ef.hasTid()) {
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void enterLoopEvent(int wId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
+				buffer.putByte(EventKind.ENTER_LOOP);
+				if (wId != MISSING_FIELD_VAL)
+					buffer.putInt(wId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void leaveLoopEvent(int wId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
+				buffer.putByte(EventKind.LEAVE_LOOP);
+				if (wId != MISSING_FIELD_VAL)
+					buffer.putInt(wId);
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
@@ -153,7 +186,7 @@ public class Runtime {
 				buffer.putByte(EventKind.NEW);
 				if (hId != MISSING_FIELD_VAL)
 					buffer.putInt(hId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
@@ -169,11 +202,11 @@ public class Runtime {
 				buffer.putByte(EventKind.NEW_ARRAY);
 				if (hId != MISSING_FIELD_VAL)
 					buffer.putInt(hId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -189,7 +222,7 @@ public class Runtime {
 				buffer.putByte(EventKind.GETSTATIC_PRIMITIVE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
@@ -208,13 +241,13 @@ public class Runtime {
 				buffer.putByte(EventKind.GETSTATIC_REFERENCE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
 				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -230,7 +263,7 @@ public class Runtime {
 				buffer.putByte(EventKind.PUTSTATIC_PRIMITIVE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
@@ -249,13 +282,13 @@ public class Runtime {
 				buffer.putByte(EventKind.PUTSTATIC_REFERENCE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
 				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -272,11 +305,11 @@ public class Runtime {
 				buffer.putByte(EventKind.GETFIELD_PRIMITIVE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasBid()) {
+				if (ef.hasBaseObj()) {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
@@ -295,17 +328,17 @@ public class Runtime {
 				buffer.putByte(EventKind.GETFIELD_REFERENCE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasBid()) {
+				if (ef.hasBaseObj()) {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
 				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -322,11 +355,11 @@ public class Runtime {
 				buffer.putByte(EventKind.PUTFIELD_PRIMITIVE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasBid()) {
+				if (ef.hasBaseObj()) {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
@@ -345,17 +378,17 @@ public class Runtime {
 				buffer.putByte(EventKind.PUTFIELD_REFERENCE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasBid()) {
+				if (ef.hasBaseObj()) {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
 				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -372,15 +405,15 @@ public class Runtime {
 				buffer.putByte(EventKind.ALOAD_PRIMITIVE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasBid()) {
+				if (ef.hasBaseObj()) {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
-				if (ef.hasIid())
+				if (ef.hasIdx())
 					buffer.putInt(iId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -395,17 +428,17 @@ public class Runtime {
 				buffer.putByte(EventKind.ALOAD_REFERENCE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasBid()) {
+				if (ef.hasBaseObj()) {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
-				if (ef.hasIid())
+				if (ef.hasIdx())
 					buffer.putInt(iId);
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -422,15 +455,15 @@ public class Runtime {
 				buffer.putByte(EventKind.ASTORE_PRIMITIVE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasBid()) {
+				if (ef.hasBaseObj()) {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
-				if (ef.hasIid())
+				if (ef.hasIdx())
 					buffer.putInt(iId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -445,17 +478,17 @@ public class Runtime {
 				buffer.putByte(EventKind.ASTORE_REFERENCE);
 				if (eId != MISSING_FIELD_VAL)
 					buffer.putInt(eId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasBid()) {
+				if (ef.hasBaseObj()) {
 					int bId = getObjectId(b);
 					buffer.putInt(bId);
 				}
-				if (ef.hasIid())
+				if (ef.hasIdx())
 					buffer.putInt(iId);
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -471,11 +504,11 @@ public class Runtime {
 				buffer.putByte(EventKind.THREAD_START);
 				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -491,11 +524,11 @@ public class Runtime {
 				buffer.putByte(EventKind.THREAD_JOIN);
 				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -512,11 +545,11 @@ public class Runtime {
 				if (pId != MISSING_FIELD_VAL) {
 					buffer.putInt(pId);
 				}
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasLid()) {
+				if (ef.hasObj()) {
 					int lId = getObjectId(l);
 					buffer.putInt(lId);
 				}
@@ -533,11 +566,11 @@ public class Runtime {
 				if (pId != MISSING_FIELD_VAL) {
 					buffer.putInt(pId);
 				}
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasLid()) {
+				if (ef.hasObj()) {
 					int lId = getObjectId(l);
 					buffer.putInt(lId);
 				}
@@ -553,11 +586,11 @@ public class Runtime {
 				buffer.putByte(EventKind.WAIT);
 				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasLid()) {
+				if (ef.hasObj()) {
 					int lId = getObjectId(l);
 					buffer.putInt(lId);
 				}
@@ -573,11 +606,11 @@ public class Runtime {
 				buffer.putByte(EventKind.NOTIFY);
 				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasLid()) {
+				if (ef.hasObj()) {
 					int lId = getObjectId(l);
 					buffer.putInt(lId);
 				}
@@ -593,7 +626,7 @@ public class Runtime {
 				buffer.putByte(EventKind.METHOD_CALL);
 				if (iId != MISSING_FIELD_VAL)
 					buffer.putInt(iId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
@@ -610,7 +643,7 @@ public class Runtime {
 				buffer.putByte(EventKind.RETURN_PRIMITIVE);
 				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
@@ -627,11 +660,11 @@ public class Runtime {
 				buffer.putByte(EventKind.RETURN_REFERENCE);
 				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -648,11 +681,11 @@ public class Runtime {
 				buffer.putByte(EventKind.EXPLICIT_THROW);
 				if (pId != MISSING_FIELD_VAL)
 					buffer.putInt(pId);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -667,11 +700,11 @@ public class Runtime {
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
 				buffer.putByte(EventKind.IMPLICIT_THROW);
-				if (ef.hasTid()) {
+				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
-				if (ef.hasOid()) {
+				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
 				}
@@ -683,6 +716,14 @@ public class Runtime {
 		if (trace) {
 			trace = false;
 			try {
+				if (thrmap != null) {
+					Object t = Thread.currentThread();
+					ThreadInfo info = (ThreadInfo) thrmap.get(t);
+					if (!info.doInstr) {
+						trace = true;
+						return;
+					}
+				}
 				buffer.putByte(EventKind.QUAD);
 				buffer.putInt(pId);
 				int tId = getObjectId(Thread.currentThread());
@@ -695,6 +736,14 @@ public class Runtime {
 		if (trace) {
 			trace = false;
 			try {
+				if (thrmap != null) {
+					Object t = Thread.currentThread();
+					ThreadInfo info = (ThreadInfo) thrmap.get(t);
+					if (!info.doInstr) {
+						trace = true;
+						return;
+					}
+				}
 				buffer.putByte(EventKind.BASIC_BLOCK);
 				buffer.putInt(bId);
 				int tId = getObjectId(Thread.currentThread());
@@ -706,45 +755,113 @@ public class Runtime {
 	public synchronized static void enterMethodCheckEvent(int mId) {
 		if (trace) {
 			trace = false;
-/*
 			Thread t = Thread.currentThread();
-			ThreadInfo info = threadInfoMap.get(t);
+			ThreadInfo info = (ThreadInfo) thrmap.get(t);
 			if (info == null) {
-				threadInfoMap.put(t, info);
 				info = new ThreadInfo();
-			} else {
+				thrmap.put(t, info);
 			}
-*/
+			info.numCallsToMeth[mId]++;
+			if (info.numCallsToMeth[mId] == instrBound) {
+				info.push(info.doInstr);
+				info.doInstr = false;
+			} else {
+				if (hasEnterAndLeaveMethodEvent && info.doInstr) {
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+					try {
+						buffer.putByte(EventKind.ENTER_METHOD);
+						if (ef.hasLoc())
+							buffer.putInt(mId);
+						if (ef.hasThr()) {
+							int tId = getObjectId(t);
+							buffer.putInt(tId);
+						}
+					} catch (IOException ex) { throw new RuntimeException(ex); }
+				}
+			}
 			trace = true;
 		}
 	}
 	public synchronized static void leaveMethodCheckEvent(int mId) {
 		if (trace) {
 			trace = false;
+			Thread t = Thread.currentThread();
+			ThreadInfo info = (ThreadInfo) thrmap.get(t);
+			if (info.doInstr) {
+				if (hasEnterAndLeaveMethodEvent) {
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+					try {
+						buffer.putByte(EventKind.LEAVE_METHOD);
+						if (ef.hasLoc())
+							buffer.putInt(mId);
+						if (ef.hasThr()) {
+							int tId = getObjectId(t);
+							buffer.putInt(tId);
+						}
+					} catch (IOException ex) { throw new RuntimeException(ex); }
+				}
+			} else {
+				if (info.numCallsToMeth[mId] == instrBound)
+					info.doInstr = info.pop();
+			}
+			info.numCallsToMeth[mId]--;
 			trace = true;
 		}
 	}
 	public synchronized static void enterLoopCheckEvent(int wId) {
 		if (trace) {
 			trace = false;
+			Thread t = Thread.currentThread();
+			ThreadInfo info = (ThreadInfo) thrmap.get(t);
+			if (info.numItersOfLoop[wId] == 0) {
+				// entering loop from outside instead of from back edge
+				info.push(info.doInstr);
+				if (hasEnterAndLeaveLoopEvent && info.doInstr) {
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
+					try {
+						buffer.putByte(EventKind.ENTER_LOOP);
+						if (wId != MISSING_FIELD_VAL)
+							buffer.putInt(wId);
+						if (ef.hasThr()) {
+							int tId = getObjectId(t);
+							buffer.putInt(tId);
+						}
+					} catch (IOException ex) { throw new RuntimeException(ex); }
+				}
+			} else {
+				// entering loop from back edge instead of from outside
+				if (info.doInstr) {
+					info.numItersOfLoop[wId]++;
+					if (info.numItersOfLoop[wId] == instrBound)
+						info.doInstr = false;
+				}
+			}
 			trace = true;
 		}
 	}
 	public synchronized static void leaveLoopCheckEvent(int wId) {
 		if (trace) {
 			trace = false;
-/*
-			Thread t = currentThread();
-			ThreadInfo info = thrmap.get(t);
+			Thread t = Thread.currentThread();
+			ThreadInfo info = (ThreadInfo) thrmap.get(t);
 			if (info.numItersOfLoop[wId] > 0) {
             	info.numItersOfLoop[wId] = 0;
-            info.doInstr = info.stk.pop();
-*/
+				info.doInstr = info.pop();
+				if (hasEnterAndLeaveLoopEvent && info.doInstr) {
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
+					try {
+						buffer.putByte(EventKind.LEAVE_LOOP);
+						if (wId != MISSING_FIELD_VAL)
+							buffer.putInt(wId);
+						if (ef.hasThr()) {
+							int tId = getObjectId(t);
+							buffer.putInt(tId);
+						}
+					} catch (IOException ex) { throw new RuntimeException(ex); }
+				}
+			}
 			trace = true;
 		}
-	}
-	public static void setInstrScheme(InstrScheme s) {
-		scheme = s;
 	}
 	public synchronized static void open(String traceFileName,
 			String instrSchemeFileName, int numMeths, int numLoops,
@@ -753,6 +870,10 @@ public class Runtime {
 			buffer = new ByteBufferedFile(1024, traceFileName, false);
 		    objmap = new WeakIdentityHashMap();
 			scheme = InstrScheme.load(instrSchemeFileName);
+			{ 
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+				hasEnterAndLeaveMethodEvent = ef.present();
+			}
 			if (instrBound > 0) {
 				thrmap = new WeakIdentityHashMap();
 				Runtime.instrBound = instrBound;
@@ -769,6 +890,7 @@ public class Runtime {
 		} catch (IOException ex) { throw new RuntimeException(ex); }
 	}
 }
+
 
 /*
 Three kinds of basic blocks:

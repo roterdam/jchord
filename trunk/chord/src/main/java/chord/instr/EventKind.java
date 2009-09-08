@@ -13,40 +13,42 @@ package chord.instr;
 public class EventKind {
 	public static final byte ENTER_METHOD = 0;
 	public static final byte LEAVE_METHOD = 1;
+	public static final byte ENTER_LOOP = 2;
+	public static final byte LEAVE_LOOP = 3;
 
-	public static final byte BEF_NEW = 2;
-	public static final byte AFT_NEW = 3;
-	public static final byte NEW = 4;
-	public static final byte NEW_ARRAY = 5;
+	public static final byte BEF_NEW = 4;
+	public static final byte AFT_NEW = 5;
+	public static final byte NEW = 6;
+	public static final byte NEW_ARRAY = 7;
 
-	public static final byte GETSTATIC_PRIMITIVE = 6;
-	public static final byte GETSTATIC_REFERENCE = 7;
-	public static final byte PUTSTATIC_PRIMITIVE = 8;
-	public static final byte PUTSTATIC_REFERENCE = 9;
+	public static final byte GETSTATIC_PRIMITIVE = 8;
+	public static final byte GETSTATIC_REFERENCE = 9;
+	public static final byte PUTSTATIC_PRIMITIVE = 10;
+	public static final byte PUTSTATIC_REFERENCE = 11;
 
-	public static final byte GETFIELD_PRIMITIVE = 10;
-	public static final byte GETFIELD_REFERENCE = 11;
-	public static final byte PUTFIELD_PRIMITIVE = 12;
-	public static final byte PUTFIELD_REFERENCE = 13;
+	public static final byte GETFIELD_PRIMITIVE = 12;
+	public static final byte GETFIELD_REFERENCE = 13;
+	public static final byte PUTFIELD_PRIMITIVE = 14;
+	public static final byte PUTFIELD_REFERENCE = 15;
 
-	public static final byte ALOAD_PRIMITIVE = 14;
-	public static final byte ALOAD_REFERENCE = 15;
-	public static final byte ASTORE_PRIMITIVE = 16; 
-	public static final byte ASTORE_REFERENCE = 17; 
+	public static final byte ALOAD_PRIMITIVE = 16;
+	public static final byte ALOAD_REFERENCE = 17;
+	public static final byte ASTORE_PRIMITIVE = 18; 
+	public static final byte ASTORE_REFERENCE = 19; 
 
-	public static final byte METHOD_CALL = 18;
-	public static final byte RETURN_PRIMITIVE = 19;
-	public static final byte RETURN_REFERENCE = 20;
-	public static final byte EXPLICIT_THROW = 21;
-	public static final byte IMPLICIT_THROW = 22;
+	public static final byte METHOD_CALL = 20;
+	public static final byte RETURN_PRIMITIVE = 21;
+	public static final byte RETURN_REFERENCE = 22;
+	public static final byte EXPLICIT_THROW = 23;
+	public static final byte IMPLICIT_THROW = 24;
 
-	public static final byte QUAD = 23;
-	public static final byte BASIC_BLOCK = 24;
+	public static final byte QUAD = 25;
+	public static final byte BASIC_BLOCK = 26;
 
-	public static final byte THREAD_START = 25;
-	public static final byte THREAD_JOIN = 26;
-	public static final byte ACQUIRE_LOCK = 27;
-	public static final byte RELEASE_LOCK = 28;
-	public static final byte WAIT = 29;
-	public static final byte NOTIFY = 30;
+	public static final byte THREAD_START = 27;
+	public static final byte THREAD_JOIN = 28;
+	public static final byte ACQUIRE_LOCK = 29;
+	public static final byte RELEASE_LOCK = 30;
+	public static final byte WAIT = 31;
+	public static final byte NOTIFY = 32;
 }

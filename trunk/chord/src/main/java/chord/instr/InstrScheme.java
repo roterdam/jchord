@@ -26,6 +26,10 @@ public class InstrScheme implements Serializable {
 	 * ENTER_METHOD m t
 	 * LEAVE_METHOD m t
 	 * 
+	 * ENTER_AND_LEAVE_LOOP:
+	 * ENTER_LOOP w t
+	 * LEAVE_LOOP w t
+	 *
 	 * NEW_AND_NEW_ARRAY:
 	 * Controls generation of the following event before thread t
 	 * executes a NEW instruction at program point h:
@@ -170,100 +174,87 @@ public class InstrScheme implements Serializable {
 	 * NOTIFY p t l
 	 */
     public static final int ENTER_AND_LEAVE_METHOD = 0;
-    public static final int NEW_AND_NEWARRAY = 1;
+	public static final int ENTER_AND_LEAVE_LOOP = 1;
+    public static final int NEW_AND_NEWARRAY = 2;
 
-    public static final int GETSTATIC_PRIMITIVE = 2;
-    public static final int GETSTATIC_REFERENCE = 3;
-    public static final int PUTSTATIC_PRIMITIVE = 4;
-    public static final int PUTSTATIC_REFERENCE = 5;
+    public static final int GETSTATIC_PRIMITIVE = 3;
+    public static final int GETSTATIC_REFERENCE = 4;
+    public static final int PUTSTATIC_PRIMITIVE = 5;
+    public static final int PUTSTATIC_REFERENCE = 6;
 
-    public static final int GETFIELD_PRIMITIVE = 6;
-    public static final int GETFIELD_REFERENCE = 7;
-    public static final int PUTFIELD_PRIMITIVE = 8;
-    public static final int PUTFIELD_REFERENCE = 9;
+    public static final int GETFIELD_PRIMITIVE = 7;
+    public static final int GETFIELD_REFERENCE = 8;
+    public static final int PUTFIELD_PRIMITIVE = 9;
+    public static final int PUTFIELD_REFERENCE = 10;
 
-    public static final int ALOAD_PRIMITIVE = 10;
-    public static final int ALOAD_REFERENCE = 11;
-    public static final int ASTORE_PRIMITIVE = 12;
-    public static final int ASTORE_REFERENCE = 13;
+    public static final int ALOAD_PRIMITIVE = 11;
+    public static final int ALOAD_REFERENCE = 12;
+    public static final int ASTORE_PRIMITIVE = 13;
+    public static final int ASTORE_REFERENCE = 14;
 
-    public static final int METHOD_CALL = 14;
-    public static final int RETURN_PRIMITIVE = 15;
-    public static final int RETURN_REFERENCE = 16;
-    public static final int EXPLICIT_THROW = 17;
-    public static final int IMPLICIT_THROW = 18;
+    public static final int METHOD_CALL = 15;
+    public static final int RETURN_PRIMITIVE = 16;
+    public static final int RETURN_REFERENCE = 17;
+    public static final int EXPLICIT_THROW = 18;
+    public static final int IMPLICIT_THROW = 19;
 
-    public static final int THREAD_START = 19;
-    public static final int THREAD_JOIN = 20;
-    public static final int ACQUIRE_LOCK = 21;
-    public static final int RELEASE_LOCK = 22;
-    public static final int WAIT = 23;
-    public static final int NOTIFY = 24;
+    public static final int THREAD_START = 20;
+    public static final int THREAD_JOIN = 21;
+    public static final int ACQUIRE_LOCK = 22;
+    public static final int RELEASE_LOCK = 23;
+    public static final int WAIT = 24;
+    public static final int NOTIFY = 25;
     
-	public static final int MAX_NUM_EVENT_FORMATS = 25;
+	public static final int MAX_NUM_EVENT_FORMATS = 26;
 
 	public class EventFormat implements Serializable {
-		private boolean hasMorP;
-		private boolean hasT;
-		private boolean hasForI;
-		private boolean hasOorL;
-		private boolean hasB;
+		private boolean hasLoc;
+		private boolean hasThr;
+		private boolean hasFldOrIdx;
+		private boolean hasObj;
+		private boolean hasBaseObj;
 		private int size;
 		public boolean present() { return size > 0; }
 		public int size() { return size; }
-		public boolean hasMid() { return hasMorP; }
-		public boolean hasPid() { return hasMorP; }
-		public boolean hasTid() { return hasT; }
-		public boolean hasFid() { return hasForI; }
-		public boolean hasIid() { return hasForI; }
-		public boolean hasOid() { return hasOorL; }
-		public boolean hasLid() { return hasOorL; }
-		public boolean hasBid() { return hasB; }
-		public void setM() {
-			if (!hasMorP) {
-				hasMorP = true; 
+		public boolean hasLoc() { return hasLoc; }
+		public boolean hasThr() { return hasThr; }
+		public boolean hasFld() { return hasFldOrIdx; }
+		public boolean hasIdx() { return hasFldOrIdx; }
+		public boolean hasObj() { return hasObj; }
+		public boolean hasBaseObj() { return hasBaseObj; }
+		public void setLoc() {
+			if (!hasLoc) {
+				hasLoc = true; 
 				size += 4;
 			}
 		}
-		public void setP() {
-			if (!hasMorP) {
-				hasMorP = true; 
+		public void setThr() {
+			if (!hasThr) {
+				hasThr = true; 
 				size += 4;
 			}
 		}
-		public void setT() {
-			if (!hasT) {
-				hasT = true; 
+		public void setFld() {
+			if (!hasFldOrIdx) {
+				hasFldOrIdx = true; 
 				size += 4;
 			}
 		}
-		public void setF() {
-			if (!hasForI) {
-				hasForI = true; 
+		public void setIdx() {
+			if (!hasFldOrIdx) {
+				hasFldOrIdx = true; 
 				size += 4;
 			}
 		}
-		public void setI() {
-			if (!hasForI) {
-				hasForI = true; 
+		public void setObj() {
+			if (!hasObj) {
+				hasObj = true; 
 				size += 4;
 			}
 		}
-		public void setO() {
-			if (!hasOorL) {
-				hasOorL = true; 
-				size += 4;
-			}
-		}
-		public void setL() {
-			if (!hasOorL) {
-				hasOorL = true; 
-				size += 4;
-			}
-		}
-		public void setB() {
-			if (!hasB) {
-				hasB = true; 
+		public void setBaseObj() {
+			if (!hasBaseObj) {
+				hasBaseObj = true; 
 				size += 4;
 			}
 		}
@@ -274,6 +265,7 @@ public class InstrScheme implements Serializable {
 	private boolean hasBasicBlockEvent;
 	private boolean hasQuadEvent;
 	private final EventFormat[] events;
+
 	public InstrScheme() {
 		events = new EventFormat[MAX_NUM_EVENT_FORMATS];
 		for (int i = 0; i < MAX_NUM_EVENT_FORMATS; i++)
@@ -283,6 +275,7 @@ public class InstrScheme implements Serializable {
 	public void setConvert() {
 		convert = true;
 	}
+
 	public boolean isConverted() {
 		return convert;
 	}
@@ -290,6 +283,7 @@ public class InstrScheme implements Serializable {
 	public void setBasicBlockEvent() {
 		hasBasicBlockEvent = true;
 	}
+
 	public boolean hasBasicBlockEvent() {
 		return hasBasicBlockEvent;
 	}
@@ -297,6 +291,7 @@ public class InstrScheme implements Serializable {
 	public void setQuadEvent() {
 		hasQuadEvent = true;
 	}
+
 	public boolean hasQuadEvent() {
 		return hasQuadEvent;
 	}
@@ -305,6 +300,7 @@ public class InstrScheme implements Serializable {
 		assert (n >= 0);
 		instrMethodAndLoopBound = n;
 	}
+
 	public int getInstrMethodAndLoopBound() {
 		return instrMethodAndLoopBound;
 	}
@@ -312,261 +308,329 @@ public class InstrScheme implements Serializable {
 	public EventFormat getEvent(int eventId) {
 		return events[eventId];
 	}
-	public void setEnterAndLeaveMethodEvent(
-			boolean hasM, boolean hasT) {
+
+	public void setEnterAndLeaveMethodEvent(boolean hasLoc, boolean hasThr) {
 		EventFormat e = events[ENTER_AND_LEAVE_METHOD];
-		if (hasM) e.setM();
-		if (hasT) e.setT();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
 	}
-	public void setNewAndNewArrayEvent(
-			boolean hasP, boolean hasT, boolean hasO) {
+
+	public void setEnterAndLeaveLoopEvent(boolean hasLoc, boolean hasThr) {
+		EventFormat e = events[ENTER_AND_LEAVE_LOOP];
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+	}
+
+	public void setNewAndNewArrayEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[NEW_AND_NEWARRAY];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setGetstaticPrimitiveEvent(
-			boolean hasP, boolean hasT, boolean hasF) {
+
+	public void setGetstaticPrimitiveEvent(boolean hasLoc, boolean hasThr,
+			boolean hasFld) {
 		EventFormat e = events[GETSTATIC_PRIMITIVE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasF) e.setF();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasFld) e.setFld();
 	}
+
 	public void setGetstaticReferenceEvent(
-			boolean hasP, boolean hasT, boolean hasF, boolean hasO) {
+			boolean hasLoc, boolean hasThr, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[GETSTATIC_REFERENCE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasF) e.setF();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasFld) e.setFld();
+		if (hasObj) e.setObj();
 	}
-	public void setPutstaticPrimitiveEvent(
-			boolean hasP, boolean hasT, boolean hasF) {
+
+	public void setPutstaticPrimitiveEvent(boolean hasLoc, boolean hasThr,
+			boolean hasFld) {
 		EventFormat e = events[PUTSTATIC_PRIMITIVE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasF) e.setF();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasFld) e.setFld();
 	}
-	public void setPutstaticReferenceEvent(
-			boolean hasP, boolean hasT, boolean hasF, boolean hasO) {
+
+	public void setPutstaticReferenceEvent(boolean hasLoc, boolean hasThr,
+			boolean hasFld, boolean hasObj) {
 		EventFormat e = events[PUTSTATIC_REFERENCE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasF) e.setF();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasFld) e.setFld();
+		if (hasObj) e.setObj();
 	}
-	public void setGetfieldPrimitiveEvent(
-			boolean hasP, boolean hasT, boolean hasB, boolean hasF) {
+
+	public void setGetfieldPrimitiveEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasFld) {
 		EventFormat e = events[GETFIELD_PRIMITIVE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasB) e.setB();
-		if (hasF) e.setF();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
+		if (hasFld) e.setFld();
 	}
-	public void setGetfieldReferenceEvent(
-			boolean hasP, boolean hasT, boolean hasB, boolean hasF, boolean hasO) {
+
+	public void setGetfieldReferenceEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[GETFIELD_REFERENCE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasB) e.setB();
-		if (hasF) e.setF();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
+		if (hasFld) e.setFld();
+		if (hasObj) e.setObj();
 	}
-	public void setPutfieldPrimitiveEvent(
-			boolean hasP, boolean hasT, boolean hasB, boolean hasF) {
+
+	public void setPutfieldPrimitiveEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasFld) {
 		EventFormat e = events[PUTFIELD_PRIMITIVE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasB) e.setB();
-		if (hasF) e.setF();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
+		if (hasFld) e.setFld();
 	}
-	public void setPutfieldReferenceEvent(
-			boolean hasP, boolean hasT, boolean hasB, boolean hasF, boolean hasO) {
+
+	public void setPutfieldReferenceEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[PUTFIELD_REFERENCE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasB) e.setB();
-		if (hasF) e.setF();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
+		if (hasFld) e.setFld();
+		if (hasObj) e.setObj();
 	}
-	public void setAloadPrimitiveEvent(
-			boolean hasP, boolean hasT, boolean hasB, boolean hasI) {
+
+	public void setAloadPrimitiveEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasIdx) {
 		EventFormat e = events[ALOAD_PRIMITIVE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasB) e.setB();
-		if (hasI) e.setI();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
+		if (hasIdx) e.setIdx();
 	}
-	public void setAloadReferenceEvent(
-			boolean hasP, boolean hasT, boolean hasB, boolean hasI, boolean hasO) {
+
+	public void setAloadReferenceEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasIdx, boolean hasObj) {
 		EventFormat e = events[ALOAD_REFERENCE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasB) e.setB();
-		if (hasI) e.setI();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
+		if (hasIdx) e.setIdx();
+		if (hasObj) e.setObj();
 	}
-	public void setAstorePrimitiveEvent(
-			boolean hasP, boolean hasT, boolean hasB, boolean hasI) {
+
+	public void setAstorePrimitiveEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasIdx) {
 		EventFormat e = events[ASTORE_PRIMITIVE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasB) e.setB();
-		if (hasI) e.setI();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
+		if (hasIdx) e.setIdx();
 	}
-	public void setAstoreReferenceEvent(
-			boolean hasP, boolean hasT, boolean hasB, boolean hasI, boolean hasO) {
+
+	public void setAstoreReferenceEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasIdx, boolean hasObj) {
 		EventFormat e = events[ASTORE_REFERENCE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasB) e.setB();
-		if (hasI) e.setI();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
+		if (hasIdx) e.setIdx();
+		if (hasObj) e.setObj();
 	}
-	public void setMethodCallEvent(boolean hasP, boolean hasT) {
+
+	public void setMethodCallEvent(boolean hasLoc, boolean hasThr) {
 		EventFormat e = events[METHOD_CALL];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
 	}
-	public void setReturnPrimitiveEvent(boolean hasP, boolean hasT) {
+
+	public void setReturnPrimitiveEvent(boolean hasLoc, boolean hasThr) {
 		EventFormat e = events[RETURN_PRIMITIVE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
 	}
-	public void setReturnReferenceEvent(
-			boolean hasP, boolean hasT, boolean hasO) {
+
+	public void setReturnReferenceEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[RETURN_REFERENCE];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setExplicitThrowEvent(boolean hasP, boolean hasT, boolean hasO) {
+
+	public void setExplicitThrowEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[EXPLICIT_THROW];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setImplicitThrowEvent(boolean hasT, boolean hasO) {
+
+	public void setImplicitThrowEvent(boolean hasThr, boolean hasObj) {
 		EventFormat e = events[IMPLICIT_THROW];
-		if (hasT) e.setT();
-		if (hasO) e.setO();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setThreadStartEvent(
-			boolean hasP, boolean hasT, boolean hasO) {
+
+	public void setThreadStartEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[THREAD_START];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setThreadJoinEvent(
-			boolean hasP, boolean hasT, boolean hasO) {
+
+	public void setThreadJoinEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[THREAD_JOIN];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasO) e.setO();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setAcquireLockEvent(
-			boolean hasP, boolean hasT, boolean hasL) {
+
+	public void setAcquireLockEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[ACQUIRE_LOCK];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasL) e.setL();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setReleaseLockEvent(
-			boolean hasP, boolean hasT, boolean hasL) {
+
+	public void setReleaseLockEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[RELEASE_LOCK];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasL) e.setL();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setWaitEvent(
-			boolean hasP, boolean hasT, boolean hasL) {
+
+	public void setWaitEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[WAIT];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasL) e.setL();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
-	public void setNotifyEvent(
-			boolean hasP, boolean hasT, boolean hasL) {
+
+	public void setNotifyEvent(boolean hasLoc, boolean hasThr,
+			boolean hasObj) {
 		EventFormat e = events[NOTIFY];
-		if (hasP) e.setP();
-		if (hasT) e.setT();
-		if (hasL) e.setL();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
 	
 	public boolean hasFieldEvent() {
 		return hasGetfieldEvent() || hasPutfieldEvent();
 	}
+
 	public boolean hasStaticEvent() {
 		return hasGetstaticEvent() || hasPutstaticEvent();
 	}
+
 	public boolean hasArrayEvent() {
 		return hasAloadEvent() || hasAstoreEvent();
 	}
+
 	public boolean hasGetstaticEvent() {
 		return events[GETSTATIC_PRIMITIVE].present() ||
 			events[GETSTATIC_REFERENCE].present();
 	}
+
 	public boolean hasPutstaticEvent() {
 		return events[PUTSTATIC_PRIMITIVE].present() ||
 			events[PUTSTATIC_REFERENCE].present();
 	}
+
 	public boolean hasGetfieldEvent() {
 		return events[GETFIELD_PRIMITIVE].present() ||
 			events[GETFIELD_REFERENCE].present();
 	}
+
 	public boolean hasPutfieldEvent() {
 		return events[PUTFIELD_PRIMITIVE].present() ||
 			events[PUTFIELD_REFERENCE].present();
 	}
+
 	public boolean hasAloadEvent() {
 		return events[ALOAD_PRIMITIVE].present() ||
 			events[ALOAD_REFERENCE].present();
 	}
+
 	public boolean hasAstoreEvent() {
 		return events[ASTORE_PRIMITIVE].present() ||
 			events[ASTORE_REFERENCE].present();
 	}
+
 	public boolean needsMmap() {
-		return events[ENTER_AND_LEAVE_METHOD].hasMid() || instrMethodAndLoopBound > 0;
+		return instrMethodAndLoopBound > 0 ||
+			events[ENTER_AND_LEAVE_METHOD].hasLoc();
 	}
+
+	public boolean needsWmap() {
+		return instrMethodAndLoopBound > 0 ||
+			events[ENTER_AND_LEAVE_LOOP].hasLoc();
+	}
+
 	public boolean needsHmap() {
-		return events[NEW_AND_NEWARRAY].hasPid();
+		return events[NEW_AND_NEWARRAY].hasLoc();
 	}
+
 	public boolean needsEmap() {
 		return
-			events[GETSTATIC_PRIMITIVE].hasPid() || events[GETSTATIC_REFERENCE].hasPid() ||
-			events[PUTSTATIC_PRIMITIVE].hasPid() || events[PUTSTATIC_REFERENCE].hasPid() ||
-			events[GETFIELD_PRIMITIVE].hasPid() || events[GETFIELD_REFERENCE].hasPid() ||
-			events[PUTFIELD_PRIMITIVE].hasPid() || events[PUTFIELD_REFERENCE].hasPid() ||
-			events[ALOAD_PRIMITIVE].hasPid() || events[ALOAD_REFERENCE].hasPid() ||
-			events[ASTORE_PRIMITIVE].hasPid() || events[ASTORE_REFERENCE].hasPid();
+			events[GETSTATIC_PRIMITIVE].hasLoc() ||
+			events[GETSTATIC_REFERENCE].hasLoc() ||
+			events[PUTSTATIC_PRIMITIVE].hasLoc() ||
+			events[PUTSTATIC_REFERENCE].hasLoc() ||
+			events[GETFIELD_PRIMITIVE].hasLoc() ||
+			events[GETFIELD_REFERENCE].hasLoc() ||
+			events[PUTFIELD_PRIMITIVE].hasLoc() ||
+			events[PUTFIELD_REFERENCE].hasLoc() ||
+			events[ALOAD_PRIMITIVE].hasLoc() ||
+			events[ALOAD_REFERENCE].hasLoc() ||
+			events[ASTORE_PRIMITIVE].hasLoc() ||
+			events[ASTORE_REFERENCE].hasLoc();
 	}
+
 	public boolean needsFmap() {
 		return
-			events[GETSTATIC_PRIMITIVE].hasFid() || events[GETSTATIC_REFERENCE].hasFid() ||
-			events[PUTSTATIC_PRIMITIVE].hasFid() || events[PUTSTATIC_REFERENCE].hasFid() ||
-			events[GETFIELD_PRIMITIVE].hasFid() || events[GETFIELD_REFERENCE].hasFid() ||
-			events[PUTFIELD_PRIMITIVE].hasFid() || events[PUTFIELD_REFERENCE].hasFid();
+			events[GETSTATIC_PRIMITIVE].hasFld() ||
+			events[GETSTATIC_REFERENCE].hasFld() ||
+			events[PUTSTATIC_PRIMITIVE].hasFld() ||
+			events[PUTSTATIC_REFERENCE].hasFld() ||
+			events[GETFIELD_PRIMITIVE].hasFld() ||
+			events[GETFIELD_REFERENCE].hasFld() ||
+			events[PUTFIELD_PRIMITIVE].hasFld() ||
+			events[PUTFIELD_REFERENCE].hasFld();
 	}
+
 	public boolean needsImap() {
-		return events[METHOD_CALL].hasPid();
+		return events[METHOD_CALL].hasLoc();
 	}
+
 	public boolean needsPmap() {
-		return
-			events[RETURN_PRIMITIVE].hasPid() || events[RETURN_REFERENCE].hasPid() ||
-			events[EXPLICIT_THROW].hasPid() || events[IMPLICIT_THROW].hasPid() ||
-			events[THREAD_START].hasPid() || events[THREAD_JOIN].hasPid() ||
-			events[ACQUIRE_LOCK].hasPid() || events[RELEASE_LOCK].hasPid() ||
-			events[WAIT].hasPid() || events[NOTIFY].hasPid() ||
-			hasQuadEvent;
+		return hasQuadEvent ||
+			events[RETURN_PRIMITIVE].hasLoc() ||
+			events[RETURN_REFERENCE].hasLoc() ||
+			events[EXPLICIT_THROW].hasLoc() ||
+			events[IMPLICIT_THROW].hasLoc() ||
+			events[THREAD_START].hasLoc() ||
+			events[THREAD_JOIN].hasLoc() ||
+			events[ACQUIRE_LOCK].hasLoc() ||
+			events[RELEASE_LOCK].hasLoc() ||
+			events[WAIT].hasLoc() ||
+			events[NOTIFY].hasLoc();
 	}
+
 	public boolean needsBmap() {
 		return hasBasicBlockEvent;
 	}
+
 	public boolean needsTraceTransform() {
-		return events[NEW_AND_NEWARRAY].hasOid();
+		return events[NEW_AND_NEWARRAY].hasObj();
 	}
+
 	public static InstrScheme load(String fileName) {
 		InstrScheme scheme;
 		try {
@@ -581,6 +645,7 @@ public class InstrScheme implements Serializable {
 		}
 		return scheme;
 	}
+
 	public void save(String fileName) {
 		try {
 			ObjectOutputStream stream = new ObjectOutputStream(
