@@ -1,0 +1,238 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Configuration - Per-site Configuration</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Per-site configuration files">
+  <p>
+  Per-site configuration files can be found in your /conf/{yourconfig} folder.
+  These configuration files are referenced from the sites.properties file, for which
+  you can find the documentation <a href="./sites.html">here</a>.
+  </p>
+  <subsection name="Default configuration file">
+  <p>
+  You'll find a 'default.properties' files in your distribution, a file that's configured
+  to become the default configuration for every site that isn't assigned a special
+  configuration in 'sites.properties'.
+  Most of the time, you'll want to let this file as it is, but override the settings in a
+  per-site specific file of the sites you'll want JSpider to visit.
+  </p>
+  <p>
+  The default configuration file makes sure that each unknown site is handled properly,
+  so edit this file only when you really know what you're doing.
+  </p>
+  <p>
+  In your distribution, you'll also find a 'j-spider.sourceforge.net' file, which is the
+  configuration you'll need to test JSpider on it's own project site.  These files can be
+  used as a reference when you're creating your own:
+  </p>
+  <source>
+  # -----------------------------------------------------------------------------
+  # Default Site Configuration File
+  # -----------------------------------------------------------------------------
+  #
+  # $Id: site-props.xml,v 1.2 2003/04/04 20:06:23 vanrogu Exp $
+  #
+  # This is the default per-site configuration file. Each site for which no
+  # configuration file is specified will default to this configuration.
+  # By adding specific configuration files under this folder, you can configure
+  # the behaviour of JSpider on a per-site basis.
+  #
+  # -----------------------------------------------------------------------------
+
+  # -----------------------------------------------------------------------------
+  # Proxy Configuration
+  # -----------------------------------------------------------------------------
+  #
+  # Determines whether this site is to be accessed via the proxy server defined
+  # in jspider.properties.
+  #
+  # PROPERTIES :
+  #
+  #  site.proxy.use
+  #    whether the proxy settings defined in jspider.properties are applicable
+  #    to this site.
+  #    if 'true', the settings in jspider.properties are used.  if 'false', this
+  #    site is treated as a local site, and accessed without going through the
+  #    proxy server.
+  #    if no proxy is configured in jspider.properties (jspider.proxy.use in that
+  #    file is set to false), then this setting doesn't matter.
+  #
+  # -----------------------------------------------------------------------------
+
+  site.proxy.use=true
+
+
+
+  # -----------------------------------------------------------------------------
+  # Throttling Configuration
+  # -----------------------------------------------------------------------------
+  #
+  # Throttling allows you to keep the number of requests over a given time period
+  # towards a specific server under control.
+  # Without throttling, JSpider running on a fast machine with a speedy internet
+  # connection would choke the target system with requests.  By configuring
+  # throttling, you can tell JSpider how it should spread its requests to one
+  # server.  By tweaking these settings, you can generate more or less traffic
+  # on a server (to do scalability/load testing), or influence the usage pattern
+  # of the site.
+  # Please note that throttling influences only the maximum amount of requests to
+  # be done towards a server in a given timeframe.  If your JSpider system is
+  # heavily loaded, it is possible that these numbers aren't reached and that
+  # throttling doesn't have to hold the parser threads for a while.
+  # by default, a throttle implementation that forces a minimum amount of milli-
+  # seconds between two subsequent requests to the same host is provided.
+  #
+  # PROPERTIES :
+  #
+  #  site.throttle.provider
+  #   the class that implements the Provider interface via which the Throttle
+  #   implementation is created.  This way, you can easily plug in your own
+  #   throttle implementation.
+  #   A few default implementations are provided, configuration of these
+  #   is explained below:
+  #
+  # DISTRIBUTED LOAD THROTTLE (default)
+  # -----------------------------------
+  #
+  # When using the distributed load throttle (the default throttle), a minimum
+  # number of milliseconds between two subsequent requests to the same server
+  # are enforced.
+  #
+  # PROPERTIES :
+  #
+  #  site.throttle.interval
+  #    minimum number of milliseconds between two requests to the same server.
+  #    when a request is to be made faster then allowed, the request is postponed
+  #    until the next allowed timeframe.
+  #
+  # SIMULTANEOUS USERS THROTTLE
+  # ---------------------------
+  #
+  # By enabling this throttle strategy, you can simulate load on a system by
+  # different simultaneous users.
+  # Each spider thread (configured in jspider.properties) will act as a simulated
+  # user, and will be throttled on its own.  The 'thinking time' for each user
+  # can be configured to simulate real system loads.
+  # This throttle implementation can cause a much more diversed request pattern.
+  # (Several requests at the same time, then no requests for a while, etc ...
+  #
+  # PROPERTIES :
+  #
+  #  site.throttle.thinktime.min
+  #    minimum number of milliseconds between two requests from the same
+  #    simulated user (spider thread).
+  #
+  #  site.throttle.thinktime.max
+  #    maximum number of milliseconds between two requests from the same
+  #    simulated user (spider thread).
+  #
+  # -----------------------------------------------------------------------------
+
+  # --- COMMENT OUT TO USE OTHER THROTTLE IMPLEMENTATION ------------------------
+  site.throttle.provider=net.javacoding.jspider.core.throttle.impl.DistributedLoadThrottleProvider
+  site.throttle.config.interval=1000
+
+  # --- UNCOMMENT TO USE SIMULTANEOUS USERS SIMULATION --------------------------
+  #site.throttle.provider=net.javacoding.jspider.core.throttle.impl.SimultaneousUsersThrottleProvider
+  #site.throttle.config.thinktime.min=2000
+  #site.throttle.config.thinktime.max=5000
+
+
+
+  # -----------------------------------------------------------------------------
+  # Cookie Configuration
+  # -----------------------------------------------------------------------------
+  #
+  # Configures the cookie usage for the sites that are given this configuration
+  #
+  # PROPERTIES :
+  #
+  #  site.cookies.use
+  #    whether cookies should be accepted and sent back to the site (true/false)
+  #
+  # -----------------------------------------------------------------------------
+
+  site.cookies.use=true
+
+
+
+  # -----------------------------------------------------------------------------
+  # Robots.txt configuration
+  # -----------------------------------------------------------------------------
+  #
+  # Configures the handling of the robots.txt file on this site
+  #
+  # PROPERTIES :
+  #
+  #  site.robotstxt.fetch
+  #    whether the spider should fetch the robots.txt file
+  #
+  #  site.robotstxt.obey
+  #    whether the spider should obey the robots.txt file
+  #
+  # -----------------------------------------------------------------------------
+
+  site.robotstxt.fetch=true
+  site.robotstxt.obey=true
+
+
+
+  # -----------------------------------------------------------------------------
+  # Rules Configuration
+  # -----------------------------------------------------------------------------
+  #
+  # Tells the system what rules to apply upon encountered URLs from this site.
+  #
+  # PROPERTIES:
+  #
+  #  site.rules.spider.count
+  #    The number of rules that will be applied on all URLs before being taken
+  #    into account for spidering (fetching)
+  #
+  #  site.rules.spider.[number]
+  #    the name of the class that provides the rule implementation by which the
+  #    urls should be handled
+  #
+  #  site.rules.parser.count
+  #    The number of rules that will be applied on all URLs before being taken
+  #    into account for parsing
+  #
+  #  site.rules.parser.[number]
+  #    the name of the class that provides the rule implementation by which the
+  #    urls should be handled
+  #
+  # -----------------------------------------------------------------------------
+
+  site.rules.spider.count=2
+  site.rules.spider.1.class=net.javacoding.jspider.mod.rule.InternallyReferencedOnlyRule
+  site.rules.spider.2.class=net.javacoding.jspider.mod.rule.ForbiddenPathRule
+  site.rules.spider.2.config.path=/content/javadoc
+
+  site.rules.parser.count=1
+  site.rules.parser.1.class=net.javacoding.jspider.mod.rule.BaseSiteOnlyRule</source>
+  </subsection>
+
+  <subsection name="Creating your own per-site configurations">
+    <p>
+  <table>
+    <th>Name</th><th>Values</th><th>Description</th>
+    <tr><td>site.proxy.use</td><td>true,false</td><td>Determines whether the proxy server specified in jspider.properties must be used for this site</td></tr>
+    <tr><td>site.throttle.*</td><td>...</td><td>The configuration of the Throttle component that will control when and how much JSpider can access the website</td></tr>
+    <tr><td>site.robotstxt.fetch</td><td>true,false</td><td>Whether the robots.txt file for this site should be fetched.  If skipped, all resources in the site can be spidered.  Otherwise, it will be interpreted.</td></tr>
+    <tr><td>site.robotstxt.obey</td><td>true,false</td><td>Whether the information in robots.txt should be taken into account.  Please do not use on public sites, only on your own private sites for testing purposes.</td></tr>
+    <tr><td>site.cookies.use</td><td>true,false</td><td>Determines whether cookies are to be accepted and sent back to the server</td></tr>
+    <tr><td>site.rules.spider</td><td>...</td><td>Determines the set of rules a resource url must pass to be selected for spidering (fetching)</td></tr>
+    <tr><td>site.rules.parser</td><td>...</td><td>Determines the set of rules a resource url must pass to be selected for parsing (interpretation to search for referenced resources)</td></tr>
+  </table>
+    </p>
+    </subsection>
+
+</section>
+</body>
+</document>
+

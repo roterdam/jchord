@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Configuration - sites.properties</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Assigning site configurations : sites.properties">
+  <p>
+  The file 'sites.properties' can be found under the /conf/{yourconfig} folder, for
+  the default configuration this is '/conf/default'.
+  </p>
+  <p>
+  This file is used to assign a specific per-site configuration to each site that is
+  encountered by JSpider.
+  </p>
+  <subsection name="Default configuration">
+  <p>
+  To explain how this configuration works, we'll have a look at the provided default:
+  </p>
+  <source>
+  # -----------------------------------------------------------------------------
+  # Websites configuration file
+  # -----------------------------------------------------------------------------
+  #
+  # $Id: sites.xml,v 1.1 2002/12/23 19:45:33 vanrogu Exp $
+  #
+  # This configuration file determines the JSpider per-site configuration to be
+  # used for a certain site.
+  # The referenced configuration files can be found in the 'sites' subfolder.
+  #
+  # PROPERTIES :
+  #
+  #  jspider.site.config.default
+  #    the default configuration to which all websites that don't have a specific
+  #    configuration assigned are defaulted.
+  #
+  #  [subdomain].domain.toplevel:[port]=configuration
+  #    assigns a certain configuration to the site
+  #    example: for 'j-spider.sourceforge.net:80', the matching is as follows:
+  #      j-spider.sourceforge.net:80
+  #      j-spider.sourcedforge.net
+  #    example: for 'www.javacoding.net', the matching is as follows:
+  #      www.javacoding.net
+  #
+  # -----------------------------------------------------------------------------
+
+  jspider.site.config.default=default
+
+  j-spider.sourceforge.net=j-spider.sourceforge.net</source>
+  <p>
+  The things you'll want to change about this file are adding extra host names, and assigning
+  different configuration files for them.  If you do so, keep in mind that the name of the
+  configuration used must match a .properties file in the ./sites subfolder.
+  </p>
+  </subsection>
+
+</section>
+</body>
+</document>
+

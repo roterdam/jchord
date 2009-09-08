@@ -1,0 +1,51 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="JSpider Documentation">
+
+  <subsection name="User Manual (PDF)">
+  <p>
+   We are proud to anounce that the JSpider project now has a real downloadable,
+   printable user manual (PDF format).
+   You can find it at our <a href="http://sourceforge.net/project/showfiles.php?group_id=65617">download page</a>.
+  </p>
+  </subsection>
+
+  <subsection name="Online documentation">
+    <p>
+    There is also some online documentation on how to use and configure JSpider:
+    </p>
+    <p>
+    <table>
+      <th>Name</th><th>Description</th>
+      <tr>
+        <td><a href="./install/index.html">Installation</a></td>
+        <td>
+         Describes how to install JSpider on your system.
+        </td>
+      </tr>
+        <tr>
+          <td><a href="./usage/index.html">Usage</a></td>
+          <td>
+           Describes how to start JSpider and choose a configuration
+          </td>
+        </tr>
+      <tr>
+        <td><a href="./config/index.html">Configuration</a></td>
+        <td>
+         How to configure JSpider to adapt it to your needs
+        </td>
+      </tr>
+    </table>
+    </p>
+  </subsection>
+</section>
+</body>
+</document>
+

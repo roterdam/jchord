@@ -1,0 +1,1 @@
+[${eventName}] robots.txt skipped for site: ${event.site.URL}

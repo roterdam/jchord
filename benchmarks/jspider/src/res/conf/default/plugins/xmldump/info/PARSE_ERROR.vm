@@ -1,0 +1,4 @@
+$indent          <http-status>${resource.httpStatus}</http-status>
+$indent          <size>${resource.size}</size>
+$indent          <mime>${resource.mime}</mime>
+$indent          <fetch-time>${resource.timeMs}</fetch-time>

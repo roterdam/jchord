@@ -1,0 +1,77 @@
+#macro ( resource $resource $indent )
+
+$indent      <resource file="${resource.fileName}" url="${resource.URL}">
+$indent        <state>${resource.stateName}</state>
+$indent        <info>
+#parse("info/${resource.stateName}.vm")
+$indent        </info>
+#if ( $resource.stateName == "PARSED" )
+$indent        <email-addresses>
+#foreach( $emailAddressRef in $resource.emailAddressReferences )
+$indent          <email-address address="${emailAddressRef.eMailAddress}" count="${emailAddressRef.count}"/>
+#end
+$indent        </email-addresses>
+$indent        <references>
+#foreach( $resourceReference in $resource.outgoingReferences )
+$indent          <reference url="$resourceReference.referee.URL" count="${resourceReference.count}"/>
+#end
+$indent        </references>
+#end
+$indent        <referers>
+#foreach( $resourceReference in $resource.incomingReferences )
+$indent          <referer url="$resourceReference.referer.URL" count="${resourceReference.count}"/>
+#end
+$indent        </referers>
+$indent      </resource>
+#end
+
+
+
+
+#macro( folder $folder $indent )
+$indent      <folder name="${folder.name}">
+$indent        <resources>
+#foreach( $resource in $folder.resources )
+#resource ( $resource "$indent    " )
+#end
+$indent        </resources>
+$indent        <folders>
+#foreach( $subfolder in $folder.folders )
+#folder ( $subfolder "$indent    " )
+#end
+$indent        </folders>
+$indent      </folder>
+#end
+
+
+
+<?xml version="1.0" encoding="UTF-8"?>
+<sites>
+
+#foreach( $site in $sites )
+  <site host="${site.host}" url="${site.URL}" basesite="${site.baseSite}" musthandle="${site.mustHandle}">
+
+    <folders>
+#foreach ( $folder in $site.rootFolders )
+#folder ( $folder "" )
+#end
+    </folders>
+
+    <cookies>
+#foreach( $cookie in $site.cookies )
+      <cookie name="${cookie.name}" path="${cookie.path}" domain="${cookie.domain}" value="${cookie.value}" expires="${cookie.expires}"/>
+#end
+    </cookies>
+
+    <resources>
+#foreach( $resource in $site.rootResources )
+#resource ( $resource "" )
+#end
+
+    </resources>
+
+  </site>
+
+#end
+
+</sites>

@@ -1,0 +1,23 @@
+Build report for JSpider.
+This file summarizes the configuration used to build this distribution.
+
+System summary :
+----------------
+
+Java version : @java.version@
+Java vendor  : @java.vendor@
+Ant version  : @ant.version@
+OS name      : @os.name@
+OS arch      : @os.arch@
+OS version   : @os.version@
+
+Project summary :
+-----------------
+
+JSpider version number : @jspider.version.number@
+JSpider version string : @jspider.version.string@
+
+Build summary :
+---------------
+
+Build timestamp : @build.timestamp.standard@

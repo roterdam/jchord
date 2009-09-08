@@ -1,0 +1,72 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Installing - Binaries</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Installing JSpider">
+  <p>
+  This explanation assumes a Unix-like system to be used.  Windows equivalents
+  should be obvious.
+  </p>
+
+  <subsection name="STEP 1: Download the binary">
+  <p>
+  You'll need to make sure you have downloaded the JSpider binary from <a href="http://sourceforge.net/project/showfiles.php?group_id=65617">our download page</a>, 
+  we'll be using this file throughout the rest of this explanation.
+  Make sure you have downloaded the latest version of JSPIDER-MAIN, to be sure the latest stable build
+  and the latest bugfixes and features are present.
+  </p>
+  </subsection>
+
+  <subsection name="STEP 2: Extracting the binaries">
+  <p>
+  There are different formats in which we distribute our binaries: .zip, .tar, and .tar.gz
+  In this explanation, we'll assume you downloaded the .zip version.
+  </p>
+  <p>
+  In our example, the install directory will be '/opt'.
+  </p>   
+  <p>
+  Copy the downloaded file to '/opt' (or any other directory you want to use as an install directory).
+  </p>
+  <source>
+  jar -xvf jspider-0-1-1-dev.zip
+  (use the filename of the file you downloaded)
+  cd jspider-0-1-1-dev
+  (use the filename of the file you downloaded without the .jar extension)</source>
+  <p>
+  Now we're going to make the startup script executable:
+  </p>
+  <source>
+  cd bin
+  chmod a+x jspider.sh</source>
+  </subsection>
+
+  <subsection name="STEP 3: Testing your JSpider installation">
+  <p>
+  Now you're ready to test your JSpider installation.  cd into the {jpspider}/bin directory and start JSpider 
+  (this example assumes that you have a webserver listening on localhost, port 80):
+  </p>
+  <source>  ./jspider.sh http://localhost</source>
+  <p>
+  A lot of output should go on your screen now, as JSpider traverses the site you gave it.
+  Congratulations, you've successfully installed JSpider !
+  </p>
+  </subsection>
+
+  <subsection name="IMPORTANT REMARK: Proxy/Firewall issues">
+  <p>
+  When you need a proxy/firewall to connect to a certain host, your have to configure that in the JSpider
+  configuration files.
+  </p>
+  <p>
+  an explanation of how to do this can be found <a href="../config/proxy.html">here</a> ...
+  </p>
+ </subsection>
+</section>
+</body>
+</document>

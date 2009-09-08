@@ -1,0 +1,276 @@
+JSpider CHANGE HISTORY
+----------------------
+
+$Id: CHANGEHISTORY,v 1.79 2003/05/02 17:36:58 vanrogu Exp $
+
+
+This document contains a list of changes made between releases
+The names given next to the date of the release are actually the
+CVS tag names that can be used to checkout the specified version.
+
+[ LONG TERM ] Objectives for jspider-1-0-0-rc1
+----------------------------------------------
+
+  Topic                        dev release        status
+
+Documentation / Quality
+  user manual                  0.5.0              DONE (+ONGOING)
+  developer manual            (0.6.0)             ---
+  enough JUnit tests           0.2.0              DONE (+ONGOING)
+  mature api                  (0.7.0)             ---
+
+Storage
+  memory storage               0.1.0              DONE
+  jdbc storage                 0.4.0              DONE
+
+Configuration
+  properties files             0.1.0              DONE
+  xml files                   (0.7.0)             ---
+
+Interfacing
+  gui                         (0.7.0)             ---
+  velocity reporting           0.4.0              DONE
+
+Features
+  robots.txt                   0.1.0              DONE
+  site downloading             0.3.0              DONE
+  folder-level model           0.5.0              DONE
+  xml reporting                0.5.0              DONE
+  email address handling       0.5.0              DONE
+
+
+[ SOMEDAY ] PLANNED :
+---------------------
+
+  custom classloading (?)
+    instead of putting everything on the classpath in startup scripts
+      + easy way to add plugins, etc...
+    common/lib/*.jar (change /lib to /common/lib)
+    common/classes
+    common/
+  refactor context/agent stuff
+  implement DAO cache for DB storage
+  refactor EventDispatcherImpl, add FilteringEventDispatcherImpl
+  configure url fixing
+      - convert backslashes? (Y/N)
+      - remove dot folders? (Y/N)
+      - strip query? (Y/N)
+      - remove trailing slashes? (Y/N)
+  diskwriter improvements
+      option to map certain extensions to another
+        plugin.config.mapping.enabled = true/false
+        plugin.config.mapping.from.extension=jsp php pl asp
+        plugin.config.mapping.to.extension=html
+        plugin.config.mapping.mime=text/html
+        change also in links of all resources !
+  - improve robots.txt handling:
+      max size (DOS attack on spider) + tests ( site.robotstxt.maxsize=... )
+      implement allow lines (order!!!) + add tests
+      implement double useragents (same rules) in robots.txt (+add test)
+      implement 401 and 403 on robots.txt to skip site
+      http://www.robotstxt.org/wc/norobots-rfc.txt
+
+  jspider optional addons pack (cvs jspider-optional)
+    swing gui plugin (progression, etc...)
+  new project site (cvs jspider-site)
+  mention/use RFC 2616 (http statuses - do something with these?)
+
+  xml configuration files
+  rules that can change an url (remove params, ...)
+  Configuration for handling of non-HTTP protocols (ftp,news,https,gopher,...)
+  Add HTML WelformedNess Check (While parsing?  Afterwards?)
+  improve cookiesupport (path, time to live, ...)
+  support multiple fetches of same resource (comparing timing, etc...)
+  support decoupled eventDispatcher (per-plugin basis, async, dispatcher thread)
+  optimize storage - have notion of added or changed entities and only save those
+  support setting case-sensitivity option when comparing URLs
+  jdk1.4 logging filepath could be problematic
+    if not started from /bin (../x used)
+    how to solve ?
+
+[ UPCOMING ] jspider-0-5-0-dev
+------------------------------
+
+  fixed bug that cause 'null' mimetype not to be parsed (found on WebLogic 6.1 SP3)
+  updated functional test scripts
+  create jspider-site CVS module
+  fixed bug in dump script - was not showing urls for each site
+  added missing RobotsTXTSkippedEvent.vm velocity template
+  changed default url normalizing.  Trailing slash is not trimmed anymore
+  fixed bug which caused no resources to be fetched when robots.txt skipped
+  removed canstop flag (workaround) on scheduler
+  changed download configuration to limit scope to base site
+  fixed bug which caused site specific rules to be skipped sometimes
+  changed checkErrors configuration to check outgoing links without parsing
+  implemented global event filtering flag
+  fixed bug of non-relative path to logging config in startup scripts
+  refactored storage
+    split DAO and DAO-SPI, and introduced middle mapping layer
+    summary is now constructed in middle layer
+    moved folder ensuring logic into middle layer
+  added junit tests
+    malformed base url parsing
+    email address finding event notifications
+  fixed indentation problem in xmldump (info element in included template now indented)
+  made clear distinction between site.getRootResources and site.getAllResources
+  fixed buggy base href implementation (wrong relative urls in case of folder href)
+  changed testscripts (server side) and functional junit tests to work on any host
+  fixed bug of not recognising base site if jspider was not started from root
+  added JUnit tests
+    technical: for URLUtil, URLFinder
+    functional: UserAgent, BASE HREF intepretation, model ...
+  small refactorings
+  got rid of interfaces SpiderWorkerTask and ThinkerWorkerTask
+  implemented folder-level interpretation and storage
+    default xml report now shows the site structure recursively
+  used buffering for reading incoming streams
+  changed task type identification from instanceof to type member
+  default configuration now only handles the base site
+  configuration on per-site level whether it should be handled
+  implemented separate site config reference for base site
+  implemented feature that flags the base site with a boolean value
+  improved User-Agent config:
+    default setting compiled into JSpider
+    optional override on global level (jspider.properties)
+    optional override on a per-site config basis (site config)
+  added tool to jspider-tool: email, that fetches all e-mail addresses on a page
+  supported count attribute on resource_reference
+    (reflects how many times a certain page links to another)
+  re-introduced mail addresses, but properly handled this time
+    event EMailAddressDiscoveredEvent
+    event EMailAddressReferenceDiscoveredEvent
+    created object for EMailAddressReference with counter for multiple refs
+    EMailAddress address object in model
+  implemented BASE HREF interpretation during html parsing
+  handle Malformed BaseURLs ( new event MalformedBaseFoundEvent )
+  upgraded logging to jakarta commons-logging 1.0.3
+  Added XML dump reporting to default config (velocity plugin based)
+  fixed bug which caused error while writing Velocity reports
+    (fetched references of a non-parsed resources)
+  new Rule impl :
+    NoURLParamsRule
+    MaxNumberOfURLParamsRule ( int )
+    BoundedDepthRule ( int min, int max )
+    MaxResourcesPerSiteRule ( int max )
+  new EventFilter impl :
+    NonErrorsOnlyEventFilter
+  added JUnit tests
+    for rule implementations
+BUGS SOLVED:
+  #723859 - Fields <timeMs> and <size> swapped in JDBC storage
+  #730315 - ResourceFetchErrorEvent: this.httpStatus is never set...
+
+[2003-04-06] jspider-0-4-0-dev
+------------------------------
+
+  refactored storage:
+    made sure all JDBC Exceptions are handled well and statements, etc... closed
+    implemented cookie support via their own DAO
+    supported Cookies in JDBC storage
+    used int id as unique ids in JDBC storage impl, instead of URLs
+    changed resource reference storage + implemented it in JDBC storage
+    moved resource references out of SiteInternal implementation
+    added ContentDAO for resource content.  This way, it is not fetched with the resource info each time
+    refactored decision and decision step storage as a separate DAO
+    implemented decision and decision step storage in JDBC
+  added xdocs about threading configuration
+  updated xdocs about site configuration
+  refactoring: moved Plugin, EventFilter and Rule to spi package
+  refactoring: moved rule implementations to mod package
+  introduced .config.* in throttle configuration
+  implemented monitoring of blocked and assigned task counter in scheduler
+  upgraded templating engine in velocity plugin to velocity 1.3.1 (final)
+  changed literal config names (default, tool, unittest) to final Strings on ConfigurationFactory
+  fixed bug that caused some resources to be blocked twice, fetched twice, and kill JSpider with a fatal exception
+  fixed bug that caused wrong userAgent to be used when retrieving robots.txt
+  reworked configuration
+    put config keys in final Strings (interface ConfigConstants)
+    renamed properties in configuration files for more uniformity
+  added junit tests for plugin instantiation logic
+  create rules with properties
+  new rule impl
+    ForbiddenPatternRule - like robots.txt DisAllows - configured per site
+  fixed bug that caused HTTP headers not to be saved in case of a 404 error
+  fixed bug that causes zero-length-string site host to be saved (eg: in mailto protocol)
+  fixed bug which caused html interpretation to be done by spider threads (implemented wrong tagging interface)
+  added velocity-dump next to velocity-trace
+  added getters to all api event classes
+  brought all config files in sync (put latest config additions)
+  jspider-tool: disabled logging by default
+  better handling of malformed urls found while parsing (event impl)
+  changed instantiation of plugins.  First, a config-param ctr is searched now, then a no-args ctr
+  fixed resource length of -1 that used to be reported sometimes
+  added logging via jakarta commons-logging, support for log4j and jdk1.4 logging
+  implemented some command-line tools with jspider
+    fetch, info, headers, download, findlinks
+    e.g.: jspider-tool download http://j-spider.sourceforge.net/robots.txt
+  added velocity reporting mechanism (velocity config)
+  synchronized access to plugin (monitor events can come in any time)
+  migrated storage to a more DAO-driven architecture
+  implemented preliminary jdbc storage option
+  jspider can now be configured not to obey robots.txt for a site
+  new rule implementations :
+    OnlyDeeperInSiteRule
+  several small bugfixes
+  several small refactorings
+
+[2003-02-23] jspider-0-3-0-dev
+------------------------------
+  (This is mainly a refactoring release, with minor new functionality)
+  new standard configuration 'download' (DiskWriter plugin)
+  output folder to be used as default output folder
+  improved ant script
+  added continuous integration support
+  added unit tests (for rule implementations, ...)
+  added history (logging) of decisions on resource (which rule decided what)
+  reworking of threading system with more fine-grained task and thread statuses
+  multiple cookie support
+  http header support
+
+[2003-01-04] jspider-0-2-0-dev
+------------------------------
+
+  Internal changes:
+    - reduced responsability of the Agent
+    - implemented TaskScheduler
+    - Storage is purely storage now
+  Better cookie support (on a per-site basis)
+  Better robots.txt handling
+  New throttle implementation that simulates simultaneous users
+  Maven-enabled the project
+    added first xdocs for user manual (installation + configuration docs)
+  Fixed some threading problems
+  Added JUnit tests
+  added Unix startup script
+  Added new Event Filter implementations
+    ErrorsOnlyEventFilter (404/500/...)
+  Uniform output system (Log)
+    SystemOutLog
+    DevNullLog
+  added monitor support (daemon thread dispatching MonitorEvents)
+    for WorkerThreadPools
+    for JobScheduler
+  Event Filtering per event type: Engine/Monitoring/Spider
+  Better plugin support
+    multiple plugins, each with custom configuration
+    optional event filtering on a per-plugin basis in addition to global filtering
+  Better configuration support
+    implemented JSPIDER_HOME variable support for easy configuration
+    abstracted to allow addition of non-properties files based config in the future
+  Add Engine Event SpideringSummary -> total urls, errors, etc ...
+  Added JUnit support part on site (j-spider.sourceforge.net) to test jspider upon
+    developed some first functional JUnit tests with this site
+  improved the rules implementation
+  added unit tests for robots.txt support and parsing capabilities
+  added Statusbased FileWriter Plugin
+  added new default configuration checkErrors
+  added JUnit tests for cookie support
+
+[2002-11-20] jspider-0-1-0-dev
+------------------------------
+  initial release
+  robots.txt support
+  in memory storage of gathered data
+  basic plugin support ( console / devnull )
+  Basic Rules impl ( InternalSiteOnly, RobotsTXTFile )
+  Basic event Filtering ( AllowAllEventFilter )

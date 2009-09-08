@@ -1,0 +1,124 @@
+<?xml version="1.0"?>
+<document>
+ <properties>
+  <title>JSpider - User Manual - Configuration - Threading</title>
+  <author email="gunther@javacoding.net">Gunther Van Roey</author>
+ </properties>
+
+<body>
+
+<section name="Configuration parameters">
+  <subsection name="Introduction about threading in JSpider">
+  <p>
+  To be able to influence the inner workings of JSpider, the jspider.properties
+  in your config/{yourconfig} folder can be customized.
+  </p>
+  <p>
+  JSpider has two kinds of jobs: Spider jobs (tasks assigned to threads that must
+  go out and go fetch some data).<br/>
+  The other kind are Thinker jobs, that include the testing of rules, parsing of
+  HTML, etc...
+  </p>
+  <p>
+  For each of both jobs, a different pool of threads is assigned.  This way, you
+  can balance the number of spider threads against thinker threads.
+  </p>
+  </subsection>
+  <subsection name="Default configuration">
+  <p>
+  In the default JSpider configuration, a thread pool of 5 threads is foreseen to
+  fetch resources, while only a single thread will be a thinker thread.
+  </p>
+  <p>
+  Normally, fetching data from over the internet is much slower than local logic
+  processing, so a single thinker thread can easily keep multiple spider threads
+  busy.
+  </p>
+  <p>
+  If you, for instance create a rule that connects to a database to see if a certain
+  URL should be fetched, the thinker thread may become heavily loaded, resulting in
+  a blocking of the spiders.
+  From this moment, it will be beneficially to add more thinkers.
+  </p>
+  <p>
+  Also, if you have a very slow internet connection, adding more spiders may scale
+  the incoming amount of data.
+  </p>
+  <p>
+  Anyway, you can simply change the parameteres and test the results yourself.
+  The configuration parameters related to threading in jspider.properties are:
+  </p>
+  <source>
+      # -----------------------------------------------------------------------------
+      # Threading Configuration
+      # -----------------------------------------------------------------------------
+      #
+      # Determines the number of threads in the different worker thread pools used
+      # by JSpider.  This settings will affect the system's performance and
+      # scalibility.
+      # Normally, the number of spider threads (threads that go out and fetch data
+      # from the web servers, needs to be much higher than the number of parser
+      # threads (threads that inspect the data and find new URLs in it).
+      #
+      # PROPERTIES:
+      #
+      #  jspider.threads.spiders
+      #    the number of threads assigned to fetching data over the internet.
+      #
+      #  jspider.threads.spiders.monitoring.enabled
+      #    whether monitoring events should be generated about the status of this
+      #    thread pool.  If enabled, monitoring events will be dispatched by the
+      #    system to allow you to monitor the load on the threadpool. (true/false)
+      #
+      #  jspider.threads.spiders.monitoring.interval
+      #    the number of milliseconds between two snapshots of the status of the
+      #    threadpool with the spider threads.  At each interval, a monitoring
+      #    event will be triggered notidfying you of the status of this threadpool.
+      #    only used if jspider.threads.spiders.monitoring.enabled=true
+      #
+      #  jspider.threads.thinkers
+      #    the number of threads assigned to inspecting fetched data and searching
+      #    for new URLs and sites in it.
+      #    A very low number (1 or 2) should really be enough in most circumstances
+      #
+      #  jspider.threads.thinkers.monitoring.enabled
+      #    whether monitoring events should be generated about the status of this
+      #    thread pool.  If enabled, monitoring events will be dispatched by the
+      #    system to allow you to monitor the load on the threadpool. (true/false)
+      #
+      #  jspider.threads.thinkers.monitoring.interval
+      #    the number of milliseconds between two snapshots of the status of the
+      #    threadpool with the parser threads.  At each interval, a monitoring
+      #    event will be triggered notidfying you of the status of this threadpool.
+      #    only used if jspider.threads.thinkers.monitoring.enabled=true
+      #
+      # -----------------------------------------------------------------------------
+
+      jspider.threads.spiders.count=5
+      jspider.threads.spiders.monitoring.enabled=true
+      jspider.threads.spiders.monitoring.interval=1000
+      jspider.threads.thinkers.count=1
+      jspider.threads.thinkers.monitoring.enabled=true
+      jspider.threads.thinkers.monitoring.interval=1000</source>
+  </subsection>
+
+  <subsection name="Configuration Parameters">
+  <p>
+  An explanation of each individual parameter:
+  </p>
+  <p>
+  <table>
+    <th>Name</th><th>Values</th><th>Description</th>
+    <tr><td>jspider.threads.spiders.count</td><td>(number)</td><td>The number of threads to be assigned to spidering (HTTP fetching tasks)</td></tr>
+    <tr><td>jspider.threads.spiders.monitoring.enabled</td><td>true,false</td><td>Whether monitoring events about the load on the spider thread pool should be generated</td></tr>
+    <tr><td>jspider.threads.spiders.monitoring.interval</td><td>(number)</td><td>Number of milliseconds between two monitoring 'snapshots' of the load on the thread pool</td></tr>
+    <tr><td>jspider.threads.thinkers.count</td><td>(number)</td><td>The number of threads to be assigned to thinker tasks (rule appliance, HTML parsing, etc...)</td></tr>
+    <tr><td>jspider.threads.thinkers.monitoring.enabled</td><td>true,false</td><td>Whether monitoring events about the load on the thinker thread pool should be generated</td></tr>
+    <tr><td>jspider.threads.thinkers.monitoring.interval</td><td>(number)</td><td>Number of milliseconds between two monitoring 'snapshots' of the load on the thread pool</td></tr>
+  </table>
+  </p>
+  </subsection>
+</section>
+</body>
+</document>
+

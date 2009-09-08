@@ -1,0 +1,960 @@
+[engine.SpideringStartedEvent] http://www.cs.berkeley.edu/
+[site.SiteDiscoveredEvent] http://www.cs.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/robots.txt
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/robots.txt
+[site.RobotsTXTFetchedEvent] site: http://www.cs.berkeley.edu
+<robots.txt>
+User-agent: *
+Disallow: /logs
+Disallow: /idsg
+Disallow: /Soda
+Disallow: /iris
+
+</robots.txt>
+[site.UserAgentObeyedEvent] site: http://www.cs.berkeley.edu, userAgent: *
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/favicon.ico
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/favicon.ico'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Includes/eecsHome.css
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/Includes/eecsHome.css'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Includes/EECS-images/eecslogo.gif
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/Includes/EECS-images/eecslogo.gif'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/Includes/EECS-images/eecslogo.gif
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/'
+[site.SiteDiscoveredEvent] http://coe.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://coe.berkeley.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://coe.berkeley.edu/'
+[site.SiteDiscoveredEvent] http://www.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://www.berkeley.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.berkeley.edu/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/deptinfo/login.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/deptinfo/login.html'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/deptinfo/login.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/EECSbrochure/toc.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/EECSbrochure/toc.html'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/history.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/history.shtml'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/Impact.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/Impact.shtml'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Diversity/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Diversity/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/OutreachPrograms.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/OutreachPrograms.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/EECSbrochure/toc.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Directions/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Directions/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/officers.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/history.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/officers.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/Impact.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Diversity/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/education/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/education/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/OutreachPrograms.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Directions/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/education/degrees.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/education/degrees.shtml'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Prospective/ugrad.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Prospective/ugrad.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/officers.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Gradadm/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Gradadm/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/education/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Students/
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/education/degrees.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Students/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Prospective/ugrad.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Gradadm/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/education/courses.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/education/courses.shtml'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/education/usli/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/education/usli/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Students/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Research/
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/education/courses.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Research/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/education/usli/
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Research/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Research/Areas/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Research/Areas/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Research/Areas/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Research/Areas/Centers/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Research/Areas/Centers/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Research/Projects/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Research/Projects/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Research/Areas/Centers/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Pubs/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Pubs/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Research/Projects/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Visiting/Scholars/menu.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Visiting/Scholars/menu.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Pubs/
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Visiting/Scholars/menu.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/people.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/people.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/people.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Rosters/roster.name.nostudentee.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Rosters/roster.name.nostudentee.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Rosters/roster.name.nostudentee.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Faculty/Lists/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Faculty/Lists/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Faculty/Lists/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/staff.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/staff.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/staff.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Students/directories.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Students/directories.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Students/directories.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/alumni/lists.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/alumni/lists.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/alumni/lists.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/IPRO/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/IPRO/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/IPRO/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/IPRO/memberships.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/IPRO/memberships.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/IPRO/memberships.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/IPRO/VIF/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/IPRO/VIF/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/IPRO/VIF/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/IPRO/recruitment.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/IPRO/recruitment.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/IPRO/recruitment.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/IPRO/entrepreneur.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/IPRO/entrepreneur.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/IPRO/entrepreneur.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/IPRO/news.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/IPRO/news.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/IPRO/news.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/cal/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/cal/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/cal/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/IPRO/conferences.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/IPRO/conferences.shtml'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Colloquium/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Colloquium/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/news/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/news/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/IPRO/conferences.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Colloquium/
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Includes/EECS-images/cory_soda.logo.jpg
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/Includes/EECS-images/cory_soda.logo.jpg'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/news/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/EE/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/EE/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/Includes/EECS-images/cory_soda.logo.jpg
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/EE/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Resguide/stud.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Resguide/stud.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Resguide/stud.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Resguide/acad.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Resguide/acad.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Resguide/acad.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/staffinfo.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/staffinfo.shtml'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Resguide/admin.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Resguide/admin.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/staffinfo.shtml
+[site.SiteDiscoveredEvent] http://www.erso.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://www.erso.berkeley.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.erso.berkeley.edu/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Resguide/admin.shtml
+[site.SiteDiscoveredEvent] http://iris.eecs.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://iris.eecs.berkeley.edu
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://iris.eecs.berkeley.edu'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/emergency/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/emergency/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/deptinfo
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/deptinfo'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/emergency/
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/deptinfo
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Includes/EECS-images/soda.emblem.jpg
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/Includes/EECS-images/soda.emblem.jpg'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/Includes/EECS-images/soda.emblem.jpg
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Includes/Images/minilogo.jpg
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/Includes/Images/minilogo.jpg'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/Includes/Images/minilogo.jpg
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Visitors/employment.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Visitors/employment.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Visitors/employment.shtml
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/cs_brochure_final.pdf
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/cs_brochure_final.pdf'
+[site.SiteDiscoveredEvent] http://www.citris.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://www.citris.berkeley.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.citris.berkeley.edu/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Faculty/Lists/CS/list.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Faculty/Lists/CS/list.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Faculty/Lists/CS/list.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Faculty/Lists/CS/visiting.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Faculty/Lists/CS/visiting.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Faculty/Lists/CS/visiting.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Visiting/Scholars/CS/scholars.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Visiting/Scholars/CS/scholars.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Visiting/Scholars/CS/scholars.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Resguide/staff.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Resguide/staff.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Resguide/staff.shtml
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/People/alumni.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/People/alumni.shtml'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Deptonly/Rosters/roster.name.cs.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/Deptonly/Rosters/roster.name.cs.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/Deptonly/Rosters/roster.name.cs.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Deptonly/Rosters/roster.room.soda.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Deptonly/Rosters/roster.room.soda.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Deptonly/Rosters/roster.room.soda.html
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Deptonly/Rosters/roster.name.csgrad.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/Deptonly/Rosters/roster.name.csgrad.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/Deptonly/Rosters/roster.name.csgrad.html
+[site.SiteDiscoveredEvent] http://www-inst.eecs.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://www-inst.eecs.berkeley.edu/classes-eecs.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www-inst.eecs.berkeley.edu/classes-eecs.html'
+[site.SiteDiscoveredEvent] http://sis.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://sis.berkeley.edu/catalog/gcc_list_crse_req
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://sis.berkeley.edu/catalog/gcc_list_crse_req'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Scheduling/CS/schedule.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Scheduling/CS/schedule.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Scheduling/CS/schedule.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Scheduling/CS/schedule-draft.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Scheduling/CS/schedule-draft.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Scheduling/CS/schedule-draft.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Policies/enrollment.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Policies/enrollment.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Policies/enrollment.shtml
+[resource.ResourceDiscoveredEvent] http://www-inst.eecs.berkeley.edu/~selfpace/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www-inst.eecs.berkeley.edu/~selfpace/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Scheduling/CS/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Scheduling/CS/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Scheduling/CS/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Research/Areas/CS/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Research/Areas/CS/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Research/Areas/CS/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Research/Projects/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Pubs/TechRpts/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Pubs/TechRpts/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Pubs/TechRpts/
+[site.SiteDiscoveredEvent] https://buffy.eecs.berkeley.edu
+[resource.ResourceDiscoveredEvent] https://buffy.eecs.berkeley.edu/PHP/facres/menu.php
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'https://buffy.eecs.berkeley.edu/PHP/facres/menu.php'
+[site.SiteDiscoveredEvent] ftp://ftp.cs.berkeley.edu
+[resource.ResourceDiscoveredEvent] ftp://ftp.cs.berkeley.edu/ucb/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'ftp://ftp.cs.berkeley.edu/ucb/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Peer/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/Peer/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Peer/resources/cshandbook.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Peer/resources/cshandbook.html'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Students/Grad/Affairs/CS/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Students/Grad/Affairs/CS/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Students/organizations.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Students/organizations.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Peer/resources/cshandbook.html
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Policies/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Policies/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Forms/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Forms/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Students/Grad/Affairs/CS/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Deptonly/Rosters/roster.room.soda.html'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Campus/Directions/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Campus/Directions/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Resguide/roomsched.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Resguide/roomsched.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Students/organizations.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Forms/soda.keyreq.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Forms/soda.keyreq.shtml'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Forms/soda.bldg.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Forms/soda.bldg.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Policies/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/emergency/sodaemergency.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/emergency/sodaemergency.shtml'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/department/emergency/sodaill.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/department/emergency/sodaill.shtml'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~sequin/soda/soda.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/~sequin/soda/soda.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Forms/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Campus/Directions/
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Includes/copyright.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/Includes/copyright.shtml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Resguide/roomsched.shtml
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/help
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/' to 'http://www.eecs.berkeley.edu/help'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Forms/soda.bldg.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Forms/soda.keyreq.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/emergency/sodaemergency.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/department/emergency/sodaill.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~sequin/soda/soda.html
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Includes/copyright.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/help
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/favicon.ico
+[resource.ResourceIgnoredForParsingEvent] http://www.cs.berkeley.edu/favicon.ico
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/Peer/' to 'http://www.cs.berkeley.edu/Peer/'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/Peer/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/Peer/' to 'http://www.cs.berkeley.edu/Peer/'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/Peer/
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/People/alumni.shtml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/Menubars/cs.logo.gif
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.berkeley.edu/Menubars/cs.logo.gif'
+[site.SiteDiscoveredEvent] http://www.scottaaronson.com
+[resource.ResourceDiscoveredEvent] http://www.scottaaronson.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.scottaaronson.com'
+[site.SiteDiscoveredEvent] http://www.research.ibm.com
+[resource.ResourceDiscoveredEvent] http://www.research.ibm.com/people/d/dfb/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.research.ibm.com/people/d/dfb/'
+[site.SiteDiscoveredEvent] http://ssli.ee.washington.edu
+[resource.ResourceDiscoveredEvent] http://ssli.ee.washington.edu/~bilmes/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://ssli.ee.washington.edu/~bilmes/'
+[site.SiteDiscoveredEvent] http://www.GreencourtSoftware.com
+[resource.ResourceDiscoveredEvent] http://www.GreencourtSoftware.com/Channing
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.GreencourtSoftware.com/Channing'
+[site.SiteDiscoveredEvent] http://www.cs.bu.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.bu.edu/fac/byers
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.bu.edu/fac/byers'
+[site.SiteDiscoveredEvent] http://www.cs.uwm.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.uwm.edu/faculty/boyland
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.uwm.edu/faculty/boyland'
+[site.SiteDiscoveredEvent] http://www.kiskeya.net
+[resource.ResourceDiscoveredEvent] http://www.kiskeya.net/ramon/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.kiskeya.net/ramon/'
+[site.SiteDiscoveredEvent] http://www.cs.drexel.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.drexel.edu/~bchar
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.drexel.edu/~bchar'
+[site.SiteDiscoveredEvent] http://www.blif.org
+[resource.ResourceDiscoveredEvent] http://www.blif.org/~satrajit
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.blif.org/~satrajit'
+[site.SiteDiscoveredEvent] http://www.cs.sunysb.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.sunysb.edu/~chiueh
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.sunysb.edu/~chiueh'
+[site.SiteDiscoveredEvent] http://icemcfd.com
+[resource.ResourceDiscoveredEvent] http://icemcfd.com/wayne.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://icemcfd.com/wayne.html'
+[site.SiteDiscoveredEvent] http://achoi-usa.spaces.live.com
+[resource.ResourceDiscoveredEvent] http://achoi-usa.spaces.live.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://achoi-usa.spaces.live.com'
+[site.SiteDiscoveredEvent] http://www.theether.org
+[resource.ResourceDiscoveredEvent] http://www.theether.org/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.theether.org/'
+[site.SiteDiscoveredEvent] http://www.douglis.org
+[resource.ResourceDiscoveredEvent] http://www.douglis.org/fred
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.douglis.org/fred'
+[site.SiteDiscoveredEvent] http://www.inria.fr
+[resource.ResourceDiscoveredEvent] http://www.inria.fr/saga/emiris/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.inria.fr/saga/emiris/'
+[site.SiteDiscoveredEvent] http://www.cs.arizona.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.arizona.edu/people/will/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.arizona.edu/people/will/'
+[site.SiteDiscoveredEvent] http://www-nrg.ee.lbl.gov
+[resource.ResourceDiscoveredEvent] http://www-nrg.ee.lbl.gov/floyd/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www-nrg.ee.lbl.gov/floyd/'
+[site.SiteDiscoveredEvent] http://www.cis.ohio-state.edu
+[resource.ResourceDiscoveredEvent] http://www.cis.ohio-state.edu/~fosler
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cis.ohio-state.edu/~fosler'
+[site.SiteDiscoveredEvent] http://www.ssec.wisc.edu
+[resource.ResourceDiscoveredEvent] http://www.ssec.wisc.edu/~dglo/index.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.ssec.wisc.edu/~dglo/index.html'
+[site.SiteDiscoveredEvent] http://kevingong.com
+[resource.ResourceDiscoveredEvent] http://kevingong.com/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://kevingong.com/'
+[site.SiteDiscoveredEvent] http://www.softcomputing.es
+[resource.ResourceDiscoveredEvent] http://www.softcomputing.es/en/detail.php
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.softcomputing.es/en/detail.php'
+[site.SiteDiscoveredEvent] http://csua.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://csua.berkeley.edu/~gmartin
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://csua.berkeley.edu/~gmartin'
+[site.SiteDiscoveredEvent] http://pages.prodigy.net
+[resource.ResourceDiscoveredEvent] http://pages.prodigy.net/hamachi/Hamachi/Gordon.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://pages.prodigy.net/hamachi/Hamachi/Gordon.html'
+[site.SiteDiscoveredEvent] http://www.well.com
+[resource.ResourceDiscoveredEvent] http://www.well.com/~oh
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.well.com/~oh'
+[site.SiteDiscoveredEvent] http://www.tophe.net
+[resource.ResourceDiscoveredEvent] http://www.tophe.net/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.tophe.net/'
+[resource.ResourceDiscoveredEvent] http://icemcfd.com/mike.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://icemcfd.com/mike.html'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/cs_brochure_final.pdf
+[site.SiteDiscoveredEvent] http://www.ocf.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://www.ocf.berkeley.edu/~yangte
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.ocf.berkeley.edu/~yangte'
+[resource.ResourceIgnoredForParsingEvent] http://www.cs.berkeley.edu/cs_brochure_final.pdf
+[site.SiteDiscoveredEvent] http://www.stanford.edu
+[resource.ResourceDiscoveredEvent] http://www.stanford.edu/~jurafsky/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.stanford.edu/~jurafsky/'
+[site.SiteDiscoveredEvent] http://www.cis.upenn.edu
+[resource.ResourceDiscoveredEvent] http://www.cis.upenn.edu/~cisfac/kannan/kannan.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cis.upenn.edu/~cisfac/kannan/kannan.html'
+[site.SiteDiscoveredEvent] http://www-ece.rice.edu
+[resource.ResourceDiscoveredEvent] http://www-ece.rice.edu/~knightly/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www-ece.rice.edu/~knightly/'
+[site.SiteDiscoveredEvent] http://users.ap.net
+[resource.ResourceDiscoveredEvent] http://users.ap.net/~kupfer/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://users.ap.net/~kupfer/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.berkeley.edu/~landay'
+[resource.ResourceDiscoveredEvent] http://www.csua.berkeley.edu/~cmlee
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.csua.berkeley.edu/~cmlee'
+[site.SiteDiscoveredEvent] http://www.cs.unc.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.unc.edu/~lorenzen
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.unc.edu/~lorenzen'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/Menubars/cs.logo.gif
+[site.SiteDiscoveredEvent] http://www.0011.com
+[resource.ResourceDiscoveredEvent] http://www.0011.com/kin/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.0011.com/kin/'
+[site.SiteDiscoveredEvent] http://www.newmediarepublic.com
+[resource.ResourceDiscoveredEvent] http://www.newmediarepublic.com/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.newmediarepublic.com/'
+[resource.ResourceIgnoredForParsingEvent] http://www.cs.berkeley.edu/Menubars/cs.logo.gif
+[resource.ResourceDiscoveredEvent] http://www.cs.unc.edu/~manocha
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.unc.edu/~manocha'
+[site.SiteDiscoveredEvent] http://www.iiia.csic.es
+[resource.ResourceDiscoveredEvent] http://www.iiia.csic.es/~mantaras
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.iiia.csic.es/~mantaras'
+[site.SiteDiscoveredEvent] http://www.cs.colorado.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.colorado.edu/homes/martin/public_html/Home.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.colorado.edu/homes/martin/public_html/Home.html'
+[site.SiteDiscoveredEvent] http://www.cs.umbc.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.umbc.edu/~mayfield/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.umbc.edu/~mayfield/'
+[site.SiteDiscoveredEvent] http://www.bobmayo.com
+[resource.ResourceDiscoveredEvent] http://www.bobmayo.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.bobmayo.com'
+[site.SiteDiscoveredEvent] http://bcn.boulder.co.us
+[resource.ResourceDiscoveredEvent] http://bcn.boulder.co.us/~neal/Home.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://bcn.boulder.co.us/~neal/Home.html'
+[site.SiteDiscoveredEvent] http://www-ee.Stanford.EDU:80
+[resource.ResourceDiscoveredEvent] http://www-ee.Stanford.EDU:80/~nickm/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www-ee.Stanford.EDU:80/~nickm/'
+[site.SiteDiscoveredEvent] http://www.me.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://www.me.berkeley.edu/faculty/mcmains/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.me.berkeley.edu/faculty/mcmains/'
+[site.SiteDiscoveredEvent] http://www.soe.ucsc.edu
+[resource.ResourceDiscoveredEvent] http://www.soe.ucsc.edu/~elm/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.soe.ucsc.edu/~elm/'
+[site.SiteDiscoveredEvent] http://www.geocities.com
+[resource.ResourceDiscoveredEvent] http://www.geocities.com/kvman1999
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.geocities.com/kvman1999'
+[site.SiteDiscoveredEvent] http://www.greenet.com
+[resource.ResourceDiscoveredEvent] http://www.greenet.com/~brion
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.greenet.com/~brion'
+[resource.ResourceDiscoveredEvent] http://www.csua.berkeley.edu/~piaw
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.csua.berkeley.edu/~piaw'
+[site.SiteDiscoveredEvent] http://www.wisdom.weizmann.ac.il
+[resource.ResourceDiscoveredEvent] http://www.wisdom.weizmann.ac.il/~naor
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.wisdom.weizmann.ac.il/~naor'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay' to 'http://www.cs.berkeley.edu/~landay/'
+[resource.ResourceDiscoveredEvent] http://www.cs.uwm.edu/faculty/munson/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.uwm.edu/faculty/munson/'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/~landay
+[site.SiteDiscoveredEvent] http://www.norvig.com
+[resource.ResourceDiscoveredEvent] http://www.norvig.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.norvig.com'
+[site.SiteDiscoveredEvent] http://www.lbl.gov
+[resource.ResourceDiscoveredEvent] http://www.lbl.gov/~olken/homepage.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.lbl.gov/~olken/homepage.html'
+[site.SiteDiscoveredEvent] http://ti.arc.nasa.gov
+[resource.ResourceDiscoveredEvent] http://ti.arc.nasa.gov/people/oza
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://ti.arc.nasa.gov/people/oza'
+[resource.ResourceDiscoveredEvent] http://www.geocities.com/wheelife2005/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.geocities.com/wheelife2005/'
+[site.SiteDiscoveredEvent] http://www.cs.uh.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.uh.edu/~paris
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.uh.edu/~paris'
+[site.SiteDiscoveredEvent] http://www-cse.ucsd.edu
+[resource.ResourceDiscoveredEvent] http://www-cse.ucsd.edu/users/pasquale
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www-cse.ucsd.edu/users/pasquale'
+[resource.ResourceDiscoveredEvent] http://http.cs.berkeley.edu/~patterson
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://http.cs.berkeley.edu/~patterson'
+[site.SiteDiscoveredEvent] http://cs1.cs.nyu.edu
+[resource.ResourceDiscoveredEvent] http://cs1.cs.nyu.edu/peck/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://cs1.cs.nyu.edu/peck/'
+[site.SiteDiscoveredEvent] http://www.eecs.umich.edu
+[resource.ResourceDiscoveredEvent] http://www.eecs.umich.edu/~aprakash/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.eecs.umich.edu/~aprakash/'
+[site.SiteDiscoveredEvent] http://www.iki.fi
+[resource.ResourceDiscoveredEvent] http://www.iki.fi/~rimey/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.iki.fi/~rimey/'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/Includes/eecsHome.css
+[site.SiteDiscoveredEvent] http://tonyrose.us
+[resource.ResourceDiscoveredEvent] http://tonyrose.us
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://tonyrose.us'
+[site.SiteDiscoveredEvent] http://www.cs.ucsb.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.ucsb.edu/~schauser
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.ucsb.edu/~schauser'
+[site.SiteDiscoveredEvent] http://www.speech.sri.com
+[resource.ResourceDiscoveredEvent] http://www.speech.sri.com/people/stolcke
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.speech.sri.com/people/stolcke'
+[resource.ResourceDiscoveredEvent] http://www.csua.berkeley.edu/~stevensn
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.csua.berkeley.edu/~stevensn'
+[resource.ResourceIgnoredForFetchingEvent] http://http.cs.berkeley.edu/~patterson
+[resource.ResourceIgnoredForParsingEvent] http://www.cs.berkeley.edu/Includes/eecsHome.css
+[resource.ResourceDiscoveredEvent] http://www.csua.berkeley.edu/~steve/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.csua.berkeley.edu/~steve/'
+[site.SiteDiscoveredEvent] http://www.andrew.cmu.edu
+[resource.ResourceDiscoveredEvent] http://www.andrew.cmu.edu/user/tinaw/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.andrew.cmu.edu/user/tinaw/'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/~landay/
+[site.SiteDiscoveredEvent] http://www.cs.ust.hk
+[resource.ResourceDiscoveredEvent] http://www.cs.ust.hk/faculty/dekai/bio.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.ust.hk/faculty/dekai/bio.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay' to 'http://www.cs.berkeley.edu/~landay/'
+[site.SiteDiscoveredEvent] http://ist.psu.edu
+[resource.ResourceDiscoveredEvent] http://ist.psu.edu/yen
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://ist.psu.edu/yen'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/~landay
+[site.SiteDiscoveredEvent] http://home.comcast.net
+[resource.ResourceDiscoveredEvent] http://home.comcast.net/~andrew.yu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://home.comcast.net/~andrew.yu/'
+[resource.ResourceDiscoveredEvent] http://www.CSUA.Berkeley.EDU/~yuen
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.CSUA.Berkeley.EDU/~yuen'
+[site.SiteDiscoveredEvent] http://www.cs.cmu.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.cmu.edu/~hzhang
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.cmu.edu/~hzhang'
+[site.SiteDiscoveredEvent] http://anytime.cs.umass.edu
+[resource.ResourceDiscoveredEvent] http://anytime.cs.umass.edu/~shlomo
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://anytime.cs.umass.edu/~shlomo'
+[site.SiteDiscoveredEvent] http://www.cs.utexas.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.utexas.edu/users/diz
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.utexas.edu/users/diz'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/index_files/filelist.xml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/index_files/filelist.xml'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/contact
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.berkeley.edu/contact'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/index_files/editdata.mso
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/index_files/editdata.mso'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.eecs.berkeley.edu/EE/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Help/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.eecs.berkeley.edu/Help/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/pictures/chalk.gif
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/pictures/chalk.gif'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Search/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.eecs.berkeley.edu/Search/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/pictures/landay-medium.jpg
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/pictures/landay-medium.jpg'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/Prospective/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.eecs.berkeley.edu/Prospective/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceDiscoveredEvent] http://www.berkeley.edu
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.berkeley.edu'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.berkeley.edu'
+[resource.ResourceDiscoveredEvent] http://www.eecs.berkeley.edu/help/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.eecs.berkeley.edu/help/'
+[site.SiteDiscoveredEvent] http://www.designofsites.com
+[resource.ResourceDiscoveredEvent] http://www.designofsites.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.designofsites.com'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/People/alumni.shtml' to 'http://www.eecs.berkeley.edu/Includes/copyright.shtml'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/pictures/dos-cover.gif
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/pictures/dos-cover.gif'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/People/alumni.shtml
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/index_files/filelist.xml
+[resource.ResourceDiscoveredEvent] http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceDiscoveredEvent] http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[site.SiteDiscoveredEvent] http://www.unex.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://www.unex.berkeley.edu/eng/sum/336701.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.unex.berkeley.edu/eng/sum/336701.html'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/course.jpg
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/course.jpg'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.unex.berkeley.edu/eng/sum/336701.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/index_files/editdata.mso
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.unex.berkeley.edu/eng/sum/336701.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Help/
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/pictures/chalk.gif
+[resource.ResourceDiscoveredEvent] http://HTTP.CS.Berkeley.EDU/%7Elanday/past.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/%7Elanday/past.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/contact' to 'http://www.eecs.berkeley.edu/help'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Search/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/contact
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/research/overview.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/research/overview.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/pictures/landay-medium.jpg
+[site.SiteDiscoveredEvent] http://guir.cs.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/silk/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://guir.cs.berkeley.edu/projects/silk/'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://guir.cs.berkeley.edu/'
+[resource.ResourceDiscoveredEvent] http://www.coe.berkeley.edu/labnotes/0502/bid.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.coe.berkeley.edu/labnotes/0502/bid.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/Prospective/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/pictures/my-students.jpg
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/pictures/my-students.jpg'
+[resource.ResourceIgnoredForFetchingEvent] http://www.eecs.berkeley.edu/help/
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/students.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/students.html'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/administration/applicants.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/administration/applicants.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/research/cv.pdf
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/research/cv.pdf'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/pictures/dos-cover.gif
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/research/publications/publications.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/research/publications/publications.html'
+[resource.ResourceIgnoredForFetchingEvent] http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/personal.htm
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/personal.htm'
+[resource.ResourceIgnoredForFetchingEvent] http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF
+[resource.ResourceDiscoveredEvent] http://HTTP.CS.Berkeley.EDU/~landay/research/talks/talks.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://HTTP.CS.Berkeley.EDU/~landay/research/talks/talks.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay/personal.htm'
+[resource.ResourceIgnoredForFetchingEvent] http://HTTP.CS.Berkeley.EDU/%7Elanday/past.html
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay//
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/' to 'http://www.cs.berkeley.edu/~landay//'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/~landay/
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/research/overview.html
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/pictures/my-students.jpg
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/administration/applicants.html
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/research/cv.pdf
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/research/publications/publications.html
+[resource.ResourceIgnoredForFetchingEvent] http://HTTP.CS.Berkeley.EDU/~landay/research/talks/talks.html
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay//
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/contact' to 'http://www.eecs.berkeley.edu/help'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/contact
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/~landay/course.jpg
+[resource.ResourceIgnoredForParsingEvent] http://www.cs.berkeley.edu/~landay/course.jpg
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/~landay/personal.htm
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/personal_files/filelist.xml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://www.cs.berkeley.edu/~landay/personal_files/filelist.xml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/personal_files/filelist.xml
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/personal_files/editdata.mso
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://www.cs.berkeley.edu/~landay/personal_files/editdata.mso'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/personal_files/editdata.mso
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://www.cs.berkeley.edu/~landay/pictures/chalk.gif'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/running.htm
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://www.cs.berkeley.edu/~landay/running.htm'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/wedding/index.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://www.cs.berkeley.edu/~landay/wedding/index.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/wedding/index.html
+[resource.ResourceDiscoveredEvent] http://www.cs.cmu.edu/~landay
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://www.cs.cmu.edu/~landay'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/index.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/personal.htm' to 'http://www.cs.berkeley.edu/~landay/index.html'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/~landay/personal.htm
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/~landay/students.html
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/students_files/filelist.xml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/~landay/students_files/filelist.xml'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/students_files/filelist.xml
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/students_files/editdata.mso
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/~landay/students_files/editdata.mso'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/students_files/editdata.mso
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/~landay/pictures/chalk.gif'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[site.SiteDiscoveredEvent] http://guir.berkeley.edu
+[resource.ResourceDiscoveredEvent] http://guir.berkeley.edu/people/everitt/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/people/everitt/'
+[resource.ResourceDiscoveredEvent] http://guir.berkeley.edu/outpost
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/outpost'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~jasonh
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/~jasonh'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/satin/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/satin/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Ejasonh/research/cia/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Ejasonh/research/cia/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/%7Ejasonh/research/cia/
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Exdjiang/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Exdjiang/'
+[resource.ResourceDiscoveredEvent] http://guir.berkeley.edu/projects/cfabric/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/cfabric/'
+[resource.ResourceDiscoveredEvent] http://www-inst.eecs.berkeley.edu/~hesham
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-inst.eecs.berkeley.edu/~hesham'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/ic2d/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/ic2d/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Esrk
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Esrk'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/outpost
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/outpost'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/suede/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~jimlin
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/~jimlin'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/silk/vl/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/silk/vl/'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/denim/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/denim/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~newman
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/~newman'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/denim
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/denim'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/outpost'
+[site.SiteDiscoveredEvent] http://www.parc.xerox.com
+[resource.ResourceDiscoveredEvent] http://www.parc.xerox.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.parc.xerox.com'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Eaks
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Eaks'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Eaks/CS260Project/index.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Eaks/CS260Project/index.html'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/%7Eaks/CS260Project/index.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Emwalker/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Emwalker/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Ewaterson/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Ewaterson/'
+[resource.ResourceDiscoveredEvent] http://guir.berkeley.edu/projects/webquilt/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/webquilt/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[site.SiteDiscoveredEvent] http://charon.sfsu.edu
+[resource.ResourceDiscoveredEvent] http://charon.sfsu.edu/yeroc.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://charon.sfsu.edu/yeroc.html'
+[resource.ResourceDiscoveredEvent] http://guir.cs.berkeley.edu/projects/notepals
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/notepals'
+[resource.ResourceDiscoveredEvent] http://guir.berkeley.edu/projects/outpost
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/outpost'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[site.SiteDiscoveredEvent] http://students.seattleu.edu
+[resource.ResourceDiscoveredEvent] http://students.seattleu.edu/matthewt/index.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://students.seattleu.edu/matthewt/index.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/webquilt/'
+[resource.EMailAddressDiscoveredEvent] 'vibhav@uclink4.berkeley.edu'
+[resource.EMailAddressReferenceDiscoveredEvent] in http://www.cs.berkeley.edu/~landay/students.html : '${event.emailAddress}'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/webquilt/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Etsohn/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Etsohn/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/webquilt/'
+[resource.ResourceDiscoveredEvent] http://www-inst.eecs.berkeley.edu/%7Enma/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-inst.eecs.berkeley.edu/%7Enma/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[site.SiteDiscoveredEvent] http://www.cs.ucla.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.ucla.edu
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.ucla.edu'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Ebilz
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Ebilz'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/outpost'
+[site.SiteDiscoveredEvent] http://www.edgelab.sfu.ca
+[resource.ResourceDiscoveredEvent] http://www.edgelab.sfu.ca/projects/palm_new.htm
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.edgelab.sfu.ca/projects/palm_new.htm'
+[resource.ResourceDiscoveredEvent] http://www.geocities.com/psyche0417/index.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.geocities.com/psyche0417/index.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Ejackchen
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Ejackchen'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[resource.ResourceDiscoveredEvent] http://www-inst.eecs.berkeley.edu/%7Evsc
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-inst.eecs.berkeley.edu/%7Evsc'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/notepals'
+[site.SiteDiscoveredEvent] http://www.viant.com
+[resource.ResourceDiscoveredEvent] http://www.viant.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.viant.com'
+[resource.ResourceDiscoveredEvent] http://http.cs.berkeley.edu/~rcdavis/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://http.cs.berkeley.edu/~rcdavis/'
+[resource.ResourceIgnoredForFetchingEvent] http://http.cs.berkeley.edu/~rcdavis/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/notepals'
+[site.SiteDiscoveredEvent] http://www.borisfx.com
+[resource.ResourceDiscoveredEvent] http://www.borisfx.com/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.borisfx.com/'
+[resource.ResourceDiscoveredEvent] http://www-inst.eecs.berkeley.edu/%7Erfarrell
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-inst.eecs.berkeley.edu/%7Erfarrell'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/outpost'
+[site.SiteDiscoveredEvent] http://www.fury.com
+[resource.ResourceDiscoveredEvent] http://www.fury.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.fury.com'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/webquilt/'
+[site.SiteDiscoveredEvent] http://ilpsoft.eecs.berkeley.edu:9636
+[resource.ResourceDiscoveredEvent] http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/atf.1.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/atf.1.html'
+[site.SiteDiscoveredEvent] http://www.ee.washington.edu
+[resource.ResourceDiscoveredEvent] http://www.ee.washington.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.ee.washington.edu/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Ejheer/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Ejheer/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/webquilt/'
+[site.SiteDiscoveredEvent] http://home.earthlink.net
+[resource.ResourceDiscoveredEvent] http://home.earthlink.net/%7Ebhelfrich/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://home.earthlink.net/%7Ebhelfrich/'
+[resource.ResourceDiscoveredEvent] http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/helfrich.1.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/helfrich.1.html'
+[site.SiteDiscoveredEvent] http://www.telelogue.com
+[resource.ResourceDiscoveredEvent] http://www.telelogue.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.telelogue.com'
+[resource.EMailAddressDiscoveredEvent] 'fuzzylettuce@hotmail.com'
+[resource.EMailAddressReferenceDiscoveredEvent] in http://www.cs.berkeley.edu/~landay/students.html : '${event.emailAddress}'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/denim/'
+[resource.ResourceDiscoveredEvent] http://www.andrew.cmu.edu/user/huang2/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.andrew.cmu.edu/user/huang2/'
+[resource.ResourceDiscoveredEvent] http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/cathyh.1.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/cathyh.1.html'
+[site.SiteDiscoveredEvent] http://www.hcii.cmu.edu
+[resource.ResourceDiscoveredEvent] http://www.hcii.cmu.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.hcii.cmu.edu/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Etwinkle
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Etwinkle'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/notepals'
+[site.SiteDiscoveredEvent] http://www.siebel.com
+[resource.ResourceDiscoveredEvent] http://www.siebel.com/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.siebel.com/'
+[resource.ResourceDiscoveredEvent] http://www-inst.EECS.Berkeley.EDU/%7Enena/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-inst.EECS.Berkeley.EDU/%7Enena/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Emihut/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Emihut/'
+[resource.ResourceDiscoveredEvent] http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/mihut.1.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/mihut.1.html'
+[resource.ResourceDiscoveredEvent] http://www-inst.eecs.berkeley.edu/%7Ekjoshi
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-inst.eecs.berkeley.edu/%7Ekjoshi'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/mihut.1.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/denim'
+[site.SiteDiscoveredEvent] http://www.sendmail.com
+[resource.ResourceDiscoveredEvent] http://www.sendmail.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.sendmail.com'
+[resource.ResourceDiscoveredEvent] http://www-inst.EECS.Berkeley.EDU/%7Ereblee/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-inst.EECS.Berkeley.EDU/%7Ereblee/'
+[resource.ResourceDiscoveredEvent] http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/rcdavis.1.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/rcdavis.1.html'
+[site.SiteDiscoveredEvent] http://www.nortelnetworks.com
+[resource.ResourceDiscoveredEvent] http://www.nortelnetworks.com/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.nortelnetworks.com/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/denim/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Efli
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Efli'
+[resource.ResourceDiscoveredEvent] http://guir.berkeley.edu/projects/depbl/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/depbl/'
+[resource.ResourceDiscoveredEvent] http://www-2.cs.cmu.edu/%7Echrisl/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-2.cs.cmu.edu/%7Echrisl/'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/%7Eallanl/research/gdt.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/%7Eallanl/research/gdt.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.hcii.cmu.edu/'
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/%7Eallanl/research/gdt.html
+[resource.EMailAddressDiscoveredEvent] 'joseph.michiels@sf.razorfish.com'
+[resource.EMailAddressReferenceDiscoveredEvent] in http://www.cs.berkeley.edu/~landay/students.html : '${event.emailAddress}'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/notepals'
+[site.SiteDiscoveredEvent] http://www.razorfish.com
+[resource.ResourceDiscoveredEvent] http://www.razorfish.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.razorfish.com'
+[resource.ResourceDiscoveredEvent] http://www.cs.colorado.edu/%7Ecbmorrey/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.colorado.edu/%7Ecbmorrey/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/rcdavis.1.html'
+[resource.ResourceDiscoveredEvent] http://www.cs.colorado.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.colorado.edu/'
+[resource.ResourceDiscoveredEvent] http://www-inst.eecs.berkeley.edu/%7Easalazar/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www-inst.eecs.berkeley.edu/%7Easalazar/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[site.SiteDiscoveredEvent] http://www.cs.tamu.edu
+[resource.ResourceDiscoveredEvent] http://www.cs.tamu.edu/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.tamu.edu/'
+[resource.ResourceDiscoveredEvent] http://ilpsoft.eecs.berkeley.edu:9636/%7Eilpsoft/98abstracts/rcdavis.1.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/%7Eilpsoft/98abstracts/rcdavis.1.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/notepals'
+[site.SiteDiscoveredEvent] http://www.daimi.au.dk
+[resource.ResourceDiscoveredEvent] http://www.daimi.au.dk/%7Emiksen/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.daimi.au.dk/%7Emiksen/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.berkeley.edu/projects/outpost'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/denim/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/denim/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://guir.cs.berkeley.edu/projects/suede/'
+[site.SiteDiscoveredEvent] http://www.cisco.com
+[resource.ResourceDiscoveredEvent] http://www.cisco.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cisco.com'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/~landay/index.html
+[resource.ResourceDiscoveredEvent] http://www.geocities.com/SiliconValley/Heights/5025/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.geocities.com/SiliconValley/Heights/5025/'
+[resource.ResourceDiscoveredEvent] http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/henryyu.1.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://ilpsoft.eecs.berkeley.edu:9636/~ilpsoft/98abstracts/henryyu.1.html'
+[site.SiteDiscoveredEvent] http://www.intel.com
+[resource.ResourceDiscoveredEvent] http://www.intel.com
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.intel.com'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/students.html' to 'http://www.cs.berkeley.edu/~landay/index.html'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/~landay/students.html
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/index_files/filelist.xml'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/index_files/editdata.mso'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/pictures/chalk.gif'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/index.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/pictures/landay-medium.jpg'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.berkeley.edu'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.designofsites.com'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/pictures/dos-cover.gif'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.unex.berkeley.edu/eng/sum/336701.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/course.jpg'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.unex.berkeley.edu/eng/sum/336701.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.unex.berkeley.edu/eng/sum/336701.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/%7Elanday/past.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/research/overview.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://guir.cs.berkeley.edu/projects/silk/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://guir.cs.berkeley.edu/'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.coe.berkeley.edu/labnotes/0502/bid.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/pictures/my-students.jpg'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/students.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/administration/applicants.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/research/cv.pdf'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/research/publications/publications.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/personal.htm'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://HTTP.CS.Berkeley.EDU/~landay/research/talks/talks.html'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/personal.htm'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/index.html' to 'http://www.cs.berkeley.edu/~landay/'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/~landay/index.html
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Esrk
+[site.SiteDiscoveredEvent] http://jameslin.name
+[resource.ResourceDiscoveredEvent] http://jameslin.name
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~jimlin' to 'http://jameslin.name'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/~jimlin
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~jimlin' to 'http://jameslin.name'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/~jimlin
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/~newman
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Eaks
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Emwalker/
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Ewaterson/
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Etsohn/
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Ebilz
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Ejackchen
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/%7Ejheer/
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/%7Ejheer/
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Etwinkle
+[resource.ResourceDiscoveredEvent] http://www.csua.berkeley.edu/~mihut/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/%7Emihut/' to 'http://www.csua.berkeley.edu/~mihut/'
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/%7Emihut/
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/%7Emihut/' to 'http://www.csua.berkeley.edu/~mihut/'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/%7Emihut/
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Efli
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/%7Exdjiang/
+[resource.ResourceFetchErrorEvent] http://www.cs.berkeley.edu/~jasonh
+[resource.ResourceFetchedEvent] http://www.cs.berkeley.edu/~landay/running.htm
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/running_files/filelist.xml
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/running.htm' to 'http://www.cs.berkeley.edu/~landay/running_files/filelist.xml'
+[resource.ResourceDiscoveredEvent] http://www.cs.berkeley.edu/~landay/running_files/editdata.mso
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/running.htm' to 'http://www.cs.berkeley.edu/~landay/running_files/editdata.mso'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/running.htm' to 'http://www.cs.berkeley.edu/~landay/pictures/chalk.gif'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/running.htm' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineLeft.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/running.htm' to 'http://HTTP.CS.Berkeley.EDU/~landay/pictures/LineRight.GIF'
+[resource.ResourceReferenceDiscoveredEvent] from 'http://www.cs.berkeley.edu/~landay/running.htm' to 'http://www.cs.berkeley.edu/~landay/personal.htm'
+[resource.ResourceParsedEvent] http://www.cs.berkeley.edu/~landay/running.htm
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/running_files/filelist.xml
+[resource.ResourceIgnoredForFetchingEvent] http://www.cs.berkeley.edu/~landay/running_files/editdata.mso
+[engine.SpideringSummaryEvent]
+  known urls ............. : 284
+
+  visited urls ........... : 19
+  parsed urls ............ : 13
+  parse ignored urls ..... : 6
+  parse error urls ....... : 0
+
+  not visited urls ....... : 265
+  fetching ignored urls .. : 253
+  forbidden urls ......... : 0
+  fetch error urls ....... : 12
+
+  not yet  visited urls .. : 0
+[engine.SpideringStoppedEvent]
