@@ -1,0 +1,618 @@
+<html>
+<head>
+    <title>cache4j</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=windows-1251">
+    <link rel="stylesheet" href="style.css" type="text/css">
+</head>
+
+<body bgcolor="#EFEFEF" text="#000000" leftmargin="0" topmargin="0" marginwidth="0" marginheight="0">
+<table width="600" border="0" cellspacing="1" cellpadding="1" align="center" class="text">
+    <tr>
+        <td>&nbsp; </td>
+    </tr>
+</table>
+<table width="600" border="0" cellspacing="5" cellpadding="1" align="center">
+<tr>
+    <td class="logo"><b>cache4j - Tutorial</b></td>
+</tr>
+<tr>
+<td class="brdr">
+<table width="100%" border="0" cellspacing="10" cellpadding="0">
+<tr>
+<td>
+<table width="100%" border="0" cellspacing="1" cellpadding="1" class="section">
+    <tr>
+        <td><a href="#feature">1. Основные возможности</a></td>
+    </tr>
+    <tr>
+        <td><a href="#runtimeJava">2. Требования к runtime Java</a></td>
+    </tr>
+    <tr>
+        <td><a href="#install">3. Что нужно для использования cache4j
+            ?</a></td>
+    </tr>
+    <tr>
+        <td><a href="#interface">4. Основные интерфейсы cache4j</a></td>
+    </tr>
+    <tr>
+        <td><a href="#implementation">5. Реализации</a></td>
+    </tr>
+    <tr>
+        <td><a href="#evictalg">6. Вытеснение объектов</a></td>
+    </tr>
+    <tr>
+        <td><a href="#time">7. Время нахождения объекта в кеше</a></td>
+    </tr>
+    <tr>
+        <td><a href="#store">8. Хранение объектов в кеше</a></td>
+    </tr>
+    <tr>
+        <td><a href="#config">9. Файл конфигурации</a></td>
+    </tr>
+    <tr>
+        <td><a href="#example">10. Пример использования</a></td>
+    </tr>
+    <tr>
+        <td>&nbsp;</td>
+    </tr>
+</table>
+<table width="100%" border="0" cellspacing="5" cellpadding="2" class="text">
+<tr>
+    <td class="section"><a name="feature"></a>Основные возможности</td>
+</tr>
+<tr>
+    <td class="brdrTop">
+        <ul class="text">
+            <li>кеширование объектов в памяти</li>
+            <li>спроектирован для работы в многопоточных приложениях</li>
+            <li>две реализации кеша synchronized, blocking</li>
+            <li>реализовано алгоритмы вытеснения объектов LFU, LRU, FIFO</li>
+            <li>для хранения объектов могут использоваться сильные (strong)
+                или магкие(soft) ссылки
+            </li>
+            <li>распостраняется под BSD лицензией</li>
+        </ul>
+    </td>
+</tr>
+<tr>
+    <td class="section"><a name="runtimeJava"></a>Требования к runtime
+        Java
+    </td>
+</tr>
+<tr>
+    <td class="brdrTop">cache4j можно использоваться с JDK 1.3, 1.4,
+        1.5<br>
+        При использовании с JDK 1.3 нужен xml парсер (например: Apache
+        <a href="http://xml.apache.org/xerces2-j/">xerces</a>)
+    </td>
+</tr>
+<tr>
+    <td class="section"><a name="install"></a>Что нужно для использования
+        cache4j ?
+    </td>
+</tr>
+<tr>
+    <td class="brdrTop">
+        <ul class="text">
+            <li>cache4j_?.jar</li>
+            <li>файл конфигурации</li>
+            <li>xml парсер (если используется JDK 1.3)</li>
+        </ul>
+    </td>
+</tr>
+<tr>
+    <td class="section"><a name="interface"></a>Основные интерфейсы
+        cache4j
+    </td>
+</tr>
+<tr>
+    <td class="brdrTop">
+        <ul>
+            <li><b>CacheFactory</b> этот класс управляет экземплярами
+                кешей (загрузка конфигурации, добавление, удаление, ...)
+            </li>
+            <li><b>Cache</b> интерфейс доступа к объектам кеша</li>
+            <li><b>CacheConfig</b> конфигурация кеша</li>
+            <li><b>CacheInfo</b> предоставляет дополнительную информацию
+                о кеше
+            </li>
+            <li><b>ManagedCache</b> интерфейс управления кешем</li>
+        </ul>
+        <p class="text">Документацию в формате javadoc можно найти <a href="api/index.html">здесь</a>.</p>
+    </td>
+</tr>
+<tr>
+    <td class="section"><a name="implementation"></a>Реализации</td>
+</tr>
+<tr>
+    <td class="brdrTop">
+        <p class="text">В cache4j существует несколько реализаций которые
+            определяют поведение кеша:</p>
+        <ul class="text">
+            <li><b>synchronized</b> - в этой реализации доступ к объектам
+                синхронизирован на уровне кеша. Это означает что в любой
+                момент времени доставать, помещать или удалять объект из
+                кеша может только один поток.
+            </li>
+            <li><b>blocking</b> - в этой реализации доступ к объектам
+                синхронизирован на уровне объектов. Это означает что потоки
+                будут переходить в режим ожидания только если они будут
+                пытаться выполнить какое либо действие над одним и тем же
+                объектом. Например если один поток запросил объект которого
+                нет в кеше и после этого начал его загружать то другой поток,
+                который обращается к тому же объекту, перейдёт в режим ожидания
+                до того момента пока первый поток не поместит загруженный
+                объект в кеш.
+            </li>
+            <li><b>nocache</b> - в этой реализации кеширования нет вообще.
+                Эта реализация может быть полезна когда кеширование нужно
+                отключить (например для того чтобы проверить производительность
+                приложения без кеша)
+            </li>
+        </ul>
+    </td>
+</tr>
+<tr>
+    <td class="section"><a name="evictalg"></a>Вытеснение объектов</td>
+</tr>
+<tr>
+    <td class="brdrTop">
+        <p class="text">Размер кеша ограничен поэтому при заполнении
+            кеша из него нужно удалять какие то объекты. Критериями заполнения
+            кеша являются количество объектов в кеше(max-size) и\или объём
+            памяти занимаемый кешем(max-memory-size). Какие именно объекты
+            нужно удалять определяется алгоритмом удаления(вытеснения).
+            В cache4j реализованы следующие алгоритмы вытеснения:</p>
+        <ul class="text">
+            <li><b>lru</b> - (Least Recently Used) удаляется объект к
+                которому дольше всего небыло обращений
+            </li>
+            <li><b>lfu</b> - (Least Frequently Used) удаляется объект
+                к которому было наименьшее количество обращений
+            </li>
+            <li><b> fifo</b> - (First In First Out) удаляется объект который
+                дольше всего находится в кеше
+            </li>
+        </ul>
+    </td>
+</tr>
+<tr>
+    <td class="section"><a name="time"></a>Время нахождения объекта
+        в кеше
+    </td>
+</tr>
+<tr>
+    <td class="brdrTop">
+        <p class="text">Нахождение объектов в кеше можно контролировать
+            параметрами:</p>
+        <ul class="text">
+            <li><b>ttl</b> - максимальное время жизни объекта в кеше</li>
+            <li><b>idle</b> - максимальное время бездействия объекта в
+                кеше. Обычно меньше чем время жизни объекта.
+            </li>
+        </ul>
+        <p class="text">Если у запрошеного из кеша объекта закончилось
+            время жизни или время бездействия то возвращается null. Объекты
+            у которых закончилось время жизни или время бездействия периодически
+            удаляются отдельным потоком.</p>
+    </td>
+</tr>
+<tr>
+    <td class="section"><a name="store"></a>Хранение объектов в кеше</td>
+</tr>
+<tr>
+    <td class="brdrTop">
+        <p class="text">Для хранения объектов в кеше могут использоваться
+            strong или soft ссылки.</p>
+        <ul class="text">
+            <li><b>strong</b> - ссылки это обычные ссылки на java объект</li>
+            <li><b>soft</b> - этот тип ссылки предполагает доступ к объекту
+                кеша через мягкую ссылку java.lang.ref.SoftReference. Зачем
+                это нужно ? Если ссылка на кешируемый объект доступна только
+                через java.lang.ref.SoftReference то garbage collector может
+                удалить такой объект, но только в том случае если использована
+                вся память доступная JVM. То есть если JVM требуется память
+                но вся доступная память занята то garbage collector, кроме
+                всего прочего, удаляет все объекты доступные только через
+                java.lang.ref.SoftReference и если после этого память не
+                освободилась бросает исключение java.lang.OutOfMemoryError.
+                Такое поведение полезно когда в кеше нужно держать максимально
+                возможное количество объектов и в тоже время предоставлять
+                приложению возможность использовать всю доступную память.
+            </li>
+        </ul>
+    </td>
+</tr>
+<tr>
+    <td class="section"><a name="config"></a>Файл конфигурации</td>
+</tr>
+<tr>
+<td class="brdrTop">
+<p class="text"><b>&lt;cache-factory&gt;</b></p>
+
+<p class="text">&lt;cache-factory&gt; это корневой тег в файле
+    конфигурации. Возможные атрибуты тега описаны в таблице ниже.</p>
+<table width="100%" border="0" cellspacing="1" cellpadding="5" align="center" class="table_brdr">
+    <tr align="center">
+        <td class="table_title">Атрибут</td>
+        <td class="table_title">
+            <nobr>По умолчанию</nobr>
+        </td>
+        <td class="table_title">Описание</td>
+    </tr>
+    <tr valign="top">
+        <td align="center" class="table_row">
+            <nobr>clean-interval</nobr>
+        </td>
+        <td class="table_row" align="center">30 секунд</td>
+        <td class="table_row">
+            <p>Период очистки кеша от устаревших объектов. Значение
+                можно указывать в:</p>
+            <ul>
+                <li> миллисекундах (60000 = 1минута)</li>
+                <li>секундах (60s = 60 секунд)</li>
+                <li>минутах (1m = 1 минута)</li>
+                <li>часах (1h = 1 час)</li>
+            </ul>
+        </td>
+    </tr>
+</table>
+<p class="text"><b>&lt;cache&gt;</b></p>
+
+<p class="text">Тег &lt;cache&gt; описывает конфигурацию одного
+    экземпляра кеша. Возможные атрибуты тега описаны в таблице
+    ниже.</p>
+<table width="100%" border="0" cellspacing="1" cellpadding="5" align="center" class="table_brdr">
+<tr align="center">
+    <td class="table_title">Атрибут</td>
+    <td class="table_title">
+        <nobr>По умолчанию</nobr>
+    </td>
+    <td class="table_title">Описание</td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">id</td>
+    <td class="table_row" align="center">атрибут обязателен
+        для заполнения
+    </td>
+    <td class="table_row">Идентификатор кеша, должен быть уникальным.
+        В CacheFactory не может существовать два кеша с одинаковым
+        идентификатором.
+    </td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">desc</td>
+    <td class="table_row" align="center">null</td>
+    <td class="table_row">Описание экземпляра кеша.</td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">ttl</td>
+    <td class="table_row" align="center">0 - без ограничений</td>
+    <td class="table_row">Максимальное время жизни объекта в
+        кеше (Time To Live). Значение можно указывать в:
+        <ul>
+            <li> миллисекундах (60000 = 1минута)</li>
+            <li>секундах (60s = 60 секунд)</li>
+            <li>минутах (1m = 1 минута)</li>
+            <li>часах (1h = 1 час)</li>
+        </ul>
+    </td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">idle</td>
+    <td class="table_row" align="center">0 - без ограничений</td>
+    <td class="table_row">Максимальное время бездействия объекта
+        в кеше (Idle Time). Значение можно указывать в:
+        <ul>
+            <li> миллисекундах (60000 = 1минута)</li>
+            <li>секундах (60s = 60 секунд)</li>
+            <li>минутах (1m = 1 минута)</li>
+            <li>часах (1h = 1 час)</li>
+        </ul>
+    </td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">
+        <nobr>max-memory-size</nobr>
+    </td>
+    <td class="table_row" align="center">0 - без ограничений</td>
+    <td class="table_row">
+        <p>Максимальный объём памяти занимаемый всеми объектами
+            кеша(байт). Значение можно указывать в: </p>
+        <ul>
+            <li> байтах (1024 = 1 килобайт)</li>
+            <li>килобайтах (1k = 1 килобайт)</li>
+            <li>мегабайтах (1m = 1 мегабайт)</li>
+        </ul>
+    </td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">max-size</td>
+    <td class="table_row" align="center">0 - без ограничений</td>
+    <td class="table_row">Максимальное количество объектов в
+        кеше.
+    </td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">type</td>
+    <td class="table_row" align="center">synchronized</td>
+    <td class="table_row">
+        <p>Тип кеша. Возможные значения: </p>
+        <ul>
+            <li>blocking</li>
+            <li>synchronized</li>
+            <li>nocache</li>
+        </ul>
+    </td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">algorithm</td>
+    <td class="table_row" align="center">lru</td>
+    <td class="table_row">
+        <p>Алгоритм удаления объектов из кеша. Возможные значения:</p>
+        <ul>
+            <li>lru (Least Recently Used)</li>
+            <li>lfu (Least Frequently Used)</li>
+            <li>fifo (First In First Out)</li>
+        </ul>
+    </td>
+</tr>
+<tr valign="top">
+    <td class="table_row" align="center">reference</td>
+    <td class="table_row" align="center">strong</td>
+    <td class="table_row">
+        <p>Тип ссылки на объект содержащийся в кеше. Возможные
+            значения:</p>
+        <ul>
+            <li> strong сильная ссылка</li>
+            <li>soft магкая ссылка (SoftReference)</li>
+        </ul>
+    </td>
+</tr>
+</table>
+</td>
+</tr>
+<tr>
+    <td class="section"><a name="example"></a>Пример использования</td>
+</tr>
+<tr>
+<td class="brdrTop">
+<p class="text">Задача: добавить кеширование в DAO для объектов
+    "Счёт" и "Валюта" кроме этого создать кеш в котором будут
+    кешироваться временные объекты. <br>
+    &nbsp;&nbsp;Количество объектов "Валюта" ограничено примерно
+    100шт., поэтому все валюты можно держать в кеше без каких
+    либо ограничений. Количество и размер временных объектов не
+    известно, поэтому кеш для таких объектов можно ограничить
+    по занимаемому объёму и\или по количеству объектов. Кроме
+    этого для хранения временных объектов в кеше можно использовать
+    мягкие ссылки. Возможное количество объектов "Счёт" как и
+    количество временных объектов не определено, поэтому для хранения
+    счетов так же можно использовать кеш с ограничениями по количеству
+    или занимаемому объёму. Объекты &quot;Счёт&quot; содержат
+    ссылку на объект &quot;Валюта&quot; поэтому после получения
+    &quot;Счёта&quot; из кеша нужно обновить ссылку на валюту,
+    так как &quot;Валюта&quot; могла изменится.</p>
+<table width="100%" border="0" cellspacing="2" cellpadding="1">
+    <tr>
+        <td class="text"><b>Файл конфигурации:</b></td>
+    </tr>
+    <tr>
+        <td>
+                        <pre class="source">  &lt;?xml version=&quot;1.0&quot; encoding=&quot;Windows-1251&quot;?&gt;
+          &lt;!--
+           | Интервал удаления устаревших объектов : 30 секунд
+           --&gt;
+    &lt;cache-factory clean-interval=&quot;30s&quot;&gt;
+          &lt;!--
+           |   Кеш для временных объектов 
+           |   время жизни объектов       : 1 час
+           |   время бездействия объектов : 30 минут
+           |   количество объектов        : 1000
+           |   максимальный объём памяти  : 50 мегабайт
+           |   тип ссылки на объекты      : soft(мягкая ссылка) 
+           --&gt;
+        &lt;cache id="tempObj" desc="Кеш для временных объектов"
+            ttl="1h"                  
+            idle="30m"
+            max-size="1000"
+            max-memory-size="50m"
+            reference="soft" /&gt;
+
+         &lt;!--
+          |   Кеш для объектов &quot;Валюта&quot;
+          --&gt;
+        &lt;cache id="currency" desc="Кеш для объектов Валюта"/&gt;
+
+          &lt;!--
+           |   Кеш для объектов &quot;Счёт&quot;
+           |   количество объектов        : 1000
+           --&gt;
+        &lt;cache id="account" desc="Кеш для объектов Счёт"
+            max-size="1000" /&gt;
+
+    &lt;/cache-factory&gt;</pre>
+        </td>
+    </tr>
+</table>
+<table width="100%" border="0" cellspacing="2" cellpadding="1">
+    <tr>
+        <td class="text"><b>Загрузка конфигурации:</b></td>
+    </tr>
+    <tr>
+        <td>
+                        <pre class="source">
+    import  net.sf.cache4j.CacheFactory;
+    import  net.sf.cache4j.Cache;
+    import java.io.InputStream;
+    import java.io.FileInputStream;
+    //...
+    CacheFactory сacheFactory = CacheFactory.getInstance();
+    try {
+        InputStream in = new FileInputStream("config.xml");
+        сacheFactory.loadConfig(in);
+    } catch (CacheException ce){
+        // ...
+    }
+    //...</pre>
+        </td>
+    </tr>
+</table>
+<table width="100%" border="0" cellspacing="2" cellpadding="1">
+    <tr>
+        <td class="text"><b>Получение экземпляра кеша:</b></td>
+    </tr>
+    <tr>
+        <td>
+                        <pre class="source">
+    //...
+    Cache tempObjCache = CacheFactory.getInstance().getCache("tempObj");
+    Cache accountCache = CacheFactory.getInstance().getCache("account");
+    Cache currencyCache = CacheFactory.getInstance().getCache("currency");	
+    //...
+</pre>
+        </td>
+    </tr>
+</table>
+<table width="100%" border="0" cellspacing="2" cellpadding="1">
+    <tr>
+        <td class="sourceTitle"><b class="text">Загрузка &quot;Валюты&quot;:</b></td>
+    </tr>
+    <tr>
+        <td>
+                        <pre class="source">
+    //...
+    public Currency loadCurrency(String id) throws Exception {
+        Currency currency = null;
+        try {
+            //пробуем достать валюту с идентификатором id из кеша
+            currency = (Currency)currencyCache.get(id);
+        } catch (CacheException ce) {
+            //...
+            throw new Exception(ce);
+        }
+        //если объект достали из кеша
+        if (currency != null) {
+            return currency;
+        }
+        try {
+            //если объекта не было в кеше его нужно подгрузить из 
+            //базы а потом поместить в кеш
+            currency = loadCurrencyFromDb(id);
+        } finally {
+            try {
+                currencyCache.put(id, currency);
+            } catch (CacheException ce) {
+                throw new Exception(ce);
+            }
+        }
+    }
+</pre>
+        </td>
+    </tr>
+</table>
+<table width="100%" border="0" cellspacing="2" cellpadding="1">
+    <tr>
+        <td class="text"><b>Загрузка &quot;Счёта&quot;:</b></td>
+    </tr>
+    <tr>
+        <td>
+                        <pre class="source">
+    //...
+    public Account loadAccount(String number) throws Exception {
+        Account account = null;
+        try {
+            //пробуем достать счёт с идентификатором number из кеша
+            account = (Account)accountCache.get(number);
+        } catch (CacheException ce) {
+            //...
+            throw new Exception(ce);
+        }
+        //если объект достали из кеша
+        if (account != null) {
+            return updateAccount(account);
+        }
+        try {
+            //если объекта не было в кеше его нужно подгрузить 
+            //из базы а потом поместить в кеш
+            account = loadAccountFromDb(number);
+        } finally {
+            try {
+                accountCache.put(number, account);
+            } catch (CacheException ce) {
+                throw new Exception(ce);
+            }
+        }
+    }
+    public Account updateAccount(Account account) throws Exception {
+        //обновляем ссылку на валюту
+        account.setCurrency(loadCurrency(account.getCurrencyId()));
+        return account;
+    }
+
+</pre>
+        </td>
+    </tr>
+</table>
+<table width="100%" border="0" cellspacing="2" cellpadding="1">
+    <tr>
+        <td class="text"><b>Сохранение &quot;Валюты&quot;:</b></td>
+    </tr>
+    <tr>
+        <td>
+                        <pre class="source">
+    public Currency saveCurrency(Currency currency) throws Exception {
+        saveCurrencyInDB(currency);
+        try {
+            currencyCache.remove(currency.getId());
+        } catch (CacheException ce) {
+            throw new Exception(ce);
+        }
+        return currency;
+    }
+</pre>
+        </td>
+    </tr>
+</table>
+<table width="100%" border="0" cellspacing="2" cellpadding="1">
+    <tr>
+        <td class="text"><b>Сохранение &quot;Счёта&quot;:</b></td>
+    </tr>
+    <tr>
+        <td>
+                        <pre class="source">
+    public Account saveAccount(Account account) throws Exception {
+        saveAccountInDB(account);
+        try {
+            accountCache.remove(account.getNumber());
+        } catch (CacheException ce) {
+            throw new Exception(ce);
+        }
+        return account;
+    }
+</pre>
+        </td>
+    </tr>
+</table>
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+</table>
+
+</td>
+</tr>
+<tr>
+    <td class="copyright" align="right">Copyright (c) 2006, Yuriy Stepovoy. All
+        rights reserved. <a href="mailto:stepovoy@gmail.com">email:stepovoy@gmail.com</a></td>
+</tr>
+</table>
+<table width="600" border="0" cellspacing="1" cellpadding="1" align="center" class="text">
+    <tr>
+        <td>&nbsp; </td>
+    </tr>
+</table>
+</body>
+</html>
