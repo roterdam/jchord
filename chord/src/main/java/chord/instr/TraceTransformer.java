@@ -25,6 +25,7 @@ public class TraceTransformer {
 	private boolean newAndNewArrayHasTid;
 	private boolean newAndNewArrayHasOid;
 	private int enterAndLeaveMethodNumBytes;
+	private int enterAndLeaveLoopNumBytes;
 	private int newAndNewArrayNumBytes;
 	private int getstaticPrimitiveNumBytes;
 	private int getstaticReferenceNumBytes;
@@ -69,10 +70,11 @@ public class TraceTransformer {
 */
 	public void run(String rdFileName, String wrFileName, InstrScheme scheme) {
 		try {
-			newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasPid();
-			newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasTid();
-			newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasOid();
+			newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasLoc();
+			newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasThr();
+			newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasObj();
 			enterAndLeaveMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD).size();
+			enterAndLeaveLoopNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP).size();
 			newAndNewArrayNumBytes = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).size();
 			getstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE).size();
 			getstaticReferenceNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE).size();
@@ -243,6 +245,9 @@ public class TraceTransformer {
 		case EventKind.ENTER_METHOD:
 		case EventKind.LEAVE_METHOD:
 			return enterAndLeaveMethodNumBytes;
+		case EventKind.ENTER_LOOP:
+		case EventKind.LEAVE_LOOP:
+			return enterAndLeaveLoopNumBytes;
 		case EventKind.METHOD_CALL:
 			return methodCallNumBytes;
 		case EventKind.RETURN_PRIMITIVE:

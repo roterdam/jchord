@@ -57,6 +57,8 @@ public class Instrumentor {
 
 	protected static final String enterMethodEventCall = runtimeClassName + "enterMethodEvent(";
 	protected static final String leaveMethodEventCall = runtimeClassName + "leaveMethodEvent(";
+	protected static final String enterLoopEventCall = runtimeClassName + "enterLoopEvent(";
+	protected static final String leaveLoopEventCall = runtimeClassName + "leaveLoopEvent(";
 
 	protected static final String befNewEventCall = runtimeClassName + "befNewEvent(";
 	protected static final String aftNewEventCall = runtimeClassName + "aftNewEvent(";
@@ -93,6 +95,9 @@ public class Instrumentor {
 	protected static final String acquireLockEventCall = runtimeClassName + "acquireLockEvent(";
 	protected static final String releaseLockEventCall = runtimeClassName + "releaseLockEvent(";
 
+	protected InstrScheme scheme;
+	protected Program program;
+
 	protected DomF domF;
 	protected DomM domM;
 	protected DomH domH;
@@ -108,19 +113,20 @@ public class Instrumentor {
 	protected IndexMap<String> Imap;
 	protected IndexMap<String> Pmap;
 	protected IndexMap<String> Bmap;
-	
 	protected IndexMap<BasicBlock> Wmap;
-	protected ClassPool pool;
-	protected CtClass exType;
-	protected MyExprEditor exprEditor = new MyExprEditor();
-	protected CFGLoopFinder finder = new CFGLoopFinder();
 
-	protected InstrScheme scheme;
+	private ClassPool pool;
+	private CtClass exType;
+	private MyExprEditor exprEditor = new MyExprEditor();
+	private CFGLoopFinder finder = new CFGLoopFinder();
+	private String enterLoopCallKind, leaveLoopCallKind;
+
 	protected boolean convert;
 	protected int instrMethodAndLoopBound;
 	protected boolean hasBasicBlockEvent;
 	protected boolean hasQuadEvent;
 	protected EventFormat enterAndLeaveMethodEvent;
+	protected EventFormat enterAndLeaveLoopEvent;
 	protected EventFormat newAndNewArrayEvent;
 	protected EventFormat getstaticPrimitiveEvent;
 	protected EventFormat getstaticReferenceEvent;
@@ -150,6 +156,8 @@ public class Instrumentor {
 	protected TIntObjectHashMap<String> bciToInstrMap =
 		new TIntObjectHashMap<String>();
 
+	public InstrScheme getInstrScheme() { return scheme; }
+
 	public DomF getDomF() { return domF; }
 	public DomM getDomM() { return domM; }
 	public DomH getDomH() { return domH; }
@@ -165,8 +173,13 @@ public class Instrumentor {
 	public IndexMap<String> getImap() { return Imap; }
 	public IndexMap<String> getPmap() { return Pmap; }
 	public IndexMap<String> getBmap() { return Bmap; }
+	public IndexMap<BasicBlock> getWmap() { return Wmap; }
 
-	public void visit(Program program, InstrScheme scheme) {
+	public Instrumentor(Program program, InstrScheme scheme) {
+		this.program = program;
+		this.scheme = scheme;
+	}
+	public void run() {
 		String fullClassPathName = Properties.classPathName +
 			File.pathSeparator + Properties.mainClassPathName;
 		pool = new ClassPool();
@@ -184,12 +197,19 @@ public class Instrumentor {
 			}
 		}
 		pool.appendSystemPath();
-		this.scheme = scheme;
 		convert = scheme.isConverted();
 		instrMethodAndLoopBound = scheme.getInstrMethodAndLoopBound();
 		hasBasicBlockEvent = scheme.hasBasicBlockEvent();
 		hasQuadEvent = scheme.hasQuadEvent();
 		enterAndLeaveMethodEvent = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
+		enterAndLeaveLoopEvent = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
+		if (instrMethodAndLoopBound > 0) {
+			enterLoopCallKind = enterLoopCheckCall;
+			leaveLoopCallKind = leaveLoopCheckCall;
+		} else if (enterAndLeaveLoopEvent.present()) {
+			enterLoopCallKind = enterLoopEventCall;
+			leaveLoopCallKind = leaveLoopEventCall;
+		}
 		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
 		getstaticReferenceEvent = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
@@ -275,7 +295,7 @@ public class Instrumentor {
 			}
 			assert (exType != null);
 		}
-		if (instrMethodAndLoopBound > 0)
+		if (scheme.needsWmap())
 			Wmap = new IndexHashMap<BasicBlock>();
 		
 		String bootClassesDirName = Properties.bootClassesDirName;
@@ -426,7 +446,8 @@ public class Instrumentor {
 		}
 		Map<Quad, Integer> bcMap = joeqMethod.getBCMap();
 		if (bcMap != null) {
-			if (instrMethodAndLoopBound > 0 || hasQuadEvent || hasBasicBlockEvent) {
+			if (instrMethodAndLoopBound > 0 || enterAndLeaveLoopEvent.present() ||
+					hasQuadEvent || hasBasicBlockEvent) {
 				ControlFlowGraph cfg = joeqMethod.getCFG();
 				bciToInstrMap.clear();
 				if (hasQuadEvent || hasBasicBlockEvent) {
@@ -457,12 +478,13 @@ public class Instrumentor {
 						}
 					}
 				}
-				if (instrMethodAndLoopBound > 0) {
+				String enterEventCall, leaveEventCall;
+				if (instrMethodAndLoopBound > 0 || enterAndLeaveLoopEvent.present()) {
 					finder.visit(cfg);
 					Set<BasicBlock> heads = finder.getLoopHeads();
 					for (BasicBlock head : heads) {
 						int wId = Wmap.getOrAdd(head);
-						String headInstr = enterLoopCheckCall + wId + ");";
+						String headInstr = enterLoopCallKind + wId + ");";
 						int headBCI = getBCI(head, joeqMethod);
 						attachInstrToBCIBef(headInstr, headBCI);
 					}
@@ -470,7 +492,7 @@ public class Instrumentor {
 						Set<BasicBlock> exits = finder.getLoopExits(head);
 						for (BasicBlock exit : exits) {
 							int wId = Wmap.getOrAdd(exit);
-							String exitInstr = leaveLoopCheckCall + wId + ");";
+							String exitInstr = leaveLoopCallKind + wId + ");";
 							int exitBCI = getBCI(exit, joeqMethod);
 							attachInstrToBCIBef(exitInstr, exitBCI);
 						}
@@ -492,26 +514,23 @@ public class Instrumentor {
 		// bytecode instrumentation offsets could get messed up 
 		String enterStr = "";
 		String leaveStr = "";
-		if (instrMethodAndLoopBound > 0) {
-			enterStr = enterStr + enterMethodCheckCall + mId + "); ";
-			leaveStr = leaveMethodCheckCall + mId + "); " + leaveStr;
-		}
 		if (Modifier.isSynchronized(mods)) {
 			String syncExpr = Modifier.isStatic(mods) ? "$class" : "$0";
 			if (acquireLockEvent.present()) {
 				int pId = set(Pmap, -1);
-				String str = acquireLockEventCall + pId + "," +
-					syncExpr + "); ";
-				enterStr = enterStr + str;
+				enterStr = acquireLockEventCall + pId + "," +
+					syncExpr + ");";
 			}
 			if (releaseLockEvent.present()) {
 				int pId = set(Pmap, -2);
-				String str = releaseLockEventCall + pId + "," +
-					syncExpr + "); ";
-				leaveStr = str + leaveStr;
+				leaveStr = releaseLockEventCall + pId + "," +
+					syncExpr + ");";
 			}
 		}
-		if (enterAndLeaveMethodEvent.present()) {
+		if (instrMethodAndLoopBound > 0) {
+			enterStr = enterMethodCheckCall + mId + ");" + enterStr;
+			leaveStr = leaveStr + leaveMethodCheckCall + mId + ");";
+		} else if (enterAndLeaveMethodEvent.present()) {
 			enterStr = enterStr + enterMethodEventCall + mId + ");";
 			leaveStr = leaveMethodEventCall + mId + ");" + leaveStr;
 		}
@@ -583,10 +602,10 @@ public class Instrumentor {
 		}
 		public void edit(NewExpr e) {
 			if (newAndNewArrayEvent.present()) {
-				int hId = newAndNewArrayEvent.hasPid() ? set(Hmap, e) :
+				int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) :
 					Runtime.MISSING_FIELD_VAL;
 				String instr1, instr2;
-				if (newAndNewArrayEvent.hasOid()) {
+				if (newAndNewArrayEvent.hasObj()) {
 					instr1 = befNewEventCall + hId + ");";
 					instr2 = aftNewEventCall + hId + ",$_);";
 				} else {
@@ -603,7 +622,7 @@ public class Instrumentor {
 		}
 		public void edit(NewArray e) {
 			if (newAndNewArrayEvent.present()) {
-				int hId = newAndNewArrayEvent.hasPid() ? set(Hmap, e) :
+				int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) :
 					Runtime.MISSING_FIELD_VAL;
 				String instr = newArrayEventCall + hId + ",$_);";
 				try {
@@ -687,9 +706,9 @@ public class Instrumentor {
 		}
 		public void edit(MonitorEnter e) {
 			if (acquireLockEvent.present()) {
-				int pId = acquireLockEvent.hasPid() ? set(Pmap, e) :
+				int pId = acquireLockEvent.hasLoc() ? set(Pmap, e) :
 					Runtime.MISSING_FIELD_VAL;
-				String l = acquireLockEvent.hasLid() ? "$0" : "null";
+				String l = acquireLockEvent.hasObj() ? "$0" : "null";
 				String instr = acquireLockEventCall + pId + "," + l + ");";
 				try {
 					e.replace("{ $proceed(); " + instr + " }");
@@ -700,9 +719,9 @@ public class Instrumentor {
 		}
 		public void edit(MonitorExit e) {
 			if (releaseLockEvent.present()) {
-				int pId = releaseLockEvent.hasPid() ? set(Pmap, e) :
+				int pId = releaseLockEvent.hasLoc() ? set(Pmap, e) :
 					Runtime.MISSING_FIELD_VAL;
-				String l = releaseLockEvent.hasLid() ? "$0" : "null";
+				String l = releaseLockEvent.hasObj() ? "$0" : "null";
 				String instr = releaseLockEventCall + pId + "," + l + ");";
 				try {
 					e.replace("{ " + instr + " $proceed(); }");
@@ -721,9 +740,9 @@ public class Instrumentor {
 	}
 	protected String getstaticPrimitive(FieldAccess e, CtField f) {
 		if (getstaticPrimitiveEvent.present()) {
-			int eId = getstaticPrimitiveEvent.hasPid() ? set(Emap, e) :
+			int eId = getstaticPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			int fId = getstaticPrimitiveEvent.hasFid() ? getFid(f) :
+			int fId = getstaticPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $_ = $proceed($$); " + getstaticPriEventCall + eId +
 				"," + fId + "); }"; 
@@ -732,11 +751,11 @@ public class Instrumentor {
 	}
 	protected String getstaticReference(FieldAccess e, CtField f) {
 		if (getstaticReferenceEvent.present()) {
-			int eId = getstaticReferenceEvent.hasPid() ? set(Emap, e) :
+			int eId = getstaticReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			int fId = getstaticReferenceEvent.hasFid() ? getFid(f) :
+			int fId = getstaticReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
-			String oId = getstaticReferenceEvent.hasOid() ? "$_" : "null";
+			String oId = getstaticReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + getstaticRefEcentCall + eId +
 				"," + fId + "," + oId + "); }"; 
 		}
@@ -744,9 +763,9 @@ public class Instrumentor {
 	}
 	protected String putstaticPrimitive(FieldAccess e, CtField f) {
 		if (putstaticPrimitiveEvent.present()) {
-			int eId = putstaticPrimitiveEvent.hasPid() ? set(Emap, e) :
+			int eId = putstaticPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			int fId = putstaticPrimitiveEvent.hasFid() ? getFid(f) :
+			int fId = putstaticPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $proceed($$); " + putstaticPriEventCall + eId +
 				"," + fId + "); }"; 
@@ -755,11 +774,11 @@ public class Instrumentor {
 	}
 	protected String putstaticReference(FieldAccess e, CtField f) {
 		if (putstaticReferenceEvent.present()) {
-			int eId = putstaticReferenceEvent.hasPid() ? set(Emap, e) :
+			int eId = putstaticReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			int fId = putstaticReferenceEvent.hasFid() ? getFid(f) :
+			int fId = putstaticReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
-			String oId = putstaticReferenceEvent.hasOid() ? "$1" : "null";
+			String oId = putstaticReferenceEvent.hasObj() ? "$1" : "null";
 			return "{ $proceed($$); " + putstaticRefEventCall + eId +
 				"," + fId + "," + oId + "); }";
 		}
@@ -767,10 +786,10 @@ public class Instrumentor {
 	}
 	protected String getfieldPrimitive(FieldAccess e, CtField f) {
 		if (getfieldPrimitiveEvent.present()) {
-			int eId = getfieldPrimitiveEvent.hasPid() ? set(Emap, e) :
+			int eId = getfieldPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = getfieldPrimitiveEvent.hasBid() ? "$0" : "null";
-			int fId = getfieldPrimitiveEvent.hasFid() ? getFid(f) :
+			String bId = getfieldPrimitiveEvent.hasBaseObj() ? "$0" : "null";
+			int fId = getfieldPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $_ = $proceed($$); " + getfieldPriEventCall +
 				eId + "," + bId + "," + fId + "); }"; 
@@ -779,12 +798,12 @@ public class Instrumentor {
 	}
 	protected String getfieldReference(FieldAccess e, CtField f) {
 		if (getfieldReferenceEvent.present()) {
-			int eId = getfieldReferenceEvent.hasPid() ? set(Emap, e) :
+			int eId = getfieldReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = getfieldReferenceEvent.hasBid() ? "$0" : "null";
-			int fId = getfieldReferenceEvent.hasFid() ? getFid(f) :
+			String bId = getfieldReferenceEvent.hasBaseObj() ? "$0" : "null";
+			int fId = getfieldReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
-			String oId = getfieldReferenceEvent.hasOid() ? "$_" : "null";
+			String oId = getfieldReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + getfieldReference +
 				eId + "," + bId + "," + fId + "," + oId + "); }"; 
 		}
@@ -792,10 +811,10 @@ public class Instrumentor {
 	}
 	protected String putfieldPrimitive(FieldAccess e, CtField f) {
 		if (putfieldPrimitiveEvent.present()) {
-			int eId = putfieldPrimitiveEvent.hasPid() ? set(Emap, e) :
+			int eId = putfieldPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = putfieldPrimitiveEvent.hasBid() ? "$0" : "null";
-			int fId = putfieldPrimitiveEvent.hasFid() ? getFid(f) :
+			String bId = putfieldPrimitiveEvent.hasBaseObj() ? "$0" : "null";
+			int fId = putfieldPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $proceed($$); " + putfieldPriEventCall + eId +
 				"," + bId + "," + fId + "); }"; 
@@ -804,12 +823,12 @@ public class Instrumentor {
 	}
 	protected String putfieldReference(FieldAccess e, CtField f) {
 		if (putfieldReferenceEvent.present()) {
-			int eId = putfieldReferenceEvent.hasPid() ? set(Emap, e) :
+			int eId = putfieldReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = putfieldReferenceEvent.hasBid() ? "$0" : "null";
-			int fId = putfieldReferenceEvent.hasFid() ? getFid(f) :
+			String bId = putfieldReferenceEvent.hasBaseObj() ? "$0" : "null";
+			int fId = putfieldReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
-			String oId = putfieldReferenceEvent.hasOid() ? "$1" : "null";
+			String oId = putfieldReferenceEvent.hasObj() ? "$1" : "null";
 			return "{ $proceed($$); " + putfieldRefEventCall +
 				eId + "," + bId + "," + fId + "," + oId + "); }"; 
 		}
@@ -817,10 +836,10 @@ public class Instrumentor {
 	}
 	protected String aloadPrimitive(ArrayAccess e) {
 		if (aloadPrimitiveEvent.present()) {
-			int eId = aloadPrimitiveEvent.hasPid() ? set(Emap, e) :
+			int eId = aloadPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = aloadPrimitiveEvent.hasBid() ? "$0" : "null";
-			String iId = aloadPrimitiveEvent.hasIid() ? "$1" : "-1";
+			String bId = aloadPrimitiveEvent.hasBaseObj() ? "$0" : "null";
+			String iId = aloadPrimitiveEvent.hasIdx() ? "$1" : "-1";
 			return "{ $_ = $proceed($$); " + aloadPriEventCall +
 				eId + "," + bId + "," + iId + "); }"; 
 		}
@@ -828,11 +847,11 @@ public class Instrumentor {
 	}
 	protected String aloadReference(ArrayAccess e) {
 		if (aloadReferenceEvent.present()) {
-			int eId = aloadReferenceEvent.hasPid() ? set(Emap, e) :
+			int eId = aloadReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = aloadReferenceEvent.hasBid() ? "$0" : "null";
-			String iId = aloadReferenceEvent.hasIid() ? "$1" : "-1";
-			String oId = aloadReferenceEvent.hasOid() ? "$_" : "null";
+			String bId = aloadReferenceEvent.hasBaseObj() ? "$0" : "null";
+			String iId = aloadReferenceEvent.hasIdx() ? "$1" : "-1";
+			String oId = aloadReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + aloadRefEventCall +
 				eId + "," + bId + "," + iId + "," + oId + "); }"; 
 		}
@@ -840,10 +859,10 @@ public class Instrumentor {
 	}
 	protected String astorePrimitive(ArrayAccess e) {
 		if (astorePrimitiveEvent.present()) {
-			int eId = astorePrimitiveEvent.hasPid() ? set(Emap, e) :
+			int eId = astorePrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = astorePrimitiveEvent.hasBid() ? "$0" : "null";
-			String iId = astorePrimitiveEvent.hasIid() ? "$1" : "-1";
+			String bId = astorePrimitiveEvent.hasBaseObj() ? "$0" : "null";
+			String iId = astorePrimitiveEvent.hasIdx() ? "$1" : "-1";
 			return "{ $proceed($$); " + astorePriEventCall +
 				eId + "," + bId + "," + iId + "); }"; 
 		}
@@ -851,11 +870,11 @@ public class Instrumentor {
 	}
 	protected String astoreReference(ArrayAccess e) {
 		if (astoreReferenceEvent.present()) {
-			int eId = astoreReferenceEvent.hasPid() ? set(Emap, e) :
+			int eId = astoreReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = astoreReferenceEvent.hasBid() ? "$0" : "null";
-			String iId = astoreReferenceEvent.hasIid() ? "$1" : "-1";
-			String oId = astoreReferenceEvent.hasOid() ? "$2" : "null";
+			String bId = astoreReferenceEvent.hasBaseObj() ? "$0" : "null";
+			String iId = astoreReferenceEvent.hasIdx() ? "$1" : "-1";
+			String oId = astoreReferenceEvent.hasObj() ? "$2" : "null";
 			return "{ $proceed($$); " + astoreRefEventCall +
 				eId + "," + bId + "," + iId + "," + oId + "); }"; 
 		}
@@ -865,7 +884,7 @@ public class Instrumentor {
 		// Part 1: add METHOD_CALL event if present
 		String instr1;
 		if (methodCallEvent.present()) {
-			int iId = methodCallEvent.hasPid() ? set(Imap, e) :
+			int iId = methodCallEvent.hasLoc() ? set(Imap, e) :
 				Runtime.MISSING_FIELD_VAL;
 			instr1 = " " + methodCallEventCall + iId + ");";
 		} else
@@ -886,17 +905,17 @@ public class Instrumentor {
 			if (mName.equals("wait") && (mDesc.equals("()V") ||
 					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
 				if (waitEvent.present()) {
-					int pId = waitEvent.hasPid() ? set(Pmap, e) :
+					int pId = waitEvent.hasLoc() ? set(Pmap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String lId = waitEvent.hasLid() ? "$0" : "null";
+					String lId = waitEvent.hasObj() ? "$0" : "null";
 					instr2 = waitEventCall + pId + "," + lId + ");";
 				}
 			} else if ((mName.equals("notify") ||
 					mName.equals("notifyAll")) && mDesc.equals("()V")) {
 				if (notifyEvent.present()) {
-					int pId = notifyEvent.hasPid() ? set(Pmap, e) :
+					int pId = notifyEvent.hasLoc() ? set(Pmap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String lId = notifyEvent.hasLid() ? "$0" : "null";
+					String lId = notifyEvent.hasObj() ? "$0" : "null";
 					instr2 = notifyEventCall + pId + "," + lId + ");";
 				}
 			}
@@ -905,17 +924,17 @@ public class Instrumentor {
 			String mDesc = m.getSignature();
 			if (mName.equals("start") && mDesc.equals("()V")) {
 				if (threadStartEvent.present()) {
-					int pId = threadStartEvent.hasPid() ? set(Pmap, e) :
+					int pId = threadStartEvent.hasLoc() ? set(Pmap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String oId = threadStartEvent.hasOid() ? "$0" : "null";
+					String oId = threadStartEvent.hasObj() ? "$0" : "null";
 					instr2 = threadStartEventCall + pId + "," + oId + ");";
 				}
 			} else if (mName.equals("join") && (mDesc.equals("()V") ||
 					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
 				if (threadJoinEvent.present()) {
-					int pId = threadJoinEvent.hasPid() ? set(Pmap, e) :
+					int pId = threadJoinEvent.hasLoc() ? set(Pmap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String oId = threadJoinEvent.hasOid() ? "$0" : "null";
+					String oId = threadJoinEvent.hasObj() ? "$0" : "null";
 					instr2 = threadJoinEventCall + pId + "," + oId + ");";
 				}
 			}

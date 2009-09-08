@@ -21,6 +21,9 @@ import chord.util.ByteBufferedFile;
 import chord.util.ProcessExecutor;
 import chord.util.ReadException;
 import chord.util.Executor;
+import chord.util.IndexMap;
+
+import joeq.Compiler.Quad.BasicBlock;
 
 /**
  * 
@@ -54,11 +57,15 @@ public class DynamicAnalysis extends JavaAnalysis {
 	}
 	public void run() {
 		scheme = getInstrScheme();
+		assert(scheme != null);
 		final String instrSchemeFileName = Properties.instrSchemeFileName;
 		scheme.save(instrSchemeFileName);
-		instrumentor = new Instrumentor();
-		instrumentor.visit(Program.v(), scheme);
-		assert(scheme != null);
+		instrumentor = new Instrumentor(Program.v(), scheme);
+		instrumentor.run();
+		IndexMap<String> Mmap = instrumentor.getMmap();
+		int numMeths = (Mmap != null) ? Mmap.size() : 0;
+		IndexMap<BasicBlock> Wmap = instrumentor.getWmap();
+		int numLoops = (Wmap != null) ? Wmap.size() : 0;
 		boolean needsTraceTransform = scheme.needsTraceTransform();
 		final String mainClassName = Properties.mainClassName;
 		assert (mainClassName != null);
@@ -76,8 +83,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 			ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
 			ProcessExecutor.execute("mkfifo " + finalTraceFileName);
 		}
-		final int numMeths = getNum("numMeths.txt");
-		final int numLoops = getNum("numLoops.txt");
 		final String[] runIDs = Properties.runIDs.split(",");
 		final String traceFileName = needsTraceTransform ?
 			crudeTraceFileName : finalTraceFileName;
@@ -90,14 +95,14 @@ public class DynamicAnalysis extends JavaAnalysis {
 			"=num_meths=" + numMeths +
 			"=num_loops=" + numLoops +
 			"=instr_scheme_file_name=" + instrSchemeFileName +
-			"=instr_bound=" + Properties.instrBound +
+			"=instr_bound=" + scheme.getInstrMethodAndLoopBound() +
 			" " + mainClassName + " ";
 		Runnable traceTransformer = new Runnable() {
 			public void run() {
 				(new TraceTransformer()).run(
 					crudeTraceFileName, finalTraceFileName, scheme);
 				if (DEBUG) {
-					(new TracePrinter()).run(crudeTraceFileName, scheme);
+					(new TracePrinter()).run(crudeTraceFileName, instrumentor);
 					System.out.println("DONE");
 				}
 			}
@@ -105,7 +110,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		Runnable traceProcessor = new Runnable() {
 			public void run() {
 				if (DEBUG) {
-					(new TracePrinter()).run(finalTraceFileName, scheme);
+					(new TracePrinter()).run(finalTraceFileName, instrumentor);
 					System.out.println("DONE");
 				}
 				processTrace(finalTraceFileName);
@@ -135,21 +140,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 		doneAllPasses();
 	}
 
-	private static int getNum(String fileName) {
-		File file = new File(Properties.classesDirName, fileName);
-		if (!file.exists())
-			return 0;
-		try {
-			BufferedReader reader = new BufferedReader(new FileReader(file));
-			String s = reader.readLine();
-			assert (s != null);
-			reader.close();
-			return Integer.parseInt(s);
-		} catch (IOException ex) { 
-			throw new RuntimeException(ex);
-		}
-	}
-	
 	private void processTrace(String fileName) {
 		try {
 			initPass();
@@ -162,16 +152,16 @@ public class DynamicAnalysis extends JavaAnalysis {
 				case EventKind.ENTER_METHOD:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					int m = ef.hasMid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
+					int m = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
 					processEnterMethod(m, t);
 					break;
 				}
 				case EventKind.LEAVE_METHOD:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					int m = ef.hasMid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
+					int m = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
 					processLeaveMethod(m, t);
 					break;
 				}
@@ -179,228 +169,228 @@ public class DynamicAnalysis extends JavaAnalysis {
 				case EventKind.NEW_ARRAY:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
-					int h = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int h = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processNewOrNewArray(h, t, o);
 					break;
 				}
 				case EventKind.GETSTATIC_PRIMITIVE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int f = ef.hasFid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int f = ef.hasFld() ? buffer.getInt() : -1;
 					processGetstaticPrimitive(e, t, f);
 					break;
 				}
 				case EventKind.GETSTATIC_REFERENCE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int f = ef.hasFid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int f = ef.hasFld() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processGetstaticReference(e, t, f, o);
 					break;
 				}
 				case EventKind.PUTSTATIC_PRIMITIVE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int f = ef.hasFid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int f = ef.hasFld() ? buffer.getInt() : -1;
 					processPutstaticPrimitive(e, t, f);
 					break;
 				}
 				case EventKind.PUTSTATIC_REFERENCE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int f = ef.hasFid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int f = ef.hasFld() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processPutstaticReference(e, t, f, o);
 					break;
 				}
 				case EventKind.GETFIELD_PRIMITIVE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int b = ef.hasBid() ? buffer.getInt() : -1;
-					int f = ef.hasFid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
+					int f = ef.hasFld() ? buffer.getInt() : -1;
 					processGetfieldPrimitive(e, t, b, f);
 					break;
 				}
 				case EventKind.GETFIELD_REFERENCE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int b = ef.hasBid() ? buffer.getInt() : -1;
-					int f = ef.hasFid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
+					int f = ef.hasFld() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processGetfieldReference(e, t, b, f, o);
 					break;
 				}
 				case EventKind.PUTFIELD_PRIMITIVE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int b = ef.hasBid() ? buffer.getInt() : -1;
-					int f = ef.hasFid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
+					int f = ef.hasFld() ? buffer.getInt() : -1;
 					processPutfieldPrimitive(e, t, b, f);
 					break;
 				}
 				case EventKind.PUTFIELD_REFERENCE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int b = ef.hasBid() ? buffer.getInt() : -1;
-					int f = ef.hasFid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
+					int f = ef.hasFld() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processPutfieldReference(e, t, b, f, o);
 					break;
 				}
 				case EventKind.ALOAD_PRIMITIVE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int b = ef.hasBid() ? buffer.getInt() : -1;
-					int i = ef.hasIid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
+					int i = ef.hasIdx() ? buffer.getInt() : -1;
 					processAloadPrimitive(e, t, b, i);
 					break;
 				}
 				case EventKind.ALOAD_REFERENCE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ALOAD_REFERENCE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int b = ef.hasBid() ? buffer.getInt() : -1;
-					int i = ef.hasIid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
+					int i = ef.hasIdx() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processAloadReference(e, t, b, i, o);
 					break;
 				}
 				case EventKind.ASTORE_PRIMITIVE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int b = ef.hasBid() ? buffer.getInt() : -1;
-					int i = ef.hasIid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
+					int i = ef.hasIdx() ? buffer.getInt() : -1;
 					processAstorePrimitive(e, t, b, i);
 					break;
 				}
 				case EventKind.ASTORE_REFERENCE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ASTORE_REFERENCE);
-					int e = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int b = ef.hasBid() ? buffer.getInt() : -1;
-					int i = ef.hasIid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int e = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
+					int i = ef.hasIdx() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processAstoreReference(e, t, b, i, o);
 					break;
 				}
 				case EventKind.THREAD_START:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.THREAD_START);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processThreadStart(p, t, o);
 					break;
 				}
 				case EventKind.THREAD_JOIN:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.THREAD_JOIN);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processThreadJoin(p, t, o);
 					break;
 				}
 				case EventKind.ACQUIRE_LOCK:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int l = ef.hasLid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int l = ef.hasObj() ? buffer.getInt() : -1;
 					processAcquireLock(p, t, l);
 					break;
 				}
 				case EventKind.RELEASE_LOCK:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int l = ef.hasLid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int l = ef.hasObj() ? buffer.getInt() : -1;
 					processReleaseLock(p, t, l);
 					break;
 				}
 				case EventKind.WAIT:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.WAIT);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int l = ef.hasLid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int l = ef.hasObj() ? buffer.getInt() : -1;
 					processWait(p, t, l);
 					break;
 				}
 				case EventKind.NOTIFY:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int l = ef.hasLid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int l = ef.hasObj() ? buffer.getInt() : -1;
 					processNotify(p, t, l);
 					break;
 				}
 				case EventKind.METHOD_CALL:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-					int i = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
+					int i = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
 					processMethodCall(i, t);
 					break;
 				}
 				case EventKind.RETURN_PRIMITIVE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
 					processReturnPrimitive(p, t);
 					break;
 				}
 				case EventKind.RETURN_REFERENCE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processReturnReference(p, t, o);
 					break;
 				}
 				case EventKind.EXPLICIT_THROW:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processExplicitThrow(p, t, o);
 					break;
 				}
 				case EventKind.IMPLICIT_THROW:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
-					int p = ef.hasPid() ? buffer.getInt() : -1;
-					int t = ef.hasTid() ? buffer.getInt() : -1;
-					int o = ef.hasOid() ? buffer.getInt() : -1;
+					int p = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processImplicitThrow(p, t, o);
 					break;
 				}
