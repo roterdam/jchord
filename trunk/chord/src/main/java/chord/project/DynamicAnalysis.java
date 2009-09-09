@@ -33,7 +33,7 @@ import joeq.Compiler.Quad.BasicBlock;
 	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
-	public final static boolean DEBUG = true;
+	public final static boolean DEBUG = false;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
 	
