@@ -33,7 +33,7 @@ import joeq.Compiler.Quad.BasicBlock;
 	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
-	public final static boolean DEBUG = false;
+	public final static boolean DEBUG = true;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
 	
@@ -162,6 +162,22 @@ public class DynamicAnalysis extends JavaAnalysis {
 					int m = ef.hasLoc() ? buffer.getInt() : -1;
 					int t = ef.hasThr() ? buffer.getInt() : -1;
 					processLeaveMethod(m, t);
+					break;
+				}
+				case EventKind.ENTER_LOOP:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
+					int w = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					processEnterLoop(w, t);
+					break;
+				}
+				case EventKind.LEAVE_LOOP:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
+					int w = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					processLeaveLoop(w, t);
 					break;
 				}
 				case EventKind.NEW:
@@ -421,6 +437,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 	}
 	public void processEnterMethod(int m, int t) { }
 	public void processLeaveMethod(int m, int t) { }
+	public void processEnterLoop(int w, int t) { }
+	public void processLeaveLoop(int w, int t) { }
 	public void processNewOrNewArray(int h, int t, int o) { }
 	public void processGetstaticPrimitive(int e, int t, int f) { }
 	public void processGetstaticReference(int e, int t, int f, int o) { }
