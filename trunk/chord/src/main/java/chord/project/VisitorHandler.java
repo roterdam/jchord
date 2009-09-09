@@ -16,6 +16,7 @@ import chord.visitors.IHeapInstVisitor;
 import chord.visitors.IInstVisitor;
 import chord.visitors.IInvokeInstVisitor;
 import chord.visitors.IAcqLockInstVisitor;
+import chord.visitors.IRelLockInstVisitor;
 import chord.visitors.IMethodVisitor;
 import chord.visitors.IMoveInstVisitor;
 import chord.visitors.INewInstVisitor;
@@ -45,6 +46,7 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Return.THROW_A;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
+import joeq.Compiler.Quad.Operator.Monitor.MONITOREXIT;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.Templates.ListIterator;
 
@@ -62,7 +64,8 @@ public class VisitorHandler {
 	private Collection<INewInstVisitor> nivs;
 	private Collection<IInvokeInstVisitor> iivs;
 	private Collection<IReturnInstVisitor> rivs;
-	private Collection<IAcqLockInstVisitor> livs;
+	private Collection<IAcqLockInstVisitor> acqivs;
+	private Collection<IRelLockInstVisitor> relivs;
 	private Collection<IMoveInstVisitor> mivs;
 	private Collection<IPhiInstVisitor> pivs;
 	private Collection<IInstVisitor> ivs;
@@ -157,9 +160,14 @@ public class VisitorHandler {
 							riv.visitReturnInst(q);
 					}
 				} else if (op instanceof MONITORENTER) {
-					if (livs != null) {
-						for (IAcqLockInstVisitor liv : livs)
-							liv.visitAcqLockInst(q);
+					if (acqivs != null) {
+						for (IAcqLockInstVisitor acqiv : acqivs)
+							acqiv.visitAcqLockInst(q);
+					}
+				} else if (op instanceof MONITOREXIT) {
+					if (relivs != null) {
+						for (IRelLockInstVisitor reliv : relivs)
+							reliv.visitRelLockInst(q);
 					}
 				}
 			}
@@ -225,15 +233,21 @@ public class VisitorHandler {
 				rivs.add((IReturnInstVisitor) task);
 			}
 			if (task instanceof IAcqLockInstVisitor) {
-				if (livs == null)
-					livs = new ArrayList<IAcqLockInstVisitor>();
-				livs.add((IAcqLockInstVisitor) task);
+				if (acqivs == null)
+					acqivs = new ArrayList<IAcqLockInstVisitor>();
+				acqivs.add((IAcqLockInstVisitor) task);
+			}
+			if (task instanceof IRelLockInstVisitor) {
+				if (relivs == null)
+					relivs = new ArrayList<IRelLockInstVisitor>();
+				relivs.add((IRelLockInstVisitor) task);
 			}
 		}
 		reachableMethods = Program.v().getReachableMethods();
 		doInsts = (ivs != null) || (hivs != null) ||
 			(iivs != null) || (nivs != null) || (mivs != null) ||
-			(pivs != null) || (rivs != null) || (livs != null);
+			(pivs != null) || (rivs != null) || (acqivs != null) ||
+			(relivs != null);
 		doCFGs = (vvs != null) || doInsts;
 		if (cvs != null) {
 			IndexHashSet<jq_Class> preparedClasses =
