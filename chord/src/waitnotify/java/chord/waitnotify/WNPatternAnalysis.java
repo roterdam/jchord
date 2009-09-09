@@ -48,12 +48,12 @@ public class WNPatternAnalysis extends DynamicAnalysis {
     	instrScheme.setAloadPrimitiveEvent(true, true, true, true);
     	instrScheme.setAstorePrimitiveEvent(true, true, true, true);
 
-    	instrScheme.setGetstaticReferenceEvent(true, true, false, true);
-    	instrScheme.setPutstaticReferenceEvent(true, true, false, true);
-    	instrScheme.setGetfieldReferenceEvent(true, true, false, false, true);
-    	instrScheme.setPutfieldReferenceEvent(true, true, false, false, true);
-    	instrScheme.setAloadReferenceEvent(true, true, false, false, true);
-    	instrScheme.setAstoreReferenceEvent(true, true, false, false, true);
+    	instrScheme.setGetstaticReferenceEvent(true, true, true, false);
+    	instrScheme.setPutstaticReferenceEvent(true, true, true, false);
+    	instrScheme.setGetfieldReferenceEvent(true, true, true, true, false);
+    	instrScheme.setPutfieldReferenceEvent(true, true, true, true, false);
+    	instrScheme.setAloadReferenceEvent(true, true, true, true, false);
+    	instrScheme.setAstoreReferenceEvent(true, true, true, true, false);
 
     	instrScheme.setThreadStartEvent(true, true, true);
     	instrScheme.setThreadJoinEvent(true, true, true);
@@ -140,22 +140,22 @@ public class WNPatternAnalysis extends DynamicAnalysis {
 	}
 
 	public void processGetstaticReference(int eId, int tId, int fId, int oId) { 
-		processHeapRd(eId, tId, oId);
+		processHeapRd(eId, tId, Runtime.getPrimitiveId(1, fId));
 	}
-	public void processPutstaticReference(int eId, int tId, int fIdx, int oId) {
-		processHeapWr(eId, tId, oId);
+	public void processPutstaticReference(int eId, int tId, int fId, int oId) {
+		processHeapWr(eId, tId, Runtime.getPrimitiveId(1, fId));
 	}
 	public void processGetfieldReference(int eId, int tId, int bId, int fId, int oId) { 
-		processHeapRd(eId, tId, oId);
+		processHeapRd(eId, tId, Runtime.getPrimitiveId(bId, fId));
 	}
 	public void processPutfieldReference(int eId, int tId, int bId, int fId, int oId) { 
-		processHeapWr(eId, tId, oId);
+		processHeapWr(eId, tId, Runtime.getPrimitiveId(bId, fId));
 	}
 	public void processAloadReference(int eId, int tId, int bId, int iId, int oId) {
-		processHeapRd(eId, tId, oId);
+		processHeapRd(eId, tId, Runtime.getPrimitiveId(bId, iId));
 	}
 	public void processAstoreReference(int eId, int tId, int bId, int iId, int oId) {
-		processHeapWr(eId, tId, oId);
+		processHeapWr(eId, tId, Runtime.getPrimitiveId(bId, iId));
 	}
 
 	public void processAcquireLock(int pId, int tId, int lId) {

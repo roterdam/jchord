@@ -33,7 +33,7 @@ import joeq.Compiler.Quad.BasicBlock;
 	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
-	public final static boolean DEBUG = false;
+	public final static boolean DEBUG = true;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
 	
@@ -99,10 +99,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 			" " + mainClassName + " ";
 		Runnable traceTransformer = new Runnable() {
 			public void run() {
-				(new TraceTransformer()).run(
-					crudeTraceFileName, finalTraceFileName, scheme);
+				(new TraceTransformer(crudeTraceFileName, finalTraceFileName, scheme)).run();
 				if (DEBUG) {
-					(new TracePrinter()).run(crudeTraceFileName, instrumentor);
+					(new TracePrinter(crudeTraceFileName, instrumentor)).run();
 					System.out.println("DONE");
 				}
 			}
@@ -110,7 +109,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		Runnable traceProcessor = new Runnable() {
 			public void run() {
 				if (DEBUG) {
-					(new TracePrinter()).run(finalTraceFileName, instrumentor);
+					(new TracePrinter(finalTraceFileName, instrumentor)).run();
 					System.out.println("DONE");
 				}
 				processTrace(finalTraceFileName);
