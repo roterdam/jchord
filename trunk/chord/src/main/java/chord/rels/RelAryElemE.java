@@ -28,7 +28,7 @@ public class RelAryElemE extends ProgramRel {
 		DomE domE = (DomE) doms[0];
 		int numE = domE.size();
 		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad e = domE.get(eIdx);
+			Quad e = (Quad) domE.get(eIdx);
 			Operator op = e.getOperator();
 			if (op instanceof ALoad || op instanceof AStore) {
 				add(eIdx);

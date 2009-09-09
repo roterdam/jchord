@@ -121,7 +121,7 @@ public class InstrScheme implements Serializable {
 	 * ASTORE_REFERENCE e t b i o
 	 * 
 	 * METHOD_CALL:
-	 * METHOD_CALL p t
+	 * METHOD_CALL i t
 	 * 
      * RETURN_PRIMITIVE:
      * RETURN_PRIMITIVE p t
@@ -138,40 +138,40 @@ public class InstrScheme implements Serializable {
 	 * THREAD_START:
 	 * Controls generation of the following event before thread t
 	 * calls the <tt>start()</tt> method of <tt>java.lang.Thread</tt>
-	 * at program point p and spawns a thread o:
-	 * THREAD_START p t o
+	 * at program point i and spawns a thread o:
+	 * THREAD_START i t o
 	 * 
 	 * THREAD_JOIN:
 	 * Controls generation of the following event before thread t
 	 * calls the <tt>join()</tt>, <tt>join(int)</tt>, or
 	 * <tt>join(int,int)</tt> method of <tt>java.lang.Thread</tt>
-	 * at program point p to join with thread o:
-	 * THREAD_JOIN p t o
+	 * at program point i to join with thread o:
+	 * THREAD_JOIN i t o
 	 * 
 	 * ACQUIRE_LOCK:
 	 * Controls generation of the following event after thread t
-	 * executes a statement of the form monitorenter l or enters
-	 * a method synchronized on l at program point p:
-	 * ACQUIRE_LOCK p t l
+	 * executes a statement of the form monitorenter o or enters
+	 * a method synchronized on o at program point l:
+	 * ACQUIRE_LOCK l t o
 	 * 
 	 * RELEASE_LOCK:
 	 * Controls generation of the following event before thread t
-	 * executes a statement of the form monitorexit l or leaves
-	 * a method synchronized on l:
-	 * RELEASE_LOCK p t l
+	 * executes a statement of the form monitorexit o or leaves
+	 * a method synchronized on o at program point r:
+	 * RELEASE_LOCK r t o
 	 * 
 	 * WAIT:
 	 * Controls generation of the following event before thread t
 	 * calls the <tt>wait()</tt>, <tt>wait(long)</tt>, or
 	 * <tt>wait(long,int)</tt> method of <tt>java.lang.Object</tt>
-	 * at program point p on object l:
-	 * WAIT p t l
+	 * at program point i on object o:
+	 * WAIT i t o
 	 * 
 	 * NOTIFY:
 	 * Controls generation of the following event before thread t
 	 * calls the <tt>notify()</tt> or <tt>notifyAll()</tt> method of
-	 * <tt>java.lang.Object</tt> at program point p on object l:
-	 * NOTIFY p t l
+	 * <tt>java.lang.Object</tt> at program point i on object o:
+	 * NOTIFY i t o
 	 */
     public static final int ENTER_AND_LEAVE_METHOD = 0;
 	public static final int ENTER_AND_LEAVE_LOOP = 1;
@@ -606,21 +606,24 @@ public class InstrScheme implements Serializable {
 	}
 
 	public boolean needsImap() {
-		return events[METHOD_CALL].hasLoc();
+		return
+			events[METHOD_CALL].hasLoc() ||
+			events[THREAD_START].hasLoc() ||
+			events[THREAD_JOIN].hasLoc() ||
+			events[WAIT].hasLoc() ||
+			events[NOTIFY].hasLoc();
 	}
 
 	public boolean needsPmap() {
-		return hasQuadEvent ||
-			events[RETURN_PRIMITIVE].hasLoc() ||
-			events[RETURN_REFERENCE].hasLoc() ||
-			events[EXPLICIT_THROW].hasLoc() ||
-			events[IMPLICIT_THROW].hasLoc() ||
-			events[THREAD_START].hasLoc() ||
-			events[THREAD_JOIN].hasLoc() ||
-			events[ACQUIRE_LOCK].hasLoc() ||
-			events[RELEASE_LOCK].hasLoc() ||
-			events[WAIT].hasLoc() ||
-			events[NOTIFY].hasLoc();
+ 		return hasQuadEvent;
+	}
+
+	public boolean needsLmap() {
+		return events[ACQUIRE_LOCK].hasLoc();
+	}
+
+	public boolean needsRmap() {
+		return events[RELEASE_LOCK].hasLoc();
 	}
 
 	public boolean needsBmap() {

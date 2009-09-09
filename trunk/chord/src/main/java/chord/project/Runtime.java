@@ -496,14 +496,14 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void threadStartEvent(int pId, Object o) {
+	public synchronized static void threadStartEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.THREAD_START);
 				buffer.putByte(EventKind.THREAD_START);
-				if (pId != MISSING_FIELD_VAL)
-					buffer.putInt(pId);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
@@ -516,14 +516,14 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void threadJoinEvent(int pId, Object o) {
+	public synchronized static void threadJoinEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.THREAD_JOIN);
 				buffer.putByte(EventKind.THREAD_JOIN);
-				if (pId != MISSING_FIELD_VAL)
-					buffer.putInt(pId);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
@@ -536,83 +536,83 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void acquireLockEvent(int pId, Object l) {
+	public synchronized static void acquireLockEvent(int lId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
 				buffer.putByte(EventKind.ACQUIRE_LOCK);
-				if (pId != MISSING_FIELD_VAL) {
-					buffer.putInt(pId);
+				if (lId != MISSING_FIELD_VAL) {
+					buffer.putInt(lId);
 				}
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
 				if (ef.hasObj()) {
-					int lId = getObjectId(l);
-					buffer.putInt(lId);
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
 				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void releaseLockEvent(int pId, Object l) {
+	public synchronized static void releaseLockEvent(int rId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
 				buffer.putByte(EventKind.RELEASE_LOCK);
-				if (pId != MISSING_FIELD_VAL) {
-					buffer.putInt(pId);
+				if (rId != MISSING_FIELD_VAL) {
+					buffer.putInt(rId);
 				}
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
 				if (ef.hasObj()) {
-					int lId = getObjectId(l);
-					buffer.putInt(lId);
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
 				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void waitEvent(int pId, Object l) {
+	public synchronized static void waitEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.WAIT);
 				buffer.putByte(EventKind.WAIT);
-				if (pId != MISSING_FIELD_VAL)
-					buffer.putInt(pId);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
 				if (ef.hasObj()) {
-					int lId = getObjectId(l);
-					buffer.putInt(lId);
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
 				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void notifyEvent(int pId, Object l) {
+	public synchronized static void notifyEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
 				buffer.putByte(EventKind.NOTIFY);
-				if (pId != MISSING_FIELD_VAL)
-					buffer.putInt(pId);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
 				if (ef.hasObj()) {
-					int lId = getObjectId(l);
-					buffer.putInt(lId);
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
 				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;

@@ -452,17 +452,17 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void processAloadReference(int e, int t, int b, int i, int o) { }
 	public void processAstorePrimitive(int e, int t, int b, int i) { }
 	public void processAstoreReference(int e, int t, int b, int i, int o) { }
-	public void processThreadStart(int p, int t, int o) { }
-	public void processThreadJoin(int p, int t, int o) { }
-	public void processAcquireLock(int p, int t, int l) { }
-	public void processReleaseLock(int p, int t, int l) { }
-	public void processWait(int p, int t, int l) { }
-	public void processNotify(int p, int t, int l) { }
+	public void processThreadStart(int i, int t, int o) { }
+	public void processThreadJoin(int i, int t, int o) { }
+	public void processAcquireLock(int l, int t, int o) { }
+	public void processReleaseLock(int r, int t, int o) { }
+	public void processWait(int i, int t, int o) { }
+	public void processNotify(int i, int t, int o) { }
 	public void processMethodCall(int i, int t) { }
 	public void processReturnPrimitive(int p, int t) { }
 	public void processReturnReference(int p, int t, int o) { }
 	public void processExplicitThrow(int p, int t, int o) { }
 	public void processImplicitThrow(int p, int t, int o) { }
-	public void processQuad(int q, int t) { }
+	public void processQuad(int p, int t) { }
 	public void processBasicBlock(int b, int t) { }
 }

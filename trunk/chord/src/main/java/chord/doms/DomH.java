@@ -5,12 +5,12 @@
  */
 package chord.doms;
 
+import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.TypeOperand;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import chord.project.Chord;
-import chord.project.Program;
 import chord.visitors.INewInstVisitor;
 
 /**
@@ -30,10 +30,10 @@ public class DomH extends QuadDom implements INewInstVisitor {
 	public void visitNewInst(Quad q) {
 		getOrAdd(q);
 	}
-	public String toXMLAttrsString(Quad q) {
-		// XXX
-		if (q == null)
+	public String toXMLAttrsString(Inst i) {
+		if (i == null)
 			return "";
+		Quad q = (Quad) i;
 		TypeOperand to = (q.getOperator() instanceof New) ?
 			New.getType(q) : NewArray.getType(q);
 		String type = to.getType().getName();

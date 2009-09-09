@@ -31,7 +31,11 @@ public class TracePrinter {
 		IndexMap<String> Hmap = instrumentor.getHmap();
 		IndexMap<String> Emap = instrumentor.getEmap();
 		IndexMap<String> Fmap = instrumentor.getFmap();
+		IndexMap<String> Imap = instrumentor.getImap();
+		IndexMap<String> Lmap = instrumentor.getLmap();
+		IndexMap<String> Rmap = instrumentor.getRmap();
 		IndexMap<String> Pmap = instrumentor.getPmap();
+		IndexMap<String> Bmap = instrumentor.getBmap();
 		boolean convert = false;
 		try {
 			ByteBufferedFile buffer = new ByteBufferedFile(1024, traceFileName, true);
@@ -254,108 +258,105 @@ public class TracePrinter {
 				case EventKind.THREAD_START:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.THREAD_START);
-					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
+					int i = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String iStr = convert ? Integer.toString(i) : ((i < 0) ? "null" : Imap.get(i));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("THREAD_START " + pStr + " " + t + " " + o);
+					System.out.println("THREAD_START " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.THREAD_JOIN:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.THREAD_JOIN);
-					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
+					int i = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String iStr = convert ? Integer.toString(i) : ((i < 0) ? "null" : Imap.get(i));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("THREAD_JOIN " + pStr + " " + t + " " + o);
+					System.out.println("THREAD_JOIN " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.ACQUIRE_LOCK:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ACQUIRE_LOCK);
-					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
+					int l = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String lStr = convert ? Integer.toString(l) : ((l < 0) ? "null" : Lmap.get(l));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					int l = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("ACQUIRE_LOCK " + pStr + " " + t + " " + l);
+					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					System.out.println("ACQUIRE_LOCK " + lStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.RELEASE_LOCK:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.RELEASE_LOCK);
-					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
+					int r = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String rStr = convert ? Integer.toString(r) : ((r < 0) ? "null" : Rmap.get(r));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					int l = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("RELEASE_LOCK " + pStr + " " + t + " " + l);
+					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					System.out.println("RELEASE_LOCK " + rStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.WAIT:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.WAIT);
-					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
+					int i = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String iStr = convert ? Integer.toString(i) : ((i < 0) ? "null" : Imap.get(i));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					int l = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("WAIT " + pStr + " " + t + " " + l);
+					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					System.out.println("WAIT " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.NOTIFY:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
-					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
+					int i = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String iStr = convert ? Integer.toString(i) : ((i < 0) ? "null" : Imap.get(i));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					int l = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("NOTIFY " + pStr + " " + t + " " + l);
+					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					System.out.println("NOTIFY " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.METHOD_CALL:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 					int i = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String iStr = convert ? Integer.toString(i) : ((i < 0) ? "null" : Imap.get(i));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("METHOD_CALL " + i + " " + t);
+					System.out.println("METHOD_CALL " + iStr + " " + t);
 					break;
 				}
 				case EventKind.RETURN_PRIMITIVE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
 					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("RETURN_PRIMITIVE " + pStr + " " + t);
+					System.out.println("RETURN_PRIMITIVE " + p + " " + t);
 					break;
 				}
 				case EventKind.RETURN_REFERENCE:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
 					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("RETURN_REFERENCE " + pStr + " " + t + " " + o);
+					System.out.println("RETURN_REFERENCE " + p + " " + t + " " + o);
 					break;
 				}
 				case EventKind.EXPLICIT_THROW:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
 					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("EXPLICIT_THROW " + pStr + " " + t + " " + o);
+					System.out.println("EXPLICIT_THROW " + p + " " + t + " " + o);
 					break;
 				}
 				case EventKind.IMPLICIT_THROW:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
 					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					String pStr = convert ? Integer.toString(p) : ((p < 0) ? "null" : Pmap.get(p));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("IMPLICIT_THROW " + pStr + " " + t + " " + o);
+					System.out.println("IMPLICIT_THROW " + p + " " + t + " " + o);
 					break;
 				}
 				case EventKind.QUAD:
@@ -369,9 +370,9 @@ public class TracePrinter {
 				case EventKind.BASIC_BLOCK:
 				{
 					int b = buffer.getInt();
-					// TODO
+					String bStr = convert ? Integer.toString(b) : ((b < 0) ? "null" : Bmap.get(b));
 					int t = buffer.getInt();
-					System.out.println("BASIC_BLOCK " + b + " " + t);
+					System.out.println("BASIC_BLOCK " + bStr + " " + t);
 					break;
 				}
 				default:

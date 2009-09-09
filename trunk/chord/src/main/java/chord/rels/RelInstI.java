@@ -27,7 +27,7 @@ public class RelInstI extends ProgramRel {
 		DomI domI = (DomI) doms[0];
 		int numI = domI.size();
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			Quad q = domI.get(iIdx);
+			Quad q = (Quad) domI.get(iIdx);
 			jq_Method m = Invoke.getMethod(q).getMethod();
 			if (!m.isStatic())
 				add(iIdx);

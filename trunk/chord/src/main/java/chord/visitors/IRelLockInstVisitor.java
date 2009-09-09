@@ -13,12 +13,12 @@ import joeq.Compiler.Quad.Quad;
  * 
  * @author Mayur Naik (mayur.naik@intel.com)
  */
-public interface ILockInstVisitor extends IMethodVisitor {
+public interface IRelLockInstVisitor extends IMethodVisitor {
 	/**
-	 * Visits all monitorenter statements in all methods
+	 * Visits all monitorexit statements in all methods
 	 * in the program.
 	 * 
-	 * @param	q	A monitorenter statement.
+	 * @param	q	A monitorexit statement.
 	 */
-	public void visitLockInst(Quad q);
+	public void visitRelLockInst(Quad q);
 }

@@ -35,7 +35,7 @@ public class RelEV extends ProgramRel {
 		DomV domV = (DomV) doms[1];
 		int numE = domE.size();
 		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad q = domE.get(eIdx);
+			Quad q = (Quad) domE.get(eIdx);
 			Operator op = q.getOperator();
 			RegisterOperand bo;
 			if (op instanceof ALoad) {

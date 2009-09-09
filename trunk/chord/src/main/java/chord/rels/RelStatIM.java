@@ -32,7 +32,7 @@ public class RelStatIM extends ProgramRel {
 		DomM domM = (DomM) doms[1];
 		int numI = domI.size();
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			Quad i = domI.get(iIdx);
+			Quad i = (Quad) domI.get(iIdx);
 			Operator op = i.getOperator();
 			if (op instanceof InvokeStatic) {
 				MethodOperand mo = InvokeStatic.getMethod(i);

@@ -35,7 +35,7 @@ public class RelPobjValAsgnInst extends ProgramRel {
 		DomH domH = (DomH) doms[2];
 		int numH = domH.size();
 		for (int hIdx = 0; hIdx < numH; hIdx++) {
-			Quad h = domH.get(hIdx);
+			Quad h = (Quad) domH.get(hIdx);
 			int pIdx = domP.indexOf(h);
 			Operator op = h.getOperator();
 			RegisterOperand vo;

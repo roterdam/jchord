@@ -29,7 +29,7 @@ public class RelPE extends ProgramRel {
 		DomE domE = (DomE) doms[1];
 		int numE = domE.size();
 		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad e = domE.get(eIdx);
+			Quad e = (Quad) domE.get(eIdx);
 			int pIdx = domP.indexOf(e);
 			add(pIdx, eIdx);
 		}
