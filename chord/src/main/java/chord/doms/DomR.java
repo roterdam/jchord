@@ -12,30 +12,30 @@ import joeq.Compiler.Quad.Quad;
 
 import chord.project.Chord;
 import chord.project.Program;
-import chord.visitors.IAcqLockInstVisitor;
+import chord.visitors.IRelLockInstVisitor;
 
 /**
- * Domain of all monitorenter statements.
+ * Domain of all monitorexit statements.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "L",
+	name = "R",
 	consumedNames = { "M" }
 )
-public class DomL extends QuadDom implements IAcqLockInstVisitor {
+public class DomR extends QuadDom implements IRelLockInstVisitor {
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
 		ctnrMethod = m;
 		if (m.isSynchronized()) {
 			ControlFlowGraph cfg = m.getCFG();
-			BasicBlock head = cfg.entry();
-			Program.v().mapInstToMethod(head, m);
-			getOrAdd(head);
+			BasicBlock tail = cfg.exit();
+			Program.v().mapInstToMethod(tail, m);
+			getOrAdd(tail);
 		}
 	}
-	public void visitAcqLockInst(Quad q) {
+	public void visitRelLockInst(Quad q) {
 		getOrAdd(q);
 	}
 }

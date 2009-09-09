@@ -53,7 +53,7 @@ public class Database {
 	private Map<Long, Map<Integer, List<DBElemInfo>>> eBase;
 	public Set<ErrorInfo> errors;
 	private IndexMap<String> Emap;
-	private IndexMap<String> Pmap;
+	private IndexMap<String> Imap;
 	
 	public Database(){
 		eBase = new HashMap<Long, Map<Integer, List<DBElemInfo>>>();
@@ -107,10 +107,10 @@ public class Database {
 		return iidsListWithoutDups;
 	}
 	
-	public void checkForErrors(IndexMap<String> Emap, IndexMap<String> Pmap) {
+	public void checkForErrors(IndexMap<String> Emap, IndexMap<String> Imap) {
 		//System.out.println("yes...in checkForErrors");
 		this.Emap = Emap;
-		this.Pmap = Pmap;
+		this.Imap = Imap;
 		Iterator eBaseItr = eBase.entrySet().iterator();
 		while(eBaseItr.hasNext()){
 			Map.Entry eBaseEntry = (Map.Entry)eBaseItr.next();
@@ -216,7 +216,7 @@ public class Database {
 			s = Emap.get(iid);
 		}
 		else{
-			s = Pmap.get(iid);
+			s = Imap.get(iid);
 		}
 	
 		MethodElem elem = MethodElem.parse(s);

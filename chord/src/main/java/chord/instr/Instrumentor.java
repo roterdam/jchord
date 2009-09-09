@@ -13,9 +13,11 @@ import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.doms.DomH;
 import chord.doms.DomI;
+import chord.doms.DomL;
 import chord.doms.DomM;
 import chord.doms.DomP;
 import chord.doms.DomB;
+import chord.doms.DomR;
 import chord.instr.InstrScheme.EventFormat;
 import chord.project.CFGLoopFinder;
 import chord.project.ChordRuntimeException;
@@ -103,6 +105,8 @@ public class Instrumentor {
 	protected DomH domH;
 	protected DomE domE;
 	protected DomI domI;
+	protected DomL domL;
+	protected DomR domR;
 	protected DomP domP;
 	protected DomB domB;
 
@@ -111,6 +115,8 @@ public class Instrumentor {
 	protected IndexMap<String> Hmap;
 	protected IndexMap<String> Emap;
 	protected IndexMap<String> Imap;
+	protected IndexMap<String> Lmap;
+	protected IndexMap<String> Rmap;
 	protected IndexMap<String> Pmap;
 	protected IndexMap<String> Bmap;
 	protected IndexMap<BasicBlock> Wmap;
@@ -163,6 +169,8 @@ public class Instrumentor {
 	public DomH getDomH() { return domH; }
 	public DomE getDomE() { return domE; }
 	public DomI getDomI() { return domI; }
+	public DomL getDomL() { return domL; }
+	public DomR getDomR() { return domR; }
 	public DomP getDomP() { return domP; }
 	public DomB getDomB() { return domB; }
 
@@ -171,6 +179,8 @@ public class Instrumentor {
 	public IndexMap<String> getHmap() { return Hmap; }
 	public IndexMap<String> getEmap() { return Emap; }
 	public IndexMap<String> getImap() { return Imap; }
+	public IndexMap<String> getLmap() { return Lmap; }
+	public IndexMap<String> getRmap() { return Rmap; }
 	public IndexMap<String> getPmap() { return Pmap; }
 	public IndexMap<String> getBmap() { return Bmap; }
 	public IndexMap<BasicBlock> getWmap() { return Wmap; }
@@ -271,13 +281,27 @@ public class Instrumentor {
 			} else
 				Imap = new IndexHashMap<String>();
 		}
-		if (scheme.needsPmap()) {
+		if (scheme.needsLmap()) {
 			if (convert) {
-				domP = (DomP) Project.getTrgt("P");
-				Project.runTask(domP);
-				Pmap = getUniqueStringMap(domP);
+				domL = (DomL) Project.getTrgt("L");
+				Project.runTask(domL);
+				Lmap = getUniqueStringMap(domL);
 			} else
-				Pmap = new IndexHashMap<String>();
+				Lmap = new IndexHashMap<String>();
+		}
+		if (scheme.needsRmap()) {
+			if (convert) {
+				domR = (DomR) Project.getTrgt("R");
+				Project.runTask(domR);
+				Rmap = getUniqueStringMap(domR);
+			} else
+				Rmap = new IndexHashMap<String>();
+		}
+		if (scheme.needsPmap()) {
+			assert (convert);
+			domP = (DomP) Project.getTrgt("P");
+			Project.runTask(domP);
+			Pmap = getUniqueStringMap(domP);
 		}
 		if (scheme.needsBmap()) {
 			assert (convert);
@@ -285,6 +309,9 @@ public class Instrumentor {
 			Project.runTask(domB);
 			Bmap = getUniqueStringMap(domB);
 		}
+		if (scheme.needsWmap())
+			Wmap = new IndexHashMap<BasicBlock>();
+
 		if (instrMethodAndLoopBound > 0 ||
 				enterAndLeaveMethodEvent.present() ||
 				releaseLockEvent.present()) {
@@ -295,8 +322,6 @@ public class Instrumentor {
 			}
 			assert (exType != null);
 		}
-		if (scheme.needsWmap())
-			Wmap = new IndexHashMap<BasicBlock>();
 		
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String classesDirName = Properties.classesDirName;
@@ -380,6 +405,14 @@ public class Instrumentor {
 		if (Imap != null) {
 			FileUtils.writeMapToFile(Imap,
 				(new File(outDirName, "I.dynamic.txt")).getAbsolutePath());
+		}
+		if (Lmap != null) {
+			FileUtils.writeMapToFile(Lmap,
+				(new File(outDirName, "L.dynamic.txt")).getAbsolutePath());
+		}
+		if (Rmap != null) {
+			FileUtils.writeMapToFile(Rmap,
+				(new File(outDirName, "R.dynamic.txt")).getAbsolutePath());
 		}
 		if (Pmap != null) {
 			FileUtils.writeMapToFile(Pmap,
@@ -472,6 +505,7 @@ public class Instrumentor {
 									int bci = joeqMethod.getBCI(q);
 									assert (bci != -1);
 									int pId = domP.indexOf(q);
+									assert (pId != -1);
 									String instr = quadEventCall + pId + ");";
 									attachInstrToBCIAft(instr, bci);
 								}
@@ -479,7 +513,6 @@ public class Instrumentor {
 						}
 					}
 				}
-				String enterEventCall, leaveEventCall;
 				if (instrMethodAndLoopBound > 0 || enterAndLeaveLoopEvent.present()) {
 					finder.visit(cfg);
 					Set<BasicBlock> heads = finder.getLoopHeads();
@@ -523,13 +556,13 @@ public class Instrumentor {
 			else
 				syncExpr = "$0";
 			if (acquireLockEvent.present()) {
-				int pId = set(Pmap, -1);
-				enterStr = acquireLockEventCall + pId + "," +
+				int lId = set(Lmap, -1);
+				enterStr = acquireLockEventCall + lId + "," +
 					syncExpr + ");";
 			}
 			if (releaseLockEvent.present()) {
-				int pId = set(Pmap, -2);
-				leaveStr = releaseLockEventCall + pId + "," +
+				int rId = set(Rmap, -2);
+				leaveStr = releaseLockEventCall + rId + "," +
 					syncExpr + ");";
 			}
 		}
@@ -712,10 +745,10 @@ public class Instrumentor {
 		}
 		public void edit(MonitorEnter e) {
 			if (acquireLockEvent.present()) {
-				int pId = acquireLockEvent.hasLoc() ? set(Pmap, e) :
+				int lId = acquireLockEvent.hasLoc() ? set(Lmap, e) :
 					Runtime.MISSING_FIELD_VAL;
-				String l = acquireLockEvent.hasObj() ? "$0" : "null";
-				String instr = acquireLockEventCall + pId + "," + l + ");";
+				String o = acquireLockEvent.hasObj() ? "$0" : "null";
+				String instr = acquireLockEventCall + lId + "," + o + ");";
 				try {
 					e.replace("{ $proceed(); " + instr + " }");
 				} catch (CannotCompileException ex) {
@@ -725,10 +758,10 @@ public class Instrumentor {
 		}
 		public void edit(MonitorExit e) {
 			if (releaseLockEvent.present()) {
-				int pId = releaseLockEvent.hasLoc() ? set(Pmap, e) :
+				int rId = releaseLockEvent.hasLoc() ? set(Rmap, e) :
 					Runtime.MISSING_FIELD_VAL;
-				String l = releaseLockEvent.hasObj() ? "$0" : "null";
-				String instr = releaseLockEventCall + pId + "," + l + ");";
+				String o = releaseLockEvent.hasObj() ? "$0" : "null";
+				String instr = releaseLockEventCall + rId + "," + o + ");";
 				try {
 					e.replace("{ " + instr + " $proceed(); }");
 				} catch (CannotCompileException ex) {
@@ -911,18 +944,18 @@ public class Instrumentor {
 			if (mName.equals("wait") && (mDesc.equals("()V") ||
 					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
 				if (waitEvent.present()) {
-					int pId = waitEvent.hasLoc() ? set(Pmap, e) :
+					int iId = waitEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String lId = waitEvent.hasObj() ? "$0" : "null";
-					instr2 = waitEventCall + pId + "," + lId + ");";
+					String oId = waitEvent.hasObj() ? "$0" : "null";
+					instr2 = waitEventCall + iId + "," + oId + ");";
 				}
 			} else if ((mName.equals("notify") ||
 					mName.equals("notifyAll")) && mDesc.equals("()V")) {
 				if (notifyEvent.present()) {
-					int pId = notifyEvent.hasLoc() ? set(Pmap, e) :
+					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String lId = notifyEvent.hasObj() ? "$0" : "null";
-					instr2 = notifyEventCall + pId + "," + lId + ");";
+					String oId = notifyEvent.hasObj() ? "$0" : "null";
+					instr2 = notifyEventCall + iId + "," + oId + ");";
 				}
 			}
 		} else if (cName.equals("java.lang.Thread")) {
@@ -930,18 +963,18 @@ public class Instrumentor {
 			String mDesc = m.getSignature();
 			if (mName.equals("start") && mDesc.equals("()V")) {
 				if (threadStartEvent.present()) {
-					int pId = threadStartEvent.hasLoc() ? set(Pmap, e) :
+					int iId = threadStartEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
 					String oId = threadStartEvent.hasObj() ? "$0" : "null";
-					instr2 = threadStartEventCall + pId + "," + oId + ");";
+					instr2 = threadStartEventCall + iId + "," + oId + ");";
 				}
 			} else if (mName.equals("join") && (mDesc.equals("()V") ||
 					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
 				if (threadJoinEvent.present()) {
-					int pId = threadJoinEvent.hasLoc() ? set(Pmap, e) :
+					int iId = threadJoinEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
 					String oId = threadJoinEvent.hasObj() ? "$0" : "null";
-					instr2 = threadJoinEventCall + pId + "," + oId + ");";
+					instr2 = threadJoinEventCall + iId + "," + oId + ");";
 				}
 			}
 		}

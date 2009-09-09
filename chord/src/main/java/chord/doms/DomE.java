@@ -5,6 +5,7 @@
  */
 package chord.doms;
 
+import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Getfield;
@@ -37,7 +38,8 @@ public class DomE extends QuadDom implements IHeapInstVisitor {
 		}
 		getOrAdd(q);
 	}
-	public String toXMLAttrsString(Quad q) {
+	public String toXMLAttrsString(Inst i) {
+		Quad q = (Quad) i;
 		Operator op = q.getOperator();
 		return super.toXMLAttrsString(q) +
 			" rdwr=\"" + (Program.isWrHeapInst(op) ? "Wr" : "Rd") + "\"";

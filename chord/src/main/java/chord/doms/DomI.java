@@ -7,7 +7,6 @@ package chord.doms;
 
 import joeq.Compiler.Quad.Quad;
 import chord.project.Chord;
-import chord.project.Program;
 import chord.visitors.IInvokeInstVisitor;
 
 /**

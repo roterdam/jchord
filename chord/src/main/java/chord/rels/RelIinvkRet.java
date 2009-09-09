@@ -31,7 +31,7 @@ public class RelIinvkRet extends ProgramRel {
 		DomV domV = (DomV) doms[2];
 		int numI = domI.size();
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			Quad q = domI.get(iIdx);
+			Quad q = (Quad) domI.get(iIdx);
 			RegisterOperand vo = Invoke.getDest(q);
 			if (vo != null) {
 				Register v = vo.getRegister();

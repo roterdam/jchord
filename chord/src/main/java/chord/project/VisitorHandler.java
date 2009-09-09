@@ -15,7 +15,7 @@ import chord.visitors.IFieldVisitor;
 import chord.visitors.IHeapInstVisitor;
 import chord.visitors.IInstVisitor;
 import chord.visitors.IInvokeInstVisitor;
-import chord.visitors.ILockInstVisitor;
+import chord.visitors.IAcqLockInstVisitor;
 import chord.visitors.IMethodVisitor;
 import chord.visitors.IMoveInstVisitor;
 import chord.visitors.INewInstVisitor;
@@ -62,7 +62,7 @@ public class VisitorHandler {
 	private Collection<INewInstVisitor> nivs;
 	private Collection<IInvokeInstVisitor> iivs;
 	private Collection<IReturnInstVisitor> rivs;
-	private Collection<ILockInstVisitor> livs;
+	private Collection<IAcqLockInstVisitor> livs;
 	private Collection<IMoveInstVisitor> mivs;
 	private Collection<IPhiInstVisitor> pivs;
 	private Collection<IInstVisitor> ivs;
@@ -158,8 +158,8 @@ public class VisitorHandler {
 					}
 				} else if (op instanceof MONITORENTER) {
 					if (livs != null) {
-						for (ILockInstVisitor liv : livs)
-							liv.visitLockInst(q);
+						for (IAcqLockInstVisitor liv : livs)
+							liv.visitAcqLockInst(q);
 					}
 				}
 			}
@@ -224,10 +224,10 @@ public class VisitorHandler {
 					rivs = new ArrayList<IReturnInstVisitor>();
 				rivs.add((IReturnInstVisitor) task);
 			}
-			if (task instanceof ILockInstVisitor) {
+			if (task instanceof IAcqLockInstVisitor) {
 				if (livs == null)
-					livs = new ArrayList<ILockInstVisitor>();
-				livs.add((ILockInstVisitor) task);
+					livs = new ArrayList<IAcqLockInstVisitor>();
+				livs.add((IAcqLockInstVisitor) task);
 			}
 		}
 		reachableMethods = Program.v().getReachableMethods();

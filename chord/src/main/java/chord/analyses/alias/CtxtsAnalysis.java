@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.RegisterFactory.Register;
@@ -286,12 +287,12 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				}
 			}
 			kobjValue = new int[domH.size()];
-			for (Quad inst : domH) {
+			for (Inst inst : domH) {
 				int h = domH.indexOf(inst);
 				kobjValue[h] = kobjK;
 			}
 			kcfaValue = new int[domI.size()];
-			for (Quad inst : domI) {
+			for (Inst inst : domI) {
 				int i = domI.indexOf(inst);
 				kcfaValue[i] = kcfaK;
 			}
@@ -375,7 +376,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			if (!isCtxtSenI[iIdx])
 				continue;
-			Quad invk = domI.get(iIdx);
+			Quad invk = (Quad) domI.get(iIdx);
 			jq_Method meth = Program.v().getMethod(invk);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
 			int k = kcfaValue[iIdx];
@@ -386,7 +387,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			}
 		}
 		for (int hIdx = 1; hIdx < numH; hIdx++) {
-			Quad inst = domH.get(hIdx);
+			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = Program.v().getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
 			int k = kobjValue[hIdx];
@@ -410,7 +411,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			if (!isCtxtSenI[iIdx])
 				continue;
-			Quad invk = domI.get(iIdx);
+			Quad invk = (Quad) domI.get(iIdx);
 			jq_Method meth = Program.v().getMethod(invk);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
 			int k = kcfaValue[iIdx];
@@ -437,7 +438,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		if (!isLastIter)
 			relRefinableCH.zero();
 		for (int hIdx = 1; hIdx < numH; hIdx++) {
-			Quad inst = domH.get(hIdx);
+			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = Program.v().getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
 			int k = kobjValue[hIdx];

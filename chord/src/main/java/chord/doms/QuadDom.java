@@ -11,9 +11,11 @@ import chord.project.Project;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 
-public abstract class QuadDom extends ProgramDom<Quad> {
+public abstract class QuadDom extends ProgramDom<Inst> {
 	protected DomM domM;
 	protected jq_Method ctnrMethod;
 	public void init() {
@@ -23,26 +25,36 @@ public abstract class QuadDom extends ProgramDom<Quad> {
 	public void visit(jq_Method m) {
 		ctnrMethod = m;
 	}
-	public int getOrAdd(Quad q) {
-		// XXX
-		if (q != null)
-			Program.v().mapInstToMethod(q, ctnrMethod);
-		return super.getOrAdd(q);
+	public int getOrAdd(Inst i) {
+		if (i != null)
+			Program.v().mapInstToMethod(i, ctnrMethod);
+		return super.getOrAdd(i);
 	}
-	public String toUniqueString(Quad q) {
-		if (q == null)
+	public String toUniqueString(Inst i) {
+		if (i == null)
 			return "null";
-		jq_Method m = Program.v().getMethod(q);
-		int bci = m.getBCI(q);
+		jq_Method m = Program.v().getMethod(i);
+		int bci;
+		if (i instanceof Quad)
+			bci = m.getBCI((Quad) i);
+		else {
+			BasicBlock b = (BasicBlock) i;
+			if (b.isEntry())
+				bci = -1;
+			else {
+				assert (b.isExit());
+				bci = -2;
+			}
+		}
 		String mName = m.getName().toString();
 		String mDesc = m.getDesc().toString();
 		String cName = m.getDeclaringClass().getName();
 		return Program.toString(bci, mName, mDesc, cName);
 	}
-	public String toXMLAttrsString(Quad q) {
-		jq_Method m = Program.v().getMethod(q);
+	public String toXMLAttrsString(Inst i) {
+		jq_Method m = Program.v().getMethod(i);
 		String file = Program.getSourceFileName(m.getDeclaringClass());
-		int line = Program.getLineNumber(q, m);
+		int line = Program.getLineNumber(i, m);
 		int mIdx = domM.indexOf(m);
 		return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
 			"Mid=\"M" + mIdx + "\"";
