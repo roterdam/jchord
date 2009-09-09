@@ -21,86 +21,82 @@ import chord.util.tuple.integer.IntTrio;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class TraceTransformer {
-	private boolean newAndNewArrayHasHid;
-	private boolean newAndNewArrayHasTid;
-	private boolean newAndNewArrayHasOid;
-	private int enterAndLeaveMethodNumBytes;
-	private int enterAndLeaveLoopNumBytes;
-	private int newAndNewArrayNumBytes;
-	private int getstaticPrimitiveNumBytes;
-	private int getstaticReferenceNumBytes;
-	private int putstaticPrimitiveNumBytes;
-	private int putstaticReferenceNumBytes;
-	private int getfieldPrimitiveNumBytes;
-	private int getfieldReferenceNumBytes;
-	private int putfieldPrimitiveNumBytes;
-	private int putfieldReferenceNumBytes;
-	private int aloadPrimitiveNumBytes;
-	private int aloadReferenceNumBytes;
-	private int astorePrimitiveNumBytes;
-	private int astoreReferenceNumBytes;
-	private int threadStartNumBytes;
-	private int threadJoinNumBytes;
-	private int acquireLockNumBytes;
-	private int releaseLockNumBytes;
-	private int waitNumBytes;
-	private int notifyNumBytes;
-	private int methodCallNumBytes;
-	private int returnPrimitiveNumBytes;
-	private int returnReferenceNumBytes;
-	private int explicitThrowNumBytes;
-	private int implicitThrowNumBytes;
+	private final String rdFileName;
+	private final String wrFileName;
+
+	// cached values from scheme for efficiency
+	private final boolean newAndNewArrayHasHid;
+	private final boolean newAndNewArrayHasTid;
+	private final boolean newAndNewArrayHasOid;
+	private final int enterAndLeaveMethodNumBytes;
+	private final int enterAndLeaveLoopNumBytes;
+	private final int newAndNewArrayNumBytes;
+	private final int getstaticPrimitiveNumBytes;
+	private final int getstaticReferenceNumBytes;
+	private final int putstaticPrimitiveNumBytes;
+	private final int putstaticReferenceNumBytes;
+	private final int getfieldPrimitiveNumBytes;
+	private final int getfieldReferenceNumBytes;
+	private final int putfieldPrimitiveNumBytes;
+	private final int putfieldReferenceNumBytes;
+	private final int aloadPrimitiveNumBytes;
+	private final int aloadReferenceNumBytes;
+	private final int astorePrimitiveNumBytes;
+	private final int astoreReferenceNumBytes;
+	private final int threadStartNumBytes;
+	private final int threadJoinNumBytes;
+	private final int acquireLockNumBytes;
+	private final int releaseLockNumBytes;
+	private final int waitNumBytes;
+	private final int notifyNumBytes;
+	private final int methodCallNumBytes;
+	private final int returnPrimitiveNumBytes;
+	private final int returnReferenceNumBytes;
+	private final int explicitThrowNumBytes;
+	private final int implicitThrowNumBytes;
+
 	private ByteBufferedFile reader, writer;
 	private boolean isInNew;
 	private TByteArrayList tmp;
 	private List<IntTrio> pending;
 	private int count;
-/*
-	public static void main(String[] args) {
-		(new TraceTransformer()).run();
+
+	public TraceTransformer(String rdFileName, String wrFileName, InstrScheme scheme) {
+		this.rdFileName = rdFileName;
+		this.wrFileName = wrFileName;
+		newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasLoc();
+		newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasThr();
+		newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasObj();
+		assert (newAndNewArrayHasOid);
+		enterAndLeaveMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD).size();
+		enterAndLeaveLoopNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP).size();
+		newAndNewArrayNumBytes = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).size();
+		getstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE).size();
+		getstaticReferenceNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE).size();
+		putstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE).size();
+		putstaticReferenceNumBytes = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE).size();
+		getfieldPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE).size();
+		getfieldReferenceNumBytes = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE).size();
+		putfieldPrimitiveNumBytes = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE).size();
+		putfieldReferenceNumBytes = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE).size();
+		aloadPrimitiveNumBytes = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE).size();
+		aloadReferenceNumBytes = scheme.getEvent(InstrScheme.ALOAD_REFERENCE).size();
+		astorePrimitiveNumBytes = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE).size();
+		astoreReferenceNumBytes = scheme.getEvent(InstrScheme.ASTORE_REFERENCE).size();
+		threadStartNumBytes = scheme.getEvent(InstrScheme.THREAD_START).size();
+		threadJoinNumBytes = scheme.getEvent(InstrScheme.THREAD_JOIN).size();
+		acquireLockNumBytes = scheme.getEvent(InstrScheme.ACQUIRE_LOCK).size();
+		releaseLockNumBytes = scheme.getEvent(InstrScheme.RELEASE_LOCK).size();
+		waitNumBytes = scheme.getEvent(InstrScheme.WAIT).size();
+		notifyNumBytes = scheme.getEvent(InstrScheme.NOTIFY).size();
+		methodCallNumBytes = scheme.getEvent(InstrScheme.METHOD_CALL).size();
+		returnPrimitiveNumBytes = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE).size();
+		returnReferenceNumBytes = scheme.getEvent(InstrScheme.RETURN_REFERENCE).size();
+		explicitThrowNumBytes = scheme.getEvent(InstrScheme.EXPLICIT_THROW).size();
+		implicitThrowNumBytes = scheme.getEvent(InstrScheme.IMPLICIT_THROW).size();
 	}
 	public void run() {
-		String rdFileName = System.getProperty("chord.crude.trace.file");
-		assert (rdFileName != null);
-		String wrFileName = System.getProperty("chord.final.trace.file");
-		assert (wrFileName != null);
-		InstrScheme scheme = InstrScheme.load();
-		run(rdFileName, wrFileName, scheme);
-	}
-*/
-	public void run(String rdFileName, String wrFileName, InstrScheme scheme) {
 		try {
-			newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasLoc();
-			newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasThr();
-			newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasObj();
-			enterAndLeaveMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD).size();
-			enterAndLeaveLoopNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP).size();
-			newAndNewArrayNumBytes = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).size();
-			getstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE).size();
-			getstaticReferenceNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE).size();
-			putstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE).size();
-			putstaticReferenceNumBytes = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE).size();
-			getfieldPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETFIELD_PRIMITIVE).size();
-			getfieldReferenceNumBytes = scheme.getEvent(InstrScheme.GETFIELD_REFERENCE).size();
-			putfieldPrimitiveNumBytes = scheme.getEvent(InstrScheme.PUTFIELD_PRIMITIVE).size();
-			putfieldReferenceNumBytes = scheme.getEvent(InstrScheme.PUTFIELD_REFERENCE).size();
-			aloadPrimitiveNumBytes = scheme.getEvent(InstrScheme.ALOAD_PRIMITIVE).size();
-			aloadReferenceNumBytes = scheme.getEvent(InstrScheme.ALOAD_REFERENCE).size();
-			astorePrimitiveNumBytes = scheme.getEvent(InstrScheme.ASTORE_PRIMITIVE).size();
-			astoreReferenceNumBytes = scheme.getEvent(InstrScheme.ASTORE_REFERENCE).size();
-			threadStartNumBytes = scheme.getEvent(InstrScheme.THREAD_START).size();
-			threadJoinNumBytes = scheme.getEvent(InstrScheme.THREAD_JOIN).size();
-			acquireLockNumBytes = scheme.getEvent(InstrScheme.ACQUIRE_LOCK).size();
-			releaseLockNumBytes = scheme.getEvent(InstrScheme.RELEASE_LOCK).size();
-			waitNumBytes = scheme.getEvent(InstrScheme.WAIT).size();
-			notifyNumBytes = scheme.getEvent(InstrScheme.NOTIFY).size();
-			methodCallNumBytes = scheme.getEvent(InstrScheme.METHOD_CALL).size();
-			returnPrimitiveNumBytes = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE).size();
-			returnReferenceNumBytes = scheme.getEvent(InstrScheme.RETURN_REFERENCE).size();
-			explicitThrowNumBytes = scheme.getEvent(InstrScheme.EXPLICIT_THROW).size();
-			implicitThrowNumBytes = scheme.getEvent(InstrScheme.IMPLICIT_THROW).size();
-
-			assert (newAndNewArrayHasOid);
 			reader = new ByteBufferedFile(1024, rdFileName, true);
 			writer = new ByteBufferedFile(1024, wrFileName, false);
 			isInNew = false;
