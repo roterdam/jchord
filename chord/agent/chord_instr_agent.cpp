@@ -131,7 +131,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 {
     cout << "***** ENTER Agent_OnLoad" << endl;
 	if (options == NULL) {
-		cerr << "ERROR: Expected option trace_file_name=<name> to agent" << endl;
+		cerr << "ERROR: Expected options to agent" << endl;
 		exit(1);
 	}
 	char* next = options;
@@ -149,6 +149,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 				exit(1);
             }
 			enable_tracing = true;
+			cout << "OPTION trace_file_name: " << trace_file_name << endl;
         } else if (strcmp(token, "instr_scheme_file_name") == 0) {
             next = get_token(next, (char*) ",=", instr_scheme_file_name, MAX_FILE_NAME);
             if (next == NULL) {
@@ -156,6 +157,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 					<< options << endl;
 				exit(1);
             }
+			cout << "OPTION instr_scheme_file_name: " << instr_scheme_file_name << endl;
         } else if (strcmp(token, "classes_file_name") == 0) {
             next = get_token(next, (char*) ",=", classes_file_name, MAX_FILE_NAME);
             if (next == NULL) {
@@ -164,6 +166,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 				exit(1);
             }
 			loaded_class_kinds++;
+			cout << "OPTION classes_file_name: " << classes_file_name << endl;
         } else if (strcmp(token, "boot_classes_file_name") == 0) {
             next = get_token(next, (char*) ",=", boot_classes_file_name, MAX_FILE_NAME);
             if (next == NULL) {
@@ -172,6 +175,7 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 				exit(1);
             }
 			loaded_class_kinds++;
+			cout << "OPTION boot_classes_file_name: " << boot_classes_file_name << endl;
 		} else if (strcmp(token, "num_meths") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
@@ -179,9 +183,9 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
                 cerr << "ERROR: Cannot parse option num_meths=<num>: "
 					<< options << endl;
 				exit(1);
-				num_meths = atoi(next);
-				cout << "num_meths: " << num_meths << endl;
 			}
+			num_meths = atoi(arg);
+			cout << "OPTION num_meths: " << num_meths << endl;
 		} else if (strcmp(token, "num_loops") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
@@ -189,19 +193,19 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
                 cerr << "ERROR: Cannot parse option num_loops=<num>: "
 					<< options << endl;
 				exit(1);
-				num_loops = atoi(next);
-				cout << "num_loops: " << num_loops << endl;
 			}
+			num_loops = atoi(arg);
+			cout << "OPTION num_loops: " << num_loops << endl;
 		} else if (strcmp(token, "instr_bound") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
 			if (next == NULL) {
-                cerr << "ERROR: Cannot parse option num_loops=<num>: "
+                cerr << "ERROR: Cannot parse option instr_bound=<num>: "
 					<< options << endl;
 				exit(1);
-				instr_bound = atoi(next);
-				cout << "instr_bound: " << instr_bound << endl;
 			}
+			instr_bound = atoi(arg);
+			cout << "OPTION instr_bound: " << instr_bound << endl;
 		} else {
 			cerr << "ERROR: Unknown option: " << token << endl;
 			exit(1);

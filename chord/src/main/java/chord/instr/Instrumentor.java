@@ -305,7 +305,8 @@ public class Instrumentor {
 		for (jq_Class c : classes) {
 			String cName = c.getName();
 			if (cName.equals("java.lang.J9VMInternals") ||
-					cName.startsWith("java.lang.ref."))
+					cName.startsWith("java.lang.ref.") ||
+					cName.equals("sun.util.resources.TimeZoneNames"))
 				continue;
 			CtClass clazz;
 			try {
@@ -514,8 +515,13 @@ public class Instrumentor {
 		// bytecode instrumentation offsets could get messed up 
 		String enterStr = "";
 		String leaveStr = "";
-		if (Modifier.isSynchronized(mods)) {
-			String syncExpr = Modifier.isStatic(mods) ? "$class" : "$0";
+		if (Modifier.isSynchronized(mods) &&
+				(acquireLockEvent.present() || releaseLockEvent.present())) {
+			String syncExpr;
+			if (Modifier.isStatic(mods))
+				syncExpr = cName + ".class";
+			else
+				syncExpr = "$0";
 			if (acquireLockEvent.present()) {
 				int pId = set(Pmap, -1);
 				enterStr = acquireLockEventCall + pId + "," +
