@@ -1,2 +1,0 @@
-net.sf.cache4j.test.BlockingCacheTest
-net.sf.cache4j.test.SynchronizedCacheTest

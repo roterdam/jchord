@@ -1,1 +1,0 @@
-[${eventName}] in ${event.resource.URL} : '${event.malformedURL}'
