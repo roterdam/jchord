@@ -59,7 +59,7 @@ public class Properties {
 	public static final String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public static final boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
 	static {
-		assert (scopeKind.equals("rta") || scopeKind.equals("cha") || scopeKind.equals("dynamic"));
+		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
 	}
 
 	public static void print() {

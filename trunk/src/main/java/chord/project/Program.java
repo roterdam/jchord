@@ -86,8 +86,6 @@ public class Program {
 				String scopeKind = Properties.scopeKind;
 				if (scopeKind.equals("rta")) {
 					init(new RTA());
-				} else if (scopeKind.equals("cha")) {
-					init(new CHA());
 				} else if (scopeKind.equals("dynamic")) {
 					initFromDynamic();
 				} else
@@ -160,7 +158,7 @@ public class Program {
 		return FileUtils.readFileToList(rootsFileName);
 	}
 
-	private void init(AbstractBootstrapper bootstrapper) throws IOException {
+	private void init(IBootstrapper bootstrapper) throws IOException {
 		String mainClassName = Properties.mainClassName;
 		List<String> rootsList = readRootsFile();
 		List<MethodSign> rootMethodSigns = null;

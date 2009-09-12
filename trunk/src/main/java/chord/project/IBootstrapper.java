@@ -1,11 +1,13 @@
 package chord.project;
 
+import java.util.List;
+
 import chord.util.IndexSet;
-import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Class;
 
 public interface IBootstrapper {
+	public void run(List<MethodSign> rootMethodSigns);
 	/**
 	 * 
 	 * @return
@@ -16,10 +18,4 @@ public interface IBootstrapper {
 	 * @return
 	 */
 	public IndexSet<jq_Method> getReachableMethods();
-	/**
-	 * 
-	 * @param m
-	 * @return
-	 */
-	public IndexSet<jq_InstanceMethod> getTargetsOfVirtualCall(jq_InstanceMethod m);
 }
