@@ -61,9 +61,9 @@ public class Program {
 	private static final Program instance = new Program();
 	public static Program v() { return instance; }
 	private boolean isInited;
-	private IndexHashSet<jq_Class> preparedClasses;
-	private IndexHashSet<jq_Method> reachableMethods;
-	private IndexHashSet<jq_Type> reachableTypes;
+	private IndexSet<jq_Class> preparedClasses;
+	private IndexSet<jq_Method> reachableMethods;
+	private IndexSet<jq_Type> reachableTypes;
 	private Map<String, jq_Class> nameToClassMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private jq_Method mainMethod;
@@ -292,15 +292,15 @@ public class Program {
 		}
 	}
 	
-	public IndexHashSet<jq_Class> getPreparedClasses() {
+	public IndexSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
 	
-	public IndexHashSet<jq_Method> getReachableMethods() { 
+	public IndexSet<jq_Method> getReachableMethods() { 
 		return reachableMethods;
 	}
-	
-	public IndexHashSet<jq_Type> getReachableTypes() {
+
+	public IndexSet<jq_Type> getReachableTypes() {
 		return reachableTypes;
 	}
 	
