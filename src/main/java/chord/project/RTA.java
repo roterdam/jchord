@@ -10,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import chord.util.ArraySet;
 import chord.util.IndexSet;
 import chord.util.Timer;
 import chord.util.IndexHashSet;
@@ -148,7 +149,7 @@ public class RTA implements IBootstrapper {
 								if (d.implementsInterface(c)) {
 									jq_InstanceMethod m2 = d.getVirtualMethod(nd);
 									assert (m2 != null);
-									handleSennMethod(m2);
+									handleSeenMethod(m2);
 								}
 							}
 						} else {
@@ -158,7 +159,7 @@ public class RTA implements IBootstrapper {
 								if (d.extendsClass(c)) {
 									jq_InstanceMethod m2 = d.getVirtualMethod(nd);
 									assert (m2 != null);
-									handleSennMethod.add(m2);
+									handleSeenMethod(m2);
 								}
 							}
 						}
@@ -187,9 +188,6 @@ public class RTA implements IBootstrapper {
 		}
 		if (DEBUG) System.out.println("LEAVE handleTodoMethod: " + m);
 	}
-
-    private IndexSet<jq_InstanceMethod> getTargetsOfVirtualCall(jq_InstanceMethod m) {
-    }
 
 	protected void prepareClass(jq_Class c) {
 		if (preparedClasses.add(c)) {
