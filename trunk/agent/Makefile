@@ -5,33 +5,27 @@
 #   M32_FLAG    -- "-m32" if using 32-bit JVM on 64-bit machine
 
 LIB_DIR = ../lib
+JNI_H_DIR = $(shell find $(JDK_ROOT) -name jni.h -exec dirname '{}' \;)
+JNI_MD_H_DIR = $(shell find $(JDK_ROOT) -name jni_md.h -exec dirname '{}' \;)
+INCLUDES = -I. -I$(JNI_H_DIR) -I$(JNI_MD_H_DIR) -I$(BUDDY_SRC) -I$(BUDDY_SRC)/..
+DLL_OUTPUT_OPTION = -o$(space)
+OBJECT_OUTPUT_OPTION = -o$(space)
 
 ifeq (${OS},Windows_NT)
   CXXFLAGS = $(M32_FLAG) -mno-cygwin -Wall -O2
-  OBJECT_OUTPUT_OPTION = -o$(space)
   LINK = dllwrap
   LINKFLAGS = $(M32_FLAG) -s --target=i386-mingw32 --add-underscore --driver-name c++ -mno-cygwin
-  DLL_OUTPUT_OPTION = -o$(space)
-  INCLUDES = -I"$(JDK_ROOT)/include" \
-             -I"$(JDK_ROOT)/include/win32"
   INSTR_DLL_NAME = $(LIB_DIR)/chord_instr_agent.dll
 else
   ifeq (${shell uname -s},Darwin)
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
-    OBJECT_OUTPUT_OPTION = -o$(space)
     LINK = $(CXX) 
     LINKFLAGS = $(M32_FLAG) -dynamiclib -framework JavaVM  -single_module -undefined suppress -flat_namespace
-    DLL_OUTPUT_OPTION = -o$(space)
-    INCLUDES = -I$(JDK_ROOT)/Headers/
     INSTR_DLL_NAME = $(LIB_DIR)/libchord_instr_agent.jnilib
   else
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
-    OBJECT_OUTPUT_OPTION = -o$(space)
     LINK = $(CXX)
     LINKFLAGS = $(M32_FLAG) -shared
-    DLL_OUTPUT_OPTION = -o$(space)
-    INCLUDES = -I. -I$(JDK_ROOT)/include \
-               -I$(JDK_ROOT)/include/linux
     INSTR_DLL_NAME = $(LIB_DIR)/libchord_instr_agent.so
   endif
 endif
