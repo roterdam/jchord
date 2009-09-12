@@ -28,8 +28,6 @@ public class TraceTransformer {
 	private final boolean newAndNewArrayHasHid;
 	private final boolean newAndNewArrayHasTid;
 	private final boolean newAndNewArrayHasOid;
-	private final int enterAndLeaveMethodNumBytes;
-	private final int enterAndLeaveLoopNumBytes;
 	private final int newAndNewArrayNumBytes;
 	private final int getstaticPrimitiveNumBytes;
 	private final int getstaticReferenceNumBytes;
@@ -68,8 +66,6 @@ public class TraceTransformer {
 		newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasThr();
 		newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasObj();
 		assert (newAndNewArrayHasOid);
-		enterAndLeaveMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD).size();
-		enterAndLeaveLoopNumBytes = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP).size();
 		newAndNewArrayNumBytes = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).size();
 		getstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE).size();
 		getstaticReferenceNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE).size();
@@ -106,10 +102,12 @@ public class TraceTransformer {
 			while (!reader.isDone()) {
 				assert (count == tmp.size());
 				if (isInNew) {
-					if (count > 5000000) {
-						System.out.print("size: " + count + " PENDING:");
-						for (int i = 0; i < pending.size(); i++)
-							System.out.print(" " + pending.get(i).idx2);
+					if (count > 100000000) {
+						System.out.print("WARNING: size: " + count + " PENDING:");
+						for (int i = 0; i < pending.size(); i++) {
+							IntTrio trio = pending.get(i);
+							System.out.print(" " + trio.idx2 + ":" + trio.idx0);
+						}
 						System.out.println();
 						// remove 1st item in pending, it is oldest
 						pending.remove(0);
@@ -240,10 +238,9 @@ public class TraceTransformer {
 			return astoreReferenceNumBytes;
 		case EventKind.ENTER_METHOD:
 		case EventKind.LEAVE_METHOD:
-			return enterAndLeaveMethodNumBytes;
 		case EventKind.ENTER_LOOP:
 		case EventKind.LEAVE_LOOP:
-			return enterAndLeaveLoopNumBytes;
+			return 8;
 		case EventKind.METHOD_CALL:
 			return methodCallNumBytes;
 		case EventKind.RETURN_PRIMITIVE:

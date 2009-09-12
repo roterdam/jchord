@@ -173,39 +173,37 @@ public class InstrScheme implements Serializable {
 	 * <tt>java.lang.Object</tt> at program point i on object o:
 	 * NOTIFY i t o
 	 */
-    public static final int ENTER_AND_LEAVE_METHOD = 0;
-	public static final int ENTER_AND_LEAVE_LOOP = 1;
-    public static final int NEW_AND_NEWARRAY = 2;
+    public static final int NEW_AND_NEWARRAY = 0;
 
-    public static final int GETSTATIC_PRIMITIVE = 3;
-    public static final int GETSTATIC_REFERENCE = 4;
-    public static final int PUTSTATIC_PRIMITIVE = 5;
-    public static final int PUTSTATIC_REFERENCE = 6;
+    public static final int GETSTATIC_PRIMITIVE = 1;
+    public static final int GETSTATIC_REFERENCE = 2;
+    public static final int PUTSTATIC_PRIMITIVE = 3;
+    public static final int PUTSTATIC_REFERENCE = 4;
 
-    public static final int GETFIELD_PRIMITIVE = 7;
-    public static final int GETFIELD_REFERENCE = 8;
-    public static final int PUTFIELD_PRIMITIVE = 9;
-    public static final int PUTFIELD_REFERENCE = 10;
+    public static final int GETFIELD_PRIMITIVE = 5;
+    public static final int GETFIELD_REFERENCE = 6;
+    public static final int PUTFIELD_PRIMITIVE = 7;
+    public static final int PUTFIELD_REFERENCE = 8;
 
-    public static final int ALOAD_PRIMITIVE = 11;
-    public static final int ALOAD_REFERENCE = 12;
-    public static final int ASTORE_PRIMITIVE = 13;
-    public static final int ASTORE_REFERENCE = 14;
+    public static final int ALOAD_PRIMITIVE = 9;
+    public static final int ALOAD_REFERENCE = 10;
+    public static final int ASTORE_PRIMITIVE = 11;
+    public static final int ASTORE_REFERENCE = 12;
 
-    public static final int METHOD_CALL = 15;
-    public static final int RETURN_PRIMITIVE = 16;
-    public static final int RETURN_REFERENCE = 17;
-    public static final int EXPLICIT_THROW = 18;
-    public static final int IMPLICIT_THROW = 19;
+    public static final int METHOD_CALL = 13;
+    public static final int RETURN_PRIMITIVE = 14;
+    public static final int RETURN_REFERENCE = 15;
+    public static final int EXPLICIT_THROW = 16;
+    public static final int IMPLICIT_THROW = 17;
 
-    public static final int THREAD_START = 20;
-    public static final int THREAD_JOIN = 21;
-    public static final int ACQUIRE_LOCK = 22;
-    public static final int RELEASE_LOCK = 23;
-    public static final int WAIT = 24;
-    public static final int NOTIFY = 25;
+    public static final int THREAD_START = 18;
+    public static final int THREAD_JOIN = 19;
+    public static final int ACQUIRE_LOCK = 20;
+    public static final int RELEASE_LOCK = 21;
+    public static final int WAIT = 22;
+    public static final int NOTIFY = 23;
     
-	public static final int MAX_NUM_EVENT_FORMATS = 26;
+	public static final int MAX_NUM_EVENT_FORMATS = 24;
 
 	public class EventFormat implements Serializable {
 		private boolean hasLoc;
@@ -261,7 +259,10 @@ public class InstrScheme implements Serializable {
 	}
 
 	private boolean convert;
-	private int instrMethodAndLoopBound;
+	private int callsBound;
+	private int itersBound;
+	private boolean hasEnterAndLeaveMethodEvent;
+	private boolean hasEnterAndLeaveLoopEvent;
 	private boolean hasBasicBlockEvent;
 	private boolean hasQuadEvent;
 	private final EventFormat[] events;
@@ -280,6 +281,22 @@ public class InstrScheme implements Serializable {
 		return convert;
 	}
 
+	public void setEnterAndLeaveMethodEvent() {
+		hasEnterAndLeaveMethodEvent = true;
+	}
+
+	public boolean hasEnterAndLeaveMethodEvent() {
+		return hasEnterAndLeaveMethodEvent;
+	}
+
+	public void setEnterAndLeaveLoopEvent() {
+		hasEnterAndLeaveLoopEvent = true;
+	}
+
+	public boolean hasEnterAndLeaveLoopEvent() {
+		return hasEnterAndLeaveLoopEvent;
+	}
+
 	public void setBasicBlockEvent() {
 		hasBasicBlockEvent = true;
 	}
@@ -296,29 +313,26 @@ public class InstrScheme implements Serializable {
 		return hasQuadEvent;
 	}
 
-	public void setInstrMethodAndLoopBound(int n) {
+	public void setCallsBound(int n) {
 		assert (n >= 0);
-		instrMethodAndLoopBound = n;
+		callsBound = n;
 	}
 
-	public int getInstrMethodAndLoopBound() {
-		return instrMethodAndLoopBound;
+	public int getCallsBound() {
+		return callsBound;
+	}
+
+	public void setItersBound(int n) {
+		assert (n >= 0);
+		itersBound = n;
+	}
+
+	public int getItersBound() {
+		return itersBound;
 	}
 
 	public EventFormat getEvent(int eventId) {
 		return events[eventId];
-	}
-
-	public void setEnterAndLeaveMethodEvent(boolean hasLoc, boolean hasThr) {
-		EventFormat e = events[ENTER_AND_LEAVE_METHOD];
-		if (hasLoc) e.setLoc();
-		if (hasThr) e.setThr();
-	}
-
-	public void setEnterAndLeaveLoopEvent(boolean hasLoc, boolean hasThr) {
-		EventFormat e = events[ENTER_AND_LEAVE_LOOP];
-		if (hasLoc) e.setLoc();
-		if (hasThr) e.setThr();
 	}
 
 	public void setNewAndNewArrayEvent(boolean hasLoc, boolean hasThr,
@@ -564,13 +578,12 @@ public class InstrScheme implements Serializable {
 	}
 
 	public boolean needsMmap() {
-		return instrMethodAndLoopBound > 0 ||
-			events[ENTER_AND_LEAVE_METHOD].hasLoc();
+		return callsBound > 0 || hasEnterAndLeaveMethodEvent ||
+			itersBound > 0 || hasEnterAndLeaveLoopEvent;
 	}
 
 	public boolean needsWmap() {
-		return instrMethodAndLoopBound > 0 ||
-			events[ENTER_AND_LEAVE_LOOP].hasLoc();
+		return itersBound > 0 || hasEnterAndLeaveLoopEvent;
 	}
 
 	public boolean needsHmap() {

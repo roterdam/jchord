@@ -33,7 +33,7 @@ import joeq.Compiler.Quad.BasicBlock;
 	name = "dyn-java"
 )
 public class DynamicAnalysis extends JavaAnalysis {
-	public final static boolean DEBUG = true;
+	public final static boolean DEBUG = false;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
 	
@@ -62,10 +62,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 		scheme.save(instrSchemeFileName);
 		instrumentor = new Instrumentor(Program.v(), scheme);
 		instrumentor.run();
-		IndexMap<String> Mmap = instrumentor.getMmap();
-		int numMeths = (Mmap != null) ? Mmap.size() : 0;
-		IndexMap<BasicBlock> Wmap = instrumentor.getWmap();
-		int numLoops = (Wmap != null) ? Wmap.size() : 0;
 		boolean needsTraceTransform = scheme.needsTraceTransform();
 		final String mainClassName = Properties.mainClassName;
 		assert (mainClassName != null);
@@ -86,6 +82,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final String[] runIDs = Properties.runIDs.split(",");
 		final String traceFileName = needsTraceTransform ?
 			crudeTraceFileName : finalTraceFileName;
+		IndexMap<String> Mmap = instrumentor.getMmap();
+		IndexMap<String> Wmap = instrumentor.getWmap();
+		final int numMeths = (Mmap != null) ? Mmap.size() : 0;
 		final String instrProgramCmd = "java -ea -Xbootclasspath/p:" +
 			bootClassesDirName + File.pathSeparator + Properties.mainClassPathName +
 			" -Xverify:none" + " -verbose" + 
@@ -93,9 +92,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 			" -agentpath:" + Properties.instrAgentFileName +
 			"=trace_file_name=" + traceFileName +
 			"=num_meths=" + numMeths +
-			"=num_loops=" + numLoops +
 			"=instr_scheme_file_name=" + instrSchemeFileName +
-			"=instr_bound=" + scheme.getInstrMethodAndLoopBound() +
+			"=calls_bound=" + scheme.getCallsBound() +
+			"=iters_bound=" + scheme.getItersBound() +
 			" " + mainClassName + " ";
 		Runnable traceTransformer = new Runnable() {
 			public void run() {
@@ -143,40 +142,36 @@ public class DynamicAnalysis extends JavaAnalysis {
 		try {
 			initPass();
 			ByteBufferedFile buffer = new ByteBufferedFile(1024, fileName, true);
-			int count = 0;
+			long count = 0;
 			while (!buffer.isDone()) {
 				byte opcode = buffer.getByte();
 				count++;
 				switch (opcode) {
 				case EventKind.ENTER_METHOD:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					int m = ef.hasLoc() ? buffer.getInt() : -1;
-					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int m = buffer.getInt();
+					int t = buffer.getInt();
 					processEnterMethod(m, t);
 					break;
 				}
 				case EventKind.LEAVE_METHOD:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					int m = ef.hasLoc() ? buffer.getInt() : -1;
-					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int m = buffer.getInt();
+					int t = buffer.getInt();
 					processLeaveMethod(m, t);
 					break;
 				}
 				case EventKind.ENTER_LOOP:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-					int w = ef.hasLoc() ? buffer.getInt() : -1;
-					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int w = buffer.getInt();
+					int t = buffer.getInt();
 					processEnterLoop(w, t);
 					break;
 				}
 				case EventKind.LEAVE_LOOP:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-					int w = ef.hasLoc() ? buffer.getInt() : -1;
-					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int w = buffer.getInt();
+					int t = buffer.getInt();
 					processLeaveLoop(w, t);
 					break;
 				}

@@ -36,6 +36,7 @@ public class TracePrinter {
 		IndexMap<String> Rmap = instrumentor.getRmap();
 		IndexMap<String> Pmap = instrumentor.getPmap();
 		IndexMap<String> Bmap = instrumentor.getBmap();
+		IndexMap<String> Wmap = instrumentor.getWmap();
 		boolean convert = false;
 		try {
 			ByteBufferedFile buffer = new ByteBufferedFile(1024, traceFileName, true);
@@ -44,36 +45,34 @@ public class TracePrinter {
 				switch (opcode) {
 				case EventKind.ENTER_METHOD:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					int m = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int m = buffer.getInt();
 					String mStr = convert ? Integer.toString(m) : ((m < 0) ? "null" : Mmap.get(m));
-					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int t = buffer.getInt();
 					System.out.println("ENTER_METHOD " + mStr + " " + t);
 					break;
 				}
 				case EventKind.LEAVE_METHOD:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					int m = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int m = buffer.getInt();
 					String mStr = convert ? Integer.toString(m) : ((m < 0) ? "null" : Mmap.get(m));
-					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int t = buffer.getInt();
 					System.out.println("LEAVE_METHOD " + mStr + " " + t);
 					break;
 				}
 				case EventKind.ENTER_LOOP:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-					int w = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("ENTER_LOOP " + w + " " + t);
+					int w = buffer.getInt();
+					String wStr = convert ? Integer.toString(w) : ((w < 0) ? "null" : Wmap.get(w));
+					int t = buffer.getInt();
+					System.out.println("ENTER_LOOP " + wStr + " " + t);
 					break;
 				}
 				case EventKind.LEAVE_LOOP:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-					int w = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("LEAVE_LOOP " + w + " " + t);
+					int w = buffer.getInt();
+					String wStr = convert ? Integer.toString(w) : ((w < 0) ? "null" : Wmap.get(w));
+					int t = buffer.getInt();
+					System.out.println("LEAVE_LOOP " + wStr + " " + t);
 					break;
 				}
 				case EventKind.BEF_NEW:

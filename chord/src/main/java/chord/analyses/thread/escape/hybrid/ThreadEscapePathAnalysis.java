@@ -66,10 +66,11 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
             return instrScheme;
         instrScheme = new InstrScheme();
 		instrScheme.setConvert();
-		instrScheme.setInstrMethodAndLoopBound(1);
+		instrScheme.setCallsBound(1);
+		instrScheme.setItersBound(1);
 		instrScheme.setBasicBlockEvent();
 		instrScheme.setQuadEvent();
-		instrScheme.setEnterAndLeaveMethodEvent(true, true);
+		instrScheme.setEnterAndLeaveMethodEvent();
         return instrScheme;
     }
     // data structures set once and for all

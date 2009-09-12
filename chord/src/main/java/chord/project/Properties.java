@@ -53,7 +53,8 @@ public class Properties {
 
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
 	public final static String instrAgentFileName = System.getProperty("chord.instr.agent.file");
-	public static final int instrBound = Integer.getInteger("chord.instr.bound", 0);
+	public static final int callsBound = Integer.getInteger("chord.calls.bound", 0);
+	public static final int itersBound = Integer.getInteger("chord.iters.bound", 0);
 
 	public static final String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public static final boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
@@ -84,7 +85,8 @@ public class Properties {
 		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
 		System.out.println("chord.run.ids: " + runIDs);
 		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
-		System.out.println("chord.instr.bound: " + instrBound);
+		System.out.println("chord.calls.bound: " + callsBound);
+		System.out.println("chord.iters.bound: " + itersBound);
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
 		System.out.println("******************************");

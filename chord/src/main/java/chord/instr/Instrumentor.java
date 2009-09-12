@@ -13,11 +13,12 @@ import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.doms.DomH;
 import chord.doms.DomI;
-import chord.doms.DomL;
 import chord.doms.DomM;
+import chord.doms.DomL;
+import chord.doms.DomR;
 import chord.doms.DomP;
 import chord.doms.DomB;
-import chord.doms.DomR;
+import chord.doms.DomW;
 import chord.instr.InstrScheme.EventFormat;
 import chord.project.CFGLoopFinder;
 import chord.project.ChordRuntimeException;
@@ -51,11 +52,6 @@ import java.util.Set;
  */
 public class Instrumentor {
 	protected static final String runtimeClassName = "chord.project.Runtime.";
-
-	protected static final String enterMethodCheckCall = runtimeClassName + "enterMethodCheckEvent(";
-	protected static final String leaveMethodCheckCall = runtimeClassName + "leaveMethodCheckEvent(";
-	protected static final String enterLoopCheckCall = runtimeClassName + "enterLoopCheckEvent(";
-	protected static final String leaveLoopCheckCall = runtimeClassName + "leaveLoopCheckEvent(";
 
 	protected static final String enterMethodEventCall = runtimeClassName + "enterMethodEvent(";
 	protected static final String leaveMethodEventCall = runtimeClassName + "leaveMethodEvent(";
@@ -109,6 +105,7 @@ public class Instrumentor {
 	protected DomR domR;
 	protected DomP domP;
 	protected DomB domB;
+	protected DomW domW;
 
 	protected IndexMap<String> Fmap;
 	protected IndexMap<String> Mmap;
@@ -119,20 +116,18 @@ public class Instrumentor {
 	protected IndexMap<String> Rmap;
 	protected IndexMap<String> Pmap;
 	protected IndexMap<String> Bmap;
-	protected IndexMap<BasicBlock> Wmap;
+	protected IndexMap<String> Wmap;
 
 	private ClassPool pool;
 	private CtClass exType;
 	private MyExprEditor exprEditor = new MyExprEditor();
 	private CFGLoopFinder finder = new CFGLoopFinder();
-	private String enterLoopCallKind, leaveLoopCallKind;
 
 	protected boolean convert;
-	protected int instrMethodAndLoopBound;
-	protected boolean hasBasicBlockEvent;
-	protected boolean hasQuadEvent;
-	protected EventFormat enterAndLeaveMethodEvent;
-	protected EventFormat enterAndLeaveLoopEvent;
+	protected boolean genBasicBlockEvent;
+	protected boolean genQuadEvent;
+	protected boolean genEnterAndLeaveMethodEvent;
+	protected boolean genEnterAndLeaveLoopEvent;
 	protected EventFormat newAndNewArrayEvent;
 	protected EventFormat getstaticPrimitiveEvent;
 	protected EventFormat getstaticReferenceEvent;
@@ -173,6 +168,7 @@ public class Instrumentor {
 	public DomR getDomR() { return domR; }
 	public DomP getDomP() { return domP; }
 	public DomB getDomB() { return domB; }
+	public DomW getDomW() { return domW; }
 
 	public IndexMap<String> getFmap() { return Fmap; }
 	public IndexMap<String> getMmap() { return Mmap; }
@@ -183,7 +179,7 @@ public class Instrumentor {
 	public IndexMap<String> getRmap() { return Rmap; }
 	public IndexMap<String> getPmap() { return Pmap; }
 	public IndexMap<String> getBmap() { return Bmap; }
-	public IndexMap<BasicBlock> getWmap() { return Wmap; }
+	public IndexMap<String> getWmap() { return Wmap; }
 
 	public Instrumentor(Program program, InstrScheme scheme) {
 		this.program = program;
@@ -208,18 +204,12 @@ public class Instrumentor {
 		}
 		pool.appendSystemPath();
 		convert = scheme.isConverted();
-		instrMethodAndLoopBound = scheme.getInstrMethodAndLoopBound();
-		hasBasicBlockEvent = scheme.hasBasicBlockEvent();
-		hasQuadEvent = scheme.hasQuadEvent();
-		enterAndLeaveMethodEvent = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-		enterAndLeaveLoopEvent = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-		if (instrMethodAndLoopBound > 0) {
-			enterLoopCallKind = enterLoopCheckCall;
-			leaveLoopCallKind = leaveLoopCheckCall;
-		} else if (enterAndLeaveLoopEvent.present()) {
-			enterLoopCallKind = enterLoopEventCall;
-			leaveLoopCallKind = leaveLoopEventCall;
-		}
+		genBasicBlockEvent = scheme.hasBasicBlockEvent();
+		genQuadEvent = scheme.hasQuadEvent();
+		genEnterAndLeaveMethodEvent = scheme.getCallsBound() > 0 ||
+			scheme.hasEnterAndLeaveMethodEvent();
+		genEnterAndLeaveLoopEvent = scheme.getItersBound() > 0 ||
+			scheme.hasEnterAndLeaveLoopEvent();
 		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
 		getstaticReferenceEvent = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
@@ -301,20 +291,17 @@ public class Instrumentor {
 			assert (convert);
 			domP = (DomP) Project.getTrgt("P");
 			Project.runTask(domP);
-			Pmap = getUniqueStringMap(domP);
 		}
 		if (scheme.needsBmap()) {
 			assert (convert);
 			domB = (DomB) Project.getTrgt("B");
 			Project.runTask(domB);
-			Bmap = getUniqueStringMap(domB);
 		}
-		if (scheme.needsWmap())
-			Wmap = new IndexHashMap<BasicBlock>();
-
-		if (instrMethodAndLoopBound > 0 ||
-				enterAndLeaveMethodEvent.present() ||
-				releaseLockEvent.present()) {
+		if (scheme.needsWmap()) {
+			domW = (DomW) Project.getTrgt("W");
+			domW.init();
+		}
+		if (genEnterAndLeaveMethodEvent || releaseLockEvent.present()) {
 			try {
 				exType = pool.get("java.lang.Throwable");
 			} catch (NotFoundException ex) {
@@ -414,7 +401,18 @@ public class Instrumentor {
 			FileUtils.writeMapToFile(Rmap,
 				(new File(outDirName, "R.dynamic.txt")).getAbsolutePath());
 		}
-		if (Pmap != null) {
+		if (domB != null) {
+			Bmap = getUniqueStringMap(domB);
+			FileUtils.writeMapToFile(Bmap,
+				(new File(outDirName, "B.dynamic.txt")).getAbsolutePath());
+		}
+		if (domW != null) {
+			Wmap = getUniqueStringMap(domW);
+			FileUtils.writeMapToFile(Wmap,
+				(new File(outDirName, "W.dynamic.txt")).getAbsolutePath());
+		}
+		if (domP != null) {
+			Pmap = getUniqueStringMap(domP);
 			FileUtils.writeMapToFile(Pmap,
 				(new File(outDirName, "P.dynamic.txt")).getAbsolutePath());
 		}
@@ -464,12 +462,21 @@ public class Instrumentor {
 		String mDesc = javassistMethod.getSignature();
 		String cName = javassistMethod.getDeclaringClass().getName();
 		mStr = Program.toString(mName, mDesc, cName);
+		Map<Quad, Integer> bcMap;
+		try {
+			bcMap = joeqMethod.getBCMap();
+		} catch (RuntimeException ex) {
+			System.out.println("WARNING: Skipping instrumenting body of method: " + mStr +
+				"; reason follows:");
+			ex.printStackTrace();
+			return;
+		}
 		if (Mmap != null) {
 			if (convert) {
 				mId = Mmap.indexOf(mStr);
 				if (mId == -1) {
 					System.out.println("WARNING: Skipping method: " + mStr +
-						"; not found by static analysis");
+						"; not found by static analysis.");
 					return;
 				}
 			} else {
@@ -478,26 +485,27 @@ public class Instrumentor {
 				assert (mId == n);
 			}
 		}
-		Map<Quad, Integer> bcMap = joeqMethod.getBCMap();
-		if (bcMap != null) {
-			if (instrMethodAndLoopBound > 0 || enterAndLeaveLoopEvent.present() ||
-					hasQuadEvent || hasBasicBlockEvent) {
+		if (bcMap == null) {
+			System.out.println("WARNING: Skipping instrumenting body of method: " + mStr +
+				"; bytecode does not exist.");
+		} else {
+			if (genEnterAndLeaveLoopEvent || genQuadEvent || genBasicBlockEvent) {
 				ControlFlowGraph cfg = joeqMethod.getCFG();
 				bciToInstrMap.clear();
-				if (hasQuadEvent || hasBasicBlockEvent) {
+				if (genQuadEvent || genBasicBlockEvent) {
 					for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
 							it.hasNext();) {
 						BasicBlock bb = it.nextBasicBlock();
 						if (bb.isEntry() || bb.isExit())
 							continue;
-						if (hasBasicBlockEvent) {
+						if (genBasicBlockEvent) {
 							int bId = domB.indexOf(bb);
 							assert (bId != -1);
 							String instr = basicBlockEventCall + bId + ");";
 							int bci = getBCI(bb, joeqMethod);
 							attachInstrToBCIAft(instr, bci);
 						}
-						if (hasQuadEvent) {
+						if (genQuadEvent) {
 							int n = bb.size();
 							for (int i = 0; i < n; i++) {
 								Quad q = bb.getQuad(i);
@@ -513,20 +521,23 @@ public class Instrumentor {
 						}
 					}
 				}
-				if (instrMethodAndLoopBound > 0 || enterAndLeaveLoopEvent.present()) {
+				if (genEnterAndLeaveLoopEvent) {
 					finder.visit(cfg);
 					Set<BasicBlock> heads = finder.getLoopHeads();
 					for (BasicBlock head : heads) {
-						int wId = Wmap.getOrAdd(head);
-						String headInstr = enterLoopCallKind + wId + ");";
+						int n = domW.size();
+						int wId = domW.getOrAdd(head, joeqMethod);
+						assert (wId == n);
+						String headInstr = enterLoopEventCall + wId + "," + mId + ");";
 						int headBCI = getBCI(head, joeqMethod);
 						attachInstrToBCIBef(headInstr, headBCI);
 					}
 					for (BasicBlock head : heads) {
 						Set<BasicBlock> exits = finder.getLoopExits(head);
+						int wId = domW.indexOf(head);
+						assert (wId != -1);
 						for (BasicBlock exit : exits) {
-							int wId = Wmap.getOrAdd(exit);
-							String exitInstr = leaveLoopCallKind + wId + ");";
+							String exitInstr = leaveLoopEventCall + wId + "," + mId + ");";
 							int exitBCI = getBCI(exit, joeqMethod);
 							attachInstrToBCIBef(exitInstr, exitBCI);
 						}
@@ -538,10 +549,6 @@ public class Instrumentor {
 			} catch (CannotCompileException ex) {
 				throw new ChordRuntimeException(ex);
 			}
-		} else {
-			System.out.println(
-				"WARNING: Skipping instrumenting body of method: " +
-				joeqMethod);
 		}
 		// NOTE: do not move insertBefore or insertAfter or addCatch
 		// calls to a method to before bytecode instrumentation, else
@@ -566,12 +573,9 @@ public class Instrumentor {
 					syncExpr + ");";
 			}
 		}
-		if (instrMethodAndLoopBound > 0) {
-			enterStr = enterMethodCheckCall + mId + ");" + enterStr;
-			leaveStr = leaveStr + leaveMethodCheckCall + mId + ");";
-		} else if (enterAndLeaveMethodEvent.present()) {
-			enterStr = enterStr + enterMethodEventCall + mId + ");";
-			leaveStr = leaveMethodEventCall + mId + ");" + leaveStr;
+		if (genEnterAndLeaveMethodEvent) {
+			enterStr = enterMethodEventCall + mId + ");" + enterStr;
+			leaveStr = leaveStr + leaveMethodEventCall + mId + ");";
 		}
 		if (!enterStr.equals("")) {
 			try {

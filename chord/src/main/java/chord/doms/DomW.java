@@ -1,0 +1,25 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
+package chord.doms;
+
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Class.jq_Method;
+import chord.project.Chord;
+
+/**
+ * Domain of loop head/exit basic blocks.
+ * 
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
+@Chord(
+	name = "W"
+)
+public class DomW extends DomB {
+	public int getOrAdd(BasicBlock b, jq_Method m) {
+		basicBlockToMethodMap.put(b, m);
+		return super.getOrAdd(b);
+	}
+}
