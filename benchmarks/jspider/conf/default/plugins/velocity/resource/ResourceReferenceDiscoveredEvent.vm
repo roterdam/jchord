@@ -1,1 +1,0 @@
-[${eventName}] from '${event.resource.URL}' to '${event.referencedResource.URL}'

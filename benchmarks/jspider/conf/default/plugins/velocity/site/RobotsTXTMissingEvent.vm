@@ -1,1 +1,0 @@
-[${eventName}] site: ${event.site.URL}
