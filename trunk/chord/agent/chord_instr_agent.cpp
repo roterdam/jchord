@@ -18,7 +18,7 @@ static char trace_file_name[MAX_FILE_NAME];
 static char instr_scheme_file_name[MAX_FILE_NAME];
 static char classes_file_name[MAX_FILE_NAME];
 static char boot_classes_file_name[MAX_FILE_NAME];
-static int num_meths, num_loops, instr_bound;
+static int num_meths, calls_bound, iters_bound;
 
 char* get_token(char *str, char *seps, char *buf, int max)
 {
@@ -66,7 +66,8 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 		}
 		jstring str1 = jni_env->NewStringUTF(trace_file_name);
 		jstring str2 = jni_env->NewStringUTF(instr_scheme_file_name);
-		jni_env->CallStaticObjectMethod(c, m, str1, str2, num_meths, num_loops, instr_bound);
+		jni_env->CallStaticObjectMethod(c, m, str1, str2, num_meths,
+			calls_bound, iters_bound);
 	}
 
 	cout << "LEAVE VMInit" << endl;
@@ -186,26 +187,26 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 			}
 			num_meths = atoi(arg);
 			cout << "OPTION num_meths: " << num_meths << endl;
-		} else if (strcmp(token, "num_loops") == 0) {
+		} else if (strcmp(token, "calls_bound") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
 			if (next == NULL) {
-                cerr << "ERROR: Cannot parse option num_loops=<num>: "
+                cerr << "ERROR: Cannot parse option calls_bound=<num>: "
 					<< options << endl;
 				exit(1);
 			}
-			num_loops = atoi(arg);
-			cout << "OPTION num_loops: " << num_loops << endl;
-		} else if (strcmp(token, "instr_bound") == 0) {
+			calls_bound = atoi(arg);
+			cout << "OPTION calls_bound: " << calls_bound << endl;
+		} else if (strcmp(token, "iters_bound") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
 			if (next == NULL) {
-                cerr << "ERROR: Cannot parse option instr_bound=<num>: "
+                cerr << "ERROR: Cannot parse option iters_bound=<num>: "
 					<< options << endl;
 				exit(1);
 			}
-			instr_bound = atoi(arg);
-			cout << "OPTION instr_bound: " << instr_bound << endl;
+			iters_bound = atoi(arg);
+			cout << "OPTION iters_bound: " << iters_bound << endl;
 		} else {
 			cerr << "ERROR: Unknown option: " << token << endl;
 			exit(1);

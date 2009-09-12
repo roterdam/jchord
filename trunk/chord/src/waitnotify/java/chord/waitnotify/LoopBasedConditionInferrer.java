@@ -15,7 +15,7 @@ public class LoopBasedConditionInferrer extends DynamicAnalysis {
     	instrScheme = new InstrScheme();
 		instrScheme.setConvert();
 
-		instrScheme.setEnterAndLeaveLoopEvent(true, true);
+		instrScheme.setEnterAndLeaveLoopEvent();
 
     	instrScheme.setGetstaticPrimitiveEvent(true, true, true);
     	instrScheme.setGetfieldPrimitiveEvent(true, true, true, true);

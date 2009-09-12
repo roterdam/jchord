@@ -88,15 +88,17 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     		instrScheme.setConvert();
     	instrScheme.setNewAndNewArrayEvent(true, false, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, true);
-    	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
-    	instrScheme.setGetfieldReferenceEvent(true, false, true, false, false);
-    	instrScheme.setPutfieldPrimitiveEvent(true, false, true, false);
-    	instrScheme.setPutfieldReferenceEvent(true, false, true, true, true);
-    	instrScheme.setAloadPrimitiveEvent(true, false, true, false);
-    	instrScheme.setAloadReferenceEvent(true, false, true, false, false);
-    	instrScheme.setAstorePrimitiveEvent(true, false, true, false);
-    	instrScheme.setAstoreReferenceEvent(true, false, true, true, true);
     	instrScheme.setThreadStartEvent(false, false, true);
+
+    	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
+    	instrScheme.setPutfieldPrimitiveEvent(true, false, true, false);
+    	instrScheme.setAloadPrimitiveEvent(true, false, true, false);
+    	instrScheme.setAstorePrimitiveEvent(true, false, true, false);
+
+    	instrScheme.setGetfieldReferenceEvent(true, false, true, false, false);
+    	instrScheme.setPutfieldReferenceEvent(true, false, true, true, true);
+    	instrScheme.setAloadReferenceEvent(true, false, true, false, false);
+    	instrScheme.setAstoreReferenceEvent(true, false, true, true, true);
     	return instrScheme;
     }
 

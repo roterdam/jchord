@@ -19,42 +19,60 @@ import java.io.IOException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Runtime {
+	static class LoopFrame {
+		int wId;		// unique loop id (across all loops)
+		// number of calls to containing method of this loop
+		// at the time this frame was created
+		int numCalls;
+		// current number of iterations of this loop; stops
+		// incrementing beyond itersBound
+		int numIters;
+		public LoopFrame(int wId, int numCalls, int numIters) {
+			this.wId = wId;
+			this.numCalls = numCalls;
+			this.numIters = numIters;
+		}
+	}
 	public static final int MISSING_FIELD_VAL = -1;
 	public static final int UNKNOWN_FIELD_VAL = -2;
-	private static int instrBound;
+	private static int callsBound;
+	private static int itersBound;
 	private static int numMeths;
-	private static int numLoops;
+	private static boolean alwaysInstr;
 	private static class ThreadInfo {
 		private final static int INITIAL_STK_SIZE = 100; 
 		public int numCallsToMeth[];
-		public int numItersOfLoop[];
-		public boolean doInstr;
-		public boolean stk[];
-		public int stkSize;
-		public int stkTop;
+		public int numMethsExceedingCallsBound;
+		public boolean noInstr;
+		public LoopFrame stk[];
+		private int stkSize;
+		private int stkTopPos;
 		public ThreadInfo() {
 			numCallsToMeth = new int[numMeths];
-			numItersOfLoop = new int[numLoops];
-			doInstr = true;
-			stk = new boolean[INITIAL_STK_SIZE];
+			numMethsExceedingCallsBound = 0;
+			noInstr = false;
+			stk = new LoopFrame[INITIAL_STK_SIZE];
 			stkSize = INITIAL_STK_SIZE;
-			stkTop = -1;
+			stkTopPos = -1;
 		}
-		public boolean pop() {
-			assert (stkTop >= 0);
-			return stk[stkTop--];
+		public void pop() {
+			if (stkTopPos < 0) throw new RuntimeException();
+			--stkTopPos;
 		}
-		public void push(boolean val) {
-			if (stkTop == stkSize - 1) {
+		public LoopFrame top() {
+			return stkTopPos == -1 ? null : stk[stkTopPos];
+		}
+		public void push(int wId, int numCalls) {
+			LoopFrame frame = new LoopFrame(wId, numCalls, 0);
+			if (stkTopPos == stkSize - 1) {
 				int newStkSize = stkSize * 2;
-				boolean newStk[] = new boolean[newStkSize];
+				LoopFrame newStk[] = new LoopFrame[newStkSize];
 				System.arraycopy(stk, 0, newStk, 0, stkSize);
 				stk = newStk;
 				stkSize = newStkSize;
 			}
-			stk[++stkTop] = val;
+			stk[++stkTopPos] = frame;
 		}
-			
 	}
 	private static ByteBufferedFile buffer;
 	// note: use currentId == 0 for null and currentId == 1 for hypothetical
@@ -86,70 +104,6 @@ public class Runtime {
     	l = l << 32;
     	return l + fId;
     }
-	public synchronized static void enterMethodEvent(int mId) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-				buffer.putByte(EventKind.ENTER_METHOD);
-				if (mId != MISSING_FIELD_VAL)
-					buffer.putInt(mId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void leaveMethodEvent(int mId) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-				buffer.putByte(EventKind.LEAVE_METHOD);
-				if (mId != MISSING_FIELD_VAL)
-					buffer.putInt(mId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void enterLoopEvent(int wId) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-				buffer.putByte(EventKind.ENTER_LOOP);
-				if (wId != MISSING_FIELD_VAL)
-					buffer.putInt(wId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void leaveLoopEvent(int wId) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-				buffer.putByte(EventKind.LEAVE_LOOP);
-				if (wId != MISSING_FIELD_VAL)
-					buffer.putInt(wId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
 	// befNew event is present => h,t,o present
 	public synchronized static void befNewEvent(int hId) {
 		if (trace) {
@@ -716,10 +670,10 @@ public class Runtime {
 		if (trace) {
 			trace = false;
 			try {
-				if (thrmap != null) {
+				if (!alwaysInstr) {
 					Object t = Thread.currentThread();
 					ThreadInfo info = (ThreadInfo) thrmap.get(t);
-					if (!info.doInstr) {
+					if (info == null || info.noInstr) {
 						trace = true;
 						return;
 					}
@@ -736,10 +690,10 @@ public class Runtime {
 		if (trace) {
 			trace = false;
 			try {
-				if (thrmap != null) {
+				if (!alwaysInstr) {
 					Object t = Thread.currentThread();
 					ThreadInfo info = (ThreadInfo) thrmap.get(t);
-					if (!info.doInstr) {
+					if (info == null || info.noInstr) {
 						trace = true;
 						return;
 					}
@@ -752,134 +706,179 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void enterMethodCheckEvent(int mId) {
+	public synchronized static void enterMethodEvent(int mId) {
+		if (trace) {
+			trace = false;
+			Thread t = Thread.currentThread();
+			ThreadInfo info = null;
+			if (thrmap != null) {
+				info = (ThreadInfo) thrmap.get(t);
+				if (info == null) {
+					info = new ThreadInfo();
+					thrmap.put(t, info);
+				}
+			}
+			boolean genEvent = false;
+			if (callsBound == 0) {
+				assert (hasEnterAndLeaveMethodEvent);
+				// if bound was 0 but still landed here means event must be
+				// generated unconditionally
+				genEvent = true;
+			} else {
+				if (info.numCallsToMeth[mId]++ == callsBound) {
+					info.numMethsExceedingCallsBound++;
+					info.noInstr = true;
+				} else if (hasEnterAndLeaveMethodEvent && !info.noInstr)
+					genEvent = true;
+			}
+			if (genEvent) {
+				try {
+					buffer.putByte(EventKind.ENTER_METHOD);
+					buffer.putInt(mId);
+					int tId = getObjectId(t);
+					buffer.putInt(tId);
+				} catch (IOException ex) { throw new RuntimeException(ex); }
+			}
+			trace = true;
+		}
+	}
+	public synchronized static void leaveMethodEvent(int mId) {
+		if (trace) {
+			trace = false;
+			Thread t = Thread.currentThread();
+			boolean genEvent = false;
+			if (callsBound == 0) {
+				assert (hasEnterAndLeaveMethodEvent);
+				// if bound was 0 but still landed here means event must be
+				// generated unconditionally
+				genEvent = true;
+			} else {
+				ThreadInfo info = (ThreadInfo) thrmap.get(t);
+				if (--info.numCallsToMeth[mId] == callsBound) {
+					if (--info.numMethsExceedingCallsBound == 0) {
+						assert (info.noInstr);
+						info.noInstr = false;
+					}
+				} else if (hasEnterAndLeaveMethodEvent && !info.noInstr)
+					genEvent = true;
+			}
+			if (genEvent) {
+				try {
+					buffer.putByte(EventKind.LEAVE_METHOD);
+					buffer.putInt(mId);
+					int tId = getObjectId(t);
+					buffer.putInt(tId);
+				} catch (IOException ex) { throw new RuntimeException(ex); }
+			}
+			trace = true;
+		}
+	}
+	public synchronized static void enterLoopEvent(int wId, int mId) {
 		if (trace) {
 			trace = false;
 			Thread t = Thread.currentThread();
 			ThreadInfo info = (ThreadInfo) thrmap.get(t);
 			if (info == null) {
-				info = new ThreadInfo();
-				thrmap.put(t, info);
+				trace = true;
+				return;
 			}
-			info.numCallsToMeth[mId]++;
-			if (info.numCallsToMeth[mId] == instrBound) {
-				info.push(info.doInstr);
-				info.doInstr = false;
-			} else {
-				if (hasEnterAndLeaveMethodEvent && info.doInstr) {
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					try {
-						buffer.putByte(EventKind.ENTER_METHOD);
-						if (ef.hasLoc())
-							buffer.putInt(mId);
-						if (ef.hasThr()) {
-							int tId = getObjectId(t);
-							buffer.putInt(tId);
-						}
-					} catch (IOException ex) { throw new RuntimeException(ex); }
+			boolean genEvent = false;
+			if (itersBound == 0) {
+				assert (hasEnterAndLeaveLoopEvent);
+				int n = info.numCallsToMeth[mId];
+				LoopFrame topFrame = info.top();
+				if (topFrame == null || topFrame.wId != wId || topFrame.numCalls != n) {
+					// entering loop from outside instead of from back edge
+					info.push(wId, n);
+					genEvent = true;
 				}
+			} else {
+				if (info.noInstr) {
+					trace = true;
+					return;
+				}
+				int n = info.numCallsToMeth[mId];
+				LoopFrame topFrame = info.top();
+				if (topFrame != null && topFrame.wId == wId && topFrame.numCalls == n) {
+					// entering loop from back edge instead of from outside
+					if (++topFrame.numIters == itersBound)
+						info.noInstr = true;
+				} else {
+					// entering loop from outside instead of from back edge
+					info.push(wId, n);
+					if (hasEnterAndLeaveLoopEvent)
+						genEvent = true;
+				}
+			}
+			if (genEvent) {
+				try {
+					buffer.putByte(EventKind.ENTER_LOOP);
+					buffer.putInt(wId);
+					int tId = getObjectId(t);
+					buffer.putInt(tId);
+				} catch (IOException ex) { throw new RuntimeException(ex); }
 			}
 			trace = true;
 		}
 	}
-	public synchronized static void leaveMethodCheckEvent(int mId) {
+	public synchronized static void leaveLoopEvent(int wId, int mId) {
 		if (trace) {
 			trace = false;
 			Thread t = Thread.currentThread();
 			ThreadInfo info = (ThreadInfo) thrmap.get(t);
-			if (info.doInstr) {
-				if (hasEnterAndLeaveMethodEvent) {
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-					try {
-						buffer.putByte(EventKind.LEAVE_METHOD);
-						if (ef.hasLoc())
-							buffer.putInt(mId);
-						if (ef.hasThr()) {
-							int tId = getObjectId(t);
-							buffer.putInt(tId);
-						}
-					} catch (IOException ex) { throw new RuntimeException(ex); }
-				}
-			} else {
-				if (info.numCallsToMeth[mId] == instrBound)
-					info.doInstr = info.pop();
+			if (info == null) {
+				trace = true;
+				return;
 			}
-			info.numCallsToMeth[mId]--;
-			trace = true;
-		}
-	}
-	public synchronized static void enterLoopCheckEvent(int wId) {
-		if (trace) {
-			trace = false;
-			Thread t = Thread.currentThread();
-			ThreadInfo info = (ThreadInfo) thrmap.get(t);
-			if (info.numItersOfLoop[wId] == 0) {
-				// entering loop from outside instead of from back edge
-				info.push(info.doInstr);
-				if (hasEnterAndLeaveLoopEvent && info.doInstr) {
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-					try {
-						buffer.putByte(EventKind.ENTER_LOOP);
-						if (wId != MISSING_FIELD_VAL)
-							buffer.putInt(wId);
-						if (ef.hasThr()) {
-							int tId = getObjectId(t);
-							buffer.putInt(tId);
-						}
-					} catch (IOException ex) { throw new RuntimeException(ex); }
+			boolean genEvent = false;
+			if (itersBound == 0) {
+				assert (hasEnterAndLeaveLoopEvent);
+				int n = info.numCallsToMeth[mId];
+				LoopFrame topFrame = info.top();
+				if (topFrame == null || topFrame.wId != wId || topFrame.numCalls != n) {
+					trace = true;
+					return;
 				}
+				info.pop();
+				genEvent = true;
 			} else {
-				// entering loop from back edge instead of from outside
-				if (info.doInstr) {
-					info.numItersOfLoop[wId]++;
-					if (info.numItersOfLoop[wId] == instrBound)
-						info.doInstr = false;
+				int n = info.numCallsToMeth[mId];
+				LoopFrame topFrame = info.top();
+				if (topFrame == null || topFrame.wId != wId || topFrame.numCalls != n) {
+					trace = true;
+					return;
 				}
+				info.noInstr = false;
+				info.pop();
+				if (hasEnterAndLeaveLoopEvent)
+					genEvent = true;
 			}
-			trace = true;
-		}
-	}
-	public synchronized static void leaveLoopCheckEvent(int wId) {
-		if (trace) {
-			trace = false;
-			Thread t = Thread.currentThread();
-			ThreadInfo info = (ThreadInfo) thrmap.get(t);
-			if (info.numItersOfLoop[wId] > 0) {
-            	info.numItersOfLoop[wId] = 0;
-				info.doInstr = info.pop();
-				if (hasEnterAndLeaveLoopEvent && info.doInstr) {
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_LOOP);
-					try {
-						buffer.putByte(EventKind.LEAVE_LOOP);
-						if (wId != MISSING_FIELD_VAL)
-							buffer.putInt(wId);
-						if (ef.hasThr()) {
-							int tId = getObjectId(t);
-							buffer.putInt(tId);
-						}
-					} catch (IOException ex) { throw new RuntimeException(ex); }
-				}
+			if (genEvent) {
+				try {
+					buffer.putByte(EventKind.LEAVE_LOOP);
+					buffer.putInt(wId);
+					int tId = getObjectId(t);
+					buffer.putInt(tId);
+				} catch (IOException ex) { throw new RuntimeException(ex); }
 			}
 			trace = true;
 		}
 	}
 	public synchronized static void open(String traceFileName,
-			String instrSchemeFileName, int numMeths, int numLoops,
-			int instrBound) {
+			String instrSchemeFileName, int numMeths,
+			int callsBound, int itersBound) {
 		try {
 			buffer = new ByteBufferedFile(1024, traceFileName, false);
 		    objmap = new WeakIdentityHashMap();
 			scheme = InstrScheme.load(instrSchemeFileName);
-			{ 
-				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_AND_LEAVE_METHOD);
-				hasEnterAndLeaveMethodEvent = ef.present();
-			}
-			if (instrBound > 0) {
+			hasEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent();
+			hasEnterAndLeaveLoopEvent = scheme.hasEnterAndLeaveLoopEvent();
+			Runtime.callsBound = callsBound;
+			Runtime.itersBound = itersBound;
+			Runtime.numMeths = numMeths;
+			alwaysInstr = (callsBound > 0 || itersBound > 0) ? false : true;
+			if (!alwaysInstr || hasEnterAndLeaveLoopEvent)
 				thrmap = new WeakIdentityHashMap();
-				Runtime.instrBound = instrBound;
-				Runtime.numMeths = numMeths;
-				Runtime.numLoops = numLoops;
-			}
 		} catch (IOException ex) { throw new RuntimeException(ex); }
 		trace = true;
 	}
@@ -891,63 +890,3 @@ public class Runtime {
 	}
 }
 
-
-/*
-Three kinds of basic blocks:
-
-1. METHOD ENTRY BASIC BLOCK e:
-   num_nested_levs[M]++;
-   if (num_nested_levs[M] == max) {
-       push(do_instrument);
-       do_instrument = false;
-   }
-   /else/ if (do_instrument)
-       print e
-
-2. METHOD EXIT BASIC BLOCK e:
-   if (do_instrument)
-       print e
-   /else/ if (num_nested_levs[M] == max)
-       do_instrument = pop();
-   num_nested_levs[M]--;
-
-3. BASIC BLOCK p other than METHOD ENTRY or EXIT:
-    assert that p is not both the head and exit of same loop
-    if (p is exit of loop L1) {
-        if (entering from inside loop) { // figured by test last_iters_of_loop[L1] > 0
-            last_iters_of_loop[L] = 0;
-            do_instrument = pop();
-        }
-    }
-    if (p is exit of loop L2) {
-        if (entering from inside loop) {
-            ...
-        }
-    }
-    NOTE: head test below MUST come after all loop tests above, as we might be
-    leaving one loop and starting another, in which case we want do_instrument
-    to be set correctly
-    if (p is head of loop L) {
-        if (entering from outside loop) // figured by test last_iters_of_loop[L] == 0
-            push(do_instrument);
-        else if (do_instrument) {
-            last_iters_of_loop[L]++
-            if (last_iters_of_loop[L] == max)
-                do_instrument = false;
-        }
-    }
-    if (do_instrument)
-        print p;
-
-
-INVARIANTS:
-1. METHOD ENTRY or EXIT basic blocks cannot be loop head or loop exit of any loop
-2. basic block besides METHOD ENTRY or EXIT can be loop head of 1 loop,
-   and loop exit of 1 or more loops
-
-INSTRUMENTIATION:
-1. instrument METHOD ENTRY and EXIT basic blocks using method.insertBefore and
-   method.insertAfter/addCatch
-2. instrument each basic block with (loop exits + loop head + print) check above
-
-*/
