@@ -14,21 +14,22 @@ import chord.util.FileUtils;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Utils {
-	public static void copyFile(String fileName) {
-		String homeDirName = Properties.homeDirName;
-		assert (homeDirName != null);
+	public static void copyFile(String baseDirName, String fileName) {
 		String outDirName = Properties.outDirName;
 		assert (outDirName != null);
-		File srcFile = new File(homeDirName, fileName);
+		File srcFile = new File(baseDirName, fileName);
 		if (!srcFile.exists()) {
-			throw new RuntimeException(
-				"File named '" + fileName +
-				"' does not exist under Chord's root directory '" +
-				homeDirName + "'.");
+			throw new RuntimeException("File '" + fileName +
+				"' does not exist in dir: " + baseDirName);
 		}
 		File dstFile = new File(outDirName, srcFile.getName());
 		FileUtils.copy(srcFile.getAbsolutePath(),
 			dstFile.getAbsolutePath());
+	}
+	public static void copyFile(String fileName) {
+		String homeDirName = Properties.homeDirName;
+		assert (homeDirName != null);
+		copyFile(homeDirName, fileName);
 	}
 	public static void runSaxon(String xmlFileName, String xslFileName) {
 		String outDirName = Properties.outDirName;

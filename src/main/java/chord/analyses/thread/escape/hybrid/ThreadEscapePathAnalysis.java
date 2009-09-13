@@ -59,15 +59,15 @@ import joeq.Compiler.Quad.BasicBlock;
     name = "thresc-path-java"
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
-	private final static boolean DEBUG = false;
+	private final static boolean DEBUG = true;
     protected InstrScheme instrScheme;
     public InstrScheme getInstrScheme() {
         if (instrScheme != null)
             return instrScheme;
         instrScheme = new InstrScheme();
 		instrScheme.setConvert();
-		instrScheme.setCallsBound(1);
-		instrScheme.setItersBound(1);
+		// instrScheme.setCallsBound(1);
+		// instrScheme.setItersBound(1);
 		instrScheme.setBasicBlockEvent();
 		instrScheme.setQuadEvent();
 		instrScheme.setEnterAndLeaveMethodEvent();
