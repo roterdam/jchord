@@ -15,31 +15,31 @@ ifeq (${OS},Windows_NT)
   CXXFLAGS = $(M32_FLAG) -mno-cygwin -Wall -O2
   LINK = dllwrap
   LINKFLAGS = $(M32_FLAG) -s --target=i386-mingw32 --add-underscore --driver-name c++ -mno-cygwin
-  INSTR_DLL_NAME = $(LIB_DIR)/chord_instr_agent.dll
+  INSTR_LIB_NAME = $(LIB_DIR)/chord_instr_agent.dll
 else
   ifeq (${shell uname -s},Darwin)
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
     LINK = $(CXX) 
     LINKFLAGS = $(M32_FLAG) -dynamiclib -framework JavaVM  -single_module -undefined suppress -flat_namespace
-    INSTR_DLL_NAME = $(LIB_DIR)/libchord_instr_agent.jnilib
+    INSTR_LIB_NAME = $(LIB_DIR)/libchord_instr_agent.so
   else
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
     LINK = $(CXX)
     LINKFLAGS = $(M32_FLAG) -shared
-    INSTR_DLL_NAME = $(LIB_DIR)/libchord_instr_agent.so
+    INSTR_LIB_NAME = $(LIB_DIR)/libchord_instr_agent.so
   endif
 endif
 
-default: $(INSTR_DLL_NAME)
+default: $(INSTR_LIB_NAME)
 
-$(INSTR_DLL_NAME): chord_instr_agent.o
+$(INSTR_LIB_NAME): chord_instr_agent.o
 	$(LINK) $(LINKFLAGS) $< $(DLL_OUTPUT_OPTION)$@
 
 chord_instr_agent.o: chord_instr_agent.cpp
 	$(CXX) chord_instr_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
 
 clean:
-	$(RM) -f chord_instr_agent.o $(INSTR_DLL_NAME)
+	$(RM) -f chord_instr_agent.o $(INSTR_LIB_NAME)
 
 empty := 
 space := $(empty) $(empty)
