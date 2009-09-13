@@ -170,14 +170,6 @@
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
-	<mkdir dir="classes/waitnotify"/>
-    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/waitnotify/java" destdir="classes/waitnotify">
-      <classpath>
-        <pathelement location="classes/waitnotify"/>
-        <pathelement path="${chord.main.class.path}"/>
-      </classpath>
-    </javac>
     <if>
       <equals arg1="${sun.arch.data.model}" arg2="32"/>
       <then><property name="m32" value="-m32"/></then>
@@ -228,7 +220,7 @@
     <jvmarg value="-Xss${chord.max.stack}"/>
     <!-- <jvmarg value="-agentlib:hprof=cpu=times,interval=5"/> --> 
     <syspropertyset>
-        <propertyref prefix="chord."/>
+        <propertyref builtin="all"/>
     </syspropertyset>
     <classpath>
         <pathelement path="${chord.main.class.path}"/>
@@ -295,23 +287,6 @@
     <property name="chord.analyses" value="monosite-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-    <antcall target="run"/>
-  </target>
-
-  <target name="run-wn">
-    <path id="chord_java_analysis_path">
-      <pathelement location="classes/main"/>
-      <pathelement location="classes/waitnotify"/>
-    </path>
-    <path id="chord_dlog_analysis_path">
-      <pathelement location="src/main/dlog"/>
-      <pathelement location="src/waitnotify/dlog"/>
-    </path>
-    <property name="chord.analyses" value="wn-java"/>
-    <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
-    <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-    <property name="chord.scope.kind" value="dynamic"/>
-    <property name="chord.reuse.scope" value="true"/>
     <antcall target="run"/>
   </target>
 
