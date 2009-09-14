@@ -55,7 +55,7 @@ public class Properties {
 	public static final int callsBound = Integer.getInteger("chord.calls.bound", 0);
 	public static final int itersBound = Integer.getInteger("chord.iters.bound", 0);
 
-	public static final boolean doSSA = buildBoolProp("chord.ssa", false);
+	public static final boolean doSSA = buildBoolProp("chord.ssa", true);
 	public static final String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public static final boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
 	static {
