@@ -41,17 +41,11 @@ public class DomM extends ProgramDom<jq_Method>
 		implements IMethodVisitor {
 	public void init() {
 		// Reserve index 0 for the main method of the program.
-		// Reserver index 1 for the start() method of java.lang.Thread
+		// Reserve index 1 for the start() method of java.lang.Thread
 		// if it exists.
 		jq_Method mainMethod = Program.v().getMainMethod();
-		IndexSet<jq_Method> rootMethods = Program.v().getRootMethods();
-		assert (mainMethod != null ^ rootMethods != null);
-		if (mainMethod != null)
-			getOrAdd(mainMethod);
-		else {
-			for (jq_Method m : rootMethods)
-				getOrAdd(m);
-		}
+		assert (mainMethod != null);
+		getOrAdd(mainMethod);
 		jq_Method startMethod = Program.v().getThreadStartMethod();
 		if (startMethod != null)
 			getOrAdd(startMethod);
