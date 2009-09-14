@@ -9,6 +9,7 @@
   <target name="bddbddb-class-path">
     <path id="bddbddb_class_path">
       <fileset dir="lib/bddbddb" includes="*.jar"/>
+      <pathelement location="lib/jwutil.jar"/>
     </path>
     <property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
   </target>
@@ -218,7 +219,7 @@
     <jvmarg value="-ea"/> 
     <jvmarg value="-Xmx${chord.max.heap}"/>
     <jvmarg value="-Xss${chord.max.stack}"/>
-    <!-- <jvmarg value="-agentlib:hprof=cpu=times,interval=5"/> --> 
+    <!-- jvmarg value="-agentlib:hprof=cpu=times,interval=5"/-->
     <syspropertyset>
         <propertyref builtin="all"/>
     </syspropertyset>
