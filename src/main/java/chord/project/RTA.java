@@ -66,36 +66,27 @@ public class RTA implements IBootstrapper {
 	public IndexHashSet<jq_Method> getReachableMethods() {
 		return seenMethods;
 	}
-	public void run(List<MethodSign> rootMethodSigns) {
+	public void run() {
 		System.out.println("ENTER: bootstrapper");
 		Timer timer = new Timer();
 		timer.init();
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
-		List<jq_Method> rootMethods =
-			new ArrayList<jq_Method>(rootMethodSigns.size()); 
-		for (MethodSign sign : rootMethodSigns) {
-            String mName = sign.mName;
-            String mDesc = sign.mDesc;
-            String cName = sign.cName;
-        	jq_Class klass = (jq_Class) jq_Type.parseType(cName);
-			prepareClass(klass);
-			jq_NameAndDesc nd = new jq_NameAndDesc(mName, mDesc);
-        	jq_Method method = (jq_Method) klass.getDeclaredMember(nd);
-			assert (method != null);
-			rootMethods.add(method);
-		}
+		String mainClassName = Properties.mainClassName;
+		assert (mainClassName != null);
+       	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
+		prepareClass(mainClass);
+		jq_NameAndDesc nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
+        jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(nd);
+		assert (mainMethod != null);
 		for (int i = 0; repeat; i++) {
 			System.out.println("Iteration: " + i);
 			repeat = false;
 			initPass();
          	classesAddedForClinit.clear();
         	seenMethods.clear();
-			for (jq_Method rootMethod : rootMethods) {
-				jq_Class c = rootMethod.getDeclaringClass();
-				handleClinits(c);
-        		handleSeenMethod(rootMethod);
-			}
+			handleClinits(mainClass);
+        	handleSeenMethod(mainMethod);
 	        while (!todoMethods.isEmpty()) {
 	        	jq_Method m = todoMethods.remove(todoMethods.size() - 1);
 	        	handleTodoMethod(m);

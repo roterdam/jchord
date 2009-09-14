@@ -12,7 +12,7 @@ import chord.project.Program;
 import chord.util.IndexSet;
 
 /**
- * Relation containing all entry methods (typically only the main method)
+ * Relation containing all entry methods.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -23,13 +23,7 @@ import chord.util.IndexSet;
 public class RelEntryM extends ProgramRel {
 	public void fill() {
 		jq_Method mainMethod = Program.v().getMainMethod();
-		IndexSet<jq_Method> rootMethods = Program.v().getRootMethods();
-		assert (mainMethod != null ^ rootMethods != null);
-		if (mainMethod != null)
-			add(mainMethod);
-		else {
-			for (jq_Method m : rootMethods)
-				add(m);
-		}
+		assert (mainMethod != null);
+		add(mainMethod);
 	}
 }

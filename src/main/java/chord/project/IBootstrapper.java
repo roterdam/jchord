@@ -7,7 +7,7 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Class;
 
 public interface IBootstrapper {
-	public void run(List<MethodSign> rootMethodSigns);
+	public void run();
 	/**
 	 * 
 	 * @return
