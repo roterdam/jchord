@@ -8,14 +8,6 @@ import joeq.Class.jq_Class;
 
 public interface IBootstrapper {
 	public void run();
-	/**
-	 * 
-	 * @return
-	 */
 	public IndexSet<jq_Class> getPreparedClasses();
-	/**
-	 * 
-	 * @return
-	 */
 	public IndexSet<jq_Method> getReachableMethods();
 }
