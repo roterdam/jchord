@@ -117,7 +117,6 @@ public class Properties {
 	public static final String outDirName = System.getProperty("chord.out.dir");
 	static {
 		assert(outDirName != null);
-		assert(homeDirName != null);
 	}
 	public static final String outFileName = build("chord.out.file", "log.txt");
 	public static final String errFileName = build("chord.err.file", "log.txt");
@@ -171,6 +170,9 @@ public class Properties {
     // Chord resource properties
  
 	public final static String homeDirName = System.getProperty("chord.home.dir");
+	static {
+		assert(homeDirName != null);
+	}
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
 	public final static String bddLibDirName = System.getProperty("chord.bdd.lib.dir");
