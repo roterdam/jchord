@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.analyses.thread.escape.hybrid;
+package chord.analyses.escape.hybrid;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -15,12 +15,14 @@ import chord.util.tuple.integer.IntTrio;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class SrcNode {
-	final IntArraySet[] env;  // may contain null (i.e. escPts) elems
+public class DstNode {
+	final IntArraySet[] env;
 	final Set<IntTrio> heap;
-	public SrcNode(IntArraySet[] e, Set<IntTrio> h) {
+	final IntArraySet esc;
+	public DstNode(IntArraySet[] e, Set<IntTrio> h, IntArraySet e2) {
 		env = e;
 		heap = h;
+		esc = e2;
 	}
 	public int hashCode() {
 		return heap.hashCode();
@@ -28,14 +30,16 @@ public class SrcNode {
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
-		if (!(o instanceof SrcNode))
+		if (!(o instanceof DstNode))
 			return false;
-		SrcNode that = (SrcNode) o;
+		DstNode that = (DstNode) o;
 		return Arrays.equals(env, that.env) &&
+			esc.equals(that.esc) &&
 			heap.equals(that.heap);
 	}
 	public String toString() {
-		return "env@s=" + ThreadEscapeFullAnalysis.toString(env) +
-			";heap@s=" + ThreadEscapeFullAnalysis.toString(heap);
+		return "env@d=" + ThreadEscapeFullAnalysis.toString(env) +
+			"; heap@d=" + ThreadEscapeFullAnalysis.toString(heap) +
+			"; esc@d=" + ThreadEscapeFullAnalysis.toString(esc);
 	}
 }

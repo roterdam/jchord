@@ -3,32 +3,32 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.analyses.thread.escape.hybrid;
+package chord.analyses.escape.hybrid;
 
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class SD {
+public class SummEdge {
 	final SrcNode srcNode;
-	final DstNode dstNode;
-	public SD(SrcNode s, DstNode d) {
+	final RetNode retNode;
+	public SummEdge(SrcNode s, RetNode r) {
 		srcNode = s;
-		dstNode = d;
+		retNode = r;
 	}
 	public int hashCode() {
-		return srcNode.hashCode() + dstNode.hashCode();
+		return srcNode.hashCode() + retNode.hashCode();
 	}
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
-		if (!(o instanceof SD))
+		if (!(o instanceof SummEdge))
 			return false;
-		SD that = (SD) o;
+		SummEdge that = (SummEdge) o;
 		return srcNode.equals(that.srcNode) &&
-			dstNode.equals(that.dstNode);
+			retNode.equals(that.retNode);
 	}
 	public String toString() {
-		return srcNode + ";" + dstNode;
+		return srcNode + ";" + retNode;
 	}
 }
