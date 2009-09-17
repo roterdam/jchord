@@ -171,17 +171,21 @@
         <pathelement path="${chord.main.class.path}"/>
       </classpath>
     </javac>
+    <path id="jdk_root">
+      <pathelement location="${java.home}/.."/>
+    </path>
+    <pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
     <if>
       <equals arg1="${sun.arch.data.model}" arg2="32"/>
       <then><property name="m32" value="-m32"/></then>
       <else><property name="m32" value=""/></else>
     </if>
     <exec executable="make" dir="bdd">
-      <arg value="JDK_ROOT=${java.home}/.."/>
+      <arg value="JDK_ROOT=${jdk_root}"/>
       <arg value="M32_FLAG=${m32}"/>
     </exec>
     <exec executable="make" dir="agent">
-      <arg value="JDK_ROOT=${java.home}/.."/>
+      <arg value="JDK_ROOT=${jdk_root}"/>
       <arg value="M32_FLAG=${m32}"/>
     </exec>
   </target>
