@@ -94,7 +94,7 @@ public class Project {
 
             String analyses = Properties.analyses;
             if (analyses != null) {
-                String[] analysisNames = analyses.split(" |,|:|;");
+                String[] analysisNames = analyses.split(Properties.LIST_SEPARATOR);
 				for (String name : analysisNames)
 					runTask(name);
             }

@@ -53,11 +53,14 @@ import java.io.File;
  * <tr><td colspan=2>Program analysis properties</td></tr>
  *
  * <tr><td><tt>chord.java.analysis.path</tt></td>
- *     <td>Classpath containing program analyses expressed in Java (i.e. @Chord-annotated classes) to be included in the project</td></tr>
+ *     <td>Classpath containing program analyses expressed in Java 
+ *         (i.e. @Chord-annotated classes) to be included in the project</td></tr>
  * <tr><td><tt>chord.dlog.analysis.path</tt></td>
- *     <td>Path of dirs containing program analyses expressed in Datalog (i.e. .datalog and .dlog files) to be included in the project</td></tr>
+ *     <td>Path of dirs containing program analyses expressed in Datalog
+ *         (i.e. .datalog and .dlog files) to be included in the project</td></tr>
  * <tr><td><tt>chord.analyses</tt></td>
- *     <td>List of names of program analyses to be run in order; separator = <tt>' |,|:|;'</tt> (default=empty list)</td></tr>
+ *     <td>List of names of program analyses to be run in order;
+ *         separator = <tt>' |,|:|;'</tt> (default=empty list)</td></tr>
  *
  * <tr><td colspan=2>BDD-based Datalog solver properties</td></tr>
  * 
@@ -70,6 +73,9 @@ import java.io.File;
  *
  * <tr><td colspan=2>Program instrumentation properties</td></tr>
  *
+ * <tr><td><tt>chord.instr.exclude</tt></td>
+ *     <td>List of prefixes of names of classes and packages to exclude from instrumentation;
+ *         separator = <tt>' |,|:|;'</tt> (default="java.,sun.,com.")</td></tr>
  * <tr><td><tt>chord.run.ids</tt></td>
  *     <td>List of IDs to identify program runs; separator = <tt>' |,|:|;'</tt> (default="0")</td></tr>
  * <tr><td><tt>chord.args.XXX</tt></td>
@@ -111,38 +117,40 @@ import java.io.File;
 public class Properties {
 	private Properties() { }
 
+	public final static String LIST_SEPARATOR = " |,|:|;";
+
 	// Chord I/O properties
 
-	public static final String workDirName = System.getProperty("user.dir");
-	public static final String outDirName = System.getProperty("chord.out.dir");
+	public final static String workDirName = System.getProperty("user.dir");
+	public final static String outDirName = System.getProperty("chord.out.dir");
 	static {
 		assert(outDirName != null);
 	}
-	public static final String outFileName = build("chord.out.file", "log.txt");
-	public static final String errFileName = build("chord.err.file", "log.txt");
+	public final static String outFileName = build("chord.out.file", "log.txt");
+	public final static String errFileName = build("chord.err.file", "log.txt");
 
     // Program properties
 
-	public static final String mainClassName = System.getProperty("chord.main.class");
-	public static final String classPathName = System.getProperty("chord.class.path");
-	public static final String srcPathName = System.getProperty("chord.src.path");
+	public final static String mainClassName = System.getProperty("chord.main.class");
+	public final static String classPathName = System.getProperty("chord.class.path");
+	public final static String srcPathName = System.getProperty("chord.src.path");
 	
     // Program scope properties
 
-	public static final String scopeKind = System.getProperty("chord.scope.kind", "rta");
+	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	static {
 		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
 	}
-	public static final boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
-	public static final String bootClassesFileName = build("chord.boot.classes.file", "boot_classes.txt");
-	public static final String classesFileName = build("chord.classes.file", "classes.txt");
-	public static final String methodsFileName = build("chord.methods.file", "methods.txt");
+	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
+	public final static String bootClassesFileName = build("chord.boot.classes.file", "boot_classes.txt");
+	public final static String classesFileName = build("chord.classes.file", "classes.txt");
+	public final static String methodsFileName = build("chord.methods.file", "methods.txt");
 
     // Program analysis properties
 
-	public static final String javaAnalysisPathName = System.getProperty("chord.java.analysis.path");
-	public static final String dlogAnalysisPathName = System.getProperty("chord.dlog.analysis.path");
-	public static final String analyses = System.getProperty("chord.analyses");
+	public final static String javaAnalysisPathName = System.getProperty("chord.java.analysis.path");
+	public final static String dlogAnalysisPathName = System.getProperty("chord.dlog.analysis.path");
+	public final static String analyses = System.getProperty("chord.analyses");
 
     // BDD-based Datalog solver properties
 
@@ -152,12 +160,13 @@ public class Properties {
 
 	// Program instrumentation properties
 
+	public final static String instrExcludedPckgs = System.getProperty("chord.instr.exclude", "java.,sun.,com.");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
-	public static final int callsBound = Integer.getInteger("chord.calls.bound", 0);
-	public static final int itersBound = Integer.getInteger("chord.iters.bound", 0);
+	public final static int callsBound = Integer.getInteger("chord.calls.bound", 0);
+	public final static int itersBound = Integer.getInteger("chord.iters.bound", 0);
 
-	public static final String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
-	public static final String classesDirName = build("chord.classes.dir", "classes");
+	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
+	public final static String classesDirName = build("chord.classes.dir", "classes");
 
 	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
 	public final static String crudeTraceFileName = build("chord.crude.trace.file", "crude_trace.txt");
