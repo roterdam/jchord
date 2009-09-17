@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.analyses.thread.escape;
+package chord.analyses.escape.dynamic;
 
 import java.io.IOException;
 import java.io.PrintWriter;

@@ -1,4 +1,4 @@
-package chord.analyses.thread.escape.hybrid;
+package chord.analyses.escape.hybrid;
 
 import java.util.HashMap;
 import java.util.List;
