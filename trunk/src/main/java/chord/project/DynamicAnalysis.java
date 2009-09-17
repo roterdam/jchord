@@ -79,7 +79,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
 			ProcessExecutor.execute("mkfifo " + finalTraceFileName);
 		}
-		final String[] runIDs = Properties.runIDs.split(" |,|:|;");
+		final String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
 		final String traceFileName = needsTraceTransform ?
 			crudeTraceFileName : finalTraceFileName;
 		IndexMap<String> Mmap = instrumentor.getMmap();

@@ -313,13 +313,27 @@ public class Instrumentor {
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
+		String[] excluded = Properties.instrExcludedPckgs.split(Properties.LIST_SEPARATOR);
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
 			if (cName.equals("java.lang.J9VMInternals") ||
-					cName.startsWith("java.lang.ref.") ||
-					cName.equals("sun.util.resources.TimeZoneNames"))
+				cName.startsWith("java.lang.ref.") ||
+				cName.equals("sun.util.resources.TimeZoneNames")) {
+				System.out.println("WARNING: Not instrumenting class: " + cName);
 				continue;
+			}
+			boolean match = false;
+			for (String s : excluded) {
+				if (cName.startsWith(s)) {
+					match = true;
+		 			break;
+				}
+			}
+			if (match) {
+				System.out.println("WARNING: Not instrumenting class: " + cName);
+				continue;
+			}
 			CtClass clazz;
 			try {
 				clazz = pool.get(cName);

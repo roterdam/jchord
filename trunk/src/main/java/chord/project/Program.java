@@ -146,7 +146,7 @@ public class Program {
 		assert (mainClassName != null);
 		String classPathName = Properties.classPathName;
 		assert (classPathName != null);
-        String[] runIDs = Properties.runIDs.split(",");
+        String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
         final String cmd = "java -ea " +
             " -cp " + classPathName +
