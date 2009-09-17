@@ -63,7 +63,7 @@ import chord.util.Timer;
 	    name = "thresc-full-java"
 	)
 public class ThreadEscapeFullAnalysis extends JavaAnalysis {
-    private final static boolean DEBUG = true;
+    private final static boolean DEBUG = false;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();
 	public final static IntArraySet emptyEsc = new IntArraySet(0);

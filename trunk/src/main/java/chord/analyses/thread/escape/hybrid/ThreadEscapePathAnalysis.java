@@ -326,6 +326,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         System.out.println("Path analysis escHeapInsts:");
         for (Quad e : escHeapInsts)
             System.out.println("\t" + Program.v().toString(e));
+		System.out.println("Path analysis locHeapInsts:");
+        for (Quad e : heapInstToAllocs.keySet()) {
+            System.out.println("\t" + Program.v().toString(e));
+			for (Quad h : heapInstToAllocs.get(e)) {
+            	System.out.println("\t\t" + Program.v().toString(h));
+			}
+		}
+		
 	}
 
 	private List<IntPair> processMethArgs(jq_Method m) {
