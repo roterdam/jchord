@@ -15,7 +15,6 @@
 # Relations
 ###
 
-rootCM(c:C,m:M) input
 CICM(c:C,i:I,d:C,m:M) input
 MI(m:M,i:I) input
 
@@ -28,7 +27,7 @@ thrSenAbbrCMCM(c:C,m:M,d:C,n:M) output
 # Constraints
 ###
 
-thrSenAbbrRootCM(c,m) :- rootCM(c,m).
+thrSenAbbrRootCM(0,0).
 thrSenAbbrRootCM(d,1) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,1).
 
 thrSenAbbrReachableCM(c,m) :- thrSenAbbrRootCM(c,m).
