@@ -6,18 +6,17 @@
 	<classpathentry kind="src" output="classes/monosite" path="src/monosite/java"/>
 	<classpathentry kind="src" output="classes/downcast" path="src/downcast/java"/>
 	<classpathentry kind="src" output="classes/deadlock" path="src/deadlock/java"/>
-	<classpathentry kind="src" output="classes/waitnotify" path="src/waitnotify/java"/>
 	<classpathentry exported="true" kind="lib" path="lib/trove-2.0.4.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/j2h.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/bddbddb/bddbddb.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/bddbddb/javabdd-1.0b2.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/bddbddb/jdom.jar"/>
-	<classpathentry exported="true" kind="lib" path="lib/bddbddb/jwutil-1.0.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/saxon9.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/java2html.jar"/>
 	<classpathentry kind="lib" path="lib/scannotation-1.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/javassist.jar"/>
 	<classpathentry kind="lib" path="lib/joeq.jar"/>
+	<classpathentry kind="lib" path="lib/jwutil.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>
