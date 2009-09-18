@@ -60,6 +60,8 @@ import joeq.Compiler.Quad.BasicBlock;
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private final static boolean DEBUG = false;
+	private final static TIntArrayList emptyTmpsList = new TIntArrayList(0);
+	private final static List<IntPair> emptyArgsList = Collections.emptyList();
     protected InstrScheme instrScheme;
     public InstrScheme getInstrScheme() {
         if (instrScheme != null)
@@ -75,6 +77,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
     }
     // data structures set once and for all
 	private List/*IntPair*/[] methToArgs;
+	private TIntArrayList[] methToTmps;
     // set of heap insts deemed escaping in some run so far
 	private Set<Quad> escHeapInsts;
 	private Map<Quad, Set<Quad>> heapInstToAllocs;
@@ -121,7 +124,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		domV = (DomV) Project.getTrgt("V");
 		Project.runTask(domV);
         domQ = (ProgramDom) Project.getTrgt("Q");
-    	methToArgs = new List[domM.size()];
+		int numM = domM.size();
+    	methToArgs = new List[numM];
+		methToTmps = new TIntArrayList[numM];
     	escHeapInsts = new HashSet<Quad>();
     	heapInstToAllocs = new HashMap<Quad, Set<Quad>>();
     }
@@ -145,7 +150,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
 	public void processEnterMethod(int m, int t) {
-		if (DEBUG) System.out.println("T" + t + " ENTER_METHOD " + m);
+		// if (DEBUG) System.out.println("T" + t + " ENTER_METHOD " + domM.get(m));
 		Handler handler = thrToHandlerMap.get(t);
 		if (handler == null) {
 			handler = new Handler(t);
@@ -154,19 +159,19 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		handler.processEnterMethod(m);
 	}
     public void processLeaveMethod(int m, int t) {
-		if (DEBUG) System.out.println("T" + t + " LEAVE_METHOD " + m);
+		// if (DEBUG) System.out.println("T" + t + " LEAVE_METHOD " + domM.get(m));
 		Handler handler = thrToHandlerMap.get(t);
 		if (handler != null)
 			handler.processLeaveMethod(m);
 	}
 	public void processBasicBlock(int b, int t) {
-		if (DEBUG) System.out.println("T" + t + " BB " + b);
+		// if (DEBUG) System.out.println("T" + t + " BB " + b);
 		Handler handler = thrToHandlerMap.get(t);
 		if (handler != null)
 			handler.processBasicBlock(b);
 	}
 	public void processQuad(int p, int t) {
-		if (DEBUG) System.out.println("T" + t + " QUAD " + p);
+		// if (DEBUG) System.out.println("T" + t + " QUAD " + p);
 		Handler handler = thrToHandlerMap.get(t);
 		if (handler != null)
 			handler.processQuad(p);
@@ -336,12 +341,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		
 	}
 
-	private List<IntPair> processMethArgs(jq_Method m) {
+	private List<IntPair> processMethVars(jq_Method m, int mId) {
 		List<IntPair> args = null;
+		TIntArrayList tmps = null;
 		ControlFlowGraph cfg = m.getCFG();
 		assert (cfg != null);
 		RegisterFactory rf = cfg.getRegisterFactory();
 		int numArgs = m.getParamTypes().length;
+		int numVars = rf.size();
 		for (int zId = 0; zId < numArgs; zId++) {
 			Register v = rf.get(zId);
 			if (v.getType().isReferenceType()) {
@@ -352,8 +359,22 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				args.add(new IntPair(zId, vId));
 			}
 		}
+		for (int zId = numArgs; zId < numVars; zId++) {
+			Register v = rf.get(zId);
+			if (v.getType().isReferenceType()) {
+				int vId = domV.indexOf(v);
+				assert (vId != -1);
+				if (tmps == null)
+					tmps = new TIntArrayList();
+				tmps.add(vId);
+			}
+		}
 		if (args == null)
-			args = Collections.emptyList();
+			args = emptyArgsList;
+		if (tmps == null)
+		 	tmps = emptyTmpsList;
+		methToArgs[mId] = args;
+		methToTmps[mId] = tmps;
 		return args;
 	}
 
@@ -362,38 +383,39 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		// context of this method, i.e., number of times this method has
 		// been called until now in the current run, across all threads
 		final int cId;
-		// invkArgs is null and invkRet is -1 if this method was called
-		// implicitly
-		final List<IntPair> invkArgs;
-		final int invkRet;
+		// isExplicit is true iff method was explicitly called
+		// if isExplicit is true then invkRet may be -1 meaning that either
+		// method doesn't return a value of reference type or call site
+		// ignores returned value
+		// if isExplicit is false then invkRet is undefined
+		boolean isExplicit;
+		int invkRet;
 		BasicBlock prevBB;
 		BasicBlock currBB;
 		int prevXid;
-		public Frame(int mId, int cId, List<IntPair> invkArgs, int invkRet) {
+		InvkInfo pendingInvk;
+		public Frame(int mId, int cId) {
 			this.mId = mId;
 			this.cId = cId;
-			this.invkArgs = invkArgs;
-			this.invkRet = invkRet;
 		}
 	}
 	class InvkInfo {
 		final String sign;
 		final List<IntPair> invkArgs;
 		final int invkRet;
-		final int invkQid;
-		public InvkInfo(String sign, List<IntPair> invkArgs,
-				int invkRet, int invkQid) {
+		public InvkInfo(String sign, List<IntPair> invkArgs, int invkRet) {
 			this.sign = sign;
 			this.invkArgs = invkArgs;
 			this.invkRet = invkRet;
-			this.invkQid = invkQid;
+		}
+		public String toString() {
+			return sign + " " + invkRet;
 		}
 	}
 
 	class Handler {
 		private Stack<Frame> frames = new Stack<Frame>();
 		private Frame top;
-		private Stack<InvkInfo> pendingInvks = new Stack<InvkInfo>();
 		private boolean foundThreadRoot;
 		// ignoredMethNumFrames > 0 means currently ignoring code
 		// reachable from method with id ignoredMethId
@@ -439,7 +461,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		public void processEnterMethod(int mId) {
 			assert (mId >= 0);
 			if (ignoredMethNumFrames > 0) {
-				if (DEBUG) System.out.println("Ignoring");
 				if (mId == ignoredMethId)
 					ignoredMethNumFrames++;
 				return;
@@ -448,79 +469,80 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			String cName = m.getDeclaringClass().getName();
 			jq_Class cls = Program.v().getPreparedClass(cName);
 			if (cls == null) {
-				if (DEBUG) System.out.println("Missing class: " + cName);
+				System.out.println("WARNING: Missing class: " + cName);
 				beginIgnoredMeth(mId);
 				return;
 			}
+			if (DEBUG) System.out.println("T" + tId + " ENTER: " + m);
 			String mName = m.getName().toString();
 			String mDesc = m.getDesc().toString();
 			String mSign = mName + mDesc;
-			List<IntPair> invkArgs = null;
-			int invkRet = -1;
-			boolean found = false;
-			if (!pendingInvks.isEmpty()) {
-				InvkInfo invkInfo = pendingInvks.peek();
-				if (invkInfo.sign.equals(mSign)) {
-					found = true;
-					pendingInvks.pop();
-					invkArgs = invkInfo.invkArgs;
-					invkRet = invkInfo.invkRet;
-					int invkQid = invkInfo.invkQid;
-					List<IntPair> methArgs = methToArgs[mId];
-					if (methArgs == null) {
-						methArgs = processMethArgs(m);
-						methToArgs[mId] = methArgs;
-					}
-					int numArgs = methArgs.size();
-					assert (numArgs == invkArgs.size());
-					for (int i = 0; i < numArgs; i++) {
-						IntPair zv = methArgs.get(i);
-						int zId = zv.idx0;
-						int vId = zv.idx1;
-						IntPair zu = invkArgs.get(i);
-						assert (zu.idx0 == zId);
-						int uId = zu.idx1;
-						copySet.add(new IntTrio(invkQid, vId, uId));
-					}
+			InvkInfo pendingInvk;
+			if (top != null) {
+ 				pendingInvk = top.pendingInvk;
+				frames.push(top);
+			} else
+				pendingInvk = null;
+			int cId = methToNumCalls[mId]++;
+			top = new Frame(mId, cId);
+			int currQid = setCurrQid(m.getCFG().entry());
+			List<IntPair> methArgs = methToArgs[mId];
+			if (methArgs == null)
+				methArgs = processMethVars(m, mId);
+			TIntArrayList methTmps = methToTmps[mId];
+			if (DEBUG) System.out.println("\tPending Invk: " + pendingInvk);
+			if (pendingInvk != null && pendingInvk.sign.equals(mSign)) {
+				if (DEBUG) System.out.println("\tMATCHES");
+				List<IntPair> invkArgs = pendingInvk.invkArgs;
+				int numArgs = methArgs.size();
+				top.invkRet = pendingInvk.invkRet;
+				top.isExplicit = true;
+				assert (numArgs == invkArgs.size());
+				for (int i = 0; i < numArgs; i++) {
+					IntPair zv = methArgs.get(i);
+					int zId = zv.idx0;
+					int vId = zv.idx1;
+					IntPair zu = invkArgs.get(i);
+					assert (zu.idx0 == zId);
+					int uId = zu.idx1;
+					copySet.add(new IntTrio(currQid, vId, uId));
+				}
+			} else if (!foundThreadRoot &&
+					(mSign.equals("main([Ljava/lang/String;)V") ||
+						mSign.equals("run()V"))) {
+				foundThreadRoot = true;
+				System.out.println("Treating method " + m +
+					" as thread root of thread# " + tId);
+				IntPair thisArg = methArgs.get(0);
+				assert (thisArg.idx0 == 0);
+					int vId = thisArg.idx1;
+				if (mSign.equals("run()V"))
+					startSet.add(new IntPair(currQid, vId));
+				else
+					asgnSet.add(new IntPair(currQid, vId));
+			} else {
+				for (IntPair p : methArgs) {
+					int vId = p.idx1;
+					asgnSet.add(new IntPair(currQid, vId));
 				}
 			}
-			if (top != null)
-				frames.push(top);
-			int cId = methToNumCalls[mId]++;
-			if (DEBUG) System.out.println("Method: " + m);
-			top = new Frame(mId, cId, invkArgs, invkRet);
-			if (!found && !foundThreadRoot) {
-				if (mSign.equals("main([Ljava/lang/String;)V") || mSign.equals("run()V")) {
-					foundThreadRoot = true;
-					System.out.println("Treating method '" + m +
-						"' as thread root of thread# " + tId);
-					if (mSign.equals("run()V")) {
-						List<IntPair> methArgs = methToArgs[mId];
-						if (methArgs == null) {
-							methArgs = processMethArgs(m);
-							methToArgs[mId] = methArgs;
-						}
-						IntPair thisArg = methArgs.get(0);
-						assert (thisArg.idx0 == 0);
-						int currQid = setCurrQid(m.getCFG().entry());
-						int vId = thisArg.idx1;
-						startSet.add(new IntPair(currQid, vId));
-					}
-				}
+			int numTmps = methTmps.size();
+			for (int i = 0; i < numTmps; i++) {
+				int vId = methTmps.get(i);
+				asgnSet.add(new IntPair(currQid, vId));
 			}
 		}
 		public void processLeaveMethod(int mId) {
 			assert (mId >= 0);
 			if (top == null) {
-				if (DEBUG) System.out.println("Ignoring 1");
 				return;
 			}
 			if (ignoredMethNumFrames > 0) {
-				if (DEBUG) System.out.println("Ignoring 2");
 				if (mId == ignoredMethId)
 					ignoredMethNumFrames--;
 				return;
 			}
+			if (DEBUG) System.out.println("T" + tId + " LEAVE: " + domM.get(mId));
 			assert (mId == top.mId);
 			if (frames.isEmpty())
 				top = null;
@@ -529,11 +551,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 		public void processBasicBlock(int bId) {
 			if (top == null) {
-				if (DEBUG) System.out.println("Ignoring 1");
 				return;
 			}
 			if (ignoredMethNumFrames > 0) {
-				if (DEBUG) System.out.println("Ignoring 2");
 				return;
 			}
 			BasicBlock bb = domB.get(bId);
@@ -554,11 +574,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 		public void processQuad(int pId) {
 			if (top == null) {
-				if (DEBUG) System.out.println("Ignoring 1");
 				return;
 			}
 			if (ignoredMethNumFrames > 0) {
-				if (DEBUG) System.out.println("Ignoring 2");
 				return;
 			}
 			BasicBlock currBB = top.currBB;
@@ -572,6 +590,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			}
 		}
 		private void processQuad(Quad q) {
+			if (DEBUG) System.out.println("Quad: " + q);
+			top.pendingInvk = null;
 			Operator op = q.getOperator();
 			if (op instanceof Invoke)
 				processInvoke(q);
@@ -585,7 +605,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				processAload(q);
 			else if (op instanceof Putfield)
 				processPutfield(q);
-			else if (op instanceof AStore)
+				else if (op instanceof AStore)
 				processAstore(q);
 			else if (op instanceof Getstatic)
 				processGetstatic(q);
@@ -783,7 +803,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				}
 			}
 			if (invkArgs == null)
-				invkArgs = Collections.emptyList();
+				invkArgs = emptyArgsList;
 			int invkRet = -1;
 			RegisterOperand vo = Invoke.getDest(q);
 			if (vo != null) {
@@ -797,25 +817,29 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			String mName = m.getName().toString();
 			String mDesc = m.getDesc().toString();
 			String mSign = mName + mDesc;
-			int currQid = setCurrQid(q);
 			if (mSign.equals("start()V") &&
 					m.getDeclaringClass().getName().equals("java.lang.Thread")) {
+				int currQid = setCurrQid(q);
 				IntPair thisArg = invkArgs.get(0);
 				assert (thisArg.idx0 == 0);
 				int vId = thisArg.idx1;
 				spawnSet.add(new IntPair(currQid, vId));
 			} else {
-				InvkInfo invkInfo =
-					new InvkInfo(mSign, invkArgs, invkRet, currQid);
-				pendingInvks.push(invkInfo);
+				if (DEBUG) System.out.println("Setting top.pendingInvk: " +
+					mSign + " " + invkRet);
+				InvkInfo invkInfo = new InvkInfo(mSign, invkArgs, invkRet);
+				top.pendingInvk = invkInfo;
 			}
 		}
 		private void processReturn(Quad q) {
-			int invkRet = top.invkRet;
-			if (invkRet == -1) {
-				// this method was called implicitly
+			boolean isExplicit = top.isExplicit;
+			if (DEBUG) System.out.println("Return: " + domM.get(top.mId) + " " +
+				isExplicit + " " + top.invkRet);
+			if (!isExplicit)
 				return;
-			}
+			int invkRet = top.invkRet;
+			if (invkRet == -1)
+				return;
 			Operand rx = Return.getSrc(q);
 			if (rx instanceof RegisterOperand) {
 				RegisterOperand ro = (RegisterOperand) rx;
