@@ -573,9 +573,11 @@ public class Program {
 	
 	public static String getSourceFileName(jq_Class c) {
 		String t = c.getName();
-		String s = t.substring(0, t.lastIndexOf('.') + 1);
+		int i = t.lastIndexOf('.') + 1;
+		String s = t.substring(0, i);
 		Utf8 f = c.getSourceFile();
-		return s.replace('.', '/') + f;
+		String r = (f == null) ? ("[" + t.substring(i) + "]") : f.toString();
+		return s.replace('.', '/') + r;
 	}
 	
 	public void print() {
