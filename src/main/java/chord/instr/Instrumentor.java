@@ -186,9 +186,14 @@ public class Instrumentor {
 		this.scheme = scheme;
 	}
 	public void run() {
-		String fullClassPathName = Properties.classPathName +
-			File.pathSeparator + Properties.mainClassPathName;
+		String fullClassPathName = Properties.mainClassPathName +
+			File.pathSeparator + Properties.classPathName;
 		pool = new ClassPool();
+		try {
+			pool.appendPathList(System.getProperty("sun.boot.class.path"));
+		} catch (NotFoundException ex) {
+			throw new ChordRuntimeException(ex);
+		}
 		String[] pathElems = fullClassPathName.split(File.pathSeparator);
 		for (String pathElem : pathElems) {
 			File file = new File(pathElem);
@@ -202,7 +207,8 @@ public class Instrumentor {
 				throw new ChordRuntimeException(ex);
 			}
 		}
-		pool.appendSystemPath();
+		// pool.appendSystemPath();
+		System.out.println("POOL: " + pool);
 		convert = scheme.isConverted();
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
@@ -313,7 +319,9 @@ public class Instrumentor {
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
-		String[] excluded = Properties.instrExcludedPckgs.split(Properties.LIST_SEPARATOR);
+		String instrExcludedPckgs = Properties.instrExcludedPckgs;
+		String[] excluded = instrExcludedPckgs.equals("") ? new String[0] :
+			instrExcludedPckgs.split(Properties.LIST_SEPARATOR);
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
@@ -343,7 +351,9 @@ public class Instrumentor {
 			List<jq_Method> methods = program.getReachableMethods(c);
 			CtBehavior[] inits = clazz.getDeclaredConstructors();
 			CtBehavior[] meths = clazz.getDeclaredMethods();
+			System.out.println("CLASS: " + cName);
 			for (jq_Method m : methods) {
+				System.out.println("XXX: " + m + " sign: " + m.getDesc().toString());
 				CtBehavior method = null;
 				String mName = m.getName().toString();
 				if (mName.equals("<clinit>")) {
@@ -351,6 +361,7 @@ public class Instrumentor {
 				} else if (mName.equals("<init>")) {
 					String mDesc = m.getDesc().toString();
 					for (CtBehavior x : inits) {
+						System.out.println("\t" + x.getSignature());
 						if (x.getSignature().equals(mDesc)) {
 							method = x;
 							break;
