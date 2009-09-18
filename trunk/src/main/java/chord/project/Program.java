@@ -416,36 +416,6 @@ public class Program {
 		return 0;
 	}
 	
-	public static String toString(RegisterOperand op) {
-		return "<" + op.getType().getName() + " " + op.getRegister() + ">";
-	}
-
-	public static String toString(Operand op) {
-		if (op instanceof RegisterOperand)
-			return toString((RegisterOperand) op);
-		return op.toString();
-	}
-
-	public String toStringInvokeInst(Quad q) {
-		String s = "";
-		RegisterOperand ro = Invoke.getDest(q);
-		if (ro != null) 
-			s = toString(ro) + " := ";
-		else
-			s = "";
-		jq_Method m = Invoke.getMethod(q).getMethod();
-		s += m.getNameAndDesc().toString() + "(";
-		ParamListOperand po = Invoke.getParamList(q);
-		int n = po.length();
-		for (int i = 0; i < n; i++) {
-			s += toString(po.get(i));
-			if (i < n - 1)
-				s += ",";
-		}
-		s += ")";
-		return location(q) + s;
-	}
-	
 	public static String toString(int bci, String mName, String mDesc,
 			String cName) {
 		return bci + "!" + mName + ":" + mDesc + "@" + cName;
@@ -455,96 +425,6 @@ public class Program {
 		return name + ":" + desc + "@" + cName;
 	}
 
-	public String toStringNewInst(Quad q) {
-		String t, l;
-		if (q.getOperator() instanceof New) {
-			l = toString(New.getDest(q));
-			t = New.getType(q).getType().getName();
-		} else {
-			l = toString(NewArray.getDest(q));
-			t = NewArray.getType(q).getType().getName();
-		}
-		return location(q) + l + " = new " + t;
-	}
-	
-	public String toStringHeapInst(Quad q) {
-		Operator op = q.getOperator();
-		String s;
-		if (isWrHeapInst(op)) {
-			String b, f, r;
-			if (op instanceof Putfield) {
-				b = toString(Putfield.getBase(q)) + ".";
-				f = Putfield.getField(q).getField().toString();
-				r = toString(Putfield.getSrc(q));
-			} else if (op instanceof AStore) {
-				b = toString(AStore.getBase(q));
-				f = "[*]";
-				r = toString(AStore.getValue(q));
-			} else {
-				b = "";
-				f = Putstatic.getField(q).getField().toString();
-				r = toString(Putstatic.getSrc(q));
-			}
-			s = b + f + " := " + r;
-		} else {
-			String l, b, f;
-			if (op instanceof Getfield) {
-				l = toString(Getfield.getDest(q));
-				b = toString(Getfield.getBase(q)) + ".";
-				f = Getfield.getField(q).getField().toString();
-			} else if (op instanceof ALoad) {
-				l = toString(ALoad.getDest(q));
-				b = toString(ALoad.getBase(q));
-				f = "[*]";
-			} else {
-				l = toString(Getstatic.getDest(q));
-				b = "";
-				f = Getstatic.getField(q).getField().toString();
-			}
-			s = l + " := " + b + f;
-			
-		}
-		return location(q) + s;
-	}
-	
-	public String toStringLockInst(Inst q) {
-		jq_Method m = getMethod(q);
-		String fileName = getSourceFileName(m.getDeclaringClass());
-		int lineNumber = getLineNumber(q, m);
-		String s;
-		if (q instanceof Quad)
-			s = Monitor.getSrc((Quad) q).toString();
-		else
-			s = getMethod(q).toString();
-		return fileName + ":" + lineNumber + ": monitorenter " + s;
-	}
-
-	public String location(Quad q) {
-		jq_Method m = getMethod(q);
-		jq_Class c = m.getDeclaringClass();
-		String fileName = getSourceFileName(c);
-		int lineNumber = getLineNumber(q, m);
-		return fileName + ":" + lineNumber + ": ";
-	}
-	
-	public String toString(Quad q) {
-		Operator op = q.getOperator();
-		if (op instanceof Move) {
-			return location(q) + Move.getDest(q) + " := " +
-				Move.getSrc(q);
-		}
-		if (op instanceof Getfield || op instanceof Putfield ||
-				op instanceof ALoad || op instanceof AStore ||
-				op instanceof Getstatic || op instanceof Putstatic) {
-			return toStringHeapInst(q);
-		}
-		if (op instanceof New || op instanceof NewArray)
-			return toStringNewInst(q);
-		if (op instanceof Invoke)
-			return toStringInvokeInst(q);
-		return location(q) + q.toString();
-	}
-	
 	public static jq_Field getField(Quad e) {
 		Operator op = e.getOperator();
 		if (op instanceof ALoad || op instanceof AStore)
@@ -572,12 +452,158 @@ public class Program {
 	}
 	
 	public static String getSourceFileName(jq_Class c) {
+		Utf8 f = c.getSourceFile();
+		if (f == null)
+			return null;
 		String t = c.getName();
 		int i = t.lastIndexOf('.') + 1;
 		String s = t.substring(0, i);
-		Utf8 f = c.getSourceFile();
-		String r = (f == null) ? ("[" + t.substring(i) + "]") : f.toString();
-		return s.replace('.', '/') + r;
+		return s.replace('.', '/') + f;
+	}
+
+	/**************************************************************
+	 * Functions for printing program structures in various formats
+	 **************************************************************/
+
+	public String toVerboseStr(Quad q) {
+		return toBytePosStr(q) + " " + toJavaPosStr(q) + " " + toQuadStr(q);
+	}
+
+	public String toJavaPosStr(Quad q) {
+		jq_Method m = getMethod(q);
+		jq_Class c = m.getDeclaringClass();
+		String fileName = getSourceFileName(c);
+		int lineNumber = getLineNumber(q, m);
+		return fileName + ":" + lineNumber;
+	}
+
+	public String toBytePosStr(Inst i) {
+        if (i == null)
+            return "null";
+        jq_Method m = getMethod(i);
+        int bci;
+        if (i instanceof Quad)
+            bci = m.getBCI((Quad) i);
+        else {
+            BasicBlock b = (BasicBlock) i;
+            if (b.isEntry())
+                bci = -1;
+            else {
+                assert (b.isExit());
+                bci = -2;
+            }
+        }
+        String mName = m.getName().toString();
+        String mDesc = m.getDesc().toString();
+        String cName = m.getDeclaringClass().getName();
+        return toString(bci, mName, mDesc, cName);
+	}
+
+	public String toQuadStr(Quad q) {
+		Operator op = q.getOperator();
+		if (op instanceof Move) {
+			return Move.getDest(q) + " = " + Move.getSrc(q);
+		}
+		if (op instanceof Getfield || op instanceof Putfield ||
+				op instanceof ALoad || op instanceof AStore ||
+				op instanceof Getstatic || op instanceof Putstatic) {
+			return toStringHeapInst(q);
+		}
+		if (op instanceof New || op instanceof NewArray)
+			return toStringNewInst(q);
+		if (op instanceof Invoke)
+			return toStringInvokeInst(q);
+		return q.toString();
+	}
+
+	public static String toString(RegisterOperand op) {
+		return "<" + op.getType().getName() + " " + op.getRegister() + ">";
+	}
+
+	public static String toString(Operand op) {
+		if (op instanceof RegisterOperand)
+			return toString((RegisterOperand) op);
+		return op.toString();
+	}
+
+	public String toStringInvokeInst(Quad q) {
+		String s = "";
+		RegisterOperand ro = Invoke.getDest(q);
+		if (ro != null) 
+			s = toString(ro) + " = ";
+		else
+			s = "";
+		jq_Method m = Invoke.getMethod(q).getMethod();
+		s += m.getNameAndDesc().toString() + "(";
+		ParamListOperand po = Invoke.getParamList(q);
+		int n = po.length();
+		for (int i = 0; i < n; i++) {
+			s += toString(po.get(i));
+			if (i < n - 1)
+				s += ",";
+		}
+		return s + ")";
+	}
+	
+	public String toStringNewInst(Quad q) {
+		String t, l;
+		if (q.getOperator() instanceof New) {
+			l = toString(New.getDest(q));
+			t = New.getType(q).getType().getName();
+		} else {
+			l = toString(NewArray.getDest(q));
+			t = NewArray.getType(q).getType().getName();
+		}
+		return l + " = new " + t;
+	}
+	
+	public String toStringHeapInst(Quad q) {
+		Operator op = q.getOperator();
+		String s;
+		if (isWrHeapInst(op)) {
+			String b, f, r;
+			if (op instanceof Putfield) {
+				b = toString(Putfield.getBase(q)) + ".";
+				f = Putfield.getField(q).getField().toString();
+				r = toString(Putfield.getSrc(q));
+			} else if (op instanceof AStore) {
+				b = toString(AStore.getBase(q));
+				f = "[*]";
+				r = toString(AStore.getValue(q));
+			} else {
+				b = "";
+				f = Putstatic.getField(q).getField().toString();
+				r = toString(Putstatic.getSrc(q));
+			}
+			s = b + f + " = " + r;
+		} else {
+			String l, b, f;
+			if (op instanceof Getfield) {
+				l = toString(Getfield.getDest(q));
+				b = toString(Getfield.getBase(q)) + ".";
+				f = Getfield.getField(q).getField().toString();
+			} else if (op instanceof ALoad) {
+				l = toString(ALoad.getDest(q));
+				b = toString(ALoad.getBase(q));
+				f = "[*]";
+			} else {
+				l = toString(Getstatic.getDest(q));
+				b = "";
+				f = Getstatic.getField(q).getField().toString();
+			}
+			s = l + " = " + b + f;
+			
+		}
+		return s;
+	}
+	
+	public String toStringLockInst(Inst q) {
+		String s;
+		if (q instanceof Quad)
+			s = Monitor.getSrc((Quad) q).toString();
+		else
+			s = getMethod(q).toString();
+		return "monitorenter " + s;
 	}
 	
 	public void print() {

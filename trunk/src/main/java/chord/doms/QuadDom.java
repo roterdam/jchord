@@ -31,25 +31,7 @@ public abstract class QuadDom extends ProgramDom<Inst> {
 		return super.getOrAdd(i);
 	}
 	public String toUniqueString(Inst i) {
-		if (i == null)
-			return "null";
-		jq_Method m = Program.v().getMethod(i);
-		int bci;
-		if (i instanceof Quad)
-			bci = m.getBCI((Quad) i);
-		else {
-			BasicBlock b = (BasicBlock) i;
-			if (b.isEntry())
-				bci = -1;
-			else {
-				assert (b.isExit());
-				bci = -2;
-			}
-		}
-		String mName = m.getName().toString();
-		String mDesc = m.getDesc().toString();
-		String cName = m.getDeclaringClass().getName();
-		return Program.toString(bci, mName, mDesc, cName);
+		return Program.v().toBytePosStr(i);
 	}
 	public String toXMLAttrsString(Inst i) {
 		jq_Method m = Program.v().getMethod(i);
