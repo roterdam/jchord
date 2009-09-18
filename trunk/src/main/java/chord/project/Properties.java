@@ -189,32 +189,43 @@ public class Properties {
 
 	public static void print() {
 		System.out.println("******************************");
-		System.out.println("chord.home.dir: " + homeDirName);
-		System.out.println("chord.out: " + outFileName);
-		System.out.println("chord.err: " + errFileName);
 		System.out.println("chord.work.dir: " + workDirName);
 		System.out.println("chord.out.dir: " + outDirName);
-		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
-		System.out.println("chord.classes.dir: " + classesDirName);
+		System.out.println("chord.out.file: " + outFileName);
+		System.out.println("chord.err.file: " + errFileName);
+		System.out.println();
 		System.out.println("chord.main.class: " + mainClassName);
 		System.out.println("chord.class.path: " + classPathName);
 		System.out.println("chord.src.path: " + srcPathName);
-		System.out.println("chord.main.class.path: " + mainClassPathName);
+		System.out.println();
+		System.out.println("chord.scope.kind: " + scopeKind);
+		System.out.println("chord.reuse.scope: " + reuseScope);
+		System.out.println("chord.boot.classes.file: " + bootClassesFileName);
+		System.out.println("chord.classes.file: " + classesFileName);
+		System.out.println("chord.methods.file: " + methodsFileName);
+		System.out.println();
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
 		System.out.println("chord.analyses: " + analyses);
-		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
+		System.out.println();
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
-		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
+		System.out.println();
+		System.out.println("chord.instr.exclude: " + instrExcludedPckgs);
 		System.out.println("chord.run.ids: " + runIDs);
-		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
 		System.out.println("chord.calls.bound: " + callsBound);
 		System.out.println("chord.iters.bound: " + itersBound);
+		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
+		System.out.println("chord.classes.dir: " + classesDirName);
+		System.out.println();
 		System.out.println("chord.ssa: " + doSSA);
-		System.out.println("chord.scope.kind: " + scopeKind);
-		System.out.println("chord.reuse.scope: " + reuseScope);
+		System.out.println();
+		System.out.println("chord.home.dir: " + homeDirName);
+		System.out.println("chord.main.class.path: " + mainClassPathName);
+		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
+		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
+		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
 		System.out.println("******************************");
 	}
 	public static String build(String propName, String fileName) {
