@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
@@ -31,6 +32,7 @@ import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
@@ -163,10 +165,10 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		}
 		System.out.println("Full analysis escHeapInsts:");
 		for (Quad e : escHeapInsts)
-			System.out.println("\t" + Program.v().toString(e));
+			System.out.println("\t" + Program.v().toVerboseStr(e));
 		System.out.println("Full analysis locHeapInsts:");
 		for (Quad e : locHeapInsts)
-			System.out.println("\t" + Program.v().toString(e));
+			System.out.println("\t" + Program.v().toVerboseStr(e));
 	}
 
 	private void processThread(Pair<Ctxt, jq_Method> root) {
@@ -224,11 +226,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			PathEdge edge2 = new PathEdge(q2, bb2, sd);
 			addPathEdge(cm, edge2);
 		}
-	}
-	private int getIdx(RegisterOperand ro, jq_Method m) {
-		Register r = ro.getRegister();
-		int vIdx = domV.indexOf(r);
-		return vIdx - methToVar0Idx.get(m);
 	}
 	private void addPathEdge(Pair<Ctxt, jq_Method> cm, PathEdge pe) {
 		if (DEBUG)
@@ -504,7 +501,8 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		jq_Method m;
 		public void visitMove(Quad q) {
 	        RegisterOperand lo = Move.getDest(q);
-	        if (!lo.getType().isReferenceType())
+			jq_Type t = lo.getType();
+	        if (!t.isReferenceType())
 	        	return;
 	        IntArraySet[] dstEnv = iDstNode.env;
 			Operand rx = Move.getSrc(q);
@@ -515,9 +513,37 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 				rPts = dstEnv[rIdx];
 			} else
 				rPts = nilPts;
-			int lIdx = getIdx(lo, m);
 			IntArraySet[] dstEnv2 = copy(dstEnv);
+			int lIdx = getIdx(lo, m);
 			dstEnv2[lIdx] = rPts;
+			oDstNode = new DstNode(dstEnv2, iDstNode.heap,
+				iDstNode.esc);
+		}
+		public void visitPhi(Quad q) {
+			RegisterOperand lo = Phi.getDest(q);
+			jq_Type t = lo.getType();
+			assert (t != null);
+			if (!t.isReferenceType())
+				return;
+	        IntArraySet[] dstEnv = iDstNode.env;
+			IntArraySet lPts = new IntArraySet();
+			ParamListOperand ros = Phi.getSrcs(q);
+			int n = ros.length();
+			for (int i = 0; i < n; i++) {
+				RegisterOperand ro = ros.get(i);
+				if (ro != null) {
+					int rIdx = getIdx(ro, m);
+					IntArraySet rPts = dstEnv[rIdx];
+					if (rPts == escPts) {
+						lPts = escPts;
+						break;
+					}
+					lPts.addAll(rPts);
+				}
+			}
+			IntArraySet[] dstEnv2 = copy(dstEnv);
+			int lIdx = getIdx(lo, m);
+			dstEnv2[lIdx] = lPts;
 			oDstNode = new DstNode(dstEnv2, iDstNode.heap,
 				iDstNode.esc);
 		}
@@ -723,6 +749,28 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 				throw new ThrEscException();
 		}
 	}
+
+	/*****************************************************************
+	 * Frequently used functions
+     *****************************************************************/
+
+	private int getIdx(RegisterOperand ro, jq_Method m) {
+		Register r = ro.getRegister();
+		int vIdx = domV.indexOf(r);
+		return vIdx - methToVar0Idx.get(m);
+	}
+	private static IntArraySet[] copy(IntArraySet[] a) {
+		int n = a.length;
+		IntArraySet[] b = new IntArraySet[n];
+        for (int i = 0; i < n; i++)
+        	b[i] = a[i];
+        return b;
+	}
+
+	/*****************************************************************
+	 * Printing functions
+     *****************************************************************/
+
 	public static String toString(IntArraySet[] env) {
 		String s = null;
 		for (IntArraySet e : env) {
@@ -755,12 +803,5 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		if (s == null)
 			return "{}";
 		return "{" + s + "}";
-	}
-	private static IntArraySet[] copy(IntArraySet[] a) {
-		int n = a.length;
-		IntArraySet[] b = new IntArraySet[n];
-        for (int i = 0; i < n; i++)
-        	b[i] = a[i];
-        return b;
 	}
 }
