@@ -186,19 +186,17 @@ public class Instrumentor {
 		this.scheme = scheme;
 	}
 	public void run() {
-		String fullClassPathName = Properties.mainClassPathName +
-			File.pathSeparator + Properties.classPathName;
+		String sunBootClassPathName = System.getProperty("sun.boot.class.path");
+		String fullClassPathName =
+			sunBootClassPathName + File.pathSeparator +
+			Properties.mainClassPathName + File.pathSeparator +
+			Properties.classPathName;
 		pool = new ClassPool();
-		try {
-			pool.appendPathList(System.getProperty("sun.boot.class.path"));
-		} catch (NotFoundException ex) {
-			throw new ChordRuntimeException(ex);
-		}
 		String[] pathElems = fullClassPathName.split(File.pathSeparator);
 		for (String pathElem : pathElems) {
 			File file = new File(pathElem);
 			if (!file.exists()) {
-				System.out.println("WARNING: Ignoring: " + pathElem);
+				System.out.println("WARNING: Ignoring path element: " + pathElem);
 				continue;
 			}
 			try {
@@ -207,7 +205,6 @@ public class Instrumentor {
 				throw new ChordRuntimeException(ex);
 			}
 		}
-		// pool.appendSystemPath();
 		System.out.println("POOL: " + pool);
 		convert = scheme.isConverted();
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
@@ -316,7 +313,6 @@ public class Instrumentor {
 			assert (exType != null);
 		}
 		
-		String bootClassesDirName = Properties.bootClassesDirName;
 		String classesDirName = Properties.classesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
 		String instrExcludedPckgs = Properties.instrExcludedPckgs;
@@ -351,9 +347,7 @@ public class Instrumentor {
 			List<jq_Method> methods = program.getReachableMethods(c);
 			CtBehavior[] inits = clazz.getDeclaredConstructors();
 			CtBehavior[] meths = clazz.getDeclaredMethods();
-			System.out.println("CLASS: " + cName);
 			for (jq_Method m : methods) {
-				System.out.println("XXX: " + m + " sign: " + m.getDesc().toString());
 				CtBehavior method = null;
 				String mName = m.getName().toString();
 				if (mName.equals("<clinit>")) {
@@ -361,7 +355,6 @@ public class Instrumentor {
 				} else if (mName.equals("<init>")) {
 					String mDesc = m.getDesc().toString();
 					for (CtBehavior x : inits) {
-						System.out.println("\t" + x.getSignature());
 						if (x.getSignature().equals(mDesc)) {
 							method = x;
 							break;
@@ -388,8 +381,7 @@ public class Instrumentor {
 			}
 			System.out.println("Writing class: " + cName);
 			try {
-				String dirName = c.isSystemClass() ? bootClassesDirName : classesDirName;
-				clazz.writeFile(dirName);
+				clazz.writeFile(classesDirName);
 			} catch (CannotCompileException ex) {
 				throw new ChordRuntimeException(ex);
 			} catch (IOException ex) {
