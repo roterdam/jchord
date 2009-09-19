@@ -78,7 +78,6 @@ public class Program {
 			jq_Method.doSSA();
 		try {
 			boolean filesExist =
-				(new File(Properties.bootClassesFileName)).exists() &&
 				(new File(Properties.classesFileName)).exists() &&
 				(new File(Properties.methodsFileName)).exists();
 			if (Properties.reuseScope && filesExist)
@@ -97,25 +96,21 @@ public class Program {
 		}
 		isInited = true;
 	}
-	private void loadAndPrepare(String fileName,
-			boolean mustBeSystemClass) throws IOException {
+	private void loadAndPrepare(String fileName) throws IOException {
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
 		String s;
 		while ((s = r.readLine()) != null) {
 			System.out.println("Loading: " + s);
 			jq_Class c = (jq_Class) Helper.load(s);
-			if (c == null)
-				continue;
+			assert (c != null);
 			c.prepare();
-			assert(c.isSystemClass() == mustBeSystemClass);
 			preparedClasses.add(c);
 		}
 		r.close();
 	}
 	private void initFromCache() throws IOException {
 		preparedClasses = new IndexHashSet<jq_Class>();
-		loadAndPrepare(Properties.bootClassesFileName, true);
-		loadAndPrepare(Properties.classesFileName, false);
+		loadAndPrepare(Properties.classesFileName);
 		buildReachableTypes();
 		reachableMethods = new IndexHashSet<jq_Method>();
 		BufferedReader r = new BufferedReader(
@@ -151,7 +146,6 @@ public class Program {
         final String cmd = "java -ea " +
             " -cp " + classPathName +
             " -agentpath:" + Properties.instrAgentFileName +
-            "=boot_classes_file_name=" + Properties.bootClassesFileName +
             "=classes_file_name=" + Properties.classesFileName +
             " " + mainClassName + " ";
 		preparedClasses = new IndexHashSet<jq_Class>();
@@ -159,8 +153,7 @@ public class Program {
             System.out.println("Processing Run ID: " + runID);
             String args = System.getProperty("chord.args." + runID, "");
 			ProcessExecutor.execute(cmd + args);
-			loadAndPrepare(Properties.bootClassesFileName, true);
-			loadAndPrepare(Properties.classesFileName, false);
+			loadAndPrepare(Properties.classesFileName);
 		}
 		reachableMethods = new IndexHashSet<jq_Method>();
 		for (jq_Class c : preparedClasses) {
@@ -172,17 +165,11 @@ public class Program {
 		write();
 	}
 	private void write() throws IOException {
-		PrintWriter bootClassesFileWriter =
-			new PrintWriter(Properties.bootClassesFileName);
 		PrintWriter classesFileWriter =
 			new PrintWriter(Properties.classesFileName);
 		for (jq_Class c : preparedClasses) {
-			if (c.isSystemClass())
-				bootClassesFileWriter.println(c);
-			else
-				classesFileWriter.println(c);
+			classesFileWriter.println(c);
 		}
-		bootClassesFileWriter.close();
 		classesFileWriter.close();
 		buildReachableTypes();
 		PrintWriter methodsFileWriter =

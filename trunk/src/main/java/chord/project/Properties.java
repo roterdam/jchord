@@ -142,7 +142,6 @@ public class Properties {
 		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
 	}
 	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
-	public final static String bootClassesFileName = build("chord.boot.classes.file", "boot_classes.txt");
 	public final static String classesFileName = build("chord.classes.file", "classes.txt");
 	public final static String methodsFileName = build("chord.methods.file", "methods.txt");
 
@@ -165,7 +164,6 @@ public class Properties {
 	public final static int callsBound = Integer.getInteger("chord.calls.bound", 0);
 	public final static int itersBound = Integer.getInteger("chord.iters.bound", 0);
 
-	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
 	public final static String classesDirName = build("chord.classes.dir", "classes");
 
 	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
@@ -200,7 +198,6 @@ public class Properties {
 		System.out.println();
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
-		System.out.println("chord.boot.classes.file: " + bootClassesFileName);
 		System.out.println("chord.classes.file: " + classesFileName);
 		System.out.println("chord.methods.file: " + methodsFileName);
 		System.out.println();
@@ -216,7 +213,6 @@ public class Properties {
 		System.out.println("chord.run.ids: " + runIDs);
 		System.out.println("chord.calls.bound: " + callsBound);
 		System.out.println("chord.iters.bound: " + itersBound);
-		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
 		System.out.println("chord.classes.dir: " + classesDirName);
 		System.out.println();
 		System.out.println("chord.ssa: " + doSSA);
