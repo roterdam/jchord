@@ -86,7 +86,7 @@ import java.io.File;
  *     <td></td></tr>
  * <tr><td><tt>chord.boot.classes.dir</tt></td>
  *     <td></td></tr>
- * <tr><td><tt>chord.classes.dir</tt></td>
+ * <tr><td><tt>chord.user.classes.dir</tt></td>
  *     <td></td></tr>
  * <tr><td><tt>chord.instr.scheme.file</tt></td>
  *     <td></td></tr>
@@ -163,8 +163,8 @@ public class Properties {
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
 	public final static int callsBound = Integer.getInteger("chord.calls.bound", 0);
 	public final static int itersBound = Integer.getInteger("chord.iters.bound", 0);
-
-	public final static String classesDirName = build("chord.classes.dir", "classes");
+	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
+	public final static String userClassesDirName = build("chord.user.classes.dir", "user_classes");
 
 	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
 	public final static String crudeTraceFileName = build("chord.crude.trace.file", "crude_trace.txt");
@@ -213,7 +213,8 @@ public class Properties {
 		System.out.println("chord.run.ids: " + runIDs);
 		System.out.println("chord.calls.bound: " + callsBound);
 		System.out.println("chord.iters.bound: " + itersBound);
-		System.out.println("chord.classes.dir: " + classesDirName);
+		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
+		System.out.println("chord.user.classes.dir: " + userClassesDirName);
 		System.out.println();
 		System.out.println("chord.ssa: " + doSSA);
 		System.out.println();

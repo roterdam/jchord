@@ -17,7 +17,6 @@ static bool enable_tracing = false;
 static char trace_file_name[MAX_FILE_NAME];
 static char instr_scheme_file_name[MAX_FILE_NAME];
 static char classes_file_name[MAX_FILE_NAME];
-static char boot_classes_file_name[MAX_FILE_NAME];
 static int num_meths, calls_bound, iters_bound;
 
 char* get_token(char *str, char *seps, char *buf, int max)
@@ -84,8 +83,7 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 		jvmtiError result;
 		result = jvmti_env->GetLoadedClasses(&class_count, &classes);
 		assert(result == JVMTI_ERROR_NONE);
-		fstream boot_classes_out, classes_out;
- 		boot_classes_out.open(boot_classes_file_name, ios::out);
+		fstream classes_out;
  		classes_out.open(classes_file_name, ios::out);
 		for (int i = 0; i < class_count; i++) {
 			jclass klass = classes[i];
@@ -93,15 +91,8 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 			jvmti_env->GetClassSignature(klass, &class_name, NULL);
 			if (class_name[0] == '[')
 				continue;
-			jobject classloader;
-			result = jvmti_env->GetClassLoader(klass, &classloader);
-			assert(result == JVMTI_ERROR_NONE);
-			if (classloader == NULL)
-				boot_classes_out << class_name << endl;
-			else
-				classes_out << class_name << endl;
+			classes_out << class_name << endl;
 		}
-		boot_classes_out.close();
 		classes_out.close();
 	}
 
@@ -136,7 +127,6 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 		exit(1);
 	}
 	char* next = options;
-	int loaded_class_kinds = 0;
 	while (1) {
     	char token[2048];
 		next = get_token(next, (char*) ",=", token, sizeof(token));
@@ -166,17 +156,8 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 					<< options << endl;
 				exit(1);
             }
-			loaded_class_kinds++;
+			list_loaded_classes = true;
 			cout << "OPTION classes_file_name: " << classes_file_name << endl;
-        } else if (strcmp(token, "boot_classes_file_name") == 0) {
-            next = get_token(next, (char*) ",=", boot_classes_file_name, MAX_FILE_NAME);
-            if (next == NULL) {
-                cerr << "ERROR: Cannot parse option boot_classes_file_name=<name>: "
-					<< options << endl;
-				exit(1);
-            }
-			loaded_class_kinds++;
-			cout << "OPTION boot_classes_file_name: " << boot_classes_file_name << endl;
 		} else if (strcmp(token, "num_meths") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
@@ -211,10 +192,6 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 			cerr << "ERROR: Unknown option: " << token << endl;
 			exit(1);
 		}
-	}
-	if (loaded_class_kinds > 0) {
-		assert(loaded_class_kinds == 2);
-		list_loaded_classes = true;
 	}
 
     jvmtiError retval;

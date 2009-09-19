@@ -45,6 +45,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 
 /**
  *
@@ -185,27 +186,63 @@ public class Instrumentor {
 		this.program = program;
 		this.scheme = scheme;
 	}
+	private static boolean checkExists(String pathElem) {
+		File file = new File(pathElem);
+		if (!file.exists()) {
+			System.out.println("WARNING: Instrumentor ignoring non-existent path element: " + pathElem);
+			return false;
+		}
+		return true;
+	}
 	public void run() {
-		String sunBootClassPathName = System.getProperty("sun.boot.class.path");
-		String fullClassPathName =
-			sunBootClassPathName + File.pathSeparator +
-			Properties.mainClassPathName + File.pathSeparator +
-			Properties.classPathName;
 		pool = new ClassPool();
-		String[] pathElems = fullClassPathName.split(File.pathSeparator);
-		for (String pathElem : pathElems) {
-			File file = new File(pathElem);
-			if (!file.exists()) {
-				System.out.println("WARNING: Ignoring path element: " + pathElem);
-				continue;
-			}
-			try {
-				pool.appendClassPath(pathElem);
-			} catch (NotFoundException ex) {
-				throw new ChordRuntimeException(ex);
+
+		{
+			String pathName = Properties.mainClassPathName;
+			String[] pathElems = pathName.split(File.pathSeparator);
+			for (String pathElem : pathElems) {
+				if (checkExists(pathElem)) {
+					try {
+						pool.appendClassPath(pathElem);
+					} catch (NotFoundException ex) {
+						throw new ChordRuntimeException(ex);
+					}
+				}
 			}
 		}
-		System.out.println("POOL: " + pool);
+
+		Set<String> bootClassPathResourceNames = new HashSet<String>();
+		{
+			String pathName = System.getProperty("sun.boot.class.path");
+			String[] pathElems = pathName.split(File.pathSeparator);
+			for (String pathElem : pathElems) {
+				if (checkExists(pathElem)) {
+					bootClassPathResourceNames.add(pathElem);
+					try {
+						pool.appendClassPath(pathElem);
+					} catch (NotFoundException ex) {
+						throw new ChordRuntimeException(ex);
+					}
+				}
+			}
+		}
+
+		Set<String> userClassPathResourceNames = new HashSet<String>();
+		{
+			String pathName = Properties.classPathName;
+			String[] pathElems = pathName.split(File.pathSeparator);
+			for (String pathElem : pathElems) {
+				if (checkExists(pathElem)) {
+					userClassPathResourceNames.add(pathElem);
+					try {
+						pool.appendClassPath(pathElem);
+					} catch (NotFoundException ex) {
+						throw new ChordRuntimeException(ex);
+					}
+				}
+			}
+		}
+
 		convert = scheme.isConverted();
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
@@ -313,7 +350,8 @@ public class Instrumentor {
 			assert (exType != null);
 		}
 		
-		String classesDirName = Properties.classesDirName;
+		String bootClassesDirName = Properties.bootClassesDirName;
+		String userClassesDirName = Properties.userClassesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
 		String instrExcludedPckgs = Properties.instrExcludedPckgs;
 		String[] excluded = instrExcludedPckgs.equals("") ? new String[0] :
@@ -337,6 +375,19 @@ public class Instrumentor {
 			if (match) {
 				System.out.println("WARNING: Not instrumenting class: " + cName);
 				continue;
+			}
+			String outDirName = null;
+			String resourceName = pool.getResource(cName);
+			if (resourceName == null) {
+				throw new ChordRuntimeException(
+					"Instrumentor could not find class: " + cName);
+			} else if (bootClassPathResourceNames.contains(resourceName)) {
+				outDirName = bootClassesDirName;
+			} else if (userClassPathResourceNames.contains(resourceName)) {
+				outDirName = userClassesDirName;
+			} else {
+				throw new ChordRuntimeException("Resource " + resourceName +
+					" neither in boot nor user classpaths");
 			}
 			CtClass clazz;
 			try {
@@ -379,9 +430,9 @@ public class Instrumentor {
 					ex.printStackTrace();
 				}
 			}
-			System.out.println("Writing class: " + cName);
+			// System.out.println("Writing class: " + cName);
 			try {
-				clazz.writeFile(classesDirName);
+				clazz.writeFile(outDirName);
 			} catch (CannotCompileException ex) {
 				throw new ChordRuntimeException(ex);
 			} catch (IOException ex) {
