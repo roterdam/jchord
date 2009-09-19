@@ -194,7 +194,7 @@
     <mkdir dir="${chord.out.dir}"/>
     <property name="chord.java.analysis.path" location="classes/main"/>
     <property name="chord.dlog.analysis.path" location="src/main/dlog"/>
-    <property name="chord.max.heap" value="2048m"/>
+    <property name="chord.max.heap" value="1024m"/>
     <property name="chord.max.stack" value="32m"/>
     <property name="chord.bddbddb.max.heap" value="1024m"/>
     <property name="chord.bddbddb.work.dir" location="${chord.out.dir}"/>
