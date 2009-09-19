@@ -67,7 +67,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 		assert (mainClassName != null);
 		final String classPathName = Properties.classPathName;
 		assert (classPathName != null);
-		final String classesDirName = Properties.classesDirName;
+		final String bootClassesDirName = Properties.bootClassesDirName;
+		final String userClassesDirName = Properties.userClassesDirName;
 		final String crudeTraceFileName = Properties.crudeTraceFileName;
 		final String finalTraceFileName = Properties.finalTraceFileName;
 		boolean doTracePipe = System.getProperty(
@@ -85,9 +86,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 		IndexMap<String> Wmap = instrumentor.getWmap();
 		final int numMeths = (Mmap != null) ? Mmap.size() : 0;
 		final String instrProgramCmd = "java -ea -Xbootclasspath/p:" +
-			classesDirName + File.pathSeparator +
-			Properties.mainClassPathName + File.pathSeparator + classPathName +
-			" -Xverify:none" + " -verbose" + 
+			Properties.mainClassPathName + File.pathSeparator + bootClassesDirName +
+			" -Xverify:none" + // " -verbose" + 
+			" -cp " + userClassesDirName + File.pathSeparator + classPathName +
 			" -agentpath:" + Properties.instrAgentFileName +
 			"=trace_file_name=" + traceFileName +
 			"=num_meths=" + numMeths +
