@@ -209,7 +209,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		String outDirName = Properties.outDirName;
 		try {
 			PrintWriter writer = new PrintWriter(new FileWriter(
-				new File(outDirName, "visited.txt")));
+				new File(outDirName, "dynamic_visited_heap_insts.txt")));
 			for (int i = 0; i < numE; i++) {
 				if (isEidxVisited[i])
 					writer.println(Emap.get(i));
@@ -217,7 +217,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			writer.close();
 			if (isFlowIns) {
 				writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "flowInsEsc.txt")));
+					new File(outDirName, "dynamic_flowins_esc_heap_insts.txt")));
 				for (int i = 0; i < numE; i++) {
 					if (isEidxFlowInsEsc[i])
 						writer.println(Emap.get(i));
@@ -226,7 +226,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			}
 			if (isFlowSen) {
 				writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "flowSenEsc.txt")));
+					new File(outDirName, "dynamic_flowsen_esc_heap_insts.txt")));
 				for (int i = 0; i < numE; i++) {
 					if (isEidxFlowSenEsc[i])
 						writer.println(Emap.get(i));

@@ -484,7 +484,11 @@ public class Program {
 	 **************************************************************/
 
 	public String toVerboseStr(Quad q) {
-		return toBytePosStr(q) + " " + toJavaPosStr(q) + " " + toQuadStr(q);
+		return toBytePosStr(q) + " (" + toJavaPosStr(q) + ") [" + toQuadStr(q) + "]";
+	}
+
+	public String toPosStr(Quad q) {
+		return toBytePosStr(q) + " (" + toJavaPosStr(q) + ")";
 	}
 
 	public String toJavaPosStr(Quad q) {

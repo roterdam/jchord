@@ -80,10 +80,6 @@ import java.io.File;
  *     <td>List of IDs to identify program runs; separator = <tt>' |,|:|;'</tt> (default="0")</td></tr>
  * <tr><td><tt>chord.args.XXX</tt></td>
  *     <td>Command line arguments to be passed to run having ID XXX (default="")</td></tr>
- * <tr><td><tt>chord.calls.bound</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.iters.bound</tt></td>
- *     <td></td></tr>
  * <tr><td><tt>chord.boot.classes.dir</tt></td>
  *     <td></td></tr>
  * <tr><td><tt>chord.user.classes.dir</tt></td>
@@ -161,8 +157,6 @@ public class Properties {
 
 	public final static String instrExcludedPckgs = System.getProperty("chord.instr.exclude", "java.,sun.,com.");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
-	public final static int callsBound = Integer.getInteger("chord.calls.bound", 0);
-	public final static int itersBound = Integer.getInteger("chord.iters.bound", 0);
 	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
 	public final static String userClassesDirName = build("chord.user.classes.dir", "user_classes");
 
@@ -211,8 +205,6 @@ public class Properties {
 		System.out.println();
 		System.out.println("chord.instr.exclude: " + instrExcludedPckgs);
 		System.out.println("chord.run.ids: " + runIDs);
-		System.out.println("chord.calls.bound: " + callsBound);
-		System.out.println("chord.iters.bound: " + itersBound);
 		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
 		System.out.println("chord.user.classes.dir: " + userClassesDirName);
 		System.out.println();

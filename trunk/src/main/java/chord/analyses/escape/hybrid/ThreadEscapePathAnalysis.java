@@ -8,10 +8,16 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.Stack;
 import java.util.Collections;
+import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.io.File;
+import java.io.IOException;
 
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
 
+import chord.project.Properties;
+import chord.project.ChordRuntimeException;
 import chord.util.ArraySet;
 import chord.util.FileUtils;
 import chord.util.IndexMap;
@@ -21,7 +27,6 @@ import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.integer.IntQuad;
 import chord.util.tuple.object.Pair;
-
 import chord.bddbddb.Rel.PairIterable;
 import chord.doms.DomH;
 import chord.doms.DomE;
@@ -59,7 +64,7 @@ import joeq.Compiler.Quad.BasicBlock;
     name = "thresc-path-java"
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
-	private final static boolean DEBUG = false;
+	private final static boolean DEBUG = true;
 	private final static TIntArrayList emptyTmpsList = new TIntArrayList(0);
 	private final static List<IntPair> emptyArgsList = Collections.emptyList();
     protected InstrScheme instrScheme;
@@ -68,8 +73,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
             return instrScheme;
         instrScheme = new InstrScheme();
 		instrScheme.setConvert();
-		// instrScheme.setCallsBound(1);
-		// instrScheme.setItersBound(1);
 		instrScheme.setBasicBlockEvent();
 		instrScheme.setQuadEvent();
 		instrScheme.setEnterAndLeaveMethodEvent();
@@ -328,15 +331,29 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         }
         relHybridEscE.close();
 
-        System.out.println("Path analysis escHeapInsts:");
-        for (Quad e : escHeapInsts)
-            System.out.println("\t" + Program.v().toVerboseStr(e));
-		System.out.println("Path analysis locHeapInsts:");
-        for (Quad e : heapInstToAllocs.keySet()) {
-            System.out.println("\t" + Program.v().toVerboseStr(e));
-			for (Quad h : heapInstToAllocs.get(e)) {
-            	System.out.println("\t\t" + Program.v().toVerboseStr(h));
+		try {
+			String outDirName = Properties.outDirName;
+			{
+				PrintWriter writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "path_esc_heap_insts.txt")));
+				for (Quad e : escHeapInsts)
+					writer.println(Program.v().toPosStr(e));
+				writer.close();
 			}
+
+			{
+				PrintWriter writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "path_loc_heap_insts.txt")));
+   		     	for (Quad e : heapInstToAllocs.keySet()) {
+					writer.println(Program.v().toPosStr(e));
+					for (Quad h : heapInstToAllocs.get(e)) {
+						writer.println("\t" + Program.v().toPosStr(h));
+					}
+				}
+				writer.close();
+			}
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
 		}
 		
 	}
