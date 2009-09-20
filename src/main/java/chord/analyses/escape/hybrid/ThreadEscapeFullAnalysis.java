@@ -14,6 +14,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.io.File;
+import java.io.IOException;
 
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
@@ -38,6 +42,9 @@ import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+
+import chord.project.Properties;
+import chord.project.ChordRuntimeException;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.ICSCG;
 import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
@@ -163,12 +170,26 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
-		System.out.println("Full analysis escHeapInsts:");
-		for (Quad e : escHeapInsts)
-			System.out.println("\t" + Program.v().toVerboseStr(e));
-		System.out.println("Full analysis locHeapInsts:");
-		for (Quad e : locHeapInsts)
-			System.out.println("\t" + Program.v().toVerboseStr(e));
+
+		try {
+			String outDirName = Properties.outDirName;
+			{
+				PrintWriter writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "full_esc_heap_insts.txt")));
+				for (Quad e : escHeapInsts)
+					writer.println(Program.v().toPosStr(e));
+				writer.close();
+			}
+			{
+				PrintWriter writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "full_loc_heap_insts.txt")));
+				for (Quad e : locHeapInsts)
+					writer.println(Program.v().toPosStr(e));
+				writer.close();
+			}
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		}
 	}
 
 	private void processThread(Pair<Ctxt, jq_Method> root) {
