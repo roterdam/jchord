@@ -12,9 +12,14 @@ import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operand.FieldOperand;
 import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+
+import chord.doms.DomM;
+import chord.doms.DomV;
+import chord.doms.DomF;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 import chord.visitors.IHeapInstVisitor;
@@ -31,7 +36,15 @@ import chord.visitors.IHeapInstVisitor;
 )
 public class RelMputInstFldInst extends ProgramRel
 		implements IHeapInstVisitor {
+	private DomM domM;
+	private DomV domV;
+	private DomF domF;
 	private jq_Method ctnrMethod;
+	public void init() {
+		domM = (DomM) doms[0];
+		domV = (DomV) doms[1];
+		domF = (DomF) doms[2];
+	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
 		ctnrMethod = m;
@@ -47,17 +60,22 @@ public class RelMputInstFldInst extends ProgramRel
 					RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 					Register b = bo.getRegister();
 					jq_Field f = null;
-					try {
-						add(ctnrMethod, b, f, r);
-					} catch (RuntimeException ex) {
-						// TODO
-					}
+					int mIdx = domM.indexOf(ctnrMethod);
+					assert (mIdx != -1);
+					int rIdx = domV.indexOf(r);
+					assert (rIdx != -1);
+					int bIdx = domV.indexOf(b);
+					assert (bIdx != -1);
+					int fIdx = 0;
+					add(mIdx, bIdx, fIdx, rIdx);
 				}
 			}
 			return;
 		}
 		if (op instanceof Putfield) {
-			jq_Field f = Putfield.getField(q).getField();
+			FieldOperand fo = Putfield.getField(q);
+			fo.resolve();
+			jq_Field f = fo.getField();
 			if (f.getType().isReferenceType()) {
 				Operand rx = Putfield.getSrc(q);
 				if (rx instanceof RegisterOperand) {
@@ -67,11 +85,18 @@ public class RelMputInstFldInst extends ProgramRel
 						RegisterOperand ro = (RegisterOperand) rx;
 						Register b = bo.getRegister();
 						Register r = ro.getRegister();
-						try {
-							add(ctnrMethod, b, f, r);
-						} catch (RuntimeException ex) {
-							// TODO
-						}
+						int mIdx = domM.indexOf(ctnrMethod);
+						assert (mIdx != -1);
+						int bIdx = domV.indexOf(b);
+						assert (bIdx != -1);
+						int rIdx = domV.indexOf(r);
+						assert (rIdx != -1);
+						int fIdx = domF.indexOf(f);
+						if (fIdx == -1) {
+							System.out.println("WARNING: MputInstFldInst: method: " +
+								ctnrMethod + " quad: " + q);
+						} else
+							add(mIdx, bIdx, fIdx, rIdx);
 					}
 				}
 			}
