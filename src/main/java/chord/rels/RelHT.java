@@ -39,8 +39,11 @@ public class RelHT extends ProgramRel {
 			else
 				t = NewArray.getType(h).getType();
 			int tIdx = domT.indexOf(t);
-			if (tIdx != -1)
-				add(hIdx, tIdx);
+			if (tIdx == -1) {
+				System.out.println("WARNING: HT: " + h);
+				continue;
+			}
+			add(hIdx, tIdx);
 		}
 	}
 }

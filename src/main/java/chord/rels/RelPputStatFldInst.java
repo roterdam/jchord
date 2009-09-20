@@ -13,7 +13,11 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operand.FieldOperand;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import chord.doms.DomP;
+import chord.doms.DomF;
+import chord.doms.DomV;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 import chord.visitors.IHeapInstVisitor;
@@ -30,18 +34,37 @@ import chord.visitors.IHeapInstVisitor;
 )
 public class RelPputStatFldInst extends ProgramRel
 		implements IHeapInstVisitor {
+    private DomP domP;
+    private DomF domF;
+    private DomV domV;
+    public void init() {
+        domP = (DomP) doms[0];
+        domF = (DomF) doms[1];
+        domV = (DomV) doms[2];
+    }
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) { }
-	public void visitHeapInst(Quad p) {
-		Operator op = p.getOperator();
+	public void visitHeapInst(Quad q) {
+		Operator op = q.getOperator();
 		if (op instanceof Putstatic) {
-			jq_Field f = Putstatic.getField(p).getField();
+			FieldOperand fo = Putstatic.getField(q);
+			fo.resolve();
+			jq_Field f = fo.getField();
 			if (f.getType().isReferenceType()) {
-				Operand rx = Putstatic.getSrc(p);
+				Operand rx = Putstatic.getSrc(q);
 				if (rx instanceof RegisterOperand) {
 					RegisterOperand ro = (RegisterOperand) rx;
 					Register r = ro.getRegister();
-					add(p, f, r);
+					int pIdx = domP.indexOf(q);
+					assert (pIdx != -1);
+					int rIdx = domV.indexOf(r);
+					assert (rIdx != -1);
+					int fIdx = domF.indexOf(f);
+					if (fIdx == -1) {
+						System.out.println("WARNING: PputStatFldInst: " +
+							" quad: " + q);
+					} else
+						add(pIdx, fIdx, rIdx);
 				}
 			}
 		}

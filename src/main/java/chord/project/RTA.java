@@ -34,6 +34,7 @@ import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
 import joeq.Compiler.Quad.Operand.MethodOperand;
+import joeq.Compiler.Quad.Operand.FieldOperand;
 import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 
@@ -158,20 +159,22 @@ public class RTA implements IBootstrapper {
 						assert (op instanceof InvokeStatic);
 				} else if (op instanceof Getstatic) {
 					if (DEBUG) System.out.println("Quad: " + q);
-					jq_Class c = Getstatic.getField(q).
-						getField().getDeclaringClass();
+					FieldOperand fo = Getstatic.getField(q);
+					fo.resolve();
+					jq_Class c = fo.getField().getDeclaringClass();
 					handleClass(c);
 				} else if (op instanceof Putstatic) {
 					if (DEBUG) System.out.println("Quad: " + q);
-					jq_Class c = Putstatic.getField(q).
-						getField().getDeclaringClass();
+					FieldOperand fo = Putstatic.getField(q);
+					fo.resolve();
+					jq_Class c = fo.getField().getDeclaringClass();
 					handleClass(c);
 				} else if (op instanceof New) {
 					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Class c = (jq_Class) New.getType(q).getType();
 					handleClass(c);
 					if (reachableAllocClasses.add(c)) {
-						if (DEBUG) System.out.println("Setting repeat");
+						if (DEBUG) System.out.println("repeat set");
 						repeat = true;
 					}
 				}

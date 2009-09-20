@@ -37,6 +37,7 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
@@ -61,9 +62,9 @@ public class Program {
 	private static final Program instance = new Program();
 	public static Program v() { return instance; }
 	private boolean isInited;
-	private IndexSet<jq_Class> preparedClasses;
-	private IndexSet<jq_Method> reachableMethods;
-	private IndexSet<jq_Type> reachableTypes;
+	private IndexSet<jq_Class> classes;
+	private IndexSet<jq_Method> methods;
+	private IndexSet<jq_Type> types;
 	private Map<String, jq_Class> nameToClassMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private jq_Method mainMethod;
@@ -96,25 +97,28 @@ public class Program {
 		}
 		isInited = true;
 	}
-	private void loadAndPrepare(String fileName) throws IOException {
+	private void loadClasses(String fileName) throws IOException {
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
 		String s;
 		while ((s = r.readLine()) != null) {
 			System.out.println("Loading: " + s);
 			jq_Class c = (jq_Class) Helper.load(s);
 			assert (c != null);
-			c.prepare();
-			preparedClasses.add(c);
+			classes.add(c);
 		}
 		r.close();
 	}
 	private void initFromCache() throws IOException {
-		preparedClasses = new IndexHashSet<jq_Class>();
-		loadAndPrepare(Properties.classesFileName);
-		buildReachableTypes();
-		reachableMethods = new IndexHashSet<jq_Method>();
-		BufferedReader r = new BufferedReader(
-			new FileReader(Properties.methodsFileName));
+		classes = new IndexHashSet<jq_Class>();
+		loadClasses(Properties.classesFileName);
+		methods = new IndexHashSet<jq_Method>();
+		readMethods(Properties.methodsFileName);
+		touchMethods();
+		buildTypes();
+	}
+
+	private void readMethods(String fileName) throws IOException {
+		BufferedReader r = new BufferedReader(new FileReader(fileName));
 		String s;
 		while ((s = r.readLine()) != null) {
 			int sep1 = s.indexOf(':');
@@ -125,17 +129,45 @@ public class Program {
 			jq_Class c = getPreparedClass(cName);
 			assert (c != null);
 			jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
-			reachableMethods.add(m);
+			methods.add(m);
 		}
 		r.close();
 	}
 
+	private void touchMethods() {
+		for (jq_Method m : methods) {
+			if (m.isAbstract())
+				continue;
+			ControlFlowGraph cfg = m.getCFG();
+			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+					it.hasNext();) {
+				BasicBlock bb = it.nextBasicBlock();
+				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
+					Quad q = it2.nextQuad();
+					Operator op = q.getOperator();
+					if (op instanceof Invoke) {
+						MethodOperand mo = Invoke.getMethod(q);
+						mo.resolve();
+					} else if (op instanceof Getstatic) {
+						Getstatic.getField(q).getField().getDeclaringClass();
+					} else if (op instanceof Putstatic) {
+                    	Putstatic.getField(q).getField().getDeclaringClass();
+					} else if (op instanceof New) {
+						New.getType(q).getType();
+					}
+				}
+			}
+		}
+	}
+
 	private void init(IBootstrapper bootstrapper) throws IOException {
 		bootstrapper.run();
-		preparedClasses = bootstrapper.getPreparedClasses();
-		reachableMethods = bootstrapper.getReachableMethods();
+		classes = bootstrapper.getPreparedClasses();
+		methods = bootstrapper.getReachableMethods();
+		buildTypes();
 		write();
 	}
+
 	private void initFromDynamic() throws IOException {
 		String mainClassName = Properties.mainClassName;
 		assert (mainClassName != null);
@@ -148,33 +180,35 @@ public class Program {
             " -agentpath:" + Properties.instrAgentFileName +
             "=classes_file_name=" + Properties.classesFileName +
             " " + mainClassName + " ";
-		preparedClasses = new IndexHashSet<jq_Class>();
+		classes = new IndexHashSet<jq_Class>();
         for (String runID : runIDs) {
             System.out.println("Processing Run ID: " + runID);
             String args = System.getProperty("chord.args." + runID, "");
 			ProcessExecutor.execute(cmd + args);
-			loadAndPrepare(Properties.classesFileName);
+			loadClasses(Properties.classesFileName);
 		}
-		reachableMethods = new IndexHashSet<jq_Method>();
-		for (jq_Class c : preparedClasses) {
+		methods = new IndexHashSet<jq_Method>();
+		for (jq_Class c : classes) {
 			for (jq_Method m : c.getDeclaredInstanceMethods()) 
-				reachableMethods.add(m);
+				methods.add(m);
 			for (jq_Method m : c.getDeclaredStaticMethods()) 
-				reachableMethods.add(m);
+				methods.add(m);
 		}
+		touchMethods();
+		buildTypes();
 		write();
 	}
+
 	private void write() throws IOException {
 		PrintWriter classesFileWriter =
 			new PrintWriter(Properties.classesFileName);
-		for (jq_Class c : preparedClasses) {
+		for (jq_Class c : classes) {
 			classesFileWriter.println(c);
 		}
 		classesFileWriter.close();
-		buildReachableTypes();
 		PrintWriter methodsFileWriter =
 			new PrintWriter(Properties.methodsFileName);
-		for (jq_Method m : reachableMethods)
+		for (jq_Method m : methods)
 			methodsFileWriter.println(m);
 		methodsFileWriter.close();
 	}
@@ -193,29 +227,26 @@ public class Program {
 		return m;
 	}
 
-	private void buildReachableTypes() {
-		reachableTypes = new IndexHashSet<jq_Type>();
+	private void buildTypes() {
+		types = new IndexHashSet<jq_Type>();
 		for (jq_Type t : PrimordialClassLoader.loader.getAllTypes()) {
-			if (t != null)
-				reachableTypes.add(t);
+			if (t != null) {
+				types.add(t);
+			}
 		}
 	}
 	
 	private void buildNameToClassMap() {
 		nameToClassMap = new HashMap<String, jq_Class>();
-		for (jq_Type t : reachableTypes) {
-			if (t instanceof jq_Class) {
-				jq_Class c = (jq_Class) t;
-				nameToClassMap.put(t.getName(), c);
-			}
+		for (jq_Class c : classes) {
+			nameToClassMap.put(c.getName(), c);
 		}
 	}
 	
 	private void buildClassToMethodsMap() {
 		classToMethodsMap = new HashMap<jq_Class, List<jq_Method>>();
-		for (jq_Method m : reachableMethods) {
+		for (jq_Method m : methods) {
 			jq_Class c = m.getDeclaringClass();
-			assert (preparedClasses.contains(c));
 			List<jq_Method> methods = classToMethodsMap.get(c);
 			if (methods == null) {
 				methods = new ArrayList<jq_Method>();
@@ -226,15 +257,15 @@ public class Program {
 	}
 	
 	public IndexSet<jq_Class> getPreparedClasses() {
-		return preparedClasses;
+		return classes;
 	}
 	
 	public IndexSet<jq_Method> getReachableMethods() { 
-		return reachableMethods;
+		return methods;
 	}
 
 	public IndexSet<jq_Type> getReachableTypes() {
-		return reachableTypes;
+		return types;
 	}
 	
 	public jq_Class getPreparedClass(String name) {
