@@ -76,9 +76,3 @@ class Philo extends Thread {
     }
 }
 
-
-
-
-
-
-
