@@ -41,6 +41,7 @@ import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Getfield;
@@ -102,7 +103,15 @@ public class Program {
 		String s;
 		while ((s = r.readLine()) != null) {
 			System.out.println("Loading: " + s);
-			jq_Class c = (jq_Class) Helper.load(s);
+			jq_Class c;
+			try {
+				c = (jq_Class) Helper.load(s);
+			} catch (Exception ex) {
+				System.out.println("WARNING: ignoring class: " + s +
+					"; reason follows:");
+				ex.printStackTrace();
+				continue;
+			}
 			assert (c != null);
 			classes.add(c);
 		}
@@ -523,7 +532,7 @@ public class Program {
 
 	public String toQuadStr(Quad q) {
 		Operator op = q.getOperator();
-		if (op instanceof Move) {
+		if (op instanceof Move || op instanceof CheckCast) {
 			return Move.getDest(q) + " = " + Move.getSrc(q);
 		}
 		if (op instanceof Getfield || op instanceof Putfield ||

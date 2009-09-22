@@ -7,15 +7,19 @@ package chord.rels;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import joeq.Compiler.Quad.Operand.ParamListOperand;
 
 import chord.project.Chord;
 import chord.project.ProgramRel;
 import chord.visitors.IMoveInstVisitor;
+import chord.visitors.IPhiInstVisitor;
 
 /**
  * Relation containing each tuple (p,v1,v2) such that the statement
@@ -28,19 +32,36 @@ import chord.visitors.IMoveInstVisitor;
 	sign = "P0,V0,V1:P0_V0xV1"
 )
 public class RelPobjVarAsgnInst extends ProgramRel
-		implements IMoveInstVisitor {
+		implements IMoveInstVisitor, IPhiInstVisitor {
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) { }
-	public void visitMoveInst(Quad p) {
-		Operand rx = Move.getSrc(p);
+	public void visitMoveInst(Quad q) {
+		Operand rx = Move.getSrc(q);
 		if (rx instanceof RegisterOperand) {
 			RegisterOperand ro = (RegisterOperand) rx;
 			if (ro.getType().isReferenceType()) {
 				Register r = ro.getRegister();
-				RegisterOperand lo = Move.getDest(p);
+				RegisterOperand lo = Move.getDest(q);
 				Register l = lo.getRegister();
-				add(p, l, r);
+				add(q, l, r);
 			}
 		}
+	}
+    public void visitPhiInst(Quad q) {
+        RegisterOperand lo = Phi.getDest(q);
+        jq_Type t = lo.getType();
+        assert (t != null);
+        if (t.isReferenceType()) {
+            Register l = lo.getRegister();
+            ParamListOperand ros = Phi.getSrcs(q);
+            int n = ros.length();
+            for (int i = 0; i < n; i++) {
+                RegisterOperand ro = ros.get(i);
+                if (ro != null) {
+                    Register r = ro.getRegister();
+                    add(q, l, r);
+                }
+            }
+        }
 	}
 }
