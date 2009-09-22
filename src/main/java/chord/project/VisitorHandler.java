@@ -38,6 +38,7 @@ import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Phi;
@@ -144,7 +145,10 @@ public class VisitorHandler {
 						for (INewInstVisitor niv : nivs)
 							niv.visitNewInst(q);
 					}
-				} else if (op instanceof Move) {
+				} else if (op instanceof Move || op instanceof CheckCast) {
+					// note: fine to handle both Move and CheckCast together
+					// because Operator.Move and Operator.CheckCast use same operand indices
+					// for src and dst operands
 					if (mivs != null) {
 						for (IMoveInstVisitor miv : mivs)
 							miv.visitMoveInst(q);

@@ -353,9 +353,9 @@ public class Instrumentor {
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String userClassesDirName = Properties.userClassesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
-		String instrExcludedPckgs = Properties.instrExcludedPckgs;
-		String[] excluded = instrExcludedPckgs.equals("") ? new String[0] :
-			instrExcludedPckgs.split(Properties.LIST_SEPARATOR);
+		String instrExcludeNames = Properties.instrExcludeNames;
+		String[] excluded = instrExcludeNames.equals("") ? new String[0] :
+			instrExcludeNames.split(Properties.LIST_SEPARATOR);
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
@@ -373,7 +373,8 @@ public class Instrumentor {
 				}
 			}
 			if (match) {
-				System.out.println("WARNING: Not instrumenting class: " + cName);
+				System.out.println("WARNING: Not instrumenting class " + cName +
+					" as it excluded by chord.instr.exclude");
 				continue;
 			}
 			String outDirName = null;
@@ -386,8 +387,10 @@ public class Instrumentor {
 			} else if (userClassPathResourceNames.contains(resourceName)) {
 				outDirName = userClassesDirName;
 			} else {
-				throw new ChordRuntimeException("Resource " + resourceName +
-					" neither in boot nor user classpaths");
+				System.out.println("WARNING: Not instrumenting class " + cName +
+				" as its defining resource " + resourceName +
+				" is neither in the boot nor user classpath");
+				continue;
 			}
 			CtClass clazz;
 			try {
@@ -430,7 +433,7 @@ public class Instrumentor {
 					ex.printStackTrace();
 				}
 			}
-			// System.out.println("Writing class: " + cName);
+			System.out.println("Writing class: " + cName);
 			try {
 				clazz.writeFile(outDirName);
 			} catch (CannotCompileException ex) {
@@ -530,21 +533,12 @@ public class Instrumentor {
 		String mDesc = javassistMethod.getSignature();
 		String cName = javassistMethod.getDeclaringClass().getName();
 		mStr = Program.toString(mName, mDesc, cName);
-		Map<Quad, Integer> bcMap;
-		try {
-			bcMap = joeqMethod.getBCMap();
-		} catch (RuntimeException ex) {
-			System.out.println("WARNING: Skipping instrumenting body of method: " + mStr +
-				"; reason follows:");
-			ex.printStackTrace();
-			return;
-		}
 		if (Mmap != null) {
 			if (convert) {
 				mId = Mmap.indexOf(mStr);
 				if (mId == -1) {
-					System.out.println("WARNING: Skipping method: " + mStr +
-						"; not found by static analysis.");
+					System.out.println("WARNING: Skipping instrumenting method " +
+						mStr + "; not found by static analysis.");
 					return;
 				}
 			} else {
@@ -553,70 +547,79 @@ public class Instrumentor {
 				assert (mId == n);
 			}
 		}
-		if (bcMap == null) {
-			System.out.println("WARNING: Skipping instrumenting body of method: " + mStr +
+		if (genEnterAndLeaveLoopEvent || genQuadEvent || genBasicBlockEvent) {
+			Map<Quad, Integer> bcMap;
+			try{
+				bcMap = joeqMethod.getBCMap();
+			} catch (RuntimeException ex) {
+				System.out.println("WARNING: Skipping instrumenting method " + mStr +
+					"; reason follows:");
+				ex.printStackTrace();
+				return;
+			}
+			if (bcMap == null) {
+				System.out.println("WARNING: Skipping instrumenting method " + mStr +
 				"; bytecode does not exist.");
-		} else {
-			if (genEnterAndLeaveLoopEvent || genQuadEvent || genBasicBlockEvent) {
-				ControlFlowGraph cfg = joeqMethod.getCFG();
-				bciToInstrMap.clear();
-				if (genQuadEvent || genBasicBlockEvent) {
-					for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-							it.hasNext();) {
-						BasicBlock bb = it.nextBasicBlock();
-						if (bb.isEntry() || bb.isExit())
-							continue;
-						if (genBasicBlockEvent) {
-							int bId = domB.indexOf(bb);
-							assert (bId != -1);
-							String instr = basicBlockEventCall + bId + ");";
-							int bci = getBCI(bb, joeqMethod);
-							attachInstrToBCIAft(instr, bci);
-						}
-						if (genQuadEvent) {
-							int n = bb.size();
-							for (int i = 0; i < n; i++) {
-								Quad q = bb.getQuad(i);
-								if (isRelevant(q)) {
-									int bci = joeqMethod.getBCI(q);
-									assert (bci != -1);
-									int pId = domP.indexOf(q);
-									assert (pId != -1);
-									String instr = quadEventCall + pId + ");";
-									attachInstrToBCIAft(instr, bci);
-								}
+				return;
+			}
+			ControlFlowGraph cfg = joeqMethod.getCFG();
+			bciToInstrMap.clear();
+			if (genQuadEvent || genBasicBlockEvent) {
+				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+						it.hasNext();) {
+					BasicBlock bb = it.nextBasicBlock();
+					if (bb.isEntry() || bb.isExit())
+						continue;
+					if (genBasicBlockEvent) {
+						int bId = domB.indexOf(bb);
+						assert (bId != -1);
+						String instr = basicBlockEventCall + bId + ");";
+						int bci = getBCI(bb, joeqMethod);
+						attachInstrToBCIAft(instr, bci);
+					}
+					if (genQuadEvent) {
+						int n = bb.size();
+						for (int i = 0; i < n; i++) {
+							Quad q = bb.getQuad(i);
+							if (isRelevant(q)) {
+								int bci = joeqMethod.getBCI(q);
+								assert (bci != -1);
+								int pId = domP.indexOf(q);
+								assert (pId != -1);
+								String instr = quadEventCall + pId + ");";
+								attachInstrToBCIAft(instr, bci);
 							}
 						}
 					}
 				}
-				if (genEnterAndLeaveLoopEvent) {
-					finder.visit(cfg);
-					Set<BasicBlock> heads = finder.getLoopHeads();
-					for (BasicBlock head : heads) {
-						int n = domW.size();
-						int wId = domW.getOrAdd(head, joeqMethod);
-						assert (wId == n);
-						String headInstr = enterLoopEventCall + wId + "," + mId + ");";
-						int headBCI = getBCI(head, joeqMethod);
-						attachInstrToBCIBef(headInstr, headBCI);
-					}
-					for (BasicBlock head : heads) {
-						Set<BasicBlock> exits = finder.getLoopExits(head);
-						int wId = domW.indexOf(head);
-						assert (wId != -1);
-						for (BasicBlock exit : exits) {
-							String exitInstr = leaveLoopEventCall + wId + "," + mId + ");";
-							int exitBCI = getBCI(exit, joeqMethod);
-							attachInstrToBCIBef(exitInstr, exitBCI);
-						}
+			}
+			if (genEnterAndLeaveLoopEvent) {
+				finder.visit(cfg);
+				Set<BasicBlock> heads = finder.getLoopHeads();
+				for (BasicBlock head : heads) {
+					int n = domW.size();
+					int wId = domW.getOrAdd(head, joeqMethod);
+					assert (wId == n);
+					String headInstr = enterLoopEventCall + wId + "," + mId + ");";
+					int headBCI = getBCI(head, joeqMethod);
+					attachInstrToBCIBef(headInstr, headBCI);
+				}
+				for (BasicBlock head : heads) {
+					Set<BasicBlock> exits = finder.getLoopExits(head);
+					int wId = domW.indexOf(head);
+					assert (wId != -1);
+					for (BasicBlock exit : exits) {
+						String exitInstr = leaveLoopEventCall + wId + "," + mId + ");";
+						int exitBCI = getBCI(exit, joeqMethod);
+						attachInstrToBCIBef(exitInstr, exitBCI);
 					}
 				}
 			}
-			try {
-				javassistMethod.instrument(exprEditor);
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
-			}
+		}
+		try {
+			javassistMethod.instrument(exprEditor);
+		} catch (CannotCompileException ex) {
+			throw new ChordRuntimeException(ex);
 		}
 		// NOTE: do not move insertBefore or insertAfter or addCatch
 		// calls to a method to before bytecode instrumentation, else
