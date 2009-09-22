@@ -8,9 +8,10 @@ package chord.instr;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
-
 import gnu.trove.TByteArrayList;
 
+import chord.project.Runtime;
+import chord.project.Properties;
 import chord.project.ChordRuntimeException;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
@@ -93,8 +94,8 @@ public class TraceTransformer {
 	}
 	public void run() {
 		try {
-			reader = new ByteBufferedFile(1024, rdFileName, true);
-			writer = new ByteBufferedFile(1024, wrFileName, false);
+			reader = new ByteBufferedFile(Properties.traceBlockSize, rdFileName, true);
+			writer = new ByteBufferedFile(Properties.traceBlockSize, wrFileName, false);
 			isInNew = false;
 			pending = new ArrayList<IntTrio>();
  			tmp = new TByteArrayList();
