@@ -35,8 +35,9 @@ import gnu.trove.TIntArrayList;
  */
 @Chord(
 	name = "dynamic-thresc-java",
-	namesOfSigns = { "visitedE", "flowInsEscE", "flowSenEscE" },
-	signs = { "E0", "E0", "E0" }
+	namesOfSigns = { "visitedE", "flowInsEscE", "flowSenEscE",
+					 "visitedL", "flosInsEscL", "flowSenEscL" },
+	signs = { "E0", "E0", "E0", "L0", "L0", "L0" }
 )
 public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     // set of all currently escaping objects
@@ -53,6 +54,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	// thread-escaping
     // invariant: isHidxEsc[h] = true => HidxToPendingEidxs[h] == null
     private TIntArrayList[] HidxToPendingEidxs;
+    private TIntArrayList[] HidxToPendingLidxs;
     // isHidxEsc[h] == true iff alloc site having index h in domain H
 	// is flow-ins. thread-escaping
 	private boolean[] isHidxEsc;
@@ -66,14 +68,22 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	// having index e in domain E is visited during the execution
 	private boolean[] isEidxVisited;
 
+	private boolean[] isLidxFlowSenEsc;
+	private boolean[] isLidxFlowInsEsc;
+	private boolean[] isLidxVisited;
+
 	private boolean isFlowIns = true;
 	private boolean isFlowSen = true;
 
 	protected ProgramRel relVisitedE;
+	protected ProgramRel relVisitedL;
 	protected ProgramRel relFlowInsEscE;
 	protected ProgramRel relFlowSenEscE;
+	protected ProgramRel relFlowInsEscL;
+	protected ProgramRel relFlowSenEscL;
 
 	private int numE;
+	private int numL;
 	private int numH;
 	private boolean convert;
 
@@ -90,6 +100,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     	instrScheme.setPutstaticReferenceEvent(false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);
 
+		instrScheme.setAcquireLockEvent(true, false, true);
     	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setPutfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setAloadPrimitiveEvent(true, false, true, false);
@@ -106,25 +117,36 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
 		numE = instrumentor.getEmap().size();
+		numL = instrumentor.getLmap().size();
 		isEidxVisited = new boolean[numE];
-		if (convert)
+		isLidxVisited = new boolean[numL];
+		if (convert) {
 			relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
+			relVisitedL = (ProgramRel) Project.getTrgt("visitedL");
+		}
 		if (isFlowIns) {
 			isEidxFlowInsEsc = new boolean[numE];
+			isLidxFlowInsEsc = new boolean[numL];
 			if (convert) {
 				relFlowInsEscE =
 					(ProgramRel) Project.getTrgt("flowInsEscE");
+				relFlowInsEscL =
+					(ProgramRel) Project.getTrgt("flowInsEscL");
 			}
 			numH = instrumentor.getHmap().size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
+			HidxToPendingLidxs = new TIntArrayList[numH];
 			isHidxEsc = new boolean[numH];
 			objToHidx = new TIntIntHashMap();
 		}
 		if (isFlowSen) {
 			isEidxFlowSenEsc = new boolean[numE];
+			isLidxFlowSenEsc = new boolean[numL];
 			if (convert) {
  				relFlowSenEscE =
 					(ProgramRel) Project.getTrgt("flowSenEscE");
+ 				relFlowSenEscL =
+					(ProgramRel) Project.getTrgt("flowSenEscL");
 			}
 		}
 	}
@@ -133,8 +155,10 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		escObjs.clear();
 		objToFldObjs.clear();
 		if (isFlowSen) {
-			for (int i = 0; i < numH; i++)
+			for (int i = 0; i < numH; i++) {
 				HidxToPendingEidxs[i] = null;
+				HidxToPendingLidxs[i] = null;
+			}
 			for (int i = 0; i < numH; i++)
 				isHidxEsc[i] = false;
 			objToHidx.clear();
@@ -143,40 +167,64 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 
 	public void donePass() {
 		System.out.println("***** STATS *****");
-		int numVisited = 0;
-		int numFlowInsOriginalEsc = 0;
-		int numFlowInsAdjustedEsc = 0;
-		int numFlowSenEsc = 0;
 		int numAllocEsc = 0;
+		int numVisitedE = 0;
+		int numVisitedL = 0;
+		int numFlowInsOriginalEscE = 0;
+		int numFlowInsOriginalEscL = 0;
+		int numFlowInsAdjustedEscE = 0;
+		int numFlowInsAdjustedEscL = 0;
+		int numFlowSenEscE = 0;
+		int numFlowSenEscL = 0;
 		for (int i = 0; i < numE; i++) {
 			if (isEidxVisited[i])
-				numVisited++;
+				numVisitedE++;
+		}
+		for (int i = 0; i < numL; i++) {
+			if (isLidxVisited[i])
+				numVisitedL++;
 		}
 		if (isFlowSen) {
 			for (int i = 0; i < numE; i++) {
 				if (isEidxFlowSenEsc[i]) {
-					numFlowSenEsc++;
+					numFlowSenEscE++;
+				}
+			}
+			for (int i = 0; i < numL; i++) {
+				if (isLidxFlowSenEsc[i]) {
+					numFlowSenEscL++;
 				}
 			}
 		}
 		if (isFlowIns) {
-			for (int i = 0; i < numE; i++) {
-				if (isEidxFlowInsEsc[i])
-					numFlowInsOriginalEsc++;
-				else if (isFlowSen && isEidxFlowSenEsc[i])
-					numFlowInsAdjustedEsc++;
-			}
-			numFlowInsAdjustedEsc += numFlowInsOriginalEsc;
 			for (int i = 0; i < numH; i++) {
 				if (isHidxEsc[i])
 					numAllocEsc++;
 			}
+			for (int i = 0; i < numE; i++) {
+				if (isEidxFlowInsEsc[i])
+					numFlowInsOriginalEscE++;
+				else if (isFlowSen && isEidxFlowSenEsc[i])
+					numFlowInsAdjustedEscE++;
+			}
+			numFlowInsAdjustedEscE += numFlowInsOriginalEscE;
+			for (int i = 0; i < numL; i++) {
+				if (isLidxFlowInsEsc[i])
+					numFlowInsOriginalEscL++;
+				else if (isFlowSen && isLidxFlowSenEsc[i])
+					numFlowInsAdjustedEscL++;
+			}
+			numFlowInsAdjustedEscL += numFlowInsOriginalEscL;
 		}
-		System.out.println("numVisited: " + numVisited +
-			" numFlowSenEsc: " + numFlowSenEsc +
-			" numFlowInsEsc (original): " + numFlowInsOriginalEsc +
-			" numFlowInsEsc (adjusted): " + numFlowInsAdjustedEsc +
-			" numAllocEsc: " + numAllocEsc);
+		System.out.println("numAllocEsc: " + numAllocEsc);
+		System.out.println("numVisitedE: " + numVisitedE +
+			" numFlowSenEscE: " + numFlowSenEscE +
+			" numFlowInsEscE (original): " + numFlowInsOriginalEscE +
+			" numFlowInsEscE (adjusted): " + numFlowInsAdjustedEscE);
+		System.out.println("numVisitedL: " + numVisitedL +
+			" numFlowSenEscL: " + numFlowSenEscL +
+			" numFlowInsEscL (original): " + numFlowInsOriginalEscL +
+			" numFlowInsEscL (adjusted): " + numFlowInsAdjustedEscL);
 	}
 
 	public void doneAllPasses() {
@@ -187,6 +235,12 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 					relVisitedE.add(i);
 			}
 			relVisitedE.save();
+			relVisitedL.zero();
+			for (int i = 0; i < numL; i++) {
+				if (isLidxVisited[i])
+					relVisitedL.add(i);
+			}
+			relVisitedL.save();
 			if (isFlowIns) {
 				relFlowInsEscE.zero();
 				for (int i = 0; i < numE; i++) {
@@ -194,6 +248,12 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 						relFlowInsEscE.add(i);
 				}
 				relFlowInsEscE.save();
+				relFlowInsEscL.zero();
+				for (int i = 0; i < numL; i++) {
+					if (isLidxFlowInsEsc[i])
+						relFlowInsEscL.add(i);
+				}
+				relFlowInsEscL.save();
 			}
 			if (isFlowSen) {
 				relFlowSenEscE.zero();
@@ -202,34 +262,63 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 						relFlowSenEscE.add(i);
 				}
 				relFlowSenEscE.save();
+				relFlowSenEscL.zero();
+				for (int i = 0; i < numL; i++) {
+					if (isLidxFlowSenEsc[i])
+						relFlowSenEscL.add(i);
+				}
+				relFlowSenEscL.save();
 			}
 		}
 
 		IndexMap<String> Emap = instrumentor.getEmap();
+		IndexMap<String> Lmap = instrumentor.getLmap();
 		String outDirName = Properties.outDirName;
 		try {
-			PrintWriter writer = new PrintWriter(new FileWriter(
-				new File(outDirName, "dynamic_visited_heap_insts.txt")));
+			PrintWriter writer;
+			writer = new PrintWriter(new FileWriter(
+				new File(outDirName, "dynamic_visitedE.txt")));
 			for (int i = 0; i < numE; i++) {
 				if (isEidxVisited[i])
 					writer.println(Emap.get(i));
 			}
 			writer.close();
+			writer = new PrintWriter(new FileWriter(
+				new File(outDirName, "dynamic_visitedL.txt")));
+			for (int i = 0; i < numL; i++) {
+				if (isLidxVisited[i])
+					writer.println(Lmap.get(i));
+			}
+			writer.close();
 			if (isFlowIns) {
 				writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "dynamic_flowins_esc_heap_insts.txt")));
+					new File(outDirName, "dynamic_flowInsEscE.txt")));
 				for (int i = 0; i < numE; i++) {
 					if (isEidxFlowInsEsc[i])
 						writer.println(Emap.get(i));
 				}
 				writer.close();
+				writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "dynamic_flowInsEscL.txt")));
+				for (int i = 0; i < numL; i++) {
+					if (isLidxFlowInsEsc[i])
+						writer.println(Lmap.get(i));
+				}
+				writer.close();
 			}
 			if (isFlowSen) {
 				writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "dynamic_flowsen_esc_heap_insts.txt")));
+					new File(outDirName, "dynamic_flowSenEscE.txt")));
 				for (int i = 0; i < numE; i++) {
 					if (isEidxFlowSenEsc[i])
 						writer.println(Emap.get(i));
+				}
+				writer.close();
+				writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "dynamic_flowSenEscL.txt")));
+				for (int i = 0; i < numL; i++) {
+					if (isLidxFlowSenEsc[i])
+						writer.println(Lmap.get(i));
 				}
 				writer.close();
 			}
@@ -276,37 +365,34 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	}
 
 	public void processPutstaticReference(int e, int t, int f, int o) { 
-		if (o != 0) {
+		if (o != 0)
 			markAndPropEsc(o);
-		}
 	}
 	public void processThreadStart(int p, int t, int o) { 
-		if (o != 0) {
+		if (o != 0)
 			markAndPropEsc(o);
-		}
 	}
-	private void processHeapRd(int eIdx, int b) {
-		if (eIdx >= 0 && b != 0) {
-			isEidxVisited[eIdx] = true;
+    public void processAcquireLock(int l, int t, int o) {
+		if (l >= 0 && o != 0) {
+			isLidxVisited[l] = true;
 			if (isFlowSen) {
-				if (!isEidxFlowSenEsc[eIdx] && escObjs.contains(b)) {
-					isEidxFlowSenEsc[eIdx] = true;
-				}
+				if (!isLidxFlowSenEsc[l] && escObjs.contains(o))
+					isLidxFlowSenEsc[l] = true;
 			}
 			if (isFlowIns) {
-				if (!isEidxFlowInsEsc[eIdx]) {
-					if (objToHidx.containsKey(b)) {
-						int hIdx = objToHidx.get(b);
-						if (isHidxEsc[hIdx]) {
-							isEidxFlowInsEsc[eIdx] = true;
+				if (!isLidxFlowInsEsc[l]) {
+					if (objToHidx.containsKey(o)) {
+						int h = objToHidx.get(o);
+						if (isHidxEsc[h]) {
+							isLidxFlowInsEsc[l] = true;
 						} else {
-							TIntArrayList l = HidxToPendingEidxs[hIdx];
-							if (l == null) {
-								l = new TIntArrayList();
-								HidxToPendingEidxs[hIdx] = l;
-								l.add(eIdx);
-							} else if (!l.contains(eIdx)) {
-								l.add(eIdx);
+							TIntArrayList list = HidxToPendingLidxs[h];
+							if (list == null) {
+								list = new TIntArrayList();
+								HidxToPendingLidxs[h] = list;
+								list.add(l);
+							} else if (!list.contains(l)) {
+								list.add(l);
 							}
 						}
 					}
@@ -314,8 +400,36 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			}
 		}
 	}
-	private void processHeapWr(int eIdx, int b, int fIdx, int r) {
-		processHeapRd(eIdx, b);
+	private void processHeapRd(int e, int b) {
+		if (e >= 0 && b != 0) {
+			isEidxVisited[e] = true;
+			if (isFlowSen) {
+				if (!isEidxFlowSenEsc[e] && escObjs.contains(b))
+					isEidxFlowSenEsc[e] = true;
+			}
+			if (isFlowIns) {
+				if (!isEidxFlowInsEsc[e]) {
+					if (objToHidx.containsKey(b)) {
+						int h = objToHidx.get(b);
+						if (isHidxEsc[h]) {
+							isEidxFlowInsEsc[e] = true;
+						} else {
+							TIntArrayList list = HidxToPendingEidxs[h];
+							if (list == null) {
+								list = new TIntArrayList();
+								HidxToPendingEidxs[h] = list;
+								list.add(e);
+							} else if (!list.contains(e)) {
+								list.add(e);
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	private void processHeapWr(int e, int b, int fIdx, int r) {
+		processHeapRd(e, b);
 		if (b != 0 && fIdx >= 0) {
 			if (r == 0) {
 				// remove field fIdx if it is there
@@ -351,17 +465,17 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			}
 		}
 	}
-	private void markHesc(int hIdx) {
-		if (!isHidxEsc[hIdx]) {
-			isHidxEsc[hIdx] = true;
-			TIntArrayList l = HidxToPendingEidxs[hIdx];
+	private void markHesc(int h) {
+		if (!isHidxEsc[h]) {
+			isHidxEsc[h] = true;
+			TIntArrayList l = HidxToPendingEidxs[h];
 			if (l != null) {
 				int n = l.size();
 				for (int i = 0; i < n; i++) {
-					int eIdx = l.get(i);
-					isEidxFlowInsEsc[eIdx] = true;
+					int e = l.get(i);
+					isEidxFlowInsEsc[e] = true;
 				}
-				HidxToPendingEidxs[hIdx] = null;
+				HidxToPendingEidxs[h] = null;
 			}
 		}
 	}
@@ -369,8 +483,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
         if (escObjs.add(o)) {
         	if (isFlowSen) {
 				if (objToHidx.containsKey(o)) {
-					int hIdx = objToHidx.get(o);
-					markHesc(hIdx);
+					int h = objToHidx.get(o);
+					markHesc(h);
 				}
         	}
 			List<FldObj> l = objToFldObjs.get(o);
