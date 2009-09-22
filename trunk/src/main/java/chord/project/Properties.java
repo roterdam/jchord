@@ -9,103 +9,101 @@ import java.io.File;
 
 /**
  * System properties recognized by Chord:
- * <p>
- * <table border=1>
- * <tr><td colspan=2>Chord I/O properties</td></tr>
  *
- * <tr><td><tt>user.dir</tt></td>
- *     <td>Location of working directory during Chord's execution</td></tr>
- * <tr><td><tt>chord.out.dir</tt></td>
- *     <td>Location of directory to which Chord dumps all files</td></tr>
- * <tr><td><tt>chord.out.file</tt></td>
- *     <td>Location of file to which standard output stream is redirected
- *         (default=${chord.out.dir}/log.txt)</td></tr>
- * <tr><td><tt>chord.err.file</tt></td>
- *     <td>Location of file to which standard error stream is redirected
- *         (default=${chord.out.dir}/log.txt)</td></tr>
+ * Chord I/O properties
  *
- * <tr><td colspan=2>Program properties</td></tr>
+ * user.dir
+ *     Location of working directory during Chord's execution
+ * chord.out.dir
+ *     Location of directory to which Chord dumps all files
+ * chord.out.file
+ *     Location of file to which standard output stream is redirected
+ *         (default=${chord.out.dir}/log.txt)
+ * chord.err.file
+ *     Location of file to which standard error stream is redirected
+ *         (default=${chord.out.dir}/log.txt)
  *
- * <tr><td><tt>chord.main.class</tt></td>
- *     <td>Fully-qualified name of main class of program to be analyzed (e.g. "com.example.Main")</td></tr>
- * <tr><td><tt>chord.class.path</tt></td>
- *     <td>Class path of program to be analyzed (${sun.boot.class.path} is implicitly appended)</td></tr>
- * <tr><td><tt>chord.src.path</tt></td>
- *     <td>Java source path of program to be analyzed</td></tr>
+ * Program properties
  *
- * <tr><td colspan=2>Program scope properties</td></tr>
+ * chord.main.class
+ *     Fully-qualified name of main class of program to be analyzed (e.g. "com.example.Main")
+ * chord.class.path
+ *     Class path of program to be analyzed (${sun.boot.class.path} is implicitly appended)
+ * chord.src.path
+ *     Java source path of program to be analyzed
  *
- * <tr><td><tt>chord.scope.kind</tt></td>
- *     <td>Algorithm to compute program scope; possible values are "rta" and "dynamic" (default="rta")</td></tr>
- * <tr><td><tt>chord.reuse.scope</tt></td>
- *     <td>Use program scope specified by files ${chord.boot.classes.file}, ${chord.classes.file},
- *         and ${chord.methods.file} (default=false)</td></tr>
- * <tr><td><tt>chord.boot.classes.file</tt></td>
- *     <td>Location of file from/to which list of system classes (e.g. sun.* and java.*)
- *         deemed reachable is read/written (default=${chord.out.dir}/boot_classes.txt)</td></tr>
- * <tr><td><tt>chord.classes.file</tt></td>
- *     <td>Location of file from/to which list of non-system classes deemed reachable is read/written
- *         (default=${chord.out.dir}/boot_classes.txt)</td></tr>
- * <tr><td><tt>chord.methods.file</tt></td>
- *     <td>Location of file from/to which list of all methods deemed reachable is read/written
- *         (default=${chord.out.dir}/methods.txt)</td></tr>
+ * Program scope properties
  *
- * <tr><td colspan=2>Program analysis properties</td></tr>
+ * chord.scope.kind
+ *     Algorithm to compute program scope; possible values are "rta" and "dynamic" (default="rta")
+ * chord.reuse.scope
+ *     Use program scope specified by files ${chord.boot.classes.file}, ${chord.classes.file},
+ *         and ${chord.methods.file} (default=false)
+ * chord.classes.file
+ *     Location of file from/to which list of classes deemed reachable is read/written
+ *         (default=${chord.out.dir}/classes.txt)
+ * chord.methods.file
+ *     Location of file from/to which list of methods deemed reachable is read/written
+ *         (default=${chord.out.dir}/methods.txt)
  *
- * <tr><td><tt>chord.java.analysis.path</tt></td>
- *     <td>Classpath containing program analyses expressed in Java 
- *         (i.e. @Chord-annotated classes) to be included in the project</td></tr>
- * <tr><td><tt>chord.dlog.analysis.path</tt></td>
- *     <td>Path of dirs containing program analyses expressed in Datalog
- *         (i.e. .datalog and .dlog files) to be included in the project</td></tr>
- * <tr><td><tt>chord.analyses</tt></td>
- *     <td>List of names of program analyses to be run in order;
- *         separator = <tt>' |,|:|;'</tt> (default=empty list)</td></tr>
+ * Program analysis properties
  *
- * <tr><td colspan=2>BDD-based Datalog solver properties</td></tr>
+ * chord.java.analysis.path
+ *     Classpath containing program analyses expressed in Java 
+ *         (i.e. @Chord-annotated classes) to be included in the project
+ * chord.dlog.analysis.path
+ *     Path of dirs containing program analyses expressed in Datalog
+ *         (i.e. .datalog and .dlog files) to be included in the project
+ * chord.analyses
+ *     List of names of program analyses to be run in order;
+ *         separator = ' |,|:|;' (default=empty list)
+ *
+ * BDD-based Datalog solver properties
  * 
- * <tr><td><tt>chord.bddbddb.work.dir</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.bddbddb.max.heap</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.bddbddb.noisy</tt></td>
- *     <td></td></tr>
+ * chord.bddbddb.work.dir
+ *     
+ * chord.bddbddb.max.heap
+ *     
+ * chord.bddbddb.noisy
+ *     
+ * Program instrumentation properties
  *
- * <tr><td colspan=2>Program instrumentation properties</td></tr>
+ * chord.instr.exclude
+ *     List of prefixes of names of classes and packages to exclude from instrumentation;
+ *         separator = ' |,|:|;' (default="java.,sun.,com.")
+ * chord.run.ids
+ *     List of IDs to identify program runs; separator = ' |,|:|;' (default="0")
+ * chord.args.XXX
+ *     Command line arguments to be passed to run having ID XXX (default="")
+ * chord.boot.classes.dir
+ *    
+ * chord.user.classes.dir
+ *     
+ * chord.runtime.max.heap
  *
- * <tr><td><tt>chord.instr.exclude</tt></td>
- *     <td>List of prefixes of names of classes and packages to exclude from instrumentation;
- *         separator = <tt>' |,|:|;'</tt> (default="java.,sun.,com.")</td></tr>
- * <tr><td><tt>chord.run.ids</tt></td>
- *     <td>List of IDs to identify program runs; separator = <tt>' |,|:|;'</tt> (default="0")</td></tr>
- * <tr><td><tt>chord.args.XXX</tt></td>
- *     <td>Command line arguments to be passed to run having ID XXX (default="")</td></tr>
- * <tr><td><tt>chord.boot.classes.dir</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.user.classes.dir</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.instr.scheme.file</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.crude.trace.file</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.final.trace.file</tt></td>
- *     <td></td></tr>
+ * chord.instr.scheme.file
+ *     
+ * chord.crude.trace.file
+ *     
+ * chord.final.trace.file
+ *     
+ * chord.trace.block.size
  *
- * <tr><td colspan=2>Program transformation properties</td></tr>
+ * Program transformation properties
  *
- * <tr><td><tt>chord.ssa</tt></td>
- *     <td>Do SSA transformation for all methods deemed reachable (default=false)</td></tr>
+ * chord.ssa
+ *     Do SSA transformation for all methods deemed reachable (default=false)
  *
- * <tr><td colspan=2>Chord resource properties</td></tr>
+ * Chord resource properties
  *
- * <tr><td><tt>chord.home.dir</tt></td>
- *     <td>Location of root directory of Chord's installation</td></tr>
- * <tr><td><tt>chord.main.class.path</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.bddbddb.class.path</tt></td>
- *     <td></td></tr>
- * <tr><td><tt>chord.instr.agent.file</tt></td>
- *     <td></td></tr>
+ * chord.home.dir
+ *     Location of root directory of Chord's installation
+ * chord.main.class.path
+ *     
+ * chord.bddbddb.class.path
+ *     
+ * chord.instr.agent.file
+ *     
  * </table>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -149,20 +147,22 @@ public class Properties {
 
     // BDD-based Datalog solver properties
 
-	public final static String bddbddbWorkDirName = System.getProperty("chord.bddbddb.work.dir");
-	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap");
-	public final static String bddbddbNoisy = System.getProperty("chord.bddbddb.noisy");
+	public final static String bddbddbWorkDirName = System.getProperty("chord.bddbddb.work.dir", outDirName);
+	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
+	public final static String bddbddbNoisy = System.getProperty("chord.bddbddb.noisy", "no");
 
 	// Program instrumentation properties
 
-	public final static String instrExcludedPckgs = System.getProperty("chord.instr.exclude", "java.,sun.,com.");
+	public final static String instrExcludeNames =
+		System.getProperty("chord.instr.exclude", "java.,sun.,com.");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
 	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
 	public final static String userClassesDirName = build("chord.user.classes.dir", "user_classes");
-
+	public final static String runtimeMaxHeap = System.getProperty("chord.runtime.max.heap", "1024m");
 	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
 	public final static String crudeTraceFileName = build("chord.crude.trace.file", "crude_trace.txt");
 	public final static String finalTraceFileName = build("chord.final.trace.file", "final_trace.txt");
+	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 
     // Program transformation properties
  
@@ -203,10 +203,15 @@ public class Properties {
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
 		System.out.println();
-		System.out.println("chord.instr.exclude: " + instrExcludedPckgs);
+		System.out.println("chord.instr.exclude: " + instrExcludeNames);
 		System.out.println("chord.run.ids: " + runIDs);
 		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
 		System.out.println("chord.user.classes.dir: " + userClassesDirName);
+		System.out.println("chord.runtime.max.heap: " + runtimeMaxHeap);
+		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
+		System.out.println("chord.crude.trace.file: " + crudeTraceFileName);
+		System.out.println("chord.final.trace.file: " + finalTraceFileName);
+		System.out.println("chord.trace.block.size: " + traceBlockSize);
 		System.out.println();
 		System.out.println("chord.ssa: " + doSSA);
 		System.out.println();

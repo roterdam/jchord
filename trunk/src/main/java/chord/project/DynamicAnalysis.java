@@ -87,9 +87,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final int numMeths = (Mmap != null) ? Mmap.size() : 0;
 		final String instrProgramCmd = "java -ea -Xbootclasspath/p:" +
 			Properties.mainClassPathName + File.pathSeparator + bootClassesDirName +
+			" -Xmx" + Properties.runtimeMaxHeap +
 			" -Xverify:none" + // " -verbose" + 
 			" -cp " + userClassesDirName + File.pathSeparator + classPathName +
 			" -agentpath:" + Properties.instrAgentFileName +
+			"=trace_block_size=" + Properties.traceBlockSize +
 			"=trace_file_name=" + traceFileName +
 			"=num_meths=" + numMeths +
 			"=instr_scheme_file_name=" + instrSchemeFileName +

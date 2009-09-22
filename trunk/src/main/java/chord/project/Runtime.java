@@ -864,11 +864,11 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void open(String traceFileName,
-			String instrSchemeFileName, int numMeths,
+	public synchronized static void open(int fileBlockSize,
+			String traceFileName, String instrSchemeFileName, int numMeths,
 			int callsBound, int itersBound) {
 		try {
-			buffer = new ByteBufferedFile(1024, traceFileName, false);
+			buffer = new ByteBufferedFile(fileBlockSize, traceFileName, false);
 		    objmap = new WeakIdentityHashMap();
 			scheme = InstrScheme.load(instrSchemeFileName);
 			hasEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent();

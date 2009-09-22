@@ -17,7 +17,7 @@ static bool enable_tracing = false;
 static char trace_file_name[MAX_FILE_NAME];
 static char instr_scheme_file_name[MAX_FILE_NAME];
 static char classes_file_name[MAX_FILE_NAME];
-static int num_meths, calls_bound, iters_bound;
+static int trace_block_size, num_meths, calls_bound, iters_bound;
 
 char* get_token(char *str, char *seps, char *buf, int max)
 {
@@ -56,7 +56,7 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 			exit(1);
 		}
 		const char* mName = "open";
-		const char* mSign = "(Ljava/lang/String;Ljava/lang/String;III)V";
+		const char* mSign = "(ILjava/lang/String;Ljava/lang/String;III)V";
 		jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
 		if (m == NULL) {
 			cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
@@ -65,8 +65,8 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 		}
 		jstring str1 = jni_env->NewStringUTF(trace_file_name);
 		jstring str2 = jni_env->NewStringUTF(instr_scheme_file_name);
-		jni_env->CallStaticObjectMethod(c, m, str1, str2, num_meths,
-			calls_bound, iters_bound);
+		jni_env->CallStaticObjectMethod(c, m, trace_block_size, str1, str2,
+			num_meths, calls_bound, iters_bound);
 	}
 
 	cout << "LEAVE VMInit" << endl;
@@ -158,6 +158,16 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
             }
 			list_loaded_classes = true;
 			cout << "OPTION classes_file_name: " << classes_file_name << endl;
+		} else if (strcmp(token, "trace_block_size") == 0) {
+            char arg[16];
+            next = get_token(next, (char*) ",=", arg, sizeof(arg));
+			if (next == NULL) {
+                cerr << "ERROR: Cannot parse option trace_block_size=<num>: "
+					<< options << endl;
+				exit(1);
+			}
+			trace_block_size = atoi(arg);
+			cout << "OPTION trace_block_size: " << trace_block_size << endl;
 		} else if (strcmp(token, "num_meths") == 0) {
             char arg[16];
             next = get_token(next, (char*) ",=", arg, sizeof(arg));
