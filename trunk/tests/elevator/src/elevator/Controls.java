@@ -49,9 +49,9 @@ class Controls {
     // False if the call was already claimed (upFlag was already true)
     public boolean claimUp(String lift, int floor) {
         if(checkUp(floor)) {
-            synchronized(floors[floor]) {
-                if(!floors[floor].upFlag) {
-                    floors[floor].upFlag = true;
+            synchronized(floors[floor]) { // DONE
+                if(!floors[floor].upFlag) { // DONE
+                    floors[floor].upFlag = true; // DONE
                     return true;
                 }
             }
@@ -65,9 +65,9 @@ class Controls {
     // False if the call was already claimed (downFlag was already true)
     public boolean claimDown(String lift, int floor) {
         if(checkDown(floor)) {
-            synchronized(floors[floor]) {
-                if(!floors[floor].downFlag) {
-                    floors[floor].downFlag = true;
+            synchronized(floors[floor]) {  // DONE
+                if(!floors[floor].downFlag) { // DONE
+                    floors[floor].downFlag = true;  // DONE
                     return true;
                 }
             }
@@ -80,9 +80,9 @@ class Controls {
     // floor, checkUp() will return false.  This prevents an elevator from
     // wasting its time trying to claim a call that has already been claimed
     public boolean checkUp(int floor) {
-        synchronized(floors[floor]) {
-            boolean ret = floors[floor].upPeople.size() != 0;
-            ret = ret && !floors[floor].upFlag;
+        synchronized(floors[floor]) {  // DONE
+            boolean ret = floors[floor].upPeople.size() != 0; // DONE
+            ret = ret && !floors[floor].upFlag; // DONE
             return ret;
         }
     }
@@ -92,9 +92,9 @@ class Controls {
     // floor, checkUp() will return false.  This prevents an elevator from
     // wasting its time trying to claim a call that has already been claimed
     public boolean checkDown(int floor) {
-        synchronized(floors[floor]) {
-            boolean ret = floors[floor].downPeople.size() != 0;
-            ret = ret && !floors[floor].downFlag;
+        synchronized(floors[floor]) { // DONE
+            boolean ret = floors[floor].downPeople.size() != 0; // DONE
+            ret = ret && !floors[floor].downFlag; // DONE
             return ret;
         }
     }
@@ -104,10 +104,10 @@ class Controls {
     // to which the people wish to travel.  The floors vector and upFlag
     // are reset.
     public Vector getUpPeople(int floor) {
-        synchronized(floors[floor]) {
-            Vector temp = floors[floor].upPeople;
-            floors[floor].upPeople = new Vector();
-            floors[floor].upFlag = false;
+        synchronized(floors[floor]) {   // DONE
+            Vector temp = floors[floor].upPeople;  // DONE
+            floors[floor].upPeople = new Vector(); // DONE
+            floors[floor].upFlag = false;a  // DONE
             return temp;
         }
     }
@@ -117,10 +117,10 @@ class Controls {
     // to which the people wish to travel.  The floors vector and downFlag
     // are reset.
     public Vector getDownPeople(int floor) {
-        synchronized(floors[floor]) {
-            Vector temp = floors[floor].downPeople;
-            floors[floor].downPeople = new Vector();
-            floors[floor].downFlag = false;
+        synchronized(floors[floor]) { // DONE
+            Vector temp = floors[floor].downPeople; // DONE
+            floors[floor].downPeople = new Vector();  // DONE
+            floors[floor].downFlag = false; // DONE
             return temp;
         }
     }

@@ -17,9 +17,11 @@ public class SummEdge {
 		retNode = r;
 	}
 	public int hashCode() {
-		return srcNode.hashCode() + retNode.hashCode();
+		// System.out.println("SE HC");
+		return 0; // srcNode.hashCode() + retNode.hashCode(); 
 	}
 	public boolean equals(Object o) {
+		// System.out.println("SE EQ");
 		if (o == this)
 			return true;
 		if (!(o instanceof SummEdge))

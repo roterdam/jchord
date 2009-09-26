@@ -14,17 +14,22 @@ import joeq.Compiler.Quad.Quad;
  */
 public class PathEdge {
 	final Quad q;	// q == null => empty basic block
+	final int qIdx; // q == null => qIdx == -1
+	final int qId;
 	final BasicBlock bb;	// basic block of quad
 	final SD sd;
-	public PathEdge(Quad q, BasicBlock bb, SD sd) {
+	public PathEdge(Quad q, int qIdx, BasicBlock bb, SD sd) {
 		this.q = q;
+		this.qIdx = qIdx;
 		this.bb = bb;
 		this.sd = sd;
+		this.qId = q == null ? -1 : q.getID();
 	}
 	public int hashCode() {
-		return sd.hashCode();
+		return qId;
 	}
 	public boolean equals(Object o) {
+		// System.out.println("PE EQ");
 		if (o == this)
 			return true;
 		if (!(o instanceof PathEdge))

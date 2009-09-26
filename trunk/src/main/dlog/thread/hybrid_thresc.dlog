@@ -42,7 +42,6 @@ escQHtc_i(q:Q0,h:H0) output
 escQV(q:Q0,v:V0) output
 hybridVisitedE(e:E0) output
 hybridEscE(e:E0) output
-
 queryE(e:E0) output
 queryPV(p:P0,v:V0) output
 queryQV(q:Q0,v:V0) output
@@ -102,13 +101,15 @@ hybridEscE(e) :- escQV(q,v), PQ(p,q), PE(p,e), EV(e,v).
 
 ###
 
-queryE(e) :- flowinsEscE(e), !hybridEscE(e), hybridVisitedE(e).
+#queryE(e) :- flowinsEscE(e), !hybridEscE(e), hybridVisitedE(e).
+queryE(e) :- !hybridEscE(e), hybridVisitedE(e).
+
 queryPV(p,v) :- PE(p,e), EV(e,v), queryE(e).
 queryQV(q,v) :- queryPV(p,v), PQ(p,q).
 
 relevantQVH(q,v,h) :- queryQV(q,v), relevantQVH(q,v,h1), QHFH_i(q,h,_,h1).
 relevantQVH(q,v,h) :- queryQV(q,v), QVH_i(q,v,h).
-
 relevantPVH(p,v,h) :- relevantQVH(q,v,h), PQ(p,q).
+
 relevantEH(e,h) :- PE(p,e), EV(e,v), relevantPVH(p,v,h).
 
