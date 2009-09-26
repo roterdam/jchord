@@ -64,7 +64,7 @@ import joeq.Compiler.Quad.BasicBlock;
     name = "thresc-path-java"
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
-	private final static boolean DEBUG = true;
+	private final static boolean DEBUG = false;
 	private final static TIntArrayList emptyTmpsList = new TIntArrayList(0);
 	private final static List<IntPair> emptyArgsList = Collections.emptyList();
     protected InstrScheme instrScheme;
@@ -107,6 +107,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private Set<IntPair> spawnSet;
 	private Set<IntPair> startSet;
 	private Set<IntPair> baseQVset;
+	private Set<IntPair> lockQVset;
 	private Set<IntPair> PQset;
 
 	public Map<Quad, Set<Quad>> getHeapInstToAllocsMap() {
@@ -335,7 +336,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			String outDirName = Properties.outDirName;
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "path_esc_heap_insts.txt")));
+					new File(outDirName, "hybrid_pathEscE.txt")));
 				for (Quad e : escHeapInsts)
 					writer.println(Program.v().toPosStr(e));
 				writer.close();
@@ -343,7 +344,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "path_loc_heap_insts.txt")));
+					new File(outDirName, "hybrid_pathLocE.txt")));
    		     	for (Quad e : heapInstToAllocs.keySet()) {
 					writer.println(Program.v().toPosStr(e));
 					for (Quad h : heapInstToAllocs.get(e)) {
@@ -614,7 +615,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				processInvoke(q);
 			else if (op instanceof RETURN_A)
 				processReturn(q);
-			else if (op instanceof Move)
+			else if (op instanceof Move || op instanceof CheckCast)
 				processMove(q);
 			else if (op instanceof Getfield)
 				processGetfield(q);
@@ -769,15 +770,18 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int bId = domV.indexOf(b);
 			assert (bId != -1);
 			baseQVset.add(new IntPair(currQid, bId));
-			jq_Field f = Getfield.getField(q).getField();
+			FieldOperand fo = Getfield.getField(q);
+			fo.resolve();
+			jq_Field f = fo.getField();
 			if (!f.getType().isReferenceType())
+				return;
+			int fId = domF.indexOf(f);
+			if (fId == -1)
 				return;
 			RegisterOperand lo = Getfield.getDest(q);
 			Register l = lo.getRegister();
 			int lId = domV.indexOf(l);
 			assert (lId != -1);
-			int fId = domF.indexOf(f);
-			assert (fId != -1);
 			getinstSet.add(new IntQuad(currQid, lId, bId, fId));
 		}
 		private void processPutfield(Quad q) {
@@ -790,18 +794,21 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int bId = domV.indexOf(b);
 			assert (bId != -1);
 			baseQVset.add(new IntPair(currQid, bId));
-			jq_Field f = Putfield.getField(q).getField();
+			FieldOperand fo = Putfield.getField(q);
+			fo.resolve();
+			jq_Field f = fo.getField();
 			if (!f.getType().isReferenceType())
 				return;
 			Operand rx = Putfield.getSrc(q);
 			if (!(rx instanceof RegisterOperand))
 				return;
+			int fId = domF.indexOf(f);
+			if (fId == -1)
+				return;
 			RegisterOperand ro = (RegisterOperand) rx;
 			Register r = ro.getRegister();
 			int rId = domV.indexOf(r);
 			assert (rId != -1);
-			int fId = domF.indexOf(f);
-			assert (fId != -1);
 			putinstSet.add(new IntQuad(currQid, bId, fId, rId));
 		}
 		private void processInvoke(Quad q) {
