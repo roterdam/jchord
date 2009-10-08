@@ -1,0 +1,23 @@
+# name=relevant-pres-dlog
+
+.include "U.dom"
+.include "Q.dom"
+
+.bddvarorder Q0_U0xU1
+
+useQU(q:Q0,v:U0) input
+defQU(q:Q0,v:U0) input
+movs(q:Q0,l:U0,r:U1) input
+liveQU_o(q:Q0,u:U0) input
+
+liveQU_i(q:Q0,u:U0) output
+presQU(q:Q0,u:U0) output
+
+###
+
+presQU(q,u) :- liveQU_o(q,u), !defQU(q,u).
+
+liveQU_i(q,u) :- presQU(q,u).
+liveQU_i(q,u) :- useQU(q,u).
+liveQU_i(q,u) :- movs(q,l,u), liveQU_o(q,l).
+

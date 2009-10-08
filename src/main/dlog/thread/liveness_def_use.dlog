@@ -1,0 +1,64 @@
+# name=liveness-def-use-dlog
+
+.include "U.dom"
+.include "Q.dom"
+.include "H.dom"
+.include "F.dom"
+.include "P.dom"
+
+.bddvarorder Q0_P0_U0xU1_H0xF0
+
+asgnP(p:P0,l:U0) input
+copyP(p:P0,l:U0,r:U1) input
+copyQ(q:Q0,l:U0,r:U1) input
+allocP(p:P0,l:U0,h:H0) input
+getinstP(p:P0,l:U0,b:U1,f:F0) input
+putinstP(p:P0,b:U0,f:F0,r:U1) input
+getstatP(p:P0,l:U0) input
+putstatP(p:P0,l:U0) input
+spawnP(p:P0,v:U0) input
+startP(p:P0,v:U0) input
+basePU(p:P0,v:U0) input
+PQ(p:P0,q:Q0) input
+
+asgnQ(q:Q0,l:U0) 
+copyX(q:Q0,l:U0,r:U1) 
+allocQ(q:Q0,l:U0,h:H0) 
+getinstQ(q:Q0,l:U0,b:U1,f:F0) 
+putinstQ(q:Q0,b:U0,f:F0,r:U1) 
+getstatQ(q:Q0,l:U0) 
+putstatQ(q:Q0,l:U0)
+spawnQ(q:Q0,v:U0) 
+startQ(q:Q0,v:U0) 
+baseQU(q:Q0,v:U0) 
+
+useQU(q:Q0,v:U0) output
+defQU(q:Q0,v:U0) output
+
+###
+
+asgnQ(q,l) :- asgnP(p,l), PQ(p,q).
+copyX(q,l,r) :- copyP(p,l,r), PQ(p,q).
+copyX(q,l,r) :- copyQ(q,l,r).
+allocQ(q,l,h) :- allocP(p,l,h), PQ(p,q).
+getinstQ(q,l,b,f) :- getinstP(p,l,b,f), PQ(p,q).
+putinstQ(q,b,f,r) :- putinstP(p,b,f,r), PQ(p,q).
+getstatQ(q,l) :- getstatP(p,l), PQ(p,q).
+putstatQ(q,l) :- putstatP(p,l), PQ(p,q).
+spawnQ(q,v) :- spawnP(p,v), PQ(p,q).
+startQ(q,v) :- startP(p,v), PQ(p,q).
+baseQU(q,v) :- basePU(p,v), PQ(p,q).
+
+defQU(q,l) :- asgnQ(q,l).
+defQU(q,l) :- copyX(q,l,_).
+defQU(q,l) :- getinstQ(q,l,_,_).
+defQU(q,l) :- getstatQ(q,l).
+defQU(q,v) :- allocQ(q,v,_).
+
+useQU(q,r) :- copyX(q,_,r).
+useQU(q,r) :- putinstQ(q,_,_,r).
+useQU(q,b) :- baseQU(q,b).
+useQU(q,r) :- putstatQ(q,r).
+useQU(q,u) :- spawnQ(q,u).
+useQU(q,u) :- startQ(q,u).
+

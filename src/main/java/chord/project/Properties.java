@@ -150,6 +150,7 @@ public class Properties {
 	public final static String bddbddbWorkDirName = System.getProperty("chord.bddbddb.work.dir", outDirName);
 	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 	public final static String bddbddbNoisy = System.getProperty("chord.bddbddb.noisy", "no");
+	public final static boolean saveMap = buildBoolProp("chord.save.map", false);
 
 	// Program instrumentation properties
 
@@ -162,6 +163,7 @@ public class Properties {
 	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
 	public final static String crudeTraceFileName = build("chord.crude.trace.file", "crude_trace.txt");
 	public final static String finalTraceFileName = build("chord.final.trace.file", "final_trace.txt");
+	public final static boolean doTracePipe = buildBoolProp("chord.trace.pipe", false);
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 
     // Program transformation properties
@@ -202,6 +204,7 @@ public class Properties {
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
+		System.out.println("chord.save.map: " + saveMap);
 		System.out.println();
 		System.out.println("chord.instr.exclude: " + instrExcludeNames);
 		System.out.println("chord.run.ids: " + runIDs);
@@ -211,6 +214,7 @@ public class Properties {
 		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
 		System.out.println("chord.crude.trace.file: " + crudeTraceFileName);
 		System.out.println("chord.final.trace.file: " + finalTraceFileName);
+		System.out.println("chord.trace.pipe: " + doTracePipe);
 		System.out.println("chord.trace.block.size: " + traceBlockSize);
 		System.out.println();
 		System.out.println("chord.ssa: " + doSSA);

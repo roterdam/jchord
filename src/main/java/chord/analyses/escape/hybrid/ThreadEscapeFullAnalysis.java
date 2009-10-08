@@ -214,20 +214,24 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 				System.out.println("Processing path edge: cm: " + cm + " pe: " + pe);
 			if (q == null) {
 				BasicBlock bb = pe.bb;
-				assert (bb.isEntry());
-				for (Object o : bb.getSuccessorsList()) {
-					BasicBlock bb2 = (BasicBlock) o;
-					Quad q2;
-					int q2Idx;
-					if (bb2.size() == 0) {
-						q2 = null;
-						q2Idx = -1;
-					} else {
-						q2 = bb2.getQuad(0);
-						q2Idx = 0;
+				if (bb.isEntry()) {
+					for (Object o : bb.getSuccessorsList()) {
+						BasicBlock bb2 = (BasicBlock) o;
+						Quad q2;
+						int q2Idx;
+						if (bb2.size() == 0) {
+							q2 = null;
+							q2Idx = -1;
+						} else {
+							q2 = bb2.getQuad(0);
+							q2Idx = 0;
+						}
+						PathEdge edge2 = new PathEdge(q2, q2Idx, bb2, pe.sd);
+						addPathEdge(cm, edge2);
 					}
-					PathEdge edge2 = new PathEdge(q2, q2Idx, bb2, pe.sd);
-					addPathEdge(cm, edge2);
+				} else {
+					assert (bb.isExit()); 
+					processReturn(cm, pe);
 				}
 			} else {
 				Operator op = q.getOperator();
@@ -402,12 +406,16 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		SD sd = pe.sd;
 		DstNode dstNode = sd.dstNode;
 		IntArraySet rPts = nilPts;
-		Operand rx = Return.getSrc(pe.q);
-		if (rx instanceof RegisterOperand) {
-			RegisterOperand ro = (RegisterOperand) rx;
-			if (ro.getType().isReferenceType()) {
-				int rIdx = getIdx(ro, cm.val1);
-				rPts = dstNode.env[rIdx];
+		Quad q = pe.q;
+		// q may be null in which case pe.bb is exit basic block
+		if (q != null) {
+			Operand rx = Return.getSrc(q);
+			if (rx instanceof RegisterOperand) {
+				RegisterOperand ro = (RegisterOperand) rx;
+				if (ro.getType().isReferenceType()) {
+					int rIdx = getIdx(ro, cm.val1);
+					rPts = dstNode.env[rIdx];
+				}
 			}
 		}
 		RetNode retNode = new RetNode(rPts, dstNode.heap, dstNode.esc);

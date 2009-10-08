@@ -675,10 +675,10 @@ public class Instrumentor {
 			op instanceof Operator.New ||
 			op instanceof Operator.ALoad ||
 			op instanceof Operator.AStore ||
+			op instanceof Operator.Return ||
 			op instanceof Operator.Getstatic ||
 			op instanceof Operator.Putstatic ||
 			op instanceof Operator.NewArray ||
-			op instanceof Operator.Return ||
 			op instanceof Operator.Monitor;
 	}
 

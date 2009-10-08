@@ -1,0 +1,22 @@
+# name=relevant-Q-dlog
+
+.include "Q.dom"
+.include "P.dom"
+.include "M.dom"
+.include "T.dom"
+
+.bddvarorder Q0_M0_P0_T0
+
+PQ(p:P0,q:Q0) input
+MP(m:M0,p:P0) input
+TM(t:T0,m:M0) input
+relevantT(t:T0) input
+relevantP(p:P0) output
+relevantQ(q:Q0) output
+
+###
+
+relevantM(m) :- TM(t,m), relevantT(t).
+relevantP(p) :- MP(m,p), relevantM(m).
+relevantQ(q) :- PQ(p,q), relevantP(p).
+

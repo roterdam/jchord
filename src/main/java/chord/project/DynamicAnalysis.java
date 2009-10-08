@@ -71,8 +71,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final String userClassesDirName = Properties.userClassesDirName;
 		final String crudeTraceFileName = Properties.crudeTraceFileName;
 		final String finalTraceFileName = Properties.finalTraceFileName;
-		boolean doTracePipe = System.getProperty(
-			"chord.trace.pipe", "false").equals("true");
+		boolean doTracePipe = Properties.doTracePipe;
 		ProcessExecutor.execute("rm " + crudeTraceFileName);
 		ProcessExecutor.execute("rm " + finalTraceFileName);
 		if (doTracePipe) {
@@ -100,11 +99,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 			" " + mainClassName + " ";
 		Runnable traceTransformer = new Runnable() {
 			public void run() {
-				(new TraceTransformer(crudeTraceFileName, finalTraceFileName, scheme)).run();
 				if (DEBUG) {
 					(new TracePrinter(crudeTraceFileName, instrumentor)).run();
 					System.out.println("DONE");
 				}
+				(new TraceTransformer(crudeTraceFileName, finalTraceFileName, scheme)).run();
 			}
 		};
 		Runnable traceProcessor = new Runnable() {
