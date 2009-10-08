@@ -55,8 +55,7 @@ public class TraceTransformer {
 	private final int implicitThrowNumBytes;
 
 	private ByteBufferedFile reader, writer;
-	private boolean isInNew;
-	private TByteArrayList tmp;
+	private byte[] tmp;
 	private List<IntTrio> pending;
 	private int count;
 
@@ -96,13 +95,11 @@ public class TraceTransformer {
 		try {
 			reader = new ByteBufferedFile(Properties.traceBlockSize, rdFileName, true);
 			writer = new ByteBufferedFile(Properties.traceBlockSize, wrFileName, false);
-			isInNew = false;
 			pending = new ArrayList<IntTrio>();
- 			tmp = new TByteArrayList();
+ 			tmp = new byte[100000];
 			count = 0; // size of tmp
 			while (!reader.isDone()) {
-				assert (count == tmp.size());
-				if (isInNew) {
+				if (count != 0) {
 					if (count > 50000000) {
 						System.out.print("WARNING: size: " + count + " PENDING:");
 						for (int i = 0; i < pending.size(); i++) {
@@ -114,14 +111,12 @@ public class TraceTransformer {
 						pending.remove(0);
 						adjust();
 					}
-				} else
-					assert (count == 0);
+				}
 				byte opcode = reader.getByte();
 				switch (opcode) {
 				case EventKind.BEF_NEW:
 				{
-					isInNew = true;
-					tmp.add(EventKind.NEW);
+					addToTmp(EventKind.NEW);
 					byte hIdx1 = reader.getByte();
 					byte hIdx2 = reader.getByte();
 					byte hIdx3 = reader.getByte();
@@ -131,25 +126,24 @@ public class TraceTransformer {
 					byte tIdx3 = reader.getByte();
 					byte tIdx4 = reader.getByte();
 					if (newAndNewArrayHasHid) {
-						tmp.add(hIdx1);
-						tmp.add(hIdx2);
-						tmp.add(hIdx3);
-						tmp.add(hIdx4);
+						addToTmp(hIdx1);
+						addToTmp(hIdx2);
+						addToTmp(hIdx3);
+						addToTmp(hIdx4);
 					}
 					if (newAndNewArrayHasTid) {
-						tmp.add(tIdx1);
-						tmp.add(tIdx2);
-						tmp.add(tIdx3);
-						tmp.add(tIdx4);
+						addToTmp(tIdx1);
+						addToTmp(tIdx2);
+						addToTmp(tIdx3);
+						addToTmp(tIdx4);
 					}
 					int hIdx = ByteBufferedFile.assemble(hIdx1, hIdx2, hIdx3, hIdx4);
 					int tIdx = ByteBufferedFile.assemble(tIdx1, tIdx2, tIdx3, tIdx4);
-					pending.add(new IntTrio(hIdx, tIdx, tmp.size()));
-					tmp.add((byte) 0); // dummy placeholder for obj
-					tmp.add((byte) 0); // dummy placeholder for obj
-					tmp.add((byte) 0); // dummy placeholder for obj
-					tmp.add((byte) 0); // dummy placeholder for obj
-					count += newAndNewArrayNumBytes + 1;
+					pending.add(new IntTrio(hIdx, tIdx, count));
+					addToTmp((byte) 0); // dummy placeholder for obj
+					addToTmp((byte) 0); // dummy placeholder for obj
+					addToTmp((byte) 0); // dummy placeholder for obj
+					addToTmp((byte) 0); // dummy placeholder for obj
 					break;
 				} 
 				case EventKind.AFT_NEW:
@@ -165,10 +159,10 @@ public class TraceTransformer {
 						IntTrio trio = pending.get(i);
 						if (trio.idx0 == hIdx && trio.idx1 == tIdx) {
 							int j = trio.idx2; 
-							tmp.set(j, oIdx1);
-							tmp.set(j + 1, oIdx2);
-							tmp.set(j + 2, oIdx3);
-							tmp.set(j + 3, oIdx4);
+							tmp[j] = oIdx1;
+							tmp[j + 1] = oIdx2;
+							tmp[j + 2] = oIdx3;
+							tmp[j + 3] = oIdx4;
 							pending.remove(i);
 							if (i == 0)
 								adjust();
@@ -180,13 +174,12 @@ public class TraceTransformer {
 				default:
 				{
 					int offset = getOffset(opcode);
-					if (isInNew) {
-						tmp.add(opcode);
+					if (count != 0) {
+						addToTmp(opcode);
 						for (int i = 0; i < offset; i++) {
 							byte v = reader.getByte();
-							tmp.add(v);
+							addToTmp(v);
 						}
-						count += offset + 1;
 					} else {
 						writer.putByte(opcode);
 						for (int i = 0; i < offset; i++) {
@@ -198,9 +191,18 @@ public class TraceTransformer {
 				}
 				}
 			}
-			assert (!isInNew);
-			assert (pending.size() == 0);
-			assert (tmp.size() == 0);
+			if (count != 0) {
+				System.out.println("WARNING: pending list:");
+				for (int i = 0; i < pending.size(); i++) {
+					IntTrio trio = pending.get(i);
+					System.out.println("\thIdx: " + trio.idx0 + " tIdx: " + trio.idx1);
+				}
+				for (int i = 0; i < count; i++) {
+					byte v = tmp[i];
+					writer.putByte(v);
+				}
+			} else
+				assert (pending.size() == 0);
 			writer.flush();
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
@@ -274,10 +276,9 @@ public class TraceTransformer {
 	private void adjust() throws IOException {
 		int limit;
 		int pendingSize = pending.size();
-		if (pendingSize == 0) {
+		if (pendingSize == 0)
 			limit = count;
-			isInNew = false;
-		} else {
+		else {
 			IntTrio trio = pending.get(0);
 			limit = trio.idx2;
 			trio.idx2 = 0;
@@ -288,16 +289,22 @@ public class TraceTransformer {
 		}
 		int j = 0;
 		for (; j < limit; j++) {
-			byte v = tmp.get(j);
+			byte v = tmp[j];
 			writer.putByte(v);
 		}
-		TByteArrayList tmp2 = new TByteArrayList();
+		int i = 0;
 		for (; j < count; j++) {
-			byte v = tmp.get(j);
-			tmp2.add(v);
+			tmp[i++] = tmp[j];
 		}
-		tmp.clear();
-		tmp = tmp2;
 		count -= limit;
+	}
+	private void addToTmp(byte v) {
+		int n = tmp.length;
+		if (count == n) {
+			byte[] tmp2 = new byte[n * 2];
+			System.arraycopy(tmp, 0, tmp2, 0, n);
+			tmp = tmp2;
+		}
+		tmp[count++] = v;
 	}
 }

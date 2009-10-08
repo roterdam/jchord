@@ -15,7 +15,7 @@
 .include "V.dom"
 .include "Z.dom"
 
-.bddvarorder F0_I0xM0xM1_T0_V0xV1_T1_H0_H1_Z0
+.bddvarorder F0_I0xM0xM1_T0_V0xV1_T1_H0xH1_Z0
 
 ###
 # Relations

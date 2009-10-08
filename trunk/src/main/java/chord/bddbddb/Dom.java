@@ -60,21 +60,26 @@ public class Dom<T> extends IndexHashMap<T> {
 	/**
 	 * Reflects the domain in memory onto disk.
 	 */
-	public void save(String dirName) {
+	public void save(String dirName, boolean saveMap) {
 		try {
-			PrintWriter out;
-			String mapFileName = name + ".map";
-			out = new PrintWriter(new File(dirName, mapFileName));
-			int size = size();
-			for (int i = 0; i < size; i++) {
-				T val = get(i);
-				out.println(toUniqueString(val));
+			String mapFileName = "";
+			if (saveMap) {
+				mapFileName = name + ".map";
+				PrintWriter out = new PrintWriter(new File(dirName, mapFileName));
+				int size = size();
+				for (int i = 0; i < size; i++) {
+					T val = get(i);
+					out.println(toUniqueString(val));
+				}
+				out.close();
 			}
-			out.close();
-			String domFileName = name + ".dom";
-			out = new PrintWriter(new File(dirName, domFileName));
-			out.println(name + " " + size + " " + mapFileName);
-			out.close();
+			{
+				String domFileName = name + ".dom";
+				PrintWriter out = new PrintWriter(new File(dirName, domFileName));
+				int size = size();
+				out.println(name + " " + size + " " + mapFileName);
+				out.close();
+			}
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}

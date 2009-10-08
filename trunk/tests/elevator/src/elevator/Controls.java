@@ -107,7 +107,7 @@ class Controls {
         synchronized(floors[floor]) {   // DONE
             Vector temp = floors[floor].upPeople;  // DONE
             floors[floor].upPeople = new Vector(); // DONE
-            floors[floor].upFlag = false;a  // DONE
+            floors[floor].upFlag = false;  // DONE
             return temp;
         }
     }
