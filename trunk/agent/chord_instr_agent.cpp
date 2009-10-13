@@ -10,14 +10,14 @@ using namespace std;
 
 static jvmtiEnv* jvmti_env;
 
-#define MAX_FILE_NAME 8192
+#define MAX 20000
 
 static bool list_loaded_classes = false;
-static bool enable_tracing = false;
-static char trace_file_name[MAX_FILE_NAME];
-static char instr_scheme_file_name[MAX_FILE_NAME];
-static char classes_file_name[MAX_FILE_NAME];
-static int trace_block_size, num_meths, calls_bound, iters_bound;
+static char classes_file_name[MAX];
+
+static bool enable_runtime = false;
+static char runtime_class_name[MAX];
+static char* runtime_args_str = NULL;
 
 char* get_token(char *str, char *seps, char *buf, int max)
 {
@@ -38,40 +38,46 @@ char* get_token(char *str, char *seps, char *buf, int max)
     return str + len;
 }
 
+static void call_runtime_class_method(JNIEnv* jni_env,
+	const char* mName, const char* mSign, const char* args)
+{
+	jclass c = jni_env->FindClass(runtime_class_name);
+	if (c == NULL) {
+		cout << "ERROR: JNI: Cannot find class: " <<
+			runtime_class_name << endl;
+		exit(1);
+	}
+	jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
+	if (m == NULL) {
+		cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
+			" from class: " << runtime_class_name << endl;
+		exit(1);
+	}
+	if (args != NULL) {
+		jstring a = jni_env->NewStringUTF(args);
+		jni_env->CallStaticObjectMethod(c, m, a);
+	} else
+		jni_env->CallStaticObjectMethod(c, m);
+}
+
 static void JNICALL VMStart(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 {
     cout << "ENTER VMStart" << endl;
     cout << "LEAVE VMStart" << endl;
 }
 
-static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread) 
+static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 {
     cout << "ENTER VMInit" << endl;
 
-	if (enable_tracing) {
-		const char* cName = "chord/project/Runtime";
-		jclass c = jni_env->FindClass(cName);
-		if (c == NULL) {
-			cout << "ERROR: JNI: Cannot find class: " << cName << endl;
-			exit(1);
-		}
+	if (enable_runtime) {
 		const char* mName = "open";
-		const char* mSign = "(ILjava/lang/String;Ljava/lang/String;III)V";
-		jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
-		if (m == NULL) {
-			cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
-				" from class: " << cName << endl;
-			exit(1);
-		}
-		jstring str1 = jni_env->NewStringUTF(trace_file_name);
-		jstring str2 = jni_env->NewStringUTF(instr_scheme_file_name);
-		jni_env->CallStaticObjectMethod(c, m, trace_block_size, str1, str2,
-			num_meths, calls_bound, iters_bound);
+		const char* mSign = "(Ljava/lang/String;)V";
+		call_runtime_class_method(jni_env, mName, mSign, runtime_args_str);
 	}
 
 	cout << "LEAVE VMInit" << endl;
 }
-
 
 static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 {
@@ -96,24 +102,10 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 		classes_out.close();
 	}
 
-	if (enable_tracing) {
-		const char* name = "chord/project/Runtime";
-	    jclass klass = jni_env->FindClass(name);
-		if (klass == NULL) {
-			cout << "ERROR: JNI: Cannot find class: " << name << endl;
-			exit(1);
-		}
-		const char* methodName = "close";
-		const char* methodSign = "()V";
-		jmethodID method =
-			jni_env->GetStaticMethodID(klass, methodName, methodSign);
-		if (method == NULL) {
-			cout << "ERROR: JNI: Cannot get method "
-				<< methodName << methodSign
-				<< " from class: " << name << endl;
-			exit(1);
-		}
-		jni_env->CallStaticObjectMethod(klass, method);
+	if (enable_runtime) {
+		const char* mName = "close";
+		const char* mSign = "()V";
+		call_runtime_class_method(jni_env, mName, mSign, NULL);
 	}
 
 	cout << "LEAVE VMDeath" << endl;
@@ -128,80 +120,36 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 	}
 	char* next = options;
 	while (1) {
-    	char token[2048];
+    	char token[MAX];
 		next = get_token(next, (char*) ",=", token, sizeof(token));
 		if (next == NULL)
 			break;
-        if (strcmp(token, "trace_file_name") == 0) {
-            next = get_token(next, (char*) ",=", trace_file_name, MAX_FILE_NAME);
+        if (strcmp(token, "runtime_class_name") == 0) {
+            next = get_token(next, (char*) ",=", runtime_class_name, MAX);
             if (next == NULL) {
-                cerr << "ERROR: Cannot parse option trace_file_name=<name>: "
+                cerr << "ERROR: Bad option runtime_class_name=<name>: "
 					<< options << endl;
 				exit(1);
             }
-			enable_tracing = true;
-			cout << "OPTION trace_file_name: " << trace_file_name << endl;
-        } else if (strcmp(token, "instr_scheme_file_name") == 0) {
-            next = get_token(next, (char*) ",=", instr_scheme_file_name, MAX_FILE_NAME);
+			enable_runtime = true;
+			cout << "OPTION runtime_class_name: " << runtime_class_name << endl;
+			continue;
+        }
+		if (strcmp(token, "classes_file_name") == 0) {
+            next = get_token(next, (char*) ",=", classes_file_name, MAX);
             if (next == NULL) {
-                cerr << "ERROR: Cannot parse option instr_scheme_file_name=<name>: "
-					<< options << endl;
-				exit(1);
-            }
-			cout << "OPTION instr_scheme_file_name: " << instr_scheme_file_name << endl;
-        } else if (strcmp(token, "classes_file_name") == 0) {
-            next = get_token(next, (char*) ",=", classes_file_name, MAX_FILE_NAME);
-            if (next == NULL) {
-                cerr << "ERROR: Cannot parse option classes_file_name=<name>: "
+                cerr << "ERROR: Bad option classes_file_name=<name>: "
 					<< options << endl;
 				exit(1);
             }
 			list_loaded_classes = true;
 			cout << "OPTION classes_file_name: " << classes_file_name << endl;
-		} else if (strcmp(token, "trace_block_size") == 0) {
-            char arg[16];
-            next = get_token(next, (char*) ",=", arg, sizeof(arg));
-			if (next == NULL) {
-                cerr << "ERROR: Cannot parse option trace_block_size=<num>: "
-					<< options << endl;
-				exit(1);
-			}
-			trace_block_size = atoi(arg);
-			cout << "OPTION trace_block_size: " << trace_block_size << endl;
-		} else if (strcmp(token, "num_meths") == 0) {
-            char arg[16];
-            next = get_token(next, (char*) ",=", arg, sizeof(arg));
-			if (next == NULL) {
-                cerr << "ERROR: Cannot parse option num_meths=<num>: "
-					<< options << endl;
-				exit(1);
-			}
-			num_meths = atoi(arg);
-			cout << "OPTION num_meths: " << num_meths << endl;
-		} else if (strcmp(token, "calls_bound") == 0) {
-            char arg[16];
-            next = get_token(next, (char*) ",=", arg, sizeof(arg));
-			if (next == NULL) {
-                cerr << "ERROR: Cannot parse option calls_bound=<num>: "
-					<< options << endl;
-				exit(1);
-			}
-			calls_bound = atoi(arg);
-			cout << "OPTION calls_bound: " << calls_bound << endl;
-		} else if (strcmp(token, "iters_bound") == 0) {
-            char arg[16];
-            next = get_token(next, (char*) ",=", arg, sizeof(arg));
-			if (next == NULL) {
-                cerr << "ERROR: Cannot parse option iters_bound=<num>: "
-					<< options << endl;
-				exit(1);
-			}
-			iters_bound = atoi(arg);
-			cout << "OPTION iters_bound: " << iters_bound << endl;
-		} else {
-			cerr << "ERROR: Unknown option: " << token << endl;
-			exit(1);
+			continue;
 		}
+	}
+	if (enable_runtime) {
+		runtime_args_str = strdup(options);
+		assert(runtime_args_str != NULL);
 	}
 
     jvmtiError retval;

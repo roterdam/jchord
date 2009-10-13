@@ -6,6 +6,7 @@
 package chord.project;
 
 import java.io.File;
+import chord.util.ClassUtils;
 
 /**
  * System properties recognized by Chord:
@@ -167,6 +168,8 @@ public class Properties {
 	public final static String finalTraceFileName = build("chord.final.trace.file", "final_trace.txt");
 	public final static boolean doTracePipe = buildBoolProp("chord.trace.pipe", false);
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
+	public final static String runtimeClassName =
+		System.getProperty("chord.runtime.class", "chord.project.BufferedRuntime");
 
     // Program transformation properties
  
@@ -219,6 +222,7 @@ public class Properties {
 		System.out.println("chord.final.trace.file: " + finalTraceFileName);
 		System.out.println("chord.trace.pipe: " + doTracePipe);
 		System.out.println("chord.trace.block.size: " + traceBlockSize);
+		System.out.println("chord.runtime.class: " + runtimeClassName);
 		System.out.println();
 		System.out.println("chord.ssa: " + doSSA);
 		System.out.println();

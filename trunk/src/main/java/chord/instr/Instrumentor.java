@@ -52,7 +52,7 @@ import java.util.HashSet;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor {
-	protected static final String runtimeClassName = "chord.project.Runtime.";
+	protected static final String runtimeClassName = Properties.runtimeClassName + ".";
 
 	protected static final String enterMethodEventCall = runtimeClassName + "enterMethodEvent(";
 	protected static final String leaveMethodEventCall = runtimeClassName + "leaveMethodEvent(";
