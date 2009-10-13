@@ -62,81 +62,104 @@ public class DynamicAnalysis extends JavaAnalysis {
 		scheme.save(instrSchemeFileName);
 		instrumentor = new Instrumentor(Program.v(), scheme);
 		instrumentor.run();
-		boolean needsTraceTransform = scheme.needsTraceTransform();
 		final String mainClassName = Properties.mainClassName;
 		assert (mainClassName != null);
 		final String classPathName = Properties.classPathName;
 		assert (classPathName != null);
 		final String bootClassesDirName = Properties.bootClassesDirName;
 		final String userClassesDirName = Properties.userClassesDirName;
-		final String crudeTraceFileName = Properties.crudeTraceFileName;
-		final String finalTraceFileName = Properties.finalTraceFileName;
-		boolean doTracePipe = Properties.doTracePipe;
-		ProcessExecutor.execute("rm " + crudeTraceFileName);
-		ProcessExecutor.execute("rm " + finalTraceFileName);
-		if (doTracePipe) {
-			ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
-			ProcessExecutor.execute("mkfifo " + finalTraceFileName);
-		}
-		final String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
-		final String traceFileName = needsTraceTransform ?
-			crudeTraceFileName : finalTraceFileName;
-		IndexMap<String> Mmap = instrumentor.getMmap();
-		IndexMap<String> Wmap = instrumentor.getWmap();
+		final IndexMap<String> Mmap = instrumentor.getMmap();
+		final IndexMap<String> Wmap = instrumentor.getWmap();
 		final int numMeths = (Mmap != null) ? Mmap.size() : 0;
-		final String instrProgramCmd = "java -ea -Xbootclasspath/p:" +
+		final String runtimeClassName = Properties.runtimeClassName;
+		String instrProgramCmd = "java -ea -Xbootclasspath/p:" +
 			Properties.mainClassPathName + File.pathSeparator + bootClassesDirName +
 			" " + Properties.runtimeJvmargs +
 			" -Xverify:none" + // " -verbose" + 
 			" -cp " + userClassesDirName + File.pathSeparator + classPathName +
 			" -agentpath:" + Properties.instrAgentFileName +
-			"=trace_block_size=" + Properties.traceBlockSize +
-			"=trace_file_name=" + traceFileName +
 			"=num_meths=" + numMeths +
 			"=instr_scheme_file_name=" + instrSchemeFileName +
 			"=calls_bound=" + scheme.getCallsBound() +
 			"=iters_bound=" + scheme.getItersBound() +
-			" " + mainClassName + " ";
-		Runnable traceTransformer = new Runnable() {
-			public void run() {
-				if (DEBUG) {
-					(new TracePrinter(crudeTraceFileName, instrumentor)).run();
-					System.out.println("DONE");
-				}
-				(new TraceTransformer(crudeTraceFileName, finalTraceFileName, scheme)).run();
+			"=runtime_class_name=" + runtimeClassName.replace('.', '/');
+		final String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
+		final boolean processBuffer =
+			runtimeClassName.equals(BufferedRuntime.class.getName());
+		if (processBuffer) {
+			final String crudeTraceFileName = Properties.crudeTraceFileName;
+			final String finalTraceFileName = Properties.finalTraceFileName;
+			boolean needsTraceTransform = scheme.needsTraceTransform();
+			final String traceFileName = needsTraceTransform ?
+				crudeTraceFileName : finalTraceFileName;
+			instrProgramCmd += 
+				"=trace_block_size=" + Properties.traceBlockSize +
+				"=trace_file_name=" + traceFileName +
+				" " + mainClassName + " ";
+			ProcessExecutor.execute("rm " + crudeTraceFileName);
+			ProcessExecutor.execute("rm " + finalTraceFileName);
+			final boolean doTracePipe = Properties.doTracePipe;
+			if (doTracePipe) {
+				ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
+				ProcessExecutor.execute("mkfifo " + finalTraceFileName);
 			}
-		};
-		Runnable traceProcessor = new Runnable() {
-			public void run() {
-				if (DEBUG) {
-					(new TracePrinter(finalTraceFileName, instrumentor)).run();
-					System.out.println("DONE");
-				}
-				processTrace(finalTraceFileName);
-			}
-		};
-		boolean serial = doTracePipe ? false : true;
-		Executor executor = new Executor(serial);
-		initAllPasses();
-		for (String runID : runIDs) {
-			System.out.println("Processing Run ID: " + runID);
-			final String args = System.getProperty("chord.args." + runID, "");
-			Runnable instrProgram = new Runnable() {
+			Runnable traceTransformer = new Runnable() {
 				public void run() {
-					ProcessExecutor.execute(instrProgramCmd + args);
+					if (DEBUG) {
+						(new TracePrinter(crudeTraceFileName, instrumentor)).run();
+						System.out.println("DONE");
+					}
+					(new TraceTransformer(crudeTraceFileName,
+						finalTraceFileName, scheme)).run();
 				}
 			};
-			executor.execute(instrProgram);
-			if (needsTraceTransform)
-				executor.execute(traceTransformer);
-			executor.execute(traceProcessor);
-			try {
-				executor.waitForCompletion();
-			} catch (InterruptedException ex) {
-				throw new ChordRuntimeException(ex);
+			Runnable traceProcessor = new Runnable() {
+				public void run() {
+					if (DEBUG) {
+						(new TracePrinter(finalTraceFileName, instrumentor)).run();
+						System.out.println("DONE");
+					}
+					processTrace(finalTraceFileName);
+				}
+			};
+			final boolean serial = doTracePipe ? false : true;
+			final Executor executor = new Executor(serial);
+			initAllPasses();
+			for (String runID : runIDs) {
+				System.out.println("Processing Run ID: " + runID);
+				final String args = System.getProperty("chord.args." + runID, "");
+				final String cmd = instrProgramCmd + args;
+				Runnable instrProgram = new Runnable() {
+					public void run() {
+						ProcessExecutor.execute(cmd);
+					}
+				};
+				executor.execute(instrProgram);
+				if (processBuffer) {
+					if (needsTraceTransform)
+						executor.execute(traceTransformer);
+					executor.execute(traceProcessor);
+					try {
+						executor.waitForCompletion();
+					} catch (InterruptedException ex) {
+						throw new ChordRuntimeException(ex);
+					}
+				}
 			}
+			doneAllPasses();
+		} else {
+			instrProgramCmd += " " + mainClassName + " ";
+			initAllPasses();
+			for (String runID : runIDs) {
+				System.out.println("Processing Run ID: " + runID);
+				final String args = System.getProperty("chord.args." + runID, "");
+				final String cmd = instrProgramCmd + args;
+				initPass();
+				ProcessExecutor.execute(cmd);
+				donePass();
+			}
+			doneAllPasses();
 		}
-		doneAllPasses();
 	}
 
 	private void processTrace(String fileName) {
