@@ -385,7 +385,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		processHeapRd(e, b);
 	}
 
-	public void processPutstaticReference(int e, int t, int f, int o) { 
+	public void processPutstaticReference(int e, int t, int b, int f, int o) { 
 		if (o != 0)
 			markAndPropEsc(o);
 	}
