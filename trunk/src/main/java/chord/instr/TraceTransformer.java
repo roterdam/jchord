@@ -244,7 +244,8 @@ public class TraceTransformer {
 		case EventKind.ENTER_LOOP:
 		case EventKind.LEAVE_LOOP:
 			return 8;
-		case EventKind.METHOD_CALL:
+		case EventKind.METHOD_CALL_BEF:
+		case EventKind.METHOD_CALL_AFT:
 			return methodCallNumBytes;
 		case EventKind.RETURN_PRIMITIVE:
 			return returnPrimitiveNumBytes;

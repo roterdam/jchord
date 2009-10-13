@@ -28,6 +28,8 @@ MV(m:M,v:V) input
 MP(m:M,p:P) input
 EV(e:E,v:V) input
 escCPVO(c:C,p:P,v:V,o:C) output
+reachableCM(c:C,m:M) input
+ME(m:M,e:E) input
 
 escCE(c:C,e:E)
 flowinsVisitedE(e:E) output
@@ -44,5 +46,5 @@ escO(o2) :- CFC(o1,_,o2), escO(o1).
 escCPVO(c,p,v,o) :- CVC(c,v,o), MV(m,v), MP(m,p), escO(o). split
 escCE(c,e) :- EV(e,v), CVC(c,v,o), escO(o).
 
-flowinsVisitedE(e) :- EV(e,v), CVC(_,v,_).
+flowinsVisitedE(e) :- ME(m,e), reachableCM(_,m).
 flowinsEscE(e) :- escCE(_,e).

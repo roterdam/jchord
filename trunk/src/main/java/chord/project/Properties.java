@@ -155,11 +155,13 @@ public class Properties {
 	// Program instrumentation properties
 
 	public final static String instrExcludeNames =
-		System.getProperty("chord.instr.exclude", "java.,sun.,com.");
+		System.getProperty("chord.instr.exclude", "java.,sun.,com.ibm.,org.apache.harmony.");
+	public final static String checkExcludeNames =
+		System.getProperty("chord.check.exclude", "java.,sun.,com.ibm.,org.apache.harmony.");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
+	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-Xmx1024m");
 	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
 	public final static String userClassesDirName = build("chord.user.classes.dir", "user_classes");
-	public final static String runtimeMaxHeap = System.getProperty("chord.runtime.max.heap", "1024m");
 	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
 	public final static String crudeTraceFileName = build("chord.crude.trace.file", "crude_trace.txt");
 	public final static String finalTraceFileName = build("chord.final.trace.file", "final_trace.txt");
@@ -207,10 +209,11 @@ public class Properties {
 		System.out.println("chord.save.map: " + saveMap);
 		System.out.println();
 		System.out.println("chord.instr.exclude: " + instrExcludeNames);
+		System.out.println("chord.check.exclude: " + checkExcludeNames);
 		System.out.println("chord.run.ids: " + runIDs);
+		System.out.println("chord.runtime.jvmargs: " + runtimeJvmargs);
 		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
 		System.out.println("chord.user.classes.dir: " + userClassesDirName);
-		System.out.println("chord.runtime.max.heap: " + runtimeMaxHeap);
 		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
 		System.out.println("chord.crude.trace.file: " + crudeTraceFileName);
 		System.out.println("chord.final.trace.file: " + finalTraceFileName);

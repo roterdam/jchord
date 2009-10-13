@@ -36,19 +36,20 @@ public class EventKind {
 	public static final byte ASTORE_PRIMITIVE = 18; 
 	public static final byte ASTORE_REFERENCE = 19; 
 
-	public static final byte METHOD_CALL = 20;
-	public static final byte RETURN_PRIMITIVE = 21;
-	public static final byte RETURN_REFERENCE = 22;
-	public static final byte EXPLICIT_THROW = 23;
-	public static final byte IMPLICIT_THROW = 24;
+	public static final byte METHOD_CALL_BEF = 20;
+	public static final byte METHOD_CALL_AFT = 21;
+	public static final byte RETURN_PRIMITIVE = 22;
+	public static final byte RETURN_REFERENCE = 23;
+	public static final byte EXPLICIT_THROW = 24;
+	public static final byte IMPLICIT_THROW = 25;
 
-	public static final byte QUAD = 25;
-	public static final byte BASIC_BLOCK = 26;
+	public static final byte QUAD = 26;
+	public static final byte BASIC_BLOCK = 27;
 
-	public static final byte THREAD_START = 27;
-	public static final byte THREAD_JOIN = 28;
-	public static final byte ACQUIRE_LOCK = 29;
-	public static final byte RELEASE_LOCK = 30;
-	public static final byte WAIT = 31;
-	public static final byte NOTIFY = 32;
+	public static final byte THREAD_START = 28;
+	public static final byte THREAD_JOIN = 29;
+	public static final byte ACQUIRE_LOCK = 30;
+	public static final byte RELEASE_LOCK = 31;
+	public static final byte WAIT = 32;
+	public static final byte NOTIFY = 33;
 }
