@@ -103,7 +103,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 	private Set<Quad> escHeapInsts = new HashSet<Quad>();
 	// set of heap insts proven thread local by whole-program analysis
 	private Set<Quad> locHeapInsts = new HashSet<Quad>();
-	private Quad currHeapInst;
 	private Set<Quad> currAllocs;
 	private jq_Method threadStartMethod;
 	private jq_Method mainMethod;
@@ -112,7 +111,8 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		ThreadEscapePathAnalysis analysis =
 			(ThreadEscapePathAnalysis) Project.getTrgt("thresc-path-java");
 		Project.runTask(analysis);
-		Map<Quad, Set<Quad>> heapInstToAllocs = analysis.getHeapInstToAllocsMap();
+		Map<Set<Quad>, Set<Quad>> allocInstsToHeapInsts =
+			analysis.getAllocInstsToHeapInstsMap();
 		threadStartMethod = Program.v().getThreadStartMethod();
 		mainMethod = Program.v().getMainMethod();
 		domV = (DomV) Project.getTrgt("V");
@@ -146,38 +146,31 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		cscg = cscgAnalysis.getCallGraph();
 		Set<Pair<Ctxt, jq_Method>> roots = cscg.getRoots();
 
-		for (Map.Entry<Quad, Set<Quad>> e : heapInstToAllocs.entrySet()) {
-			currHeapInst = e.getKey();
-			currAllocs = e.getValue();
-			jq_Method m = Program.v().getMethod(currHeapInst);
-			String c = m.getDeclaringClass().getName();
-			if (c.startsWith("java.") || c.startsWith("sun.") ||
-				c.startsWith("com.") || c.startsWith("org."))
-				continue;
-			System.out.println("currHeapInst: " +
-				Program.v().toVerboseStr(currHeapInst));
-			for (Quad h : currAllocs)
-				System.out.println("\t" + Program.v().toVerboseStr(h));
+		for (Map.Entry<Set<Quad>, Set<Quad>> e :
+				allocInstsToHeapInsts.entrySet()) {
+			currAllocs = e.getKey();
+			locHeapInsts = e.getValue();
+			System.out.println("**************");
+			System.out.println("currHeapInsts:");
+			for (Quad q : locHeapInsts)
+				System.out.println("\t" + Program.v().toVerboseStr(q));
+			System.out.println("currAllocInsts:");
+			for (Quad q : currAllocs)
+				System.out.println("\t" + Program.v().toVerboseStr(q));
 			Timer timer = new Timer("hybrid-thresc-timer");
 			timer.init();
-			invkTimer = new Timer("invk-timer");
-			invkTimer.init();
-			invkTimer.pause();
 			try {
-				for (Pair<Ctxt, jq_Method> root : roots) {
+				for (Pair<Ctxt, jq_Method> root : roots) 
 					processThread(root);
-				}
-				System.out.println("XXX LOC");
-				locHeapInsts.add(currHeapInst);
 			} catch (ThrEscException ex) {
-				System.out.println("XXX ESC");
-				escHeapInsts.add(currHeapInst);
+				// do nothing
 			}
-			invkTimer.resume();
-			invkTimer.done();
+			for (Quad q : locHeapInsts)
+				System.out.println("LOC: " + Program.v().toVerboseStr(q));
+			for (Quad q : escHeapInsts)
+				System.out.println("ESC: " + Program.v().toVerboseStr(q));
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
-			System.out.println(invkTimer.getExclusiveTimeStr());
 		}
 		try {
 			String outDirName = Properties.outDirName;
@@ -199,7 +192,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			throw new ChordRuntimeException(ex);
 		}
 	}
-	Timer invkTimer;
 
 	private void processThread(Pair<Ctxt, jq_Method> root) {
 		System.out.println("PROCESSING THREAD: " + root);
@@ -336,7 +328,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		return new IntArraySet(tmpPts);
 	}
 	private void processInvoke(Pair<Ctxt, jq_Method> cm, PathEdge pe) {
-		invkTimer.resume();
 		Quad q = pe.q;
 		MethodOperand mo = Invoke.getMethod(q);
 		mo.resolve();
@@ -354,7 +345,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			SD sd2 = (dstNode == dstNode2) ? sd :
 				new SD(sd.srcNode, dstNode2);
 			propagateToSucc(cm, pe.qIdx, pe.bb, sd2);
-			invkTimer.pause();
 			return;
 		}
 		SD sd = pe.sd;
@@ -400,7 +390,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 				addPathEdge(cm2, pe2);
 			}
 		}
-		invkTimer.pause();
 	}
 	private void processReturn(Pair<Ctxt, jq_Method> cm, PathEdge pe) {
 		SD sd = pe.sd;
@@ -638,7 +627,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			oDstNode = new DstNode(dstEnv2, iDstNode.heap, iDstNode.esc);
 		}
 		public void visitALoad(Quad q) {
-			if (q == currHeapInst)
+			if (locHeapInsts.contains(q))
 				check(q, ALoad.getBase(q));
 			Operator op = q.getOperator();
 			if (!((ALoad) op).getType().isReferenceType())
@@ -663,7 +652,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			oDstNode = new DstNode(dstEnv2, dstHeap, iDstNode.esc);
 		}
 		public void visitGetfield(Quad q) {
-			if (q == currHeapInst)
+			if (locHeapInsts.contains(q))
 				check(q, Getfield.getBase(q));
 			FieldOperand fo = Getfield.getField(q);
 			fo.resolve();
@@ -696,7 +685,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			oDstNode = new DstNode(dstEnv2, dstHeap, iDstNode.esc);
 		}
 		public void visitAStore(Quad q) {
-			if (q == currHeapInst)
+			if (locHeapInsts.contains(q))
 				check(q, AStore.getBase(q));
 			Operator op = q.getOperator();
 			if (!((AStore) op).getType().isReferenceType())
@@ -756,7 +745,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			oDstNode = propagateEsc(rPts, iDstNode);
 		}
 		public void visitPutfield(Quad q) {
-			if (q == currHeapInst)
+			if (locHeapInsts.contains(q))
 				check(q, Putfield.getBase(q));
 			FieldOperand fo = Putfield.getField(q);
 			fo.resolve();
@@ -886,8 +875,12 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			RegisterOperand bo = (RegisterOperand) bx;
 			int bIdx = getIdx(bo, m);
 			IntArraySet pts = iDstNode.env[bIdx];
-			if (pts == escPts)
-				throw new ThrEscException();
+			if (pts == escPts) {
+				locHeapInsts.remove(q);
+				escHeapInsts.add(q);
+				if (locHeapInsts.size() == 0)
+					throw new ThrEscException();
+			}
 		}
 	}
 

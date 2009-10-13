@@ -98,7 +98,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     	if (convert)
     		instrScheme.setConvert();
     	instrScheme.setNewAndNewArrayEvent(true, false, true);
-    	instrScheme.setPutstaticReferenceEvent(false, false, false, true);
+    	instrScheme.setPutstaticReferenceEvent(false, false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);
 
 		// instrScheme.setAcquireLockEvent(true, false, true);

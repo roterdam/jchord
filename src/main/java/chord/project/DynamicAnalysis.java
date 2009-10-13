@@ -86,7 +86,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final int numMeths = (Mmap != null) ? Mmap.size() : 0;
 		final String instrProgramCmd = "java -ea -Xbootclasspath/p:" +
 			Properties.mainClassPathName + File.pathSeparator + bootClassesDirName +
-			" -Xmx" + Properties.runtimeMaxHeap +
+			" " + Properties.runtimeJvmargs +
 			" -Xverify:none" + // " -verbose" + 
 			" -cp " + userClassesDirName + File.pathSeparator + classPathName +
 			" -agentpath:" + Properties.instrAgentFileName +
@@ -191,8 +191,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 					EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
 					int e = ef.hasLoc() ? buffer.getInt() : -1;
 					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
 					int f = ef.hasFld() ? buffer.getInt() : -1;
-					processGetstaticPrimitive(e, t, f);
+					processGetstaticPrimitive(e, t, b, f);
 					break;
 				}
 				case EventKind.GETSTATIC_REFERENCE:
@@ -200,9 +201,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 					EventFormat ef = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
 					int e = ef.hasLoc() ? buffer.getInt() : -1;
 					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
 					int f = ef.hasFld() ? buffer.getInt() : -1;
 					int o = ef.hasObj() ? buffer.getInt() : -1;
-					processGetstaticReference(e, t, f, o);
+					processGetstaticReference(e, t, b, f, o);
 					break;
 				}
 				case EventKind.PUTSTATIC_PRIMITIVE:
@@ -210,8 +212,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 					EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
 					int e = ef.hasLoc() ? buffer.getInt() : -1;
 					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
 					int f = ef.hasFld() ? buffer.getInt() : -1;
-					processPutstaticPrimitive(e, t, f);
+					processPutstaticPrimitive(e, t, b, f);
 					break;
 				}
 				case EventKind.PUTSTATIC_REFERENCE:
@@ -219,9 +222,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 					EventFormat ef = scheme.getEvent(InstrScheme.PUTSTATIC_REFERENCE);
 					int e = ef.hasLoc() ? buffer.getInt() : -1;
 					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int b = ef.hasBaseObj() ? buffer.getInt() : -1;
 					int f = ef.hasFld() ? buffer.getInt() : -1;
 					int o = ef.hasObj() ? buffer.getInt() : -1;
-					processPutstaticReference(e, t, f, o);
+					processPutstaticReference(e, t, b, f, o);
 					break;
 				}
 				case EventKind.GETFIELD_PRIMITIVE:
@@ -362,12 +366,22 @@ public class DynamicAnalysis extends JavaAnalysis {
 					processNotify(p, t, l);
 					break;
 				}
-				case EventKind.METHOD_CALL:
+				case EventKind.METHOD_CALL_BEF:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 					int i = ef.hasLoc() ? buffer.getInt() : -1;
 					int t = ef.hasThr() ? buffer.getInt() : -1;
-					processMethodCall(i, t);
+					int o = ef.hasThr() ? buffer.getInt() : -1;
+					processMethodCallBef(i, t, o);
+					break;
+				}
+				case EventKind.METHOD_CALL_AFT:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
+					int i = ef.hasLoc() ? buffer.getInt() : -1;
+					int t = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasThr() ? buffer.getInt() : -1;
+					processMethodCallAft(i, t, o);
 					break;
 				}
 				case EventKind.RETURN_PRIMITIVE:
@@ -436,10 +450,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void processEnterLoop(int w, int t) { }
 	public void processLeaveLoop(int w, int t) { }
 	public void processNewOrNewArray(int h, int t, int o) { }
-	public void processGetstaticPrimitive(int e, int t, int f) { }
-	public void processGetstaticReference(int e, int t, int f, int o) { }
-	public void processPutstaticPrimitive(int e, int t, int f) { }
-	public void processPutstaticReference(int e, int t, int f, int o) { }
+	public void processGetstaticPrimitive(int e, int t, int b, int f) { }
+	public void processGetstaticReference(int e, int t, int b, int f, int o) { }
+	public void processPutstaticPrimitive(int e, int t, int b, int f) { }
+	public void processPutstaticReference(int e, int t, int b, int f, int o) { }
 	public void processGetfieldPrimitive(int e, int t, int b, int f) { }
 	public void processGetfieldReference(int e, int t, int b, int f, int o) { }
 	public void processPutfieldPrimitive(int e, int t, int b, int f) { }
@@ -454,7 +468,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void processReleaseLock(int r, int t, int o) { }
 	public void processWait(int i, int t, int o) { }
 	public void processNotify(int i, int t, int o) { }
-	public void processMethodCall(int i, int t) { }
+	public void processMethodCallBef(int i, int t, int o) { }
+	public void processMethodCallAft(int i, int t, int o) { }
 	public void processReturnPrimitive(int p, int t) { }
 	public void processReturnReference(int p, int t, int o) { }
 	public void processExplicitThrow(int p, int t, int o) { }

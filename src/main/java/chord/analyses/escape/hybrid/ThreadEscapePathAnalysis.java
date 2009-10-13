@@ -18,6 +18,7 @@ import gnu.trove.TIntArrayList;
 
 import chord.project.Properties;
 import chord.project.ChordRuntimeException;
+import chord.util.IndexSet;
 import chord.util.ArraySet;
 import chord.util.FileUtils;
 import chord.util.IndexMap;
@@ -109,7 +110,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
     /***** data structures set once for all runs *****/
     // set of heap insts deemed escaping in some run so far
 	private Set<Quad> escHeapInsts;
-	private Map<Quad, Set<Quad>> heapInstToAllocs;
+	private Map<Set<Quad>, Set<Quad>> allocInstsToHeapInsts;
 	private int[] methToFstP;
 	private int[] methToNumP;
 	private boolean[] isIgnoredMeth;
@@ -125,7 +126,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private boolean[] isDoneMeth;
 	private TIntObjectHashMap<ThreadHandler> threadToHandlerMap =
 		new TIntObjectHashMap<ThreadHandler>();
-	private int[] methToNumCalls;
+
 	private DomF domF;
 	private DomM domM;
 	private DomH domH;
@@ -148,9 +149,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private Set<IntPair> PQset;
 	private int[] succ;
 	private int[][] succs;
+	private IndexMap<String> cIdMap;
 
-	public Map<Quad, Set<Quad>> getHeapInstToAllocsMap() {
-		return heapInstToAllocs;
+	public Map<Set<Quad>, Set<Quad>> getAllocInstsToHeapInstsMap() {
+		return allocInstsToHeapInsts;
 	}
 
     public void initAllPasses() {
@@ -171,7 +173,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		domU = (ProgramDom) Project.getTrgt("U");
 		int numM = domM.size();
     	escHeapInsts = new HashSet<Quad>();
-    	heapInstToAllocs = new HashMap<Quad, Set<Quad>>();
 
 		methToFstP = new int[numM];
 		methToNumP = new int[numM];
@@ -236,6 +237,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         }
 		assert (fstP == numP);
 		isDoneMeth = new boolean[numM];
+		cIdMap = new IndexHashMap<String>();
     }
 	
 	public void initPass() {
@@ -244,8 +246,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			isDoneMeth[mId] = false;
 		done.clear();
 		threadToHandlerMap.clear();
-		methToNumCalls = new int[domM.size()];
+
 		domQ.clear();
+		domQ.getOrAdd(null);
 		succ = new int[NUMQ_ESTIMATE];
 		succs = new int[NUMQ_ESTIMATE][];
 		allocSet = new HashSet<IntTrio>();
@@ -260,6 +263,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		startSet = new HashSet<IntPair>();
 		basePUset = new HashSet<IntPair>();
 		PQset = new HashSet<IntPair>();
+		cIdMap.clear();
+		cIdMap.getOrAdd(null);
 	}
 
 	public void doneAllPasses() {
@@ -280,6 +285,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
 	public void donePass() {
+		System.out.println("DONE PASS");
 		domQ.save();
 		domU.save();
 
@@ -400,40 +406,51 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 		ProgramRel relStart = (ProgramRel) Project.getTrgt("startP");
 		relStart.zero();
-		for (IntPair p : startSet) {
-			int q = p.idx0;
-			int v = p.idx1;
-			relStart.add(q, v);
+		for (IntPair t : startSet) {
+			int p = t.idx0;
+			int u = t.idx1;
+			relStart.add(p, u);
 		}
 		startSet.clear();
 		relStart.save();
 
 		ProgramRel relBasePU = (ProgramRel) Project.getTrgt("basePU");
 		relBasePU.zero();
-		for (IntPair pu : basePUset) {
-			relBasePU.add(pu.idx0, pu.idx1);
+		for (IntPair t : basePUset) {
+			int p = t.idx0;
+			int u = t.idx1;
+			relBasePU.add(p, u);
 		}
 		basePUset.clear();
 		relBasePU.save();
 
 		ProgramRel relPQ = (ProgramRel) Project.getTrgt("PQ");
 		relPQ.zero();
-		for (IntPair pq : PQset) {
-			relPQ.add(pq.idx0, pq.idx1);
+		for (IntPair t : PQset) {
+			int p = t.idx0;
+			int q = t.idx1;
+			relPQ.add(p, q);
 		}
 		PQset.clear();
 		relPQ.save();
 
+        String checkExcludeNames = Properties.checkExcludeNames;
+        String[] excluded = checkExcludeNames.equals("") ? new String[0] :
+            checkExcludeNames.split(Properties.LIST_SEPARATOR);
 		ProgramRel relRelevantT = (ProgramRel) Project.getTrgt("relevantT");
+        IndexSet<jq_Class> classes = Program.v().getPreparedClasses();
 		relRelevantT.zero();
-		int numT = domT.size();
-		for (int tIdx = 0; tIdx < numT; tIdx++) {
-			jq_Type t = domT.get(tIdx);
-			if (t instanceof jq_Class) {
-				String c = ((jq_Class) t).getName();
-				if (c.startsWith("java.") || c.startsWith("sun.") ||
-						c.startsWith("com.") || c.startsWith("org."))
-					continue;
+		for (jq_Class c : classes) {
+			String cName = c.getName();
+            boolean match = false;
+            for (String s : excluded) {
+                if (cName.startsWith(s)) {
+                    match = true;
+                    break;
+                }
+            }
+			if (!match) {
+				int tIdx = domT.indexOf(c);
 				relRelevantT.add(tIdx);
 			}
 		}
@@ -574,6 +591,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         relRelevantEH.load();
         PairIterable<Quad, Quad> tuples =
             relRelevantEH.getAry2ValTuples();
+    	Map<Quad, Set<Quad>> heapInstToAllocInsts = new HashMap<Quad, Set<Quad>>();
         for (Pair<Quad, Quad> tuple : tuples) {
             Quad e = tuple.val0;
             if (escHeapInsts.contains(e)) {
@@ -583,10 +601,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
                 continue;
             }
             Quad h = tuple.val1;
-            Set<Quad> allocs = heapInstToAllocs.get(e);
+            Set<Quad> allocs = heapInstToAllocInsts.get(e);
             if (allocs == null) {
                 allocs = new ArraySet<Quad>();
-                heapInstToAllocs.put(e, allocs);
+                heapInstToAllocInsts.put(e, allocs);
             }
             allocs.add(h);
         }
@@ -597,12 +615,25 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         relHybridEscE.load();
         Iterable<Quad> tuples2 = relHybridEscE.getAry1ValTuples();
         for (Quad e : tuples2) {
-            if (escHeapInsts.add(e) && heapInstToAllocs.remove(e) != null) {
+            if (escHeapInsts.add(e) && heapInstToAllocInsts.remove(e) != null) {
                 // was deemed thread local in an earlier path program
 				System.out.println("Deemed loc in earlier path: " + e);
             }
         }
         relHybridEscE.close();
+
+		allocInstsToHeapInsts = new HashMap<Set<Quad>, Set<Quad>>();
+        for (Map.Entry<Quad, Set<Quad>> e :
+				heapInstToAllocInsts.entrySet()) {
+            Quad heapInst = e.getKey();
+            Set<Quad> allocInsts = e.getValue();
+			Set<Quad> heapInsts = allocInstsToHeapInsts.get(allocInsts);
+			if (heapInsts == null) {
+				heapInsts = new ArraySet<Quad>();
+				allocInstsToHeapInsts.put(allocInsts, heapInsts);
+			}
+			heapInsts.add(heapInst);
+		}
 
 		try {
 			String outDirName = Properties.outDirName;
@@ -617,9 +648,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_pathLocE.txt")));
-   		     	for (Quad e : heapInstToAllocs.keySet()) {
+   		     	for (Quad e : heapInstToAllocInsts.keySet()) {
 					writer.println(Program.v().toPosStr(e));
-					for (Quad h : heapInstToAllocs.get(e)) {
+					for (Quad h : heapInstToAllocInsts.get(e)) {
 						writer.println("\t" + Program.v().toPosStr(h));
 					}
 				}
@@ -631,7 +662,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		
 	}
 
-	private InvkInfo getInvkInfo(Quad q) {
+	private InvkInfo getInvkInfo(Quad q, int pId) {
 		List<IntPair> invkArgs = null;
 		ParamListOperand lo = Invoke.getParamList(q);
 		int numArgs = lo.length();
@@ -661,7 +692,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		String mName = m.getName().toString();
 		String mDesc = m.getDesc().toString();
 		String mSign = mName + mDesc;
-		InvkInfo info = new InvkInfo(mSign, invkArgs, invkRetn);
+		InvkInfo info = new InvkInfo(pId, mSign, invkArgs, invkRetn);
 		return info;
 	}
 	private List<IntPair> getMethArgs(int mIdx) {
@@ -702,7 +733,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		return args;
 	}
 	public void processEnterMethod(int m, int t) {
-		// System.out.println("EM " + m + " " + t);
+		// System.out.println("EM " + domM.get(m) + " " + t);
+		// System.out.println("EM " + m);
 		ThreadHandler handler = threadToHandlerMap.get(t);
 		if (handler == null) {
 			handler = new ThreadHandler();
@@ -712,7 +744,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
     public void processLeaveMethod(int m, int t) {
-		// System.out.println("LM " + m + " " + t);
+		// System.out.println("LM " + domM.get(m) + " " + t);
+		// System.out.println("LM " + m);
 		ThreadHandler handler = threadToHandlerMap.get(t);
 		if (handler != null)
 			handler.processLeaveMethod(m);
@@ -753,11 +786,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			this.cId = cId;
 		}
 	}
+
 	class InvkInfo {
+		final int pId;
 		final String sign;
 		final List<IntPair> invkArgs;
 		final int invkRet;
-		public InvkInfo(String sign, List<IntPair> invkArgs, int invkRet) {
+		public InvkInfo(int pId, String sign, List<IntPair> invkArgs, int invkRet) {
+			this.pId = pId;
 			this.sign = sign;
 			this.invkArgs = invkArgs;
 			this.invkRet = invkRet;
@@ -775,10 +811,26 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		// reachable from method with id ignoredMethId
 		private int ignoredMethId;
 		private int ignoredMethNumFrames;
+		private boolean[] alreadyCalled;
 		private int prevQid;
 		private int currPid;
 		public ThreadHandler() {
 			prevQid = -1;
+			alreadyCalled = new boolean[domM.size()];
+		}
+		private int getCid(int pId) {
+			String s = Integer.toString(pId);
+			int n = frames.size();
+			for (int i = n - 2; i >= 0; i--) {
+				Frame frame = frames.get(i);
+				InvkInfo pendingInvk = frame.pendingInvk;
+				if (pendingInvk == null)
+					break;
+				s += "_" + pendingInvk.pId;
+			}
+			int cId = cIdMap.getOrAdd(s);
+			// System.out.println("cId: " + cId + " s: " + s);
+			return cId;
 		}
 		private void addSucc(int q, int r) {
 			// assert (q != r);
@@ -809,8 +861,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		private int setCurrQid(int pId) {
 			currPid = pId;
 			int currQid = domQ.getOrAdd(new IntPair(pId, top.cId));
+			// System.out.println("currQid: " + currQid + " pId: " + pId + " cId: " + top.cId);
 			if (prevQid != -1) {
 				addSucc(prevQid, currQid);
+				// System.out.println("Adding edge: " + prevQid);
 			}
 			prevQid = currQid;
 			if (currQid == domQ.size() - 1) {
@@ -843,16 +897,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				ignoredMethNumFrames = 1;
 				return;
 			}
-			InvkInfo pendingInvk;
-			if (top != null) {
- 				pendingInvk = top.pendingInvk;
-				frames.push(top);
-			} else
-				pendingInvk = null;
-			// System.out.println("XXX: " + domM.get(mId));
-			final int cId = methToNumCalls[mId]++;
-			top = new Frame(mId, cId);
-			final int currQid = setCurrQid(methToFstP[mId]);
+			if (alreadyCalled[mId]) {
+				ignoredMethId = mId;
+				ignoredMethNumFrames = 1;
+				return;
+			}
+			InvkInfo pendingInvk = (top != null) ? top.pendingInvk : null;
 			List<IntPair> methArgs = methToArgs[mId];
 			if (methArgs == null)
 				methArgs = getMethArgs(mId);
@@ -864,8 +914,34 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					invkArgs = null;
 			} else
 				invkArgs = null;
-			// at this point invkArgs != 1 iff this was not an explicitly
+			// at this point invkArgs != null iff this was not an explicitly
 			// called method
+
+			boolean doThreadRoot = false;
+			if (invkArgs == null) {
+				if (!foundThreadRoot && (mSign.equals("main([Ljava/lang/String;)V") ||
+						mSign.equals("run()V"))) {
+					doThreadRoot = true;
+					System.out.println("WARNING: Treating method: " +
+						domM.get(mId) + " as root of thread");
+				} else if (!mSign.equals("<clinit>()V")) {
+					System.out.println("WARNING: Ignoring phantom method: " +
+						domM.get(mId));
+					ignoredMethId = mId;
+					ignoredMethNumFrames = 1;
+					return;
+				}
+			}
+			alreadyCalled[mId] = true;
+
+			// System.out.println("XXX EM: " + domM.get(mId));
+
+			if (top != null)
+				frames.push(top);
+			final int cId = (invkArgs == null) ? 0 : getCid(pendingInvk.pId);
+			top = new Frame(mId, cId);
+
+			final int currQid = setCurrQid(methToFstP[mId]);
 			boolean initArgs = false;
 			if (invkArgs != null) {
 				int numArgs = methArgs.size();
@@ -880,12 +956,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					int uId = zu.idx1;
 					copyQset.add(new IntTrio(currQid, vId, uId));
 				}
-			} else if (!foundThreadRoot &&
-					(mSign.equals("main([Ljava/lang/String;)V") ||
-					mSign.equals("run()V"))) {
+			} else if (doThreadRoot) {
 				foundThreadRoot = true;
-				System.out.println("Treating method " + domM.get(mId) +
-					" as thread root of thread");
 				IntPair thisArg = methArgs.get(0);
 				assert (thisArg.idx0 == 0);
 					int vId = thisArg.idx1;
@@ -893,14 +965,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					startSet.add(new IntPair(currPid, vId));
 				else
 					asgnSet.add(new IntPair(currPid, vId));
-			} else 
+			} else
 				initArgs = true;
 			if (!isDoneMeth[mId]) {
 				if (initArgs) {
-					for (IntPair p : methArgs) {
-						int vId = p.idx1;
-						asgnSet.add(new IntPair(currPid, vId));
-					}
+                    for (IntPair p : methArgs) {
+                        int vId = p.idx1;
+                        asgnSet.add(new IntPair(currPid, vId));
+                    }
 				}
 				TIntArrayList methTmps = methToTmps[mId];
 				int numTmps = methTmps.size();
@@ -913,20 +985,26 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 		public void processLeaveMethod(int mId) {
 			assert (mId >= 0);
-			if (top == null)
-				return;
 			if (ignoredMethNumFrames > 0) {
 				if (mId == ignoredMethId)
 					ignoredMethNumFrames--;
 				return;
 			}
-			assert (mId == top.mId);
-			top = (frames.isEmpty()) ? null : frames.pop();
-		}
-		public void processBasicBlock(int bId) {
 			if (top == null)
 				return;
+			if (mId != top.mId) {
+				System.out.println("mId: " + mId + " top.mId: " + top.mId); 
+				assert (false);
+			}
+			alreadyCalled[mId] = false;
+			top = (frames.isEmpty()) ? null : frames.pop();
+
+			// System.out.println("XXX LM: " + domM.get(mId));
+		}
+		public void processBasicBlock(int bId) {
 			if (ignoredMethNumFrames > 0)
+				return;
+			if (top == null)
 				return;
 			BasicBlock bb = domB.get(bId);
 			assert (bb != null);
@@ -945,9 +1023,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			top.prevXid = 0;
 		}
 		public void processQuad(int pId) {
-			if (top == null) 
-				return;
 			if (ignoredMethNumFrames > 0)
+				return;
+			if (top == null) 
 				return;
 			BasicBlock currBB = top.currBB;
 			assert (currBB != null);
@@ -960,6 +1038,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			}
 		}
 		private void processQuad(Quad q) {
+			// System.out.println("PROCESSING: " + q);
 			top.pendingInvk = null;
 			Operator op = q.getOperator();
 			if (op instanceof Move) {
@@ -1010,7 +1089,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
             }
 			RegisterOperand lo = Phi.getDest(q);
 			jq_Type t = lo.getType();
-			assert (t != null);
+			if (t == null) {
+				// System.out.println("XXX: " + q + " " + domM.get(top.mId) + " " + top.currBB + " " + top.prevBB);
+				return;
+			}
 			if (!t.isReferenceType())
 				return;
 			setCurrQid(q);
@@ -1026,10 +1108,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			assert (i < n);
 			RegisterOperand ro = Phi.getSrc(q, i);
 			Register r = ro.getRegister();
-			int rId = domU.getOrAdd(r);
+			int rId = domU.indexOf(r);
 			assert (rId != -1);
 			Register l = lo.getRegister();
-			int lId = domU.getOrAdd(l);
+			int lId = domU.indexOf(l);
 			assert (lId != -1);
 			copyPset.add(new IntTrio(currPid, lId, rId));
 			done.add(q);
@@ -1038,7 +1120,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			setCurrQid(q);
 			RegisterOperand vo = isNew ? New.getDest(q) : NewArray.getDest(q);
 			Register v = vo.getRegister();
-			int vId = domU.getOrAdd(v);
+			int vId = domU.indexOf(v);
 			assert (vId != -1);
 			int hId = domH.indexOf(q);
 			assert (hId != -1);
@@ -1066,11 +1148,11 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			setCurrQid(q);
 			RegisterOperand lo = Move.getDest(q);
 			Register l = lo.getRegister();
-			int lId = domU.getOrAdd(l);
+			int lId = domU.indexOf(l);
 			assert (lId != -1);
 			if (ro != null) {
 				Register r = ro.getRegister();
-				int rId = domU.getOrAdd(r);
+				int rId = domU.indexOf(r);
 				assert (rId != -1);
 				copyPset.add(new IntTrio(currPid, lId, rId));
 			} else {
@@ -1089,7 +1171,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			setCurrQid(q);
 			RegisterOperand lo = Getstatic.getDest(q);
 			Register l = lo.getRegister();
-			int lId = domU.getOrAdd(l);
+			int lId = domU.indexOf(l);
 			assert (lId != -1);
 			getstatSet.add(new IntPair(currPid, lId));
 			done.add(q);
@@ -1108,7 +1190,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			setCurrQid(q);
 			RegisterOperand ro = (RegisterOperand) rx;
 			Register r = ro.getRegister();
-			int rId = domU.getOrAdd(r);
+			int rId = domU.indexOf(r);
 			assert (rId != -1);
 			putstatSet.add(new IntPair(currPid, rId));
 			done.add(q);
@@ -1119,14 +1201,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
                 return;
 			RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
 			Register b = bo.getRegister();
-			int bId = domU.getOrAdd(b);
+			int bId = domU.indexOf(b);
 			assert (bId != -1);
 			basePUset.add(new IntPair(currPid, bId));
 			if (!((ALoad) q.getOperator()).getType().isReferenceType())
 				return;
 			RegisterOperand lo = ALoad.getDest(q);
 			Register l = lo.getRegister();
-			int lId = domU.getOrAdd(l);
+			int lId = domU.indexOf(l);
 			assert (lId != -1);
 			int fId = 0;
 			getinstSet.add(new IntQuad(currPid, lId, bId, fId));
@@ -1138,7 +1220,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
                 return;
 			RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 			Register b = bo.getRegister();
-			int bId = domU.getOrAdd(b);
+			int bId = domU.indexOf(b);
 			assert (bId != -1);
 			basePUset.add(new IntPair(currPid, bId));
 			if (!((AStore) q.getOperator()).getType().isReferenceType())
@@ -1148,7 +1230,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				return;
 			RegisterOperand ro = (RegisterOperand) rx;
 			Register r = ro.getRegister();
-			int rId = domU.getOrAdd(r);
+			int rId = domU.indexOf(r);
+			assert (rId != -1);
 			assert (rId != -1);
 			int fId = 0;
 			putinstSet.add(new IntQuad(currPid, bId, fId, rId));
@@ -1165,7 +1248,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			setCurrQid(q);
 			RegisterOperand bo = (RegisterOperand) bx;
 			Register b = bo.getRegister();
-			int bId = domU.getOrAdd(b);
+			int bId = domU.indexOf(b);
 			assert (bId != -1);
 			basePUset.add(new IntPair(currPid, bId));
 			FieldOperand fo = Getfield.getField(q);
@@ -1178,7 +1261,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				return;
 			RegisterOperand lo = Getfield.getDest(q);
 			Register l = lo.getRegister();
-			int lId = domU.getOrAdd(l);
+			int lId = domU.indexOf(l);
 			assert (lId != -1);
 			getinstSet.add(new IntQuad(currPid, lId, bId, fId));
 			done.add(q);
@@ -1194,7 +1277,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			setCurrQid(q);
 			RegisterOperand bo = (RegisterOperand) bx;
 			Register b = bo.getRegister();
-			int bId = domU.getOrAdd(b);
+			int bId = domU.indexOf(b);
 			assert (bId != -1);
 			basePUset.add(new IntPair(currPid, bId));
 			FieldOperand fo = Putfield.getField(q);
@@ -1210,7 +1293,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				return;
 			RegisterOperand ro = (RegisterOperand) rx;
 			Register r = ro.getRegister();
-			int rId = domU.getOrAdd(r);
+			int rId = domU.indexOf(r);
 			assert (rId != -1);
 			putinstSet.add(new IntQuad(currPid, bId, fId, rId));
 			done.add(q);
@@ -1231,7 +1314,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					return;
 				InvkInfo info = invkToInfo[pId];
 				if (info == null) {
-					info = getInvkInfo(q);
+					info = getInvkInfo(q, pId);
 					invkToInfo[pId] = info;
 				}
 				List<IntPair> invkArgs = info.invkArgs;
@@ -1243,7 +1326,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			} else {
 				InvkInfo info = invkToInfo[pId];
 				if (info == null) {
-					info = getInvkInfo(q);
+					info = getInvkInfo(q, pId);
 					invkToInfo[pId] = info;
 				}
 				top.pendingInvk = info;
@@ -1260,7 +1343,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			if (rx instanceof RegisterOperand) {
 				RegisterOperand ro = (RegisterOperand) rx;
 				Register v = ro.getRegister();
-				int methRet = domU.getOrAdd(v);
+				int methRet = domU.indexOf(v);
 				assert (methRet != -1);
 				int currQid = setCurrQid(q);
 				copyQset.add(new IntTrio(currQid, invkRet, methRet));

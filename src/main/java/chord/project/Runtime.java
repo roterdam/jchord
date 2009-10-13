@@ -572,22 +572,45 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void methodCallEvent(int iId) {
+	public synchronized static void methodCallBefEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-				buffer.putByte(EventKind.METHOD_CALL);
+				buffer.putByte(EventKind.METHOD_CALL_BEF);
 				if (iId != MISSING_FIELD_VAL)
 					buffer.putInt(iId);
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
-	
+	}
+	public synchronized static void methodCallAftEvent(int iId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
+				buffer.putByte(EventKind.METHOD_CALL_AFT);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
 	}
 	public synchronized static void returnPrimitiveEvent(int pId) {
 		if (trace) {

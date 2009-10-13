@@ -79,7 +79,8 @@ public class Instrumentor {
 	protected static final String astorePriEventCall = runtimeClassName + "astorePrimitiveEvent(";
 	protected static final String astoreRefEventCall = runtimeClassName + "astoreReferenceEvent(";
 
-	protected static final String methodCallEventCall = runtimeClassName + "methodCallEvent(";
+	protected static final String methodCallBefEventCall = runtimeClassName + "methodCallBefEvent(";
+	protected static final String methodCallAftEventCall = runtimeClassName + "methodCallAftEvent(";
 	protected static final String returnPriEventCall = runtimeClassName + "returnPrimtiveEvent(";
 	protected static final String returnRefEventCall = runtimeClassName + "returnReferenceEvent(";
 	protected static final String explicitThrowEventCall = runtimeClassName + "explicitThrowEvent(";
@@ -795,7 +796,7 @@ public class Instrumentor {
 				String instr;
 				if (isWr) {
 					instr = isPrim ? astorePrimitive(e) : astoreReference(e);
-					} else {
+				} else {
 					instr = isPrim ? aloadPrimitive(e) : aloadReference(e);
 				}
 				if (instr != null) {
@@ -804,17 +805,6 @@ public class Instrumentor {
 					} catch (CannotCompileException ex) {
 						throw new ChordRuntimeException(ex);
 					}
-				}
-			}
-		}
-		public void edit(MethodCall e) {
-			String instr = processMethodCall(e);
-			if (instr != null) {
-				try {
-					// NOTE: added $_ recently
-					e.replace("{ " + instr + " $_ = $proceed($$); }");
-				} catch (CannotCompileException ex) {
-					throw new ChordRuntimeException(ex);
 				}
 			}
 		}
@@ -844,6 +834,31 @@ public class Instrumentor {
 				}
 			}
 		}
+		public void edit(MethodCall e) {
+			String befInstr = "";
+			String aftInstr = "";
+			// Part 1: add METHOD_CALL event if present
+			if (methodCallEvent.present()) {
+				int iId = methodCallEvent.hasLoc() ? set(Imap, e) :
+					Runtime.MISSING_FIELD_VAL;
+				String o = methodCallEvent.hasObj() ? "$0" : "null";
+				if (methodCallEvent.isBef())
+					befInstr = methodCallBefEventCall + iId + "," + o + ");";
+				if (methodCallEvent.isAft())
+					aftInstr = methodCallAftEventCall + iId + "," + o + ");";
+			} 
+			// Part 2: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
+			// if present and applicable
+			String instr = processThreadRelatedCall(e);
+			if (instr != null)
+				befInstr += instr;
+			try {
+				e.replace("{ " + befInstr + " $_ = $proceed($$); " +
+					aftInstr + " }");
+			} catch (CannotCompileException ex) {
+				throw new ChordRuntimeException(ex);
+			}
+		}
 	}
 	protected int getFid(CtField field) {
 		String fName = field.getName();
@@ -856,10 +871,11 @@ public class Instrumentor {
 		if (getstaticPrimitiveEvent.present()) {
 			int eId = getstaticPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
+			String b = getstaticPrimitiveEvent.hasBaseObj() ? "$class" : "null";
 			int fId = getstaticPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $_ = $proceed($$); " + getstaticPriEventCall + eId +
-				"," + fId + "); }"; 
+				"," + b + "," + fId + "); }"; 
 		}
 		return null;
 	}
@@ -867,11 +883,12 @@ public class Instrumentor {
 		if (getstaticReferenceEvent.present()) {
 			int eId = getstaticReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
+			String b = getstaticReferenceEvent.hasBaseObj() ? "$class" : "null";
 			int fId = getstaticReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
-			String oId = getstaticReferenceEvent.hasObj() ? "$_" : "null";
+			String o = getstaticReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + getstaticRefEcentCall + eId +
-				"," + fId + "," + oId + "); }"; 
+				"," + b + "," + fId + "," + o + "); }"; 
 		}
 		return null;
 	}
@@ -879,10 +896,11 @@ public class Instrumentor {
 		if (putstaticPrimitiveEvent.present()) {
 			int eId = putstaticPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
+			String b = putstaticPrimitiveEvent.hasBaseObj() ? "$class" : "null";
 			int fId = putstaticPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $proceed($$); " + putstaticPriEventCall + eId +
-				"," + fId + "); }"; 
+				"," + b + "," + fId + "); }"; 
 		}
 		return null;
 	}
@@ -890,11 +908,12 @@ public class Instrumentor {
 		if (putstaticReferenceEvent.present()) {
 			int eId = putstaticReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
+			String b = putstaticReferenceEvent.hasBaseObj() ? "$class" : "null";
 			int fId = putstaticReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
-			String oId = putstaticReferenceEvent.hasObj() ? "$1" : "null";
+			String o = putstaticReferenceEvent.hasObj() ? "$1" : "null";
 			return "{ $proceed($$); " + putstaticRefEventCall + eId +
-				"," + fId + "," + oId + "); }";
+				"," + b + "," + fId + "," + o + "); }";
 		}
 		return null;
 	}
@@ -902,11 +921,11 @@ public class Instrumentor {
 		if (getfieldPrimitiveEvent.present()) {
 			int eId = getfieldPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = getfieldPrimitiveEvent.hasBaseObj() ? "$0" : "null";
+			String b = getfieldPrimitiveEvent.hasBaseObj() ? "$0" : "null";
 			int fId = getfieldPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $_ = $proceed($$); " + getfieldPriEventCall +
-				eId + "," + bId + "," + fId + "); }"; 
+				eId + "," + b + "," + fId + "); }"; 
 		}
 		return null;
 	}
@@ -914,12 +933,12 @@ public class Instrumentor {
 		if (getfieldReferenceEvent.present()) {
 			int eId = getfieldReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = getfieldReferenceEvent.hasBaseObj() ? "$0" : "null";
+			String b = getfieldReferenceEvent.hasBaseObj() ? "$0" : "null";
 			int fId = getfieldReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
-			String oId = getfieldReferenceEvent.hasObj() ? "$_" : "null";
+			String o = getfieldReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + getfieldReference +
-				eId + "," + bId + "," + fId + "," + oId + "); }"; 
+				eId + "," + b + "," + fId + "," + o + "); }"; 
 		}
 		return null;
 	}
@@ -927,11 +946,11 @@ public class Instrumentor {
 		if (putfieldPrimitiveEvent.present()) {
 			int eId = putfieldPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = putfieldPrimitiveEvent.hasBaseObj() ? "$0" : "null";
+			String b = putfieldPrimitiveEvent.hasBaseObj() ? "$0" : "null";
 			int fId = putfieldPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $proceed($$); " + putfieldPriEventCall + eId +
-				"," + bId + "," + fId + "); }"; 
+				"," + b + "," + fId + "); }"; 
 		}
 		return null;
 	}
@@ -939,12 +958,12 @@ public class Instrumentor {
 		if (putfieldReferenceEvent.present()) {
 			int eId = putfieldReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = putfieldReferenceEvent.hasBaseObj() ? "$0" : "null";
+			String b = putfieldReferenceEvent.hasBaseObj() ? "$0" : "null";
 			int fId = putfieldReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
-			String oId = putfieldReferenceEvent.hasObj() ? "$1" : "null";
+			String o = putfieldReferenceEvent.hasObj() ? "$1" : "null";
 			return "{ $proceed($$); " + putfieldRefEventCall +
-				eId + "," + bId + "," + fId + "," + oId + "); }"; 
+				eId + "," + b + "," + fId + "," + o + "); }"; 
 		}
 		return null;
 	}
@@ -952,10 +971,10 @@ public class Instrumentor {
 		if (aloadPrimitiveEvent.present()) {
 			int eId = aloadPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = aloadPrimitiveEvent.hasBaseObj() ? "$0" : "null";
-			String iId = aloadPrimitiveEvent.hasIdx() ? "$1" : "-1";
+			String b = aloadPrimitiveEvent.hasBaseObj() ? "$0" : "null";
+			String i = aloadPrimitiveEvent.hasIdx() ? "$1" : "-1";
 			return "{ $_ = $proceed($$); " + aloadPriEventCall +
-				eId + "," + bId + "," + iId + "); }"; 
+				eId + "," + b + "," + i + "); }"; 
 		}
 		return null;
 	}
@@ -963,11 +982,11 @@ public class Instrumentor {
 		if (aloadReferenceEvent.present()) {
 			int eId = aloadReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = aloadReferenceEvent.hasBaseObj() ? "$0" : "null";
-			String iId = aloadReferenceEvent.hasIdx() ? "$1" : "-1";
-			String oId = aloadReferenceEvent.hasObj() ? "$_" : "null";
+			String b = aloadReferenceEvent.hasBaseObj() ? "$0" : "null";
+			String i = aloadReferenceEvent.hasIdx() ? "$1" : "-1";
+			String o = aloadReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + aloadRefEventCall +
-				eId + "," + bId + "," + iId + "," + oId + "); }"; 
+				eId + "," + b + "," + i + "," + o + "); }"; 
 		}
 		return null;
 	}
@@ -975,10 +994,10 @@ public class Instrumentor {
 		if (astorePrimitiveEvent.present()) {
 			int eId = astorePrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = astorePrimitiveEvent.hasBaseObj() ? "$0" : "null";
-			String iId = astorePrimitiveEvent.hasIdx() ? "$1" : "-1";
+			String b = astorePrimitiveEvent.hasBaseObj() ? "$0" : "null";
+			String i = astorePrimitiveEvent.hasIdx() ? "$1" : "-1";
 			return "{ $proceed($$); " + astorePriEventCall +
-				eId + "," + bId + "," + iId + "); }"; 
+				eId + "," + b + "," + i + "); }"; 
 		}
 		return null;
 	}
@@ -986,26 +1005,16 @@ public class Instrumentor {
 		if (astoreReferenceEvent.present()) {
 			int eId = astoreReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String bId = astoreReferenceEvent.hasBaseObj() ? "$0" : "null";
-			String iId = astoreReferenceEvent.hasIdx() ? "$1" : "-1";
-			String oId = astoreReferenceEvent.hasObj() ? "$2" : "null";
+			String b = astoreReferenceEvent.hasBaseObj() ? "$0" : "null";
+			String i = astoreReferenceEvent.hasIdx() ? "$1" : "-1";
+			String o = astoreReferenceEvent.hasObj() ? "$2" : "null";
 			return "{ $proceed($$); " + astoreRefEventCall +
-				eId + "," + bId + "," + iId + "," + oId + "); }"; 
+				eId + "," + b + "," + i + "," + o + "); }"; 
 		}
 		return null;
 	}
-	protected String processMethodCall(MethodCall e) {
-		// Part 1: add METHOD_CALL event if present
-		String instr1;
-		if (methodCallEvent.present()) {
-			int iId = methodCallEvent.hasLoc() ? set(Imap, e) :
-				Runtime.MISSING_FIELD_VAL;
-			instr1 = " " + methodCallEventCall + iId + ");";
-		} else
-			instr1 = null;
-		// Part 2: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
-		// if present and applicable
-		String instr2 = null;
+	protected String processThreadRelatedCall(MethodCall e) {
+		String instr = null;
 		CtMethod m;
 		try {
 			m = e.getMethod();
@@ -1021,16 +1030,16 @@ public class Instrumentor {
 				if (waitEvent.present()) {
 					int iId = waitEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String oId = waitEvent.hasObj() ? "$0" : "null";
-					instr2 = waitEventCall + iId + "," + oId + ");";
+					String o = waitEvent.hasObj() ? "$0" : "null";
+					instr = waitEventCall + iId + "," + o + ");";
 				}
 			} else if ((mName.equals("notify") ||
 					mName.equals("notifyAll")) && mDesc.equals("()V")) {
 				if (notifyEvent.present()) {
 					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String oId = notifyEvent.hasObj() ? "$0" : "null";
-					instr2 = notifyEventCall + iId + "," + oId + ");";
+					String o = notifyEvent.hasObj() ? "$0" : "null";
+					instr = notifyEventCall + iId + "," + o + ");";
 				}
 			}
 		} else if (cName.equals("java.lang.Thread")) {
@@ -1040,23 +1049,19 @@ public class Instrumentor {
 				if (threadStartEvent.present()) {
 					int iId = threadStartEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String oId = threadStartEvent.hasObj() ? "$0" : "null";
-					instr2 = threadStartEventCall + iId + "," + oId + ");";
+					String o = threadStartEvent.hasObj() ? "$0" : "null";
+					instr = threadStartEventCall + iId + "," + o + ");";
 				}
 			} else if (mName.equals("join") && (mDesc.equals("()V") ||
 					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
 				if (threadJoinEvent.present()) {
 					int iId = threadJoinEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
-					String oId = threadJoinEvent.hasObj() ? "$0" : "null";
-					instr2 = threadJoinEventCall + iId + "," + oId + ");";
+					String o = threadJoinEvent.hasObj() ? "$0" : "null";
+					instr = threadJoinEventCall + iId + "," + o + ");";
 				}
 			}
 		}
-		if (instr1 == null)
-			return instr2;
-		if (instr2 == null)
-			return instr1;
-		return instr1 + instr2;
+		return instr;
 	}
 }

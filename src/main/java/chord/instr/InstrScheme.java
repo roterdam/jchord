@@ -211,6 +211,8 @@ public class InstrScheme implements Serializable {
 		private boolean hasFldOrIdx;
 		private boolean hasObj;
 		private boolean hasBaseObj;
+		private boolean isBef;
+		private boolean isAft;
 		private int size;
 		public boolean present() { return size > 0; }
 		public int size() { return size; }
@@ -220,6 +222,10 @@ public class InstrScheme implements Serializable {
 		public boolean hasIdx() { return hasFldOrIdx; }
 		public boolean hasObj() { return hasObj; }
 		public boolean hasBaseObj() { return hasBaseObj; }
+		public void setBef() { isBef = true; }
+		public void setAft() { isAft = true; }
+		public boolean isBef() { return isBef; }
+		public boolean isAft() { return isAft; }
 		public void setLoc() {
 			if (!hasLoc) {
 				hasLoc = true; 
@@ -344,35 +350,39 @@ public class InstrScheme implements Serializable {
 	}
 
 	public void setGetstaticPrimitiveEvent(boolean hasLoc, boolean hasThr,
-			boolean hasFld) {
+			boolean hasBaseObj, boolean hasFld) {
 		EventFormat e = events[GETSTATIC_PRIMITIVE];
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
 		if (hasFld) e.setFld();
 	}
 
-	public void setGetstaticReferenceEvent(
-			boolean hasLoc, boolean hasThr, boolean hasFld, boolean hasObj) {
+	public void setGetstaticReferenceEvent(boolean hasLoc, boolean hasThr,
+			boolean hasBaseObj, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[GETSTATIC_REFERENCE];
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
 		if (hasFld) e.setFld();
 		if (hasObj) e.setObj();
 	}
 
 	public void setPutstaticPrimitiveEvent(boolean hasLoc, boolean hasThr,
-			boolean hasFld) {
+			boolean hasBaseObj, boolean hasFld) {
 		EventFormat e = events[PUTSTATIC_PRIMITIVE];
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
 		if (hasFld) e.setFld();
 	}
 
 	public void setPutstaticReferenceEvent(boolean hasLoc, boolean hasThr,
-			boolean hasFld, boolean hasObj) {
+			boolean hasBaseObj, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[PUTSTATIC_REFERENCE];
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
+		if (hasBaseObj) e.setBaseObj();
 		if (hasFld) e.setFld();
 		if (hasObj) e.setObj();
 	}
@@ -453,10 +463,16 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setMethodCallEvent(boolean hasLoc, boolean hasThr) {
+	public void setMethodCallEvent(boolean hasLoc, boolean hasThr, boolean hasObj,
+			boolean isBef, boolean isAft) {
+		if (!isBef && !isAft)
+			return;
 		EventFormat e = events[METHOD_CALL];
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
+		if (isBef) e.setBef();
+		if (isAft) e.setAft();
 	}
 
 	public void setReturnPrimitiveEvent(boolean hasLoc, boolean hasThr) {

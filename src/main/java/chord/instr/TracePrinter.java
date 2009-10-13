@@ -119,9 +119,10 @@ public class TracePrinter {
 					int e = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String eStr = convert ? Integer.toString(e) : ((e < 0) ? "null" : Emap.get(e));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = convert ? Integer.toString(f) : ((f < 0) ? "null" : Fmap.get(f));
-					System.out.println("GETSTATIC_PRIMITIVE " + eStr + " " + t + " " + fStr);
+					System.out.println("GETSTATIC_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
 					break;
 				}
 				case EventKind.GETSTATIC_REFERENCE:
@@ -130,10 +131,11 @@ public class TracePrinter {
 					int e = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String eStr = convert ? Integer.toString(e) : ((e < 0) ? "null" : Emap.get(e));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = convert ? Integer.toString(f) : ((f < 0) ? "null" : Fmap.get(f));
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("GETSTATIC_REFERENCE " + eStr + " " + t + " " + fStr + " " + o);
+					System.out.println("GETSTATIC_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
 					break;
 				}
 				case EventKind.PUTSTATIC_PRIMITIVE:
@@ -142,9 +144,10 @@ public class TracePrinter {
 					int e = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String eStr = convert ? Integer.toString(e) : ((e < 0) ? "null" : Emap.get(e));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = convert ? Integer.toString(f) : ((f < 0) ? "null" : Fmap.get(f));
-					System.out.println("PUTSTATIC_PRIMITIVE " + eStr + " " + t + " " + fStr);
+					System.out.println("PUTSTATIC_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
 					break;
 				}
 				case EventKind.PUTSTATIC_REFERENCE:
@@ -153,10 +156,11 @@ public class TracePrinter {
 					int e = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String eStr = convert ? Integer.toString(e) : ((e < 0) ? "null" : Emap.get(e));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = convert ? Integer.toString(f) : ((f < 0) ? "null" : Fmap.get(f));
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("PUTSTATIC_REFERENCE " + eStr + " " + t + " " + fStr + " " + o);
+					System.out.println("PUTSTATIC_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
 					break;
 				}
 				case EventKind.GETFIELD_PRIMITIVE:
@@ -315,13 +319,24 @@ public class TracePrinter {
 					System.out.println("NOTIFY " + iStr + " " + t + " " + o);
 					break;
 				}
-				case EventKind.METHOD_CALL:
+				case EventKind.METHOD_CALL_BEF:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 					int i = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String iStr = convert ? Integer.toString(i) : ((i < 0) ? "null" : Imap.get(i));
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("METHOD_CALL " + iStr + " " + t);
+					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					System.out.println("METHOD_CALL_BEF " + iStr + " " + t + " " + o);
+					break;
+				}
+				case EventKind.METHOD_CALL_AFT:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
+					int i = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String iStr = convert ? Integer.toString(i) : ((i < 0) ? "null" : Imap.get(i));
+					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					System.out.println("METHOD_CALL_AFT " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.RETURN_PRIMITIVE:
