@@ -87,7 +87,7 @@ public class Runtime {
 	private static boolean hasEnterAndLeaveMethodEvent;
 	private static boolean hasEnterAndLeaveLoopEvent;
 
-    private static int getObjectId(Object o) {
+    public static int getObjectId(Object o) {
     	if (o == null)
     		return 0;
         Object val = objmap.get(o);
