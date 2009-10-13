@@ -168,7 +168,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void getstaticPrimitiveEvent(int eId, int fId) {
+	public synchronized static void getstaticPrimitiveEvent(int eId, Object b, int fId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -180,13 +180,17 @@ public class Runtime {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
+				if (ef.hasBaseObj()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
 				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void getstaticReferenceEvent(int eId, int fId,
+	public synchronized static void getstaticReferenceEvent(int eId, Object b, int fId,
 			Object o) {
 		if (trace) {
 			trace = false;
@@ -199,6 +203,10 @@ public class Runtime {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
+				if (ef.hasBaseObj()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
 				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 				if (ef.hasObj()) {
@@ -209,7 +217,7 @@ public class Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void putstaticPrimitiveEvent(int eId, int fId) {
+	public synchronized static void putstaticPrimitiveEvent(int eId, Object b, int fId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -221,13 +229,17 @@ public class Runtime {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
 				}
+				if (ef.hasBaseObj()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
+				}
 				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
 	}
-	public synchronized static void putstaticReferenceEvent(int eId, int fId,
+	public synchronized static void putstaticReferenceEvent(int eId, Object b, int fId,
 			Object o) {
 		if (trace) {
 			trace = false;
@@ -239,6 +251,10 @@ public class Runtime {
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
+				}
+				if (ef.hasBaseObj()) {
+					int bId = getObjectId(b);
+					buffer.putInt(bId);
 				}
 				if (fId != MISSING_FIELD_VAL)
 					buffer.putInt(fId);
