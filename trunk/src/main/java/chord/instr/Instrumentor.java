@@ -871,7 +871,12 @@ public class Instrumentor {
 		if (getstaticPrimitiveEvent.present()) {
 			int eId = getstaticPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String b = getstaticPrimitiveEvent.hasBaseObj() ? "$class" : "null";
+			String b;
+			if (getstaticPrimitiveEvent.hasBaseObj()) {
+				String cName = f.getDeclaringClass().getName();
+				b = cName + ".class";
+			} else
+				b = "null";
 			int fId = getstaticPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $_ = $proceed($$); " + getstaticPriEventCall + eId +
@@ -883,7 +888,12 @@ public class Instrumentor {
 		if (getstaticReferenceEvent.present()) {
 			int eId = getstaticReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String b = getstaticReferenceEvent.hasBaseObj() ? "$class" : "null";
+			String b;
+			if (getstaticReferenceEvent.hasBaseObj()) {
+				String cName = f.getDeclaringClass().getName();
+				b = cName + ".class";
+			} else
+				b = "null";
 			int fId = getstaticReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			String o = getstaticReferenceEvent.hasObj() ? "$_" : "null";
@@ -896,7 +906,12 @@ public class Instrumentor {
 		if (putstaticPrimitiveEvent.present()) {
 			int eId = putstaticPrimitiveEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String b = putstaticPrimitiveEvent.hasBaseObj() ? "$class" : "null";
+			String b;
+			if (putstaticPrimitiveEvent.hasBaseObj()) {
+				String cName = f.getDeclaringClass().getName();
+				b = cName + ".class";
+			} else
+				b = "null";
 			int fId = putstaticPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $proceed($$); " + putstaticPriEventCall + eId +
@@ -908,7 +923,12 @@ public class Instrumentor {
 		if (putstaticReferenceEvent.present()) {
 			int eId = putstaticReferenceEvent.hasLoc() ? set(Emap, e) :
 				Runtime.MISSING_FIELD_VAL;
-			String b = putstaticReferenceEvent.hasBaseObj() ? "$class" : "null";
+			String b;
+			if (putstaticReferenceEvent.hasBaseObj()) {
+				String cName = f.getDeclaringClass().getName();
+				b = cName + ".class";
+			} else
+				b = "null";
 			int fId = putstaticReferenceEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			String o = putstaticReferenceEvent.hasObj() ? "$1" : "null";
