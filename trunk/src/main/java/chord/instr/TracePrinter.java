@@ -38,7 +38,7 @@ public class TracePrinter {
 		IndexMap<String> Pmap = instrumentor.getPmap();
 		IndexMap<String> Bmap = instrumentor.getBmap();
 		IndexMap<String> Wmap = instrumentor.getWmap();
-		boolean convert = true;
+		boolean convert = false;
 		try {
 			ByteBufferedFile buffer = new ByteBufferedFile(Properties.traceBlockSize, traceFileName, true);
 			while (!buffer.isDone()) {

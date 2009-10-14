@@ -505,9 +505,9 @@ public class Instrumentor {
 		int n = b.size();
 		for (int i = 0; i < n; i++) {
 			Quad q = b.getQuad(i);
-	        int bci = m.getBCI(q);
-	        if (bci != -1)
-	            return bci;
+			int bci = m.getBCI(q);
+			if (bci != -1)
+				return bci;
 		}
 		throw new ChordRuntimeException();
 	}
@@ -835,8 +835,8 @@ public class Instrumentor {
 			}
 		}
 		public void edit(MethodCall e) {
-			String befInstr = "";
-			String aftInstr = "";
+			String befInstr = null;
+			String aftInstr = null;
 			// Part 1: add METHOD_CALL event if present
 			if (methodCallEvent.present()) {
 				int iId = methodCallEvent.hasLoc() ? set(Imap, e) :
@@ -846,12 +846,28 @@ public class Instrumentor {
 					befInstr = methodCallBefEventCall + iId + "," + o + ");";
 				if (methodCallEvent.isAft())
 					aftInstr = methodCallAftEventCall + iId + "," + o + ");";
-			} 
+			}
 			// Part 2: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
 			// if present and applicable
 			String instr = processThreadRelatedCall(e);
-			if (instr != null)
-				befInstr += instr;
+			if (instr != null) {
+				if (befInstr == null)
+					befInstr = instr;
+				else
+					befInstr += instr;
+				if (aftInstr == null)
+					aftInstr = "";
+			} else if (befInstr == null) {
+				if (aftInstr == null)
+					return;
+				befInstr = "";
+			} else if (aftInstr == null)
+				aftInstr = "";
+			// NOTE: the following must be executed only if at least
+			// befInstr or aftInstr is non-null.  Otherwise, all call sites
+			// in the program will be replaced, and this can cause null
+			// pointer exceptions in certain cases (i.e. $_ = $proceed($$)
+			// does not seem to be safe usage for all call sites).
 			try {
 				e.replace("{ " + befInstr + " $_ = $proceed($$); " +
 					aftInstr + " }");
@@ -880,7 +896,7 @@ public class Instrumentor {
 			int fId = getstaticPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $_ = $proceed($$); " + getstaticPriEventCall + eId +
-				"," + b + "," + fId + "); }"; 
+				"," + b + "," + fId + "); }";
 		}
 		return null;
 	}
@@ -898,7 +914,7 @@ public class Instrumentor {
 				Runtime.MISSING_FIELD_VAL;
 			String o = getstaticReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + getstaticRefEcentCall + eId +
-				"," + b + "," + fId + "," + o + "); }"; 
+				"," + b + "," + fId + "," + o + "); }";
 		}
 		return null;
 	}
@@ -915,7 +931,7 @@ public class Instrumentor {
 			int fId = putstaticPrimitiveEvent.hasFld() ? getFid(f) :
 				Runtime.MISSING_FIELD_VAL;
 			return "{ $proceed($$); " + putstaticPriEventCall + eId +
-				"," + b + "," + fId + "); }"; 
+				"," + b + "," + fId + "); }";
 		}
 		return null;
 	}
