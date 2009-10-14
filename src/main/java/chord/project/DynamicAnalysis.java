@@ -394,7 +394,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 					int i = ef.hasLoc() ? buffer.getInt() : -1;
 					int t = ef.hasThr() ? buffer.getInt() : -1;
-					int o = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processMethodCallBef(i, t, o);
 					break;
 				}
@@ -403,7 +403,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 					int i = ef.hasLoc() ? buffer.getInt() : -1;
 					int t = ef.hasThr() ? buffer.getInt() : -1;
-					int o = ef.hasThr() ? buffer.getInt() : -1;
+					int o = ef.hasObj() ? buffer.getInt() : -1;
 					processMethodCallAft(i, t, o);
 					break;
 				}
