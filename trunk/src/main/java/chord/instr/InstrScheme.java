@@ -143,8 +143,7 @@ public class InstrScheme implements Serializable {
 	 * 
 	 * THREAD_JOIN:
 	 * Controls generation of the following event before thread t
-	 * calls the <tt>join()</tt>, <tt>join(int)</tt>, or
-	 * <tt>join(int,int)</tt> method of <tt>java.lang.Thread</tt>
+	 * calls the <tt>join()</tt> method of <tt>java.lang.Thread</tt>
 	 * at program point i to join with thread o:
 	 * THREAD_JOIN i t o
 	 * 
@@ -162,8 +161,7 @@ public class InstrScheme implements Serializable {
 	 * 
 	 * WAIT:
 	 * Controls generation of the following event before thread t
-	 * calls the <tt>wait()</tt>, <tt>wait(long)</tt>, or
-	 * <tt>wait(long,int)</tt> method of <tt>java.lang.Object</tt>
+	 * calls the <tt>wait()</tt> method of <tt>java.lang.Object</tt>
 	 * at program point i on object o:
 	 * WAIT i t o
 	 * 

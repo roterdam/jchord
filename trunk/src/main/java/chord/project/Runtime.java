@@ -119,6 +119,9 @@ public class Runtime {
 	public static void notifyEvent(int iId, Object o) {
 		doDefault();
 	}
+	public static void notifyAllEvent(int iId, Object o) {
+		doDefault();
+	}
 	public static void methodCallBefEvent(int iId, Object o) {
 		doDefault();
 	}

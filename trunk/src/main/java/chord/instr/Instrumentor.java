@@ -92,6 +92,7 @@ public class Instrumentor {
 	protected static final String threadJoinEventCall = runtimeClassName + "threadJoinEvent(";
 	protected static final String waitEventCall = runtimeClassName + "waitEvent(";
 	protected static final String notifyEventCall = runtimeClassName + "notifyEvent(";
+	protected static final String notifyAllEventCall = runtimeClassName + "notifyAllEvent(";
 	protected static final String acquireLockEventCall = runtimeClassName + "acquireLockEvent(";
 	protected static final String releaseLockEventCall = runtimeClassName + "releaseLockEvent(";
 
@@ -1061,16 +1062,21 @@ public class Instrumentor {
 		if (cName.equals("java.lang.Object")) {
 			String mName = m.getName();
 			String mDesc = m.getSignature();
-			if (mName.equals("wait") && (mDesc.equals("()V") ||
-					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
+			if (mName.equals("wait") && mDesc.equals("()V")) {
 				if (waitEvent.present()) {
 					int iId = waitEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
 					String o = waitEvent.hasObj() ? "$0" : "null";
 					instr = waitEventCall + iId + "," + o + ");";
 				}
-			} else if ((mName.equals("notify") ||
-					mName.equals("notifyAll")) && mDesc.equals("()V")) {
+			} else if (mName.equals("notifyAll") && mDesc.equals("()V")) {
+				if (notifyEvent.present()) {
+					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
+						Runtime.MISSING_FIELD_VAL;
+					String o = notifyEvent.hasObj() ? "$0" : "null";
+					instr = notifyAllEventCall + iId + "," + o + ");";
+				}
+			} else if (mName.equals("notify") && mDesc.equals("()V")) {
 				if (notifyEvent.present()) {
 					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
@@ -1088,13 +1094,38 @@ public class Instrumentor {
 					String o = threadStartEvent.hasObj() ? "$0" : "null";
 					instr = threadStartEventCall + iId + "," + o + ");";
 				}
-			} else if (mName.equals("join") && (mDesc.equals("()V") ||
-					mDesc.equals("(L)V") || mDesc.equals("(LI)V"))) {
+			} else if (mName.equals("join") && mDesc.equals("()V")) {
 				if (threadJoinEvent.present()) {
 					int iId = threadJoinEvent.hasLoc() ? set(Imap, e) :
 						Runtime.MISSING_FIELD_VAL;
 					String o = threadJoinEvent.hasObj() ? "$0" : "null";
 					instr = threadJoinEventCall + iId + "," + o + ");";
+				}
+			}
+		} else if (cName.startsWith("java.util.concurrent.locks.") &&
+				cName.endsWith("ConditionObject")) {
+			String mName = m.getName();
+			String mDesc = m.getSignature();
+			if (mName.equals("await") && mDesc.equals("()V")) {
+				if (waitEvent.present()) {
+					int iId = waitEvent.hasLoc() ? set(Imap, e) :
+						Runtime.MISSING_FIELD_VAL;
+					String o = waitEvent.hasObj() ? "$0" : "null";
+					instr = waitEventCall + iId + "," + o + ");";
+				}
+			} else if (mName.equals("signalAll") && mDesc.equals("()V")) {
+				if (notifyEvent.present()) {
+					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
+						Runtime.MISSING_FIELD_VAL;
+					String o = notifyEvent.hasObj() ? "$0" : "null";
+					instr = notifyAllEventCall + iId + "," + o + ");";
+				}
+			} else if (mName.equals("signal") && mDesc.equals("()V")) {
+				if (notifyEvent.present()) {
+					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
+						Runtime.MISSING_FIELD_VAL;
+					String o = notifyEvent.hasObj() ? "$0" : "null";
+					instr = notifyEventCall + iId + "," + o + ");";
 				}
 			}
 		}
