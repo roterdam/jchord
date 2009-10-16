@@ -269,6 +269,7 @@ public class TraceTransformer {
 		case EventKind.WAIT:
 			return waitNumBytes;
 		case EventKind.NOTIFY:
+		case EventKind.NOTIFY_ALL:
 			return notifyNumBytes;
 		default:
 			throw new RuntimeException();

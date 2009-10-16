@@ -319,6 +319,16 @@ public class TracePrinter {
 					System.out.println("NOTIFY " + iStr + " " + t + " " + o);
 					break;
 				}
+				case EventKind.NOTIFY_ALL:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
+					int i = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					String iStr = convert ? Integer.toString(i) : ((i < 0) ? "null" : Imap.get(i));
+					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
+					System.out.println("NOTIFY_ALL " + iStr + " " + t + " " + o);
+					break;
+				}
 				case EventKind.METHOD_CALL_BEF:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);

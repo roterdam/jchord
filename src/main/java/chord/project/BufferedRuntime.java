@@ -562,6 +562,26 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
+	public synchronized static void notifyAllEvent(int iId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
+				buffer.putByte(EventKind.NOTIFY_ALL);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
 	public synchronized static void methodCallBefEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
