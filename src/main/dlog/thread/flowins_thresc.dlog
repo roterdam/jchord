@@ -34,6 +34,7 @@ ME(m:M,e:E) input
 escCE(c:C,e:E)
 flowinsVisitedE(e:E) output
 flowinsEscE(e:E) output
+flowinsLocE(e:E) output
 
 ###
 # Constraints
@@ -48,3 +49,4 @@ escCE(c,e) :- EV(e,v), CVC(c,v,o), escO(o).
 
 flowinsVisitedE(e) :- ME(m,e), reachableCM(_,m).
 flowinsEscE(e) :- escCE(_,e).
+flowinsLocE(e) :- EV(e,v), CVC(_,v,_), !flowinsEscE(e).
