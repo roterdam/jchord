@@ -65,7 +65,9 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Util.Templates.ListIterator;
 
 @Chord(
-    name = "thresc-path-java"
+    name = "thresc-path-java",
+    namesOfSigns = { "EH" },
+    signs = { "E0,H0:E0_H0" }
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	public final static int REDIRECTED = -1;
@@ -110,6 +112,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
     /***** data structures set once for all runs *****/
     // set of heap insts deemed escaping in some run so far
 	private Set<Quad> escHeapInsts;
+   	private Map<Quad, Set<Quad>> heapInstToAllocInsts;
 	private Map<Set<Quad>, Set<Quad>> allocInstsToHeapInsts;
 	private int[] methToFstP;
 	private int[] methToNumP;
@@ -238,6 +241,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		assert (fstP == numP);
 		isDoneMeth = new boolean[numM];
 		cIdMap = new IndexHashMap<String>();
+ 		heapInstToAllocInsts = new HashMap<Quad, Set<Quad>>();
     }
 	
 	public void initPass() {
@@ -282,6 +286,49 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			"\nret: " + numRet + 
 			"\ngetstatic: " + numGetstatic +
 			"\nputstatic: " + numPutstatic);
+
+		ProgramRel relEH = (ProgramRel) Project.getTrgt("EH");
+		relEH.zero();
+		allocInstsToHeapInsts = new HashMap<Set<Quad>, Set<Quad>>();
+        for (Map.Entry<Quad, Set<Quad>> e :
+				heapInstToAllocInsts.entrySet()) {
+            Quad heapInst = e.getKey();
+            Set<Quad> allocInsts = e.getValue();
+			for (Quad allocInst : allocInsts)
+				relEH.add(heapInst, allocInst);
+			Set<Quad> heapInsts = allocInstsToHeapInsts.get(allocInsts);
+			if (heapInsts == null) {
+				heapInsts = new ArraySet<Quad>();
+				allocInstsToHeapInsts.put(allocInsts, heapInsts);
+			}
+			heapInsts.add(heapInst);
+		}
+		relEH.save();
+
+		try {
+			String outDirName = Properties.outDirName;
+			{
+				PrintWriter writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "hybrid_pathEscE.txt")));
+				for (Quad e : escHeapInsts)
+					writer.println(Program.v().toPosStr(e));
+				writer.close();
+			}
+
+			{
+				PrintWriter writer = new PrintWriter(new FileWriter(
+					new File(outDirName, "hybrid_pathLocE.txt")));
+   		     	for (Quad e : heapInstToAllocInsts.keySet()) {
+					writer.println(Program.v().toPosStr(e));
+					for (Quad h : heapInstToAllocInsts.get(e)) {
+						writer.println("\t" + Program.v().toPosStr(h));
+					}
+				}
+				writer.close();
+			}
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		}
 	}
 
 	public void donePass() {
@@ -591,7 +638,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         relRelevantEH.load();
         PairIterable<Quad, Quad> tuples =
             relRelevantEH.getAry2ValTuples();
-    	Map<Quad, Set<Quad>> heapInstToAllocInsts = new HashMap<Quad, Set<Quad>>();
         for (Pair<Quad, Quad> tuple : tuples) {
             Quad e = tuple.val0;
             if (escHeapInsts.contains(e)) {
@@ -621,45 +667,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
             }
         }
         relHybridEscE.close();
-
-		allocInstsToHeapInsts = new HashMap<Set<Quad>, Set<Quad>>();
-        for (Map.Entry<Quad, Set<Quad>> e :
-				heapInstToAllocInsts.entrySet()) {
-            Quad heapInst = e.getKey();
-            Set<Quad> allocInsts = e.getValue();
-			Set<Quad> heapInsts = allocInstsToHeapInsts.get(allocInsts);
-			if (heapInsts == null) {
-				heapInsts = new ArraySet<Quad>();
-				allocInstsToHeapInsts.put(allocInsts, heapInsts);
-			}
-			heapInsts.add(heapInst);
-		}
-
-		try {
-			String outDirName = Properties.outDirName;
-			{
-				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "hybrid_pathEscE.txt")));
-				for (Quad e : escHeapInsts)
-					writer.println(Program.v().toPosStr(e));
-				writer.close();
-			}
-
-			{
-				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "hybrid_pathLocE.txt")));
-   		     	for (Quad e : heapInstToAllocInsts.keySet()) {
-					writer.println(Program.v().toPosStr(e));
-					for (Quad h : heapInstToAllocInsts.get(e)) {
-						writer.println("\t" + Program.v().toPosStr(h));
-					}
-				}
-				writer.close();
-			}
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
-		}
-		
 	}
 
 	private InvkInfo getInvkInfo(Quad q, int pId) {
@@ -734,10 +741,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 	public void processEnterMethod(int m, int t) {
 		// System.out.println("EM " + domM.get(m) + " " + t);
-		// System.out.println("EM " + m);
+		// System.out.println(t + " EM " + m);
 		ThreadHandler handler = threadToHandlerMap.get(t);
 		if (handler == null) {
-			handler = new ThreadHandler();
+			handler = new ThreadHandler(t);
 			threadToHandlerMap.put(t, handler);
 		}
 		handler.processEnterMethod(m);
@@ -745,7 +752,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
     public void processLeaveMethod(int m, int t) {
 		// System.out.println("LM " + domM.get(m) + " " + t);
-		// System.out.println("LM " + m);
+		// System.out.println(t + " LM " + m);
 		ThreadHandler handler = threadToHandlerMap.get(t);
 		if (handler != null)
 			handler.processLeaveMethod(m);
@@ -814,7 +821,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		private boolean[] alreadyCalled;
 		private int prevQid;
 		private int currPid;
-		public ThreadHandler() {
+		private int tId;
+		public ThreadHandler(int tId) {
+			this.tId = tId;
 			prevQid = -1;
 			alreadyCalled = new boolean[domM.size()];
 		}
@@ -1099,6 +1108,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			BasicBlockTableOperand bo = Phi.getPreds(q);
 			int n = bo.size();
 			int i = 0;
+			// if (top.prevBB == null)
+			//	System.out.println("XXX: " + domM.get(top.mId));
 			assert (top.prevBB != null);
 			for (; i < n; i++) {
 				BasicBlock bb = bo.get(i);
@@ -1149,6 +1160,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			RegisterOperand lo = Move.getDest(q);
 			Register l = lo.getRegister();
 			int lId = domU.indexOf(l);
+			// if (lId == -1)
+			// 	System.out.println(q + " " + " XXX" + l + "XXX " + domM.get(top.mId) + " " + tId);
 			assert (lId != -1);
 			if (ro != null) {
 				Register r = ro.getRegister();
