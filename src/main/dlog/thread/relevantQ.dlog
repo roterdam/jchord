@@ -13,6 +13,7 @@ TM(t:T0,m:M0) input
 relevantT(t:T0) input
 relevantP(p:P0) output
 relevantQ(q:Q0) output
+relevantM(m:M0)
 
 ###
 
