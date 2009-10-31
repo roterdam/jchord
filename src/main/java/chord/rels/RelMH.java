@@ -28,7 +28,7 @@ public class RelMH extends ProgramRel {
 		DomM domM = (DomM) doms[0];
 		DomH domH = (DomH) doms[1];
 		int numH = domH.size();
-		for (int hIdx = 0; hIdx < numH; hIdx++) {
+		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad q = (Quad) domH.get(hIdx);
 			jq_Method m = Program.v().getMethod(q);
 			int mIdx = domM.indexOf(m);
