@@ -30,6 +30,7 @@ import joeq.UTF.Utf8;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
+import joeq.Class.jq_LineNumberBC;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -72,6 +73,7 @@ public class Program {
 	private boolean HTMLizedJavaSrcFiles;
 	private final Map<Inst, jq_Method> instToMethodMap = 
 		new HashMap<Inst, jq_Method>();
+	private String[] scopeExcludedNames;
 
 	public void init() {
 		if (isInited)
@@ -79,6 +81,9 @@ public class Program {
 		if (Properties.doSSA)
 			jq_Method.doSSA();
 		try {
+        	String s = Properties.scopeExcludeNames;
+			scopeExcludedNames = s.equals("") ? new String[0] :
+            	s.split(Properties.LIST_SEPARATOR);
 			boolean filesExist =
 				(new File(Properties.classesFileName)).exists() &&
 				(new File(Properties.methodsFileName)).exists();
@@ -107,13 +112,23 @@ public class Program {
 			try {
 				c = (jq_Class) Helper.load(s);
 			} catch (Exception ex) {
-				System.out.println("WARNING: ignoring class: " + s +
+				System.out.println("WARNING: Ignoring class: " + s +
 					"; reason follows:");
 				ex.printStackTrace();
 				continue;
 			}
 			assert (c != null);
-			classes.add(c);
+			String cName = c.getName();
+			boolean exclude = false;
+			for (String n : scopeExcludedNames) {
+				if (cName.startsWith(n)) {
+					System.out.println("WARNING: Excluding class: " + n);
+					exclude = true;
+					break;
+				}
+			}
+			if (!exclude)
+				classes.add(c);
 		}
 		r.close();
 	}
@@ -130,15 +145,17 @@ public class Program {
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
 		String s;
 		while ((s = r.readLine()) != null) {
-			int sep1 = s.indexOf(':');
-			int sep2 = s.indexOf('@', sep1 + 1);
-			String mName = s.substring(0, sep1);
-			String mDesc = s.substring(sep1 + 1, sep2);
-			String cName = s.substring(sep2 + 1);
+			MethodSign sign = MethodSign.parse(s);
+			String cName = sign.cName;
 			jq_Class c = getPreparedClass(cName);
-			assert (c != null);
-			jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
-			methods.add(m);
+			if (c == null)
+				System.out.println("WARNING: Excluding method: " + s);
+			else {
+				String mName = sign.mName;
+				String mDesc = sign.mDesc;
+				jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
+				methods.add(m);
+			}
 		}
 		r.close();
 	}
@@ -171,8 +188,27 @@ public class Program {
 
 	private void init(IBootstrapper bootstrapper) throws IOException {
 		bootstrapper.run();
-		classes = bootstrapper.getPreparedClasses();
-		methods = bootstrapper.getReachableMethods();
+		classes = new IndexHashSet<jq_Class>();
+		for (jq_Class c : bootstrapper.getPreparedClasses()) {
+			boolean exclude = false;
+			for (String s : scopeExcludedNames) {
+				if (c.getName().startsWith(s)) {
+					System.out.println("WARNING: Excluding class: " + c);
+					exclude = true;
+					break;
+				}
+			}
+			if (!exclude)
+				classes.add(c);
+		}
+		methods = new IndexHashSet<jq_Method>();
+		for (jq_Method m : bootstrapper.getReachableMethods()) {
+			jq_Class c = m.getDeclaringClass();
+			if (!classes.contains(c))
+				System.out.println("WARNING: Excluding method: " + m);
+			else
+				methods.add(m);
+		}
 		buildTypes();
 		write();
 	}
@@ -184,7 +220,7 @@ public class Program {
 		assert (classPathName != null);
         String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
-        final String cmd = "java -ea " +
+        final String cmd = "java " + Properties.runtimeJvmargs +
             " -cp " + classPathName +
             " -agentpath:" + Properties.instrAgentFileName +
             "=classes_file_name=" + Properties.classesFileName +
@@ -217,11 +253,11 @@ public class Program {
 		classesFileWriter.close();
 		PrintWriter methodsFileWriter =
 			new PrintWriter(Properties.methodsFileName);
-		for (jq_Method m : methods)
+		for (jq_Method m : methods) {
 			methodsFileWriter.println(m);
+		}
 		methodsFileWriter.close();
 	}
-
 
 	public void mapInstToMethod(Inst i, jq_Method m) {
 		instToMethodMap.put(i, m);
