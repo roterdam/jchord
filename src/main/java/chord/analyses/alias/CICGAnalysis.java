@@ -21,12 +21,12 @@ import chord.project.Project;
 	consumedNames = { "IM", "MM", "reachableM" }
 )
 public class CICGAnalysis extends JavaAnalysis {
-	private DomM domM;
-	private ProgramRel relRootM;
-	private ProgramRel relReachableM;
-	private ProgramRel relIM;
-	private ProgramRel relMM;
-	private CICG callGraph;
+	protected DomM domM;
+	protected ProgramRel relRootM;
+	protected ProgramRel relReachableM;
+	protected ProgramRel relIM;
+	protected ProgramRel relMM;
+	protected CICG callGraph;
 	public void run() {
 		domM = (DomM) Project.getTrgt("M");
 		relRootM = (ProgramRel) Project.getTrgt("rootM");
