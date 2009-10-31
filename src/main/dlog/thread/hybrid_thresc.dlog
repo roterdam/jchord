@@ -7,9 +7,17 @@
 .include "P.dom"
 .include "U.dom"
 
-.bddvarorder E0_Q0xQ1_P0_U0xU1_H0xH1xF0
+# H0xF0_H1
+# H0xF0xH1
+# H1_H0xF0
+# bad
+# F0_H0xH1
+# H1_H0_F0
+# H1_Q0_H0xF0
 
-succ(p:Q0,q:Q1) input
+.bddvarorder E0_Q0xQ1xQ2_P0_U0xU1_H0xF0xH1
+
+succ(p:Q,q:Q) input
 asgnP(p:P0,l:U0) input
 copyP(p:P0,l:U0,r:U1) input
 copyQ(q:Q0,l:U0,r:U1) input
@@ -33,21 +41,21 @@ spawnQ(q:Q0,v:U0) output
 startQ(q:Q0,v:U0) output
 baseQU(q:Q0,v:U0) output
 
+relevantAllocQ(q:Q,l:U,h:H)
+relevantCopyX(q:Q,l:U,r:U)
+relevantGetinstQ(q:Q,l:U,b:U,f:F)
+QHH_iTrans(q:Q,h1:H,h2:H)
+presQQU(q1:Q,q2:Q,v:U)
 presQU(q:Q0,v:U0) input
-liveQU_i(q:Q0,v:U0) input
 liveQU_o(q:Q0,v:U0) input
 PQ(p:P0,q:Q0) input
 PE(p:P0,e:E0) input
 relevantP(p:P0) input
 EU(e:E0,w:U0)
-#flowinsEscE(e:E0) input
 
 QHFH_i(q:Q0,h1:H0,f:F0,h2:H1) output
-QHFH_o(q:Q0,h1:H0,f:F0,h2:H1) output
 QUH_i(q:Q0,v:U0,h:H0) output
-QUH_o(q:Q0,v:U0,h:H0) output
 escQH_i(q:Q0,h:H0) output
-escQH_o(q:Q0,h:H0) output
 escQHtc_i(q:Q0,h:H0) output
 escQU(q:Q0,v:U0) output
 hybridVisitedE(e:E0) output
@@ -58,6 +66,7 @@ queryQU(q:Q0,v:U0) output
 relevantQUH(q:Q0,v:U0,h:H0) output
 relevantPUH(p:P0,v:U0,h:H0) output
 relevantEH(e:E0,h:H0) output
+succTrans(p:Q,q:Q)
 
 ###
 
@@ -75,31 +84,32 @@ baseQU(q,v) :- basePU(p,v), PQ(p,q).
 
 ###
 
+succTrans(p,q) :- p=q.
+succTrans(p,q) :- succ(p,q).
+succTrans(p,r) :- succTrans(p,q), succTrans(q,r). 
+
 QHFH_i(_,0,_,0).
-QHFH_o(_,0,_,0).
 escQH_i(_,0).
-escQH_o(_,0).
 
-QUH_o(q,v,h) :- QUH_i(q,v,h), presQU(q,v). split
-QHFH_o(q,h1,f,h2) :- QHFH_i(q,h1,f,h2).
-escQH_o(q,h) :- escQH_i(q,h).
+presQQU(q,q2,u) :- presQU(q,u), succ(q,q2).
 
-#QUH_i(q,v,h) :- liveQU_i(q,v), QUH_o(p,v,h), succ(p,q).
-QUH_i(q,v,h) :- QUH_o(p,v,h), succ(p,q).
-QHFH_i(q,h1,f,h2) :- QHFH_o(p,h1,f,h2), succ(p,q). 
-escQH_i(q,h) :- escQH_o(p,h), succ(p,q).
+QUH_i(q2,v,h) :- QUH_i(q,v,h), presQQU(q,q2,v). pri=5
 
-QUH_o(q,l,h) :- liveQU_o(q,l), allocQ(q,l,h).
-QUH_o(q,l,h) :- liveQU_o(q,l), copyX(q,l,r), QUH_i(q,r,h). split
-QUH_o(q,l,h) :- liveQU_o(q,l), getinstQ(q,l,b,f), QUH_i(q,b,g), QHFH_i(q,g,f,h). split
-QHFH_o(q,h1,f,h2) :- putinstQ(q,b,f,r), QUH_i(q,b,h1), QUH_i(q,r,h2). split
-escQH_o(q,h) :- putstatQ(q,l), QUH_i(q,l,h). 
-escQH_o(q,h) :- spawnQ(q,v), QUH_i(q,v,h).
-QUH_o(q,l,0) :- getstatQ(q,l).
+relevantAllocQ(q,l,h) :- liveQU_o(q,l), allocQ(q,l,h).
+relevantCopyX(q,l,r) :- liveQU_o(q,l), copyX(q,l,r).
+relevantGetinstQ(q,l,b,f) :- liveQU_o(q,l), getinstQ(q,l,b,f).
+
+QUH_i(q2,l,h) :- relevantAllocQ(q,l,h), succ(q,q2).
+QUH_i(q2,l,h) :- relevantCopyX(q,l,r), QUH_i(q,r,h), succ(q,q2). split
+QUH_i(q2,l,h) :- relevantGetinstQ(q,l,b,f), QUH_i(q,b,g), QHFH_i(p,g,f,h), succTrans(p,q), succ(q,q2). split
+QHFH_i(q2,h1,f,h2) :- succ(q,q2), putinstQ(q,b,f,r), QUH_i(q,b,h1), QUH_i(q,r,h2). split
+escQH_i(q2,h) :- putstatQ(q,l), QUH_i(q,l,h), succ(q,q2). 
+escQH_i(q2,h) :- spawnQ(q,v), QUH_i(q,v,h), succ(q,q2).
+QUH_i(q2,l,0) :- getstatQ(q,l), succ(q,q2).
 QUH_i(q,v,0) :- startQ(q,v).
 
-escQHtc_i(q,h) :- escQH_i(q,h).
-escQHtc_i(q,h) :- escQHtc_i(q,h1), QHFH_i(q,h1,_,h).
+escQHtc_i(q2,h) :- escQH_i(q,h), succTrans(q,q2).
+escQHtc_i(q,h) :- escQHtc_i(q,h1), QHFH_i(p,h1,_,h), succTrans(p,q).
 
 escQU(q,v) :- QUH_i(q,v,h), escQHtc_i(q,h).
 
@@ -110,13 +120,15 @@ hybridEscE(e) :- escQU(q,v), PQ(p,q), PE(p,e), EU(e,v).
 
 ###
 
-#queryE(e) :- flowinsEscE(e), !hybridEscE(e), hybridVisitedE(e).
 queryE(e) :- !hybridEscE(e), hybridVisitedE(e).
 
 queryPU(p,v) :- PE(p,e), EU(e,v), queryE(e).
 queryQU(q,v) :- queryPU(p,v), PQ(p,q).
 
-relevantQUH(q,v,h) :- queryQU(q,v), relevantQUH(q,v,h1), QHFH_i(q,h,_,h1).
+QHH_iTrans(q,h,h2) :- QHFH_i(q,h,_,h2).
+QHH_iTrans(q2,h,h2) :- QHH_iTrans(q,h,h2), succTrans(q,q2).
+
+relevantQUH(q,v,h) :- queryQU(q,v), relevantQUH(q,v,h1), QHH_iTrans(q,h,h1).
 relevantQUH(q,v,h) :- queryQU(q,v), QUH_i(q,v,h).
 relevantPUH(p,v,h) :- relevantQUH(q,v,h), PQ(p,q).
 
