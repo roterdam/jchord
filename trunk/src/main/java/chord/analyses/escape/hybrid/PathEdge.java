@@ -5,40 +5,30 @@
  */
 package chord.analyses.escape.hybrid;
 
-import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.Quad;
-
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class PathEdge {
-	final Quad q;	// q == null => empty basic block
-	final int qIdx; // q == null => qIdx == -1
-	final int qId;
-	final BasicBlock bb;	// basic block of quad
-	final SD sd;
-	public PathEdge(Quad q, int qIdx, BasicBlock bb, SD sd) {
-		this.q = q;
-		this.qIdx = qIdx;
-		this.bb = bb;
-		this.sd = sd;
-		this.qId = q == null ? -1 : q.getID();
+	final SrcNode srcNode;
+	final DstNode dstNode;
+	public PathEdge(SrcNode s, DstNode d) {
+		srcNode = s;
+		dstNode = d;
 	}
 	public int hashCode() {
-		return qId;
+		return srcNode.hashCode() + dstNode.hashCode();
 	}
 	public boolean equals(Object o) {
-		// System.out.println("PE EQ");
 		if (o == this)
 			return true;
 		if (!(o instanceof PathEdge))
 			return false;
 		PathEdge that = (PathEdge) o;
-		return q == that.q && bb == that.bb &&
-			sd.equals(that.sd);
+		return srcNode.equals(that.srcNode) &&
+			dstNode.equals(that.dstNode);
 	}
 	public String toString() {
-		return q + ";" + sd;
+		return srcNode + ";" + dstNode;
 	}
 }
