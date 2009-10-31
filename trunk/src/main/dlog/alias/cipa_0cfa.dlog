@@ -23,6 +23,7 @@
 
 VHfilter(v:V,h:H) input
 HT(h:H0,t:T1) input
+clsHF(h:H,f:F)
 clsTF(t:T,f:F) input
 cha(n:M1,t:T1,m:M0) input
 sub(t1:T1,t2:T0) input
