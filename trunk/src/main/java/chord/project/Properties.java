@@ -13,7 +13,7 @@ import chord.util.ClassUtils;
  *
  * Chord I/O properties
  *
- * user.dir
+ * chord.work.dir
  *     Location of working directory during Chord's execution
  * chord.out.dir
  *     Location of directory to which Chord dumps all files
@@ -116,7 +116,7 @@ public class Properties {
 
 	// Chord I/O properties
 
-	public final static String workDirName = System.getProperty("user.dir");
+	public final static String workDirName = System.getProperty("chord.work.dir");
 	public final static String outDirName = System.getProperty("chord.out.dir");
 	static {
 		assert(outDirName != null);
@@ -139,6 +139,7 @@ public class Properties {
 	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
 	public final static String classesFileName = build("chord.classes.file", "classes.txt");
 	public final static String methodsFileName = build("chord.methods.file", "methods.txt");
+	public final static String scopeExcludeNames = System.getProperty("chord.scope.exclude", "");
 
     // Program analysis properties
 
@@ -151,7 +152,7 @@ public class Properties {
 	public final static String bddbddbWorkDirName = System.getProperty("chord.bddbddb.work.dir", outDirName);
 	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 	public final static String bddbddbNoisy = System.getProperty("chord.bddbddb.noisy", "no");
-	public final static boolean saveMap = buildBoolProp("chord.save.map", false);
+	public final static boolean saveMap = buildBoolProp("chord.save.map", true);
 
 	// Program instrumentation properties
 
@@ -160,13 +161,13 @@ public class Properties {
 	public final static String checkExcludeNames =
 		System.getProperty("chord.check.exclude", "java.,sun.,com.ibm.,org.apache.harmony.");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
-	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-Xmx1024m");
+	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
 	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
 	public final static String userClassesDirName = build("chord.user.classes.dir", "user_classes");
 	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
 	public final static String crudeTraceFileName = build("chord.crude.trace.file", "crude_trace.txt");
 	public final static String finalTraceFileName = build("chord.final.trace.file", "final_trace.txt");
-	public final static boolean doTracePipe = buildBoolProp("chord.trace.pipe", false);
+	public final static boolean doTracePipe = buildBoolProp("chord.trace.pipe", true);
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 	public final static String runtimeClassName =
 		System.getProperty("chord.runtime.class", "chord.project.BufferedRuntime");
@@ -185,6 +186,7 @@ public class Properties {
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
 	public final static String bddLibDirName = System.getProperty("chord.bdd.lib.dir");
 	public final static String instrAgentFileName = System.getProperty("chord.instr.agent.file");
+	public final static String jvmargs = System.getProperty("chord.jvmargs");
 
 	public static void print() {
 		System.out.println("******************************");
@@ -201,6 +203,7 @@ public class Properties {
 		System.out.println("chord.reuse.scope: " + reuseScope);
 		System.out.println("chord.classes.file: " + classesFileName);
 		System.out.println("chord.methods.file: " + methodsFileName);
+		System.out.println("chord.scope.exclude: " + scopeExcludeNames);
 		System.out.println();
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
@@ -231,6 +234,7 @@ public class Properties {
 		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
 		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
 		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
+		System.out.println("chord.jvmargs: " + jvmargs);
 		System.out.println("******************************");
 	}
 	public static String build(String propName, String fileName) {
