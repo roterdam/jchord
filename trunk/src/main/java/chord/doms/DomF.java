@@ -15,9 +15,11 @@ import chord.visitors.IFieldVisitor;
 /**
  * Domain of fields.
  * <p>
- * The 0th element in this domain denotes a distinguished hypothetical
- * field denoted <tt>arrayElem</tt> that is regarded as accessed
- * whenever an array element is accessed.
+ * The 0th element in this domain (null) denotes a distinguished
+ * hypothetical field that is regarded as accessed whenever an
+ * array element is accessed.  This field can be used by analyses
+ * that do not distinguish between different elements of the
+ * same array.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

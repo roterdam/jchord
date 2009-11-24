@@ -15,6 +15,11 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 
+/**
+ * Abstract domain of quads and entry/exit basic blocks of methods.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public abstract class QuadDom extends ProgramDom<Inst> {
 	protected DomM domM;
 	protected jq_Method ctnrMethod;

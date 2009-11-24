@@ -8,7 +8,7 @@ package chord.visitors;
 import joeq.Compiler.Quad.Quad;
 
 /**
- * Visitor over all monitorenter statements in all methods
+ * Visitor over all monitorexit statements in all methods
  * in the program.
  * 
  * @author Mayur Naik (mayur.naik@intel.com)

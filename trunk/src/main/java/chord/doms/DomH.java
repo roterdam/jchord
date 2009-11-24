@@ -15,7 +15,11 @@ import chord.visitors.INewInstVisitor;
 
 /**
  * Domain of object allocation statements.
- * 
+ * <p>
+ * The 0th element of this domain (null) is a distinguished
+ * hypothetical object allocation statement that may be used
+ * for various purposes.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(

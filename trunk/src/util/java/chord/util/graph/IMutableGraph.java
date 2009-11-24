@@ -6,7 +6,7 @@
 package chord.util.graph;
 
 /**
- * Specification of a mutable, unlabeled, directed graph along with
+ * Specification of a mutable, unlabeled, directed graph with
  * useful operations on it.
  * <p>
  * Classes implementing this interface are:

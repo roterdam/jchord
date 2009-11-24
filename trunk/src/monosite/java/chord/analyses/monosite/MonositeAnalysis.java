@@ -11,7 +11,7 @@ import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
 
 /**
- * Monomorphic call site analysis.
+ * Static monomorphic call site analysis.
  * <p>
  * Outputs relations <tt>monoSite</tt> and <tt>polySite</tt>
  * containing dynamically dispatching method invocation statements

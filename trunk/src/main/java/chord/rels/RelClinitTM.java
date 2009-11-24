@@ -14,7 +14,7 @@ import chord.visitors.IMethodVisitor;
 
 /**
  * Relation containing each tuple (t,m) such that method m is
- * the class initializer method of type t.
+ * the class initializer method of class t.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

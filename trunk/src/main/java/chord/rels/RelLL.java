@@ -20,18 +20,15 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
 import chord.doms.DomL;
-import chord.doms.DomE;
-import chord.project.Program;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 import chord.visitors.IMethodVisitor;
 
 /**
- * Relation containing each tuple (e,l) such that statement e
- * that accesses (reads or writes) an instance field, a
- * static field, or an array element is lexically enclosed in
- * a synchronized block that acquires a lock at monitorenter
- * statement l.
+ * Relation containing each tuple (l1,l2) such that the synchronized
+ * block or synchronized method that acquires the lock at point l1
+ * lexically encloses (directly or transitively) the synchronized block
+ * that acquires the lock at point l2.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

@@ -12,8 +12,8 @@ import chord.util.IndexMap;
 import chord.util.tuple.object.Pair;
 
 /**
- * Specification of an immutable, unlabeled, directed graph along
- * with useful operations on it.
+ * Specification of an immutable, unlabeled, directed graph with
+ * useful operations on it.
  * <p>
  * This interface must be used when it is desirable to provide an
  * immutable view of an unlabeled, directed graph to clients even
