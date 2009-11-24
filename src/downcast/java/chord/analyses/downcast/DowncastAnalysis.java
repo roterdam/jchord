@@ -11,7 +11,7 @@ import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
 
 /**
- * Downcast safety analysis.
+ * Static downcast safety analysis.
  * <p> 
  * Outputs relations <tt>safeDowncast</tt> and <tt>unsafeDowncast</tt>
  * containing pairs (v,t) such that local variable v of reference type

@@ -8,7 +8,7 @@ package chord.util.graph;
 import java.util.Set;
 
 /**
- * Specification of an immutable, labeled, directed graph along with
+ * Specification of an immutable, labeled, directed graph with
  * useful operations on it.
  * <p>
  * This interface must be used when it is desirable to provide an

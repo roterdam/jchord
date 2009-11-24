@@ -15,7 +15,8 @@ import chord.project.Program;
 import chord.visitors.IRelLockInstVisitor;
 
 /**
- * Domain of all monitorexit statements.
+ * Domain of all lock release points, including monitorexit
+ * statements and (unique) exit basic blocks of synchronized methods.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

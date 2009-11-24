@@ -28,7 +28,7 @@ import chord.util.IndexSet;
  * The above two methods are the entry-point methods of the implicitly
  * created main thread and each explicitly created thread,
  * respectively.  Due to Chord's emphasis on concurrency, these
- * methods are referenced frequently by various predefined program
+ * methods are referenced frequently by various pre-defined program
  * analyses expressed in Datalog, and giving them special indices
  * makes it convenient to reference them in those analyses.
  * 

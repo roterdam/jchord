@@ -19,7 +19,7 @@ import chord.project.ProgramRel;
 /**
  * Relation containing each tuple (m1,t,m2) such that method m2 is the
  * resolved method of an invokevirtual or invokeinterface call with
- * resolved method m1 on an object of class t.
+ * resolved method m1 on an object of concrete class t.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

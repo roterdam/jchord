@@ -16,7 +16,7 @@ import chord.util.IndexHashMap;
 
 /**
  * Complete implementation of a mutable, unlabeled, directed graph
- * along with useful operations on it.
+ * with useful operations on it.
  * <p>
  * This class must be used by clients who wish to use both, the
  * operations inherited by it (e.g., computing SCCs, ordering nodes

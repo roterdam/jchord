@@ -17,7 +17,7 @@ import chord.project.ProgramRel;
 import chord.util.tuple.object.Pair;
 
 /**
- * Reachable abstract threads analysis.
+ * Static analysis computing reachable abstract threads.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
