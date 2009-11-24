@@ -72,7 +72,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final IndexMap<String> Wmap = instrumentor.getWmap();
 		final int numMeths = (Mmap != null) ? Mmap.size() : 0;
 		final String runtimeClassName = Properties.runtimeClassName;
-		String instrProgramCmd = "java -ea " + Properties.runtimeJvmargs +
+		String instrProgramCmd = "java " + Properties.runtimeJvmargs +
 			" -Xbootclasspath/p:" +
 			Properties.mainClassPathName + File.pathSeparator + bootClassesDirName +
 			" -Xverify:none" + // " -verbose" + 

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="chord" default="help">
-  <property name="chord.home.dir" location="."/>
 
   <target name="ant-contrib">
     <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar"/>
@@ -25,19 +24,21 @@
   </target>
 
   <!-- Target props-file does following things in order:
-   1. Sets chord.work.dir to current directory if it is not already set
+   1. Checks that chord.work.dir is set
    2. Loads properties from file {chord.work.dir}/chord.properties, if the file exists;
       Each relative path element in the value of any property named chord.*.path in the
       file is converted to an absolute path element w.r.t. {chord.work.dir}
-   3. Sets chord.out.dir to {chord.work.dir}/chord_output, if it is not already set
   -->
   <target name="props-file" depends="ant-contrib">
     <if>
       <isset property="chord.work.dir"/>
-      <then/>
+      <then>
+        <fail message="ERROR: Directory ${chord.work.dir} does not exist">
+          <condition><not><available file="${chord.work.dir}" type="dir"/></not></condition>
+        </fail>
+      </then>
       <else>
-        <property name="chord.work.dir" location="."/>
-        <echo message="WARNING: Property chord.work.dir not set; setting it to: ${chord.work.dir}"/>
+        <fail message="ERROR: Property chord.work.dir not defined"/>
       </else>
     </if>
     <property name="chord.props.file" location="${chord.work.dir}/chord.properties"/>
@@ -51,7 +52,6 @@
       </then>
       <else/>
     </if>
-    <property name="chord.out.dir" location="${chord.work.dir}/chord_output/"/>
   </target>
 
   <target name="util-class-path">
@@ -80,27 +80,11 @@
   <echo>
   compile      Compile Chord source code
   run          Run Chord
-               Optional properties:
+               Required properties:
                - chord.work.dir
-                 working dir while running Chord; default=ant basedir
-               - chord.out.dir
-                 dir to dump Chord's output files; default={chord.work.dir}/chord_output
-               - chord.main.class
-                 fully-qualified name of main class of program to be analyzed
-               - chord.class.path
-                 classpath of program to be analyzed; need not include system classpath
-               - chord.src.path
-                 path containing Java surce files of program to be analyzed
-               - chord.out.file
-                 file to which stdout is redirected; default={chord.out.dir/log.txt
-               - chord.err.file
-                 file to which stderr is redirected; default={chord.out.dir/log.txt
-               - chord.analyses
-                 comma-separated list of names of analyses to be run on program
-               - chord.scope.kind
-                 specifies how to compute program scope; values=[rta|dynamic]; default=rta
-               - chord.reuse.scope
-                 specifies whether to reuse scope; values=[true|false]; default=false
+                 working dir while running Chord
+               Optional properties:
+                 See http://code.google.com/p/jchord/wiki/ChordProperties_2_0
   run-XXX      Run custom analysis XXX (e.g. datarace, deadlock, etc.)
   j2h_xref     Convert .java files to .html with cross-references
                Required properties:
@@ -191,11 +175,13 @@
   </target>
 
   <target name="run" depends="main-class-path,bdd-lib-dir,props-file">
-    <mkdir dir="${chord.out.dir}"/>
-    <property name="chord.java.analysis.path" location="classes/main"/>
-    <property name="chord.dlog.analysis.path" location="src/main/dlog"/>
-    <property name="chord.max.heap" value="1024m"/>
+    <fail message="ERROR: Property chord.home.dir must not be explicitly set">
+      <condition><isset property="chord.home.dir"/></condition>
+    </fail>
+    <property name="chord.home.dir" location="."/>
+    <property name="chord.max.heap" value="2048m"/>
     <property name="chord.max.stack" value="32m"/>
+    <property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
     <if>
       <os family="unix"/>
       <then>
@@ -216,10 +202,7 @@
     </if>
     <java classname="chord.project.Project"
       	fork="true" failonerror="true" dir="${chord.work.dir}">
-    <jvmarg value="-showversion"/>
-    <jvmarg value="-ea"/> 
-    <jvmarg value="-Xmx${chord.max.heap}"/>
-    <jvmarg value="-Xss${chord.max.stack}"/>
+    <jvmarg line="${chord.jvmargs}"/>
     <!--jvmarg value="-agentlib:hprof=cpu=times,interval=10,depth=5"/-->
     <syspropertyset>
         <propertyref builtin="all"/>
@@ -359,6 +342,7 @@
       <sysproperty key="basedir" file="${work.dir}"/>
       <sysproperty key="maxtuples" value="${max.tuples}"/>
       <sysproperty key="noisy" value="${noisy}"/>
+      <sysproperty key="strict" value="yes"/>
       <arg file="${dlog.file}"/>
     </java>
   </target>
