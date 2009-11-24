@@ -39,7 +39,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 	public void init() { }
 	public void save() {
 		System.out.println("SAVING dom " + name + " size: " + size());
-		super.save(Properties.outDirName, Properties.saveMap);
+		super.save(Properties.outDirName, Properties.saveMaps);
 		Project.setTrgtDone(this);
 	}
 	public void fill() {

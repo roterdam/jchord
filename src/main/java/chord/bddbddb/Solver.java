@@ -29,7 +29,7 @@ public class Solver {
 		String cmd =
 			"java -Xmx" + Properties.bddbddbMaxHeap +
 			" -cp " + Properties.bddbddbClassPathName +
-			" -Dnoisy=" + Properties.bddbddbNoisy +
+			" -Dnoisy=" + (Properties.bddbddbNoisy ? "yes" : "no") +
 			" -Djava.library.path=" + Properties.bddLibDirName +
 			" -Dbasedir=" + Properties.bddbddbWorkDirName +
 			" net.sf.bddbddb.Solver " + fileName;
