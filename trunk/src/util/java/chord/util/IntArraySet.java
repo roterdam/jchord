@@ -40,20 +40,10 @@ public class IntArraySet {
     /** the default capacity for new sets */
     protected static final int DEFAULT_CAPACITY = 10;
 
-    /**
-     * Creates a new <code>IntArraySet</code> instance with the
-     * default capacity.
-     */
     public IntArraySet() {
         this(DEFAULT_CAPACITY);
     }
 
-    /**
-     * Creates a new <code>IntArraySet</code> instance with the
-     * specified capacity.
-     *
-     * @param capacity an <code>int</code> value
-     */
     public IntArraySet(int capacity) {
 		if (capacity <= 0)
 			capacity = 1;
@@ -61,14 +51,6 @@ public class IntArraySet {
         _pos = 0;
     }
 
-    /**
-     * Creates a new <code>IntArraySet</code> instance whose
-     * capacity is the greater of the length of <tt>values</tt> and
-     * DEFAULT_CAPACITY and whose initial contents are the specified
-     * values.
-     *
-     * @param values an <code>int[]</code> value
-     */
     public IntArraySet(IntArraySet that) {
 		int n = that._pos;
 		if (n == 0) {
