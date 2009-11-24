@@ -12,7 +12,7 @@ import chord.project.ProgramRel;
 
 /**
  * Call graph analysis producing a thread-oblivious, abbreviated,
- * context-sensitive call graph of the program.
+ * context-insensitive call graph of the program.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

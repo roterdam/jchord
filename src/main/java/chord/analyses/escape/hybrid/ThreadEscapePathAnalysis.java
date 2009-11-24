@@ -740,6 +740,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		return args;
 	}
 	public void processEnterMethod(int m, int t) {
+/*
+		jq_Method meth = domM.get(m);
+		String name = meth.getDeclaringClass().getName();
+		if (!name.startsWith("java.") && !name.startsWith("sun.") && !name.startsWith("com.ibm."))
+			System.out.println("METHOD: " + meth + " " + t);
+*/
 		// System.out.println("EM " + domM.get(m) + " " + t);
 		// System.out.println(t + " EM " + m);
 		ThreadHandler handler = threadToHandlerMap.get(t);
@@ -818,14 +824,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		// reachable from method with id ignoredMethId
 		private int ignoredMethId;
 		private int ignoredMethNumFrames;
-		private boolean[] alreadyCalled;
+		// private boolean[] alreadyCalled;
 		private int prevQid;
 		private int currPid;
 		private int tId;
 		public ThreadHandler(int tId) {
 			this.tId = tId;
 			prevQid = -1;
-			alreadyCalled = new boolean[domM.size()];
+			// alreadyCalled = new boolean[domM.size()];
 		}
 		private int getCid(int pId) {
 			String s = Integer.toString(pId);
@@ -906,11 +912,13 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				ignoredMethNumFrames = 1;
 				return;
 			}
+/*
 			if (alreadyCalled[mId]) {
 				ignoredMethId = mId;
 				ignoredMethNumFrames = 1;
 				return;
 			}
+*/
 			InvkInfo pendingInvk = (top != null) ? top.pendingInvk : null;
 			List<IntPair> methArgs = methToArgs[mId];
 			if (methArgs == null)
@@ -934,14 +942,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					System.out.println("WARNING: Treating method: " +
 						domM.get(mId) + " as root of thread");
 				} else if (!mSign.equals("<clinit>()V")) {
-					System.out.println("WARNING: Ignoring phantom method: " +
-						domM.get(mId));
+					// System.out.println("WARNING: Ignoring phantom method: " +
+					//	domM.get(mId));
 					ignoredMethId = mId;
 					ignoredMethNumFrames = 1;
 					return;
 				}
 			}
-			alreadyCalled[mId] = true;
+			// alreadyCalled[mId] = true;
 
 			// System.out.println("XXX EM: " + domM.get(mId));
 
@@ -1005,7 +1013,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				System.out.println("mId: " + mId + " top.mId: " + top.mId); 
 				assert (false);
 			}
-			alreadyCalled[mId] = false;
+			// alreadyCalled[mId] = false;
 			top = (frames.isEmpty()) ? null : frames.pop();
 
 			// System.out.println("XXX LM: " + domM.get(mId));
