@@ -243,6 +243,18 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		int i = 0;
 		for (Map.Entry<Set<Quad>, Set<Quad>> e :
 				allocInstsToHeapInsts.entrySet()) {
+			//////////////////
+			currLocHeapInsts = e.getValue();
+			boolean consider = false;
+			for (Quad q : currLocHeapInsts) {
+				if (domE.indexOf(q) == 12572) {
+					consider = true;
+					break;
+				}
+			}
+			if (!consider)
+				continue;
+			//////////////////
 			try {
 				synchronized (lock) {
 					while (done)
@@ -257,7 +269,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			System.out.println("**************");
 			System.out.println("currHeapInsts:");
 			for (Quad q : currLocHeapInsts)
-				System.out.println("\t" + Program.v().toVerboseStr(q));
+				System.out.println("\t" + Program.v().toVerboseStr(q) + " " + domE.indexOf(q));
 			System.out.println("currAllocInsts:");
 			for (Quad q : currAllocs)
 				System.out.println("\t" + Program.v().toVerboseStr(q));

@@ -22,7 +22,6 @@ import chord.project.Project;
 import chord.project.Program;
 
 /**
- * Context-insensitive call graph analysis.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
