@@ -5,8 +5,6 @@
  */
 package chord.project;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.File;
 import java.lang.InterruptedException;
@@ -17,13 +15,12 @@ import chord.instr.TracePrinter;
 import chord.instr.InstrScheme;
 import chord.instr.TraceTransformer;
 import chord.instr.InstrScheme.EventFormat;
+import chord.runtime.BufferedRuntime;
 import chord.util.ByteBufferedFile;
 import chord.util.ProcessExecutor;
 import chord.util.ReadException;
 import chord.util.Executor;
 import chord.util.IndexMap;
-
-import joeq.Compiler.Quad.BasicBlock;
 
 /**
  * 
