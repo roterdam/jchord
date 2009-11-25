@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-
+import java.io.Serializable;
 
 import chord.bddbddb.Dom;
 import chord.project.ProgramDom;
@@ -29,7 +29,8 @@ import chord.visitors.IClassVisitor;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ProgramDom<T> extends Dom<T> implements ITask {
+public class ProgramDom<T extends Serializable>
+		extends Dom<T> implements ITask {
 	public void run() {
 		clear();
 		init();
@@ -39,9 +40,23 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 	public void init() { }
 	public void save() {
 		System.out.println("SAVING dom " + name + " size: " + size());
-		super.save(Properties.outDirName, Properties.saveMaps);
+		try {
+			super.save(Properties.bddbddbWorkDirName,
+				Properties.saveDomMap, Properties.saveDomSer);
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		}
 		Project.setTrgtDone(this);
 	}
+    public void load() {
+		try {
+			super.load(Properties.bddbddbWorkDirName);
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		} catch (ClassNotFoundException ex) {
+			throw new ChordRuntimeException(ex);
+		}
+    }
 	public void fill() {
 		if (this instanceof IClassVisitor) {
 			VisitorHandler vh = new VisitorHandler(this);
@@ -85,8 +100,8 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 		String fileName = tag + ".xml";
 		PrintWriter out;
 		try {
-			out = new PrintWriter(new FileWriter(
-				new File(Properties.outDirName, fileName)));
+			File file = new File(Properties.outDirName, fileName);
+			out = new PrintWriter(new FileWriter(file));
 		} catch (IOException ex) {
 			throw new RuntimeException(ex);
 		}

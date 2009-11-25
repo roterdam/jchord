@@ -6,6 +6,7 @@
 package chord.analyses.alias; 
 
 import java.util.Set;
+import java.io.Serializable;
 
 /**
  * Representation of an abstract object.
@@ -15,7 +16,7 @@ import java.util.Set;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Obj {
+public class Obj implements Serializable {
 	public final Set<Ctxt> pts;
 	public Obj(Set<Ctxt> pts) {
 		assert (pts != null);

@@ -5,10 +5,15 @@
  */
 package chord.bddbddb;
 
+import java.io.ObjectOutputStream;
+import java.io.ObjectInputStream;
+import java.io.FileOutputStream;
+import java.io.FileInputStream;
 import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.Serializable;
 
 import chord.util.IndexHashMap;
 
@@ -26,7 +31,7 @@ import chord.util.IndexHashMap;
  * value is mapped to integer K in the domain where K is the number
  * of values already in the domain.</li>
  * <li>The domain built in memory is reflected onto disk by calling
- * {@link #save(String,boolean)}.</li>
+ * {@link #save(String,boolean,boolean)}.</li>
  * <li>The domain on disk can be read by a Datalog program.</li>
  * <li>The domain in memory can be read by calling any of the
  * following:
@@ -46,9 +51,8 @@ import chord.util.IndexHashMap;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Dom<T> extends IndexHashMap<T> {
+public class Dom<T extends Serializable> extends IndexHashMap<T> {
 	protected String name;
-	public Dom() { }
 	public void setName(String name) {
 		assert (name != null);
 		assert (this.name == null);
@@ -60,29 +64,50 @@ public class Dom<T> extends IndexHashMap<T> {
 	/**
 	 * Reflects the domain in memory onto disk.
 	 */
-	public void save(String dirName, boolean saveMap) {
-		try {
-			String mapFileName = "";
-			if (saveMap) {
-				mapFileName = name + ".map";
-				PrintWriter out = new PrintWriter(new File(dirName, mapFileName));
-				int size = size();
+	public void save(String dirName, boolean saveDomMap, boolean saveDomSer)
+			throws IOException {
+		String mapFileName = "";
+		if (saveDomMap) {
+			mapFileName = name + ".map";
+			File file = new File(dirName, mapFileName);
+			PrintWriter out = new PrintWriter(file);
+			int size = size();
 				for (int i = 0; i < size; i++) {
-					T val = get(i);
-					out.println(toUniqueString(val));
-				}
-				out.close();
+				T val = get(i);
+				out.println(toUniqueString(val));
 			}
-			{
-				String domFileName = name + ".dom";
-				PrintWriter out = new PrintWriter(new File(dirName, domFileName));
-				int size = size();
-				out.println(name + " " + size + " " + mapFileName);
-				out.close();
-			}
-		} catch (IOException ex) {
-			throw new RuntimeException(ex);
+			out.close();
 		}
+		if (saveDomSer) {
+			String serFileName = name + ".ser";
+			File file = new File(dirName, serFileName);
+				ObjectOutputStream out = new ObjectOutputStream(
+			new FileOutputStream(file));
+			int size = size();
+			out.writeInt(size);
+				for (int i = 0; i < size; i++) {
+				T val = get(i);
+				out.writeObject(val);
+			}
+			out.close();
+		}
+		String domFileName = name + ".dom";
+		File file = new File(dirName, domFileName);
+		PrintWriter out = new PrintWriter(file);
+		int size = size();
+		out.println(name + " " + size + " " + mapFileName);
+		out.close();
+	}
+	public void load(String dirName) throws IOException, ClassNotFoundException {
+		String serFileName = name + ".ser";
+		File file = new File(dirName, serFileName);
+		ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
+		int size = in.readInt();
+		for (int i = 0; i < size; i++) {
+			T val = (T) in.readObject();
+			add(val);
+		}
+        in.close();
 	}
     public String toUniqueString(T val) {
     	return val == null ? "null" : val.toString();

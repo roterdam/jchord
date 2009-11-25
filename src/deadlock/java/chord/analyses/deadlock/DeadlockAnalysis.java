@@ -44,7 +44,7 @@ import chord.util.SetUtils;
 import chord.util.tuple.object.Pair;
 
 /**
- * Deadlock analysis.
+ * Static deadlock analysis.
  * <p>
  * Outputs relation <tt>deadlock</tt> containing each tuple
  * <tt>(a1,l1,l2,a2,l3,l4)</tt> denoting a possible deadlock between
