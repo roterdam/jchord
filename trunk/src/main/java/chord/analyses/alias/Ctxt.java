@@ -9,6 +9,7 @@ import chord.project.Program;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
+import java.io.Serializable;
 
 /**
  * Representation of an abstract context of a method.
@@ -26,7 +27,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Ctxt {
+public class Ctxt implements Serializable {
 	/**
 	 * The sequence of statements comprising the abstract context,
 	 * in decreasing order of significance.

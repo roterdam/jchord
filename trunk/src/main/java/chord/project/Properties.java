@@ -47,11 +47,7 @@ public class Properties {
 	static {
 		if (outDirName == null)
 			outDirName = absolutizeDirName(workDirName, "chord_output");
-		try {
-			(new File(outDirName)).createNewFile();
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
-		}
+		createDir(outDirName, "chord.out.dir");
 	}
 	public final static String outFileName = build("chord.out.file", "log.txt");
 	public final static String errFileName = build("chord.err.file", "log.txt");
@@ -92,13 +88,20 @@ public class Properties {
 		}
 	}
 	public final static String analyses = System.getProperty("chord.analyses");
+	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
 
     // BDD-based Datalog solver properties
 
-	public final static String bddbddbWorkDirName = System.getProperty("chord.bddbddb.work.dir", outDirName);
+	public static String bddbddbWorkDirName = System.getProperty("chord.bddbddb.work.dir");
+	static {
+		if (bddbddbWorkDirName == null)
+			bddbddbWorkDirName = absolutizeDirName(outDirName, "bddbddb");
+		createDir(bddbddbWorkDirName, "chord.bddbddb.work.dir");
+	}
 	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 	public final static boolean bddbddbNoisy = buildBoolProp("chord.bddbddb.noisy", false);
-	public final static boolean saveMaps = buildBoolProp("chord.save.maps", true);
+	public final static boolean saveDomMap = buildBoolProp("chord.dom.map", true);
+	public final static boolean saveDomSer = buildBoolProp("chord.dom.ser", false);
 
 	// Program instrumentation properties
 
@@ -153,11 +156,13 @@ public class Properties {
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
 		System.out.println("chord.analyses: " + analyses);
+		System.out.println("chord.reuse.rels: " + reuseRels);
 		System.out.println();
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
-		System.out.println("chord.save.maps: " + saveMaps);
+		System.out.println("chord.dom.map: " + saveDomMap);
+		System.out.println("chord.dom.ser: " + saveDomSer);
 		System.out.println();
 		System.out.println("chord.instr.exclude: " + instrExcludeNames);
 		System.out.println("chord.check.exclude: " + checkExcludeNames);
@@ -175,21 +180,37 @@ public class Properties {
 		System.out.println("chord.ssa: " + doSSA);
 		System.out.println("******************************");
 	}
-	public static String absolutizeDirName(String parent, String child) {
+	private static String absolutizeDirName(String parent, String child) {
 		return (new File(parent, child)).getAbsolutePath();
 	}
-	public static String buildDirName(String[] dirElems) {
+	private static String buildDirName(String[] dirElems) {
 		String dir = "";
 		for (String dirElem : dirElems)
 			dir += dirElem + File.separator;
 		return dir;
 	}
-	public static String build(String propName, String fileName) {
+	private static String build(String propName, String fileName) {
 		String val = System.getProperty(propName);
 		return (val != null) ? val :
 			(new File(outDirName, fileName)).getAbsolutePath();
 	}
-	public static boolean buildBoolProp(String propName, boolean defaultVal) {
+	private static boolean buildBoolProp(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
+	}
+	private static void createDir(String dirName, String propName) {
+		File file = new File(dirName);
+		if (file.exists()) {
+			if (!file.isDirectory()) {
+				throw new ChordRuntimeException(
+					"Value of " + propName + " is not a directory: " + dirName);
+			}
+		} else {
+			boolean ret = (new File(dirName)).mkdirs();
+			if (!ret) {
+				throw new ChordRuntimeException(
+					"Failed to create directory specified by " + propName + ": " +
+					dirName);
+			}
+		}
 	}
 }

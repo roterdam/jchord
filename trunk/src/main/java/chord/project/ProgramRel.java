@@ -26,11 +26,11 @@ public class ProgramRel extends Rel implements ITask {
 	public void init() { }
 	public void save() {
 		System.out.println("SAVING rel " + name + " size: " + size());
-		super.save(Properties.outDirName);
+		super.save(Properties.bddbddbWorkDirName);
 		Project.setTrgtDone(this);
 	}
 	public void load() {
-		super.load(Properties.outDirName);
+		super.load(Properties.bddbddbWorkDirName);
 	}
 	public void fill() {
 		if (this instanceof IClassVisitor) {

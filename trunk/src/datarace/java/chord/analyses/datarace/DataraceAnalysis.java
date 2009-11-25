@@ -49,7 +49,7 @@ import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
 
 /**
- * Datarace analysis.
+ * Static datarace analysis.
  * <p>
  * Outputs relation <tt>datarace</tt> containing each tuple
  * <tt>(a1,c1,e1,a2,c2,e2)</tt> denoting a possible race between

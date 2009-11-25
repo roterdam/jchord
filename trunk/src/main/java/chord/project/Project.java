@@ -68,12 +68,8 @@ public class Project {
         PrintStream errStream = null;
         try {
             String outDirName = Properties.outDirName;
-            assert (outDirName != null);
             String outFileName = Properties.outFileName;
             String errFileName = Properties.errFileName;
-
-            outFileName = FileUtils.getAbsolutePath(outFileName, outDirName);
-            errFileName = FileUtils.getAbsolutePath(errFileName, outDirName);
             File outFile = new File(outFileName);
             outStream = new PrintStream(outFile);
             System.setOut(outStream);
@@ -89,8 +85,8 @@ public class Project {
 			currTimer.init();
 
             Properties.print();
-            Project.init();
             Program.v().init();
+            Project.init();
 
             String analyses = Properties.analyses;
             if (analyses != null) {
@@ -448,6 +444,31 @@ public class Project {
 					producerTaskNames.add(getSourceName(task));
 				}
 				redefinedTarget(trgtName, producerTaskNames);
+			}
+		}
+
+		if (Properties.reuseRels) {
+			File file = new File(Properties.bddbddbWorkDirName);
+			File[] subFiles = file.listFiles(filter);
+			for (File subFile : subFiles) {
+				String fileName = subFile.getName();
+				if (fileName.endsWith(".ser")) {
+					String domName = fileName.substring(0, fileName.length() - 4);
+					System.out.println("dom XXX: " + domName);
+					ProgramDom dom = (ProgramDom) getTrgt(domName);
+					dom.load();
+					setTrgtDone(domName);
+				}
+			}
+			for (File subFile : subFiles) {
+				String fileName = subFile.getName();
+				if (fileName.endsWith(".bdd")) {
+					String relName = fileName.substring(0, fileName.length() - 4);
+					System.out.println("rel XXX: " + relName);
+					ProgramRel rel = (ProgramRel) getTrgt(relName);
+					rel.load();
+					setTrgtDone(relName);
+				}
 			}
 		}
 		isInited = true;

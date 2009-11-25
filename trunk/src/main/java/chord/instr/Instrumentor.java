@@ -8,6 +8,7 @@ package chord.instr;
 import gnu.trove.TIntObjectHashMap;
 import javassist.*;
 import javassist.expr.*;
+import java.io.Serializable;
 
 import chord.doms.DomE;
 import chord.doms.DomF;
@@ -491,7 +492,7 @@ public class Instrumentor {
 		}
 	}
 
-	protected IndexMap<String> getUniqueStringMap(ProgramDom dom) {
+	protected <T extends Serializable> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {
 		IndexMap<String> map = new IndexHashMap<String>(dom.size());
 		for (int i = 0; i < dom.size(); i++) {
 			String s = dom.toUniqueString(dom.get(i));
