@@ -13,10 +13,10 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 
 import chord.util.FileUtils;
+import chord.program.MethodSign;
 import chord.project.JavaAnalysis;
 import chord.doms.DomM;
 import chord.project.Chord;
-import chord.project.MethodSign;
 import chord.project.ProgramRel;
 import chord.project.Project;
 import chord.project.Program;

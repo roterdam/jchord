@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the BSD License; see COPYING for details.
  */
-package chord.project;
+package chord.runtime;
 
 import chord.instr.EventKind;
 import chord.instr.InstrScheme;

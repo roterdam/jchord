@@ -18,6 +18,7 @@ import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
+import chord.program.MethodSign;
 import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
 import chord.util.FileUtils;

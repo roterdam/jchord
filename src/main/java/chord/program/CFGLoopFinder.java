@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.program;
 
 import java.util.Stack;
 import java.util.Set;
@@ -21,7 +21,7 @@ import joeq.Compiler.Quad.ControlFlowGraph;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CFGLoopFinder implements ICFGVisitor {
+public class CFGLoopFinder {
 	public static final boolean DEBUG = false;
 	private Set<BasicBlock> visitedBef;
     private Set<BasicBlock> visitedAft;

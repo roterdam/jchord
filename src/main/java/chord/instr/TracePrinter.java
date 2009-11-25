@@ -13,7 +13,7 @@ import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
 import chord.project.ChordRuntimeException;
 import chord.util.IndexMap;
-import chord.project.Runtime;
+import chord.runtime.Runtime;
 
 /**
  * 

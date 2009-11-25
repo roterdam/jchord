@@ -10,9 +10,9 @@ import java.util.List;
 import java.util.ArrayList;
 import gnu.trove.TByteArrayList;
 
-import chord.project.Runtime;
 import chord.project.Properties;
 import chord.project.ChordRuntimeException;
+import chord.runtime.Runtime;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
 import chord.util.tuple.integer.IntTrio;
