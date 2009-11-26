@@ -13,7 +13,6 @@ import java.io.PrintStream;
 import java.io.PrintWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 
 import chord.util.IndexHashMap;
 
@@ -51,7 +50,7 @@ import chord.util.IndexHashMap;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Dom<T extends Serializable> extends IndexHashMap<T> {
+public class Dom<T> extends IndexHashMap<T> {
 	protected String name;
 	public void setName(String name) {
 		assert (name != null);
@@ -64,8 +63,7 @@ public class Dom<T extends Serializable> extends IndexHashMap<T> {
 	/**
 	 * Reflects the domain in memory onto disk.
 	 */
-	public void save(String dirName, boolean saveDomMap, boolean saveDomSer)
-			throws IOException {
+	public void save(String dirName, boolean saveDomMap) throws IOException {
 		String mapFileName = "";
 		if (saveDomMap) {
 			mapFileName = name + ".map";
@@ -78,36 +76,12 @@ public class Dom<T extends Serializable> extends IndexHashMap<T> {
 			}
 			out.close();
 		}
-		if (saveDomSer) {
-			String serFileName = name + ".ser";
-			File file = new File(dirName, serFileName);
-				ObjectOutputStream out = new ObjectOutputStream(
-			new FileOutputStream(file));
-			int size = size();
-			out.writeInt(size);
-				for (int i = 0; i < size; i++) {
-				T val = get(i);
-				out.writeObject(val);
-			}
-			out.close();
-		}
 		String domFileName = name + ".dom";
 		File file = new File(dirName, domFileName);
 		PrintWriter out = new PrintWriter(file);
 		int size = size();
 		out.println(name + " " + size + " " + mapFileName);
 		out.close();
-	}
-	public void load(String dirName) throws IOException, ClassNotFoundException {
-		String serFileName = name + ".ser";
-		File file = new File(dirName, serFileName);
-		ObjectInputStream in = new ObjectInputStream(new FileInputStream(file));
-		int size = in.readInt();
-		for (int i = 0; i < size; i++) {
-			T val = (T) in.readObject();
-			add(val);
-		}
-        in.close();
 	}
     public String toUniqueString(T val) {
     	return val == null ? "null" : val.toString();

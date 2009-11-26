@@ -100,8 +100,7 @@ public class Properties {
 	}
 	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 	public final static boolean bddbddbNoisy = buildBoolProp("chord.bddbddb.noisy", false);
-	public final static boolean saveDomMap = buildBoolProp("chord.dom.map", true);
-	public final static boolean saveDomSer = buildBoolProp("chord.dom.ser", false);
+	public final static boolean saveDomMaps = buildBoolProp("chord.save.maps", true);
 
 	// Program instrumentation properties
 
@@ -161,8 +160,7 @@ public class Properties {
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
-		System.out.println("chord.dom.map: " + saveDomMap);
-		System.out.println("chord.dom.ser: " + saveDomSer);
+		System.out.println("chord.save.maps: " + saveDomMaps);
 		System.out.println();
 		System.out.println("chord.instr.exclude: " + instrExcludeNames);
 		System.out.println("chord.check.exclude: " + checkExcludeNames);

@@ -156,6 +156,9 @@ public class Rel {
     public RelSign getSign() {
     	return sign;
     }
+	public Dom[] getDoms() {
+		return doms;
+	}
     /**
      * Sets the domains of this relation.
      * 

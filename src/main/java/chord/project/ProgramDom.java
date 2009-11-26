@@ -29,8 +29,7 @@ import chord.visitors.IClassVisitor;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ProgramDom<T extends Serializable>
-		extends Dom<T> implements ITask {
+public class ProgramDom<T> extends Dom<T> implements ITask {
 	public void run() {
 		clear();
 		init();
@@ -41,22 +40,12 @@ public class ProgramDom<T extends Serializable>
 	public void save() {
 		System.out.println("SAVING dom " + name + " size: " + size());
 		try {
-			super.save(Properties.bddbddbWorkDirName,
-				Properties.saveDomMap, Properties.saveDomSer);
+			super.save(Properties.bddbddbWorkDirName, Properties.saveDomMaps);
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
 		}
 		Project.setTrgtDone(this);
 	}
-    public void load() {
-		try {
-			super.load(Properties.bddbddbWorkDirName);
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
-		} catch (ClassNotFoundException ex) {
-			throw new ChordRuntimeException(ex);
-		}
-    }
 	public void fill() {
 		if (this instanceof IClassVisitor) {
 			VisitorHandler vh = new VisitorHandler(this);
