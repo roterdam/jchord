@@ -8,6 +8,8 @@ package chord.project;
 import java.io.File;
 import java.io.IOException;
 import chord.util.ClassUtils;
+import chord.util.FileUtils;
+import chord.util.ChordRuntimeException;
 
 /**
  * System properties recognized by Chord.
@@ -46,8 +48,8 @@ public class Properties {
 	public static String outDirName = System.getProperty("chord.out.dir");
 	static {
 		if (outDirName == null)
-			outDirName = absolutizeDirName(workDirName, "chord_output");
-		createDir(outDirName, "chord.out.dir");
+			outDirName = FileUtils.getAbsolutePath(workDirName, "chord_output");
+		FileUtils.mkdirs(outDirName);
 	}
 	public final static String outFileName = build("chord.out.file", "log.txt");
 	public final static String errFileName = build("chord.err.file", "log.txt");
@@ -74,29 +76,30 @@ public class Properties {
 	public static String javaAnalysisPathName =
 		System.getProperty("chord.java.analysis.path");
 	static {
-		if (javaAnalysisPathName == null) {
-			String childDirName = buildDirName(new String[] { "classes", "main" });
-			javaAnalysisPathName = absolutizeDirName(homeDirName, childDirName);
-		}
+		if (javaAnalysisPathName == null)
+			javaAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "classes/main");
 	}
 	public static String dlogAnalysisPathName =
 		System.getProperty("chord.dlog.analysis.path");
 	static {
 		if (dlogAnalysisPathName == null) {
-			String childDirName = buildDirName(new String[] { "src", "main", "dlog" });
-			dlogAnalysisPathName = absolutizeDirName(homeDirName, childDirName);
+			dlogAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "src/main/dlog");
 		}
 	}
 	public final static String analyses = System.getProperty("chord.analyses");
 	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
+	public final static String printRels = System.getProperty("chord.print.rels", "");
+	public final static boolean printAnalysisGraph = buildBoolProp("chord.print.analysis.graph", false);
+	public final static String analysisGraphURL = System.getProperty("chord.analysis.graph.url",
+		"http://chord.stanford.edu/javadoc_2_0/");
 
     // BDD-based Datalog solver properties
 
 	public static String bddbddbWorkDirName = System.getProperty("chord.bddbddb.work.dir");
 	static {
 		if (bddbddbWorkDirName == null)
-			bddbddbWorkDirName = absolutizeDirName(outDirName, "bddbddb");
-		createDir(bddbddbWorkDirName, "chord.bddbddb.work.dir");
+			bddbddbWorkDirName = FileUtils.getAbsolutePath(outDirName, "bddbddb");
+		FileUtils.mkdirs(bddbddbWorkDirName);
 	}
 	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 	public final static boolean bddbddbNoisy = buildBoolProp("chord.bddbddb.noisy", false);
@@ -156,6 +159,9 @@ public class Properties {
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
 		System.out.println("chord.analyses: " + analyses);
 		System.out.println("chord.reuse.rels: " + reuseRels);
+		System.out.println("chord.print.rels: " + printRels);
+		System.out.println("chord.print.analysis.graph: " + printAnalysisGraph);
+		System.out.println("chord.analysis.graph.url: " + analysisGraphURL);
 		System.out.println();
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
@@ -178,15 +184,6 @@ public class Properties {
 		System.out.println("chord.ssa: " + doSSA);
 		System.out.println("******************************");
 	}
-	private static String absolutizeDirName(String parent, String child) {
-		return (new File(parent, child)).getAbsolutePath();
-	}
-	private static String buildDirName(String[] dirElems) {
-		String dir = "";
-		for (String dirElem : dirElems)
-			dir += dirElem + File.separator;
-		return dir;
-	}
 	private static String build(String propName, String fileName) {
 		String val = System.getProperty(propName);
 		return (val != null) ? val :
@@ -194,21 +191,5 @@ public class Properties {
 	}
 	private static boolean buildBoolProp(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
-	}
-	private static void createDir(String dirName, String propName) {
-		File file = new File(dirName);
-		if (file.exists()) {
-			if (!file.isDirectory()) {
-				throw new ChordRuntimeException(
-					"Value of " + propName + " is not a directory: " + dirName);
-			}
-		} else {
-			boolean ret = (new File(dirName)).mkdirs();
-			if (!ret) {
-				throw new ChordRuntimeException(
-					"Failed to create directory specified by " + propName + ": " +
-					dirName);
-			}
-		}
 	}
 }

@@ -12,7 +12,7 @@ import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 
-import chord.project.ChordRuntimeException;
+import chord.util.ChordRuntimeException;
 import chord.project.Properties;
 import chord.util.IndexMap;
 import chord.instr.InstrScheme;

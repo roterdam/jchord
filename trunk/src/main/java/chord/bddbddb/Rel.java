@@ -9,6 +9,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
+import java.io.PrintWriter;
 import java.io.PrintStream;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -314,6 +315,24 @@ public class Rel {
     	}
     	close();
     }
+	public void print(String dirName) {
+    	if (bdd == null)
+    		throw new RuntimeException("");
+		try {
+            File file = new File(dirName, name + "txtd");
+			PrintWriter out = new PrintWriter(new FileWriter(file));
+			AryNIterable tuples = getAryNValTuples();
+			for (Object[] tuple : tuples) {
+				for (Object o : tuple)
+					out.print(o + " ");
+				out.println();
+			}
+			out.close();
+    	} catch (IOException ex) {
+    		throw new RuntimeException(ex);
+    	}
+    	close();
+	}
     private BDD makeIterBdd(boolean[] keptDoms) {
    		BDD iterBdd = factory.one();
    		for (int i = 0; i < keptDoms.length; i++) {

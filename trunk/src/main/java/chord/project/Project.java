@@ -9,6 +9,8 @@ import java.io.PrintStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.FileWriter;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ import chord.util.FileUtils;
 import chord.util.StringUtils;
 import chord.util.Timer;
 import chord.util.tuple.object.Pair;
+import chord.util.ChordRuntimeException;
 import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.RelSign;
 import chord.bddbddb.Dom;
@@ -95,6 +98,7 @@ public class Project {
 				for (String name : analysisNames)
 					runTask(name);
             }
+
 			System.out.println("LEAVE: chord");
 			currTimer.done();
 			printCurrTimer();
@@ -468,6 +472,84 @@ public class Project {
 				}
 			}
 		}
+
+		if (Properties.printAnalysisGraph) {
+			PrintWriter out;
+			try {
+				File file = new File(Properties.outDirName, "analysis_graph.xml");
+				out = new PrintWriter(new FileWriter(file));
+			} catch (IOException ex) {
+				throw new ChordRuntimeException(ex);
+			}
+			out.println("<analysis_graph>");
+			for (String name : nameToTaskMap.keySet()) {
+				ITask task = nameToTaskMap.get(name);
+				Class clazz = task.getClass();
+				String loc;
+				if (clazz == DlogAnalysis.class) {
+					loc = ((DlogAnalysis) task).getFileName();
+					loc = (new File(loc)).getName();
+				} else
+					loc = clazz.getName().replace(".", "/") + ".html";
+				loc = Properties.analysisGraphURL + loc;
+				out.print("<task name=\"" + name + "\" loc=\"" +
+					loc + "\" producedTrgts=\"");
+				Set<String> producedNames = taskToProducedNamesMap.get(task);
+				int np = producedNames.size(), ip = 0;
+				for (String name2 : producedNames) {
+					out.print(name2);
+					if (++ip != np)
+						out.print(" ");
+				}
+				out.print("\" consumedTrgts=\"");
+				Set<String> consumedNames = taskToConsumedNamesMap.get(task);
+				int nc = consumedNames.size(), ic = 0;
+				for (String name2 : consumedNames) {
+					out.print(name2);
+					if (++ic != nc)
+						out.print(" ");
+				}
+				out.println("\"/>");
+			}
+			for (String name : nameToTrgtMap.keySet()) {
+				Object trgt = nameToTrgtMap.get(name);
+				String kind;
+				if (trgt instanceof ProgramRel)
+					kind = "rel";
+				else if (trgt instanceof ProgramDom)
+					kind = "dom";
+				else
+					kind = "trgt";
+				out.print("<" + kind + " name=\"" + name + "\" producingTasks=\"");
+				Set<ITask> producerTasks = trgtToProducerTasksMap.get(trgt);
+				int n = producerTasks.size(), i = 0;
+				for (ITask task : producerTasks) {
+					String name2 = task.getName();
+					out.print(name2);
+					if (++i != n)
+						out.print(" ");
+				}
+				out.println("\"/>");
+			}
+			out.println("</analysis_graph>");
+			out.close();
+			OutDirUtils.copyFileFromHomeDir("src/main/web/style.css");
+			OutDirUtils.copyFileFromHomeDir("src/main/web/analysis_graph.xsl");
+			OutDirUtils.copyFileFromHomeDir("src/main/web/analysis_graph.dtd");
+			OutDirUtils.runSaxon("analysis_graph.xml", "analysis_graph.xsl");
+		}
+
+		String printRels = Properties.printRels;
+		if (!printRels.equals("")) {
+			String[] relNames = printRels.split(Properties.LIST_SEPARATOR);
+			for (String relName : relNames) {
+				ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
+				assert(rel != null);
+				rel.load();
+				rel.print();
+			}
+		}
+
 		isInited = true;
 	}
 
@@ -786,7 +868,7 @@ public class Project {
 			return ((DlogAnalysis) analysis).getFileName();
 		return clazz.getName();
 	}
-	
+
 	private static void anonJavaAnalysis(String name) {
 		System.err.println("WARNING: Java analysis '" + name +
 			"' is not named via a @Chord(name=\"...\") annotation; " +

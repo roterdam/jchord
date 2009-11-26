@@ -14,6 +14,7 @@ import java.io.Serializable;
 import chord.bddbddb.Dom;
 import chord.project.ProgramDom;
 import chord.visitors.IClassVisitor;
+import chord.util.ChordRuntimeException;
 
 /**
  * Generic implementation of a program domain (a specialized kind
