@@ -34,6 +34,7 @@ import chord.util.Timer;
 import chord.util.tuple.object.Pair;
 import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.RelSign;
+import chord.bddbddb.Dom;
 
 /**
  * A project.
@@ -127,6 +128,15 @@ public class Project {
 		System.out.println("Inclusive time: " + currTimer.getInclusiveTimeStr());
 	}
 
+	public static ITask getTaskProducingTrgt(Object trgt) {
+		Set<ITask> tasks = trgtToProducerTasksMap.get(trgt);
+		if (tasks.size() != 1) {
+			throw new ChordRuntimeException("Task producing trgt '" +
+				trgt + "' not found.");
+		}
+		return tasks.iterator().next();
+	}
+
 	public static void runTask(ITask task) {
 		System.out.println("ENTER: " + task);
 		if (isTaskDone(task)) {
@@ -141,13 +151,7 @@ public class Project {
 		for (Object trgt : consumedTrgts) {
 			if (isTrgtDone(trgt))
 				continue;
-			Set<ITask> tasks = trgtToProducerTasksMap.get(trgt);
-			if (tasks.size() != 1) {
-				throw new ChordRuntimeException("Task producing trgt '" +
-					trgt + "' consumed by task '" + task +
-					"' not found.");
-			}
-			ITask task2 = tasks.iterator().next();
+			ITask task2 = getTaskProducingTrgt(trgt);
 			runTask(task2);
 		}
 		task.run();
@@ -452,20 +456,13 @@ public class Project {
 			File[] subFiles = file.listFiles(filter);
 			for (File subFile : subFiles) {
 				String fileName = subFile.getName();
-				if (fileName.endsWith(".ser")) {
-					String domName = fileName.substring(0, fileName.length() - 4);
-					System.out.println("dom XXX: " + domName);
-					ProgramDom dom = (ProgramDom) getTrgt(domName);
-					dom.load();
-					setTrgtDone(domName);
-				}
-			}
-			for (File subFile : subFiles) {
-				String fileName = subFile.getName();
 				if (fileName.endsWith(".bdd")) {
 					String relName = fileName.substring(0, fileName.length() - 4);
-					System.out.println("rel XXX: " + relName);
 					ProgramRel rel = (ProgramRel) getTrgt(relName);
+					for (Dom dom : rel.getDoms()) {
+						ITask task2 = getTaskProducingTrgt(dom);
+						runTask(task2);
+					}
 					rel.load();
 					setTrgtDone(relName);
 				}
