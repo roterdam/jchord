@@ -51,7 +51,7 @@ import chord.util.tuple.integer.IntPair;
 import chord.project.ProgramRel;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Properties;
-import chord.project.ChordRuntimeException;
+import chord.util.ChordRuntimeException;
 import chord.analyses.alias.ICICG;
 import chord.analyses.alias.ThrSenAbbrCICGAnalysis;
 import chord.doms.DomE;

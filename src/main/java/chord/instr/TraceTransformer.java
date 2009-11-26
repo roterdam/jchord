@@ -11,8 +11,8 @@ import java.util.ArrayList;
 import gnu.trove.TByteArrayList;
 
 import chord.project.Properties;
-import chord.project.ChordRuntimeException;
 import chord.runtime.Runtime;
+import chord.util.ChordRuntimeException;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
 import chord.util.tuple.integer.IntTrio;
@@ -272,7 +272,7 @@ public class TraceTransformer {
 		case EventKind.NOTIFY_ALL:
 			return notifyNumBytes;
 		default:
-			throw new RuntimeException();
+			throw new ChordRuntimeException();
 		}
 	}
 	private void adjust() throws IOException {

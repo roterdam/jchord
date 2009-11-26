@@ -23,12 +23,8 @@ import java.util.ArrayList;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class FileUtils {
-	public static String getAbsolutePath(String fileName, String baseName) {
-		File file = new File(fileName);
-		if (file.isAbsolute())
-			return fileName;
-		file = new File(baseName, fileName);
-		return file.getAbsolutePath();
+	public static String getAbsolutePath(String parent, String child) {
+		return (new File(parent, child)).getAbsolutePath();
 	}
 	public static void copy(String fromFileName, String toFileName) {
 		try {
@@ -41,37 +37,35 @@ public class FileUtils {
 			}
 			fis.close();
 			fos.close();
-		} catch (Exception e) {
-			throw new RuntimeException(e.getMessage(), e);
+		} catch (Exception ex) {
+			throw new ChordRuntimeException(ex);
 		}
 	}
-	public static boolean mkdir(String dirName) {
-		return mkdir(new File(dirName));
+	public static boolean mkdirs(String dirName) {
+		return mkdirs(new File(dirName));
 	}
-	public static boolean mkdir(String parentName, String childName) {
-		return mkdir(new File(parentName, childName));
+	public static boolean mkdirs(String parentName, String childName) {
+		return mkdirs(new File(parentName, childName));
 	}
-	public static boolean mkdir(File file) {
+	public static boolean mkdirs(File file) {
 		if (file.exists()) {
 			if (!file.isDirectory()) {
-				throw new RuntimeException(
+				throw new ChordRuntimeException(
 					"File '" + file + "' is not a directory.");
 			}
 			return false;
 		}
 		if (file.mkdirs())
 			return true;
-		throw new RuntimeException("Failed to create directory '" +
+		throw new ChordRuntimeException("Failed to create directory '" +
 			file + "'"); 
 	}
 	public static PrintWriter newPrintWriter(String fileName) {
-		PrintWriter out;
 		try {
-			out = new PrintWriter(fileName);
+			return new PrintWriter(fileName);
 		} catch (FileNotFoundException ex) {
-			throw new RuntimeException(ex);
+			throw new ChordRuntimeException(ex);
 		}
-		return out;
 	}
     public static Object readSerialFile(String serialFileName) {
 		try {
@@ -81,7 +75,7 @@ public class FileUtils {
 			os.close();
 			return o;
 		} catch (Exception ex) {
-			throw new RuntimeException(ex);
+			throw new ChordRuntimeException(ex);
 		}
     }
     public static void writeSerialFile(Object o, String serialFileName) {
@@ -91,7 +85,7 @@ public class FileUtils {
 			os.writeObject(o);
 			os.close();
 		} catch (Exception ex) {
-			throw new RuntimeException(ex);
+			throw new ChordRuntimeException(ex);
 		}
 	}
 
@@ -109,7 +103,7 @@ public class FileUtils {
             in.close();
             return list;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new ChordRuntimeException(ex);
         }
     }
 	public static IndexMap<String> readFileToMap(String fileName) {
@@ -126,29 +120,35 @@ public class FileUtils {
             in.close();
             return map;
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new ChordRuntimeException(ex);
         }
     }
 	public static void writeListToFile(List<String> list, String fileName) {
+		writeListToFile(list, new File(fileName));
+	}
+	public static void writeListToFile(List<String> list, File file) {
 		try {
-            PrintWriter out = new PrintWriter(fileName);
+            PrintWriter out = new PrintWriter(file);
             for (String s : list) {
                 out.println(s);
             }
             out.close();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new ChordRuntimeException(ex);
         }
     }
 	public static void writeMapToFile(IndexMap<String> map, String fileName) {
+		writeMapToFile(map, new File(fileName));
+	}
+	public static void writeMapToFile(IndexMap<String> map, File file) {
 		try {
-            PrintWriter out = new PrintWriter(fileName);
+            PrintWriter out = new PrintWriter(file);
             for (String s : map) {
                 out.println(s);
             }
             out.close();
         } catch (Exception ex) {
-            throw new RuntimeException(ex);
+            throw new ChordRuntimeException(ex);
         }
     }
 

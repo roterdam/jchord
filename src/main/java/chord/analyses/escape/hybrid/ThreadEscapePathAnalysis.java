@@ -17,10 +17,9 @@ import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
 
 import chord.project.Properties;
-import chord.project.ChordRuntimeException;
+import chord.util.ChordRuntimeException;
 import chord.util.IndexSet;
 import chord.util.ArraySet;
-import chord.util.FileUtils;
 import chord.util.IndexMap;
 import chord.util.IndexHashMap;
 import chord.util.ProcessExecutor;

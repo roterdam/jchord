@@ -11,7 +11,7 @@ import chord.project.Properties;
 import chord.instr.InstrScheme.EventFormat;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
-import chord.project.ChordRuntimeException;
+import chord.util.ChordRuntimeException;
 import chord.util.IndexMap;
 import chord.runtime.Runtime;
 

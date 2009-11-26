@@ -7,6 +7,7 @@ package chord.project;
 
 import chord.bddbddb.Rel;
 import chord.visitors.IClassVisitor;
+import chord.util.ChordRuntimeException;
 
 /**
  * Generic implementation of a program relation (a specialized kind
@@ -40,6 +41,9 @@ public class ProgramRel extends Rel implements ITask {
 			throw new ChordRuntimeException("Relation '" + name +
 				"' must override method fill().");
 		}
+	}
+	public void print() {
+		super.print(Properties.outDirName);
 	}
 	public String toString() {
 		return name;

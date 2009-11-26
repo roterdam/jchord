@@ -22,7 +22,7 @@ import chord.project.ProgramDom;
 import chord.project.ProgramRel;
 import chord.project.JavaAnalysis;
 import chord.project.Properties;
-import chord.project.Utils;
+import chord.project.OutDirUtils;
 
 import chord.util.ArraySet;
 import chord.util.graph.IPathVisitor;
@@ -219,13 +219,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
         
         PrintWriter out;
 
-        String outDirName = Properties.outDirName;
-
 		relDeadlock.load();
 		relSyncCLC.load();
 
-		out = FileUtils.newPrintWriter(
-			(new File(outDirName, "deadlocklist.xml")).getAbsolutePath());
+		out = OutDirUtils.newPrintWriter("deadlocklist.xml");
 		out.println("<deadlocklist>");
 		for (Object[] tuple : relDeadlock.getAryNValTuples()) {
 			Pair<Ctxt, jq_Method> t1Val = (Pair) tuple[0];
@@ -338,8 +335,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 				}
 			};
 
-        out = FileUtils.newPrintWriter(
-        	(new File(outDirName, "CMCMlist.xml")).getAbsolutePath());
+        out = OutDirUtils.newPrintWriter("CMCMlist.xml");
         out.println("<CMCMlist>");
         
         for (CM cm1 : CMCMMap.keySet()) {
@@ -375,22 +371,22 @@ public class DeadlockAnalysis extends JavaAnalysis {
         domM.saveToXMLFile();
         domL.saveToXMLFile();
 
-        Utils.copyFile("src/deadlock/web/results.dtd");
-        Utils.copyFile("src/main/web/Olist.dtd");
-        Utils.copyFile("src/main/web/Clist.dtd");
-        Utils.copyFile("src/main/web/Alist.dtd");
-        Utils.copyFile("src/main/web/Hlist.dtd");
-        Utils.copyFile("src/main/web/Ilist.dtd");
-        Utils.copyFile("src/main/web/Mlist.dtd");
-        Utils.copyFile("src/main/web/Llist.dtd");
-        Utils.copyFile("src/deadlock/web/results.xml");
-        Utils.copyFile("src/main/web/style.css");
-        Utils.copyFile("src/deadlock/web/group.xsl");
-        Utils.copyFile("src/deadlock/web/paths.xsl");
-        Utils.copyFile("src/main/web/misc.xsl");
+        OutDirUtils.copyFileFromHomeDir("src/deadlock/web/results.dtd");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/Olist.dtd");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/Clist.dtd");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/Alist.dtd");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/Hlist.dtd");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/Ilist.dtd");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/Mlist.dtd");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/Llist.dtd");
+        OutDirUtils.copyFileFromHomeDir("src/deadlock/web/results.xml");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/style.css");
+        OutDirUtils.copyFileFromHomeDir("src/deadlock/web/group.xsl");
+        OutDirUtils.copyFileFromHomeDir("src/deadlock/web/paths.xsl");
+        OutDirUtils.copyFileFromHomeDir("src/main/web/misc.xsl");
 
-        Utils.runSaxon("results.xml", "group.xsl");
-        Utils.runSaxon("results.xml", "paths.xsl");
+        OutDirUtils.runSaxon("results.xml", "group.xsl");
+        OutDirUtils.runSaxon("results.xml", "paths.xsl");
 
         Program.v().HTMLizeJavaSrcFiles();
 	}

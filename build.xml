@@ -375,5 +375,11 @@
         <pathelement location="lib/j2h.jar"/>
       </classpath>
     </javadoc>
+    <copy todir="javadoc" flatten="true">
+      <fileset dir="src">
+        <include name="**/*.dlog"/>
+        <include name="**/*.datalog"/>
+      </fileset>
+    </copy>
   </target>
 </project>

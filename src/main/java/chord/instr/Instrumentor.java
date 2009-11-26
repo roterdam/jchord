@@ -22,13 +22,13 @@ import chord.doms.DomB;
 import chord.doms.DomW;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.CFGLoopFinder;
-import chord.project.ChordRuntimeException;
+import chord.util.ChordRuntimeException;
 import chord.project.Program;
 import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.project.Properties;
+import chord.project.OutDirUtils;
 import chord.runtime.Runtime;
-import chord.util.FileUtils;
 import chord.util.IndexHashMap;
 import chord.util.IndexMap;
 import chord.util.IndexSet;
@@ -448,47 +448,37 @@ public class Instrumentor {
 
 		String outDirName = Properties.outDirName;
 		if (Fmap != null) {
-			FileUtils.writeMapToFile(Fmap,
-				(new File(outDirName, "F.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Fmap, "F.dynamic.txt");
 		}
 		if (Mmap != null) {
-			FileUtils.writeMapToFile(Mmap,
-				(new File(outDirName, "M.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Mmap, "M.dynamic.txt");
 		}
 		if (Hmap != null) {
-			FileUtils.writeMapToFile(Hmap,
-				(new File(outDirName, "H.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Hmap, "H.dynamic.txt");
 		}
 		if (Emap != null) {
-			FileUtils.writeMapToFile(Emap,
-				(new File(outDirName, "E.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Emap, "E.dynamic.txt");
 		}
 		if (Imap != null) {
-			FileUtils.writeMapToFile(Imap,
-				(new File(outDirName, "I.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Imap, "I.dynamic.txt");
 		}
 		if (Lmap != null) {
-			FileUtils.writeMapToFile(Lmap,
-				(new File(outDirName, "L.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Lmap, "L.dynamic.txt");
 		}
 		if (Rmap != null) {
-			FileUtils.writeMapToFile(Rmap,
-				(new File(outDirName, "R.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Rmap, "R.dynamic.txt");
 		}
 		if (domB != null) {
 			Bmap = getUniqueStringMap(domB);
-			FileUtils.writeMapToFile(Bmap,
-				(new File(outDirName, "B.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Bmap, "B.dynamic.txt");
 		}
 		if (domW != null) {
 			Wmap = getUniqueStringMap(domW);
-			FileUtils.writeMapToFile(Wmap,
-				(new File(outDirName, "W.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Wmap, "W.dynamic.txt");
 		}
 		if (domP != null) {
 			Pmap = getUniqueStringMap(domP);
-			FileUtils.writeMapToFile(Pmap,
-				(new File(outDirName, "P.dynamic.txt")).getAbsolutePath());
+			OutDirUtils.writeMapToFile(Pmap, "P.dynamic.txt");
 		}
 	}
 
@@ -497,7 +487,7 @@ public class Instrumentor {
 		for (int i = 0; i < dom.size(); i++) {
 			String s = dom.toUniqueString(dom.get(i));
 			if (map.contains(s))
-				throw new RuntimeException("Map for domain " + dom +
+				throw new ChordRuntimeException("Map for domain " + dom +
 					" already contains: " + s);
 			map.getOrAdd(s);
 		}

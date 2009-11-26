@@ -41,7 +41,7 @@ import chord.project.ProgramRel;
 import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.project.Properties;
-import chord.project.Utils;
+import chord.project.OutDirUtils;
 import chord.util.FileUtils;
 import chord.util.SetUtils;
 import chord.util.tuple.object.Hext;
@@ -177,8 +177,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		String outDirName = Properties.outDirName;
 		
-		out = FileUtils.newPrintWriter(
-			(new File(outDirName, "dataracelist.xml")).getAbsolutePath());
+		out = OutDirUtils.newPrintWriter("dataracelist.xml");
 		out.println("<dataracelist>");
 		final ProgramRel relDatarace = (ProgramRel) Project.getTrgt("datarace");
 		relDatarace.load();
@@ -262,8 +261,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 				}
 			};
 
-		out = FileUtils.newPrintWriter(
-			(new File(outDirName, "TCElist.xml")).getAbsolutePath());
+		out = OutDirUtils.newPrintWriter("TCElist.xml");
 		out.println("<TCElist>");
 		for (Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad> tce : domTCE) {
 			Pair<Ctxt, jq_Method> srcCM = tce.val0;
@@ -325,26 +323,26 @@ public class DataraceAnalysis extends JavaAnalysis {
 		domF.saveToXMLFile();
 		domL.saveToXMLFile();
 
-		Utils.copyFile("src/datarace/web/results.dtd");
-		Utils.copyFile("src/main/web/Olist.dtd");
-		Utils.copyFile("src/main/web/Clist.dtd");
-		Utils.copyFile("src/main/web/Alist.dtd");
-		Utils.copyFile("src/main/web/Hlist.dtd");
-		Utils.copyFile("src/main/web/Ilist.dtd");
-		Utils.copyFile("src/main/web/Mlist.dtd");
-		Utils.copyFile("src/main/web/Elist.dtd");
-		Utils.copyFile("src/main/web/Flist.dtd");
-		Utils.copyFile("src/main/web/Llist.dtd");
-		Utils.copyFile("src/datarace/web/results.xml");
-		Utils.copyFile("src/main/web/style.css");
-		Utils.copyFile("src/datarace/web/group.xsl");
-		Utils.copyFile("src/datarace/web/paths.xsl");
-		Utils.copyFile("src/datarace/web/races.xsl");
-		Utils.copyFile("src/main/web/misc.xsl");
+		OutDirUtils.copyFileFromHomeDir("src/datarace/web/results.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Olist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Clist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Alist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Hlist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Ilist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Mlist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Elist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Flist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/Llist.dtd");
+		OutDirUtils.copyFileFromHomeDir("src/datarace/web/results.xml");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/style.css");
+		OutDirUtils.copyFileFromHomeDir("src/datarace/web/group.xsl");
+		OutDirUtils.copyFileFromHomeDir("src/datarace/web/paths.xsl");
+		OutDirUtils.copyFileFromHomeDir("src/datarace/web/races.xsl");
+		OutDirUtils.copyFileFromHomeDir("src/main/web/misc.xsl");
 
-		Utils.runSaxon("results.xml", "group.xsl");
-		Utils.runSaxon("results.xml", "paths.xsl");
-		Utils.runSaxon("results.xml", "races.xsl");
+		OutDirUtils.runSaxon("results.xml", "group.xsl");
+		OutDirUtils.runSaxon("results.xml", "paths.xsl");
+		OutDirUtils.runSaxon("results.xml", "races.xsl");
 
 		Program.v().HTMLizeJavaSrcFiles();
 	}
