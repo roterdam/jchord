@@ -13,7 +13,6 @@ import java.util.HashMap;
 import chord.util.tuple.object.Pair;
 import chord.util.ArraySet;
 
-import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 
