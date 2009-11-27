@@ -15,7 +15,6 @@ import chord.doms.DomM;
 import chord.project.ProgramRel;
 import chord.util.SetUtils;
 import chord.util.graph.AbstractGraph;
-import chord.util.ArraySet;
 
 /**
  * Implementation of a context-insensitive call graph.
