@@ -38,7 +38,6 @@ import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
-import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.NewArray;
@@ -68,8 +67,6 @@ import chord.util.ArraySet;
 import chord.util.CompareUtils;
 import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
-import chord.util.tuple.object.Pair;
-import chord.util.tuple.object.Trio;
 import chord.util.Timer;
 
 /**

@@ -5,7 +5,6 @@
  */
 package chord.analyses.deadlock;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.Set;
 import java.util.Map;
@@ -21,7 +20,6 @@ import chord.project.Chord;
 import chord.project.ProgramDom;
 import chord.project.ProgramRel;
 import chord.project.JavaAnalysis;
-import chord.project.Properties;
 import chord.project.OutDirUtils;
 
 import chord.util.ArraySet;
@@ -39,7 +37,6 @@ import chord.doms.DomC;
 import chord.doms.DomH;
 import chord.doms.DomI;
 import chord.doms.DomM;
-import chord.util.FileUtils;
 import chord.util.SetUtils;
 import chord.util.tuple.object.Pair;
 
@@ -265,8 +262,6 @@ public class DeadlockAnalysis extends JavaAnalysis {
 					tmp = t1Val; t1Val = t2Val; t2Val = tmp;
 				}
 			}
-			int t1 = domA.indexOf(t1Val);
-			int t2 = domA.indexOf(t2Val);
 			int c1 = domC.indexOf(c1Val);
 			int c2 = domC.indexOf(c2Val);
 			int c3 = domC.indexOf(c3Val);
@@ -299,15 +294,8 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			addToCMCMMap(t2cVal, t2mVal, c3Val, m3Val);
 			addToCMCMMap(c1Val , m1Val , c2Val, m2Val);
 			addToCMCMMap(c3Val , m3Val , c4Val, m4Val);
-/*
-			Type type1 = getLub(o1Val, o4Val);
-			Type type2 = getLub(o2Val, o3Val);
-			int type1id = domT.get(type1);
-			int type2id = domT.get(type1);
-*/
 			out.println("<deadlock " +
 				"group=\"" + l1 + "_" + l2 + "_" + l3 + "_" + l4 + "\" " +
-				// "t1id=\"T" + type1id + "\" t2id=\"T" + type2id + "\" " +
 				"T1Cid=\"C" + t1c + "\" T1Mid=\"M" + t1m + "\" " +
 				"T2Cid=\"C" + t2c + "\" T2Mid=\"M" + t2m + "\" " +
 				"C1id=\"C"  + c1 + "\" M1id=\"M" + m1 + "\" L1id=\"L" + l1 + "\" O1id=\"O" + o1 + "\" " +

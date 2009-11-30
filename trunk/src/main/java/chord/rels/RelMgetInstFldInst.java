@@ -58,7 +58,6 @@ public class RelMgetInstFldInst extends ProgramRel
 				Register l = lo.getRegister();
 				RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
 				Register b = bo.getRegister();
-				jq_Field f = null;
 				int mIdx = domM.indexOf(ctnrMethod);
 				assert (mIdx != -1);
 				int lIdx = domV.indexOf(l);

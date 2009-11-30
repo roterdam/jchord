@@ -59,7 +59,6 @@ public class RelMputInstFldInst extends ProgramRel
 					Register r = ro.getRegister();
 					RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 					Register b = bo.getRegister();
-					jq_Field f = null;
 					int mIdx = domM.indexOf(ctnrMethod);
 					assert (mIdx != -1);
 					int rIdx = domV.indexOf(r);

@@ -6,19 +6,30 @@
  */
 package chord.runtime;
 
-import chord.instr.EventKind;
 import chord.instr.InstrScheme;
-import chord.instr.InstrScheme.EventFormat;
-import chord.util.ByteBufferedFile;
 import chord.util.WeakIdentityHashMap;
 
-import java.io.IOException;
-
 /**
+ * Abstract online or offline handler of events generated during an
+ * instrumented program's execution.
  * 
+ * Dynamic program analyses must specify a concrete event handler
+ * via system property <tt>chord.runtime.class</tt>.  The default
+ * event handler is {@link chord.runtime.Runtime} and should suffice
+ * for offline dynamic program analyses (i.e. those that handle
+ * the events in a separate JVM, either during or after the
+ * instrumented program's execution).  Online analyses (i.e. those
+ * that handle events during the instrumented program's execution in
+ * the same JVM) must subclass this class and define the relevant
+ * event handling methods, i.e. static methods named ".*Event"
+ * (e.g. {@link #acquireLockEvent(int, Object)}).  Which methods are
+ * relevant depends upon the instrumentation scheme chosen by the
+ * dynamic program analysis
+ * (see {@link chord.project.DynamicAnalysis#getInstrScheme()}).
+ *   
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Runtime {
+public abstract class Runtime {
 	public static final int MISSING_FIELD_VAL = -1;
 	public static final int UNKNOWN_FIELD_VAL = -2;
 

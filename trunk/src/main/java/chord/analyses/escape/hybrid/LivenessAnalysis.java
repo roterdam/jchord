@@ -7,9 +7,6 @@ package chord.analyses.escape.hybrid;
 
 import chord.project.Project;
 import chord.project.ProgramRel;
-import chord.project.Properties;
-
-import java.io.*;
 
 /**
  * 
@@ -30,18 +27,6 @@ public class LivenessAnalysis {
 			int[] use2, int[][] uses2,
 			int[] succ, int[][] succs, int numQ) {
 		System.out.println("ENTER LivenessAnalysis");
-/*
-		for (int i = 0; i < numQ; i++) {
-			System.out.print(i + ": " + succ[i]);
-			int[] S = succs[i];
-			if (S != null) {
-				int n = S[0];
-				for (int j = 1; j <= n; j++)
-					System.out.print(" " + S[j]);
-			}
-			System.out.println();
-		}
-*/
 		def = def2;
 		defs = defs2;
 		use = use2;
@@ -83,62 +68,6 @@ public class LivenessAnalysis {
 				liveQU_o.add(q, Q[i]);
 		}
 		liveQU_o.save();
-/*
-		// presQU(q,v) :- live_o(q,v), !defQV(q,v).
-		int[][] pres = new int[numQ][];
-		for (int q = 0; q < numQ; q++)
-			pres[q] = new int[AVG_LIVE_VARS_ESTIMATE + 1];
-		for (int q = 0; q < numQ; q++) {
-			int[] P = pres[q];
-			final int[] origP = P;
-			final int[] Q = live[q];
-			final int nQ = Q[0];
-			final int d = def[q];
-			if (d == NULL_U_VAL) {
-				for (int i = 1; i <= nQ; i++)
-					P = addIfAbsent(Q[i], P);
-			} else if (d != REDIRECTED) {
-				for (int i = 1; i <= nQ; i++) {
-					final int l = Q[i];
-					if (d != l)
-						P = addIfAbsent(l, P);
-				}
-			} else {
-				final int[] D = defs[q];
-				final int nD = D[0];
-				for (int i = 1; i <= nQ; i++) {
-					final int l = Q[i];
-					boolean found = false;
-					for (int j = 1; j <= nD; j++) {
-						if (D[j] == l) {
-							found = true;
-							break;
-						}
-					}
-					if (!found)
-						P = addIfAbsent(l, P);
-				}
-			}
-			if (P != origP)
-				pres[q] = P;
-		}
-
-		long numPres = 0;
-		for (int q = 0; q < numQ; q++) {
-			numPres += pres[q][0];
-		}
-		System.out.println("NUM PRES: " + numPres);
-
-        ProgramRel presQU = (ProgramRel) Project.getTrgt("presQU");
-		presQU.zero();
-		for (int q = 0; q < numQ; q++) {
-			final int[] Q = pres[q];
-			final int nQ = Q[0];
-			for (int i = 1; i <= nQ; i++)
-				presQU.add(q, Q[i]);
-		}
-		presQU.save();
-*/
 	}
 
 	private static void process(int q, int r) {

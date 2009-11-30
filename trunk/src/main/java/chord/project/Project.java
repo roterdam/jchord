@@ -26,12 +26,10 @@ import java.util.Stack;
 
 import org.scannotation.AnnotationDB;
 
-import chord.instr.InstrScheme;
 import chord.program.Program;
 import chord.util.ArraySet;
 import chord.util.ArrayUtils;
 import chord.util.ClassUtils;
-import chord.util.FileUtils;
 import chord.util.StringUtils;
 import chord.util.Timer;
 import chord.util.tuple.object.Pair;

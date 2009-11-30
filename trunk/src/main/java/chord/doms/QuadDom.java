@@ -11,9 +11,7 @@ import chord.project.Project;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Inst;
-import joeq.Compiler.Quad.Quad;
 
 /**
  * Abstract domain of quads and entry/exit basic blocks of methods.

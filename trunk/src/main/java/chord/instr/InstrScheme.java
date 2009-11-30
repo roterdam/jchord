@@ -15,8 +15,8 @@ import java.io.IOException;
 import chord.util.ChordRuntimeException;
 
 /**
- * Allows users to specify the kind and format of events to be
- * generated during the execution of an instrumented program.
+ * Scheme specifying the kind and format of events to be
+ * generated during an instrumented program's execution.
  * 
  * The supported events and their formats are as follows:
  * <p>

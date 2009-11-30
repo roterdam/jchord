@@ -23,9 +23,7 @@ import chord.project.Properties;
 import chord.project.RTA;
 import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
-import chord.util.FileUtils;
 import chord.util.IndexSet;
-import chord.util.ArraySet;
 import chord.util.ChordRuntimeException;
  
 import joeq.Class.PrimordialClassLoader;
@@ -34,7 +32,6 @@ import joeq.UTF.Utf8;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_LineNumberBC;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;

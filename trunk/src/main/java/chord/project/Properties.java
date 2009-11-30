@@ -6,10 +6,7 @@
 package chord.project;
 
 import java.io.File;
-import java.io.IOException;
-import chord.util.ClassUtils;
 import chord.util.FileUtils;
-import chord.util.ChordRuntimeException;
 
 /**
  * System properties recognized by Chord.

@@ -5,7 +5,6 @@
  */
 package chord.analyses.datarace;
 
-import java.io.File;
 import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +41,6 @@ import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.project.Properties;
 import chord.project.OutDirUtils;
-import chord.util.FileUtils;
 import chord.util.SetUtils;
 import chord.util.tuple.object.Hext;
 import chord.util.tuple.object.Pair;
@@ -175,8 +173,6 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		PrintWriter out;
 
-		String outDirName = Properties.outDirName;
-		
 		out = OutDirUtils.newPrintWriter("dataracelist.xml");
 		out.println("<dataracelist>");
 		final ProgramRel relDatarace = (ProgramRel) Project.getTrgt("datarace");

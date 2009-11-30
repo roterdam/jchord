@@ -13,7 +13,6 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Util.Templates.ListIterator;
 import chord.doms.DomP;
-import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 import chord.visitors.IMethodVisitor;

@@ -19,17 +19,16 @@ import chord.visitors.IVarVisitor;
  * Domain of local variables of reference type.
  * <p>
  * Each local variable declared in each block of each method is
- * represented by a unique element in this domain, in particular,
- * local variables that have the same name but are declared in
- * different methods or in different blocks of the same method
- * are represented by different elements in this domain.
+ * represented by a unique element in this domain.  Local variables
+ * that have the same name but are declared in different methods
+ * or in different blocks of the same method are represented by
+ * different elements in this domain.
  * <p>
- * All local variables of the same method are assigned contiguous
- * indices in this domain, in particular, the set of local
- * variables of a method is the disjoint union of its argument
- * variables and its temporary variables, and the argument
- * variables are assigned contiguous indices in order followed by
- * the temporary variables.
+ * The set of local variables of a method is the disjoint union of
+ * its argument variables and its temporary variables.  All local
+ * variables of the same method are assigned contiguous indices in
+ * this domain.  The argument variables are assigned contiguous
+ * indices in order followed by the temporary variables.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

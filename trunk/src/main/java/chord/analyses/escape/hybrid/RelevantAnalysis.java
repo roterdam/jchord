@@ -7,9 +7,6 @@ package chord.analyses.escape.hybrid;
 
 import chord.project.Project;
 import chord.project.ProgramRel;
-import chord.project.Properties;
-
-import java.io.*;
 
 /**
  * 

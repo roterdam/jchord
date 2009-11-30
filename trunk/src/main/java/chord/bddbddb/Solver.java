@@ -7,7 +7,6 @@ package chord.bddbddb;
 
 import chord.project.Properties;
 import chord.util.ProcessExecutor;
-import chord.util.Timer;
 
 /**
  * Interface to bddbddb's BDD-based Datalog solver.
