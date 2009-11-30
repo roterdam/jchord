@@ -12,7 +12,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.doms.DomM;
 import chord.doms.DomV;
-import chord.project.Program;
+import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 

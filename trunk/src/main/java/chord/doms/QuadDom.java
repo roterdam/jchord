@@ -5,7 +5,7 @@
  */
 package chord.doms;
 
-import chord.project.Program;
+import chord.program.Program;
 import chord.project.ProgramDom;
 import chord.project.Project;
 

@@ -21,7 +21,7 @@ import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
 import chord.doms.DomL;
 import chord.doms.DomE;
-import chord.project.Program;
+import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 import chord.visitors.IMethodVisitor;

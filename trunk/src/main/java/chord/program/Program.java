@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.program;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -18,7 +18,9 @@ import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
-import chord.program.MethodSign;
+import chord.project.IBootstrapper;
+import chord.project.Properties;
+import chord.project.RTA;
 import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
 import chord.util.FileUtils;

@@ -7,8 +7,8 @@ package chord.doms;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Type;
+import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Program;
 import chord.project.ProgramDom;
 
 /**

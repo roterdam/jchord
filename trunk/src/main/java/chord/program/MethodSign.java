@@ -6,19 +6,44 @@
 package chord.program;
 
 /**
+ * Representation of the signature of a method.
  * 
+ * Its format is <tt>mName:mDesc@cName</tt> where:
+ * <ul>
+ * <li><tt>mName</tt> denotes the name of the method,</li>
+ * <li><tt>mDesc</tt> denotes the descriptor of the method, and</li>
+ * <li><tt>cName</tt> denotes the name of the class declaring the
+ * method.</li>
+ * </ul>
+
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class MethodSign {
 	public final String mName;
 	public final String mDesc;
 	public final String cName;
+	/**
+	 * Creates the representation of the signature of the specified
+	 * method.
+	 * 
+	 * @param	mName	The name of the method.
+	 * @param	mDesc	The descriptor of the method.
+	 * @param	cName	The name of the class declaring the method.
+	 */
 	public MethodSign(String mName, String mDesc, String cName) {
 		this.mName = mName;
 		this.mDesc = mDesc;
 		this.cName = cName;
 	}
-	// s is of the form mName:mDesc@cName
+	/**
+	 * Creates the representation of the signature of the specified
+	 * method.
+	 * 
+	 * @param	s	A string of the form <tt>mName:mDesc@cName</tt>
+	 * specifying a method.
+	 * @return	The representation of the signature of the specified
+	 * method.
+	 */
 	public static MethodSign parse(String s) {
 		int colonIdx = s.indexOf(':');
         int atIdx = s.indexOf('@');

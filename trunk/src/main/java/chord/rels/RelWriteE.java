@@ -8,8 +8,8 @@ package chord.rels;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import chord.doms.DomE;
+import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Program;
 import chord.project.ProgramRel;
 
 /**

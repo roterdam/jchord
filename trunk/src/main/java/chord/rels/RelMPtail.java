@@ -9,8 +9,8 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Program;
 import chord.project.ProgramRel;
 import chord.visitors.IMethodVisitor;
 

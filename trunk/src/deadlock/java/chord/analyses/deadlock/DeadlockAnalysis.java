@@ -15,7 +15,7 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 
-import chord.project.Program;
+import chord.program.Program;
 import chord.project.Project;
 import chord.project.Chord;
 import chord.project.ProgramDom;

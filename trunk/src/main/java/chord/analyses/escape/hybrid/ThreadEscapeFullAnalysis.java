@@ -48,6 +48,7 @@ import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.util.tuple.integer.IntPair;
+import chord.program.Program;
 import chord.project.ProgramRel;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Properties;
@@ -62,7 +63,6 @@ import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.project.Chord;
 import chord.project.JavaAnalysis;
-import chord.project.Program;
 import chord.project.Project;
 import chord.util.ArraySet;
 import chord.util.CompareUtils;

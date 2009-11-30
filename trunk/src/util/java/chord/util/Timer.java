@@ -7,10 +7,9 @@ package chord.util;
 
 import java.util.Date;
 import java.text.DateFormat;
-import java.io.PrintWriter;
 
 /**
- * Timer implementation.
+ * Implementation of a timer with facility to pause and resume.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
