@@ -15,7 +15,9 @@ import chord.util.WeakIdentityHashMap;
 import java.io.IOException;
 
 /**
- * 
+ * Concrete offline handler of events generated during an
+ * instrumented program's execution.
+ *  
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class BufferedRuntime extends Runtime {

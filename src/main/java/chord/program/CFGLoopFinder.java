@@ -17,7 +17,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 
 /**
- * Infers all loops in a given control-flow graph.
+ * Inference of all loops in a control-flow graph.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

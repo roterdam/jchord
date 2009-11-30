@@ -6,7 +6,8 @@
 package chord.instr;
 
 /**
- * The kind of an event.
+ * The kind of an event generated during an instrumented
+ * program's execution.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

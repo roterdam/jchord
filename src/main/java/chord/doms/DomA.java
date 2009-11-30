@@ -6,7 +6,6 @@
 package chord.doms;
 
 import joeq.Class.jq_Method;
-import chord.program.Program;
 import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.analyses.alias.Ctxt;

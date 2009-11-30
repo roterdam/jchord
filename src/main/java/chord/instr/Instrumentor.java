@@ -48,9 +48,9 @@ import java.util.Set;
 import java.util.HashSet;
 
 /**
- * Instruments and rewrites the .class files of a given program
- * to generate the specified events during the execution of the
- * instrumented program.
+ * Functionality for offline instrumention and rewriting of a
+ * program's bytecode to generate the specified events during
+ * its execution.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

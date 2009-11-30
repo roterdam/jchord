@@ -7,7 +7,6 @@ package chord.analyses.escape.hybrid;
 
 import java.util.Set;
 
-import chord.util.CompareUtils;
 import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
 

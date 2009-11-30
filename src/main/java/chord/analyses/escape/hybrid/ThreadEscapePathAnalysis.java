@@ -23,7 +23,6 @@ import chord.util.IndexSet;
 import chord.util.ArraySet;
 import chord.util.IndexMap;
 import chord.util.IndexHashMap;
-import chord.util.ProcessExecutor;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.integer.IntQuad;
@@ -32,8 +31,6 @@ import chord.bddbddb.Rel.PairIterable;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.bddbddb.Rel.IntTrioIterable;
 import chord.doms.DomH;
-import chord.doms.DomE;
-import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomF;
 import chord.doms.DomP;
@@ -89,8 +86,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private long numGetstatic;
 	private long numPutstatic;
 
-	private final static int MAX_CALLS = 2;
-	private final static boolean DEBUG = false;
 	private final static List<IntPair> emptyArgsList =
 		Collections.emptyList();
 	private final static TIntArrayList emptyTmpsList =
@@ -948,10 +943,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					return;
 				}
 			}
-			// alreadyCalled[mId] = true;
-
-			// System.out.println("XXX EM: " + domM.get(mId));
-
 			if (top != null)
 				frames.push(top);
 			final int cId = (invkArgs == null) ? 0 : getCid(pendingInvk.pId);
@@ -1012,10 +1003,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				System.out.println("mId: " + mId + " top.mId: " + top.mId); 
 				assert (false);
 			}
-			// alreadyCalled[mId] = false;
 			top = (frames.isEmpty()) ? null : frames.pop();
-
-			// System.out.println("XXX LM: " + domM.get(mId));
 		}
 		public void processBasicBlock(int bId) {
 			if (ignoredMethNumFrames > 0)
@@ -1054,7 +1042,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			}
 		}
 		private void processQuad(Quad q) {
-			// System.out.println("PROCESSING: " + q);
 			top.pendingInvk = null;
 			Operator op = q.getOperator();
 			if (op instanceof Move) {
@@ -1106,7 +1093,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			RegisterOperand lo = Phi.getDest(q);
 			jq_Type t = lo.getType();
 			if (t == null) {
-				// System.out.println("XXX: " + q + " " + domM.get(top.mId) + " " + top.currBB + " " + top.prevBB);
 				return;
 			}
 			if (!t.isReferenceType())
@@ -1115,8 +1101,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			BasicBlockTableOperand bo = Phi.getPreds(q);
 			int n = bo.size();
 			int i = 0;
-			// if (top.prevBB == null)
-			//	System.out.println("XXX: " + domM.get(top.mId));
 			assert (top.prevBB != null);
 			for (; i < n; i++) {
 				BasicBlock bb = bo.get(i);
@@ -1167,8 +1151,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			RegisterOperand lo = Move.getDest(q);
 			Register l = lo.getRegister();
 			int lId = domU.indexOf(l);
-			// if (lId == -1)
-			// 	System.out.println(q + " " + " XXX" + l + "XXX " + domM.get(top.mId) + " " + tId);
 			assert (lId != -1);
 			if (ro != null) {
 				Register r = ro.getRegister();

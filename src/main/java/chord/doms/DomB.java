@@ -10,14 +10,10 @@ import java.util.HashMap;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_NameAndDesc;
-import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ProgramDom;
-import chord.project.Project;
 import chord.visitors.IMethodVisitor;
 import joeq.Util.Templates.ListIterator;
 

@@ -10,8 +10,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import chord.util.ArraySet;
-import chord.util.IndexSet;
 import chord.util.Timer;
 import chord.util.IndexHashSet;
 
@@ -44,8 +42,6 @@ import joeq.Util.Templates.ListIterator;
  */
 public class RTA implements IBootstrapper {
 	public static final boolean DEBUG = false;
-    private static final IndexSet<jq_InstanceMethod> emptySet =
-        new ArraySet<jq_InstanceMethod>(0);
     private IndexHashSet<jq_Class> reachableAllocClasses =
         new IndexHashSet<jq_Class>();
 	protected IndexHashSet<jq_Class> preparedClasses =
