@@ -11,8 +11,8 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Program;
 import chord.visitors.IHeapInstVisitor;
 
 /**

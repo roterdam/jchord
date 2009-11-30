@@ -27,6 +27,7 @@ import java.util.Stack;
 import org.scannotation.AnnotationDB;
 
 import chord.instr.InstrScheme;
+import chord.program.Program;
 import chord.util.ArraySet;
 import chord.util.ArrayUtils;
 import chord.util.ClassUtils;

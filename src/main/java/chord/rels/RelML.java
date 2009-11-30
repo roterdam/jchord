@@ -9,8 +9,8 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import chord.doms.DomL;
 import chord.doms.DomM;
+import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Program;
 import chord.project.ProgramRel;
 
 /**

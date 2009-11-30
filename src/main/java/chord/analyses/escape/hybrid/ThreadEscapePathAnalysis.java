@@ -16,6 +16,7 @@ import java.io.IOException;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
 
+import chord.program.Program;
 import chord.project.Properties;
 import chord.util.ChordRuntimeException;
 import chord.util.IndexSet;
@@ -38,7 +39,6 @@ import chord.doms.DomF;
 import chord.doms.DomP;
 import chord.doms.DomB;
 import chord.doms.DomT;
-import chord.project.Program;
 import chord.project.Project;
 import chord.project.ProgramDom;
 import chord.project.ProgramRel;

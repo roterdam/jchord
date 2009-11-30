@@ -11,7 +11,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import chord.analyses.alias.Ctxt;
-import chord.project.Program;
+import chord.program.Program;
 import chord.project.ProgramDom;
 import chord.project.Project;
 

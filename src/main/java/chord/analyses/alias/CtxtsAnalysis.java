@@ -30,9 +30,9 @@ import chord.doms.DomH;
 import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomV;
+import chord.program.Program;
 import chord.project.Chord;
 import chord.project.JavaAnalysis;
-import chord.project.Program;
 import chord.project.ProgramRel;
 import chord.project.Project;
 

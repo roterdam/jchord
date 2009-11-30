@@ -15,7 +15,7 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Util.Templates.ListIterator;
 
-import chord.project.Program;
+import chord.program.Program;
 import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.project.Chord;

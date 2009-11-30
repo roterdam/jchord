@@ -8,7 +8,6 @@ package chord.instr;
 import gnu.trove.TIntObjectHashMap;
 import javassist.*;
 import javassist.expr.*;
-import java.io.Serializable;
 
 import chord.doms.DomE;
 import chord.doms.DomF;
@@ -22,8 +21,8 @@ import chord.doms.DomB;
 import chord.doms.DomW;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.CFGLoopFinder;
+import chord.program.Program;
 import chord.util.ChordRuntimeException;
-import chord.project.Program;
 import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.project.Properties;
@@ -49,7 +48,10 @@ import java.util.Set;
 import java.util.HashSet;
 
 /**
- *
+ * Instruments and rewrites the .class files of a given program
+ * to generate the specified events during the execution of the
+ * instrumented program.
+ * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor {
@@ -185,6 +187,14 @@ public class Instrumentor {
 	public IndexMap<String> getBmap() { return Bmap; }
 	public IndexMap<String> getWmap() { return Wmap; }
 
+	/**
+	 * Initializes the instrumentor.
+	 * 
+	 * @param	program	The program to instrument.
+	 * @param	scheme	The scheme specifying the kind and format
+	 * of events to generate during the execution of the
+	 * instrumented program. 
+	 */
 	public Instrumentor(Program program, InstrScheme scheme) {
 		this.program = program;
 		this.scheme = scheme;
@@ -192,14 +202,20 @@ public class Instrumentor {
 	private static boolean checkExists(String pathElem) {
 		File file = new File(pathElem);
 		if (!file.exists()) {
-			System.out.println("WARNING: Instrumentor ignoring non-existent path element: " + pathElem);
+			System.out.println("WARNING: Instrumentor ignoring " +
+				"non-existent path element: " + pathElem);
 			return false;
 		}
 		return true;
 	}
+	/**
+	 * Runs the instrumentor which reads each .class file of the
+	 * given program and writes a corresponding .class file with
+	 * instrumentation for generating the specified kind and format
+	 * of events during the execution of the instrumented program.
+	 */
 	public void run() {
 		pool = new ClassPool();
-
 		{
 			String pathName = Properties.mainClassPathName;
 			String[] pathElems = pathName.split(File.pathSeparator);
@@ -213,7 +229,6 @@ public class Instrumentor {
 				}
 			}
 		}
-
 		Set<String> bootClassPathResourceNames = new HashSet<String>();
 		{
 			String pathName = System.getProperty("sun.boot.class.path");
@@ -229,7 +244,6 @@ public class Instrumentor {
 				}
 			}
 		}
-
 		Set<String> userClassPathResourceNames = new HashSet<String>();
 		{
 			String pathName = Properties.classPathName;
@@ -446,28 +460,20 @@ public class Instrumentor {
 			}
 		}
 
-		String outDirName = Properties.outDirName;
-		if (Fmap != null) {
+		if (Fmap != null)
 			OutDirUtils.writeMapToFile(Fmap, "F.dynamic.txt");
-		}
-		if (Mmap != null) {
+		if (Mmap != null)
 			OutDirUtils.writeMapToFile(Mmap, "M.dynamic.txt");
-		}
-		if (Hmap != null) {
+		if (Hmap != null)
 			OutDirUtils.writeMapToFile(Hmap, "H.dynamic.txt");
-		}
-		if (Emap != null) {
+		if (Emap != null)
 			OutDirUtils.writeMapToFile(Emap, "E.dynamic.txt");
-		}
-		if (Imap != null) {
+		if (Imap != null)
 			OutDirUtils.writeMapToFile(Imap, "I.dynamic.txt");
-		}
-		if (Lmap != null) {
+		if (Lmap != null)
 			OutDirUtils.writeMapToFile(Lmap, "L.dynamic.txt");
-		}
-		if (Rmap != null) {
+		if (Rmap != null)
 			OutDirUtils.writeMapToFile(Rmap, "R.dynamic.txt");
-		}
 		if (domB != null) {
 			Bmap = getUniqueStringMap(domB);
 			OutDirUtils.writeMapToFile(Bmap, "B.dynamic.txt");
@@ -482,7 +488,7 @@ public class Instrumentor {
 		}
 	}
 
-	protected <T extends Serializable> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {
+	protected <T> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {
 		IndexMap<String> map = new IndexHashMap<String>(dom.size());
 		for (int i = 0; i < dom.size(); i++) {
 			String s = dom.toUniqueString(dom.get(i));

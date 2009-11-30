@@ -17,6 +17,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 
 /**
+ * Infers all loops in a given control-flow graph.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -27,6 +28,19 @@ public class CFGLoopFinder {
     private Set<Pair<BasicBlock, BasicBlock>> backEdges;
     	private Map<BasicBlock, Set<BasicBlock>> headToBody;
 	private Map<BasicBlock, Set<BasicBlock>> headToExits;
+	/**
+	 * Computes all loops in a given control-flow graph.
+	 * It builds two maps:
+	 * <ul>
+	 * <li>headToBody: from each loop header to the set of all
+	 * basic blocks in that loop's body.</li>
+	 * <li>headToExits: from each loop header to the set of all
+	 * basic blocks in that loop's body that have an immediate
+	 * successor outside that loop's body.</li>
+	 * </ul>
+	 * 
+	 * @param	cfg	A control-flow graph.
+	 */
 	public void visit(ControlFlowGraph cfg) {
 		// build back edges
 		visitedBef = new ArraySet<BasicBlock>();
@@ -91,18 +105,60 @@ public class CFGLoopFinder {
 			}
 		}
 	}
+	/**
+	 * Provides the set of all loop header basic blocks in this
+	 * control-flow graph.
+	 * 
+	 * @return	The set of all loop header basic blocks in this
+	 * control-flow graph.
+	 */
 	public Set<BasicBlock> getLoopHeads() {
 		return headToBody.keySet();
 	}
+	/**
+	 * Provides the set of all basic blocks in the body of the loop
+	 * specified by the given loop header.
+	 * 
+	 * @param	head	A loop header.
+	 * 
+	 * @return	The set of all basic blocks in the body of the loop
+	 * specified by the given loop header.
+	 */
 	public Set<BasicBlock> getLoopBody(BasicBlock head) {
 		return headToBody.get(head);
 	}
+	/**
+	 * Provides the set of all basic blocks in the body of the loop
+	 * specified by the given loop header that have an immediate
+	 * successor outside that loop's body.
+	 * 
+	 * @param	head	A loop header.
+	 * @return	The set of all basic blocks in the body of the loop
+	 * specified by the given loop header that have an immediate
+	 * successor outside that loop's body.
+	 */
 	public Set<BasicBlock> getLoopExits(BasicBlock head) {
 		return headToExits.get(head);
 	}
+	/**
+	 * Provides a map from each loop header in this control-flow graph
+	 * to the set of all basic blocks in that loop's body that have an
+	 * immediate successor outside that loop's body.
+	 * 
+	 * @return	A map from each loop header in this control-flow graph
+	 * to the set of all basic blocks in that loop's body that have an
+	 * immediate successor outside that loop's body.
+	 */
 	public Map<BasicBlock, Set<BasicBlock>> getHeadToExitsMap() {
 		return headToExits;
 	}
+	/**
+	 * Provides a map from each loop header in this control-flow graph
+	 * to the set of all basic blocks in that loop's body.
+	 * 
+	 * @return	A map from each loop header in this control-flow graph
+	 * to the set of all basic blocks in that loop's body.
+	 */
 	public Map<BasicBlock, Set<BasicBlock>> getHeadToBodyMap() {
 		return headToBody;
 	}

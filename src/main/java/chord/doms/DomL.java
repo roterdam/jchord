@@ -10,8 +10,8 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
 
+import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Program;
 import chord.visitors.IAcqLockInstVisitor;
 
 /**

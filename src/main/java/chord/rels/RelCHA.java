@@ -12,7 +12,7 @@ import joeq.Class.jq_NameAndDesc;
 
 import chord.util.IndexSet;
 import chord.doms.DomM;
-import chord.project.Program;
+import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 

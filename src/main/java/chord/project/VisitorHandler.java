@@ -8,6 +8,7 @@ package chord.project;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import chord.program.Program;
 import chord.util.IndexSet;
 
 import chord.visitors.IClassVisitor;
