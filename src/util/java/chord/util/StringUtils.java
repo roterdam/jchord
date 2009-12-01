@@ -7,37 +7,61 @@ package chord.util;
 
 /**
  * String related utilities.
- *  
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class StringUtils {
+public final class StringUtils {
+
 	/**
-	 * Trim the numerical suffix of the given string (e.g. convert
-	 * "abc123xyz456 to "abc123xyz").
+	 * Just disables an instance creation of this utility class.
 	 *
-	 * @param	s	The string whose numerical suffix is to be trimmed.
-	 * @return	A copy of the given string without any numerical
-	 * 			suffix.
+	 * @throws UnsupportedOperationException always.
 	 */
-	public static String trimNumSuffix(String s) {
+	private StringUtils() {
+		throw new UnsupportedOperationException();
+	}
+
+	/**
+	 * Trim the numerical suffix of the given string.  For instance,
+	 * converts "abc123xyz456" to "abc123xyz". If given string is
+	 * empty, also returns an empty string.
+	 *
+	 * @return A copy of the given string without any numerical suffix.
+	 * @throws IllegalArgumentException if {@code s} is {@code null}.
+	 * @param	s	The string whose numerical suffix is to be trimmed.
+	 */
+	public static String trimNumSuffix(final String s) {
+		if (s == null) {
+			throw new IllegalArgumentException();
+		}
+		if (s.length() == 0) {
+			return s;
+		}
 		int i = s.length() - 1;
-		while (Character.isDigit(s.charAt(i)))
+		while (Character.isDigit(s.charAt(i))) {
 			i--;
+		}
 		return s.substring(0, i + 1);
 	}
+
 	/**
-	 * Create an array of strings by concatenating two given arrays
-	 * of strings.
-	 * 
-	 * @param	a	An array of strings.
-	 * @param	b	An array of strings.
-	 * @return	A new array of strings containing those in <tt>a</tt>
-	 * 			followed by those in <tt>b</tt>.
+	 * Create an array of strings by concatenating two given arrays of strings.
+	 *
+	 * @return A new array of strings containing those in {@code a} followed by those in {@code b}.
+	 * @throws IllegalArgumentException if any of arguments is {@code null}.
+	 * @param	a	the first array of strings.
+	 * @param	b	the second array of strings.
 	 */
-	public static String[] concat(String[] a, String[] b) {
-		String[] c = new String[a.length + b.length];
-		System.arraycopy(a, 0, c, 0, a.length);
-		System.arraycopy(b, 0, c, a.length, b.length);
-		return c;
+	public static String[] concat(final String[] a, final String[] b) {
+		if (a == null) {
+			throw new IllegalArgumentException();
+		}
+		if (b == null) {
+			throw new IllegalArgumentException();
+		}
+		final String[] result = new String[a.length + b.length];
+		System.arraycopy(a, 0, result, 0, a.length);
+		System.arraycopy(b, 0, result, a.length, b.length);
+		return result;
 	}
 }
