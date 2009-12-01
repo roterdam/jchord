@@ -10,7 +10,7 @@ import joeq.Compiler.Quad.Quad;
 /**
  * Visitor over all phi statements in all methods in the program.
  * 
- * @author Mayur Naik (mayur.naik@intel.com)
+ * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public interface IPhiInstVisitor extends IMethodVisitor {
 	/**

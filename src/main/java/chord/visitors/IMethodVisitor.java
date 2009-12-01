@@ -10,7 +10,7 @@ import joeq.Class.jq_Method;
 /**
  * Visitor over all methods of all classes in the program.
  * 
- * @author Mayur Naik (mayur.naik@intel.com)
+ * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public interface IMethodVisitor extends IClassVisitor {
 	/**

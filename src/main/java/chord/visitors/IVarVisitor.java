@@ -10,7 +10,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 /**
  * Visitor over all local variables of all methods in the program.
  * 
- * @author Mayur Naik (mayur.naik@intel.com)
+ * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public interface IVarVisitor extends IMethodVisitor {
 	/**

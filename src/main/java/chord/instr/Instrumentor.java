@@ -48,7 +48,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 /**
- * Functionality for offline instrumention and rewriting of a
+ * Functionality for offline instrumentation and rewriting of a
  * program's bytecode to generate the specified events during
  * its execution.
  * 

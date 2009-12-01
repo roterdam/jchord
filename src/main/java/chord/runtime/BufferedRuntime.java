@@ -15,9 +15,13 @@ import chord.util.WeakIdentityHashMap;
 import java.io.IOException;
 
 /**
- * Concrete offline handler of events generated during an
+ * Buffered file-based offline handler of events generated during an
  * instrumented program's execution.
- *  
+ * <p>
+ * A file is used to communicate events between the JVM running the
+ * instrumented program (which produces events) and the JVM running
+ * the dynamic program analysis (which consumes events).
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class BufferedRuntime extends Runtime {

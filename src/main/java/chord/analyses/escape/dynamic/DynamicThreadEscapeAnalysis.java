@@ -27,6 +27,7 @@ import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
 
 /**
+ * Dynamic thread-escape analysis.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

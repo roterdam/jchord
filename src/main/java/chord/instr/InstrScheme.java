@@ -15,163 +15,153 @@ import java.io.IOException;
 import chord.util.ChordRuntimeException;
 
 /**
- * Scheme specifying the kind and format of events to be
- * generated during an instrumented program's execution.
- * 
- * The supported events and their formats are as follows:
+ * Scheme specifying the kind and format of events to be generated
+ * during an instrumented program's execution.
  * <p>
- * ENTER_AND_LEAVE_METHOD:
- * Controls generation of the following events after/before
+ * The supported events and their formats are as follows:
+ * <table border=1>
+ * <tr><td>ENTER_AND_LEAVE_METHOD</td>
+ * <td>Controls generation of the following events after/before
  * thread t enters/leaves method m: <br>
  * ENTER_METHOD m t <br>
  * LEAVE_METHOD m t
- * <p>
- * ENTER_AND_LEAVE_LOOP:
- * Controls the generation of the following events before/after
+ * </td></tr>
+ * <tr><td>ENTER_AND_LEAVE_LOOP</td>
+ * <td>Controls the generation of the following events before/after
  * thread t enters/leaves loop m: <br>
  * ENTER_LOOP w t <br>
  * LEAVE_LOOP w t
- * <p>
- * NEW_AND_NEW_ARRAY:
- * Controls generation of the following event before thread t
+ * </td></tr>
+ * <tr><td>NEW_AND_NEW_ARRAY</td>
+ * <td>Controls generation of the following event before thread t
  * executes a NEW instruction at program point h: <br>
- * BEF_NEW h t
- * <p>
- * Controls generation of the following event after thread t
- * executes a NEW instruction at program point h and allocates
- * new object o: <br>
- * AFT_NEW h t o
- * <p>
+ * BEF_NEW h t <br>
+ *     Controls generation of the following event after thread t
+ * executes a NEW instruction at program point h and allocates new
+ * object o: <br>
+ * AFT_NEW h t o <br>
  * Note: Both above events are visible only in the crude trace
- * and not in the final trace.  Moreover, they are needed only
- * if instrOid is true.
- * <p>
- * Controls generation of the following events after thread t
+ * and not in the final trace.  They are generated only if argument
+ * <tt>hasObj</tt> of method {@link #setNewAndNewArrayEvent}
+ * is true. <br>
+ *     Controls generation of the following events after thread t
  * executes a NEW or NEWARRAY instruction at program point h
  * and allocates new object o: <br>
  * NEW h t o <br>
  * NEW_ARRAY h t o
- * <p>
- * GETSTATIC_PRIMITIVE:
- * Controls generation of the following event after thread t
+ * </td></tr>
+ * <tr><td>GETSTATIC_PRIMITIVE</td>
+ * <td>Controls generation of the following event after thread t
  * reads primitive-typed static field f at program point e: <br>
- * GETSTATIC_PRIMITIVE e t f 
- * <p>
- * GETSTATIC_REFERENCE:
- * Controls generation of the following event after thread t
- * reads object o from reference-typed static field f at
- * program point e: <br>
- * GETSTATIC_REFERENCE e t f o
- *
- * PUTSTATIC_PRIMITIVE:
- * Controls generation of the following event after thread t
+ * GETSTATIC_PRIMITIVE e t f
+ * </td></tr>
+ * <tr><td>GETSTATIC_REFERENCE</td>
+ * <td>Controls generation of the following event after thread t
+ * reads object o from reference-typed static field f at program
+ * point e: <br>
+ * GETSTATIC_REFERENCE e t f o 
+ * </td></tr>
+ * <tr><td>PUTSTATIC_PRIMITIVE</td>
+ * <td>Controls generation of the following event after thread t
  * writes primitive-typed static field f at program point e: <br>
  * PUTSTATIC_PRIMITIVE e t f
- * <p>
- * PUTSTATIC_REFERENCE:
- * Controls generation of the following event after thread t
- * writes object o to reference-typed static field f at
- * program point e: <br>
+ * </td></tr>
+ * <tr><td>PUTSTATIC_REFERENCE</td> 
+ * <td>Controls generation of the following event after thread t
+ * writes object o to reference-typed static field f at program
+ * point e: <br>
  * PUTSTATIC_REFERENCE e t f o
- * <p>
- * GETFIELD_PRIMITIVE:
- * Controls generation of the following event after thread t
- * reads primitive-typed instance field f of object b at
- * program point e: <br>
+ * </td></tr>
+ * <tr><td>GETFIELD_PRIMITIVE</td>
+ * <td>Controls generation of the following event after thread t
+ * reads primitive-typed instance field f of object b at program
+ * point e: <br>
  * GETFIELD_PRIMITIVE e t b f
- * <p>
- * GETFIELD_REFERENCE:
- * Controls generation of the following event after thread t
- * reads object o from reference-typed instance field f of
- * object b at program point e: <br>
+ * </td></tr>
+ * <tr><td>GETFIELD_REFERENCE</td>
+ * <td>Controls generation of the following event after thread t
+ * reads object o from reference-typed instance field f of object b
+ * at program point e: <br>
  * GETFIELD_REFERENCE e t b f o
- * <p>
- * PUTFIELD_PRIMITIVE:
- * Controls generation of the following event after thread t
- * writes primitive-typed instance field f of object b at
- * program point e: <br>
+ * </td></tr>
+ * <tr><td>PUTFIELD_PRIMITIVE</td>
+ * <td>Controls generation of the following event after thread t
+ * writes primitive-typed instance field f of object b at program
+ * point e: <br>
  * PUTFIELD_PRIMITIVE e t b f
- * <p>
- * PUTFIELD_REFERENCE:
- * Controls generation of the following event after thread t
- * writes object o to reference-typed instance field f of
- * object b at program point e: <br>
+ * </td></tr>
+ * <tr><td>PUTFIELD_REFERENCE</td>
+ * <td>Controls generation of the following event after thread t
+ * writes object o to reference-typed instance field f of object b
+ * at program point e: <br>
  * PUTFIELD_REFERENCE e t b f o
- * <p>
- * ALOAD_PRIMITIVE:
- * Controls generation of the following event after thread t
+ * </td></tr>
+ * <tr><td>ALOAD_PRIMITIVE</td>
+ * <td>Controls generation of the following event after thread t
  * reads the primitive-typed i^th element of array object b at
  * program point e: <br>
  * ALOAD_PRIMITIVE e t b i
- * <p>
- * ALOAD_REFERENCE:
- * Controls generation of the following event after thread t
- * reads object o from the reference-typed i^th element of
- * array object b at program point e: <br>
+ * </td></tr>
+ * <tr><td>ALOAD_REFERENCE</td>
+ * <td>Controls generation of the following event after thread t
+ * reads object o from the reference-typed i^th element of array
+ * object b at program point e: <br>
  * ALOAD_REFERENCE e t b i o
- * <p>
- * ASTORE_PRIMITIVE:
- * Controls generation of the following event after thread t
+ * </td></tr>
+ * <tr><td>ASTORE_PRIMITIVE</td>
+ * <td>Controls generation of the following event after thread t
  * writes the primitive-typed i^th element of array object b at
  * program point e: <br>
  * ASTORE_PRIMITIVE e t b i
- * <p>
- * ASTORE_REFERENCE: <br>
- * Controls generation of the following event after thread t
+ * </td></tr>
+ * <tr><td>ASTORE_REFERENCE</td>
+ * <td>Controls generation of the following event after thread t
  * writes object o to the reference-typed i^th element of array
  * object b at program point e: <br>
  * ASTORE_REFERENCE e t b i o
- * <p>
- * METHOD_CALL: <br>
+ * </td></tr>
+ * <tr><td>METHOD_CALL</td>
+ * <td>Controls generation of the following event before or after
+ * thread t executes the method invocation statement at program
+ * point i: <br>
  * METHOD_CALL i t
- * <p>
- * RETURN_PRIMITIVE: <br>
- * RETURN_PRIMITIVE p t
- * <p>
- * RETURN_REFERENCE: <br>
- * RETURN_REFERENCE p t o
- * <p>
- * THROW_EXPLICIT: <br>
- * THROW_EXPLICIT p t
- * <p>
- * THROW_IMPLICIT: <br>
- * THROW_IMPLICIT t
- * <p>
- * THREAD_START:
- * Controls generation of the following event before thread t
+ * </td></tr>
+ * <tr><td>THREAD_START</td>
+ * <td>Controls generation of the following event before thread t
  * calls the <tt>start()</tt> method of <tt>java.lang.Thread</tt>
  * at program point i and spawns a thread o: <br>
  * THREAD_START i t o
- * <p>
- * THREAD_JOIN:
- * Controls generation of the following event before thread t
+ * </td></tr>
+ * <tr><td>THREAD_JOIN</td>
+ * <td>Controls generation of the following event before thread t
  * calls the <tt>join()</tt> method of <tt>java.lang.Thread</tt>
  * at program point i to join with thread o: <br>
  * THREAD_JOIN i t o
- * <p>
- * ACQUIRE_LOCK:
- * Controls generation of the following event after thread t
- * executes a statement of the form monitorenter o or enters
- * a method synchronized on o at program point l: <br>
+ * </td></tr>
+ * <tr><td>ACQUIRE_LOCK</td>
+ * <td>Controls generation of the following event after thread t
+ * executes a statement of the form monitorenter o or enters a
+ * method synchronized on o at program point l: <br>
  * ACQUIRE_LOCK l t o
- * <p>
- * RELEASE_LOCK:
- * Controls generation of the following event before thread t
- * executes a statement of the form monitorexit o or leaves
- * a method synchronized on o at program point r: <br>
+ * </td></tr>
+ * <tr><td>RELEASE_LOCK</td>
+ * <td>Controls generation of the following event before thread t
+ * executes a statement of the form monitorexit o or leaves a
+ * method synchronized on o at program point r: <br>
  * RELEASE_LOCK r t o
- * <p>
- * WAIT:
- * Controls generation of the following event before thread t
+ * </td></tr>
+ * <tr><td>WAIT</td>
+ * <td>Controls generation of the following event before thread t
  * calls the <tt>wait()</tt> method of <tt>java.lang.Object</tt>
  * at program point i on object o: <br>
- * WAIT i t o
- * <p>
- * NOTIFY:
- * Controls generation of the following event before thread t
+ * WAIT i t o 
+ * </td></tr>
+ * <tr><td>NOTIFY</td>
+ * <td>Controls generation of the following event before thread t
  * calls the <tt>notify()</tt> or <tt>notifyAll()</tt> method of
- * <tt>java.lang.Object</tt> at program point i on object o:
- * NOTIFY i t o
+ * <tt>java.lang.Object</tt> at program point i on object o: <br>
+ * NOTIFY i t o</td></tr>
+ * </table>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

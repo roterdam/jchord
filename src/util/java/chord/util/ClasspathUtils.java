@@ -18,7 +18,7 @@ import org.scannotation.AnnotationDB;
 
 /**
  * 
- * @author Mayur Naik (mayur.naik@intel.com)
+ * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClasspathUtils {
 	public static Set<String> getClassNames(String classPath) {
