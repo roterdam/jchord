@@ -7,20 +7,29 @@ package chord.util;
 
 /**
  * Array related utilities.
- * 
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ArrayUtils {
+public final class ArrayUtils {
+
+	/**
+	 * Just disables an instance creation of this utility class.
+	 *
+	 * @throws UnsupportedOperationException always.
+	 */
+	private ArrayUtils() {
+		throw new UnsupportedOperationException();
+	}
+
 	/**
 	 * Determines whether a given array contains a given value.
-	 * 
+	 *
+	 * @return true iff the given array contains the given value.
 	 * @param	<T>	The type of the array elements and the value
-	 * 			to be checked for containment in the array.
+	 * to be checked for containment in the array.
 	 * @param	a	An array.
 	 * @param	s	A value to be checked for containment in the
-	 * 			given array.
-	 * 
-	 * @return	true iff the given array contains the given value.
+	 * given array.
 	 */
 	public static <T> boolean contains(T[] a, T s) {
 		for (T t : a) {
@@ -32,13 +41,13 @@ public class ArrayUtils {
 		}
 		return false;
 	}
+
 	/**
 	 * Determines whether a given array contains duplicate values.
-	 * 
+	 *
+	 * @return true iff the given array contains duplicate values.
 	 * @param	<T>	The type of the array elements.
 	 * @param	a	An array.
-	 * 
-	 * @return	true iff the given array contains duplicate values.
 	 */
 	public static <T> boolean hasDuplicates(T[] a) {
 		for (int i = 0; i < a.length - 1; i++) {
@@ -51,8 +60,9 @@ public class ArrayUtils {
 		}
 		return false;
 	}
+
 	public static <T> String toString(T[] a,
-			String begStr, String sepStr, String endStr) {
+									  String begStr, String sepStr, String endStr) {
 		int n = a.length;
 		if (n == 0)
 			return begStr + endStr;
@@ -62,7 +72,9 @@ public class ArrayUtils {
 		}
 		return s + endStr;
 	}
+
 	public static <T> String toString(T[] a) {
 		return toString(a, "", ",", "");
 	}
+
 }
