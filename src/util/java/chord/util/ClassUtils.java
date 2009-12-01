@@ -7,24 +7,34 @@ package chord.util;
 
 /**
  * Class related utilities.
- *  
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ClassUtils {
+public final class ClassUtils {
+
+	/**
+	 * Just disables an instance creation of this utility class.
+	 *
+	 * @throws UnsupportedOperationException always.
+	 */
+	private ClassUtils() {
+		throw new UnsupportedOperationException();
+	}
+
 	/**
 	 * Determines whether a given class is a subclass of another.
-	 * 
-	 * @param	a	A class.
-	 * @param	b	A class.
-	 * @return	true iff class <tt>a</tt> is a subclass of class
-	 * 			<tt>b</tt>.
+	 *
+	 * @param	subclass	An intended subclass.
+	 * @param	superclass	An intended superclass.
+	 * @return	{@code true} iff class {@code subclass} is a subclass of class <tt>superclass</tt>.
 	 */
-	public static boolean isSubclass(Class a, Class b) {
+	public static boolean isSubclass(final Class subclass, final Class superclass) {
 		try {
-			a.asSubclass(b);
-		} catch (ClassCastException ex) {
+			subclass.asSubclass(superclass);
+		} catch (final ClassCastException ex) {
 			return false;
 		}
 		return true;
 	}
+
 }
