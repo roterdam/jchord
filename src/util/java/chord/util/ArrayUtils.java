@@ -33,7 +33,7 @@ public final class ArrayUtils {
 	 */
 	public static <T> boolean contains(T[] a, T s) {
 		for (T t : a) {
-			if (t == null) {
+			if (t == null) { // TODO: THIS SEEMS A BIT STUPID, IT SHOULD NEVER HAPPEN: IF a IS null, foreach throws NPE
 				if (s == null)
 					return true;
 			} else if (s != null && t.equals(s))
@@ -46,16 +46,21 @@ public final class ArrayUtils {
 	 * Determines whether a given array contains duplicate values.
 	 *
 	 * @return true iff the given array contains duplicate values.
+	 * @throws IllegalArgumentException if {@code array} is {@code null}.
 	 * @param	<T>	The type of the array elements.
-	 * @param	a	An array.
+	 * @param	array	An array.
 	 */
-	public static <T> boolean hasDuplicates(T[] a) {
-		for (int i = 0; i < a.length - 1; i++) {
-			T elem = a[i];
-			for (int j = i + 1; j < a.length; j++) {
-				T elem2 = a[j];
-				if (elem.equals(elem2))
+	public static <T> boolean hasDuplicates(final T[] array) {
+		if (array == null) {
+			throw new IllegalArgumentException();
+		}
+		for (int i = 0; i < array.length - 1; i++) {
+			final T x = array[i];
+			for (int j = i + 1; j < array.length; j++) {
+				final T y = array[j];
+				if (x.equals(y)) {
 					return true;
+				}
 			}
 		}
 		return false;
