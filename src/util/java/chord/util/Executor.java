@@ -9,6 +9,12 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
+ * An executor can execute tasks synchronously or asynchronously.
+ * Even if this implementation is synchronized and the implementation
+ * is thread-safe, it not scale well: it is not possible to submit
+ * new tasks if any thread is waiting for completion of previously
+ * finished tasks.  
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public final class Executor { // TODO: MIGHT BE REPLACED BY USING java.util.concurrent, WHICH ALLOWS MUCH BETTER CONCURRENCY CONTROL MUCH MORE SCALABLE LOCKING.
