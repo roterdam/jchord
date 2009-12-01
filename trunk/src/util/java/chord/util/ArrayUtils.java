@@ -61,20 +61,40 @@ public final class ArrayUtils {
 		return false;
 	}
 
-	public static <T> String toString(T[] a,
-									  String begStr, String sepStr, String endStr) {
-		int n = a.length;
-		if (n == 0)
-			return begStr + endStr;
-		String s = begStr + a[0];
-		for (int i = 1; i < n; i++) {
-			s += sepStr + a[i];
+	/**
+	 * Returns string representation of elements in given array. This method never returns {@code null}.
+	 *
+	 * @param array	 an array of elements.
+	 * @param begin	 string prefix.
+	 * @param separator elements separator.
+	 * @param end	   string suffix.
+	 * @param <T>       The type of array elements.
+	 * @return string representation of elements in given array.
+	 * @throws IllegalArgumentException if {@code array} is {@code null}.
+	 */
+	public static <T> String toString(final T[] array, final String begin, final String separator, final String end) {
+		if (array == null) {
+			throw new IllegalArgumentException();
 		}
-		return s + endStr;
+		final StringBuilder result = new StringBuilder(begin);
+		for (int i = 0; i < array.length; i++) {
+			result.append(array[i]);
+			if (i < array.length - 1) {
+				result.append(separator);
+			}
+		}
+		return result.append(end).toString();
 	}
 
-	public static <T> String toString(T[] a) {
-		return toString(a, "", ",", "");
+	/**
+	 * Returns string representation of elements in given array. This method never returns {@code null}.
+	 *
+	 * @param array an array of elements.
+	 * @param <T>   The type of the array elements.
+	 * @return string representation of elements in given array.
+	 */
+	public static <T> String toString(final T[] array) {
+		return toString(array, "", ",", "");
 	}
 
 }
