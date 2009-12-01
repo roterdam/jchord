@@ -19,13 +19,24 @@ import java.util.ArrayList;
 
 /**
  * File related utilities.
- *  
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class FileUtils {
+public final class FileUtils {
+
+	/**
+	 * Just disables an instance creation of this utility class.
+	 *
+	 * @throws UnsupportedOperationException always.
+	 */
+	private FileUtils() {
+		throw new IllegalArgumentException();
+	}
+
 	public static String getAbsolutePath(String parent, String child) {
 		return (new File(parent, child)).getAbsolutePath();
 	}
+
 	public static void copy(String fromFileName, String toFileName) {
 		try {
 			FileInputStream fis = new FileInputStream(fromFileName);
@@ -58,7 +69,7 @@ public class FileUtils {
 		if (file.mkdirs())
 			return true;
 		throw new ChordRuntimeException("Failed to create directory '" +
-			file + "'"); 
+			file + "'");
 	}
 	public static PrintWriter newPrintWriter(String fileName) {
 		try {
