@@ -16,7 +16,7 @@ import chord.visitors.IAcqLockInstVisitor;
 
 /**
  * Domain of all lock acquire points, including monitorenter
- * statements and (unique) entry basic blocks of synchronized methods.
+ * statements and entry basic blocks of synchronized methods.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

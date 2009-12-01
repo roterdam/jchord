@@ -11,7 +11,7 @@ import joeq.Compiler.Quad.Quad;
  * Visitor over all monitorexit statements in all methods
  * in the program.
  * 
- * @author Mayur Naik (mayur.naik@intel.com)
+ * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public interface IRelLockInstVisitor extends IMethodVisitor {
 	/**

@@ -10,7 +10,7 @@ import joeq.Class.jq_Class;
 /**
  * Visitor over all classes in the program.
  * 
- * @author Mayur Naik (mayur.naik@intel.com)
+ * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public interface IClassVisitor {
 	/**
