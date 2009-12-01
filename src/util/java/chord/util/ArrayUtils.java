@@ -27,17 +27,22 @@ public final class ArrayUtils {
 	 * @return true iff the given array contains the given value.
 	 * @param	<T>	The type of the array elements and the value
 	 * to be checked for containment in the array.
-	 * @param	a	An array.
+	 * @param	array	An array.
 	 * @param	s	A value to be checked for containment in the
 	 * given array.
 	 */
-	public static <T> boolean contains(T[] a, T s) {
-		for (T t : a) {
-			if (t == null) { // TODO: THIS SEEMS A BIT STUPID, IT SHOULD NEVER HAPPEN: IF a IS null, foreach throws NPE
-				if (s == null)
+	public static <T> boolean contains(final T[] array, final T s) {
+		if (array == null) {
+			throw new IllegalArgumentException();
+		}
+		for (final T t : array) {
+			if (t == null) {
+				if (s == null) {
 					return true;
-			} else if (s != null && t.equals(s))
+				}
+			} else if (t.equals(s)) {
 				return true;
+			}
 		}
 		return false;
 	}
