@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="chord" default="help">
 
+	
+
   <target name="ant-contrib">
     <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar"/>
   </target>
@@ -116,6 +118,12 @@
   </target>
 
   <target name="compile" depends="compile-props,main-class-path,ant-contrib">
+    <if>
+      <equals arg1="${os.name}" arg2="FreeBSD"/>
+      <then><property name="make" value="gmake"/></then>
+      <else><property name="make" value="make"/></else>
+    </if>
+	<echo message="make is '${make}'"/>
   <property environment="env"/>
 	<mkdir dir="classes/util"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
@@ -164,11 +172,11 @@
       <then><property name="m32" value="-m32"/></then>
       <else><property name="m32" value=""/></else>
     </if>
-    <exec executable="make" dir="bdd">
+    <exec executable="${make}" dir="bdd">
       <arg value="JDK_ROOT=${jdk_root}"/>
       <arg value="M32_FLAG=${m32}"/>
     </exec>
-    <exec executable="make" dir="agent">
+    <exec executable="${make}" dir="agent">
       <arg value="JDK_ROOT=${jdk_root}"/>
       <arg value="M32_FLAG=${m32}"/>
     </exec>
@@ -275,17 +283,23 @@
     <antcall target="run"/>
   </target>
 
-  <target name="clean">
+  <target name="clean" depends="ant-contrib">
+    <if>
+      <equals arg1="${os.name}" arg2="FreeBSD"/>
+      <then><property name="make" value="gmake"/></then>
+      <else><property name="make" value="make"/></else>
+    </if>
+	<echo message="make is '${make}'"/>
     <path id="jdk_root">
       <pathelement location="${java.home}/.."/>
     </path>
     <pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
     <delete dir="classes"/>
-    <exec executable="make" dir="bdd">
+    <exec executable="${make}" dir="bdd">
       <arg value="JDK_ROOT=${jdk_root}"/>
         <arg value="clean"/>
     </exec>
-    <exec executable="make" dir="agent">
+    <exec executable="${make}" dir="agent">
       <arg value="JDK_ROOT=${jdk_root}"/>
         <arg value="clean"/>
     </exec>
