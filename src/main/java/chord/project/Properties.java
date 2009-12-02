@@ -34,8 +34,16 @@ public class Properties {
 	public final static String propsFileName = System.getProperty("chord.props.file");
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
-	public final static String bddLibDirName = System.getProperty("chord.bdd.lib.dir");
-	public final static String instrAgentFileName = System.getProperty("chord.instr.agent.file");
+	public static String bddLibDirName = System.getProperty("chord.bdd.lib.dir");
+	static {
+		if (bddLibDirName == null)
+			bddLibDirName = FileUtils.getAbsolutePath(homeDirName, "lib");
+	}
+	public static String instrAgentFileName = System.getProperty("chord.instr.agent.file");
+	static {
+		if (instrAgentFileName == null)
+			instrAgentFileName = FileUtils.getAbsolutePath(homeDirName, "lib/libchord_instr_agent.so");
+	}
 	public final static String maxHeap = System.getProperty("chord.max.heap");
 	public final static String maxStack = System.getProperty("chord.max.stack");
 	public final static String jvmargs = System.getProperty("chord.jvmargs");

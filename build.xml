@@ -190,24 +190,6 @@
     <property name="chord.max.heap" value="2048m"/>
     <property name="chord.max.stack" value="32m"/>
     <property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
-    <if>
-      <os family="unix"/>
-      <then>
-        <property name="chord.instr.agent.file" location="lib/libchord_instr_agent.so"/>
-      </then>
-      <elseif>
-        <os family="windows"/>
-        <then>
-          <property name="chord.instr.agent.file" location="lib/chord_instr_agent.dll"/>
-        </then>
-      </elseif>
-      <elseif>
-        <os family="mac"/>
-        <then>
-          <property name="chord.instr.agent.file" location="lib/libchord_instr_agent.jnilib"/>
-        </then>
-      </elseif>
-    </if>
     <java classname="chord.project.Project"
       	fork="true" failonerror="true" dir="${chord.work.dir}">
     <jvmarg line="${chord.jvmargs}"/>
