@@ -8,7 +8,7 @@ LIB_DIR = ../lib
 JNI_H_DIR = $(shell find $(JDK_ROOT) -name jni.h -exec dirname '{}' \;)
 INCLUDES = -I. -I$(BUDDY_SRC) -I$(BUDDY_SRC)/.. -I$(JNI_H_DIR)
 JNI_MD_H_DIR = $(shell find $(JDK_ROOT) -name jni_md.h -exec dirname '{}' \;)
-ifneq ($(JNI_MD_H_DIR),)
+ifneq (x$(JNI_MD_H_DIR),x)
 	INCLUDES += -I$(JNI_MD_H_DIR)
 endif
 DLL_OUTPUT_OPTION = -o$(space)

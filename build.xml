@@ -164,11 +164,11 @@
       <then><property name="m32" value="-m32"/></then>
       <else><property name="m32" value=""/></else>
     </if>
-    <exec executable="gmake" dir="bdd">
+    <exec executable="make" dir="bdd">
       <arg value="JDK_ROOT=${jdk_root}"/>
       <arg value="M32_FLAG=${m32}"/>
     </exec>
-    <exec executable="gmake" dir="agent">
+    <exec executable="make" dir="agent">
       <arg value="JDK_ROOT=${jdk_root}"/>
       <arg value="M32_FLAG=${m32}"/>
     </exec>
