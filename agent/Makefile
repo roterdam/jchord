@@ -24,7 +24,7 @@ else
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
     LINK = $(CXX) 
     LINKFLAGS = $(M32_FLAG) -dynamiclib -framework JavaVM  -single_module -undefined suppress -flat_namespace
-    INSTR_LIB_NAME = $(LIB_DIR)/libchord_instr_agent.so
+    INSTR_LIB_NAME = $(LIB_DIR)/libchord_instr_agent.dylib
   else
     CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
     LINK = $(CXX)
