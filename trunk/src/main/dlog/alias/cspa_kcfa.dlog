@@ -23,7 +23,6 @@
 ###
 
 HT(h:H0,t:T1) input
-clsTF(t:T,f:F) input
 cha(n:M1,t:T1,m:M0) input
 sub(t1:T1,t2:T0) input
 MI(m:M,i:I) input
@@ -36,7 +35,6 @@ MgetInstFldInst(m:M,l:V,b:V,f:F) input
 MputInstFldInst(m:M,b:V,f:F,r:V) input
 MgetStatFldInst(m:M,l:V,f:F) input
 MputStatFldInst(m:M,f:F,r:V) input
-MclsVarAsgnInst(m:M,l:V,r:V) input
 
 RobjValAsgnInst(c:C,l:V,h:H) output
 RobjVarAsgnInst(c:C,l:V,r:V) output
@@ -44,7 +42,6 @@ RgetInstFldInst(c:C,l:V,b:V,f:F) output
 RputInstFldInst(c:C,b:V,f:F,r:V) output
 RgetStatFldInst(c:C,l:V,f:F) output
 RputStatFldInst(c:C,f:F,r:V) output
-RclsVarAsgnInst(c:C,l:V,r:V) output
 
 classT(t:T) input
 staticTM(t:T,m:M) input
@@ -95,9 +92,6 @@ CVC(c1:C,v:V,c2:C) output
 
 FC(f:F,c:C) output
 CFC(c1:C,f:F,c2:C) output
-
-clsHF(h:H,f:F)
-clsCF(c:C,f:F) output
 
 CIC(c:C,i:I,d:C) output
 CHC(c:C,h:H,d:C) output
@@ -175,14 +169,6 @@ DVC(c,l,c1) :- RobjVarAsgnInst(c,l,r), DVC(c,r,c1), VCfilter(l,c1).
 
 RgetInstFldInst(c,l,b,f) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f).
 DVC(c,l,c2) :- RgetInstFldInst(c,l,b,f), DVC(c,b,c1), CFC(c1,f,c2). split
-
-###
-
-clsHF(h,f) :- HT(h,t), clsTF(t,f).
-clsCF(c,f) :- clsHF(h,f), CH(c,h).
-
-RclsVarAsgnInst(c,l,r) :- reachableCM(c,m), MclsVarAsgnInst(m,l,r).
-DVC(c,l,c2) :- RclsVarAsgnInst(c,l,r), DVC(c,r,c1), clsCF(c1,f), FC(f,c2).
 
 ###
 

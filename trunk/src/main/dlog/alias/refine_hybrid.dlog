@@ -36,7 +36,6 @@ MI(m:M,i:I) input
 CHC(c1:C,h:H,c2:C) input
 reachableCM(c:C,m:M) input
 IinvkArg0(i:I0,v:V1) input
-clsCF(c:C,f:F) input
 
 ctxtInsICM(i:I,c:C,m:M) input
 kobjSenICM(i:I,c:C,m:M) input
@@ -50,7 +49,6 @@ RgetInstFldInst(c:C,l:V,b:V,f:F) input
 RputInstFldInst(c:C,b:V,f:F,r:V) input
 RgetStatFldInst(c:C,l:V,f:F) input
 RputStatFldInst(c:C,f:F,r:V) input
-RclsVarAsgnInst(c:C,l:V,r:V) input
 
 DIC(c:C,i:I,c:C) input
 refineCIC(c:C,i:I,c:C)
@@ -110,9 +108,6 @@ refineCVC(c,r,c1) :- RobjVarAsgnInst(c,l,r), DVC(c,r,c1), refineCVC(c,l,c1).
 
 refineCVC(c,b,c1)  :- RgetInstFldInst(c,l,b,f), DVC(c,b,c1), CFC(c1,f,c2), refineCVC(c,l,c2). split
 refineCFC(c1,f,c2) :- RgetInstFldInst(c,l,b,f), DVC(c,b,c1), CFC(c1,f,c2), refineCVC(c,l,c2). split
-
-refineCVC(c,r,c1) :- RclsVarAsgnInst(c,l,r), clsCF(c1,f), DVC(c,r,c1), FC(f,c2), refineCVC(c,l,c2). split
-refineFC(f,c2)    :- RclsVarAsgnInst(c,l,r), clsCF(c1,f), DVC(c,r,c1), FC(f,c2), refineCVC(c,l,c2). split
 
 refineFC(f,o) :- RgetStatFldInst(c,l,f), FC(f,o), refineCVC(c,l,o).
 
