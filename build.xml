@@ -1,11 +1,35 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="chord" default="help">
+<!--
+	Main build file for JChord project.
+-->
+<project name="chord" default="help" basedir=".">
 
+	<!--
+		PROPERTIES
+	-->
+
+	<!--
+		A directory where are located additional tools for building infrastructure.
+		TODO: MOVE TOOLS OUT FROM PROGRAM LIBRARIES
+	-->
+	<property name="tool.home" value="${basedir}/lib"/>
 	
+	<!--
+		A directory where program libraries are located.
+	-->
+	<property name="lib.home" value="${basedir}/lib"/>
 
-  <target name="ant-contrib">
-    <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar"/>
-  </target>
+	<!--
+		ADDITIONAL TOOLS FOR BUILDING INFRASTRUCTURE.
+	-->
+
+	<taskdef name="java2html" classname="de.java2html.anttasks.Java2HtmlTask">
+		<classpath>
+			<pathelement location="${tool.home}/java2html.jar"/>
+		</classpath>
+	</taskdef>
+
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${tool.home}/ant-contrib.jar"/>
 
   <target name="bddbddb-class-path">
     <path id="bddbddb_class_path">
@@ -31,7 +55,7 @@
       Each relative path element in the value of any property named chord.*.path in the
       file is converted to an absolute path element w.r.t. {chord.work.dir}
   -->
-  <target name="props-file" depends="ant-contrib">
+  <target name="props-file">
     <if>
       <isset property="chord.work.dir"/>
       <then>
@@ -117,7 +141,7 @@
   </echo>
   </target>
 
-  <target name="compile" depends="compile-props,main-class-path,ant-contrib">
+  <target name="compile" depends="compile-props,main-class-path">
     <if>
       <equals arg1="${os.name}" arg2="FreeBSD"/>
       <then><property name="make" value="gmake"/></then>
@@ -265,7 +289,7 @@
     <antcall target="run"/>
   </target>
 
-  <target name="clean" depends="ant-contrib">
+  <target name="clean">
     <if>
       <equals arg1="${os.name}" arg2="FreeBSD"/>
       <then><property name="make" value="gmake"/></then>
@@ -314,11 +338,6 @@
   <target name="j2h_fast">
     <fail unless="java.dir"/>
     <fail unless="html.dir"/>
-    <taskdef name="java2html" classname="de.java2html.anttasks.Java2HtmlTask">
-      <classpath>
-        <pathelement location="lib/java2html.jar"/>
-      </classpath>
-    </taskdef>
     <java2html
       srcdir="${java.dir}"
       destdir="${html.dir}"
