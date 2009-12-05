@@ -19,6 +19,11 @@
 	<property name="lib.home" value="${basedir}/lib"/>
 
 	<!--
+		TODO: THIS MAYBE HAS TO BE REPLACED BY '${lib.home}' or '${tool.home}'. 
+	-->
+	<property name="chord.bdd.lib.dir" location="lib"/>
+
+	<!--
 		Selects debug targets. 
 	-->
 	<property name="debuglevel" value="source,lines,vars"/>
@@ -108,9 +113,6 @@
 		LIONS LIVE HERE. 
 	-->
 
-  <target name="bdd-lib-dir">
-    <property name="chord.bdd.lib.dir" location="lib"/>
-  </target>
 
 
   <!-- Target props-file does following things in order:
@@ -242,7 +244,7 @@
     </exec>
   </target>
 
-  <target name="run" depends="bdd-lib-dir,props-file">
+  <target name="run" depends="props-file">
     <fail message="ERROR: Property chord.home.dir must not be explicitly set">
       <condition><isset property="chord.home.dir"/></condition>
     </fail>
@@ -380,7 +382,7 @@
 
   <!-- BDDBDDB UTILS -->
 
-  <target name="solve" depends="bdd-lib-dir">
+  <target name="solve">
     <fail unless="work.dir"/>
     <fail unless="dlog.file"/>
     <property name="max.tuples" value="1000"/>
@@ -398,7 +400,7 @@
     </java>
   </target>
 
-  <target name="debug" depends="bdd-lib-dir">
+  <target name="debug">
     <fail unless="work.dir"/>
     <fail unless="dlog.file"/>
     <property name="max.tuples" value="1000"/>
