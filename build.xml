@@ -60,6 +60,19 @@
 		<echo message="Make command is '${make}'."/>
 	</target>
 
+	<target name="select-architecture">
+		<if>
+			<equals arg1="${sun.arch.data.model}" arg2="32"/>
+			<then>
+				<property name="architecture" value="-m32"/>
+			</then>
+			<else>
+				<property name="architecture" value=""/>
+			</else>
+		</if>
+		<echo message="Architecture is '${architecture}'"/>
+	</target>
+
 	<!--
 		ADDITIONAL TOOLS FOR BUILDING INFRASTRUCTURE.
 	-->
@@ -108,6 +121,75 @@
 		<pathelement location="lib/saxon9.jar"/>
 	</path>
 	<property name="chord.main.class.path" refid="main_class_path"/><!-- TODO: IS THIS DUPLICIT REFERENCING NECESSARY? -->
+
+	<!--
+		Comptilation meta-target. It only calls compilation target for Java and C part.
+	-->
+	<target name="compile" depends="compile-java-part, compile-c-part" description="Compiles entire project."/>
+
+	<!--
+		Compiles Java part of the project.
+	-->
+	<target name="compile-java-part" description="Compiles Java part of the project">
+		<property environment="env"/>
+		<mkdir dir="classes/util"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/util/java" destdir="classes/util" classpathref="util_class_path"/>
+		<mkdir dir="classes/main"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/main/java" destdir="classes/main" classpath="${chord.main.class.path}"/>
+		<mkdir dir="classes/datarace"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/datarace/java" destdir="classes/datarace">
+			<classpath>
+				<pathelement location="classes/datarace"/>
+				<pathelement path="${chord.main.class.path}"/>
+			</classpath>
+		</javac>
+		<mkdir dir="classes/deadlock"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/deadlock/java" destdir="classes/deadlock">
+			<classpath>
+				<pathelement location="classes/deadlock"/>
+				<pathelement path="${chord.main.class.path}"/>
+			</classpath>
+		</javac>
+		<mkdir dir="classes/downcast"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/downcast/java" destdir="classes/downcast">
+			<classpath>
+				<pathelement location="classes/downcast"/>
+				<pathelement path="${chord.main.class.path}"/>
+			</classpath>
+		</javac>
+		<mkdir dir="classes/monosite"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/monosite/java" destdir="classes/monosite">
+			<classpath>
+				<pathelement location="classes/monosite"/>
+				<pathelement path="${chord.main.class.path}"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<!--
+		Compiles C part of the project.
+	-->
+	<target name="compile-c-part" depends="select-make-implementation, select-architecture" description="Compiles C part of the project">
+		<path id="jdk_root">
+			<pathelement location="${java.home}/.."/>
+		</path>
+		<pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
+		<exec executable="${make}" dir="bdd">
+			<arg value="JDK_ROOT=${jdk_root}"/>
+			<arg value="M32_FLAG=${architecture}"/>
+		</exec>
+		<exec executable="${make}" dir="agent">
+			<arg value="JDK_ROOT=${jdk_root}"/>
+			<arg value="M32_FLAG=${architecture}"/>
+		</exec>
+	</target>
+
 
 	<!--
 		LIONS LIVE HERE. 
@@ -185,64 +267,6 @@
   </echo>
   </target>
 
-  <target name="compile" depends="select-make-implementation">
-  <property environment="env"/>
-	<mkdir dir="classes/util"/>
-    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-      srcdir="src/util/java" destdir="classes/util" classpathref="util_class_path"/>
-	<mkdir dir="classes/main"/>
-    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-      srcdir="src/main/java" destdir="classes/main" classpath="${chord.main.class.path}"/>
-	<mkdir dir="classes/datarace"/>
-    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/datarace/java" destdir="classes/datarace">
-      <classpath>
-        <pathelement location="classes/datarace"/>
-        <pathelement path="${chord.main.class.path}"/>
-      </classpath>
-    </javac>
-	<mkdir dir="classes/deadlock"/>
-    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/deadlock/java" destdir="classes/deadlock">
-      <classpath>
-        <pathelement location="classes/deadlock"/>
-        <pathelement path="${chord.main.class.path}"/>
-      </classpath>
-    </javac>
-	<mkdir dir="classes/downcast"/>
-    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/downcast/java" destdir="classes/downcast">
-      <classpath>
-        <pathelement location="classes/downcast"/>
-        <pathelement path="${chord.main.class.path}"/>
-      </classpath>
-    </javac>
-	<mkdir dir="classes/monosite"/>
-    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-        srcdir="src/monosite/java" destdir="classes/monosite">
-      <classpath>
-        <pathelement location="classes/monosite"/>
-        <pathelement path="${chord.main.class.path}"/>
-      </classpath>
-    </javac>
-    <path id="jdk_root">
-      <pathelement location="${java.home}/.."/>
-    </path>
-    <pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
-    <if>
-      <equals arg1="${sun.arch.data.model}" arg2="32"/>
-      <then><property name="m32" value="-m32"/></then>
-      <else><property name="m32" value=""/></else>
-    </if>
-    <exec executable="${make}" dir="bdd">
-      <arg value="JDK_ROOT=${jdk_root}"/>
-      <arg value="M32_FLAG=${m32}"/>
-    </exec>
-    <exec executable="${make}" dir="agent">
-      <arg value="JDK_ROOT=${jdk_root}"/>
-      <arg value="M32_FLAG=${m32}"/>
-    </exec>
-  </target>
 
   <target name="run" depends="props-file">
     <fail message="ERROR: Property chord.home.dir must not be explicitly set">
