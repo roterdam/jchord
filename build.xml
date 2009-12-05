@@ -122,6 +122,40 @@
 	</path>
 	<property name="chord.main.class.path" refid="main_class_path"/><!-- TODO: IS THIS DUPLICIT REFERENCING NECESSARY? -->
 
+	<!-- 
+		SHOW MUST GO ON
+	-->
+
+	<!-- 
+		Cleans everything produced by the build.
+	-->
+	<target name="clean" depends="select-make-implementation" description="Cleans everything produced by the build.">
+		<parallel>
+			<delete dir="classes"/>
+			<sequential>
+				<path id="jdk_root">
+					<pathelement location="${java.home}/.."/>
+				</path>
+				<pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
+				<parallel>
+					<exec executable="${make}" dir="bdd">
+						<arg value="JDK_ROOT=${jdk_root}"/>
+						<arg value="clean"/>
+					</exec>
+					<exec executable="${make}" dir="agent">
+						<arg value="JDK_ROOT=${jdk_root}"/>
+						<arg value="clean"/>
+					</exec>
+				</parallel>
+			</sequential>
+		</parallel>
+	</target>
+
+	<!--
+		A meta-target just for fast checking whether java part is compilable from scratch. Useful for refactoring.
+	-->
+	<target name="check" depends="clean, compile-java-part" description="Fast check whether project can be compiled from scratch."/>
+
 	<!--
 		Comptilation meta-target. It only calls compilation target for Java and C part.
 	-->
@@ -349,22 +383,6 @@
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
     <antcall target="run"/>
-  </target>
-
-  <target name="clean" depends="select-make-implementation">
-    <path id="jdk_root">
-      <pathelement location="${java.home}/.."/>
-    </path>
-    <pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
-    <delete dir="classes"/>
-    <exec executable="${make}" dir="bdd">
-      <arg value="JDK_ROOT=${jdk_root}"/>
-        <arg value="clean"/>
-    </exec>
-    <exec executable="${make}" dir="agent">
-      <arg value="JDK_ROOT=${jdk_root}"/>
-        <arg value="clean"/>
-    </exec>
   </target>
 
   <target name="cleandoc">
