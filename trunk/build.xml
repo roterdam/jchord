@@ -66,7 +66,20 @@
 	</taskdef>
 
 	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${tool.home}/ant-contrib.jar"/>
+
+	<!--
+		PATHS
+	-->
 	
+	<!--
+		Compilation libraries for 'util' module.
+	-->
+	<path id="util_class_path">
+		<pathelement location="${lib.home}/trove-2.0.4.jar"/>
+		<pathelement location="${lib.home}/scannotation-1.0.2.jar"/>
+	</path>
+	<property name="chord.util.class.path" refid="util_class_path"/><!-- TODO: IS THIS DUPLICIT REFERENCING NECESSARY? -->
+
   <target name="bddbddb-class-path">
     <path id="bddbddb_class_path">
       <fileset dir="lib/bddbddb" includes="*.jar"/>
@@ -111,20 +124,12 @@
     </if>
   </target>
 
-  <target name="util-class-path">
-    <path id="util_class_path">
-      <pathelement location="classes/util"/>
-      <pathelement location="lib/trove-2.0.4.jar"/>
-      <pathelement location="lib/scannotation-1.0.2.jar"/>
-    </path>
-    <property name="chord.util.class.path" refid="util_class_path"/>
-  </target>
-
-  <target name="main-class-path" depends="util-class-path,bddbddb-class-path">
+  <target name="main-class-path" depends="bddbddb-class-path">
     <path id="main_class_path">
       <pathelement location="classes/main"/>
       <pathelement path="${chord.bddbddb.class.path}"/>
       <pathelement path="${chord.util.class.path}"/>
+      <pathelement location="classes/util"/>
       <pathelement location="lib/joeq.jar"/>
       <pathelement location="lib/javassist.jar"/>
       <pathelement location="lib/j2h.jar"/>
@@ -176,7 +181,7 @@
   <property environment="env"/>
 	<mkdir dir="classes/util"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-      srcdir="src/util/java" destdir="classes/util" classpath="${chord.util.class.path}"/>
+      srcdir="src/util/java" destdir="classes/util" classpathref="util_class_path"/>
 	<mkdir dir="classes/main"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
       srcdir="src/main/java" destdir="classes/main" classpath="${chord.main.class.path}"/>
