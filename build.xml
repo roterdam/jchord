@@ -5,7 +5,7 @@
 <project name="chord" default="help" basedir=".">
 
 	<!--
-		PROPERTIES
+		STATIC PROPERTIES
 	-->
 
 	<!--
@@ -35,6 +35,28 @@
 	<property name="source" value="1.5"/>
 
 	<!--
+		DYNAMIC PROPERTIES
+	-->
+	
+	<!--
+		This target solves the problem that the C part of the 
+		project needs GNU make, which is 'make' on Linux, but
+		usually 'gmake' on non-GNU operation systems.
+	-->
+	<target name="select-make-implementation" description="Selects proper make implementation for the platform.">
+		<if>
+			<equals arg1="${os.name}" arg2="FreeBSD"/>
+			<then>
+				<property name="make" value="gmake"/>
+			</then>
+			<else>
+				<property name="make" value="make"/>
+			</else>
+		</if>
+		<echo message="Make command is '${make}'."/>
+	</target>
+
+	<!--
 		ADDITIONAL TOOLS FOR BUILDING INFRASTRUCTURE.
 	-->
 
@@ -45,7 +67,7 @@
 	</taskdef>
 
 	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${tool.home}/ant-contrib.jar"/>
-
+	
   <target name="bddbddb-class-path">
     <path id="bddbddb_class_path">
       <fileset dir="lib/bddbddb" includes="*.jar"/>
@@ -151,13 +173,7 @@
   </echo>
   </target>
 
-  <target name="compile" depends="main-class-path">
-    <if>
-      <equals arg1="${os.name}" arg2="FreeBSD"/>
-      <then><property name="make" value="gmake"/></then>
-      <else><property name="make" value="make"/></else>
-    </if>
-	<echo message="make is '${make}'"/>
+  <target name="compile" depends="select-make-implementation, main-class-path">
   <property environment="env"/>
 	<mkdir dir="classes/util"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
@@ -299,13 +315,7 @@
     <antcall target="run"/>
   </target>
 
-  <target name="clean">
-    <if>
-      <equals arg1="${os.name}" arg2="FreeBSD"/>
-      <then><property name="make" value="gmake"/></then>
-      <else><property name="make" value="make"/></else>
-    </if>
-	<echo message="make is '${make}'"/>
+  <target name="clean" depends="select-make-implementation">
     <path id="jdk_root">
       <pathelement location="${java.home}/.."/>
     </path>
