@@ -10,9 +10,8 @@
 
 	<!--
 		A directory where are located additional tools for building infrastructure.
-		TODO: MOVE TOOLS OUT FROM PROGRAM LIBRARIES
 	-->
-	<property name="tool.home" value="${basedir}/lib"/>
+	<property name="tool.home" value="${basedir}/tools"/>
 	
 	<!--
 		A directory where program libraries are located.
