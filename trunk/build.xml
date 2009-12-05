@@ -20,6 +20,21 @@
 	<property name="lib.home" value="${basedir}/lib"/>
 
 	<!--
+		Selects debug targets. 
+	-->
+	<property name="debuglevel" value="source,lines,vars"/>
+	
+	<!--
+		Compilation target. 
+	-->
+	<property name="target" value="1.5"/>
+
+	<!--
+		Compilation source.
+	-->
+	<property name="source" value="1.5"/>
+
+	<!--
 		ADDITIONAL TOOLS FOR BUILDING INFRASTRUCTURE.
 	-->
 
@@ -43,11 +58,6 @@
     <property name="chord.bdd.lib.dir" location="lib"/>
   </target>
 
-  <target name="compile-props">
-    <property name="debuglevel" value="source,lines,vars"/>
-    <property name="target" value="1.5"/>
-    <property name="source" value="1.5"/>
-  </target>
 
   <!-- Target props-file does following things in order:
    1. Checks that chord.work.dir is set
@@ -141,7 +151,7 @@
   </echo>
   </target>
 
-  <target name="compile" depends="compile-props,main-class-path">
+  <target name="compile" depends="main-class-path">
     <if>
       <equals arg1="${os.name}" arg2="FreeBSD"/>
       <then><property name="make" value="gmake"/></then>
