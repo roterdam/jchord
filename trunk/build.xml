@@ -60,7 +60,11 @@
 		<echo message="Make command is '${make}'."/>
 	</target>
 
-	<target name="select-architecture">
+	<!--
+		This target solves the problem of selecting
+		a proper 32 or 64 bit switch for C compiler.
+	-->
+	<target name="select-architecture" description="Selects proper 32 or 64 bit switch for C compiler.">
 		<if>
 			<equals arg1="${sun.arch.data.model}" arg2="32"/>
 			<then>
