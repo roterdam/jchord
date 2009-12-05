@@ -80,13 +80,33 @@
 	</path>
 	<property name="chord.util.class.path" refid="util_class_path"/><!-- TODO: IS THIS DUPLICIT REFERENCING NECESSARY? -->
 
-  <target name="bddbddb-class-path">
-    <path id="bddbddb_class_path">
-      <fileset dir="lib/bddbddb" includes="*.jar"/>
-      <pathelement location="lib/jwutil.jar"/>
-    </path>
-    <property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
-  </target>
+	<!--
+		TODO: INVESTIGATE THIS
+	-->
+	<path id="bddbddb_class_path">
+		<fileset dir="lib/bddbddb" includes="*.jar"/>
+		<pathelement location="lib/jwutil.jar"/>
+	</path>
+	<property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
+
+	<!--
+		Compilation libraries for 'main' module.
+	-->
+	<path id="main_class_path">
+		<pathelement location="classes/main"/>
+		<pathelement path="${chord.bddbddb.class.path}"/>
+		<pathelement path="${chord.util.class.path}"/>
+		<pathelement location="classes/util"/>
+		<pathelement location="lib/joeq.jar"/>
+		<pathelement location="lib/javassist.jar"/>
+		<pathelement location="lib/j2h.jar"/>
+		<pathelement location="lib/saxon9.jar"/>
+	</path>
+	<property name="chord.main.class.path" refid="main_class_path"/><!-- TODO: IS THIS DUPLICIT REFERENCING NECESSARY? -->
+
+	<!--
+		LIONS LIVE HERE. 
+	-->
 
   <target name="bdd-lib-dir">
     <property name="chord.bdd.lib.dir" location="lib"/>
@@ -122,20 +142,6 @@
       </then>
       <else/>
     </if>
-  </target>
-
-  <target name="main-class-path" depends="bddbddb-class-path">
-    <path id="main_class_path">
-      <pathelement location="classes/main"/>
-      <pathelement path="${chord.bddbddb.class.path}"/>
-      <pathelement path="${chord.util.class.path}"/>
-      <pathelement location="classes/util"/>
-      <pathelement location="lib/joeq.jar"/>
-      <pathelement location="lib/javassist.jar"/>
-      <pathelement location="lib/j2h.jar"/>
-      <pathelement location="lib/saxon9.jar"/>
-    </path>
-    <property name="chord.main.class.path" refid="main_class_path"/>
   </target>
 
   <target name="help">
@@ -177,7 +183,7 @@
   </echo>
   </target>
 
-  <target name="compile" depends="select-make-implementation, main-class-path">
+  <target name="compile" depends="select-make-implementation">
   <property environment="env"/>
 	<mkdir dir="classes/util"/>
     <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
@@ -236,7 +242,7 @@
     </exec>
   </target>
 
-  <target name="run" depends="main-class-path,bdd-lib-dir,props-file">
+  <target name="run" depends="bdd-lib-dir,props-file">
     <fail message="ERROR: Property chord.home.dir must not be explicitly set">
       <condition><isset property="chord.home.dir"/></condition>
     </fail>
@@ -374,7 +380,7 @@
 
   <!-- BDDBDDB UTILS -->
 
-  <target name="solve" depends="bddbddb-class-path,bdd-lib-dir">
+  <target name="solve" depends="bdd-lib-dir">
     <fail unless="work.dir"/>
     <fail unless="dlog.file"/>
     <property name="max.tuples" value="1000"/>
@@ -392,7 +398,7 @@
     </java>
   </target>
 
-  <target name="debug" depends="bddbddb-class-path,bdd-lib-dir">
+  <target name="debug" depends="bdd-lib-dir">
     <fail unless="work.dir"/>
     <fail unless="dlog.file"/>
     <property name="max.tuples" value="1000"/>
