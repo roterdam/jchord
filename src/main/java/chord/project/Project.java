@@ -98,6 +98,17 @@ public class Project {
 					runTask(name);
             }
 
+			String printRels = Properties.printRels;
+			if (!printRels.equals("")) {
+				String[] relNames = printRels.split(Properties.LIST_SEPARATOR);
+				for (String relName : relNames) {
+					ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
+					assert(rel != null);
+					rel.load();
+					rel.print();
+				}
+			}
+
 			System.out.println("LEAVE: chord");
 			currTimer.done();
 			printCurrTimer();
@@ -536,17 +547,6 @@ public class Project {
 			OutDirUtils.copyFileFromHomeDir("src/main/web/analysis_graph.xsl");
 			OutDirUtils.copyFileFromHomeDir("src/main/web/analysis_graph.dtd");
 			OutDirUtils.runSaxon("analysis_graph.xml", "analysis_graph.xsl");
-		}
-
-		String printRels = Properties.printRels;
-		if (!printRels.equals("")) {
-			String[] relNames = printRels.split(Properties.LIST_SEPARATOR);
-			for (String relName : relNames) {
-				ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
-				assert(rel != null);
-				rel.load();
-				rel.print();
-			}
 		}
 
 		isInited = true;
