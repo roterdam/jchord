@@ -1,0 +1,3 @@
+<0!main:([Ljava/lang/String;)V@Philo,forks:[Z@Table,6!<init>:()V@Table>
+<22!main:([Ljava/lang/String;)V@Philo,t:LTable;@Philo,0!main:([Ljava/lang/String;)V@Philo>
+<9!main:([Ljava/lang/String;)V@Philo,null,22!main:([Ljava/lang/String;)V@Philo>

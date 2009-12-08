@@ -1,0 +1,3 @@
+<data:Ljava/util/Hashtable;@jgfutil.JGFInstrumentor,10!<clinit>:()V@jgfutil.JGFInstrumentor>
+<timers:Ljava/util/Hashtable;@jgfutil.JGFInstrumentor,0!<clinit>:()V@jgfutil.JGFInstrumentor>
+<voidVec:Lraytracer/Vec;@raytracer.RayTracer,0!<clinit>:()V@raytracer.RayTracer>
