@@ -319,13 +319,20 @@ public class Rel {
     	if (bdd == null)
     		throw new RuntimeException("");
 		try {
-            File file = new File(dirName, name + "txtd");
+            File file = new File(dirName, name + ".txt");
 			PrintWriter out = new PrintWriter(new FileWriter(file));
 			AryNIterable tuples = getAryNValTuples();
+			int n = doms.length;
 			for (Object[] tuple : tuples) {
-				for (Object o : tuple)
-					out.print(o + " ");
-				out.println();
+				String s = "<";
+				for (int i = 0; i < n; i++) {
+					Object o = tuple[i];
+					s += doms[i].toUniqueString(o);
+					if (i < n - 1)
+						s += ",";
+				}
+				s += ">";
+				out.println(s);
 			}
 			out.close();
     	} catch (IOException ex) {
