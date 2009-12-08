@@ -17,7 +17,7 @@ for my $dir (@testcase_dirs) {
 	my @cmds;
 	push @cmds, "ant -f $dir/build.xml clean";
 	push @cmds, "ant -f $dir/build.xml compile";
-	push @cmds, "ant -Dchord.work.dir=$dir -Dchord.scope.exclude=\"java.,javax.,sun.,joeq.,jwutil.,com.sun.\" run";
+	push @cmds, "ant -Dchord.work.dir=$dir -Dchord.scope.exclude=\"java.,javax.,sun.,joeq.,jwutil.,com.sun.,com.ibm.,org.apache.harmony.\" run";
 	sort_and_diff(\@cmds, "$dir/chord_output/classes.txt", "$dir/correct_output/classes.txt");
 	sort_and_diff(\@cmds, "$dir/chord_output/methods.txt", "$dir/correct_output/methods.txt");
 	push @cmds, "ant -Dchord.work.dir=$dir -Dchord.reuse.scope=true -Dchord.analyses=cipa-0cfa-dlog -Dchord.print.rels=FH,VH,HFH,IM run";
