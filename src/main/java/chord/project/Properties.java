@@ -75,6 +75,8 @@ public class Properties {
 	public final static String classesFileName = build("chord.classes.file", "classes.txt");
 	public final static String methodsFileName = build("chord.methods.file", "methods.txt");
 	public final static String scopeExcludeNames = System.getProperty("chord.scope.exclude", "");
+	public final static String checkExcludeNames =
+		System.getProperty("chord.check.exclude", "java.,sun.,com.ibm.,org.apache.harmony.");
 
     // Program analysis properties
 
@@ -113,9 +115,7 @@ public class Properties {
 	// Program instrumentation properties
 
 	public final static String instrExcludeNames =
-		System.getProperty("chord.instr.exclude", "java.,sun.,com.ibm.,org.apache.harmony.");
-	public final static String checkExcludeNames =
-		System.getProperty("chord.check.exclude", "java.,sun.,com.ibm.,org.apache.harmony.");
+		System.getProperty("chord.instr.exclude", "java.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil.");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
 	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
 	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
@@ -159,6 +159,7 @@ public class Properties {
 		System.out.println("chord.classes.file: " + classesFileName);
 		System.out.println("chord.methods.file: " + methodsFileName);
 		System.out.println("chord.scope.exclude: " + scopeExcludeNames);
+		System.out.println("chord.check.exclude: " + checkExcludeNames);
 		System.out.println();
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
@@ -174,7 +175,6 @@ public class Properties {
 		System.out.println("chord.save.maps: " + saveDomMaps);
 		System.out.println();
 		System.out.println("chord.instr.exclude: " + instrExcludeNames);
-		System.out.println("chord.check.exclude: " + checkExcludeNames);
 		System.out.println("chord.run.ids: " + runIDs);
 		System.out.println("chord.runtime.jvmargs: " + runtimeJvmargs);
 		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
