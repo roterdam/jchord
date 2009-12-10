@@ -497,6 +497,7 @@
       <arg file="${dlog.file}"/>
     </java>
   </target>
+
   <target name="javadoc">
     <javadoc destdir="javadoc">
       <fileset dir="src">

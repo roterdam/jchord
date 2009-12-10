@@ -23,7 +23,7 @@ import java.io.Serializable;
  * <tt>epsilon</tt>, is the lone context of methods that are
  * analyzed context insensitively.  These include the main method,
  * all class initializer methods, and any additional user-specified
- * methods (see {@link chord.analyses.alias.CtxtsAnalysis}).
+ * methods (see {@link chord.alias.cs.CtxtsAnalysis}).
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

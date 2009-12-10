@@ -20,7 +20,7 @@ import chord.doms.DomH;
  * <p>
  * The 0th element in this domain denotes the distinguished
  * abstract context <tt>epsilon</tt>
- * (see {@link chord.analyses.alias.Ctxt}).
+ * (see {@link chord.alias.common.Ctxt}).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

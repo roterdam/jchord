@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Chord Tester.
+-->
+<project name="chord-tester" default="test-all" basedir=".">
+
+  <taskdef resource="net/sf/antcontrib/antlib.xml" classpath="tools/ant-contrib.jar"/>
+
+  <property name="chord.main.doms" value="M,F,V,P,I,E,H,L,R,Z"/>
+  <property name="chord.main.rels" value="aryElemE,cha,clinitM,EF,EV,HT,IinvkArg0,IinvkArg,IinvkRet,initM,instF,instFldE,instI,instM,LE,LI,LL,ME,MgetInstFldInst,MgetStatFldInst,MH,MI,ML,MmethArg,MmethRet,MobjValAsgnInst,MobjVarAsgnInst,MPhead,MP,MPtail,MputInstFldInst,MputStatFldInst,MV,PE,PgetInstFldInst,PgetStatFldInst,PI,PL,PobjValAsgnInst,PobjVarAsgnInst,PP,PputInstFldInst,PputStatFldInst,privateM,specIM,statF,statFldE,statIM,statM,syncLM,syncLV,syncM,thisMV,virtIM,VT,writeE"/>
+  <property name="chord.main.doms_and_rels" value="${chord.main.doms},${chord.main.rels}"/>
+  <property name="chord.cia.rels" value="FH,VH,HFH,IM,MM,rootM,reachableM,thrOblAbbrRootM,thrOblAbbrReachableM,thrOblAbbrIM,thrOblAbbrMM,thrSenAbbrRootM,thrSenAbbrReachableM,thrSenAbbrIM,thrSenAbbrMM"/>
+
+  <target name="test-all">
+    <for param="testdir">
+      <dirset dir="tests" includes="*"/>
+      <sequential>
+        <echo message="===== Benchmark: @{testdir}"/>
+        <ant dir="@{testdir}" target="clean"/>
+        <ant dir="@{testdir}" target="compile"/>
+        <ant target="run">
+          <property name="chord.work.dir" value="@{testdir}"/>
+          <property name="chord.build.scope" value="true"/>
+          <property name="chord.scope.exclude" value="java.,javax.,sun.,joeq.,jwutil.,com.sun.,com.ibm.,org.apache.harmony."/>
+        </ant>
+        <antcall target="sort-and-diff">
+          <param name="arg1" location="@{testdir}/chord_output/classes.txt"/>
+          <param name="arg2" location="@{testdir}/correct_output/classes.txt"/>
+        </antcall> 
+        <antcall target="sort-and-diff">
+          <param name="arg1" location="@{testdir}/chord_output/methods.txt"/>
+          <param name="arg2" location="@{testdir}/correct_output/methods.txt"/>
+        </antcall> 
+        <if>
+          <isset property="test.main"/>
+          <then>
+            <ant target="run">
+              <property name="chord.work.dir" value="@{testdir}"/>
+              <property name="chord.reuse.scope" value="true"/>
+              <property name="chord.analyses" value="${chord.main.doms_and_rels}"/>
+              <property name="chord.print.rels" value="${chord.main.rels}"/>
+            </ant>
+			<antcall target="compare-doms">
+			  <param name="testdir" value="@{testdir}"/>
+			  <param name="domnames" value="${chord.main.doms}"/>
+			</antcall>
+			<antcall target="compare-rels">
+			  <param name="testdir" value="@{testdir}"/>
+			  <param name="relnames" value="${chord.main.rels}"/>
+			</antcall>
+          </then>
+        </if>
+        <if>
+          <isset property="test.cia"/>
+          <then>
+            <path id="chord_java_analysis_path">
+              <pathelement location="classes/main"/>
+              <pathelement location="classes/alias/ci"/>
+              <pathelement location="classes/alias/common"/>
+            </path>
+            <path id="chord_dlog_analysis_path">
+              <pathelement location="src/alias/ci/dlog"/>
+            </path>
+            <ant target="run">
+              <property name="chord.work.dir" value="@{testdir}"/>
+              <property name="chord.reuse.scope" value="true"/>
+              <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
+              <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
+              <property name="chord.analyses" value="cipa-0cfa-dlog,thrOblAbbrCICG-dlog,thrSenAbbrCICG-dlog"/>
+              <property name="chord.print.rels" value="${chord.cia.rels}"/>
+            </ant>
+			<antcall target="compare-rels">
+			  <param name="testdir" value="@{testdir}"/>
+			  <param name="relnames" value="${chord.cia.rels}"/>
+			</antcall>
+          </then>
+        </if>
+      </sequential>
+    </for>
+  </target>
+
+  <!--
+   params: testdir, domnames
+   -->
+  <target name="compare-doms">
+    <for param="domname" list="${domnames}">
+      <sequential>
+        <antcall target="sort-and-diff">
+          <param name="arg1" location="${testdir}/chord_output/bddbddb/@{domname}.map"/>
+          <param name="arg2" location="${testdir}/correct_output/@{domname}.map"/>
+        </antcall>
+      </sequential>
+    </for>
+  </target>
+
+  <!--
+   params: testdir, relnames
+   -->
+  <target name="compare-rels">
+    <for param="relname" list="${relnames}">
+      <sequential>
+	    <antcall target="sort-and-diff">
+	      <param name="arg1" location="${testdir}/chord_output/@{relname}.txt"/>
+	      <param name="arg2" location="${testdir}/correct_output/@{relname}.txt"/>
+	    </antcall>
+      </sequential>
+	</for>
+  </target>
+
+  <!--
+   params: arg1, arg2
+   -->
+  <target name="sort-and-diff">
+    <exec executable="sort">
+      <arg line="${arg1} -o ${arg1}"/> 
+    </exec>
+    <exec executable="sort">
+      <arg line="${arg2} -o ${arg2}"/> 
+    </exec>
+    <exec executable="diff">
+      <arg line="${arg1} ${arg2}"/> 
+    </exec>
+  </target>
+</project>
+

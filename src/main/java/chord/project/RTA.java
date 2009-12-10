@@ -12,6 +12,7 @@ import java.util.Set;
 
 import chord.util.Timer;
 import chord.util.IndexHashSet;
+import chord.util.ChordRuntimeException;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
@@ -70,7 +71,10 @@ public class RTA implements IBootstrapper {
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
-		assert (mainClassName != null);
+		if (mainClassName == null) {
+			throw new ChordRuntimeException("Main class is not defined " +
+				"(use system property chord.main.class)");
+		}
        	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
 		prepareClass(mainClass);
 		jq_NameAndDesc nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");

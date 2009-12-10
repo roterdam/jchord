@@ -23,7 +23,7 @@ import chord.project.ProgramRel;
  * <ul>
  * <li><tt>chord.max.iters</tt> (default is 0)</li>
  * <li>All system properties recognized by abstract contexts analysis
- * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
+ * (see {@link chord.alias.cs.CtxtsAnalysis}).</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)

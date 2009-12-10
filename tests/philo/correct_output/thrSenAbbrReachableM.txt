@@ -1,0 +1,4 @@
+<<init>:(ILTable;)V@Philo>
+<<init>:()V@Table>
+<main:([Ljava/lang/String;)V@Philo>
+<run:()V@Philo>
