@@ -1,0 +1,5 @@
+<getForks:(I)I@Table,R0!getForks:(I)I@Table>
+<<init>:(ILTable;)V@Philo,R0!<init>:(ILTable;)V@Philo>
+<<init>:()V@Table,R0!<init>:()V@Table>
+<putForks:(I)V@Table,R0!putForks:(I)V@Table>
+<run:()V@Philo,R0!run:()V@Philo>

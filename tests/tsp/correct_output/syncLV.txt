@@ -1,0 +1,6 @@
+<13!calc_bound:(I)I@TspSolver,T23!calc_bound:(I)I@TspSolver>
+<13!set_best:(I[I)V@TspSolver,T10!set_best:(I[I)V@TspSolver>
+<5!get_tour:(I)I@TspSolver,T8!get_tour:(I)I@TspSolver>
+<6!find_solvable_tour:()I@TspSolver,T20!find_solvable_tour:()I@TspSolver>
+<6!split_tour:(I)V@TspSolver,T28!split_tour:(I)V@TspSolver>
+<8!new_tour:(II)I@TspSolver,T20!new_tour:(II)I@TspSolver>

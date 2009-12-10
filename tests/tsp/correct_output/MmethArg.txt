@@ -1,0 +1,13 @@
+<<init>:()V@PrioQElement,0,R0!<init>:()V@PrioQElement>
+<<init>:()V@TourElement,0,R0!<init>:()V@TourElement>
+<<init>:()V@TspSolver,0,R0!<init>:()V@TspSolver>
+<less_than:(LPrioQElement;LPrioQElement;)Z@TspSolver,0,R0!less_than:(LPrioQElement;LPrioQElement;)Z@TspSolver>
+<less_than:(LPrioQElement;LPrioQElement;)Z@TspSolver,1,R1!less_than:(LPrioQElement;LPrioQElement;)Z@TspSolver>
+<main:([Ljava/lang/String;)V@Tsp,0,R0!main:([Ljava/lang/String;)V@Tsp>
+<MakeTourString:(I[I)V@TspSolver,1,R1!MakeTourString:(I[I)V@TspSolver>
+<read_tsp:(Ljava/lang/String;)I@Tsp,0,R0!read_tsp:(Ljava/lang/String;)I@Tsp>
+<recursive_solve:(I)V@TspSolver,0,R0!recursive_solve:(I)V@TspSolver>
+<run:()V@TspSolver,0,R0!run:()V@TspSolver>
+<set_best:(I[I)V@TspSolver,1,R1!set_best:(I[I)V@TspSolver>
+<visit_nodes:(I)V@TspSolver,0,R0!visit_nodes:(I)V@TspSolver>
+<Worker:()V@TspSolver,0,R0!Worker:()V@TspSolver>

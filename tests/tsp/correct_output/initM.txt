@@ -1,0 +1,3 @@
+<<init>:()V@PrioQElement>
+<<init>:()V@TourElement>
+<<init>:()V@TspSolver>

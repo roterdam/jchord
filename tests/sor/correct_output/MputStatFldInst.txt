@@ -1,0 +1,4 @@
+<<clinit>:()V@sor.Sor,black_:[[F@sor.Sor,T9!<clinit>:()V@sor.Sor>
+<<clinit>:()V@sor.Sor,red_:[[F@sor.Sor,T14!<clinit>:()V@sor.Sor>
+<main:([Ljava/lang/String;)V@sor.Sor,barrier:LEDU/oswego/cs/dl/util/concurrent/CyclicBarrier;@sor.Sor,T49!main:([Ljava/lang/String;)V@sor.Sor>
+<main:([Ljava/lang/String;)V@sor.Sor,t:[Ljava/lang/Thread;@sor.Sor,T48!main:([Ljava/lang/String;)V@sor.Sor>

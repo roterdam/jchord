@@ -34,7 +34,6 @@ import chord.util.StringUtils;
 import chord.util.Timer;
 import chord.util.tuple.object.Pair;
 import chord.util.ChordRuntimeException;
-// import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.RelSign;
 import chord.bddbddb.Dom;
 
@@ -57,10 +56,6 @@ public class Project {
 	private static Map<ITask, Set<Object>> taskToConsumedTrgtsMap;
 	private static Map<Object, Set<ITask>> trgtToProducerTasksMap;
 	private static Map<Object, Set<ITask>> trgtToConsumerTasksMap;
-/*
-	private static Map<Set<ITask>, ITask> resolverMap =
-		new HashMap<Set<ITask>, ITask>();
-*/
 	private static Set<ITask> doneTasks = new HashSet<ITask>();
 	private static Set<Object> doneTrgts = new HashSet<Object>();
 	private static Stack<Timer> timers = new Stack<Timer>();
@@ -90,6 +85,10 @@ public class Project {
 			currTimer.init();
 
             Properties.print();
+
+			if (Properties.buildScope) {
+				Program.v();
+			}
 
             String analyses = Properties.analyses;
             if (analyses != null) {
@@ -532,77 +531,6 @@ public class Project {
 		return "producer_name=\"" + task.getName() +
 			"\" producer_url=\"" + loc + "\"";
 	}
-
-/*
-	private static ITask resolve(Set<ITask> tasks) {
-		if (resolverMap.containsKey(tasks))
-			return resolverMap.get(tasks);
-		ITask resolver = null;
-		if (tasks.size() == 4) {
-			ITask cspa0cfaDlogTask = null;
-			ITask cspaKcfaDlogTask = null;
-			ITask cspaKobjDlogTask = null;
-			ITask cspaHybridDlogTask = null;
-			for (ITask task : tasks) {
-				String name = task.getName();
-				if (name.equals("cspa-0cfa-dlog"))
-					cspa0cfaDlogTask = task;
-				else if (name.equals("cspa-kobj-dlog"))
-					cspaKobjDlogTask = task;
-				else if (name.equals("cspa-kcfa-dlog"))
-					cspaKcfaDlogTask = task;
-				else if (name.equals("cspa-hybrid-dlog"))
-					cspaHybridDlogTask = task;
-			}
-			if (cspa0cfaDlogTask != null && cspaKcfaDlogTask != null &&
-				cspaKobjDlogTask != null && cspaHybridDlogTask != null) {
-				String ctxtKindStr = System.getProperty(
-					"chord.ctxt.kind", "ci");
-				String instCtxtKindStr = System.getProperty(
-					"chord.inst.ctxt.kind", ctxtKindStr);
-				String statCtxtKindStr = System.getProperty(
-					"chord.stat.ctxt.kind", ctxtKindStr);
-				int instCtxtKind, statCtxtKind;
-				if (instCtxtKindStr.equals("ci")) {
-					instCtxtKind = CtxtsAnalysis.CTXTINS;
-				} else if (instCtxtKindStr.equals("cs")) {
-					instCtxtKind = CtxtsAnalysis.KCFASEN;
-				} else if (instCtxtKindStr.equals("co")) {
-					instCtxtKind = CtxtsAnalysis.KOBJSEN;
-				} else
-					throw new ChordRuntimeException();
-				if (statCtxtKindStr.equals("ci")) {
-					statCtxtKind = CtxtsAnalysis.CTXTINS;
-				} else if (statCtxtKindStr.equals("cs")) {
-					statCtxtKind = CtxtsAnalysis.KCFASEN;
-				} else if (statCtxtKindStr.equals("cc")) {
-					statCtxtKind = CtxtsAnalysis.CTXTCPY;
-				} else
-					throw new ChordRuntimeException();
-				if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
-						statCtxtKind == CtxtsAnalysis.CTXTINS)
-					resolver = cspa0cfaDlogTask;
-				else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
-						statCtxtKind == CtxtsAnalysis.CTXTCPY)
-					resolver = cspaKobjDlogTask;
-				else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
-						statCtxtKind == CtxtsAnalysis.KCFASEN)
-					resolver = cspaKcfaDlogTask;
-				else
-					resolver = cspaHybridDlogTask;
-			}
-		}
-		if (resolver != null) {
-			System.out.println("Using task '" + getSourceName(resolver) +
-				"' to resolve following tasks:");
-			for (ITask task : tasks) {
-				System.out.println("\t'" + getSourceName(task) + "'");
-			}
-		}
-		resolverMap.put(tasks, resolver);
-		return resolver;
-	}
-*/
 
 	private static void checkErrors() {
 		if (!hasNoErrors) {

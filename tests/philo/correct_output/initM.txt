@@ -1,0 +1,2 @@
+<<init>:(ILTable;)V@Philo>
+<<init>:()V@Table>

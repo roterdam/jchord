@@ -1,5 +1,0 @@
-<data:Ljava/util/Hashtable;@jgfutil.JGFInstrumentor,10!<clinit>:()V@jgfutil.JGFInstrumentor>
-<initAllTasks:Lmontecarlo/ToInitAllTasks;@montecarlo.AppDemo,44!initSerial:()V@montecarlo.AppDemo>
-<results:Ljava/util/Vector;@montecarlo.AppDemo,0!runThread:()V@montecarlo.AppDemo>
-<tasks:Ljava/util/Vector;@montecarlo.AppDemo,0!initTasks:(I)V@montecarlo.AppDemo>
-<timers:Ljava/util/Hashtable;@jgfutil.JGFInstrumentor,0!<clinit>:()V@jgfutil.JGFInstrumentor>

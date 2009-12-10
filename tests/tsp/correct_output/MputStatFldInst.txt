@@ -1,0 +1,8 @@
+<<clinit>:()V@TspSolver,barrier:Ljava/lang/Integer;@TspSolver,T15!<clinit>:()V@TspSolver>
+<<clinit>:()V@TspSolver,MinLock:Ljava/lang/Integer;@TspSolver,T9!<clinit>:()V@TspSolver>
+<<clinit>:()V@TspSolver,MinTour:[I@TspSolver,T8!<clinit>:()V@TspSolver>
+<<clinit>:()V@TspSolver,PrioQ:[LPrioQElement;@TspSolver,T18!<clinit>:()V@TspSolver>
+<<clinit>:()V@TspSolver,TourLock:Ljava/lang/Integer;@TspSolver,T12!<clinit>:()V@TspSolver>
+<<clinit>:()V@TspSolver,Tours:[LTourElement;@TspSolver,T20!<clinit>:()V@TspSolver>
+<<clinit>:()V@TspSolver,TourStack:[I@TspSolver,T19!<clinit>:()V@TspSolver>
+<<clinit>:()V@TspSolver,weights:[[I@TspSolver,T7!<clinit>:()V@TspSolver>
