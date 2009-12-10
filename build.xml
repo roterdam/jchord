@@ -100,7 +100,6 @@
 		<pathelement location="${lib.home}/trove-2.0.4.jar"/>
 		<pathelement location="${lib.home}/scannotation-1.0.2.jar"/>
 	</path>
-	<property name="chord.util.class.path" refid="util_class_path"/><!-- TODO: IS THIS DUPLICIT REFERENCING NECESSARY? -->
 
 	<!--
 		TODO: INVESTIGATE THIS
@@ -117,7 +116,7 @@
 	<path id="main_class_path">
 		<pathelement location="classes/main"/>
 		<pathelement path="${chord.bddbddb.class.path}"/>
-		<pathelement path="${chord.util.class.path}"/>
+		<path refid="util_class_path"/>
 		<pathelement location="classes/util"/>
 		<pathelement location="lib/joeq.jar"/>
 		<pathelement location="lib/javassist.jar"/>
@@ -175,13 +174,58 @@
 			srcdir="src/util/java" destdir="classes/util" classpathref="util_class_path"/>
 		<mkdir dir="classes/main"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			srcdir="src/main/java" destdir="classes/main" classpath="${chord.main.class.path}"/>
+			srcdir="src/main/java" destdir="classes/main" classpathref="main_class_path"/>
+		<mkdir dir="classes/alias/common"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/alias/common/java" destdir="classes/alias/common" classpathref="main_class_path"/>
+		<mkdir dir="classes/alias/ci"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/alias/ci/java" destdir="classes/alias/ci">
+			<classpath>
+				<path refid="main_class_path"/>
+				<pathelement location="classes/alias/common"/>
+			</classpath>
+		</javac>
+		<mkdir dir="classes/alias/cs"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/alias/cs/java" destdir="classes/alias/cs">
+			<classpath>
+				<path refid="main_class_path"/>
+				<pathelement location="classes/alias/common"/>
+			</classpath>
+		</javac>
+		<mkdir dir="classes/thread"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/thread/java" destdir="classes/thread">
+			<classpath>
+				<path refid="main_class_path"/>
+				<pathelement location="classes/alias/common"/>
+			</classpath>
+		</javac>
+		<mkdir dir="classes/escape/dynamic"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/escape/dynamic/java" destdir="classes/escape/dynamic" classpathref="main_class_path"/>
+		<mkdir dir="classes/escape/hybrid"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/escape/hybrid/java" destdir="classes/escape/hybrid">
+			<classpath>
+				<path refid="main_class_path"/>
+				<pathelement location="classes/alias/common"/>
+				<pathelement location="classes/alias/ci"/>
+			</classpath>
+		</javac>
+		<mkdir dir="classes/stats"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src/stats/java" destdir="classes/stats" classpathref="main_class_path"/>
 		<mkdir dir="classes/datarace"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
 			srcdir="src/datarace/java" destdir="classes/datarace">
 			<classpath>
 				<pathelement location="classes/datarace"/>
-				<pathelement path="${chord.main.class.path}"/>
+				<pathelement location="classes/alias/common"/>
+				<pathelement location="classes/alias/cs"/>
+				<pathelement location="classes/thread"/>
+				<path refid="main_class_path"/>
 			</classpath>
 		</javac>
 		<mkdir dir="classes/deadlock"/>
@@ -189,25 +233,18 @@
 			srcdir="src/deadlock/java" destdir="classes/deadlock">
 			<classpath>
 				<pathelement location="classes/deadlock"/>
-				<pathelement path="${chord.main.class.path}"/>
+				<pathelement location="classes/alias/common"/>
+				<pathelement location="classes/alias/cs"/>
+				<pathelement location="classes/thread"/>
+				<path refid="main_class_path"/>
 			</classpath>
 		</javac>
 		<mkdir dir="classes/downcast"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			srcdir="src/downcast/java" destdir="classes/downcast">
-			<classpath>
-				<pathelement location="classes/downcast"/>
-				<pathelement path="${chord.main.class.path}"/>
-			</classpath>
-		</javac>
+			srcdir="src/downcast/java" destdir="classes/downcast" classpathref="main_class_path"/>
 		<mkdir dir="classes/monosite"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			srcdir="src/monosite/java" destdir="classes/monosite">
-			<classpath>
-				<pathelement location="classes/monosite"/>
-				<pathelement path="${chord.main.class.path}"/>
-			</classpath>
-		</javac>
+			srcdir="src/monosite/java" destdir="classes/monosite" classpathref="main_class_path"/>
 	</target>
 
 	<!--
@@ -236,7 +273,7 @@
 
 
   <!-- Target props-file does following things in order:
-   1. Checks that chord.work.dir is set
+   1. Checks that chord.work.dir is set, and if not, sets it to current directory
    2. Loads properties from file {chord.work.dir}/chord.properties, if the file exists;
       Each relative path element in the value of any property named chord.*.path in the
       file is converted to an absolute path element w.r.t. {chord.work.dir}
@@ -250,7 +287,7 @@
         </fail>
       </then>
       <else>
-        <fail message="ERROR: Property chord.work.dir not defined"/>
+        <property name="chord.work.dir" location="."/>
       </else>
     </if>
     <property name="chord.props.file" location="${chord.work.dir}/chord.properties"/>

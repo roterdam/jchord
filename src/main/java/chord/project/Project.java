@@ -34,7 +34,7 @@ import chord.util.StringUtils;
 import chord.util.Timer;
 import chord.util.tuple.object.Pair;
 import chord.util.ChordRuntimeException;
-import chord.analyses.alias.CtxtsAnalysis;
+// import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.RelSign;
 import chord.bddbddb.Dom;
 
@@ -57,8 +57,10 @@ public class Project {
 	private static Map<ITask, Set<Object>> taskToConsumedTrgtsMap;
 	private static Map<Object, Set<ITask>> trgtToProducerTasksMap;
 	private static Map<Object, Set<ITask>> trgtToConsumerTasksMap;
+/*
 	private static Map<Set<ITask>, ITask> resolverMap =
 		new HashMap<Set<ITask>, ITask>();
+*/
 	private static Set<ITask> doneTasks = new HashSet<ITask>();
 	private static Set<Object> doneTrgts = new HashSet<Object>();
 	private static Stack<Timer> timers = new Stack<Timer>();
@@ -88,11 +90,10 @@ public class Project {
 			currTimer.init();
 
             Properties.print();
-            Program.v().init();
-            Project.init();
 
             String analyses = Properties.analyses;
             if (analyses != null) {
+            	Project.init();
                 String[] analysisNames = analyses.split(Properties.LIST_SEPARATOR);
 				for (String name : analysisNames)
 					runTask(name);
@@ -100,6 +101,7 @@ public class Project {
 
 			String printRels = Properties.printRels;
 			if (!printRels.equals("")) {
+				Project.init();
 				String[] relNames = printRels.split(Properties.LIST_SEPARATOR);
 				for (String relName : relNames) {
 					ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
@@ -107,6 +109,52 @@ public class Project {
 					rel.load();
 					rel.print();
 				}
+			}
+
+			if (Properties.publishTargets) {
+				Project.init();
+				PrintWriter out;
+				try {
+					File file = new File(Properties.outDirName, "targets.xml");
+					out = new PrintWriter(new FileWriter(file));
+				} catch (IOException ex) {
+					throw new ChordRuntimeException(ex);
+				}
+				out.println("<targets " +
+					"java_analysis_path=\"" + Properties.javaAnalysisPathName + "\" " +
+					"dlog_analysis_path=\"" + Properties.dlogAnalysisPathName + "\">");
+				for (String name : nameToTrgtMap.keySet()) {
+					Object trgt = nameToTrgtMap.get(name);
+					String kind;
+					if (trgt instanceof ProgramDom)
+						kind = "domain";
+					else if (trgt instanceof ProgramRel)
+						kind = "relation";
+					else
+						kind = "other";
+					Set<ITask> tasks = trgtToProducerTasksMap.get(trgt);
+					Iterator<ITask> it = tasks.iterator();
+					String producerStr;
+					String otherProducersStr = "";
+					if (it.hasNext()) {
+						ITask fstTask = it.next();
+						producerStr = getNameAndURL(fstTask);
+						while (it.hasNext()) {
+							ITask task = it.next();
+							otherProducersStr += "<producer " + getNameAndURL(task) + "/>";
+						}
+					} else
+						producerStr = "producer_name=\"-\" producer_url=\"-\"";
+					out.println("\t<target name=\"" + name + "\" kind=\"" + kind +
+						"\" " + producerStr  + ">" +
+						otherProducersStr + "</target>");
+				}
+				out.println("</targets>");
+				out.close();
+				OutDirUtils.copyFileFromHomeDir("src/main/web/style.css");
+				OutDirUtils.copyFileFromHomeDir("src/main/web/targets.xsl");
+				OutDirUtils.copyFileFromHomeDir("src/main/web/targets.dtd");
+				OutDirUtils.runSaxon("targets.xml", "targets.xsl");
 			}
 
 			System.out.println("LEAVE: chord");
@@ -260,13 +308,14 @@ public class Project {
 	public static void init() {
 		if (isInited)
 			return;
+
+		// create and populate the following maps:
+		// nameToTaskMap, nameToTrgtsDebugMap
+		// taskToConsumedNamesMap, taskToProducedNamesMap
 		nameToTaskMap = new HashMap<String, ITask>();
 		nameToTrgtsDebugMap = new HashMap<String, Set<TrgtInfo>>();
-		taskToConsumedNamesMap =
-			new HashMap<ITask, Set<String>>();
-		taskToProducedNamesMap =
-			new HashMap<ITask, Set<String>>();
-		
+		taskToConsumedNamesMap = new HashMap<ITask, Set<String>>();
+		taskToProducedNamesMap = new HashMap<ITask, Set<String>>();
 		buildDlogAnalysisMap();
 		buildJavaAnalysisMap();
 
@@ -381,22 +430,13 @@ public class Project {
 			for (int i = 0; i < domNames.length; i++) {
 				String domName = StringUtils.trimNumSuffix(domNames[i]);
 				Object trgt = nameToTrgtMap.get(domName);
-				if (trgt == null) {
-					undefinedDom(domName, rel.getName());
-					continue;
-				}
-				if (!(trgt instanceof ProgramDom)) {
-					illtypedDom(domName, rel.getName(),
-						trgt.getClass().getName());
-					continue;
-				}
+				assert (trgt != null);
+				assert (trgt instanceof ProgramDom);
 				doms[i] = (ProgramDom) trgt;
 			}
 			rel.setSign(sign);
 			rel.setDoms(doms);
 		}
-
-		checkErrors();
 
 		trgtToConsumerTasksMap = new HashMap<Object, Set<ITask>>();
 		trgtToProducerTasksMap = new HashMap<Object, Set<ITask>>();
@@ -438,26 +478,19 @@ public class Project {
 		for (String trgtName : nameToTrgtMap.keySet()) {
 			Object trgt = nameToTrgtMap.get(trgtName);
 			Set<ITask> producerTasks = trgtToProducerTasksMap.get(trgt);
-			int size = producerTasks.size();
-			if (size == 0) {
+			int pSize = producerTasks.size();
+			if (pSize == 0) {
 				Set<ITask> consumerTasks =
 					trgtToConsumerTasksMap.get(trgt);
+				int cSize = consumerTasks.size();
 				List<String> consumerTaskNames =
-					new ArraySet<String>(consumerTasks.size());
-				for (ITask task : consumerTasks) {
+					new ArraySet<String>(cSize);
+				for (ITask task : consumerTasks)
 					consumerTaskNames.add(getSourceName(task));
-				}
 				undefinedTarget(trgtName, consumerTaskNames);
-			} else if (size > 1) {
-				ITask task2 = resolve(producerTasks);
-				if (task2 != null) {
-					Set<ITask> tasks2 = new ArraySet<ITask>(1);
-					tasks2.add(task2);
-					trgtToProducerTasksMap.put(trgt, tasks2);
-					continue;
-				}
+			} else if (pSize > 1) {
 				List<String> producerTaskNames =
-					new ArraySet<String>(producerTasks.size());
+					new ArraySet<String>(pSize);
 				for (ITask task : producerTasks) {
 					producerTaskNames.add(getSourceName(task));
 				}
@@ -471,7 +504,8 @@ public class Project {
 			for (File subFile : subFiles) {
 				String fileName = subFile.getName();
 				if (fileName.endsWith(".bdd")) {
-					String relName = fileName.substring(0, fileName.length() - 4);
+					int n = fileName.length();
+					String relName = fileName.substring(0, n - 4);
 					ProgramRel rel = (ProgramRel) getTrgt(relName);
 					for (Dom dom : rel.getDoms()) {
 						ITask task2 = getTaskProducingTrgt(dom);
@@ -483,75 +517,23 @@ public class Project {
 			}
 		}
 
-		if (Properties.printAnalysisGraph) {
-			PrintWriter out;
-			try {
-				File file = new File(Properties.outDirName, "analysis_graph.xml");
-				out = new PrintWriter(new FileWriter(file));
-			} catch (IOException ex) {
-				throw new ChordRuntimeException(ex);
-			}
-			out.println("<analysis_graph>");
-			for (String name : nameToTaskMap.keySet()) {
-				ITask task = nameToTaskMap.get(name);
-				Class clazz = task.getClass();
-				String loc;
-				if (clazz == DlogAnalysis.class) {
-					loc = ((DlogAnalysis) task).getFileName();
-					loc = (new File(loc)).getName();
-				} else
-					loc = clazz.getName().replace(".", "/") + ".html";
-				loc = Properties.analysisGraphURL + loc;
-				out.print("<task name=\"" + name + "\" loc=\"" +
-					loc + "\" producedTrgts=\"");
-				Set<String> producedNames = taskToProducedNamesMap.get(task);
-				int np = producedNames.size(), ip = 0;
-				for (String name2 : producedNames) {
-					out.print(name2);
-					if (++ip != np)
-						out.print(" ");
-				}
-				out.print("\" consumedTrgts=\"");
-				Set<String> consumedNames = taskToConsumedNamesMap.get(task);
-				int nc = consumedNames.size(), ic = 0;
-				for (String name2 : consumedNames) {
-					out.print(name2);
-					if (++ic != nc)
-						out.print(" ");
-				}
-				out.println("\"/>");
-			}
-			for (String name : nameToTrgtMap.keySet()) {
-				Object trgt = nameToTrgtMap.get(name);
-				String kind;
-				if (trgt instanceof ProgramRel)
-					kind = "rel";
-				else if (trgt instanceof ProgramDom)
-					kind = "dom";
-				else
-					kind = "trgt";
-				out.print("<" + kind + " name=\"" + name + "\" producingTasks=\"");
-				Set<ITask> producerTasks = trgtToProducerTasksMap.get(trgt);
-				int n = producerTasks.size(), i = 0;
-				for (ITask task : producerTasks) {
-					String name2 = task.getName();
-					out.print(name2);
-					if (++i != n)
-						out.print(" ");
-				}
-				out.println("\"/>");
-			}
-			out.println("</analysis_graph>");
-			out.close();
-			OutDirUtils.copyFileFromHomeDir("src/main/web/style.css");
-			OutDirUtils.copyFileFromHomeDir("src/main/web/analysis_graph.xsl");
-			OutDirUtils.copyFileFromHomeDir("src/main/web/analysis_graph.dtd");
-			OutDirUtils.runSaxon("analysis_graph.xml", "analysis_graph.xsl");
-		}
-
 		isInited = true;
 	}
 
+	private static String getNameAndURL(ITask task) {
+		Class clazz = task.getClass();
+		String loc;
+		if (clazz == DlogAnalysis.class) {
+			loc = ((DlogAnalysis) task).getFileName();
+			loc = (new File(loc)).getName();
+		} else
+			loc = clazz.getName().replace(".", "/") + ".html";
+		loc = Properties.targetsURL + loc;
+		return "producer_name=\"" + task.getName() +
+			"\" producer_url=\"" + loc + "\"";
+	}
+
+/*
 	private static ITask resolve(Set<ITask> tasks) {
 		if (resolverMap.containsKey(tasks))
 			return resolverMap.get(tasks);
@@ -620,6 +602,7 @@ public class Project {
 		resolverMap.put(tasks, resolver);
 		return resolver;
 	}
+*/
 
 	private static void checkErrors() {
 		if (!hasNoErrors) {
@@ -663,8 +646,10 @@ public class Project {
 	};
 
 	private static void buildDlogAnalysisMap() {
-		String[] fileNames =
-			Properties.dlogAnalysisPathName.split(File.pathSeparator);
+		String dlogAnalysisPathName = Properties.dlogAnalysisPathName;
+		if (dlogAnalysisPathName.equals(""))
+			return;
+		String[] fileNames = dlogAnalysisPathName.split(File.pathSeparator);
 		for (String fileName : fileNames) {
 			File file = new File(fileName);
 			if (!file.exists()) {
@@ -676,9 +661,11 @@ public class Project {
 	}
 
 	private static void buildJavaAnalysisMap() {
+		String javaAnalysisPathName = Properties.javaAnalysisPathName;
+		if (javaAnalysisPathName.equals(""))
+			return;
 		ArrayList<URL> list = new ArrayList<URL>();
-		String[] fileNames =
-			Properties.javaAnalysisPathName.split(File.pathSeparator);
+		String[] fileNames = javaAnalysisPathName.split(File.pathSeparator);
 		for (String fileName : fileNames) {
 			File file = new File(fileName);
 			if (!file.exists()) {
@@ -720,6 +707,17 @@ public class Project {
 		}
 	};
 
+	// 1. Creates a DlogAnalysis task object corresponding to this Datalog analysis
+	// 2. Maps the name of the analysis to that object in nameToTaskMAp
+	// 3. Creates a ProgramDom trgt object for each domain in the .bddvarorder of
+	//    the Datalog analysis and for each domain of each input/output relation of
+	//    the Datalog analysis, and adds it to nameToTrgtsDebugMap
+	// 4. Creates a ProgramRel trgt object for each input/output relation of 
+	//    the Datalog analysis, and adds it to nameToTrgtsDebugMap
+	// 5. Adds each input relation as a consumed trgt of the created DlogAnalysis
+	//    task object, in taskToConsumedNamesMap
+	// 6. Adds each output relation as a produced trgt of the created DlogAnalysis
+	//    task object, in taskToProducedNamesMap
 	private static void processDlogAnalysis(File file) {
 		if (file.isDirectory()) {
 			File[] subFiles = file.listFiles(filter);
@@ -892,29 +890,18 @@ public class Project {
 		hasNoErrors = false;
 	}
 	
-	private static void undefinedDom(String domName, String relName) {
-		System.err.println("ERROR: '" + domName +
-			"' declared as a domain of relation '" + relName +
-			"' not declared as a produced name of any task.");
-		hasNoErrors = false;
-	}
-	
-	private static void illtypedDom(String domName, String relName,
-			String type) {
-		System.err.println("ERROR: '" + domName +
-			"' declared as a domain of relation '" + relName +
-			"' has type '" + type + "' which is not a subclass of '" +
-			ProgramDom.class.getName() + "'.");
-		hasNoErrors = false;
-	}
-	
 	private static void undefinedTarget(String name,
 			List<String> consumerTaskNames) {
-		System.err.println("WARNING: '" + name +
-			"' not declared as produced name of any task; " +
-			"declared as consumed name of following tasks:");
-		for (String taskName : consumerTaskNames) {
-			System.err.println("\t'" + taskName + "'");
+		System.err.print("WARNING: '" + name +
+			"' not declared as produced name of any task");
+		if (consumerTaskNames.isEmpty())
+			System.err.println();
+		else {
+			System.err.println(
+				"; declared as consumed name of following tasks:");
+			for (String taskName : consumerTaskNames) {
+				System.err.println("\t'" + taskName + "'");
+			}
 		}
 	}
 	

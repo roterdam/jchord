@@ -62,9 +62,12 @@ import joeq.Main.Helper;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Program {
-	private static final Program instance = new Program();
-	public static Program v() { return instance; }
-	private boolean isInited;
+	private static Program instance;
+	public static Program v() {
+		if (instance == null)
+			instance = new Program();
+		return instance;
+	}
 	private IndexSet<jq_Class> classes;
 	private IndexSet<jq_Method> methods;
 	private IndexSet<jq_Type> types;
@@ -76,9 +79,7 @@ public class Program {
 		new HashMap<Inst, jq_Method>();
 	private String[] scopeExcludedNames;
 
-	public void init() {
-		if (isInited)
-			return;
+	private Program() {
 		if (Properties.doSSA)
 			jq_Method.doSSA();
 		try {
@@ -102,7 +103,6 @@ public class Program {
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
 		}
-		isInited = true;
 	}
 	private void loadClasses(String fileName) throws IOException {
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
