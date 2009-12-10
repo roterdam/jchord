@@ -12,7 +12,7 @@ import java.io.Serializable;
  * Representation of an abstract object.
  * <p>
  * An abstract object (also called points-to set) is a set of
- * abstract contexts (see {@link chord.analyses.alias.Ctxt}).
+ * abstract contexts (see {@link chord.alias.common.Ctxt}).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

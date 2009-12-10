@@ -64,7 +64,7 @@ import chord.util.tuple.object.Trio;
  * <li><tt>chord.include.nongrded</tt> (default is true).</li>
  * <li><tt>chord.print.results</tt> (default is true).</li>
  * <li>All system properties recognized by abstract contexts analysis
- * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
+ * (see {@link chord.alias.cs.CtxtsAnalysis}).</li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
