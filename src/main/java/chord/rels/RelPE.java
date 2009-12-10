@@ -1,0 +1,37 @@
+/*
+ * Copyright (c) 2008-2009, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
+package chord.rels;
+
+import joeq.Compiler.Quad.Quad;
+import chord.doms.DomE;
+import chord.doms.DomP;
+import chord.project.Chord;
+import chord.project.ProgramRel;
+
+/**
+ * Relation containing each tuple (p,e) such that the statement
+ * at program point p is a heap access statement e that
+ * accesses (reads or writes) an instance field, a static field,
+ * or an array element.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
+@Chord(
+	name = "PE",
+	sign = "P0,E0:E0_P0"
+)
+public class RelPE extends ProgramRel {
+	public void fill() {
+		DomP domP = (DomP) doms[0];
+		DomE domE = (DomE) doms[1];
+		int numE = domE.size();
+		for (int eIdx = 0; eIdx < numE; eIdx++) {
+			Quad e = (Quad) domE.get(eIdx);
+			int pIdx = domP.indexOf(e);
+			add(pIdx, eIdx);
+		}
+	}
+}
