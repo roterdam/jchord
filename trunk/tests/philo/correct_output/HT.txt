@@ -1,0 +1,15 @@
+<0!main:([Ljava/lang/String;)V@Philo,Table>
+<101!getForks:(I)I@Table,java.lang.StringBuilder>
+<11!getForks:(I)I@Table,java.lang.StringBuilder>
+<123!run:()V@Philo,java.lang.StringBuilder>
+<147!getForks:(I)I@Table,java.lang.StringBuilder>
+<164!run:()V@Philo,java.lang.StringBuilder>
+<210!run:()V@Philo,java.lang.StringBuilder>
+<22!main:([Ljava/lang/String;)V@Philo,Philo>
+<39!run:()V@Philo,java.lang.StringBuilder>
+<3!putForks:(I)V@Table,java.lang.StringBuilder>
+<3!run:()V@Philo,java.lang.StringBuilder>
+<50!putForks:(I)V@Table,java.lang.StringBuilder>
+<6!<init>:()V@Table,boolean[]>
+<79!run:()V@Philo,java.lang.StringBuilder>
+<9!main:([Ljava/lang/String;)V@Philo,Philo[]>

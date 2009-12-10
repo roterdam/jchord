@@ -1,0 +1,14 @@
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,123!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,131!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,145!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,160!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,208!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,229!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,251!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,259!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,26!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,30!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,42!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,49!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,77!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
+<-1!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,91!doBarrier:(ZJ)I@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>

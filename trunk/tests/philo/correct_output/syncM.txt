@@ -1,0 +1,2 @@
+<getForks:(I)I@Table>
+<putForks:(I)V@Table>

@@ -1,0 +1,15 @@
+<106!find_solvable_tour:()I@TspSolver,LEFT_CHILD:(I)I@TspSolver>
+<111!find_solvable_tour:()I@TspSolver,RIGHT_CHILD:(I)I@TspSolver>
+<128!split_tour:(I)V@TspSolver,new_tour:(II)I@TspSolver>
+<136!calc_bound:(I)I@TspSolver,set_best:(I[I)V@TspSolver>
+<140!find_solvable_tour:()I@TspSolver,less_than:(LPrioQElement;LPrioQElement;)Z@TspSolver>
+<146!visit_nodes:(I)V@TspSolver,set_best:(I[I)V@TspSolver>
+<164!main:([Ljava/lang/String;)V@Tsp,calc_bound:(I)I@TspSolver>
+<167!find_solvable_tour:()I@TspSolver,less_than:(LPrioQElement;LPrioQElement;)Z@TspSolver>
+<187!new_tour:(II)I@TspSolver,calc_bound:(I)I@TspSolver>
+<246!split_tour:(I)V@TspSolver,less_than:(LPrioQElement;LPrioQElement;)Z@TspSolver>
+<25!get_tour:(I)I@TspSolver,find_solvable_tour:()I@TspSolver>
+<275!find_solvable_tour:()I@TspSolver,split_tour:(I)V@TspSolver>
+<3!Worker:()V@TspSolver,get_tour:(I)I@TspSolver>
+<403!main:([Ljava/lang/String;)V@Tsp,MakeTourString:(I[I)V@TspSolver>
+<66!main:([Ljava/lang/String;)V@Tsp,read_tsp:(Ljava/lang/String;)I@Tsp>

@@ -1,0 +1,4 @@
+<eatctr:I@Table>
+<forks:[Z@Table>
+<id:I@Philo>
+<t:LTable;@Philo>

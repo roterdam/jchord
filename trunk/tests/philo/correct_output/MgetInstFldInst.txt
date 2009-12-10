@@ -1,0 +1,13 @@
+<getForks:(I)I@Table,T24!getForks:(I)I@Table,R0!getForks:(I)I@Table,forks:[Z@Table>
+<getForks:(I)I@Table,T32!getForks:(I)I@Table,R0!getForks:(I)I@Table,forks:[Z@Table>
+<getForks:(I)I@Table,T37!getForks:(I)I@Table,R0!getForks:(I)I@Table,forks:[Z@Table>
+<getForks:(I)I@Table,T39!getForks:(I)I@Table,R0!getForks:(I)I@Table,forks:[Z@Table>
+<getForks:(I)I@Table,T41!getForks:(I)I@Table,R0!getForks:(I)I@Table,forks:[Z@Table>
+<getForks:(I)I@Table,T42!getForks:(I)I@Table,R0!getForks:(I)I@Table,forks:[Z@Table>
+<<init>:()V@Table,T3!<init>:()V@Table,R0!<init>:()V@Table,forks:[Z@Table>
+<main:([Ljava/lang/String;)V@Philo,T14!main:([Ljava/lang/String;)V@Philo,R4!main:([Ljava/lang/String;)V@Philo,null>
+<main:([Ljava/lang/String;)V@Philo,T18!main:([Ljava/lang/String;)V@Philo,R4!main:([Ljava/lang/String;)V@Philo,null>
+<putForks:(I)V@Table,T17!putForks:(I)V@Table,R0!putForks:(I)V@Table,forks:[Z@Table>
+<putForks:(I)V@Table,T18!putForks:(I)V@Table,R0!putForks:(I)V@Table,forks:[Z@Table>
+<run:()V@Philo,T30!run:()V@Philo,R0!run:()V@Philo,t:LTable;@Philo>
+<run:()V@Philo,T65!run:()V@Philo,R0!run:()V@Philo,t:LTable;@Philo>

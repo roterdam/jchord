@@ -1,0 +1,15 @@
+<getForks:(I)I@Table,101!getForks:(I)I@Table>
+<getForks:(I)I@Table,11!getForks:(I)I@Table>
+<getForks:(I)I@Table,147!getForks:(I)I@Table>
+<<init>:()V@Table,6!<init>:()V@Table>
+<main:([Ljava/lang/String;)V@Philo,0!main:([Ljava/lang/String;)V@Philo>
+<main:([Ljava/lang/String;)V@Philo,22!main:([Ljava/lang/String;)V@Philo>
+<main:([Ljava/lang/String;)V@Philo,9!main:([Ljava/lang/String;)V@Philo>
+<putForks:(I)V@Table,3!putForks:(I)V@Table>
+<putForks:(I)V@Table,50!putForks:(I)V@Table>
+<run:()V@Philo,123!run:()V@Philo>
+<run:()V@Philo,164!run:()V@Philo>
+<run:()V@Philo,210!run:()V@Philo>
+<run:()V@Philo,39!run:()V@Philo>
+<run:()V@Philo,3!run:()V@Philo>
+<run:()V@Philo,79!run:()V@Philo>

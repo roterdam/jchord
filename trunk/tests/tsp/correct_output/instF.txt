@@ -1,0 +1,13 @@
+<conn:I@TourElement>
+<CurDist:I@TspSolver>
+<index:I@PrioQElement>
+<last:I@TourElement>
+<lower_bound:I@TourElement>
+<mst_weight:I@TourElement>
+<Path:[I@TspSolver>
+<PathLen:I@TspSolver>
+<prefix:[I@TourElement>
+<prefix_weight:I@TourElement>
+<priority:I@PrioQElement>
+<Visit:[I@TspSolver>
+<visitNodes:I@TspSolver>

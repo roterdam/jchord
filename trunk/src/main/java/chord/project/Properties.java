@@ -65,6 +65,7 @@ public class Properties {
 	
     // Program scope properties
 
+	public final static boolean buildScope = buildBoolProp("chord.build.scope", false);
 	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	static {
 		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
@@ -148,6 +149,7 @@ public class Properties {
 		System.out.println("chord.main.class: " + mainClassName);
 		System.out.println("chord.class.path: " + classPathName);
 		System.out.println("chord.src.path: " + srcPathName);
+		System.out.println("chord.build.scope: " + buildScope);
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
 		System.out.println("chord.classes.file: " + classesFileName);

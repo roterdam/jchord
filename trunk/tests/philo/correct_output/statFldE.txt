@@ -1,0 +1,12 @@
+<0!putForks:(I)V@Table>
+<0!run:()V@Philo>
+<120!run:()V@Philo>
+<144!getForks:(I)I@Table>
+<161!run:()V@Philo>
+<207!run:()V@Philo>
+<36!run:()V@Philo>
+<47!putForks:(I)V@Table>
+<74!getForks:(I)I@Table>
+<76!run:()V@Philo>
+<8!getForks:(I)I@Table>
+<98!getForks:(I)I@Table>
