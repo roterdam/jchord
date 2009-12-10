@@ -18,13 +18,6 @@ public class Properties {
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
 
-	// Mandatory properties
-
-	public final static String workDirName = System.getProperty("chord.work.dir");
-	static {
-		assert(workDirName != null);
-	}
-
 	// Chord boot properties
 
 	public final static String homeDirName = System.getProperty("chord.home.dir");
@@ -50,6 +43,11 @@ public class Properties {
 
 	// Chord I/O properties
 
+	public static String workDirName = System.getProperty("chord.work.dir");
+	static {
+		if (workDirName == null)
+			workDirName = System.getProperty("user.dir");
+	}
 	public static String outDirName = System.getProperty("chord.out.dir");
 	static {
 		if (outDirName == null)
@@ -96,8 +94,8 @@ public class Properties {
 	public final static String analyses = System.getProperty("chord.analyses");
 	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
 	public final static String printRels = System.getProperty("chord.print.rels", "");
-	public final static boolean printAnalysisGraph = buildBoolProp("chord.print.analysis.graph", false);
-	public final static String analysisGraphURL = System.getProperty("chord.analysis.graph.url",
+	public final static boolean publishTargets = buildBoolProp("chord.publish.targets", false);
+	public final static String targetsURL = System.getProperty("chord.targets.url",
 		"http://chord.stanford.edu/javadoc_2_0/");
 
     // BDD-based Datalog solver properties
@@ -135,7 +133,9 @@ public class Properties {
 	public static void print() {
 		System.out.println("******************************");
 		System.out.println("chord.work.dir: " + workDirName);
-		System.out.println();
+		System.out.println("chord.out.dir: " + outDirName);
+		System.out.println("chord.out.file: " + outFileName);
+		System.out.println("chord.err.file: " + errFileName);
 		System.out.println("chord.home.dir: " + homeDirName);
 		System.out.println("chord.props.file: " + propsFileName);
 		System.out.println("chord.main.class.path: " + mainClassPathName);
@@ -145,35 +145,26 @@ public class Properties {
 		System.out.println("chord.max.heap: " + maxHeap);
 		System.out.println("chord.max.stack: " + maxStack);
 		System.out.println("chord.jvmargs: " + jvmargs);
-		System.out.println();
-		System.out.println("chord.out.dir: " + outDirName);
-		System.out.println("chord.out.file: " + outFileName);
-		System.out.println("chord.err.file: " + errFileName);
-		System.out.println();
 		System.out.println("chord.main.class: " + mainClassName);
 		System.out.println("chord.class.path: " + classPathName);
 		System.out.println("chord.src.path: " + srcPathName);
-		System.out.println();
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
 		System.out.println("chord.classes.file: " + classesFileName);
 		System.out.println("chord.methods.file: " + methodsFileName);
 		System.out.println("chord.scope.exclude: " + scopeExcludeNames);
 		System.out.println("chord.check.exclude: " + checkExcludeNames);
-		System.out.println();
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
 		System.out.println("chord.analyses: " + analyses);
 		System.out.println("chord.reuse.rels: " + reuseRels);
 		System.out.println("chord.print.rels: " + printRels);
-		System.out.println("chord.print.analysis.graph: " + printAnalysisGraph);
-		System.out.println("chord.analysis.graph.url: " + analysisGraphURL);
-		System.out.println();
+		System.out.println("chord.publish.targets: " + publishTargets);
+		System.out.println("chord.targets.url: " + targetsURL);
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
 		System.out.println("chord.save.maps: " + saveDomMaps);
-		System.out.println();
 		System.out.println("chord.instr.exclude: " + instrExcludeNames);
 		System.out.println("chord.run.ids: " + runIDs);
 		System.out.println("chord.runtime.jvmargs: " + runtimeJvmargs);
@@ -185,7 +176,6 @@ public class Properties {
 		System.out.println("chord.trace.pipe: " + doTracePipe);
 		System.out.println("chord.trace.block.size: " + traceBlockSize);
 		System.out.println("chord.runtime.class: " + runtimeClassName);
-		System.out.println();
 		System.out.println("chord.ssa: " + doSSA);
 		System.out.println("******************************");
 	}

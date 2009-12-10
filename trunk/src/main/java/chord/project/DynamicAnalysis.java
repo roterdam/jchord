@@ -28,9 +28,6 @@ import chord.util.ChordRuntimeException;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-	name = "dyn-java"
-)
 public class DynamicAnalysis extends JavaAnalysis {
 	public final static boolean DEBUG = false;
 	protected InstrScheme scheme;
