@@ -1,7 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" output="classes/util" path="src/util/java"/>
-	<classpathentry kind="src" output="classes/main" path="src/main/java"/>
+	<classpathentry kind="src" output="classes/escape/hybrid" path="src/escape/hybrid/java"/>
+	<classpathentry kind="src" output="classes/escape/dynamic" path="src/escape/dynamic/java"/>
+	<classpathentry kind="src" output="classes/alias/cs" path="src/alias/cs/java"/>
+	<classpathentry kind="src" output="classes/alias/common" path="src/alias/common/java"/>
+	<classpathentry kind="src" output="classes/alias/ci" path="src/alias/ci/java"/>
+	<classpathentry kind="src" output="classes/thread" path="src/thread/java"/>
+	<classpathentry kind="src" output="classes/stats" path="src/stats/java"/>
 	<classpathentry kind="src" output="classes/datarace" path="src/datarace/java"/>
 	<classpathentry kind="src" output="classes/monosite" path="src/monosite/java"/>
 	<classpathentry kind="src" output="classes/downcast" path="src/downcast/java"/>
@@ -13,10 +19,10 @@
 	<classpathentry exported="true" kind="lib" path="lib/bddbddb/jdom.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/saxon9.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="lib" path="lib/java2html.jar"/>
 	<classpathentry kind="lib" path="lib/scannotation-1.0.2.jar"/>
 	<classpathentry kind="lib" path="lib/javassist.jar"/>
 	<classpathentry kind="lib" path="lib/joeq.jar"/>
 	<classpathentry kind="lib" path="lib/jwutil.jar"/>
+	<classpathentry kind="lib" path="tools/java2html.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>
