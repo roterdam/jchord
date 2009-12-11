@@ -347,6 +347,7 @@
     <fail message="ERROR: Property chord.home.dir must not be explicitly set">
       <condition><isset property="chord.home.dir"/></condition>
     </fail>
+    <property name="chord.java.analysis.path" location="classes/main"/>
     <property name="chord.home.dir" location="."/>
     <property name="chord.max.heap" value="1024m"/>
     <property name="chord.max.stack" value="32m"/>
