@@ -241,10 +241,22 @@
 		</javac>
 		<mkdir dir="classes/downcast"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			srcdir="src/downcast/java" destdir="classes/downcast" classpathref="main_class_path"/>
+			srcdir="src/downcast/java" destdir="classes/downcast">
+            <classpath>
+				<pathelement location="classes/alias/common"/>
+				<pathelement location="classes/alias/cs"/>
+				<path refid="main_class_path"/>
+			</classpath>
+        </javac>
 		<mkdir dir="classes/monosite"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			srcdir="src/monosite/java" destdir="classes/monosite" classpathref="main_class_path"/>
+			srcdir="src/monosite/java" destdir="classes/monosite">
+            <classpath>
+				<pathelement location="classes/alias/common"/>
+				<pathelement location="classes/alias/cs"/>
+				<path refid="main_class_path"/>
+			</classpath>
+        </javac>
 	</target>
 
 	<!--
@@ -371,10 +383,20 @@
     <path id="chord_java_analysis_path">
       <pathelement location="classes/main"/>
       <pathelement location="classes/datarace"/>
+      <pathelement location="classes/alias/common"/>
+      <pathelement location="classes/alias/ci"/>
+      <pathelement location="classes/alias/cs"/>
+      <pathelement location="classes/thread"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
       <pathelement location="src/datarace/dlog"/>
+      <pathelement location="src/alias/ci/dlog"/>
+      <pathelement location="src/alias/cs/dlog"/>
+      <pathelement location="src/thread/dlog"/>
+      <pathelement location="src/mhp/dlog"/>
+      <pathelement location="src/locks/dlog"/>
+      <pathelement location="src/escape/static/dlog"/>
     </path>
     <property name="chord.analyses" value="datarace-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
@@ -384,12 +406,22 @@
 
   <target name="run-deadlock">
     <path id="chord_java_analysis_path">
-      <pathelement location="classes/masin"/>
+      <pathelement location="classes/main"/>
       <pathelement location="classes/deadlock"/>
+      <pathelement location="classes/alias/common"/>
+      <pathelement location="classes/alias/ci"/>
+      <pathelement location="classes/alias/cs"/>
+      <pathelement location="classes/thread"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
       <pathelement location="src/deadlock/dlog"/>
+      <pathelement location="src/alias/ci/dlog"/>
+      <pathelement location="src/alias/cs/dlog"/>
+      <pathelement location="src/thread/dlog"/>
+      <pathelement location="src/mhp/dlog"/>
+      <pathelement location="src/locks/dlog"/>
+      <pathelement location="src/escape/static/dlog"/>
     </path>
     <property name="chord.analyses" value="deadlock-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
@@ -401,10 +433,15 @@
     <path id="chord_java_analysis_path">
       <pathelement location="classes/main"/>
       <pathelement location="classes/downcast"/>
+      <pathelement location="classes/alias/common"/>
+      <pathelement location="classes/alias/ci"/>
+      <pathelement location="classes/alias/cs"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
       <pathelement location="src/downcast/dlog"/>
+      <pathelement location="src/alias/ci/dlog"/>
+      <pathelement location="src/alias/cs/dlog"/>
     </path>
     <property name="chord.analyses" value="downcast-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
@@ -416,10 +453,15 @@
     <path id="chord_java_analysis_path">
       <pathelement location="classes/main"/>
       <pathelement location="classes/monosite"/>
+      <pathelement location="classes/alias/common"/>
+      <pathelement location="classes/alias/ci"/>
+      <pathelement location="classes/alias/cs"/>
     </path>
     <path id="chord_dlog_analysis_path">
       <pathelement location="src/main/dlog"/>
       <pathelement location="src/monosite/dlog"/>
+      <pathelement location="src/alias/ci/dlog"/>
+      <pathelement location="src/alias/cs/dlog"/>
     </path>
     <property name="chord.analyses" value="monosite-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>

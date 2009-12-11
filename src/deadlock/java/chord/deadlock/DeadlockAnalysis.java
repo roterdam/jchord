@@ -14,6 +14,7 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 
+import chord.project.Properties;
 import chord.program.Program;
 import chord.project.Project;
 import chord.project.Chord;
@@ -27,6 +28,7 @@ import chord.util.graph.IPathVisitor;
 import chord.util.graph.ShortestPathBuilder;
 import chord.alias.common.Ctxt;
 import chord.alias.common.Obj;
+import chord.alias.cs.CtxtsAnalysis;
 import chord.alias.cs.ICSCG;
 import chord.alias.cs.ThrSenAbbrCSCGAnalysis;
 import chord.bddbddb.Rel.RelView;
@@ -56,7 +58,7 @@ import chord.util.tuple.object.Pair;
  * <li><tt>chord.include.parallel</tt> (default is true).</li>
  * <li><tt>chord.include.nonreent</tt> (default is true).</li>
  * <li><tt>chord.include.nongrded</tt> (default is true).</li>
- * <li><tt>chord.print.results</tt> (default is true).</li>
+ * <li><tt>chord.publish.results</tt> (default is true).</li>
  * <li>All system properties recognized by abstract contexts analysis
  * (see {@link chord.alias.cs.CtxtsAnalysis}).</li>
  * </ul>
@@ -109,13 +111,12 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			"chord.exclude.nonreent");
 		boolean excludeNongrded = Boolean.getBoolean(
 			"chord.exclude.nongrded");
-		boolean printResults = System.getProperty(
-			"chord.print.results", "true").equals("true");
 
 		init();
 		
 		Project.runTask(domL);
 
+		Project.runTask(CtxtsAnalysis.getCspaKind());
 		Project.runTask(thrSenAbbrCSCGAnalysis);
 		thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
 		domN.clear();
@@ -159,8 +160,8 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		Project.runTask("deadlock-dlog");
 		Project.runTask("deadlock-stats-dlog");
 
-		if (printResults)
-			printResults();
+		if (Properties.publishResults)
+			publishResults();
 	}
 
 	private Obj getPointsTo(int cIdx, int lIdx) {
@@ -175,7 +176,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		return new Obj(pts);
 	}
 	
-	private void printResults() {
+	private void publishResults() {
         final DomO domO = new DomO();
         domO.setName("O");
         

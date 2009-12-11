@@ -198,6 +198,8 @@ public class Rel {
 		for (int i = 0; i < numDoms; i++) {
 			String name = domNames[i];
 			int numElems = doms[i].size();
+			if (numElems == 0)
+				numElems = 1;
         	BDDDomain d = factory.extDomain(new long[] { numElems })[0];
         	d.setName(name);
 			domBdds[i] = d;

@@ -261,13 +261,13 @@
    -->
   <target name="sort-and-diff">
     <exec executable="sort">
-      <arg line="${arg1} -o ${arg1}"/> 
+      <arg line="${arg1} -o ${arg1}"/>
     </exec>
     <exec executable="sort">
-      <arg line="${arg2} -o ${arg2}"/> 
+      <arg line="${arg2} -o ${arg2}"/>
     </exec>
     <exec executable="diff" resultproperty="retval">
-      <arg line="${arg1} ${arg2}"/> 
+      <arg line="--strip-trailing-cr ${arg1} ${arg2}"/> 
     </exec>
     <if>
       <not><equals arg1="${retval}" arg2="0"/></not>

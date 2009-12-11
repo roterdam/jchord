@@ -26,15 +26,6 @@ ME(m:M0,e:E0) input
 thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0) input
 forkACM(t:A0,c:C0,m:M0) input
 reachableTCE(t:A0,c:C0,e:E0) input
-CVC(c:C0,v:V0,o:C1) input
-FC(f:F0,o:C0) input
-statM(m:M) input
-syncM(m:M) input
-thisMV(m:M0,v:V0) input
-syncLM(l:L0,m:M0) input
-syncLV(l:L0,v:V0) input
-TM(t:T0,m:M0) input
-clsTF(t:T0,f:F0) input
 transLI(l:L0,i:I0) input
 transLE(l:L0,e:E0) input
 
@@ -42,7 +33,7 @@ invkLock(c:C0,i:I0,o:C1)
 elemLock(c:C0,e:E0,o:C1)
 syncC(c:C1)
 
-syncCLC(c:C0,l:L0,o:C1) output
+syncCLC(c:C0,l:L0,o:C1) input
 
 unlockedM(t:A0,c1:C1,m:M0,c2:C2) 
 unlockedI(t:A0,c1:C0,i:I0,c2:C2) 
@@ -52,10 +43,6 @@ guardedE(t:A0,c1:C0,e:E0,c2:C1) output
 ###
 # Constraints
 ###
-
-syncCLC(c,l,o) :- syncLM(l,m), thisMV(m,v), CVC(c,v,o).
-syncCLC(_,l,o) :- syncLM(l,m), statM(m), TM(t,m), clsTF(t,f), FC(f,o).
-syncCLC(c,l,o) :- syncLV(l,v), CVC(c,v,o).
 
 syncC(o) :- syncCLC(_,_,o).
 

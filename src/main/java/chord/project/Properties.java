@@ -17,6 +17,8 @@ public class Properties {
 	private Properties() { }
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
+	public final static String DEFAULT_EXCLUDES =
+		"java.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil.";
 
 	// Chord boot properties
 
@@ -74,8 +76,6 @@ public class Properties {
 	public final static String classesFileName = build("chord.classes.file", "classes.txt");
 	public final static String methodsFileName = build("chord.methods.file", "methods.txt");
 	public final static String scopeExcludeNames = System.getProperty("chord.scope.exclude", "");
-	public final static String checkExcludeNames =
-		System.getProperty("chord.check.exclude", "java.,sun.,com.ibm.,org.apache.harmony.");
 
     // Program analysis properties
 
@@ -92,12 +92,15 @@ public class Properties {
 			dlogAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "src/main/dlog");
 		}
 	}
-	public final static String analyses = System.getProperty("chord.analyses");
-	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
-	public final static String printRels = System.getProperty("chord.print.rels", "");
 	public final static boolean publishTargets = buildBoolProp("chord.publish.targets", false);
 	public final static String targetsURL = System.getProperty("chord.targets.url",
 		"http://chord.stanford.edu/javadoc_2_0/");
+	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
+	public final static String analyses = System.getProperty("chord.analyses");
+	public final static String checkExcludeNames =
+		System.getProperty("chord.check.exclude", DEFAULT_EXCLUDES);
+	public final static boolean publishResults = buildBoolProp("chord.publish.results", true);
+	public final static String printRels = System.getProperty("chord.print.rels", "");
 
     // BDD-based Datalog solver properties
 
@@ -114,7 +117,7 @@ public class Properties {
 	// Program instrumentation properties
 
 	public final static String instrExcludeNames =
-		System.getProperty("chord.instr.exclude", "java.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil.");
+		System.getProperty("chord.instr.exclude", DEFAULT_EXCLUDES);
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
 	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
 	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
@@ -155,14 +158,15 @@ public class Properties {
 		System.out.println("chord.classes.file: " + classesFileName);
 		System.out.println("chord.methods.file: " + methodsFileName);
 		System.out.println("chord.scope.exclude: " + scopeExcludeNames);
-		System.out.println("chord.check.exclude: " + checkExcludeNames);
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
-		System.out.println("chord.analyses: " + analyses);
-		System.out.println("chord.reuse.rels: " + reuseRels);
-		System.out.println("chord.print.rels: " + printRels);
 		System.out.println("chord.publish.targets: " + publishTargets);
 		System.out.println("chord.targets.url: " + targetsURL);
+		System.out.println("chord.reuse.rels: " + reuseRels);
+		System.out.println("chord.analyses: " + analyses);
+		System.out.println("chord.check.exclude: " + checkExcludeNames);
+		System.out.println("chord.publish.results: " + publishResults);
+		System.out.println("chord.print.rels: " + printRels);
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
