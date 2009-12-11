@@ -9,6 +9,7 @@ import chord.project.Chord;
 import chord.project.Project;
 import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
+import chord.alias.cs.CtxtsAnalysis;
 
 /**
  * Static downcast safety analysis.
@@ -32,6 +33,7 @@ import chord.project.ProgramRel;
 )
 public class DowncastAnalysis extends JavaAnalysis {
 	public void run() {
+		Project.runTask(CtxtsAnalysis.getCspaKind());
 		Project.runTask("downcast-dlog");
 	}
 }

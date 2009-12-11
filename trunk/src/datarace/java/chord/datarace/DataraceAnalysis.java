@@ -21,6 +21,7 @@ import chord.util.graph.ShortestPathBuilder;
 import chord.alias.cs.ICSCG;
 import chord.alias.common.Ctxt;
 import chord.alias.common.Obj;
+import chord.alias.cs.CtxtsAnalysis;
 import chord.alias.cs.CSAliasAnalysis;
 import chord.alias.cs.ThrSenAbbrCSCGAnalysis;
 import chord.bddbddb.Rel.RelView;
@@ -61,7 +62,7 @@ import chord.util.tuple.object.Trio;
  * <li><tt>chord.include.escaping</tt> (default is true).</li>
  * <li><tt>chord.include.parallel</tt> (default is true).</li>
  * <li><tt>chord.include.nongrded</tt> (default is true).</li>
- * <li><tt>chord.print.results</tt> (default is true).</li>
+ * <li><tt>chord.publish.results</tt> (default is true).</li>
  * <li>All system properties recognized by abstract contexts analysis
  * (see {@link chord.alias.cs.CtxtsAnalysis}).</li>
  * </ul>
@@ -101,11 +102,10 @@ public class DataraceAnalysis extends JavaAnalysis {
 		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
 		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");
 		boolean excludeNongrded = Boolean.getBoolean("chord.exclude.nongrded");
-		boolean printResults = System.getProperty(
-			"chord.print.results", "true").equals("true");
 
 		init();
 
+		Project.runTask(CtxtsAnalysis.getCspaKind());
 		Project.runTask("datarace-prologue-dlog");
 		if (excludeParallel)
 			Project.runTask("datarace-parallel-exclude-dlog");
@@ -122,11 +122,11 @@ public class DataraceAnalysis extends JavaAnalysis {
 		Project.runTask("datarace-dlog");
 		Project.runTask("datarace-stats-dlog");
 
-		if (printResults)
-			printResults();
+		if (Properties.publishResults)
+			publishResults();
 	}
 
-	private void printResults() {
+	private void publishResults() {
 		Project.runTask(hybridAnalysis);
 		Project.runTask(thrSenAbbrCSCGAnalysis);
 	    final ICSCG thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();

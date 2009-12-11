@@ -29,7 +29,7 @@ thisMV(m:M0,v:V0) input
 MPhead(m:M0,p:P0) input
 CVC(c:C0,v:V0,o:C1) input
 TM(t:T0,m:M0) input
-clsTF(t:T0,f:F0) input
+#clsTF(t:T0,f:F0) input
 FC(f:F0,c:C0) input
 statM(m:M0) input
 escNO(l:N0,o:C0) output
@@ -40,5 +40,5 @@ escNO(l:N0,o:C0) output
 
 escNO(n,o) :- NC(n,c), NL(n,l), syncLV(l,v), CVC(c,v,o).
 escNO(n,o) :- NC(n,c), NL(n,l), syncLM(l,m), thisMV(m,v), CVC(c,v,o).
-escNO(n,o) :- NL(n,l), syncLM(l,m), statM(m), TM(t,m), clsTF(t,f), FC(f,o).
+#escNO(n,o) :- NL(n,l), syncLM(l,m), statM(m), TM(t,m), clsTF(t,f), FC(f,o).
 

@@ -9,6 +9,7 @@ import chord.project.Chord;
 import chord.project.Project;
 import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
+import chord.alias.cs.CtxtsAnalysis;
 
 /**
  * Static monomorphic call site analysis.
@@ -33,6 +34,7 @@ import chord.project.ProgramRel;
 )
 public class MonositeAnalysis extends JavaAnalysis {
 	public void run() {
+		Project.runTask(CtxtsAnalysis.getCspaKind());
 		Project.runTask("monosite-dlog");
 	}
 }
