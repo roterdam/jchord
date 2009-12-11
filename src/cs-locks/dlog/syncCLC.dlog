@@ -25,7 +25,7 @@ thisMV(m:M0,v:V0) input
 syncLM(l:L0,m:M0) input
 syncLV(l:L0,v:V0) input
 TM(t:T0,m:M0) input
-clsTF(t:T0,f:F0) input
+#clsTF(t:T0,f:F0) input
 
 syncCLC(c:C0,l:L0,o:C1) output
 
@@ -34,6 +34,6 @@ syncCLC(c:C0,l:L0,o:C1) output
 ###
 
 syncCLC(c,l,o) :- syncLM(l,m), thisMV(m,v), CVC(c,v,o).
-syncCLC(_,l,o) :- syncLM(l,m), statM(m), TM(t,m), clsTF(t,f), FC(f,o).
+#syncCLC(_,l,o) :- syncLM(l,m), statM(m), TM(t,m), clsTF(t,f), FC(f,o).
 syncCLC(c,l,o) :- syncLV(l,v), CVC(c,v,o).
 

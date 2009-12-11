@@ -1,0 +1,7 @@
+<barrier:Ljava/lang/Integer;@TspSolver,[<java.lang.Integer T15> = new java.lang.Integer]>
+<MinLock:Ljava/lang/Integer;@TspSolver,[<java.lang.Integer T9> = new java.lang.Integer]>
+<MinTour:[I@TspSolver,[<int[] T8> = new int[]]>
+<PrioQ:[LPrioQElement;@TspSolver,[<PrioQElement[] T18> = new PrioQElement[]]>
+<TourLock:Ljava/lang/Integer;@TspSolver,[<java.lang.Integer T12> = new java.lang.Integer]>
+<Tours:[LTourElement;@TspSolver,[<TourElement[] T20> = new TourElement[]]>
+<TourStack:[I@TspSolver,[<int[] T19> = new int[]]>

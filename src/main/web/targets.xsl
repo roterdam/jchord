@@ -31,10 +31,9 @@
 	    <td class="head3"><xsl:value-of select="@kind"/></td>
 	    <xsl:variable name="producer_url" select="@producer_url"/>
 	    <td class="head3"><a href="{$producer_url}"><xsl:value-of select="@producer_name"/></a>
-        <xsl:for-each select="producer">
-            <xsl:variable name="producer_url" select="@url"/>
-            <a href="{$producer_url}"><xsl:value-of select="@name"/></a>
-            <xsl:if test="position()!=last()"><xsl:text>, </xsl:text></xsl:if>
+          <xsl:for-each select="producer">
+            <xsl:variable name="producer_url" select="@producer_url"/>
+            <xsl:text>, </xsl:text><a href="{$producer_url}"><xsl:value-of select="@producer_name"/></a>
           </xsl:for-each>
         </td>
       </tr>

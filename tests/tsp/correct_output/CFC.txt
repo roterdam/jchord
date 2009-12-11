@@ -1,0 +1,6 @@
+<[<java.lang.Thread[] T75> = new java.lang.Thread[]],null,[<TspSolver T79> = new TspSolver]>
+<[<PrioQElement[] T18> = new PrioQElement[]],null,[<PrioQElement T45> = new PrioQElement]>
+<[<TourElement[] T20> = new TourElement[]],null,[<TourElement T42> = new TourElement]>
+<[<TourElement T42> = new TourElement],prefix:[I@TourElement,[<int[] T1> = new int[]]>
+<[<TspSolver T79> = new TspSolver],Path:[I@TspSolver,[<int[] T3> = new int[]]>
+<[<TspSolver T79> = new TspSolver],Visit:[I@TspSolver,[<int[] T2> = new int[]]>
