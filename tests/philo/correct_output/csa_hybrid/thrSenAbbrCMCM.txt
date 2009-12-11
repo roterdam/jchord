@@ -1,0 +1,2 @@
+<[],main:([Ljava/lang/String;)V@Philo,[0!main:([Ljava/lang/String;)V@Philo],<init>:()V@Table>
+<[],main:([Ljava/lang/String;)V@Philo,[22!main:([Ljava/lang/String;)V@Philo],<init>:(ILTable;)V@Philo>

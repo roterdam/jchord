@@ -1,2 +1,0 @@
-<[<java.lang.Thread[] T48> = new java.lang.Thread[]],null,[<sor.sor_first_row_even T110> = new sor.sor_first_row_even]>
-<[<java.lang.Thread[] T48> = new java.lang.Thread[]],null,[<sor.sor_first_row_odd T107> = new sor.sor_first_row_odd]>

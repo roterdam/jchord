@@ -1,0 +1,14 @@
+<[],R0!<init>:(ILTable;)V@Philo,[22!main:([Ljava/lang/String;)V@Philo]>
+<[],R0!<init>:()V@Table,[0!main:([Ljava/lang/String;)V@Philo]>
+<[],R2!<init>:(ILTable;)V@Philo,[0!main:([Ljava/lang/String;)V@Philo]>
+<[],R3!main:([Ljava/lang/String;)V@Philo,[0!main:([Ljava/lang/String;)V@Philo]>
+<[],R4!main:([Ljava/lang/String;)V@Philo,[9!main:([Ljava/lang/String;)V@Philo]>
+<[],T10!main:([Ljava/lang/String;)V@Philo,[0!main:([Ljava/lang/String;)V@Philo]>
+<[],T11!main:([Ljava/lang/String;)V@Philo,[9!main:([Ljava/lang/String;)V@Philo]>
+<[],T14!main:([Ljava/lang/String;)V@Philo,[22!main:([Ljava/lang/String;)V@Philo]>
+<[],T18!main:([Ljava/lang/String;)V@Philo,[22!main:([Ljava/lang/String;)V@Philo]>
+<[],T1!<init>:()V@Table,[6!<init>:()V@Table]>
+<[],T2!main:([Ljava/lang/String;)V@Philo,[0!main:([Ljava/lang/String;)V@Philo]>
+<[],T3!<init>:()V@Table,[6!<init>:()V@Table]>
+<[],T7!main:([Ljava/lang/String;)V@Philo,[22!main:([Ljava/lang/String;)V@Philo]>
+<[],T8!main:([Ljava/lang/String;)V@Philo,[22!main:([Ljava/lang/String;)V@Philo]>

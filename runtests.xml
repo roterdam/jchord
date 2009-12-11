@@ -10,7 +10,18 @@
   <property name="chord.main.rels" value="aryElemE,cha,clinitM,EF,EV,HT,IinvkArg0,IinvkArg,IinvkRet,initM,instF,instFldE,instI,instM,LE,LI,LL,ME,MgetInstFldInst,MgetStatFldInst,MH,MI,ML,MmethArg,MmethRet,MobjValAsgnInst,MobjVarAsgnInst,MPhead,MP,MPtail,MputInstFldInst,MputStatFldInst,MV,PE,PgetInstFldInst,PgetStatFldInst,PI,PL,PobjValAsgnInst,PobjVarAsgnInst,PP,PputInstFldInst,PputStatFldInst,privateM,specIM,statF,statFldE,statIM,statM,syncLM,syncLV,syncM,thisMV,virtIM,VT,writeE"/>
   <property name="chord.main.doms_and_rels" value="${chord.main.doms},${chord.main.rels}"/>
   <property name="chord.cia.rels" value="FH,VH,HFH,IM,MM,rootM,reachableM,thrOblAbbrRootM,thrOblAbbrReachableM,thrOblAbbrIM,thrOblAbbrMM,thrSenAbbrRootM,thrSenAbbrReachableM,thrSenAbbrIM,thrSenAbbrMM"/>
-  <property name="chord.csa.rels" value="FC,CVC,CFC,CICM,CMCM,rootCM,reachableCM,thrOblAbbrRootCM,thrOblAbbrReachableCM,thrOblAbbrCICM,thrOblAbbrCMCM,thrSenAbbrRootCM,thrSenAbbrReachableCM,thrSenAbbrCICM,thrSenAbbrCMCM"/>
+  <property name="chord.csa.rels" value="FC,CVC,CFC,CICM,CMCM,rootCM,reachableCM,thrOblAbbrRootCM,thrOblAbbrReachableCM,thrOblAbbrCICM,thrOblAbbrCMCM,thrSenAbbrRootCM,thrSenAbbrReachableCM,thrSenAbbrCICM,thrSenAbbrCMCM,epsilonV,epsilonM,kcfaSenM,kobjSenM,ctxtCpyM,CC,CH,CI"/>
+
+  <path id="csa_java_analysis_path">
+    <pathelement location="classes/main"/>
+    <pathelement location="classes/alias/ci"/>
+    <pathelement location="classes/alias/cs"/>
+    <pathelement location="classes/alias/common"/>
+  </path>
+  <path id="csa_dlog_analysis_path">
+    <pathelement location="src/alias/ci/dlog"/>
+    <pathelement location="src/alias/cs/dlog"/>
+  </path>
 
   <target name="test-all">
     <for param="testdir">
@@ -49,9 +60,33 @@
           </then>
         </if>
         <if>
-          <isset property="test.csa"/>
+          <isset property="test.csa.0cfa"/>
           <then>
-            <antcall target="test-csa">
+            <antcall target="test-csa-0cfa">
+              <param name="testdir" value="@{testdir}"/>
+            </antcall>
+          </then>
+        </if>
+        <if>
+          <isset property="test.csa.kobj"/>
+          <then>
+            <antcall target="test-csa-kobj">
+              <param name="testdir" value="@{testdir}"/>
+            </antcall>
+          </then>
+        </if>
+        <if>
+          <isset property="test.csa.kcfa"/>
+          <then>
+            <antcall target="test-csa-kcfa">
+              <param name="testdir" value="@{testdir}"/>
+            </antcall>
+          </then>
+        </if>
+        <if>
+          <isset property="test.csa.hybrid"/>
+          <then>
+            <antcall target="test-csa-hybrid">
               <param name="testdir" value="@{testdir}"/>
             </antcall>
           </then>
@@ -72,10 +107,12 @@
     </ant>
     <antcall target="compare-doms">
       <param name="testdir" value="${testdir}"/>
+      <param name="correctdir" value="${testdir}/correct_output/main"/>
       <param name="domnames" value="${chord.main.doms}"/>
     </antcall>
     <antcall target="compare-rels">
       <param name="testdir" value="${testdir}"/>
+      <param name="correctdir" value="${testdir}/correct_output/main"/>
       <param name="relnames" value="${chord.main.rels}"/>
     </antcall>
   </target>
@@ -102,6 +139,7 @@
     </ant>
     <antcall target="compare-rels">
       <param name="testdir" value="${testdir}"/>
+      <param name="correctdir" value="${testdir}/correct_output/cia"/>
       <param name="relnames" value="${chord.cia.rels}"/>
     </antcall>
   </target>
@@ -109,54 +147,110 @@
   <!--
    params: testdir
    -->
-  <target name="test-csa">
-    <path id="chord_java_analysis_path">
-      <pathelement location="classes/main"/>
-      <pathelement location="classes/alias/ci"/>
-      <pathelement location="classes/alias/cs"/>
-      <pathelement location="classes/alias/common"/>
-    </path>
-    <path id="chord_dlog_analysis_path">
-      <pathelement location="src/alias/ci/dlog"/>
-      <pathelement location="src/alias/cs/dlog"/>
-    </path>
+  <target name="test-csa-0cfa">
     <ant target="run">
       <property name="chord.work.dir" value="${testdir}"/>
       <property name="chord.reuse.scope" value="true"/>
-      <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
-      <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
+      <property name="chord.java.analysis.path" refid="csa_java_analysis_path"/>
+      <property name="chord.dlog.analysis.path" refid="csa_dlog_analysis_path"/>
       <property name="chord.analyses" value="cspa-0cfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
       <property name="chord.print.rels" value="${chord.csa.rels}"/>
     </ant>
     <antcall target="compare-rels">
       <param name="testdir" value="${testdir}"/>
+      <param name="correctdir" value="${testdir}/correct_output/csa_0cfa"/>
       <param name="relnames" value="${chord.csa.rels}"/>
     </antcall>
   </target>
 
   <!--
-   params: testdir, domnames
+   params: testdir
+   -->
+  <target name="test-csa-kobj">
+    <ant target="run">
+      <property name="chord.work.dir" value="${testdir}"/>
+      <property name="chord.reuse.scope" value="true"/>
+      <property name="chord.java.analysis.path" refid="csa_java_analysis_path"/>
+      <property name="chord.dlog.analysis.path" refid="csa_dlog_analysis_path"/>
+      <property name="chord.inst.ctxt.kind" value="co"/>
+      <property name="chord.kobj.k" value="1"/>
+      <property name="chord.analyses" value="cspa-kobj-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+      <property name="chord.print.rels" value="${chord.csa.rels}"/>
+    </ant>
+    <antcall target="compare-rels">
+      <param name="testdir" value="${testdir}"/>
+      <param name="correctdir" value="${testdir}/correct_output/csa_kobj"/>
+      <param name="relnames" value="${chord.csa.rels}"/>
+    </antcall>
+  </target>
+
+  <!--
+   params: testdir
+   -->
+  <target name="test-csa-kcfa">
+    <ant target="run">
+      <property name="chord.work.dir" value="${testdir}"/>
+      <property name="chord.reuse.scope" value="true"/>
+      <property name="chord.java.analysis.path" refid="csa_java_analysis_path"/>
+      <property name="chord.dlog.analysis.path" refid="csa_dlog_analysis_path"/>
+      <property name="chord.inst.ctxt.kind" value="cs"/>
+      <property name="chord.kcfa.k" value="1"/>
+      <property name="chord.analyses" value="cspa-kcfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+      <property name="chord.print.rels" value="${chord.csa.rels}"/>
+    </ant>
+    <antcall target="compare-rels">
+      <param name="testdir" value="${testdir}"/>
+      <param name="correctdir" value="${testdir}/correct_output/csa_kcfa"/>
+      <param name="relnames" value="${chord.csa.rels}"/>
+    </antcall>
+  </target>
+
+  <!--
+   params: testdir
+   -->
+  <target name="test-csa-hybrid">
+    <ant target="run">
+      <property name="chord.work.dir" value="${testdir}"/>
+      <property name="chord.reuse.scope" value="true"/>
+      <property name="chord.java.analysis.path" refid="csa_java_analysis_path"/>
+      <property name="chord.dlog.analysis.path" refid="csa_dlog_analysis_path"/>
+      <property name="chord.inst.ctxt.kind" value="co"/>
+      <property name="chord.stat.ctxt.kind" value="cs"/>
+      <property name="chord.kobj.k" value="1"/>
+      <property name="chord.kcfa.k" value="1"/>
+      <property name="chord.analyses" value="cspa-hybrid-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+      <property name="chord.print.rels" value="${chord.csa.rels}"/>
+    </ant>
+    <antcall target="compare-rels">
+      <param name="testdir" value="${testdir}"/>
+      <param name="correctdir" value="${testdir}/correct_output/csa_hybrid"/>
+      <param name="relnames" value="${chord.csa.rels}"/>
+    </antcall>
+  </target>
+
+  <!--
+   params: testdir, correctdir, domnames
    -->
   <target name="compare-doms">
     <for param="domname" list="${domnames}">
       <sequential>
         <antcall target="sort-and-diff">
           <param name="arg1" location="${testdir}/chord_output/bddbddb/@{domname}.map"/>
-          <param name="arg2" location="${testdir}/correct_output/@{domname}.map"/>
+          <param name="arg2" location="${correctdir}/@{domname}.map"/>
         </antcall>
       </sequential>
     </for>
   </target>
 
   <!--
-   params: testdir, relnames
+   params: testdir, correctdir, relnames
    -->
   <target name="compare-rels">
     <for param="relname" list="${relnames}">
       <sequential>
         <antcall target="sort-and-diff">
           <param name="arg1" location="${testdir}/chord_output/@{relname}.txt"/>
-          <param name="arg2" location="${testdir}/correct_output/@{relname}.txt"/>
+          <param name="arg2" location="${correctdir}/@{relname}.txt"/>
         </antcall>
       </sequential>
     </for>

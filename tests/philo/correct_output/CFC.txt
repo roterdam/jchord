@@ -1,3 +1,0 @@
-<[<Philo[] T11> = new Philo[]],null,[<Philo T7> = new Philo]>
-<[<Philo T7> = new Philo],t:LTable;@Philo,[<Table T10> = new Table]>
-<[<Table T10> = new Table],forks:[Z@Table,[<boolean[] T1> = new boolean[]]>

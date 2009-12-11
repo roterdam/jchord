@@ -1,0 +1,2 @@
+<[],<clinit>:()V@sor.Sor>
+<[],main:([Ljava/lang/String;)V@sor.Sor>

@@ -1,0 +1,12 @@
+<R0!main:([Ljava/lang/String;)V@Philo>
+<R3!main:([Ljava/lang/String;)V@Philo>
+<R4!main:([Ljava/lang/String;)V@Philo>
+<R6!main:([Ljava/lang/String;)V@Philo>
+<T10!main:([Ljava/lang/String;)V@Philo>
+<T11!main:([Ljava/lang/String;)V@Philo>
+<T14!main:([Ljava/lang/String;)V@Philo>
+<T18!main:([Ljava/lang/String;)V@Philo>
+<T1!main:([Ljava/lang/String;)V@Philo>
+<T2!main:([Ljava/lang/String;)V@Philo>
+<T7!main:([Ljava/lang/String;)V@Philo>
+<T8!main:([Ljava/lang/String;)V@Philo>

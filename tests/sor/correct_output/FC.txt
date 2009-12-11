@@ -1,2 +1,0 @@
-<barrier:LEDU/oswego/cs/dl/util/concurrent/CyclicBarrier;@sor.Sor,[<EDU.oswego.cs.dl.util.concurrent.CyclicBarrier T49> = new EDU.oswego.cs.dl.util.concurrent.CyclicBarrier]>
-<t:[Ljava/lang/Thread;@sor.Sor,[<java.lang.Thread[] T48> = new java.lang.Thread[]]>
