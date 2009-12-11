@@ -21,7 +21,6 @@ import chord.project.ProgramRel;
  * <p>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.max.iters</tt> (default is 0)</li>
  * <li>All system properties recognized by abstract contexts analysis
  * (see {@link chord.alias.cs.CtxtsAnalysis}).</li>
  * </ul>
@@ -32,44 +31,7 @@ import chord.project.ProgramRel;
 	name = "downcast-java"
 )
 public class DowncastAnalysis extends JavaAnalysis {
-	private int maxIters;
-
-	private ProgramRel relRefineH;
-	private ProgramRel relRefineM;
-	private ProgramRel relRefineV;
-	private ProgramRel relRefineI;
-
 	public void run() {
-		maxIters = Integer.getInteger("chord.max.iters", 0);
-		assert (maxIters >= 0);
-
-		relRefineH = (ProgramRel) Project.getTrgt("refineH");
-		relRefineM = (ProgramRel) Project.getTrgt("refineM");
-		relRefineV = (ProgramRel) Project.getTrgt("refineV");
-		relRefineI = (ProgramRel) Project.getTrgt("refineI");
-
-		for (int numIters = 0; true; numIters++) {
-			Project.runTask("downcast-dlog");
-			if (numIters == maxIters)
-				break;
-			Project.runTask("downcast-feedback-dlog");
-			Project.runTask("refine-hybrid-dlog");
-			relRefineH.load();
-			int numRefineH = relRefineH.size();
-			relRefineH.close();
-			relRefineM.load();
-			int numRefineM = relRefineM.size();
-			relRefineM.close();
-			relRefineV.load();
-			int numRefineV = relRefineV.size();
-			relRefineV.close();
-			relRefineI.load();
-			int numRefineI = relRefineI.size();
-			relRefineI.close();
-			if (numRefineH == 0 && numRefineM == 0 &&
-				numRefineV == 0 && numRefineI == 0)
-				break;
-			Project.resetTaskDone("ctxts-java");
-		}
+		Project.runTask("downcast-dlog");
 	}
 }

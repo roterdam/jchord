@@ -52,7 +52,6 @@ import chord.util.tuple.object.Pair;
  * <p>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.max.iters</tt> (default is 0)</li>
  * <li><tt>chord.include.escaping</tt> (default is true).</li>
  * <li><tt>chord.include.parallel</tt> (default is true).</li>
  * <li><tt>chord.include.nonreent</tt> (default is true).</li>
@@ -75,11 +74,6 @@ public class DeadlockAnalysis extends JavaAnalysis {
     private DomC domC;
     private DomL domL;
     ProgramDom<Pair<Ctxt, Inst>> domN;
-    
-    private ProgramRel relRefineH;
-    private ProgramRel relRefineM;
-    private ProgramRel relRefineV;
-    private ProgramRel relRefineI;
 	private ThrSenAbbrCSCGAnalysis thrSenAbbrCSCGAnalysis;
 	private ProgramRel relNC;
 	private ProgramRel relNL;
@@ -91,10 +85,6 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		new HashMap<CM, Set<CM>>();
 
 	private void init() {
-		relRefineH = (ProgramRel) Project.getTrgt("refineH");
-		relRefineM = (ProgramRel) Project.getTrgt("refineM");
-		relRefineV = (ProgramRel) Project.getTrgt("refineV");
-		relRefineI = (ProgramRel) Project.getTrgt("refineI");
 		domM = (DomM) Project.getTrgt("M");
 		domI = (DomI) Project.getTrgt("I");
 		domA = (DomA) Project.getTrgt("A");
@@ -111,9 +101,6 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	}
 	
 	public void run() {
-		int maxIters = Integer.getInteger("chord.max.iters", 0);
-		assert (maxIters >= 0);
-
 		boolean excludeParallel = Boolean.getBoolean(
 			"chord.exclude.parallel");
 		boolean excludeEscaping = Boolean.getBoolean(
@@ -129,70 +116,48 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		
 		Project.runTask(domL);
 
-		for (int numIters = 0; true; numIters++) {
-			Project.runTask(thrSenAbbrCSCGAnalysis);
-			thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
-			domN.clear();
-			for (Inst i : domL) {
-				jq_Method m = Program.v().getMethod(i);
-				Set<Ctxt> cs = thrSenAbbrCSCG.getContexts(m);
-				for (Ctxt c : cs) {
-					domN.getOrAdd(new Pair<Ctxt, Inst>(c, i));
-				}
+		Project.runTask(thrSenAbbrCSCGAnalysis);
+		thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
+		domN.clear();
+		for (Inst i : domL) {
+			jq_Method m = Program.v().getMethod(i);
+			Set<Ctxt> cs = thrSenAbbrCSCG.getContexts(m);
+			for (Ctxt c : cs) {
+				domN.getOrAdd(new Pair<Ctxt, Inst>(c, i));
 			}
-			domN.save();
-
-			relNC.zero();
-			relNL.zero();
-			for (Pair<Ctxt, Inst> cm : domN) {
-				int n = domN.indexOf(cm);
-				int c = domC.indexOf(cm.val0);
-				int l = domL.indexOf(cm.val1);
-				relNC.add(n, c);
-				relNL.add(n, l);
-			}
-			relNC.save();
-			relNL.save();
-
-			if (excludeParallel)
-				Project.runTask("deadlock-parallel-exclude-dlog");
-			else
-				Project.runTask("deadlock-parallel-include-dlog");
-			if (excludeEscaping)
-				Project.runTask("deadlock-escaping-exclude-dlog");
-			else
-				Project.runTask("deadlock-escaping-include-dlog");
-			if (excludeNonreent)
-				Project.runTask("deadlock-nonreent-exclude-dlog");
-			else
-				Project.runTask("deadlock-nonreent-include-dlog");
-			if (excludeNongrded)
-				Project.runTask("deadlock-nongrded-exclude-dlog");
-			else
-				Project.runTask("deadlock-nongrded-include-dlog");
-			Project.runTask("deadlock-dlog");
-			Project.runTask("deadlock-stats-dlog");
-			if (numIters == maxIters)
-				break;
-			Project.runTask("deadlock-feedback-dlog");
-			Project.runTask("refine-hybrid-dlog");
-			relRefineH.load();
-			int numRefineH = relRefineH.size();
-			relRefineH.close();
-			relRefineM.load();
-			int numRefineM = relRefineM.size();
-			relRefineM.close();
-			relRefineV.load();
-			int numRefineV = relRefineV.size();
-			relRefineV.close();
-			relRefineI.load();
-			int numRefineI = relRefineI.size();
-			relRefineI.close();
-			if (numRefineH == 0 && numRefineM == 0 &&
-				numRefineV == 0 && numRefineI == 0)
-				break;
-			Project.resetTaskDone("ctxts-java");
 		}
+		domN.save();
+
+		relNC.zero();
+		relNL.zero();
+		for (Pair<Ctxt, Inst> cm : domN) {
+			int n = domN.indexOf(cm);
+			int c = domC.indexOf(cm.val0);
+			int l = domL.indexOf(cm.val1);
+			relNC.add(n, c);
+			relNL.add(n, l);
+		}
+		relNC.save();
+		relNL.save();
+
+		if (excludeParallel)
+			Project.runTask("deadlock-parallel-exclude-dlog");
+		else
+			Project.runTask("deadlock-parallel-include-dlog");
+		if (excludeEscaping)
+			Project.runTask("deadlock-escaping-exclude-dlog");
+		else
+			Project.runTask("deadlock-escaping-include-dlog");
+		if (excludeNonreent)
+			Project.runTask("deadlock-nonreent-exclude-dlog");
+		else
+			Project.runTask("deadlock-nonreent-include-dlog");
+		if (excludeNongrded)
+			Project.runTask("deadlock-nongrded-exclude-dlog");
+		else
+			Project.runTask("deadlock-nongrded-include-dlog");
+		Project.runTask("deadlock-dlog");
+		Project.runTask("deadlock-stats-dlog");
 
 		if (printResults)
 			printResults();
