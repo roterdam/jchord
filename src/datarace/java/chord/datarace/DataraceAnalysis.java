@@ -58,7 +58,6 @@ import chord.util.tuple.object.Trio;
  * <p>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.max.iters</tt> (default is 0)</li>
  * <li><tt>chord.include.escaping</tt> (default is true).</li>
  * <li><tt>chord.include.parallel</tt> (default is true).</li>
  * <li><tt>chord.include.nongrded</tt> (default is true).</li>
@@ -73,10 +72,6 @@ import chord.util.tuple.object.Trio;
 	name="datarace-java"
 )
 public class DataraceAnalysis extends JavaAnalysis {
-	private ProgramRel relRefineH;
-	private ProgramRel relRefineM;
-	private ProgramRel relRefineV;
-	private ProgramRel relRefineI;
 	private DomM domM;
 	private DomI domI;
 	private DomF domF;
@@ -89,10 +84,6 @@ public class DataraceAnalysis extends JavaAnalysis {
 	private ThrSenAbbrCSCGAnalysis thrSenAbbrCSCGAnalysis;
 
 	private void init() {
-		relRefineH = (ProgramRel) Project.getTrgt("refineH");
-		relRefineM = (ProgramRel) Project.getTrgt("refineM");
-		relRefineV = (ProgramRel) Project.getTrgt("refineV");
-		relRefineI = (ProgramRel) Project.getTrgt("refineI");
 		domM = (DomM) Project.getTrgt("M");
 		domI = (DomI) Project.getTrgt("I");
 		domF = (DomF) Project.getTrgt("F");
@@ -107,9 +98,6 @@ public class DataraceAnalysis extends JavaAnalysis {
 	}
 
 	public void run() {
-		int maxIters = Integer.getInteger("chord.max.iters", 0);
-		assert (maxIters >= 0);
-
 		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
 		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");
 		boolean excludeNongrded = Boolean.getBoolean("chord.exclude.nongrded");
@@ -118,43 +106,21 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		init();
 
-		for (int numIters = 0; true; numIters++) {
-			Project.runTask("datarace-prologue-dlog");
-			if (excludeParallel)
-				Project.runTask("datarace-parallel-exclude-dlog");
-			else
-				Project.runTask("datarace-parallel-include-dlog");
-			if (excludeEscaping)
-				Project.runTask("datarace-escaping-exclude-dlog");
-			else
-				Project.runTask("datarace-escaping-include-dlog");
-			if (excludeNongrded)
-				Project.runTask("datarace-nongrded-exclude-dlog");
-			else
-				Project.runTask("datarace-nongrded-include-dlog");
-			Project.runTask("datarace-dlog");
-			Project.runTask("datarace-stats-dlog");
-			if (numIters == maxIters)
-				break;
-			Project.runTask("datarace-feedback-dlog");
-			Project.runTask("refine-hybrid-dlog");
-			relRefineH.load();
-			int numRefineH = relRefineH.size();
-			relRefineH.close();
-			relRefineM.load();
-			int numRefineM = relRefineM.size();
-			relRefineM.close();
-			relRefineV.load();
-			int numRefineV = relRefineV.size();
-			relRefineV.close();
-			relRefineI.load();
-			int numRefineI = relRefineI.size();
-			relRefineI.close();
-			if (numRefineH == 0 && numRefineM == 0 &&
-				numRefineV == 0 && numRefineI == 0)
-				break;
-			Project.resetTaskDone("ctxts-java");
-		}
+		Project.runTask("datarace-prologue-dlog");
+		if (excludeParallel)
+			Project.runTask("datarace-parallel-exclude-dlog");
+		else
+			Project.runTask("datarace-parallel-include-dlog");
+		if (excludeEscaping)
+			Project.runTask("datarace-escaping-exclude-dlog");
+		else
+			Project.runTask("datarace-escaping-include-dlog");
+		if (excludeNongrded)
+			Project.runTask("datarace-nongrded-exclude-dlog");
+		else
+			Project.runTask("datarace-nongrded-include-dlog");
+		Project.runTask("datarace-dlog");
+		Project.runTask("datarace-stats-dlog");
 
 		if (printResults)
 			printResults();
