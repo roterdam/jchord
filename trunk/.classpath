@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
 	<classpathentry kind="src" output="classes/util" path="src/util/java"/>
+	<classpathentry kind="src" output="classes/main" path="src/main/java"/>
 	<classpathentry kind="src" output="classes/escape/hybrid" path="src/escape/hybrid/java"/>
 	<classpathentry kind="src" output="classes/escape/dynamic" path="src/escape/dynamic/java"/>
 	<classpathentry kind="src" output="classes/alias/cs" path="src/alias/cs/java"/>
