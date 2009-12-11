@@ -95,9 +95,7 @@ public class Ctxt implements Serializable {
 		int n = elems.length;
 		for (int i = 0; i < n; i++) {
 			Quad q = elems[i];
-			Operator op = q.getOperator();
-			s += (op instanceof Invoke) ?
-				Program.v().toStringInvokeInst(q) : Program.v().toStringNewInst(q);
+			s += Program.v().toBytePosStr(q);
 			if (i < n - 1)
 				s += ",";
 		}
