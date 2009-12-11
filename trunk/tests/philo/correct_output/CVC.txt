@@ -1,0 +1,14 @@
+<[],R0!<init>:(ILTable;)V@Philo,[<Philo T7> = new Philo]>
+<[],R0!<init>:()V@Table,[<Table T10> = new Table]>
+<[],R2!<init>:(ILTable;)V@Philo,[<Table T10> = new Table]>
+<[],R3!main:([Ljava/lang/String;)V@Philo,[<Table T10> = new Table]>
+<[],R4!main:([Ljava/lang/String;)V@Philo,[<Philo[] T11> = new Philo[]]>
+<[],T10!main:([Ljava/lang/String;)V@Philo,[<Table T10> = new Table]>
+<[],T11!main:([Ljava/lang/String;)V@Philo,[<Philo[] T11> = new Philo[]]>
+<[],T14!main:([Ljava/lang/String;)V@Philo,[<Philo T7> = new Philo]>
+<[],T18!main:([Ljava/lang/String;)V@Philo,[<Philo T7> = new Philo]>
+<[],T1!<init>:()V@Table,[<boolean[] T1> = new boolean[]]>
+<[],T2!main:([Ljava/lang/String;)V@Philo,[<Table T10> = new Table]>
+<[],T3!<init>:()V@Table,[<boolean[] T1> = new boolean[]]>
+<[],T7!main:([Ljava/lang/String;)V@Philo,[<Philo T7> = new Philo]>
+<[],T8!main:([Ljava/lang/String;)V@Philo,[<Philo T7> = new Philo]>
