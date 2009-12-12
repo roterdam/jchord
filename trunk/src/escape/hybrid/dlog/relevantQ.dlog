@@ -10,14 +10,14 @@
 PQ(p:P0,q:Q0) input
 MP(m:M0,p:P0) input
 TM(t:T0,m:M0) input
-relevantT(t:T0) input
+checkExcludedT(t:T0) input
 relevantP(p:P0) output
 relevantQ(q:Q0) output
 relevantM(m:M0)
 
 ###
 
-relevantM(m) :- TM(t,m), relevantT(t).
+relevantM(m) :- TM(t,m), !checkExcludedT(t).
 relevantP(p) :- MP(m,p), relevantM(m).
 relevantQ(q) :- PQ(p,q), relevantP(p).
 
