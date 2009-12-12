@@ -475,27 +475,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		PQset.clear();
 		relPQ.save();
 
-        String checkExcludeNames = Properties.checkExcludeNames;
-        String[] excluded = checkExcludeNames.equals("") ? new String[0] :
-            checkExcludeNames.split(Properties.LIST_SEPARATOR);
-		ProgramRel relRelevantT = (ProgramRel) Project.getTrgt("relevantT");
-        IndexSet<jq_Class> classes = Program.v().getPreparedClasses();
-		relRelevantT.zero();
-		for (jq_Class c : classes) {
-			String cName = c.getName();
-            boolean match = false;
-            for (String s : excluded) {
-                if (cName.startsWith(s)) {
-                    match = true;
-                    break;
-                }
-            }
-			if (!match) {
-				int tIdx = domT.indexOf(c);
-				relRelevantT.add(tIdx);
-			}
-		}
-		relRelevantT.save();
 		Project.resetTaskDone("relevant-Q-dlog");
 		Project.runTask("relevant-Q-dlog");
 

@@ -25,6 +25,7 @@ import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
+import chord.util.StringUtils;
  
 import joeq.Class.PrimordialClassLoader;
 import joeq.Util.Templates.ListIterator;
@@ -77,15 +78,14 @@ public class Program {
 	private boolean HTMLizedJavaSrcFiles;
 	private final Map<Inst, jq_Method> instToMethodMap = 
 		new HashMap<Inst, jq_Method>();
-	private String[] scopeExcludedNames;
+	private String[] scopeExcludedPrefixes;
 
 	private Program() {
 		if (Properties.doSSA)
 			jq_Method.doSSA();
 		try {
-        	String s = Properties.scopeExcludeNames;
-			scopeExcludedNames = s.equals("") ? new String[0] :
-            	s.split(Properties.LIST_SEPARATOR);
+			scopeExcludedPrefixes = StringUtils.toArray(
+        		Properties.scopeExcludeStr, Properties.LIST_SEPARATOR);
 			boolean filesExist =
 				(new File(Properties.classesFileName)).exists() &&
 				(new File(Properties.methodsFileName)).exists();
@@ -121,9 +121,9 @@ public class Program {
 			assert (c != null);
 			String cName = c.getName();
 			boolean exclude = false;
-			for (String n : scopeExcludedNames) {
-				if (cName.startsWith(n)) {
-					System.out.println("WARNING: Excluding class: " + n);
+			for (String prefix : scopeExcludedPrefixes) {
+				if (cName.startsWith(prefix)) {
+					System.out.println("WARNING: Excluding class: " + cName);
 					exclude = true;
 					break;
 				}
@@ -192,9 +192,10 @@ public class Program {
 		classes = new IndexHashSet<jq_Class>();
 		for (jq_Class c : bootstrapper.getPreparedClasses()) {
 			boolean exclude = false;
-			for (String s : scopeExcludedNames) {
-				if (c.getName().startsWith(s)) {
-					System.out.println("WARNING: Excluding class: " + c);
+			String cName = c.getName();
+			for (String prefix : scopeExcludedPrefixes) {
+				if (cName.startsWith(prefix)) {
+					System.out.println("WARNING: Excluding class: " + cName);
 					exclude = true;
 					break;
 				}

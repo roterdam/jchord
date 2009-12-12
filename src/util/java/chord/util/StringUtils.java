@@ -64,4 +64,7 @@ public final class StringUtils {
 		System.arraycopy(b, 0, result, a.length, b.length);
 		return result;
 	}
+	public static String[] toArray(String str, String sep) {
+        return str.equals("") ? new String[0] : str.split(sep);
+	}
 }

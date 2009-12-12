@@ -31,6 +31,7 @@ import chord.runtime.Runtime;
 import chord.util.IndexHashMap;
 import chord.util.IndexMap;
 import chord.util.IndexSet;
+import chord.util.StringUtils;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -370,9 +371,8 @@ public class Instrumentor {
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String userClassesDirName = Properties.userClassesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
-		String instrExcludeNames = Properties.instrExcludeNames;
-		String[] excluded = instrExcludeNames.equals("") ? new String[0] :
-			instrExcludeNames.split(Properties.LIST_SEPARATOR);
+		String[] instrExcludedPrefixes = StringUtils.toArray(
+			Properties.instrExcludeStr, Properties.LIST_SEPARATOR);
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
@@ -383,7 +383,7 @@ public class Instrumentor {
 				continue;
 			}
 			boolean match = false;
-			for (String s : excluded) {
+			for (String s : instrExcludedPrefixes) {
 				if (cName.startsWith(s)) {
 					match = true;
 		 			break;

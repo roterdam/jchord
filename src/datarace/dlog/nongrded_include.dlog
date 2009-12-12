@@ -25,7 +25,7 @@ MI(m:M0,i:I0) input
 ME(m:M0,e:E0) input
 thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0) input
 forkACM(t:A0,c:C0,m:M0) input
-reachableTCE(t:A0,c:C0,e:E0) input
+relevantTCE(t:A0,c:C0,e:E0) input
 transLI(l:L0,i:I0) input
 transLE(l:L0,e:E0) input
 
@@ -56,5 +56,5 @@ unlockedM(t,d,n,o) :- unlockedI(t,c,i,o), thrSenAbbrCICM(c,i,d,n).
 
 unlockedE(t,c,e,o) :- unlockedM(t,c,m,o), ME(m,e), !elemLock(c,e,o).
 
-guardedE(t,c,e,o) :- reachableTCE(t,c,e), syncC(o), !unlockedE(t,c,e,o).
+guardedE(t,c,e,o) :- relevantTCE(t,c,e), syncC(o), !unlockedE(t,c,e,o).
 
