@@ -30,7 +30,7 @@ public class RelHT extends ProgramRel {
 		DomH domH = (DomH) doms[0];
 		DomT domT = (DomT) doms[1];
 		int numH = domH.size();
-		for (int hIdx = 1; hIdx < numH; hIdx++) {
+		for (int hIdx = 0; hIdx < numH; hIdx++) {
 			Quad h = (Quad) domH.get(hIdx);
 			Operator op = h.getOperator();
 			jq_Type t;
