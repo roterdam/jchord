@@ -13,13 +13,13 @@
 .include "F.dom"
 .include "E.dom"
 
-.bddvarorder F0_E0_Z0_M0xP0_V0_C0xC1
+.bddvarorder E0_M0xP0_V0_C0_F0_C1_Z0
 
 ###
 # Relations
 ###
 
-CVC(c1:C,v:V,c2:C) input
+CVC(c1:C0,v:V0,c2:C1) input
 FC(f:F,c:C) input
 CFC(c1:C,f:F,c2:C) input
 MmethArg(m:M,z:Z,v:V) input

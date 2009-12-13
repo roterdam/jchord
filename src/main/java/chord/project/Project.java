@@ -90,19 +90,17 @@ public class Project {
 				Program.v();
 			}
 
-            String analyses = Properties.analyses;
-            if (analyses != null) {
+            String[] runAnalyses = Properties.toArray(Properties.runAnalyses);
+            if (runAnalyses.length > 0) {
             	Project.init();
-                String[] analysisNames = analyses.split(Properties.LIST_SEPARATOR);
-				for (String name : analysisNames)
+				for (String name : runAnalyses)
 					runTask(name);
             }
 
-			String printRels = Properties.printRels;
-			if (!printRels.equals("")) {
+			String[] printRels = Properties.toArray(Properties.printRels);
+			if (printRels.length > 0) {
 				Project.init();
-				String[] relNames = printRels.split(Properties.LIST_SEPARATOR);
-				for (String relName : relNames) {
+				for (String relName : printRels) {
 					ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
 					assert(rel != null);
 					rel.load();
@@ -527,7 +525,7 @@ public class Project {
 			loc = (new File(loc)).getName();
 		} else
 			loc = clazz.getName().replace(".", "/") + ".html";
-		loc = Properties.targetsURL + loc;
+		loc = Properties.javadocURL + loc;
 		return "producer_name=\"" + task.getName() +
 			"\" producer_url=\"" + loc + "\"";
 	}
