@@ -19,11 +19,6 @@
 	<property name="lib.home" value="${basedir}/lib"/>
 
 	<!--
-		TODO: THIS MAYBE HAS TO BE REPLACED BY '${lib.home}' or '${tool.home}'. 
-	-->
-	<property name="chord.bdd.lib.dir" location="lib"/>
-
-	<!--
 		Selects debug targets. 
 	-->
 	<property name="debuglevel" value="source,lines,vars"/>
@@ -83,7 +78,7 @@
 
 	<taskdef name="java2html" classname="de.java2html.anttasks.Java2HtmlTask">
 		<classpath>
-			<pathelement location="${tool.home}/java2html.jar"/>
+			<pathelement location="${lib.home}/java2html.jar"/>
 		</classpath>
 	</taskdef>
 
@@ -285,10 +280,14 @@
 
 
   <!-- Target props-file does following things in order:
-   1. Checks that chord.work.dir is set, and if not, sets it to current directory
-   2. Loads properties from file {chord.work.dir}/chord.properties, if the file exists;
-      Each relative path element in the value of any property named chord.*.path in the
-      file is converted to an absolute path element w.r.t. {chord.work.dir}
+   1. Sets property ${chord.work.dir} to the current directory if it is not already set.
+   2. Checks that the value of property ${chord.work.dir} is an existing directory.
+   3. Sets property ${chord.props.file} to "${chord.work.dir}/chord.properties" if it 
+	  is not already set.
+   4. If the file specified by property ${chord.props.file} exists, then loads all
+      properties defined in the file.  Each relative (as opposed to absolute) path
+      element in the value of any property named chord.<...>.path set in this file is
+      converted to an absolute path element w.r.t. ${chord.work.dir}.
   -->
   <target name="props-file">
     <if>
@@ -517,7 +516,7 @@
     <java classname="net.sf.bddbddb.Solver"
         fork="true" failonerror="true" maxmemory="${max.heap}"
         classpath="${chord.bddbddb.class.path}">
-      <sysproperty key="java.library.path" file="${chord.bdd.lib.dir}"/>
+      <sysproperty key="java.library.path" file="${lib.home}"/>
       <sysproperty key="basedir" file="${work.dir}"/>
       <sysproperty key="maxtuples" value="${max.tuples}"/>
       <sysproperty key="noisy" value="${noisy}"/>
@@ -534,7 +533,7 @@
     <java classname="net.sf.bddbddb.Interactive"
         fork="true" failonerror="true" maxmemory="${max.heap}"
         classpath="${chord.bddbddb.class.path}">
-      <sysproperty key="java.library.path" file="${chord.bdd.lib.dir}"/>
+      <sysproperty key="java.library.path" file="${lib.home}"/>
       <sysproperty key="basedir" file="${work.dir}"/>
       <sysproperty key="maxtuples" value="${max.tuples}"/>
       <arg file="${dlog.file}"/>
