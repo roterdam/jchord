@@ -397,7 +397,7 @@
       <pathelement location="src/locks/dlog"/>
       <pathelement location="src/escape/static/dlog"/>
     </path>
-    <property name="chord.analyses" value="datarace-java"/>
+    <property name="chord.run.analyses" value="datarace-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
     <antcall target="run"/>
@@ -422,7 +422,7 @@
       <pathelement location="src/locks/dlog"/>
       <pathelement location="src/escape/static/dlog"/>
     </path>
-    <property name="chord.analyses" value="deadlock-java"/>
+    <property name="chord.run.analyses" value="deadlock-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
     <antcall target="run"/>
@@ -442,7 +442,7 @@
       <pathelement location="src/alias/ci/dlog"/>
       <pathelement location="src/alias/cs/dlog"/>
     </path>
-    <property name="chord.analyses" value="downcast-java"/>
+    <property name="chord.run.analyses" value="downcast-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
     <antcall target="run"/>
@@ -462,7 +462,7 @@
       <pathelement location="src/alias/ci/dlog"/>
       <pathelement location="src/alias/cs/dlog"/>
     </path>
-    <property name="chord.analyses" value="monosite-java"/>
+    <property name="chord.run.analyses" value="monosite-java"/>
     <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
     <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
     <antcall target="run"/>
