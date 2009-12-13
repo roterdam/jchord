@@ -77,7 +77,7 @@ public class Properties {
 		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
 	}
 	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
-	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude", DEFAULT_EXCLUDES);
+	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude", "");
 	public final static String checkExcludeStr = System.getProperty("chord.check.exclude", DEFAULT_EXCLUDES);
 	public final static String instrExcludeStr = System.getProperty("chord.instr.exclude", DEFAULT_EXCLUDES);
 
