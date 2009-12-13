@@ -25,7 +25,6 @@ import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
-import chord.util.StringUtils;
  
 import joeq.Class.PrimordialClassLoader;
 import joeq.Util.Templates.ListIterator;
@@ -84,8 +83,8 @@ public class Program {
 		if (Properties.doSSA)
 			jq_Method.doSSA();
 		try {
-			scopeExcludedPrefixes = StringUtils.toArray(
-        		Properties.scopeExcludeStr, Properties.LIST_SEPARATOR);
+			scopeExcludedPrefixes = Properties.toArray(
+        		Properties.scopeExcludeStr);
 			boolean filesExist =
 				(new File(Properties.classesFileName)).exists() &&
 				(new File(Properties.methodsFileName)).exists();

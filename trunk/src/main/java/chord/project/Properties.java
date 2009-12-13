@@ -29,10 +29,10 @@ public class Properties {
 	public final static String propsFileName = System.getProperty("chord.props.file");
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
-	public static String bddLibDirName = System.getProperty("chord.bdd.lib.dir");
+	public static String libDirName = System.getProperty("chord.lib.dir");
 	static {
-		if (bddLibDirName == null)
-			bddLibDirName = FileUtils.getAbsolutePath(homeDirName, "lib");
+		if (libDirName == null)
+			libDirName = FileUtils.getAbsolutePath(homeDirName, "lib");
 	}
 	public static String instrAgentFileName = System.getProperty("chord.instr.agent.file");
 	static {
@@ -96,7 +96,7 @@ public class Properties {
 	}
 	public final static boolean publishTargets = buildBoolProp("chord.publish.targets", false);
 	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
-	public final static String analyses = System.getProperty("chord.analyses");
+	public final static String runAnalyses = System.getProperty("chord.run.analyses");
 	public final static String checkExcludeStr =
 		System.getProperty("chord.check.exclude", DEFAULT_EXCLUDES);
 	public final static boolean publishResults = buildBoolProp("chord.publish.results", true);
@@ -136,53 +136,75 @@ public class Properties {
 
 	public static void print() {
 		System.out.println("******************************");
+
+		System.out.println("*** Chord boot properties:");
 		System.out.println("chord.work.dir: " + workDirName);
-		System.out.println("chord.out.dir: " + outDirName);
-		System.out.println("chord.out.file: " + outFileName);
-		System.out.println("chord.err.file: " + errFileName);
-		System.out.println("chord.home.dir: " + homeDirName);
 		System.out.println("chord.props.file: " + propsFileName);
-		System.out.println("chord.main.class.path: " + mainClassPathName);
-		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
-		System.out.println("chord.bdd.lib.dir: " + bddLibDirName);
-		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
 		System.out.println("chord.max.heap: " + maxHeap);
 		System.out.println("chord.max.stack: " + maxStack);
 		System.out.println("chord.jvmargs: " + jvmargs);
+		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
+
+		System.out.println("*** Chord task properties:");
+		System.out.println("chord.build.scope: " + buildScope);
+		System.out.println("chord.run.analyses: " + runAnalyses);
+		System.out.println("chord.print.rels: " + printRels);
+		System.out.println("chord.publish.targets: " + publishTargets);
+
+		System.out.println("*** Basic program properties:");
 		System.out.println("chord.main.class: " + mainClassName);
 		System.out.println("chord.class.path: " + classPathName);
 		System.out.println("chord.src.path: " + srcPathName);
-		System.out.println("chord.build.scope: " + buildScope);
+		System.out.println("chord.run.ids: " + runIDs);
+		// TODO: args.XXX
+		System.out.println("chord.runtime.jvmargs: " + runtimeJvmargs);
+
+		System.out.println("*** Program scope properties:");
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
-		System.out.println("chord.classes.file: " + classesFileName);
-		System.out.println("chord.methods.file: " + methodsFileName);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
+		System.out.println("chord.check.exclude: " + checkExcludeStr);
+		System.out.println("chord.instr.exclude: " + instrExcludeStr);
+
+		System.out.println("*** Program analysis properties:");
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
-		System.out.println("chord.analyses: " + analyses);
-		System.out.println("chord.check.exclude: " + checkExcludeStr);
 		System.out.println("chord.reuse.rels: " + reuseRels);
-		System.out.println("chord.print.rels: " + printRels);
-		System.out.println("chord.javadoc.url: " + javadocURL);
-		System.out.println("chord.publish.targets: " + publishTargets);
 		System.out.println("chord.publish.results: " + publishResults);
-		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
-		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
+
+		System.out.println("*** Program transformation properties:");
+		System.out.println("chord.ssa: " + doSSA);
+
+		System.out.println("*** Chord debug properties:");
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
 		System.out.println("chord.save.maps: " + saveDomMaps);
-		System.out.println("chord.instr.exclude: " + instrExcludeStr);
-		System.out.println("chord.run.ids: " + runIDs);
-		System.out.println("chord.runtime.jvmargs: " + runtimeJvmargs);
+
+		System.out.println("*** Chord instrumentation properties:");
+		System.out.println("chord.trace.pipe: " + doTracePipe);
+		System.out.println("chord.trace.block.size: " + traceBlockSize);
+		System.out.println("chord.runtime.class: " + runtimeClassName);
+
+		System.out.println("*** Chord output properties:");
+		System.out.println("chord.out.dir: " + outDirName);
+		System.out.println("chord.out.file: " + outFileName);
+		System.out.println("chord.err.file: " + errFileName);
+		System.out.println("chord.classes.file: " + classesFileName);
+		System.out.println("chord.methods.file: " + methodsFileName);
+		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
 		System.out.println("chord.user.classes.dir: " + userClassesDirName);
 		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
 		System.out.println("chord.crude.trace.file: " + crudeTraceFileName);
 		System.out.println("chord.final.trace.file: " + finalTraceFileName);
-		System.out.println("chord.trace.pipe: " + doTracePipe);
-		System.out.println("chord.trace.block.size: " + traceBlockSize);
-		System.out.println("chord.runtime.class: " + runtimeClassName);
-		System.out.println("chord.ssa: " + doSSA);
+
+		System.out.println("*** Chord resource properties:");
+		System.out.println("chord.home.dir: " + homeDirName);
+		System.out.println("chord.lib.dir: " + libDirName);
+		System.out.println("chord.main.class.path: " + mainClassPathName);
+		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
+		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
+		System.out.println("chord.javadoc.url: " + javadocURL);
+
 		System.out.println("******************************");
 	}
 	private static String build(String propName, String fileName) {
@@ -192,5 +214,8 @@ public class Properties {
 	}
 	private static boolean buildBoolProp(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
+	}
+	public static String[] toArray(String str) {
+        return str.equals("") ? new String[0] : str.split(LIST_SEPARATOR);
 	}
 }

@@ -11,7 +11,6 @@ import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ProgramRel;
 import chord.project.Properties;
-import chord.util.StringUtils;
 
 /**
  * Relation containing each type t the prefix of whose name
@@ -27,8 +26,8 @@ import chord.util.StringUtils;
 public class RelCheckExcludedT extends ProgramRel {
 	public void fill() {
 		DomT domT = (DomT) doms[0];
-		String[] checkExcludedPrefixes = StringUtils.toArray(
-			Properties.checkExcludeStr, Properties.LIST_SEPARATOR);
+		String[] checkExcludedPrefixes = Properties.toArray(
+			Properties.checkExcludeStr);
 		for (jq_Class c : Program.v().getPreparedClasses()) {
 			String cName = c.getName();
 			for (String prefix : checkExcludedPrefixes) {

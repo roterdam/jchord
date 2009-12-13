@@ -31,7 +31,6 @@ import chord.runtime.Runtime;
 import chord.util.IndexHashMap;
 import chord.util.IndexMap;
 import chord.util.IndexSet;
-import chord.util.StringUtils;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -371,8 +370,8 @@ public class Instrumentor {
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String userClassesDirName = Properties.userClassesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
-		String[] instrExcludedPrefixes = StringUtils.toArray(
-			Properties.instrExcludeStr, Properties.LIST_SEPARATOR);
+		String[] instrExcludedPrefixes = Properties.toArray(
+			Properties.instrExcludeStr);
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
