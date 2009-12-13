@@ -22,6 +22,58 @@ public class Properties {
 
 	// Chord boot properties
 
+	public static String workDirName = System.getProperty("chord.work.dir");
+	static {
+		if (workDirName == null)
+			workDirName = System.getProperty("user.dir");
+	}
+	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
+
+	// Chord task properties
+
+	public final static boolean buildScope = buildBoolProp("chord.build.scope", false);
+	public final static String runAnalyses = System.getProperty("chord.run.analyses", "");
+	public final static String printRels = System.getProperty("chord.print.rels", "");
+	public final static boolean publishTargets = buildBoolProp("chord.publish.targets", false);
+
+	// Basic program properties
+
+	public final static String mainClassName = System.getProperty("chord.main.class");
+	public final static String classPathName = System.getProperty("chord.class.path");
+	public final static String srcPathName = System.getProperty("chord.src.path");
+	public final static String runIDs = System.getProperty("chord.run.ids", "0");
+	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
+
+	// Program scope properties
+
+	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
+	static {
+		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
+	}
+	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
+	public final static String classesFileName = build("chord.classes.file", "classes.txt");
+	public final static String methodsFileName = build("chord.methods.file", "methods.txt");
+	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude", DEFAULT_EXCLUDES);
+	public final static String checkExcludeStr = System.getProperty("chord.check.exclude", DEFAULT_EXCLUDES);
+	public final static String instrExcludeStr = System.getProperty("chord.instr.exclude", DEFAULT_EXCLUDES);
+
+	// Program analysis properties
+
+	public static String javaAnalysisPathName = System.getProperty("chord.java.analysis.path");
+	static {
+		if (javaAnalysisPathName == null)
+			javaAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "classes/main");
+	}
+	public static String dlogAnalysisPathName =
+		System.getProperty("chord.dlog.analysis.path");
+	static {
+		if (dlogAnalysisPathName == null) {
+			dlogAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "src/main/dlog");
+		}
+	}
+	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
+	public final static boolean publishResults = buildBoolProp("chord.publish.results", true);
+
 	public final static String homeDirName = System.getProperty("chord.home.dir");
 	static {
 		assert(homeDirName != null);
@@ -47,11 +99,6 @@ public class Properties {
 
 	// Chord I/O properties
 
-	public static String workDirName = System.getProperty("chord.work.dir");
-	static {
-		if (workDirName == null)
-			workDirName = System.getProperty("user.dir");
-	}
 	public static String outDirName = System.getProperty("chord.out.dir");
 	static {
 		if (outDirName == null)
@@ -61,46 +108,8 @@ public class Properties {
 	public final static String outFileName = build("chord.out.file", "log.txt");
 	public final static String errFileName = build("chord.err.file", "log.txt");
 
-    // Program properties
-
-	public final static String mainClassName = System.getProperty("chord.main.class");
-	public final static String classPathName = System.getProperty("chord.class.path");
-	public final static String srcPathName = System.getProperty("chord.src.path");
-	
-    // Program scope properties
-
-	public final static boolean buildScope = buildBoolProp("chord.build.scope", false);
-	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
-	static {
-		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
-	}
-	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
-	public final static String classesFileName = build("chord.classes.file", "classes.txt");
-	public final static String methodsFileName = build("chord.methods.file", "methods.txt");
-	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude", "");
-
     // Program analysis properties
 
-	public static String javaAnalysisPathName =
-		System.getProperty("chord.java.analysis.path");
-	static {
-		if (javaAnalysisPathName == null)
-			javaAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "classes/main");
-	}
-	public static String dlogAnalysisPathName =
-		System.getProperty("chord.dlog.analysis.path");
-	static {
-		if (dlogAnalysisPathName == null) {
-			dlogAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "src/main/dlog");
-		}
-	}
-	public final static boolean publishTargets = buildBoolProp("chord.publish.targets", false);
-	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
-	public final static String runAnalyses = System.getProperty("chord.run.analyses");
-	public final static String checkExcludeStr =
-		System.getProperty("chord.check.exclude", DEFAULT_EXCLUDES);
-	public final static boolean publishResults = buildBoolProp("chord.publish.results", true);
-	public final static String printRels = System.getProperty("chord.print.rels", "");
 
     // BDD-based Datalog solver properties
 
@@ -110,16 +119,11 @@ public class Properties {
 			bddbddbWorkDirName = FileUtils.getAbsolutePath(outDirName, "bddbddb");
 		FileUtils.mkdirs(bddbddbWorkDirName);
 	}
-	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 	public final static boolean bddbddbNoisy = buildBoolProp("chord.bddbddb.noisy", false);
 	public final static boolean saveDomMaps = buildBoolProp("chord.save.maps", true);
 
 	// Program instrumentation properties
 
-	public final static String instrExcludeStr =
-		System.getProperty("chord.instr.exclude", DEFAULT_EXCLUDES);
-	public final static String runIDs = System.getProperty("chord.run.ids", "0");
-	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
 	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
 	public final static String userClassesDirName = build("chord.user.classes.dir", "user_classes");
 	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
