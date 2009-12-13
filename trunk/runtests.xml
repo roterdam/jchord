@@ -102,7 +102,7 @@
     <ant target="run">
       <property name="chord.work.dir" value="${testdir}"/>
       <property name="chord.reuse.scope" value="true"/>
-      <property name="chord.analyses" value="${chord.main.doms_and_rels}"/>
+      <property name="chord.run.analyses" value="${chord.main.doms_and_rels}"/>
       <property name="chord.print.rels" value="${chord.main.rels}"/>
     </ant>
     <antcall target="compare-doms">
@@ -134,7 +134,7 @@
       <property name="chord.reuse.scope" value="true"/>
       <property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
       <property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-      <property name="chord.analyses" value="cipa-0cfa-dlog,thrOblAbbrCICG-dlog,thrSenAbbrCICG-dlog"/>
+      <property name="chord.run.analyses" value="cipa-0cfa-dlog,thrOblAbbrCICG-dlog,thrSenAbbrCICG-dlog"/>
       <property name="chord.print.rels" value="${chord.cia.rels}"/>
     </ant>
     <antcall target="compare-rels">
@@ -153,7 +153,7 @@
       <property name="chord.reuse.scope" value="true"/>
       <property name="chord.java.analysis.path" refid="csa_java_analysis_path"/>
       <property name="chord.dlog.analysis.path" refid="csa_dlog_analysis_path"/>
-      <property name="chord.analyses" value="cspa-0cfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+      <property name="chord.run.analyses" value="cspa-0cfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
       <property name="chord.print.rels" value="${chord.csa.rels}"/>
     </ant>
     <antcall target="compare-rels">
@@ -174,7 +174,7 @@
       <property name="chord.dlog.analysis.path" refid="csa_dlog_analysis_path"/>
       <property name="chord.inst.ctxt.kind" value="co"/>
       <property name="chord.kobj.k" value="1"/>
-      <property name="chord.analyses" value="cspa-kobj-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+      <property name="chord.run.analyses" value="cspa-kobj-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
       <property name="chord.print.rels" value="${chord.csa.rels}"/>
     </ant>
     <antcall target="compare-rels">
@@ -195,7 +195,7 @@
       <property name="chord.dlog.analysis.path" refid="csa_dlog_analysis_path"/>
       <property name="chord.inst.ctxt.kind" value="cs"/>
       <property name="chord.kcfa.k" value="1"/>
-      <property name="chord.analyses" value="cspa-kcfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+      <property name="chord.run.analyses" value="cspa-kcfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
       <property name="chord.print.rels" value="${chord.csa.rels}"/>
     </ant>
     <antcall target="compare-rels">
@@ -218,7 +218,7 @@
       <property name="chord.stat.ctxt.kind" value="cs"/>
       <property name="chord.kobj.k" value="1"/>
       <property name="chord.kcfa.k" value="1"/>
-      <property name="chord.analyses" value="cspa-hybrid-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+      <property name="chord.run.analyses" value="cspa-hybrid-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
       <property name="chord.print.rels" value="${chord.csa.rels}"/>
     </ant>
     <antcall target="compare-rels">
