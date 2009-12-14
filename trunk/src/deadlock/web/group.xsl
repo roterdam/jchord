@@ -107,7 +107,7 @@
 				<xsl:variable name="M4id" select="@M4id"/>
 				[<a href="path_{$T2Cid}_{$T2Mid}_{$C3id}_{$M3id}.html">Shortest path from thread root to first lock</a>]
 				<xsl:if test="$M3id != $M4id or $C3id != $C4id">
-					[<a href="path_{$C3id}_{$M3id}_{$C4id}_{$M4id}.html">Shortest path from first to second lock</a>]
+					[<a href="path_{$C3id}_{$M3id}_{$C4id}_{$M4id}.html">Shortest path from first lock to second lock</a>]
 				</xsl:if>
 			</td>
 		</tr>
