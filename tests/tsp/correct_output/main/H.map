@@ -24,4 +24,3 @@
 7!<init>:()V@TourElement
 7!<init>:()V@TspSolver
 97!main:([Ljava/lang/String;)V@Tsp
-null

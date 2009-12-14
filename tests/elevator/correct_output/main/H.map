@@ -30,4 +30,3 @@
 72!<init>:(ILelevator/Controls;)V@elevator.Lift
 78!doMoving:()V@elevator.Lift
 8!<init>:(I)V@elevator.Controls
-null
