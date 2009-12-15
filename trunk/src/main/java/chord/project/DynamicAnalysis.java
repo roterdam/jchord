@@ -25,6 +25,7 @@ import chord.util.IndexMap;
 import chord.util.ChordRuntimeException;
 
 /**
+ * Generic implementation of a dynamic program analysis (a specialized kind of Java task).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

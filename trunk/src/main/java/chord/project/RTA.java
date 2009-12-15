@@ -38,6 +38,8 @@ import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 
 /**
+ * Rapid Type Analysis algorithm for computing program scope
+ * (reachable classes and methods).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

@@ -5,7 +5,9 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Class;
 
 /**
- * 
+ * Generic interface for algorithms computing program scope
+ * (reachable classes and methods).
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public interface IBootstrapper {

@@ -2,7 +2,26 @@
 <!--
   Test runner for Chord.
 -->
-<project name="chord-tester" default="test-all" basedir=".">
+<project name="chord-tester" default="help" basedir=".">
+
+	<property name="test.dirs" value="philo,sor,elevator,tsp,hedc"/>
+
+	<target name="help">
+		<echo>
+		test-all Test all Chord components
+		         Optional properties:
+		         - test.dirs       (comma-separated list of directories under test/ to be included; default="${test.dirs}")
+		test     Test only chosen Chord components
+		         Optional properties:
+		         - test.dirs       (comma-separated list of directories under test/ to be included; default="${test.dirs}")
+		         - test.main       (test basic program domains and relations; default=false)
+		         - test.cia        (test 0-CFA may alias and call graph analyses; default=false)
+		         - test.csa.0cfa   (test context-sensitive adaptor for 0-CFA may alias and call graph analyses; default=false)
+		         - test.csa.kobj   (test k-object-sensitive may alias and call graph analyses; default=false)
+		         - test.csa.kcfa   (test k-CFA may alias and call graph analyses; default=false)
+		         - test.csa.hybrid (test hybrid context-sensitive may alias and call graph analyses; default=false)
+		</echo>
+	</target>
 
 	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="tools/ant-contrib.jar"/>
 
@@ -27,6 +46,9 @@
 		<pathelement location="src/alias/cs/dlog"/>
 	</path>
 
+	<!--
+		Test all Chord components.
+	-->
 	<target name="test-all">
 		<property name="test.main" value="true"/>
 		<property name="test.cia" value="true"/>
@@ -37,9 +59,12 @@
 		<antcall target="test"/>
 	</target>
 
+	<!--
+		Test only chosen Chord components.
+	-->
 	<target name="test">
 		<for param="testdir">
-			<dirset dir="tests" includes="*"/>
+			<dirset dir="tests" includes="${test.dirs}"/>
 			<sequential>
 				<echo message="===== Benchmark: @{testdir}"/>
 				<ant dir="@{testdir}" target="clean"/>
@@ -110,6 +135,10 @@
 	</target>
 
 	<!--
+		INTERNAL TARGETS
+	-->
+
+	<!--
 		Test basic program domains and relations.
 	-->
 	<target name="test-main">
@@ -133,7 +162,7 @@
 	</target>
 
 	<!--
-		Test context-insensitive may-alias and call-graph analysis.
+		Test 0-CFA may-alias and call-graph analyses.
 	-->
 	<target name="test-cia">
 		<fail unless="testdir"/>
@@ -161,7 +190,7 @@
 	</target>
 
 	<!--
-		Test context-sensitive may-alias and call-graph analysis (0CFA version)
+		Test context-sensitive adaptor for 0-CFA may-alias and call-graph analyses.
 	-->
 	<target name="test-csa-0cfa">
 		<fail unless="testdir"/>
@@ -181,7 +210,7 @@
 	</target>
 
 	<!--
-		Test context-sensitive may-alias and call-graph analysis (k-object-sensitive version)
+		Test k-object-sensitive may-alias and call-graph analyses.
 	-->
 	<target name="test-csa-kobj">
 		<ant target="run">
@@ -202,7 +231,7 @@
 	</target>
 
 	<!--
-		Test context-sensitive may-alias and call-graph analysis (kCFA version)
+		Test k-CFA may-alias and call-graph analyses.
 	-->
 	<target name="test-csa-kcfa">
 	<ant target="run">
@@ -223,7 +252,7 @@
 	</target>
 
 	<!--
-		Test context-sensitive may-alias and call-graph analysis (hybrid version)
+		Test hybrid context-sensitive may-alias and call-graph analyses.
 	-->
 	<target name="test-csa-hybrid">
 		<fail unless="testdir"/>

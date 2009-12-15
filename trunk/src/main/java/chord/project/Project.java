@@ -38,10 +38,9 @@ import chord.bddbddb.RelSign;
 import chord.bddbddb.Dom;
 
 /**
- * A project.
+ * A Chord project comprising a set of tasks and a set of targets
+ * produced/consumed by those tasks.
  * 
- * It encapsulates all program analyses in scope.
- *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Project {

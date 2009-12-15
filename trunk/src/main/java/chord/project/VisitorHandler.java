@@ -53,7 +53,9 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.Templates.ListIterator;
 
 /**
- * 
+ * Utility for registering and executing a set of tasks
+ * as visitors over program representation.
+ *
  * @author Mayur Naik (mayur.naik@intel.com)
  */
 public class VisitorHandler {
