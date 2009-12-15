@@ -112,7 +112,7 @@ public class Properties {
 	public final static boolean doTracePipe = buildBoolProp("chord.trace.pipe", true);
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 	public final static String runtimeClassName =
-		System.getProperty("chord.runtime.class", "chord.project.BufferedRuntime");
+		System.getProperty("chord.runtime.class", chord.runtime.BufferedRuntime.class.getName());
 
 	// Chord output properties
 
