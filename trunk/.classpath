@@ -24,6 +24,6 @@
 	<classpathentry kind="lib" path="lib/javassist.jar"/>
 	<classpathentry kind="lib" path="lib/joeq.jar"/>
 	<classpathentry kind="lib" path="lib/jwutil.jar"/>
-	<classpathentry kind="lib" path="tools/java2html.jar"/>
+	<classpathentry kind="lib" path="lib/java2html.jar"/>
 	<classpathentry kind="output" path="output"/>
 </classpath>
