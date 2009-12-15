@@ -29,7 +29,6 @@ import gnu.trove.TIntArrayList;
 /**
  * Dynamic thread-escape analysis.
  * 
- * <p>
  * Outputs the following relations:
  * <ul>
  * <li><tt>visitedE</tt> containing each heap-accessing statement 
@@ -40,7 +39,8 @@ import gnu.trove.TIntArrayList;
  * </ul>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.convert</tt> (default is false).</li>
+ * <li><tt>chord.convert</tt> ([true|false]; default=false)</li>
+ * <li><tt>chord.escape.dynamic.kind</tt> ([fi|fsw|fss]; default=fss)</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -48,9 +48,16 @@ import gnu.trove.TIntArrayList;
 @Chord(
 	name = "dynamic-thresc-java",
 	namesOfSigns = { "visitedE", "escE" },
-	signs = { "E0", "E0", "E0" }
+	signs = { "E0", "E0" }
 )
 public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
+	enum Kind {
+		FLOWINS,
+		FLOWSEN_WEAK,
+		FLOWSEN_STRONG
+	};
+	Kind kind;
+
     // set of all currently escaping objects
     private TIntHashSet escObjs;
 
@@ -87,10 +94,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	protected ProgramRel relVisitedE;
 	protected ProgramRel relEscE;
 	private int numE;
-
-	private boolean isFlowIns;
-	private boolean isFlowSen;
-
 	private int numH;
 	private boolean convert;
 
@@ -120,6 +123,19 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     }
 
 	public void initAllPasses() {
+		String kindStr = System.getProperty("chord.escape.dynamic.kind", "fss");
+		if (kindStr.equals("fi"))
+			kind = Kind.FLOWINS;
+		else if (kindStr.equals("fss"))
+			kind = Kind.FLOWSEN_STRONG;
+		else if (kindStr.equals("fsw"))
+			kind = Kind.FLOWSEN_WEAK;
+		else {
+			throw new ChordRuntimeException(
+				"Unknown value for property chord.escape.dynamic.kind: " + kindStr);
+		}
+		System.out.println("KIND: " + kind + " " + kindStr);
+		
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
 		numE = instrumentor.getEmap().size();
@@ -129,7 +145,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
 			relEscE = (ProgramRel) Project.getTrgt("escE");
 		}
-		if (isFlowIns) {
+		if (kind == Kind.FLOWINS) {
 			numH = instrumentor.getHmap().size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
 			isHidxEsc = new boolean[numH];
@@ -140,7 +156,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public void initPass() {
 		escObjs.clear();
 		objToFldObjs.clear();
-		if (isFlowSen) {
+		if (kind == Kind.FLOWINS) {
 			for (int i = 0; i < numH; i++) {
 				HidxToPendingEidxs[i] = null;
 			}
@@ -162,7 +178,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 					numEscE++;
 			}
 		}
-		if (isFlowIns) {
+		if (kind == Kind.FLOWINS) {
 			for (int i = 0; i < numH; i++) {
 				if (isHidxEsc[i])
 					numAllocEsc++;
@@ -215,7 +231,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		if (o != 0) {
 			objToFldObjs.remove(o);
 			escObjs.remove(o);
-			if (isFlowIns) {
+			if (kind == Kind.FLOWINS) {
 				objToHidx.remove(o);
 				if (h >= 0)
 					objToHidx.put(o, h);
@@ -259,11 +275,10 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	private void processHeapRd(int e, int b) {
 		if (e >= 0 && b != 0) {
 			isEidxVisited[e] = true;
-			if (isFlowSen) {
+			if (kind == Kind.FLOWSEN_STRONG || kind == Kind.FLOWSEN_WEAK) {
 				if (!isEidxEsc[e] && escObjs.contains(b))
 					isEidxEsc[e] = true;
-			}
-			if (isFlowIns) {
+			} else if (kind == Kind.FLOWINS) {
 				if (!isEidxEsc[e]) {
 					if (objToHidx.containsKey(b)) {
 						int h = objToHidx.get(b);
@@ -288,6 +303,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		processHeapRd(e, b);
 		if (b != 0 && fIdx >= 0) {
 			if (r == 0) {
+				if (kind == Kind.FLOWSEN_WEAK)
+					return;
 				// remove field fIdx if it is there
 				List<FldObj> l = objToFldObjs.get(b);
 				if (l != null) {
@@ -302,22 +319,43 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				}
 			} else {
 				List<FldObj> l = objToFldObjs.get(b);
+				boolean added = false;
 				if (l == null) {
 					l = new ArrayList<FldObj>();
 					objToFldObjs.put(b, l);
-				} else {
+				} else if (kind != Kind.FLOWSEN_WEAK) {
 					int n = l.size();
 					for (int i = 0; i < n; i++) {
 						FldObj fo = (FldObj) l.get(i);
 						if (fo.f == fIdx) {
 							fo.o = r;
-							return;
+							added = true;
+							break;
 						}
 					}
 				}
-				l.add(new FldObj(fIdx, r));
+				if (!added)
+					l.add(new FldObj(fIdx, r));
 				if (escObjs.contains(b))
 					markAndPropEsc(r);
+			}
+		}
+	}
+    private void markAndPropEsc(int o) {
+        if (escObjs.add(o)) {
+        	if (kind == Kind.FLOWINS) {
+				if (objToHidx.containsKey(o)) {
+					int h = objToHidx.get(o);
+					markHesc(h);
+				}
+        	}
+			List<FldObj> l = objToFldObjs.get(o);
+			if (l != null) {
+				int n = l.size();
+				for (int i = 0; i < n; i++) {
+					FldObj fo = (FldObj) l.get(i);
+					markAndPropEsc(fo.o);
+				}
 			}
 		}
 	}
@@ -332,24 +370,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 					isEidxEsc[e] = true;
 				}
 				HidxToPendingEidxs[h] = null;
-			}
-		}
-	}
-    private void markAndPropEsc(int o) {
-        if (escObjs.add(o)) {
-        	if (isFlowSen) {
-				if (objToHidx.containsKey(o)) {
-					int h = objToHidx.get(o);
-					markHesc(h);
-				}
-        	}
-			List<FldObj> l = objToFldObjs.get(o);
-			if (l != null) {
-				int n = l.size();
-				for (int i = 0; i < n; i++) {
-					FldObj fo = (FldObj) l.get(i);
-					markAndPropEsc(fo.o);
-				}
 			}
 		}
 	}
