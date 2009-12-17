@@ -12,6 +12,7 @@ import java.io.File;
 import java.util.List;
 import java.util.ArrayList;
 
+import chord.util.IntArraySet;
 import chord.util.ChordRuntimeException;
 import chord.project.Properties;
 import chord.util.IndexMap;
@@ -40,7 +41,6 @@ import gnu.trove.TIntArrayList;
  * Recognized system properties:
  * <ul>
  * <li><tt>chord.convert</tt> ([true|false]; default=false)</li>
- * <li><tt>chord.escape.dynamic.kind</tt> ([fi|fsw|fss]; default=fss)</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -51,18 +51,11 @@ import gnu.trove.TIntArrayList;
 	signs = { "E0", "E0" }
 )
 public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
-	enum Kind {
-		FLOWINS,
-		FLOWSEN_WEAK,
-		FLOWSEN_STRONG
-	};
-	Kind kind;
-
-    // set of all currently escaping objects
+	// set of IDs of currently escaping concrete/abstract objects
     private TIntHashSet escObjs;
 
-	// map from each object to a list containing each non-null-valued
-	// instance field of reference type along with that value
+	// map from each concrete object ID to a list of each instance field
+	// of reference type along with its value (a concrete object ID)
 	private TIntObjectHashMap<List<FldObj>> objToFldObjs;
 
     // map from each object to the index in domain H of its alloc site
@@ -91,19 +84,20 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     //    index e in domain E is flow-ins. thread-escaping
 	private boolean[] isEidxEsc;
 
-	protected ProgramRel relVisitedE;
-	protected ProgramRel relEscE;
 	private int numE;
 	private int numH;
 	private boolean convert;
+	private boolean isFlowIns;
 
-    protected InstrScheme instrScheme;
+    private InstrScheme instrScheme;
+
+	private ProgramRel relVisitedE;
+	private ProgramRel relEscE;
+
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null)
     		return instrScheme;
     	instrScheme = new InstrScheme();
-    	boolean convert = System.getProperty(
-    		"chord.convert", "false").equals("true");
     	if (convert)
     		instrScheme.setConvert();
     	instrScheme.setNewAndNewArrayEvent(true, false, true);
@@ -119,23 +113,19 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     	instrScheme.setPutfieldReferenceEvent(true, false, true, true, true);
     	instrScheme.setAloadReferenceEvent(true, false, true, false, false);
     	instrScheme.setAstoreReferenceEvent(true, false, true, true, true);
+
     	return instrScheme;
     }
 
+	public void run() {
+    	convert = System.getProperty(
+			"chord.convert", "false").equals("true");
+		isFlowIns = System.getProperty(
+			"chord.escape.dynamic.flowins", "false").equals("true");
+		super.run();
+	}
+
 	public void initAllPasses() {
-		String kindStr = System.getProperty("chord.escape.dynamic.kind", "fss");
-		if (kindStr.equals("fi"))
-			kind = Kind.FLOWINS;
-		else if (kindStr.equals("fss"))
-			kind = Kind.FLOWSEN_STRONG;
-		else if (kindStr.equals("fsw"))
-			kind = Kind.FLOWSEN_WEAK;
-		else {
-			throw new ChordRuntimeException(
-				"Unknown value for property chord.escape.dynamic.kind: " + kindStr);
-		}
-		System.out.println("KIND: " + kind + " " + kindStr);
-		
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
 		numE = instrumentor.getEmap().size();
@@ -145,7 +135,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
 			relEscE = (ProgramRel) Project.getTrgt("escE");
 		}
-		if (kind == Kind.FLOWINS) {
+		if (isFlowIns) {
 			numH = instrumentor.getHmap().size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
 			isHidxEsc = new boolean[numH];
@@ -156,7 +146,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public void initPass() {
 		escObjs.clear();
 		objToFldObjs.clear();
-		if (kind == Kind.FLOWINS) {
+		if (isFlowIns) {
 			for (int i = 0; i < numH; i++) {
 				HidxToPendingEidxs[i] = null;
 			}
@@ -178,7 +168,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 					numEscE++;
 			}
 		}
-		if (kind == Kind.FLOWINS) {
+		if (isFlowIns) {
 			for (int i = 0; i < numH; i++) {
 				if (isHidxEsc[i])
 					numAllocEsc++;
@@ -228,40 +218,55 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	}
 
 	public void processNewOrNewArray(int h, int t, int o) {
-		if (o != 0) {
-			objToFldObjs.remove(o);
-			escObjs.remove(o);
-			if (kind == Kind.FLOWINS) {
-				objToHidx.remove(o);
-				if (h >= 0)
-					objToHidx.put(o, h);
-			}
+		if (o == 0)
+			return;
+		objToFldObjs.remove(o);
+		escObjs.remove(o);
+		if (isFlowIns) {
+			objToHidx.remove(o);
+			if (h >= 0)
+				objToHidx.put(o, h);
 		}
-	}
-	public void processGetfieldReference(int e, int t, int b, int f, int o) { 
-		processHeapRd(e, b);
-	}
-	public void processPutfieldReference(int e, int t, int b, int f, int o) {
-		processHeapWr(e, b, f, o);
-	}
-	public void processAloadReference(int e, int t, int b, int i, int o) { 
-		processHeapRd(e, b);
-	}
-	public void processAstoreReference(int e, int t, int b, int i, int o) {
-		processHeapWr(e, b, i, o);
 	}
 
 	public void processGetfieldPrimitive(int e, int t, int b, int f) { 
-		processHeapRd(e, b);
+		if (e >= 0)
+			processHeapRd(e, b);
 	}
-	public void processPutfieldPrimitive(int e, int t, int b, int f) {
-		processHeapRd(e, b);
-	}
+
 	public void processAloadPrimitive(int e, int t, int b, int i) { 
-		processHeapRd(e, b);
+		if (e >= 0)
+			processHeapRd(e, b);
 	}
+
+	public void processGetfieldReference(int e, int t, int b, int f, int o) { 
+		if (e >= 0)
+			processHeapRd(e, b);
+	}
+
+	public void processAloadReference(int e, int t, int b, int i, int o) { 
+		if (e >= 0)
+			processHeapRd(e, b);
+	}
+
+	public void processPutfieldPrimitive(int e, int t, int b, int f) {
+		if (e >= 0)
+			processHeapRd(e, b);
+	}
+
 	public void processAstorePrimitive(int e, int t, int b, int i) {
-		processHeapRd(e, b);
+		if (e >= 0)
+			processHeapRd(e, b);
+	}
+
+	public void processPutfieldReference(int e, int t, int b, int f, int o) {
+		if (e >= 0)
+			processHeapWr(e, b, f, o);
+	}
+
+	public void processAstoreReference(int e, int t, int b, int i, int o) {
+		if (e >= 0)
+			processHeapWr(e, b, i, o);
 	}
 
 	public void processPutstaticReference(int e, int t, int b, int f, int o) { 
@@ -272,93 +277,90 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		if (o != 0)
 			markAndPropEsc(o);
 	}
+
 	private void processHeapRd(int e, int b) {
-		if (e >= 0 && b != 0) {
-			isEidxVisited[e] = true;
-			if (kind == Kind.FLOWSEN_STRONG || kind == Kind.FLOWSEN_WEAK) {
-				if (!isEidxEsc[e] && escObjs.contains(b))
+		if (isEidxEsc[e])
+			return;
+		isEidxVisited[e] = true;
+		if (b == 0)
+			return;
+		if (isFlowIns) {
+			if (objToHidx.containsKey(b)) {
+				int h = objToHidx.get(b);
+				if (isHidxEsc[h]) {
 					isEidxEsc[e] = true;
-			} else if (kind == Kind.FLOWINS) {
-				if (!isEidxEsc[e]) {
-					if (objToHidx.containsKey(b)) {
-						int h = objToHidx.get(b);
-						if (isHidxEsc[h]) {
-							isEidxEsc[e] = true;
-						} else {
-							TIntArrayList list = HidxToPendingEidxs[h];
-							if (list == null) {
-								list = new TIntArrayList();
-								HidxToPendingEidxs[h] = list;
-								list.add(e);
-							} else if (!list.contains(e)) {
-								list.add(e);
-							}
-						}
+				} else {
+					TIntArrayList list = HidxToPendingEidxs[h];
+					if (list == null) {
+						list = new TIntArrayList();
+						HidxToPendingEidxs[h] = list;
+						list.add(e);
+					} else if (!list.contains(e)) {
+						list.add(e);
 					}
 				}
 			}
+		} else {
+			if (escObjs.contains(b))
+				isEidxEsc[e] = true;
 		}
 	}
+
 	private void processHeapWr(int e, int b, int fIdx, int r) {
 		processHeapRd(e, b);
-		if (b != 0 && fIdx >= 0) {
-			if (r == 0) {
-				if (kind == Kind.FLOWSEN_WEAK)
-					return;
-				// remove field fIdx if it is there
-				List<FldObj> l = objToFldObjs.get(b);
-				if (l != null) {
-					int n = l.size();
-					for (int i = 0; i < n; i++) {
-						FldObj fo = (FldObj) l.get(i);
-						if (fo.f == fIdx) {
-							l.remove(i);
-							return;
-						}
+		if (b == 0 || fIdx < 0)
+			return;
+		List<FldObj> l = objToFldObjs.get(b);
+		if (r == 0) {
+			// this is a strong update; so remove field fIdx if it is there
+			if (l != null) {
+				int n = l.size();
+				for (int i = 0; i < n; i++) {
+					FldObj fo = l.get(i);
+					if (fo.f == fIdx) {
+						l.remove(i);
+						break;
 					}
 				}
-			} else {
-				List<FldObj> l = objToFldObjs.get(b);
-				boolean added = false;
-				if (l == null) {
-					l = new ArrayList<FldObj>();
-					objToFldObjs.put(b, l);
-				} else if (kind != Kind.FLOWSEN_WEAK) {
-					int n = l.size();
-					for (int i = 0; i < n; i++) {
-						FldObj fo = (FldObj) l.get(i);
-						if (fo.f == fIdx) {
-							fo.o = r;
-							added = true;
-							break;
-						}
-					}
+			}
+			return;
+		}
+		boolean added = false;
+		if (l == null) {
+			l = new ArrayList<FldObj>();
+			objToFldObjs.put(b, l);
+		} else {
+			for (FldObj fo : l) {
+				if (fo.f == fIdx) {
+					fo.o = r;
+					added = true;
+					break;
 				}
-				if (!added)
-					l.add(new FldObj(fIdx, r));
-				if (escObjs.contains(b))
-					markAndPropEsc(r);
 			}
 		}
+		if (!added)
+			l.add(new FldObj(fIdx, r));
+		if (escObjs.contains(b))
+			markAndPropEsc(r);
 	}
+
+
     private void markAndPropEsc(int o) {
-        if (escObjs.add(o)) {
-        	if (kind == Kind.FLOWINS) {
+		if (escObjs.add(o)) {
+			List<FldObj> l = objToFldObjs.get(o);
+			if (l != null) {
+				for (FldObj fo : l)
+					markAndPropEsc(fo.o);
+			}
+        	if (isFlowIns) {
 				if (objToHidx.containsKey(o)) {
 					int h = objToHidx.get(o);
 					markHesc(h);
 				}
         	}
-			List<FldObj> l = objToFldObjs.get(o);
-			if (l != null) {
-				int n = l.size();
-				for (int i = 0; i < n; i++) {
-					FldObj fo = (FldObj) l.get(i);
-					markAndPropEsc(fo.o);
-				}
-			}
 		}
 	}
+
 	private void markHesc(int h) {
 		if (!isHidxEsc[h]) {
 			isHidxEsc[h] = true;
@@ -378,5 +380,9 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 class FldObj {
     public int f;
     public int o;
-    public FldObj(int f, int o) { this.f = f; this.o = o; }
+    public FldObj(int f, int o) {
+		this.f = f;
+		this.o = o;
+	}
 }
+
