@@ -689,14 +689,28 @@ public class Instrumentor {
 		int id;
 		if (convert) {
 			id = map.indexOf(s);
-			if (id == -1) {
-				// throw new ChordRuntimeException("Element " + s +
-				//	" not found in map.");
-				return Runtime.UNKNOWN_FIELD_VAL;
-			}
+			if (id == -1)
+				id = Runtime.UNKNOWN_FIELD_VAL;
 		} else {
 			int n = map.size();
 			id = map.getOrAdd(bci + "!" + mStr);
+			assert (id == n);
+		}
+		return id;
+	}
+	protected int getFid(CtField field) {
+		String fName = field.getName();
+		String fDesc = field.getSignature();
+		String cName = field.getDeclaringClass().getName();
+		String s = Program.toString(fName, fDesc, cName);
+		int id;
+		if (convert) {
+			id = Fmap.indexOf(s);
+			if (id == -1)
+				id = Runtime.UNKNOWN_FIELD_VAL;
+		} else {
+			int n = Fmap.size();
+			id = Fmap.getOrAdd(s);
 			assert (id == n);
 		}
 		return id;
@@ -709,7 +723,6 @@ public class Instrumentor {
 			// add any instrumentation
 			if (s != null)
 				s = "{ " + s + " }";
-			// System.out.println("XXX: " + pos + ":" + s);
 			return s;
 		}
 		public void edit(NewExpr e) {
@@ -872,13 +885,6 @@ public class Instrumentor {
 				throw new ChordRuntimeException(ex);
 			}
 		}
-	}
-	protected int getFid(CtField field) {
-		String fName = field.getName();
-		String fDesc = field.getSignature();
-		String cName = field.getDeclaringClass().getName();
-		String s = Program.toString(fName, fDesc, cName);
-		return Fmap.getOrAdd(s);
 	}
 	protected String getstaticPrimitive(FieldAccess e, CtField f) {
 		if (getstaticPrimitiveEvent.present()) {
