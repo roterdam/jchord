@@ -303,6 +303,12 @@
 		<mkdir dir="${release.dir}"/>
 		<mkdir dir="${release.dir}/lib"/>
 		<mkdir dir="${release.dir}/bin"/>
+		<copy todir="${release.dir}/bin">
+			<fileset dir="${basedir}/bin"/>
+		</copy>
+		<chmod perm="755">
+			<fileset dir="${release.dir}/bin"/>
+		</chmod>
 		<mkdir dir="${release.dir}/etc"/>
 	</target>
 
