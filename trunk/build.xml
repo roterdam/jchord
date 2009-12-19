@@ -74,6 +74,11 @@
 	<property name="source" value="1.5"/>
 
 	<!--
+		Distribution directory; our artifacts are placed here.
+	-->
+	<property name="dist.home" value="${basedir}/dist"/>
+
+	<!--
 		Release directory. 
 	-->
 	<property name="release.dir" value="${basedir}/release"/>
@@ -297,9 +302,16 @@
 	</target>
 
 	<!--
+		Builds output artifacts.
+	-->
+	<target name="dist" description="Builds output artifacts.">
+		<mkdir dir="${dist.home}"/>
+	</target>
+
+	<!--
 		Prepares a binary release of the project.
 	-->
-	<target name="release" depends="clean, compile" description="Preparese a binary release of the project.">
+	<target name="release" depends="clean, compile, dist" description="Preparese a binary release of the project.">
 		<mkdir dir="${release.dir}"/>
 		<mkdir dir="${release.dir}/lib"/>
 		<mkdir dir="${release.dir}/bin"/>
@@ -539,6 +551,7 @@
 	<target name="clean" depends="select-make-implementation"
 			description="Cleans everything produced by the build.">
 		<parallel>
+			<delete dir="${dist.home}"/>
 			<delete dir="${release.dir}"/>
 			<delete dir="classes"/>
 			<sequential>
