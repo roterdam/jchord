@@ -74,6 +74,11 @@
 	<property name="source" value="1.5"/>
 
 	<!--
+		Release directory. 
+	-->
+	<property name="release.dir" value="${basedir}/release"/>
+
+	<!--
 		DYNAMIC PROPERTIES
 	-->
 	
@@ -289,6 +294,16 @@
 			<arg value="JDK_ROOT=${jdk_root}"/>
 			<arg value="M32_FLAG=${architecture}"/>
 		</exec>
+	</target>
+
+	<!--
+		Prepares a binary release of the project.
+	-->
+	<target name="release" depends="clean, compile" description="Preparese a binary release of the project.">
+		<mkdir dir="${release.dir}"/>
+		<mkdir dir="${release.dir}/lib"/>
+		<mkdir dir="${release.dir}/bin"/>
+		<mkdir dir="${release.dir}/etc"/>
 	</target>
 
 
@@ -518,6 +533,7 @@
 	<target name="clean" depends="select-make-implementation"
 			description="Cleans everything produced by the build.">
 		<parallel>
+			<delete dir="${release.dir}"/>
 			<delete dir="classes"/>
 			<sequential>
 				<path id="jdk_root">
