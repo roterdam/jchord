@@ -60,5 +60,5 @@ export CLASSPATH
 ##
 ## SHOW MUST GO ON
 ##
-exec "${java_cmd}" ${JAVA_OPTS} ${JCHORD_OPTS} 'chord.project.Project' "${@}"
+exec "${java_cmd}" -Dchord.home.dir="${jchord_dir}" ${JAVA_OPTS} ${JCHORD_OPTS} 'chord.project.Project' "${@}"
 
