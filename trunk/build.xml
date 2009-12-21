@@ -306,6 +306,8 @@
 	-->
 	<target name="dist" description="Builds output artifacts.">
 		<mkdir dir="${dist.home}"/>
+		<jar destfile="${dist.home}/jchord-app.jar" basedir="${basedir}/classes/main"/>
+		<jar destfile="${dist.home}/jchord-util.jar" basedir="${basedir}/classes/util"/>
 	</target>
 
 	<!--
@@ -314,6 +316,9 @@
 	<target name="release" depends="clean, compile, dist" description="Preparese a binary release of the project.">
 		<mkdir dir="${release.dir}"/>
 		<mkdir dir="${release.dir}/lib"/>
+		<copy todir="${release.dir}/lib">
+			<fileset dir="${dist.home}" includes="*.jar"/>
+		</copy>
 		<mkdir dir="${release.dir}/bin"/>
 		<copy todir="${release.dir}/bin">
 			<fileset dir="${basedir}/bin"/>
