@@ -24,7 +24,6 @@ startingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
 ###
 
 statF(f:F0) input
-PE(p:P0,e:E0) input
 EF(e:E0,f:F0) input
 statE(e:E0)
 CEC(c:C0,e:E0,o:C1) input
@@ -33,7 +32,7 @@ escapingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
 ###
 
 mhe(c:C0,e:E0,t1:A0,t2:A1) input
-parallelRaceHext(t1:A1,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+parallelRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
 
 ###
 
