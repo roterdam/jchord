@@ -18,7 +18,7 @@ public class Properties {
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
 	public final static String DEFAULT_EXCLUDES =
-		"java.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil.";
+		"java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil.";
 
 	// Chord resource properties
 
