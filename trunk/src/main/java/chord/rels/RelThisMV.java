@@ -16,8 +16,8 @@ import chord.project.Chord;
 import chord.project.ProgramRel;
 
 /**
- * Relation containing each tuple (m,z,v) such that local variable
- * v is the zth argument variable of method m.
+ * Relation containing each tuple (m,v) such that local variable
+ * v is the implicit this argument variable of instance method m.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
