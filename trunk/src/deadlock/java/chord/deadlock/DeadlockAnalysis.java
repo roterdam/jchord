@@ -106,10 +106,18 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	}
 	
 	private void finish() {
-		relNC.close();
-		relNL.close();
-		relDeadlock.close();
-		relSyncCLC.close();
+		if (relNC.isOpen()) {
+			relNC.isOpen();
+		}
+		if (relNL.isOpen()) {
+			relNL.close();
+		}
+		if (relDeadlock.isOpen()) {
+			relDeadlock.close();
+		}
+		if (relSyncCLC.isOpen()) {
+			relSyncCLC.close();
+		}
 	}
 	
 	public void run() {
