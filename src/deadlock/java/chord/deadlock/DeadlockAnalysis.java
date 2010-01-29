@@ -64,42 +64,52 @@ import chord.util.tuple.object.Pair;
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
+ * @author Zhifeng Lai (zflai@cse.ust.hk)
  */
 @Chord(
 	name="deadlock-java"
 )
 public class DeadlockAnalysis extends JavaAnalysis {
-    private DomM domM;
-    private DomI domI;
-    private DomA domA;
-    private DomH domH;
-    private DomC domC;
+	private DomA domA;
+	private DomC domC;	
+	private DomH domH;
+	private DomI domI;
     private DomL domL;
-    ProgramDom<Pair<Ctxt, Inst>> domN;
-	private ThrSenAbbrCSCGAnalysis thrSenAbbrCSCGAnalysis;
+    private DomM domM;
+    private ProgramDom<Pair<Ctxt, Inst>> domN;
+	
 	private ProgramRel relNC;
 	private ProgramRel relNL;
 	private ProgramRel relDeadlock;
 	private ProgramRel relSyncCLC;
 	
 	private ICSCG thrSenAbbrCSCG;
-	private final Map<CM, Set<CM>> CMCMMap =
-		new HashMap<CM, Set<CM>>();
+	private ThrSenAbbrCSCGAnalysis thrSenAbbrCSCGAnalysis;
+	private final Map<CM, Set<CM>> CMCMMap = new HashMap<CM, Set<CM>>();
 
 	private void init() {
-		domM = (DomM) Project.getTrgt("M");
-		domI = (DomI) Project.getTrgt("I");
 		domA = (DomA) Project.getTrgt("A");
-		domH = (DomH) Project.getTrgt("H");
 		domC = (DomC) Project.getTrgt("C");
+		domH = (DomH) Project.getTrgt("H");
+		domI = (DomI) Project.getTrgt("I");
 		domL = (DomL) Project.getTrgt("L");
+		domM = (DomM) Project.getTrgt("M");
 		domN = (ProgramDom) Project.getTrgt("N");
-		thrSenAbbrCSCGAnalysis = (ThrSenAbbrCSCGAnalysis)
-			Project.getTrgt("thrsen-abbr-cscg-java");
+		
 		relNC = (ProgramRel) Project.getTrgt("NC");
 		relNL = (ProgramRel) Project.getTrgt("NL");
 		relDeadlock = (ProgramRel) Project.getTrgt("deadlock");
 		relSyncCLC = (ProgramRel) Project.getTrgt("syncCLC");
+		
+		thrSenAbbrCSCGAnalysis = (ThrSenAbbrCSCGAnalysis)
+			Project.getTrgt("thrsen-abbr-cscg-java");
+	}
+	
+	private void finish() {
+		relNC.close();
+		relNL.close();
+		relDeadlock.close();
+		relSyncCLC.close();
 	}
 	
 	public void run() {
@@ -160,8 +170,11 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		Project.runTask("deadlock-dlog");
 		Project.runTask("deadlock-stats-dlog");
 
-		if (Properties.publishResults)
+		if (Properties.publishResults) {
 			publishResults();
+		}
+		
+		finish();
 	}
 
 	private Obj getPointsTo(int cIdx, int lIdx) {
@@ -270,10 +283,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 				"C4id=\"C"  + c4 + "\" M4id=\"M" + m4 + "\" L4id=\"L" + l4 + "\" O4id=\"O" + o4 + "\"/>");
 		}
 		out.println("</deadlocklist>");
-		out.close();
-
-		relDeadlock.close();
-		relSyncCLC.close();
+		out.close();		
 		
         IPathVisitor<Pair<Ctxt, jq_Method>> visitor =
 			new IPathVisitor<Pair<Ctxt, jq_Method>>() {
