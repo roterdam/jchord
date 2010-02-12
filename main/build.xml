@@ -51,12 +51,12 @@
 	<!--
 		Location of program libraries.
 	-->
-	<property name="lib.home" value="${basedir}/lib"/>
+	<property name="lib.home" location="lib"/>
 
 	<!--
 		Location of tools for building infrastructure.
 	-->
-	<property name="tool.home" value="${basedir}/tools"/>
+	<property name="tool.home" location="tools"/>
 
 	<!--
 		Selects debug targets. 
@@ -76,12 +76,12 @@
 	<!--
 		Distribution directory; our artifacts are placed here.
 	-->
-	<property name="dist.home" value="${basedir}/dist"/>
+	<property name="dist.home" location="dist"/>
 
 	<!--
 		Release directory. 
 	-->
-	<property name="release.dir" value="${basedir}/release"/>
+	<property name="release.dir" location="release"/>
 
 	<!--
 		DYNAMIC PROPERTIES
@@ -138,9 +138,9 @@
 	-->
 	
 	<!--
-		Classpath of Chord utils
+		Classpath of external utilities used by Chord
 	-->
-	<path id="util_class_path">
+	<path id="ext_util_class_path">
 		<pathelement location="${lib.home}/trove-2.0.4.jar"/>
 		<pathelement location="${lib.home}/scannotation-1.0.2.jar"/>
 	</path>
@@ -158,10 +158,9 @@
 		Classpath of Chord
 	-->
 	<path id="main_class_path">
-		<pathelement location="classes/main"/>
+		<pathelement location="classes"/>
 		<pathelement path="${chord.bddbddb.class.path}"/>
-		<path refid="util_class_path"/>
-		<pathelement location="classes/util"/>
+		<path refid="ext_util_class_path"/>
 		<pathelement location="lib/joeq.jar"/>
 		<pathelement location="lib/javassist.jar"/>
 		<pathelement location="lib/j2h.jar"/>
@@ -192,12 +191,9 @@
 	-->
 	<target name="compile-java-part" description="Compiles Java part of the project">
 		<property environment="env"/>
-		<mkdir dir="classes/util"/>
+		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			srcdir="src/util/java" destdir="classes/util" classpathref="util_class_path"/>
-		<mkdir dir="classes/main"/>
-		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			srcdir="src/main/java" destdir="classes/main" classpathref="main_class_path"/>
+			srcdir="src/java" destdir="classes" classpathref="main_class_path"/>
 	</target>
 
 	<!--
@@ -209,11 +205,11 @@
 			<pathelement location="${java.home}/.."/>
 		</path>
 		<pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
-		<exec executable="${make}" dir="bdd">
+		<exec executable="${make}" dir="src/bdd">
 			<arg value="JDK_ROOT=${jdk_root}"/>
 			<arg value="M32_FLAG=${architecture}"/>
 		</exec>
-		<exec executable="${make}" dir="agent">
+		<exec executable="${make}" dir="src/agent">
 			<arg value="JDK_ROOT=${jdk_root}"/>
 			<arg value="M32_FLAG=${architecture}"/>
 		</exec>
@@ -224,8 +220,7 @@
 	-->
 	<target name="dist" description="Builds output artifacts.">
 		<mkdir dir="${dist.home}"/>
-		<jar destfile="${dist.home}/jchord-app.jar" basedir="${basedir}/classes/main"/>
-		<jar destfile="${dist.home}/jchord-util.jar" basedir="${basedir}/classes/util"/>
+		<jar destfile="${dist.home}/chord.jar" basedir="classes"/>
 	</target>
 
 	<!--
@@ -285,7 +280,7 @@
 		<then>
 			<property file="${chord.props.file}"/>
 			<propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
-			<antfetch antfile="${basedir}/pathconvert.xml" dir="${chord.work.dir}"
+			<antfetch antfile="${tool.home}/pathconvert.xml" dir="${chord.work.dir}"
 				target="pathconvert" inheritAll="false" return="${chord.path.prop.list}"/>
 		</then>
 		<else/>
@@ -293,13 +288,13 @@
 	</target>
 
 	<target name="run" depends="props-file">
-		<fail message="ERROR: Property chord.home.dir must not be explicitly set">
+		<fail message="ERROR: Property chord.main.dir must not be explicitly set">
 			<condition>
-				<isset property="chord.home.dir"/>
+				<isset property="chord.main.dir"/>
 			</condition>
 		</fail>
-		<property name="chord.java.analysis.path" location="classes/main"/>
-		<property name="chord.home.dir" location="."/>
+		<property name="chord.java.analysis.path" location="classes"/>
+		<property name="chord.main.dir" location="."/>
 		<property name="chord.max.heap" value="1024m"/>
 		<property name="chord.max.stack" value="32m"/>
 		<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
@@ -322,22 +317,10 @@
 
 	<target name="run-datarace">
 		<path id="chord_java_analysis_path">
-			<pathelement location="classes/main"/>
-			<pathelement location="classes/datarace"/>
-			<pathelement location="classes/alias/common"/>
-			<pathelement location="classes/alias/ci"/>
-			<pathelement location="classes/alias/cs"/>
-			<pathelement location="classes/thread"/>
+			<pathelement location="classes"/>
 		</path>
 		<path id="chord_dlog_analysis_path">
-			<pathelement location="src/main/dlog"/>
-			<pathelement location="src/datarace/dlog"/>
-			<pathelement location="src/alias/ci/dlog"/>
-			<pathelement location="src/alias/cs/dlog"/>
-			<pathelement location="src/thread/dlog"/>
-			<pathelement location="src/mhp/dlog"/>
-			<pathelement location="src/locks/dlog"/>
-			<pathelement location="src/escape/static/dlog"/>
+			<pathelement location="src/dlog"/>
 		</path>
 		<property name="chord.run.analyses" value="datarace-java"/>
 		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
@@ -347,22 +330,10 @@
 
 	<target name="run-deadlock">
 		<path id="chord_java_analysis_path">
-			<pathelement location="classes/main"/>
-			<pathelement location="classes/deadlock"/>
-			<pathelement location="classes/alias/common"/>
-			<pathelement location="classes/alias/ci"/>
-			<pathelement location="classes/alias/cs"/>
-			<pathelement location="classes/thread"/>
+			<pathelement location="classes"/>
 		</path>
 		<path id="chord_dlog_analysis_path">
-			<pathelement location="src/main/dlog"/>
-			<pathelement location="src/deadlock/dlog"/>
-			<pathelement location="src/alias/ci/dlog"/>
-			<pathelement location="src/alias/cs/dlog"/>
-			<pathelement location="src/thread/dlog"/>
-			<pathelement location="src/mhp/dlog"/>
-			<pathelement location="src/locks/dlog"/>
-			<pathelement location="src/escape/static/dlog"/>
+			<pathelement location="src/dlog"/>
 		</path>
 		<property name="chord.run.analyses" value="deadlock-java"/>
 		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
@@ -446,18 +417,10 @@
 	-->
 
 	<target name="javadoc">
-		<javadoc destdir="javadoc">
-			<fileset dir="src">
+		<javadoc destdir="javadoc" classpathref="main_class_path">
+			<fileset dir="src/java">
 				<include name="**/*.java"/>
 			</fileset>
-			<classpath>
-				<pathelement location="lib/joeq.jar"/>
-				<pathelement location="lib/trove-2.0.4.jar"/>
-				<pathelement location="lib/bddbddb/javabdd-1.0b2.jar"/>
-				<pathelement location="lib/javassist.jar"/>
-				<pathelement location="lib/scannotation-1.0.2.jar"/>
-				<pathelement location="lib/j2h.jar"/>
-			</classpath>
 		</javadoc>
 		<copy todir="javadoc" flatten="true">
 			<fileset dir="src">
@@ -483,11 +446,11 @@
 				</path>
 				<pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
 				<parallel>
-					<exec executable="${make}" dir="bdd">
+					<exec executable="${make}" dir="src/bdd">
 						<arg value="JDK_ROOT=${jdk_root}"/>
 						<arg value="clean"/>
 					</exec>
-					<exec executable="${make}" dir="agent">
+					<exec executable="${make}" dir="src/agent">
 						<arg value="JDK_ROOT=${jdk_root}"/>
 						<arg value="clean"/>
 					</exec>

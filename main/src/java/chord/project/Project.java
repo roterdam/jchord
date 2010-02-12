@@ -147,9 +147,9 @@ public class Project {
 				}
 				out.println("</targets>");
 				out.close();
-				OutDirUtils.copyFileFromHomeDir("src/main/web/style.css");
-				OutDirUtils.copyFileFromHomeDir("src/main/web/targets.xsl");
-				OutDirUtils.copyFileFromHomeDir("src/main/web/targets.dtd");
+				OutDirUtils.copyFileFromMainDir("src/web/style.css");
+				OutDirUtils.copyFileFromMainDir("src/web/targets.xsl");
+				OutDirUtils.copyFileFromMainDir("src/web/targets.dtd");
 				OutDirUtils.runSaxon("targets.xml", "targets.xsl");
 			}
 

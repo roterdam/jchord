@@ -39,9 +39,9 @@ public class OutDirUtils {
 		FileUtils.copy(srcFile.getAbsolutePath(),
 			dstFile.getAbsolutePath());
 	}
-	public static void copyFileFromHomeDir(String fileName) {
-		String homeDirName = Properties.homeDirName;
-		copyFile(homeDirName, fileName);
+	public static void copyFileFromMainDir(String fileName) {
+		String mainDirName = Properties.mainDirName;
+		copyFile(mainDirName, fileName);
 	}
 	public static void writeMapToFile(IndexMap<String> map, String fileName) {
 		FileUtils.writeMapToFile(map, new File(outDirName, fileName));

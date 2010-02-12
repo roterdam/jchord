@@ -1,17 +1,17 @@
 #! /bin/sh
 
 ##
-## Jchord executable script. Do not modify this file in any way.
+## Chord executable script. Do not modify this file in any way.
 ## You can still affect the execution in several ways:
 ##
 ## Select JVM version you want by setting JAVA_HOME environment varibale.
 ##
 ## Any additional parameters can be passed to Java by setting environment
-## variables JAVA_OPTS and/or JCHORD_OPTS. If boths of them are set and 
+## variables JAVA_OPTS and/or CHORD_OPTS. If boths of them are set and 
 ## contains conflicting options, the second one overwrites the first one.  
 ##
 ## Any command lines argumens passed to this scrip will be passed to 
-## Jchord program without any change. 
+## Chord program without any change. 
 ##
 
 ##
@@ -36,18 +36,18 @@ else
 fi
 
 ##
-## Determine own installation directory, referenced as 'jchord_dir'.
+## Determine own installation directory, referenced as 'chord_dir'.
 ##
 current_working_directory="`pwd`"
 script_dir=`dirname "${0}"`
 cd "${script_dir}/.."
-jchord_dir="`pwd`"
+chord_dir="`pwd`"
 cd "${current_working_directory}"
 
 ##
 ## Constructing CLASSPATH. 
 ##
-for library in ${jchord_dir}/lib/*.jar ; do 
+for library in ${chord_dir}/lib/*.jar ; do 
 	if [ -z "${CLASSPATH}" ] ; then
 		CLASSPATH="${library}"
 	else
@@ -60,5 +60,5 @@ export CLASSPATH
 ##
 ## SHOW MUST GO ON
 ##
-exec "${java_cmd}" -Dchord.home.dir="${jchord_dir}" ${JAVA_OPTS} ${JCHORD_OPTS} 'chord.project.Project' "${@}"
+exec "${java_cmd}" -Dchord.home.dir="${chord_dir}" ${JAVA_OPTS} ${CHORD_OPTS} 'chord.project.Project' "${@}"
 
