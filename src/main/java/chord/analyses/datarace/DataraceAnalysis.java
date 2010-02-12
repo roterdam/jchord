@@ -66,7 +66,7 @@ import chord.util.tuple.object.Trio;
  * <li>All system properties recognized by abstract contexts analysis
  * (see {@link chord.alias.cs.CtxtsAnalysis}).</li>
  * </ul>
- * 
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
@@ -146,14 +146,18 @@ public class DataraceAnalysis extends JavaAnalysis {
 		final ProgramRel relRaceCEC = (ProgramRel) Project.getTrgt("raceCEC");
 		relRaceCEC.load();
 		final Iterable<Hext<Pair<Ctxt, jq_Method>, Ctxt, Quad,
-				Pair<Ctxt, jq_Method>, Ctxt, Quad>> tuples =
-			relDatarace.getAry6ValTuples();
+				Pair<Ctxt, jq_Method>, Ctxt, Quad>> tuples = relDatarace.getAry6ValTuples();
 		for (Hext<Pair<Ctxt, jq_Method>, Ctxt, Quad,
 				  Pair<Ctxt, jq_Method>, Ctxt, Quad> tuple : tuples) {
 			int tce1 = domTCE.getOrAdd(new Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>(
 				tuple.val0, tuple.val1, tuple.val2));
 			int tce2 = domTCE.getOrAdd(new Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>(
 				tuple.val3, tuple.val4, tuple.val5));
+			// tuples: datarace(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+			// view:   raceCEC(c1:C0,e1:E0,c2:C1,e2:E1,o:C2)
+			// raceCEC(c1,e1,c2,e2,o) :- datarace(_ ,c1,e1,_ ,c2,e2), CEC(c1,e1,o), CEC(c2,e2,o)
+			/*System.out.println(tuple.val1.size());
+			System.out.println(tuple.val4.size());*/
 			RelView view = relRaceCEC.getView();
 			view.selectAndDelete(0, tuple.val1);
 			view.selectAndDelete(1, tuple.val2);
@@ -184,7 +188,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 		relLI.load();
 		relLE.load();
 		relSyncCLC.load();
-		
+
 		final Map<Pair<Ctxt, jq_Method>, ShortestPathBuilder> srcNodeToSPB =
 			new HashMap<Pair<Ctxt, jq_Method>, ShortestPathBuilder>();
 
@@ -274,7 +278,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 		relLI.close();
 		relLE.close();
 		relSyncCLC.close();
-		
+
 		domO.saveToXMLFile();
 		domC.saveToXMLFile();
 		domA.saveToXMLFile();
@@ -307,5 +311,17 @@ public class DataraceAnalysis extends JavaAnalysis {
 		OutDirUtils.runSaxon("results.xml", "races.xsl");
 
 		Program.v().HTMLizeJavaSrcFiles();
+
+		final ProgramRel relRdOrWrTCEF = (ProgramRel) Project.getTrgt("rdOrWrTCEF");
+		relRdOrWrTCEF.load();
+		final Iterable<chord.util.tuple.object.Quad<Pair<Ctxt, jq_Method>, Ctxt, Quad, jq_Field>> tuples1 = relRdOrWrTCEF.getAry4ValTuples();;
+		for (chord.util.tuple.object.Quad<Pair<Ctxt, jq_Method>, Ctxt, Quad, jq_Field> tuple : tuples1) {
+			System.out.println(tuple.val0);
+			System.out.println(tuple.val1);
+			System.out.println(Program.v().toVerboseStr(((Quad) tuple.val2)));
+			System.out.println("\t" + tuple.val2);
+			System.out.println(tuple.val3);
+			System.out.println();
+		}
 	}
 }

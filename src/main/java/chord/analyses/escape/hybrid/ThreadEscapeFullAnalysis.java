@@ -77,11 +77,12 @@ import chord.util.Timer;
 	    name = "thresc-full-java"
 	)
 public class ThreadEscapeFullAnalysis extends JavaAnalysis {
-    private final static boolean DEBUG = false;
+	public static int ESC_VAL;
+    private final static boolean DEBUG = true;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();
 	public final static IntArraySet nilPts = new IntArraySet(0);
-	public final static IntArraySet escPts = new IntArraySet(0);
+	public static IntArraySet escPts;
 	private DomV domV;
 	private DomF domF;
 	private DomH domH;
@@ -149,7 +150,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 					synchronized (lock) {
 						done = false;
 						lock.notify();
-						lock.wait(600000);
+						lock.wait(900000);
 					}
 					timedOut = true;
 					synchronized (lock) {
@@ -168,7 +169,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		// Project.runTask(analysis);
 		// Map<Set<Quad>, Set<Quad>> allocInstsToHeapInsts =
 		//	analysis.getAllocInstsToHeapInstsMap();
-
 		threadStartMethod = Program.v().getThreadStartMethod();
 		mainMethod = Program.v().getMainMethod();
 		domV = (DomV) Project.getTrgt("V");
@@ -183,6 +183,11 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		Project.runTask(domM);
 		domE = (DomE) Project.getTrgt("E");
 		Project.runTask(domE);
+		int numH = domH.size();
+		ESC_VAL = numH;
+		escPts = new IntArraySet(1);
+		escPts.add(ESC_VAL);
+		escPts.setReadOnly();
 
 		ProgramRel rel = (ProgramRel) Project.getTrgt("EH");
 		rel.load();
@@ -319,6 +324,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			Location loc = workList1.remove(last);
 			PathEdge pe  = workList2.remove(last);
 			Quad q = loc.q;
+			// System.out.println(loc.m + " " + loc.q);
 			if (DEBUG)
 				System.out.println("Processing path edge: loc: " + loc + " pe: " + pe);
 			if (q == null) {
@@ -397,6 +403,8 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 				invkQuadToLoc.put(q, loc);
 		}
 		if (peSet.add(pe)) {
+			if (DEBUG)
+				System.out.println("ADDED");
 			workList1.add(loc);
 			workList2.add(pe);
 		}
@@ -422,28 +430,9 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		Location loc = new Location(root, bb, -1, null);
 		addPathEdge(loc, pe);
 	}
+
 	private IntArraySet tmpPts = new IntArraySet();
-	private IntArraySet getPtsFromHeap(IntArraySet bPts, int fIdx,
-			Set<IntTrio> heap, IntArraySet rPts) {
-		assert (bPts != escPts);
-		tmpPts.clear();
-		for (IntTrio t : heap) {
-			if (t.idx1 != fIdx)
-				continue;
-			int h1Idx = t.idx0;
-			if (bPts.contains(h1Idx)) {
-				int h2Idx = t.idx2;
-				if (h2Idx == 0)
-					return escPts;
-				tmpPts.add(h2Idx);
-			}
-		}
-		if (tmpPts.isEmpty())
-			return nilPts;
-		if (tmpPts.equals(rPts))
-			return rPts;
-		return new IntArraySet(tmpPts);
-	}
+
 	private void processInvoke(Location loc, PathEdge pe) {
 		Quad q = loc.q;
 		MethodOperand mo = Invoke.getMethod(q);
@@ -452,12 +441,25 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		if (tgt == threadStartMethod) {
 			if (DEBUG) System.out.println("Target is thread start method");
 			DstNode dstNode = pe.dstNode;
-			IntArraySet[] dstEnv = dstNode.env;
+			IntArraySet[] iEnv = dstNode.env;
 			RegisterOperand ao = Invoke.getParam(q, 0);
 			int aIdx = getIdx(ao);
-			IntArraySet aPts = dstEnv[aIdx];
-			DstNode dstNode2 = (aPts == escPts || aPts == nilPts) ? dstNode :
-				propagateEsc(aPts, dstNode);
+			IntArraySet aPts = iEnv[aIdx];
+			DstNode dstNode2;
+			if (aPts == escPts || aPts == nilPts)
+				dstNode2 = dstNode;
+			else {
+				Set<IntTrio> iHeap = dstNode.heap;
+				IntArraySet iEsc = dstNode.esc;
+				IntArraySet oEsc = propagateEsc(aPts, iHeap, iEsc);
+				if (oEsc == iEsc)
+					dstNode2 = dstNode;
+				else {
+					IntArraySet[] oEnv = updateEnv(iEnv, oEsc);
+					Set<IntTrio> oHeap = updateHeap(iHeap, oEsc);
+					dstNode2 = new DstNode(oEnv, oHeap, oEsc);
+				}
+			}
 			PathEdge pe2 = (dstNode == dstNode2) ? pe :
 				new PathEdge(pe.srcNode, dstNode2);
 			propagateToSucc(loc.m, loc.bb, loc.qIdx, pe2);
@@ -592,9 +594,18 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
         	if (i == rIdx)
         		continue;
         	IntArraySet pts = clrDstEnv[i];
-        	if (pts != escPts && pts.overlaps(tgtRetEsc)) {
-        		pts = escPts;
-        	}
+        	if (pts != nilPts && pts != escPts && pts.overlaps(tgtRetEsc)) {
+				tmpPts.clear();
+				int k = pts.size();
+				for (int j = 0; j < k; j++) {
+					int x = pts.get(j);
+					if (!tgtRetEsc.contains(x))
+						tmpPts.add(x);
+				}
+				tmpPts.add(ESC_VAL);
+				if (!tmpPts.equals(pts))
+					pts = new IntArraySet(tmpPts);
+			}
         	clrDstEnv2[i] = pts;
         }
         IntArraySet clrDstEsc = clrDstNode.esc;
@@ -611,51 +622,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
         propagateToSucc(loc.m, loc.bb, loc.qIdx, pe2);
         return true;
 	}
-	private DstNode propagateEsc(IntArraySet pts, DstNode iDstNode) {
-		assert (pts != escPts);
-		assert (pts != nilPts);
-		IntArraySet dstEsc = iDstNode.esc;
-		IntArraySet dstEsc2 = new IntArraySet(pts);
-		Set<IntTrio> dstHeap = iDstNode.heap;
-		IntArraySet[] dstEnv = iDstNode.env;
-		boolean changed;
-		do {
-			changed = false;
-			for (IntTrio t : dstHeap) {
-				int hIdx = t.idx0;
-				assert (hIdx != 0);
-				if (dstEsc2.contains(hIdx)) {
-					int h2Idx = t.idx2;
-					if (h2Idx != 0 && dstEsc2.add(h2Idx))
-						changed = true;
-				}
-			}
-		} while (changed);
-		int n = dstEnv.length;
-		IntArraySet[] dstEnv2 = new IntArraySet[n];  // TODO
-		for (int i = 0; i < n; i++) {
-			IntArraySet pts2 = dstEnv[i];
-			if (pts2 == escPts || dstEsc2.overlaps(pts2))
-				dstEnv2[i] = escPts;
-			else
-				dstEnv2[i] = pts2;
-		}
-		Set<IntTrio> dstHeap2 = new ArraySet<IntTrio>(dstHeap.size());  // TODO
-		for (IntTrio t : dstHeap) {
-			int hIdx = t.idx0;
-			if (!dstEsc2.contains(hIdx)) {
-				int h2Idx = t.idx2;
-				if (dstEsc2.contains(h2Idx))
-					dstHeap2.add(new IntTrio(hIdx, t.idx1, 0));
-				else
-					dstHeap2.add(t);
-			}
-		}
-		// MAYUR System.out.println("XXX heap size: " + dstHeap2.size());
-		dstEsc2.addAll(dstEsc);
-		// MAYUR System.out.println("AAA esc size: " + dstEsc2.size());
-		return new DstNode(dstEnv2, dstHeap2, dstEsc2);
-	}
 	
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 		DstNode iDstNode;
@@ -668,31 +634,31 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			jq_Type t = lo.getType();
 	        if (!t.isReferenceType())
 	        	return;
-	        IntArraySet[] dstEnv = iDstNode.env;
+	        IntArraySet[] iEnv = iDstNode.env;
 			int lIdx = getIdx(lo);
-			IntArraySet lPts = dstEnv[lIdx];
+			IntArraySet ilPts = iEnv[lIdx];
 			Operand rx = Move.getSrc(q);
-			IntArraySet lPts2;
+			IntArraySet olPts;
 			if (rx instanceof RegisterOperand) {
 				RegisterOperand ro = (RegisterOperand) rx;
 				int rIdx = getIdx(ro);
-				lPts2 = dstEnv[rIdx];
+				olPts = iEnv[rIdx];
 			} else
-				lPts2 = nilPts;
-			if (lPts2 == lPts)
+				olPts = nilPts;
+			if (olPts == ilPts)
 				return;
-			IntArraySet[] dstEnv2 = copy(dstEnv);
-			dstEnv2[lIdx] = lPts2;
-			oDstNode = new DstNode(dstEnv2, iDstNode.heap, iDstNode.esc);
+			IntArraySet[] oEnv = copy(iEnv);
+			oEnv[lIdx] = olPts;
+			Set<IntTrio> oHeap = iDstNode.heap;
+			IntArraySet oEsc = iDstNode.esc;
+			oDstNode = new DstNode(oEnv, oHeap, oEsc);
 		}
 		public void visitPhi(Quad q) {
 			RegisterOperand lo = Phi.getDest(q);
 			jq_Type t = lo.getType();
-			if (t == null)
+			if (t == null || !t.isReferenceType())
 				return;
-			if (!t.isReferenceType())
-				return;
-	        IntArraySet[] dstEnv = iDstNode.env;
+	        IntArraySet[] iEnv = iDstNode.env;
 			ParamListOperand ros = Phi.getSrcs(q);
 			int n = ros.length();
 			tmpPts.clear();
@@ -701,33 +667,30 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 				RegisterOperand ro = ros.get(i);
 				if (ro != null) {
 					int rIdx = getIdx(ro);
-					IntArraySet rPts = dstEnv[rIdx];
-					if (rPts == escPts) {
-						pPts = escPts;
-						break;
-					}
+					IntArraySet rPts = iEnv[rIdx];
 					pPts.addAll(rPts);
 				}
 			}
 			int lIdx = getIdx(lo);
-			IntArraySet lPts = dstEnv[lIdx];
-			IntArraySet lPts2;
-			if (pPts == escPts) {
-				if (lPts == escPts)
+			IntArraySet ilPts = iEnv[lIdx];
+			IntArraySet olPts;
+			if (pPts.isEmpty()) {
+				if (ilPts == nilPts)
 					return;
-				lPts2 = escPts;
-			} else if (pPts.isEmpty()) {
-				if (lPts == nilPts)
-					return;
-				lPts2 = nilPts;
+				olPts = nilPts;
 			} else {
-				if (pPts.equals(lPts))
+				if (pPts.equals(ilPts))
 					return;
-				lPts2 = new IntArraySet(pPts);
+				if (pPts.size() == 1 && pPts.contains(ESC_VAL))
+					olPts = escPts;
+				else
+					olPts = new IntArraySet(pPts);
 			}
-			IntArraySet[] dstEnv2 = copy(dstEnv);
-			dstEnv2[lIdx] = lPts2;
-			oDstNode = new DstNode(dstEnv2, iDstNode.heap, iDstNode.esc);
+			IntArraySet[] oEnv = copy(iEnv);
+			oEnv[lIdx] = olPts;
+			Set<IntTrio> oHeap = iDstNode.heap;
+			IntArraySet oEsc = iDstNode.esc;
+			oDstNode = new DstNode(oEnv, oHeap, oEsc);
 		}
 		public void visitALoad(Quad q) {
 			if (currLocHeapInsts.contains(q))
@@ -735,24 +698,21 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			Operator op = q.getOperator();
 			if (!((ALoad) op).getType().isReferenceType())
 				return;
-			IntArraySet[] dstEnv = iDstNode.env;
-			Set<IntTrio> dstHeap = iDstNode.heap;
+			IntArraySet[] iEnv = iDstNode.env;
+			Set<IntTrio> iHeap = iDstNode.heap;
 			RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
 			int bIdx = getIdx(bo);
-			IntArraySet bPts = dstEnv[bIdx];
+			IntArraySet bPts = iEnv[bIdx];
 			RegisterOperand lo = ALoad.getDest(q);
 			int lIdx = getIdx(lo);
-			IntArraySet lPts = dstEnv[lIdx];
-			IntArraySet lPts2;
-			if (bPts == escPts)
-				lPts2 = escPts;
-			else
-				lPts2 = getPtsFromHeap(bPts, 0, dstHeap, lPts);
-			if (lPts2 == lPts)
+			IntArraySet ilPts = iEnv[lIdx];
+			IntArraySet olPts = getPtsFromHeap(bPts, 0, iHeap, ilPts);
+			if (olPts == ilPts)
 				return;
-			IntArraySet[] dstEnv2 = copy(dstEnv);
-			dstEnv2[lIdx] = lPts2;
-			oDstNode = new DstNode(dstEnv2, dstHeap, iDstNode.esc);
+			IntArraySet[] oEnv = copy(iEnv);
+			oEnv[lIdx] = olPts;
+			IntArraySet iEsc = iDstNode.esc;
+			oDstNode = new DstNode(oEnv, iHeap, iEsc);
 		}
 		public void visitGetfield(Quad q) {
 			if (currLocHeapInsts.contains(q))
@@ -762,30 +722,27 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			jq_Field f = fo.getField();
 			if (!f.getType().isReferenceType())
 				return;
-			IntArraySet[] dstEnv = iDstNode.env;
-			Set<IntTrio> dstHeap = iDstNode.heap;
+			IntArraySet[] iEnv = iDstNode.env;
+			Set<IntTrio> iHeap = iDstNode.heap;
 			RegisterOperand lo = Getfield.getDest(q);
 			int lIdx = getIdx(lo);
-			IntArraySet lPts = dstEnv[lIdx];
+			IntArraySet ilPts = iEnv[lIdx];
 			Operand bx = Getfield.getBase(q);
-			IntArraySet lPts2;
+			IntArraySet olPts;
 			if (bx instanceof RegisterOperand) {
 				RegisterOperand bo = (RegisterOperand) bx;
 				int bIdx = getIdx(bo);
-				IntArraySet bPts = dstEnv[bIdx];
-				if (bPts == escPts) {
-					lPts2 = escPts;
-				} else {
-					int fIdx = domF.indexOf(f);
-					lPts2 = getPtsFromHeap(bPts, fIdx, dstHeap, lPts);
-				}
+				IntArraySet bPts = iEnv[bIdx];
+				int fIdx = domF.indexOf(f);
+				olPts = getPtsFromHeap(bPts, fIdx, iHeap, ilPts);
 			} else
-				lPts2 = nilPts;
-			if (lPts2 == lPts)
+				olPts = nilPts;
+			if (olPts == ilPts)
 				return;
-			IntArraySet[] dstEnv2 = copy(dstEnv);
-			dstEnv2[lIdx] = lPts2;
-			oDstNode = new DstNode(dstEnv2, dstHeap, iDstNode.esc);
+			IntArraySet[] oEnv = copy(iEnv);
+			oEnv[lIdx] = olPts;
+			IntArraySet iEsc = iDstNode.esc;
+			oDstNode = new DstNode(oEnv, iHeap, iEsc);
 		}
 		public void visitAStore(Quad q) {
 			if (currLocHeapInsts.contains(q))
@@ -798,53 +755,16 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 				return;
 			RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 			RegisterOperand ro = (RegisterOperand) rx;
-			IntArraySet[] dstEnv = iDstNode.env;
+			IntArraySet[] iEnv = iDstNode.env;
 			int rIdx = getIdx(ro);
-			IntArraySet rPts = dstEnv[rIdx];
+			IntArraySet rPts = iEnv[rIdx];
 			if (rPts == nilPts)
 				return;
 			int bIdx = getIdx(bo);
-			IntArraySet bPts = dstEnv[bIdx];
+			IntArraySet bPts = iEnv[bIdx];
 			if (bPts == nilPts)
 				return;
-			if (bPts != escPts) {
-				Set<IntTrio> dstHeap = iDstNode.heap;
-				ArraySet<IntTrio> dstHeap2 = null;
-				int nb = bPts.size();
-				if (rPts == escPts) {
-					for (int i = 0; i < nb; i++) {
-						int hIdx = bPts.get(i);
-						IntTrio trio = new IntTrio(hIdx, 0, 0);
-						if (!dstHeap.contains(trio)) {
-							if (dstHeap2 == null)
-								dstHeap2 = new ArraySet<IntTrio>(dstHeap);
-							dstHeap2.add(trio);
-						}
-					}
-				} else {
-					int nr = rPts.size();
-					for (int i = 0; i < nb; i++) {
-						int hIdx = bPts.get(i);
-						for (int j = 0; j < nr; j++) {
-							int hIdx2 = rPts.get(j);
-							IntTrio trio = new IntTrio(hIdx, 0, hIdx2);
-							if (dstHeap2 != null)
-								dstHeap2.add(trio);
-							else if (!dstHeap.contains(trio)) {
-								dstHeap2 = new ArraySet<IntTrio>(dstHeap);
-								dstHeap2.addForcibly(trio);
-							}
-						}
-					}
-				}
-				if (dstHeap2 == null)
-					return;
-				oDstNode = new DstNode(dstEnv, dstHeap2, iDstNode.esc);
-				return;
-			}
-			if (rPts == escPts)
-				return;
-			oDstNode = propagateEsc(rPts, iDstNode);
+			processWrite(bPts, rPts, null);
 		}
 		public void visitPutfield(Quad q) {
 			if (currLocHeapInsts.contains(q))
@@ -860,56 +780,78 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			Operand bx = Putfield.getBase(q);
 			if (!(bx instanceof RegisterOperand))
 				return;
-			IntArraySet[] dstEnv = iDstNode.env;
+			IntArraySet[] iEnv = iDstNode.env;
 			RegisterOperand ro = (RegisterOperand) rx;
 			int rIdx = getIdx(ro);
-			IntArraySet rPts = dstEnv[rIdx];
+			IntArraySet rPts = iEnv[rIdx];
 			if (rPts == nilPts)
 				return;
 			RegisterOperand bo = (RegisterOperand) bx;
 			int bIdx = getIdx(bo);
-			IntArraySet bPts = dstEnv[bIdx];
+			IntArraySet bPts = iEnv[bIdx];
 			if (bPts == nilPts)
 				return;
-			if (bPts != escPts) {
-				Set<IntTrio> dstHeap = iDstNode.heap;
-				ArraySet<IntTrio> dstHeap2 = null;
-				int fIdx = domF.indexOf(f);
+			processWrite(bPts, rPts, f);
+		}
+		private void processWrite(IntArraySet bPts, IntArraySet rPts, jq_Field f) {
+			IntArraySet oEsc;
+			IntArraySet[] oEnv;
+			Set<IntTrio> oHeap;
+			if (bPts == escPts) {
+				if (rPts == escPts)
+					return;
+				IntArraySet iEsc = iDstNode.esc;
+				Set<IntTrio> iHeap = iDstNode.heap;
+				oEsc = propagateEsc(rPts, iHeap, iEsc);
+				if (oEsc == iEsc)
+					return;
+				IntArraySet[] iEnv = iDstNode.env;
+				oEnv = updateEnv(iEnv, oEsc);
+				oHeap = updateHeap(iHeap, oEsc);
+			} else {
 				int nb = bPts.size();
-				if (rPts == escPts) {
-					for (int i = 0; i < nb; i++) {
-						int hIdx = bPts.get(i);
-						IntTrio trio = new IntTrio(hIdx, fIdx, 0);
-						if (!dstHeap.contains(trio)) {
-							if (dstHeap2 == null)
-								dstHeap2 = new ArraySet<IntTrio>(dstHeap);
-							dstHeap2.add(trio);
-						}
+				int nr = rPts.size();
+				Set<IntTrio> iHeap = iDstNode.heap;
+				oHeap = iHeap;
+				int fIdx = (f == null) ? 0 : domF.indexOf(f); 
+				boolean foundEsc = false;
+				for (int i = 0; i < nb; i++) {
+					int hIdx = bPts.get(i);
+					if (hIdx == ESC_VAL) {
+						foundEsc = true;
+						continue;
 					}
-				} else {
-					int nr = rPts.size();
-					for (int i = 0; i < nb; i++) {
-						int hIdx = bPts.get(i);
-						for (int j = 0; j < nr; j++) {
-							int hIdx2 = rPts.get(j);
-							IntTrio trio = new IntTrio(hIdx, fIdx, hIdx2);
-							if (dstHeap2 != null)
-								dstHeap2.add(trio);
-							else if (!dstHeap.contains(trio)) {
-								dstHeap2 = new ArraySet<IntTrio>(dstHeap);
-								dstHeap2.addForcibly(trio);
-							}
+					for (int j = 0; j < nr; j++) {
+						int hIdx2 = rPts.get(j);
+						IntTrio trio = new IntTrio(hIdx, fIdx, hIdx2);
+						if (oHeap != iHeap)
+							oHeap.add(trio);
+						else if (!iHeap.contains(trio)) {
+							oHeap = new ArraySet<IntTrio>(iHeap);
+							((ArraySet) oHeap).addForcibly(trio);
 						}
 					}
 				}
-				if (dstHeap2 == null)
-					return;
-				oDstNode = new DstNode(dstEnv, dstHeap2, iDstNode.esc);
-				return;
+				if (rPts == escPts || !foundEsc) {
+					if (oHeap == iHeap)
+						return;
+					oEsc = iDstNode.esc;
+					oEnv = iDstNode.env;
+				} else {
+					IntArraySet iEsc = iDstNode.esc;
+					oEsc = propagateEsc(rPts, oHeap, iEsc);
+					if (oEsc == iEsc) {
+						if (oHeap == iHeap)
+							return;
+						oEnv = iDstNode.env;
+					} else {
+						IntArraySet[] iEnv = iDstNode.env;
+						oEnv = updateEnv(iEnv, oEsc);
+						oHeap = updateHeap(oHeap, oEsc);
+					}
+				}
 			}
-			if (rPts == escPts)
-				return;
-			oDstNode = propagateEsc(rPts, iDstNode);
+			oDstNode = new DstNode(oEnv, oHeap, oEsc);
 		}
 		public void visitPutstatic(Quad q) {
 			FieldOperand fo = Putstatic.getField(q);
@@ -920,13 +862,20 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 	        Operand rx = Putstatic.getSrc(q);
 	        if (!(rx instanceof RegisterOperand))
 	        	return;
-			IntArraySet[] dstEnv = iDstNode.env;
-	        RegisterOperand ro = (RegisterOperand) rx;
-	        int rIdx = getIdx(ro);
-	        IntArraySet rPts = dstEnv[rIdx];
-	        if (rPts == escPts || rPts == nilPts)
-	        	return;
-			oDstNode = propagateEsc(rPts, iDstNode);
+			IntArraySet[] iEnv = iDstNode.env;
+            RegisterOperand ro = (RegisterOperand) rx;
+            int rIdx = getIdx(ro);
+            IntArraySet rPts = iEnv[rIdx];
+            if (rPts == escPts || rPts == nilPts)
+                return;
+			Set<IntTrio> iHeap = iDstNode.heap;
+			IntArraySet iEsc = iDstNode.esc;
+			IntArraySet oEsc = propagateEsc(rPts, iHeap, iEsc);
+			if (oEsc == iEsc)
+				return;
+			IntArraySet[] oEnv = updateEnv(iEnv, oEsc);
+			Set<IntTrio> oHeap = updateHeap(iHeap, oEsc);
+			oDstNode = new DstNode(oEnv, oHeap, oEsc); 
 		}
 		public void visitGetstatic(Quad q) {
 			FieldOperand fo = Getstatic.getField(q);
@@ -934,14 +883,16 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			jq_Field f = fo.getField();
 	        if (!f.getType().isReferenceType())
 	        	return;
-			IntArraySet[] dstEnv = iDstNode.env;
+			IntArraySet[] iEnv = iDstNode.env;
 	        RegisterOperand lo = Getstatic.getDest(q);
 	        int lIdx = getIdx(lo);
-			if (dstEnv[lIdx] == escPts)
+			if (iEnv[lIdx] == escPts)
 				return;
-	        IntArraySet[] dstEnv2 = copy(dstEnv);
-	       	dstEnv2[lIdx] = escPts;
-			oDstNode = new DstNode(dstEnv2, iDstNode.heap, iDstNode.esc);
+	        IntArraySet[] oEnv = copy(iEnv);
+	       	oEnv[lIdx] = escPts;
+			Set<IntTrio> iHeap = iDstNode.heap;
+			IntArraySet iEsc = iDstNode.esc;
+			oDstNode = new DstNode(oEnv, iHeap, iEsc);
 		}
 		public void visitNew(Quad q) {
 			RegisterOperand vo = New.getDest(q);
@@ -952,23 +903,31 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			processAlloc(q, vo);
 		}
 		private void processAlloc(Quad q, RegisterOperand vo) {
-			IntArraySet[] dstEnv = iDstNode.env;
+			IntArraySet[] iEnv = iDstNode.env;
 			int vIdx = getIdx(vo);
-			IntArraySet dstPts = dstEnv[vIdx];
-			if (currAllocs.contains(q)) {
-				int hIdx = domH.indexOf(q);
-				if (dstPts.size() == 1 && dstPts.contains(hIdx))
+			IntArraySet vPts = iEnv[vIdx];
+			IntArraySet iEsc = iDstNode.esc;
+			if (!currAllocs.contains(q)) {
+				if (vPts == escPts)
 					return;
-				dstPts = new IntArraySet(1);
-				dstPts.add(hIdx);
+				vPts = escPts;
 			} else {
-				if (dstPts == escPts)
-					return;
-				dstPts = escPts;
+				int hIdx = domH.indexOf(q);
+				if (iEsc.contains(hIdx)) {
+					if (vPts == escPts)
+						return;
+					vPts = escPts;
+				} else {
+					if (vPts.size() == 1 && vPts.contains(hIdx))
+						return;
+					vPts = new IntArraySet(1);
+					vPts.add(hIdx);
+				}
 			}
-			IntArraySet[] dstEnv2 = copy(dstEnv);
-			dstEnv2[vIdx] = dstPts;
-			oDstNode = new DstNode(dstEnv2, iDstNode.heap, iDstNode.esc);
+			IntArraySet[] oEnv = copy(iEnv);
+			oEnv[vIdx] = vPts;
+			Set<IntTrio> oHeap = iDstNode.heap;
+			oDstNode = new DstNode(oEnv, oHeap, iEsc);
 		}
 		private void check(Quad q, Operand bx) {
 			if (!(bx instanceof RegisterOperand))
@@ -976,7 +935,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			RegisterOperand bo = (RegisterOperand) bx;
 			int bIdx = getIdx(bo);
 			IntArraySet pts = iDstNode.env[bIdx];
-			if (pts == escPts) {
+			if (pts.contains(ESC_VAL)) {
 				currLocHeapInsts.remove(q);
 				currEscHeapInsts.add(q);
 				if (currLocHeapInsts.size() == 0)
@@ -984,6 +943,109 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			}
 		}
 	}
+	private IntArraySet getPtsFromHeap(IntArraySet bPts, int fIdx,
+			Set<IntTrio> heap, IntArraySet rPts) {
+		tmpPts.clear();
+		if (bPts.contains(ESC_VAL))
+			tmpPts.add(ESC_VAL);
+		for (IntTrio t : heap) {
+			if (t.idx1 == fIdx && bPts.contains(t.idx0))
+				tmpPts.add(t.idx2);
+		}
+		if (tmpPts.isEmpty())
+			return nilPts;
+		if (tmpPts.size() == 1 && tmpPts.contains(ESC_VAL))
+			return escPts;
+		if (tmpPts.equals(rPts))
+			return rPts;
+		return new IntArraySet(tmpPts);
+	}
+    private IntArraySet propagateEsc(IntArraySet pts, Set<IntTrio> iHeap,
+			IntArraySet iEsc) {
+        assert (pts != escPts);
+        assert (pts != nilPts);
+		IntArraySet oEsc = null;
+		int n = pts.size();
+		for (int i = 0; i < n; i++) {
+			int x = pts.get(i);
+			if (x != ESC_VAL && !iEsc.contains(x)) {
+				if (oEsc == null)
+					oEsc = new IntArraySet(n);
+				oEsc.add(x);
+			}
+		}
+		if (oEsc == null)
+			return iEsc;
+		oEsc.addAll(iEsc);
+		boolean changed;
+		do {
+			changed = false;
+			for (IntTrio t : iHeap) {
+				int hIdx = t.idx0;
+				assert (hIdx != ESC_VAL);
+				if (oEsc.contains(hIdx)) {
+					int h2Idx = t.idx2;
+					if (h2Idx != ESC_VAL && oEsc.add(h2Idx))
+						changed = true;
+				}
+			}
+		} while (changed);
+		return oEsc;
+	}
+	private IntArraySet[] updateEnv(IntArraySet[] iEnv, IntArraySet oEsc) {
+		IntArraySet[] oEnv = null;
+        int n = iEnv.length;
+		for (int i = 0; i < n; i++) {
+            IntArraySet pts = iEnv[i];
+            if (pts != nilPts && pts != escPts && oEsc.overlaps(pts)) {
+				if (oEnv == null) {
+					oEnv = new IntArraySet[n];
+					for (int j = 0; j < i; j++)
+						oEnv[j] = iEnv[j];
+				}
+				int m = pts.size();
+				IntArraySet pts2 = new IntArraySet(m);
+				pts2.addForcibly(ESC_VAL);
+				for (int j = 0; j < m; j++) {
+					int x = pts.get(j);
+					if (x != ESC_VAL && !oEsc.contains(x))
+						pts2.addForcibly(x);
+				}
+				oEnv[i] = pts2;
+			} else if (oEnv != null)
+				oEnv[i] = pts;
+        }
+		return (oEnv == null) ? iEnv : oEnv;
+	}
+	private Set<IntTrio> updateHeap(Set<IntTrio> iHeap, IntArraySet oEsc) {
+		boolean buildHeap = false;
+        for (IntTrio t : iHeap) {
+            int hIdx = t.idx0;
+            if (oEsc.contains(hIdx)) {
+				buildHeap = true;
+				break;
+			}
+			int h2Idx = t.idx2;
+			if (oEsc.contains(h2Idx)) {
+				buildHeap = true;
+				break;
+            }
+		}
+		if (!buildHeap)
+			return iHeap;
+		Set<IntTrio> oHeap = new ArraySet<IntTrio>(iHeap.size());
+		for (IntTrio t : iHeap) {
+			int hIdx = t.idx0;
+			if (!oEsc.contains(hIdx)) {
+				int h2Idx = t.idx2;
+				if (oEsc.contains(h2Idx))
+					oHeap.add(new IntTrio(hIdx, t.idx1, ESC_VAL));
+				else
+					oHeap.add(t);
+			}
+		}
+		return oHeap;
+    }
 
 	/*****************************************************************
 	 * Frequently used functions
@@ -1063,7 +1125,8 @@ class Location {
 		return (q != null) ? (q == l.q) : (bb == l.bb);
 	}
 	public String toString() {
-		return Integer.toString(q.getID());
+		return m + " " + q;
+		// Integer.toString(q.getID());
 	}
 }
 

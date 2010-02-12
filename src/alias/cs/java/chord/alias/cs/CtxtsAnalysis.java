@@ -509,7 +509,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		System.out.println("numSCCs: " + sccList.size());
 		for (int i = 0; i < sccList.size(); i++) {
 			Set<jq_Method> scc = sccList.get(i);
-			// System.out.println("SCC: " + i + " size: " + scc.size());
+			System.out.println("SCC: #" + i + " size: " + scc.size());
 			if (scc.size() == 1) {
 				jq_Method cle = scc.iterator().next();
 				if (roots.contains(cle))
