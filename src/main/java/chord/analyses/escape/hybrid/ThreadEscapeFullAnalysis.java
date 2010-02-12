@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.escape.hybrid;
+package chord.analyses.escape.hybrid;
 
 import gnu.trove.TObjectIntHashMap;
 
@@ -52,8 +52,8 @@ import chord.project.ProgramRel;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Properties;
 import chord.util.ChordRuntimeException;
-import chord.alias.ci.ICICG;
-import chord.alias.ci.ThrSenAbbrCICGAnalysis;
+import chord.analyses.alias.ICICG;
+import chord.analyses.alias.ThrSenAbbrCICGAnalysis;
 import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.doms.DomH;

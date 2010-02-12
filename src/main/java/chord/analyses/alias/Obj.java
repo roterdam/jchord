@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.alias.common;
+package chord.analyses.alias;
 
 import java.util.Set;
 import java.io.Serializable;
@@ -12,7 +12,7 @@ import java.io.Serializable;
  * Representation of an abstract object.
  * <p>
  * An abstract object (also called points-to set) is a set of
- * abstract contexts (see {@link chord.alias.common.Ctxt}).
+ * abstract contexts (see {@link chord.analyses.alias.Ctxt}).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

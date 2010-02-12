@@ -3,14 +3,14 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.thread;
+package chord.analyses.thread;
 
 import joeq.Class.jq_Method;
 import chord.project.Chord;
 import chord.project.JavaAnalysis;
 import chord.project.Project;
-import chord.alias.common.Ctxt;
-import chord.alias.common.DomC;
+import chord.analyses.alias.Ctxt;
+import chord.analyses.alias.DomC;
 import chord.doms.DomM;
 import chord.project.ProgramRel;
 import chord.util.tuple.object.Pair;

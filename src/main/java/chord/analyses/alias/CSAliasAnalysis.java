@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.alias.cs;
+package chord.analyses.alias;
 
 import java.util.Set;
 import java.util.HashSet;
@@ -11,8 +11,6 @@ import java.util.HashSet;
 import joeq.Class.jq_Field;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
-import chord.alias.common.Obj;
-import chord.alias.common.Ctxt;
 import chord.bddbddb.Rel.RelView;
 import chord.util.SetUtils;
 import chord.project.Chord;

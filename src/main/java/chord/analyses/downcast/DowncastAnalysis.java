@@ -3,13 +3,13 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.downcast;
+package chord.analyses.downcast;
 
 import chord.project.Chord;
 import chord.project.Project;
 import chord.project.JavaAnalysis;
 import chord.project.ProgramRel;
-import chord.alias.cs.CtxtsAnalysis;
+import chord.analyses.alias.CtxtsAnalysis;
 
 /**
  * Static downcast safety analysis.
@@ -23,7 +23,7 @@ import chord.alias.cs.CtxtsAnalysis;
  * Recognized system properties:
  * <ul>
  * <li>All system properties recognized by abstract contexts analysis
- * (see {@link chord.alias.cs.CtxtsAnalysis}).</li>
+ * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)

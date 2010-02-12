@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.deadlock;
+package chord.analyses.deadlock;
 
 import java.io.PrintWriter;
 import java.util.Set;
@@ -26,16 +26,16 @@ import chord.project.OutDirUtils;
 import chord.util.ArraySet;
 import chord.util.graph.IPathVisitor;
 import chord.util.graph.ShortestPathBuilder;
-import chord.alias.common.Ctxt;
-import chord.alias.common.Obj;
-import chord.alias.cs.CtxtsAnalysis;
-import chord.alias.cs.ICSCG;
-import chord.alias.cs.ThrSenAbbrCSCGAnalysis;
+import chord.analyses.alias.Ctxt;
+import chord.analyses.alias.Obj;
+import chord.analyses.alias.CtxtsAnalysis;
+import chord.analyses.alias.ICSCG;
+import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
+import chord.analyses.alias.DomO;
+import chord.analyses.alias.DomC;
 import chord.bddbddb.Rel.RelView;
-import chord.thread.DomA;
+import chord.analyses.thread.DomA;
 import chord.doms.DomL;
-import chord.alias.common.DomO;
-import chord.alias.common.DomC;
 import chord.doms.DomH;
 import chord.doms.DomI;
 import chord.doms.DomM;
@@ -60,7 +60,7 @@ import chord.util.tuple.object.Pair;
  * <li><tt>chord.include.nongrded</tt> (default is true).</li>
  * <li><tt>chord.publish.results</tt> (default is true).</li>
  * <li>All system properties recognized by abstract contexts analysis
- * (see {@link chord.alias.cs.CtxtsAnalysis}).</li>
+ * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)

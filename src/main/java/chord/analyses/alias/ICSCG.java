@@ -3,14 +3,13 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.alias.cs;
+package chord.analyses.alias;
 
 import java.util.Set;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 
-import chord.alias.common.Ctxt;
 import chord.util.graph.ILabeledGraph;
 import chord.util.tuple.object.Pair;
 

@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.alias.common;
+package chord.analyses.alias;
 
 import chord.program.Program;
 import joeq.Compiler.Quad.Operator;
@@ -23,7 +23,7 @@ import java.io.Serializable;
  * <tt>epsilon</tt>, is the lone context of methods that are
  * analyzed context insensitively.  These include the main method,
  * all class initializer methods, and any additional user-specified
- * methods (see {@link chord.alias.cs.CtxtsAnalysis}).
+ * methods (see {@link chord.analyses.alias.CtxtsAnalysis}).
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
