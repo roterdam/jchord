@@ -6,7 +6,7 @@ To run this example:
 
    This will compile the Java source code of the example.
 
-2. Run the following command in Chord's root directory:
+2. Run the following command in Chord's main directory:
 
    ant -Dchord.work.dir=examples/datarace_test -Dchord.scope.kind=dynamic run-datarace
 
