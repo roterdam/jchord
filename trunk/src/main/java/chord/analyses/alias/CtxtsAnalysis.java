@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.alias.cs;
+package chord.analyses.alias;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,8 +29,6 @@ import chord.doms.DomH;
 import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomV;
-import chord.alias.common.DomC;
-import chord.alias.common.Ctxt;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.JavaAnalysis;

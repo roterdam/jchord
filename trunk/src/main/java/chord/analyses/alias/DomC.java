@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.alias.common;
+package chord.analyses.alias;
 
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
@@ -20,7 +20,7 @@ import chord.doms.DomH;
  * <p>
  * The 0th element in this domain denotes the distinguished
  * abstract context <tt>epsilon</tt>
- * (see {@link chord.alias.common.Ctxt}).
+ * (see {@link chord.analyses.alias.Ctxt}).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

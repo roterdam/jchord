@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.alias.cs;
+package chord.analyses.alias;
 
 import java.util.Set;
 
@@ -22,7 +22,6 @@ import chord.project.ProgramRel;
 import chord.util.SetUtils;
 import chord.util.graph.AbstractGraph;
 import chord.util.tuple.object.Pair;
-import chord.alias.common.Ctxt;
 
 /**
  * Implementation of a context-sensitive call graph.
