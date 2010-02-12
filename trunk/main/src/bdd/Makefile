@@ -7,7 +7,7 @@
 #   M32_FLAG     -- "-m32" if using 32-bit JVM on 64-bit machine
 
 BUDDY_SRC = buddy/src
-LIB_DIR = ../lib
+LIB_DIR = ../../lib
 JNI_H_DIR = $(shell find $(JDK_ROOT) -name jni.h -exec dirname '{}' \;)
 INCLUDES = -I. -I$(BUDDY_SRC) -I$(BUDDY_SRC)/.. -I$(JNI_H_DIR)
 JNI_MD_H_DIR = $(shell find $(JDK_ROOT) -name jni_md.h -exec dirname '{}' \;)
