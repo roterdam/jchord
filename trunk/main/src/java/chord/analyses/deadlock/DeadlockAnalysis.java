@@ -343,19 +343,19 @@ public class DeadlockAnalysis extends JavaAnalysis {
         domM.saveToXMLFile();
         domL.saveToXMLFile();
 
-        OutDirUtils.copyFileFromHomeDir("src/deadlock/web/results.dtd");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/Olist.dtd");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/Clist.dtd");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/Alist.dtd");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/Hlist.dtd");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/Ilist.dtd");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/Mlist.dtd");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/Llist.dtd");
-        OutDirUtils.copyFileFromHomeDir("src/deadlock/web/results.xml");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/style.css");
-        OutDirUtils.copyFileFromHomeDir("src/deadlock/web/group.xsl");
-        OutDirUtils.copyFileFromHomeDir("src/deadlock/web/paths.xsl");
-        OutDirUtils.copyFileFromHomeDir("src/main/web/misc.xsl");
+        OutDirUtils.copyFileFromMainDir("src/web/Olist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/Clist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/Alist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/Hlist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/Ilist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/Mlist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/Llist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/style.css");
+        OutDirUtils.copyFileFromMainDir("src/web/misc.xsl");
+        OutDirUtils.copyFileFromMainDir("src/web/deadlock/results.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/deadlock/results.xml");
+        OutDirUtils.copyFileFromMainDir("src/web/deadlock/group.xsl");
+        OutDirUtils.copyFileFromMainDir("src/web/deadlock/paths.xsl");
 
         OutDirUtils.runSaxon("results.xml", "group.xsl");
         OutDirUtils.runSaxon("results.xml", "paths.xsl");

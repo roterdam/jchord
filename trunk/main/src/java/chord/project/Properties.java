@@ -22,21 +22,21 @@ public class Properties {
 
 	// Chord resource properties
 
-	public final static String homeDirName = System.getProperty("chord.home.dir");
+	public final static String mainDirName = System.getProperty("chord.main.dir");
 	static {
-		assert(homeDirName != null);
+		assert(mainDirName != null);
 	}
 	public static String libDirName = System.getProperty("chord.lib.dir");
 	static {
 		if (libDirName == null)
-			libDirName = FileUtils.getAbsolutePath(homeDirName, "lib");
+			libDirName = FileUtils.getAbsolutePath(mainDirName, "lib");
 	}
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
 	public static String instrAgentFileName = System.getProperty("chord.instr.agent.file");
 	static {
 		if (instrAgentFileName == null)
-			instrAgentFileName = FileUtils.getAbsolutePath(homeDirName, "lib/libchord_instr_agent.so");
+			instrAgentFileName = FileUtils.getAbsolutePath(mainDirName, "lib/libchord_instr_agent.so");
 	}
 	public final static String javadocURL = System.getProperty("chord.javadoc.url",
 		"http://chord.stanford.edu/javadoc_2_0/");
@@ -86,13 +86,13 @@ public class Properties {
 	public static String javaAnalysisPathName = System.getProperty("chord.java.analysis.path");
 	static {
 		if (javaAnalysisPathName == null)
-			javaAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "classes/main");
+			javaAnalysisPathName = FileUtils.getAbsolutePath(mainDirName, "classes");
 	}
 	public static String dlogAnalysisPathName =
 		System.getProperty("chord.dlog.analysis.path");
 	static {
 		if (dlogAnalysisPathName == null) {
-			dlogAnalysisPathName = FileUtils.getAbsolutePath(homeDirName, "src/main/dlog");
+			dlogAnalysisPathName = FileUtils.getAbsolutePath(mainDirName, "src/dlog");
 		}
 	}
 	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
@@ -142,7 +142,7 @@ public class Properties {
 		System.out.println("******************************");
 
 		System.out.println("*** Chord resource properties:");
-		System.out.println("chord.home.dir: " + homeDirName);
+		System.out.println("chord.main.dir: " + mainDirName);
 		System.out.println("chord.lib.dir: " + libDirName);
 		System.out.println("chord.main.class.path: " + mainClassPathName);
 		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
