@@ -66,6 +66,10 @@ public class IntArraySet {
 		}
     }
 
+	private boolean isReadOnly;
+	public void setReadOnly() {
+		isReadOnly = true;
+	}
     /**
      * Double the capacity of the internal array.
      * Must be called only when _pos == _data.length
@@ -113,6 +117,8 @@ public class IntArraySet {
 	}
 
 	public void clear() {
+		if (isReadOnly)
+			throw new RuntimeException();
 		_pos = 0;
 	}
 
@@ -122,6 +128,8 @@ public class IntArraySet {
      * @param val an <code>int</code> value
      */
     public boolean add(int val) {
+		if (isReadOnly)
+			throw new RuntimeException();
 		if (contains(val))
 			return false;
         if (_pos == _data.length)
@@ -131,12 +139,16 @@ public class IntArraySet {
     }
 
 	public void addForcibly(int val) {
+		if (isReadOnly)
+			throw new RuntimeException();
         if (_pos ==  _data.length)
        		grow();
 		_data[_pos++] = val;
 	}
 
 	public boolean addAll(IntArraySet that) {
+		if (isReadOnly)
+			throw new RuntimeException();
         boolean modified = false;
         int n = that._pos;
 		for (int i = 0; i < n; i++) {

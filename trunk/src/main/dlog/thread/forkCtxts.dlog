@@ -15,7 +15,6 @@
 # Relations
 ###
 
-MI(m:M,i:I) input
 thrOblAbbrCICM(c:C,i:I,d:C,m:M) input
 
 forkC(c:C) output

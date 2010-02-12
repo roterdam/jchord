@@ -41,6 +41,7 @@ import gnu.trove.TIntArrayList;
  * Recognized system properties:
  * <ul>
  * <li><tt>chord.convert</tt> ([true|false]; default=false)</li>
+ * <li><tt>chord.dynamic.escape.flowins</tt> ([true|false]; default=false)</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -54,8 +55,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	// set of IDs of currently escaping concrete/abstract objects
     private TIntHashSet escObjs;
 
-	// map from each concrete object ID to a list of each instance field
-	// of reference type along with its value (a concrete object ID)
+	// map from each object to a list of each non-null instance field
+	// of reference type along with its value
 	private TIntObjectHashMap<List<FldObj>> objToFldObjs;
 
     // map from each object to the index in domain H of its alloc site
@@ -223,9 +224,10 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		objToFldObjs.remove(o);
 		escObjs.remove(o);
 		if (isFlowIns) {
-			objToHidx.remove(o);
 			if (h >= 0)
 				objToHidx.put(o, h);
+			else
+				objToHidx.remove(o);
 		}
 	}
 

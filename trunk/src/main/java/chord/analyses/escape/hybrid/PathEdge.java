@@ -15,6 +15,7 @@ public class PathEdge {
 	public PathEdge(SrcNode s, DstNode d) {
 		srcNode = s;
 		dstNode = d;
+		// d.check();
 	}
 	public int hashCode() {
 		return srcNode.hashCode() + dstNode.hashCode();

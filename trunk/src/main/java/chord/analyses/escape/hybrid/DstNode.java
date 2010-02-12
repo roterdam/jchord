@@ -19,6 +19,17 @@ public class DstNode {
 	final IntArraySet[] env;
 	final Set<IntTrio> heap;
 	final IntArraySet esc;
+	public void check() {
+		assert (!esc.contains(ThreadEscapeFullAnalysis.ESC_VAL));
+		for (IntTrio t : heap) {
+			assert(!esc.contains(t.idx0));
+			assert(!esc.contains(t.idx2));
+		}
+		int n = env.length;
+		for (int i = 0; i < n; i++) {
+			assert(!esc.overlaps(env[i]));
+		}
+	}
 	public DstNode(IntArraySet[] e, Set<IntTrio> h, IntArraySet e2) {
 		env = e;
 		heap = h;
