@@ -10,10 +10,10 @@
 		<echo>
 		test-all Test all Chord components
 		         Optional properties:
-		         - test.dirs       (comma-separated list of directories under test/ to be included; default="${test.dirs}")
+		         - test.dirs       (comma-separated list of directories under programs/ to be included; default="${test.dirs}")
 		test     Test only chosen Chord components
 		         Optional properties:
-		         - test.dirs       (comma-separated list of directories under test/ to be included; default="${test.dirs}")
+		         - test.dirs       (comma-separated list of directories under programs/ to be included; default="${test.dirs}")
 		         - test.main       (test basic program domains and relations; default=false)
 		         - test.cia        (test 0-CFA may alias and call graph analyses; default=false)
 		         - test.csa.0cfa   (test context-sensitive adaptor for 0-CFA may alias and call graph analyses; default=false)
@@ -59,7 +59,7 @@
 				<ant dir="${maindir}" target="run">
 					<property name="chord.work.dir" value="@{testdir}"/>
 					<property name="chord.build.scope" value="true"/>
-					<property name="chord.scope.exclude" value="java.,javax.,sun.,joeq.,jwutil.,com.sun.,com.ibm.,org.apache.harmony."/>
+					<property name="chord.scope.exclude" value="java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil."/>
 					</ant>
 				<antcall target="sort-and-diff">
 					<param name="arg1" location="@{testdir}/chord_output/classes.txt"/>
