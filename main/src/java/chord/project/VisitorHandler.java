@@ -83,7 +83,7 @@ public class VisitorHandler {
 		this.tasks = tasks;
 	}
 	private void visitFields(jq_Class c) {
-		for (Object o : c.getMembers()) {
+		for (Object o : c.getSortedMembers()) {
 			if (o instanceof jq_Field) {
 				jq_Field f = (jq_Field) o;
 				for (IFieldVisitor fv : fvs)
@@ -92,7 +92,7 @@ public class VisitorHandler {
 		}
 	}
 	private void visitMethods(jq_Class c) {
-		for (Object o : c.getMembers()) {
+		for (Object o : c.getSortedMembers()) {
 			if (o instanceof jq_Method) {
 				jq_Method m = (jq_Method) o;
 				if (!reachableMethods.contains(m))
