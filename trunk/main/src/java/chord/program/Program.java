@@ -77,14 +77,11 @@ public class Program {
 	private boolean HTMLizedJavaSrcFiles;
 	private final Map<Inst, jq_Method> instToMethodMap = 
 		new HashMap<Inst, jq_Method>();
-	private String[] scopeExcludedPrefixes;
 
 	private Program() {
 		if (Properties.doSSA)
 			jq_Method.doSSA();
 		try {
-			scopeExcludedPrefixes = Properties.toArray(
-        		Properties.scopeExcludeStr);
 			boolean filesExist =
 				(new File(Properties.classesFileName)).exists() &&
 				(new File(Properties.methodsFileName)).exists();
@@ -118,17 +115,7 @@ public class Program {
 				continue;
 			}
 			assert (c != null);
-			String cName = c.getName();
-			boolean exclude = false;
-			for (String prefix : scopeExcludedPrefixes) {
-				if (cName.startsWith(prefix)) {
-					System.out.println("WARNING: Excluding class: " + cName);
-					exclude = true;
-					break;
-				}
-			}
-			if (!exclude)
-				classes.add(c);
+			classes.add(c);
 		}
 		r.close();
 	}
@@ -137,7 +124,6 @@ public class Program {
 		loadClasses(Properties.classesFileName);
 		methods = new IndexHashSet<jq_Method>();
 		readMethods(Properties.methodsFileName);
-		touchMethods();
 		buildTypes();
 	}
 
@@ -160,48 +146,11 @@ public class Program {
 		r.close();
 	}
 
-	private void touchMethods() {
-		for (jq_Method m : methods) {
-			if (m.isAbstract())
-				continue;
-			ControlFlowGraph cfg = m.getCFG();
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-					it.hasNext();) {
-				BasicBlock bb = it.nextBasicBlock();
-				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();
-					Operator op = q.getOperator();
-					if (op instanceof Invoke) {
-						MethodOperand mo = Invoke.getMethod(q);
-						mo.resolve();
-					} else if (op instanceof Getstatic) {
-						Getstatic.getField(q).getField().getDeclaringClass();
-					} else if (op instanceof Putstatic) {
-                    	Putstatic.getField(q).getField().getDeclaringClass();
-					} else if (op instanceof New) {
-						New.getType(q).getType();
-					}
-				}
-			}
-		}
-	}
-
 	private void init(IBootstrapper bootstrapper) throws IOException {
 		bootstrapper.run();
 		classes = new IndexHashSet<jq_Class>();
-		for (jq_Class c : bootstrapper.getPreparedClasses()) {
-			boolean exclude = false;
-			String cName = c.getName();
-			for (String prefix : scopeExcludedPrefixes) {
-				if (cName.startsWith(prefix)) {
-					System.out.println("WARNING: Excluding class: " + cName);
-					exclude = true;
-					break;
-				}
-			}
-			if (!exclude)
-				classes.add(c);
-		}
+		for (jq_Class c : bootstrapper.getPreparedClasses()) 
+			classes.add(c);
 		methods = new IndexHashSet<jq_Method>();
 		for (jq_Method m : bootstrapper.getReachableMethods()) {
 			jq_Class c = m.getDeclaringClass();
@@ -240,7 +189,6 @@ public class Program {
 			for (jq_Method m : c.getDeclaredStaticMethods()) 
 				methods.add(m);
 		}
-		touchMethods();
 		buildTypes();
 		write();
 	}
@@ -275,11 +223,46 @@ public class Program {
 
 	private void buildTypes() {
 		types = new IndexHashSet<jq_Type>();
+		for (jq_Class c : classes)
+			types.add(c);
+/*
+		for (jq_Class c : classes) {
+            jq_Class d = c.getSuperclass();
+			// d is null if c is java.lang.Object
+            if (d != null)
+				types.add(d);
+            for (jq_Class i : c.getDeclaredInterfaces())
+				types.add(i);
+		}
+		for (jq_Method m : methods) {
+			for (jq_Type t : m.getParamTypes())
+				types.add(t);
+			types.add(m.getReturnType());
+			if (m.isAbstract())
+				continue;
+			ControlFlowGraph cfg = m.getCFG();
+        	for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+            	    it.hasNext();) {
+            	BasicBlock bb = it.nextBasicBlock();
+				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
+					Quad q = it2.nextQuad();
+					Operator op = q.getOperator();
+					if (op instanceof New) {
+                    	jq_Type t = New.getType(q).getType();
+						types.add(t);
+					} else if (op instanceof NewArray) {
+                    	jq_Type t = NewArray.getType(q).getType();
+						types.add(t);
+					}
+				}
+			}
+		}
 		for (jq_Type t : PrimordialClassLoader.loader.getAllTypes()) {
 			if (t != null) {
 				types.add(t);
 			}
 		}
+*/
 	}
 	
 	private void buildNameToClassMap() {

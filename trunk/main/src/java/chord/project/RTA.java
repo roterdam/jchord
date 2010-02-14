@@ -15,6 +15,7 @@ import chord.util.IndexHashSet;
 import chord.util.ChordRuntimeException;
 
 import joeq.Class.PrimordialClassLoader;
+import joeq.Class.jq_Field;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_InstanceMethod;
@@ -32,8 +33,6 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
-import joeq.Compiler.Quad.Operand.MethodOperand;
-import joeq.Compiler.Quad.Operand.FieldOperand;
 import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 
@@ -127,9 +126,7 @@ public class RTA implements IBootstrapper {
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {
 					if (DEBUG) System.out.println("Quad: " + q);
-					MethodOperand mo = Invoke.getMethod(q);
-					mo.resolve();
-					jq_Method n = mo.getMethod();
+					jq_Method n = Invoke.getMethod(q).getMethod();
 					jq_Class c = n.getDeclaringClass();
 					handleClass(c);
 					handleSeenMethod(n);
@@ -161,15 +158,13 @@ public class RTA implements IBootstrapper {
 						assert (op instanceof InvokeStatic);
 				} else if (op instanceof Getstatic) {
 					if (DEBUG) System.out.println("Quad: " + q);
-					FieldOperand fo = Getstatic.getField(q);
-					fo.resolve();
-					jq_Class c = fo.getField().getDeclaringClass();
+					jq_Field f = Getstatic.getField(q).getField();
+					jq_Class c = f.getDeclaringClass();
 					handleClass(c);
 				} else if (op instanceof Putstatic) {
 					if (DEBUG) System.out.println("Quad: " + q);
-					FieldOperand fo = Putstatic.getField(q);
-					fo.resolve();
-					jq_Class c = fo.getField().getDeclaringClass();
+					jq_Field f = Putstatic.getField(q).getField();
+					jq_Class c = f.getDeclaringClass();
 					handleClass(c);
 				} else if (op instanceof New) {
 					if (DEBUG) System.out.println("Quad: " + q);
