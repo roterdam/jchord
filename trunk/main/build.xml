@@ -226,7 +226,8 @@
 	<!--
 		Prepares a binary release of the project.
 	-->
-	<target name="release" depends="clean, compile, dist" description="Preparese a binary release of the project.">
+	<target name="release" depends="clean, compile, dist"
+			description="Prepares a binary release of the project.">
 		<mkdir dir="${release.dir}"/>
 		<mkdir dir="${release.dir}/lib"/>
 		<copy todir="${release.dir}/lib">
