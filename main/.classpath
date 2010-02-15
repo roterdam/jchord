@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="classes" path="src/java"/>
+	<classpathentry kind="lib" path="lib/trove-2.0.4.jar"/>
+	<classpathentry kind="lib" path="lib/bddbddb/bddbddb.jar"/>
+	<classpathentry kind="lib" path="lib/bddbddb/javabdd-1.0b2.jar"/>
+	<classpathentry kind="lib" path="lib/bddbddb/jdom.jar"/>
+	<classpathentry kind="lib" path="lib/saxon9.jar"/>
+	<classpathentry kind="lib" path="lib/scannotation-1.0.2.jar"/>
+	<classpathentry kind="lib" path="lib/javassist.jar"/>
+	<classpathentry kind="lib" path="lib/joeq.jar"/>
+	<classpathentry kind="lib" path="lib/jwutil.jar"/>
+	<classpathentry kind="lib" path="lib/j2h.jar"/>
+	<classpathentry kind="lib" path="lib/java2html.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="output" path="classes"/>
+</classpath>
