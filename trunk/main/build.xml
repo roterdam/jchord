@@ -280,9 +280,10 @@
 		<available file="${chord.props.file}"/>
 		<then>
 			<property file="${chord.props.file}"/>
+			<dirname property="chord.props.dir" file="${chord.props.file}"/>
 			<propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
-			<antfetch antfile="${tool.home}/pathconvert.xml" dir="${chord.work.dir}"
-				target="pathconvert" inheritAll="false" return="${chord.path.prop.list}"/>
+			<antfetch antfile="${tool.home}/pathconvert.xml" dir="${chord.props.dir}"
+				target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
 		</then>
 		<else/>
 	</if>
