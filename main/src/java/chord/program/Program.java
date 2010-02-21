@@ -81,6 +81,9 @@ public class Program {
 	private Program() {
 		if (Properties.doSSA)
 			jq_Method.doSSA();
+        String[] scopeExcludedPrefixes = Properties.toArray(
+            Properties.scopeExcludeStr);
+		jq_Method.exclude(scopeExcludedPrefixes);
 		try {
 			boolean filesExist =
 				(new File(Properties.classesFileName)).exists() &&
@@ -225,46 +228,8 @@ public class Program {
 		types = new IndexHashSet<jq_Type>();
 		for (jq_Class c : classes)
 			types.add(c);
-/*
-		for (jq_Class c : classes) {
-            jq_Class d = c.getSuperclass();
-			// d is null if c is java.lang.Object
-            if (d != null)
-				types.add(d);
-            for (jq_Class i : c.getDeclaredInterfaces())
-				types.add(i);
-		}
-		for (jq_Method m : methods) {
-			for (jq_Type t : m.getParamTypes())
-				types.add(t);
-			types.add(m.getReturnType());
-			if (m.isAbstract())
-				continue;
-			ControlFlowGraph cfg = m.getCFG();
-        	for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-            	    it.hasNext();) {
-            	BasicBlock bb = it.nextBasicBlock();
-				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();
-					Operator op = q.getOperator();
-					if (op instanceof New) {
-                    	jq_Type t = New.getType(q).getType();
-						types.add(t);
-					} else if (op instanceof NewArray) {
-                    	jq_Type t = NewArray.getType(q).getType();
-						types.add(t);
-					}
-				}
-			}
-		}
-		for (jq_Type t : PrimordialClassLoader.loader.getAllTypes()) {
-			if (t != null) {
-				types.add(t);
-			}
-		}
-*/
 	}
-	
+
 	private void buildNameToClassMap() {
 		nameToClassMap = new HashMap<String, jq_Class>();
 		for (jq_Class c : classes) {
