@@ -5,7 +5,7 @@
  */
 package chord.analyses.escape.hybrid;
 
-import chord.project.ISummaryEdge;
+import chord.project.analyses.rhs.ISummaryEdge;
 
 /**
  * 

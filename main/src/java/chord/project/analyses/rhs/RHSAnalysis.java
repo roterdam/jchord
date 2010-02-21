@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.project.analyses.rhs;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,8 +28,8 @@ import chord.analyses.alias.ICICG;
 import chord.analyses.alias.ThrSenAbbrCICGAnalysis;
 import chord.doms.DomI;
 import chord.doms.DomM;
-import chord.project.analyses.JavaAnalysis;
 import chord.project.Project;
+import chord.project.analyses.JavaAnalysis;
 import chord.util.ArraySet;
 
 /**
