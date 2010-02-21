@@ -6,9 +6,9 @@
 package chord.rels;
 
 import joeq.Class.jq_Class;
+import chord.program.visitors.IClassVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IClassVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each interface type.

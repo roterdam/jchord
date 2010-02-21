@@ -7,8 +7,8 @@ package chord.analyses.alias;
 
 import java.util.Set;
 
-import chord.project.ProgramDom;
 import chord.project.Project;
+import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of abstract objects.

@@ -9,21 +9,22 @@ import java.util.ArrayList;
 import java.util.Collection;
 
 import chord.program.Program;
+import chord.program.visitors.IAcqLockInstVisitor;
+import chord.program.visitors.IClassVisitor;
+import chord.program.visitors.IFieldVisitor;
+import chord.program.visitors.IHeapInstVisitor;
+import chord.program.visitors.IInstVisitor;
+import chord.program.visitors.IInvokeInstVisitor;
+import chord.program.visitors.IMethodVisitor;
+import chord.program.visitors.IMoveInstVisitor;
+import chord.program.visitors.INewInstVisitor;
+import chord.program.visitors.IPhiInstVisitor;
+import chord.program.visitors.IRelLockInstVisitor;
+import chord.program.visitors.IReturnInstVisitor;
+import chord.program.visitors.IVarVisitor;
+import chord.project.analyses.ITask;
 import chord.util.IndexSet;
 
-import chord.visitors.IClassVisitor;
-import chord.visitors.IFieldVisitor;
-import chord.visitors.IHeapInstVisitor;
-import chord.visitors.IInstVisitor;
-import chord.visitors.IInvokeInstVisitor;
-import chord.visitors.IAcqLockInstVisitor;
-import chord.visitors.IRelLockInstVisitor;
-import chord.visitors.IMethodVisitor;
-import chord.visitors.IMoveInstVisitor;
-import chord.visitors.INewInstVisitor;
-import chord.visitors.IPhiInstVisitor;
-import chord.visitors.IReturnInstVisitor;
-import chord.visitors.IVarVisitor;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;

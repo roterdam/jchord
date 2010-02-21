@@ -29,7 +29,7 @@ import chord.util.WeakIdentityHashMap;
  * methods named ".*Event", e.g. {@link #acquireLockEvent(int, Object)}.
  * Which methods are relevant depends upon the instrumentation scheme
  * chosen by the dynamic program analysis;
- * see {@link chord.project.DynamicAnalysis#getInstrScheme()}.
+ * see {@link chord.project.analyses.DynamicAnalysis#getInstrScheme()}.
  *   
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

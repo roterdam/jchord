@@ -11,8 +11,8 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
 
 import chord.program.Program;
+import chord.program.visitors.IAcqLockInstVisitor;
 import chord.project.Chord;
-import chord.visitors.IAcqLockInstVisitor;
 
 /**
  * Domain of all lock acquire points, including monitorenter

@@ -9,7 +9,7 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Type;
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.ProgramDom;
+import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of types.

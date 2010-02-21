@@ -14,7 +14,7 @@ import java.util.Set;
 import chord.doms.DomM;
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m1,t,m2) such that method m2 is the

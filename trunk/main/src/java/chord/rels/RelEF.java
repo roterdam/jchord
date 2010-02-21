@@ -11,7 +11,7 @@ import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (e,f) such that statement e

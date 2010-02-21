@@ -13,7 +13,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,v) such that local variable

@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.HashMap;
 
 import chord.bddbddb.RelSign;
+import chord.project.analyses.ProgramRel;
 import chord.util.ClassUtils;
 
 /**

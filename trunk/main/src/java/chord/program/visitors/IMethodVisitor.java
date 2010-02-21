@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.visitors;
+package chord.program.visitors;
 
 import joeq.Class.jq_Method;
 

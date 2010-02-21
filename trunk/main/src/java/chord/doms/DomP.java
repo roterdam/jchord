@@ -16,9 +16,9 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Util.Templates.ListIterator;
 
 import chord.program.Program;
-import chord.project.ProgramDom;
 import chord.project.Project;
 import chord.project.Chord;
+import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of simple statements.

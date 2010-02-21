@@ -9,7 +9,7 @@ import joeq.Class.jq_Type;
 
 import chord.doms.DomT;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (s,t) such that type s is a

@@ -5,11 +5,11 @@
  */
 package chord.analyses.alias;
 
-import chord.project.JavaAnalysis;
 import chord.doms.DomM;
 import chord.project.Chord;
-import chord.project.ProgramRel;
 import chord.project.Project;
+import chord.project.analyses.JavaAnalysis;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Context-insensitive call graph analysis.

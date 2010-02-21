@@ -16,10 +16,10 @@ import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 
+import chord.program.visitors.IMoveInstVisitor;
+import chord.program.visitors.IPhiInstVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IMoveInstVisitor;
-import chord.visitors.IPhiInstVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (p,v1,v2) such that the statement

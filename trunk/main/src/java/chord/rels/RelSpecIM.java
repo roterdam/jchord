@@ -13,7 +13,7 @@ import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (i,m) such that m is the resolved

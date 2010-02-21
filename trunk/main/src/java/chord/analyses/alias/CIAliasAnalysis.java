@@ -14,9 +14,9 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.bddbddb.Rel.RelView;
 import chord.project.Chord;
-import chord.project.JavaAnalysis;
-import chord.project.ProgramRel;
 import chord.project.Project;
+import chord.project.analyses.JavaAnalysis;
+import chord.project.analyses.ProgramRel;
 
 import chord.util.SetUtils;
 

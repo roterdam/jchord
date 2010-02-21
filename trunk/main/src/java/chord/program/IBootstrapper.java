@@ -1,4 +1,4 @@
-package chord.project;
+package chord.program;
 
 import chord.util.IndexSet;
 import joeq.Class.jq_Method;

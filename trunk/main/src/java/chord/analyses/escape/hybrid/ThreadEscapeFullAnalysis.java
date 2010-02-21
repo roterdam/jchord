@@ -7,11 +7,9 @@ package chord.analyses.escape.hybrid;
 
 import gnu.trove.TObjectIntHashMap;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.io.PrintWriter;
@@ -22,16 +20,12 @@ import java.io.IOException;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
-import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operand.FieldOperand;
-import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Getfield;
@@ -48,7 +42,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Properties;
 import chord.util.ChordRuntimeException;
@@ -102,11 +96,9 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge>
 	private Set<Quad> currEscHeapInsts = new HashSet<Quad>();
     private MyQuadVisitor qv = new MyQuadVisitor();
 	private jq_Method threadStartMethod;
-	private jq_Method mainMethod;
 
 	public void run() {
 		threadStartMethod = Program.v().getThreadStartMethod();
-		mainMethod = Program.v().getMainMethod();
         domI = (DomI) Project.getTrgt("I");
         Project.runTask(domI);
         domM = (DomM) Project.getTrgt("M");
@@ -230,7 +222,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge>
 			// arg of start method of java.lang.Thread escapes
 			env[0] = escPts;
 		}
-		BasicBlock bb = root.getCFG().entry();
 		SrcNode srcNode = new SrcNode(env, emptyHeap);
 		DstNode dstNode = new DstNode(env, emptyHeap, nilPts);
 		PathEdge pe = new PathEdge(srcNode, dstNode);

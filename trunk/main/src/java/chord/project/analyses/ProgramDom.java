@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.project.analyses;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -11,8 +11,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 
 import chord.bddbddb.Dom;
-import chord.project.ProgramDom;
-import chord.visitors.IClassVisitor;
+import chord.program.visitors.IClassVisitor;
+import chord.project.Project;
+import chord.project.Properties;
+import chord.project.VisitorHandler;
+import chord.project.analyses.ProgramDom;
 import chord.util.ChordRuntimeException;
 
 /**

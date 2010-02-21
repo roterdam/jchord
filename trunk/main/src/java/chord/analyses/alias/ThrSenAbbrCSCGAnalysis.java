@@ -7,8 +7,8 @@ package chord.analyses.alias;
 
 import chord.doms.DomM;
 import chord.project.Chord;
-import chord.project.ProgramRel;
 import chord.project.Project;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Call graph analysis producing a thread-sensitive, abbreviated,

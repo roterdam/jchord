@@ -13,7 +13,7 @@ import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.doms.DomL;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (l,v) such that monitorenter

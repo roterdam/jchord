@@ -3,13 +3,14 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.program;
 
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import chord.project.Properties;
 import chord.util.Timer;
 import chord.util.IndexHashSet;
 import chord.util.ChordRuntimeException;

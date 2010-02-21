@@ -18,10 +18,10 @@ import chord.project.Properties;
 import chord.program.Program;
 import chord.project.Project;
 import chord.project.Chord;
-import chord.project.ProgramDom;
-import chord.project.ProgramRel;
-import chord.project.JavaAnalysis;
 import chord.project.OutDirUtils;
+import chord.project.analyses.JavaAnalysis;
+import chord.project.analyses.ProgramDom;
+import chord.project.analyses.ProgramRel;
 
 import chord.util.ArraySet;
 import chord.util.graph.IPathVisitor;

@@ -9,9 +9,9 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import chord.program.visitors.IVarVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IVarVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (v,t) such that local variable v

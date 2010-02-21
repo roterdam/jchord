@@ -12,7 +12,7 @@ import joeq.Compiler.Quad.Quad;
 
 import chord.bddbddb.Rel.RelView;
 import chord.doms.DomM;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 import chord.util.SetUtils;
 import chord.util.graph.AbstractGraph;
 

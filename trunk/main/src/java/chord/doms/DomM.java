@@ -8,9 +8,9 @@ package chord.doms;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import chord.program.Program;
+import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
-import chord.project.ProgramDom;
-import chord.visitors.IMethodVisitor;
+import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of methods.

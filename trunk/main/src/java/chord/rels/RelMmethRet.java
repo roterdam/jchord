@@ -13,9 +13,9 @@ import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
+import chord.program.visitors.IReturnInstVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IReturnInstVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,z,v) such that local variable
