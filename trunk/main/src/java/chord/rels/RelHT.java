@@ -33,17 +33,15 @@ public class RelHT extends ProgramRel {
 		for (int hIdx = 0; hIdx < numH; hIdx++) {
 			Quad h = (Quad) domH.get(hIdx);
 			Operator op = h.getOperator();
-			jq_Type t;
-			if (op instanceof New)
-				t = New.getType(h).getType();
-			else
-				t = NewArray.getType(h).getType();
-			int tIdx = domT.indexOf(t);
-			if (tIdx == -1) {
-				System.out.println("WARNING: HT: " + h);
-				continue;
+			if (op instanceof New) {
+				jq_Type t = New.getType(h).getType();
+				int tIdx = domT.indexOf(t);
+				if (tIdx == -1) {
+					System.out.println("WARNING: HT: " + h);
+					continue;
+				}
+				add(hIdx, tIdx);
 			}
-			add(hIdx, tIdx);
 		}
 	}
 }
