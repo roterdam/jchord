@@ -13,9 +13,9 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Util.Templates.ListIterator;
 import chord.doms.DomP;
+import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IMethodVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (p1,p2) such that program point p2

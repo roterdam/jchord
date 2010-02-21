@@ -22,9 +22,9 @@ import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
 import chord.doms.DomI;
 import chord.doms.DomL;
+import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IMethodVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (l,i) such that method

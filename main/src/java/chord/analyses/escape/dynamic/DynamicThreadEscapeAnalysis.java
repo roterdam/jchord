@@ -18,9 +18,9 @@ import chord.project.Properties;
 import chord.util.IndexMap;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.DynamicAnalysis;
-import chord.project.ProgramRel;
 import chord.project.Project;
+import chord.project.analyses.DynamicAnalysis;
+import chord.project.analyses.ProgramRel;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;

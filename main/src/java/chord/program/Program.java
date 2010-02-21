@@ -18,9 +18,7 @@ import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
-import chord.project.IBootstrapper;
 import chord.project.Properties;
-import chord.project.RTA;
 import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
 import chord.util.IndexSet;

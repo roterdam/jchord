@@ -3,10 +3,13 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.project.analyses;
 
 import chord.bddbddb.Rel;
-import chord.visitors.IClassVisitor;
+import chord.program.visitors.IClassVisitor;
+import chord.project.Project;
+import chord.project.Properties;
+import chord.project.VisitorHandler;
 import chord.util.ChordRuntimeException;
 
 /**

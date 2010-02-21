@@ -6,8 +6,8 @@
 package chord.doms;
 
 import joeq.Compiler.Quad.Quad;
+import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
-import chord.visitors.IInvokeInstVisitor;
 
 /**
  * Domain of method invocation statements.

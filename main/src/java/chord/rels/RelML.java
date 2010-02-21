@@ -11,7 +11,7 @@ import chord.doms.DomL;
 import chord.doms.DomM;
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,l) such that method m contains

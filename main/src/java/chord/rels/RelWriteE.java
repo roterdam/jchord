@@ -10,7 +10,7 @@ import joeq.Compiler.Quad.Quad;
 import chord.doms.DomE;
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing all statements that write to an instance

@@ -15,7 +15,7 @@ import chord.doms.DomH;
 import chord.doms.DomP;
 import chord.doms.DomV;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (p,v,h) such that the statement

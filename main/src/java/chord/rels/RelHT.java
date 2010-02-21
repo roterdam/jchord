@@ -13,7 +13,7 @@ import joeq.Compiler.Quad.Operator.NewArray;
 import chord.doms.DomH;
 import chord.doms.DomT;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (h,t) such that object allocation

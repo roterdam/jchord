@@ -9,9 +9,9 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
+import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
-import chord.project.ProgramDom;
-import chord.visitors.IInvokeInstVisitor;
+import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of argument and return variable positions of methods

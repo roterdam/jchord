@@ -7,9 +7,9 @@ package chord.rels;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
+import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IMethodVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (t,m) such that method m is

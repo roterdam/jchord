@@ -10,8 +10,8 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.TypeOperand;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
+import chord.program.visitors.INewInstVisitor;
 import chord.project.Chord;
-import chord.visitors.INewInstVisitor;
 
 /**
  * Domain of object allocation statements.

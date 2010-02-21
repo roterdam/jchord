@@ -18,7 +18,7 @@ import joeq.Util.Templates.ListIterator;
 import chord.util.ArraySet;
 import chord.bddbddb.Rel.RelView;
 import chord.doms.DomM;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 import chord.util.SetUtils;
 import chord.util.graph.AbstractGraph;
 import chord.util.tuple.object.Pair;

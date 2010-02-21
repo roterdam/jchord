@@ -10,8 +10,8 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
-import chord.project.ProgramDom;
 import chord.project.Project;
+import chord.project.analyses.ProgramDom;
 import chord.doms.DomI;
 import chord.doms.DomH;
 

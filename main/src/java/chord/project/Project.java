@@ -5,7 +5,6 @@
  */
 package chord.project;
 
-import java.io.PrintStream;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -27,6 +26,10 @@ import java.util.Stack;
 import org.scannotation.AnnotationDB;
 
 import chord.program.Program;
+import chord.project.analyses.DlogAnalysis;
+import chord.project.analyses.ITask;
+import chord.project.analyses.ProgramDom;
+import chord.project.analyses.ProgramRel;
 import chord.util.ArraySet;
 import chord.util.ArrayUtils;
 import chord.util.ClassUtils;
@@ -61,107 +64,85 @@ public class Project {
 	private static Timer currTimer;
 
 	private Project() { }
-	
-	public static void main(String[] args) {
-        PrintStream outStream = null;
-        PrintStream errStream = null;
-        try {
-            String outDirName = Properties.outDirName;
-            String outFileName = Properties.outFileName;
-            String errFileName = Properties.errFileName;
-            File outFile = new File(outFileName);
-            outStream = new PrintStream(outFile);
-            System.setOut(outStream);
-            File errFile = new File(errFileName);
-            if (errFile.equals(outFile))
-                errStream = outStream;
-            else
-                errStream = new PrintStream(errFile);
-            System.setErr(errStream);
 
-			System.out.println("ENTER: chord");
-			currTimer = new Timer("chord");
-			currTimer.init();
+	public static void run() {
+		System.out.println("ENTER: chord");
+		currTimer = new Timer("chord");
+		currTimer.init();
 
-            Properties.print();
+        Properties.print();
 
-			if (Properties.buildScope) {
-				Program.v();
-			}
-
-            String[] runAnalyses = Properties.toArray(Properties.runAnalyses);
-            if (runAnalyses.length > 0) {
-            	Project.init();
-				for (String name : runAnalyses)
-					runTask(name);
-            }
-
-			String[] printRels = Properties.toArray(Properties.printRels);
-			if (printRels.length > 0) {
-				Project.init();
-				for (String relName : printRels) {
-					ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
-					assert(rel != null);
-					rel.load();
-					rel.print();
-				}
-			}
-
-			if (Properties.publishTargets) {
-				Project.init();
-				PrintWriter out;
-				try {
-					File file = new File(Properties.outDirName, "targets.xml");
-					out = new PrintWriter(new FileWriter(file));
-				} catch (IOException ex) {
-					throw new ChordRuntimeException(ex);
-				}
-				out.println("<targets " +
-					"java_analysis_path=\"" + Properties.javaAnalysisPathName + "\" " +
-					"dlog_analysis_path=\"" + Properties.dlogAnalysisPathName + "\">");
-				for (String name : nameToTrgtMap.keySet()) {
-					Object trgt = nameToTrgtMap.get(name);
-					String kind;
-					if (trgt instanceof ProgramDom)
-						kind = "domain";
-					else if (trgt instanceof ProgramRel)
-						kind = "relation";
-					else
-						kind = "other";
-					Set<ITask> tasks = trgtToProducerTasksMap.get(trgt);
-					Iterator<ITask> it = tasks.iterator();
-					String producerStr;
-					String otherProducersStr = "";
-					if (it.hasNext()) {
-						ITask fstTask = it.next();
-						producerStr = getNameAndURL(fstTask);
-						while (it.hasNext()) {
-							ITask task = it.next();
-							otherProducersStr += "<producer " + getNameAndURL(task) + "/>";
-						}
-					} else
-						producerStr = "producer_name=\"-\" producer_url=\"-\"";
-					out.println("\t<target name=\"" + name + "\" kind=\"" + kind +
-						"\" " + producerStr  + ">" +
-						otherProducersStr + "</target>");
-				}
-				out.println("</targets>");
-				out.close();
-				OutDirUtils.copyFileFromMainDir("src/web/style.css");
-				OutDirUtils.copyFileFromMainDir("src/web/targets.xsl");
-				OutDirUtils.copyFileFromMainDir("src/web/targets.dtd");
-				OutDirUtils.runSaxon("targets.xml", "targets.xsl");
-			}
-
-			System.out.println("LEAVE: chord");
-			currTimer.done();
-			printCurrTimer();
-			outStream.close();
-			if (errStream != outStream)
-				errStream.close();
-        } catch (Throwable ex) {
-			throw new ChordRuntimeException(ex);
+		if (Properties.buildScope) {
+			Program.v();
 		}
+
+        String[] runAnalyses = Properties.toArray(Properties.runAnalyses);
+        if (runAnalyses.length > 0) {
+        	Project.init();
+			for (String name : runAnalyses)
+				runTask(name);
+        }
+
+		String[] printRels = Properties.toArray(Properties.printRels);
+		if (printRels.length > 0) {
+			Project.init();
+			for (String relName : printRels) {
+				ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
+				assert(rel != null);
+				rel.load();
+				rel.print();
+			}
+		}
+
+		if (Properties.publishTargets) {
+			Project.init();
+			PrintWriter out;
+			try {
+				File file = new File(Properties.outDirName, "targets.xml");
+				out = new PrintWriter(new FileWriter(file));
+			} catch (IOException ex) {
+				throw new ChordRuntimeException(ex);
+			}
+			out.println("<targets " +
+				"java_analysis_path=\"" + Properties.javaAnalysisPathName + "\" " +
+				"dlog_analysis_path=\"" + Properties.dlogAnalysisPathName + "\">");
+			for (String name : nameToTrgtMap.keySet()) {
+				Object trgt = nameToTrgtMap.get(name);
+				String kind;
+				if (trgt instanceof ProgramDom)
+					kind = "domain";
+				else if (trgt instanceof ProgramRel)
+					kind = "relation";
+				else
+					kind = "other";
+				Set<ITask> tasks = trgtToProducerTasksMap.get(trgt);
+				Iterator<ITask> it = tasks.iterator();
+				String producerStr;
+				String otherProducersStr = "";
+				if (it.hasNext()) {
+					ITask fstTask = it.next();
+					producerStr = getNameAndURL(fstTask);
+					while (it.hasNext()) {
+						ITask task = it.next();
+						otherProducersStr += "<producer " + getNameAndURL(task) + "/>";
+					}
+				} else
+					producerStr = "producer_name=\"-\" producer_url=\"-\"";
+				out.println("\t<target name=\"" + name + "\" kind=\"" + kind +
+					"\" " + producerStr  + ">" +
+					otherProducersStr + "</target>");
+			}
+			out.println("</targets>");
+			out.close();
+			OutDirUtils.copyFileFromMainDir("src/web/style.css");
+			OutDirUtils.copyFileFromMainDir("src/web/targets.xsl");
+			OutDirUtils.copyFileFromMainDir("src/web/targets.dtd");
+			OutDirUtils.runSaxon("targets.xml", "targets.xsl");
+		}
+
+		System.out.println("LEAVE: chord");
+		currTimer.done();
+		printCurrTimer();
 	}
 
 	public static Object getTrgt(String name) {

@@ -12,8 +12,8 @@ import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import chord.program.Program;
+import chord.program.visitors.IHeapInstVisitor;
 import chord.project.Chord;
-import chord.visitors.IHeapInstVisitor;
 
 /**
  * Domain of statements that access (read or write) an

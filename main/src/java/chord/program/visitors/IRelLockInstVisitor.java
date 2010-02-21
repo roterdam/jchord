@@ -3,22 +3,22 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.visitors;
+package chord.program.visitors;
 
 import joeq.Compiler.Quad.Quad;
 
 /**
- * Visitor over all monitorenter statements in all methods
+ * Visitor over all monitorexit statements in all methods
  * in the program.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public interface IAcqLockInstVisitor extends IMethodVisitor {
+public interface IRelLockInstVisitor extends IMethodVisitor {
 	/**
-	 * Visits all monitorenter statements in all methods
+	 * Visits all monitorexit statements in all methods
 	 * in the program.
 	 * 
-	 * @param	q	A monitorenter statement.
+	 * @param	q	A monitorexit statement.
 	 */
-	public void visitAcqLockInst(Quad q);
+	public void visitRelLockInst(Quad q);
 }

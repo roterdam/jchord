@@ -11,9 +11,9 @@ import java.util.Map;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import chord.program.visitors.IVarVisitor;
 import chord.project.Chord;
-import chord.project.ProgramDom;
-import chord.visitors.IVarVisitor;
+import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of local variables of reference type.

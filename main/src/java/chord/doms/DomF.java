@@ -8,9 +8,9 @@ package chord.doms;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import chord.program.Program;
+import chord.program.visitors.IFieldVisitor;
 import chord.project.Chord;
-import chord.project.ProgramDom;
-import chord.visitors.IFieldVisitor;
+import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of fields.

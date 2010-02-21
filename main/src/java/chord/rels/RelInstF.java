@@ -7,9 +7,9 @@ package chord.rels;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
+import chord.program.visitors.IFieldVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IFieldVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing all instance (as opposed to static) fields.

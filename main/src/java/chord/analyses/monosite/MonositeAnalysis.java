@@ -7,8 +7,8 @@ package chord.analyses.monosite;
 
 import chord.project.Chord;
 import chord.project.Project;
-import chord.project.JavaAnalysis;
-import chord.project.ProgramRel;
+import chord.project.analyses.JavaAnalysis;
+import chord.project.analyses.ProgramRel;
 import chord.analyses.alias.CtxtsAnalysis;
 
 /**

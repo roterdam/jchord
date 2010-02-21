@@ -3,7 +3,9 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.project.analyses;
+
+import chord.project.Project;
 
 /**
  * Specification of a program analysis.

@@ -9,7 +9,7 @@ import joeq.Compiler.Quad.Quad;
 import chord.doms.DomE;
 import chord.doms.DomP;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (p,e) such that the statement

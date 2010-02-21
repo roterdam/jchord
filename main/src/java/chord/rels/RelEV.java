@@ -16,7 +16,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.doms.DomE;
 import chord.doms.DomV;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (e,v) such that statement e

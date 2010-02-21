@@ -6,8 +6,8 @@
 package chord.doms;
 
 import chord.program.Program;
-import chord.project.ProgramDom;
 import chord.project.Project;
+import chord.project.analyses.ProgramDom;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;

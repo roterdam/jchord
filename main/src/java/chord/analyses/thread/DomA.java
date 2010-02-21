@@ -6,8 +6,8 @@
 package chord.analyses.thread;
 
 import joeq.Class.jq_Method;
-import chord.project.ProgramDom;
 import chord.project.Project;
+import chord.project.analyses.ProgramDom;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.DomC;
 import chord.util.tuple.object.Pair;

@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project;
+package chord.project.analyses;
 
 import java.io.IOException;
 import java.io.File;
@@ -16,6 +16,7 @@ import chord.instr.InstrScheme;
 import chord.instr.TraceTransformer;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.Program;
+import chord.project.Properties;
 import chord.runtime.BufferedRuntime;
 import chord.util.ByteBufferedFile;
 import chord.util.ProcessExecutor;

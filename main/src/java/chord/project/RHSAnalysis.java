@@ -5,55 +5,32 @@
  */
 package chord.project;
 
-import gnu.trove.TObjectIntHashMap;
-
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.io.File;
-import java.io.IOException;
 
-import joeq.Class.jq_Type;
-import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Inst;
-import joeq.Compiler.Quad.QuadVisitor;
-import joeq.Compiler.Quad.Operand.ParamListOperand;
-import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Return;
-import joeq.Compiler.Quad.RegisterFactory.Register;
 
-import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.object.Pair;
 import chord.program.Program;
 import chord.program.Location;
-import chord.project.ProgramRel;
-import chord.bddbddb.Rel.IntPairIterable;
-import chord.project.Properties;
-import chord.util.ChordRuntimeException;
 import chord.analyses.alias.ICICG;
 import chord.analyses.alias.ThrSenAbbrCICGAnalysis;
 import chord.doms.DomI;
 import chord.doms.DomM;
-import chord.project.Chord;
-import chord.project.JavaAnalysis;
+import chord.project.analyses.JavaAnalysis;
 import chord.project.Project;
 import chord.util.ArraySet;
-import chord.util.CompareUtils;
-import chord.util.IntArraySet;
-import chord.util.tuple.integer.IntTrio;
 
 /**
  * Implementation of the Reps-Horwitz-Sagiv algorithm for

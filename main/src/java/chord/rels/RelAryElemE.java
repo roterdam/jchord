@@ -11,7 +11,7 @@ import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 import chord.doms.DomE;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each statement that accesses (reads or writes)

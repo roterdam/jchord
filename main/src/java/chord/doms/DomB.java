@@ -12,9 +12,9 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
-import chord.project.ProgramDom;
-import chord.visitors.IMethodVisitor;
+import chord.project.analyses.ProgramDom;
 import joeq.Util.Templates.ListIterator;
 
 /**

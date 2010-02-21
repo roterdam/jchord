@@ -3,22 +3,22 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.visitors;
+package chord.program.visitors;
 
 import joeq.Compiler.Quad.Quad;
 
 /**
- * Visitor over all copy assignment statements in all methods
+ * Visitor over all new/newarray statements in all methods
  * in the program.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public interface IMoveInstVisitor extends IMethodVisitor {
+public interface INewInstVisitor extends IMethodVisitor {
 	/**
-	 * Visits all copy assignment statements in all methods
+	 * Visits all new/newarray statements in all methods
 	 * in the program.
 	 * 
-	 * @param	q	A copy assignment statement.
+	 * @param	q	A new/newarray statement.
 	 */
-	public void visitMoveInst(Quad q);
+	public void visitNewInst(Quad q);
 }

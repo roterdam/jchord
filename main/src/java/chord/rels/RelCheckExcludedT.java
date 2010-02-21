@@ -9,8 +9,8 @@ import joeq.Class.jq_Class;
 import chord.doms.DomT;
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.ProgramRel;
 import chord.project.Properties;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each type t the prefix of whose name

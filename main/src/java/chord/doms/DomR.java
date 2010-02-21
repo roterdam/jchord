@@ -11,8 +11,8 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
 
 import chord.program.Program;
+import chord.program.visitors.IRelLockInstVisitor;
 import chord.project.Chord;
-import chord.visitors.IRelLockInstVisitor;
 
 /**
  * Domain of all lock release points, including monitorexit

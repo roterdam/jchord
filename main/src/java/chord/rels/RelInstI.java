@@ -10,7 +10,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import chord.doms.DomI;
 import chord.project.Chord;
-import chord.project.ProgramRel;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing all method invocation statements whose

@@ -18,9 +18,9 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.doms.DomP;
 import chord.doms.DomF;
 import chord.doms.DomV;
+import chord.program.visitors.IHeapInstVisitor;
 import chord.project.Chord;
-import chord.project.ProgramRel;
-import chord.visitors.IHeapInstVisitor;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (p,f,v) such that the statement
