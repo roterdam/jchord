@@ -5,28 +5,35 @@
  */
 package chord.analyses.escape.hybrid;
 
+import chord.project.ISummaryEdge;
+
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class SummEdge {
+public class SummaryEdge implements ISummaryEdge {
 	final SrcNode srcNode;
 	final RetNode retNode;
-	public SummEdge(SrcNode s, RetNode r) {
+	public SummaryEdge(SrcNode s, RetNode r) {
 		srcNode = s;
 		retNode = r;
 	}
+	public boolean matchesSrcNodeOf(ISummaryEdge se2) {
+		SrcNode srcNode2 = ((SummaryEdge) se2).srcNode;
+		return srcNode.equals(srcNode2);
+	}
+	public boolean mergeWith(ISummaryEdge se2) {
+		return retNode.mergeWith(((SummaryEdge) se2).retNode);
+	}
 	public int hashCode() {
-		// System.out.println("SE HC");
 		return 0; // srcNode.hashCode() + retNode.hashCode(); 
 	}
 	public boolean equals(Object o) {
-		// System.out.println("SE EQ");
 		if (o == this)
 			return true;
-		if (!(o instanceof SummEdge))
+		if (!(o instanceof SummaryEdge))
 			return false;
-		SummEdge that = (SummEdge) o;
+		SummaryEdge that = (SummaryEdge) o;
 		return srcNode.equals(that.srcNode) &&
 			retNode.equals(that.retNode);
 	}

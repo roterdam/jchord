@@ -7,6 +7,7 @@ package chord.analyses.escape.hybrid;
 
 import java.util.Set;
 
+import chord.util.ArraySet;
 import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
 
@@ -15,14 +16,35 @@ import chord.util.tuple.integer.IntTrio;
  *
  */
 public class RetNode {
-	final IntArraySet pts;
-	final Set<IntTrio> heap;
-	final IntArraySet esc;
-	public RetNode(IntArraySet p, Set<IntTrio> h,
-			IntArraySet e) {
+	IntArraySet pts;
+	Set<IntTrio> heap;
+	IntArraySet esc;
+	public RetNode(IntArraySet p, Set<IntTrio> h, IntArraySet e) {
 		pts = p;
 		heap = h;
 		esc = e;
+	}
+	public boolean mergeWith(RetNode retNode2) {
+		boolean changed = false;
+		IntArraySet pts2 = retNode2.pts;
+		if (!pts.equals(pts2)) {
+			pts = new IntArraySet(pts);
+			pts.addAll(pts2);
+			changed = true;
+		}
+		IntArraySet esc2 = retNode2.esc;
+		if (!esc.equals(esc2)) {
+			esc = new IntArraySet(esc);
+			esc.addAll(esc2);
+			changed = true;
+		}
+		Set<IntTrio> heap2 = retNode2.heap;
+		if (!heap.equals(heap2)) {
+			heap = new ArraySet<IntTrio>(heap);
+			heap.addAll(heap2);
+			changed = true;
+		}
+		return changed;
 	}
 	public int hashCode() {
 		return heap.hashCode();

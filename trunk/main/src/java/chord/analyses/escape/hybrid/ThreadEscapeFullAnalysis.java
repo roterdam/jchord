@@ -52,8 +52,6 @@ import chord.project.ProgramRel;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Properties;
 import chord.util.ChordRuntimeException;
-import chord.analyses.alias.ICICG;
-import chord.analyses.alias.ThrSenAbbrCICGAnalysis;
 import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.doms.DomH;
@@ -61,7 +59,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.project.Chord;
-import chord.project.JavaAnalysis;
+import chord.project.RHSAnalysis;
 import chord.project.Project;
 import chord.util.ArraySet;
 import chord.util.CompareUtils;
@@ -76,54 +74,22 @@ import chord.util.Timer;
 @Chord(
 	    name = "thresc-full-java"
 	)
-public class ThreadEscapeFullAnalysis extends JavaAnalysis {
+public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge> {
 	public static int ESC_VAL;
-    private final static boolean DEBUG = false;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();
 	public final static IntArraySet nilPts = new IntArraySet(0);
 	public static IntArraySet escPts;
+	private IntArraySet tmpPts = new IntArraySet();
+	private DomM domM;
+	private DomI domI;
 	private DomV domV;
 	private DomF domF;
 	private DomH domH;
-	private DomI domI;
-	private DomM domM;
 	private DomE domE;
 	private int varId[];
 	private TObjectIntHashMap<jq_Method> methToNumVars =
 		new TObjectIntHashMap<jq_Method>();
-	private List<Location> workList1 = new ArrayList<Location>();
-	private List<PathEdge> workList2 = new ArrayList<PathEdge>();
-	private Map<Quad, Location> invkQuadToLoc =
-		new HashMap<Quad, Location>();
-	private Map<Inst, Set<PathEdge>> pathEdges =
-		new HashMap<Inst, Set<PathEdge>>();
-	private Map<jq_Method, Set<SummEdge>> summEdges =
-		new HashMap<jq_Method, Set<SummEdge>>();
-	private MyQuadVisitor qv = new MyQuadVisitor();
-	private ICICG cicg;
-	private Map<jq_Method, Set<Quad>> callersMap =
-		new HashMap<jq_Method, Set<Quad>>();
-	private Map<Quad, Set<jq_Method>> targetsMap =
-		new HashMap<Quad, Set<jq_Method>>();
-
-	private Set<Quad> getCallers(jq_Method m) {
-		Set<Quad> callers = callersMap.get(m);
-		if (callers == null) {
-			callers = cicg.getCallers(m);
-			callersMap.put(m, callers);
-		}
-		return callers;
-	}
-
-	private Set<jq_Method> getTargets(Quad i) {
-		Set<jq_Method> targets = targetsMap.get(i);
-		if (targets == null) {
-			targets = cicg.getTargets(i);
-			targetsMap.put(i, targets);
-		}
-		return targets;
-	}
 
 	// TODO: E -> CE in each of 3 below sets?
 	// set of heap insts deemed possibly escaping by
@@ -134,43 +100,17 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 	private Set<Quad> currAllocs;
 	private Set<Quad> currLocHeapInsts = new HashSet<Quad>();
 	private Set<Quad> currEscHeapInsts = new HashSet<Quad>();
+    private MyQuadVisitor qv = new MyQuadVisitor();
 	private jq_Method threadStartMethod;
 	private jq_Method mainMethod;
-	private volatile boolean timedOut = false;
-	private volatile boolean doneAll = false;
-	private boolean done = false;
-	private final Object lock = new Object();
-	private Thread timerThread = new Thread() {
-		public void run() {
-			try {
-				while (true) {
-					if (doneAll)
-						break;
-					timedOut = false;
-					synchronized (lock) {
-						done = false;
-						lock.notify();
-						lock.wait(900000);
-					}
-					timedOut = true;
-					synchronized (lock) {
-						while (!done)
-							lock.wait();
-					}
-				}
-			} catch (InterruptedException ex) {
-				throw new ChordRuntimeException(ex);
-			}
-		}
-	};
+
 	public void run() {
-		// ThreadEscapePathAnalysis analysis =
-		//	(ThreadEscapePathAnalysis) Project.getTrgt("thresc-path-java");
-		// Project.runTask(analysis);
-		// Map<Set<Quad>, Set<Quad>> allocInstsToHeapInsts =
-		//	analysis.getAllocInstsToHeapInstsMap();
 		threadStartMethod = Program.v().getThreadStartMethod();
 		mainMethod = Program.v().getMainMethod();
+        domI = (DomI) Project.getTrgt("I");
+        Project.runTask(domI);
+        domM = (DomM) Project.getTrgt("M");
+        Project.runTask(domM);
 		domV = (DomV) Project.getTrgt("V");
 		Project.runTask(domV);
 		domF = (DomF) Project.getTrgt("F");
@@ -232,27 +172,8 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			vIdx += n;
 		}
 
-		ThrSenAbbrCICGAnalysis cicgAnalysis =
-			(ThrSenAbbrCICGAnalysis) Project.getTrgt(
-				"thrsen-abbr-cicg-java");
-		Project.runTask(cicgAnalysis);
-		cicg = cicgAnalysis.getCallGraph();
-		Set<jq_Method> roots = cicg.getRoots();
-
-		timerThread.start();
-
-		int n = allocInstsToHeapInsts.size();
-		int i = 0;
 		for (Map.Entry<Set<Quad>, Set<Quad>> e :
 				allocInstsToHeapInsts.entrySet()) {
-			try {
-				synchronized (lock) {
-					while (done)
-						lock.wait();
-				}
-			} catch (InterruptedException ex) {
-				throw new ChordRuntimeException(ex);
-			}
 			currAllocs = e.getKey();
 			currLocHeapInsts = e.getValue();
 			currEscHeapInsts.clear();
@@ -266,8 +187,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			Timer timer = new Timer("hybrid-thresc-timer");
 			timer.init();
 			try {
-				for (jq_Method root : roots) 
-					processThread(root);
+				super.run();
 			} catch (ThrEscException ex) {
 				// do nothing
 			}
@@ -279,13 +199,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			escHeapInsts.addAll(currEscHeapInsts);
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
-			i++;
-			if (i == n)
-				doneAll = true;
-			synchronized (lock) {
-				done = true;
-				lock.notify();
-			}
 		}
 		try {
 			String outDirName = Properties.outDirName;
@@ -308,113 +221,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		}
 	}
 
-	private void processThread(jq_Method root) {
-		System.out.println("PROCESSING THREAD: " + root);
-		init(root);
-		while (!workList1.isEmpty()) {
-			if (timedOut) {
-				System.out.println("TIMED OUT");
-				for (Quad q : currLocHeapInsts) {
-					currEscHeapInsts.add(q);
-				}
-				currLocHeapInsts.clear();
-				throw new ThrEscException();
-			}
-			int last = workList1.size() - 1;
-			Location loc = workList1.remove(last);
-			PathEdge pe  = workList2.remove(last);
-			Quad q = loc.q;
-			// System.out.println(loc.m + " " + loc.q);
-			if (DEBUG)
-				System.out.println("Processing path edge: loc: " + loc + " pe: " + pe);
-			if (q == null) {
-				BasicBlock bb = loc.bb;
-				if (bb.isEntry()) {
-					for (Object o : bb.getSuccessorsList()) {
-						BasicBlock bb2 = (BasicBlock) o;
-						Quad q2;
-						int q2Idx;
-						if (bb2.size() == 0) {
-							q2 = null;
-							q2Idx = -1;
-						} else {
-							q2 = bb2.getQuad(0);
-							q2Idx = 0;
-						}
-						Location loc2 = new Location(loc.m, bb2, q2Idx, q2);
-						addPathEdge(loc2, pe);
-					}
-				} else {
-					assert (bb.isExit()); 
-					processReturn(loc.m, q, pe);
-				}
-			} else {
-				Operator op = q.getOperator();
-				if (op instanceof Invoke) {
-					processInvoke(loc, pe);
-				} else if (op instanceof Return) {
-					processReturn(loc.m, q, pe);
-				} else {
-					DstNode dstNode = pe.dstNode;
-					qv.iDstNode = dstNode;
-					qv.oDstNode = dstNode;
-					q.accept(qv);
-					DstNode dstNode2 = qv.oDstNode;
-					PathEdge pe2 = (dstNode2 == dstNode) ? pe :
-						new PathEdge(pe.srcNode, dstNode2);
-					propagateToSucc(loc.m, loc.bb, loc.qIdx, pe2);
-				}
-			}
-		}
-	}
-	private void propagateToSucc(jq_Method m, BasicBlock bb, int qIdx, PathEdge pe) {
-		if (qIdx != bb.size() - 1) {
-			int q2Idx = qIdx + 1;
-			Quad q2 = bb.getQuad(q2Idx);
-			Location loc2 = new Location(m, bb, q2Idx, q2);
-			addPathEdge(loc2, pe);
-			return;
-		}
-		for (Object o : bb.getSuccessorsList()) {
-			BasicBlock bb2 = (BasicBlock) o;
-			int q2Idx;
-			Quad q2;
-			if (bb2.size() == 0) {
-				q2Idx = -1;
-				q2 = null;
-			} else {
-				q2Idx = 0;
-				q2 = bb2.getQuad(0);
-			}
-			Location loc2 = new Location(m, bb2, q2Idx, q2);
-			addPathEdge(loc2, pe);
-		}
-	}
-	private void addPathEdge(Location loc, PathEdge pe) {
-		if (DEBUG)
-			System.out.println("\tAdding path edge: loc " + loc + " pe: " + pe);
-		Quad q = loc.q;
-		Inst i = (q != null) ? q : loc.bb;
-		Set<PathEdge> peSet = pathEdges.get(i);
-		if (peSet == null) {
-			peSet = new HashSet<PathEdge>();
-			pathEdges.put(i, peSet);
-			if (q != null && (q.getOperator() instanceof Invoke))
-				invkQuadToLoc.put(q, loc);
-		}
-		if (peSet.add(pe)) {
-			if (DEBUG)
-				System.out.println("ADDED");
-			workList1.add(loc);
-			workList2.add(pe);
-		}
-	}
-	private void init(jq_Method root) {
-		pathEdges.clear();
-		summEdges.clear();
-		// clear worklist: may not be empty due to thrown exception
-		workList1.clear();
-		workList2.clear();
+	public PathEdge getInitPathEdge(jq_Method root) {
 		int n = methToNumVars.get(root);
 		IntArraySet[] env = new IntArraySet[n];
 		for (int i = 0; i < n; i++)
@@ -427,87 +234,71 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		SrcNode srcNode = new SrcNode(env, emptyHeap);
 		DstNode dstNode = new DstNode(env, emptyHeap, nilPts);
 		PathEdge pe = new PathEdge(srcNode, dstNode);
-		Location loc = new Location(root, bb, -1, null);
-		addPathEdge(loc, pe);
+		return pe;
 	}
 
-	private IntArraySet tmpPts = new IntArraySet();
+	public PathEdge getMiscSuccPathEdge(Quad q, PathEdge pe) {
+		DstNode dstNode = pe.dstNode;
+		qv.iDstNode = dstNode;
+		qv.oDstNode = dstNode;
+		q.accept(qv);
+		DstNode dstNode2 = qv.oDstNode;
+		PathEdge pe2 = (dstNode2 == dstNode) ? pe :
+			new PathEdge(pe.srcNode, dstNode2);
+		return pe2;
+	}
 
-	private void processInvoke(Location loc, PathEdge pe) {
-		Quad q = loc.q;
-		MethodOperand mo = Invoke.getMethod(q);
-		mo.resolve();
-		jq_Method tgt = mo.getMethod();
-		if (tgt == threadStartMethod) {
-			if (DEBUG) System.out.println("Target is thread start method");
-			DstNode dstNode = pe.dstNode;
-			IntArraySet[] iEnv = dstNode.env;
-			RegisterOperand ao = Invoke.getParam(q, 0);
-			int aIdx = getIdx(ao);
-			IntArraySet aPts = iEnv[aIdx];
-			DstNode dstNode2;
-			if (aPts == escPts || aPts == nilPts)
+	public PathEdge getForkSuccPathEdge(Quad q, PathEdge pe) {
+		DstNode dstNode = pe.dstNode;
+		IntArraySet[] iEnv = dstNode.env;
+		RegisterOperand ao = Invoke.getParam(q, 0);
+		int aIdx = getIdx(ao);
+		IntArraySet aPts = iEnv[aIdx];
+		DstNode dstNode2;
+		if (aPts == escPts || aPts == nilPts)
+			dstNode2 = dstNode;
+		else {
+			Set<IntTrio> iHeap = dstNode.heap;
+			IntArraySet iEsc = dstNode.esc;
+			IntArraySet oEsc = propagateEsc(aPts, iHeap, iEsc);
+			if (oEsc == iEsc)
 				dstNode2 = dstNode;
 			else {
-				Set<IntTrio> iHeap = dstNode.heap;
-				IntArraySet iEsc = dstNode.esc;
-				IntArraySet oEsc = propagateEsc(aPts, iHeap, iEsc);
-				if (oEsc == iEsc)
-					dstNode2 = dstNode;
-				else {
-					IntArraySet[] oEnv = updateEnv(iEnv, oEsc);
-					Set<IntTrio> oHeap = updateHeap(iHeap, oEsc);
-					dstNode2 = new DstNode(oEnv, oHeap, oEsc);
-				}
+				IntArraySet[] oEnv = updateEnv(iEnv, oEsc);
+				Set<IntTrio> oHeap = updateHeap(iHeap, oEsc);
+				dstNode2 = new DstNode(oEnv, oHeap, oEsc);
 			}
-			PathEdge pe2 = (dstNode == dstNode2) ? pe :
-				new PathEdge(pe.srcNode, dstNode2);
-			propagateToSucc(loc.m, loc.bb, loc.qIdx, pe2);
-			return;
 		}
+		PathEdge pe2 = (dstNode == dstNode2) ? pe :
+			new PathEdge(pe.srcNode, dstNode2);
+		return pe2;
+	}
+
+	public PathEdge getInitPathEdge(Quad q, jq_Method m2, PathEdge pe) {
 		DstNode dstNode = pe.dstNode;
 		IntArraySet[] dstEnv = dstNode.env;
         ParamListOperand args = Invoke.getParamList(q);
         int numArgs = args.length();
-        jq_Method m = Program.v().getMethod(q);
-		for (jq_Method m2 : getTargets(q)) {
-			if (DEBUG) System.out.println("Target: " + m2);
-			Set<SummEdge> seSet = summEdges.get(m2);
-			boolean found = false;
-			if (seSet != null) {
-				for (SummEdge se : seSet) {
-					if (DEBUG) System.out.println("Testing summary edge: " + se);
-					if (propagateSEtoPE(pe, loc, m, se)) {
-						if (DEBUG) System.out.println("Match found");
-						found = true;
-					}
-				}
-			}
-			if (!found) {
-				if (DEBUG) System.out.println("No match found");
-		        int numVars = methToNumVars.get(m2);
-		        IntArraySet[] env = new IntArraySet[numVars];
-		        int mIdx = 0;
-		        for (int i = 0; i < numArgs; i++) {
-		            RegisterOperand ao = args.get(i);
-		            if (ao.getType().isReferenceType()) {
-		                int aIdx = getIdx(ao);
-		                IntArraySet pts = dstEnv[aIdx];
-		                env[mIdx++] = pts;
-					}
-		        }
-		        while (mIdx < numVars)
-		        	env[mIdx++] = nilPts;
-				SrcNode srcNode2 = new SrcNode(env, dstNode.heap);
-				DstNode dstNode2 = new DstNode(env, dstNode.heap, nilPts);
-				PathEdge pe2 = new PathEdge(srcNode2, dstNode2);
-				BasicBlock bb2 = m2.getCFG().entry();
-				Location loc2 = new Location(m2, bb2, -1, null);
-				addPathEdge(loc2, pe2);
+		int numVars = methToNumVars.get(m2);
+		IntArraySet[] env = new IntArraySet[numVars];
+		int mIdx = 0;
+		for (int i = 0; i < numArgs; i++) {
+			RegisterOperand ao = args.get(i);
+			if (ao.getType().isReferenceType()) {
+				int aIdx = getIdx(ao);
+				IntArraySet pts = dstEnv[aIdx];
+				env[mIdx++] = pts;
 			}
 		}
+		while (mIdx < numVars)
+			env[mIdx++] = nilPts;
+		SrcNode srcNode2 = new SrcNode(env, dstNode.heap);
+		DstNode dstNode2 = new DstNode(env, dstNode.heap, nilPts);
+		PathEdge pe2 = new PathEdge(srcNode2, dstNode2);
+		return pe2;
 	}
-	private void processReturn(jq_Method m, Quad q, PathEdge pe) {
+
+	public SummaryEdge getSummaryEdge(Quad q, PathEdge pe) {
 		DstNode dstNode = pe.dstNode;
 		IntArraySet rPts = nilPts;
 		// q may be null in which case pe.bb is exit basic block
@@ -522,51 +313,18 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			}
 		}
 		RetNode retNode = new RetNode(rPts, dstNode.heap, dstNode.esc);
-		SummEdge se = new SummEdge(pe.srcNode, retNode);
-		Set<SummEdge> seSet = summEdges.get(m);
-		if (DEBUG) System.out.println("Testing summary edge: " + se);
-		if (seSet == null) {
-			seSet = new HashSet<SummEdge>();
-			summEdges.put(m, seSet);
-		}
-		if (!seSet.add(se)) {
-			// summary edge se already exists
-			if (DEBUG) System.out.println("Already exists");
-			return;
-		}
-		boolean flag = false;
-		if (DEBUG) System.out.println("Not found; adding");
-		for (Quad q2 : getCallers(m)) {
-			if (DEBUG) System.out.println("Caller: " + q2);
-			jq_Method m2 = Program.v().getMethod(q2);
-			Set<PathEdge> peSet = pathEdges.get(q2);
-			if (peSet == null)
-				continue;
-			peSet = new ArraySet<PathEdge>(peSet);
-			Location loc2 = invkQuadToLoc.get(q2);
-			for (PathEdge pe2 : peSet) {
-				if (DEBUG) System.out.println("Testing path edge: " + pe2);
-				boolean match = propagateSEtoPE(pe2, loc2, m2, se);
-				if (match) {
-					if (DEBUG) System.out.println("Match found");
-					flag = true;
-				} else {
-					if (DEBUG) System.out.println("No match found");
-				}
-			}
-		}
-		if (m != mainMethod && m != threadStartMethod)
-			assert flag;
+		SummaryEdge se = new SummaryEdge(pe.srcNode, retNode);
+		return se;
 	}
-	private boolean propagateSEtoPE(PathEdge clrPE, Location loc,
-			jq_Method clrM, SummEdge tgtSE) {
+
+	public PathEdge getInvkSuccPathEdge(Quad q, PathEdge clrPE, 
+			SummaryEdge tgtSE) {
 		DstNode clrDstNode = clrPE.dstNode;
 		SrcNode tgtSrcNode = tgtSE.srcNode;
 		if (!clrDstNode.heap.equals(tgtSrcNode.heap))
-			return false;
+			return null;
 		IntArraySet[] clrDstEnv = clrDstNode.env;
 		IntArraySet[] tgtSrcEnv = tgtSrcNode.env;
-		Quad q = loc.q;
         ParamListOperand args = Invoke.getParamList(q);
         int numArgs = args.length();
         for (int i = 0, fIdx = 0; i < numArgs; i++) {
@@ -576,7 +334,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
                 IntArraySet aPts = clrDstEnv[aIdx];
                 IntArraySet fPts = tgtSrcEnv[fIdx];
                 if (!CompareUtils.areEqual(aPts, fPts))
-                	return false;
+                	return null;
                 fIdx++;
 			}
 		}
@@ -619,10 +377,13 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
         DstNode clrDstNode2 = new DstNode(clrDstEnv2,
         	tgtRetNode.heap, clrDstEsc2);
         PathEdge pe2 = new PathEdge(clrPE.srcNode, clrDstNode2);
-        propagateToSucc(loc.m, loc.bb, loc.qIdx, pe2);
-        return true;
+		return pe2;
 	}
 	
+	public boolean doMerge() {
+		return true;
+	}
+
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 		DstNode iDstNode;
 		DstNode oDstNode;
@@ -717,9 +478,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		public void visitGetfield(Quad q) {
 			if (currLocHeapInsts.contains(q))
 				check(q, Getfield.getBase(q));
-			FieldOperand fo = Getfield.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Getfield.getField(q).getField();
 			if (!f.getType().isReferenceType())
 				return;
 			IntArraySet[] iEnv = iDstNode.env;
@@ -769,9 +528,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		public void visitPutfield(Quad q) {
 			if (currLocHeapInsts.contains(q))
 				check(q, Putfield.getBase(q));
-			FieldOperand fo = Putfield.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Putfield.getField(q).getField();
 			if (!f.getType().isReferenceType())
 				return;
 			Operand rx = Putfield.getSrc(q);
@@ -854,9 +611,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			oDstNode = new DstNode(oEnv, oHeap, oEsc);
 		}
 		public void visitPutstatic(Quad q) {
-			FieldOperand fo = Putstatic.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Putstatic.getField(q).getField();
 	        if (!f.getType().isReferenceType())
 	        	return;
 	        Operand rx = Putstatic.getSrc(q);
@@ -878,9 +633,7 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 			oDstNode = new DstNode(oEnv, oHeap, oEsc); 
 		}
 		public void visitGetstatic(Quad q) {
-			FieldOperand fo = Getstatic.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Getstatic.getField(q).getField();
 	        if (!f.getType().isReferenceType())
 	        	return;
 			IntArraySet[] iEnv = iDstNode.env;
@@ -1100,33 +853,6 @@ public class ThreadEscapeFullAnalysis extends JavaAnalysis {
 		if (s == null)
 			return "{}";
 		return "{" + s + "}";
-	}
-}
-
-class Location {
-    // q == null iff qIdx == -1 iff empty bb
-	final jq_Method m;
-	final BasicBlock bb;
-    final int qIdx;
-    final Quad q;
-	public Location(jq_Method m, BasicBlock bb, int qIdx, Quad q) {
-		this.m = m;
-		this.bb = bb;
-		this.qIdx = qIdx;
-		this.q = q;
-	}
-	public int hashCode() {
-		return (q != null) ? q.hashCode() : bb.hashCode();
-	}
-	public boolean equals(Object o) {
-		if (!(o instanceof Location))
-			return false;
-		Location l = (Location) o;
-		return (q != null) ? (q == l.q) : (bb == l.bb);
-	}
-	public String toString() {
-		return m + " " + q;
-		// Integer.toString(q.getID());
 	}
 }
 

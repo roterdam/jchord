@@ -5,17 +5,25 @@
  */
 package chord.analyses.escape.hybrid;
 
+import chord.project.IPathEdge;
+
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class PathEdge {
+public class PathEdge implements IPathEdge {
 	final SrcNode srcNode;
 	final DstNode dstNode;
 	public PathEdge(SrcNode s, DstNode d) {
 		srcNode = s;
 		dstNode = d;
-		// d.check();
+	}
+	public boolean matchesSrcNodeOf(IPathEdge pe2) {
+		SrcNode srcNode2 = ((PathEdge) pe2).srcNode;
+		return srcNode.equals(srcNode2);
+	}
+	public boolean mergeWith(IPathEdge pe2) {
+		return dstNode.mergeWith(((PathEdge) pe2).dstNode);
 	}
 	public int hashCode() {
 		return srcNode.hashCode() + dstNode.hashCode();
