@@ -1,5 +1,7 @@
 #include <jvmti.h>
 #include <assert.h>
+#include <stdlib.h>
+#include <string.h>
 using namespace std;
 #include "iostream"
 #include "fstream"
