@@ -5,7 +5,12 @@
  */
 package chord.analyses.escape.hybrid;
 
+import java.util.Set;
+
+import chord.util.ArraySet;
+import chord.util.IntArraySet;
 import chord.project.analyses.rhs.ISummaryEdge;
+import chord.util.tuple.integer.IntTrio;
 
 /**
  * 
@@ -13,7 +18,7 @@ import chord.project.analyses.rhs.ISummaryEdge;
  */
 public class SummaryEdge implements ISummaryEdge {
 	final SrcNode srcNode;
-	final RetNode retNode;
+	RetNode retNode;
 	public SummaryEdge(SrcNode s, RetNode r) {
 		srcNode = s;
 		retNode = r;
@@ -23,7 +28,47 @@ public class SummaryEdge implements ISummaryEdge {
 		return srcNode.equals(srcNode2);
 	}
 	public boolean mergeWith(ISummaryEdge se2) {
-		return retNode.mergeWith(((SummaryEdge) se2).retNode);
+		RetNode retNode1 = this.retNode;
+		RetNode retNode2 = ((SummaryEdge) se2).retNode;
+        boolean changed = false;
+		IntArraySet pts1 = retNode1.pts;
+        IntArraySet pts2 = retNode2.pts;
+        if (!pts1.equals(pts2)) {
+			if (pts2 != ThreadEscapeFullAnalysis.nilPts) {
+				if (pts1 == ThreadEscapeFullAnalysis.nilPts)
+					pts1 = pts2;
+				else {
+					pts1 = new IntArraySet(pts1);
+					pts1.addAll(pts2);
+				}
+            	changed = true;
+			}
+        }
+        IntArraySet esc1 = retNode1.esc;
+        IntArraySet esc2 = retNode2.esc;
+        if (!esc1.equals(esc2)) {
+			if (esc2 != ThreadEscapeFullAnalysis.nilPts) {
+				if (esc1 == ThreadEscapeFullAnalysis.nilPts)
+					esc1 = esc2;
+				else {
+					esc1 = new IntArraySet(esc1);
+					esc1.addAll(esc2);
+				}
+            	changed = true;
+			}
+        }
+        Set<IntTrio> heap1 = retNode1.heap;
+        Set<IntTrio> heap2 = retNode2.heap;
+        if (!heap1.equals(heap2)) {
+            heap1 = new ArraySet<IntTrio>(heap1);
+            heap1.addAll(heap2);
+            changed = true;
+        }
+		if (changed) {
+			this.retNode = new RetNode(pts1, heap1, esc1);
+			return true;
+		}
+		return false;
 	}
 	public int hashCode() {
 		return 0; // srcNode.hashCode() + retNode.hashCode(); 

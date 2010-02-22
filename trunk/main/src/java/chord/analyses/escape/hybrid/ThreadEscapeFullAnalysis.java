@@ -234,7 +234,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge>
 		qv.oDstNode = dstNode;
 		q.accept(qv);
 		DstNode dstNode2 = qv.oDstNode;
-		PathEdge pe2 = (dstNode2 == dstNode) ? pe :
+		PathEdge pe2 = // (dstNode2 == dstNode) ? pe :
 			new PathEdge(pe.srcNode, dstNode2);
 		return pe2;
 	}
@@ -260,7 +260,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge>
 				dstNode2 = new DstNode(oEnv, oHeap, oEsc);
 			}
 		}
-		PathEdge pe2 = (dstNode == dstNode2) ? pe :
+		PathEdge pe2 = // (dstNode == dstNode2) ? pe :
 			new PathEdge(pe.srcNode, dstNode2);
 		return pe2;
 	}
@@ -815,7 +815,8 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge>
 	public static String toString(IntArraySet[] env) {
 		String s = null;
 		for (IntArraySet e : env) {
-			String x = (e == nilPts) ? "N" : (e == escPts) ? "E" : toString(e);
+			String x = (e == nilPts) ? "N" :
+				(e == escPts) ? "E" : toString(e);
 			s = (s == null) ? x : s + "," + x;
 		}
 		if (s == null)
