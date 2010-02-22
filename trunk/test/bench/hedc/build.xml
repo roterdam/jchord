@@ -6,6 +6,9 @@
   <target name="clean">
     <delete dir="classes"/>
     <delete dir="chord_output"/>
+    <delete>
+        <fileset dir="." includes="thread*.log"/>
+    </delete>
   </target>
   <target name="compile">
     <mkdir dir="classes"/>
