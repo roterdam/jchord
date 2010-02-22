@@ -1,0 +1,1 @@
+set CLASSPATH=C:\weblech-0.0.3\classes;C:\weblech-0.0.3\lib\log4j-1.1.3.jar;%CLASSPATH%

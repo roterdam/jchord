@@ -1,0 +1,3 @@
+@echo off
+echo Running Spider...
+java -Dpretex.transitionlabels=transitionsConcMod.txt -Djavato.observer=javato.typestateConcMod.TypeStateConcModEventHandler weblech.ui.TextSpider config/spider.properties

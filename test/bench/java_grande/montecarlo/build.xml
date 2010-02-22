@@ -6,14 +6,11 @@
   <target name="clean">
     <delete dir="classes"/>
     <delete dir="chord_output"/>
-    <delete>
-        <fileset dir="." includes="thread*.log"/>
-    </delete>
   </target>
   <target name="compile">
     <mkdir dir="classes"/>
     <javac debug="true" debuglevel="${debuglevel}"
       source="${source}" target="${target}"
-      srcdir="src" destdir="classes" classpath="lib/servlet.jar"/>
+      srcdir="src" destdir="classes"/>
   </target>
 </project>
