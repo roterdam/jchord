@@ -282,17 +282,19 @@ public abstract class RHSAnalysis<PE extends IPathEdge, SE extends ISummaryEdge>
 			boolean found = false;
 			if (seSet != null) {
 				for (SE se : seSet) {
-					if (DEBUG) System.out.println("\tTesting summary edge: " + se);
+					if (DEBUG) System.out.println("\tTesting SE: " + se);
 					if (propagateSEtoPE(pe, loc, m, se)) {
-						if (DEBUG) System.out.println("\tMatch found");
+						if (DEBUG) System.out.println("\tMatched");
 						found = true;
 						if (doMerge)
 							break;
+					} else {
+						if (DEBUG) System.out.println("\tDid not match");
 					}
 				}
 			}
 			if (!found) {
-				if (DEBUG) System.out.println("\tNo match found");
+				if (DEBUG) System.out.println("\tNo SE found");
 				PE pe2 = getInitPathEdge(q, m2, pe);
 				BasicBlock bb2 = m2.getCFG().entry();
 				Location loc2 = new Location(m2, bb2, -1, null);
@@ -339,8 +341,8 @@ public abstract class RHSAnalysis<PE extends IPathEdge, SE extends ISummaryEdge>
 		}
 		boolean flag = false;
 		for (Quad q2 : getCallers(m)) {
-			if (DEBUG) System.out.println("\tCaller: " + q2);
 			jq_Method m2 = Program.v().getMethod(q2);
+			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
 			Set<PE> peSet = pathEdges.get(q2);
 			if (peSet == null)
 				continue;
