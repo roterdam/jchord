@@ -1,1 +1,0 @@
-java -Dpretex.transitionlabels=transitionsConcMod.txt -Djavato.instrumentor=javato.typestateConcMod.VisitorForConcModChecking javato.instrumentor.TransformerForInstrumentation -keep-line-number -x javato -d classes -process-dir classes
