@@ -302,7 +302,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				domC.setCtxt(newElems);
 			}
 		}
-		for (int hIdx = 0; hIdx < numH; hIdx++) {
+		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = Program.v().getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
@@ -340,7 +340,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		assert (domC.size() == numC);
 
 		relCH.zero();
-		for (int hIdx = 0; hIdx < numH; hIdx++) {
+		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = Program.v().getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
