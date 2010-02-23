@@ -18,11 +18,11 @@ public class Properties {
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
 	public final static String DEFAULT_SCOPE_EXCLUDES =
-		"sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil.";
+		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.";
 	public final static String DEFAULT_INSTR_EXCLUDES =
-		"sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil.";
+		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,java.lang.Object";
 	public final static String DEFAULT_CHECK_EXCLUDES =
-		"java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil.";
+		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,java.,javax.";
 
 	// Chord resource properties
 

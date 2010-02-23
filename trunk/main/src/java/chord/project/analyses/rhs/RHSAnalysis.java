@@ -40,7 +40,7 @@ import chord.util.ArraySet;
  */
 public abstract class RHSAnalysis<PE extends IPathEdge, SE extends ISummaryEdge>
 		extends JavaAnalysis {
-    protected final static boolean DEBUG = true;
+    protected  static boolean DEBUG = false;
 
 	// get the path edge at thread-root method m
 	// which may either be the main method or the java.lang.Thread.start() method
@@ -339,7 +339,6 @@ public abstract class RHSAnalysis<PE extends IPathEdge, SE extends ISummaryEdge>
 			if (DEBUG) System.out.println("\tYes, not adding");
 			return;
 		}
-		boolean flag = false;
 		for (Quad q2 : getCallers(m)) {
 			jq_Method m2 = Program.v().getMethod(q2);
 			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
@@ -356,14 +355,11 @@ public abstract class RHSAnalysis<PE extends IPathEdge, SE extends ISummaryEdge>
 				boolean match = propagateSEtoPE(pe2, loc2, m2, seToAdd);
 				if (match) {
 					if (DEBUG) System.out.println("\tMatched");
-					flag = true;
 				} else {
 					if (DEBUG) System.out.println("\tDid not match");
 				}
 			}
 		}
-		if (m != mainMethod && m != threadStartMethod)
-			assert flag;
 	}
 
 	private boolean propagateSEtoPE(PE clrPE, Location loc,
