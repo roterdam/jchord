@@ -15,6 +15,10 @@ import chord.project.Chord;
 
 /**
  * Domain of object allocation statements.
+* <p>		
+ * The 0th element of this domain (null) is a distinguished		
+ * hypothetical object allocation statement that may be used		
+ * for various purposes.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -23,10 +27,16 @@ import chord.project.Chord;
 	consumedNames = { "M" }
 )
 public class DomH extends QuadDom implements INewInstVisitor {
+	public void init() {		
+		super.init();		
+		getOrAdd(null);		
+	}
 	public void visitNewInst(Quad q) {
 		getOrAdd(q);
 	}
 	public String toXMLAttrsString(Inst i) {
+		if (i == null)
+			return "";
 		Quad q = (Quad) i;
 		TypeOperand to = (q.getOperator() instanceof New) ?
 			New.getType(q) : NewArray.getType(q);
