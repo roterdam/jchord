@@ -18,6 +18,8 @@ import chord.util.tuple.integer.IntTrio;
  */
 public class SummaryEdge implements ISummaryEdge {
 	final SrcNode srcNode;
+    // retNode is intentionally not final: it is updated when this smry edge
+	// is merged with another smry edge with matching srcNode; see mergeWith
 	RetNode retNode;
 	public SummaryEdge(SrcNode s, RetNode r) {
 		srcNode = s;
@@ -31,6 +33,7 @@ public class SummaryEdge implements ISummaryEdge {
 		RetNode retNode1 = this.retNode;
 		RetNode retNode2 = ((SummaryEdge) se2).retNode;
         boolean changed = false;
+		// merge pts's
 		IntArraySet pts1 = retNode1.pts;
         IntArraySet pts2 = retNode2.pts;
         if (!pts1.equals(pts2)) {
@@ -44,6 +47,7 @@ public class SummaryEdge implements ISummaryEdge {
             	changed = true;
 			}
         }
+		// merge esc's
         IntArraySet esc1 = retNode1.esc;
         IntArraySet esc2 = retNode2.esc;
         if (!esc1.equals(esc2)) {
@@ -57,6 +61,7 @@ public class SummaryEdge implements ISummaryEdge {
             	changed = true;
 			}
         }
+		// merge heaps
         Set<IntTrio> heap1 = retNode1.heap;
         Set<IntTrio> heap2 = retNode2.heap;
         if (!heap1.equals(heap2)) {
@@ -71,7 +76,8 @@ public class SummaryEdge implements ISummaryEdge {
 		return false;
 	}
 	public int hashCode() {
-		return 0; // srcNode.hashCode() + retNode.hashCode(); 
+		// return srcNode.hashCode() + retNode.hashCode(); 
+		return 0;
 	}
 	public boolean equals(Object o) {
 		if (o == this)
@@ -79,8 +85,7 @@ public class SummaryEdge implements ISummaryEdge {
 		if (!(o instanceof SummaryEdge))
 			return false;
 		SummaryEdge that = (SummaryEdge) o;
-		return srcNode.equals(that.srcNode) &&
-			retNode.equals(that.retNode);
+		return srcNode.equals(that.srcNode) && retNode.equals(that.retNode);
 	}
 	public String toString() {
 		return srcNode + ";" + retNode;

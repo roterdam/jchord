@@ -19,21 +19,10 @@ public class DstNode {
 	final IntArraySet[] env;
 	final Set<IntTrio> heap;
 	final IntArraySet esc;
-	public void check() {
-		assert (!esc.contains(ThreadEscapeFullAnalysis.ESC_VAL));
-		for (IntTrio t : heap) {
-			assert(!esc.contains(t.idx0));
-			assert(!esc.contains(t.idx2));
-		}
-		int n = env.length;
-		for (int i = 0; i < n; i++) {
-			assert(!esc.overlaps(env[i]));
-		}
-	}
-	public DstNode(IntArraySet[] e, Set<IntTrio> h, IntArraySet e2) {
-		env = e;
-		heap = h;
-		esc = e2;
+	public DstNode(IntArraySet[] env, Set<IntTrio> heap, IntArraySet esc) {
+		this.env = env;
+		this.heap = heap;
+		this.esc = esc;
 	}
 	public int hashCode() {
 		return heap.hashCode();
@@ -44,13 +33,12 @@ public class DstNode {
 		if (!(o instanceof DstNode))
 			return false;
 		DstNode that = (DstNode) o;
-		return Arrays.equals(env, that.env) &&
-			esc.equals(that.esc) &&
+		return Arrays.equals(env, that.env) && esc.equals(that.esc) &&
 			heap.equals(that.heap);
 	}
 	public String toString() {
-		return "env@d=" + ThreadEscapeFullAnalysis.toString(env) +
-			"; heap@d=" + ThreadEscapeFullAnalysis.toString(heap) +
-			"; esc@d=" + ThreadEscapeFullAnalysis.toString(esc);
+		return "v@d=" + ThreadEscapeFullAnalysis.toString(env) +
+			 "; h@d=" + ThreadEscapeFullAnalysis.toString(heap) +
+			 "; e@d=" + ThreadEscapeFullAnalysis.toString(esc);
 	}
 }

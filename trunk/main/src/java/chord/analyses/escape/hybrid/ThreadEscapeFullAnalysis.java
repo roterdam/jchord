@@ -171,8 +171,10 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge>
 			currEscHeapInsts.clear();
 			System.out.println("**************");
 			System.out.println("currHeapInsts:");
-			for (Quad q : currLocHeapInsts)
-				System.out.println("\t" + Program.v().toVerboseStr(q) + " " + domE.indexOf(q));
+			for (Quad q : currLocHeapInsts) {
+				int x = domE.indexOf(q);
+				System.out.println("\t" + Program.v().toVerboseStr(q) + " " + x);
+			}
 			System.out.println("currAllocInsts:");
 			for (Quad q : currAllocs)
 				System.out.println("\t" + Program.v().toVerboseStr(q));
@@ -348,12 +350,15 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge>
 				int k = pts.size();
 				for (int j = 0; j < k; j++) {
 					int x = pts.get(j);
-					if (!tgtRetEsc.contains(x))
-						tmpPts.add(x);
+					if (x != ESC_VAL && !tgtRetEsc.contains(x))
+						tmpPts.addForcibly(x);
 				}
-				tmpPts.add(ESC_VAL);
-				if (!tmpPts.equals(pts))
+				if (tmpPts.isEmpty())
+					pts = escPts;
+				else {
+					tmpPts.addForcibly(ESC_VAL);
 					pts = new IntArraySet(tmpPts);
+				}
 			}
         	clrDstEnv2[i] = pts;
         }
@@ -747,13 +752,19 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge>
 					for (int j = 0; j < i; j++)
 						oEnv[j] = iEnv[j];
 				}
+				tmpPts.clear();
 				int m = pts.size();
-				IntArraySet pts2 = new IntArraySet(m);
-				pts2.addForcibly(ESC_VAL);
 				for (int j = 0; j < m; j++) {
 					int x = pts.get(j);
 					if (x != ESC_VAL && !oEsc.contains(x))
-						pts2.addForcibly(x);
+						tmpPts.addForcibly(x);
+				}
+				IntArraySet pts2;
+				if (tmpPts.isEmpty())
+					pts2 = escPts;
+				else {
+					tmpPts.addForcibly(ESC_VAL);
+					pts2 = new IntArraySet(tmpPts);
 				}
 				oEnv[i] = pts2;
 			} else if (oEnv != null)

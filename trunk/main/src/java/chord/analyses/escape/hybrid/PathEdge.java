@@ -18,6 +18,8 @@ import chord.util.tuple.integer.IntTrio;
  */
 public class PathEdge implements IPathEdge {
 	final SrcNode srcNode;
+	// dstNode is intentionally not final: it is updated when this path edge
+	// is merged with another path edge with matching srcNode; see mergeWith
 	DstNode dstNode;
 	public PathEdge(SrcNode s, DstNode d) {
 		srcNode = s;
@@ -31,6 +33,7 @@ public class PathEdge implements IPathEdge {
 		DstNode dstNode1 = this.dstNode;
 		DstNode dstNode2 = ((PathEdge) pe2).dstNode;
         boolean changed = false;
+		// merge esc's
 		IntArraySet esc1 = dstNode1.esc;
         IntArraySet esc2 = dstNode2.esc;
         if (!esc1.equals(esc2)) {
@@ -39,11 +42,12 @@ public class PathEdge implements IPathEdge {
 					esc1 = esc2; 
 				else {
             		esc1 = new IntArraySet(esc1);
-            		esc1.addAll(esc2);
+					esc1.addAll(esc2);
 				}
             	changed = true;
 			}
         }
+		// merge env's
         IntArraySet[] env1 = dstNode1.env;
         IntArraySet[] env2 = dstNode2.env;
         int n = env1.length;
@@ -52,31 +56,34 @@ public class PathEdge implements IPathEdge {
         for (int i = 0; i < n; i++) {
             IntArraySet pts1 = env1[i];
             IntArraySet pts2 = env2[i];
-            if (!pts1.equals(pts2)) {
-				if (pts2 == ThreadEscapeFullAnalysis.nilPts) {
-					if (env3 != null)
-						env3[i] = pts1;
-					continue;
-				}
-				if (pts1 == ThreadEscapeFullAnalysis.nilPts)
-					pts1 = pts2;
-				else {
-					pts1 = new IntArraySet(pts1);
-					pts1.addAll(pts2);
-				}
-                if (env3 == null) {
-                    env3 = new IntArraySet[n];
-                    for (int j = 0; j < i; j++)
-                        env3[j] = env1[j];
-                }
-                env3[i] = pts1;
-            } else if (env3 != null)
-                env3[i] = pts1;
+            if (pts1.equals(pts2)) {
+				if (env3 != null)
+					env3[i] = pts1;
+				continue;
+			}
+			if (pts2 == ThreadEscapeFullAnalysis.nilPts) {
+				if (env3 != null)
+					env3[i] = pts1;
+				continue;
+			}
+			if (pts1 == ThreadEscapeFullAnalysis.nilPts)
+				pts1 = pts2;
+			else {
+				pts1 = new IntArraySet(pts1);
+				pts1.addAll(pts2);
+			}
+			if (env3 == null) {
+				env3 = new IntArraySet[n];
+				for (int j = 0; j < i; j++)
+					env3[j] = env1[j];
+			}
+			env3[i] = pts1;
         }
         if (env3 != null) {
             env1 = env3;
             changed = true;
         }
+		// merge heaps
         Set<IntTrio> heap1 = dstNode1.heap;
         Set<IntTrio> heap2 = dstNode2.heap;
         if (!heap1.equals(heap2)) {
@@ -99,8 +106,7 @@ public class PathEdge implements IPathEdge {
 		if (!(o instanceof PathEdge))
 			return false;
 		PathEdge that = (PathEdge) o;
-		return srcNode.equals(that.srcNode) &&
-			dstNode.equals(that.dstNode);
+		return srcNode.equals(that.srcNode) && dstNode.equals(that.dstNode);
 	}
 	public String toString() {
 		return srcNode + ";" + dstNode;
