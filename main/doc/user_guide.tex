@@ -125,7 +125,7 @@ Program analysis appliers: Researchers with possibly a limited program analysis 
 Program analysis writers: Program analysis researchers wanting to implement and evaluate new program analysis algorithms.
 \end{itemize}
 
-\Chord\ is intended to work on a variety of platforms, including Linux, Windows, and MacOS.
+\Chord\ is intended to work on a variety of platforms, including Linux, Windows/Cygwin, and MacOS.
 It has been tested most extensively on Linux.
 
 \Chord\ is open source software distributed under the \xlink{New BSD License}{http://www.opensource.org/licenses/bsd-license.php}.
@@ -185,7 +185,7 @@ and for executing dynamic program analyses.
 \end{itemize}
 
 \texonly{\newpage}
-\section{A Quick Tour}
+\section{Running Chord}
 
 Suppose the program to be analyzed has the following directory structure:
 
@@ -259,7 +259,7 @@ in the run having ID \verb+XXX+ via property \verb+chord.args.XXX+, as illustrat
 properties \verb+chord.args.0+ and \verb+chord.args.1+ in the above example.
 \end{itemize}
 
-Execute Chord on the above program by running the following command in Chord's main directory:
+To run Chord on the above program, run the following command in Chord's main directory:
 
 \begin{quote}
 \begin{verbatim}
@@ -280,11 +280,13 @@ In the above case, the above command does not do much beyond loading the sample 
 For Chord to do something interesting, you need to set additional properties, either
 on the above command line or in the \verb+chord.properties+ file, specifying the task(s)
 Chord must perform.
-All tasks are summarized in the ``Chord task properties" section at \ref{sec-sys-props}.
-The two most common tasks, described next, are building program scope and
-running program analyses.
+All tasks are summarized in the ``Chord Task Properties" portion of Section \ref{sec-sys-props}.
+The two most common tasks, described next, are building program scope (Section \ref{sec:building-scope})
+and running program analyses (Section \ref{sec:running-analyses}).
 
-\paragraph{Building Program Scope}
+\texonly{\newpage}
+\section{Building Program Scope}
+\label{sec:building-scope}
 
 Chord computes program scope (i.e. reachable classes and methods of a given Java program) if property
 \verb+chord.build.scope+ is set to \verb+true+.
@@ -330,14 +332,16 @@ predictive power of program analyses performed using the computed program scope.
 \end{itemize}
 \end{itemize}
 
-The default value of \verb+chord.reuse.scope+ is \verb+false+ and the default value of \verb+chord.scope.kind+
-is \verb+rta+.
-Finally, the default values of \verb+chord.classes.file+ and \verb+chord.methods.file+ are
+The default value of property \verb+chord.reuse.scope+ is \verb+false+ and that of
+property \verb+chord.scope.kind+ is \verb+rta+.
+The default values of properties \verb+chord.classes.file+ and \verb+chord.methods.file+ are
 \verb+${chord.out.dir}/classes.txt+ and \verb+${chord.out.dir}/methods.txt+, respectively,
 where property \verb+chord.out.dir+ defaults to \verb+${chord.work.dir}/chord_output/+,
 and property \verb+chord.work.dir+ defaults to the current working directory.
 
-\paragraph{Running Program Analyses}
+\texonly{\newpage}
+\section{Running Program Analyses}
+\label{sec:running-analyses}
 
 TODO
 
@@ -347,16 +351,6 @@ TODO
 %chord.dlog.analysis.path	 path	 Path of directories containing program analyses in Datalog (i.e. *.datalog and *.dlog files).	${chord.main.dir}/src/main/dlog/
 %chord.reuse.rels	 bool	 Construct program relations from BDDs stored on disk (from a previous run of Chord) whenever possible instead of re-computing them.	false
 %chord.publish.results	 bool	 Publish the results of program analyses in HTML.	true
-
-%\texonly{\newpage}
-%\section{Program Representation (todo)}
-
-%TODO
-
-%\texonly{\newpage}
-%\section{Implementing Program Analyses (todo)}
-
-%TODO
 
 \texonly{\newpage}
 \section{Chord System Properties}
@@ -491,6 +485,16 @@ The separator for list-valued properties can be either a blank space, a comma, a
 \end{table}
 
 \texonly{\newpage}
+\section{Program Representation}
+
+TODO
+
+\texonly{\newpage}
+\section{Writing Program Analyses}
+
+TODO
+
+\texonly{\newpage}
 \section{Acknowledgments}
 
 Chord would not be possible without the following open-source software:
@@ -504,7 +508,7 @@ Chord would not be possible without the following open-source software:
 \xlink{bddbddb}{http://bddbddb.sourceforge.net/}, a BDD-based Datalog solver
 \end{itemize}
 
-Chord additionally uses the following open-source tools and libraries:
+Chord additionally relies on the following open-source tools and libraries:
 \begin{itemize}
 \item
 \xlink{Ant-Contrib}{http://ant-contrib.sourceforge.net/}, a collection of useful Ant tasks  
@@ -517,6 +521,8 @@ Chord additionally uses the following open-source tools and libraries:
 \item
 \xlink{Saxon}{http://saxon.sourceforge.net/}, an XSLT processor
 \end{itemize}
+
+This user guide was produced using \xlink{Hyperlatex}{http://hyperlatex.sourceforge.net/}.
 
 Chord was supported in part by grants from the National Science Foundation, an equipment grant from Intel, and a Microsoft fellowship during 2005-2007.
 

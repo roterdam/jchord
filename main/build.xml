@@ -39,6 +39,7 @@
 		          - max.tuples (default=1000)
 		          - max.heap   (default=1024m)
 		javadoc   Generate javadoc for Chord source code
+		htmldoc   Generate HTML user guide
 		clean     Cleanup all generated class files
 		cleandoc  Cleanup all generated javadoc files
 		</echo>
@@ -432,6 +433,13 @@
 		</copy>
 	</target>
 
+	<target name="htmldoc">
+		<exec executable="hyperlatex" dir="doc">
+			<arg value="-html"/>
+			<arg value="user_guide"/>
+		</exec>
+	</target>
+
 	<!--
 		CLEAN UP
 	-->
@@ -461,7 +469,10 @@
 		</parallel>
 	</target>
 
-	<target name="cleandoc" description="Cleans Javadoc.">
+	<target name="cleandoc" description="Cleans Javadoc and HTML user guide.">
 		<delete dir="javadoc"/>
+		<delete>
+			<fileset dir="doc" includes="*.html"/>
+		</delete>
 	</target>
 </project>
