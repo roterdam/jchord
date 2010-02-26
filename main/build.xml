@@ -282,7 +282,11 @@
 		<then>
 			<property file="${chord.props.file}"/>
 			<dirname property="chord.props.dir" file="${chord.props.file}"/>
+			<!--
 			<propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
+			Commented out due to "supported regular expression pattern matcher not found" error.
+			-->
+			<property name="chord.path.prop.list" value="chord.class.path,chord.src.path"/>
 			<antfetch antfile="${tool.home}/pathconvert.xml" dir="${chord.props.dir}"
 				target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
 		</then>
