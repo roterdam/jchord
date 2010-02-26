@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="pathconvert">
   <target name="pathconvert">
-     <propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
      <for list="${chord.path.prop.list}" delimiter="," param="prop">
        <sequential>
          <path id="abspath">
