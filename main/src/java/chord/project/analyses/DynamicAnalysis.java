@@ -465,35 +465,102 @@ public class DynamicAnalysis extends JavaAnalysis {
 			throw new ChordRuntimeException(ex);
 		}
 	}
-	public void processEnterMethod(int m, int t) { }
-	public void processLeaveMethod(int m, int t) { }
-	public void processEnterLoop(int w, int t) { }
-	public void processLeaveLoop(int w, int t) { }
-	public void processNewOrNewArray(int h, int t, int o) { }
-	public void processGetstaticPrimitive(int e, int t, int b, int f) { }
-	public void processGetstaticReference(int e, int t, int b, int f, int o) { }
-	public void processPutstaticPrimitive(int e, int t, int b, int f) { }
-	public void processPutstaticReference(int e, int t, int b, int f, int o) { }
-	public void processGetfieldPrimitive(int e, int t, int b, int f) { }
-	public void processGetfieldReference(int e, int t, int b, int f, int o) { }
-	public void processPutfieldPrimitive(int e, int t, int b, int f) { }
-	public void processPutfieldReference(int e, int t, int b, int f, int o) { }
-	public void processAloadPrimitive(int e, int t, int b, int i) { }
-	public void processAloadReference(int e, int t, int b, int i, int o) { }
-	public void processAstorePrimitive(int e, int t, int b, int i) { }
-	public void processAstoreReference(int e, int t, int b, int i, int o) { }
-	public void processThreadStart(int i, int t, int o) { }
-	public void processThreadJoin(int i, int t, int o) { }
-	public void processAcquireLock(int l, int t, int o) { }
-	public void processReleaseLock(int r, int t, int o) { }
-	public void processWait(int i, int t, int o) { }
-	public void processNotify(int i, int t, int o) { }
-	public void processMethodCallBef(int i, int t, int o) { }
-	public void processMethodCallAft(int i, int t, int o) { }
-	public void processReturnPrimitive(int p, int t) { }
-	public void processReturnReference(int p, int t, int o) { }
-	public void processExplicitThrow(int p, int t, int o) { }
-	public void processImplicitThrow(int p, int t, int o) { }
-	public void processQuad(int p, int t) { }
-	public void processBasicBlock(int b, int t) { }
+	public void processEnterMethod(int m, int t) {
+		error();
+	}
+	public void processLeaveMethod(int m, int t) { 
+		error();
+	}
+	public void processEnterLoop(int w, int t) { 
+		error();
+	}
+	public void processLeaveLoop(int w, int t) { 
+		error();
+	}
+	public void processNewOrNewArray(int h, int t, int o) { 
+		error();
+	}
+	public void processGetstaticPrimitive(int e, int t, int b, int f) { 
+		error();
+	}
+	public void processGetstaticReference(int e, int t, int b, int f, int o) { 
+		error();
+	}
+	public void processPutstaticPrimitive(int e, int t, int b, int f) { 
+		error();
+	}
+	public void processPutstaticReference(int e, int t, int b, int f, int o) { 
+		error();
+	}
+	public void processGetfieldPrimitive(int e, int t, int b, int f) { 
+		error();
+	}
+	public void processGetfieldReference(int e, int t, int b, int f, int o) { 
+		error();
+	}
+	public void processPutfieldPrimitive(int e, int t, int b, int f) { 
+		error();
+	}
+	public void processPutfieldReference(int e, int t, int b, int f, int o) {
+		error();
+	}
+	public void processAloadPrimitive(int e, int t, int b, int i) { 
+		error();
+	}
+	public void processAloadReference(int e, int t, int b, int i, int o) { 
+		error();
+	}
+	public void processAstorePrimitive(int e, int t, int b, int i) { 
+		error();
+	}
+	public void processAstoreReference(int e, int t, int b, int i, int o) { 
+		error();
+	}
+	public void processThreadStart(int i, int t, int o) { 
+		error();
+	}
+	public void processThreadJoin(int i, int t, int o) { 
+		error();
+	}
+	public void processAcquireLock(int l, int t, int o) { 
+		error();
+	}
+	public void processReleaseLock(int r, int t, int o) { 
+		error();
+	}
+	public void processWait(int i, int t, int o) { 
+		error();
+	}
+	public void processNotify(int i, int t, int o) { 
+		error();
+	}
+	public void processMethodCallBef(int i, int t, int o) { 
+		error();
+	}
+	public void processMethodCallAft(int i, int t, int o) { 
+		error();
+	}
+	public void processReturnPrimitive(int p, int t) { 
+		error();
+	}
+	public void processReturnReference(int p, int t, int o) { 
+		error();
+	}
+	public void processExplicitThrow(int p, int t, int o) { 
+		error();
+	}
+	public void processImplicitThrow(int p, int t, int o) { 
+		error();
+	}
+	public void processQuad(int p, int t) { 
+		error();
+	}
+	public void processBasicBlock(int b, int t) { 
+		error();
+	}
+	private void error() {
+		throw new ChordRuntimeException("Dynamic analysis must override method " +
+			"process<XXX>, where <XXX> is the instrumentation event " +
+			"indicated in the below stack trace.");
+	}
 }
