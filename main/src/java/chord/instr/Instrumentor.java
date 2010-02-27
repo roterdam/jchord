@@ -129,7 +129,6 @@ public class Instrumentor {
 	private MyExprEditor exprEditor = new MyExprEditor();
 	private CFGLoopFinder finder = new CFGLoopFinder();
 
-	protected boolean convert;
 	protected boolean genBasicBlockEvent;
 	protected boolean genQuadEvent;
 	protected boolean genEnterAndLeaveMethodEvent;
@@ -260,7 +259,6 @@ public class Instrumentor {
 			}
 		}
 
-		convert = scheme.isConverted();
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
 		genEnterAndLeaveMethodEvent = scheme.getCallsBound() > 0 ||
@@ -289,68 +287,45 @@ public class Instrumentor {
 		methodCallEvent = scheme.getEvent(InstrScheme.METHOD_CALL);
 		
 		if (scheme.needsFmap()) {
-			if (convert) {
-				domF = (DomF) Project.getTrgt("F");
-				Project.runTask(domF);
-				Fmap = getUniqueStringMap(domF);
-			} else
-				Fmap = new IndexHashMap<String>();
+			domF = (DomF) Project.getTrgt("F");
+			Project.runTask(domF);
+			Fmap = getUniqueStringMap(domF);
 		}
 		if (scheme.needsMmap()) {
-			if (convert) {
-				domM = (DomM) Project.getTrgt("M");
-				Project.runTask(domM);
-				Mmap = getUniqueStringMap(domM);
-			} else
-				Mmap = new IndexHashMap<String>();
+			domM = (DomM) Project.getTrgt("M");
+			Project.runTask(domM);
+			Mmap = getUniqueStringMap(domM);
 		}
 		if (scheme.needsHmap()) {
-			if (convert) {
-				domH = (DomH) Project.getTrgt("H");
-				Project.runTask(domH);
-				Hmap = getUniqueStringMap(domH);
-			} else
-				Hmap = new IndexHashMap<String>();
+			domH = (DomH) Project.getTrgt("H");
+			Project.runTask(domH);
+			Hmap = getUniqueStringMap(domH);
 		}
 		if (scheme.needsEmap()) {
-			if (convert) {
-				domE = (DomE) Project.getTrgt("E");
-				Project.runTask(domE);
-				Emap = getUniqueStringMap(domE);
-			} else
-				Emap = new IndexHashMap<String>();
+			domE = (DomE) Project.getTrgt("E");
+			Project.runTask(domE);
+			Emap = getUniqueStringMap(domE);
 		}
 		if (scheme.needsImap()) {
-			if (convert) {
-				domI = (DomI) Project.getTrgt("I");
-				Project.runTask(domI);
-				Imap = getUniqueStringMap(domI);
-			} else
-				Imap = new IndexHashMap<String>();
+			domI = (DomI) Project.getTrgt("I");
+			Project.runTask(domI);
+			Imap = getUniqueStringMap(domI);
 		}
 		if (scheme.needsLmap()) {
-			if (convert) {
-				domL = (DomL) Project.getTrgt("L");
-				Project.runTask(domL);
-				Lmap = getUniqueStringMap(domL);
-			} else
-				Lmap = new IndexHashMap<String>();
+			domL = (DomL) Project.getTrgt("L");
+			Project.runTask(domL);
+			Lmap = getUniqueStringMap(domL);
 		}
 		if (scheme.needsRmap()) {
-			if (convert) {
-				domR = (DomR) Project.getTrgt("R");
-				Project.runTask(domR);
-				Rmap = getUniqueStringMap(domR);
-			} else
-				Rmap = new IndexHashMap<String>();
+			domR = (DomR) Project.getTrgt("R");
+			Project.runTask(domR);
+			Rmap = getUniqueStringMap(domR);
 		}
 		if (scheme.needsPmap()) {
-			assert (convert);
 			domP = (DomP) Project.getTrgt("P");
 			Project.runTask(domP);
 		}
 		if (scheme.needsBmap()) {
-			assert (convert);
 			domB = (DomB) Project.getTrgt("B");
 			Project.runTask(domB);
 		}
@@ -370,8 +345,8 @@ public class Instrumentor {
 		String bootClassesDirName = Properties.bootClassesDirName;
 		String userClassesDirName = Properties.userClassesDirName;
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
-		String[] instrExcludedPrefixes = Properties.toArray(
-			Properties.instrExcludeStr);
+		String[] scopeExcludedPrefixes = Properties.toArray(
+			Properties.scopeExcludeStr);
 
 		for (jq_Class c : classes) {
 			String cName = c.getName();
@@ -382,7 +357,7 @@ public class Instrumentor {
 				continue;
 			}
 			boolean match = false;
-			for (String s : instrExcludedPrefixes) {
+			for (String s : scopeExcludedPrefixes) {
 				if (cName.startsWith(s)) {
 					match = true;
 		 			break;
@@ -390,7 +365,7 @@ public class Instrumentor {
 			}
 			if (match) {
 				System.out.println("WARNING: Not instrumenting class " + cName +
-					" as it excluded by chord.instr.exclude");
+					" as it excluded by chord.scope.exclude");
 				continue;
 			}
 			String outDirName = null;
@@ -532,17 +507,11 @@ public class Instrumentor {
 		String cName = javassistMethod.getDeclaringClass().getName();
 		mStr = Program.toString(mName, mDesc, cName);
 		if (Mmap != null) {
-			if (convert) {
-				mId = Mmap.indexOf(mStr);
-				if (mId == -1) {
-					System.out.println("WARNING: Skipping instrumenting method " +
-						mStr + "; not found by static analysis.");
-					return;
-				}
-			} else {
-				int n = Mmap.size();
-				mId = Mmap.getOrAdd(mStr);
-				assert (mId == n);
+			mId = Mmap.indexOf(mStr);
+			if (mId == -1) {
+				System.out.println("WARNING: Skipping instrumenting method " +
+					mStr + "; not found by static analysis.");
+				return;
 			}
 		}
 		if (genEnterAndLeaveLoopEvent || genQuadEvent || genBasicBlockEvent) {
@@ -686,16 +655,9 @@ public class Instrumentor {
 
 	protected int set(IndexMap<String> map, int bci) {
 		String s = bci + "!" + mStr;
-		int id;
-		if (convert) {
-			id = map.indexOf(s);
-			if (id == -1)
-				id = Runtime.UNKNOWN_FIELD_VAL;
-		} else {
-			int n = map.size();
-			id = map.getOrAdd(bci + "!" + mStr);
-			assert (id == n);
-		}
+		int id = map.indexOf(s);
+		if (id == -1)
+			id = Runtime.UNKNOWN_FIELD_VAL;
 		return id;
 	}
 	protected int getFid(CtField field) {
@@ -703,16 +665,9 @@ public class Instrumentor {
 		String fDesc = field.getSignature();
 		String cName = field.getDeclaringClass().getName();
 		String s = Program.toString(fName, fDesc, cName);
-		int id;
-		if (convert) {
-			id = Fmap.indexOf(s);
-			if (id == -1)
-				id = Runtime.UNKNOWN_FIELD_VAL;
-		} else {
-			int n = Fmap.size();
-			id = Fmap.getOrAdd(s);
-			assert (id == n);
-		}
+		int id = Fmap.indexOf(s);
+		if (id == -1)
+			id = Runtime.UNKNOWN_FIELD_VAL;
 		return id;
 	}
 

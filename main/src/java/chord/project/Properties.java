@@ -18,9 +18,7 @@ public class Properties {
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
 	public final static String DEFAULT_SCOPE_EXCLUDES =
-		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.";
-	public final static String DEFAULT_INSTR_EXCLUDES =
-		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,java.lang.Object";
+		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,java.,javax.";
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,java.,javax.";
 
@@ -83,7 +81,6 @@ public class Properties {
 	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
 	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
 	public final static String checkExcludeStr = System.getProperty("chord.check.exclude", DEFAULT_CHECK_EXCLUDES);
-	public final static String instrExcludeStr = System.getProperty("chord.instr.exclude", DEFAULT_INSTR_EXCLUDES);
 
 	// Program analysis properties
 
@@ -180,7 +177,6 @@ public class Properties {
 		System.out.println("chord.reuse.scope: " + reuseScope);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
 		System.out.println("chord.check.exclude: " + checkExcludeStr);
-		System.out.println("chord.instr.exclude: " + instrExcludeStr);
 
 		System.out.println("*** Program analysis properties:");
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
