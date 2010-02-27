@@ -26,7 +26,7 @@ import chord.project.Chord;
     signs = { "E0,E1:E0xE1" }
 )
 public class DynamicAliasAnalysis extends AbstractDynamicAliasAnalysis {
-    private InstrScheme instrScheme;
+	private InstrScheme instrScheme;
 	// map from statements in domain E to points-to set of concrete objects
     private TIntObjectHashMap<TIntHashSet> eIdx2pts =
 		new TIntObjectHashMap<TIntHashSet>();

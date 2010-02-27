@@ -10,7 +10,16 @@ import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.util.tuple.integer.IntPair;
+import chord.util.IndexMap;
+import chord.project.OutDirUtils;
+import chord.project.Properties;
+import chord.program.Program;
+import chord.instr.InstrScheme;
+import chord.doms.DomE;
 
+import joeq.Compiler.Quad.Quad;
+
+import java.io.PrintWriter;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -59,9 +68,22 @@ public abstract class AbstractDynamicAliasAnalysis extends DynamicAnalysis {
         ProgramRel relAliasingRacePair =
 			(ProgramRel) Project.getTrgt("aliasingRacePair");
 		relAliasingRacePair.zero();
-		for (IntPair p : aliasingRacePairSet) {
+		for (IntPair p : aliasingRacePairSet)
 			relAliasingRacePair.add(p.idx0, p.idx1);
-		}
 		relAliasingRacePair.save();
+
+        DomE domE = instrumentor.getDomE();
+        String outDirName = Properties.outDirName;
+		Program program = Program.v();
+		PrintWriter writer =
+			OutDirUtils.newPrintWriter("aliasing_race_pair.txt");
+		for (IntPair p : aliasingRacePairSet) {
+			Quad q1 = (Quad) domE.get(p.idx0);
+			Quad q2 = (Quad) domE.get(p.idx1);
+			String s1 = program.toVerboseStr(q1);
+			String s2 = program.toVerboseStr(q2);
+			writer.println("e1=<" + s1 + ">, e2=<" + s2 + ">");
+		}
+		writer.close();
 	}
 }
