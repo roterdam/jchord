@@ -40,7 +40,6 @@ import gnu.trove.TIntArrayList;
  * </ul>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.convert</tt> ([true|false]; default=false)</li>
  * <li><tt>chord.dynamic.escape.flowins</tt> ([true|false]; default=false)</li>
  * </ul>
  *
@@ -87,7 +86,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 
 	private int numE;
 	private int numH;
-	private boolean convert;
 	private boolean isFlowIns;
 
     private InstrScheme instrScheme;
@@ -99,8 +97,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     	if (instrScheme != null)
     		return instrScheme;
     	instrScheme = new InstrScheme();
-    	if (convert)
-    		instrScheme.setConvert();
     	instrScheme.setNewAndNewArrayEvent(true, false, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);
@@ -119,8 +115,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     }
 
 	public void run() {
-    	convert = System.getProperty(
-			"chord.convert", "false").equals("true");
 		isFlowIns = System.getProperty(
 			"chord.escape.dynamic.flowins", "false").equals("true");
 		super.run();
@@ -132,10 +126,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		numE = instrumentor.getEmap().size();
 		isEidxVisited = new boolean[numE];
 		isEidxEsc = new boolean[numE];
-		if (convert) {
-			relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
-			relEscE = (ProgramRel) Project.getTrgt("escE");
-		}
+		relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
+		relEscE = (ProgramRel) Project.getTrgt("escE");
 		if (isFlowIns) {
 			numH = instrumentor.getHmap().size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
@@ -181,19 +173,17 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	}
 
 	public void doneAllPasses() {
-		if (convert) {
-			relVisitedE.zero();
-			relEscE.zero();
-			for (int i = 0; i < numE; i++) {
-				if (isEidxVisited[i]) {
-					relVisitedE.add(i);
-					if (isEidxEsc[i])
-						relEscE.add(i);
-				}
+		relVisitedE.zero();
+		relEscE.zero();
+		for (int i = 0; i < numE; i++) {
+			if (isEidxVisited[i]) {
+				relVisitedE.add(i);
+				if (isEidxEsc[i])
+					relEscE.add(i);
 			}
-			relVisitedE.save();
-			relEscE.save();
 		}
+		relVisitedE.save();
+		relEscE.save();
 
 		IndexMap<String> Emap = instrumentor.getEmap();
 		String outDirName = Properties.outDirName;

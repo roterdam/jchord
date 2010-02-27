@@ -13,27 +13,37 @@ import chord.instr.InstrScheme;
 import chord.project.Chord;
 
 /**
- * Concrete dynamic alias analysis.
+ * Dynamic alias analysis using object alloc site-based abstraction.
+ * 
+ * This analysis runs in support of race detection and abstracts concrete
+ * objects by their alloc site.
+ * Thus, for statements
+ * 		u.f = y; 
+ * and
+ * 		z = v.f;
+ * pts(u) and pts(v) are computed (in the form of alloc sites),
+ * which enables the detection of a potential race. 
  * 
  * @author Omer Tripp (omertrip@post.tau.ac.il)
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "dynamic-alias-java",
+	name = "dynamic-alias-alloc-java",
     consumedNames = { "startingRacePair" },
     producedNames = { "aliasingRacePair" },
     namesOfSigns = { "aliasingRacePair" },
     signs = { "E0,E1:E0xE1" }
 )
-public class DynamicAliasAnalysis extends AbstractDynamicAliasAnalysis {
+public class DynamicAliasAnalysisUsingAlloc extends AbstractDynamicAliasAnalysis {
     private InstrScheme instrScheme;
-	// map from statements in domain E to points-to set of concrete objects
+    private TIntIntHashMap obj2hIdx = new TIntIntHashMap();
     private TIntObjectHashMap<TIntHashSet> eIdx2pts =
 		new TIntObjectHashMap<TIntHashSet>();
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null)
     		return instrScheme;
     	instrScheme = new InstrScheme();
+    	instrScheme.setNewAndNewArrayEvent(true, false, true);
     	instrScheme.setGetfieldReferenceEvent(true, false, true, false, false);
     	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setPutfieldReferenceEvent(true, false, true, false, false);
@@ -52,21 +62,27 @@ public class DynamicAliasAnalysis extends AbstractDynamicAliasAnalysis {
 		final TIntHashSet pts2 = eIdx2pts.get(e2);
 		if (pts2 == null)
 			return false;
-		final TIntProcedure proc = new TIntProcedure() {
-			public boolean execute(int value) {
-				if (pts2.contains(value))
-					return false;
-				return true;
-			}
-		};
-		if (!pts1.forEach(proc))
-			return true;
-		return false;
+        final TIntProcedure proc = new TIntProcedure() {
+            public boolean execute(int value) {
+                if (pts2.contains(value))
+                    return false;
+                return true;
+            }
+        };
+        if (!pts1.forEach(proc))
+            return true;
+        return false;
 	}
 
 	public void donePass() {
 		super.donePass();
+		obj2hIdx.clear();
 		eIdx2pts.clear();
+	}
+
+	public void processNewOrNewArray(int h, int t, int o) {
+		if (o != 0 && h >= 0)
+			obj2hIdx.put(o, h);
 	}
 
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
@@ -108,7 +124,10 @@ public class DynamicAliasAnalysis extends AbstractDynamicAliasAnalysis {
 				pts = new TIntHashSet();
 				eIdx2pts.put(e, pts);
 			}
-			pts.add(b);
+			if (obj2hIdx.containsKey(b)) {
+				int h = obj2hIdx.get(b);
+				pts.add(h);
+			}
 		}
 	}
 }
