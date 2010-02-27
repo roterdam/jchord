@@ -5,77 +5,68 @@
  */
 package chord.analyses.alias.dynamic;
 
+import gnu.trove.TIntProcedure;
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntObjectHashMap;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.analyses.DynamicAnalysis;
 
 /**
- * Dynamic alias analysis.
- * 
- * This analysis runs in support of race detection, and abstracts concrete objects by their allocation site.
- * Thus, for statements
- * 		u.f = y; 
- * and
- * 		z = v.f;
- * pts(u) and pts(v) are computed (in the form of allocation sites), which enables the detection of a 
- * potential race. 
+ * Concrete dynamic alias analysis.
  * 
  * @author Omer Tripp (omertrip@post.tau.ac.il)
+ * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "dynamic-alias-java"
+	name = "dynamic-alias-java",
+    consumedNames = { "startingRacePair" },
+    producedNames = { "aliasingRacePair" },
+    namesOfSigns = { "aliasingRacePair" },
+    signs = { "E0,E1:E0xE1" }
 )
-public class DynamicAliasAnalysis extends DynamicAnalysis {
-
+public class DynamicAliasAnalysis extends AbstractDynamicAliasAnalysis {
     private InstrScheme instrScheme;
-    private TIntIntHashMap object2allocationSite;
-    private TIntObjectHashMap<TIntHashSet> pts;
-
+	// map from statements in domain E to points-to set of concrete objects
+    private TIntObjectHashMap<TIntHashSet> eIdx2pts =
+		new TIntObjectHashMap<TIntHashSet>();
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null)
     		return instrScheme;
     	instrScheme = new InstrScheme();
-    	instrScheme.setNewAndNewArrayEvent(true, false, true);
-
     	instrScheme.setGetfieldReferenceEvent(true, false, true, false, false);
     	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setPutfieldReferenceEvent(true, false, true, false, false);
     	instrScheme.setPutfieldPrimitiveEvent(true, false, true, false);
-    	
     	instrScheme.setAloadReferenceEvent(true, false, true, false, false);
     	instrScheme.setAloadPrimitiveEvent(true, false, true, false);
     	instrScheme.setAstoreReferenceEvent(true, false, true, false, false);
     	instrScheme.setAstorePrimitiveEvent(true, false, true, false);
-
     	return instrScheme;
     }
 
-	public void initAllPasses() {
-		object2allocationSite = new TIntIntHashMap();
-		pts = new TIntObjectHashMap<TIntHashSet>();
-	}
-
-	public void initPass() {
-		object2allocationSite.clear();
-		pts.clear();
+	public boolean aliases(int e1, int e2) {
+		final TIntHashSet pts1 = eIdx2pts.get(e1);
+		if (pts1 == null)
+			return false;
+		final TIntHashSet pts2 = eIdx2pts.get(e2);
+		if (pts2 == null)
+			return false;
+		final TIntProcedure proc = new TIntProcedure() {
+			public boolean execute(int value) {
+				if (pts2.contains(value))
+					return false;
+				return true;
+			}
+		};
+		if (!pts1.forEach(proc))
+			return true;
+		return false;
 	}
 
 	public void donePass() {
-//		System.out.println("***** DONE PASS *****");
-	}
-
-	public void doneAllPasses() {
-//		System.out.println("***** DONE ALL PASSES *****");
-	}
-
-	public void processNewOrNewArray(int h, int t, int o) {
-		if (o != 0 && h >= 0) {
-			// Associate the allocated object with an allocation site.
-			object2allocationSite.put(o, h);
-		}
+		super.donePass();
+		eIdx2pts.clear();
 	}
 
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
@@ -90,7 +81,7 @@ public class DynamicAliasAnalysis extends DynamicAnalysis {
 		updatePointsTo(e, b);
 	}
 	
-	public void processGetfieldPrimitive(int e, int t, int b, int f, int o) {
+	public void processGetfieldPrimitive(int e, int t, int b, int f) {
 		updatePointsTo(e, b);
 	}
 	
@@ -112,15 +103,12 @@ public class DynamicAliasAnalysis extends DynamicAnalysis {
 	
 	private void updatePointsTo(int e, int b) {
 		if (e >= 0 && b != 0) {
-			TIntHashSet S = pts.get(e);
-			if (S == null) {
-				S = new TIntHashSet();
-				pts.put(e, S);
+			TIntHashSet pts = eIdx2pts.get(e);
+			if (pts == null) {
+				pts = new TIntHashSet();
+				eIdx2pts.put(e, pts);
 			}
-			if (object2allocationSite.containsKey(b)) {
-				int allocationSite = object2allocationSite.get(b);
-				S.add(allocationSite);
-			}
+			pts.add(b);
 		}
 	}
 }
