@@ -257,7 +257,6 @@ public class InstrScheme implements Serializable {
 		}
 	}
 
-	private boolean convert;
 	private int callsBound;
 	private int itersBound;
 	private boolean hasEnterAndLeaveMethodEvent;
@@ -270,14 +269,6 @@ public class InstrScheme implements Serializable {
 		events = new EventFormat[MAX_NUM_EVENT_FORMATS];
 		for (int i = 0; i < MAX_NUM_EVENT_FORMATS; i++)
 			events[i] = new EventFormat();
-	}
-
-	public void setConvert() {
-		convert = true;
-	}
-
-	public boolean isConverted() {
-		return convert;
 	}
 
 	public void setEnterAndLeaveMethodEvent() {
