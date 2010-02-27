@@ -14,13 +14,17 @@ import java.util.ArrayList;
 
 import chord.util.IntArraySet;
 import chord.util.ChordRuntimeException;
-import chord.project.Properties;
+import chord.project.OutDirUtils;
+import chord.program.Program;
+import chord.doms.DomE;
 import chord.util.IndexMap;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.Project;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
+
+import joeq.Compiler.Quad.Quad;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
@@ -185,27 +189,23 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		relVisitedE.save();
 		relEscE.save();
 
-		IndexMap<String> Emap = instrumentor.getEmap();
-		String outDirName = Properties.outDirName;
-		try {
-			PrintWriter writer;
-			writer = new PrintWriter(new FileWriter(
-				new File(outDirName, "dynamic_visitedE.txt")));
-			for (int i = 0; i < numE; i++) {
-				if (isEidxVisited[i])
-					writer.println(Emap.get(i));
-			}
-			writer.close();
-			writer = new PrintWriter(new FileWriter(
-				new File(outDirName, "dynamic_escE.txt")));
-			for (int i = 0; i < numE; i++) {
+		DomE domE = instrumentor.getDomE();
+		Program program = Program.v();
+		PrintWriter writer1 =
+			 OutDirUtils.newPrintWriter("dynamic_visitedE.txt");
+		PrintWriter writer2 =
+			OutDirUtils.newPrintWriter("dynamic_escE.txt");
+		for (int i = 0; i < numE; i++) {
+			if (isEidxVisited[i]) {
+				Quad q = (Quad) domE.get(i);
+				String s = program.toVerboseStr(q);
+				writer1.println(s);
 				if (isEidxEsc[i])
-					writer.println(Emap.get(i));
+					writer2.println(s);
 			}
-			writer.close();
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
 		}
+		writer1.close();
+		writer2.close();
 	}
 
 	public void processNewOrNewArray(int h, int t, int o) {
