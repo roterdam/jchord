@@ -5,12 +5,22 @@
  */
 package chord.analyses.alias.dynamic;
 
-import gnu.trove.TIntProcedure;
 import gnu.trove.TIntHashSet;
-import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntObjectHashMap;
+import gnu.trove.TIntProcedure;
+
+import java.io.PrintWriter;
+
+import joeq.Compiler.Quad.Quad;
+import chord.bddbddb.Rel.IntPairIterable;
+import chord.doms.DomE;
 import chord.instr.InstrScheme;
+import chord.program.Program;
 import chord.project.Chord;
+import chord.project.OutDirUtils;
+import chord.project.Project;
+import chord.project.analyses.ProgramRel;
+import chord.util.tuple.integer.IntPair;
 
 /**
  * Concrete dynamic alias analysis.
@@ -21,8 +31,8 @@ import chord.project.Chord;
 @Chord(
 	name = "dynamic-alias-java",
     consumedNames = { "startingRacePair" },
-    producedNames = { "aliasingRacePair" },
-    namesOfSigns = { "aliasingRacePair" },
+    producedNames = { "normalizedAliasingRacePair" },
+    namesOfSigns = { "normalizedAliasingRacePair" },
     signs = { "E0,E1:E0xE1" }
 )
 public class DynamicAliasAnalysis extends AbstractDynamicAliasAnalysis {
@@ -110,5 +120,31 @@ public class DynamicAliasAnalysis extends AbstractDynamicAliasAnalysis {
 			}
 			pts.add(b);
 		}
+	}
+	
+	public void doneAllPasses() {
+        ProgramRel relRawAliasingRacePair =
+			(ProgramRel) Project.getTrgt("rawAliasingRacePair");
+		relRawAliasingRacePair.zero();
+		for (IntPair p : aliasingRacePairSet)
+			relRawAliasingRacePair.add(p.idx0, p.idx1);
+		relRawAliasingRacePair.save();
+		Project.runTask("nonalloc-filter");
+        DomE domE = instrumentor.getDomE();
+		Program program = Program.v();
+		ProgramRel relNormalizedAliasingRacePair =
+			(ProgramRel) Project.getTrgt("normalizedAliasingRacePair");
+		relNormalizedAliasingRacePair.load();
+		PrintWriter writer =
+			OutDirUtils.newPrintWriter("aliasing_race_pair-dyn.txt");
+		IntPairIterable ary2IntTuples = relNormalizedAliasingRacePair.getAry2IntTuples();
+		for (IntPair p : ary2IntTuples) {
+			Quad q1 = (Quad) domE.get(p.idx0);
+			Quad q2 = (Quad) domE.get(p.idx1);
+			String s1 = program.toVerboseStr(q1);
+			String s2 = program.toVerboseStr(q2);
+			writer.println("e1=<" + s1 + ">, e2=<" + s2 + ">");
+		}
+		writer.close();
 	}
 }
