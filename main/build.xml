@@ -286,9 +286,9 @@
 			<propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
 			Commented out due to "supported regular expression pattern matcher not found" error.
 			-->
-			<property name="chord.path.prop.list" value="chord.class.path,chord.src.path"/>
+      <property name="chord.path.prop.list" value="chord.class.path,chord.src.path"/>
 			<antfetch antfile="${tool.home}/pathconvert.xml" dir="${chord.props.dir}"
-				target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
+        target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
 		</then>
 		<else/>
 	</if>
@@ -304,7 +304,9 @@
 		<property name="chord.main.dir" location="."/>
 		<property name="chord.max.heap" value="1024m"/>
 		<property name="chord.max.stack" value="32m"/>
-		<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
+    <!--<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>-->
+    <property name="chord.jvmargs" value="-Xbootclasspath/p:/home/pliang/pa/m/realtime.jar -showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
+
 		<java classname="chord.project.Main" fork="true" failonerror="true" dir="${chord.work.dir}">
 			<jvmarg line="${chord.jvmargs}"/>
 			<syspropertyset>
