@@ -5,12 +5,23 @@
  */
 package chord.analyses.alias.dynamic;
 
-import gnu.trove.TIntProcedure;
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
+import gnu.trove.TIntIterator;
 import gnu.trove.TIntObjectHashMap;
+import gnu.trove.TIntProcedure;
+
+import java.io.PrintWriter;
+
+import joeq.Compiler.Quad.Quad;
+import chord.doms.DomE;
 import chord.instr.InstrScheme;
+import chord.program.Program;
 import chord.project.Chord;
+import chord.project.OutDirUtils;
+import chord.project.Project;
+import chord.project.analyses.ProgramRel;
+import chord.util.tuple.integer.IntPair;
 
 /**
  * Dynamic alias analysis using object alloc site-based abstraction.
@@ -30,15 +41,16 @@ import chord.project.Chord;
 @Chord(
 	name = "dynamic-alias-alloc-java",
     consumedNames = { "startingRacePair" },
-    producedNames = { "aliasingRacePair" },
+    producedNames = { "aliasingRacePair", "bannedE" },
     namesOfSigns = { "aliasingRacePair" },
     signs = { "E0,E1:E0xE1" }
 )
 public class DynamicAliasAnalysisUsingAlloc extends AbstractDynamicAliasAnalysis {
     private InstrScheme instrScheme;
-    private TIntIntHashMap obj2hIdx = new TIntIntHashMap();
-    private TIntObjectHashMap<TIntHashSet> eIdx2pts =
+    private final TIntIntHashMap obj2hIdx = new TIntIntHashMap();
+    private final TIntObjectHashMap<TIntHashSet> eIdx2pts =
 		new TIntObjectHashMap<TIntHashSet>();
+	private final TIntHashSet banned = new TIntHashSet();
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null)
     		return instrScheme;
@@ -127,7 +139,47 @@ public class DynamicAliasAnalysisUsingAlloc extends AbstractDynamicAliasAnalysis
 			if (obj2hIdx.containsKey(b)) {
 				int h = obj2hIdx.get(b);
 				pts.add(h);
+			} else {
+				banned.add(e);
 			}
 		}
+	}
+	
+	public void doneAllPasses() {
+		ProgramRel relAliasingRacePair =
+			(ProgramRel) Project.getTrgt("aliasingRacePair");
+		relAliasingRacePair.zero();
+		for (IntPair p : aliasingRacePairSet)
+			relAliasingRacePair.add(p.idx0, p.idx1);
+		relAliasingRacePair.save();
+
+        DomE domE = instrumentor.getDomE();
+		Program program = Program.v();
+		PrintWriter writer =
+			OutDirUtils.newPrintWriter("aliasing_race_pair-dynalloc.txt");
+		for (IntPair p : aliasingRacePairSet) {
+			Quad q1 = (Quad) domE.get(p.idx0);
+			Quad q2 = (Quad) domE.get(p.idx1);
+			String s1 = program.toVerboseStr(q1);
+			String s2 = program.toVerboseStr(q2);
+			writer.println("e1=<" + s1 + ">, e2=<" + s2 + ">");
+		}
+		
+		writer.close();
+        ProgramRel relBannedE =
+			(ProgramRel) Project.getTrgt("bannedE");
+		relBannedE.zero();
+		TIntIterator it = banned.iterator();
+		while (it.hasNext())
+			relBannedE.add(it.next());			
+		relBannedE.save();
+		writer = OutDirUtils.newPrintWriter("bannedStatements.txt");
+		it = banned.iterator();
+		while (it.hasNext()) {
+			Quad q = (Quad) domE.get(it.next());
+			String s = program.toVerboseStr(q);
+			writer.println("e=<" + s + ">");
+		}
+		writer.close();
 	}
 }
