@@ -5,31 +5,24 @@
  */
 package chord.analyses.escape.dynamic;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.io.File;
-import java.util.List;
-import java.util.ArrayList;
-
-import chord.util.IntArraySet;
-import chord.util.ChordRuntimeException;
-import chord.project.OutDirUtils;
-import chord.program.Program;
-import chord.doms.DomE;
-import chord.util.IndexMap;
-import chord.instr.InstrScheme;
-import chord.project.Chord;
-import chord.project.Project;
-import chord.project.analyses.DynamicAnalysis;
-import chord.project.analyses.ProgramRel;
-
-import joeq.Compiler.Quad.Quad;
-
+import gnu.trove.TIntArrayList;
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntObjectHashMap;
-import gnu.trove.TIntArrayList;
+
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+
+import joeq.Compiler.Quad.Quad;
+import chord.doms.DomE;
+import chord.instr.InstrScheme;
+import chord.program.Program;
+import chord.project.Chord;
+import chord.project.OutDirUtils;
+import chord.project.Project;
+import chord.project.analyses.DynamicAnalysis;
+import chord.project.analyses.ProgramRel;
 
 /**
  * Dynamic thread-escape analysis.
