@@ -162,5 +162,21 @@ public final class FileUtils {
             throw new ChordRuntimeException(ex);
         }
     }
-
+	public static void deleteFile(String fileName) {
+		deleteFile(new File(fileName));
+	}
+	public static void deleteFile(File file) {
+		if (file.exists())
+			delete(file);
+	}
+	// file is assumed to exist
+	private static void delete(File file) {
+		if (file.isDirectory()) {
+			File[] files = file.listFiles();
+			for (File file2 : files)
+				delete(file2);
+		}
+		if (!file.delete())
+			throw new ChordRuntimeException("Failed to delete file: " + file);
+	}
 }

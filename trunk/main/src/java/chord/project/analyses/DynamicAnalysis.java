@@ -24,6 +24,7 @@ import chord.util.ReadException;
 import chord.util.Executor;
 import chord.util.IndexMap;
 import chord.util.ChordRuntimeException;
+import chord.util.FileUtils;
 
 /**
  * Generic implementation of a dynamic program analysis (a specialized kind of Java task).
@@ -93,8 +94,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 				"=trace_block_size=" + Properties.traceBlockSize +
 				"=trace_file_name=" + traceFileName +
 				" " + mainClassName + " ";
-			ProcessExecutor.execute("rm " + crudeTraceFileName);
-			ProcessExecutor.execute("rm " + finalTraceFileName);
+			FileUtils.deleteFile(crudeTraceFileName);
+			FileUtils.deleteFile(finalTraceFileName);
 			final boolean doTracePipe = Properties.doTracePipe;
 			if (doTracePipe) {
 				ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
