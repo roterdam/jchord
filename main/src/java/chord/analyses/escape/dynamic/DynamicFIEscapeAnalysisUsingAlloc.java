@@ -145,7 +145,9 @@ public class DynamicFIEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 	public void donePass() {
 		System.out.println("***** STATS *****");
 		int numVisitedE = getAllVisited().size();
+		System.out.println("numVisitedE computed");
 		Set<Node> esc = getReachableFromShared();
+		System.out.println("esc computed");
 		int numAllocEsc = esc.size();
 		TIntHashSet escE = new TIntHashSet();
 		for (Node n : esc) {
@@ -160,16 +162,22 @@ public class DynamicFIEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 	private Set<Node> getReachableFromShared() {
 		Set<Node> esc = new HashSet<Node>(10);
 		Set<Node> worklist = new HashSet<Node>(5);
+		Set<Node> visited = new HashSet<Node>(5);
 		worklist.add(Node.SHARED);
 		while (!worklist.isEmpty()) {
 			Iterator<Node> it = worklist.iterator();
 			worklist = new HashSet<Node>(5);
 			while (it.hasNext()) {
 				Node n = it.next();
+				visited.add(n);
 				esc.add(n);
 				Set<Node> succSet = reachabilityGraph.get(n);
 				if (succSet != null) {
-					worklist.addAll(succSet);
+					for (Node succ : succSet) {
+						if (!visited.contains(succ)) {
+							worklist.add(succ);
+						}
+					}
 				}
 			}
 		}
