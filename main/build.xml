@@ -305,7 +305,7 @@
 		<property name="chord.max.heap" value="1024m"/>
 		<property name="chord.max.stack" value="32m"/>
     <!--<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>-->
-    <property name="chord.jvmargs" value="-Xbootclasspath/p:/home/pliang/pa/m/realtime.jar -showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
+    <property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
 
 		<java classname="chord.project.Main" fork="true" failonerror="true" dir="${chord.work.dir}">
 			<jvmarg line="${chord.jvmargs}"/>
