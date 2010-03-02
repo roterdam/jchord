@@ -42,8 +42,8 @@ import chord.util.tuple.integer.IntPair;
 	name = "dynamic-alias-alloc-java",
     consumedNames = { "startingRacePair" },
     producedNames = { "aliasingRacePair", "bannedE" },
-    namesOfSigns = { "aliasingRacePair" },
-    signs = { "E0,E1:E0xE1" }
+    namesOfSigns = { "aliasingRacePair", "bannedE" },
+    signs = { "E0,E1:E0xE1", "E0:E0" }
 )
 public class DynamicAliasAnalysisUsingAlloc extends AbstractDynamicAliasAnalysis {
     private InstrScheme instrScheme;
