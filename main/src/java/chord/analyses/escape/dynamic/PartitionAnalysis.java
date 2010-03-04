@@ -169,8 +169,9 @@ public class PartitionAnalysis extends DynamicAnalysis {
       if (!(updateAbstraction instanceof NoneLocalAbstraction) && !(snapshotAbstraction instanceof NoneGlobalAbstraction))
         throw new RuntimeException("At most one of updateAbstraction and snapshotAbstraction can be not none");
 
-      if (getBooleanArg("visualize", false)) graphMonitor = new UbiGraphMonitor();
-      else graphMonitor = new SerializingGraphMonitor(X.path("graph"), getIntArg("graph.maxCommands", 100000));
+      //if (getBooleanArg("visualize", false)) graphMonitor = new UbiGraphMonitor();
+      //else graphMonitor = new SerializingGraphMonitor(X.path("graph"), getIntArg("graph.maxCommands", 100000));
+      graphMonitor = new SerializingGraphMonitor(X.path("graph"), getIntArg("graph.maxCommands", 100000));
 
       // Save options
       HashMap<Object,Object> options = new LinkedHashMap<Object,Object>();
