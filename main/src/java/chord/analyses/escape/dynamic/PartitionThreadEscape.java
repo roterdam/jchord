@@ -35,7 +35,6 @@ import gnu.trove.TIntIntHashMap;
 import gnu.trove.TLongIntHashMap;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
-import org.ubiety.ubigraph.UbigraphClient;
 
 /**
  * Thread-escape in the partition framework.
