@@ -55,7 +55,7 @@ class ThreadEscapePropertyState extends PropertyState {
       followEscapeNodes(a);
   }
 
-  public int propagateAlongEdge(int a, int b) {
+  public int propagateAlongEdge(int a, int b, int f) {
     if (escapedNodes.contains(a))
       return followEscapeNodes(b);
     return 0;

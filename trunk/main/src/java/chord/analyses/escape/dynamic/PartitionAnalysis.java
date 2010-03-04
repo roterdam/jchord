@@ -439,7 +439,7 @@ public class PartitionAnalysis extends DynamicAnalysis {
     if (b != -1) {
       edges.add(new Edge(f, b));
       snapshotAbstraction.edgeCreated(a, b);
-      if (!useStrongUpdates) numNew = propertyState.propagateAlongEdge(a, b);
+      if (!useStrongUpdates) numNew = propertyState.propagateAlongEdge(a, b, f);
       if (graphMonitor != null)
         graphMonitor.addEdge(a, b, ""+f);
     }
@@ -683,7 +683,7 @@ abstract class PropertyState {
 
   public abstract String name();
   public abstract void setGlobal(int a, boolean useStrongUpdates); // Node a corresponds to a global variable (for whatever that's worth to the analysis)
-  public abstract int propagateAlongEdge(int a, int b); // Update the property incrementally (only called with weak updates)
+  public abstract int propagateAlongEdge(int a, int b, int f); // Update the property incrementally (only called with weak updates)
   public abstract int numTrue(); // Number of nodes satisfying the property
   public abstract boolean isTrue(int a); // Property holds on node a?
   public abstract void computeAll(); // Compute the property for all nodes (called if strong updates)
@@ -722,7 +722,7 @@ abstract class CyclicityPropertyState extends PropertyState {
     // TODO
   }
 
-  public int propagateAlongEdge(int a, int b) {
+  public int propagateAlongEdge(int a, int b, int f) {
     // TODO
     return 0;
   }
