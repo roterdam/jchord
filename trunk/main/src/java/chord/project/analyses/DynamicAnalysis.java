@@ -129,7 +129,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 				final String cmd = instrProgramCmd + args;
 				Runnable instrProgram = new Runnable() {
 					public void run() {
-						ProcessExecutor.execute(cmd);
+						int result = ProcessExecutor.execute(cmd);
+						if (result != 0) {
+							System.err.println("JVM running instrumented program terminated abnormally with return value: " + result);
+							System.exit(1);
+						}
 					}
 				};
 				executor.execute(instrProgram);
@@ -153,7 +157,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 				final String args = System.getProperty("chord.args." + runID, "");
 				final String cmd = instrProgramCmd + args;
 				initPass();
-				ProcessExecutor.execute(cmd);
+				int result = ProcessExecutor.execute(cmd);
+				if (result != 0) {
+					System.err.println("JVM running instrumented program terminated abnormally with return value: " + result);
+					System.exit(1);
+				}
 				donePass();
 			}
 			doneAllPasses();
