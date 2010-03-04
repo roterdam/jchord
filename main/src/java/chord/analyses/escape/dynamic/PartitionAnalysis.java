@@ -16,6 +16,7 @@ import java.util.Random;
 import java.util.Collections;
 
 import joeq.Compiler.Quad.Quad;
+import chord.doms.DomT;
 
 import chord.util.IntArraySet;
 import chord.util.ChordRuntimeException;
@@ -31,8 +32,10 @@ import chord.program.Program;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
+import gnu.trove.TLongIntHashMap;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
+//import org.ubiety.ubigraph.UbigraphClient;
 
 /**
  * Evaluate the precision and complexity of various heap abstractions.
@@ -46,57 +49,81 @@ import gnu.trove.TIntArrayList;
  *    We then apply the abstraction at various snapshots of the graph to answer queries (very inefficient).
  *    Supports abstractions above plus reachability.
  *
+ * Notation:
+ *   a: node in a graph
+ *   v: abstract value from update abstraction
+ *   w: abstract value from snapshot abstraction
+ *
+ * TODO: exclude queries that come from DomT
+ * TODO: make this all work on the IBM JDK without excluding java.*
+ *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
 @Chord(name = "partition-java")
 public class PartitionAnalysis extends DynamicAnalysis {
-  static final int ARRAY_FIELD = -2;
-  static final int THREAD_FIELD = -3;
+  static final int ARRAY_FIELD = 88888;
+  static final int THREAD_FIELD = 99999;
   static final int NULL_OBJECT = 0;
+  static final int THREAD_GLOBAL_OBJECT = 100000;
+
+  /*static Execution X = new Execution();
+  static {
+    System.out.println("PartitionAnalysis");
+    Properties.outDirName = X.path(null);
+    System.setProperty("chord.out.dir", X.path(null));
+  }*/
 
   InstrScheme instrScheme;
+  DomT domT; // Classes (to figure out which objects to exclude)
 
   // Execution management/logging
   Execution X = new Execution();
-  HashMap<Object,Object> output = new LinkedHashMap<Object,Object>();
 
   // Parameters of the analysis
+  PropertyState propertyState;
   int verbose;
   boolean useStrongUpdates;
   LocalAbstraction updateAbstraction;
   GlobalAbstraction snapshotAbstraction;
-  double queryFrac;
-  Random random;
+  double queryFrac, snapshotFrac;
+  Random selectQueryRandom;
+  Random selectSnapshotRandom;
   int kCFA; // Number of call sites keep in k-CFA
   int kOS; // Number of object allocation sites to keep in k-OS
-  boolean pointedTo; // For reachability
-  boolean matchFirstField; // For reachability
-  boolean matchLastField; // For reachability
+  ReachabilityGlobalAbstraction.Spec reachabilitySpec = new ReachabilityGlobalAbstraction.Spec();
+  GraphMonitor graphMonitor;
 
-  // We have a graph over abstract values (determined by updateAbstraction)
+  // We have a graph over abstract values (determined by updateAbstraction); each node impliciting representing a set of objects
   TIntIntHashMap o2h = new TIntIntHashMap(); // o (object ID) -> heap allocation site h
   TIntObjectHashMap<Object> o2v = new TIntObjectHashMap<Object>(); // o (object ID) -> abstract value v
   IndexMap<Object> a2v = new IndexHashMap<Object>(); // a (node ID) -> abstract value v (along with reverse map)
   List<List<Edge>> a2edges = new ArrayList<List<Edge>>(); // a (node ID) -> list of outgoing edges from a
   int N; // Number of nodes
 
-  TIntHashSet staticEscapedNodes = new TIntHashSet(); // set of a (node ID) [static nodes: monotonically growing (even with strong updates)]
-  TIntHashSet escapedNodes = new TIntHashSet(); // set of a (node ID) [updated if using strong updates]
-
   TIntObjectHashMap<ThreadInfo> threadInfos = new TIntObjectHashMap<ThreadInfo>(); // t (thread) -> ThreadInfo
 
   // For each query, we maintain counts (number of escaping and non-escaping over the run)
   HashMap<Query, QueryResult> queryResults = new HashMap<Query, QueryResult>();
+  int numQueryHits;
+  StatFig snapshotPrecision = new StatFig();
 
   LocalAbstraction parseLocalAbstraction(String abstractionType) {
     if (abstractionType.equals("none")) return new NoneLocalAbstraction();
-    if (abstractionType.equals("alloc")) return new AllocLocalAbstraction();
+    if (abstractionType.equals("alloc")) return new AllocLocalAbstraction(kCFA, kOS, o2h);
     throw new RuntimeException("Unknown: "+abstractionType+" (possibilities: none|alloc)");
   }
   GlobalAbstraction parseGlobalAbstraction(String abstractionType) {
+    if (abstractionType.equals("none")) return new NoneGlobalAbstraction();
     if (abstractionType.startsWith("wrap:")) return new WrappedGlobalAbstraction(parseLocalAbstraction(abstractionType.substring(5)));
-    if (abstractionType.equals("reachability")) return new ReachabilityGlobalAbstraction();
-    throw new RuntimeException("Unknown: "+abstractionType+" (possibilities: wrap:<local>|reachability)");
+    if (abstractionType.equals("recency")) return new RecencyGlobalAbstraction();
+    if (abstractionType.equals("reachability")) return new ReachabilityGlobalAbstraction(reachabilitySpec);
+    throw new RuntimeException("Unknown: "+abstractionType+" (possibilities: wrap:<local abstraction>|recency|reachability)");
+  }
+  PropertyState parsePropertyState(String s) {
+    //if (s.equals("may-alias")) return new MayAliasPropertyState();
+    if (s.equals("thread-escape")) return new ThreadEscapePropertyState();
+    //if (s.equals("cyclicity")) return new CyclicityPropertyState();
+    throw new RuntimeException("Unknown: "+s+" (possibilities: may-alias|thread-escape|cyclicity)");
   }
 
   String getStringArg(String key, String defaultValue) {
@@ -119,45 +146,56 @@ public class PartitionAnalysis extends DynamicAnalysis {
     try {
       // Parse options
       verbose = getIntArg("verbose", 0);
-      useStrongUpdates = getBooleanArg("useStrongUpdates", false);
+      propertyState = parsePropertyState(getStringArg("property", ""));
 
+      queryFrac = getDoubleArg("queryFrac", 1.0);
+      snapshotFrac = getDoubleArg("snapshotFrac", 0.0);
+      selectQueryRandom = new Random(getIntArg("selectQueryRandom", 1));
+      selectSnapshotRandom = new Random(getIntArg("selectSnapshotRandom", 1));
+
+      kCFA = getIntArg("kCFA", 0);
+      kOS = getIntArg("kOS", 0);
+      reachabilitySpec.pointedTo = getBooleanArg("pointedTo", false);
+      reachabilitySpec.matchRepeatedFields = getBooleanArg("matchRepeatedFields", false);
+      reachabilitySpec.matchFirstField = getBooleanArg("matchFirstField", false);
+      reachabilitySpec.matchLastField = getBooleanArg("matchLastField", false);
+
+      useStrongUpdates = getBooleanArg("useStrongUpdates", false);
       updateAbstraction = parseLocalAbstraction(getStringArg("updateAbstraction", ""));
       snapshotAbstraction = parseGlobalAbstraction(getStringArg("snapshotAbstraction", ""));
 
       if (useStrongUpdates && !(updateAbstraction instanceof NoneLocalAbstraction))
         throw new RuntimeException("Can only use strong updates with no abstract interpretation.  Use snapshots to have strong updates and abstractions.");
+      if (!(updateAbstraction instanceof NoneLocalAbstraction) && !(snapshotAbstraction instanceof NoneGlobalAbstraction))
+        throw new RuntimeException("At most one of updateAbstraction and snapshotAbstraction can be not none");
 
-      queryFrac = getDoubleArg("queryFrac", 1.0);
-      random = new Random(getIntArg("random", 1));
-
-      kCFA = getIntArg("kCFA", 0);
-      kOS = getIntArg("kOS", 0);
-      pointedTo = getBooleanArg("pointedTo", false);
-      matchFirstField = getBooleanArg("matchFirstField", false);
-      matchLastField = getBooleanArg("matchLastField", false);
+      if (getBooleanArg("visualize", false)) graphMonitor = new UbiGraphMonitor();
+      else graphMonitor = new SerializingGraphMonitor(X.path("graph"), getIntArg("graph.maxCommands", 100000));
 
       // Save options
       HashMap<Object,Object> options = new LinkedHashMap<Object,Object>();
       options.put("program", System.getProperty("chord.work.dir"));
+      options.put("property", propertyState.name());
       options.put("verbose", verbose);
       options.put("useStrongUpdates", useStrongUpdates);
       options.put("updateAbstraction", updateAbstraction);
       options.put("snapshotAbstraction", snapshotAbstraction);
-      options.put("kCFA", kCFA);
-      options.put("kOS", kOS);
       options.put("queryFrac", queryFrac);
+      options.put("snapshotFrac", snapshotFrac);
       X.writeMap("options.map", options);
+      X.output.put("exec.status", "running");
 
       super.run();
 
       // Save output
-      X.writeMap("output.map", output);
+      X.output.put("exec.status", "done");
     } catch (Throwable t) {
-      X.logs("ERROR: %s", t);
+      X.output.put("exec.status", "failed");
+      X.errors("%s", t);
       for (StackTraceElement e : t.getStackTrace())
         X.logs("  %s", e);
-      throw new RuntimeException(t);
     }
+    X.finish();
 	}
 
   QueryResult queryResult(int e, int b) {
@@ -165,25 +203,25 @@ public class PartitionAnalysis extends DynamicAnalysis {
     QueryResult qr = queryResults.get(q);
     if (qr == null) {
       queryResults.put(q, qr = new QueryResult());
-      qr.selected = random.nextDouble() < queryFrac; // Choose to answer this query with some probability
+      qr.selected = selectQueryRandom.nextDouble() < queryFrac; // Choose to answer this query with some probability
     }
     return qr;
   }
 
   void outputQueries() {
-    PrintWriter out = X.openOut(X.path("queries.out"));
+    PrintWriter out = Utils.openOut(X.path("queries.out"));
     StatFig fig = new StatFig();
     for (Query q : queryResults.keySet()) {
       QueryResult qr = queryResults.get(q);
       if (qr.selected) {
-        out.println(String.format("%s | %s %s", estr(q.e), qr.numEscaping, qr.numNonEscaping));
-        fig.add(qr.numEscaping + qr.numNonEscaping);
+        out.println(String.format("%s | %s %s", estr(q.e), qr.numTrue, qr.numFalse));
+        fig.add(qr.numTrue + qr.numFalse);
       }
       else
         out.println(String.format("%s | ?", estr(q.e)));
     }
     out.close();
-    output.put("query.numHits", fig.mean());
+    X.output.put("query.numHits", fig.mean());
     X.logs("  # hits per query: %s (%s total hits)", fig, fig.n);
   }
 
@@ -196,73 +234,59 @@ public class PartitionAnalysis extends DynamicAnalysis {
   }
 
   // The global abstraction partitions the nodes in the current graph, where each partition has the same value.
-  // Then we want to compute whether a given node is reachable from a some node in initEscapedNodes
-  // via 1) edges in the graph or 2) jumps between nodes with the same value.
   class SnapshotAnalysis {
-    HashMap<Object, List<Integer>> v2as = new HashMap(); // abstract value to set of nodes
     GlobalAbstraction abstraction;
+    SnapshotAnalysisState state;
 
     public SnapshotAnalysis(GlobalAbstraction abstraction) {
       this.abstraction = abstraction;
-      abstraction.init();
+      HashMap<Object, List<Integer>> w2as = abstraction.getAbstractionMap();
 
-      // Compute mapping from nodes to abstract values
-      for (int a = 0; a < N; a++) {
-        Object value = abstraction.get(a);
-        Utils.add(v2as, value, a);
+      this.state = propertyState.newSnapshotAnalysisState();
+      state.abstraction = abstraction;
+      state.w2as = w2as;
+    }
+
+    int complexity() { return state.w2as.size(); } // Complexity of this abstraction (number of abstract values)
+
+    public boolean computeIsTrue(int a) { return state.computeIsTrue(a); } // Expensive
+
+    public void runFinal() {
+      propertyState.computeAll();
+      int actualNumTrue = propertyState.numTrue();
+
+      state.computeAll();
+      int propNumTrue = state.numTrue();
+
+      if (graphMonitor != null) {
+        for (int a = 0; a < N; a++) {
+          boolean actualTrue = propertyState.isTrue(a);
+          boolean propTrue = state.isTrue(a);
+          String color = null;
+          if (actualTrue && propTrue) color = "#00ff00"; // Good
+          else if (!actualTrue && propTrue) color = "#ff0000"; // Bad (false positive)
+          else if (!actualTrue && !propTrue) color = "#ffffff"; // Good
+          else throw new RuntimeException("Got true negative - shouldn't happen (snapshot analysis is broken)");
+          // Get the abstraction value (either local or global)
+          String label = (abstraction instanceof NoneGlobalAbstraction) ? a2v.get(a).toString() : state.getAbstraction(a).toString();
+          graphMonitor.setNodeLabel(a, label);
+          graphMonitor.setNodeColor(a, color);
+        }
       }
-    }
 
-    // Complexity of this abstraction
-    int complexity() { return v2as.size(); } // Number of abstract values
-
-    boolean reachable(int a, int dest, TIntHashSet visitedNodes) {
-      if (a == dest) return true;
-      if (visitedNodes.contains(a)) return false;
-      visitedNodes.add(a);
-
-      // Try following edges in the graph
-      for (Edge e : a2edges.get(a))
-        if (reachable(e.b, dest, visitedNodes)) return true;
-      // Try jumping to nodes with the same value
-      Object value = abstraction.get(a);
-      for (int b : v2as.get(value))
-        if (reachable(b, dest, visitedNodes)) return true;
-      return false;
-    }
-
-    void followEscapeValues(int a, TIntHashSet visitedNodes, Set<Object> escapedValues) {
-      if (visitedNodes.contains(a)) return;
-      visitedNodes.add(a);
-      Object value = abstraction.get(a);
-      escapedValues.add(value);
-      for (Edge e : a2edges.get(a))
-        followEscapeValues(e.b, visitedNodes, escapedValues);
-    }
-
-    // Does node a escape under the given global abstraction?
-    public boolean escapes(int a) {
-      for (int start : staticEscapedNodes.toArray())
-        if (reachable(start, a, new TIntHashSet())) return true;
-      return false;
-    }
-
-    public void run() {
-      // Which nodes are escaping under the abstraction?
-      TIntHashSet abstractionEscapedNodes = new TIntHashSet();
-      for (int start : staticEscapedNodes.toArray())
-        reachable(start, -1, abstractionEscapedNodes);
-
-      int n0 = staticEscapedNodes.size();
       X.logs("=== Snapshot abstraction %s (at end) ===", abstraction);
       X.logs("  complexity: %d values", complexity());
-      X.logs("  precision: %d/%d = %.2f",
-        escapedNodes.size()-n0, abstractionEscapedNodes.size()-n0,
-        1.0*(escapedNodes.size()-n0)/(abstractionEscapedNodes.size()-n0));
-      output.put("finalSnapshot.numTrueEscape", escapedNodes.size()-n0);
-      output.put("finalSnapshot.numPropEscape", abstractionEscapedNodes.size()-n0);
-      output.put("finalSnapshot.precision", 1.0*(escapedNodes.size()-n0)/(abstractionEscapedNodes.size()-n0));
-      output.put("complexity", complexity());
+      X.logs("  precision: %d/%d = %.2f", actualNumTrue, propNumTrue, 1.0*actualNumTrue/propNumTrue);
+      X.output.put("finalSnapshot.actualNumTrue", actualNumTrue);
+      X.output.put("finalSnapshot.propNumTrue", propNumTrue);
+      X.output.put("finalSnapshot.precision", 1.0*actualNumTrue/propNumTrue);
+      X.output.put("complexity", complexity());
+      if (propNumTrue > 0) snapshotPrecision.add(1.0*actualNumTrue/propNumTrue);
+
+      PrintWriter out = Utils.openOut(X.path("snapshot-abstractions"));
+      for (Object w : state.w2as.keySet())
+        out.println(w);
+      out.close();
     }
   }
 
@@ -272,6 +296,8 @@ public class PartitionAnalysis extends DynamicAnalysis {
 
     instrScheme.setEnterAndLeaveMethodEvent();
     instrScheme.setEnterAndLeaveLoopEvent();
+
+    // TODO: turn off instrumentation when not needed
 
     instrScheme.setNewAndNewArrayEvent(true, true, true); // h, t, o
 
@@ -317,46 +343,60 @@ public class PartitionAnalysis extends DynamicAnalysis {
     int H = instrumentor.getHmap().size();
     int F = instrumentor.getFmap().size();
     X.logs("initAllPasses: |E| = %s, |H| = %s, |F| = %s", E, H, F);
+
+    domT = (DomT)Project.getTrgt("T");
+    Project.runTask(domT);
+
+    propertyState.X = X;
+    propertyState.a2edges = a2edges;
+    propertyState.verbose = verbose;
+    snapshotAbstraction.X = X;
+    snapshotAbstraction.o2h = o2h;
+    snapshotAbstraction.a2v = a2v;
+    snapshotAbstraction.a2edges = a2edges;
   }
 
   public void doneAllPasses() {
     X.logs("===== Results using updateAbstraction = %s, useStrongUpdates = %s =====", updateAbstraction, useStrongUpdates);
 
     // Evaluate on queries (real metric)
-    int numEscaping = 0;
-    for (QueryResult qr : queryResults.values())
-      if (qr.escapes()) numEscaping++;
+    int numTrue = 0;
+    int numSelected = 0;
+    for (QueryResult qr : queryResults.values()) {
+      if (!qr.selected) continue;
+      if (qr.isTrue()) numTrue++;
+      numSelected++;
+    }
 
-    X.logs("  %d/%d = %.2f queries proposed to be escaping",
-      numEscaping, queryResults.size(), 1.0*numEscaping/queryResults.size());
-    output.put("query.numEscape", numEscaping);
-    output.put("query.numTotal", queryResults.size());
-    output.put("query.fracEscape", 1.0*numEscaping/queryResults.size());
+    X.logs("  %d total queries; %d/%d = %.2f queries proposed to have property %s",
+      queryResults.size(), numTrue, numSelected, 1.0*numTrue/numSelected, propertyState.name());
+    X.output.put("query.numTrue", numTrue);
+    X.output.put("query.numSelected", numSelected);
+    X.output.put("query.numTotal", queryResults.size());
+    X.output.put("query.fracTrue", 1.0*numTrue/numSelected);
     outputQueries();
 
     if (!(updateAbstraction instanceof NoneLocalAbstraction) || !useStrongUpdates)
       X.logs("    (run with updateAbstraction = none and useStrongUpdates = true to get number actually escaping; divide to get precision of %s)", updateAbstraction);
 
-    // Evaluate on final nodes (don't really care about this)
-    for (int a = 0; a < N; a++) // Propagate escapes on nodes (hasn't been done if weak updates)
-      if (staticEscapedNodes.contains(a)) followEscapeNodes(a);
-    int numEscape = 0;
+    // Evaluate on final nodes: how many nodes have that property
+    if (useStrongUpdates) propertyState.computeAll(); // Need to still do this
+    numTrue = 0;
     for (int a = 0; a < N; a++)
-      if (escapedNodes.contains(a)) numEscape++;
-    int n0 = staticEscapedNodes.size();
-    X.logs("  %d/%d = %.2f nodes proposed to be escaping at end (not including %d static nodes)",
-        numEscape-n0, N-n0, 1.0*(numEscape-n0)/(N-n0), n0);
-    output.put("finalNodes.numEscape", numEscape-n0);
-    output.put("finalNodes.numTotal", N-n0);
-    output.put("finalNodes.fracEscape", 1.0*(numEscape-n0)/(N-n0));
-    output.put("finalObjects.numTotal", o2v.size());
+      if (propertyState.isTrue(a)) numTrue++;
+    X.logs("  %d/%d = %.2f nodes proposed to be escaping at end", numTrue, N, 1.0*numTrue/N);
+    X.output.put("finalNodes.numTrue", numTrue);
+    X.output.put("finalNodes.numTotal", N);
+    X.output.put("finalNodes.fracTrue", 1.0*numTrue/N);
+    X.output.put("finalObjects.numTotal", o2v.size());
 
-    if (verbose >= 5) {
-      X.logs("  staticEscapedNodes (static nodes to be ignored): %s", nodes_str(staticEscapedNodes));
-      X.logs("  escapedNodes: %s", nodes_str(escapedNodes));
-    }
+    new SnapshotAnalysis(snapshotAbstraction).runFinal();
 
-    new SnapshotAnalysis(snapshotAbstraction).run();
+    X.logs("  snapshot precision: %s", snapshotPrecision);
+    X.output.put("snapshotPrecision", snapshotPrecision.mean());
+    X.output.put("query.totalNumHits", numQueryHits);
+
+    if (graphMonitor != null) graphMonitor.finish();
   }
 
   //////////////////////////////
@@ -365,13 +405,15 @@ public class PartitionAnalysis extends DynamicAnalysis {
     //if (o == -1) return -1;
     if (o == NULL_OBJECT) return -1;
     Object v = o2v.get(o);
-    if (v == null) o2v.put(o, v = updateAbstraction.get(t, o));
+    ThreadInfo info = threadInfo(t);
+    if (v == null) o2v.put(o, v = updateAbstraction.get(info, o));
     int a = a2v.getOrAdd(v);
     if (a == N) {
       if (verbose >= 1) X.logs("NEWNODE o=%s => a=%s, v=%s", ostr(o), a, v);
-      snapshotAbstraction.record(a, t, o);
+      snapshotAbstraction.nodeCreated(a, info, o);
       a2edges.add(new ArrayList<Edge>());
       N++;
+      if (graphMonitor != null) graphMonitor.addNode(a, null);
     }
     return a;
   }
@@ -385,52 +427,42 @@ public class PartitionAnalysis extends DynamicAnalysis {
       assert (updateAbstraction instanceof NoneLocalAbstraction); // Otherwise we have to materialize...
       for (int i = 0; i < edges.size(); i++) {
         if (edges.get(i).f == f) {
+          int old_b = edges.get(i).b;
+          snapshotAbstraction.edgeDeleted(a, old_b);
+          if (graphMonitor != null) graphMonitor.deleteEdge(a, old_b);
           edges.remove(i);
           break;
         }
       }
     }
-    int numNewEscape = 0;
+    int numNew = -1;
     if (b != -1) {
       edges.add(new Edge(f, b));
-      if (!useStrongUpdates) {
-        if (escapedNodes.contains(a))
-          numNewEscape = followEscapeNodes(b);
-      }
+      snapshotAbstraction.edgeCreated(a, b);
+      if (!useStrongUpdates) numNew = propertyState.propagateAlongEdge(a, b);
+      if (graphMonitor != null)
+        graphMonitor.addEdge(a, b, ""+f);
     }
     if (verbose >= 1)
-      X.logs("ADDEDGE b=%s (%s) f=%s o=%s (%s): %s new nodes escaped", ostr(oa), astr(a), fstr(f), ostr(ob), astr(b), numNewEscape);
-  }
-  // Weak update: contaminate everyone downstream
-  // Return number of new nodes marked as escaping
-  int followEscapeNodes(int a) {
-    if (escapedNodes.contains(a)) return 0;
-    int n = 1;
-    escapedNodes.add(a);
-    for (Edge e : a2edges.get(a))
-      n += followEscapeNodes(e.b);
-    return n;
-  }
-
-  // Should only be called for nodes corresponding to static fields (which don't get counted)
-  void setEscape(int a) {
-    if (verbose >= 1) X.logs("SETESCAPE a=%s", astr(a));
-    staticEscapedNodes.add(a);
-    if (!useStrongUpdates) escapedNodes.add(a);
+      X.logs("ADDEDGE b=%s (%s) f=%s o=%s (%s)%s", ostr(oa), astr(a), fstr(f), ostr(ob), astr(b), numNew != -1 ? ", "+numNew+" new" : "");
   }
 
   void makeQuery(int e, int t, int o) {
+    numQueryHits++;
     // If we are using strong updates, then escapeNodes is not getting updated, so we can't answer queries (fast).
     QueryResult result = queryResult(e, o);
     if (result.selected) {
       int a = a2v.indexOf(o2v.get(o));
       if (!useStrongUpdates) // Weak updates: we are updating escape all the time, so easy to answer this query
-        result.add(escapedNodes.contains(a));
+        result.add(propertyState.isTrue(a));
       else {
         SnapshotAnalysis analysis = new SnapshotAnalysis(snapshotAbstraction);
-        result.add(analysis.escapes(a)); // This is expensive - use the snapshot
+        result.add(analysis.computeIsTrue(a)); // Use the snapshot (this is expensive!)
       }
       if (verbose >= 1) X.logs("QUERY e=%s, t=%s, o=%s: result = %s", estr(e), tstackstr(t), ostr(o), result);
+    }
+    if (selectSnapshotRandom.nextDouble() < snapshotFrac) {
+      new SnapshotAnalysis(snapshotAbstraction).runFinal();
     }
   }
 
@@ -447,9 +479,9 @@ public class PartitionAnalysis extends DynamicAnalysis {
   String fstr(int f) { // field
     if (f == THREAD_FIELD) return "[T]";
     if (f == ARRAY_FIELD) return "[*]";
-    return f == -1 ? "-" : instrumentor.getFmap().get(f);
+    return f < 0 ? "-" : instrumentor.getFmap().get(f);
   }
-  String hstr(int h) { return h == -1 ? "-" : instrumentor.getHmap().get(h); } // heap allocation site
+  String hstr(int h) { return h < 0 ? "-" : instrumentor.getHmap().get(h); } // heap allocation site
   String estr(int e) {
     if (e == -1) return "-";
     Quad quad = (Quad)instrumentor.getDomE().get(e);
@@ -470,259 +502,133 @@ public class PartitionAnalysis extends DynamicAnalysis {
   ////////////////////////////////////////////////////////////
   // Handlers
 
-  public void processEnterMethod(int m, int t) {
+  @Override public void processEnterMethod(int m, int t) {
     if (verbose >= 6) X.logs("EVENT enterMethod: m=%s, t=%s", mstr(m), tstackstr(t));
     threadInfo(t).callStack.push(m);
   }
-  public void processLeaveMethod(int m, int t) {
+  @Override public void processLeaveMethod(int m, int t) {
     if (verbose >= 6) X.logs("EVENT leaveMethod: m=%s, t=%s", mstr(m), tstackstr(t));
-    assert (threadInfo(t).callStack.pop() == m);
+    ThreadInfo info = threadInfo(t);
+    if (info.callStack.size() == 0)
+      X.errors("Tried to pop empty call stack");
+    else {
+      int mm = info.callStack.pop();
+      if (mm != m) X.errors("Pushed %s but popped %s", mstr(m), mstr(mm));
+    }
   }
 
-  public void processEnterLoop(int w, int t) {
+  @Override public void processEnterLoop(int w, int t) {
     if (verbose >= 5) X.logs("EVENT enterLoop: w=%s", w);
   }
-  public void processLeaveLoop(int w, int t) {
+  @Override public void processLeaveLoop(int w, int t) {
     if (verbose >= 5) X.logs("EVENT leaveLoop: w=%s", w);
   }
 
-  public void processNewOrNewArray(int h, int t, int o) { // new Object
+  @Override public void processNewOrNewArray(int h, int t, int o) { // new Object
     o2h.put(o, h);
     if (verbose >= 5) X.logs("EVENT new: h=%s, t=%s, o=%s", hstr(h), tstackstr(t), ostr(o));
     getNode(t, o); // Force creation of a new node
   }
 
-  public void processGetstaticPrimitive(int e, int t, int b, int f) { }
-  public void processGetstaticReference(int e, int t, int b, int f, int o) { // ... = b.f, where b.f = o and b is static
+  @Override public void processGetstaticPrimitive(int e, int t, int b, int f) { }
+  @Override public void processGetstaticReference(int e, int t, int b, int f, int o) { // ... = b.f, where b.f = o and b is static
     if (verbose >= 5) X.logs("EVENT getStaticReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstackstr(t), ostr(b), fstr(f), ostr(o));
   }
-  public void processPutstaticPrimitive(int e, int t, int b, int f) { }
-  public void processPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
+  @Override public void processPutstaticPrimitive(int e, int t, int b, int f) { }
+  @Override public void processPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
     if (verbose >= 5) X.logs("EVENT putStaticReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstackstr(t), ostr(b), fstr(f), ostr(o));
-    setEscape(getNode(t, b));
+    propertyState.setGlobal(getNode(t, b), useStrongUpdates);
     addEdge(t, b, f, o);
   }
 
-  public void processGetfieldPrimitive(int e, int t, int b, int f) {
+  @Override public void processGetfieldPrimitive(int e, int t, int b, int f) {
     makeQuery(e, t, b);
   }
-  public void processGetfieldReference(int e, int t, int b, int f, int o) { // ... = b.f, where b.f = o
+  @Override public void processGetfieldReference(int e, int t, int b, int f, int o) { // ... = b.f, where b.f = o
     if (verbose >= 5) X.logs("EVENT getFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstackstr(t), ostr(b), fstr(f), ostr(o));
     makeQuery(e, t, b);
   }
-  public void processPutfieldPrimitive(int e, int t, int b, int f) {
+  @Override public void processPutfieldPrimitive(int e, int t, int b, int f) {
     makeQuery(e, t, b);
   }
-  public void processPutfieldReference(int e, int t, int b, int f, int o) { // b.f = o
+  @Override public void processPutfieldReference(int e, int t, int b, int f, int o) { // b.f = o
     if (verbose >= 5) X.logs("EVENT putFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstackstr(t), ostr(b), fstr(f), ostr(o));
     makeQuery(e, t, b);
     addEdge(t, b, f, o);
   }
 
-  public void processAloadPrimitive(int e, int t, int b, int i) {
+  @Override public void processAloadPrimitive(int e, int t, int b, int i) {
     makeQuery(e, t, b);
   }
-  public void processAloadReference(int e, int t, int b, int i, int o) {
+  @Override public void processAloadReference(int e, int t, int b, int i, int o) {
     if (verbose >= 5) X.logs("EVENT loadReference: e=%s, t=%s, b=%s, i=%s, o=%s", estr(e), tstackstr(t), ostr(b), i, ostr(o));
     makeQuery(e, t, b);
   }
-  public void processAstorePrimitive(int e, int t, int b, int i) {
+  @Override public void processAstorePrimitive(int e, int t, int b, int i) {
     makeQuery(e, t, b);
   }
-  public void processAstoreReference(int e, int t, int b, int i, int o) {
+  @Override public void processAstoreReference(int e, int t, int b, int i, int o) {
     if (verbose >= 5) X.logs("EVENT storeReference: e=%s, t=%s, b=%s, i=%s, o=%s", estr(e), tstackstr(t), ostr(b), i, ostr(o));
     makeQuery(e, t, b);
     addEdge(t, b, ARRAY_FIELD, o);
   }
 
-  // In o.start() acts like g_{t,i} = o, where g_{ti} is like a global variable specific to thread t.
-  int threadToObjId(int i, int t) {
-    return 100000 + 100*i + t;
-  }
+  // In o.start() acts like g_{t,i} = o, where g_{t,i} is like a global variable specific to thread t.
+  //int threadToObjId(int i, int t) { return 100000 + 100*i + t; }
 
-  public void processThreadStart(int i, int t, int o) {
+  @Override public void processThreadStart(int i, int t, int o) {
     if (verbose >= 4) X.logs("EVENT threadStart: i=%s, t=%s, o=%s", istr(i), tstackstr(t), ostr(o));
-    int b = threadToObjId(i, t);
-    setEscape(getNode(t, b));
+    //int b = threadToObjId(i, t);
+    //setEscape(getNode(t, b));
+    // How to get a handle on the thread that was just started?
+    int b = THREAD_GLOBAL_OBJECT;
+    propertyState.setGlobal(getNode(t, b), useStrongUpdates);
     addEdge(t, b, THREAD_FIELD, o);
   }
-  public void processThreadJoin(int i, int t, int o) {
+  @Override public void processThreadJoin(int i, int t, int o) {
     if (verbose >= 4) X.logs("EVENT threadJoin: i=%s, t=%s, o=%s", istr(i), tstackstr(t), ostr(o));
-    int b = threadToObjId(i, t);
-    addEdge(t, b, THREAD_FIELD, NULL_OBJECT);
+    // Need to reclaim selectively...
+    //int b = threadToObjId(i, t);
+    //addEdge(t, b, THREAD_FIELD, NULL_OBJECT);
   }
 
-  public void processAcquireLock(int l, int t, int o) { }
-  public void processReleaseLock(int r, int t, int o) { }
-  public void processWait(int i, int t, int o) { }
-  public void processNotify(int i, int t, int o) { }
+  @Override public void processAcquireLock(int l, int t, int o) { }
+  @Override public void processReleaseLock(int r, int t, int o) { }
+  @Override public void processWait(int i, int t, int o) { }
+  @Override public void processNotify(int i, int t, int o) { }
 
-  public void processMethodCallBef(int i, int t, int o) {
+  @Override public void processMethodCallBef(int i, int t, int o) {
     if (verbose >= 5) X.logs("EVENT methodCallBefore: i=%s, t=%s, o=%s", istr(i), tstackstr(t), ostr(o));
     threadInfo(t).callSites.push(i);
     threadInfo(t).callAllocs.push(o2h.get(o));
   }
-  public void processMethodCallAft(int i, int t, int o) {
+  @Override public void processMethodCallAft(int i, int t, int o) {
+    ThreadInfo info = threadInfo(t);
     if (verbose >= 5) X.logs("EVENT methodCallAfter: i=%s, t=%s, o=%s", istr(i), tstackstr(t), ostr(o));
-    int ii = threadInfo(t).callSites.pop();
-    assert (ii == i);
-    int hh = threadInfo(t).callAllocs.pop();
-    assert (hh == o2h.get(o));
+    if (info.callSites.size() == 0)
+      X.errors("Tried to pop empty callSites stack"); // Should only happen for com.ibm.misc.SignalDispatcher
+    else {
+      int ii = info.callSites.pop();
+      if (ii != i) X.logs("pushed %s but popped %s", istr(i), istr(ii));
+    }
+    if (info.callAllocs.size() == 0)
+      X.errors("Tried to pop empty callAllocs stack");
+    else {
+      int hh = info.callAllocs.pop();
+      int h = o2h.get(o);
+      if (hh != h) X.logs("pushed %s but popped %s", hstr(h), hstr(hh));
+    }
   }
 
-  public void processReturnPrimitive(int p, int t) { }
-  public void processReturnReference(int p, int t, int o) { }
-  public void processExplicitThrow(int p, int t, int o) { }
-  public void processImplicitThrow(int p, int t, int o) { }
+  @Override public void processReturnPrimitive(int p, int t) { }
+  @Override public void processReturnReference(int p, int t, int o) { }
+  @Override public void processExplicitThrow(int p, int t, int o) { }
+  @Override public void processImplicitThrow(int p, int t, int o) { }
 
-  public void processQuad(int p, int t) {
+  @Override public void processQuad(int p, int t) {
     if (verbose >= 7) X.logs("EVENT processQuad p=%s, t=%s", pstr(p), tstackstr(t));
   }
-  public void processBasicBlock(int b, int t) { }
-
-  ////////////////////////////////////////////////////////////
-  // Abstractions
-
-  // Local abstractions only depend on the object (used for abstract interpretation),
-  // but can depend on the current thread (get information aobut where the object was allocated).
-  abstract class LocalAbstraction {
-    public abstract Object get(int t, int o);
-  }
-
-  class NoneLocalAbstraction extends LocalAbstraction {
-    public String toString() { return "none"; }
-    public Object get(int t, int o) { return o; }
-  }
-
-  class AllocLocalAbstraction extends LocalAbstraction {
-    public String toString() {
-      return String.format("alloc(kCFA=%d,kOS=%d)", kCFA, kOS);
-    }
-
-    public Object get(int t, int o) {
-      ThreadInfo info = threadInfo(t);
-      if (kCFA == 0 && kOS == 0) return o2h.get(o); // 0-CFA
-
-      StringBuilder buf = new StringBuilder();
-      buf.append(o2h.get(o));
-
-      if (kCFA > 0) {
-        for (int i = 0; i < kCFA; i++) {
-          int j = info.callSites.size() - i - 1;
-          if (j < 0) break;
-          buf.append('_');
-          buf.append(info.callSites.get(j));
-        }
-      }
-
-      if (kOS > 0) {
-        for (int i = 0; i < kCFA; i++) {
-          int j = info.callAllocs.size() - i - 1;
-          if (j < 0) break;
-          buf.append('_');
-          buf.append(info.callAllocs.get(j));
-        }
-      }
-
-      return buf.toString();
-    }
-  }
-
-  // Global abstractions depend on the graph (used for snapshots).
-  abstract class GlobalAbstraction {
-    public abstract Object get(int a); // Based on the node in the graph
-    public void record(int a, int t, int o) { }
-    public void init() { }
-  }
-
-  class WrappedGlobalAbstraction extends GlobalAbstraction {
-    LocalAbstraction abstraction; // Just use this local abstraction
-    TIntObjectHashMap<Object> a2v = new TIntObjectHashMap<Object>(); // a (node ID) -> abstract value v
-    WrappedGlobalAbstraction(LocalAbstraction abstraction) { this.abstraction = abstraction; }
-    public String toString() { return abstraction.toString(); }
-
-    public Object get(int a) { return a2v.get(a); }
-    @Override public void record(int a, int t, int o) {
-      a2v.put(a, abstraction.get(t, o));
-    }
-  }
-
-  class ReachabilityGlobalAbstraction extends GlobalAbstraction {
-    @Override public String toString() {
-      if (pointedTo) return "reach(point)";
-      if (matchFirstField) return "reach(first_f)";
-      if (matchLastField) return "reach(last_f)";
-      return "reach";
-    }
-
-    // Ideally, we would have a set here, but that's too expensive
-    ArrayList<String>[] a2vs;
-    //String[] a2v; // Too sloppy
-
-    // Source: variable or heap-allocation site.
-    // General recipe for predicates is some function of the list of fields from source to the node.
-    // Examples:
-    //   Reachable-from: path must exist.
-    //   Pointed-to-by: length must be one.
-    //   Reachable-from-with-first-field
-    //   Reachable-from-with-last-field
-    //  Note that a node can fire on many predicates.  We just choose one arbitrarily for now.
-    @Override public void init() {
-      //a2v = new String[N];
-      a2vs = new ArrayList[N];
-      for (int a = 0; a < N; a++) a2vs[a] = new ArrayList<String>();
-      
-      // For each node, get it's source
-      for (int a = 0; a < N; a++) {
-        int o = a2o(a);
-        String source = "H"+o2h.get(o);
-        //X.logs("--- source=%s, a=%s", source, astr(a));
-        search(source, -1, -1, 0, a);
-      }
-    }
-
-    int a2o(int a) {
-      assert (updateAbstraction instanceof NoneLocalAbstraction);
-      return (Integer)PartitionAnalysis.this.a2v.get(a);
-    }
-
-    void search(String source, int first_f, int last_f, int len, int a) {
-      //if (a2v[a] != null) return; // Already have a predicate
-      
-      String v = null;
-      if (len > 0) { // Avoid trivial predicates
-        if (pointedTo) {
-          if (len == 1) v = source;
-        }
-        else if (matchFirstField)
-          v = source+"."+first_f+".*";
-        else if (matchLastField)
-          v = source+".*."+last_f;
-        else // Plain reachability
-          v = source;
-      }
-
-      if (v != null && a2vs[a].indexOf(v) != -1) return; // Already have it
-
-      if (v != null) a2vs[a].add(v);
-      //X.logs("source=%s first_f=%s last_f=%s len=%s a=%s: v=%s", source, fstr(first_f), fstr(last_f), len, astr(a), a2vs[a]);
-
-      if (pointedTo && len >= 1) return;
-
-      // Recurse
-      for (Edge e : a2edges.get(a)) {
-        search(source, len == 0 ? e.f : first_f, e.f, len+1, e.b);
-      }
-    }
-
-    public Object get(int a) {
-      if (staticEscapedNodes.contains(a)) return "-";
-      Collections.sort(a2vs[a]); // Canonicalize
-      //int h = o2h.get(a2o(a));
-      //return h + ":" + a2vs[a].toString();
-      return a2vs[a].toString();
-    }
-  }
+  @Override public void processBasicBlock(int b, int t) { }
 }
 
 ////////////////////////////////////////////////////////////
@@ -735,14 +641,6 @@ class Edge {
   }
   int f;
   int b;
-}
-
-class Utils {
-  public static <S, T> void add(Map<S, List<T>> map, S key1, T key2) {
-    List<T> s = map.get(key1);
-    if(s == null) map.put(key1, s = new ArrayList<T>());
-    s.add(key2);
-  }
 }
 
 // Query for thread escape: is the object pointed to by the relvant variable thread-escaping at program point e?
@@ -760,16 +658,16 @@ class Query {
 
 class QueryResult {
   boolean selected; // Whether we are trying to answer this query or not
-  int numEscaping = 0;
-  int numNonEscaping = 0;
+  int numTrue = 0;
+  int numFalse = 0;
 
-  boolean escapes() { return numEscaping > 0; } // Escapes if any escapes
+  boolean isTrue() { return numTrue > 0; } // Existential property
   void add(boolean b) {
-    if (b) numEscaping++;
-    else numNonEscaping++;
+    if (b) numTrue++;
+    else numFalse++;
   }
 
-  @Override public String toString() { return numEscaping+"|"+numNonEscaping; }
+  @Override public String toString() { return numTrue+"|"+numFalse; }
 }
 
 class ThreadInfo {
@@ -778,65 +676,90 @@ class ThreadInfo {
   Stack<Integer> callAllocs = new Stack(); // Elements are object allocation sites h (for kOS)
 }
 
-class Execution {
-  public Execution() {
-    System.out.println(new File(".").getAbsolutePath());
-    for (int i = 0; ; i++) {
-      basePath = System.getProperty("chord.partition.execPoolPath", ".")+"/"+i+".exec";
-      if (!new File(basePath).exists()) break;
-    }
-    System.out.println("Execution directory: "+basePath);
-    new File(basePath).mkdir();
-    logOut = openOut(path("log"));
-    
-    String view = System.getProperty("chord.partition.addToView", null);
-    if (view != null) {
-      PrintWriter out = openOut(path("addToView"));
-      out.println(view);
-      out.close();
-    }
-  }
-  String path(String name) { return basePath+"/"+name; }
+abstract class PropertyState {
+  Execution X;
+  List<List<Edge>> a2edges;
+  int verbose;
 
-  PrintWriter openOut(String path) {
-    try {
-      return new PrintWriter(path);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public void logs(String format, Object... args) {
-    logOut.println(String.format(format, args));
-    logOut.flush();
-  }
-
-  public void writeMap(String name, HashMap<Object,Object> map) {
-    PrintWriter out = openOut(path(name));
-    for (Object key : map.keySet()) {
-      out.println(key+"\t"+map.get(key));
-    }
-    out.close();
-  }
-
-  String basePath;
-	PrintWriter logOut;
+  public abstract String name();
+  public abstract void setGlobal(int a, boolean useStrongUpdates); // Node a corresponds to a global variable (for whatever that's worth to the analysis)
+  public abstract int propagateAlongEdge(int a, int b); // Update the property incrementally (only called with weak updates)
+  public abstract int numTrue(); // Number of nodes satisfying the property
+  public abstract boolean isTrue(int a); // Property holds on node a?
+  public abstract void computeAll(); // Compute the property for all nodes (called if strong updates)
+  public abstract SnapshotAnalysisState newSnapshotAnalysisState();
 }
 
-class StatFig {
-  double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY, sum = 0;
-  int n = 0;
+abstract class SnapshotAnalysisState {
+  GlobalAbstraction abstraction;
+  HashMap<Object, List<Integer>> w2as; // snapshot abstract value w -> nodes with that value
+  public Object getAbstraction(int a) { return abstraction.get(a); } // Can override
 
-  double mean() { return sum/n; }
+  public abstract boolean computeIsTrue(int a); // Does property hold for node a under the snapshot abstraction specified by w2as?
+  public abstract int numTrue(); // Number of nodes satisfying the property
+  public abstract boolean isTrue(int a); // Property holds on node a?
+  public abstract void computeAll(); // Return number of nodes for which the property holds (under the abstraction)
+}
 
-  void add(double x) {
-    sum += x;
-    n += 1;
-    min = Math.min(min, x);
-    max = Math.max(max, x);
+////////////////////////////////////////////////////////////
+// Specific instances: TODO: move these to another file
+
+// Not natural
+abstract class MayAliasPropertyState extends PropertyState {
+  public String name() { return "may-alias"; }
+}
+
+// This property doesn't make sense for heap abstractions
+abstract class CyclicityPropertyState extends PropertyState {
+  public String name() { return "cyclicity"; }
+
+  TIntHashSet cyclicNodes = new TIntHashSet();
+
+  public void computeAll() {
+    // Need to do strongly connected components
+    int N = a2edges.size();
+    //for (int a = 0; a < N; a++)
+    // TODO
   }
 
-  @Override public String toString() {
-    return String.format("%.2f / %.2f / %.2f (%d)", min, sum/n, max, n);
+  public int propagateAlongEdge(int a, int b) {
+    // TODO
+    return 0;
   }
+
+  public void setGlobal(int a, boolean useStrongUpdates) { }
+
+  public boolean isTrue(int a) { return cyclicNodes.contains(a); }
+  public int numTrue() { return cyclicNodes.size(); }
+
+  /*class MySnapshotAnalysisState extends SnapshotAnalysisState {
+    private boolean findCycle(int a, TIntHashSet visitedNodes) {
+      if (visitedNodes.contains(a)) return true; // Found a cycle
+      visitedNodes.add(a);
+
+      // Try following edges in the graph
+      for (Edge e : a2edges.get(a))
+        if (findCycle(e.b, visitedNodes)) return true;
+      // Try jumping to nodes with the same value
+      Object w = getAbstraction(a);
+      for (int b : w2as.get(w))
+        if (findCycle(b, visitedNodes)) return true;
+      return false;
+    }
+
+    // Can this node reach a cycle under the given global abstraction?
+    public boolean computeIsTrue(int a) {
+      return findCycle(a, new TIntHashSet());
+    }
+
+    TIntHashSet abstractionEscapedNodes = new TIntHashSet();
+    public void computeAll() {
+      // Which nodes are escaping under the abstraction?
+      for (int start : staticEscapedNodes.toArray())
+        reachable(start, -1, abstractionEscapedNodes);
+    }
+    public int numTrue() { return abstractionEscapedNodes.size(); }
+    public boolean isTrue(int a) { return abstractionEscapedNodes.contains(a); }
+  }
+  public SnapshotAnalysisState newSnapshotAnalysisState() { return new MySnapshotAnalysisState(); }*/
 }
