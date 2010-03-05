@@ -74,6 +74,7 @@ class Execution {
     if (view != null) {
       PrintWriter out = Utils.openOut(path("addToView"));
       out.println(view);
+      out.println(System.getProperty("chord.out.pooldir"));
       out.close();
     }
     watch.start();

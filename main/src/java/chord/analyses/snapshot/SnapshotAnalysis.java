@@ -356,18 +356,20 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     out.close();
 
     final SnapshotResult result = takeSnapshot();
-    if (result.proposedNumTrue() > 0)
+    if (result != null && result.proposedNumTrue() > 0)
       snapshotPrecision.add(result.precision());
 
-    if (result instanceof NodeBasedSnapshotResult) annotateGraph((NodeBasedSnapshotResult)result);
+    if (result != null && result instanceof NodeBasedSnapshotResult) annotateGraph((NodeBasedSnapshotResult)result);
 
     X.logs("Snapshot");
     X.logs("  complexity: %d values", complexity);
-    X.logs("  precision: %d/%d = %.2f", result.actualNumTrue(), result.proposedNumTrue(), result.precision());
     X.output.put("complexity", complexity);
-    X.output.put("snapshot.actualNumTrue", result.actualNumTrue());
-    X.output.put("snapshot.proposedNumTrue", result.proposedNumTrue());
-    X.output.put("snapshot.precision", result.precision());
+    if (result != null) {
+      X.logs("  precision: %d/%d = %.2f", result.actualNumTrue(), result.proposedNumTrue(), result.precision());
+      X.output.put("snapshot.actualNumTrue", result.actualNumTrue());
+      X.output.put("snapshot.proposedNumTrue", result.proposedNumTrue());
+      X.output.put("snapshot.precision", result.precision());
+    }
   }
 
   private void annotateGraph(final NodeBasedSnapshotResult result) {
