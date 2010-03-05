@@ -66,18 +66,11 @@ public class PartitionAnalysis extends DynamicAnalysis {
   static final int NULL_OBJECT = 0;
   static final int THREAD_GLOBAL_OBJECT = 100000;
 
-  /*static Execution X = new Execution();
-  static {
-    System.out.println("PartitionAnalysis");
-    Properties.outDirName = X.path(null);
-    System.setProperty("chord.out.dir", X.path(null));
-  }*/
-
   InstrScheme instrScheme;
   DomT domT; // Classes (to figure out which objects to exclude)
 
   // Execution management/logging
-  Execution X = new Execution();
+  Execution X;
 
   // Parameters of the analysis
   PropertyState propertyState;
@@ -143,6 +136,7 @@ public class PartitionAnalysis extends DynamicAnalysis {
   }
 
 	public void run() {
+    X = new Execution();
     boolean success = false;
     try {
       // Parse options

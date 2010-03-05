@@ -54,7 +54,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   InstrScheme instrScheme;
 
   // Execution management/logging
-  Execution X = new Execution();
+  Execution X;
 
   // Parameters of the analysis (updates and abstraction)
   int verbose;
@@ -102,6 +102,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   }
 
 	public void run() {
+    X = new Execution();
     boolean success = false;
     try {
       // Parse options
@@ -290,6 +291,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
 
     X.logs("Aggregated snapshot precision: %s", snapshotPrecision);
     X.output.put("snapshot.avgPrecision", snapshotPrecision.mean());
+    X.output.put("snapshot.num", snapshotPrecision.n);
     X.output.put("finalObjects.numTotal", state.o2h.size());
 
     if (graphMonitor != null) graphMonitor.finish();

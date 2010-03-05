@@ -16,7 +16,6 @@ import java.util.Random;
 import java.util.Collections;
 
 import joeq.Compiler.Quad.Quad;
-import chord.doms.DomT;
 
 import chord.util.IntArraySet;
 import chord.util.ChordRuntimeException;
