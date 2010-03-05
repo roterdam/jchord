@@ -304,7 +304,8 @@
 		<property name="chord.main.dir" location="."/>
 		<property name="chord.max.heap" value="1024m"/>
 		<property name="chord.max.stack" value="32m"/>
-		<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
+    <!--<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>-->
+		<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack} -Xrunhprof:cpu=samples,depth=20"/>
 
 		<java classname="chord.project.Main" fork="true" failonerror="true" dir="${chord.work.dir}">
 			<jvmarg line="${chord.jvmargs}"/>

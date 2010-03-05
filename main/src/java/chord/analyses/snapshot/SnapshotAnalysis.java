@@ -35,19 +35,20 @@ import gnu.trove.TIntIntHashMap;
 import gnu.trove.TLongIntHashMap;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
+import gnu.trove.TIntProcedure;
 
 /**
  * Evaluate the precision and complexity of various heap abstractions.
- * Build a graph over the concrete heap.
+ * Maintains a graph over the concrete heap.
  * Abstractions are functions that operate on snapshots of the concrete heap.
- * Client will override this class.
+ * Client will override this class and provide queries on the abstractions.
  *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
 public abstract class SnapshotAnalysis extends DynamicAnalysis {
   public abstract String propertyName();
 
-  static final int ARRAY_FIELD = 88888;
+  static final int ARRAY_FIELD = 99999;
   static final int NULL_OBJECT = 0;
 
   InstrScheme instrScheme;
@@ -55,7 +56,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   // Execution management/logging
   Execution X = new Execution();
 
-  // Parameters of the analysis
+  // Parameters of the analysis (updates and abstraction)
   int verbose;
   boolean useStrongUpdates;
   Abstraction abstraction;
@@ -74,7 +75,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
 
   HashMap<Query, QueryResult> queryResults = new HashMap<Query, QueryResult>();
   int numQueryHits;
-  //StatFig snapshotPrecision = new StatFig();
+  StatFig snapshotPrecision = new StatFig();
 
   public Abstraction parseAbstraction(String abstractionType) {
     if (abstractionType.equals("none")) return new NoneAbstraction();
@@ -132,6 +133,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       options.put("abstraction", abstraction);
       options.put("queryFrac", queryFrac);
       options.put("snapshotFrac", snapshotFrac);
+      options.put("exclude", getStringArg("exclude", ""));
       X.writeMap("options.map", options);
       X.output.put("exec.status", "running");
 
@@ -162,11 +164,12 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     }
   }
   public boolean isExcluded(int e) {
+    if (e < 0) return true;
     Quad q = (Quad)instrumentor.getDomE().get(e);
     jq_Class c = Program.v().getMethod(q).getDeclaringClass();
+    //X.logs("CHECK e = %s, q = %s, class = %s", estr(e), q, c);
     return excludedClasses.contains(c);
   }
-
 
   public ThreadInfo threadInfo(int t) {
     if (t == -1) return null;
@@ -175,55 +178,6 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       threadInfos.put(t, info = new ThreadInfo());
     return info;
   }
-
-  // The global abstraction partitions the nodes in the current graph, where each partition has the same value.
-  /*abstract class Snapshot {
-    public Snapshot() {
-      abstraction.
-    }
-
-    int complexity() { return state.w2as.size(); } // Complexity of this abstraction (number of abstract values)
-
-    public boolean computeIsTrue(int a) { return state.computeIsTrue(a); } // Expensive
-
-    public void runFinal() {
-      propertyState.computeAll();
-      int actualNumTrue = propertyState.numTrue();
-
-      state.computeAll();
-      int propNumTrue = state.numTrue();
-
-      if (graphMonitor != null) {
-        for (int a = 0; a < N; a++) {
-          boolean actualTrue = propertyState.isTrue(a);
-          boolean propTrue = state.isTrue(a);
-          String color = null;
-          if (actualTrue && propTrue) color = "#00ff00"; // Good
-          else if (!actualTrue && propTrue) color = "#ff0000"; // Bad (false positive)
-          else if (!actualTrue && !propTrue) color = "#ffffff"; // Good
-          else throw new RuntimeException("Got true negative - shouldn't happen (snapshot analysis is broken)");
-          // Get the abstraction value (either local or global)
-          String label = (abstraction instanceof NoneAbstraction) ? a2v.get(a).toString() : state.getAbstraction(a).toString();
-          graphMonitor.setNodeLabel(a, label);
-          graphMonitor.setNodeColor(a, color);
-        }
-      }
-
-      X.logs("=== Snapshot abstraction %s (at end) ===", abstraction);
-      X.logs("  complexity: %d values", complexity());
-      X.logs("  precision: %d/%d = %.2f", actualNumTrue, propNumTrue, 1.0*actualNumTrue/propNumTrue);
-      X.output.put("finalSnapshot.actualNumTrue", actualNumTrue);
-      X.output.put("finalSnapshot.propNumTrue", propNumTrue);
-      X.output.put("finalSnapshot.precision", 1.0*actualNumTrue/propNumTrue);
-      X.output.put("complexity", complexity());
-      if (propNumTrue > 0) snapshotPrecision.add(1.0*actualNumTrue/propNumTrue);
-
-      PrintWriter out = Utils.openOut(X.path("snapshot-abstractions"));
-      for (Object w : state.w2as.keySet())
-        out.println(w);
-      out.close();
-    }
-  }*/
 
   public InstrScheme getInstrScheme() {
     if (instrScheme != null) return instrScheme;
@@ -275,8 +229,10 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     return queryResult(query).selected;
   }
   public void answerQuery(Query query, boolean isTrue) {
-    queryResult(query).add(isTrue);
+    QueryResult result = queryResult(query);
+    result.add(isTrue);
     numQueryHits++;
+    if (verbose >= 1) X.logs("QUERY %s: result = %s", query, result);
   }
   private QueryResult queryResult(Query q) {
     QueryResult qr = queryResults.get(q);
@@ -307,8 +263,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     int E = instrumentor.getEmap().size();
     int H = instrumentor.getHmap().size();
     int F = instrumentor.getFmap().size();
-    X.logs("initAllPasses: |E| = %s, |H| = %s, |F| = %s", E, H, F);
-
+    computedExcludedClasses();
+    X.logs("initAllPasses: |E| = %s, |H| = %s, |F| = %s, excluding %s classes", E, H, F, excludedClasses.size());
     abstraction.X = X;
     abstraction.state = state;
   }
@@ -325,31 +281,16 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
 
     X.logs("  %d total queries; %d/%d = %.2f queries proposed to have property %s",
       queryResults.size(), numTrue, numSelected, 1.0*numTrue/numSelected, propertyName());
+    X.output.put("query.totalNumHits", numQueryHits);
     X.output.put("query.numTrue", numTrue);
     X.output.put("query.numSelected", numSelected);
     X.output.put("query.numTotal", queryResults.size());
     X.output.put("query.fracTrue", 1.0*numTrue/numSelected);
     outputQueries();
 
-    /*if (!(updateAbstraction instanceof NoneAbstraction) || !useStrongUpdates)
-      X.logs("    (run with updateAbstraction = none and useStrongUpdates = true to get number actually escaping; divide to get precision of %s)", updateAbstraction);
-
-    // Evaluate on final nodes: how many nodes have that property
-    if (useStrongUpdates) propertyState.computeAll(); // Need to still do this
-    numTrue = 0;
-    for (int a = 0; a < N; a++)
-      if (propertyState.isTrue(a)) numTrue++;
-    X.logs("  %d/%d = %.2f nodes proposed to be escaping at end", numTrue, N, 1.0*numTrue/N);
-    X.output.put("finalNodes.numTrue", numTrue);
-    X.output.put("finalNodes.numTotal", N);
-    X.output.put("finalNodes.fracTrue", 1.0*numTrue/N);
-    X.output.put("finalObjects.numTotal", o2v.size());*/
-
-    //new SnapshotAnalysis(snapshotAbstraction).runFinal();
-
-    //X.logs("  snapshot precision: %s", snapshotPrecision);
-    //X.output.put("snapshotPrecision", snapshotPrecision.mean());
-    //X.output.put("query.totalNumHits", numQueryHits);
+    X.logs("Aggregated snapshot precision: %s", snapshotPrecision);
+    X.output.put("snapshot.avgPrecision", snapshotPrecision.mean());
+    X.output.put("finalObjects.numTotal", state.o2h.size());
 
     if (graphMonitor != null) graphMonitor.finish();
   }
@@ -358,7 +299,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   // Override these graph construction handlers (remember to call super though)
 
   public void nodeCreated(int t, int o) {
-    assert (o >= 0);
+    if (o < 0) return; // Ignore bad nodes
     if (o == NULL_OBJECT) return;
     if (state.o2edges.containsKey(o)) return; // Already exists
     state.o2h.putIfAbsent(o, -1); // Just in case we didn't get an allocation site
@@ -387,7 +328,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       }
     }
 
-    if (o != -1) {
+    if (o > 0) {
       edges.add(new Edge(f, o));
       abstraction.edgeCreated(b, f, o);
       if (graphMonitor != null) graphMonitor.addEdge(o, b, ""+f);
@@ -399,11 +340,71 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   // Typically, this function is the source of queries
   public void fieldAccessed(int e, int t, int b, int f, int o) {
     nodeCreated(t, b);
-    if (selectSnapshotRandom.nextDouble() < snapshotFrac)
-      takeSnapshot();
+    nodeCreated(t, o);
+    if (selectSnapshotRandom.nextDouble() < snapshotFrac) 
+      doSnapshotAnalysis();
   }
 
-  public void takeSnapshot() { }
+  private void doSnapshotAnalysis() {
+    // Compute abstraction
+    abstraction.ensureComputed();
+
+    int complexity = abstraction.a2os.size(); // Complexity of this abstraction (number of abstract values)
+    PrintWriter out = Utils.openOut(X.path("snapshot-abstractions"));
+    for (Object a : abstraction.a2os.keySet())
+      out.println(a);
+    out.close();
+
+    final SnapshotResult result = takeSnapshot();
+    if (result.proposedNumTrue() > 0)
+      snapshotPrecision.add(result.precision());
+
+    if (result instanceof NodeBasedSnapshotResult) annotateGraph((NodeBasedSnapshotResult)result);
+
+    X.logs("Snapshot");
+    X.logs("  complexity: %d values", complexity);
+    X.logs("  precision: %d/%d = %.2f", result.actualNumTrue(), result.proposedNumTrue(), result.precision());
+    X.output.put("complexity", complexity);
+    X.output.put("snapshot.actualNumTrue", result.actualNumTrue());
+    X.output.put("snapshot.proposedNumTrue", result.proposedNumTrue());
+    X.output.put("snapshot.precision", result.precision());
+  }
+
+  private void annotateGraph(final NodeBasedSnapshotResult result) {
+    if (graphMonitor == null) return;
+    // Color the nodes for visualization
+    state.o2h.forEachKey(new TIntProcedure() { public boolean execute(int o) { 
+      boolean actualTrue = result.actualTrueNodes.contains(o);
+      boolean proposedTrue = result.proposedTrueNodes.contains(o);
+      String color = null;
+      if (actualTrue && proposedTrue) color = "#00ff00"; // Good
+      else if (!actualTrue && proposedTrue) color = "#ff0000"; // Bad (false positive)
+      else if (!actualTrue && !proposedTrue) color = "#ffffff"; // Good
+      else throw new RuntimeException("Got true negative - shouldn't happen (snapshot analysis is broken)");
+      String label = abstraction.getValue(o)+"";
+      graphMonitor.setNodeLabel(o, label);
+      graphMonitor.setNodeColor(o, color);
+      return true;
+    } });
+  }
+
+  // Evaluate the abstraction in time (doesn't have to be the same evalutaion metric as the queries)
+  public abstract SnapshotResult takeSnapshot();
+
+  abstract class SnapshotResult {
+    public abstract int actualNumTrue();
+    public abstract int proposedNumTrue();
+    public double precision() { return 1.0 * actualNumTrue() / proposedNumTrue(); }
+  }
+
+  // When precision can be computed as a function of nodes in the graph
+  class NodeBasedSnapshotResult extends SnapshotResult {
+    // Fill these up
+    TIntHashSet actualTrueNodes = new TIntHashSet();
+    TIntHashSet proposedTrueNodes = new TIntHashSet();
+    @Override public int actualNumTrue() { return actualTrueNodes.size(); }
+    @Override public int proposedNumTrue() { return proposedTrueNodes.size(); }
+  }
 
   //////////////////////////////
   // Pretty-printing
@@ -469,8 +470,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   }
   @Override public void processPutfieldReference(int e, int t, int b, int f, int o) { // b.f = o
     if (verbose >= 5) X.logs("EVENT putFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
-    edgeCreated(t, b, f, o);
     if (!isExcluded(e)) fieldAccessed(e, t, b, f, o);
+    edgeCreated(t, b, f, o);
   }
 
   @Override public void processAloadPrimitive(int e, int t, int b, int i) {
@@ -485,8 +486,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   }
   @Override public void processAstoreReference(int e, int t, int b, int i, int o) {
     if (verbose >= 5) X.logs("EVENT storeReference: e=%s, t=%s, b=%s, i=%s, o=%s", estr(e), tstr(t), ostr(b), i, ostr(o));
-    edgeCreated(t, b, ARRAY_FIELD, o);
     if (!isExcluded(e)) fieldAccessed(e, t, b, ARRAY_FIELD, o);
+    edgeCreated(t, b, ARRAY_FIELD, o);
   }
 
   @Override public void processThreadStart(int i, int t, int o) {

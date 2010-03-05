@@ -91,7 +91,10 @@ class AllocAbstraction extends Abstraction {
     this.kOS = kOS;
   }
 
-  @Override public String toString() { return String.format("alloc(kCFA=%d,kOS=%d)", kCFA, kOS); }
+  @Override public String toString() {
+    if (kCFA == 0 && kOS == 0) return "alloc";
+    return String.format("alloc(kCFA=%d,kOS=%d)", kCFA, kOS);
+  }
 
   @Override public void nodeCreated(ThreadInfo info, int o) {
     setValue(o, computeValue(info, o));
