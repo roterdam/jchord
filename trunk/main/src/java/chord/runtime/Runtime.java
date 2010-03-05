@@ -175,7 +175,7 @@ public abstract class Runtime {
 	}
 	// called during VMInit JVMTI event
 	public static void open(String args) {
-		String[] a = args.split("=");
+		String[] a = chord.project.analyses.DynamicAnalysis.agentOptions.split("=");
         String instrSchemeFileName = null;
 		for (int i = 0; i < a.length; i += 2) {
 			if (a[i].equals("instr_scheme_file_name")) {
