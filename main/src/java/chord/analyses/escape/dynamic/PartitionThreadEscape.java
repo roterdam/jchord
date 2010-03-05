@@ -59,6 +59,7 @@ class ThreadEscapePropertyState extends PropertyState {
       return followEscapeNodes(b);
     return 0;
   }
+  public void readEdge(int a, int f) { }
 
   // Weak update: contaminate everyone downstream
   // Return number of new nodes marked as escaping

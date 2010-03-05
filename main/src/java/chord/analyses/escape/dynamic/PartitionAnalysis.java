@@ -298,8 +298,8 @@ public class PartitionAnalysis extends DynamicAnalysis {
     if (instrScheme != null) return instrScheme;
     instrScheme = new InstrScheme();
 
-    instrScheme.setEnterAndLeaveMethodEvent();
-    instrScheme.setEnterAndLeaveLoopEvent();
+    //instrScheme.setEnterAndLeaveMethodEvent();
+    //instrScheme.setEnterAndLeaveLoopEvent();
 
     // TODO: turn off instrumentation when not needed
 
@@ -451,6 +451,11 @@ public class PartitionAnalysis extends DynamicAnalysis {
       X.logs("ADDEDGE b=%s (%s) f=%s o=%s (%s)%s", ostr(oa), astr(a), fstr(f), ostr(ob), astr(b), numNew != -1 ? ", "+numNew+" new" : "");
   }
 
+  void readEdge(int t, int oa, int f) {
+    int a = getNode(t, oa);
+    propertyState.readEdge(a, f);
+  }
+
   void makeQuery(int e, int t, int o) {
     numQueryHits++;
     // If we are using strong updates, then escapeNodes is not getting updated, so we can't answer queries (fast).
@@ -487,7 +492,7 @@ public class PartitionAnalysis extends DynamicAnalysis {
   }
   String hstr(int h) { return h < 0 ? "-" : instrumentor.getHmap().get(h); } // heap allocation site
   String estr(int e) {
-    if (e == -1) return "-";
+    if (e < 0) return "-";
     Quad quad = (Quad)instrumentor.getDomE().get(e);
     return Program.v().toJavaPosStr(quad)+" "+Program.v().toQuadStr(quad);
   }
@@ -547,10 +552,12 @@ public class PartitionAnalysis extends DynamicAnalysis {
 
   @Override public void processGetfieldPrimitive(int e, int t, int b, int f) {
     makeQuery(e, t, b);
+    readEdge(t, b, f);
   }
   @Override public void processGetfieldReference(int e, int t, int b, int f, int o) { // ... = b.f, where b.f = o
     if (verbose >= 5) X.logs("EVENT getFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstackstr(t), ostr(b), fstr(f), ostr(o));
     makeQuery(e, t, b);
+    readEdge(t, b, f);
   }
   @Override public void processPutfieldPrimitive(int e, int t, int b, int f) {
     makeQuery(e, t, b);
@@ -563,10 +570,12 @@ public class PartitionAnalysis extends DynamicAnalysis {
 
   @Override public void processAloadPrimitive(int e, int t, int b, int i) {
     makeQuery(e, t, b);
+    readEdge(t, b, ARRAY_FIELD);
   }
   @Override public void processAloadReference(int e, int t, int b, int i, int o) {
     if (verbose >= 5) X.logs("EVENT loadReference: e=%s, t=%s, b=%s, i=%s, o=%s", estr(e), tstackstr(t), ostr(b), i, ostr(o));
     makeQuery(e, t, b);
+    readEdge(t, b, ARRAY_FIELD);
   }
   @Override public void processAstorePrimitive(int e, int t, int b, int i) {
     makeQuery(e, t, b);
@@ -688,6 +697,7 @@ abstract class PropertyState {
   public abstract String name();
   public abstract void setGlobal(int a, boolean useStrongUpdates); // Node a corresponds to a global variable (for whatever that's worth to the analysis)
   public abstract int propagateAlongEdge(int a, int b, int f); // Update the property incrementally (only called with weak updates)
+  public abstract void readEdge(int a, int f);
   public abstract int numTrue(); // Number of nodes satisfying the property
   public abstract boolean isTrue(int a); // Property holds on node a?
   public abstract void computeAll(); // Compute the property for all nodes (called if strong updates)
