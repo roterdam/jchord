@@ -121,6 +121,7 @@ public class Properties {
 	static {
     // Automatically find a free subdirectory
     String outPoolPath = System.getProperty("chord.out.pooldir");
+    //System.out.println("OUT "+outPoolPath);
     if (outPoolPath != null) {
       for (int i = 0; ; i++) {
         outDirName = outPoolPath+"/"+i+".exec";
