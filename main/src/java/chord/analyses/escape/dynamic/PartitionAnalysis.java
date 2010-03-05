@@ -143,6 +143,7 @@ public class PartitionAnalysis extends DynamicAnalysis {
   }
 
 	public void run() {
+    boolean success = false;
     try {
       // Parse options
       verbose = getIntArg("verbose", 0);
@@ -190,6 +191,7 @@ public class PartitionAnalysis extends DynamicAnalysis {
 
       // Save output
       X.output.put("exec.status", "done");
+      success = true;
     } catch (Throwable t) {
       X.output.put("exec.status", "failed");
       X.errors("%s", t);
@@ -197,6 +199,7 @@ public class PartitionAnalysis extends DynamicAnalysis {
         X.logs("  %s", e);
     }
     X.finish();
+    if (!success) System.exit(1);
 	}
 
   QueryResult queryResult(int e, int b) {
@@ -318,23 +321,23 @@ public class PartitionAnalysis extends DynamicAnalysis {
     instrScheme.setAstoreReferenceEvent(true, true, true, true, true); // e, t, b, i, o
 
     instrScheme.setThreadStartEvent(true, true, true); // i, t, o
-    instrScheme.setThreadJoinEvent(true, true, true); // i, t, o
+    //instrScheme.setThreadJoinEvent(true, true, true); // i, t, o
 
-    instrScheme.setAcquireLockEvent(true, true, true); // l, t, o
-    instrScheme.setReleaseLockEvent(true, true, true); // r, t, o
-    instrScheme.setWaitEvent(true, true, true); // i, t, o
-    instrScheme.setNotifyEvent(true, true, true); // i, t, o
+    //instrScheme.setAcquireLockEvent(true, true, true); // l, t, o
+    //instrScheme.setReleaseLockEvent(true, true, true); // r, t, o
+    //instrScheme.setWaitEvent(true, true, true); // i, t, o
+    //instrScheme.setNotifyEvent(true, true, true); // i, t, o
 
     instrScheme.setMethodCallEvent(true, true, true, true, true); // i, t, o, before, after
 
-    instrScheme.setReturnPrimitiveEvent(true, true); // i, t
-    instrScheme.setReturnReferenceEvent(true, true, true); // i, t, o
+    //instrScheme.setReturnPrimitiveEvent(true, true); // i, t
+    //instrScheme.setReturnReferenceEvent(true, true, true); // i, t, o
 
-    instrScheme.setExplicitThrowEvent(true, true, true); // p, t, o
-    instrScheme.setImplicitThrowEvent(true, true); // p, t
+    //instrScheme.setExplicitThrowEvent(true, true, true); // p, t, o
+    //instrScheme.setImplicitThrowEvent(true, true); // p, t
 
-    instrScheme.setQuadEvent();
-    instrScheme.setBasicBlockEvent();
+    //instrScheme.setQuadEvent();
+    //instrScheme.setBasicBlockEvent();
 
     return instrScheme;
   }
