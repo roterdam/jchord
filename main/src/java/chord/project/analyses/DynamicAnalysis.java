@@ -32,7 +32,6 @@ import chord.util.FileUtils;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class DynamicAnalysis extends JavaAnalysis {
-	public static String agentOptions;
 	public final static boolean DEBUG = false;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
@@ -71,18 +70,17 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final IndexMap<String> Mmap = instrumentor.getMmap();
 		final int numMeths = (Mmap != null) ? Mmap.size() : 0;
 		final String runtimeClassName = Properties.runtimeClassName;
-		agentOptions =
-			"num_meths=" + numMeths +
-			"=instr_scheme_file_name=" + instrSchemeFileName +
-			"=calls_bound=" + scheme.getCallsBound() +
-			"=iters_bound=" + scheme.getItersBound() +
-			"=runtime_class_name=" + runtimeClassName.replace('.', '/');
 		String instrProgramCmd = "java " + Properties.runtimeJvmargs +
 			" -Xbootclasspath/p:" +
 			Properties.mainClassPathName + File.pathSeparator + bootClassesDirName +
 			" -Xverify:none" + // " -verbose" + 
 			" -cp " + userClassesDirName + File.pathSeparator + classPathName +
-			" -agentpath:" + Properties.instrAgentFileName + "=";
+			" -agentpath:" + Properties.instrAgentFileName +
+			"=num_meths=" + numMeths +
+			"=instr_scheme_file_name=" + instrSchemeFileName +
+			"=calls_bound=" + scheme.getCallsBound() +
+			"=iters_bound=" + scheme.getItersBound() +
+			"=runtime_class_name=" + runtimeClassName.replace('.', '/');
 		final String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
 		final boolean processBuffer =
 			runtimeClassName.equals(BufferedRuntime.class.getName());
@@ -92,10 +90,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 			boolean needsTraceTransform = scheme.needsTraceTransform();
 			final String traceFileName = needsTraceTransform ?
 				crudeTraceFileName : finalTraceFileName;
-			agentOptions += 
+			instrProgramCmd += 
 				"=trace_block_size=" + Properties.traceBlockSize +
-				"=trace_file_name=" + traceFileName;
-			instrProgramCmd += agentOptions + " " + mainClassName + " ";
+				"=trace_file_name=" + traceFileName +
+				" " + mainClassName + " ";
 			FileUtils.deleteFile(crudeTraceFileName);
 			FileUtils.deleteFile(finalTraceFileName);
 			final boolean doTracePipe = Properties.doTracePipe;
@@ -152,7 +150,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			}
 			doneAllPasses();
 		} else {
-			instrProgramCmd += agentOptions + " " + mainClassName + " ";
+			instrProgramCmd += " " + mainClassName + " ";
 			initAllPasses();
 			for (String runID : runIDs) {
 				System.out.println("Processing Run ID: " + runID);
