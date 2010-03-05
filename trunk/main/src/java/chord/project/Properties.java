@@ -119,6 +119,14 @@ public class Properties {
 
 	public static String outDirName = System.getProperty("chord.out.dir");
 	static {
+    // Automatically find a free subdirectory
+    String outPoolPath = System.getProperty("chord.out.pooldir");
+    if (outPoolPath != null) {
+      for (int i = 0; ; i++) {
+        outDirName = outPoolPath+"/"+i+".exec";
+        if (!new File(outDirName).exists()) break;
+      }
+    }
 		if (outDirName == null)
 			outDirName = FileUtils.getAbsolutePath(workDirName, "chord_output");
 		FileUtils.mkdirs(outDirName);
