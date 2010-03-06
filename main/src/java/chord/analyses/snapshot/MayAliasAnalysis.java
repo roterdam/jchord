@@ -121,8 +121,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 	
 	@Override
 	public void donePass() {
-		final ProgramDom<Object> domS = new ProgramDom<Object>();
-		domS.setName("S");
+		final ProgramDom<Object> domS = (ProgramDom) Project.getTrgt("S");
 		loc2abstractions.forEachValue(new TObjectProcedure<Set<Object>>() {
 			@Override
 			public boolean execute(Set<Object> arg0) {
@@ -148,6 +147,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		absvalRel.save();
 		Project.runTask("aliasing-race-pair-dlog");
 		ProgramRel aliasingRel = (ProgramRel) Project.getTrgt("aliasingRacePair");
+		aliasingRel.load();
 		PairIterable<Inst, Inst> tuples = aliasingRel.getAry2ValTuples();
 		for (Pair<Inst, Inst> p : tuples) {
 			Quad quad0 = (Quad) p.val0;
@@ -159,6 +159,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 				answerQuery(q, true);
 			}
 		}
+		aliasingRel.close();
 	}
 	
 	@Override
