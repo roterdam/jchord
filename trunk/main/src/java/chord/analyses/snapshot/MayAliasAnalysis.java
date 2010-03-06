@@ -127,7 +127,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 			@Override
 			public boolean execute(Set<Object> arg0) {
 				domS.addAll(arg0);
-				return false;
+				return true;
 			}
 		});		
 		domS.save();
@@ -136,13 +136,13 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		final DomE domE = instrumentor.getDomE();
 		loc2abstractions.forEachEntry(new TIntObjectProcedure<Set<Object>>() {
 			@Override
-			public boolean execute(int arg0, Set<Object> arg1) {
-				if (domE.contains(arg0)) {
-					for (Object o : arg1) {
-						absvalRel.add(arg0, o);
-					}
+			public boolean execute(int idx0, Set<Object> arg1) {
+				for (Object o : arg1) {
+					int idx1 = domS.indexOf(o);
+					if (idx1 != -1)
+						absvalRel.add(idx0, idx1);
 				}
-				return false;
+				return true;
 			}
 		});
 		absvalRel.save();
