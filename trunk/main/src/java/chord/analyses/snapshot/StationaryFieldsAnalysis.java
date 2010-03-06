@@ -96,6 +96,11 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 		}
 	}
 	
+	@Override
+	protected boolean decideIfSelected() {
+		return true;
+	}
+	
 	private void onFieldRead(int e, Object b, int f) {
 		if (e >= 0 && b != null && f != 0) {
 			if (!accessedFields.contains(f)) {
