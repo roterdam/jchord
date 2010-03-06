@@ -40,7 +40,6 @@ import chord.util.tuple.integer.IntPair;
  */
 @Chord(
 	name = "dynamic-alias-alloc-java",
-    consumedNames = { "startingRacePair" },
     producedNames = { "aliasingRacePair", "bannedE" },
     namesOfSigns = { "aliasingRacePair", "bannedE" },
     signs = { "E0,E1:E0xE1", "E0:E0" }
