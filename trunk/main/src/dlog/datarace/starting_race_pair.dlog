@@ -3,7 +3,7 @@
 # All rights reserved.
 
 # Author: Mayur Naik (mhn@cs.stanford.edu)
-# name=starting-race-pair-dlog
+# name=aliasing-race-pair-dlog
 # Computes all pairs of (e1,e2) such that both access either
 # array elements or both access the same instance field.
 
@@ -11,8 +11,9 @@
 .include "E.dom"
 .include "F.dom"
 .include "T.dom"
+.include "S.dom"
 
-.bddvarorder F0_E0xE1_M0xM1_T0
+.bddvarorder F0_E0xE1_M0xM1_T0_S0
 
 ###
 # Relations
@@ -24,7 +25,10 @@ writeE(e:E0) input
 checkExcludedT(t:T0) input
 ME(m:M0,e:E0) input
 TM(t:T0,m:M0) input
-startingRacePair(e1:E0,e2:E1) output
+startingRacePair(e1:E0,e2:E1)
+aliasingRacePair(e1:E0,e2:E1) output
+
+absval(e:E0,s:S0) input
 
 statE(e) :- EF(e,f), statF(f).
 relevantM(m) :- TM(t,m), !checkExcludedT(t).
@@ -36,4 +40,6 @@ onlyWrEF(e,f) :- relevantE(e), EF(e,f), writeE(e).
 startingRacePair(e1,e2) :- onlyWrEF(e1,f), rdOrWrEF(e2,f), e1 < e2.
 startingRacePair(e1,e2) :- rdOrWrEF(e1,f), onlyWrEF(e2,f), e1 < e2.
 startingRacePair(e1,e2) :- onlyWrEF(e1,f), onlyWrEF(e2,f), e1 = e2.
+
+aliasingRacePair(e1,e2) :- startingRacePair(e1,e2), absval(e1,s), absval(e2,s).
 
