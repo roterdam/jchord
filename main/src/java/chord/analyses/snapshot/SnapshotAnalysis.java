@@ -239,11 +239,15 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     QueryResult qr = queryResults.get(q);
     if (qr == null) {
       queryResults.put(q, qr = new QueryResult());
-      qr.selected = selectQueryRandom.nextDouble() < queryFrac; // Choose to answer this query with some probability
+      qr.selected = decideIfSelected();
     }
     return qr;
   }
-  public void outputQueries() {
+  protected boolean decideIfSelected() {
+	  return selectQueryRandom.nextDouble() < queryFrac; // Choose to answer this query with some probability
+  }
+
+public void outputQueries() {
     PrintWriter out = Utils.openOut(X.path("queries.out"));
     StatFig fig = new StatFig();
     for (Query q : queryResults.keySet()) {

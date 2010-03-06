@@ -4,16 +4,22 @@
 package chord.analyses.snapshot;
 
 import gnu.trove.TIntObjectHashMap;
+import gnu.trove.TIntObjectProcedure;
+import gnu.trove.TObjectProcedure;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import chord.bddbddb.Rel.IntPairIterable;
+import joeq.Compiler.Quad.Inst;
+import joeq.Compiler.Quad.Quad;
+import chord.bddbddb.Rel.PairIterable;
+import chord.doms.DomE;
 import chord.project.Chord;
 import chord.project.Project;
+import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.integer.IntPair;
+import chord.util.tuple.object.Pair;
 
 /**
  * @author omert
@@ -61,7 +67,6 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 	}
 
 	private final TIntObjectHashMap<Set<Object>> loc2abstractions = new TIntObjectHashMap<Set<Object>>();
-	protected final Set<IntPair> startingRacePairSet = new HashSet<IntPair>();
 	protected final Set<IntPair> aliasingRacePairSet = new HashSet<IntPair>(); 
 	
 	@Override
@@ -110,18 +115,6 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 	}
 	
 	@Override
-	public void initAllPasses() {
-		super.initAllPasses();
-		ProgramRel relStartingRacePair =
-			(ProgramRel) Project.getTrgt("startingRacePair");
-		relStartingRacePair.load();
-		IntPairIterable tuples = relStartingRacePair.getAry2IntTuples();
-		for (IntPair p : tuples) 
-			startingRacePairSet.add(p);
-		relStartingRacePair.close();
-	}
-	
-	@Override
 	public void initPass() {
 		super.initPass();
 		loc2abstractions.clear();
@@ -129,34 +122,44 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 	
 	@Override
 	public void donePass() {
-		super.donePass();
-		abstraction.ensureComputed();
-		for (IntPair p : startingRacePairSet) {
-			if (!aliasingRacePairSet.contains(p)) {
-				int e1 = p.idx0;
-				int e2 = p.idx1;
-				if (aliases(e1, e2))
-					aliasingRacePairSet.add(p);
+		final ProgramDom<Object> domS = new ProgramDom<Object>();
+		domS.setName("S");
+		loc2abstractions.forEachValue(new TObjectProcedure<Set<Object>>() {
+			@Override
+			public boolean execute(Set<Object> arg0) {
+				domS.addAll(arg0);
+				return false;
 			}
-		}
-		for (IntPair p : startingRacePairSet) {
-			int e1 = p.idx0;
-			int e2 = p.idx1;
+		});		
+		final ProgramRel absvalRel = (ProgramRel) Project.getTrgt("absval");
+		loc2abstractions.forEachEntry(new TIntObjectProcedure<Set<Object>>() {
+			@Override
+			public boolean execute(int arg0, Set<Object> arg1) {
+				for (Object o : arg1) {
+					absvalRel.add(arg0, o);
+				}
+				return false;
+			}
+		});
+		Project.runTask("aliasing-race-pair-dlog");
+		ProgramRel aliasingRel = (ProgramRel) Project.getTrgt("aliasingRacePair");
+		DomE domE = instrumentor.getDomE();
+		PairIterable<Inst, Inst> tuples = aliasingRel.getAry2ValTuples();
+		for (Pair<Inst, Inst> p : tuples) {
+			Quad quad0 = (Quad) p.val0;
+			int e1 = domE.indexOf(quad0);
+			Quad quad1 = (Quad) p.val1;
+			int e2 = domE.indexOf(quad1);
 			MayAliasQuery q = new MayAliasQuery(e1, e2);
 			if (shouldAnswerQueryHit(q)) {
-				answerQuery(q, aliasingRacePairSet.contains(p));
+				answerQuery(q, true);
 			}
 		}
 	}
 	
-	public boolean aliases(int e1, int e2) {
-		final Set<Object> pts1 = loc2abstractions.get(e1);
-		if (pts1 == null)
-			return false;
-		final Set<Object> pts2 = loc2abstractions.get(e2);
-		if (pts2 == null)
-			return false;
-        return !(Collections.disjoint(pts1, pts2));
+	@Override
+	protected boolean decideIfSelected() {
+		return true;
 	}
 
 	private void updatePointsTo(int e, Object b) {

@@ -112,7 +112,11 @@ public class IndexHashMap<T> extends ArrayList<T> implements IndexMap<T> {
     	throw new RuntimeException();
     }
     public boolean addAll(Collection<? extends T> c) {
-    	throw new RuntimeException();
+    	boolean result = false;
+    	for (T t : c) {
+    		result |= add(t);
+    	}
+    	return result;
     }
     public boolean remove(Object val) {
     	throw new RuntimeException();
