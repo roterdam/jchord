@@ -26,8 +26,7 @@ import chord.util.tuple.object.Pair;
  *
  */
 @Chord(
-	name = "ss-may-alias",
-	consumedNames = { "startingRacePair" }
+	name = "ss-may-alias"
 )
 public class MayAliasAnalysis extends SnapshotAnalysis {
 	
