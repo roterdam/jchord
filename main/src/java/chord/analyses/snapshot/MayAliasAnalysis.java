@@ -131,18 +131,22 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 			}
 		});		
 		final ProgramRel absvalRel = (ProgramRel) Project.getTrgt("absval");
+		absvalRel.zero();
+		final DomE domE = instrumentor.getDomE();
 		loc2abstractions.forEachEntry(new TIntObjectProcedure<Set<Object>>() {
 			@Override
 			public boolean execute(int arg0, Set<Object> arg1) {
-				for (Object o : arg1) {
-					absvalRel.add(arg0, o);
+				if (domE.contains(arg0)) {
+					for (Object o : arg1) {
+						absvalRel.add(arg0, o);
+					}
 				}
 				return false;
 			}
 		});
+		absvalRel.save();
 		Project.runTask("aliasing-race-pair-dlog");
 		ProgramRel aliasingRel = (ProgramRel) Project.getTrgt("aliasingRacePair");
-		DomE domE = instrumentor.getDomE();
 		PairIterable<Inst, Inst> tuples = aliasingRel.getAry2ValTuples();
 		for (Pair<Inst, Inst> p : tuples) {
 			Quad quad0 = (Quad) p.val0;
