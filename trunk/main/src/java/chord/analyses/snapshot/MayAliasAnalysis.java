@@ -130,6 +130,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 				return false;
 			}
 		});		
+		domS.save();
 		final ProgramRel absvalRel = (ProgramRel) Project.getTrgt("absval");
 		absvalRel.zero();
 		final DomE domE = instrumentor.getDomE();
