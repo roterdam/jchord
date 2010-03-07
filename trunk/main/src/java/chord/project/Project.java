@@ -70,8 +70,6 @@ public class Project {
 		currTimer = new Timer("chord");
 		currTimer.init();
 
-        Properties.print();
-
 		if (Properties.buildScope) {
 			Program.v();
 		}
@@ -282,9 +280,17 @@ public class Project {
 		resetTaskDone(getTask(name));
 	}
 
+	private static PrintWriter out;
+
 	public static void init() {
 		if (isInited)
 			return;
+
+		try {
+			out = new PrintWriter(new FileWriter(Properties.projectDebugFileName));
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		} 
 
 		// create and populate the following maps:
 		// nameToTaskMap, nameToTrgtsDebugMap
@@ -494,6 +500,7 @@ public class Project {
 			}
 		}
 
+		out.close();
 		isInited = true;
 	}
 
@@ -513,6 +520,7 @@ public class Project {
 	private static void checkErrors() {
 		if (!hasNoErrors) {
 			System.err.println("Found errors (see above). Exiting ...");
+			out.close();
 			System.exit(1);
 		}
 	}
@@ -773,13 +781,13 @@ public class Project {
 	}
 
 	private static void anonJavaAnalysis(String name) {
-		System.err.println("WARNING: Java analysis '" + name +
+		out.println("WARNING: Java analysis '" + name +
 			"' is not named via a @Chord(name=\"...\") annotation; " +
 			"using its classname itself as its name.");
 	}
 	
 	private static void anonDlogAnalysis(String name) {
-		System.err.println("WARNING: Dlog analysis '" + name +
+		out.println("WARNING: Dlog analysis '" + name +
 			"' is not named via a # name=... line; " +
 			"using its filename itself as its name.");
 	}
@@ -798,26 +806,25 @@ public class Project {
 	
 	private static void undefinedTarget(String name,
 			List<String> consumerTaskNames) {
-		System.err.print("WARNING: '" + name +
-			"' not declared as produced name of any task");
+		String msg = "WARNING: '" + name +
+			"' not declared as produced name of any task";
 		if (consumerTaskNames.isEmpty())
-			System.err.println();
+			msg += "\n";
 		else {
-			System.err.println(
-				"; declared as consumed name of following tasks:");
-			for (String taskName : consumerTaskNames) {
-				System.err.println("\t'" + taskName + "'");
-			}
+			msg += "; declared as consumed name of following tasks:\n";
+			for (String taskName : consumerTaskNames)
+				msg += "\t'" + taskName + "'\n";
 		}
+		out.print(msg);
 	}
 	
 	private static void redefinedTarget(String name,
 			List<String> producerTaskNames) {
-		System.err.println("WARNING: '" + name +
-			"' declared as produced name of multiple tasks:");
-		for (String taskName : producerTaskNames) {
-			System.err.println("\t'" + taskName + "'");
-		}
+		String msg = "WARNING: '" + name +
+			"' declared as produced name of multiple tasks:\n";
+		for (String taskName : producerTaskNames) 
+			msg += "\t'" + taskName + "'\n";
+		out.print(msg);
 	}
 	
 	private static void inconsistentDomNames(String relName, String names1,
@@ -831,7 +838,7 @@ public class Project {
 	
 	private static void inconsistentDomOrders(String relName, String order1,
 			String order2, String loc1, String loc2) {
-		System.err.println("WARNING: Relation '" + relName +
+		out.println("WARNING: Relation '" + relName +
 			"' declared with different domain orders '" + order1 +
 			"' and '" + order2 + "' in '" + loc1 + "' and '" + loc2 +
 			"' respectively.");
@@ -885,12 +892,12 @@ public class Project {
 	
 	private static void malformedPathElem(String elem, String path,
 			String msg) {
-		System.err.println("WARNING: Ignoring malformed entry '" +
+		out.println("WARNING: Ignoring malformed entry '" +
 			elem + "' in '" + path + "': " + msg + ".");
 	}
 	
 	private static void nonexistentPathElem(String elem, String path) {
-		System.err.println("WARNING: Ignoring non-existent entry '" +
+		out.println("WARNING: Ignoring non-existent entry '" +
 			elem + "' in '" + path + "'.");
 	}
 	

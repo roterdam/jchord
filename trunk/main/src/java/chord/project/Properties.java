@@ -6,7 +6,11 @@
 package chord.project;
 
 import java.io.File;
+import java.io.PrintWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import chord.util.FileUtils;
+import chord.util.ChordRuntimeException;
 
 /**
  * System properties recognized by Chord.
@@ -18,7 +22,7 @@ public class Properties {
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
 	public final static String DEFAULT_SCOPE_EXCLUDES =
-		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,java.,javax.";
+		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.";
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,java.,javax.";
 
@@ -107,6 +111,8 @@ public class Properties {
 
 	public final static boolean bddbddbNoisy = buildBoolProp("chord.bddbddb.noisy", false);
 	public final static boolean saveDomMaps = buildBoolProp("chord.save.maps", true);
+	public final static int verboseLevel = Integer.getInteger("chord.verbose.level", 0);
+	public final static int instrVerboseLevel = Integer.getInteger("chord.instr.verbose.level", 0);
 
 	// Chord instrumentation properties
 
@@ -121,7 +127,7 @@ public class Properties {
 	static {
     // Automatically find a free subdirectory
     String outPoolPath = System.getProperty("chord.out.pooldir");
-    //System.out.println("OUT "+outPoolPath);
+    // System.out.println("OUT "+outPoolPath);
     if (outPoolPath != null) {
       for (int i = 0; ; i++) {
         outDirName = outPoolPath+"/"+i+".exec";
@@ -148,9 +154,12 @@ public class Properties {
 	public final static String crudeTraceFileName = build("chord.crude.trace.file", "crude_trace.txt");
 	public final static String finalTraceFileName = build("chord.final.trace.file", "final_trace.txt");
 
-	public static void print() {
-		System.out.println("******************************");
+	public final static String propsDebugFileName = build("chord.props.debug.file", "props_debug.txt");
+	public final static String projectDebugFileName = build("chord.project.debug.file", "project_debug.txt");
+	public final static String scopeDebugFileName = build("chord.scope.debug.file", "scope_debug.txt");
+	public final static String instrDebugFileName = build("chord.instr.debug.file", "instr_debug.txt");
 
+	public static void print() {
 		System.out.println("*** Chord resource properties:");
 		System.out.println("chord.main.dir: " + mainDirName);
 		System.out.println("chord.lib.dir: " + libDirName);
@@ -197,6 +206,7 @@ public class Properties {
 		System.out.println("chord.ssa: " + doSSA);
 
 		System.out.println("*** Chord debug properties:");
+		System.out.println("chord.verbose.level: " + verboseLevel);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
 		System.out.println("chord.save.maps: " + saveDomMaps);
 
@@ -217,8 +227,6 @@ public class Properties {
 		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
 		System.out.println("chord.crude.trace.file: " + crudeTraceFileName);
 		System.out.println("chord.final.trace.file: " + finalTraceFileName);
-
-		System.out.println("******************************");
 	}
 	private static String build(String propName, String fileName) {
 		String val = System.getProperty(propName);

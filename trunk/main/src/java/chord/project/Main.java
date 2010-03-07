@@ -22,6 +22,8 @@ public class Main {
                 errStream = new PrintStream(errFile);
             System.setErr(errStream);
 
+			if (Properties.verboseLevel >= 1)
+				Properties.print();
             Project.run();
 
             outStream.close();

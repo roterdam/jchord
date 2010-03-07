@@ -261,6 +261,7 @@ public class InstrScheme implements Serializable {
 	private int itersBound;
 	private boolean hasEnterAndLeaveMethodEvent;
 	private boolean hasEnterAndLeaveLoopEvent;
+	private boolean hasFinalizeEvent;
 	private boolean hasBasicBlockEvent;
 	private boolean hasQuadEvent;
 	private final EventFormat[] events;
@@ -301,6 +302,10 @@ public class InstrScheme implements Serializable {
 
 	public boolean hasQuadEvent() {
 		return hasQuadEvent;
+	}
+
+	public boolean hasFinalizeEvent() {
+		return hasFinalizeEvent;
 	}
 
 	public void setCallsBound(int n) {
@@ -535,6 +540,10 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 	
+	public void setFinalizeEvent() {
+		hasFinalizeEvent = true;
+	}
+
 	public boolean hasFieldEvent() {
 		return hasGetfieldEvent() || hasPutfieldEvent();
 	}

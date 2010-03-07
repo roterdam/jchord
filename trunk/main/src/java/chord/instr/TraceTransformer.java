@@ -319,6 +319,8 @@ public class TraceTransformer {
 		case EventKind.NOTIFY:
 		case EventKind.NOTIFY_ALL:
 			return notifyNumBytes;
+		case EventKind.FINALIZE:
+			return 4;
 		default:
 			throw new ChordRuntimeException();
 		}

@@ -9,6 +9,9 @@ import java.io.IOException;
 import java.io.File;
 import java.lang.InterruptedException;
 
+import javassist.CannotCompileException;
+import javassist.NotFoundException;
+
 import chord.instr.EventKind;
 import chord.instr.Instrumentor;
 import chord.instr.TracePrinter;
@@ -60,7 +63,15 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final String instrSchemeFileName = Properties.instrSchemeFileName;
 		scheme.save(instrSchemeFileName);
 		instrumentor = new Instrumentor(Program.v(), scheme);
-		instrumentor.run();
+		try {
+			instrumentor.run();
+		} catch (NotFoundException ex) {
+			throw new ChordRuntimeException(ex);
+		} catch (CannotCompileException ex) {
+			throw new ChordRuntimeException(ex);
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		}
 		final String mainClassName = Properties.mainClassName;
 		assert (mainClassName != null);
 		final String classPathName = Properties.classPathName;
