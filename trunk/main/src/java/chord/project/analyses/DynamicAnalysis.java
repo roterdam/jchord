@@ -66,11 +66,14 @@ public class DynamicAnalysis extends JavaAnalysis {
 		try {
 			instrumentor.run();
 		} catch (NotFoundException ex) {
-			throw new ChordRuntimeException(ex);
+			ex.printStackTrace();
+			System.exit(1);
 		} catch (CannotCompileException ex) {
-			throw new ChordRuntimeException(ex);
+			ex.printStackTrace();
+			System.exit(1);
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			ex.printStackTrace();
+			System.exit(1);
 		}
 		final String mainClassName = Properties.mainClassName;
 		assert (mainClassName != null);
@@ -480,9 +483,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 			donePass();
 			System.out.println("PROCESS TRACE: " + count);
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			ex.printStackTrace();
+			System.exit(1);
 		} catch (ReadException ex) {
-			throw new ChordRuntimeException(ex);
+			ex.printStackTrace();
+			System.exit(1);
 		}
 	}
 	public void processEnterMethod(int m, int t) {
