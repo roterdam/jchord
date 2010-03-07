@@ -173,6 +173,9 @@ public abstract class Runtime {
 	public static void leaveLoopEvent(int wId, int mId) {
 		doDefault();
 	}
+	public static void finalizeEvent(Object o) {
+		doDefault();
+	}
 	// called during VMInit JVMTI event
 	public static void open(String args) {
 		String[] a = args.split("=");

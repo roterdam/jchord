@@ -103,6 +103,8 @@ public class Instrumentor {
 	protected static final String acquireLockEventCall = runtimeClassName + "acquireLockEvent(";
 	protected static final String releaseLockEventCall = runtimeClassName + "releaseLockEvent(";
 
+	protected static final String finalizeEventCall = runtimeClassName + "finalizeEvent(";
+
 	protected InstrScheme scheme;
 	protected Program program;
 	private String mainClassPathName;
@@ -120,7 +122,7 @@ public class Instrumentor {
 	protected boolean genQuadEvent;
 	protected boolean genEnterAndLeaveMethodEvent;
 	protected boolean genEnterAndLeaveLoopEvent;
-	// protected boolean genFinalizeEvent;
+	protected boolean genFinalizeEvent;
 	protected EventFormat newAndNewArrayEvent;
 	protected EventFormat getstaticPrimitiveEvent;
 	protected EventFormat getstaticReferenceEvent;
@@ -290,7 +292,7 @@ public class Instrumentor {
 			scheme.hasEnterAndLeaveMethodEvent();
 		genEnterAndLeaveLoopEvent = scheme.getItersBound() > 0 ||
 			scheme.hasEnterAndLeaveLoopEvent();
-		// genFinalizeEvent = scheme.hasFinalizeEvent();
+		genFinalizeEvent = scheme.hasFinalizeEvent();
 		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
 		getstaticReferenceEvent = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
@@ -604,6 +606,11 @@ public class Instrumentor {
 		// bytecode instrumentation offsets could get messed up 
 		String enterStr = "";
 		String leaveStr = "";
+		// is this finalize() method of java.lang.Object?
+		if (genFinalizeEvent && mName.equals("finalize") &&
+				mDesc.equals("()V") && cName.equals("java.lang.Object")) {
+			leaveStr += finalizeEventCall + "$0);";
+		}
 		if (Modifier.isSynchronized(mods) &&
 				(acquireLockEvent.present() || releaseLockEvent.present())) {
 			String syncExpr;
@@ -613,12 +620,12 @@ public class Instrumentor {
 				syncExpr = "$0";
 			if (acquireLockEvent.present()) {
 				int lId = set(Lmap, -1);
-				enterStr = acquireLockEventCall + lId + "," +
+				enterStr += acquireLockEventCall + lId + "," +
 					syncExpr + ");";
 			}
 			if (releaseLockEvent.present()) {
 				int rId = set(Rmap, -2);
-				leaveStr = releaseLockEventCall + rId + "," +
+				leaveStr += releaseLockEventCall + rId + "," +
 					syncExpr + ");";
 			}
 		}

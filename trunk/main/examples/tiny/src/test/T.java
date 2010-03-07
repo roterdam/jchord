@@ -130,9 +130,15 @@ public class T {
   }
 
   public static void main(String[] args) throws Exception {
+		for (int i = 0; i < 1000000; i++) {
+			Object x = new Object();
+			// System.out.println(x);
+			if (i == 500000)
+				System.gc();
+		}
     //strongWeak();
     //breakHeapAllocSiteAbstraction();
-    reachabilityExample();
+    // reachabilityExample();
     //useArray();
     //test1();
     //test2();
