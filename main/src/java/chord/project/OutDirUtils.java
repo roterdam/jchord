@@ -58,4 +58,10 @@ public class OutDirUtils {
 			throw new ChordRuntimeException(ex);
 		}
 	}
+	public static void logOut(String format, Object... args) {
+		System.out.println(String.format(format, args));
+	}
+	public static void logErr(String format, Object... args) {
+		System.err.println(String.format(format, args));
+	}
 }

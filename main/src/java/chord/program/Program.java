@@ -18,6 +18,7 @@ import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
+import chord.project.OutDirUtils;
 import chord.project.Properties;
 import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
@@ -79,6 +80,7 @@ public class Program {
 	private Program() {
 		if (Properties.doSSA)
 			jq_Method.doSSA();
+		jq_Method.setVerbose(Properties.verboseLevel);
         String[] scopeExcludedPrefixes = Properties.toArray(
             Properties.scopeExcludeStr);
 		jq_Method.exclude(scopeExcludedPrefixes);
@@ -105,13 +107,13 @@ public class Program {
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
 		String s;
 		while ((s = r.readLine()) != null) {
-			System.out.println("Loading: " + s);
+			if (Properties.verboseLevel >= 1)
+				OutDirUtils.logOut("Loading class %s", s);
 			jq_Class c;
 			try {
 				c = (jq_Class) Helper.load(s);
 			} catch (Exception ex) {
-				System.out.println("WARNING: Ignoring class: " + s +
-					"; reason follows:");
+				OutDirUtils.logErr("WARNING: Ignoring class %s reason follows:", s);
 				ex.printStackTrace();
 				continue;
 			}
@@ -136,7 +138,7 @@ public class Program {
 			String cName = sign.cName;
 			jq_Class c = getPreparedClass(cName);
 			if (c == null)
-				System.out.println("WARNING: Excluding method: " + s);
+				OutDirUtils.logErr("WARNING: Excluding method %s", s);
 			else {
 				String mName = sign.mName;
 				String mDesc = sign.mDesc;
@@ -156,7 +158,7 @@ public class Program {
 		for (jq_Method m : bootstrapper.getReachableMethods()) {
 			jq_Class c = m.getDeclaringClass();
 			if (!classes.contains(c))
-				System.out.println("WARNING: Excluding method: " + m);
+				OutDirUtils.logErr("WARNING: Excluding method %s", m);
 			else
 				methods.add(m);
 		}
