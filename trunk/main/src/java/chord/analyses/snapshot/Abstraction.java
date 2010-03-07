@@ -47,6 +47,7 @@ import gnu.trove.TObjectProcedure;
 public abstract class Abstraction {
   public Execution X;
   public State state;
+  public TIntHashSet separateNodes = new TIntHashSet(); // (Optional): let these values have a distinct value
 
   // Build these as intermediate data structures
   protected TIntObjectHashMap<Object> o2a = new TIntObjectHashMap<Object>(); // object o -> abstract value a
@@ -66,6 +67,12 @@ public abstract class Abstraction {
 
   // Helpers
   protected void setValue(int o, Object a) {
+    if (separateNodes.contains(o)) a = "-";
+    Object old_a = o2a.get(o);
+    if (old_a != null) { // There was an old abstraction there already
+      if (old_a == a) return;
+      a2os.get(old_a).remove((Integer)o);
+    }
     o2a.put(o, a);
     Utils.add(a2os, a, o);
   }
@@ -151,6 +158,8 @@ class RecencyAbstraction extends Abstraction {
   }
 
   @Override public void ensureComputed() {
+    //X.logs("RecencyAbstraction.ensureComputed: %s %s", state.o2h.size(), o2count.size());
+
     state.o2h.forEachKey(new TIntProcedure() { public boolean execute(int o) { 
       setValue(o, computeValue(o));
       return true;
@@ -195,7 +204,7 @@ class ReachabilityAbstraction extends Abstraction {
     } });
 
     // For each node, compute reachability from sources
-    o2pats.forEachKey(new TIntProcedure() { public boolean execute(int o) {
+    state.o2h.forEachKey(new TIntProcedure() { public boolean execute(int o) {
       String source = "H"+state.o2h.get(o);
       //X.logs("--- source=%s, a=%s", source, astr(a));
       search(source, -1, -1, 0, o);
@@ -246,14 +255,21 @@ class ReachabilityAbstraction extends Abstraction {
     if (spec.pointedTo && len >= 1) return;
 
     // Recurse
-    for (Edge e : state.o2edges.get(o)) {
-      if (spec.matchRepeatedFields && first_f != -1 && first_f != e.f) continue; // Must have same field
-      search(source, len == 0 ? e.f : first_f, e.f, len+1, e.o);
+    List<Edge> edges = state.o2edges.get(o);
+    if (edges == null) {
+      X.errors("o=%s returned no edges", o);
+    }
+    else {
+      for (Edge e : edges) {
+        if (spec.matchRepeatedFields && first_f != -1 && first_f != e.f) continue; // Must have same field
+        search(source, len == 0 ? e.f : first_f, e.f, len+1, e.o);
+      }
     }
   }
 
   private Object computeValue(int o) {
-    Collections.sort(o2pats.get(o)); // Canonicalize
-    return o2pats.get(o).toString();
+    List<String> pats = o2pats.get(o);
+    Collections.sort(pats); // Canonicalize
+    return pats.toString();
   }
 }

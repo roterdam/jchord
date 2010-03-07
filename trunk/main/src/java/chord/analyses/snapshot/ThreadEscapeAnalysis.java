@@ -34,6 +34,7 @@ import gnu.trove.TIntIntHashMap;
 import gnu.trove.TLongIntHashMap;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
+import gnu.trove.TIntIntProcedure;
 
 /**
  * Thread-escape in the snapshot framework.
@@ -48,13 +49,19 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
   static final int THREAD_GLOBAL_OBJECT = 100000;
 
   TIntHashSet staticNodes = new TIntHashSet(); // set of global objects
-  TIntHashSet escapedNodes = new TIntHashSet(); // set of an object [for weak updates]
+  TIntIntHashMap e2o = new TIntIntHashMap(); // For batching queries
 
   @Override public String fstr(int f) { return f >= THREAD_FIELD_START ? "[T"+(f-THREAD_FIELD_START)+"]" : super.fstr(f); }
   @Override public String ostr(int o) { return o == THREAD_GLOBAL_OBJECT ? "(T)" : super.ostr(o); }
 
+  @Override public void initAllPasses() {
+    super.initAllPasses();
+    abstraction.separateNodes = staticNodes;
+  }
+
   int currThreadField = THREAD_FIELD_START;
   int newThreadField() { currThreadField++; return currThreadField-1; }
+  //int newThreadField() { return currThreadField; } // TMP: PartitionAnalysis does this by accident
 
   // These methods add nodes to the graph
   @Override public void processPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
@@ -72,29 +79,43 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
   public void setGlobal(int o) {
     //if (verbose >= 1) X.logs("SETESCAPE a=%s", astr(a));
     staticNodes.add(o);
-    if (!useStrongUpdates) escapedNodes.add(o);
   }
 
   @Override public void fieldAccessed(int e, int t, int b, int f, int o) {
     super.fieldAccessed(e, t, b, f, o);
-    if (b > 0) {
-      Query query = new ProgramPointQuery(e);
-      if (shouldAnswerQueryHit(query)) {
-        abstraction.ensureComputed();
-        answerQuery(query, escapes(b));
-      }
+    if (queryOnlyAtSnapshot) {
+      // Keep track of the queries, so we can answer them at the end
+      e2o.put(e, b);
     }
-    else
-      X.errors("fieldAccessed at e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
-    assert (b > 0);
+    else {
+      if (b > 0) {
+        Query query = new ProgramPointQuery(e);
+        if (shouldAnswerQueryHit(query)) {
+          abstraction.ensureComputed();
+          answerQuery(query, escapes(b));
+        }
+      }
+      else
+        X.errors("fieldAccessed at e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
+      assert (b > 0);
+    }
   }
 
   @Override public SnapshotResult takeSnapshot() {
-    NodeBasedSnapshotResult result = new NodeBasedSnapshotResult();
+    final NodeBasedSnapshotResult result = new NodeBasedSnapshotResult();
     for (int start : staticNodes.toArray()) // Do flood-fill without abstraction
       reachable(start, -1, result.actualTrueNodes, false);
     for (int start : staticNodes.toArray()) // Do flood-fill with abstraction
       reachable(start, -1, result.proposedTrueNodes, true);
+
+    if (queryOnlyAtSnapshot) {
+      e2o.forEachEntry(new TIntIntProcedure() { public boolean execute(int e, int o) {
+        Query query = new ProgramPointQuery(e);
+        answerQuery(query, result.proposedTrueNodes.contains(o));
+        return true;
+      } });
+    }
+
     return result;
   }
 

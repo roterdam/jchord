@@ -60,13 +60,15 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   int verbose;
   boolean useStrongUpdates;
   Abstraction abstraction;
-  double queryFrac, snapshotFrac;
+  double queryFrac, hitFrac, snapshotFrac;
   Random selectQueryRandom;
+  Random selectHitRandom;
   Random selectSnapshotRandom;
   int kCFA; // Number of call sites keep in k-CFA
   int kOS; // Number of object allocation sites to keep in k-OS (note: this is not k-object sensitivity)
   ReachabilityAbstraction.Spec reachabilitySpec = new ReachabilityAbstraction.Spec();
   GraphMonitor graphMonitor;
+  boolean queryOnlyAtSnapshot; // For efficiency (but incorrect)
 
   // We have a graph over abstract values (determined by updateAbstraction); each node impliciting representing a set of objects
   State state = new State();
@@ -109,8 +111,10 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       verbose = getIntArg("verbose", 0);
 
       queryFrac = getDoubleArg("queryFrac", 1.0);
+      hitFrac = getDoubleArg("hitFrac", 1.0);
       snapshotFrac = getDoubleArg("snapshotFrac", 0.0);
       selectQueryRandom = new Random(getIntArg("selectQueryRandom", 1));
+      selectHitRandom = new Random(getIntArg("selectHitRandom", 1));
       selectSnapshotRandom = new Random(getIntArg("selectSnapshotRandom", 1));
 
       kCFA = getIntArg("kCFA", 0);
@@ -119,6 +123,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       reachabilitySpec.matchRepeatedFields = getBooleanArg("matchRepeatedFields", false);
       reachabilitySpec.matchFirstField = getBooleanArg("matchFirstField", false);
       reachabilitySpec.matchLastField = getBooleanArg("matchLastField", false);
+      queryOnlyAtSnapshot = getBooleanArg("queryOnlyAtSnapshot", false);
 
       useStrongUpdates = getBooleanArg("useStrongUpdates", false);
       abstraction = parseAbstraction(getStringArg("abstraction", ""));
@@ -133,6 +138,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       options.put("useStrongUpdates", useStrongUpdates);
       options.put("abstraction", abstraction);
       options.put("queryFrac", queryFrac);
+      options.put("hitFrac", hitFrac);
       options.put("snapshotFrac", snapshotFrac);
       options.put("exclude", getStringArg("exclude", ""));
       X.writeMap("options.map", options);
@@ -214,6 +220,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
 
     instrScheme.setMethodCallEvent(true, true, true, true, true); // i, t, o, before, after
 
+    instrScheme.setFinalizeEvent();
+
     //instrScheme.setReturnPrimitiveEvent(true, true); // i, t
     //instrScheme.setReturnReferenceEvent(true, true, true); // i, t, o
 
@@ -227,7 +235,9 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   }
 
   public boolean shouldAnswerQueryHit(Query query) {
-    return queryResult(query).selected;
+    if (selectHitRandom.nextDouble() < hitFrac)
+      return queryResult(query).selected;
+    return false;
   }
   public void answerQuery(Query query, boolean isTrue) {
     QueryResult result = queryResult(query);
@@ -247,7 +257,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
 	  return selectQueryRandom.nextDouble() < queryFrac; // Choose to answer this query with some probability
   }
 
-public void outputQueries() {
+  public void outputQueries() {
     PrintWriter out = Utils.openOut(X.path("queries.out"));
     StatFig fig = new StatFig();
     for (Query q : queryResults.keySet()) {
@@ -314,6 +324,11 @@ public void outputQueries() {
     abstraction.nodeCreated(info, o);
     if (graphMonitor != null) graphMonitor.addNode(o, null);
   }
+  public void nodeDeleted(int o) {
+    //abstraction.nodeDeleted(o);
+    //state.o2h.remove(o);
+    //state.o2edges.remove(o);
+  }
 
   public void edgeCreated(int t, int b, int f, int o) {
     nodeCreated(t, b);
@@ -367,7 +382,7 @@ public void outputQueries() {
 
     if (result != null && result instanceof NodeBasedSnapshotResult) annotateGraph((NodeBasedSnapshotResult)result);
 
-    X.logs("Snapshot");
+    X.logs("Snapshot %d", snapshotPrecision.n);
     X.logs("  complexity: %d values", complexity);
     X.output.put("complexity", complexity);
     if (result != null) {
@@ -544,9 +559,10 @@ public void outputQueries() {
   }
   @Override public void processBasicBlock(int b, int t) { }
 
-  // TODO
-  //public void processFinalize(int b, int t) { }
-  //public void processAddVariable(int b, int t) { }
+  @Override public void processFinalize(int o) {
+    if (verbose >= 7) X.logs("EVENT processFinalize o=%s", ostr(o));
+    nodeDeleted(o);
+  }
 
   // Query for thread escape: is the object pointed to by the relvant variable thread-escaping at program point e?
   class ProgramPointQuery extends Query {
