@@ -903,6 +903,17 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
+	public synchronized static void finalizeEvent(Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				buffer.putByte(EventKind.FINALIZE);
+				int oId = getObjectId(o);
+				buffer.putInt(oId);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
     public static void open(String args) {
 		Runtime.open(args);
         String[] a = args.split("=");

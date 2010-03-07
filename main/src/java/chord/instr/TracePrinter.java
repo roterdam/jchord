@@ -430,13 +430,11 @@ public class TracePrinter {
 					System.out.println("BASIC_BLOCK " + bStr + " " + t);
 					break;
 				}
-/*
 				case EventKind.FINALIZE:
 				{
 					int o = buffer.getInt();
 					System.out.println("FINALIZE " + o);
 				}
-*/
 				default:
 					throw new ChordRuntimeException("Opcode: " + opcode);
 				}
