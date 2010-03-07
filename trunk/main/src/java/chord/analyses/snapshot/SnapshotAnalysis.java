@@ -540,14 +540,14 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       X.errors("Tried to pop empty callSites stack");
     else {
       int ii = info.callSites.pop();
-      if (ii != i) X.logs("pushed %s but popped %s", istr(i), istr(ii));
+      if (ii != i) X.errors("pushed %s but popped %s", istr(i), istr(ii));
     }
     if (info.callAllocs.size() == 0)
       X.errors("Tried to pop empty callAllocs stack");
     else {
       int hh = info.callAllocs.pop();
       int h = state.o2h.get(o);
-      if (hh != h) X.logs("pushed %s but popped %s", hstr(h), hstr(hh));
+      if (hh != h) X.errors("pushed %s but popped %s", hstr(h), hstr(hh));
     }
   }
 
