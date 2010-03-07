@@ -116,7 +116,6 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 {
     cout << "***** ENTER Agent_OnLoad" << endl;
-    cout << "START DEBUG OPTIONS " << options << endl;
 	if (options == NULL) {
 		cerr << "ERROR: Expected options to agent" << endl;
 		exit(1);
@@ -152,7 +151,6 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 	}
 	if (enable_runtime) {
 		runtime_args_str = strdup(options);
-    cout << "DEBUG OPTIONS: " << options << endl;
 		assert(runtime_args_str != NULL);
 	}
 
