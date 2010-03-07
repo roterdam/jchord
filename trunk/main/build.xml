@@ -160,6 +160,7 @@
 	-->
 	<path id="main_class_path">
 		<pathelement location="classes"/>
+    <pathelement location="dist/chord.jar"/>
 		<pathelement path="${chord.bddbddb.class.path}"/>
 		<path refid="ext_util_class_path"/>
 		<pathelement location="lib/joeq.jar"/>

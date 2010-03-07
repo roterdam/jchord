@@ -14,6 +14,8 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Random;
 import java.util.Collections;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 import joeq.Compiler.Quad.Quad;
 import chord.doms.DomT;
@@ -64,11 +66,21 @@ class Execution {
 
   String path(String name) { return name == null ? basePath : basePath+"/"+name; }
 
+  public static String getHostName() {
+    try {
+      return InetAddress.getLocalHost().getHostName();
+    }
+    catch(UnknownHostException e) {
+      return "(unknown)";
+    }
+  }
+
   public Execution() {
     basePath = Properties.outDirName;
     System.out.println("Execution directory: "+basePath);
     //logOut = Utils.openOut(path("log"));
     logOut = new PrintWriter(System.out);
+    output.put("hostname", getHostName());
     
     String view = System.getProperty("chord.partition.addToView", null);
     if (view != null) {
@@ -99,11 +111,31 @@ class Execution {
     out.close();
   }
 
+  public static boolean system(String[] cmd) {
+    try {
+      Process p = Runtime.getRuntime().exec(cmd);
+      p.getOutputStream().close();
+      p.getInputStream().close();
+      p.getErrorStream().close();
+      return p.waitFor() == 0;
+    } catch (Exception e) {
+      return false;
+    }
+  }
+
+  Random random = new Random();
   public void finish() {
     watch.stop();
     output.put("exec.time", watch);
     output.put("exec.errors", numErrors);
     writeMap("output.map", output);
+
+    String finalPoolPath = System.getProperty("chord.partition.finalPoolPath");
+    if (finalPoolPath != null) {
+      String path;
+      for (int i = random.nextInt(1000); new File(path = finalPoolPath+"/"+i+".exec").exists(); i++);
+      system(new String[] { "cp", "-a", basePath, path });
+    }
   }
 
   String basePath;

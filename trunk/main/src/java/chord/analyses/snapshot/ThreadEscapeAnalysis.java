@@ -88,16 +88,12 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
       e2o.put(e, b);
     }
     else {
-      if (b > 0) {
-        Query query = new ProgramPointQuery(e);
-        if (shouldAnswerQueryHit(query)) {
-          abstraction.ensureComputed();
-          answerQuery(query, escapes(b));
-        }
-      }
-      else
-        X.errors("fieldAccessed at e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
       assert (b > 0);
+      Query query = new ProgramPointQuery(e);
+      if (shouldAnswerQueryHit(query)) {
+        abstraction.ensureComputed();
+        answerQuery(query, escapes(b));
+      }
     }
   }
 
