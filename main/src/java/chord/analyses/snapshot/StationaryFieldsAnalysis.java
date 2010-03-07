@@ -8,15 +8,31 @@ import gnu.trove.TIntIterator;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
 
 import chord.project.Chord;
 
 /**
  * @author omert
+ * @author pliang
  * 
  */
 @Chord(name = "ss-stat-fld")
 public class StationaryFieldsAnalysis extends SnapshotAnalysis {
+  class Event {
+    public Event(int e, int b, int f, boolean write) {
+      this.e = e;
+      this.b = b;
+      this.f = f;
+      this.write = write;
+    }
+    int e;
+    int b;
+    int f;
+    boolean write;
+  }
+  List<Event> events = new ArrayList<Event>(); // For batching
 	
 	private static class StationaryFieldQuery extends Query {
 		public final int f;
@@ -59,22 +75,44 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 
 	@Override
 	public void processPutfieldPrimitive(int e, int t, int b, int f) {
-		onFieldWrite(e, abstraction.getValue(b), f);
+    super.processPutfieldPrimitive(e, t, b, f);
+    if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, true));
+    else {
+      abstraction.ensureComputed();
+      onFieldWrite(e, abstraction.getValue(b), f);
+    }
 	}
 
 	@Override
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
-		onFieldWrite(e, abstraction.getValue(b), f);
+    super.processPutfieldReference(e, t, b, f, o);
+    if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, true));
+    else {
+      abstraction.ensureComputed();
+      onFieldWrite(e, abstraction.getValue(b), f);
+    }
 	}
 
 	@Override
 	public void processGetfieldPrimitive(int e, int t, int b, int f) {
-		onFieldRead(e, abstraction.getValue(b), f);
+    super.processGetfieldPrimitive(e, t, b, f);
+    if (isExcluded(e)) return;
+    if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, false));
+    else {
+      abstraction.ensureComputed();
+      onFieldRead(e, abstraction.getValue(b), f);
+    }
 	}
 
 	@Override
 	public void processGetfieldReference(int e, int t, int b, int f, int o) {
-		onFieldRead(e, abstraction.getValue(b), f);
+    super.processGetfieldReference(e, t, b, f, o);
+    if (isExcluded(e)) return;
+    if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, false));
+    else {
+      abstraction.ensureComputed();
+      onFieldRead(e, abstraction.getValue(b), f);
+    }
 	}
 	
 	@Override
@@ -86,7 +124,6 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 	@Override
 	public void donePass() {
 		super.donePass();
-		abstraction.ensureComputed();
 		TIntIterator it = accessedFields.iterator();
 		while (it.hasNext()) {
 			StationaryFieldQuery q = new StationaryFieldQuery(it.next());
@@ -131,8 +168,15 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 		}
 	}
 
-	@Override
-	public SnapshotResult takeSnapshot() {
-		return null;
-	}
+  @Override public SnapshotResult takeSnapshot() {
+    if (queryOnlyAtSnapshot) { // Lazy approximation
+      abstraction.ensureComputed();
+      for (Event event : events) {
+        if (event.write) onFieldWrite(event.e, abstraction.getValue(event.b), event.f);
+        else onFieldRead(event.e, abstraction.getValue(event.b), event.f);
+      }
+      events.clear();
+    }
+    return null;
+  }
 }

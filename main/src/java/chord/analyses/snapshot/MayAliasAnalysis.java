@@ -9,6 +9,8 @@ import gnu.trove.TObjectProcedure;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
@@ -23,12 +25,22 @@ import chord.util.tuple.object.Pair;
 
 /**
  * @author omert
+ * @author pliang
  *
  */
 @Chord(
 	name = "ss-may-alias"
 )
 public class MayAliasAnalysis extends SnapshotAnalysis {
+  class Event {
+    public Event(int e, int b) {
+      this.e = e;
+      this.b = b;
+    }
+    int e;
+    int b;
+  }
+  List<Event> events = new ArrayList<Event>(); // For batching
 	
 	private static class MayAliasQuery extends Query {
 		public final int e1;
@@ -73,45 +85,65 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		return "may-alias";
 	}
 	
-	@Override
+	/*@Override
 	public void processGetfieldPrimitive(int e, int t, int b, int f) {
+    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
 		updatePointsTo(e, abstraction.getValue(b));
 	}
 	
 	@Override
 	public void processPutfieldPrimitive(int e, int t, int b, int f) {
+    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
 		updatePointsTo(e, abstraction.getValue(b));
 	}
 	
 	@Override
 	public void processGetfieldReference(int e, int t, int b, int f, int o) {
+    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
 		updatePointsTo(e, abstraction.getValue(b));
 	}
 	
 	@Override
 	public void processGetstaticPrimitive(int e, int t, int b, int f) {
+    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
 		updatePointsTo(e, abstraction.getValue(b));
 	}
 	
 	@Override
 	public void processAloadPrimitive(int e, int t, int b, int i) {
+    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
 		updatePointsTo(e, abstraction.getValue(b));
 	}
 	
 	@Override
 	public void processAstorePrimitive(int e, int t, int b, int i) {
+    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
 		updatePointsTo(e, abstraction.getValue(b));
 	}
 	
 	@Override
 	public void processAloadReference(int e, int t, int b, int i, int o) {
+    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
 		updatePointsTo(e, abstraction.getValue(b));
 	}
 	
 	@Override
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
+    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
 		updatePointsTo(e, abstraction.getValue(b));
-	}
+	}*/
+
+  @Override public void fieldAccessed(int e, int t, int b, int f, int o) {
+    super.fieldAccessed(e, t, b, f, o);
+    if (queryOnlyAtSnapshot) {
+      events.add(new Event(e, b)); // Batch up objects, deal with them at snapshot
+    }
+    else {
+      assert (b > 0);
+      abstraction.ensureComputed(); // Slow!
+      updatePointsTo(e, abstraction.getValue(b));
+    }
+  }
 	
 	@Override
 	public void initPass() {
@@ -178,8 +210,13 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		}
 	}
 
-	@Override
-	public SnapshotResult takeSnapshot() {
-		return null;
-	}
+  @Override public SnapshotResult takeSnapshot() {
+    if (queryOnlyAtSnapshot) { // Lazy approximation
+      abstraction.ensureComputed();
+      for (Event event : events)
+        updatePointsTo(event.e, abstraction.getValue(event.b));
+      events.clear();
+    }
+    return null;
+  }
 }

@@ -141,6 +141,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       options.put("hitFrac", hitFrac);
       options.put("snapshotFrac", snapshotFrac);
       options.put("exclude", getStringArg("exclude", ""));
+      options.put("queryOnlyAtSnapshot", queryOnlyAtSnapshot);
       X.writeMap("options.map", options);
       X.output.put("exec.status", "running");
 
@@ -325,6 +326,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     if (graphMonitor != null) graphMonitor.addNode(o, null);
   }
   public void nodeDeleted(int o) {
+    // TODO
     //abstraction.nodeDeleted(o);
     //state.o2h.remove(o);
     //state.o2edges.remove(o);
