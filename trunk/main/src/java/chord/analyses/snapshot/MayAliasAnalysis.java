@@ -39,7 +39,37 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
     }
     int e;
     int b;
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + getOuterType().hashCode();
+		result = prime * result + b;
+		result = prime * result + e;
+		return result;
+	}
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Event other = (Event) obj;
+		if (!getOuterType().equals(other.getOuterType()))
+			return false;
+		if (b != other.b)
+			return false;
+		if (e != other.e)
+			return false;
+		return true;
+	}
+	private MayAliasAnalysis getOuterType() {
+		return MayAliasAnalysis.this;
+	}
   }
+  
   List<Event> events = new ArrayList<Event>(); // For batching
 	
 	private static class MayAliasQuery extends Query {
@@ -151,6 +181,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		loc2abstractions.clear();
 	}
 	
+	@SuppressWarnings("unchecked")
 	@Override
 	public void donePass() {
 		final ProgramDom<Object> domS = (ProgramDom) Project.getTrgt("S");
