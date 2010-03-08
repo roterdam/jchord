@@ -116,7 +116,7 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 	@Override
 	public void processNewOrNewArray(int h, int t, int o) {
 		super.processNewOrNewArray(h, t, o);
-		if (o >= 0) {
+		if (h >= 0 && o != 0 && !isExcluded(h)) {
 			if (queryOnlyAtSnapshot) {
 				Event event = new Event(t, o, true);
 				events.add(event);
@@ -130,7 +130,7 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 	@Override
 	public void fieldAccessed(int e, int t, int b, int f, int o) {
 		super.fieldAccessed(e, t, b, f, o);
-		if (e >= 0 && b >= 0 && !isExcluded(e)) {
+		if (e >= 0 && b != 0 && !isExcluded(e)) {
 			if (queryOnlyAtSnapshot) {
 				Event event = new Event(t, b, false);
 				events.add(event);
