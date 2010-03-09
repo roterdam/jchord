@@ -4,13 +4,12 @@
 package chord.analyses.snapshot;
 
 import gnu.trove.TIntHashSet;
+import gnu.trove.TIntIterator;
 
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.Map.Entry;
 
 import chord.project.Chord;
 
@@ -22,20 +21,17 @@ import chord.project.Chord;
 public class ThreadAccessAnalysis extends SnapshotAnalysis {
 
 	private static class ThreadAccessQuery extends Query {
-		public final int threadCount;
-		public final Object abs;
+		public final int e;
 		
-		public ThreadAccessQuery(Object abs, int threadCount) {
-			this.abs = abs;
-			this.threadCount = threadCount;
+		public ThreadAccessQuery(int e) {
+			this.e = e;
 		}
 
 		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;
-			result = prime * result + ((abs == null) ? 0 : abs.hashCode());
-			result = prime * result + threadCount;
+			result = prime * result + e;
 			return result;
 		}
 
@@ -48,12 +44,7 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 			if (getClass() != obj.getClass())
 				return false;
 			ThreadAccessQuery other = (ThreadAccessQuery) obj;
-			if (abs == null) {
-				if (other.abs != null)
-					return false;
-			} else if (!abs.equals(other.abs))
-				return false;
-			if (threadCount != other.threadCount)
+			if (e != other.e)
 				return false;
 			return true;
 		}
@@ -62,17 +53,47 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 	private static class Event {
 		public final int t;
 		public final int b;
-		public final boolean isRemove;
+		public final int e;
 
-		public Event(int t, int b, boolean isRemove) {
+		public Event(int t, int b, int e) {
 			this.t = t;
 			this.b = b;
-			this.isRemove = isRemove;
+			this.e = e;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + b;
+			result = prime * result + e;
+			result = prime * result + t;
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Event other = (Event) obj;
+			if (b != other.b)
+				return false;
+			if (e != other.e)
+				return false;
+			if (t != other.t)
+				return false;
+			return true;
 		}
 	}
 
 	private final List<Event> events = new LinkedList<Event>();
 	private final Map<Object, TIntHashSet> abs2threads = new HashMap<Object, TIntHashSet>();
+	private final TIntHashSet visitedLocations = new TIntHashSet();
+	private final TIntHashSet sharedAccessingLocations = new TIntHashSet();
 	
 	@Override
 	public String propertyName() {
@@ -81,18 +102,18 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 	
 	@Override
 	public void initPass() {
+		super.initPass();
 		abs2threads.clear();
 	}
 	
 	@Override
 	public void donePass() {
 		super.donePass();
-		Set<Entry<Object,TIntHashSet>> entrySet = abs2threads.entrySet();
-		for (Entry<Object,TIntHashSet> e : entrySet) {
-			ThreadAccessQuery q = new ThreadAccessQuery(e.getKey(), e.getValue().size());
+		for (TIntIterator it = visitedLocations.iterator(); it.hasNext(); ) {
+			ThreadAccessQuery q = new ThreadAccessQuery(it.next());
 			if (shouldAnswerQueryHit(q)) {
-				// The query is answered positively iff the object was accessed by no more than a single thread.
-				answerQuery(q, q.threadCount <= 1);
+				// The query is answered positively iff the statement did not access an object touched my more than one thread.
+				answerQuery(q, !sharedAccessingLocations.contains(q.e));
 			}
 		}
 	}
@@ -102,46 +123,42 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 		if (queryOnlyAtSnapshot) {
 			abstraction.ensureComputed();
 			for (Event evt : events) {
-				if (evt.isRemove) {
-					registerThreadAccessOnNew(evt.t, evt.b);
-				} else {
-					registerThreadAccess(evt.t, evt.b);
-				}
+				registerThreadAccess(evt.t, evt.b, evt.e);
 			}
 			events.clear();
 		}
 		return null;
 	}
 
-	@Override
-	public void processNewOrNewArray(int h, int t, int o) {
-		super.processNewOrNewArray(h, t, o);
-		if (o != 0) {
-			if (queryOnlyAtSnapshot) {
-				Event event = new Event(t, o, true);
-				events.add(event);
-			} else {
-				abstraction.ensureComputed();
-				registerThreadAccessOnNew(t, o);
-			}
-		}
-	}
+//	@Override
+//	public void processNewOrNewArray(int h, int t, int o) {
+//		super.processNewOrNewArray(h, t, o);
+//		if (o != 0) {
+//			if (queryOnlyAtSnapshot) {
+//				Event event = new Event(t, o, h);
+//				events.add(event);
+//			} else {
+//				abstraction.ensureComputed();
+//				registerThreadAccess(t, o, h);
+//			}
+//		}
+//	}
 	
 	@Override
 	public void fieldAccessed(int e, int t, int b, int f, int o) {
 		super.fieldAccessed(e, t, b, f, o);
-		if (e >= 0 && b != 0 && !isExcluded(e)) {
+		if (e >= 0 && b != 0) {
 			if (queryOnlyAtSnapshot) {
-				Event event = new Event(t, b, false);
+				Event event = new Event(t, b, e);
 				events.add(event);
 			} else {
 				abstraction.ensureComputed();
-				registerThreadAccess(t, b);
+				registerThreadAccess(t, b, e);
 			}
 		}
 	}
 
-	private void registerThreadAccess(int t, int b) {
+	private void registerThreadAccess(int t, int b, int e) {
 		Object abs = abstraction.getValue(b);
 		TIntHashSet S = abs2threads.get(abs);
 		if (S == null) {
@@ -149,13 +166,9 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 			abs2threads.put(abs, S);
 		}
 		S.add(t);
-	}
-	
-	private void registerThreadAccessOnNew(int t, int o) {
-		Object abs = abstraction.getValue(o);
-		abs2threads.remove(abs);
-		TIntHashSet S = new TIntHashSet();
-		S.add(t);
-		abs2threads.put(abs, S);
+		if (S.size() > 1) {
+			sharedAccessingLocations.add(e);
+		}
+		visitedLocations.add(e);
 	}
 }
