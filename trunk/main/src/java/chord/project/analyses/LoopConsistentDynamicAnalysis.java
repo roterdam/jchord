@@ -165,6 +165,9 @@ public class LoopConsistentDynamicAnalysis extends DynamicAnalysis {
 		}
 	}
 	
+	/* 
+	 * We're off by one here, probably because the last time the loop header is tested is when it exits.
+	 */
 	protected void onLoopIterationBegan(int id, int t) {
 		// This is a no-op that should be overriden by sub-classes.
 	}
