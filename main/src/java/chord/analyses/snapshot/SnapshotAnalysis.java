@@ -1,41 +1,26 @@
 package chord.analyses.snapshot;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.io.File;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Random;
-import java.util.Collections;
-
-import joeq.Compiler.Quad.Quad;
-import joeq.Class.jq_Class;
-
-import chord.util.IntArraySet;
-import chord.util.ChordRuntimeException;
-import chord.project.Properties;
-import chord.util.IndexMap;
-import chord.util.IndexHashMap;
-import chord.instr.InstrScheme;
-import chord.project.Chord;
-import chord.project.analyses.DynamicAnalysis;
-import chord.project.analyses.ProgramRel;
-import chord.project.Project;
-import chord.program.Program;
-
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
-import gnu.trove.TLongIntHashMap;
 import gnu.trove.TIntObjectHashMap;
-import gnu.trove.TIntArrayList;
 import gnu.trove.TIntProcedure;
+
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.Stack;
+
+import joeq.Class.jq_Class;
+import joeq.Compiler.Quad.Quad;
+import chord.instr.InstrScheme;
+import chord.program.Program;
+import chord.project.Properties;
+import chord.project.analyses.DynamicAnalysis;
 
 /**
  * Evaluate the precision and complexity of various heap abstractions.
@@ -191,7 +176,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     if (instrScheme != null) return instrScheme;
     instrScheme = new InstrScheme();
 
-    //instrScheme.setEnterAndLeaveMethodEvent();
+    instrScheme.setEnterAndLeaveMethodEvent();
     //instrScheme.setEnterAndLeaveLoopEvent();
 
     instrScheme.setNewAndNewArrayEvent(true, true, true); // h, t, o
@@ -214,7 +199,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     instrScheme.setThreadStartEvent(true, true, true); // i, t, o
     //instrScheme.setThreadJoinEvent(true, true, true); // i, t, o
 
-    //instrScheme.setAcquireLockEvent(true, true, true); // l, t, o
+    instrScheme.setAcquireLockEvent(true, true, true); // l, t, o
     //instrScheme.setReleaseLockEvent(true, true, true); // r, t, o
     //instrScheme.setWaitEvent(true, true, true); // i, t, o
     //instrScheme.setNotifyEvent(true, true, true); // i, t, o

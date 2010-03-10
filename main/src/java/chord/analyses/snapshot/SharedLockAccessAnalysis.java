@@ -128,6 +128,11 @@ public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 		}
 		return null;
 	}
+	
+	@Override
+	protected boolean decideIfSelected() {
+		return true;
+	}
 
 	@Override
 	public void processAcquireLock(int l, int t, int o) {
