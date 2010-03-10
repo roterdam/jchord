@@ -14,6 +14,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import chord.doms.DomB;
 import chord.doms.DomM;
+import chord.doms.DomW;
 import chord.instr.InstrScheme;
 import chord.program.CFGLoopFinder;
 
@@ -55,6 +56,7 @@ public class LoopConsistentDynamicAnalysis extends DynamicAnalysis {
 	private InstrScheme instrScheme;
 	private DomM domM;
 	private DomB domB;
+	private DomW domW;
 	
 	@Override
 	public InstrScheme getInstrScheme() {
@@ -72,6 +74,7 @@ public class LoopConsistentDynamicAnalysis extends DynamicAnalysis {
 		super.initAllPasses();
 		domM = instrumentor.getDomM();
 		domB = instrumentor.getDomB();
+		domW = instrumentor.getDomW();
 	}
 	
 	@Override
@@ -110,8 +113,10 @@ public class LoopConsistentDynamicAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void processEnterLoop(int w, int t) {
-		stack.add(new LoopRecord(w, t));
-		onLoopEnter(w, t);
+		BasicBlock loopBB = domW.get(w);
+		int indexInDomB = domB.getOrAdd(loopBB);
+		stack.add(new LoopRecord(indexInDomB, t));
+		onLoopEnter(indexInDomB, t);
 	}
 	
 	@Override
@@ -122,8 +127,10 @@ public class LoopConsistentDynamicAnalysis extends DynamicAnalysis {
 		 * of the stack, as all other loop- and method-enter events succeeding it have been matched by corresponding 
 		 * exit events.
 		 */
+		BasicBlock loopBB = domW.get(w);
+		int indexInDomB = domB.getOrAdd(loopBB);
 		Record top = stack.peek();
-		if (top instanceof LoopRecord && top.id == w) {
+		if (top instanceof LoopRecord && top.id == indexInDomB) {
 			stack.pop();
 			LoopRecord lr = (LoopRecord) top;
 			onLoopExit(lr.id, lr.t);
@@ -145,6 +152,21 @@ public class LoopConsistentDynamicAnalysis extends DynamicAnalysis {
 				}
 			}
 		} while (hasRemoved);
+		L: for (int i=(stack.size()-1); i >= 0; --i) {
+			Record r = stack.elementAt(i);
+			if (r instanceof LoopRecord) {
+				if (r.id == b) {
+					onLoopIterationBegan(b, t);
+					break L;
+				}
+			} else {
+				break L;
+			}
+		}
+	}
+	
+	protected void onLoopIterationBegan(int id, int t) {
+		// This is a no-op that should be overriden by sub-classes.
 	}
 	
 	protected void onLoopExit(int id, int t) {
