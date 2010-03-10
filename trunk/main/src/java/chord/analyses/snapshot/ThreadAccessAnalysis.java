@@ -122,6 +122,11 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 	}
 
 	@Override
+	protected boolean decideIfSelected() {
+		return true;
+	}
+	
+	@Override
 	public SnapshotResult takeSnapshot() {
 		if (queryOnlyAtSnapshot) {
 			abstraction.ensureComputed();
