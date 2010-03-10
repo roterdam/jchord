@@ -104,6 +104,9 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 	public void initPass() {
 		super.initPass();
 		abs2threads.clear();
+		visitedLocations.clear();
+		sharedAccessingLocations.clear();
+		events.clear();
 	}
 	
 	@Override

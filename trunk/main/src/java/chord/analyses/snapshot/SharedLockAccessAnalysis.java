@@ -17,7 +17,7 @@ import chord.project.Chord;
  * @author omert
  *
  */
-@Chord(name="ss-monitor-access")
+@Chord(name="ss-lock-access")
 public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 
 	private static class SharedLockAccessQuery extends Query {
@@ -94,7 +94,7 @@ public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 
 	@Override
 	public String propertyName() {
-		return "shared-monitor-access";
+		return "shared-lock-access";
 	}
 	
 	@Override
