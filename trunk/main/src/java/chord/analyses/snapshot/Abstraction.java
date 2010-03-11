@@ -145,6 +145,25 @@ class RecencyAbstraction extends Abstraction {
   }
 }
 
+class Recency2Abstraction extends Abstraction {
+  TIntIntHashMap h2lasto = new TIntIntHashMap(); // heap allocation site h -> latest object
+
+  public String toString() { return "recency2"; }
+
+  @Override public void nodeCreated(ThreadInfo info, int o) {
+    int h = state.o2h.get(o);
+    Integer old_o = h2lasto.get(h);
+    if (old_o != null) {
+      // Change abstract value of o
+      setValue(old_o, h);
+    }
+    h2lasto.put(h, o);
+    setValue(o, h+"R");
+  }
+  @Override public void nodeDeleted(int o) { }
+  @Override public void ensureComputed() { }
+}
+
 // SLOW
 class ReachabilityAbstraction extends Abstraction {
   static class Spec {
