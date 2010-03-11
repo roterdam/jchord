@@ -176,7 +176,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     if (instrScheme != null) return instrScheme;
     instrScheme = getBaselineScheme();
 
-//    instrScheme.setEnterAndLeaveMethodEvent();
+    instrScheme.setEnterAndLeaveMethodEvent();
     //instrScheme.setEnterAndLeaveLoopEvent();
 
     instrScheme.setNewAndNewArrayEvent(true, true, true); // h, t, o
@@ -712,6 +712,7 @@ class QueryResult {
   @Override public String toString() { return numTrue+"|"+numFalse; }
 }
 
+@SuppressWarnings("unchecked")
 class ThreadInfo {
   public Stack<Integer> callStack = new Stack(); // Elements are methods m (for visualization)
   public Stack<Integer> callSites = new Stack(); // Elements are call sites i (for kCFA)
