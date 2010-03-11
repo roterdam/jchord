@@ -33,7 +33,7 @@ import chord.project.analyses.DynamicAnalysis;
 public abstract class SnapshotAnalysis extends DynamicAnalysis {
   public abstract String propertyName();
 
-  static final int ARRAY_FIELD = 99999;
+  static final int ARRAY_FIELD = 100000000;
   static final int NULL_OBJECT = 0;
 
   InstrScheme instrScheme;
@@ -70,6 +70,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     if (abstractionType.equals("none")) return new NoneAbstraction();
     if (abstractionType.equals("alloc")) return new AllocAbstraction(kCFA, kOS);
     if (abstractionType.equals("recency")) return new RecencyAbstraction();
+    if (abstractionType.equals("recency2")) return new Recency2Abstraction();
     if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec);
     throw new RuntimeException("Unknown abstraction: "+abstractionType+" (possibilities: none|alloc|recency|reachability)");
   }
@@ -435,7 +436,7 @@ public boolean shouldAnswerQueryHit(Query query) {
   // Pretty-printing
 
   public String fstr(int f) { // field
-    if (f == ARRAY_FIELD) return "[*]";
+    if (f >= ARRAY_FIELD) return "["+(f-ARRAY_FIELD)+"]";
     return f < 0 ? "-" : instrumentor.getFmap().get(f);
   }
   public String hstr(int h) { return h < 0 ? "-" : instrumentor.getHmap().get(h); } // heap allocation site
@@ -508,7 +509,7 @@ public boolean shouldAnswerQueryHit(Query query) {
 	@Override
 	public void processAloadPrimitive(int e, int t, int b, int i) {
 		if (!isExcluded(e))
-			fieldAccessed(e, t, b, ARRAY_FIELD, -1);
+			fieldAccessed(e, t, b, ARRAY_FIELD+i, -1);
 	}
 
   @Override public void processMethodCallBef(int i, int t, int o) {
@@ -552,13 +553,13 @@ public boolean shouldAnswerQueryHit(Query query) {
 			X.logs("EVENT loadReference: e=%s, t=%s, b=%s, i=%s, o=%s",
 					estr(e), tstr(t), ostr(b), i, ostr(o));
 		if (!isExcluded(e))
-			fieldAccessed(e, t, b, ARRAY_FIELD, o);
+			fieldAccessed(e, t, b, ARRAY_FIELD+i, o);
 	}
 
 	@Override
 	public void processAstorePrimitive(int e, int t, int b, int i) {
 		if (!isExcluded(e))
-			fieldAccessed(e, t, b, ARRAY_FIELD, -1);
+			fieldAccessed(e, t, b, ARRAY_FIELD+i, -1);
 	}
 
 	@Override
@@ -567,8 +568,8 @@ public boolean shouldAnswerQueryHit(Query query) {
 			X.logs("EVENT storeReference: e=%s, t=%s, b=%s, i=%s, o=%s",
 					estr(e), tstr(t), ostr(b), i, ostr(o));
 		if (!isExcluded(e))
-			fieldAccessed(e, t, b, ARRAY_FIELD, o);
-		edgeCreated(t, b, ARRAY_FIELD, o);
+			fieldAccessed(e, t, b, ARRAY_FIELD+i, o);
+		edgeCreated(t, b, ARRAY_FIELD+i, o);
 	}
   
 	@Override
