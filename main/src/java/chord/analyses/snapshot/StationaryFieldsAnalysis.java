@@ -6,10 +6,10 @@ package chord.analyses.snapshot;
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIterator;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import chord.project.Chord;
 

@@ -174,16 +174,16 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
 
   public InstrScheme getInstrScheme() {
     if (instrScheme != null) return instrScheme;
-    instrScheme = new InstrScheme();
+    instrScheme = getBaselineScheme();
 
-    instrScheme.setEnterAndLeaveMethodEvent();
+//    instrScheme.setEnterAndLeaveMethodEvent();
     //instrScheme.setEnterAndLeaveLoopEvent();
 
     instrScheme.setNewAndNewArrayEvent(true, true, true); // h, t, o
 
-	  instrScheme.setGetstaticPrimitiveEvent(true, true, true, true); // e, t, b, f
-	  instrScheme.setGetstaticReferenceEvent(true, true, true, true, true); // e, t, b, f, o
-	  instrScheme.setPutstaticPrimitiveEvent(true, true, true, true); // e, t, b, f
+//	  instrScheme.setGetstaticPrimitiveEvent(true, true, true, true); // e, t, b, f
+//	  instrScheme.setGetstaticReferenceEvent(true, true, true, true, true); // e, t, b, f, o
+//	  instrScheme.setPutstaticPrimitiveEvent(true, true, true, true); // e, t, b, f
     instrScheme.setPutstaticReferenceEvent(true, true, true, true, true); // e, t, b, f, o
 
     instrScheme.setGetfieldPrimitiveEvent(true, true, true, true); // e, t, b, f
@@ -191,15 +191,15 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     instrScheme.setGetfieldReferenceEvent(true, true, true, true, true); // e, t, b, f, o
     instrScheme.setPutfieldReferenceEvent(true, true, true, true, true); // e, t, b, f, o
 
-    instrScheme.setAloadPrimitiveEvent(true, true, true, true); // e, t, b, i
-    instrScheme.setAstorePrimitiveEvent(true, true, true, true); // e, t, b, i
-    instrScheme.setAloadReferenceEvent(true, true, true, true, true); // e, t, b, i, o
-    instrScheme.setAstoreReferenceEvent(true, true, true, true, true); // e, t, b, i, o
+    instrScheme.setAloadPrimitiveEvent(true, true, true, isArrayIndexSensitive()); // e, t, b, i
+    instrScheme.setAstorePrimitiveEvent(true, true, true, isArrayIndexSensitive()); // e, t, b, i
+    instrScheme.setAloadReferenceEvent(true, true, true, isArrayIndexSensitive(), true); // e, t, b, i, o
+    instrScheme.setAstoreReferenceEvent(true, true, true, isArrayIndexSensitive(), true); // e, t, b, i, o
 
-    instrScheme.setThreadStartEvent(true, true, true); // i, t, o
+//    instrScheme.setThreadStartEvent(true, true, true); // i, t, o
     //instrScheme.setThreadJoinEvent(true, true, true); // i, t, o
 
-    instrScheme.setAcquireLockEvent(true, true, true); // l, t, o
+//    instrScheme.setAcquireLockEvent(true, true, true); // l, t, o
     //instrScheme.setReleaseLockEvent(true, true, true); // r, t, o
     //instrScheme.setWaitEvent(true, true, true); // i, t, o
     //instrScheme.setNotifyEvent(true, true, true); // i, t, o
@@ -220,7 +220,15 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     return instrScheme;
   }
 
-  public boolean shouldAnswerQueryHit(Query query) {
+  protected boolean isArrayIndexSensitive() {
+	  return false;
+  }
+
+protected InstrScheme getBaselineScheme() {
+	return new InstrScheme();
+}
+
+public boolean shouldAnswerQueryHit(Query query) {
     if (selectHitRandom.nextDouble() < hitFrac)
       return queryResult(query).selected;
     return false;
@@ -439,117 +447,224 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   ////////////////////////////////////////////////////////////
   // Handlers
 
-  @Override public void processEnterMethod(int m, int t) {
-    if (verbose >= 6) X.logs("EVENT enterMethod: m=%s, t=%s", mstr(m), tstr(t));
-  }
-  @Override public void processLeaveMethod(int m, int t) {
-    if (verbose >= 6) X.logs("EVENT leaveMethod: m=%s, t=%s", mstr(m), tstr(t));
-  }
-  @Override public void processEnterLoop(int w, int t) {
-    if (verbose >= 5) X.logs("EVENT enterLoop: w=%s", w);
-  }
-  @Override public void processLeaveLoop(int w, int t) {
-    if (verbose >= 5) X.logs("EVENT leaveLoop: w=%s", w);
-  }
+	@Override
+	public void processNewOrNewArray(int h, int t, int o) {
+		// new Object
+		state.o2h.put(o, h);
+		nodeCreated(t, o);
+		if (verbose >= 5)
+			X.logs("EVENT new: h=%s, t=%s, o=%s", hstr(h), tstr(t), ostr(o));
+	}
 
-  @Override public void processNewOrNewArray(int h, int t, int o) { // new Object
-    state.o2h.put(o, h);
-    nodeCreated(t, o);
-    if (verbose >= 5) X.logs("EVENT new: h=%s, t=%s, o=%s", hstr(h), tstr(t), ostr(o));
-  }
+	@Override
+	public void processPutstaticReference(int e, int t, int b, int f, int o) {
+		// b.f = o, where b is static
+		if (verbose >= 5)
+			X.logs("EVENT putStaticReference: e=%s, t=%s, b=%s, f=%s, o=%s",
+					estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
+		edgeCreated(t, b, f, o);
+	}
 
-  @Override public void processGetstaticPrimitive(int e, int t, int b, int f) { }
-  @Override public void processGetstaticReference(int e, int t, int b, int f, int o) { // ... = b.f, where b.f = o and b is static
-    if (verbose >= 5) X.logs("EVENT getStaticReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
-  }
-  @Override public void processPutstaticPrimitive(int e, int t, int b, int f) { }
-  @Override public void processPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
-    if (verbose >= 5) X.logs("EVENT putStaticReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
-    edgeCreated(t, b, f, o);
-  }
+	@Override
+	public void processGetfieldPrimitive(int e, int t, int b, int f) {
+		if (!isExcluded(e))
+			fieldAccessed(e, t, b, f, -1);
+	}
 
-  @Override public void processGetfieldPrimitive(int e, int t, int b, int f) {
-    if (!isExcluded(e)) fieldAccessed(e, t, b, f, -1);
-  }
-  @Override public void processGetfieldReference(int e, int t, int b, int f, int o) { // ... = b.f, where b.f = o
-    if (verbose >= 5) X.logs("EVENT getFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
-    if (!isExcluded(e)) fieldAccessed(e, t, b, f, o);
-  }
-  @Override public void processPutfieldPrimitive(int e, int t, int b, int f) {
-    if (!isExcluded(e)) fieldAccessed(e, t, b, f, -1);
-  }
-  @Override public void processPutfieldReference(int e, int t, int b, int f, int o) { // b.f = o
-    if (verbose >= 5) X.logs("EVENT putFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s", estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
-    if (!isExcluded(e)) fieldAccessed(e, t, b, f, o);
-    edgeCreated(t, b, f, o);
-  }
+	@Override
+	public void processGetfieldReference(int e, int t, int b, int f, int o) {
+		// ... = b.f, where b.f = o
+		if (verbose >= 5)
+			X.logs("EVENT getFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s",
+					estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
+		if (!isExcluded(e))
+			fieldAccessed(e, t, b, f, o);
+	}
 
-  @Override public void processAloadPrimitive(int e, int t, int b, int i) {
-    if (!isExcluded(e)) fieldAccessed(e, t, b, ARRAY_FIELD, -1);
-  }
-  @Override public void processAloadReference(int e, int t, int b, int i, int o) {
-    if (verbose >= 5) X.logs("EVENT loadReference: e=%s, t=%s, b=%s, i=%s, o=%s", estr(e), tstr(t), ostr(b), i, ostr(o));
-    if (!isExcluded(e)) fieldAccessed(e, t, b, ARRAY_FIELD, o);
-  }
-  @Override public void processAstorePrimitive(int e, int t, int b, int i) {
-    if (!isExcluded(e)) fieldAccessed(e, t, b, ARRAY_FIELD, -1);
-  }
-  @Override public void processAstoreReference(int e, int t, int b, int i, int o) {
-    if (verbose >= 5) X.logs("EVENT storeReference: e=%s, t=%s, b=%s, i=%s, o=%s", estr(e), tstr(t), ostr(b), i, ostr(o));
-    if (!isExcluded(e)) fieldAccessed(e, t, b, ARRAY_FIELD, o);
-    edgeCreated(t, b, ARRAY_FIELD, o);
-  }
+	@Override
+	public void processPutfieldPrimitive(int e, int t, int b, int f) {
+		if (!isExcluded(e))
+			fieldAccessed(e, t, b, f, -1);
+	}
 
-  @Override public void processThreadStart(int i, int t, int o) {
-    if (verbose >= 4) X.logs("EVENT threadStart: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
-  }
-  @Override public void processThreadJoin(int i, int t, int o) {
-    if (verbose >= 4) X.logs("EVENT threadJoin: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
-  }
+	@Override
+	public void processPutfieldReference(int e, int t, int b, int f, int o) {
+		// b.f = o
+		if (verbose >= 5)
+			X.logs("EVENT putFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s",
+					estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
+		if (!isExcluded(e))
+			fieldAccessed(e, t, b, f, o);
+		edgeCreated(t, b, f, o);
+	}
 
-  @Override public void processAcquireLock(int l, int t, int o) { }
-  @Override public void processReleaseLock(int r, int t, int o) { }
-  @Override public void processWait(int i, int t, int o) { }
-  @Override public void processNotify(int i, int t, int o) { }
+	@Override
+	public void processAloadPrimitive(int e, int t, int b, int i) {
+		if (!isExcluded(e))
+			fieldAccessed(e, t, b, ARRAY_FIELD, -1);
+	}
 
-  @Override public void processMethodCallBef(int i, int t, int o) {
-    if (verbose >= 5) X.logs("EVENT methodCallBefore: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
-    ThreadInfo info = threadInfo(t);
-    info.callSites.push(i);
-    info.callAllocs.push(state.o2h.get(o));
-  }
-  @Override public void processMethodCallAft(int i, int t, int o) {
-    ThreadInfo info = threadInfo(t);
-    if (verbose >= 5) X.logs("EVENT methodCallAfter: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
-    if (info.callSites.size() == 0)
-      X.errors("Tried to pop empty callSites stack");
-    else {
-      int ii = info.callSites.pop();
-      if (ii != i) X.errors("pushed %s but popped %s", istr(i), istr(ii));
-    }
-    if (info.callAllocs.size() == 0)
-      X.errors("Tried to pop empty callAllocs stack");
-    else {
-      int hh = info.callAllocs.pop();
-      int h = state.o2h.get(o);
-      if (hh != h) X.errors("pushed %s but popped %s", hstr(h), hstr(hh));
-    }
-  }
+	@Override
+	public void processAloadReference(int e, int t, int b, int i, int o) {
+		if (verbose >= 5)
+			X.logs("EVENT loadReference: e=%s, t=%s, b=%s, i=%s, o=%s",
+					estr(e), tstr(t), ostr(b), i, ostr(o));
+		if (!isExcluded(e))
+			fieldAccessed(e, t, b, ARRAY_FIELD, o);
+	}
 
-  @Override public void processReturnPrimitive(int p, int t) { }
-  @Override public void processReturnReference(int p, int t, int o) { }
-  @Override public void processExplicitThrow(int p, int t, int o) { }
-  @Override public void processImplicitThrow(int p, int t, int o) { }
+	@Override
+	public void processAstorePrimitive(int e, int t, int b, int i) {
+		if (!isExcluded(e))
+			fieldAccessed(e, t, b, ARRAY_FIELD, -1);
+	}
 
-  @Override public void processQuad(int p, int t) {
-    if (verbose >= 7) X.logs("EVENT processQuad p=%s, t=%s", pstr(p), tstr(t));
-  }
-  @Override public void processBasicBlock(int b, int t) { }
+	@Override
+	public void processAstoreReference(int e, int t, int b, int i, int o) {
+		if (verbose >= 5)
+			X.logs("EVENT storeReference: e=%s, t=%s, b=%s, i=%s, o=%s",
+					estr(e), tstr(t), ostr(b), i, ostr(o));
+		if (!isExcluded(e))
+			fieldAccessed(e, t, b, ARRAY_FIELD, o);
+		edgeCreated(t, b, ARRAY_FIELD, o);
+	}
+  
+	@Override
+	public void processMethodCallBef(int i, int t, int o) {
+		if (verbose >= 5)
+			X.logs("EVENT methodCallBefore: i=%s, t=%s, o=%s", istr(i),
+					tstr(t), ostr(o));
+		ThreadInfo info = threadInfo(t);
+		info.callSites.push(i);
+		info.callAllocs.push(state.o2h.get(o));
+	}
+  
+	@Override
+	public void processMethodCallAft(int i, int t, int o) {
+		ThreadInfo info = threadInfo(t);
+		if (verbose >= 5)
+			X.logs("EVENT methodCallAfter: i=%s, t=%s, o=%s", istr(i), tstr(t),
+					ostr(o));
+		if (info.callSites.size() == 0)
+			X.errors("Tried to pop empty callSites stack");
+		else {
+			int ii = info.callSites.pop();
+			if (ii != i)
+				X.errors("pushed %s but popped %s", istr(i), istr(ii));
+		}
+		if (info.callAllocs.size() == 0)
+			X.errors("Tried to pop empty callAllocs stack");
+		else {
+			int hh = info.callAllocs.pop();
+			int h = state.o2h.get(o);
+			if (hh != h)
+				X.errors("pushed %s but popped %s", hstr(h), hstr(hh));
+		}
+	}
+	  
+	@Override
+	public void processFinalize(int o) {
+		if (verbose >= 7)
+			X.logs("EVENT processFinalize o=%s", ostr(o));
+		nodeDeleted(o);
+	}
 
-  @Override public void processFinalize(int o) {
-    if (verbose >= 7) X.logs("EVENT processFinalize o=%s", ostr(o));
-    nodeDeleted(o);
-  }
+	 
+	@Override
+	public void processGetstaticReference(int e, int t, int b, int f, int o) { 
+		// ...=b.f, where b.f=o and b is static
+		if (verbose >= 5)
+			X.logs("EVENT getStaticReference: e=%s, t=%s, b=%s, f=%s, o=%s",
+					estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
+	}
+	
+	@Override
+	public void processThreadStart(int i, int t, int o) {
+		if (verbose >= 4)
+			X.logs("EVENT threadStart: i=%s, t=%s, o=%s", istr(i), tstr(t),
+					ostr(o));
+	}
+
+	@Override
+	public void processThreadJoin(int i, int t, int o) {
+		if (verbose >= 4)
+			X.logs("EVENT threadJoin: i=%s, t=%s, o=%s", istr(i), tstr(t),
+					ostr(o));
+	}
+
+	@Override
+	public void processEnterMethod(int m, int t) {
+		if (verbose >= 6)
+			X.logs("EVENT enterMethod: m=%s, t=%s", mstr(m), tstr(t));
+	}
+
+	@Override
+	public void processLeaveMethod(int m, int t) {
+		if (verbose >= 6)
+			X.logs("EVENT leaveMethod: m=%s, t=%s", mstr(m), tstr(t));
+	}
+
+	@Override
+	public void processEnterLoop(int w, int t) {
+		if (verbose >= 5)
+			X.logs("EVENT enterLoop: w=%s", w);
+	}
+
+	@Override
+	public void processLeaveLoop(int w, int t) {
+		if (verbose >= 5)
+			X.logs("EVENT leaveLoop: w=%s", w);
+	}
+
+	@Override
+	public void processQuad(int p, int t) {
+		if (verbose >= 7)
+			X.logs("EVENT processQuad p=%s, t=%s", pstr(p), tstr(t));
+	}
+
+	@Override
+	public void processPutstaticPrimitive(int e, int t, int b, int f) {
+	}
+
+	@Override
+	public void processGetstaticPrimitive(int e, int t, int b, int f) {
+	}
+	
+	@Override
+	public void processBasicBlock(int b, int t) {
+	}
+	  
+	@Override
+	public void processAcquireLock(int l, int t, int o) {
+	}
+
+	@Override
+	public void processReleaseLock(int r, int t, int o) {
+	}
+
+	@Override
+	public void processWait(int i, int t, int o) {
+	}
+
+	@Override
+	public void processNotify(int i, int t, int o) {
+	}
+
+	@Override
+	public void processReturnPrimitive(int p, int t) {
+	}
+
+	@Override
+	public void processReturnReference(int p, int t, int o) {
+	}
+
+	@Override
+	public void processExplicitThrow(int p, int t, int o) {
+	}
+
+	@Override
+	public void processImplicitThrow(int p, int t, int o) {
+	}
 
   // Query for thread escape: is the object pointed to by the relvant variable thread-escaping at program point e?
   class ProgramPointQuery extends Query {
