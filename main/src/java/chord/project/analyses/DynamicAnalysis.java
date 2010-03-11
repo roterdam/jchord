@@ -5,40 +5,85 @@
  */
 package chord.project.analyses;
 
-import java.io.IOException;
+import gnu.trove.TIntHashSet;
+import gnu.trove.TIntObjectHashMap;
+
 import java.io.File;
-import java.lang.InterruptedException;
+import java.io.IOException;
+import java.util.Set;
+import java.util.Stack;
 
-import javassist.CannotCompileException;
-import javassist.NotFoundException;
-
+import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import chord.doms.DomB;
+import chord.doms.DomM;
+import chord.doms.DomW;
 import chord.instr.EventKind;
+import chord.instr.InstrScheme;
 import chord.instr.Instrumentor;
 import chord.instr.TracePrinter;
-import chord.instr.InstrScheme;
 import chord.instr.TraceTransformer;
 import chord.instr.InstrScheme.EventFormat;
+import chord.program.CFGLoopFinder;
 import chord.program.Program;
+import chord.project.OutDirUtils;
 import chord.project.Properties;
 import chord.runtime.BufferedRuntime;
 import chord.util.ByteBufferedFile;
+import chord.util.ChordRuntimeException;
+import chord.util.Executor;
+import chord.util.FileUtils;
+import chord.util.IndexMap;
 import chord.util.ProcessExecutor;
 import chord.util.ReadException;
-import chord.util.Executor;
-import chord.util.IndexMap;
-import chord.util.ChordRuntimeException;
-import chord.util.FileUtils;
-import chord.project.OutDirUtils;
 
 /**
  * Generic implementation of a dynamic program analysis (a specialized kind of Java task).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
+ * @author omert (omertrip@post.tau.ac.il)
  */
 public class DynamicAnalysis extends JavaAnalysis {
 	public final static boolean DEBUG = false;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
+	
+	/* Code for handling loops consistently. */
+	private static abstract class Record {
+		
+		/* We must not implement state-dependent versions of <code>hashCode</code> and <code>equals</code>. */
+	}
+	
+	private static class LoopRecord extends Record {
+		public final int b;
+		public final int w;
+		
+		public LoopRecord(int b, int w) {
+			this.b = b;
+			this.w = w;
+		}
+	}
+	
+	private static class MethodRecord extends Record {
+		public final int m;
+		
+		public MethodRecord(int m) {
+			this.m = m;
+		}
+	}
+	
+	private final TIntObjectHashMap<Stack<Record>> stacks = new TIntObjectHashMap<Stack<Record>>(1);
+	private final TIntObjectHashMap<TIntHashSet> loopHead2body = new TIntObjectHashMap<TIntHashSet>(16);
+	private TIntHashSet visited4loops = new TIntHashSet();
+	
+	private DomM domM;
+	private DomB domB;
+	private DomW domW;
+	private boolean isUserRequestedBasicBlockEvent;
+	private boolean isUserRequestedEnterAndLeaveMethodEvent;
+	private boolean hasEnterAndLeaveLoopEvent;
+	/* End of code handling loop consistency. */
 	
 	public void initPass() {
 		// signals beginning of parsing of a trace
@@ -62,6 +107,14 @@ public class DynamicAnalysis extends JavaAnalysis {
 		try {
 			scheme = getInstrScheme();
 			assert(scheme != null);
+			hasEnterAndLeaveLoopEvent = scheme.hasEnterAndLeaveLoopEvent();
+			if (scheme.hasEnterAndLeaveLoopEvent()) {
+				/* These are mandatory for consistent handling of loop enter and leave events. */
+				isUserRequestedEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent(); 
+				scheme.setEnterAndLeaveMethodEvent();
+				isUserRequestedBasicBlockEvent = scheme.hasBasicBlockEvent(); 
+				scheme.setBasicBlockEvent();
+			}
 			final String instrSchemeFileName = Properties.instrSchemeFileName;
 			scheme.save(instrSchemeFileName);
 			instrumentor = new Instrumentor(Program.v(), scheme);
@@ -137,6 +190,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 				};
 				final boolean serial = doTracePipe ? false : true;
 				final Executor executor = new Executor(serial);
+				if (scheme.hasEnterAndLeaveLoopEvent()) {
+					init4loopConsistency();
+				}
 				initAllPasses();
 				for (String runID : runIDs) {
 					OutDirUtils.logOut("Processing Run ID %s", runID);
@@ -188,7 +244,117 @@ public class DynamicAnalysis extends JavaAnalysis {
 		OutDirUtils.logErr("JVM running instrumented program terminated abnormally with return value %d", result);
 		System.exit(1);
 	}
+	
+	private void init4loopConsistency() {
+		domM = instrumentor.getDomM();
+		domB = instrumentor.getDomB();
+		domW = instrumentor.getDomW();
+	}
+	
+	private void processBasicBlock4loopConsistency(int b, int t) {
+		Stack<Record> stack = stacks.get(t);
+		assert (stack != null);
+		if (!stack.isEmpty()) {
+			boolean hasRemoved;
+			do {
+				hasRemoved = false;
+				Record r = stack.peek();
+				if (r instanceof LoopRecord) {
+					LoopRecord lr = (LoopRecord) r;
+					TIntHashSet loopBody = loopHead2body.get(lr.b);
+					assert (loopBody != null);
+					if (!loopBody.contains(b)) {
+						stack.pop();
+						processLeaveLoop(lr.w, t);
+						hasRemoved = true;
+					}
+				}
+			} while (hasRemoved);
+			Record r = stack.peek();
+			if (r instanceof LoopRecord) {
+				LoopRecord lr = (LoopRecord) r;
+				if (lr.b == b) {
+					processLoopIteration(lr.w, t);
+				}
+			}
+		}
+	}
+	
+	private void processLeaveMethod4loopConsistency(int m, int t) {
+		Stack<Record> stack = stacks.get(t);
+		assert (stack != null);
+		if (!stack.isEmpty()) {
+			while (stack.peek() instanceof LoopRecord) {
+				LoopRecord top = (LoopRecord) stack.pop();
+				processLeaveLoop(top.w, t);
+			}
+			
+			// The present method should be at the stop of the stack.
+			Record top = stack.peek();
+			assert (top instanceof MethodRecord);
+			MethodRecord mr = (MethodRecord) top;
+			if (mr.m == m) {
+				stack.pop();
+			}
+		}
+	}
 
+	private void processEnterMethod4loopConsistency(int m, int t) {
+		Stack<Record> stack = stacks.get(t);
+		if (stack == null) {
+			stack = new Stack<Record>();
+			stacks.put(t, stack);
+		}
+		stack.add(new MethodRecord(m));
+		if (!visited4loops.contains(m)) {
+			visited4loops.add(m);
+			jq_Method mthd = domM.get(m);
+			// Perform a slightly eager computation to map each loop header to its body (in terms of <code>DomB</code>).
+			ControlFlowGraph cfg = mthd.getCFG();
+			CFGLoopFinder finder = new CFGLoopFinder();
+			finder.visit(cfg);
+			for (BasicBlock head : finder.getLoopHeads()) {
+				TIntHashSet S = new TIntHashSet();
+				loopHead2body.put(domB.getOrAdd(head), S);
+				Set<BasicBlock> loopBody = finder.getLoopBody(head);
+				for (BasicBlock bb : loopBody) {
+					S.add(domB.getOrAdd(bb));
+				}
+			}
+		}
+	}
+	
+	private void processEnterLoop4loopConsistency(int w, int t) {
+		Stack<Record> stack = stacks.get(t);
+		assert (stack != null);
+		BasicBlock loopBB = domW.get(w);
+		int indexInDomB = domB.getOrAdd(loopBB);
+		stack.add(new LoopRecord(indexInDomB, w));
+	}
+	
+	private boolean processLeaveLoop4loopConsistency(int w, int t) {
+		/*
+		 * It's not necessarily the case that the loop-exit event matches a loop-enter event at the top of the stack, 
+		 * but an important invariant is that if there is such a loop-enter event, then it's guaranteed to be at the top
+		 * of the stack, as all other loop- and method-enter events succeeding it have been matched by corresponding 
+		 * exit events.
+		 */
+		Stack<Record> stack = stacks.get(t);
+		assert (stack != null);
+		Record top = stack.peek();
+		if (top instanceof LoopRecord) {
+			LoopRecord lr = (LoopRecord) top;
+			if (lr.w == w) {
+				stack.pop();
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+	
 	private void processTrace(String fileName) throws IOException, ReadException {
 		initPass();
 		ByteBufferedFile buffer = new ByteBufferedFile(1024, fileName, true);
@@ -201,20 +367,31 @@ public class DynamicAnalysis extends JavaAnalysis {
 			{
 				int m = buffer.getInt();
 				int t = buffer.getInt();
-				processEnterMethod(m, t);
+				if (hasEnterAndLeaveLoopEvent) {
+					processEnterMethod4loopConsistency(m, t);
+				}
+				if (isUserRequestedEnterAndLeaveMethodEvent) {
+					processEnterMethod(m, t);
+				}
 				break;
 			}
 			case EventKind.LEAVE_METHOD:
 			{
 				int m = buffer.getInt();
 				int t = buffer.getInt();
-				processLeaveMethod(m, t);
+				if (hasEnterAndLeaveLoopEvent) {
+					processLeaveMethod4loopConsistency(m, t);
+				}
+				if (isUserRequestedEnterAndLeaveMethodEvent) {
+					processLeaveMethod(m, t);
+				}
 				break;
 			}
 			case EventKind.ENTER_LOOP:
 			{
 				int w = buffer.getInt();
 				int t = buffer.getInt();
+				processEnterLoop4loopConsistency(w, t);
 				processEnterLoop(w, t);
 				break;
 			}
@@ -222,7 +399,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 			{
 				int w = buffer.getInt();
 				int t = buffer.getInt();
-				processLeaveLoop(w, t);
+				boolean doLeaveLoop = processLeaveLoop4loopConsistency(w, t);
+				if (doLeaveLoop) {
+					// Fire off the loop-exit event only if a matching loop-enter event was on the stack.
+					processLeaveLoop(w, t);
+				}
 				break;
 			}
 			case EventKind.NEW:
@@ -479,7 +660,12 @@ public class DynamicAnalysis extends JavaAnalysis {
 			{
 				int b = buffer.getInt();
 				int t = buffer.getInt();
-				processBasicBlock(b, t);
+				if (hasEnterAndLeaveLoopEvent) {
+					processBasicBlock4loopConsistency(b, t);
+				}
+				if (isUserRequestedBasicBlockEvent) {
+					processBasicBlock(b, t);
+				}
 				break;
 			}
 			case EventKind.FINALIZE:
@@ -495,6 +681,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 		donePass();
 		OutDirUtils.logOut("Finished processing trace with %d events", count);
 	}
+	
+	public void processLoopIteration(int w, int t) {
+		error("void processLoopIteration(int w, int t)");
+	}
+	
 	public void processEnterMethod(int m, int t) {
 		error("void processEnterMethod(int m, int t)");
 	}
