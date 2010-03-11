@@ -197,14 +197,12 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		}
 	}
 
-	@Override
-	public SnapshotResult takeSnapshot() {
-		if (queryOnlyAtSnapshot) { // Lazy approximation
-			abstraction.ensureComputed();
-			for (Event event : events)
-				updatePointsTo(event.e, abstraction.getValue(event.b));
-			events.clear();
-		}
-		return null;
-	}
+  @Override public SnapshotResult takeSnapshot() {
+    if (queryOnlyAtSnapshot) {
+      for (Event event : events)
+        updatePointsTo(event.e, abstraction.getValue(event.b));
+      events.clear();
+    }
+    return null;
+  }
 }
