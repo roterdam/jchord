@@ -7,10 +7,10 @@ import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntObjectProcedure;
 import gnu.trove.TObjectProcedure;
 
-import java.util.HashSet;
-import java.util.Set;
-import java.util.List;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
@@ -26,52 +26,54 @@ import chord.util.tuple.object.Pair;
 /**
  * @author omert
  * @author pliang
- *
+ * 
  */
-@Chord(
-	name = "ss-may-alias"
-)
+@Chord(name = "ss-may-alias")
 public class MayAliasAnalysis extends SnapshotAnalysis {
-  class Event {
-    public Event(int e, int b) {
-      this.e = e;
-      this.b = b;
-    }
-    int e;
-    int b;
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + getOuterType().hashCode();
-		result = prime * result + b;
-		result = prime * result + e;
-		return result;
-	}
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
+	class Event {
+		public Event(int e, int b) {
+			this.e = e;
+			this.b = b;
+		}
+
+		int e;
+		int b;
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + getOuterType().hashCode();
+			result = prime * result + b;
+			result = prime * result + e;
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Event other = (Event) obj;
+			if (!getOuterType().equals(other.getOuterType()))
+				return false;
+			if (b != other.b)
+				return false;
+			if (e != other.e)
+				return false;
 			return true;
-		if (obj == null)
-			return false;
-		if (getClass() != obj.getClass())
-			return false;
-		Event other = (Event) obj;
-		if (!getOuterType().equals(other.getOuterType()))
-			return false;
-		if (b != other.b)
-			return false;
-		if (e != other.e)
-			return false;
-		return true;
+		}
+
+		private MayAliasAnalysis getOuterType() {
+			return MayAliasAnalysis.this;
+		}
 	}
-	private MayAliasAnalysis getOuterType() {
-		return MayAliasAnalysis.this;
-	}
-  }
-  
-  List<Event> events = new ArrayList<Event>(); // For batching
-	
+
+	List<Event> events = new ArrayList<Event>(); // For batching
+
 	private static class MayAliasQuery extends Query {
 		public final int e1;
 		public final int e2;
@@ -108,79 +110,32 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 	}
 
 	private final TIntObjectHashMap<Set<Object>> loc2abstractions = new TIntObjectHashMap<Set<Object>>();
-	protected final Set<IntPair> aliasingRacePairSet = new HashSet<IntPair>(); 
-	
+	protected final Set<IntPair> aliasingRacePairSet = new HashSet<IntPair>();
+
 	@Override
 	public String propertyName() {
 		return "may-alias";
 	}
-	
-	/*@Override
-	public void processGetfieldPrimitive(int e, int t, int b, int f) {
-    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
-		updatePointsTo(e, abstraction.getValue(b));
-	}
-	
-	@Override
-	public void processPutfieldPrimitive(int e, int t, int b, int f) {
-    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
-		updatePointsTo(e, abstraction.getValue(b));
-	}
-	
-	@Override
-	public void processGetfieldReference(int e, int t, int b, int f, int o) {
-    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
-		updatePointsTo(e, abstraction.getValue(b));
-	}
-	
-	@Override
-	public void processGetstaticPrimitive(int e, int t, int b, int f) {
-    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
-		updatePointsTo(e, abstraction.getValue(b));
-	}
-	
-	@Override
-	public void processAloadPrimitive(int e, int t, int b, int i) {
-    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
-		updatePointsTo(e, abstraction.getValue(b));
-	}
-	
-	@Override
-	public void processAstorePrimitive(int e, int t, int b, int i) {
-    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
-		updatePointsTo(e, abstraction.getValue(b));
-	}
-	
-	@Override
-	public void processAloadReference(int e, int t, int b, int i, int o) {
-    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
-		updatePointsTo(e, abstraction.getValue(b));
-	}
-	
-	@Override
-	public void processAstoreReference(int e, int t, int b, int i, int o) {
-    if (!queryOnlyAtSnapshot) abstraction.ensureComputed();
-		updatePointsTo(e, abstraction.getValue(b));
-	}*/
 
-  @Override public void fieldAccessed(int e, int t, int b, int f, int o) {
-    super.fieldAccessed(e, t, b, f, o);
-    if (queryOnlyAtSnapshot) {
-      events.add(new Event(e, b)); // Batch up objects, deal with them at snapshot
-    }
-    else {
-      assert (b > 0);
-      abstraction.ensureComputed(); // Slow!
-      updatePointsTo(e, abstraction.getValue(b));
-    }
-  }
-	
+	@Override
+	public void fieldAccessed(int e, int t, int b, int f, int o) {
+		super.fieldAccessed(e, t, b, f, o);
+		if (queryOnlyAtSnapshot) {
+			events.add(new Event(e, b)); // Batch up objects, deal with them at
+											// snapshot
+		} else {
+			assert (b > 0);
+			abstraction.ensureComputed(); // Slow!
+			updatePointsTo(e, abstraction.getValue(b));
+		}
+	}
+
 	@Override
 	public void initPass() {
 		super.initPass();
 		loc2abstractions.clear();
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public void donePass() {
@@ -191,7 +146,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 				domS.addAll(arg0);
 				return true;
 			}
-		});		
+		});
 		domS.save();
 		final ProgramRel absvalRel = (ProgramRel) Project.getTrgt("absval");
 		absvalRel.zero();
@@ -209,7 +164,8 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		});
 		absvalRel.save();
 		Project.runTask("aliasing-race-pair-dlog");
-		ProgramRel aliasingRel = (ProgramRel) Project.getTrgt("aliasingRacePair");
+		ProgramRel aliasingRel = (ProgramRel) Project
+				.getTrgt("aliasingRacePair");
 		aliasingRel.load();
 		PairIterable<Inst, Inst> tuples = aliasingRel.getAry2ValTuples();
 		for (Pair<Inst, Inst> p : tuples) {
@@ -224,7 +180,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		}
 		aliasingRel.close();
 	}
-	
+
 	@Override
 	protected boolean decideIfSelected() {
 		return true;
@@ -241,13 +197,14 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 		}
 	}
 
-  @Override public SnapshotResult takeSnapshot() {
-    if (queryOnlyAtSnapshot) { // Lazy approximation
-      abstraction.ensureComputed();
-      for (Event event : events)
-        updatePointsTo(event.e, abstraction.getValue(event.b));
-      events.clear();
-    }
-    return null;
-  }
+	@Override
+	public SnapshotResult takeSnapshot() {
+		if (queryOnlyAtSnapshot) { // Lazy approximation
+			abstraction.ensureComputed();
+			for (Event event : events)
+				updatePointsTo(event.e, abstraction.getValue(event.b));
+			events.clear();
+		}
+		return null;
+	}
 }

@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import chord.instr.InstrScheme;
 import chord.project.Chord;
 
 /**
@@ -132,6 +133,13 @@ public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 	@Override
 	protected boolean decideIfSelected() {
 		return true;
+	}
+	
+	@Override
+	protected InstrScheme getBaselineScheme() {
+		InstrScheme instrScheme = new InstrScheme();
+		instrScheme.setAcquireLockEvent(true, true, true);
+		return instrScheme;
 	}
 
 	@Override

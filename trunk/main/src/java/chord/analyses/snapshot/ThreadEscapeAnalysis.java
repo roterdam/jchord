@@ -1,40 +1,13 @@
 package chord.analyses.snapshot;
 
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.io.File;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Map;
-import java.util.Set;
-import java.util.Stack;
-import java.util.HashSet;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Random;
-import java.util.Collections;
-
-import joeq.Compiler.Quad.Quad;
-
-import chord.util.IntArraySet;
-import chord.util.ChordRuntimeException;
-import chord.project.Properties;
-import chord.util.IndexMap;
-import chord.util.IndexHashMap;
-import chord.instr.InstrScheme;
-import chord.project.Chord;
-import chord.project.analyses.DynamicAnalysis;
-import chord.project.analyses.ProgramRel;
-import chord.project.Project;
-import chord.program.Program;
-
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
-import gnu.trove.TLongIntHashMap;
-import gnu.trove.TIntObjectHashMap;
-import gnu.trove.TIntArrayList;
 import gnu.trove.TIntIntProcedure;
+
+import java.util.List;
+
+import chord.instr.InstrScheme;
+import chord.project.Chord;
 
 /**
  * Thread-escape in the snapshot framework.
@@ -63,6 +36,13 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
   int newThreadField() { currThreadField++; return currThreadField-1; }
   //int newThreadField() { return currThreadField; } // TMP: PartitionAnalysis does this by accident
 
+  @Override
+	protected InstrScheme getBaselineScheme() {
+	  InstrScheme instrScheme = new InstrScheme();
+	  instrScheme.setThreadStartEvent(false, true, true);
+	  return instrScheme;
+	}
+  
   // These methods add nodes to the graph
   @Override public void processPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
     super.processPutstaticReference(e, t, b, f, o);
@@ -84,6 +64,7 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
   @Override public void fieldAccessed(int e, int t, int b, int f, int o) {
     super.fieldAccessed(e, t, b, f, o);
     if (queryOnlyAtSnapshot) {
+    	System.out.println("ABCDEFG: Keeping track of stuff...");
       // Keep track of the queries, so we can answer them at the end
       e2o.put(e, b);
     }
@@ -98,12 +79,15 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
   }
 
   @Override public SnapshotResult takeSnapshot() {
+	  System.out.println("About to take a snaphot.");
     final NodeBasedSnapshotResult result = new NodeBasedSnapshotResult();
     for (int start : staticNodes.toArray()) // Do flood-fill without abstraction
       reachable(start, -1, result.actualTrueNodes, false);
     for (int start : staticNodes.toArray()) // Do flood-fill with abstraction
       reachable(start, -1, result.proposedTrueNodes, true);
-
+	  
+    System.out.println("Value of queryOnlyAtSnapshot is: " + queryOnlyAtSnapshot);
+    System.out.println("Size of e2o is " + e2o.size());
     if (queryOnlyAtSnapshot) {
       e2o.forEachEntry(new TIntIntProcedure() { public boolean execute(int e, int o) {
         Query query = new ProgramPointQuery(e);
