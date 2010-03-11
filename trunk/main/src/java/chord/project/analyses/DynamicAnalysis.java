@@ -119,6 +119,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 			scheme.save(instrSchemeFileName);
 			instrumentor = new Instrumentor(Program.v(), scheme);
 			instrumentor.run();
+			if (scheme.hasEnterAndLeaveLoopEvent()) {
+				init4loopConsistency();
+			}
 			final String mainClassName = Properties.mainClassName;
 			assert (mainClassName != null);
 			final String classPathName = Properties.classPathName;
@@ -190,9 +193,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 				};
 				final boolean serial = doTracePipe ? false : true;
 				final Executor executor = new Executor(serial);
-				if (scheme.hasEnterAndLeaveLoopEvent()) {
-					init4loopConsistency();
-				}
 				initAllPasses();
 				for (String runID : runIDs) {
 					OutDirUtils.logOut("Processing Run ID %s", runID);
@@ -251,10 +251,20 @@ public class DynamicAnalysis extends JavaAnalysis {
 		domW = instrumentor.getDomW();
 	}
 	
+	private void onLoopStart(int b, int t) {
+		Stack<Record> stack = stacks.get(t);
+		assert (stack != null);
+		BasicBlock loopBB = domB.get(b);
+		int indexInDomW = domW.getOrAdd(loopBB);
+		stack.add(new LoopRecord(b, indexInDomW));
+		processEnterLoop(indexInDomW, t);
+	}
+	
 	private void processBasicBlock4loopConsistency(int b, int t) {
 		Stack<Record> stack = stacks.get(t);
 		assert (stack != null);
-		if (!stack.isEmpty()) {
+		if (!stack.isEmpty()) {  // This test is temporary until a fix is introduced.
+			// Remove dead loop records from the stack.
 			boolean hasRemoved;
 			do {
 				hasRemoved = false;
@@ -270,11 +280,23 @@ public class DynamicAnalysis extends JavaAnalysis {
 					}
 				}
 			} while (hasRemoved);
-			Record r = stack.peek();
-			if (r instanceof LoopRecord) {
-				LoopRecord lr = (LoopRecord) r;
-				if (lr.b == b) {
-					processLoopIteration(lr.w, t);
+		}
+		boolean isLoopHead = loopHead2body.containsKey(b);
+		if (isLoopHead) {
+			if (stack.isEmpty()) { // This test is temporary until a fix is introduced.
+				onLoopStart(b, t);
+			} else {
+				Record r = stack.peek();
+				if (r instanceof MethodRecord) {
+					onLoopStart(b, t);
+				} else {
+					assert (r instanceof LoopRecord);
+					LoopRecord lr = (LoopRecord) r;
+					if (lr.b == b) {
+						processLoopIteration(lr.w, t);
+					} else {
+						onLoopStart(b, t);
+					}
 				}
 			}
 		}
@@ -308,6 +330,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		stack.add(new MethodRecord(m));
 		if (!visited4loops.contains(m)) {
 			visited4loops.add(m);
+			// System.out.println("m = " + m);
 			jq_Method mthd = domM.get(m);
 			// Perform a slightly eager computation to map each loop header to its body (in terms of <code>DomB</code>).
 			ControlFlowGraph cfg = mthd.getCFG();
@@ -324,36 +347,28 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 	}
 	
-	private void processEnterLoop4loopConsistency(int w, int t) {
-		Stack<Record> stack = stacks.get(t);
-		assert (stack != null);
-		BasicBlock loopBB = domW.get(w);
-		int indexInDomB = domB.getOrAdd(loopBB);
-		stack.add(new LoopRecord(indexInDomB, w));
-	}
-	
-	private boolean processLeaveLoop4loopConsistency(int w, int t) {
-		/*
-		 * It's not necessarily the case that the loop-exit event matches a loop-enter event at the top of the stack, 
-		 * but an important invariant is that if there is such a loop-enter event, then it's guaranteed to be at the top
-		 * of the stack, as all other loop- and method-enter events succeeding it have been matched by corresponding 
-		 * exit events.
-		 */
-		Stack<Record> stack = stacks.get(t);
-		assert (stack != null);
-		Record top = stack.peek();
-		if (top instanceof LoopRecord) {
-			LoopRecord lr = (LoopRecord) top;
-			if (lr.w == w) {
-				stack.pop();
-				return true;
-			} else {
-				return false;
-			}
-		} else {
-			return false;
-		}
-	}
+//	private boolean processLeaveLoop4loopConsistency(int w, int t) {
+//		/*
+//		 * It's not necessarily the case that the loop-exit event matches a loop-enter event at the top of the stack, 
+//		 * but an important invariant is that if there is such a loop-enter event, then it's guaranteed to be at the top
+//		 * of the stack, as all other loop- and method-enter events succeeding it have been matched by corresponding 
+//		 * exit events.
+//		 */
+//		Stack<Record> stack = stacks.get(t);
+//		assert (stack != null);
+//		Record top = stack.peek();
+//		if (top instanceof LoopRecord) {
+//			LoopRecord lr = (LoopRecord) top;
+//			if (lr.w == w) {
+//				stack.pop();
+//				return true;
+//			} else {
+//				return false;
+//			}
+//		} else {
+//			return false;
+//		}
+//	}
 	
 	private void processTrace(String fileName) throws IOException, ReadException {
 		initPass();
@@ -387,23 +402,24 @@ public class DynamicAnalysis extends JavaAnalysis {
 				}
 				break;
 			}
+			// Ignore for now until these events are removed completely.
 			case EventKind.ENTER_LOOP:
 			{
-				int w = buffer.getInt();
-				int t = buffer.getInt();
-				processEnterLoop4loopConsistency(w, t);
-				processEnterLoop(w, t);
+				buffer.getInt();
+				buffer.getInt();
+//				processEnterLoop4loopConsistency(w, t);
+//				processEnterLoop(w, t);
 				break;
 			}
 			case EventKind.LEAVE_LOOP:
 			{
-				int w = buffer.getInt();
-				int t = buffer.getInt();
-				boolean doLeaveLoop = processLeaveLoop4loopConsistency(w, t);
-				if (doLeaveLoop) {
-					// Fire off the loop-exit event only if a matching loop-enter event was on the stack.
-					processLeaveLoop(w, t);
-				}
+				buffer.getInt();
+				buffer.getInt();
+//				boolean doLeaveLoop = processLeaveLoop4loopConsistency(w, t);
+//				if (doLeaveLoop) {
+//					// Fire off the loop-exit event only if a matching loop-enter event was on the stack.
+//					processLeaveLoop(w, t);
+//				}
 				break;
 			}
 			case EventKind.NEW:
