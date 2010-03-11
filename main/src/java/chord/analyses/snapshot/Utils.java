@@ -109,7 +109,9 @@ class Execution {
     if (finalPoolPath != null) {
       String path;
       for (int i = random.nextInt(1000); new File(path = finalPoolPath+"/"+i+".exec").exists(); i++);
-      system(new String[] { "cp", "-a", basePath, path });
+      if (!new File(path).mkdir()) throw new RuntimeException("Tried to created directory "+path+" but it already exists");
+      for (String file : new String[] { "log.txt", "options.map", "output.map", "addToView", "queries.out", "graph" })
+        system(new String[] { "cp", basePath+"/"+file, path });
     }
   }
 

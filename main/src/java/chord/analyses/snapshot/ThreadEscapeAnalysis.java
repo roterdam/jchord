@@ -5,12 +5,17 @@ import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntIntProcedure;
 
 import java.util.List;
+import java.util.ArrayList;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 
 /**
  * Thread-escape in the snapshot framework.
+ * Reclaims global variables:
+ *   g = o1
+ *   g = o2
+ * At this point, o1 is no longer escaping.
  *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
@@ -18,11 +23,20 @@ import chord.project.Chord;
 public class ThreadEscapeAnalysis extends SnapshotAnalysis {
   public String propertyName() { return "thread-escape"; }
 
+  class Event {
+    public Event(int e, int b) {
+      this.e = e;
+      this.b = b;
+    }
+    int e;
+    int b;
+  }
+
   static final int THREAD_FIELD_START = 99000;
   static final int THREAD_GLOBAL_OBJECT = 100000;
 
   TIntHashSet staticNodes = new TIntHashSet(); // set of global objects
-  TIntIntHashMap e2o = new TIntIntHashMap(); // For batching queries
+  List<Event> events = new ArrayList<Event>(); // For batching
 
   @Override public String fstr(int f) { return f >= THREAD_FIELD_START ? "[T"+(f-THREAD_FIELD_START)+"]" : super.fstr(f); }
   @Override public String ostr(int o) { return o == THREAD_GLOBAL_OBJECT ? "(T)" : super.ostr(o); }
@@ -63,11 +77,8 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
 
   @Override public void fieldAccessed(int e, int t, int b, int f, int o) {
     super.fieldAccessed(e, t, b, f, o);
-    if (queryOnlyAtSnapshot) {
-    	System.out.println("ABCDEFG: Keeping track of stuff...");
-      // Keep track of the queries, so we can answer them at the end
-      e2o.put(e, b);
-    }
+    if (queryOnlyAtSnapshot)
+      events.add(new Event(e, b));
     else {
       assert (b > 0);
       Query query = new ProgramPointQuery(e);
@@ -87,13 +98,13 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
       reachable(start, -1, result.proposedTrueNodes, true);
 	  
     System.out.println("Value of queryOnlyAtSnapshot is: " + queryOnlyAtSnapshot);
-    System.out.println("Size of e2o is " + e2o.size());
+    System.out.println("Size of events is " + events.size());
     if (queryOnlyAtSnapshot) {
-      e2o.forEachEntry(new TIntIntProcedure() { public boolean execute(int e, int o) {
-        Query query = new ProgramPointQuery(e);
-        answerQuery(query, result.proposedTrueNodes.contains(o));
-        return true;
-      } });
+      for (Event event : events) { 
+        Query query = new ProgramPointQuery(event.e);
+        answerQuery(query, result.proposedTrueNodes.contains(event.b));
+      }
+      events.clear();
     }
 
     return result;

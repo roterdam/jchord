@@ -54,6 +54,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   ReachabilityAbstraction.Spec reachabilitySpec = new ReachabilityAbstraction.Spec();
   GraphMonitor graphMonitor;
   boolean queryOnlyAtSnapshot; // For efficiency (but incorrect)
+  boolean includeAllQueries;
 
   // We have a graph over abstract values (determined by updateAbstraction); each node impliciting representing a set of objects
   State state = new State();
@@ -63,6 +64,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
   HashMap<Query, QueryResult> queryResults = new HashMap<Query, QueryResult>();
   int numQueryHits;
   StatFig snapshotPrecision = new StatFig();
+  int numFieldAccesses;
 
   public Abstraction parseAbstraction(String abstractionType) {
     if (abstractionType.equals("none")) return new NoneAbstraction();
@@ -109,6 +111,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       reachabilitySpec.matchFirstField = getBooleanArg("matchFirstField", false);
       reachabilitySpec.matchLastField = getBooleanArg("matchLastField", false);
       queryOnlyAtSnapshot = getBooleanArg("queryOnlyAtSnapshot", false);
+      includeAllQueries = getBooleanArg("includeAllQueries", false);
 
       useStrongUpdates = getBooleanArg("useStrongUpdates", false);
       abstraction = parseAbstraction(getStringArg("abstraction", ""));
@@ -126,6 +129,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       options.put("hitFrac", hitFrac);
       options.put("snapshotFrac", snapshotFrac);
       options.put("exclude", getStringArg("exclude", ""));
+      options.put("includeAllQueries", includeAllQueries);
       options.put("queryOnlyAtSnapshot", queryOnlyAtSnapshot);
       X.writeMap("options.map", options);
       X.output.put("exec.status", "running");
@@ -157,6 +161,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     }
   }
   public boolean isExcluded(int e) {
+    if (includeAllQueries) return false;
     if (e < 0) return true;
     Quad q = (Quad)instrumentor.getDomE().get(e);
     jq_Class c = Program.v().getMethod(q).getDeclaringClass();
@@ -301,6 +306,7 @@ public boolean shouldAnswerQueryHit(Query query) {
     X.output.put("snapshot.avgPrecision", snapshotPrecision.mean());
     X.output.put("snapshot.num", snapshotPrecision.n);
     X.output.put("finalObjects.numTotal", state.o2h.size());
+    X.output.put("numFieldAccesses", numFieldAccesses);
 
     if (graphMonitor != null) graphMonitor.finish();
   }
@@ -355,6 +361,7 @@ public boolean shouldAnswerQueryHit(Query query) {
 
   // Typically, this function is the source of queries
   public void fieldAccessed(int e, int t, int b, int f, int o) {
+    numFieldAccesses++;
     nodeCreated(t, b);
     nodeCreated(t, o);
     if (selectSnapshotRandom.nextDouble() < snapshotFrac) 
@@ -504,6 +511,41 @@ public boolean shouldAnswerQueryHit(Query query) {
 			fieldAccessed(e, t, b, ARRAY_FIELD, -1);
 	}
 
+  @Override public void processMethodCallBef(int i, int t, int o) {
+    if (verbose >= 5) X.logs("EVENT methodCallBefore: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
+    ThreadInfo info = threadInfo(t);
+    info.callSites.push(i);
+    //info.callAllocs.push(state.o2h.get(o));
+  }
+  @Override public void processMethodCallAft(int i, int t, int o) {
+    ThreadInfo info = threadInfo(t);
+    if (verbose >= 5) X.logs("EVENT methodCallAfter: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
+
+    // NOTE: we might not get every method after event,
+    // so we might have to pop several things off the stack.
+    boolean ok = false;
+    while (info.callSites.size() > 0) {
+      int ii = info.callSites.pop();
+      if (i == ii) { ok = true; break; }
+    }
+    if (!ok)
+      X.errors("Could not pop i=%s, leaving the stack empty", istr(i));
+
+    /*if (info.callSites.size() == 0)
+      X.errors("Tried to pop empty callSites stack");
+    else {
+      int ii = info.callSites.pop();
+      if (ii != i) X.errors("pushed %s but popped %s", istr(i), istr(ii));
+    }
+    if (info.callAllocs.size() == 0)
+      X.errors("Tried to pop empty callAllocs stack");
+    else {
+      int hh = info.callAllocs.pop();
+      int h = state.o2h.get(o);
+      if (hh != h) X.errors("pushed %s but popped %s", hstr(h), hstr(hh));
+    }*/
+  }
+
 	@Override
 	public void processAloadReference(int e, int t, int b, int i, int o) {
 		if (verbose >= 5)
@@ -529,39 +571,6 @@ public boolean shouldAnswerQueryHit(Query query) {
 		edgeCreated(t, b, ARRAY_FIELD, o);
 	}
   
-	@Override
-	public void processMethodCallBef(int i, int t, int o) {
-		if (verbose >= 5)
-			X.logs("EVENT methodCallBefore: i=%s, t=%s, o=%s", istr(i),
-					tstr(t), ostr(o));
-		ThreadInfo info = threadInfo(t);
-		info.callSites.push(i);
-		info.callAllocs.push(state.o2h.get(o));
-	}
-  
-	@Override
-	public void processMethodCallAft(int i, int t, int o) {
-		ThreadInfo info = threadInfo(t);
-		if (verbose >= 5)
-			X.logs("EVENT methodCallAfter: i=%s, t=%s, o=%s", istr(i), tstr(t),
-					ostr(o));
-		if (info.callSites.size() == 0)
-			X.errors("Tried to pop empty callSites stack");
-		else {
-			int ii = info.callSites.pop();
-			if (ii != i)
-				X.errors("pushed %s but popped %s", istr(i), istr(ii));
-		}
-		if (info.callAllocs.size() == 0)
-			X.errors("Tried to pop empty callAllocs stack");
-		else {
-			int hh = info.callAllocs.pop();
-			int h = state.o2h.get(o);
-			if (hh != h)
-				X.errors("pushed %s but popped %s", hstr(h), hstr(hh));
-		}
-	}
-	  
 	@Override
 	public void processFinalize(int o) {
 		if (verbose >= 7)
@@ -714,9 +723,9 @@ class QueryResult {
 
 @SuppressWarnings("unchecked")
 class ThreadInfo {
-  public Stack<Integer> callStack = new Stack(); // Elements are methods m (for visualization)
+  //public Stack<Integer> callStack = new Stack(); // Elements are methods m (for visualization)
   public Stack<Integer> callSites = new Stack(); // Elements are call sites i (for kCFA)
-  public Stack<Integer> callAllocs = new Stack(); // Elements are object allocation sites h (for kOS)
+  //public Stack<Integer> callAllocs = new Stack(); // Elements are object allocation sites h (for kOS)
 }
 
 class State {

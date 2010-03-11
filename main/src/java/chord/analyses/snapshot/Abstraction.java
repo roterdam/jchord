@@ -99,14 +99,14 @@ class AllocAbstraction extends Abstraction {
       }
     }
 
-    if (kOS > 0) {
+    /*if (kOS > 0) {
       for (int i = 0; i < kCFA; i++) {
         int j = info.callAllocs.size() - i - 1;
         if (j < 0) break;
         buf.append('_');
         buf.append(info.callAllocs.get(j));
       }
-    }
+    }*/
 
     return buf.toString();
   }
