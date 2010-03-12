@@ -5,8 +5,8 @@ import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntIntProcedure;
 import gnu.trove.TIntIterator;
 import gnu.trove.TIntObjectHashMap;
-import gnu.trove.TObjectIntHashMap;
 import gnu.trove.TIntProcedure;
+import gnu.trove.TObjectIntHashMap;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -149,24 +149,32 @@ abstract class LabelBasedAbstraction extends Abstraction {
 		private final TIntHashSet visited;
 		private final Set<Label> labels;
 		private final boolean isPos;
+		private final boolean propagateOnlyOnChanged;
 
-		public Procedure(TIntHashSet worklist, TIntHashSet visited, Set<Label> labels, boolean isPos) {
+		public Procedure(TIntHashSet worklist, TIntHashSet visited, Set<Label> labels, boolean isPos, boolean propagateOnlyOnChanged) {
+			// The invariant does not guarantee the correctness of propagating only on changes in case of negative propagation.
+			assert (!(!isPos && propagateOnlyOnChanged)); 
 			this.worklist = worklist;
 			this.visited = visited;
 			this.labels = labels;
 			this.isPos = isPos;
+			this.propagateOnlyOnChanged = propagateOnlyOnChanged;
 		}
 		
 		@Override
 		public boolean execute(int arg0, int arg1) {
 			if (arg1 != 0) {
 				for (Label label : labels) {
-					if (isPos) 
-						posLabel(arg1, label);
-					else 
-						negLabel(arg1, label);
-					if (!visited.contains(arg1)) {
-						worklist.add(arg1);
+					boolean hasChanged;
+					if (isPos) {
+						hasChanged = posLabel(arg1, label);
+					} else { 
+						hasChanged = negLabel(arg1, label);
+					}
+					if (hasChanged || !propagateOnlyOnChanged) {
+						if (!visited.contains(arg1)) {
+							worklist.add(arg1);
+						}
 					}
 				}
 			}
@@ -199,20 +207,19 @@ abstract class LabelBasedAbstraction extends Abstraction {
 		return object2labels.get(b);
 	}
 	
-	private void posLabel(int o, Label l) {
+	private boolean posLabel(int o, Label l) {
 		Set<Label> S = object2labels.get(o);
-		boolean hasChanged = false;
 		if (S == null) {
 			object2labels.put(o, S = new HashSet<Label>(1));
-			hasChanged = true;
 		}
-		hasChanged |= S.add(l);
+		boolean hasChanged = S.add(l);
 		if (hasChanged) {
 			setValue(o, S);
 		}
+		return hasChanged;
 	}
 	
-	private void negLabel(int o, Label l) {
+	private boolean negLabel(int o, Label l) {
 		Set<Label> S = object2labels.get(o);
 		boolean hasChanged = false;
 		if (S != null) {
@@ -221,6 +228,7 @@ abstract class LabelBasedAbstraction extends Abstraction {
 		if (hasChanged) {
 			setValue(o, S);
 		}
+		return hasChanged;
 	}
 	
 	private void updateHeapGraph(int b, int f, int o) {
@@ -232,17 +240,33 @@ abstract class LabelBasedAbstraction extends Abstraction {
 		Set<Label> labels = collectLabels(b, f, o);
 		if (labels != null) {
 			if (o == 0) {
-				propagateLabels(o, labels, false);
+				// We cannot propagate only on changes as this is a negative propagation process.
+				propagateLabels(o, labels, false, false);
 				for (Label l : labels) {
 					TIntHashSet roots = getRoots(l);
 					for (TIntIterator it=roots.iterator(); it.hasNext(); ) {
 						int next = it.next();
 						assert (object2labels.get(next).contains(l)); // The root should be associated with the label supposedly originating from it.
-						propagateLabels(next, Collections.<Label> singleton(l), true);
+						/* 
+						 * Here too we must propagate all the time as the invariant
+						 * 
+						 * 		x -> y => labels(x) \subset labels(y)
+						 * 
+						 * is temporarily violated.
+						 */
+						propagateLabels(next, Collections.<Label> singleton(l), true, false);
 					}
 				}
 			} else {
-				propagateLabels(o, labels, true);
+				/* 
+				 * Since this is a positive propagation process, we are guaranteed that the invariant
+				 * 
+				 * 		x -> y => labels(x) \subset labels(y)
+				 * 
+				 * holds, which means that if x is already associated with all the labels we attempt to propagate to it, then
+				 * it is redundant to propagate them to its descendants.
+				 */
+				propagateLabels(o, labels, true, true);
 			}
 		}
 	}
@@ -263,7 +287,7 @@ abstract class LabelBasedAbstraction extends Abstraction {
 		return Collections.emptySet();
 	}
 
-	private void propagateLabels(int o, Set<Label> labels, boolean isPos) {
+	private void propagateLabels(int o, Set<Label> labels, boolean isPos, boolean propagateOnlyOnChanged) {
 		TIntHashSet worklist = new TIntHashSet();
 		TIntHashSet visited = new TIntHashSet();
 		for (Label l : labels) {
@@ -276,7 +300,7 @@ abstract class LabelBasedAbstraction extends Abstraction {
 		while (!worklist.isEmpty()) {
 			TIntIterator it = worklist.iterator();
 			worklist = new TIntHashSet();
-			Procedure proc = new Procedure(worklist, visited, labels, isPos);
+			Procedure proc = new Procedure(worklist, visited, labels, isPos, propagateOnlyOnChanged);
 			while (it.hasNext()) {
 				final int next = it.next();
 				visited.add(next);
