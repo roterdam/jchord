@@ -6,6 +6,8 @@
 package chord.instr;
 
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.FileWriter;
 
 import chord.project.Properties;
 import chord.instr.InstrScheme.EventFormat;
@@ -57,7 +59,6 @@ public class TracePrinter {
 		IndexMap<String> Rmap = instrumentor.getRmap();
 		IndexMap<String> Pmap = instrumentor.getPmap();
 		IndexMap<String> Bmap = instrumentor.getBmap();
-		IndexMap<String> Wmap = instrumentor.getWmap();
 		try {
 			ByteBufferedFile buffer = new ByteBufferedFile(
 				Properties.traceBlockSize, traceFileName, true);
@@ -78,22 +79,6 @@ public class TracePrinter {
 					String mStr = (m < 0) ? "null" : Mmap.get(m);
 					int t = buffer.getInt();
 					System.out.println("LEAVE_METHOD " + mStr + " " + t);
-					break;
-				}
-				case EventKind.ENTER_LOOP:
-				{
-					int w = buffer.getInt();
-					String wStr = (w < 0) ? "null" : Wmap.get(w);
-					int t = buffer.getInt();
-					System.out.println("ENTER_LOOP " + wStr + " " + t);
-					break;
-				}
-				case EventKind.LEAVE_LOOP:
-				{
-					int w = buffer.getInt();
-					String wStr = (w < 0) ? "null" : Wmap.get(w);
-					int t = buffer.getInt();
-					System.out.println("LEAVE_LOOP " + wStr + " " + t);
 					break;
 				}
 				case EventKind.BEF_NEW:
@@ -435,8 +420,8 @@ public class TracePrinter {
 					int o = buffer.getInt();
 					System.out.println("FINALIZE " + o);
 				}
-				default:
-					throw new ChordRuntimeException("Opcode: " + opcode);
+				default: 
+					throw new ChordRuntimeException("Unknown opcode: " + opcode);
 				}
 			}
 		} catch (IOException ex) {
