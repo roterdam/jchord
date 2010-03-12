@@ -68,6 +68,11 @@ public abstract class LabelBasedAnalysis extends DynamicAnalysis {
 	private final TIntObjectHashMap<TIntIntHashMap> heapGraph = new TIntObjectHashMap<TIntIntHashMap>();
 	protected final TIntObjectHashMap<Set<Label>> object2labels = new TIntObjectHashMap<Set<Label>>();
 
+	/* 
+	 * This method *must not* rely on <code>object2labels</code>, which might temporarily remove the association
+	 * between the roots of a label and a label while performing negative propagation!  
+	 * 
+	 * */
 	protected abstract TIntHashSet getRoots(Label l);
 	
 	private Set<Label> getLabels(int b) {
