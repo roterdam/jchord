@@ -187,6 +187,10 @@ abstract class LabelBasedAbstraction extends Abstraction {
 	protected final TIntObjectHashMap<TIntIntHashMap> heapGraph = new TIntObjectHashMap<TIntIntHashMap>();
 	protected final TIntObjectHashMap<Set<Label>> object2labels = new TIntObjectHashMap<Set<Label>>();
 
+	/* 
+	 * This method *must not* rely on <code>object2labels</code>, which might temporarily remove the association
+	 * between the roots of a label and a label while performing negative propagation!  
+	 * */
 	protected abstract TIntHashSet getRoots(Label l);
 
 	@Override
@@ -246,7 +250,7 @@ abstract class LabelBasedAbstraction extends Abstraction {
 					TIntHashSet roots = getRoots(l);
 					for (TIntIterator it=roots.iterator(); it.hasNext(); ) {
 						int next = it.next();
-						assert (object2labels.get(next).contains(l)); // The root should be associated with the label supposedly originating from it.
+//						assert (object2labels.get(next).contains(l)); // The root should be associated with the label supposedly originating from it.
 						/* 
 						 * Here too we must propagate all the time as the invariant
 						 * 
