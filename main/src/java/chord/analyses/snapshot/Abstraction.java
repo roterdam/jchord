@@ -2,19 +2,26 @@ package chord.analyses.snapshot;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
+import gnu.trove.TIntIntProcedure;
+import gnu.trove.TIntIterator;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntProcedure;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+
+import com.ibm.xtq.xslt.runtime.RuntimeError;
 
 /**
  * An abstraction is a function from a node (object) to an abstract value,
  * which depends on the graph.
  *
  * @author Percy Liang (pliang@cs.berkeley.edu)
+ * @author omert (omertrip@post.tau.ac.il)
  */
 public abstract class Abstraction {
   public Execution X;
@@ -112,6 +119,211 @@ class AllocAbstraction extends Abstraction {
   }
 }
 
+abstract class LabelBasedAbstraction extends Abstraction {
+	protected static interface Label {
+	}
+	
+	private class Procedure implements TIntIntProcedure {
+		private final TIntHashSet worklist;
+		private final TIntHashSet visited;
+		private final Set<Label> labels;
+		private final boolean isPos;
+
+		public Procedure(TIntHashSet worklist, TIntHashSet visited, Set<Label> labels, boolean isPos) {
+			this.worklist = worklist;
+			this.visited = visited;
+			this.labels = labels;
+			this.isPos = isPos;
+		}
+		
+		@Override
+		public boolean execute(int arg0, int arg1) {
+			if (arg1 != 0) {
+				for (Label label : labels) {
+					if (isPos) 
+						posLabel(arg1, label);
+					else 
+						negLabel(arg1, label);
+					if (!visited.contains(arg1)) {
+						worklist.add(arg1);
+					}
+				}
+			}
+			return true;
+		}
+	}
+	
+//	private final static int ARRAY_CONTENT = Integer.MIN_VALUE;
+	
+	private final TIntObjectHashMap<TIntIntHashMap> heapGraph = new TIntObjectHashMap<TIntIntHashMap>();
+	protected final TIntObjectHashMap<Set<Label>> object2labels = new TIntObjectHashMap<Set<Label>>();
+
+	protected abstract TIntHashSet getRoots(Label l);
+
+	@Override
+	public void edgeCreated(int b, int f, int o) {
+		if (b != 0 && f != 0) {
+			updateHeapGraph(b, f, o);
+		}
+	}
+	
+	@Override
+	public void edgeDeleted(int b, int f, int o) {
+		if (b != 0 && f != 0) {
+			updateHeapGraph(b, f, 0);
+		}
+	}
+	
+	private Set<Label> getLabels(int b) {
+		return object2labels.get(b);
+	}
+	
+	private void posLabel(int o, Label l) {
+		Set<Label> S = object2labels.get(o);
+		boolean hasChanged = false;
+		if (S == null) {
+			object2labels.put(o, S = new HashSet<Label>(1));
+			hasChanged = true;
+		}
+		hasChanged |= S.add(l);
+		if (hasChanged) {
+			setValue(o, S);
+		}
+	}
+	
+	private void negLabel(int o, Label l) {
+		Set<Label> S = object2labels.get(o);
+		boolean hasChanged = false;
+		if (S != null) {
+			hasChanged |= S.remove(l);
+		}
+		if (hasChanged) {
+			setValue(o, S);
+		}
+	}
+	
+	private void updateHeapGraph(int b, int f, int o) {
+		TIntIntHashMap M = heapGraph.get(b);
+		if (M == null) {
+			heapGraph.put(b, M = new TIntIntHashMap());
+		}
+		M.put(f, o);
+		Set<Label> labels = getLabels(b);
+		if (labels != null) {
+			if (o == 0) {
+				propagateLabels(o, labels, false);
+				for (Label l : labels) {
+					TIntHashSet roots = getRoots(l);
+					for (TIntIterator it=roots.iterator(); it.hasNext(); ) {
+						propagateLabels(it.next(), Collections.<Label> singleton(l), true);
+					}
+				}
+			} else {
+				propagateLabels(o, labels, true);
+			}
+		}
+	}
+	
+	private void propagateLabels(int o, Set<Label> labels, boolean isPos) {
+		TIntHashSet worklist = new TIntHashSet();
+		TIntHashSet visited = new TIntHashSet();
+		for (Label l : labels) {
+			if (isPos)
+				posLabel(o, l);
+			else
+				negLabel(o, l);
+		}
+		worklist.add(o);
+		while (!worklist.isEmpty()) {
+			TIntIterator it = worklist.iterator();
+			worklist = new TIntHashSet();
+			Procedure proc = new Procedure(worklist, visited, labels, isPos);
+			while (it.hasNext()) {
+				final int next = it.next();
+				visited.add(next);
+				TIntIntHashMap M = heapGraph.get(next);
+				if (M != null) {
+					M.forEachEntry(proc);
+				}
+			}
+		}
+	}
+}
+
+class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
+
+	private static class AllocationSiteLabel implements Label {
+		public final int h;
+		
+		public AllocationSiteLabel(int h) {
+			this.h = h;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + h;
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			AllocationSiteLabel other = (AllocationSiteLabel) obj;
+			if (h != other.h)
+				return false;
+			return true;
+		}
+	}
+	
+	private final TIntObjectHashMap<TIntHashSet> alloc2objects = new TIntObjectHashMap<TIntHashSet>();
+
+	@Override
+	public String toString() {
+		return "reach-from-alloc";
+	}
+	
+	@Override
+	protected TIntHashSet getRoots(Label l) {
+		assert (l instanceof AllocationSiteLabel);
+		AllocationSiteLabel allocLabel = (AllocationSiteLabel) l;
+		return alloc2objects.get(allocLabel.h);		
+	}
+
+	@Override
+	public void ensureComputed() {
+		// This is a no-op.
+	}
+
+	@Override
+	public void nodeDeleted(int o) {
+		throw new RuntimeError("Operation 'nodeDeleted' not currently supported.");
+	}
+	
+	@Override
+	public void nodeCreated(ThreadInfo info, int o) {
+		int h = state.o2h.get(o);
+		if (o != 0 /*&& h >= 0*/) {
+			Set<Label> S = new HashSet<Label>(1);
+			S.add(new AllocationSiteLabel(h));
+			object2labels.put(o, S);
+			setValue(o, S);
+			TIntHashSet T = alloc2objects.get(h);
+			if (T == null) {
+				T = new TIntHashSet();
+				alloc2objects.put(h, T);
+			}
+			T.add(o);
+		}
+	}
+}
+
 // SLOW
 class RecencyAbstraction extends Abstraction {
   TIntIntHashMap h2count = new TIntIntHashMap(); // heap allocation site h -> number of objects that have been allocated at h
@@ -170,7 +382,7 @@ class ReachabilityAbstraction extends Abstraction {
     public boolean pointedTo, matchRepeatedFields, matchFirstField, matchLastField;
   }
   Spec spec;
-  TIntObjectHashMap<List<String>> o2pats = new TIntObjectHashMap(); // o -> list of path patterns that describe o
+  TIntObjectHashMap<List<String>> o2pats = new TIntObjectHashMap<List<String>>(); // o -> list of path patterns that describe o
 
   public ReachabilityAbstraction(Spec spec) {
     this.spec = spec;

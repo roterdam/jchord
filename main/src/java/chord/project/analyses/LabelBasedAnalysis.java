@@ -92,14 +92,14 @@ public abstract class LabelBasedAnalysis extends DynamicAnalysis {
 	
 	@Override
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
-		if (e >= 0 && b != 0) {
+		if (b != 0) {
 			updateHeapGraph(b, i, o);
 		}
 	}
 	
 	@Override
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
-		if (e >= 0 && b != 0 && f >= 0) {
+		if (b != 0 && f >= 0) {
 			updateHeapGraph(b, f, o);
 		}
 	}

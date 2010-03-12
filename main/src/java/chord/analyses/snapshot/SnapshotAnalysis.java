@@ -72,6 +72,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
     if (abstractionType.equals("recency")) return new RecencyAbstraction();
     if (abstractionType.equals("recency2")) return new Recency2Abstraction();
     if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec);
+    if (abstractionType.equals("reach-from-alloc")) return new ReachableFromAllocAbstraction();
     throw new RuntimeException("Unknown abstraction: "+abstractionType+" (possibilities: none|alloc|recency|reachability)");
   }
 
