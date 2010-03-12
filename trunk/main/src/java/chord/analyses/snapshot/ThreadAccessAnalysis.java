@@ -115,8 +115,8 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 		for (TIntIterator it = visitedLocations.iterator(); it.hasNext(); ) {
 			ThreadAccessQuery q = new ThreadAccessQuery(it.next());
 			if (shouldAnswerQueryHit(q)) {
-				// The query is answered positively iff the statement did not access an object touched my more than one thread.
-				answerQuery(q, !sharedAccessingLocations.contains(q.e));
+				// The query is answered positively iff the statement did access an object touched my more than one thread.
+				answerQuery(q, sharedAccessingLocations.contains(q.e));
 			}
 		}
 	}

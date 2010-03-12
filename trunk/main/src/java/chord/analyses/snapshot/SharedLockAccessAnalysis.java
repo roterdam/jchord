@@ -107,9 +107,9 @@ public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 			if (shouldAnswerQueryHit(q)) {
 				/* 
 				 * Give a positive answer iff the lock used by the lock-acquisition statement has been accessed by
-				 * no more than one thread. 
+				 * more than one thread. 
 				 */
-				answerQuery(q, !sharedLockAcquisitionStatements.contains(e));
+				answerQuery(q, sharedLockAcquisitionStatements.contains(e));
 			}
 		}
 		abstraction2threads.clear();
