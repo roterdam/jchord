@@ -16,7 +16,7 @@ import chord.util.IndexMap;
 @Chord(name="dynamic-loop-java")
 public class LoopTest extends DynamicAnalysis {
 
-	private IndexMap<String> Wmap;
+	private IndexMap<String> Bmap;
 	private InstrScheme scheme;
 	
 	@Override
@@ -32,12 +32,12 @@ public class LoopTest extends DynamicAnalysis {
 	@Override
 	public void initAllPasses() {
 		super.initAllPasses();
-		Wmap = instrumentor.getWmap();
+		Bmap = instrumentor.getBmap();
 	}
 	
 	@Override
 	public void processEnterLoop(int w, int t) {
-		String s = Wmap.get(w);
+		String s = Bmap.get(w);
 		if (s.contains("V@T")) {
 			OutDirUtils.logOut("%s", "Entered loop: " + s);
 			OutDirUtils.logOut("%s", "Loop id: " + w);
@@ -46,7 +46,7 @@ public class LoopTest extends DynamicAnalysis {
 	
 	@Override
 	public void processLeaveLoop(int w, int t) {
-		String s = Wmap.get(w);
+		String s = Bmap.get(w);
 		if (s.contains("V@T")) {
 			OutDirUtils.logOut("%s", "Exited loop: " + s);
 		}
@@ -54,7 +54,7 @@ public class LoopTest extends DynamicAnalysis {
 	
 	@Override
 	public void processLoopIteration(int w, int t) {
-		String s = Wmap.get(w);
+		String s = Bmap.get(w);
 		if (s.contains("V@T")) {
 			OutDirUtils.logOut("%s", "Loop iteration began: " + s);
 		}

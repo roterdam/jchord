@@ -289,9 +289,6 @@ public class TraceTransformer {
 			return astoreReferenceNumBytes;
 		case EventKind.ENTER_METHOD:
 		case EventKind.LEAVE_METHOD:
-		case EventKind.ENTER_LOOP:
-		case EventKind.LEAVE_LOOP:
-			return 8;
 		case EventKind.METHOD_CALL_BEF:
 		case EventKind.METHOD_CALL_AFT:
 			return methodCallNumBytes;

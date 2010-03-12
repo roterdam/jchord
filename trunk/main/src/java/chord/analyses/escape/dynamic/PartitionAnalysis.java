@@ -491,7 +491,7 @@ public class PartitionAnalysis extends DynamicAnalysis {
     return Program.v().toJavaPosStr(quad)+" "+Program.v().toQuadStr(quad);
   }
   String mstr(int m) { return m == -1 ? "-" : instrumentor.getMmap().get(m); } // method
-  String wstr(int w) { return w == -1 ? "-" : instrumentor.getWmap().get(w); } // loop
+  String wstr(int w) { return w == -1 ? "-" : instrumentor.getBmap().get(w); } // loop
   String istr(int i) { return i == -1 ? "-" : instrumentor.getImap().get(i); } // call site
   String ostr(int o) { return o == -1 ? "-" : (o == NULL_OBJECT ? "null" : "O"+o); } // concrete object
   String tstr(int t) { return t == -1 ? "-" : "T"+t; } // thread
