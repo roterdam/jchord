@@ -128,7 +128,8 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 		while (it.hasNext()) {
 			StationaryFieldQuery q = new StationaryFieldQuery(it.next());
 			if (shouldAnswerQueryHit(q)) {
-				answerQuery(q, stationaryFields.contains(q.f));
+        // True iff non-stationary
+				answerQuery(q, !stationaryFields.contains(q.f));
 			}
 		}
 	}

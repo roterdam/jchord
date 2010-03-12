@@ -30,7 +30,7 @@ import chord.project.analyses.DynamicAnalysis;
  *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
-public abstract class SnapshotAnalysis extends DynamicAnalysis implements AbstractionListener {
+public abstract class SnapshotAnalysis extends DynamicAnalysis implements AbstractionListener, AbstractionInitializer {
   public abstract String propertyName();
 
   static final int ARRAY_FIELD = 100000000;
@@ -69,8 +69,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   public Abstraction parseAbstraction(String abstractionType) {
     if (abstractionType.equals("none")) return new NoneAbstraction();
     if (abstractionType.equals("alloc")) return new AllocAbstraction(kCFA, kOS);
-    if (abstractionType.equals("recency")) return new RecencyAbstraction();
-    if (abstractionType.equals("recency2")) return new Recency2Abstraction();
+    if (abstractionType.equals("recency")) return new RecencyAbstraction(new AllocAbstraction(kCFA, kOS));
     if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec);
     if (abstractionType.equals("alloc-reachability")) return new ReachableFromAllocAbstraction();
     if (abstractionType.equals("alloc-x-field-reachability")) return new ReachableFromAllocAbstraction();
@@ -282,6 +281,10 @@ public boolean shouldAnswerQueryHit(Query query) {
     int F = instrumentor.getFmap().size();
     computedExcludedClasses();
     X.logs("initAllPasses: |E| = %s, |H| = %s, |F| = %s, excluding %s classes", E, H, F, excludedClasses.size());
+    abstraction.init(this);
+  }
+  
+  public void initAbstraction(Abstraction abstraction) {
     abstraction.X = X;
     abstraction.state = state;
     abstraction.listener = this;

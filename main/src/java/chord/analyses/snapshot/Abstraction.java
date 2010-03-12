@@ -5,6 +5,7 @@ import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntIntProcedure;
 import gnu.trove.TIntIterator;
 import gnu.trove.TIntObjectHashMap;
+import gnu.trove.TObjectIntHashMap;
 import gnu.trove.TIntProcedure;
 
 import java.util.ArrayList;
@@ -15,11 +16,14 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.ibm.xtq.xslt.runtime.RuntimeError;
-
 interface AbstractionListener {
   // Called when the abstraction is changed
   void abstractionChanged(int o, Object a);
+}
+
+interface AbstractionInitializer {
+  // Called when the abstraction is changed
+  void initAbstraction(Abstraction abstraction);
 }
 
 /**
@@ -44,6 +48,7 @@ public abstract class Abstraction {
   public abstract void nodeDeleted(int o);
   public void edgeCreated(int b, int f, int o) { }
   public void edgeDeleted(int b, int f, int o) { }
+  public void init(AbstractionInitializer initializer) { initializer.initAbstraction(this); }
 
   // Called before we start using this abstraction in arbitrary ways, so do whatever is necessary.
   // Try to keep this function empty and incrementally update the abstraction.
@@ -54,6 +59,7 @@ public abstract class Abstraction {
 
   // Helpers
   protected void setValue(int o, Object a) {
+    if (!state.o2edges.containsKey(o)) throw new RuntimeException(""+o);
     if (separateNodes.contains(o)) a = "-";
     Object old_a = o2a.get(o);
     if (old_a != null) { // There was an old abstraction there already
@@ -70,6 +76,12 @@ public abstract class Abstraction {
   }
 }
 
+abstract class LocalAbstraction extends Abstraction {
+  public abstract Object computeValue(ThreadInfo info, int o);
+}
+
+////////////////////////////////////////////////////////////
+
 class NoneAbstraction extends Abstraction {
   @Override public String toString() { return "none"; }
   @Override public void nodeCreated(ThreadInfo info, int o) { }
@@ -78,7 +90,7 @@ class NoneAbstraction extends Abstraction {
   @Override public Object getValue(int o) { return o; }
 }
 
-class AllocAbstraction extends Abstraction {
+class AllocAbstraction extends LocalAbstraction {
   int kCFA, kOS;
 
   public AllocAbstraction(int kCFA, int kOS) {
@@ -100,7 +112,7 @@ class AllocAbstraction extends Abstraction {
 
   @Override public void ensureComputed() { }
 
-  private Object computeValue(ThreadInfo info, int o) {
+  public Object computeValue(ThreadInfo info, int o) {
     if (kCFA == 0 && kOS == 0) return state.o2h.get(o); // No context
 
     StringBuilder buf = new StringBuilder();
@@ -380,7 +392,7 @@ class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 
 	@Override
 	public void nodeDeleted(int o) {
-		throw new RuntimeError("Operation 'nodeDeleted' not currently supported.");
+		throw new RuntimeException("Operation 'nodeDeleted' not currently supported.");
 	}
 }
 
@@ -459,7 +471,7 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 }
 
 // SLOW: don't use this; use Recency2Abstraction instead
-class RecencyAbstraction extends Abstraction {
+/*class RecencyAbstraction extends Abstraction {
   TIntIntHashMap h2count = new TIntIntHashMap(); // heap allocation site h -> number of objects that have been allocated at h
   TIntIntHashMap o2count = new TIntIntHashMap(); // object -> count
 
@@ -489,25 +501,34 @@ class RecencyAbstraction extends Abstraction {
     boolean mostRecent = o2count.get(o) == h2count.get(h);
     return mostRecent ? h+"R" : h;
   }
-}
+}*/
 
-class Recency2Abstraction extends Abstraction {
-  TIntIntHashMap h2lasto = new TIntIntHashMap(); // heap allocation site h -> latest object
+class RecencyAbstraction extends Abstraction {
+  TObjectIntHashMap<Object> val2lasto = new TObjectIntHashMap<Object>(); // preliminary value -> latest object
+  LocalAbstraction abstraction;
 
-  public String toString() { return "recency2"; }
+  public RecencyAbstraction(LocalAbstraction abstraction) {
+    this.abstraction = abstraction;
+  }
+
+  @Override public void init(AbstractionInitializer initializer) {
+    super.init(initializer);
+    abstraction.init(initializer);
+  }
+
+  @Override public String toString() { return "recency("+abstraction+")"; }
+  @Override public void ensureComputed() { }
 
   @Override public void nodeCreated(ThreadInfo info, int o) {
-    int h = state.o2h.get(o);
-    Integer old_o = h2lasto.get(h);
-    if (old_o != null) {
-      // Change abstract value of o
-      setValue(old_o, h);
+    Object val = abstraction.computeValue(info, o);
+    if (val2lasto.containsKey(val)) {
+      int old_o = val2lasto.get(val);
+      setValue(old_o, val+"~"); // Previously new object (old_o) now gets old version of the the value
     }
-    h2lasto.put(h, o);
-    setValue(o, h+"R"); // Most recent
+    val2lasto.put(val, o);
+    setValue(o, val); // Most recent
   }
   @Override public void nodeDeleted(int o) { }
-  @Override public void ensureComputed() { }
 }
 
 // SLOW
