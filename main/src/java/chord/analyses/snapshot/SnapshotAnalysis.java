@@ -30,7 +30,7 @@ import chord.project.analyses.DynamicAnalysis;
  *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
-public abstract class SnapshotAnalysis extends DynamicAnalysis {
+public abstract class SnapshotAnalysis extends DynamicAnalysis implements AbstractionListener {
   public abstract String propertyName();
 
   static final int ARRAY_FIELD = 100000000;
@@ -115,7 +115,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
       queryOnlyAtSnapshot = getBooleanArg("queryOnlyAtSnapshot", false);
       includeAllQueries = getBooleanArg("includeAllQueries", false);
 
-      useStrongUpdates = getBooleanArg("useStrongUpdates", false);
+      useStrongUpdates = getBooleanArg("useStrongUpdates", true);
       abstraction = parseAbstraction(getStringArg("abstraction", ""));
 
       graphMonitor = new SerializingGraphMonitor(X.path("graph"), getIntArg("graph.maxCommands", 100000));
@@ -213,7 +213,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
 
     instrScheme.setMethodCallEvent(true, true, true, true, true); // i, t, o, before, after
 
-    instrScheme.setFinalizeEvent();
+    //instrScheme.setFinalizeEvent();
 
     //instrScheme.setReturnPrimitiveEvent(true, true); // i, t
     //instrScheme.setReturnReferenceEvent(true, true, true); // i, t, o
@@ -231,11 +231,11 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis {
 	  return false;
   }
 
-protected InstrScheme getBaselineScheme() {
-	return new InstrScheme();
-}
+  protected InstrScheme getBaselineScheme() {
+    return new InstrScheme();
+  }
 
-public boolean shouldAnswerQueryHit(Query query) {
+  public boolean shouldAnswerQueryHit(Query query) {
     if (selectHitRandom.nextDouble() < hitFrac)
       return queryResult(query).selected;
     return false;
@@ -283,6 +283,7 @@ public boolean shouldAnswerQueryHit(Query query) {
     X.logs("initAllPasses: |E| = %s, |H| = %s, |F| = %s, excluding %s classes", E, H, F, excludedClasses.size());
     abstraction.X = X;
     abstraction.state = state;
+    abstraction.listener = this;
   }
 
   public void doneAllPasses() {
@@ -315,6 +316,8 @@ public boolean shouldAnswerQueryHit(Query query) {
 
   //////////////////////////////
   // Override these graph construction handlers (remember to call super though)
+
+  public void abstractionChanged(int o, Object a) { } // Override if necessary
 
   public void nodeCreated(int t, int o) {
     if (o < 0) return; // Ignore bad nodes

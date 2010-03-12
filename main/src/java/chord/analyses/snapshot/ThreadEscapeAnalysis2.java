@@ -44,7 +44,7 @@ import gnu.trove.TIntIntProcedure;
  */
 @Chord(name="ss-thread-escape2")
 public class ThreadEscapeAnalysis2 extends SnapshotAnalysis {
-  public String propertyName() { return "thread-escape"; }
+  public String propertyName() { return "thread-escape2"; }
 
   class Event {
     public Event(int e, int b) {
@@ -81,6 +81,25 @@ public class ThreadEscapeAnalysis2 extends SnapshotAnalysis {
     // cause more nodes to escape.  Ignore this effect for now.
     if (escapedNodes.contains(b))
       setEscape(o);  
+  }
+
+  @Override public void abstractionChanged(int o, Object a) {
+    // When the abstraction changes, more things might get smashed together, so
+    // we need to propagate more escaping.
+    List<Integer> os = abstraction.a2os.get(a);
+    // Does anything escape?
+    boolean escaped = false;
+    for (int oo : os) {
+      if (escapedNodes.contains(oo)) {
+        escaped = true;
+        break;
+      }
+    }
+    // If escapes, then everything escapes.
+    if (escaped) {
+      for (int oo : os)
+        setEscapeRecurse(oo);
+    }
   }
 
   public void setEscape(int o) {

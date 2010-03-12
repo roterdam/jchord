@@ -14,7 +14,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import com.ibm.xtq.xslt.runtime.RuntimeError;
+interface AbstractionListener {
+  // Called when the abstraction is changed
+  void abstractionChanged(int o, Object a);
+}
 
 /**
  * An abstraction is a function from a node (object) to an abstract value,
@@ -26,6 +29,7 @@ import com.ibm.xtq.xslt.runtime.RuntimeError;
 public abstract class Abstraction {
   public Execution X;
   public State state;
+  public AbstractionListener listener;
   public TIntHashSet separateNodes = new TIntHashSet(); // (Optional): let these values have a distinct value
 
   // Build these as intermediate data structures
@@ -39,6 +43,7 @@ public abstract class Abstraction {
   public void edgeDeleted(int b, int f, int o) { }
 
   // Called before we start using this abstraction in arbitrary ways, so do whatever is necessary.
+  // Try to keep this function empty and incrementally update the abstraction.
   public abstract void ensureComputed();
 
   // Return the value of the abstraction (called after ensureComputed)
@@ -49,11 +54,12 @@ public abstract class Abstraction {
     if (separateNodes.contains(o)) a = "-";
     Object old_a = o2a.get(o);
     if (old_a != null) { // There was an old abstraction there already
-      if (old_a == a) return;
+      if (old_a.equals(a)) return; // Haven't changed the abstraction
       a2os.get(old_a).remove((Integer)o);
     }
     o2a.put(o, a);
     Utils.add(a2os, a, o);
+    listener.abstractionChanged(o, a);
   }
   protected void removeValue(int o) {
     Object a = o2a.remove(o);
@@ -303,7 +309,7 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 
 	@Override
 	public void nodeDeleted(int o) {
-		throw new RuntimeError("Operation 'nodeDeleted' not currently supported.");
+		throw new RuntimeException("Operation 'nodeDeleted' not currently supported.");
 	}
 	
 	@Override
@@ -324,7 +330,7 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 	}
 }
 
-// SLOW
+// SLOW: don't use this; use Recency2Abstraction instead
 class RecencyAbstraction extends Abstraction {
   TIntIntHashMap h2count = new TIntIntHashMap(); // heap allocation site h -> number of objects that have been allocated at h
   TIntIntHashMap o2count = new TIntIntHashMap(); // object -> count
@@ -370,7 +376,7 @@ class Recency2Abstraction extends Abstraction {
       setValue(old_o, h);
     }
     h2lasto.put(h, o);
-    setValue(o, h+"R");
+    setValue(o, h+"R"); // Most recent
   }
   @Override public void nodeDeleted(int o) { }
   @Override public void ensureComputed() { }
@@ -432,7 +438,7 @@ class ReachabilityAbstraction extends Abstraction {
 
   private void search(String source, int first_f, int last_f, int len, int o) {
     String pat = null;
-    if (len > 0) { // Avoid trivial predicates
+    /*if (len > 0)*/ { // Avoid trivial predicates
       if (spec.pointedTo) {
         if (len == 1) pat = source;
       }
@@ -460,7 +466,7 @@ class ReachabilityAbstraction extends Abstraction {
     // Recurse
     List<Edge> edges = state.o2edges.get(o);
     if (edges == null) {
-      X.errors("o=%s returned no edges", o);
+      X.errors("o=%s returned no edges (shouldn't happen!)", o);
     }
     else {
       for (Edge e : edges) {
