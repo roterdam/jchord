@@ -228,14 +228,14 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   }
 
   protected boolean isArrayIndexSensitive() {
-	  return false;
+	  return true;
   }
   
   protected InstrScheme getBaselineScheme() {
     return new InstrScheme();
   }
 
-public boolean shouldAnswerQueryHit(Query query) {
+  public boolean shouldAnswerQueryHit(Query query) {
     if (selectHitRandom.nextDouble() < hitFrac)
       return queryResult(query).selected;
     return false;

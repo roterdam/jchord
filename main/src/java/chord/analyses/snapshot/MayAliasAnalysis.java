@@ -74,7 +74,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 
 	List<Event> events = new ArrayList<Event>(); // For batching
 
-	private static class MayAliasQuery extends Query {
+	private class MayAliasQuery extends Query {
 		public final int e1;
 		public final int e2;
 
@@ -107,6 +107,8 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 				return false;
 			return true;
 		}
+
+    @Override public String toString() { return estr(e1) + " ; " + estr(e2); }
 	}
 
 	private final TIntObjectHashMap<Set<Object>> loc2abstractions = new TIntObjectHashMap<Set<Object>>();
