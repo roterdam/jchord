@@ -20,7 +20,7 @@ import chord.project.Chord;
 @Chord(name="ss-thr-access")
 public class ThreadAccessAnalysis extends SnapshotAnalysis {
 
-	private static class ThreadAccessQuery extends Query {
+	private class ThreadAccessQuery extends Query {
 		public final int e;
 		
 		public ThreadAccessQuery(int e) {
@@ -48,6 +48,7 @@ public class ThreadAccessAnalysis extends SnapshotAnalysis {
 				return false;
 			return true;
 		}
+    @Override public String toString() { return estr(e); }
 	}
 	
 	private static class Event {

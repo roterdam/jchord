@@ -34,7 +34,7 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
   }
   List<Event> events = new ArrayList<Event>(); // For batching
 	
-	private static class StationaryFieldQuery extends Query {
+	private class StationaryFieldQuery extends Query {
 		public final int f;
 
 		public StationaryFieldQuery(int f) {
@@ -62,6 +62,7 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 				return false;
 			return true;
 		}
+    @Override public String toString() { return fstr(f); }
 	}
 
 	private final TIntHashSet stationaryFields = new TIntHashSet();

@@ -21,7 +21,7 @@ import chord.project.Chord;
 @Chord(name="ss-lock-access")
 public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 
-	private static class SharedLockAccessQuery extends Query {
+	private class SharedLockAccessQuery extends Query {
 		public final int e;
 		public SharedLockAccessQuery(int e) {
 			this.e = e;
@@ -46,6 +46,7 @@ public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 				return false;
 			return true;
 		}
+    @Override public String toString() { return estr(e); }
 	}
 	
 	private static class Event {
