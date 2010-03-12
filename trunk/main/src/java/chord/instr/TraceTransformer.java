@@ -319,7 +319,7 @@ public class TraceTransformer {
 		case EventKind.FINALIZE:
 			return 4;
 		default:
-			throw new ChordRuntimeException();
+			throw new ChordRuntimeException("Unknown opcode: " + opcode);
 		}
 	}
 	private void adjust() throws IOException {

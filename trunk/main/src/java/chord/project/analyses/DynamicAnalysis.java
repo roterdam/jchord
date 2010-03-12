@@ -159,7 +159,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						try {
 							if (DEBUG) {
 								System.out.println("ENTER TRACE_TRANSFORMER");
-								(new TracePrinter(crudeTraceFileName, instrumentor)).run();
+								(new TracePrinter("crude", crudeTraceFileName, instrumentor)).run();
 								System.out.println("LEAVE TRACE_TRANSFORMER");
 							}
 							(new TraceTransformer(crudeTraceFileName,
@@ -175,7 +175,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						try {
 							if (DEBUG) {
 								System.out.println("ENTER TRACE_PROCESSOR");
-								(new TracePrinter(finalTraceFileName, instrumentor)).run();
+								(new TracePrinter("final", finalTraceFileName, instrumentor)).run();
 								System.out.println("LEAVE TRACE_PROCESSOR");
 							}
 							processTrace(finalTraceFileName);

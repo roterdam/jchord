@@ -29,6 +29,7 @@ import chord.runtime.Runtime;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class TracePrinter {
+	private final String name;
 	private final String traceFileName;
 	private final Instrumentor instrumentor;
 	/**
@@ -39,7 +40,8 @@ public class TracePrinter {
 	 * @param	instrumentor	The instrumentor used to instrument the
 	 * program from which the trace was generated.
 	 */
-	public TracePrinter(String traceFileName, Instrumentor instrumentor) {
+	public TracePrinter(String name, String traceFileName, Instrumentor instrumentor) {
+		this.name = name;
 		this.traceFileName = traceFileName;
 		this.instrumentor = instrumentor;
 	}
@@ -68,7 +70,7 @@ public class TracePrinter {
 					int m = buffer.getInt();
 					String mStr = (m < 0) ? "null" : Mmap.get(m);
 					int t = buffer.getInt();
-					System.out.println("ENTER_METHOD " + mStr + " " + t);
+					System.out.println(name + " ENTER_METHOD " + mStr + " " + t);
 					break;
 				}
 				case EventKind.LEAVE_METHOD:
@@ -76,7 +78,7 @@ public class TracePrinter {
 					int m = buffer.getInt();
 					String mStr = (m < 0) ? "null" : Mmap.get(m);
 					int t = buffer.getInt();
-					System.out.println("LEAVE_METHOD " + mStr + " " + t);
+					System.out.println(name + " LEAVE_METHOD " + mStr + " " + t);
 					break;
 				}
 				case EventKind.BEF_NEW:
@@ -84,7 +86,7 @@ public class TracePrinter {
 					int h = buffer.getInt();
 					String hStr = (h < 0) ? "null" : Hmap.get(h);
 					int t = buffer.getInt();
-					System.out.println("BEF_NEW " + hStr + " " + t);
+					System.out.println(name + " BEF_NEW " + hStr + " " + t);
 					break;
 				}
 				case EventKind.AFT_NEW:
@@ -93,7 +95,7 @@ public class TracePrinter {
 					String hStr = (h < 0) ? "null" : Hmap.get(h);
 					int t = buffer.getInt();
 					int o = buffer.getInt();
-					System.out.println("AFT_NEW " + hStr + " " + t + " " + o);
+					System.out.println(name + " AFT_NEW " + hStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.NEW:
@@ -103,7 +105,7 @@ public class TracePrinter {
 					String hStr = (h < 0) ? "null" : Hmap.get(h);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("NEW " + hStr + " " + t + " " + o);
+					System.out.println(name + " NEW " + hStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.NEW_ARRAY:
@@ -113,7 +115,7 @@ public class TracePrinter {
 					String hStr = (h < 0) ? "null" : Hmap.get(h);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("NEW_ARRAY " + hStr + " " + t + " " + o);
+					System.out.println(name + " NEW_ARRAY " + hStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.GETSTATIC_PRIMITIVE:
@@ -125,7 +127,7 @@ public class TracePrinter {
 					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = (f < 0) ? "null" : Fmap.get(f);
-					System.out.println("GETSTATIC_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
+					System.out.println(name + " GETSTATIC_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
 					break;
 				}
 				case EventKind.GETSTATIC_REFERENCE:
@@ -138,7 +140,7 @@ public class TracePrinter {
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = (f < 0) ? "null" : Fmap.get(f);
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("GETSTATIC_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
+					System.out.println(name + " GETSTATIC_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
 					break;
 				}
 				case EventKind.PUTSTATIC_PRIMITIVE:
@@ -150,7 +152,7 @@ public class TracePrinter {
 					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = (f < 0) ? "null" : Fmap.get(f);
-					System.out.println("PUTSTATIC_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
+					System.out.println(name + " PUTSTATIC_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
 					break;
 				}
 				case EventKind.PUTSTATIC_REFERENCE:
@@ -163,7 +165,7 @@ public class TracePrinter {
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = (f < 0) ? "null" : Fmap.get(f);
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("PUTSTATIC_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
+					System.out.println(name + " PUTSTATIC_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
 					break;
 				}
 				case EventKind.GETFIELD_PRIMITIVE:
@@ -175,7 +177,7 @@ public class TracePrinter {
 					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = (f < 0) ? "null" : Fmap.get(f);
-					System.out.println("GETFIELD_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
+					System.out.println(name + " GETFIELD_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
 					break;
 				}
 				case EventKind.GETFIELD_REFERENCE:
@@ -188,7 +190,7 @@ public class TracePrinter {
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = (f < 0) ? "null" : Fmap.get(f);
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("GETFIELD_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
+					System.out.println(name + " GETFIELD_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
 					break;
 				}
 				case EventKind.PUTFIELD_PRIMITIVE:
@@ -200,7 +202,7 @@ public class TracePrinter {
 					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = (f < 0) ? "null" : Fmap.get(f);
-					System.out.println("PUTFIELD_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
+					System.out.println(name + " PUTFIELD_PRIMITIVE " + eStr + " " + t + " " + b + " " + fStr);
 					break;
 				}
 				case EventKind.PUTFIELD_REFERENCE:
@@ -213,7 +215,7 @@ public class TracePrinter {
 					int f = ef.hasFld() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String fStr = (f < 0) ? "null" : Fmap.get(f);
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("PUTFIELD_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
+					System.out.println(name + " PUTFIELD_REFERENCE " + eStr + " " + t + " " + b + " " + fStr + " " + o);
 					break;
 				}
 				case EventKind.ALOAD_PRIMITIVE:
@@ -224,7 +226,7 @@ public class TracePrinter {
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int i = ef.hasIdx() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("ALOAD_PRIMITIVE " + eStr + " " + t + " " + b + " " + i);
+					System.out.println(name + " ALOAD_PRIMITIVE " + eStr + " " + t + " " + b + " " + i);
 					break;
 				}
 				case EventKind.ALOAD_REFERENCE:
@@ -236,7 +238,7 @@ public class TracePrinter {
 					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int i = ef.hasIdx() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("ALOAD_REFERENCE " + eStr + " " + t + " " + b + " " + i + " " + o);
+					System.out.println(name + " ALOAD_REFERENCE " + eStr + " " + t + " " + b + " " + i + " " + o);
 					break;
 				}
 				case EventKind.ASTORE_PRIMITIVE:
@@ -247,7 +249,7 @@ public class TracePrinter {
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int i = ef.hasIdx() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("ASTORE_PRIMITIVE " + eStr + " " + t + " " + b + " " + i);
+					System.out.println(name + " ASTORE_PRIMITIVE " + eStr + " " + t + " " + b + " " + i);
 					break;
 				}
 				case EventKind.ASTORE_REFERENCE:
@@ -259,7 +261,7 @@ public class TracePrinter {
 					int b = ef.hasBaseObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int i = ef.hasIdx() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("ASTORE_REFERENCE " + eStr + " " + t + " " + b + " " + i + " " + o);
+					System.out.println(name + " ASTORE_REFERENCE " + eStr + " " + t + " " + b + " " + i + " " + o);
 					break;
 				}
 				case EventKind.THREAD_START:
@@ -269,7 +271,7 @@ public class TracePrinter {
 					String iStr = (i < 0) ? "null" : Imap.get(i);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("THREAD_START " + iStr + " " + t + " " + o);
+					System.out.println(name + " THREAD_START " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.THREAD_JOIN:
@@ -279,7 +281,7 @@ public class TracePrinter {
 					String iStr = (i < 0) ? "null" : Imap.get(i);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("THREAD_JOIN " + iStr + " " + t + " " + o);
+					System.out.println(name + " THREAD_JOIN " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.ACQUIRE_LOCK:
@@ -289,7 +291,7 @@ public class TracePrinter {
 					String lStr = (l < 0) ? "null" : Lmap.get(l);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("ACQUIRE_LOCK " + lStr + " " + t + " " + o);
+					System.out.println(name + " ACQUIRE_LOCK " + lStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.RELEASE_LOCK:
@@ -299,7 +301,7 @@ public class TracePrinter {
 					String rStr = (r < 0) ? "null" : Rmap.get(r);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("RELEASE_LOCK " + rStr + " " + t + " " + o);
+					System.out.println(name + " RELEASE_LOCK " + rStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.WAIT:
@@ -309,7 +311,7 @@ public class TracePrinter {
 					String iStr = (i < 0) ? "null" : Imap.get(i);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("WAIT " + iStr + " " + t + " " + o);
+					System.out.println(name + " WAIT " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.NOTIFY:
@@ -319,7 +321,7 @@ public class TracePrinter {
 					String iStr = (i < 0) ? "null" : Imap.get(i);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("NOTIFY " + iStr + " " + t + " " + o);
+					System.out.println(name + " NOTIFY " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.NOTIFY_ALL:
@@ -329,7 +331,7 @@ public class TracePrinter {
 					String iStr = (i < 0) ? "null" : Imap.get(i);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("NOTIFY_ALL " + iStr + " " + t + " " + o);
+					System.out.println(name + " NOTIFY_ALL " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.METHOD_CALL_BEF:
@@ -339,7 +341,7 @@ public class TracePrinter {
 					String iStr = (i < 0) ? "null" : Imap.get(i);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("METHOD_CALL_BEF " + iStr + " " + t + " " + o);
+					System.out.println(name + " METHOD_CALL_BEF " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.METHOD_CALL_AFT:
@@ -349,7 +351,7 @@ public class TracePrinter {
 					String iStr = (i < 0) ? "null" : Imap.get(i);
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("METHOD_CALL_AFT " + iStr + " " + t + " " + o);
+					System.out.println(name + " METHOD_CALL_AFT " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.RETURN_PRIMITIVE:
@@ -357,7 +359,7 @@ public class TracePrinter {
 					EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
 					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("RETURN_PRIMITIVE " + p + " " + t);
+					System.out.println(name + " RETURN_PRIMITIVE " + p + " " + t);
 					break;
 				}
 				case EventKind.RETURN_REFERENCE:
@@ -366,7 +368,7 @@ public class TracePrinter {
 					int p = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
-					System.out.println("RETURN_REFERENCE " + p + " " + t + " " + o);
+					System.out.println(name + " RETURN_REFERENCE " + p + " " + t + " " + o);
 					break;
 				}
 				case EventKind.EXPLICIT_THROW:
@@ -379,7 +381,7 @@ public class TracePrinter {
 						Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() :
 						Runtime.MISSING_FIELD_VAL;
-					System.out.println("EXPLICIT_THROW " +
+					System.out.println(name + " EXPLICIT_THROW " +
 						p + " " + t + " " + o);
 					break;
 				}
@@ -393,7 +395,7 @@ public class TracePrinter {
 						Runtime.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() :
 						Runtime.MISSING_FIELD_VAL;
-					System.out.println("IMPLICIT_THROW " +
+					System.out.println(name + " IMPLICIT_THROW " +
 						p + " " + t + " " + o);
 					break;
 				}
@@ -402,7 +404,7 @@ public class TracePrinter {
 					int p = buffer.getInt();
 					String pStr = (p < 0) ? "null" : Pmap.get(p);
 					int t = buffer.getInt();
-					System.out.println("QUAD " + pStr + " " + t);
+					System.out.println(name + " QUAD " + pStr + " " + t);
 					break;
 				}
 				case EventKind.BASIC_BLOCK:
@@ -410,13 +412,13 @@ public class TracePrinter {
 					int b = buffer.getInt();
 					String bStr = (b < 0) ? "null" : Bmap.get(b);
 					int t = buffer.getInt();
-					System.out.println("BASIC_BLOCK " + bStr + " " + t);
+					System.out.println(name + " BASIC_BLOCK " + bStr + " " + t);
 					break;
 				}
 				case EventKind.FINALIZE:
 				{
 					int o = buffer.getInt();
-					System.out.println("FINALIZE " + o);
+					System.out.println(name + " FINALIZE " + o);
 				}
 				default:
 					throw new ChordRuntimeException("Opcode: " + opcode);
