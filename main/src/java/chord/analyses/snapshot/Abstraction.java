@@ -16,6 +16,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import chord.project.OutDirUtils;
+
 interface AbstractionListener {
   // Called when the abstraction is changed
   void abstractionChanged(int o, Object a);
@@ -181,6 +183,8 @@ abstract class LabelBasedAbstraction extends Abstraction {
 			return true;
 		}
 	}
+
+	private static final boolean VERBOSE = false;
 	
 //	private final static int ARRAY_CONTENT = Integer.MIN_VALUE;
 	
@@ -191,7 +195,16 @@ abstract class LabelBasedAbstraction extends Abstraction {
 	 * This method *must not* rely on <code>object2labels</code>, which might temporarily remove the association
 	 * between the roots of a label and a label while performing negative propagation!  
 	 * */
-	protected abstract TIntHashSet getRoots(Label l);
+	protected abstract TIntHashSet getRootsImpl(Label l);
+	
+	private TIntHashSet getRoots(Label l) {
+		TIntHashSet result = getRootsImpl(l);
+		if (VERBOSE) {
+			OutDirUtils.logErr("%s", "The number of roots for label " + l + " is: " + result.size() + ".");
+		}
+		return result;
+	}
+	
 
 	@Override
 	public void edgeCreated(int b, int f, int o) {
@@ -332,6 +345,11 @@ class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 		public AllocPlusFieldLabel(int h) {
 			this(h, SELF);
 		}
+		
+		@Override
+		public String toString() {
+			return "<h,f> label: " + h + (f == SELF ? "" : "." + f);
+		}
 
 		@Override
 		public int hashCode() {
@@ -367,7 +385,7 @@ class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 	}
 	
 	@Override
-	protected TIntHashSet getRoots(Label l) {
+	protected TIntHashSet getRootsImpl(Label l) {
 		assert (l instanceof AllocPlusFieldLabel);
 		AllocPlusFieldLabel apfl = (AllocPlusFieldLabel) l;
 		if (apfl.f == AllocPlusFieldLabel.SELF) {
@@ -403,7 +421,7 @@ class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 	@Override
 	public void nodeCreated(ThreadInfo info, int o) {
 		int h = state.o2h.get(o);
-		if (o != 0 /*&& h >= 0*/) {
+		if (o != 0 && h >= 0) {
 			Set<Label> S = new HashSet<Label>(1);
 			S.add(new AllocPlusFieldLabel(h));
 			object2labels.put(o, S);
@@ -430,6 +448,11 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 		
 		public AllocationSiteLabel(int h) {
 			this.h = h;
+		}
+		
+		@Override
+		public String toString() {
+			return "<h> label: " + h;
 		}
 
 		@Override
@@ -463,7 +486,7 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 	}
 	
 	@Override
-	protected TIntHashSet getRoots(Label l) {
+	protected TIntHashSet getRootsImpl(Label l) {
 		assert (l instanceof AllocationSiteLabel);
 		AllocationSiteLabel allocLabel = (AllocationSiteLabel) l;
 		return alloc2objects.get(allocLabel.h);		
@@ -482,7 +505,7 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 	@Override
 	public void nodeCreated(ThreadInfo info, int o) {
 		int h = state.o2h.get(o);
-		if (o != 0 /*&& h >= 0*/) {
+		if (o != 0 && h >= 0) {
 			Set<Label> S = new HashSet<Label>(1);
 			S.add(new AllocationSiteLabel(h));
 			object2labels.put(o, S);
