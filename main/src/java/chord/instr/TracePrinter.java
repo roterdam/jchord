@@ -57,7 +57,6 @@ public class TracePrinter {
 		IndexMap<String> Rmap = instrumentor.getRmap();
 		IndexMap<String> Pmap = instrumentor.getPmap();
 		IndexMap<String> Bmap = instrumentor.getBmap();
-		IndexMap<String> Wmap = instrumentor.getWmap();
 		try {
 			ByteBufferedFile buffer = new ByteBufferedFile(
 				Properties.traceBlockSize, traceFileName, true);
@@ -78,22 +77,6 @@ public class TracePrinter {
 					String mStr = (m < 0) ? "null" : Mmap.get(m);
 					int t = buffer.getInt();
 					System.out.println("LEAVE_METHOD " + mStr + " " + t);
-					break;
-				}
-				case EventKind.ENTER_LOOP:
-				{
-					int w = buffer.getInt();
-					String wStr = (w < 0) ? "null" : Wmap.get(w);
-					int t = buffer.getInt();
-					System.out.println("ENTER_LOOP " + wStr + " " + t);
-					break;
-				}
-				case EventKind.LEAVE_LOOP:
-				{
-					int w = buffer.getInt();
-					String wStr = (w < 0) ? "null" : Wmap.get(w);
-					int t = buffer.getInt();
-					System.out.println("LEAVE_LOOP " + wStr + " " + t);
 					break;
 				}
 				case EventKind.BEF_NEW:

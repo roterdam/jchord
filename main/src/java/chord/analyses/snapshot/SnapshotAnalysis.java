@@ -446,7 +446,7 @@ public boolean shouldAnswerQueryHit(Query query) {
     return Program.v().toJavaPosStr(quad)+" "+Program.v().toQuadStr(quad);
   }
   public String mstr(int m) { return m < 0 ? "-" : instrumentor.getMmap().get(m); } // method
-  public String wstr(int w) { return w < 0 ? "-" : instrumentor.getWmap().get(w); } // loop
+  public String wstr(int w) { return w < 0 ? "-" : instrumentor.getBmap().get(w); } // loop
   public String istr(int i) { return i < 0 ? "-" : instrumentor.getImap().get(i); } // call site
   public String ostr(int o) { return o < 0 ? "-" : (o == NULL_OBJECT ? "null" : "O"+o); } // concrete object
   public String tstr(int t) { return t < 0 ? "-" : "T"+t; } // thread

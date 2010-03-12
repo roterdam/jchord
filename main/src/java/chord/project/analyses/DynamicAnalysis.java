@@ -57,11 +57,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 	
 	private static class LoopRecord extends Record {
 		public final int b;
-		public final int w;
 		
-		public LoopRecord(int b, int w) {
+		public LoopRecord(int b) {
 			this.b = b;
-			this.w = w;
 		}
 	}
 	
@@ -79,7 +77,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 	
 	private DomM domM;
 	private DomB domB;
-	private DomW domW;
 	private boolean isUserRequestedBasicBlockEvent;
 	private boolean isUserRequestedEnterAndLeaveMethodEvent;
 	private boolean hasEnterAndLeaveLoopEvent;
@@ -128,8 +125,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 			assert (classPathName != null);
 			final String bootClassesDirName = Properties.bootClassesDirName;
 			final String userClassesDirName = Properties.userClassesDirName;
-			final IndexMap<String> Mmap = instrumentor.getMmap();
-			final int numMeths = (Mmap != null) ? Mmap.size() : 0;
 			final String runtimeClassName = Properties.runtimeClassName;
 			String instrProgramCmd = "java " + Properties.runtimeJvmargs +
 				" -Xbootclasspath/p:" +
@@ -137,10 +132,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				" -Xverify:none" + // " -verbose" + 
 				" -cp " + userClassesDirName + File.pathSeparator + classPathName +
 				" -agentpath:" + Properties.instrAgentFileName +
-				"=num_meths=" + numMeths +
 				"=instr_scheme_file_name=" + instrSchemeFileName +
-				"=calls_bound=" + scheme.getCallsBound() +
-				"=iters_bound=" + scheme.getItersBound() +
 				"=runtime_class_name=" + runtimeClassName.replace('.', '/');
 			final String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
 			final boolean processBuffer =
@@ -166,8 +158,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 					public void run() {
 						try {
 							if (DEBUG) {
+								System.out.println("ENTER TRACE_TRANSFORMER");
 								(new TracePrinter(crudeTraceFileName, instrumentor)).run();
-								System.out.println("DONE");
+								System.out.println("LEAVE TRACE_TRANSFORMER");
 							}
 							(new TraceTransformer(crudeTraceFileName,
 							 	finalTraceFileName, scheme)).run();
@@ -181,8 +174,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 					public void run() {
 						try {
 							if (DEBUG) {
+								System.out.println("ENTER TRACE_PROCESSOR");
 								(new TracePrinter(finalTraceFileName, instrumentor)).run();
-								System.out.println("DONE");
+								System.out.println("LEAVE TRACE_PROCESSOR");
 							}
 							processTrace(finalTraceFileName);
 						} catch (Throwable ex) {
@@ -248,55 +242,47 @@ public class DynamicAnalysis extends JavaAnalysis {
 	private void init4loopConsistency() {
 		domM = instrumentor.getDomM();
 		domB = instrumentor.getDomB();
-		domW = instrumentor.getDomW();
 	}
 	
 	private void onLoopStart(int b, int t) {
 		Stack<Record> stack = stacks.get(t);
 		assert (stack != null);
 		BasicBlock loopBB = domB.get(b);
-		int indexInDomW = domW.getOrAdd(loopBB);
-		stack.add(new LoopRecord(b, indexInDomW));
-		processEnterLoop(indexInDomW, t);
+		stack.add(new LoopRecord(b));
+		processEnterLoop(b, t);
 	}
 	
 	private void processBasicBlock4loopConsistency(int b, int t) {
 		Stack<Record> stack = stacks.get(t);
 		assert (stack != null);
-		if (!stack.isEmpty()) {  // This test is temporary until a fix is introduced.
-			// Remove dead loop records from the stack.
-			boolean hasRemoved;
-			do {
-				hasRemoved = false;
-				Record r = stack.peek();
-				if (r instanceof LoopRecord) {
-					LoopRecord lr = (LoopRecord) r;
-					TIntHashSet loopBody = loopHead2body.get(lr.b);
-					assert (loopBody != null);
-					if (!loopBody.contains(b)) {
-						stack.pop();
-						processLeaveLoop(lr.w, t);
+		// Remove dead loop records from the stack.
+		boolean hasRemoved;
+		do {
+			hasRemoved = false;
+			Record r = stack.peek();
+			if (r instanceof LoopRecord) {
+				LoopRecord lr = (LoopRecord) r;
+				TIntHashSet loopBody = loopHead2body.get(lr.b);
+				assert (loopBody != null);
+				if (!loopBody.contains(b)) {
+					stack.pop();
+					processLeaveLoop(lr.b, t);
 						hasRemoved = true;
-					}
 				}
-			} while (hasRemoved);
-		}
+			}
+		} while (hasRemoved);
 		boolean isLoopHead = loopHead2body.containsKey(b);
 		if (isLoopHead) {
-			if (stack.isEmpty()) { // This test is temporary until a fix is introduced.
+			Record r = stack.peek();
+			if (r instanceof MethodRecord) {
 				onLoopStart(b, t);
 			} else {
-				Record r = stack.peek();
-				if (r instanceof MethodRecord) {
-					onLoopStart(b, t);
+				assert (r instanceof LoopRecord);
+				LoopRecord lr = (LoopRecord) r;
+				if (lr.b == b) {
+					processLoopIteration(lr.b, t);
 				} else {
-					assert (r instanceof LoopRecord);
-					LoopRecord lr = (LoopRecord) r;
-					if (lr.b == b) {
-						processLoopIteration(lr.w, t);
-					} else {
-						onLoopStart(b, t);
-					}
+					onLoopStart(b, t);
 				}
 			}
 		}
@@ -308,7 +294,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		if (!stack.isEmpty()) {
 			while (stack.peek() instanceof LoopRecord) {
 				LoopRecord top = (LoopRecord) stack.pop();
-				processLeaveLoop(top.w, t);
+				processLeaveLoop(top.b, t);
 			}
 			
 			// The present method should be at the stop of the stack.
@@ -330,45 +316,26 @@ public class DynamicAnalysis extends JavaAnalysis {
 		stack.add(new MethodRecord(m));
 		if (!visited4loops.contains(m)) {
 			visited4loops.add(m);
-			// System.out.println("m = " + m);
 			jq_Method mthd = domM.get(m);
-			// Perform a slightly eager computation to map each loop header to its body (in terms of <code>DomB</code>).
+			// Perform a slightly eager computation to map each loop header
+			// to its body (in terms of <code>DomB</code>).
 			ControlFlowGraph cfg = mthd.getCFG();
 			CFGLoopFinder finder = new CFGLoopFinder();
 			finder.visit(cfg);
 			for (BasicBlock head : finder.getLoopHeads()) {
 				TIntHashSet S = new TIntHashSet();
-				loopHead2body.put(domB.getOrAdd(head), S);
+				int bh = domB.indexOf(head);
+				assert (bh != -1);
+				loopHead2body.put(bh, S);
 				Set<BasicBlock> loopBody = finder.getLoopBody(head);
 				for (BasicBlock bb : loopBody) {
-					S.add(domB.getOrAdd(bb));
+					int b2 = domB.indexOf(bb);
+					assert (b2 != -1);
+					S.add(b2);
 				}
 			}
 		}
 	}
-	
-//	private boolean processLeaveLoop4loopConsistency(int w, int t) {
-//		/*
-//		 * It's not necessarily the case that the loop-exit event matches a loop-enter event at the top of the stack, 
-//		 * but an important invariant is that if there is such a loop-enter event, then it's guaranteed to be at the top
-//		 * of the stack, as all other loop- and method-enter events succeeding it have been matched by corresponding 
-//		 * exit events.
-//		 */
-//		Stack<Record> stack = stacks.get(t);
-//		assert (stack != null);
-//		Record top = stack.peek();
-//		if (top instanceof LoopRecord) {
-//			LoopRecord lr = (LoopRecord) top;
-//			if (lr.w == w) {
-//				stack.pop();
-//				return true;
-//			} else {
-//				return false;
-//			}
-//		} else {
-//			return false;
-//		}
-//	}
 	
 	private void processTrace(String fileName) throws IOException, ReadException {
 		initPass();
@@ -400,26 +367,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 				if (isUserRequestedEnterAndLeaveMethodEvent) {
 					processLeaveMethod(m, t);
 				}
-				break;
-			}
-			// Ignore for now until these events are removed completely.
-			case EventKind.ENTER_LOOP:
-			{
-				buffer.getInt();
-				buffer.getInt();
-//				processEnterLoop4loopConsistency(w, t);
-//				processEnterLoop(w, t);
-				break;
-			}
-			case EventKind.LEAVE_LOOP:
-			{
-				buffer.getInt();
-				buffer.getInt();
-//				boolean doLeaveLoop = processLeaveLoop4loopConsistency(w, t);
-//				if (doLeaveLoop) {
-//					// Fire off the loop-exit event only if a matching loop-enter event was on the stack.
-//					processLeaveLoop(w, t);
-//				}
 				break;
 			}
 			case EventKind.NEW:

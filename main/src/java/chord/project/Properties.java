@@ -22,7 +22,7 @@ public class Properties {
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
 	public final static String DEFAULT_SCOPE_EXCLUDES =
-		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.";
+		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,com.ibm.misc.SignalDispatcher";
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,java.,javax.";
 
