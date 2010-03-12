@@ -73,6 +73,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec);
     if (abstractionType.equals("alloc-reachability")) return new ReachableFromAllocAbstraction();
     if (abstractionType.equals("alloc-x-field-reachability")) return new ReachableFromAllocPlusFieldsAbstraction();
+    if (abstractionType.equals("pointed-to")) return new PointedToByAbstraction();
     throw new RuntimeException("Unknown abstraction: "+abstractionType+" (possibilities: none|alloc|recency|reachability)");
   }
 
