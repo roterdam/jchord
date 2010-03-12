@@ -72,7 +72,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     if (abstractionType.equals("recency")) return new RecencyAbstraction();
     if (abstractionType.equals("recency2")) return new Recency2Abstraction();
     if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec);
-    if (abstractionType.equals("reach-from-alloc")) return new ReachableFromAllocAbstraction();
+    if (abstractionType.equals("alloc-reachability")) return new ReachableFromAllocAbstraction();
+    if (abstractionType.equals("alloc-x-field-reachability")) return new ReachableFromAllocAbstraction();
     throw new RuntimeException("Unknown abstraction: "+abstractionType+" (possibilities: none|alloc|recency|reachability)");
   }
 
@@ -230,12 +231,12 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   protected boolean isArrayIndexSensitive() {
 	  return false;
   }
-
+  
   protected InstrScheme getBaselineScheme() {
     return new InstrScheme();
   }
 
-  public boolean shouldAnswerQueryHit(Query query) {
+public boolean shouldAnswerQueryHit(Query query) {
     if (selectHitRandom.nextDouble() < hitFrac)
       return queryResult(query).selected;
     return false;
@@ -316,7 +317,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
   //////////////////////////////
   // Override these graph construction handlers (remember to call super though)
-
+  
   public void abstractionChanged(int o, Object a) { } // Override if necessary
 
   public void nodeCreated(int t, int o) {
