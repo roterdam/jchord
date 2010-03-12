@@ -289,6 +289,9 @@ public class TraceTransformer {
 			return astoreReferenceNumBytes;
 		case EventKind.ENTER_METHOD:
 		case EventKind.LEAVE_METHOD:
+		case EventKind.ENTER_LOOP:
+		case EventKind.LEAVE_LOOP:
+			return 8;
 		case EventKind.METHOD_CALL_BEF:
 		case EventKind.METHOD_CALL_AFT:
 			return methodCallNumBytes;
@@ -319,7 +322,7 @@ public class TraceTransformer {
 		case EventKind.FINALIZE:
 			return 4;
 		default:
-			throw new ChordRuntimeException("Unknown opcode: " + opcode);
+			throw new ChordRuntimeException();
 		}
 	}
 	private void adjust() throws IOException {

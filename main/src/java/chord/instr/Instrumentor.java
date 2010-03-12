@@ -21,6 +21,7 @@ import chord.doms.DomP;
 import chord.doms.DomB;
 import chord.doms.DomW;
 import chord.instr.InstrScheme.EventFormat;
+import chord.program.CFGLoopFinder;
 import chord.program.Program;
 import chord.util.ChordRuntimeException;
 import chord.project.Project;
@@ -62,6 +63,8 @@ public class Instrumentor {
 
 	protected static final String enterMethodEventCall = runtimeClassName + "enterMethodEvent(";
 	protected static final String leaveMethodEventCall = runtimeClassName + "leaveMethodEvent(";
+	protected static final String enterLoopEventCall = runtimeClassName + "enterLoopEvent(";
+	protected static final String leaveLoopEventCall = runtimeClassName + "leaveLoopEvent(";
 
 	protected static final String befNewEventCall = runtimeClassName + "befNewEvent(";
 	protected static final String aftNewEventCall = runtimeClassName + "aftNewEvent(";
@@ -118,6 +121,7 @@ public class Instrumentor {
 	protected boolean genBasicBlockEvent;
 	protected boolean genQuadEvent;
 	protected boolean genEnterAndLeaveMethodEvent;
+	protected boolean genEnterAndLeaveLoopEvent;
 	protected boolean genFinalizeEvent;
 	protected EventFormat newAndNewArrayEvent;
 	protected EventFormat getstaticPrimitiveEvent;
@@ -153,6 +157,7 @@ public class Instrumentor {
 	protected DomR domR;
 	protected DomP domP;
 	protected DomB domB;
+	protected DomW domW;
 
 	protected IndexMap<String> Fmap;
 	protected IndexMap<String> Mmap;
@@ -163,9 +168,11 @@ public class Instrumentor {
 	protected IndexMap<String> Rmap;
 	protected IndexMap<String> Pmap;
 	protected IndexMap<String> Bmap;
+	protected IndexMap<String> Wmap;
 
 	private CtClass exType;
 	private MyExprEditor exprEditor = new MyExprEditor();
+	private CFGLoopFinder finder = new CFGLoopFinder();
 
 	protected String mStr;
 	protected TIntObjectHashMap<String> bciToInstrMap =
@@ -182,6 +189,7 @@ public class Instrumentor {
 	public DomR getDomR() { return domR; }
 	public DomP getDomP() { return domP; }
 	public DomB getDomB() { return domB; }
+	public DomW getDomW() { return domW; }
 
 	public IndexMap<String> getFmap() { return Fmap; }
 	public IndexMap<String> getMmap() { return Mmap; }
@@ -192,6 +200,7 @@ public class Instrumentor {
 	public IndexMap<String> getRmap() { return Rmap; }
 	public IndexMap<String> getPmap() { return Pmap; }
 	public IndexMap<String> getBmap() { return Bmap; }
+	public IndexMap<String> getWmap() { return Wmap; }
 
 	/**
 	 * Initializes the instrumentor.
@@ -281,6 +290,8 @@ public class Instrumentor {
 		genQuadEvent = scheme.hasQuadEvent();
 		genEnterAndLeaveMethodEvent = scheme.getCallsBound() > 0 ||
 			scheme.hasEnterAndLeaveMethodEvent();
+		genEnterAndLeaveLoopEvent = scheme.getItersBound() > 0 ||
+			scheme.hasEnterAndLeaveLoopEvent();
 		genFinalizeEvent = scheme.hasFinalizeEvent();
 		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
@@ -346,6 +357,10 @@ public class Instrumentor {
 			domB = (DomB) Project.getTrgt("B");
 			Project.runTask(domB);
 		}
+		if (scheme.needsWmap()) {
+			domW = (DomW) Project.getTrgt("W");
+			domW.init();
+		}
 		if (genEnterAndLeaveMethodEvent || releaseLockEvent.present()) {
 			exType = pool.get("java.lang.Throwable");
 			assert (exType != null);
@@ -377,6 +392,10 @@ public class Instrumentor {
 		if (domB != null) {
 			Bmap = getUniqueStringMap(domB);
 			OutDirUtils.writeMapToFile(Bmap, "B.dynamic.txt");
+		}
+		if (domW != null) {
+			Wmap = getUniqueStringMap(domW);
+			OutDirUtils.writeMapToFile(Wmap, "W.dynamic.txt");
 		}
 		if (domP != null) {
 			Pmap = getUniqueStringMap(domP);
@@ -508,7 +527,7 @@ public class Instrumentor {
 				return;
 			}
 		}
-		if (genQuadEvent || genBasicBlockEvent) {
+		if (genEnterAndLeaveLoopEvent || genQuadEvent || genBasicBlockEvent) {
 			Map<Quad, Integer> bcMap;
 			try{
 				bcMap = joeqMethod.getBCMap();
@@ -551,6 +570,28 @@ public class Instrumentor {
 								attachInstrToBCIAft(instr, bci);
 							}
 						}
+					}
+				}
+			}
+			if (genEnterAndLeaveLoopEvent) {
+				finder.visit(cfg);
+				Set<BasicBlock> heads = finder.getLoopHeads();
+				for (BasicBlock head : heads) {
+					int n = domW.size();
+					int wId = domW.getOrAdd(head, joeqMethod);
+					assert (wId == n);
+					String headInstr = enterLoopEventCall + wId + "," + mId + ");";
+					int headBCI = getBCI(head, joeqMethod);
+					attachInstrToBCIBef(headInstr, headBCI);
+				}
+				for (BasicBlock head : heads) {
+					Set<BasicBlock> exits = finder.getLoopExits(head);
+					int wId = domW.indexOf(head);
+					assert (wId != -1);
+					for (BasicBlock exit : exits) {
+						String exitInstr = leaveLoopEventCall + wId + "," + mId + ");";
+						int exitBCI = getBCI(exit, joeqMethod);
+						attachInstrToBCIBef(exitInstr, exitBCI);
 					}
 				}
 			}

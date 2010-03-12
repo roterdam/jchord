@@ -167,6 +167,12 @@ public abstract class Runtime {
 	public static void leaveMethodEvent(int mId) {
 		doDefault();
 	}
+	public static void enterLoopEvent(int wId, int mId) {
+		doDefault();
+	}
+	public static void leaveLoopEvent(int wId, int mId) {
+		doDefault();
+	}
 	public static void finalizeEvent(Object o) {
 		doDefault();
 	}
