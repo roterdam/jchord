@@ -469,6 +469,61 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 	}
 }
 
+class PointedToByAbstraction extends Abstraction {
+
+	private final TIntObjectHashMap<TIntHashSet> object2pointers = new TIntObjectHashMap<TIntHashSet>();
+	
+	@Override
+	public String toString() {
+		return "pointed-to";
+	}
+	
+	@Override
+	public void ensureComputed() {
+		// This is a no-op.
+	}
+	
+	@Override
+	public void edgeCreated(int b, int f, int o) {
+		if (b != 0 && o != 0) {
+			boolean hasChanged = false;
+			TIntHashSet S = object2pointers.get(o);
+			if (S == null) {
+				S = new TIntHashSet();
+				object2pointers.put(o, S);
+			}
+			hasChanged |= S.add(state.o2h.get(b));
+			if (hasChanged) {
+				setValue(o, S);
+			}
+		}
+	}
+	
+	@Override
+	public void edgeDeleted(int b, int f, int o) {
+		if (b != 0 && o != 0) {
+			boolean hasChanged = false;
+			TIntHashSet S = object2pointers.get(o);
+			if (S != null) {
+				hasChanged |= S.remove(state.o2h.get(b));
+			}
+			if (hasChanged) {
+				setValue(o, S);
+			}
+		}
+	}
+
+	@Override
+	public void nodeDeleted(int o) {
+		throw new RuntimeException("Operation 'nodeDeleted' not currently supported.");
+	}
+
+	@Override
+	public void nodeCreated(ThreadInfo info, int o) {
+		// We need not do anything here.
+	}
+}
+
 // SLOW: don't use this; use Recency2Abstraction instead
 /*class RecencyAbstraction extends Abstraction {
   TIntIntHashMap h2count = new TIntIntHashMap(); // heap allocation site h -> number of objects that have been allocated at h
