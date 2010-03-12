@@ -350,8 +350,7 @@ class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 			for (TIntIterator it=alloced.iterator(); it.hasNext(); ) {
 				int next = it.next();
 				TIntIntHashMap M = heapGraph.get(next);
-				assert (M != null);
-				if (M.containsKey(apfl.f)) {
+				if (M != null && M.containsKey(apfl.f)) {
 					int o = M.get(apfl.f);
 					if (o != 0) {
 						result.add(o);
