@@ -86,10 +86,10 @@ public class Properties {
 	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
 	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
 	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
-		DEFAULT_SCOPE_EXCLUDES + File.pathSeparator + scopeExcludeExtStr);
+		DEFAULT_SCOPE_EXCLUDES + "," + scopeExcludeExtStr);
 	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
 	public final static String checkExcludeStr = System.getProperty("chord.check.exclude",
-		DEFAULT_CHECK_EXCLUDES + File.pathSeparator + checkExcludeExtStr);
+		DEFAULT_CHECK_EXCLUDES + "," + checkExcludeExtStr);
 
 	// Program analysis properties
 
