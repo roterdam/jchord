@@ -85,11 +85,21 @@ public class Properties {
 	}
 	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
 	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
-	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
-		DEFAULT_SCOPE_EXCLUDES + "," + scopeExcludeExtStr);
+	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
+	static {
+		if (!scopeExcludeExtStr.equals("")) {
+			scopeExcludeStr = scopeExcludeStr.equals("") ? scopeExcludeExtStr :
+				scopeExcludeStr + "," + scopeExcludeExtStr;
+		}
+	}
 	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
-	public final static String checkExcludeStr = System.getProperty("chord.check.exclude",
-		DEFAULT_CHECK_EXCLUDES + "," + checkExcludeExtStr);
+	public static String checkExcludeStr = System.getProperty("chord.check.exclude", DEFAULT_CHECK_EXCLUDES);
+	static {
+		if (!checkExcludeExtStr.equals("")) {
+			checkExcludeStr = checkExcludeStr.equals("") ? checkExcludeExtStr :
+				checkExcludeStr + "," + checkExcludeExtStr;
+		}
+	}
 
 	// Program analysis properties
 
