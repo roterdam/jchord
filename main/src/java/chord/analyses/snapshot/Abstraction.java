@@ -197,6 +197,11 @@ class AllocAbstraction extends LocalAbstraction {
 	}
 }
 
+/**
+ * 
+ * @author omert
+ *
+ */
 abstract class LabelBasedAbstraction extends Abstraction {
 	protected static interface Label {
 	}
@@ -359,6 +364,9 @@ abstract class LabelBasedAbstraction extends Abstraction {
 	}
 
 	private void updateHeapGraph(int b, int f, int o) {
+		if (VERBOSE) {
+			OutDirUtils.logOut("%s", "Entered updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
+		}
 		TIntIntHashMap M = heapGraph.get(b);
 		if (M == null) {
 			heapGraph.put(b, M = new TIntIntHashMap());
@@ -408,6 +416,9 @@ abstract class LabelBasedAbstraction extends Abstraction {
 				 */
 				propagateLabels(o, labels, true, true);
 			}
+		}
+		if (VERBOSE) {
+			OutDirUtils.logOut("%s", "Left updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
 		}
 	}
 
