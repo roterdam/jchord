@@ -75,8 +75,8 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 	}
 
 	@Override
-	public void processPutfieldPrimitive(int e, int t, int b, int f) {
-    super.processPutfieldPrimitive(e, t, b, f);
+	public void onProcessPutfieldPrimitive(int e, int t, int b, int f) {
+    super.onProcessPutfieldPrimitive(e, t, b, f);
     if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, true));
     else {
       abstraction.ensureComputed();
@@ -85,8 +85,8 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 	}
 
 	@Override
-	public void processPutfieldReference(int e, int t, int b, int f, int o) {
-    super.processPutfieldReference(e, t, b, f, o);
+	public void onProcessPutfieldReference(int e, int t, int b, int f, int o) {
+    super.onProcessPutfieldReference(e, t, b, f, o);
     if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, true));
     else {
       abstraction.ensureComputed();
@@ -95,8 +95,8 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 	}
 
 	@Override
-	public void processGetfieldPrimitive(int e, int t, int b, int f) {
-    super.processGetfieldPrimitive(e, t, b, f);
+	public void onProcessGetfieldPrimitive(int e, int t, int b, int f) {
+    super.onProcessGetfieldPrimitive(e, t, b, f);
     if (isExcluded(e)) return;
     if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, false));
     else {
@@ -106,8 +106,8 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 	}
 
 	@Override
-	public void processGetfieldReference(int e, int t, int b, int f, int o) {
-    super.processGetfieldReference(e, t, b, f, o);
+	public void onProcessGetfieldReference(int e, int t, int b, int f, int o) {
+    super.onProcessGetfieldReference(e, t, b, f, o);
     if (isExcluded(e)) return;
     if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, false));
     else {

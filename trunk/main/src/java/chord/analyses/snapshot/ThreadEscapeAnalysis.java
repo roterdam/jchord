@@ -58,12 +58,12 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
 	}
   
   // These methods add nodes to the graph
-  @Override public void processPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
-    super.processPutstaticReference(e, t, b, f, o);
+  @Override public void onProcessPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
+    super.onProcessPutstaticReference(e, t, b, f, o);
     setGlobal(b);
   }
-  @Override public void processThreadStart(int i, int t, int o) {
-    super.processThreadStart(i, t, o);
+  @Override public void onProcessThreadStart(int i, int t, int o) {
+    super.onProcessThreadStart(i, t, o);
     int b = THREAD_GLOBAL_OBJECT;
     nodeCreated(t, b);
     setGlobal(b);

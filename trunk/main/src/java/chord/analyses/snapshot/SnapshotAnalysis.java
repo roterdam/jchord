@@ -51,10 +51,14 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   Random selectSnapshotRandom;
   int kCFA; // Number of call sites keep in k-CFA
   int kOS; // Number of object allocation sites to keep in k-OS (note: this is not k-object sensitivity)
+  int recencyOrder; // Recency order (number of objects to keep distinct)
+  int randSize; // Number of abstract values for random abstraction
   ReachabilityAbstraction.Spec reachabilitySpec = new ReachabilityAbstraction.Spec();
   GraphMonitor graphMonitor;
   boolean queryOnlyAtSnapshot; // For efficiency (but incorrect)
-  boolean includeAllQueries;
+  boolean includeAllQueries; // Include queries based on all objects (if false, look at scope.check.exclude)
+  int maxCommands;
+  boolean ignoreBadObjects; // Ignore objects that don't have a real object allocation site (because these typically smash too many things together)
 
   // We have a graph over abstract values (determined by updateAbstraction); each node impliciting representing a set of objects
   State state = new State();
@@ -65,12 +69,20 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   int numQueryHits;
   StatFig snapshotPrecision = new StatFig();
   int numFieldAccesses;
+  int numCommands;
+  public boolean importantLog() { // See if we should print out an important thing (cap it though)
+    if (verbose < 1) return false;
+    if (numCommands >= maxCommands) return false;
+    numCommands++;
+    return true;
+  }
 
   public Abstraction parseAbstraction(String abstractionType) {
     if (abstractionType.equals("none")) return new NoneAbstraction();
+    if (abstractionType.equals("random")) return new RandomAbstraction(randSize);
     if (abstractionType.equals("alloc")) return new AllocAbstraction(kCFA, kOS);
-    if (abstractionType.equals("recency")) return new RecencyAbstraction(new AllocAbstraction(kCFA, kOS));
-    if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec);
+    if (abstractionType.equals("recency")) return new RecencyAbstraction(new AllocAbstraction(kCFA, kOS), recencyOrder);
+    if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec); // Don't use
     if (abstractionType.equals("alloc-reachability")) return new ReachableFromAllocAbstraction();
     if (abstractionType.equals("alloc-x-field-reachability")) return new ReachableFromAllocPlusFieldsAbstraction();
     if (abstractionType.equals("pointed-to")) return new PointedToByAbstraction();
@@ -109,17 +121,21 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
       kCFA = getIntArg("kCFA", 0);
       kOS = getIntArg("kOS", 0);
+      recencyOrder = getIntArg("recencyOrder", 1);
+      randSize = getIntArg("randSize", 1);
       reachabilitySpec.pointedTo = getBooleanArg("pointedTo", false);
       reachabilitySpec.matchRepeatedFields = getBooleanArg("matchRepeatedFields", false);
       reachabilitySpec.matchFirstField = getBooleanArg("matchFirstField", false);
       reachabilitySpec.matchLastField = getBooleanArg("matchLastField", false);
       queryOnlyAtSnapshot = getBooleanArg("queryOnlyAtSnapshot", false);
       includeAllQueries = getBooleanArg("includeAllQueries", false);
+      ignoreBadObjects = getBooleanArg("ignoreBadObjects", false);
 
       useStrongUpdates = getBooleanArg("useStrongUpdates", true);
       abstraction = parseAbstraction(getStringArg("abstraction", ""));
 
-      graphMonitor = new SerializingGraphMonitor(X.path("graph"), getIntArg("graph.maxCommands", 100000));
+      maxCommands = getIntArg("graph.maxCommands", 100000);
+      graphMonitor = new SerializingGraphMonitor(X.path("graph"), maxCommands);
 
       // Save options
       HashMap<Object,Object> options = new LinkedHashMap<Object,Object>();
@@ -134,6 +150,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
       options.put("exclude", getStringArg("exclude", ""));
       options.put("includeAllQueries", includeAllQueries);
       options.put("queryOnlyAtSnapshot", queryOnlyAtSnapshot);
+      options.put("ignoreBadObjects", ignoreBadObjects);
       X.writeMap("options.map", options);
       X.output.put("exec.status", "running");
 
@@ -170,6 +187,10 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     jq_Class c = Program.v().getMethod(q).getDeclaringClass();
     //X.logs("CHECK e = %s, q = %s, class = %s", estr(e), q, c);
     return excludedClasses.contains(c);
+  }
+
+  public boolean isIgnore(int o) {
+    return ignoreBadObjects && (o < 0 || !state.o2h.containsKey(o));
   }
 
   public ThreadInfo threadInfo(int t) {
@@ -245,7 +266,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     QueryResult result = queryResult(query);
     result.add(isTrue);
     numQueryHits++;
-    if (verbose >= 1) X.logs("QUERY %s: result = %s", query, result);
+    if (importantLog())
+      X.logs("QUERY %s: result = %s", query, result);
   }
   private QueryResult queryResult(Query q) {
     QueryResult qr = queryResults.get(q);
@@ -316,6 +338,16 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     X.output.put("finalObjects.numTotal", state.o2h.size());
     X.output.put("numFieldAccesses", numFieldAccesses);
 
+    // Print out information about abstractions
+    abstraction.ensureComputed();
+    int complexity = abstraction.a2os.size(); // Complexity of this abstraction (number of abstract values)
+    PrintWriter out = Utils.openOut(X.path("snapshot-abstractions"));
+    for (Object a : abstraction.a2os.keySet())
+      out.println(a);
+    out.close();
+    X.logs("Abstract complexity: %d values", complexity);
+    X.output.put("complexity", complexity);
+
     if (graphMonitor != null) graphMonitor.finish();
   }
 
@@ -325,13 +357,18 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   public void abstractionChanged(int o, Object a) { } // Override if necessary
 
   public void nodeCreated(int t, int o) {
-    if (o < 0) return; // Ignore bad nodes
     if (o == NULL_OBJECT) return;
     if (state.o2edges.containsKey(o)) return; // Already exists
+    //if (!state.o2h.containsKey(o)) X.logs("NO H FOR o=%s", ostr(o));
     state.o2h.putIfAbsent(o, -1); // Just in case we didn't get an allocation site
     state.o2edges.put(o, new ArrayList<Edge>());
     ThreadInfo info = threadInfo(t);
     abstraction.nodeCreated(info, o);
+    if (importantLog()) {
+      abstraction.ensureComputed();
+      int h = state.o2h.get(o);
+      X.logs("ADDNODE t=%s o=%s @ h=%s:%s | a=%s", tstr(t), ostr(o), h, hstr(h), abstraction.getValue(o));
+    }
     if (graphMonitor != null) graphMonitor.addNode(o, null);
   }
   public void nodeDeleted(int o) {
@@ -344,7 +381,6 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   public void edgeCreated(int t, int b, int f, int o) {
     nodeCreated(t, b);
     nodeCreated(t, o);
-    assert (b > 0);
 
     // Strong update: remove existing field pointer
     List<Edge> edges = state.o2edges.get(b);
@@ -353,7 +389,9 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
         if (edges.get(i).f == f) {
           int old_o = edges.get(i).o;
           abstraction.edgeDeleted(b, f, old_o);
-          if (graphMonitor != null) graphMonitor.deleteEdge(b, old_o);
+          if (graphMonitor != null) graphMonitor.deleteEdge(b, old_o, ""+f);
+          if (importantLog())
+            X.logs("DELEDGE b=%s f=%s old_o=%s", ostr(b), fstr(f), ostr(old_o));
           edges.remove(i);
           break;
         }
@@ -363,10 +401,10 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     if (o > 0) {
       edges.add(new Edge(f, o));
       abstraction.edgeCreated(b, f, o);
-      if (graphMonitor != null) graphMonitor.addEdge(o, b, ""+f);
+      if (graphMonitor != null) graphMonitor.addEdge(b, o, ""+f);
+      if (importantLog())
+        X.logs("ADDEDGE b=%s f=%s o=%s", ostr(b), fstr(f), ostr(o));
     }
-    if (verbose >= 1)
-      X.logs("ADDEDGE b=%s f=%s o=%s", ostr(b), fstr(f), ostr(o));
   }
 
   // Typically, this function is the source of queries
@@ -466,6 +504,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
 	@Override
 	public void processNewOrNewArray(int h, int t, int o) {
+    if (h < 0) return;
 		// new Object
 		state.o2h.put(o, h);
 		nodeCreated(t, o);
@@ -475,37 +514,50 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
 	@Override
 	public void processPutstaticReference(int e, int t, int b, int f, int o) {
+    if (isIgnore(o)) return; // Note b = 1 doesn't have an allocation site
 		// b.f = o, where b is static
 		if (verbose >= 5)
 			X.logs("EVENT putStaticReference: e=%s, t=%s, b=%s, f=%s, o=%s",
 					estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
 		edgeCreated(t, b, f, o);
+    onProcessPutstaticReference(e, t, b, f, o);
 	}
+	public void onProcessPutstaticReference(int e, int t, int b, int f, int o) { }
 
 	@Override
 	public void processGetfieldPrimitive(int e, int t, int b, int f) {
+    if (isIgnore(b)) return;
 		if (!isExcluded(e))
 			fieldAccessed(e, t, b, f, -1);
+    onProcessGetfieldPrimitive(e, t, b, f);
 	}
+	public void onProcessGetfieldPrimitive(int e, int t, int b, int f) { }
 
 	@Override
 	public void processGetfieldReference(int e, int t, int b, int f, int o) {
+    if (isIgnore(b) || isIgnore(o)) return;
 		// ... = b.f, where b.f = o
 		if (verbose >= 5)
 			X.logs("EVENT getFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s",
 					estr(e), tstr(t), ostr(b), fstr(f), ostr(o));
 		if (!isExcluded(e))
 			fieldAccessed(e, t, b, f, o);
+    onProcessGetfieldReference(e, t, b, f, o);
 	}
+	public void onProcessGetfieldReference(int e, int t, int b, int f, int o) { }
 
 	@Override
 	public void processPutfieldPrimitive(int e, int t, int b, int f) {
+    if (isIgnore(b)) return;
 		if (!isExcluded(e))
 			fieldAccessed(e, t, b, f, -1);
+    onProcessPutfieldPrimitive(e, t, b, f);
 	}
+	public void onProcessPutfieldPrimitive(int e, int t, int b, int f) { }
 
 	@Override
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
+    if (isIgnore(b) || isIgnore(o)) return;
 		// b.f = o
 		if (verbose >= 5)
 			X.logs("EVENT putFieldReference: e=%s, t=%s, b=%s, f=%s, o=%s",
@@ -513,21 +565,26 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 		if (!isExcluded(e))
 			fieldAccessed(e, t, b, f, o);
 		edgeCreated(t, b, f, o);
+    onProcessPutfieldReference(e, t, b, f, o);
 	}
+	public void onProcessPutfieldReference(int e, int t, int b, int f, int o) { }
 
 	@Override
 	public void processAloadPrimitive(int e, int t, int b, int i) {
+    if (isIgnore(b)) return;
 		if (!isExcluded(e))
 			fieldAccessed(e, t, b, ARRAY_FIELD+i, -1);
 	}
 
   @Override public void processMethodCallBef(int i, int t, int o) {
+    if (isIgnore(o)) return;
     if (verbose >= 5) X.logs("EVENT methodCallBefore: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
     ThreadInfo info = threadInfo(t);
     info.callSites.push(i);
     //info.callAllocs.push(state.o2h.get(o));
   }
   @Override public void processMethodCallAft(int i, int t, int o) {
+    if (isIgnore(o)) return;
     ThreadInfo info = threadInfo(t);
     if (verbose >= 5) X.logs("EVENT methodCallAfter: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
 
@@ -558,6 +615,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
 	@Override
 	public void processAloadReference(int e, int t, int b, int i, int o) {
+    if (isIgnore(b) || isIgnore(o)) return;
 		if (verbose >= 5)
 			X.logs("EVENT loadReference: e=%s, t=%s, b=%s, i=%s, o=%s",
 					estr(e), tstr(t), ostr(b), i, ostr(o));
@@ -567,12 +625,14 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
 	@Override
 	public void processAstorePrimitive(int e, int t, int b, int i) {
+    if (isIgnore(b)) return;
 		if (!isExcluded(e))
 			fieldAccessed(e, t, b, ARRAY_FIELD+i, -1);
 	}
 
 	@Override
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
+    if (isIgnore(b) || isIgnore(o)) return;
 		if (verbose >= 5)
 			X.logs("EVENT storeReference: e=%s, t=%s, b=%s, i=%s, o=%s",
 					estr(e), tstr(t), ostr(b), i, ostr(o));
@@ -583,6 +643,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   
 	@Override
 	public void processFinalize(int o) {
+    if (isIgnore(o)) return;
 		if (verbose >= 7)
 			X.logs("EVENT processFinalize o=%s", ostr(o));
 		nodeDeleted(o);
@@ -591,6 +652,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 	 
 	@Override
 	public void processGetstaticReference(int e, int t, int b, int f, int o) { 
+    if (isIgnore(o)) return; // Note b = 1 and doesn't have an allocation site
 		// ...=b.f, where b.f=o and b is static
 		if (verbose >= 5)
 			X.logs("EVENT getStaticReference: e=%s, t=%s, b=%s, f=%s, o=%s",
@@ -599,13 +661,17 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 	
 	@Override
 	public void processThreadStart(int i, int t, int o) {
+    if (isIgnore(o)) return;
 		if (verbose >= 4)
 			X.logs("EVENT threadStart: i=%s, t=%s, o=%s", istr(i), tstr(t),
 					ostr(o));
+    onProcessThreadStart(i, t, o);
 	}
+	public void onProcessThreadStart(int i, int t, int o) { }
 
 	@Override
 	public void processThreadJoin(int i, int t, int o) {
+    if (isIgnore(o)) return;
 		if (verbose >= 4)
 			X.logs("EVENT threadJoin: i=%s, t=%s, o=%s", istr(i), tstr(t),
 					ostr(o));
@@ -624,24 +690,6 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 	}
 
 	@Override
-	public void processEnterLoop(int w, int t) {
-		if (verbose >= 5)
-			X.logs("EVENT enterLoop: w=%s", w);
-	}
-
-	@Override
-	public void processLeaveLoop(int w, int t) {
-		if (verbose >= 5)
-			X.logs("EVENT leaveLoop: w=%s", w);
-	}
-
-	@Override
-	public void processQuad(int p, int t) {
-		if (verbose >= 7)
-			X.logs("EVENT processQuad p=%s, t=%s", pstr(p), tstr(t));
-	}
-
-	@Override
 	public void processPutstaticPrimitive(int e, int t, int b, int f) {
 	}
 
@@ -650,39 +698,14 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 	}
 	
 	@Override
-	public void processBasicBlock(int b, int t) {
-	}
-	  
-	@Override
 	public void processAcquireLock(int l, int t, int o) {
+    if (isIgnore(o)) return;
+    onProcessAcquireLock(l, t, o);
 	}
+	public void onProcessAcquireLock(int l, int t, int o) { }
 
 	@Override
 	public void processReleaseLock(int r, int t, int o) {
-	}
-
-	@Override
-	public void processWait(int i, int t, int o) {
-	}
-
-	@Override
-	public void processNotify(int i, int t, int o) {
-	}
-
-	@Override
-	public void processReturnPrimitive(int p, int t) {
-	}
-
-	@Override
-	public void processReturnReference(int p, int t, int o) {
-	}
-
-	@Override
-	public void processExplicitThrow(int p, int t, int o) {
-	}
-
-	@Override
-	public void processImplicitThrow(int p, int t, int o) {
 	}
 
   // Query for thread escape: is the object pointed to by the relvant variable thread-escaping at program point e?
