@@ -144,8 +144,8 @@ public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 	}
 
 	@Override
-	public void processAcquireLock(int l, int t, int o) {
-		super.processAcquireLock(l, t, o);
+	public void onProcessAcquireLock(int l, int t, int o) {
+		super.onProcessAcquireLock(l, t, o);
 		if (queryOnlyAtSnapshot) {
 			events.add(new Event(l, t, o));
 		} else {

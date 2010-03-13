@@ -140,7 +140,7 @@ class StatFig {
 interface GraphMonitor {
   public void finish();
   public void addNode(int a, String label);
-  public void deleteEdge(int a, int b);
+  public void deleteEdge(int a, int b, String label);
   public void addEdge(int a, int b, String label);
   public void setNodeLabel(int a, String label);
   public void setNodeColor(int a, String color);
@@ -162,7 +162,7 @@ class SerializingGraphMonitor implements GraphMonitor {
   }
   public void finish() { out.close(); }
   public void addNode(int a, String label) { if (c()) out.printf("n %s%s\n", a, label == null ? "" : " "+label); }
-  public void deleteEdge(int a, int b) { if (c()) out.printf("-e %s %s\n", a, b); }
+  public void deleteEdge(int a, int b, String label) { if (c()) out.printf("-e %s %s%s\n", a, b, label == null ? "" : " "+label); }
   public void addEdge(int a, int b, String label) { if (c()) out.printf("e %s %s%s\n", a, b, label == null ? "" : " "+label); }
   public void setNodeLabel(int a, String label) { if (c()) out.printf("nl %s %s\n", a, label); }
   public void setNodeColor(int a, String color) { if (c()) out.printf("nc %s %s\n", a, color); }

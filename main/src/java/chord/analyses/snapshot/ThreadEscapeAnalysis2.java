@@ -66,12 +66,12 @@ public class ThreadEscapeAnalysis2 extends SnapshotAnalysis {
 	}
   
   // These methods add nodes to the graph
-  @Override public void processPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
-    super.processPutstaticReference(e, t, b, f, o);
+  @Override public void onProcessPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
+    super.onProcessPutstaticReference(e, t, b, f, o);
     setEscape(o);
   }
-  @Override public void processThreadStart(int i, int t, int o) {
-    super.processThreadStart(i, t, o);
+  @Override public void onProcessThreadStart(int i, int t, int o) {
+    super.onProcessThreadStart(i, t, o);
     setEscape(o);
   }
 
@@ -115,6 +115,7 @@ public class ThreadEscapeAnalysis2 extends SnapshotAnalysis {
       setEscapeRecurse(e.o);
     // Follow abstractions
     Object a = abstraction.getValue(o);
+    if (verbose >= 1) X.logs("SETESCAPE o=%s a=%s", ostr(o), a);
     List<Integer> os = abstraction.a2os.get(a);
     if (os != null) {
       for (int oo : os) setEscapeRecurse(oo);

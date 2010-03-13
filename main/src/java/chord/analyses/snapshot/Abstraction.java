@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.Random;
 
 import chord.project.OutDirUtils;
 
@@ -115,7 +116,7 @@ abstract class LocalAbstraction extends Abstraction {
 	public abstract Object computeValue(ThreadInfo info, int o);
 }
 
-// //////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////
 
 class NoneAbstraction extends Abstraction {
 	@Override
@@ -139,6 +140,24 @@ class NoneAbstraction extends Abstraction {
 	public Object getValue(int o) {
 		return o;
 	}
+}
+
+class RandomAbstraction extends Abstraction {
+  int size;
+  Random random;
+  public RandomAbstraction(int size) {
+    this.size = size;
+    this.random = new Random(1);
+  }
+
+	@Override public String toString() { return "random("+size+")"; }
+
+	@Override public void nodeCreated(ThreadInfo info, int o) {
+    setValue(o, random.nextInt(size));
+	}
+	@Override public void nodeDeleted(int o) { }
+
+	@Override public void ensureComputed() { }
 }
 
 class AllocAbstraction extends LocalAbstraction {
@@ -764,7 +783,6 @@ class PointedToByAbstraction extends Abstraction {
 	}
 }
 
-// SLOW: don't use this; use Recency2Abstraction instead
 /*
  * class RecencyAbstraction extends Abstraction { TIntIntHashMap h2count = new
  * TIntIntHashMap(); // heap allocation site h -> number of objects that have
@@ -793,15 +811,13 @@ class PointedToByAbstraction extends Abstraction {
  */
 
 class RecencyAbstraction extends Abstraction {
-	TObjectIntHashMap<Object> val2lasto = new TObjectIntHashMap<Object>(); // preliminary
-	// value
-	// ->
-	// latest
-	// object
+	HashMap<Object,TIntArrayList> val2lastObjects = new HashMap<Object,TIntArrayList>(); // preliminary value -> latest objects
 	LocalAbstraction abstraction;
+  int order; // Number of old objects to keep around
 
-	public RecencyAbstraction(LocalAbstraction abstraction) {
+	public RecencyAbstraction(LocalAbstraction abstraction, int order) {
 		this.abstraction = abstraction;
+    this.order = order;
 	}
 
 	@Override
@@ -812,7 +828,7 @@ class RecencyAbstraction extends Abstraction {
 
 	@Override
 	public String toString() {
-		return "recency(" + abstraction + ")";
+		return "recency" + order + "(" + abstraction + ")";
 	}
 
 	@Override
@@ -822,13 +838,34 @@ class RecencyAbstraction extends Abstraction {
 	@Override
 	public void nodeCreated(ThreadInfo info, int o) {
 		Object val = abstraction.computeValue(info, o);
-		if (val2lasto.containsKey(val)) {
-			int old_o = val2lasto.get(val);
-			setValue(old_o, val + "~"); // Previously new object (old_o) now
-			// gets old version of the the value
-		}
-		val2lasto.put(val, o);
-		setValue(o, val); // Most recent
+    TIntArrayList objects = val2lastObjects.get(val);
+    if (objects == null) 
+      val2lastObjects.put(val, objects = new TIntArrayList());
+    // i = 0: most recent
+    // ...
+    // i = order-1
+    // i >= order: oldest
+    int n = objects.size();
+    if (n == 0)
+      objects.add(o);
+    else {
+      // Shift everyone to the right
+      for (int i = n-1; i >= 0; i--) {
+        int old_o = objects.get(i);
+        if (i == n-1) { // The last one
+          if (n <= order) { // Expand
+            objects.add(old_o);
+            setValue(old_o, val+"~"+(i+1));
+          }
+        }
+        else {
+          objects.set(i+1, old_o);
+          setValue(old_o, val+"~"+(i+1));
+        }
+      }
+      objects.set(0, o);
+    }
+    setValue(o, val);
 	}
 
 	@Override
