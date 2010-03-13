@@ -399,8 +399,7 @@ public class Instrumentor {
 			return;
 		}
 		if (cName.equals("java.lang.J9VMInternals") ||
-			cName.startsWith("java.lang.ref.") ||
-			cName.equals("sun.util.resources.TimeZoneNames")) {
+			cName.startsWith("java.lang.ref.")) {
 			OutDirUtils.logErr("WARNING: Not instrumenting class %s", cName);
 			return;
 		}
