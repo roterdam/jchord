@@ -694,7 +694,7 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 
 class PointedToByAbstraction extends Abstraction {
 
-	private final TIntObjectHashMap<TIntHashSet> object2pointers = new TIntObjectHashMap<TIntHashSet>();
+	private final TIntObjectHashMap<TIntIntHashMap> object2pointers = new TIntObjectHashMap<TIntIntHashMap>();
 
 	@Override
 	public String toString() {
@@ -708,30 +708,30 @@ class PointedToByAbstraction extends Abstraction {
 
 	@Override
 	public void edgeCreated(int b, int f, int o) {
-		if (b != 0 && o != 0) {
-			boolean hasChanged = false;
-			TIntHashSet S = object2pointers.get(o);
-			if (S == null) {
-				S = new TIntHashSet();
-				object2pointers.put(o, S);
+		if (b != 0 && o != 0 && f != 0) {
+			TIntIntHashMap M = object2pointers.get(o);
+			if (M == null) {
+				M = new TIntIntHashMap();
+				object2pointers.put(o, M);
 			}
-			hasChanged |= S.add(state.o2h.get(b));
+			boolean hasChanged = !M.containsValue(b);
+			M.put(f, b);
 			if (hasChanged) {
-				setValue(o, S);
+				setValue(o, M.getValues());
 			}
 		}
 	}
 
 	@Override
 	public void edgeDeleted(int b, int f, int o) {
-		if (b != 0 && o != 0) {
-			boolean hasChanged = false;
-			TIntHashSet S = object2pointers.get(o);
-			if (S != null) {
-				hasChanged |= S.remove(state.o2h.get(b));
-			}
+		if (b != 0 && o != 0 && f != 0) {
+			TIntIntHashMap M = object2pointers.get(o);
+			assert (M != null);
+			int r = M.remove(f);
+			assert (r == b);
+			boolean hasChanged = !M.containsValue(b);
 			if (hasChanged) {
-				setValue(o, S);
+				setValue(o, M.getValues());
 			}
 		}
 	}
