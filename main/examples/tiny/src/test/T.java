@@ -17,6 +17,7 @@ class A extends java.lang.Thread {
 }
 
 public class T {
+	int f;
   static Node g1;
   static Node g2;
   //static Node g3 = new Node();
@@ -129,13 +130,18 @@ public class T {
     a.next = a; // Query: should be not escaping (but weak updates will not detect this)
   }
 
+ static T ggg;
   public static void main(String[] args) throws Exception {
+	String s = args[0];
+	System.out.println("AAA" + s);
+/*
 		for (int i = 0; i < 10; i++) {
 			Object x = new Object();
 			System.out.println(x);
 			// if (i == 500000)
 			// System.gc();
 		}
+*/
     //strongWeak();
     //breakHeapAllocSiteAbstraction();
     // reachabilityExample();

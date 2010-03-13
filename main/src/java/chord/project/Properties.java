@@ -23,7 +23,7 @@ public class Properties {
 	public final static String LIST_SEPARATOR = " |,|:|;";
 	// added com.ibm.misc.SignalDispatcher because BASIC_BLOCK event in its run() method is reached without reaching ENTER_METHOD event
 	public final static String DEFAULT_SCOPE_EXCLUDES =
-		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,com.ibm.misc.SignalDispatcher";
+		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,com.ibm.misc.SignalDispatcher,java.,javax.";
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,org.apache.harmony.,joeq.,jwutil.,com.ibm.misc.SignalDispatcher,java.,javax.";
 

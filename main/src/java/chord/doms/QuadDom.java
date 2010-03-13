@@ -8,6 +8,7 @@ package chord.doms;
 import chord.program.Program;
 import chord.project.Project;
 import chord.project.analyses.ProgramDom;
+import chord.util.ChordRuntimeException;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -26,11 +27,16 @@ public abstract class QuadDom extends ProgramDom<Inst> {
 	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
+		if (m.isAbstract())
+			return;
 		ctnrMethod = m;
 	}
 	public int getOrAdd(Inst i) {
-		if (i != null)
+		if (i != null) {
+			if (ctnrMethod == null)
+				throw new ChordRuntimeException("Container method not set for inst: " + i);
 			Program.v().mapInstToMethod(i, ctnrMethod);
+		}
 		return super.getOrAdd(i);
 	}
 	public String toUniqueString(Inst i) {

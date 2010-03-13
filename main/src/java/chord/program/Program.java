@@ -218,8 +218,7 @@ public class Program {
 	public jq_Method getMethod(Inst i) {
 		jq_Method m = instToMethodMap.get(i);
 		if (m == null) {
-			throw new RuntimeException(
-				"Cannot find method containing inst: " + i);
+			throw new ChordRuntimeException("Cannot find method containing inst: " + i);
 		}
 		return m;
 	}
