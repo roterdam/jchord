@@ -83,18 +83,16 @@ public class DynamicStatsAnalysis extends DynamicAnalysis {
 			objToHidx.remove(o);
 	}
     public void processEnterMethod(int m, int t) {
-		System.out.println("REACH ENTER");
-		// if (m >= 0) System.out.println("ENTER_METHOD " + Mmap.get(m));
+		if (m >= 0) System.out.println("ENTER_METHOD " + Mmap.get(m));
     }
     public void processLeaveMethod(int m, int t) {
-		System.out.println("REACH LEAVE");
 		if (m >= 0) System.out.println("LEAVE_METHOD " + Mmap.get(m));
     }
 	public void processMethodCallBef(int i, int t, int o) {
-		// if (i >= 0) System.out.println("BEF CALL: " + Imap.get(i));
+		if (i >= 0) System.out.println("BEF CALL: " + Imap.get(i));
 	}
 	public void processMethodCallAft(int i, int t, int o) {
-		// if (i >= 0) System.out.println("AFT CALL: " + Imap.get(i));
+		if (i >= 0) System.out.println("AFT CALL: " + Imap.get(i));
 	}
     public void processGetfieldPrimitive(int e, int t, int b, int f) {
 		processHeapRd(e, b);

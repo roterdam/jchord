@@ -75,8 +75,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 	private final TIntObjectHashMap<TIntHashSet> loopHead2body = new TIntObjectHashMap<TIntHashSet>(16);
 	private TIntHashSet visited4loops = new TIntHashSet();
 	
-	private DomM domM;
-	private DomB domB;
+	protected DomM domM;
+	protected DomB domB;
 	private boolean isUserRequestedBasicBlockEvent;
 	private boolean isUserRequestedEnterAndLeaveMethodEvent;
 	private boolean hasEnterAndLeaveLoopEvent;
@@ -104,12 +104,12 @@ public class DynamicAnalysis extends JavaAnalysis {
 		try {
 			scheme = getInstrScheme();
 			assert(scheme != null);
+			isUserRequestedEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent(); 
+			isUserRequestedBasicBlockEvent = scheme.hasBasicBlockEvent(); 
 			hasEnterAndLeaveLoopEvent = scheme.hasEnterAndLeaveLoopEvent();
 			if (scheme.hasEnterAndLeaveLoopEvent()) {
 				/* These are mandatory for consistent handling of loop enter and leave events. */
-				isUserRequestedEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent(); 
 				scheme.setEnterAndLeaveMethodEvent();
-				isUserRequestedBasicBlockEvent = scheme.hasBasicBlockEvent(); 
 				scheme.setBasicBlockEvent();
 			}
 			final String instrSchemeFileName = Properties.instrSchemeFileName;

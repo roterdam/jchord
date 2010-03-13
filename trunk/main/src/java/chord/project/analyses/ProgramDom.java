@@ -54,7 +54,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 			VisitorHandler vh = new VisitorHandler(this);
 			vh.visitProgram();
 		} else {
-			throw new RuntimeException("Domain '" + getName() +
+			throw new ChordRuntimeException("Domain '" + getName() +
 				"' must override method fill().");
 		}
 	}
@@ -95,7 +95,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 			File file = new File(Properties.outDirName, fileName);
 			out = new PrintWriter(new FileWriter(file));
 		} catch (IOException ex) {
-			throw new RuntimeException(ex);
+			throw new ChordRuntimeException(ex);
 		}
 		out.println("<" + tag + ">");
 		for (int i = 0; i < size(); i++) {

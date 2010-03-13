@@ -462,8 +462,7 @@ public class Instrumentor {
 		for (int i = 0; i < dom.size(); i++) {
 			String s = dom.toUniqueString(dom.get(i));
 			if (map.contains(s))
-				throw new ChordRuntimeException("Map for domain " + dom +
-					" already contains: " + s);
+				throw new ChordRuntimeException("Map for domain " + dom + " already contains: " + s);
 			map.getOrAdd(s);
 		}
 		return map;
@@ -476,7 +475,7 @@ public class Instrumentor {
 			if (bci != -1)
 				return bci;
 		}
-		throw new ChordRuntimeException();
+		throw new ChordRuntimeException("ERROR: Couldn't find index of first bytecode instruction in basic block " + b + " of method " + m);
 	}
 	// order must be tail -> head -> rest
 	protected void attachInstrToBCIAft(String str, int bci) {
@@ -504,7 +503,7 @@ public class Instrumentor {
 		if (Mmap != null) {
 			mId = Mmap.indexOf(mStr);
 			if (mId == -1) {
-				OutDirUtils.logErr("WARNING: Skipping instrumenting method %s; not found by static analysis." + mStr);
+				OutDirUtils.logErr("WARNING: Skipping instrumenting method %s; not found by static analysis", mStr);
 				return;
 			}
 		}
@@ -513,14 +512,12 @@ public class Instrumentor {
 			try{
 				bcMap = joeqMethod.getBCMap();
 			} catch (RuntimeException ex) {
-				System.out.println("WARNING: Skipping instrumenting method " + mStr +
-					"; reason follows:");
+				System.out.println("WARNING: Skipping instrumenting method " + mStr + "; reason follows:");
 				ex.printStackTrace();
 				return;
 			}
 			if (bcMap == null) {
-				System.out.println("WARNING: Skipping instrumenting method " + mStr +
-				"; bytecode does not exist.");
+				System.out.println("WARNING: Skipping instrumenting method " + mStr + "; bytecode does not exist.");
 				return;
 			}
 			ControlFlowGraph cfg = joeqMethod.getCFG();
@@ -579,13 +576,11 @@ public class Instrumentor {
 				syncExpr = "$0";
 			if (acquireLockEvent.present()) {
 				int lId = set(Lmap, -1);
-				enterStr += acquireLockEventCall + lId + "," +
-					syncExpr + ");";
+				enterStr += acquireLockEventCall + lId + "," + syncExpr + ");";
 			}
 			if (releaseLockEvent.present()) {
 				int rId = set(Rmap, -2);
-				leaveStr += releaseLockEventCall + rId + "," +
-					syncExpr + ");";
+				leaveStr += releaseLockEventCall + rId + "," + syncExpr + ");";
 			}
 		}
 		if (genEnterAndLeaveMethodEvent) {
@@ -630,11 +625,25 @@ public class Instrumentor {
 		return set(map, e.indexOfOriginalBytecode());
 	}
 
+	protected String getDomainName(IndexMap<String> map) {
+		if (map == Fmap) return "F";
+		if (map == Emap) return "E";
+		if (map == Mmap) return "M";
+		if (map == Hmap) return "H";
+		if (map == Imap) return "I";
+		if (map == Lmap) return "L";
+		if (map == Rmap) return "R";
+		if (map == Pmap) return "P";
+		if (map == Bmap) return "B";
+		throw new ChordRuntimeException("Name of map not found");
+	}
 	protected int set(IndexMap<String> map, int bci) {
 		String s = bci + "!" + mStr;
 		int id = map.indexOf(s);
-		if (id == -1)
+		if (id == -1) {
+			OutDirUtils.logErr("WARNING: Domain %s does not contain %s", getDomainName(map), s);
 			id = Runtime.UNKNOWN_FIELD_VAL;
+		}
 		return id;
 	}
 	protected int getFid(CtField field) {
@@ -643,8 +652,10 @@ public class Instrumentor {
 		String cName = field.getDeclaringClass().getName();
 		String s = Program.toString(fName, fDesc, cName);
 		int id = Fmap.indexOf(s);
-		if (id == -1)
+		if (id == -1) {
+			OutDirUtils.logErr("WARNING: Domain F does not contain %s", s);
 			id = Runtime.UNKNOWN_FIELD_VAL;
+		}
 		return id;
 	}
 
@@ -777,34 +788,51 @@ public class Instrumentor {
 			}
 		}
 		public void edit(MethodCall e) {
-			String befInstr = null;
-			String aftInstr = null;
+			String befInstr = "";
+			String aftInstr = "";
 			// Part 1: add METHOD_CALL event if present
 			if (methodCallEvent.present()) {
 				int iId = methodCallEvent.hasLoc() ? set(Imap, e) :
 					Runtime.MISSING_FIELD_VAL;
 				String o = methodCallEvent.hasObj() ? "$0" : "null";
 				if (methodCallEvent.isBef())
-					befInstr = methodCallBefEventCall + iId + "," + o + ");";
+					befInstr += methodCallBefEventCall + iId + "," + o + ");";
 				if (methodCallEvent.isAft())
-					aftInstr = methodCallAftEventCall + iId + "," + o + ");";
+					aftInstr += methodCallAftEventCall + iId + "," + o + ");";
 			}
-			// Part 2: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
+			// Part 2: add BEF_NEW and AFT_NEW, or just NEW, event
+			// if present and applicable
+			if (newAndNewArrayEvent.present()) {
+				CtMethod m;
+				try {
+					m = e.getMethod();
+				} catch (NotFoundException ex) {
+					throw new ChordRuntimeException(ex);
+				}
+				String mDesc = m.getSignature();
+				if (mDesc.equals("()Ljava/lang/Object;")) {
+					String mName = m.getName();
+					String cName = m.getDeclaringClass().getName();
+					if ((mName.equals("newInstance") && cName.equals("java.lang.Class")) ||
+						(mName.equals("clone") && cName.equals("java.lang.Object"))) {
+						int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) :
+							Runtime.MISSING_FIELD_VAL;
+						if (newAndNewArrayEvent.hasObj()) {
+							befInstr += befNewEventCall + hId + ");";
+							aftInstr += aftNewEventCall + hId + ",$_);";
+						} else {
+							befInstr += newEventCall + hId + ");";
+						}
+					}
+				}
+			}
+			// Part 3: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
 			// if present and applicable
 			String instr = processThreadRelatedCall(e);
-			if (instr != null) {
-				if (befInstr == null)
-					befInstr = instr;
-				else
-					befInstr += instr;
-				if (aftInstr == null)
-					aftInstr = "";
-			} else if (befInstr == null) {
-				if (aftInstr == null)
-					return;
-				befInstr = "";
-			} else if (aftInstr == null)
-				aftInstr = "";
+			if (instr != null)
+				befInstr += instr;
+			if (befInstr.equals("") && aftInstr.equals(""))
+				return;
 			// NOTE: the following must be executed only if at least
 			// befInstr or aftInstr is non-null.  Otherwise, all call sites
 			// in the program will be replaced, and this can cause null
