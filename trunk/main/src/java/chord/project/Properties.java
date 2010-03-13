@@ -84,8 +84,12 @@ public class Properties {
 		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
 	}
 	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
-	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
-	public final static String checkExcludeStr = System.getProperty("chord.check.exclude", DEFAULT_CHECK_EXCLUDES);
+	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
+	public final static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
+		DEFAULT_SCOPE_EXCLUDES + File.pathSeparator + scopeExcludeExtStr);
+	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
+	public final static String checkExcludeStr = System.getProperty("chord.check.exclude",
+		DEFAULT_CHECK_EXCLUDES + File.pathSeparator + checkExcludeExtStr);
 
 	// Program analysis properties
 
@@ -194,7 +198,9 @@ public class Properties {
 		System.out.println("*** Program scope properties:");
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
+		System.out.println("chord.scope.exclude.ext: " + scopeExcludeExtStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
+		System.out.println("chord.check.exclude.ext: " + checkExcludeExtStr);
 		System.out.println("chord.check.exclude: " + checkExcludeStr);
 
 		System.out.println("*** Program analysis properties:");

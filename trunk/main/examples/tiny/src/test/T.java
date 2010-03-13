@@ -132,8 +132,7 @@ public class T {
 
  static T ggg;
   public static void main(String[] args) throws Exception {
-	String s = args[0];
-	System.out.println("AAA" + s);
+	System.out.println("AAA");
 /*
 		for (int i = 0; i < 10; i++) {
 			Object x = new Object();
