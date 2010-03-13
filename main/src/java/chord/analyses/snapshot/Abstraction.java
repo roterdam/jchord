@@ -732,8 +732,7 @@ class PointedToByAbstraction extends Abstraction {
 			if (abs >= 0) {
 				TIntIntHashMap M = object2pointers.get(o);
 				assert (M != null);
-				int r = M.remove(f);
-				assert (r == abs);
+				M.remove(f);
 				boolean hasChanged = !M.containsValue(abs);
 				if (hasChanged) {
 					setValue(o, M.getValues());
