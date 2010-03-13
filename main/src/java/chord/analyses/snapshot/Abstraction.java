@@ -709,15 +709,18 @@ class PointedToByAbstraction extends Abstraction {
 	@Override
 	public void edgeCreated(int b, int f, int o) {
 		if (b != 0 && o != 0 && f != 0) {
-			TIntIntHashMap M = object2pointers.get(o);
-			if (M == null) {
-				M = new TIntIntHashMap();
-				object2pointers.put(o, M);
-			}
-			boolean hasChanged = !M.containsValue(b);
-			M.put(f, b);
-			if (hasChanged) {
-				setValue(o, M.getValues());
+			int abs = state.o2h.get(b);
+			if (abs >= 0) {
+				TIntIntHashMap M = object2pointers.get(o);
+				if (M == null) {
+					M = new TIntIntHashMap();
+					object2pointers.put(o, M);
+				}
+				boolean hasChanged = !M.containsValue(abs);
+				M.put(f, abs);
+				if (hasChanged) {
+					setValue(o, M.getValues());
+				}
 			}
 		}
 	}
@@ -725,13 +728,16 @@ class PointedToByAbstraction extends Abstraction {
 	@Override
 	public void edgeDeleted(int b, int f, int o) {
 		if (b != 0 && o != 0 && f != 0) {
-			TIntIntHashMap M = object2pointers.get(o);
-			assert (M != null);
-			int r = M.remove(f);
-			assert (r == b);
-			boolean hasChanged = !M.containsValue(b);
-			if (hasChanged) {
-				setValue(o, M.getValues());
+			int abs = state.o2h.get(b);
+			if (abs >= 0) {
+				TIntIntHashMap M = object2pointers.get(o);
+				assert (M != null);
+				int r = M.remove(f);
+				assert (r == abs);
+				boolean hasChanged = !M.containsValue(abs);
+				if (hasChanged) {
+					setValue(o, M.getValues());
+				}
 			}
 		}
 	}
