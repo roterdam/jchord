@@ -24,8 +24,8 @@ public class DynamicStatsAnalysis extends DynamicAnalysis {
 		if (instrScheme != null) return instrScheme;
 		instrScheme = new InstrScheme();
 		instrScheme.setNewAndNewArrayEvent(true, true, true);
-		instrScheme.setEnterAndLeaveMethodEvent();
-		instrScheme.setMethodCallEvent(true, true, true, true, true);
+		// instrScheme.setEnterAndLeaveMethodEvent();
+		// instrScheme.setMethodCallEvent(true, true, true, true, true);
 		instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
 		instrScheme.setPutfieldPrimitiveEvent(true, false, true, false);
 		instrScheme.setAloadPrimitiveEvent(true, false, true, false);
@@ -48,16 +48,16 @@ public class DynamicStatsAnalysis extends DynamicAnalysis {
 			numDynamicBadO++;
 		assert (h != 0);	// 0 is a special value in domain H
         if (h > 0) {
-			System.out.println("NEW: " + Hmap.get(h));
+			// System.out.println("NEW: " + Hmap.get(h));
 			objToHidx.put(o, h);
 		} else
 			objToHidx.remove(o);
 	}
     public void processEnterMethod(int m, int t) {
-		if (m >= 0) System.out.println("ENTER_METHOD " + Mmap.get(m));
+		if (m >= 0) System.out.println("ENTER_METHOD " + Mmap.get(m) + " " + t);
     }
     public void processLeaveMethod(int m, int t) {
-		if (m >= 0) System.out.println("LEAVE_METHOD " + Mmap.get(m));
+		if (m >= 0) System.out.println("LEAVE_METHOD " + Mmap.get(m) + " " + t);
     }
 	public void processMethodCallBef(int i, int t, int o) {
 		if (i >= 0) System.out.println("BEF CALL: " + Imap.get(i));
@@ -66,42 +66,42 @@ public class DynamicStatsAnalysis extends DynamicAnalysis {
 		if (i >= 0) System.out.println("AFT CALL: " + Imap.get(i));
 	}
     public void processGetfieldPrimitive(int e, int t, int b, int f) {
-		processHeapRd(e, b);
+		processHeapRd(e, b, t);
     }
     public void processAloadPrimitive(int e, int t, int b, int i) {
-		processHeapRd(e, b);
+		processHeapRd(e, b, t);
     }
     public void processGetfieldReference(int e, int t, int b, int f, int o) {
-		processHeapRd(e, b);
+		processHeapRd(e, b, t);
     }
     public void processAloadReference(int e, int t, int b, int i, int o) {
-		processHeapRd(e, b);
+		processHeapRd(e, b, t);
     }
     public void processPutfieldPrimitive(int e, int t, int b, int f) {
-		processHeapRd(e, b);
+		processHeapRd(e, b, t);
     }
     public void processAstorePrimitive(int e, int t, int b, int i) {
-		processHeapRd(e, b);
+		processHeapRd(e, b, t);
     }
     public void processPutfieldReference(int e, int t, int b, int f, int o) {
-		processHeapWr(e, b, f, o);
+		processHeapWr(e, b, f, o, t);
     }
     public void processAstoreReference(int e, int t, int b, int i, int o) {
-		processHeapWr(e, b, i, o);
+		processHeapWr(e, b, i, o, t);
 	}
-	private void processHeapRd(int e, int b) {
+	private void processHeapRd(int e, int b, int t) {
 		assert (b >= 0);	// allow null object value
 		if (e >= 0) {
 			visitedE.add(e);
 			numDynamicVisitedE++;
 			if (b > 0 && !objToHidx.containsKey(b)) {
 				if (badE.add(e))
-					System.out.println("BAD: " + Emap.get(e));
+					; // System.out.println("BAD: " + Emap.get(e) + " " + t);
 				numDynamicBadE++;
 			}
 		}
     }
-	private void processHeapWr(int e, int b, int i, int o) {
+	private void processHeapWr(int e, int b, int i, int o, int t) {
 		assert (b >= 0);	// allow null object value
 		assert (o >= 0);	// allow null object value
 		if (e >= 0) {
@@ -110,7 +110,7 @@ public class DynamicStatsAnalysis extends DynamicAnalysis {
 			if ((b > 0 && !objToHidx.containsKey(b)) ||
 			 	(o > 0 && !objToHidx.containsKey(o))) {
 				if (badE.add(e))
-					System.out.println("BAD: " + Emap.get(e));
+					; // System.out.println("BAD: " + Emap.get(e) + " " + t);
 				numDynamicBadE++;
 			}
 		}
