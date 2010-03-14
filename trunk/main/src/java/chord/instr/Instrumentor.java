@@ -542,11 +542,11 @@ public class Instrumentor {
 			else
 				syncExpr = "$0";
 			if (acquireLockEvent.present()) {
-				int lId = set(Lmap, -1);
+				int lId = acquireLockEvent.hasLoc() ? set(Lmap, -1) : Runtime.MISSING_FIELD_VAL;
 				enterStr += acquireLockEventCall + lId + "," + syncExpr + ");";
 			}
 			if (releaseLockEvent.present()) {
-				int rId = set(Rmap, -2);
+				int rId = releaseLockEvent.hasLoc() ? set(Rmap, -2) : Runtime.MISSING_FIELD_VAL;
 				leaveStr += releaseLockEventCall + rId + "," + syncExpr + ");";
 			}
 		}
