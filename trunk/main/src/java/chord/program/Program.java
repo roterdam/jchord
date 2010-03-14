@@ -18,14 +18,13 @@ import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
-import chord.project.OutDirUtils;
+import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.IndexHashSet;
 import chord.util.ProcessExecutor;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
  
-import joeq.Class.PrimordialClassLoader;
 import joeq.Util.Templates.ListIterator;
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Class;
@@ -38,7 +37,6 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand;
-import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
@@ -108,12 +106,12 @@ public class Program {
 		String s;
 		while ((s = r.readLine()) != null) {
 			if (Properties.verbose)
-				OutDirUtils.logOut("Loading class %s", s);
+				Messages.log("SCOPE.LOADING_CLASS", s);
 			jq_Class c;
 			try {
 				c = (jq_Class) Helper.load(s);
 			} catch (Exception ex) {
-				OutDirUtils.logErr("WARNING: Ignoring class %s reason follows:", s);
+				Messages.log("SCOPE.EXCLUDING_CLASS", s);
 				ex.printStackTrace();
 				continue;
 			}
@@ -138,7 +136,7 @@ public class Program {
 			String cName = sign.cName;
 			jq_Class c = getPreparedClass(cName);
 			if (c == null)
-				OutDirUtils.logErr("WARNING: Excluding method %s", s);
+				Messages.log("SCOPE.EXCLUDING_METHOD", s);
 			else {
 				String mName = sign.mName;
 				String mDesc = sign.mDesc;
@@ -158,7 +156,7 @@ public class Program {
 		for (jq_Method m : bootstrapper.getReachableMethods()) {
 			jq_Class c = m.getDeclaringClass();
 			if (!classes.contains(c))
-				OutDirUtils.logErr("WARNING: Excluding method %s", m);
+				Messages.log("SCOPE.EXCLUDING_METHOD", m);
 			else
 				methods.add(m);
 		}

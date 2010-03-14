@@ -281,8 +281,6 @@ public class Project {
 		resetTaskDone(getTask(name));
 	}
 
-	private static PrintWriter out;
-
 	public static void init() {
 		if (isInited)
 			return;
@@ -774,20 +772,20 @@ public class Project {
 	}
 
 	private static void anonJavaAnalysis(String name) {
-		if (verbose) OutDirUtils.logOut("WARNING: Java analysis '%s' is not named via a @Chord(name=\"...\") annotation; using its classname itself as its name.", name);
+		if (verbose) Messages.log("PROJECT.ANON_JAVA_ANALYSIS", name);
 	}
 	
 	private static void anonDlogAnalysis(String name) {
-		if (verbose) OutDirUtils.logOut("WARNING: Dlog analysis '%s' is not named via a # name=... line; using its filename itself as its name.", name);
+		if (verbose) Messages.log("PROJECT.ANON_DLOG_ANALYSIS", name);
 	}
 
 	private static void ignoreDlogAnalysis(String name) {
-		OutDirUtils.logErr("ERROR: Ignoring Dlog analysis '%s'; errors were found while parsing it (see above).", name);
+		Messages.log("IGNORING_DLOG_ANALYSIS", name);
 		hasNoErrors = false;
 	}
 	
 	private static void ignoreJavaAnalysis(String name) {
-		OutDirUtils.logErr("ERROR: Ignoring Java analysis '%s'; errors were found in its @Chord annotation (see above).", name);
+		Messages.log("IGNORING_JAVA_ANALYSIS", name);
 		hasNoErrors = false;
 	}
 	
@@ -815,53 +813,53 @@ public class Project {
 	}
 	
 	private static void inconsistentDomNames(String relName, String names1, String names2, String loc1, String loc2) {
-		OutDirUtils.logErr("ERROR: Relation '%s' declared with different domain names '%s' and '%s' in '%s' and '%s' respectively.", relName, names1, names2, loc1, loc2);
+		Messages.log("PROJECT.DOM_NAMES_INCONSISTENT", relName, names1, names2, loc1, loc2);
 		hasNoErrors = false;
 	}
 	
 	private static void inconsistentDomOrders(String relName, String order1, String order2, String loc1, String loc2) {
-		if (verbose) OutDirUtils.logOut("WARNING: Relation '%s' declared with different domain orders '%s' and '%s' in '%s' and '%s' respectively.", relName, order1, order2, loc1, loc2);
+		if (verbose) Messages.log("PROJECT.DOM_ORDERS_INCONSISTENT", relName, order1, order2, loc1, loc2);
 	}
 	
 	private static void inconsistentTypes(String name, String type1, String type2, String loc1, String loc2) {
-		OutDirUtils.logErr("ERROR: '%s' declared with inconsistent types '%s' and '%s' in '%s' and '%s' respectively.", name, type1, type2, loc1, loc2);
+		Messages.log("PROJECT.TARGET_TYPE_INCONSISTENT", name, type1, type2, loc1, loc2);
 		hasNoErrors = false;
 	}
 	
 	private static void unknownSign(String name) {
-		OutDirUtils.logErr("ERROR: sign of relation '%s' unknown.", name);
+		Messages.log("PROJECT.RELATION_SIGN_UNKNOWN", name);
 		hasNoErrors = false;
 	}
 	
 	private static void unknownOrder(String name) {
-		Messages.log("PROJECT_BUILDER.RELATION_ORDER_UNKNOWN", name);
+		Messages.log("PROJECT.RELATION_ORDER_UNKNOWN", name);
 		hasNoErrors = false;
 	}
 	
 	private static void unknownType(String name) {
-		OutDirUtils.logErr("ERROR: type of target '%s' unknown.", name);
+		Messages.log("PROJECT.TARGET_TYPE_UNKNOWN", name);
 		hasNoErrors = false;
 	}
 	
 	private static void redefinedJavaTask(String newTaskName, String name, String oldTaskName) {
-		OutDirUtils.logErr("ERROR: Ignoring Java analysis '%s': its @Chord(name=\"...\") annotation uses name '%s' that is also used for another task '%s'.", name, oldTaskName, newTaskName);
+		Messages.log("PROJECT.JAVA_TASK_REDEFINED", name, oldTaskName, newTaskName);
 		hasNoErrors = false;
 	}
 	private static void redefinedDlogTask(String newTaskName, String name, String oldTaskName) {
-		OutDirUtils.logErr("ERROR: Ignoring Dlog analysis '%s': its # name=\"...\" line uses name '%s' that is also used for another task '%s'.", newTaskName, name, oldTaskName);
+		Messages.log("PROJECT.DLOG_TASK_REDEFINED", newTaskName, name, oldTaskName);
 		hasNoErrors = false;
 	}
 	
 	private static void malformedPathElem(String elem, String path, String msg) {
-		if (verbose) OutDirUtils.logOut("WARNING: Ignoring malformed entry '%s' in path '%s'.", elem, path);
+		if (verbose) Messages.log("PROJECT.MALFORMED_PATH_ELEM", elem, path);
 	}
 	
 	private static void nonexistentPathElem(String elem, String path) {
-		if (verbose) OutDirUtils.logOut("WARNING: Ignoring non-existent entry '%s' in path '%s'.", elem, path);
+		if (verbose) Messages.log("PROJECT.NON_EXISTENT_PATH_ELEM", elem, path);
 	}
 	
 	private static void nonInstantiableJavaAnalysis(String name, String msg) {
-		OutDirUtils.logErr("ERROR: Ignoring Java analysis task '%s': %s.", name, msg);
+		Messages.log("JAVA_TASK_UNINSTANTIABLE", name, msg);
 		hasNoErrors = false;
 	}
 }

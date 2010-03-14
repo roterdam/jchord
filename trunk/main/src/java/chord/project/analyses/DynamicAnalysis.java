@@ -18,7 +18,6 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import chord.doms.DomB;
 import chord.doms.DomM;
-import chord.doms.DomW;
 import chord.instr.EventKind;
 import chord.instr.InstrScheme;
 import chord.instr.Instrumentor;
@@ -27,14 +26,13 @@ import chord.instr.TraceTransformer;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.CFGLoopFinder;
 import chord.program.Program;
-import chord.project.OutDirUtils;
+import chord.project.Messages;
 import chord.project.Properties;
 import chord.runtime.BufferedRuntime;
 import chord.util.ByteBufferedFile;
 import chord.util.ChordRuntimeException;
 import chord.util.Executor;
 import chord.util.FileUtils;
-import chord.util.IndexMap;
 import chord.util.ProcessExecutor;
 import chord.util.ReadException;
 
@@ -189,7 +187,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				final Executor executor = new Executor(serial);
 				initAllPasses();
 				for (String runID : runIDs) {
-					OutDirUtils.logOut("Processing Run ID %s", runID);
+					Messages.log("DYNAMIC.STARTING_RUN", runID);
 					final String args = System.getProperty("chord.args." + runID, "");
 					final String cmd = instrProgramCmd + args;
 					Runnable instrProgram = new Runnable() {
@@ -197,7 +195,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 							try {
 								int result = ProcessExecutor.execute(cmd);
 								if (result != 0)
-									instrJVMterminated(result);
+									instrJVMfailed(result);
 							} catch (Throwable ex) {
 								ex.printStackTrace();
 								System.exit(1);
@@ -211,20 +209,22 @@ public class DynamicAnalysis extends JavaAnalysis {
 						executor.execute(traceProcessor);
 						executor.waitForCompletion();
 					}
+					Messages.log("DYNAMIC.FINISHED_RUN", runID);
 				}
 				doneAllPasses();
 			} else {
 				instrProgramCmd += " " + mainClassName + " ";
 				initAllPasses();
 				for (String runID : runIDs) {
-					OutDirUtils.logOut("Processing Run ID %s", runID);
+					Messages.log("DYNAMIC.STARTING_RUN", runID);
 					final String args = System.getProperty("chord.args." + runID, "");
 					final String cmd = instrProgramCmd + args;
 					initPass();
 					int result = ProcessExecutor.execute(cmd);
 					if (result != 0)
-						instrJVMterminated(result);
+						instrJVMfailed(result);
 					donePass();
+					Messages.log("DYNAMIC.FINISHED_RUN", runID);
 				}
 				doneAllPasses();
 			}
@@ -234,8 +234,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 	}
 
-	private static void instrJVMterminated(int result) {
-		OutDirUtils.logErr("JVM running instrumented program terminated abnormally with return value %d", result);
+	private static void instrJVMfailed(int result) {
+		Messages.log("DYNAMIC.INSTRUMENTED_JVM_FAILED", result);
 		System.exit(1);
 	}
 	
@@ -247,7 +247,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 	private void onLoopStart(int b, int t) {
 		Stack<Record> stack = stacks.get(t);
 		assert (stack != null);
-		BasicBlock loopBB = domB.get(b);
 		stack.add(new LoopRecord(b));
 		processEnterLoop(b, t);
 	}
@@ -642,7 +641,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			}
 		}
 		donePass();
-		OutDirUtils.logOut("Finished processing trace with %d events", count);
+		Messages.log("DYNAMIC.FINISHED_PROCESSING_TRACE", count);
 	}
 	
 	public void processLoopIteration(int w, int t) {
@@ -746,7 +745,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		error("void processFinalize(int o)");
 	}
 	private void error(String mSign) {
-		OutDirUtils.logErr("ERROR: Dynamic analysis %s must override method %s or omit it from its InstrScheme.", getName(), mSign);
+		Messages.log("DYNAMIC.EVENT_NOT_HANDLED", getName(), mSign);
 		System.exit(1);
 	}
 }

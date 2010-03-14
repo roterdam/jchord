@@ -20,13 +20,11 @@ import chord.doms.DomL;
 import chord.doms.DomR;
 import chord.doms.DomP;
 import chord.doms.DomB;
-import chord.doms.DomW;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.Program;
 import chord.util.ChordRuntimeException;
 import chord.project.Project;
 import chord.project.Properties;
-import chord.project.OutDirUtils;
 import chord.project.analyses.ProgramDom;
 import chord.runtime.Runtime;
 import chord.util.IndexHashMap;
@@ -43,8 +41,6 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Util.Templates.ListIterator;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.PrintWriter;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -215,7 +211,7 @@ public class Instrumentor {
 	private static boolean checkExists(String pathElem) {
 		File file = new File(pathElem);
 		if (!file.exists()) {
-			Messages.log("INSTR.IGNORE_NON_EXISTENT_PATH_ELEM", pathElem);
+			Messages.log("INSTR.NON_EXISTENT_PATH_ELEM", pathElem);
 			return false;
 		}
 		return true;
@@ -371,11 +367,11 @@ public class Instrumentor {
 			}
 		}
 		if (match) {
-			if (verbose) Messages.log("INSTR.EXPLICIT_EXCLUDE", cName);
+			if (verbose) Messages.log("INSTR.EXPLICITLY_EXCLUDING_CLASS", cName);
 			return;
 		}
 		if (cName.equals("java.lang.J9VMInternals") || cName.startsWith("java.lang.ref.")) {
-			Messages.log("INSTR.IMPLICIT_EXCLUDE", cName);
+			Messages.log("INSTR.IMPLICITLY_EXCLUDING_CLASS", cName);
 			return;
 		}
 		String outDirName = null;
@@ -1026,4 +1022,3 @@ public class Instrumentor {
 		return instr;
 	}
 }
-
