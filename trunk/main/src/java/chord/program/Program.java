@@ -78,11 +78,11 @@ public class Program {
 		new HashMap<Inst, jq_Method>();
 
 	private Program() {
+		if (Properties.verbose)
+			jq_Method.setVerbose();
 		if (Properties.doSSA)
 			jq_Method.doSSA();
-		jq_Method.setVerbose(Properties.verboseLevel);
-        String[] scopeExcludedPrefixes = Properties.toArray(
-            Properties.scopeExcludeStr);
+        String[] scopeExcludedPrefixes = Properties.toArray(Properties.scopeExcludeStr);
 		jq_Method.exclude(scopeExcludedPrefixes);
 		try {
 			boolean filesExist =
@@ -107,7 +107,7 @@ public class Program {
 		BufferedReader r = new BufferedReader(new FileReader(fileName));
 		String s;
 		while ((s = r.readLine()) != null) {
-			if (Properties.verboseLevel >= 1)
+			if (Properties.verbose)
 				OutDirUtils.logOut("Loading class %s", s);
 			jq_Class c;
 			try {

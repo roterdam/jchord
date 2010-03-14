@@ -196,6 +196,8 @@
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
 			srcdir="src/java" destdir="classes" classpathref="main_class_path"/>
+		<copy file="src/java/chord/project/messages.properties"
+			tofile="classes/chord/project/messages.properties"/>
 	</target>
 
 	<!--
