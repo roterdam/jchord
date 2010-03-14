@@ -7,16 +7,16 @@ import gnu.trove.TIntIntProcedure;
 import gnu.trove.TIntIterator;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntProcedure;
-import gnu.trove.TObjectIntHashMap;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.Random;
+import java.util.Set;
 
 import chord.project.OutDirUtils;
 
@@ -723,6 +723,36 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 }
 
 class PointedToByAbstraction extends Abstraction {
+	
+	private static class Value {
+		private final int[] values;
+		
+		public Value(int[] values) {
+			this.values = values;
+		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + Arrays.hashCode(values);
+			return result;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Value other = (Value) obj;
+			if (!Arrays.equals(values, other.values))
+				return false;
+			return true;
+		}
+	}
 
 	private final TIntObjectHashMap<TIntIntHashMap> object2pointers = new TIntObjectHashMap<TIntIntHashMap>();
 
@@ -749,7 +779,8 @@ class PointedToByAbstraction extends Abstraction {
 				boolean hasChanged = !M.containsValue(abs);
 				M.put(f, abs);
 				if (hasChanged) {
-					setValue(o, M.getValues());
+					Value v = new Value(M.getValues());
+					setValue(o, v);
 				}
 			}
 		}
@@ -765,7 +796,8 @@ class PointedToByAbstraction extends Abstraction {
 				M.remove(f);
 				boolean hasChanged = !M.containsValue(abs);
 				if (hasChanged) {
-					setValue(o, M.getValues());
+					Value v = new Value(M.getValues());
+					setValue(o, v);
 				}
 			}
 		}
