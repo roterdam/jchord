@@ -338,7 +338,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	
 	private void processTrace(String fileName) throws IOException, ReadException {
 		initPass();
-		ByteBufferedFile buffer = new ByteBufferedFile(1024, fileName, true);
+		ByteBufferedFile buffer = new ByteBufferedFile(Properties.traceBlockSize, fileName, true);
 		long count = 0;
 		while (!buffer.isDone()) {
 			byte opcode = buffer.getByte();
