@@ -30,29 +30,26 @@ public class Properties {
 
 	public final static String mainDirName = System.getProperty("chord.main.dir");
 	static {
-		assert(mainDirName != null);
+		if (mainDirName == null)
+			throw new ChordRuntimeException("ERROR: Property chord.main.dir not set; must be set to the absolute location of the directory named 'main' in your Chord installation");
 	}
-	public static String libDirName = System.getProperty("chord.lib.dir");
-	static {
-		if (libDirName == null)
-			libDirName = FileUtils.getAbsolutePath(mainDirName, "lib");
-	}
+	public static String libDirName = mainRel2AbsPath("chord.lib.dir", "lib");
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
-	public static String instrAgentFileName = System.getProperty("chord.instr.agent.file");
-	static {
-		if (instrAgentFileName == null)
-			instrAgentFileName = FileUtils.getAbsolutePath(mainDirName, "lib/libchord_instr_agent.so");
-	}
-	public final static String javadocURL = System.getProperty("chord.javadoc.url",
-		"http://chord.stanford.edu/javadoc_2_0/");
+	public static String instrAgentFileName = mainRel2AbsPath("chord.instr.agent.file", "lib" + File.separator + "libchord_instr_agent.so");
+	public final static String javadocURL = System.getProperty("chord.javadoc.url", "http://chord.stanford.edu/javadoc_2_0/");
+	public static String messagesFileName = mainRel2AbsPath("chord.messages.file", "messages.txt");
 
 	// Chord boot properties
 
 	public static String workDirName = System.getProperty("chord.work.dir");
 	static {
-		if (workDirName == null)
+		if (workDirName == null) {
 			workDirName = System.getProperty("user.dir");
+			if (workDirName == null)
+				throw new ChordRuntimeException("ERROR: Property chord.work.dir not set; must be set to the absolute location of the working directory desired during Chord's execution.");
+			OutDirUtils.logOut("WARNING: Property chord.work.dir not set; using value of user.dir (`%s`) instead", workDirName);
+		}
 	}
 	public final static String propsFileName = System.getProperty("chord.props.file");
 	public final static String maxHeap = System.getProperty("chord.max.heap");
@@ -73,8 +70,7 @@ public class Properties {
 	public final static String classPathName = System.getProperty("chord.class.path");
 	public final static String srcPathName = System.getProperty("chord.src.path");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
-	public final static String runtimeJvmargs =
-		System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
+	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
 
 	// Program scope properties
 
@@ -99,21 +95,13 @@ public class Properties {
 				checkExcludeStr + "," + checkExcludeExtStr;
 		}
 	}
+	public static final String allocMethodsFileName =
+		mainRel2AbsPath("chord.alloc.methods.file", "annot" + File.separator + "alloc_methods.txt");
 
 	// Program analysis properties
 
-	public static String javaAnalysisPathName = System.getProperty("chord.java.analysis.path");
-	static {
-		if (javaAnalysisPathName == null)
-			javaAnalysisPathName = FileUtils.getAbsolutePath(mainDirName, "classes");
-	}
-	public static String dlogAnalysisPathName =
-		System.getProperty("chord.dlog.analysis.path");
-	static {
-		if (dlogAnalysisPathName == null) {
-			dlogAnalysisPathName = FileUtils.getAbsolutePath(mainDirName, "src/dlog");
-		}
-	}
+	public static String javaAnalysisPathName = mainRel2AbsPath("chord.java.analysis.path", "classes");
+	public static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path", "src" + File.separator + "dlog");
 	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
 	public final static boolean publishResults = buildBoolProp("chord.publish.results", true);
 
@@ -125,8 +113,7 @@ public class Properties {
 
 	public final static boolean bddbddbNoisy = buildBoolProp("chord.bddbddb.noisy", false);
 	public final static boolean saveDomMaps = buildBoolProp("chord.save.maps", true);
-	public final static int verboseLevel = Integer.getInteger("chord.verbose.level", 0);
-	public final static int instrVerboseLevel = Integer.getInteger("chord.instr.verbose.level", 0);
+	public final static boolean verbose = buildBoolProp("chord.verbose", false);
 
 	// Chord instrumentation properties
 
@@ -137,41 +124,32 @@ public class Properties {
 
 	// Chord output properties
 
-	public static String outDirName = System.getProperty("chord.out.dir");
+	public static String outDirName = workRel2AbsPath("chord.out.dir", "chord_output");
 	static {
-    // Automatically find a free subdirectory
-    String outPoolPath = System.getProperty("chord.out.pooldir");
-    // System.out.println("OUT "+outPoolPath);
-    if (outPoolPath != null) {
-      for (int i = 0; ; i++) {
-        outDirName = outPoolPath+"/"+i+".exec";
-        if (!new File(outDirName).exists()) break;
-      }
-    }
-		if (outDirName == null)
-			outDirName = FileUtils.getAbsolutePath(workDirName, "chord_output");
+		// Automatically find a free subdirectory
+		String outPoolPath = System.getProperty("chord.out.pooldir");
+		if (outPoolPath != null) {
+			for (int i = 0; true; i++) {
+				outDirName = outPoolPath+"/"+i+".exec";
+				if (!new File(outDirName).exists())
+					break;
+			}
+		}
 		FileUtils.mkdirs(outDirName);
 	}
-	public final static String outFileName = build("chord.out.file", "log.txt");
-	public final static String errFileName = build("chord.err.file", "log.txt");
-	public final static String classesFileName = build("chord.classes.file", "classes.txt");
-	public final static String methodsFileName = build("chord.methods.file", "methods.txt");
-	public static String bddbddbWorkDirName = System.getProperty("chord.bddbddb.work.dir");
+	public final static String outFileName = outRel2AbsPath("chord.out.file", "log.txt");
+	public final static String errFileName = outRel2AbsPath("chord.err.file", "log.txt");
+	public final static String classesFileName = outRel2AbsPath("chord.classes.file", "classes.txt");
+	public final static String methodsFileName = outRel2AbsPath("chord.methods.file", "methods.txt");
+	public static String bddbddbWorkDirName = outRel2AbsPath("chord.bddbddb.work.dir", "bddbddb");
 	static {
-		if (bddbddbWorkDirName == null)
-			bddbddbWorkDirName = FileUtils.getAbsolutePath(outDirName, "bddbddb");
 		FileUtils.mkdirs(bddbddbWorkDirName);
 	}
-	public final static String bootClassesDirName = build("chord.boot.classes.dir", "boot_classes");
-	public final static String userClassesDirName = build("chord.user.classes.dir", "user_classes");
-	public final static String instrSchemeFileName = build("chord.instr.scheme.file", "scheme.ser");
-	public final static String crudeTraceFileName = build("chord.crude.trace.file", "crude_trace.txt");
-	public final static String finalTraceFileName = build("chord.final.trace.file", "final_trace.txt");
-
-	public final static String propsDebugFileName = build("chord.props.debug.file", "props_debug.txt");
-	public final static String projectDebugFileName = build("chord.project.debug.file", "project_debug.txt");
-	public final static String scopeDebugFileName = build("chord.scope.debug.file", "scope_debug.txt");
-	public final static String instrDebugFileName = build("chord.instr.debug.file", "instr_debug.txt");
+	public final static String bootClassesDirName = outRel2AbsPath("chord.boot.classes.dir", "boot_classes");
+	public final static String userClassesDirName = outRel2AbsPath("chord.user.classes.dir", "user_classes");
+	public final static String instrSchemeFileName = outRel2AbsPath("chord.instr.scheme.file", "scheme.ser");
+	public final static String crudeTraceFileName = outRel2AbsPath("chord.crude.trace.file", "crude_trace.txt");
+	public final static String finalTraceFileName = outRel2AbsPath("chord.final.trace.file", "final_trace.txt");
 
 	public static void print() {
 		System.out.println("*** Chord resource properties:");
@@ -181,6 +159,7 @@ public class Properties {
 		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
 		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
 		System.out.println("chord.javadoc.url: " + javadocURL);
+		System.out.println("chord.messages.file: " + messagesFileName);
 
 		System.out.println("*** Chord boot properties:");
 		System.out.println("chord.work.dir: " + workDirName);
@@ -211,6 +190,7 @@ public class Properties {
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
 		System.out.println("chord.check.exclude.ext: " + checkExcludeExtStr);
 		System.out.println("chord.check.exclude: " + checkExcludeStr);
+		System.out.println("chord.alloc.methods.file: " + allocMethodsFileName);
 
 		System.out.println("*** Program analysis properties:");
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
@@ -222,7 +202,7 @@ public class Properties {
 		System.out.println("chord.ssa: " + doSSA);
 
 		System.out.println("*** Chord debug properties:");
-		System.out.println("chord.verbose.level: " + verboseLevel);
+		System.out.println("chord.verbose: " + verbose);
 		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
 		System.out.println("chord.save.maps: " + saveDomMaps);
 
@@ -244,10 +224,17 @@ public class Properties {
 		System.out.println("chord.crude.trace.file: " + crudeTraceFileName);
 		System.out.println("chord.final.trace.file: " + finalTraceFileName);
 	}
-	private static String build(String propName, String fileName) {
+	private static String outRel2AbsPath(String propName, String fileName) {
 		String val = System.getProperty(propName);
-		return (val != null) ? val :
-			(new File(outDirName, fileName)).getAbsolutePath();
+		return (val != null) ? val : FileUtils.getAbsolutePath(outDirName, fileName);
+	}
+	private static String mainRel2AbsPath(String propName, String fileName) {
+		String val = System.getProperty(propName);
+		return (val != null) ? val : FileUtils.getAbsolutePath(mainDirName, fileName);
+	}
+	private static String workRel2AbsPath(String propName, String fileName) {
+		String val = System.getProperty(propName);
+		return (val != null) ? val : FileUtils.getAbsolutePath(workDirName, fileName);
 	}
 	private static boolean buildBoolProp(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 

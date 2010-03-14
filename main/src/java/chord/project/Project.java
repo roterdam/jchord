@@ -62,6 +62,7 @@ public class Project {
 	private static Set<Object> doneTrgts = new HashSet<Object>();
 	private static Stack<Timer> timers = new Stack<Timer>();
 	private static Timer currTimer;
+	private static boolean verbose = Properties.verbose;
 
 	private Project() { }
 
@@ -286,12 +287,6 @@ public class Project {
 		if (isInited)
 			return;
 
-		try {
-			out = new PrintWriter(new FileWriter(Properties.projectDebugFileName));
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
-		} 
-
 		// create and populate the following maps:
 		// nameToTaskMap, nameToTrgtsDebugMap
 		// taskToConsumedNamesMap, taskToProducedNamesMap
@@ -500,7 +495,6 @@ public class Project {
 			}
 		}
 
-		out.close();
 		isInited = true;
 	}
 
@@ -520,7 +514,6 @@ public class Project {
 	private static void checkErrors() {
 		if (!hasNoErrors) {
 			System.err.println("Found errors (see above). Exiting ...");
-			out.close();
 			System.exit(1);
 		}
 	}
@@ -781,129 +774,94 @@ public class Project {
 	}
 
 	private static void anonJavaAnalysis(String name) {
-		out.println("WARNING: Java analysis '" + name +
-			"' is not named via a @Chord(name=\"...\") annotation; " +
-			"using its classname itself as its name.");
+		if (verbose) OutDirUtils.logOut("WARNING: Java analysis '%s' is not named via a @Chord(name=\"...\") annotation; using its classname itself as its name.", name);
 	}
 	
 	private static void anonDlogAnalysis(String name) {
-		out.println("WARNING: Dlog analysis '" + name +
-			"' is not named via a # name=... line; " +
-			"using its filename itself as its name.");
+		if (verbose) OutDirUtils.logOut("WARNING: Dlog analysis '%s' is not named via a # name=... line; using its filename itself as its name.", name);
 	}
 
 	private static void ignoreDlogAnalysis(String name) {
-		System.err.println("ERROR: Ignoring Dlog analysis '" + name +
-			"'; errors were found while parsing it (see above).");
+		OutDirUtils.logErr("ERROR: Ignoring Dlog analysis '%s'; errors were found while parsing it (see above).", name);
 		hasNoErrors = false;
 	}
 	
 	private static void ignoreJavaAnalysis(String name) {
-		System.err.println("ERROR: Ignoring Java analysis '" + name +
-			"'; errors were found in its @Chord annotation (see above).");
+		OutDirUtils.logErr("ERROR: Ignoring Java analysis '%s'; errors were found in its @Chord annotation (see above).", name);
 		hasNoErrors = false;
 	}
 	
-	private static void undefinedTarget(String name,
-			List<String> consumerTaskNames) {
-		String msg = "WARNING: '" + name +
-			"' not declared as produced name of any task";
-		if (consumerTaskNames.isEmpty())
-			msg += "\n";
-		else {
-			msg += "; declared as consumed name of following tasks:\n";
-			for (String taskName : consumerTaskNames)
-				msg += "\t'" + taskName + "'\n";
+	private static void undefinedTarget(String name, List<String> consumerTaskNames) {
+		if (verbose) {
+			String msg = "WARNING: '" + name + "' not declared as produced name of any task";
+			if (consumerTaskNames.isEmpty())
+				msg += "\n";
+			else {
+				msg += "; declared as consumed name of following tasks:\n";
+				for (String taskName : consumerTaskNames)
+					msg += "\t'" + taskName + "'\n";
+			}
+			OutDirUtils.logOut(msg);
 		}
-		out.print(msg);
 	}
 	
-	private static void redefinedTarget(String name,
-			List<String> producerTaskNames) {
-		String msg = "WARNING: '" + name +
-			"' declared as produced name of multiple tasks:\n";
-		for (String taskName : producerTaskNames) 
-			msg += "\t'" + taskName + "'\n";
-		out.print(msg);
+	private static void redefinedTarget(String name, List<String> producerTaskNames) {
+		if (verbose) {
+			String msg = "WARNING: '" + name + "' declared as produced name of multiple tasks:\n";
+			for (String taskName : producerTaskNames) 
+				msg += "\t'" + taskName + "'\n";
+			OutDirUtils.logOut(msg);
+		}
 	}
 	
-	private static void inconsistentDomNames(String relName, String names1,
-			String names2, String loc1, String loc2) {
-		System.err.println("ERROR: Relation '" + relName +
-			"' declared with different domain names '" + names1 +
-			"' and '" + names2 + "' in '" + loc1 + "' and '" + loc2 +
-			"' respectively.");
+	private static void inconsistentDomNames(String relName, String names1, String names2, String loc1, String loc2) {
+		OutDirUtils.logErr("ERROR: Relation '%s' declared with different domain names '%s' and '%s' in '%s' and '%s' respectively.", relName, names1, names2, loc1, loc2);
 		hasNoErrors = false;
 	}
 	
-	private static void inconsistentDomOrders(String relName, String order1,
-			String order2, String loc1, String loc2) {
-		out.println("WARNING: Relation '" + relName +
-			"' declared with different domain orders '" + order1 +
-			"' and '" + order2 + "' in '" + loc1 + "' and '" + loc2 +
-			"' respectively.");
+	private static void inconsistentDomOrders(String relName, String order1, String order2, String loc1, String loc2) {
+		if (verbose) OutDirUtils.logOut("WARNING: Relation '%s' declared with different domain orders '%s' and '%s' in '%s' and '%s' respectively.", relName, order1, order2, loc1, loc2);
 	}
 	
-	private static void inconsistentTypes(String name, String type1,
-			String type2, String loc1, String loc2) {
-		System.err.println("ERROR: '" + name +
-			"' declared with inconsistent types '" + type1 +
-			"' and '" + type2 + "' in '" + loc1 + "' and '" + loc2 +
-			"' respectively.");
+	private static void inconsistentTypes(String name, String type1, String type2, String loc1, String loc2) {
+		OutDirUtils.logErr("ERROR: '%s' declared with inconsistent types '%s' and '%s' in '%s' and '%s' respectively.", name, type1, type2, loc1, loc2);
 		hasNoErrors = false;
 	}
 	
 	private static void unknownSign(String name) {
-		System.err.println("ERROR: sign of relation '" + name +
-			"' unknown.");
+		OutDirUtils.logErr("ERROR: sign of relation '%s' unknown.", name);
 		hasNoErrors = false;
 	}
 	
 	private static void unknownOrder(String name) {
-		System.err.println("ERROR: order of relation '" + name +
-			"' unknown.");
+		Messages.log("PROJECT_BUILDER.RELATION_ORDER_UNKNOWN", name);
 		hasNoErrors = false;
 	}
 	
 	private static void unknownType(String name) {
-		System.err.println("ERROR: type of target '" + name +
-			"' unknown.");
+		OutDirUtils.logErr("ERROR: type of target '%s' unknown.", name);
 		hasNoErrors = false;
 	}
 	
-	private static void redefinedJavaTask(String newTaskName, String name,
-			String oldTaskName) {
-		System.err.println("ERROR: Ignoring Java analysis '" +
-			newTaskName +
-			"': its @Chord(name=\"...\") annotation uses name '" +
-			name + "' that is also used for another task '" +
-			oldTaskName + "'.");
+	private static void redefinedJavaTask(String newTaskName, String name, String oldTaskName) {
+		OutDirUtils.logErr("ERROR: Ignoring Java analysis '%s': its @Chord(name=\"...\") annotation uses name '%s' that is also used for another task '%s'.", name, oldTaskName, newTaskName);
 		hasNoErrors = false;
 	}
-	private static void redefinedDlogTask(String newTaskName, String name,
-			String oldTaskName) {
-		System.err.println("ERROR: Ignoring Dlog analysis '" +
-			newTaskName +
-			"': its # name=\"...\" line uses name '" +
-			name + "' that is also used for another task '" +
-			oldTaskName + "'.");
+	private static void redefinedDlogTask(String newTaskName, String name, String oldTaskName) {
+		OutDirUtils.logErr("ERROR: Ignoring Dlog analysis '%s': its # name=\"...\" line uses name '%s' that is also used for another task '%s'.", newTaskName, name, oldTaskName);
 		hasNoErrors = false;
 	}
 	
-	private static void malformedPathElem(String elem, String path,
-			String msg) {
-		out.println("WARNING: Ignoring malformed entry '" +
-			elem + "' in '" + path + "': " + msg + ".");
+	private static void malformedPathElem(String elem, String path, String msg) {
+		if (verbose) OutDirUtils.logOut("WARNING: Ignoring malformed entry '%s' in path '%s'.", elem, path);
 	}
 	
 	private static void nonexistentPathElem(String elem, String path) {
-		out.println("WARNING: Ignoring non-existent entry '" +
-			elem + "' in '" + path + "'.");
+		if (verbose) OutDirUtils.logOut("WARNING: Ignoring non-existent entry '%s' in path '%s'.", elem, path);
 	}
 	
 	private static void nonInstantiableJavaAnalysis(String name, String msg) {
-		System.err.println("ERROR: Ignoring Java analysis task '" +
-			name + "': " + msg + ".");
+		OutDirUtils.logErr("ERROR: Ignoring Java analysis task '%s': %s.", name, msg);
 		hasNoErrors = false;
 	}
 }

@@ -10,6 +10,7 @@ import javassist.*;
 import javassist.expr.*;
 import java.io.FilenameFilter;
 
+import chord.project.Messages;
 import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.doms.DomH;
@@ -109,7 +110,7 @@ public class Instrumentor {
 	private String[] scopeExcludedPrefixes;
 	private String bootClassesDirName;
 	private String userClassesDirName;
-	private int instrVerboseLevel;
+	private boolean verbose;
 
 	private ClassPool pool;
 	private Set<String> bootClassPathResourceNames;
@@ -209,12 +210,12 @@ public class Instrumentor {
 		scopeExcludedPrefixes = Properties.toArray(Properties.scopeExcludeStr);
 		bootClassesDirName = Properties.bootClassesDirName;
 		userClassesDirName = Properties.userClassesDirName;
-		instrVerboseLevel = Properties.instrVerboseLevel;
+ 		verbose = Properties.verbose;
 	}
 	private static boolean checkExists(String pathElem) {
 		File file = new File(pathElem);
 		if (!file.exists()) {
-			OutDirUtils.logOut("WARNING: Instrumentor ignoring non-existent path element %s", pathElem);
+			Messages.log("INSTR.IGNORE_NON_EXISTENT_PATH_ELEM", pathElem);
 			return false;
 		}
 		return true;
@@ -355,36 +356,12 @@ public class Instrumentor {
 		FileUtils.deleteFile(userClassesDirName);
 
 		IndexSet<jq_Class> classes = program.getPreparedClasses();
-		OutDirUtils.logOut("Starting to instrument all classes; this may take a while ...");
+		Messages.log("INSTR.STARTING");
 		for (jq_Class c : classes)
 			instrClass(c);
-		OutDirUtils.logOut("Finished instrumenting all classes.");
-
-		if (Fmap != null)
-			OutDirUtils.writeMapToFile(Fmap, "F.dynamic.txt");
-		if (Mmap != null)
-			OutDirUtils.writeMapToFile(Mmap, "M.dynamic.txt");
-		if (Hmap != null)
-			OutDirUtils.writeMapToFile(Hmap, "H.dynamic.txt");
-		if (Emap != null)
-			OutDirUtils.writeMapToFile(Emap, "E.dynamic.txt");
-		if (Imap != null)
-			OutDirUtils.writeMapToFile(Imap, "I.dynamic.txt");
-		if (Lmap != null)
-			OutDirUtils.writeMapToFile(Lmap, "L.dynamic.txt");
-		if (Rmap != null)
-			OutDirUtils.writeMapToFile(Rmap, "R.dynamic.txt");
-		if (domB != null) {
-			Bmap = getUniqueStringMap(domB);
-			OutDirUtils.writeMapToFile(Bmap, "B.dynamic.txt");
-		}
-		if (domP != null) {
-			Pmap = getUniqueStringMap(domP);
-			OutDirUtils.writeMapToFile(Pmap, "P.dynamic.txt");
-		}
+		Messages.log("INSTR.FINISHED");
 	}
-	private void instrClass(jq_Class c)
-			throws NotFoundException, CannotCompileException, IOException {
+	private void instrClass(jq_Class c) throws NotFoundException, CannotCompileException, IOException {
 		String cName = c.getName();
 		boolean match = false;
 		for (String s : scopeExcludedPrefixes) {
@@ -394,26 +371,24 @@ public class Instrumentor {
 			}
 		}
 		if (match) {
-			if (instrVerboseLevel >= 1)
-				OutDirUtils.logOut("WARNING: Not instrumenting class %s as it is excluded by chord.scope.exclude", cName);
+			if (verbose) Messages.log("INSTR.EXPLICIT_EXCLUDE", cName);
 			return;
 		}
-		if (cName.equals("java.lang.J9VMInternals") ||
-			cName.startsWith("java.lang.ref.")) {
-			OutDirUtils.logErr("WARNING: Not instrumenting class %s", cName);
+		if (cName.equals("java.lang.J9VMInternals") || cName.startsWith("java.lang.ref.")) {
+			Messages.log("INSTR.IMPLICIT_EXCLUDE", cName);
 			return;
 		}
 		String outDirName = null;
 		String resourceName = pool.getResource(cName);
 		if (resourceName == null) {
-			OutDirUtils.logErr("WARNING: Instrumentor could not find class %s", cName);
+			Messages.log("INSTR.CLASS_NOT_FOUND", cName);
 			return;
 		} else if (bootClassPathResourceNames.contains(resourceName)) {
 			outDirName = bootClassesDirName;
 		} else if (userClassPathResourceNames.contains(resourceName)) {
 			outDirName = userClassesDirName;
 		} else {
-			OutDirUtils.logErr("WARNING: Not instrumenting class %s as its defining resource %s is neither in the boot nor user classpath", cName, resourceName);
+			Messages.log("INSTR.CLASS_NOT_BOOT_NOR_USER", cName, resourceName);
 			return;
 		}
 		CtClass clazz = pool.get(cName);
@@ -447,13 +422,12 @@ public class Instrumentor {
 			try {
 				process(method, m);
 			} catch (ChordRuntimeException ex) {
-				OutDirUtils.logErr("WARNING: Ignoring instrumenting method %s", method.getLongName());
+				Messages.log("INSTR.CANNOT_INSTRUMENT_METHOD", method.getLongName());
 				ex.printStackTrace();
 			}
 		}
 		clazz.writeFile(outDirName);
-		if (instrVerboseLevel >= 2)
-			OutDirUtils.logOut("Wrote instrumented class %s", cName);
+		if (verbose) Messages.log("INSTR.WROTE_INSTRUMENTED_CLASS", cName);
 	}
 
 	protected <T> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {
@@ -461,7 +435,7 @@ public class Instrumentor {
 		for (int i = 0; i < dom.size(); i++) {
 			String s = dom.toUniqueString(dom.get(i));
 			if (map.contains(s))
-				throw new ChordRuntimeException("Map for domain " + dom + " already contains: " + s);
+				throw new ChordRuntimeException(Messages.get("INSTR.DUPLICATE_IN_DOMAIN"));
 			map.getOrAdd(s);
 		}
 		return map;
@@ -474,7 +448,7 @@ public class Instrumentor {
 			if (bci != -1)
 				return bci;
 		}
-		throw new ChordRuntimeException("ERROR: Couldn't find index of first bytecode instruction in basic block " + b + " of method " + m);
+		throw new ChordRuntimeException(Messages.get("INSTR.NO_BCI_IN_BASIC_BLOCK", b, m));
 	}
 	// order must be tail -> head -> rest
 	protected void attachInstrToBCIAft(String str, int bci) {
@@ -492,8 +466,7 @@ public class Instrumentor {
 		int mId = -1;
 		String mName;
 		if (javassistMethod instanceof CtConstructor) {
-			mName = ((CtConstructor) javassistMethod).isClassInitializer() ?
-				"<clinit>" : "<init>";
+			mName = ((CtConstructor) javassistMethod).isClassInitializer() ?  "<clinit>" : "<init>";
 		} else
 			mName = javassistMethod.getName();
 		String mDesc = javassistMethod.getSignature();
@@ -502,7 +475,7 @@ public class Instrumentor {
 		if (Mmap != null) {
 			mId = Mmap.indexOf(mStr);
 			if (mId == -1) {
-				OutDirUtils.logErr("WARNING: Skipping instrumenting method %s; not found by static analysis", mStr);
+				Messages.log("INSTR.METHOD_NOT_FOUND", mStr);
 				return;
 			}
 		}
@@ -511,19 +484,18 @@ public class Instrumentor {
 			try{
 				bcMap = joeqMethod.getBCMap();
 			} catch (RuntimeException ex) {
-				System.out.println("WARNING: Skipping instrumenting method " + mStr + "; reason follows:");
+				Messages.log("INSTR.CANNOT_INSTRUMENT_METHOD", mStr);
 				ex.printStackTrace();
 				return;
 			}
 			if (bcMap == null) {
-				System.out.println("WARNING: Skipping instrumenting method " + mStr + "; bytecode does not exist.");
+				Messages.log("INSTR.METHOD_BYTECODE_NOT_FOUND", mStr);
 				return;
 			}
 			ControlFlowGraph cfg = joeqMethod.getCFG();
 			bciToInstrMap.clear();
 			if (genQuadEvent || genBasicBlockEvent) {
-				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-						it.hasNext();) {
+				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
 					BasicBlock bb = it.nextBasicBlock();
 					if (bb.isEntry() || bb.isExit())
 						continue;
@@ -634,13 +606,13 @@ public class Instrumentor {
 		if (map == Rmap) return "R";
 		if (map == Pmap) return "P";
 		if (map == Bmap) return "B";
-		throw new ChordRuntimeException("Name of map not found");
+		throw new ChordRuntimeException();
 	}
 	protected int set(IndexMap<String> map, int bci) {
 		String s = bci + "!" + mStr;
 		int id = map.indexOf(s);
 		if (id == -1) {
-			OutDirUtils.logErr("WARNING: Domain %s does not contain %s", getDomainName(map), s);
+			Messages.log("INSTR.NOT_IN_DOMAIN", getDomainName(map), s);
 			id = Runtime.UNKNOWN_FIELD_VAL;
 		}
 		return id;
@@ -652,7 +624,7 @@ public class Instrumentor {
 		String s = Program.toString(fName, fDesc, cName);
 		int id = Fmap.indexOf(s);
 		if (id == -1) {
-			OutDirUtils.logErr("WARNING: Domain F does not contain %s", s);
+			Messages.log("INSTR.NOT_IN_DOMAIN", "F", s);
 			id = Runtime.UNKNOWN_FIELD_VAL;
 		}
 		return id;
@@ -669,8 +641,7 @@ public class Instrumentor {
 		}
 		public void edit(NewExpr e) {
 			if (newAndNewArrayEvent.present()) {
-				int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) :
-					Runtime.MISSING_FIELD_VAL;
+				int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
 				String instr1, instr2;
 				if (newAndNewArrayEvent.hasObj()) {
 					instr1 = befNewEventCall + hId + ");";
@@ -680,8 +651,7 @@ public class Instrumentor {
 					instr2 = "";
 				}
 				try {
-					e.replace("{ " + instr1 + " $_ = $proceed($$); " +
-						instr2 + " }");
+					e.replace("{ " + instr1 + " $_ = $proceed($$); " + instr2 + " }");
 				} catch (CannotCompileException ex) {
 					throw new ChordRuntimeException(ex);
 				}
@@ -689,8 +659,7 @@ public class Instrumentor {
 		}
 		public void edit(NewArray e) {
 			if (newAndNewArrayEvent.present()) {
-				int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) :
-					Runtime.MISSING_FIELD_VAL;
+				int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
 				String instr = newArrayEventCall + hId + ",$_);";
 				try {
 					e.replace("{ $_ = $proceed($$); " + instr + " }");
@@ -716,21 +685,17 @@ public class Instrumentor {
 				if (!scheme.hasStaticEvent())
 					return;
 				if (isWr) {
-					instr = isPrim ? putstaticPrimitive(e, field) :
-						putstaticReference(e, field);
+					instr = isPrim ? putstaticPrimitive(e, field) : putstaticReference(e, field);
 				} else {
-					instr = isPrim ? getstaticPrimitive(e, field) :
-						getstaticReference(e, field);
+					instr = isPrim ? getstaticPrimitive(e, field) : getstaticReference(e, field);
 				}
 			} else {
 				if (!scheme.hasFieldEvent())
 					return;
 				if (isWr) {
-					instr = isPrim ? putfieldPrimitive(e, field) :
-						putfieldReference(e, field);
+					instr = isPrim ? putfieldPrimitive(e, field) : putfieldReference(e, field);
 				} else {
-					instr = isPrim ? getfieldPrimitive(e, field) :
-						getfieldReference(e, field);
+					instr = isPrim ? getfieldPrimitive(e, field) : getfieldReference(e, field);
 				}
 			}
 			if (instr != null) {
@@ -762,8 +727,7 @@ public class Instrumentor {
 		}
 		public void edit(MonitorEnter e) {
 			if (acquireLockEvent.present()) {
-				int lId = acquireLockEvent.hasLoc() ? set(Lmap, e) :
-					Runtime.MISSING_FIELD_VAL;
+				int lId = acquireLockEvent.hasLoc() ? set(Lmap, e) : Runtime.MISSING_FIELD_VAL;
 				String o = acquireLockEvent.hasObj() ? "$0" : "null";
 				String instr = acquireLockEventCall + lId + "," + o + ");";
 				try {
@@ -775,8 +739,7 @@ public class Instrumentor {
 		}
 		public void edit(MonitorExit e) {
 			if (releaseLockEvent.present()) {
-				int rId = releaseLockEvent.hasLoc() ? set(Rmap, e) :
-					Runtime.MISSING_FIELD_VAL;
+				int rId = releaseLockEvent.hasLoc() ? set(Rmap, e) : Runtime.MISSING_FIELD_VAL;
 				String o = releaseLockEvent.hasObj() ? "$0" : "null";
 				String instr = releaseLockEventCall + rId + "," + o + ");";
 				try {
@@ -791,8 +754,7 @@ public class Instrumentor {
 			String aftInstr = "";
 			// Part 1: add METHOD_CALL event if present
 			if (methodCallEvent.present()) {
-				int iId = methodCallEvent.hasLoc() ? set(Imap, e) :
-					Runtime.MISSING_FIELD_VAL;
+				int iId = methodCallEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 				String o = methodCallEvent.hasObj() ? "$0" : "null";
 				if (methodCallEvent.isBef())
 					befInstr += methodCallBefEventCall + iId + "," + o + ");";
@@ -814,8 +776,7 @@ public class Instrumentor {
 					String cName = m.getDeclaringClass().getName();
 					if ((mName.equals("newInstance") && cName.equals("java.lang.Class")) ||
 						(mName.equals("clone") && cName.equals("java.lang.Object"))) {
-						int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) :
-							Runtime.MISSING_FIELD_VAL;
+						int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
 						if (newAndNewArrayEvent.hasObj()) {
 							befInstr += befNewEventCall + hId + ");";
 							aftInstr += aftNewEventCall + hId + ",$_);";
@@ -847,16 +808,14 @@ public class Instrumentor {
 	}
 	protected String getstaticPrimitive(FieldAccess e, CtField f) {
 		if (getstaticPrimitiveEvent.present()) {
-			int eId = getstaticPrimitiveEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = getstaticPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b;
 			if (getstaticPrimitiveEvent.hasBaseObj()) {
 				String cName = f.getDeclaringClass().getName();
 				b = cName + ".class";
 			} else
 				b = "null";
-			int fId = getstaticPrimitiveEvent.hasFld() ? getFid(f) :
-				Runtime.MISSING_FIELD_VAL;
+			int fId = getstaticPrimitiveEvent.hasFld() ? getFid(f) : Runtime.MISSING_FIELD_VAL;
 			return "{ $_ = $proceed($$); " + getstaticPriEventCall + eId +
 				"," + b + "," + fId + "); }";
 		}
@@ -864,16 +823,14 @@ public class Instrumentor {
 	}
 	protected String getstaticReference(FieldAccess e, CtField f) {
 		if (getstaticReferenceEvent.present()) {
-			int eId = getstaticReferenceEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = getstaticReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b;
 			if (getstaticReferenceEvent.hasBaseObj()) {
 				String cName = f.getDeclaringClass().getName();
 				b = cName + ".class";
 			} else
 				b = "null";
-			int fId = getstaticReferenceEvent.hasFld() ? getFid(f) :
-				Runtime.MISSING_FIELD_VAL;
+			int fId = getstaticReferenceEvent.hasFld() ? getFid(f) : Runtime.MISSING_FIELD_VAL;
 			String o = getstaticReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + getstaticRefEcentCall + eId +
 				"," + b + "," + fId + "," + o + "); }";
@@ -882,16 +839,14 @@ public class Instrumentor {
 	}
 	protected String putstaticPrimitive(FieldAccess e, CtField f) {
 		if (putstaticPrimitiveEvent.present()) {
-			int eId = putstaticPrimitiveEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = putstaticPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b;
 			if (putstaticPrimitiveEvent.hasBaseObj()) {
 				String cName = f.getDeclaringClass().getName();
 				b = cName + ".class";
 			} else
 				b = "null";
-			int fId = putstaticPrimitiveEvent.hasFld() ? getFid(f) :
-				Runtime.MISSING_FIELD_VAL;
+			int fId = putstaticPrimitiveEvent.hasFld() ? getFid(f) : Runtime.MISSING_FIELD_VAL;
 			return "{ $proceed($$); " + putstaticPriEventCall + eId +
 				"," + b + "," + fId + "); }";
 		}
@@ -899,16 +854,14 @@ public class Instrumentor {
 	}
 	protected String putstaticReference(FieldAccess e, CtField f) {
 		if (putstaticReferenceEvent.present()) {
-			int eId = putstaticReferenceEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = putstaticReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b;
 			if (putstaticReferenceEvent.hasBaseObj()) {
 				String cName = f.getDeclaringClass().getName();
 				b = cName + ".class";
 			} else
 				b = "null";
-			int fId = putstaticReferenceEvent.hasFld() ? getFid(f) :
-				Runtime.MISSING_FIELD_VAL;
+			int fId = putstaticReferenceEvent.hasFld() ? getFid(f) : Runtime.MISSING_FIELD_VAL;
 			String o = putstaticReferenceEvent.hasObj() ? "$1" : "null";
 			return "{ $proceed($$); " + putstaticRefEventCall + eId +
 				"," + b + "," + fId + "," + o + "); }";
@@ -917,11 +870,9 @@ public class Instrumentor {
 	}
 	protected String getfieldPrimitive(FieldAccess e, CtField f) {
 		if (getfieldPrimitiveEvent.present()) {
-			int eId = getfieldPrimitiveEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = getfieldPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b = getfieldPrimitiveEvent.hasBaseObj() ? "$0" : "null";
-			int fId = getfieldPrimitiveEvent.hasFld() ? getFid(f) :
-				Runtime.MISSING_FIELD_VAL;
+			int fId = getfieldPrimitiveEvent.hasFld() ? getFid(f) : Runtime.MISSING_FIELD_VAL;
 			return "{ $_ = $proceed($$); " + getfieldPriEventCall +
 				eId + "," + b + "," + fId + "); }"; 
 		}
@@ -929,11 +880,9 @@ public class Instrumentor {
 	}
 	protected String getfieldReference(FieldAccess e, CtField f) {
 		if (getfieldReferenceEvent.present()) {
-			int eId = getfieldReferenceEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = getfieldReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b = getfieldReferenceEvent.hasBaseObj() ? "$0" : "null";
-			int fId = getfieldReferenceEvent.hasFld() ? getFid(f) :
-				Runtime.MISSING_FIELD_VAL;
+			int fId = getfieldReferenceEvent.hasFld() ? getFid(f) : Runtime.MISSING_FIELD_VAL;
 			String o = getfieldReferenceEvent.hasObj() ? "$_" : "null";
 			return "{ $_ = $proceed($$); " + getfieldReference +
 				eId + "," + b + "," + fId + "," + o + "); }"; 
@@ -942,11 +891,9 @@ public class Instrumentor {
 	}
 	protected String putfieldPrimitive(FieldAccess e, CtField f) {
 		if (putfieldPrimitiveEvent.present()) {
-			int eId = putfieldPrimitiveEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = putfieldPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b = putfieldPrimitiveEvent.hasBaseObj() ? "$0" : "null";
-			int fId = putfieldPrimitiveEvent.hasFld() ? getFid(f) :
-				Runtime.MISSING_FIELD_VAL;
+			int fId = putfieldPrimitiveEvent.hasFld() ? getFid(f) : Runtime.MISSING_FIELD_VAL;
 			return "{ $proceed($$); " + putfieldPriEventCall + eId +
 				"," + b + "," + fId + "); }"; 
 		}
@@ -954,11 +901,9 @@ public class Instrumentor {
 	}
 	protected String putfieldReference(FieldAccess e, CtField f) {
 		if (putfieldReferenceEvent.present()) {
-			int eId = putfieldReferenceEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = putfieldReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b = putfieldReferenceEvent.hasBaseObj() ? "$0" : "null";
-			int fId = putfieldReferenceEvent.hasFld() ? getFid(f) :
-				Runtime.MISSING_FIELD_VAL;
+			int fId = putfieldReferenceEvent.hasFld() ? getFid(f) : Runtime.MISSING_FIELD_VAL;
 			String o = putfieldReferenceEvent.hasObj() ? "$1" : "null";
 			return "{ $proceed($$); " + putfieldRefEventCall +
 				eId + "," + b + "," + fId + "," + o + "); }"; 
@@ -967,8 +912,7 @@ public class Instrumentor {
 	}
 	protected String aloadPrimitive(ArrayAccess e) {
 		if (aloadPrimitiveEvent.present()) {
-			int eId = aloadPrimitiveEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = aloadPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b = aloadPrimitiveEvent.hasBaseObj() ? "$0" : "null";
 			String i = aloadPrimitiveEvent.hasIdx() ? "$1" : "-1";
 			return "{ $_ = $proceed($$); " + aloadPriEventCall +
@@ -978,8 +922,7 @@ public class Instrumentor {
 	}
 	protected String aloadReference(ArrayAccess e) {
 		if (aloadReferenceEvent.present()) {
-			int eId = aloadReferenceEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = aloadReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b = aloadReferenceEvent.hasBaseObj() ? "$0" : "null";
 			String i = aloadReferenceEvent.hasIdx() ? "$1" : "-1";
 			String o = aloadReferenceEvent.hasObj() ? "$_" : "null";
@@ -990,8 +933,7 @@ public class Instrumentor {
 	}
 	protected String astorePrimitive(ArrayAccess e) {
 		if (astorePrimitiveEvent.present()) {
-			int eId = astorePrimitiveEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = astorePrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b = astorePrimitiveEvent.hasBaseObj() ? "$0" : "null";
 			String i = astorePrimitiveEvent.hasIdx() ? "$1" : "-1";
 			return "{ $proceed($$); " + astorePriEventCall +
@@ -1001,8 +943,7 @@ public class Instrumentor {
 	}
 	protected String astoreReference(ArrayAccess e) {
 		if (astoreReferenceEvent.present()) {
-			int eId = astoreReferenceEvent.hasLoc() ? set(Emap, e) :
-				Runtime.MISSING_FIELD_VAL;
+			int eId = astoreReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
 			String b = astoreReferenceEvent.hasBaseObj() ? "$0" : "null";
 			String i = astoreReferenceEvent.hasIdx() ? "$1" : "-1";
 			String o = astoreReferenceEvent.hasObj() ? "$2" : "null";
@@ -1025,22 +966,19 @@ public class Instrumentor {
 			String mDesc = m.getSignature();
 			if (mName.equals("wait") && mDesc.equals("()V")) {
 				if (waitEvent.present()) {
-					int iId = waitEvent.hasLoc() ? set(Imap, e) :
-						Runtime.MISSING_FIELD_VAL;
+					int iId = waitEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 					String o = waitEvent.hasObj() ? "$0" : "null";
 					instr = waitEventCall + iId + "," + o + ");";
 				}
 			} else if (mName.equals("notifyAll") && mDesc.equals("()V")) {
 				if (notifyEvent.present()) {
-					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
-						Runtime.MISSING_FIELD_VAL;
+					int iId = notifyEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 					String o = notifyEvent.hasObj() ? "$0" : "null";
 					instr = notifyAllEventCall + iId + "," + o + ");";
 				}
 			} else if (mName.equals("notify") && mDesc.equals("()V")) {
 				if (notifyEvent.present()) {
-					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
-						Runtime.MISSING_FIELD_VAL;
+					int iId = notifyEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 					String o = notifyEvent.hasObj() ? "$0" : "null";
 					instr = notifyEventCall + iId + "," + o + ");";
 				}
@@ -1050,15 +988,13 @@ public class Instrumentor {
 			String mDesc = m.getSignature();
 			if (mName.equals("start") && mDesc.equals("()V")) {
 				if (threadStartEvent.present()) {
-					int iId = threadStartEvent.hasLoc() ? set(Imap, e) :
-						Runtime.MISSING_FIELD_VAL;
+					int iId = threadStartEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 					String o = threadStartEvent.hasObj() ? "$0" : "null";
 					instr = threadStartEventCall + iId + "," + o + ");";
 				}
 			} else if (mName.equals("join") && mDesc.equals("()V")) {
 				if (threadJoinEvent.present()) {
-					int iId = threadJoinEvent.hasLoc() ? set(Imap, e) :
-						Runtime.MISSING_FIELD_VAL;
+					int iId = threadJoinEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 					String o = threadJoinEvent.hasObj() ? "$0" : "null";
 					instr = threadJoinEventCall + iId + "," + o + ");";
 				}
@@ -1069,22 +1005,19 @@ public class Instrumentor {
 			String mDesc = m.getSignature();
 			if (mName.equals("await") && mDesc.equals("()V")) {
 				if (waitEvent.present()) {
-					int iId = waitEvent.hasLoc() ? set(Imap, e) :
-						Runtime.MISSING_FIELD_VAL;
+					int iId = waitEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 					String o = waitEvent.hasObj() ? "$0" : "null";
 					instr = waitEventCall + iId + "," + o + ");";
 				}
 			} else if (mName.equals("signalAll") && mDesc.equals("()V")) {
 				if (notifyEvent.present()) {
-					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
-						Runtime.MISSING_FIELD_VAL;
+					int iId = notifyEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 					String o = notifyEvent.hasObj() ? "$0" : "null";
 					instr = notifyAllEventCall + iId + "," + o + ");";
 				}
 			} else if (mName.equals("signal") && mDesc.equals("()V")) {
 				if (notifyEvent.present()) {
-					int iId = notifyEvent.hasLoc() ? set(Imap, e) :
-						Runtime.MISSING_FIELD_VAL;
+					int iId = notifyEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
 					String o = notifyEvent.hasObj() ? "$0" : "null";
 					instr = notifyEventCall + iId + "," + o + ");";
 				}
@@ -1093,3 +1026,4 @@ public class Instrumentor {
 		return instr;
 	}
 }
+
