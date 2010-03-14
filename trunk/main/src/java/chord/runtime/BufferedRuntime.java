@@ -708,7 +708,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-    public static void open(String args) {
+    public synchronized static void open(String args) {
 		Runtime.open(args);
         String[] a = args.split("=");
 		int traceBlockSize = 0;
@@ -725,7 +725,8 @@ public class BufferedRuntime extends Runtime {
         } catch (IOException ex) { throw new RuntimeException(ex); }
         trace = true;
 	}
-	public static void close() {
+	// DO NOT REMOVE THIS SYNCHRONIZATION
+	public synchronized static void close() {
         trace = false;
 		try {
 			buffer.flush();
