@@ -18,8 +18,6 @@ import java.util.List;
 import java.util.Random;
 import java.util.Set;
 
-import chord.project.OutDirUtils;
-
 interface AbstractionListener {
 	// Called when the abstraction is changed
 	void abstractionChanged(int o, Object a);
@@ -99,7 +97,9 @@ public abstract class Abstraction {
 		if (old_a != null) { // There was an old abstraction there already
 			if (old_a.equals(a))
 				return; // Haven't changed the abstraction
-			a2os.get(old_a).remove((Integer) o);
+			List<Integer> os = a2os.get(old_a);
+			if (os != null)
+				os.remove((Integer) o);
 		}
 		o2a.put(o, a);
 		Utils.add(a2os, a, o);
@@ -216,312 +216,7 @@ class AllocAbstraction extends LocalAbstraction {
 	}
 }
 
-/**
- * 
- * @author omert
- *
- */
-abstract class LabelBasedAbstraction extends Abstraction {
-	protected static interface Label {
-	}
 
-	private class Procedure implements TIntIntProcedure {
-		private final TIntHashSet worklist;
-		private final TIntHashSet visited;
-		private final Set<Label> labels;
-		private final boolean isPos;
-		private final boolean propagateOnlyOnChanged;
-
-		public Procedure(TIntHashSet worklist, TIntHashSet visited,
-				Set<Label> labels, boolean isPos, boolean propagateOnlyOnChanged) {
-			// The invariant does not guarantee the correctness of propagating
-			// only on changes in case of negative propagation.
-			assert (!(!isPos && propagateOnlyOnChanged));
-			this.worklist = worklist;
-			this.visited = visited;
-			this.labels = labels;
-			this.isPos = isPos;
-			this.propagateOnlyOnChanged = propagateOnlyOnChanged;
-		}
-
-		@Override
-		public boolean execute(int arg0, int arg1) {
-			if (arg1 != 0) {
-				for (Label label : labels) {
-					boolean hasChanged;
-					if (isPos) {
-						hasChanged = posLabel(arg1, label);
-					} else {
-						hasChanged = negLabel(arg1, label);
-					}
-					if (hasChanged || !propagateOnlyOnChanged) {
-						if (!visited.contains(arg1)) {
-							worklist.add(arg1);
-						}
-					}
-				}
-			}
-			return true;
-		}
-	}
-
-	private static final boolean VERBOSE = false;
-	private static final int THRESHOLD = 3;
-
-	// private final static int ARRAY_CONTENT = Integer.MIN_VALUE;
-	protected final TIntObjectHashMap<TIntArrayList> object2predecessors = new TIntObjectHashMap<TIntArrayList>();
-	protected final TIntObjectHashMap<TIntIntHashMap> heapGraph = new TIntObjectHashMap<TIntIntHashMap>();
-	protected final TIntObjectHashMap<Set<Label>> object2labels = new TIntObjectHashMap<Set<Label>>();
-
-	/* Used for debugging. */
-	private int numEdgesCreated;
-	private int numEdgesDeleted;
-
-	/*
-	 * This method *must not* rely on <code>object2labels</code>, which might
-	 * temporarily remove the association between the roots of a label and a
-	 * label while performing negative propagation!
-	 */
-	protected abstract TIntHashSet getRootsImpl(Label l);
-
-	private TIntHashSet getRoots(Label l, TIntHashSet visited) {
-		TIntHashSet result = getRootsImpl(l);
-		if (result.size() > THRESHOLD) {
-			result = refine(visited, result);
-		}
-		if (VERBOSE) {
-			OutDirUtils.logOut("%s", "The number of roots for label " + l
-					+ " is: " + result.size() + ".");
-		}
-		return result;
-	}
-
-	// Check which roots actually reach the set of explored objects.
-	private TIntHashSet refine(TIntHashSet explored, TIntHashSet roots) {
-		final TIntHashSet result = new TIntHashSet(); 
-		final TIntHashSet visited = new TIntHashSet(explored.size());
-		TIntHashSet worklist = new TIntHashSet(explored);
-		L: while (!worklist.isEmpty()) {
-			TIntIterator it = worklist.iterator();
-			final TIntHashSet templist = new TIntHashSet();
-			while (it.hasNext()) {
-				int next = it.next();
-				visited.add(next);
-				if (roots.contains(next)) {
-					result.add(next);
-					// We've added all the roots already.
-					if (result.equals(roots)) {
-						break L;
-					}
-				}
-				TIntArrayList L = object2predecessors.get(next);
-				if (L != null) {
-					L.forEach(new TIntProcedure() {
-						@Override
-						public boolean execute(int arg0) {
-							if (!visited.contains(arg0)) {
-								templist.add(arg0);
-							}
-							return true;
-						}
-					});
-				}
-			}
-			worklist = templist;
-		}
-		return result;
-	}
-
-	@Override
-	public void edgeCreated(int b, int f, int o) {
-		if (VERBOSE) {
-			OutDirUtils.logOut("%s", "So far " + (++numEdgesCreated)
-					+ " edges were created.");
-		}
-		if (b != 0 && f >= 0) {
-			updateHeapGraph(b, f, o);
-		}
-	}
-
-	@Override
-	public void edgeDeleted(int b, int f, int o) {
-		if (VERBOSE) {
-			OutDirUtils.logOut("%s", "So far " + (++numEdgesDeleted)
-					+ " edges were deleted.");
-		}
-		if (b != 0 && f >= 0) {
-			updateHeapGraph(b, f, 0);
-		}
-	}
-
-	private Set<Label> getLabels(int b) {
-		return object2labels.get(b);
-	}
-
-	private boolean posLabel(int o, Label l) {
-		Set<Label> S = object2labels.get(o);
-		if (S == null) {
-			object2labels.put(o, S = new HashSet<Label>(1));
-		}
-		boolean hasChanged = S.add(l);
-		if (hasChanged) {
-			setValue(o, S);
-		}
-		return hasChanged;
-	}
-
-	private boolean negLabel(int o, Label l) {
-		Set<Label> S = object2labels.get(o);
-		boolean hasChanged = false;
-		if (S != null) {
-			hasChanged |= S.remove(l);
-		}
-		if (hasChanged) {
-			setValue(o, S);
-		}
-		return hasChanged;
-	}
-
-	private void updateHeapGraph(int b, int f, int o) {
-		if (VERBOSE) {
-			OutDirUtils.logOut("%s", "Entered updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
-		}
-		TIntIntHashMap M = heapGraph.get(b);
-		if (M == null) {
-			heapGraph.put(b, M = new TIntIntHashMap());
-		}
-		updateObject2predecessors(b, f, o, M);
-		M.put(f, o);
-		Set<Label> labels = collectLabels(b, f, o);
-		if (labels != null) {
-			if (o == 0) {
-				// We cannot propagate only on changes as this is a negative
-				// propagation process.
-				TIntHashSet visited = propagateLabels(o, labels, false, false);
-				for (Label l : labels) {
-					TIntHashSet roots = getRoots(l, visited);
-					if (VERBOSE) {
-						OutDirUtils.logOut("%s",
-								"About to restart propagation of a label with "
-										+ roots.size() + " roots.");
-					}
-					for (TIntIterator it = roots.iterator(); it.hasNext();) {
-						int next = it.next();
-						// assert (object2labels.get(next).contains(l)); // The
-						// root should be associated with the label supposedly
-						// originating from it.
-						/*
-						 * Here too we must propagate all the time as the
-						 * invariant
-						 * 
-						 * x -> y => labels(x) \subset labels(y)
-						 * 
-						 * is temporarily violated.
-						 */
-						propagateLabels(next, Collections.<Label> singleton(l),
-								true, false);
-					}
-				}
-			} else {
-				/*
-				 * Since this is a positive propagation process, we are
-				 * guaranteed that the invariant
-				 * 
-				 * x -> y => labels(x) \subset labels(y)
-				 * 
-				 * holds, which means that if x is already associated with all
-				 * the labels we attempt to propagate to it, then it is
-				 * redundant to propagate them to its descendants.
-				 */
-				propagateLabels(o, labels, true, true);
-			}
-		}
-		if (VERBOSE) {
-			OutDirUtils.logOut("%s", "Left updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
-		}
-	}
-
-	private void updateObject2predecessors(final int b, final int f,
-			final int o, final TIntIntHashMap M) {
-		if (M.containsKey(f)) {
-			final int val = M.get(f);
-			if (val != 0) {
-				// Is <code>val</code> pointed to by any other field?
-				final boolean[] isPointedToByAnotherField = new boolean[] { false };
-				M.forEachEntry(new TIntIntProcedure() {
-					@Override
-					public boolean execute(int arg0, int arg1) {
-						if (arg0 != f) {
-							if (arg1 == val) {
-								isPointedToByAnotherField[0] = true;
-								return false;
-							}
-						}
-						return true;
-					}
-				});
-				if (!isPointedToByAnotherField[0]) {
-					TIntArrayList L = object2predecessors.get(val);
-					assert (L != null);
-					int i = L.indexOf(b);
-					assert (i >= 0);
-					L.remove(i);
-				}
-			}
-		}
-		if (o != 0) {
-			TIntArrayList L = object2predecessors.get(o);
-			if (L == null) {
-				object2predecessors.put(o, L = new TIntArrayList(1));
-			}
-			L.add(b);
-		}
-	}
-
-	private Set<Label> collectLabels(int b, int f, int o) {
-		Set<Label> labels = getLabels(b);
-		Collection<Label> L = freshLabels(b, f, o);
-		if (!L.isEmpty()) {
-			if (labels == null) {
-				labels = new HashSet<Label>(L.size());
-			}
-			labels.addAll(L);
-		}
-		return labels;
-	}
-
-	protected Collection<Label> freshLabels(int b, int f, int o) {
-		return Collections.emptySet();
-	}
-
-	private TIntHashSet propagateLabels(int o, Set<Label> labels,
-			boolean isPos, boolean propagateOnlyOnChanged) {
-		TIntHashSet worklist = new TIntHashSet();
-		TIntHashSet visited = new TIntHashSet();
-		for (Label l : labels) {
-			if (isPos)
-				posLabel(o, l);
-			else
-				negLabel(o, l);
-		}
-		worklist.add(o);
-		while (!worklist.isEmpty()) {
-			TIntIterator it = worklist.iterator();
-			worklist = new TIntHashSet();
-			Procedure proc = new Procedure(worklist, visited, labels, isPos,
-					propagateOnlyOnChanged);
-			while (it.hasNext()) {
-				final int next = it.next();
-				visited.add(next);
-				TIntIntHashMap M = heapGraph.get(next);
-				if (M != null) {
-					M.forEachEntry(proc);
-				}
-			}
-		}
-		return visited;
-	}
-}
 
 class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 
@@ -640,6 +335,39 @@ class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 		throw new RuntimeException(
 				"Operation 'nodeDeleted' not currently supported.");
 	}
+
+	@Override
+	protected Set<Label> getLabelsRootedAt(final int o) {
+		assert (o != 0);
+		final Set<Label> result = new HashSet<Label>(4);
+		int h = state.o2h.get(o);
+		if (h >= 0) {
+			result.add(new AllocPlusFieldLabel(h));
+		}
+		TIntArrayList preds = object2predecessors.get(o);
+		if (preds != null) {
+			preds.forEach(new TIntProcedure() {
+				@Override
+				public boolean execute(final int pred) {
+					if (state.o2h.get(pred) >= 0) {
+						TIntIntHashMap M = heapGraph.get(pred);
+						assert (M != null);
+						M.forEachEntry(new TIntIntProcedure() {
+							@Override
+							public boolean execute(int f, int val) {
+								if (val == o) {
+									result.add(new AllocPlusFieldLabel(state.o2h.get(pred), f));
+								}
+								return true;
+							}
+						});
+					}
+					return true;
+				}
+			});
+		}
+		return result;
+	}
 }
 
 class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
@@ -720,11 +448,24 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 			T.add(o);
 		}
 	}
+
+	@Override
+	protected Set<Label> getLabelsRootedAt(int o) {
+		int h = state.o2h.get(o);
+		if (h >= 0) {
+			return Collections.<Label> singleton(new AllocationSiteLabel(h));
+		} else {
+			return Collections.emptySet();
+		}
+	}
 }
 
 class PointedToByAbstraction extends Abstraction {
 	
 	private static class Value {
+		
+		protected final static Value EMPTY_VALUE = new Value(new int[0]);
+		
 		private final int[] values;
 		
 		public Value(int[] values) {
@@ -768,16 +509,17 @@ class PointedToByAbstraction extends Abstraction {
 
 	@Override
 	public void edgeCreated(int b, int f, int o) {
+		super.edgeCreated(b, f, o);
 		if (b != 0 && o != 0 && f != 0) {
-			int abs = state.o2h.get(b);
-			if (abs >= 0) {
+			int h = state.o2h.get(b);
+			if (h >= 0) {
 				TIntIntHashMap M = object2pointers.get(o);
 				if (M == null) {
 					M = new TIntIntHashMap();
 					object2pointers.put(o, M);
 				}
-				boolean hasChanged = !M.containsValue(abs);
-				M.put(f, abs);
+				boolean hasChanged = !M.containsValue(h);
+				M.put(f, h);
 				if (hasChanged) {
 					Value v = new Value(M.getValues());
 					setValue(o, v);
@@ -788,13 +530,14 @@ class PointedToByAbstraction extends Abstraction {
 
 	@Override
 	public void edgeDeleted(int b, int f, int o) {
+		super.edgeDeleted(b, f, o);
 		if (b != 0 && o != 0 && f != 0) {
-			int abs = state.o2h.get(b);
-			if (abs >= 0) {
+			int h = state.o2h.get(b);
+			if (h >= 0) {
 				TIntIntHashMap M = object2pointers.get(o);
 				assert (M != null);
 				M.remove(f);
-				boolean hasChanged = !M.containsValue(abs);
+				boolean hasChanged = !M.containsValue(h);
 				if (hasChanged) {
 					Value v = new Value(M.getValues());
 					setValue(o, v);
@@ -811,7 +554,9 @@ class PointedToByAbstraction extends Abstraction {
 
 	@Override
 	public void nodeCreated(ThreadInfo info, int o) {
-		// We need not do anything here.
+		// We assign a fresh object the default abstraction.
+		object2pointers.put(o, new TIntIntHashMap());
+		setValue(o, Value.EMPTY_VALUE);
 	}
 }
 
