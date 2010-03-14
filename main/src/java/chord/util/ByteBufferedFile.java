@@ -174,11 +174,10 @@ public class ByteBufferedFile {
 			buffer[numMoved++] = buffer[i];
 		curPos = 0;
 		int numRead = iStream.read(buffer, numMoved, fileBlockSize);
-		if (numRead < fileBlockSize) {
+		if (numRead == -1) {
 			iStream.close();
 			iStream = null;
-			if (numRead == -1)
-				numRead = 0;
+			numRead = 0;
 		}
 		maxPos = numRead + numMoved;
 	}
