@@ -29,8 +29,7 @@ public class Main {
 			errStream = new PrintStream(errFile);
 		System.setErr(errStream);
 
-		if (Properties.verbose)
-			Properties.print();
+		Properties.print();
 		Project.run();
 
 		outStream.close();
