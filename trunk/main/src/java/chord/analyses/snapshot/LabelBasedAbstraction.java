@@ -20,8 +20,8 @@ import chord.project.OutDirUtils;
  * The abstraction of concrete node <code>o</code> is a set of {@link Labels}s. {@link LabelBasedAbstraction} 
  * enforces and maintains the following invariant: If <code>o2</code> is reachable from <code>o1</code>, then the set 
  * of labels associated with <code>o2</code> is a superset of the set of labels associated with <code>o1</code>.
- * An invariant resulting from the above invariant is that the set of labels associated with a node is the union of the 
- * sets of labels associated with its parents.   
+ * An invariant resulting from the above invariant is that the set of labels associated with node <code>o</code> is 
+ * the union of the sets of labels associated with <code>o</code>'s parents, plus the labels rooted at <code>o</code>.   
  * 
  * @author omert (omertrip@post.tau.ac.il)
  *
