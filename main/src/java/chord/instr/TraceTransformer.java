@@ -87,9 +87,27 @@ public class TraceTransformer {
 	private final int implicitThrowNumBytes;
 
 	private ByteBufferedFile reader, writer;
+	private static final int MAX_CONSTR_SIZE = Properties.maxConstr;
+	// accumulates bytes that have yet to be written to 'writer'
 	private byte[] tmp;
-	private List<IntTrio> pending;
+	// the number of bytes currently accumulated in 'tmp'
+	// invariant: count < MAX_CONSTR_SIZE
 	private int count;
+	// The pending list contains triples (h, t, count) such that
+	// event "BEF_NEW h t" has been seen but event "AFT_NEW h t o"
+	// matching it has not yet been seen (i.e. the constructor at
+	// site h has not yet returned); 'count' in the triple is the
+	// index of byte ? of the placeholder event "NEW h t ?" kept
+	// in 'tmp'.  If the matching AFT_NEW event is encountered
+	// before the number of bytes accumulated in 'tmp' exceeds
+	// MAX_CONSTR_SIZE, the ? in the placeholder event is replaced
+	// by o.  Otherwise, a warning is printed that the object
+	// allocated at site h could not be determined, in which case
+	// ? takes value 0 which is the value of null.  This may
+	// happen either because MAX_CONSTR_SIZE is not big enough or
+	// because the constructor threw an exception, causing the
+	// matching AFT_NEW event to be bypassed.
+	private List<IntTrio> pending;
 
 	/**
 	 * Initializes a trace transformer.
@@ -148,13 +166,9 @@ public class TraceTransformer {
 			count = 0; // size of tmp
 			while (!reader.isDone()) {
 				if (count != 0) {
-					if (count > 50000000) {
-						System.out.print("WARNING: size: " + count + " PENDING:");
-						for (int i = 0; i < pending.size(); i++) {
-							IntTrio trio = pending.get(i);
-							System.out.print(" " + trio.idx2 + ":" + trio.idx0);
-						}
-						System.out.println();
+					if (count >= MAX_CONSTR_SIZE) {
+						warn();
+						System.out.println("Evicting oldest.");
 						// remove 1st item in pending, it is oldest
 						pending.remove(0);
 						adjust();
@@ -240,11 +254,7 @@ public class TraceTransformer {
 				}
 			}
 			if (count != 0) {
-				System.out.println("WARNING: pending list:");
-				for (int i = 0; i < pending.size(); i++) {
-					IntTrio trio = pending.get(i);
-					System.out.println("\thIdx: " + trio.idx0 + " tIdx: " + trio.idx1);
-				}
+				warn();
 				for (int i = 0; i < count; i++) {
 					byte v = tmp[i];
 					writer.putByte(v);
@@ -356,5 +366,13 @@ public class TraceTransformer {
 			tmp = tmp2;
 		}
 		tmp[count++] = v;
+	}
+	private void warn() {
+		System.out.println("WARN: Active constructors in order are as follows:");
+		for (int i = 0; i < pending.size(); i++) {
+			IntTrio trio = pending.get(i);
+			int size = MAX_CONSTR_SIZE - trio.idx2;
+			System.out.println("\thId=" + trio.idx0 + ", tId=" + trio.idx1 + ", size=" + size);
+		}
 	}
 }
