@@ -9,7 +9,7 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
-import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
+import joeq.Compiler.Quad.Operator.Invoke;
 
 import chord.project.Chord;
 import chord.project.Project;
@@ -57,8 +57,8 @@ public class DomH extends QuadDom {
 					Operator op = q.getOperator();
 					if (op instanceof New || op instanceof NewArray) {
                     	getOrAdd(q);
-					} else if (op instanceof InvokeVirtual) {
-						jq_Method m2 = InvokeVirtual.getMethod(q).getMethod();
+					} else if (op instanceof Invoke) {
+						jq_Method m2 = Invoke.getMethod(q).getMethod();
 						String mDesc = m2.getDesc().toString();
 						if (mDesc.equals("()Ljava/lang/Object;")) {
 							String mName = m2.getName().toString();
