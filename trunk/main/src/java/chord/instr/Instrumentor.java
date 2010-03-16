@@ -795,8 +795,14 @@ public class Instrumentor {
 			// pointer exceptions in certain cases (i.e. $_ = $proceed($$)
 			// does not seem to be safe usage for all call sites).
 			try {
-				e.replace("{ " + befInstr + " $_ = $proceed($$); " +
-					aftInstr + " }");
+				if (!aftInstr.equals("")) {
+					e.replace("{ " + befInstr + " try { $_ = $proceed($$); } " +
+						"catch (java.lang.Throwable ex) { " + aftInstr + "; throw ex; }; " +
+						aftInstr + " }");
+				} else {
+					e.replace("{ " + befInstr + " $_ = $proceed($$); " +
+						aftInstr + " }");
+				}
 			} catch (CannotCompileException ex) {
 				throw new ChordRuntimeException(ex);
 			}
