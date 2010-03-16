@@ -101,7 +101,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void run() {
 		try {
 			scheme = getInstrScheme();
-			assert(scheme != null);
+			assert (scheme != null);
 			isUserRequestedEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent(); 
 			isUserRequestedBasicBlockEvent = scheme.hasBasicBlockEvent(); 
 			hasEnterAndLeaveLoopEvent = scheme.hasEnterAndLeaveLoopEvent();
