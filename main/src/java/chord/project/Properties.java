@@ -153,7 +153,7 @@ public class Properties {
 	public final static String instrSchemeFileName = outRel2AbsPath("chord.instr.scheme.file", "scheme.ser");
 	public final static String crudeTraceFileName = outRel2AbsPath("chord.crude.trace.file", "crude_trace.txt");
 	public final static String finalTraceFileName = outRel2AbsPath("chord.final.trace.file", "final_trace.txt");
-	public final static int maxConstr = Integer.getInteger("chord.max.constr", 500000000);
+	public final static int maxConstr = Integer.getInteger("chord.max.constr", 50000000);
 
 	public static void print() {
 		System.out.println("*** Chord resource properties:");
