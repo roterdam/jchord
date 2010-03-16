@@ -757,15 +757,15 @@ public class Instrumentor {
 				if (methodCallEvent.isAft())
 					aftInstr += methodCallAftEventCall + iId + "," + o + ");";
 			}
+			CtMethod m;
+			try {
+				m = e.getMethod();
+			} catch (NotFoundException ex) {
+				throw new ChordRuntimeException(ex);
+			}
 			// Part 2: add BEF_NEW and AFT_NEW, or just NEW, event
 			// if present and applicable
 			if (newAndNewArrayEvent.present()) {
-				CtMethod m;
-				try {
-					m = e.getMethod();
-				} catch (NotFoundException ex) {
-					throw new ChordRuntimeException(ex);
-				}
 				String mDesc = m.getSignature();
 				if (mDesc.equals("()Ljava/lang/Object;")) {
 					String mName = m.getName();
@@ -784,7 +784,7 @@ public class Instrumentor {
 			}
 			// Part 3: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
 			// if present and applicable
-			String instr = processThreadRelatedCall(e);
+			String instr = processThreadRelatedCall(e, m);
 			if (instr != null)
 				befInstr += instr;
 			if (befInstr.equals("") && aftInstr.equals(""))
@@ -795,7 +795,7 @@ public class Instrumentor {
 			// pointer exceptions in certain cases (i.e. $_ = $proceed($$)
 			// does not seem to be safe usage for all call sites).
 			try {
-				if (!aftInstr.equals("")) {
+				if (!aftInstr.equals("") && m.getExceptionTypes().length != 0) {
 					e.replace("{ " + befInstr + " try { $_ = $proceed($$); } " +
 						"catch (java.lang.Throwable ex) { " + aftInstr + "; throw ex; }; " +
 						aftInstr + " }");
@@ -804,6 +804,8 @@ public class Instrumentor {
 						aftInstr + " }");
 				}
 			} catch (CannotCompileException ex) {
+				throw new ChordRuntimeException(ex);
+			} catch (NotFoundException ex) {
 				throw new ChordRuntimeException(ex);
 			}
 		}
@@ -954,14 +956,8 @@ public class Instrumentor {
 		}
 		return null;
 	}
-	protected String processThreadRelatedCall(MethodCall e) {
+	protected String processThreadRelatedCall(MethodCall e, CtMethod m) {
 		String instr = null;
-		CtMethod m;
-		try {
-			m = e.getMethod();
-		} catch (NotFoundException ex) {
-			throw new ChordRuntimeException(ex);
-		}
 		String cName = m.getDeclaringClass().getName();
 		if (cName.equals("java.lang.Object")) {
 			String mName = m.getName();
