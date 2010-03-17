@@ -795,6 +795,14 @@ public class Instrumentor {
 			// pointer exceptions in certain cases (i.e. $_ = $proceed($$)
 			// does not seem to be safe usage for all call sites).
 			try {
+				// Hack: check if the target method declares exceptions it might throw
+				// and don't put try...catch around the call site if it does.
+				// This is because IBM J9 JVM does not like try...catch blocks around
+				// call sites that call methods it wants to inline, and it does not seem
+				// to inline methods that may throw exceptions.
+				// This is a hack because the target method may throw an undeclared
+				// exception like RuntimeException, which will cause aftInstr to be
+				// bypassed.
 				if (!aftInstr.equals("") && m.getExceptionTypes().length != 0) {
 					e.replace("{ " + befInstr + " try { $_ = $proceed($$); } " +
 						"catch (java.lang.Throwable ex) { " + aftInstr + "; throw ex; }; " +
