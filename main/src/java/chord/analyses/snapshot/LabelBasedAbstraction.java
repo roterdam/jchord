@@ -14,6 +14,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import chord.project.OutDirUtils;
+import chord.util.ArraySet;
 
 /**
  * 
@@ -185,7 +186,8 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 		}
 		boolean hasChanged = S.add(l);
 		if (hasChanged) {
-			setValue(o, S);
+			ArraySet<Label> arrSet = new ArraySet<Label>(S);
+			setValue(o, arrSet);
 		}
 		return hasChanged;
 	}
@@ -197,7 +199,8 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 			hasChanged |= S.remove(l);
 		}
 		if (hasChanged) {
-			setValue(o, S);
+			ArraySet<Label> arrSet = new ArraySet<Label>(S);
+			setValue(o, arrSet);
 		}
 		return hasChanged;
 	}
@@ -325,7 +328,8 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 						return EfficientUpdateResult.TRUE_FALSE;
 					} else {
 						object2labels.put(old, newLabels);
-						setValue(old, newLabels);
+						ArraySet<Label> arrSet = new ArraySet<Label>(newLabels);
+						setValue(old, arrSet);
 						return EfficientUpdateResult.TRUE_TRUE;
 					}
 				} else {
