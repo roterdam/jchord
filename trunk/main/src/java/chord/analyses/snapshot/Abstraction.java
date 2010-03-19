@@ -68,6 +68,15 @@ public abstract class Abstraction {
 		return o2a.get(o);
 	}
 
+  public Set<Object> getAbstractValues() {
+    if (require_a2o) return a2os.keySet();
+    else {
+      Set<Object> values = new HashSet<Object>();
+      for (Object a : o2a.getValues()) values.add(a);
+      return values;
+    }
+  }
+
 	// Helpers
 	protected void setValue(int o, Object a) {
 		if (!state.o2edges.containsKey(o))

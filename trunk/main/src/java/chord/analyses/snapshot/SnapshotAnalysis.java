@@ -55,6 +55,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   int randSize; // Number of abstract values for random abstraction
   ReachabilityAbstraction.Spec reachabilitySpec = new ReachabilityAbstraction.Spec();
   GraphMonitor graphMonitor;
+  int maxFieldAccessesToPrint;
+  PrintWriter fieldAccessOut;
   boolean queryOnlyAtSnapshot; // For efficiency (but incorrect)
   boolean includeAllQueries; // Include queries based on all objects (if false, look at scope.check.exclude)
   int maxCommands;
@@ -137,7 +139,11 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
       abstraction = parseAbstraction(getStringArg("abstraction", ""));
 
       maxCommands = getIntArg("graph.maxCommands", 100000);
-      graphMonitor = new SerializingGraphMonitor(X.path("graph"), maxCommands);
+      if (getBooleanArg("outputGraph", false))
+        graphMonitor = new SerializingGraphMonitor(X.path("graph"), maxCommands);
+      maxFieldAccessesToPrint = getIntArg("maxFieldAccessesToPrint", 0);
+      if (maxFieldAccessesToPrint > 0)
+        fieldAccessOut = new PrintWriter(X.path("fieldAccesses"));
 
       // Save options
       HashMap<Object,Object> options = new LinkedHashMap<Object,Object>();
@@ -343,15 +349,17 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
     // Print out information about abstractions
     abstraction.ensureComputed();
-    int complexity = abstraction.a2os.size(); // Complexity of this abstraction (number of abstract values)
+    Set<Object> abstractValues = abstraction.getAbstractValues();
+    int complexity = abstractValues.size(); // Complexity of this abstraction (number of abstract values)
     PrintWriter out = Utils.openOut(X.path("snapshot-abstractions"));
-    for (Object a : abstraction.a2os.keySet())
+    for (Object a : abstractValues)
       out.println(a);
     out.close();
     X.logs("Abstract complexity: %d values", complexity);
     X.output.put("complexity", complexity);
 
     if (graphMonitor != null) graphMonitor.finish();
+    if (fieldAccessOut != null) fieldAccessOut.close();
   }
 
   //////////////////////////////
@@ -417,6 +425,9 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     nodeCreated(t, o);
     if (selectSnapshotRandom.nextDouble() < snapshotFrac) 
       doSnapshotAnalysis();
+    if (fieldAccessOut != null && numFieldAccesses <= maxFieldAccessesToPrint) {
+      fieldAccessOut.println(String.format("%s | %s | %s %s | %s %s", estr(e), t, b, abstraction.getValue(b), o, abstraction.getValue(o)));
+    }
   }
 
   private void doSnapshotAnalysis() {
