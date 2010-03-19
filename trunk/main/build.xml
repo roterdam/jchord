@@ -309,7 +309,7 @@
 		<property name="chord.max.stack" value="32m"/>
 		<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
 
-		<java classname="chord.project.Main" fork="true" failonerror="true" dir="${chord.work.dir}">
+		<java classname="chord.project.Main" fork="true" dir="${chord.work.dir}" resultproperty="chord.run.result">
 			<jvmarg line="${chord.jvmargs}"/>
 			<syspropertyset>
 				<propertyref builtin="all"/>
@@ -320,6 +320,13 @@
 				<pathelement path="${chord.class.path}"/>
 			</classpath>
 		</java>
+		<if>
+			<not><equals arg1="${chord.run.result}" arg2="0"/></not>
+			<then>
+				<property name="chord.log.file" location="${chord.work.dir}/chord_output/log.txt"/>
+				<echo message="Chord terminated abnormally; see ${chord.log.file} for details."/>
+			</then>
+		</if>
 	</target>
 
 	<!--
@@ -353,7 +360,7 @@
 	</target>
 
 	<!--
-		UTILS FOR PRINTING VARIOUS PROGRAM REPRESENTATIONS
+		PROGRAM REPRESENTATION PRINTING UTILS
 	-->
 
 	<target name="quadcode" depends="props-file">
