@@ -77,6 +77,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     return true;
   }
 
+  public boolean require_a2o() { return false; } // By default, we don't need a map from abstract to concrete
+
   public Abstraction parseAbstraction(String abstractionType) {
     if (abstractionType.equals("none")) return new NoneAbstraction();
     if (abstractionType.equals("random")) return new RandomAbstraction(randSize);
@@ -311,6 +313,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     abstraction.X = X;
     abstraction.state = state;
     abstraction.listener = this;
+    abstraction.require_a2o = require_a2o();
   }
 
   public void doneAllPasses() {
@@ -577,14 +580,14 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 	}
 
   @Override public void processMethodCallBef(int i, int t, int o) {
-    if (isIgnore(o)) return;
+    //if (isIgnore(o)) return;
     if (verbose >= 5) X.logs("EVENT methodCallBefore: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
     ThreadInfo info = threadInfo(t);
     info.callSites.push(i);
     //info.callAllocs.push(state.o2h.get(o));
   }
   @Override public void processMethodCallAft(int i, int t, int o) {
-    if (isIgnore(o)) return;
+    //if (isIgnore(o)) return;
     ThreadInfo info = threadInfo(t);
     if (verbose >= 5) X.logs("EVENT methodCallAfter: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
 

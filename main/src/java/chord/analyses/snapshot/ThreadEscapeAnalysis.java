@@ -17,6 +17,8 @@ import chord.project.Chord;
  *   g = o2
  * At this point, o1 is no longer escaping.
  *
+ * Don't use this any more!
+ *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
 @Chord(name="ss-thread-escape")
@@ -37,6 +39,8 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
 
   TIntHashSet staticNodes = new TIntHashSet(); // set of global objects
   List<Event> events = new ArrayList<Event>(); // For batching
+
+  @Override public boolean require_a2o() { return true; }
 
   @Override public String fstr(int f) { return f >= THREAD_FIELD_START ? "[T"+(f-THREAD_FIELD_START)+"]" : super.fstr(f); }
   @Override public String ostr(int o) { return o == THREAD_GLOBAL_OBJECT ? "(T)" : super.ostr(o); }

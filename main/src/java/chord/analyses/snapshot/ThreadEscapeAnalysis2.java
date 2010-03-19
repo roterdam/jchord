@@ -58,6 +58,8 @@ public class ThreadEscapeAnalysis2 extends SnapshotAnalysis {
   TIntHashSet escapedNodes = new TIntHashSet(); // Set of objects reachable from some global at any point in time
   List<Event> events = new ArrayList<Event>(); // For batching
 
+  @Override public boolean require_a2o() { return true; }
+
   @Override
 	protected InstrScheme getBaselineScheme() {
 	  InstrScheme instrScheme = new InstrScheme();
