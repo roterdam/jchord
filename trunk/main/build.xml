@@ -305,11 +305,9 @@
 		</fail>
 		<property name="chord.java.analysis.path" location="classes"/>
 		<property name="chord.main.dir" location="."/>
-    <!--<property name="chord.max.heap" value="1024m"/>-->
 		<property name="chord.max.heap" value="2048m"/>
 		<property name="chord.max.stack" value="32m"/>
-    <property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
-    <!--<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack} -Xrunhprof:cpu=samples,depth=3"/>-->
+		<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
 
 		<java classname="chord.project.Main" fork="true" failonerror="true" dir="${chord.work.dir}">
 			<jvmarg line="${chord.jvmargs}"/>
@@ -352,6 +350,47 @@
 		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
 		<property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
 		<antcall target="run"/>
+	</target>
+
+	<!--
+		UTILS FOR PRINTING VARIOUS PROGRAM REPRESENTATIONS
+	-->
+
+	<target name="quadcode" depends="props-file">
+		<if>
+			<isset property="chord.class.path"/>
+			<then>
+				<property name="cp" value="${chord.class.path}"/>
+			</then>
+		</if>
+		<fail unless="class" message="Class must be specified via -Dclass=..."/>
+		<fail unless="cp" message="Classpath must be specified via -Dcp=..."/>
+		<java classname="joeq.Main.PrintCFG" fork="true" failonerror="true">
+			<arg value="${class}"/>
+			<classpath>
+				<pathelement location="lib/joeq.jar"/>
+				<pathelement location="lib/jwutil.jar"/>
+				<pathelement path="${cp}"/>
+			</classpath>
+		</java>
+	</target>
+
+	<target name="bytecode" depends="props-file">
+		<if>
+			<isset property="chord.class.path"/>
+			<then>
+				<property name="cp" value="${chord.class.path}"/>
+			</then>
+		</if>
+		<fail unless="class" message="Class must be specified via -Dclass=..."/>
+		<fail unless="cp" message="Classpath must be specified via -Dcp=..."/>
+		<exec executable="javap">
+			<arg value="-classpath"/>
+			<arg value="${cp}"/>
+			<arg value="-private"/>
+			<arg value="-verbose"/>
+			<arg value="${class}"/>
+		</exec>
 	</target>
 
 	<!--
