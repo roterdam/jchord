@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import chord.util.ArraySet;
 
 interface AbstractionListener {
 	// Called when the abstraction is changed
@@ -39,42 +40,22 @@ public abstract class Abstraction {
 	public Execution X;
 	public State state;
 	public AbstractionListener listener;
-	public TIntHashSet separateNodes = new TIntHashSet(); // (Optional): let
-	// these values have
-	// a distinct value
-
+  public boolean require_a2o; // Whether we need to maintain the a2o map (e.g., for thread-escape)
+	public TIntHashSet separateNodes = new TIntHashSet(); // (Optional): let these objects be distinct value (not used right now)
 	// Build these as intermediate data structures
-	protected TIntObjectHashMap<Object> o2a = new TIntObjectHashMap<Object>(); // object
-	// o
-	// ->
-	// abstract
-	// value
-	// a
-	protected HashMap<Object, List<Integer>> a2os = new HashMap<Object, List<Integer>>(); // abstraction
-
-	// value
-	// a
-	// ->
-	// nodes
-	// o
-	// with
-	// that
-	// abstraction
-	// value
-
+	protected TIntObjectHashMap<Object> o2a = new TIntObjectHashMap<Object>(); // object o -> abstract value a
+	protected HashMap<Object, List<Integer>> a2os = null; // abstraction value a -> nodes o with that abstraction value
 	// For incrementally creating the abstraction (if necessary).
 	public abstract void nodeCreated(ThreadInfo info, int o);
-
 	public abstract void nodeDeleted(int o);
+	public void edgeCreated(int b, int f, int o) { }
+  public void edgeDeleted(int b, int f, int o) { }
 
-	public void edgeCreated(int b, int f, int o) {
-	}
-
-	public void edgeDeleted(int b, int f, int o) {
-	}
+  public boolean requireImmutableAbstractValues() { return require_a2o; }
 
 	public void init(AbstractionInitializer initializer) {
 		initializer.initAbstraction(this);
+    if (require_a2o) a2os = new HashMap<Object, List<Integer>>(); 
 	}
 
 	// Called before we start using this abstraction in arbitrary ways, so do
@@ -91,18 +72,19 @@ public abstract class Abstraction {
 	protected void setValue(int o, Object a) {
 		if (!state.o2edges.containsKey(o))
 			throw new RuntimeException("" + o);
-		if (separateNodes.contains(o))
-			a = "-";
-		Object old_a = o2a.get(o);
-		if (old_a != null) { // There was an old abstraction there already
-			if (old_a.equals(a))
-				return; // Haven't changed the abstraction
-			List<Integer> os = a2os.get(old_a);
-			if (os != null)
-				os.remove((Integer) o);
-		}
+		if (separateNodes.contains(o)) a = "-";
+    if (require_a2o) {
+      Object old_a = o2a.get(o);
+      if (old_a != null) { // There was an old abstraction there already
+        if (old_a.equals(a))
+          return; // Haven't changed the abstraction
+        List<Integer> os = a2os.get(old_a);
+        if (os != null)
+          os.remove((Integer) o);
+      }
+      Utils.add(a2os, a, o);
+    }
 		o2a.put(o, a);
-		Utils.add(a2os, a, o);
 		listener.abstractionChanged(o, a);
 	}
 
@@ -170,9 +152,9 @@ class AllocAbstraction extends LocalAbstraction {
 
 	@Override
 	public String toString() {
-		if (kCFA == 0 && kOS == 0)
-			return "alloc";
-		return String.format("alloc(kCFA=%d,kOS=%d)", kCFA, kOS);
+		if (kCFA == 0 && kOS == 0) return "alloc";
+		//return String.format("alloc(kCFA=%d,kOS=%d)", kCFA, kOS);
+		return String.format("alloc(k=%d)", kCFA);
 	}
 
 	@Override
@@ -205,12 +187,6 @@ class AllocAbstraction extends LocalAbstraction {
 				buf.append(info.callSites.get(j));
 			}
 		}
-
-		/*
-		 * if (kOS > 0) { for (int i = 0; i < kCFA; i++) { int j =
-		 * info.callAllocs.size() - i - 1; if (j < 0) break; buf.append('_');
-		 * buf.append(info.callAllocs.get(j)); } }
-		 */
 
 		return buf.toString();
 	}
@@ -320,7 +296,7 @@ class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 			Set<Label> S = new HashSet<Label>(1);
 			S.add(new AllocPlusFieldLabel(h));
 			object2labels.put(o, S);
-			setValue(o, S);
+			mySetValue(o, S);
 			TIntHashSet T = alloc2objects.get(h);
 			if (T == null) {
 				T = new TIntHashSet();
@@ -439,7 +415,7 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 			Set<Label> S = new HashSet<Label>(1);
 			S.add(new AllocationSiteLabel(h));
 			object2labels.put(o, S);
-			setValue(o, S);
+			mySetValue(o, S);
 			TIntHashSet T = alloc2objects.get(h);
 			if (T == null) {
 				T = new TIntHashSet();
@@ -521,7 +497,7 @@ class PointedToByAbstraction extends Abstraction {
 				boolean hasChanged = !M.containsValue(h);
 				M.put(f, h);
 				if (hasChanged) {
-					Value v = new Value(M.getValues());
+					Value v = new Value(M.getValues()); // XXX: these should be sorted?
 					setValue(o, v);
 				}
 			}
@@ -539,7 +515,7 @@ class PointedToByAbstraction extends Abstraction {
 				M.remove(f);
 				boolean hasChanged = !M.containsValue(h);
 				if (hasChanged) {
-					Value v = new Value(M.getValues());
+					Value v = new Value(M.getValues()); // XXX: these should be sorted?
 					setValue(o, v);
 				}
 			}

@@ -179,16 +179,19 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 		return object2labels.get(b);
 	}
 
+  public void mySetValue(int o, Set<Label> S) {
+    if (requireImmutableAbstractValues())
+      S = new ArraySet<Label>(S);
+    setValue(o, S);
+  }
+
 	private boolean posLabel(int o, Label l) {
 		Set<Label> S = object2labels.get(o);
 		if (S == null) {
 			object2labels.put(o, S = new HashSet<Label>(1));
 		}
 		boolean hasChanged = S.add(l);
-		if (hasChanged) {
-			ArraySet<Label> arrSet = new ArraySet<Label>(S);
-			setValue(o, arrSet);
-		}
+		if (hasChanged) mySetValue(o, S);
 		return hasChanged;
 	}
 
@@ -198,10 +201,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 		if (S != null) {
 			hasChanged |= S.remove(l);
 		}
-		if (hasChanged) {
-			ArraySet<Label> arrSet = new ArraySet<Label>(S);
-			setValue(o, arrSet);
-		}
+		if (hasChanged) mySetValue(o, S);
 		return hasChanged;
 	}
 
@@ -328,8 +328,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 						return EfficientUpdateResult.TRUE_FALSE;
 					} else {
 						object2labels.put(old, newLabels);
-						ArraySet<Label> arrSet = new ArraySet<Label>(newLabels);
-						setValue(old, arrSet);
+            mySetValue(old, newLabels);
 						return EfficientUpdateResult.TRUE_TRUE;
 					}
 				} else {
