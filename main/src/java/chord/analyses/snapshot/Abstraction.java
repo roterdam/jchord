@@ -17,7 +17,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import chord.util.ArraySet;
 
 interface AbstractionListener {
 	// Called when the abstraction is changed
@@ -67,15 +66,17 @@ public abstract class Abstraction {
 	public Object getValue(int o) {
 		return o2a.get(o);
 	}
-
-  public Set<Object> getAbstractValues() {
-    if (require_a2o) return a2os.keySet();
-    else {
-      Set<Object> values = new HashSet<Object>();
-      for (Object a : o2a.getValues()) values.add(a);
-      return values;
-    }
-  }
+	
+	public Set<Object> getAbstractValues() {
+		if (require_a2o)
+			return a2os.keySet();
+		else {
+			Set<Object> values = new HashSet<Object>();
+			for (Object a : o2a.getValues())
+				values.add(a);
+			return values;
+		}
+	}
 
 	// Helpers
 	protected void setValue(int o, Object a) {
@@ -305,7 +306,7 @@ class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 			Set<Label> S = new HashSet<Label>(1);
 			S.add(new AllocPlusFieldLabel(h));
 			object2labels.put(o, S);
-			mySetValue(o, S);
+			setFreshValue(o, S);
 			TIntHashSet T = alloc2objects.get(h);
 			if (T == null) {
 				T = new TIntHashSet();
@@ -424,7 +425,7 @@ class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 			Set<Label> S = new HashSet<Label>(1);
 			S.add(new AllocationSiteLabel(h));
 			object2labels.put(o, S);
-			mySetValue(o, S);
+			setFreshValue(o, S);
 			TIntHashSet T = alloc2objects.get(h);
 			if (T == null) {
 				T = new TIntHashSet();
@@ -450,11 +451,11 @@ class PointedToByAbstraction extends Abstraction {
 	private static class Value {
 		
 		protected final static Value EMPTY_VALUE = new Value(new int[0]);
-		
 		private final int[] values;
 		
 		public Value(int[] values) {
-			this.values = values;
+			this.values = Arrays.copyOf(values, values.length);
+			Arrays.sort(this.values);
 		}
 
 		@Override
@@ -524,7 +525,7 @@ class PointedToByAbstraction extends Abstraction {
 				M.remove(f);
 				boolean hasChanged = !M.containsValue(h);
 				if (hasChanged) {
-					Value v = new Value(M.getValues()); // XXX: these should be sorted?
+					Value v = new Value(M.getValues());
 					setValue(o, v);
 				}
 			}

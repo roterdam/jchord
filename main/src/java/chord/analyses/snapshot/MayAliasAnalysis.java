@@ -175,7 +175,8 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 			int e1 = domE.indexOf(quad0);
 			Quad quad1 = (Quad) p.val1;
 			int e2 = domE.indexOf(quad1);
-      if (e1 == e2) continue;
+	//      if (e1 == e2) continue;
+			assert (e1 != e2);
 			MayAliasQuery q = new MayAliasQuery(e1, e2);
 			if (shouldAnswerQueryHit(q)) {
 				answerQuery(q, true);
