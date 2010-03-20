@@ -39,7 +39,7 @@ onlyWrEF(e,f) :- relevantE(e), EF(e,f), writeE(e).
 
 startingRacePair(e1,e2) :- onlyWrEF(e1,f), rdOrWrEF(e2,f), e1 < e2.
 startingRacePair(e1,e2) :- rdOrWrEF(e1,f), onlyWrEF(e2,f), e1 < e2.
-startingRacePair(e1,e2) :- onlyWrEF(e1,f), onlyWrEF(e2,f), e1 = e2.
+# startingRacePair(e1,e2) :- onlyWrEF(e1,f), onlyWrEF(e2,f), e1 = e2.
 
 aliasingRacePair(e1,e2) :- startingRacePair(e1,e2), absval(e1,s), absval(e2,s).
 
