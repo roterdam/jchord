@@ -276,8 +276,7 @@ public class Instrumentor {
 
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
-		genEnterAndLeaveMethodEvent = scheme.getCallsBound() > 0 ||
-			scheme.hasEnterAndLeaveMethodEvent();
+		genEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent();
 		genFinalizeEvent = scheme.hasFinalizeEvent();
 		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
@@ -637,17 +636,21 @@ public class Instrumentor {
 		}
 		public void edit(NewExpr e) {
 			if (newAndNewArrayEvent.present()) {
-				int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
 				String instr1, instr2;
 				if (newAndNewArrayEvent.hasObj()) {
+					// instrument hId regardless of whether client wants it
+					int hId = set(Hmap, e);
 					instr1 = befNewEventCall + hId + ");";
 					instr2 = aftNewEventCall + hId + ",$_);";
 				} else {
+ 					int hId = newAndNewArrayEvent.hasLoc() ?
+						set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
 					instr1 = newEventCall + hId + ");";
 					instr2 = "";
 				}
 				try {
-					e.replace("{ " + instr1 + " $_ = $proceed($$); " + instr2 + " }");
+					e.replace("{ " + instr1 + " $_ = $proceed($$); " +
+						instr2 + " }");
 				} catch (CannotCompileException ex) {
 					throw new ChordRuntimeException(ex);
 				}
@@ -655,8 +658,10 @@ public class Instrumentor {
 		}
 		public void edit(NewArray e) {
 			if (newAndNewArrayEvent.present()) {
-				int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
-				String instr = newArrayEventCall + hId + ",$_);";
+				int hId = newAndNewArrayEvent.hasLoc() ?
+					set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
+				String o = newAndNewArrayEvent.hasObj() ? "$_" : "null";
+				String instr = newArrayEventCall + hId + "," + o + ");";
 				try {
 					e.replace("{ $_ = $proceed($$); " + instr + " }");
 				} catch (CannotCompileException ex) {

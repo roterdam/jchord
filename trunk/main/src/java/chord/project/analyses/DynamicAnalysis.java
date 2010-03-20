@@ -43,7 +43,7 @@ import chord.util.ReadException;
  * @author omert (omertrip@post.tau.ac.il)
  */
 public class DynamicAnalysis extends JavaAnalysis {
-	public final static boolean DEBUG = false;
+	public final static boolean DEBUG = true;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
 	

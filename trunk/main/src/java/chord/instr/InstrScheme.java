@@ -199,6 +199,7 @@ public class InstrScheme implements Serializable {
 	public static final int MAX_NUM_EVENT_FORMATS = 24;
 
 	public class EventFormat implements Serializable {
+		private boolean present;
 		private boolean hasLoc;
 		private boolean hasThr;
 		private boolean hasFldOrIdx;
@@ -207,7 +208,8 @@ public class InstrScheme implements Serializable {
 		private boolean isBef;
 		private boolean isAft;
 		private int size;
-		public boolean present() { return size > 0; }
+		public void setPresent() { present = true; }
+		public boolean present() { return present; }
 		public int size() { return size; }
 		public boolean hasLoc() { return hasLoc; }
 		public boolean hasThr() { return hasThr; }
@@ -257,8 +259,6 @@ public class InstrScheme implements Serializable {
 		}
 	}
 
-	private int callsBound;
-	private int itersBound;
 	private boolean hasEnterAndLeaveMethodEvent;
 	private boolean hasEnterAndLeaveLoopEvent;
 	private boolean hasFinalizeEvent;
@@ -308,24 +308,6 @@ public class InstrScheme implements Serializable {
 		return hasFinalizeEvent;
 	}
 
-	public void setCallsBound(int n) {
-		assert (n >= 0);
-		callsBound = n;
-	}
-
-	public int getCallsBound() {
-		return callsBound;
-	}
-
-	public void setItersBound(int n) {
-		assert (n >= 0);
-		itersBound = n;
-	}
-
-	public int getItersBound() {
-		return itersBound;
-	}
-
 	public EventFormat getEvent(int eventId) {
 		return events[eventId];
 	}
@@ -333,6 +315,7 @@ public class InstrScheme implements Serializable {
 	public void setNewAndNewArrayEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[NEW_AND_NEWARRAY];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -341,6 +324,7 @@ public class InstrScheme implements Serializable {
 	public void setGetstaticPrimitiveEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasFld) {
 		EventFormat e = events[GETSTATIC_PRIMITIVE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -350,6 +334,7 @@ public class InstrScheme implements Serializable {
 	public void setGetstaticReferenceEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[GETSTATIC_REFERENCE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -360,6 +345,7 @@ public class InstrScheme implements Serializable {
 	public void setPutstaticPrimitiveEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasFld) {
 		EventFormat e = events[PUTSTATIC_PRIMITIVE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -369,6 +355,7 @@ public class InstrScheme implements Serializable {
 	public void setPutstaticReferenceEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[PUTSTATIC_REFERENCE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -379,6 +366,7 @@ public class InstrScheme implements Serializable {
 	public void setGetfieldPrimitiveEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasFld) {
 		EventFormat e = events[GETFIELD_PRIMITIVE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -388,6 +376,7 @@ public class InstrScheme implements Serializable {
 	public void setGetfieldReferenceEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[GETFIELD_REFERENCE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -398,6 +387,7 @@ public class InstrScheme implements Serializable {
 	public void setPutfieldPrimitiveEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasFld) {
 		EventFormat e = events[PUTFIELD_PRIMITIVE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -407,6 +397,7 @@ public class InstrScheme implements Serializable {
 	public void setPutfieldReferenceEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasFld, boolean hasObj) {
 		EventFormat e = events[PUTFIELD_REFERENCE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -417,6 +408,7 @@ public class InstrScheme implements Serializable {
 	public void setAloadPrimitiveEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasIdx) {
 		EventFormat e = events[ALOAD_PRIMITIVE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -426,6 +418,7 @@ public class InstrScheme implements Serializable {
 	public void setAloadReferenceEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasIdx, boolean hasObj) {
 		EventFormat e = events[ALOAD_REFERENCE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -436,6 +429,7 @@ public class InstrScheme implements Serializable {
 	public void setAstorePrimitiveEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasIdx) {
 		EventFormat e = events[ASTORE_PRIMITIVE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -445,6 +439,7 @@ public class InstrScheme implements Serializable {
 	public void setAstoreReferenceEvent(boolean hasLoc, boolean hasThr,
 			boolean hasBaseObj, boolean hasIdx, boolean hasObj) {
 		EventFormat e = events[ASTORE_REFERENCE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasBaseObj) e.setBaseObj();
@@ -457,6 +452,7 @@ public class InstrScheme implements Serializable {
 		if (!isBef && !isAft)
 			return;
 		EventFormat e = events[METHOD_CALL];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -466,6 +462,7 @@ public class InstrScheme implements Serializable {
 
 	public void setReturnPrimitiveEvent(boolean hasLoc, boolean hasThr) {
 		EventFormat e = events[RETURN_PRIMITIVE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 	}
@@ -473,6 +470,7 @@ public class InstrScheme implements Serializable {
 	public void setReturnReferenceEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[RETURN_REFERENCE];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -481,6 +479,7 @@ public class InstrScheme implements Serializable {
 	public void setExplicitThrowEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[EXPLICIT_THROW];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -488,6 +487,7 @@ public class InstrScheme implements Serializable {
 
 	public void setImplicitThrowEvent(boolean hasThr, boolean hasObj) {
 		EventFormat e = events[IMPLICIT_THROW];
+		e.setPresent();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
 	}
@@ -495,6 +495,7 @@ public class InstrScheme implements Serializable {
 	public void setThreadStartEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[THREAD_START];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -503,6 +504,7 @@ public class InstrScheme implements Serializable {
 	public void setThreadJoinEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[THREAD_JOIN];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -511,6 +513,7 @@ public class InstrScheme implements Serializable {
 	public void setAcquireLockEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[ACQUIRE_LOCK];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -519,6 +522,7 @@ public class InstrScheme implements Serializable {
 	public void setReleaseLockEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[RELEASE_LOCK];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -527,6 +531,7 @@ public class InstrScheme implements Serializable {
 	public void setWaitEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[WAIT];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -535,6 +540,7 @@ public class InstrScheme implements Serializable {
 	public void setNotifyEvent(boolean hasLoc, boolean hasThr,
 			boolean hasObj) {
 		EventFormat e = events[NOTIFY];
+		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
@@ -587,16 +593,12 @@ public class InstrScheme implements Serializable {
 	}
 
 	public boolean needsMmap() {
-		return callsBound > 0 || hasEnterAndLeaveMethodEvent ||
-			itersBound > 0 || hasEnterAndLeaveLoopEvent;
-	}
-
-	public boolean needsWmap() {
-		return itersBound > 0 || hasEnterAndLeaveLoopEvent;
+		return hasEnterAndLeaveMethodEvent || hasEnterAndLeaveLoopEvent;
 	}
 
 	public boolean needsHmap() {
-		return events[NEW_AND_NEWARRAY].hasLoc();
+		EventFormat e = events[NEW_AND_NEWARRAY];
+		return e.hasLoc() || e.hasObj();
 	}
 
 	public boolean needsEmap() {
