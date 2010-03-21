@@ -180,9 +180,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 	}
 
   public void setFreshValue(int o, Set<Label> S) {
-    if (requireImmutableAbstractValues())
-      S = new ArraySet<Label>(S);
-    setValue(o, S);
+    setValue(o, new ArraySet<Label>(S));
   }
 
 	private boolean posLabel(int o, Label l) {

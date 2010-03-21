@@ -86,10 +86,12 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     if (abstractionType.equals("random")) return new RandomAbstraction(randSize);
     if (abstractionType.equals("alloc")) return new AllocAbstraction(kCFA, kOS);
     if (abstractionType.equals("recency")) return new RecencyAbstraction(new AllocAbstraction(kCFA, kOS), recencyOrder);
-    if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec); // Don't use
+    if (abstractionType.equals("reach")) return new ReachableFromAbstraction(new AllocAbstraction(kCFA, kOS));
+    if (abstractionType.equals("point")) return new PointedToByAbstraction(new AllocAbstraction(kCFA, kOS));
+    //if (abstractionType.equals("reachability")) return new ReachabilityAbstraction(reachabilitySpec); // Don't use
+    if (abstractionType.equals("pointed-to")) return new PointedToByAllocAbstraction();
     if (abstractionType.equals("alloc-reachability")) return new ReachableFromAllocAbstraction();
     if (abstractionType.equals("alloc-x-field-reachability")) return new ReachableFromAllocPlusFieldsAbstraction();
-    if (abstractionType.equals("pointed-to")) return new PointedToByAbstraction();
     throw new RuntimeException("Unknown abstraction: "+abstractionType+" (possibilities: none|alloc|recency|reachability)");
   }
 
@@ -419,15 +421,23 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   }
 
   // Typically, this function is the source of queries
+  TIntIntHashMap e_numHits = new TIntIntHashMap(); // e -> number of times it was hit
   public void fieldAccessed(int e, int t, int b, int f, int o) {
     numFieldAccesses++;
     nodeCreated(t, b);
     nodeCreated(t, o);
     if (selectSnapshotRandom.nextDouble() < snapshotFrac) 
       doSnapshotAnalysis();
-    if (fieldAccessOut != null && numFieldAccesses <= maxFieldAccessesToPrint) {
-      fieldAccessOut.println(String.format("%s | %s | %s %s | %s %s", estr(e), t, b, abstraction.getValue(b), o, abstraction.getValue(o)));
+    //X.logs("fieldAccessed %s %s %s", fieldAccessOut, numFieldAccesses, maxFieldAccessesToPrint);
+    if (fieldAccessOut != null) {
+      if (e_numHits.adjustOrPutValue(e, 1, 1) <= maxFieldAccessesToPrint)
+        fieldAccessOut.println(String.format("%s | %s | %s | %s %s | %s %s", numFieldAccesses, estr(e), t, b, astr(abstraction.getValue(b)), o, astr(abstraction.getValue(o))));
     }
+  }
+  public String astr(Object a) {
+    if (a == null) return "(null)";
+    if (a instanceof Integer) return hstr((Integer)a);
+    return a.toString();
   }
 
   private void doSnapshotAnalysis() {
@@ -590,9 +600,14 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 			fieldAccessed(e, t, b, ARRAY_FIELD+i, -1);
 	}
 
+  TIntIntHashMap i_numHits = new TIntIntHashMap(); // i -> number of times it was hit
   @Override public void processMethodCallBef(int i, int t, int o) {
     //if (isIgnore(o)) return;
     if (verbose >= 5) X.logs("EVENT methodCallBefore: i=%s, t=%s, o=%s", istr(i), tstr(t), ostr(o));
+    if (fieldAccessOut != null) {
+      if (i_numHits.adjustOrPutValue(i, 1, 1) <= maxFieldAccessesToPrint)
+        fieldAccessOut.println(String.format("M%s | %s", numFieldAccesses, istr(i)));
+    }
     ThreadInfo info = threadInfo(t);
     info.callSites.push(i);
     //info.callAllocs.push(state.o2h.get(o));
