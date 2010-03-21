@@ -39,7 +39,7 @@
 		          - max.tuples (default=1000)
 		          - max.heap   (default=1024m)
 		javadoc   Generate javadoc for Chord source code
-		htmldoc   Generate HTML user guide
+		htmldoc   Generate HTML user guide (needs Hyperlatex installed)
 		clean     Cleanup all generated class files
 		cleandoc  Cleanup all generated javadoc files
 		</echo>
@@ -324,8 +324,7 @@
 			<not><equals arg1="${chord.run.result}" arg2="0"/></not>
 			<then>
 				<property name="chord.log.file" location="${chord.work.dir}/chord_output/log.txt"/>
-				<echo message="Chord terminated abnormally."/>
-				<echo message="See ${chord.log.file} for details."/>
+				<fail message="Chord terminated abnormally; see ${chord.log.file} for details."/>
 			</then>
 		</if>
 	</target>
