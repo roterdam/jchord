@@ -19,6 +19,8 @@ public class Main {
         PrintStream errStream = null;
 		String outFileName = Properties.outFileName;
 		String errFileName = Properties.errFileName;
+		System.out.println("Redirecting stdout to file: " + outFileName);
+		System.out.println("Redirecting stderr to file: " + errFileName);
 		File outFile = new File(outFileName);
 		outStream = new PrintStream(outFile);
 		System.setOut(outStream);

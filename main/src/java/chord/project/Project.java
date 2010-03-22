@@ -859,7 +859,7 @@ public class Project {
 	}
 	
 	private static void nonInstantiableJavaAnalysis(String name, String msg) {
-		Messages.log("JAVA_TASK_UNINSTANTIABLE", name, msg);
+		Messages.log("PROJECT.JAVA_TASK_UNINSTANTIABLE", name, msg);
 		hasNoErrors = false;
 	}
 }

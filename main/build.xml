@@ -323,8 +323,7 @@
 		<if>
 			<not><equals arg1="${chord.run.result}" arg2="0"/></not>
 			<then>
-				<property name="chord.log.file" location="${chord.work.dir}/chord_output/log.txt"/>
-				<fail message="Chord terminated abnormally; see ${chord.log.file} for details."/>
+				<fail message="Chord terminated abnormally; see above file(s) for details."/>
 			</then>
 		</if>
 	</target>
