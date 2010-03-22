@@ -69,17 +69,6 @@ public class ReachableFromAllocAbstraction extends LabelBasedAbstraction {
 	}
 
 	@Override
-	public void ensureComputed() {
-		// This is a no-op.
-	}
-
-	@Override
-	public void nodeDeleted(int o) {
-		throw new RuntimeException(
-				"Operation 'nodeDeleted' not currently supported.");
-	}
-
-	@Override
 	public void nodeCreated(ThreadInfo info, int o) {
 		int h = state.o2h.get(o);
 		if (o != 0 && h >= 0) {

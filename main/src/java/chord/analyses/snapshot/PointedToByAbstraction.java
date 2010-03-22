@@ -39,7 +39,6 @@ public class PointedToByAbstraction extends Abstraction {
   private TIntObjectHashMap object2value = new TIntObjectHashMap();
 
 	@Override public String toString() { return "point("+abstraction+")"; }
-	@Override public void ensureComputed() { }
 
   // Pointers
   public void mySetValue(int o, Object[] pointers) {
@@ -52,7 +51,6 @@ public class PointedToByAbstraction extends Abstraction {
 
 	@Override
 	public void edgeCreated(int b, int f, int o) {
-		super.edgeCreated(b, f, o);
     assert (b > 0 && o > 0);
     if (f < 0) return;
     Object val = object2value.get(b);
@@ -70,7 +68,6 @@ public class PointedToByAbstraction extends Abstraction {
 
 	@Override
 	public void edgeDeleted(int b, int f, int o) {
-		super.edgeDeleted(b, f, o);
     assert (b > 0 && o > 0);
     if (f < 0) return;
     Object val = object2value.get(b);
@@ -85,8 +82,6 @@ public class PointedToByAbstraction extends Abstraction {
       mySetValue(o, M.keys());
     }
 	}
-
-	@Override public void nodeDeleted(int o) { throw new RuntimeException("Operation 'nodeDeleted' not currently supported."); }
 
 	@Override public void nodeCreated(ThreadInfo info, int o) {
     object2value.put(o, abstraction.computeValue(info, o));

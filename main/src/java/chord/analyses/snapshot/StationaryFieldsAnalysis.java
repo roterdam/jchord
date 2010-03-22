@@ -18,22 +18,8 @@ import chord.project.Chord;
  * @author pliang
  * 
  */
-@Chord(name = "ss-stat-fld")
+@Chord(name = "ss-stationary-fields")
 public class StationaryFieldsAnalysis extends SnapshotAnalysis {
-  class Event {
-    public Event(int e, int b, int f, boolean write) {
-      this.e = e;
-      this.b = b;
-      this.f = f;
-      this.write = write;
-    }
-    int e;
-    int b;
-    int f;
-    boolean write;
-  }
-  List<Event> events = new ArrayList<Event>(); // For batching
-	
 	private class StationaryFieldQuery extends Query {
 		public final int f;
 
@@ -76,44 +62,22 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 
 	@Override
 	public void onProcessPutfieldPrimitive(int e, int t, int b, int f) {
-    super.onProcessPutfieldPrimitive(e, t, b, f);
-    if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, true));
-    else {
-      abstraction.ensureComputed();
-      onFieldWrite(e, abstraction.getValue(b), f);
-    }
+    onFieldWrite(e, abstraction.getValue(b), f);
 	}
 
 	@Override
 	public void onProcessPutfieldReference(int e, int t, int b, int f, int o) {
-    super.onProcessPutfieldReference(e, t, b, f, o);
-    if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, true));
-    else {
-      abstraction.ensureComputed();
-      onFieldWrite(e, abstraction.getValue(b), f);
-    }
+    onFieldWrite(e, abstraction.getValue(b), f);
 	}
 
 	@Override
 	public void onProcessGetfieldPrimitive(int e, int t, int b, int f) {
-    super.onProcessGetfieldPrimitive(e, t, b, f);
-    if (isExcluded(e)) return;
-    if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, false));
-    else {
-      abstraction.ensureComputed();
-      onFieldRead(e, abstraction.getValue(b), f);
-    }
+    onFieldRead(e, abstraction.getValue(b), f);
 	}
 
 	@Override
 	public void onProcessGetfieldReference(int e, int t, int b, int f, int o) {
-    super.onProcessGetfieldReference(e, t, b, f, o);
-    if (isExcluded(e)) return;
-    if (queryOnlyAtSnapshot) events.add(new Event(e, b, f, false));
-    else {
-      abstraction.ensureComputed();
-      onFieldRead(e, abstraction.getValue(b), f);
-    }
+    onFieldRead(e, abstraction.getValue(b), f);
 	}
 	
 	@Override
@@ -128,57 +92,34 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
 		TIntIterator it = accessedFields.iterator();
 		while (it.hasNext()) {
 			StationaryFieldQuery q = new StationaryFieldQuery(it.next());
-			if (shouldAnswerQueryHit(q)) {
-        // True iff non-stationary
-				answerQuery(q, !stationaryFields.contains(q.f));
-			}
+			if (!fieldIsExcluded(q.f))
+				answerQuery(q, !stationaryFields.contains(q.f)); // True iff non-stationary
 		}
-	}
-	
-	@Override
-	protected boolean decideIfSelected() {
-		return true;
 	}
 	
 	private void onFieldRead(int e, Object b, int f) {
-		if (e >= 0 && b != null && f != 0) {
-			if (!accessedFields.contains(f)) {
-				accessedFields.add(f);
-				stationaryFields.add(f);
-			}
-			TIntHashSet S = obj2readFields.get(b);
-			if (S == null) {
-				S = new TIntHashSet();
-				obj2readFields.put(b, S);
-			}
-			S.add(f);
-		}
+    if (!accessedFields.contains(f)) {
+      accessedFields.add(f);
+      stationaryFields.add(f);
+    }
+    TIntHashSet S = obj2readFields.get(b);
+    if (S == null) {
+      S = new TIntHashSet();
+      obj2readFields.put(b, S);
+    }
+    S.add(f);
 	}
 
 	private void onFieldWrite(int e, Object b, int f) {
-		if (e >= 0 && b != null && f != 0) {
-			if (!accessedFields.contains(f)) {
-				accessedFields.add(f);
-				stationaryFields.add(f);
-			}
-			if (obj2readFields.containsKey(b)) {
-				TIntHashSet S = obj2readFields.get(b);
-				if (S != null) {
-					stationaryFields.remove(f);
-				}
-			}
+    if (!accessedFields.contains(f)) {
+      accessedFields.add(f);
+      stationaryFields.add(f);
+    }
+    if (obj2readFields.containsKey(b)) {
+      TIntHashSet S = obj2readFields.get(b);
+      if (S != null) {
+        stationaryFields.remove(f);
+      }
 		}
 	}
-
-  @Override public SnapshotResult takeSnapshot() {
-    if (queryOnlyAtSnapshot) { // Lazy approximation
-      abstraction.ensureComputed();
-      for (Event event : events) {
-        if (event.write) onFieldWrite(event.e, abstraction.getValue(event.b), event.f);
-        else onFieldRead(event.e, abstraction.getValue(event.b), event.f);
-      }
-      events.clear();
-    }
-    return null;
-  }
 }

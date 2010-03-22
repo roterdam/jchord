@@ -31,7 +31,6 @@ public class RandomAbstraction extends Abstraction {
 	@Override public void nodeCreated(ThreadInfo info, int o) {
     setValue(o, random.nextInt(size));
 	}
-	@Override public void nodeDeleted(int o) { }
-
-	@Override public void ensureComputed() { }
+	@Override public void edgeCreated(int b, int f, int o) { }
+	@Override public void edgeDeleted(int b, int f, int o) { }
 }

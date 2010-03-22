@@ -40,10 +40,6 @@ public class RecencyAbstraction extends Abstraction {
 	}
 
 	@Override
-	public void ensureComputed() {
-	}
-
-	@Override
 	public void nodeCreated(ThreadInfo info, int o) {
 		Object val = abstraction.computeValue(info, o);
     TIntArrayList objects = val2lastObjects.get(val);
@@ -76,7 +72,6 @@ public class RecencyAbstraction extends Abstraction {
     setValue(o, val);
 	}
 
-	@Override
-	public void nodeDeleted(int o) {
-	}
+	@Override public void edgeCreated(int b, int f, int o) { }
+	@Override public void edgeDeleted(int b, int f, int o) { }
 }
