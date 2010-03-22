@@ -112,8 +112,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 			}
 			final String instrSchemeFileName = Properties.instrSchemeFileName;
 			scheme.save(instrSchemeFileName);
-			instrumentor = new Instrumentor(Program.v(), scheme);
-			instrumentor.run();
+			if (!Properties.reuseTrace) {
+				instrumentor = new Instrumentor(Program.v(), scheme);
+				instrumentor.run();
+			}
 			if (scheme.hasEnterAndLeaveLoopEvent()) {
 				init4loopConsistency();
 			}
@@ -136,82 +138,92 @@ public class DynamicAnalysis extends JavaAnalysis {
 			final boolean processBuffer =
 				runtimeClassName.equals(BufferedRuntime.class.getName());
 			if (processBuffer) {
-				final String crudeTraceFileName = Properties.crudeTraceFileName;
 				final String finalTraceFileName = Properties.finalTraceFileName;
-				boolean needsTraceTransform = scheme.needsTraceTransform();
-				final String traceFileName = needsTraceTransform ?
-					crudeTraceFileName : finalTraceFileName;
-				instrProgramCmd += 
-					"=trace_block_size=" + Properties.traceBlockSize +
-					"=trace_file_name=" + traceFileName +
-					" " + mainClassName + " ";
-				FileUtils.deleteFile(crudeTraceFileName);
-				FileUtils.deleteFile(finalTraceFileName);
-				final boolean doTracePipe = Properties.doTracePipe;
-				if (doTracePipe) {
-					ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
-					ProcessExecutor.execute("mkfifo " + finalTraceFileName);
-				}
-				Runnable traceTransformer = new Runnable() {
-					public void run() {
-						try {
-							if (DEBUG) {
-								System.out.println("ENTER TRACE_TRANSFORMER");
-								(new TracePrinter(crudeTraceFileName, instrumentor)).run();
-								System.out.println("LEAVE TRACE_TRANSFORMER");
-							}
-							(new TraceTransformer(crudeTraceFileName,
-							 	finalTraceFileName, scheme)).run();
-						} catch (Throwable ex) {
-							ex.printStackTrace();
-							System.exit(1);
-						}
+				if (Properties.reuseTrace) {
+					initAllPasses();
+					for (String runID : runIDs) {
+						Messages.log("DYNAMIC.STARTING_RUN", runID);
+						processTrace(finalTraceFileName);
+						Messages.log("DYNAMIC.FINISHED_RUN", runID);
 					}
-				};
-				Runnable traceProcessor = new Runnable() {
-					public void run() {
-						try {
-							if (DEBUG) {
-								System.out.println("ENTER TRACE_PROCESSOR");
-								(new TracePrinter(finalTraceFileName, instrumentor)).run();
-								System.out.println("LEAVE TRACE_PROCESSOR");
-							}
-							processTrace(finalTraceFileName);
-						} catch (Throwable ex) {
-							ex.printStackTrace();
-							System.exit(1);
-						}
+					doneAllPasses();
+				} else {
+					final String crudeTraceFileName = Properties.crudeTraceFileName;
+					boolean needsTraceTransform = scheme.needsTraceTransform();
+					final String traceFileName = needsTraceTransform ?
+						crudeTraceFileName : finalTraceFileName;
+					instrProgramCmd += 
+						"=trace_block_size=" + Properties.traceBlockSize +
+						"=trace_file_name=" + traceFileName +
+						" " + mainClassName + " ";
+					FileUtils.deleteFile(crudeTraceFileName);
+					FileUtils.deleteFile(finalTraceFileName);
+					final boolean doTracePipe = Properties.doTracePipe;
+					if (doTracePipe) {
+						ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
+						ProcessExecutor.execute("mkfifo " + finalTraceFileName);
 					}
-				};
-				final boolean serial = doTracePipe ? false : true;
-				final Executor executor = new Executor(serial);
-				initAllPasses();
-				for (String runID : runIDs) {
-					Messages.log("DYNAMIC.STARTING_RUN", runID);
-					final String args = System.getProperty("chord.args." + runID, "");
-					final String cmd = instrProgramCmd + args;
-					Runnable instrProgram = new Runnable() {
+					Runnable traceTransformer = new Runnable() {
 						public void run() {
 							try {
-								int result = ProcessExecutor.execute(cmd);
-								if (result != 0)
-									instrJVMfailed(result);
+								if (DEBUG) {
+									System.out.println("ENTER TRACE_TRANSFORMER");
+									(new TracePrinter(crudeTraceFileName, instrumentor)).run();
+									System.out.println("LEAVE TRACE_TRANSFORMER");
+								}
+								(new TraceTransformer(crudeTraceFileName,
+								 	finalTraceFileName, scheme)).run();
 							} catch (Throwable ex) {
 								ex.printStackTrace();
 								System.exit(1);
 							}
 						}
 					};
-					executor.execute(instrProgram);
-					if (processBuffer) {
-						if (needsTraceTransform)
-							executor.execute(traceTransformer);
-						executor.execute(traceProcessor);
-						executor.waitForCompletion();
+					Runnable traceProcessor = new Runnable() {
+						public void run() {
+							try {
+								if (DEBUG) {
+									System.out.println("ENTER TRACE_PROCESSOR");
+									(new TracePrinter(finalTraceFileName, instrumentor)).run();
+									System.out.println("LEAVE TRACE_PROCESSOR");
+								}
+								processTrace(finalTraceFileName);
+							} catch (Throwable ex) {
+								ex.printStackTrace();
+								System.exit(1);
+							}
+						}
+					};
+					final boolean serial = doTracePipe ? false : true;
+					final Executor executor = new Executor(serial);
+					initAllPasses();
+					for (String runID : runIDs) {
+						Messages.log("DYNAMIC.STARTING_RUN", runID);
+						final String args = System.getProperty("chord.args." + runID, "");
+						final String cmd = instrProgramCmd + args;
+						Runnable instrProgram = new Runnable() {
+							public void run() {
+								try {
+									int result = ProcessExecutor.execute(cmd);
+									if (result != 0)
+										instrJVMfailed(result);
+								} catch (Throwable ex) {
+									ex.printStackTrace();
+									System.exit(1);
+								}
+							}
+						};
+						executor.execute(instrProgram);
+						if (processBuffer) {
+							if (needsTraceTransform)
+								executor.execute(traceTransformer);
+							executor.execute(traceProcessor);
+							executor.waitForCompletion();
+						}
+						Messages.log("DYNAMIC.FINISHED_RUN", runID);
 					}
-					Messages.log("DYNAMIC.FINISHED_RUN", runID);
+					doneAllPasses();
 				}
-				doneAllPasses();
 			} else {
 				instrProgramCmd += " " + mainClassName + " ";
 				initAllPasses();

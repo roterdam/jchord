@@ -117,7 +117,14 @@ public class Properties {
 
 	// Chord instrumentation properties
 
+	public final static boolean reuseTrace = buildBoolProp("chord.reuse.trace", false);
 	public final static boolean doTracePipe = buildBoolProp("chord.trace.pipe", true);
+	static {
+		if (reuseTrace) {
+			assert(!doTracePipe);
+			assert(reuseScope);
+		}
+	}
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 	public final static String runtimeClassName =
 		System.getProperty("chord.runtime.class", chord.runtime.BufferedRuntime.class.getName());
@@ -211,6 +218,7 @@ public class Properties {
 		System.out.println("chord.save.maps: " + saveDomMaps);
 
 		System.out.println("*** Chord instrumentation properties:");
+		System.out.println("chord.reuse.trace: " + reuseTrace);
 		System.out.println("chord.trace.pipe: " + doTracePipe);
 		System.out.println("chord.trace.block.size: " + traceBlockSize);
 		System.out.println("chord.runtime.class: " + runtimeClassName);
