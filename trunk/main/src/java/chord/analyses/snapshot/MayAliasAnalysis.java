@@ -30,50 +30,6 @@ import chord.util.tuple.object.Pair;
  */
 @Chord(name = "ss-may-alias")
 public class MayAliasAnalysis extends SnapshotAnalysis {
-	class Event {
-		public Event(int e, int b) {
-			this.e = e;
-			this.b = b;
-		}
-
-		int e;
-		int b;
-
-		@Override
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;
-			result = prime * result + getOuterType().hashCode();
-			result = prime * result + b;
-			result = prime * result + e;
-			return result;
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			Event other = (Event) obj;
-			if (!getOuterType().equals(other.getOuterType()))
-				return false;
-			if (b != other.b)
-				return false;
-			if (e != other.e)
-				return false;
-			return true;
-		}
-
-		private MayAliasAnalysis getOuterType() {
-			return MayAliasAnalysis.this;
-		}
-	}
-
-	List<Event> events = new ArrayList<Event>(); // For batching
-
 	private class MayAliasQuery extends Query {
 		public final int e1;
 		public final int e2;
@@ -122,14 +78,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 	@Override
 	public void fieldAccessed(int e, int t, int b, int f, int o) {
 		super.fieldAccessed(e, t, b, f, o);
-		if (queryOnlyAtSnapshot) {
-			events.add(new Event(e, b)); // Batch up objects, deal with them at
-											// snapshot
-		} else {
-			assert (b > 0);
-			abstraction.ensureComputed(); // Slow!
-			updatePointsTo(e, abstraction.getValue(b));
-		}
+    updatePointsTo(e, abstraction.getValue(b));
 	}
 
 	@Override
@@ -175,38 +124,23 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 			int e1 = domE.indexOf(quad0);
 			Quad quad1 = (Quad) p.val1;
 			int e2 = domE.indexOf(quad1);
-	//      if (e1 == e2) continue;
-			assert (e1 != e2);
+
+	    if (e1 == e2) continue; // pliang 03/20/10: temporary fix (don't change this)
+			//assert (e1 != e2);
+      if (statementIsExcluded(e1) || statementIsExcluded(e2)) continue;
+
 			MayAliasQuery q = new MayAliasQuery(e1, e2);
-			if (shouldAnswerQueryHit(q)) {
-				answerQuery(q, true);
-			}
+      answerQuery(q, true);
 		}
 		aliasingRel.close();
 	}
 
-	@Override
-	protected boolean decideIfSelected() {
-		return true;
-	}
-
 	private void updatePointsTo(int e, Object b) {
-		if (e >= 0 && b != null) {
-			Set<Object> pts = loc2abstractions.get(e);
-			if (pts == null) {
-				pts = new HashSet<Object>();
-				loc2abstractions.put(e, pts);
-			}
-			pts.add(b);
-		}
-	}
-
-  @Override public SnapshotResult takeSnapshot() {
-    if (queryOnlyAtSnapshot) {
-      for (Event event : events)
-        updatePointsTo(event.e, abstraction.getValue(event.b));
-      events.clear();
+    Set<Object> pts = loc2abstractions.get(e);
+    if (pts == null) {
+      pts = new HashSet<Object>();
+      loc2abstractions.put(e, pts);
     }
-    return null;
-  }
+    pts.add(b);
+	}
 }

@@ -36,24 +36,16 @@ public abstract class Abstraction {
 	protected HashMap<Object, List<Integer>> a2os = null; // abstraction value a -> nodes o with that abstraction value
 	// For incrementally creating the abstraction (if necessary).
 	public abstract void nodeCreated(ThreadInfo info, int o);
-	public abstract void nodeDeleted(int o);
-	public void edgeCreated(int b, int f, int o) { }
-  public void edgeDeleted(int b, int f, int o) { }
+	public abstract void edgeCreated(int b, int f, int o);
+	public abstract void edgeDeleted(int b, int f, int o);
 
 	public void init(AbstractionInitializer initializer) {
 		initializer.initAbstraction(this);
     if (require_a2o) a2os = new HashMap<Object, List<Integer>>(); 
 	}
 
-	// Called before we start using this abstraction in arbitrary ways, so do
-	// whatever is necessary.
-	// Try to keep this function empty and incrementally update the abstraction.
-	public abstract void ensureComputed();
-
-	// Return the value of the abstraction (called after ensureComputed)
-	public Object getValue(int o) {
-		return o2a.get(o);
-	}
+	// Return the value of the abstraction
+	public Object getValue(int o) { return o2a.get(o); }
 	
 	public Set<Object> getAbstractValues() {
 		if (require_a2o)

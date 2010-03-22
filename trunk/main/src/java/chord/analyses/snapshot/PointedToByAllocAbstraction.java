@@ -60,13 +60,7 @@ class PointedToByAllocAbstraction extends Abstraction {
 	}
 
 	@Override
-	public void ensureComputed() {
-		// This is a no-op.
-	}
-
-	@Override
 	public void edgeCreated(int b, int f, int o) {
-		super.edgeCreated(b, f, o);
 		if (b != 0 && o != 0 && f != 0) {
 			int h = state.o2h.get(b);
 			if (h >= 0) {
@@ -87,7 +81,6 @@ class PointedToByAllocAbstraction extends Abstraction {
 
 	@Override
 	public void edgeDeleted(int b, int f, int o) {
-		super.edgeDeleted(b, f, o);
 		if (b != 0 && o != 0 && f != 0) {
 			int h = state.o2h.get(b);
 			if (h >= 0) {
@@ -101,12 +94,6 @@ class PointedToByAllocAbstraction extends Abstraction {
 				}
 			}
 		}
-	}
-
-	@Override
-	public void nodeDeleted(int o) {
-		throw new RuntimeException(
-				"Operation 'nodeDeleted' not currently supported.");
 	}
 
 	@Override

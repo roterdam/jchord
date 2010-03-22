@@ -42,16 +42,10 @@ public class ReachableFromAbstraction extends LabelBasedAbstraction {
 	}
 
 	@Override public String toString() { return "reach("+abstraction+")"; }
-	@Override public void ensureComputed() { }
 
 	@Override
 	protected TIntHashSet getRootsImpl(Label l) {
 		return value2objects.get(((MyLabel)l).value);
-	}
-
-	@Override
-	public void nodeDeleted(int o) {
-		throw new RuntimeException("Operation 'nodeDeleted' not currently supported.");
 	}
 
 	@Override
