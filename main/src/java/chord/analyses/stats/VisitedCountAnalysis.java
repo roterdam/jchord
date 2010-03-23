@@ -13,6 +13,7 @@ import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.OutDirUtils;
 import chord.project.analyses.DynamicAnalysis;
+import chord.project.Project;
 
 /**
  * @author omert
@@ -51,10 +52,11 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
 	}
 	
 	public void initAllPasses() {
-		domM = instrumentor.getDomM();
+    super.initAllPasses();
+    domM = (DomM)Project.getTrgt("M"); Project.runTask(domM);
 	}
 	
-    public void processEnterMethod(int m, int t) {
+  @Override public void processEnterMethod(int m, int t) {
 		if (m >= 0) {
 			jq_Method mthd = domM.get(m);
 			jq_Class klass = mthd.getDeclaringClass();
@@ -70,7 +72,7 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
 				}
 			}
 		}
-    }
+  }
     
     public void processLeaveMethod(int m, int t) {
     	/* Do nothing. */
