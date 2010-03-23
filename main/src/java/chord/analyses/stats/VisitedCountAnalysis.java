@@ -57,15 +57,17 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
     public void processEnterMethod(int m, int t) {
 		if (m >= 0) {
 			jq_Method mthd = domM.get(m);
-			visitedMethods.add(mthd);
 			jq_Class klass = mthd.getDeclaringClass();
 			visitedClasses.add(klass);
 			byte[] bytecode = mthd.getBytecode();
-			totalBytecode += bytecode.length;
+			if (visitedMethods.add(mthd)) {
+				totalBytecode += bytecode.length;
+			}
 			if (isAppMethod(mthd)) {
-				visitedAppMethods.add(mthd);
 				visitedAppClasses.add(klass);
-				totalAppBytecode += bytecode.length;
+				if (visitedAppMethods.add(mthd)) {
+					totalAppBytecode += bytecode.length;
+				}
 			}
 		}
     }
