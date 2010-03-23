@@ -75,9 +75,10 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
     }
     
     private boolean isAppMethod(jq_Method m) {
-    	String name = m.getName().toString();
+    	String className = m.getDeclaringClass().getName();
+//    	OutDirUtils.logOut("%s", className);
     	for (String pref : LIB_PREFIXES) {
-    		if (name.startsWith(pref)) {
+    		if (className.startsWith(pref)) {
     			return false;
     		}
     	}
