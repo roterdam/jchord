@@ -34,6 +34,10 @@ public class Utils {
   }
 }
 
+class BoolRef {
+  public boolean value;
+}
+
 class Execution {
   HashMap<Object,Object> output = new LinkedHashMap<Object,Object>(); // For statistics, which get dumped
   int numErrors = 0;

@@ -34,6 +34,7 @@ import gnu.trove.TIntIntHashMap;
 import gnu.trove.TLongIntHashMap;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
+import gnu.trove.TIntProcedure;
 import gnu.trove.TIntIntProcedure;
 
 /**
@@ -50,7 +51,6 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
 
   @Override public boolean require_a2o() { return true; } // Need to get list of objects associated with an abstraction
   @Override public boolean requireGraph() { return true; } // Need the graph
-
 
   // These methods add nodes to the graph
   @Override public void onProcessPutstaticReference(int e, int t, int b, int f, int o) { // b.f = o, where b is static
@@ -71,19 +71,19 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
   @Override public void abstractionChanged(int o, Object a) {
     // When the abstraction changes, more things might get smashed together, so
     // we need to propagate more escaping.
-    List<Integer> os = abstraction.a2os.get(a);
     // Does anything escape?
-    boolean escaped = false;
-    for (int oo : os) {
-      if (escapedNodes.contains(oo)) {
-        escaped = true;
-        break;
-      }
-    }
-    // If escapes, then everything escapes.
-    if (escaped) {
-      for (int oo : os)
+    final BoolRef escaped = new BoolRef();
+    
+    abstraction.getObjects(a).forEach(new TIntProcedure() { public boolean execute(int oo) {
+      if (escapedNodes.contains(oo)) escaped.value = true;
+      return !escaped.value;
+    } });
+    // If anything escapes, then everything escapes.
+    if (escaped.value) {
+      abstraction.getObjects(a).forEach(new TIntProcedure() { public boolean execute(int oo) {
         setEscapeRecurse(oo);
+        return true;
+      } });
     }
   }
 
@@ -94,18 +94,20 @@ public class ThreadEscapeAnalysis extends SnapshotAnalysis {
   private void setEscapeRecurse(int o) {
     if (escapedNodes.contains(o)) return;
     escapedNodes.add(o);
+
     // Follow edges
     for (Edge e : state.o2edges.get(o))
       setEscapeRecurse(e.o);
+
     // Follow abstractions
     Object a = abstraction.getValue(o);
     if (verbose >= 1) X.logs("SETESCAPE o=%s a=%s", ostr(o), a);
     if (fieldAccessOut != null)
       fieldAccessOut.printf("ESC %s | %s\n", ostr(o), estr(curr_e));
-    List<Integer> os = abstraction.a2os.get(a);
-    if (os != null) {
-      for (int oo : os) setEscapeRecurse(oo);
-    }
+    abstraction.getObjects(a).forEach(new TIntProcedure() { public boolean execute(int oo) {
+      setEscapeRecurse(oo);
+      return true;
+    } });
   }
 
   @Override public void fieldAccessed(int e, int t, int b, int f, int o) {

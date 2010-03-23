@@ -102,4 +102,6 @@ class PointedToByAllocAbstraction extends Abstraction {
 		object2pointers.put(o, new TIntIntHashMap());
 		setValue(o, Value.EMPTY_VALUE);
 	}
+
+  @Override public boolean requireGraph() { return true; }
 }

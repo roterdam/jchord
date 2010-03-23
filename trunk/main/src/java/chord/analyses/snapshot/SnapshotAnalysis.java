@@ -92,6 +92,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   public boolean require_a2o() { return false; } // By default, we don't need a map from abstract to concrete
   public boolean requireGraph() { return false; } // By default, we don't construct the graph (FUTURE: abstraction could require a graph)
 
+  private boolean anyRequireGraph() { return requireGraph() || abstraction.requireGraph(); }
+
   public Abstraction parseAbstraction(String abstractionType) {
     if (abstractionType.equals("none")) return new NoneAbstraction();
     if (abstractionType.equals("random")) return new RandomAbstraction(randSize);
@@ -371,12 +373,12 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   //////////////////////////////
   // Override these graph construction handlers (remember to call super though)
   
-  public void abstractionChanged(int o, Object a) { } // Override if necessary
+  public abstract void abstractionChanged(int o, Object a); // Override if necessary
 
   public void nodeCreated(int t, int o) {
     assert (o > 0);
 
-    if (requireGraph())
+    if (anyRequireGraph())
       state.o2edges.put(o, new ArrayList<Edge>());
 
     ThreadInfo info = threadInfo(t);
@@ -391,7 +393,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
   public void edgeCreated(int t, int b, int f, int o) {
     assert (b > 0 && f >= 0 && o >= 0);
-    if (!requireGraph()) return;
+    if (!anyRequireGraph()) return;
 
     // Strong update: remove existing field pointer
     List<Edge> edges = state.o2edges.get(b);

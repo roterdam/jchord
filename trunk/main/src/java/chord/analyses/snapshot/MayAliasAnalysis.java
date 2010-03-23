@@ -73,10 +73,10 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
     @Override public String toString() { return estr(e1) + " ; " + estr(e2); }
 	}
 
-	private final TIntObjectHashMap<Set<Object>> loc2abstractions = new TIntObjectHashMap<Set<Object>>();
-	protected final Set<IntPair> aliasingRacePairSet = new HashSet<IntPair>();
+	//private final TIntObjectHashMap<Set<Object>> loc2abstractions = new TIntObjectHashMap<Set<Object>>();
+	//protected final Set<IntPair> aliasingRacePairSet = new HashSet<IntPair>();
 
-  HashMap<Object,TIntHashSet> a2es = new HashMap<Object,TIntHashSet>(); // abstract value -> set of accessing statements e
+  TIntObjectHashMap<TIntHashSet> o2es = new TIntObjectHashMap<TIntHashSet>(); // object -> set of statements e accessing o
 
 	@Override
 	public String propertyName() {
@@ -86,13 +86,14 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 	@Override
 	public void fieldAccessed(int e, int t, int b, int f, int o) {
 		super.fieldAccessed(e, t, b, f, o);
-    updatePointsTo(e, abstraction.getValue(b));
+    //updatePointsTo(e, abstraction.getValue(b));
+    updatePointsTo(e, b);
 	}
 
 	@Override
 	public void initPass() {
 		super.initPass();
-		loc2abstractions.clear();
+		//loc2abstractions.clear();
 	}
 
 	@SuppressWarnings("unchecked")
@@ -103,12 +104,10 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
   }
 
   public void donePassJava() {
+    // For each accessing statement, see what field and whether it is written
     int E = domE.size();
     int[] e2f = new int[E];
     boolean[] isWrite = new boolean[E];
-    HashSet<IntPair> racingPairs = new HashSet<IntPair>();
-
-    // For each accessing statement, see what field and whether it is written
     for(int e = 0; e < E; e++) {
       Quad q = (Quad)domE.get(e);
       Operator op = q.getOperator();
@@ -127,6 +126,18 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
       }
     }
 
+    // Smash objects together
+    HashMap<Object,TIntHashSet> a2es = new HashMap<Object,TIntHashSet>(); // abstract value -> set of accessing statements e
+    for (int o : o2es.keys()) {
+      Object a = abstraction.getValue(o);
+      TIntHashSet set = a2es.get(a);
+      if (set == null) a2es.put(a, set = new TIntHashSet());
+      for (int e : o2es.get(o).toArray())
+        set.add(e);
+    }
+
+    // Find pairs of racing statements
+    HashSet<IntPair> racingPairs = new HashSet<IntPair>();
     for (TIntHashSet es : a2es.values()) {
       for (int e1 : es.toArray()) {
         for (int e2 : es.toArray()) {
@@ -147,7 +158,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
     }
   }
 
-  public void donePassDatalog() {
+  /*public void donePassDatalog() {
 		final ProgramDom<Object> domS = (ProgramDom) Project.getTrgt("S");
 		loc2abstractions.forEachValue(new TObjectProcedure<Set<Object>>() {
 			@Override
@@ -190,18 +201,20 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
       answerQuery(q, true);
 		}
 		aliasingRel.close();
-	}
+	}*/
 
-	private void updatePointsTo(int e, Object b) {
-    Set<Object> pts = loc2abstractions.get(e);
+	private void updatePointsTo(int e, int b) {
+    /*Set<Object> pts = loc2abstractions.get(e);
     if (pts == null) {
       pts = new HashSet<Object>();
       loc2abstractions.put(e, pts);
     }
-    pts.add(b);
+    pts.add(b);*/
 
-    TIntHashSet set = a2es.get(b);
-    if (set == null) a2es.put(b, set = new TIntHashSet());
+    TIntHashSet set = o2es.get(b);
+    if (set == null) o2es.put(b, set = new TIntHashSet());
     set.add(e);
 	}
+
+  @Override public void abstractionChanged(int o, Object a) { }
 }

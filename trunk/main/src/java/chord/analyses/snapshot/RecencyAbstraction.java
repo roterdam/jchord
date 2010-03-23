@@ -74,4 +74,5 @@ public class RecencyAbstraction extends Abstraction {
 
 	@Override public void edgeCreated(int b, int f, int o) { }
 	@Override public void edgeDeleted(int b, int f, int o) { }
+  @Override public boolean requireGraph() { return abstraction.requireGraph(); }
 }
