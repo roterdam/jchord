@@ -60,9 +60,6 @@ public abstract class Abstraction {
 
 	// Helpers
 	protected void setValue(int o, Object a) {
-		if (!state.o2edges.containsKey(o))
-			throw new RuntimeException("" + o);
-		if (separateNodes.contains(o)) a = "-";
     if (require_a2o) {
       Object old_a = o2a.get(o);
       if (old_a != null) { // There was an old abstraction there already
@@ -76,11 +73,6 @@ public abstract class Abstraction {
     }
 		o2a.put(o, a);
 		listener.abstractionChanged(o, a);
-	}
-
-	protected void removeValue(int o) {
-		Object a = o2a.remove(o);
-		a2os.get(a).remove((Integer) o);
 	}
 }
 
