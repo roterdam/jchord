@@ -28,19 +28,27 @@ public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 	public String propertyName() {
 		return "shared-lock-access";
 	}
+
+  private class SharedLockAccessQuery extends Query {
+    public final int l;
+    public SharedLockAccessQuery(int l) { this.l = l; }
+    @Override public int hashCode() { return l; }
+    @Override public boolean equals(Object that) { return this.l == ((SharedLockAccessQuery)that).l; }
+    @Override public String toString() { return lstr(l); }
+  }
 	
 	@Override
 	public void donePass() {
 		super.donePass();
 		for (TIntIterator it = visitedStatements.iterator(); it.hasNext(); ) {
-			int e = it.next();
-			ProgramPointQuery q = new ProgramPointQuery(e);
-			if (!statementIsExcluded(e)) {
+			int l = it.next();
+			SharedLockAccessQuery q = new SharedLockAccessQuery(l);
+			if (!lockIsExcluded(l)) {
 				/* 
 				 * Give a positive answer iff the lock used by the lock-acquisition statement has been accessed by
 				 * more than one thread. 
 				 */
-				answerQuery(q, sharedLockAcquisitionStatements.contains(e));
+				answerQuery(q, sharedLockAcquisitionStatements.contains(l));
 			}
 		}
 		abstraction2threads.clear();
@@ -50,6 +58,8 @@ public class SharedLockAccessAnalysis extends SnapshotAnalysis {
 
 	@Override
 	public void onProcessAcquireLock(int l, int t, int o) {
+    if (l < 0) return;
+
 		Object abs = abstraction.getValue(o);
 		TIntHashSet S = abstraction2threads.get(abs);
 		if (S == null) {

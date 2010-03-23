@@ -18,6 +18,7 @@ import java.util.Stack;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Inst;
 import chord.instr.InstrScheme;
 import chord.program.Program;
 import chord.project.Properties;
@@ -28,6 +29,7 @@ import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.doms.DomH;
 import chord.doms.DomI;
+import chord.doms.DomL;
 import chord.doms.DomM;
 
 /**
@@ -48,6 +50,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 	protected DomF domF;
 	protected DomH domH;
 	protected DomI domI;
+	protected DomL domL;
 	protected DomM domM;
 
   // Execution management/logging
@@ -73,7 +76,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   State state = new State();
   TIntObjectHashMap<ThreadInfo> threadInfos = new TIntObjectHashMap<ThreadInfo>(); // thread t -> ThreadInfo
   Set<jq_Class> excludedClasses = new HashSet<jq_Class>();
-  boolean[] statementIsExcluded, fieldIsExcluded; // For answering queries (precomputed)
+  boolean[] statementIsExcluded, fieldIsExcluded, lockIsExcluded; // For answering queries (precomputed)
 
   HashMap<Query, QueryResult> queryResults = new HashMap<Query, QueryResult>();
   int numQueryHits;
@@ -87,6 +90,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   }
 
   public boolean require_a2o() { return false; } // By default, we don't need a map from abstract to concrete
+  public boolean requireGraph() { return false; } // By default, we don't construct the graph (FUTURE: abstraction could require a graph)
 
   public Abstraction parseAbstraction(String abstractionType) {
     if (abstractionType.equals("none")) return new NoneAbstraction();
@@ -122,6 +126,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     domF = (DomF)Project.getTrgt("F"); Project.runTask(domF);
     domH = (DomH)Project.getTrgt("H"); Project.runTask(domH);
     domI = (DomI)Project.getTrgt("I"); Project.runTask(domI);
+    domL = (DomL)Project.getTrgt("L"); Project.runTask(domL);
     domM = (DomM)Project.getTrgt("M"); Project.runTask(domM);
 
     X = new Execution();
@@ -199,12 +204,15 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     jq_Class c = ((jq_Field)domF.get(f)).getDeclaringClass();
     return excludedClasses.contains(c);
   }
-  public boolean statementIsExcluded(int e) {
-    return statementIsExcluded[e];
+  private boolean computeLockIsExcluded(int l) {
+    if (includeAllQueries) return false;
+    Inst inst = (Inst)domL.get(l);
+    jq_Class c = Program.v().getMethod(inst).getDeclaringClass();
+    return excludedClasses.contains(c);
   }
-  public boolean fieldIsExcluded(int f) {
-    return fieldIsExcluded[f];
-  }
+  public boolean statementIsExcluded(int e) { return statementIsExcluded[e]; }
+  public boolean fieldIsExcluded(int f) { return fieldIsExcluded[f]; }
+  public boolean lockIsExcluded(int l) { return lockIsExcluded[l]; }
 
   public boolean isIgnore(int o) {
     // Allow o = 0 (null objects)
@@ -299,17 +307,21 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     int E = domE.size();
     int H = domH.size();
     int F = domF.size();
+    int L = domL.size();
 
     // Compute excluded stuff
     computedExcludedClasses();
     statementIsExcluded = new boolean[E];
     fieldIsExcluded = new boolean[F];
+    lockIsExcluded = new boolean[L];
     for (int e = 0; e < E; e++)
       statementIsExcluded[e] = computeStatementIsExcluded(e);
     for (int f = 1; f < F; f++)
       fieldIsExcluded[f] = computeFieldIsExcluded(f);
+    for (int l = 0; l < L; l++)
+      lockIsExcluded[l] = computeLockIsExcluded(l);
 
-    X.logs("initAllPasses: |E| = %s, |H| = %s, |F| = %s, excluding %s classes", E, H, F, excludedClasses.size());
+    X.logs("initAllPasses: |E| = %s, |H| = %s, |F| = %s, |L| = %s, excluding %s classes", E, H, F, L, excludedClasses.size());
     abstraction.init(this);
   }
   
@@ -363,8 +375,9 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
   public void nodeCreated(int t, int o) {
     assert (o > 0);
-    if (state.o2edges.containsKey(o)) return; // Already exists
-    state.o2edges.put(o, new ArrayList<Edge>());
+
+    if (requireGraph())
+      state.o2edges.put(o, new ArrayList<Edge>());
 
     ThreadInfo info = threadInfo(t);
     abstraction.nodeCreated(info, o);
@@ -378,6 +391,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
   public void edgeCreated(int t, int b, int f, int o) {
     assert (b > 0 && f >= 0 && o >= 0);
+    if (!requireGraph()) return;
 
     // Strong update: remove existing field pointer
     List<Edge> edges = state.o2edges.get(b);
@@ -436,6 +450,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   public String istr(int i) { return i < 0 ? "-" : domI.toUniqueString(domI.get(i)); } // call site
   public String ostr(int o) { return o < 0 ? "-" : (o == 0 ? "null" : "O"+o); } // concrete object
   public String tstr(int t) { return t < 0 ? "-" : "T"+t; } // thread
+  public String lstr(int l) { return l < 0 ? "-" : domL.toUniqueString(domL.get(l)); } // lock
 
   public String astr(Object a) {
     if (abstraction instanceof NoneAbstraction) return a.toString();
