@@ -106,6 +106,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
     int E = domE.size();
     int[] e2f = new int[E];
     boolean[] isWrite = new boolean[E];
+    HashSet<IntPair> racingPairs = new HashSet<IntPair>();
 
     // For each accessing statement, see what field and whether it is written
     for(int e = 0; e < E; e++) {
@@ -133,10 +134,16 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
           if (e2f[e1] == -1 || e2f[e2] == -1) continue; // Error in the field
           if (e2f[e1] != e2f[e2]) continue; // Has to be same field
           if (!isWrite[e1] && !isWrite[e2]) continue; // At least one has to be a write
-          MayAliasQuery q = new MayAliasQuery(e1, e2);
-          answerQuery(q, true);
+          racingPairs.add(new IntPair(e1, e2));
         }
       }
+    }
+
+    for (IntPair pair : racingPairs) {
+      int e1 = pair.idx0;
+      int e2 = pair.idx1;
+      MayAliasQuery q = new MayAliasQuery(e1, e2);
+      answerQuery(q, true);
     }
   }
 
