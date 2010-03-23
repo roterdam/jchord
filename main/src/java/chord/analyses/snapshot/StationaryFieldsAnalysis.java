@@ -5,6 +5,8 @@ package chord.analyses.snapshot;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIterator;
+import gnu.trove.TIntProcedure;
+import gnu.trove.TIntObjectHashMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -51,75 +53,43 @@ public class StationaryFieldsAnalysis extends SnapshotAnalysis {
     @Override public String toString() { return fstr(f); }
 	}
 
-	private final TIntHashSet stationaryFields = new TIntHashSet();
-	private final TIntHashSet accessedFields = new TIntHashSet();
-	private final Map<Object, TIntHashSet> obj2readFields = new HashMap<Object, TIntHashSet>(16);
+	private final TIntObjectHashMap<TIntHashSet> obj2readFields = new TIntObjectHashMap<TIntHashSet>(); // object -> set of fields read from it
+  
+	@Override public String propertyName() { return "stationary-fields"; }
+  @Override public boolean require_a2o() { return true; } // Need to get list of objects associated with an abstraction
 
-	@Override
-	public String propertyName() {
-		return "stationary-fields";
-	}
-
-	@Override
-	public void onProcessPutfieldPrimitive(int e, int t, int b, int f) {
-    onFieldWrite(e, abstraction.getValue(b), f);
-	}
-
-	@Override
-	public void onProcessPutfieldReference(int e, int t, int b, int f, int o) {
-    onFieldWrite(e, abstraction.getValue(b), f);
-	}
-
-	@Override
-	public void onProcessGetfieldPrimitive(int e, int t, int b, int f) {
-    onFieldRead(e, abstraction.getValue(b), f);
-	}
-
-	@Override
-	public void onProcessGetfieldReference(int e, int t, int b, int f, int o) {
-    onFieldRead(e, abstraction.getValue(b), f);
-	}
+	@Override public void onProcessPutfieldPrimitive(int e, int t, int b, int f) { onFieldWrite(e, b, f); }
+	@Override public void onProcessPutfieldReference(int e, int t, int b, int f, int o) { onFieldWrite(e, b, f); }
+	@Override public void onProcessGetfieldPrimitive(int e, int t, int b, int f) { onFieldRead(e, b, f); }
+	@Override public void onProcessGetfieldReference(int e, int t, int b, int f, int o) { onFieldRead(e, b, f); }
 	
-	@Override
-	public void initPass() {
-		super.initPass();
-		accessedFields.clear();
-	}
+	private void onFieldRead(int e, int b, int f) {
+    if (fieldIsExcluded(f)) return;
 
-	@Override
-	public void donePass() {
-		super.donePass();
-		TIntIterator it = accessedFields.iterator();
-		while (it.hasNext()) {
-			StationaryFieldQuery q = new StationaryFieldQuery(it.next());
-			if (!fieldIsExcluded(q.f))
-				answerQuery(q, !stationaryFields.contains(q.f)); // True iff non-stationary
-		}
-	}
-	
-	private void onFieldRead(int e, Object b, int f) {
-    if (!accessedFields.contains(f)) {
-      accessedFields.add(f);
-      stationaryFields.add(f);
-    }
     TIntHashSet S = obj2readFields.get(b);
-    if (S == null) {
-      S = new TIntHashSet();
-      obj2readFields.put(b, S);
-    }
+    if (S == null) obj2readFields.put(b, S = new TIntHashSet());
     S.add(f);
+
+    StationaryFieldQuery q = new StationaryFieldQuery(f);
+    answerQuery(q, false); // No harm in reading...
 	}
 
-	private void onFieldWrite(int e, Object b, int f) {
-    if (!accessedFields.contains(f)) {
-      accessedFields.add(f);
-      stationaryFields.add(f);
-    }
-    if (obj2readFields.containsKey(b)) {
-      TIntHashSet S = obj2readFields.get(b);
-      if (S != null) {
-        stationaryFields.remove(f);
-      }
-		}
+	private void onFieldWrite(int e, final int b, final int f) {
+    if (fieldIsExcluded(f)) return;
+
+    // Check if any object with same abstraction as b has been read
+    Object a = abstraction.getValue(b);
+    final BoolRef nonStationary = new BoolRef();
+    // Other objects bb which are indistinguishable from object b under the abstraction
+    abstraction.getObjects(a).forEach(new TIntProcedure() { public boolean execute(int bb) {
+      TIntHashSet S = obj2readFields.get(bb);
+      if (S != null && S.contains(f)) // Already read!
+        nonStationary.value = true;
+      return !nonStationary.value;
+    } });
+    StationaryFieldQuery q = new StationaryFieldQuery(f);
+    answerQuery(q, nonStationary.value);
 	}
+
+  @Override public void abstractionChanged(int o, Object a) { }
 }

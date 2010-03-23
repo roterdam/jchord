@@ -87,4 +87,6 @@ public class PointedToByAbstraction extends Abstraction {
     object2value.put(o, abstraction.computeValue(info, o));
 		mySetValue(o, new Object[0]); // No one points to o yet
 	}
+
+  @Override public boolean requireGraph() { return true; }
 }

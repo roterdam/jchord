@@ -5,6 +5,8 @@ package chord.analyses.snapshot;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIterator;
+import gnu.trove.TIntProcedure;
+import gnu.trove.TIntObjectHashMap;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -19,52 +21,42 @@ import chord.project.Chord;
  */
 @Chord(name="ss-thread-access")
 public class ThreadAccessAnalysis extends SnapshotAnalysis {
-	private final Map<Object, TIntHashSet> abs2threads = new HashMap<Object, TIntHashSet>();
-	private final TIntHashSet visitedLocations = new TIntHashSet();
-	private final TIntHashSet sharedAccessingLocations = new TIntHashSet();
+	private final TIntObjectHashMap<TIntHashSet> o2threads = new TIntObjectHashMap<TIntHashSet>(); // object o -> set of threads that have accessed o
 	
-	@Override
-	public String propertyName() {
-		return "thread-access";
-	}
-	
-	@Override
-	public void initPass() {
-		super.initPass();
-		abs2threads.clear();
-		visitedLocations.clear();
-		sharedAccessingLocations.clear();
-	}
-	
-	@Override
-	public void donePass() {
-		super.donePass();
-		for (TIntIterator it = visitedLocations.iterator(); it.hasNext(); ) {
-			ProgramPointQuery q = new ProgramPointQuery(it.next());
-			if (!statementIsExcluded(q.e)) {
-				// The query is answered positively iff the statement did access an object touched my more than one thread.
-				answerQuery(q, sharedAccessingLocations.contains(q.e));
-			}
-		}
-	}
+	@Override public String propertyName() { return "thread-access"; }
+  @Override public boolean require_a2o() { return true; } // Need to get list of objects associated with an abstraction
 
 	@Override
-	public void fieldAccessed(int e, int t, int b, int f, int o) {
+	public void fieldAccessed(int e, final int t, int b, int f, int o) {
 		super.fieldAccessed(e, t, b, f, o);
-    registerThreadAccess(t, b, e);
+
+    // Record that object b was accessed by thread t
+		TIntHashSet S = o2threads.get(b);
+		if (S == null) o2threads.put(b, S = new TIntHashSet());
+    S.add(t);
+
+    // See if b is accessed by more than one thread under the abstraction
+    // Take the union of all threads that access all objects sharing the same abstract value of b
+    if (!statementIsExcluded(e)) {
+      final BoolRef multiThreaded = new BoolRef();
+      if (S.size() > 1) multiThreaded.value = true; // Quick check: concrete says yes
+      else {
+        Object a = abstraction.getValue(b);
+        // Other objects bb which are indistinguishable from object b under the abstraction
+        abstraction.getObjects(a).forEach(new TIntProcedure() { public boolean execute(int bb) {
+          TIntHashSet S = o2threads.get(bb);
+          if (S != null) {
+            if (S.size() > 1) multiThreaded.value = true;
+            else if (S.size() == 1 && !S.contains(t)) multiThreaded.value = true;
+          }
+          return !multiThreaded.value;
+        } });
+      }
+
+			ProgramPointQuery q = new ProgramPointQuery(e);
+      answerQuery(q, multiThreaded.value);
+    }
 	}
 
-	private void registerThreadAccess(int t, int b, int e) {
-		Object abs = abstraction.getValue(b);
-		TIntHashSet S = abs2threads.get(abs);
-		if (S == null) {
-			S = new TIntHashSet();
-			abs2threads.put(abs, S);
-		}
-		S.add(t);
-		if (S.size() > 1) {
-			sharedAccessingLocations.add(e);
-		}
-		visitedLocations.add(e);
-	}
+  @Override public void abstractionChanged(int o, Object a) { }
 }

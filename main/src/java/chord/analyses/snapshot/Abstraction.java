@@ -30,22 +30,26 @@ public abstract class Abstraction {
 	public State state;
 	public AbstractionListener listener;
   public boolean require_a2o; // Whether we need to maintain the a2o map (e.g., for thread-escape)
-	public TIntHashSet separateNodes = new TIntHashSet(); // (Optional): let these objects be distinct value (not used right now)
 	// Build these as intermediate data structures
-	protected TIntObjectHashMap<Object> o2a = new TIntObjectHashMap<Object>(); // object o -> abstract value a
-	protected HashMap<Object, List<Integer>> a2os = null; // abstraction value a -> nodes o with that abstraction value
-	// For incrementally creating the abstraction (if necessary).
+
+	private TIntObjectHashMap<Object> o2a = new TIntObjectHashMap<Object>(); // object o -> abstract value a
+	private HashMap<Object, TIntArrayList> a2os = null; // abstraction value a -> nodes o with that abstraction value
+
+	// For incrementally creating the abstraction (if necessary).  Override.
 	public abstract void nodeCreated(ThreadInfo info, int o);
 	public abstract void edgeCreated(int b, int f, int o);
 	public abstract void edgeDeleted(int b, int f, int o);
+  public abstract boolean requireGraph(); // Whether we're going to get edgeCreated/edgeDeleted calls.
 
 	public void init(AbstractionInitializer initializer) {
 		initializer.initAbstraction(this);
-    if (require_a2o) a2os = new HashMap<Object, List<Integer>>(); 
+    if (require_a2o) a2os = new HashMap<Object, TIntArrayList>(); 
 	}
 
 	// Return the value of the abstraction
 	public Object getValue(int o) { return o2a.get(o); }
+  // Return all objects with that abstraction.
+  public TIntArrayList getObjects(Object a) { return a2os.get(a); }
 	
 	public Set<Object> getAbstractValues() {
 		if (require_a2o)
@@ -63,13 +67,13 @@ public abstract class Abstraction {
     if (require_a2o) {
       Object old_a = o2a.get(o);
       if (old_a != null) { // There was an old abstraction there already
-        if (old_a.equals(a))
-          return; // Haven't changed the abstraction
-        List<Integer> os = a2os.get(old_a);
-        if (os != null)
-          os.remove((Integer) o);
+        if (old_a.equals(a)) return; // Haven't changed the abstraction
+        TIntArrayList os = a2os.get(old_a);
+        if (os != null) os.remove(os.indexOf(o));
       }
-      Utils.add(a2os, a, o);
+      TIntArrayList L = a2os.get(a);
+      if (L == null) a2os.put(a, L = new TIntArrayList());
+      L.add(o);
     }
 		o2a.put(o, a);
 		listener.abstractionChanged(o, a);

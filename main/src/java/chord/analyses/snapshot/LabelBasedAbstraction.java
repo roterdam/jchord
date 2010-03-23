@@ -417,4 +417,6 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 		}
 		return visited;
 	}
+
+  @Override public boolean requireGraph() { return true; }
 }

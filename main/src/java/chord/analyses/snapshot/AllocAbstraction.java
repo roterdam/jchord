@@ -52,4 +52,6 @@ public class AllocAbstraction extends LocalAbstraction {
 
 		return buf.toString();
 	}
+
+  @Override public boolean requireGraph() { return false; }
 }

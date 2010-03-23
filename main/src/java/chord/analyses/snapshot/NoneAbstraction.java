@@ -20,8 +20,8 @@ import java.util.Set;
 
 public class NoneAbstraction extends Abstraction {
 	@Override public String toString() { return "none"; }
-	@Override public void nodeCreated(ThreadInfo info, int o) { }
+	@Override public void nodeCreated(ThreadInfo info, int o) { setValue(o, o); }
 	@Override public void edgeCreated(int b, int f, int o) { }
 	@Override public void edgeDeleted(int b, int f, int o) { }
-	@Override public Object getValue(int o) { return o; }
+  @Override public boolean requireGraph() { return false; }
 }
