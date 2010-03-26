@@ -210,6 +210,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
       loc2abstractions.put(e, pts);
     }
     pts.add(b);*/
+    if (statementIsExcluded(e)) return;
 
     TIntHashSet set = o2es.get(b);
     if (set == null) o2es.put(b, set = new TIntHashSet());
