@@ -360,9 +360,11 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     // Print out information about abstractions
     Set<Object> abstractValues = abstraction.getAbstractValues();
     int complexity = abstractValues.size(); // Complexity of this abstraction (number of abstract values)
-    PrintWriter out = Utils.openOut(X.path("snapshot-abstractions"));
-    for (Object a : abstractValues) out.println(a);
-    out.close();
+    if (false) {
+      PrintWriter out = Utils.openOut(X.path("snapshot-abstractions"));
+      for (Object a : abstractValues) out.println(a);
+      out.close();
+    }
     X.logs("Abstract complexity: %d values", complexity);
     X.output.put("complexity", complexity);
 
