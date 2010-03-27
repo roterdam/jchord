@@ -356,7 +356,7 @@ public class Instrumentor {
 			instrClass(c);
 		Messages.log("INSTR.FINISHED");
 	}
-	private void instrClass(jq_Class c) throws NotFoundException, CannotCompileException, IOException {
+	private void instrClass(jq_Class c) {
 		String cName = c.getName();
 		boolean match = false;
 		for (String s : scopeExcludedPrefixes) {
@@ -386,7 +386,12 @@ public class Instrumentor {
 			Messages.log("INSTR.CLASS_NOT_BOOT_NOR_USER", cName, resourceName);
 			return;
 		}
-		CtClass clazz = pool.get(cName);
+		CtClass clazz;
+		try {
+			clazz = pool.get(cName);
+		} catch (NotFoundException ex) {
+			throw new ChordRuntimeException(ex);
+		}
 		List<jq_Method> methods = program.getReachableMethods(c);
 		CtBehavior[] inits = clazz.getDeclaredConstructors();
 		CtBehavior[] meths = clazz.getDeclaredMethods();
@@ -421,7 +426,17 @@ public class Instrumentor {
 				ex.printStackTrace();
 			}
 		}
-		clazz.writeFile(outDirName);
+		try {
+			clazz.writeFile(outDirName);
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		} catch (NotFoundException ex) {
+			throw new ChordRuntimeException(ex);
+		} catch (CannotCompileException ex) {
+			Messages.log("INSTR.CANNOT_INSTRUMENT_CLASS", cName);
+			ex.printStackTrace();
+			return;
+		}
 		if (verbose) Messages.log("INSTR.WROTE_INSTRUMENTED_CLASS", cName);
 	}
 
