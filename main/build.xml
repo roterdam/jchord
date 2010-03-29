@@ -120,7 +120,7 @@
 				<property name="jvm-32-or-64" value="32"/>
 			</then>
 			<else>
-				<property name="architecture" value=""/>
+				<property name="architecture" value="-m64"/>
 				<property name="jvm-32-or-64" value="64"/>
 			</else>
 		</if>
