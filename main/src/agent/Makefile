@@ -11,8 +11,6 @@ JNI_MD_H_DIR = $(shell find $(JDK_ROOT) -name jni_md.h -exec dirname '{}' \;)
 ifneq (x$(JNI_MD_H_DIR),x)
 	INCLUDES += -I$(JNI_MD_H_DIR)
 endif
-DLL_OUTPUT_OPTION = -o$(space)
-OBJECT_OUTPUT_OPTION = -o$(space)
 INSTR_LIB_NAME = $(LIB_DIR)/libchord_instr_agent.so
 
 ifeq (${OS},Windows_NT)
@@ -20,7 +18,7 @@ ifeq (${OS},Windows_NT)
   LINK = dllwrap
   LINKFLAGS = $(M32_FLAG) -s --target=i386-mingw32 --add-underscore --driver-name c++ -mno-cygwin
 else
-  CXXFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
+  CXXFLAGS = $(M32_FLAG) -fPIC -O2 -fomit-frame-pointer
   LINK = $(CXX) 
   ifeq (${shell uname -s},Darwin)
     LINKFLAGS = $(M32_FLAG) -dynamiclib -framework JavaVM  -single_module -undefined suppress -flat_namespace
@@ -32,13 +30,11 @@ endif
 default: $(INSTR_LIB_NAME)
 
 $(INSTR_LIB_NAME): chord_instr_agent.o
-	$(LINK) $(LINKFLAGS) $< $(DLL_OUTPUT_OPTION)$@
+	$(LINK) $(LINKFLAGS) $< -o $@
 
 chord_instr_agent.o: chord_instr_agent.cpp
-	$(CXX) chord_instr_agent.cpp $(CXXFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@
+	$(CXX) chord_instr_agent.cpp $(CXXFLAGS) $(INCLUDES) -c -o $@
 
 clean:
 	$(RM) -f chord_instr_agent.o $(INSTR_LIB_NAME)
 
-empty := 
-space := $(empty) $(empty)
