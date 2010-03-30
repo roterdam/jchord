@@ -64,7 +64,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 			this.propagateOnlyOnChanged = propagateOnlyOnChanged;
 		}
 
-		@Override
+		// @Override
 		public boolean execute(int arg0, int arg1) {
 			if (arg1 != 0) {
 				for (Label label : labels) {
@@ -138,7 +138,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 				TIntArrayList L = object2predecessors.get(next);
 				if (L != null) {
 					L.forEach(new TIntProcedure() {
-						@Override
+						// @Override
 						public boolean execute(int arg0) {
 							if (!visited.contains(arg0)) {
 								templist.add(arg0);
@@ -211,7 +211,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 				TIntIntHashMap M = heapGraph.get(o);
 				if (M != null) {
 					M.forEachEntry(new TIntIntProcedure() {
-						@Override
+						// @Override
 						public boolean execute(int arg0, int arg1) {
 							if (arg1 != 0) {
 								updateHeapGraph(o, arg0, arg1);
@@ -308,7 +308,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 				 * Iterate over all the predecessors of 
 				 */
 				preds.forEach(new TIntProcedure() {
-					@Override
+					// @Override
 					public boolean execute(int arg0) {
 						final Set<Label> predLabels = getLabelsRootedAt(arg0);
 						for (Label l : labels) {
@@ -345,7 +345,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 				// Is <code>val</code> pointed to by any other field?
 				final boolean[] isPointedToByAnotherField = new boolean[] { false };
 				M.forEachEntry(new TIntIntProcedure() {
-					@Override
+					// @Override
 					public boolean execute(int arg0, int arg1) {
 						if (arg0 != f) {
 							if (arg1 == val) {

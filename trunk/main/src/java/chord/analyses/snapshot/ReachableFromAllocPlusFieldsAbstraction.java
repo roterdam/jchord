@@ -136,13 +136,13 @@ public class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstracti
 		TIntArrayList preds = object2predecessors.get(o);
 		if (preds != null) {
 			preds.forEach(new TIntProcedure() {
-				@Override
+				// @Override
 				public boolean execute(final int pred) {
 					if (state.o2h.get(pred) >= 0) {
 						TIntIntHashMap M = heapGraph.get(pred);
 						assert (M != null);
 						M.forEachEntry(new TIntIntProcedure() {
-							@Override
+							// @Override
 							public boolean execute(int f, int val) {
 								if (val == o) {
 									result.add(new AllocPlusFieldLabel(state.o2h.get(pred), f));

@@ -25,7 +25,7 @@ class PointedToByAllocAbstraction extends Abstraction {
 		private final int[] values;
 		
 		public Value(int[] values) {
-			this.values = Arrays.copyOf(values, values.length);
+			this.values = values.clone(); // Arrays.copyOf(values, values.length);
 			Arrays.sort(this.values);
 		}
 

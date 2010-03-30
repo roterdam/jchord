@@ -96,7 +96,7 @@ public class ReachabilityTest extends LabelBasedAnalysis {
 	public void donePass() {
 		super.donePass();
 		object2labels.forEachEntry(new TIntObjectProcedure<Set<Label>>() {
-			@Override
+			// @Override
 			public boolean execute(int arg0, Set<Label> arg1) {
 				System.out.println("Object is: " + arg0);
 				System.out.println("Labels are: ");
