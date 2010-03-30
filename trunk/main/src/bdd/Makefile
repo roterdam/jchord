@@ -23,14 +23,12 @@ ifeq (${OS},Windows_NT)
   LINKFLAGS = $(M32_FLAG) -s --target=i386-mingw32 --add-underscore --driver-name gcc -mno-cygwin
   BUDDY_LIB_NAME = $(LIB_DIR)/buddy.dll
 else
+  CFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
+  LINK = $(CC)
   ifeq (${shell uname -s},Darwin)
-    CFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
-    LINK = $(CC) 
     LINKFLAGS = $(M32_FLAG) -dynamiclib -framework JavaVM -single_module -undefined suppress -flat_namespace
     BUDDY_LIB_NAME = $(LIB_DIR)/libbuddy.dylib
   else
-    CFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
-    LINK = $(CC)
     LINKFLAGS = $(M32_FLAG) -shared
     BUDDY_LIB_NAME = $(LIB_DIR)/libbuddy.so
   endif
