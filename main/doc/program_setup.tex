@@ -1,0 +1,100 @@
+\section{Setting up a Java Program for Analysis}
+\label{sec:program-setup}
+
+Suppose the program to be analyzed has the following directory structure:
+
+\begin{quote}
+\begin{verbatim}
+example/
+    src/
+        foo/
+            Main.java
+            ...
+    classes/
+        foo/
+            Main.class
+            ...
+    lib/
+        src/
+            taz/
+                ...
+        jar/
+            taz.jar
+    chord.properties
+\end{verbatim}
+\end{quote}
+
+The above structure is typical: the program's Java source files are under \verb+src/+,
+its class files are under \verb+classes/+, the source and jar files of the libraries
+used by the program are under \verb+lib/src/+ and \verb+lib/jar/+, respectively.
+
+File \verb+chord.properties+ specifies properties to be passed to Chord (alternatively,
+these properties may be passed on the command-line, in format \verb+-D<name>=<value>+).
+A sample such file for the above program is as follows:
+
+\begin{quote}
+\begin{verbatim}
+chord.main.class=foo.Main
+chord.class.path=classes:lib/jar/taz.jar
+chord.src.path=src:../lib/src
+chord.run.ids=0,1
+chord.args.0="-thread 1 -n 10"
+chord.args.1="-thread 2 -n 50"
+\end{verbatim}
+\end{quote}
+
+Each relative (instead of absolute) path element in the value of any property
+named \verb+chord.<...>.path+ defined in this file is converted to an absolute path element with respect
+to the directory containing this file, which in the above case is \verb+example/+.
+
+Section \ref{sec:chord-sysprops} presents an exhaustive
+listing of properties recognized by \Chord.
+Here, we only describe those defined in the above
+sample \verb+chord.properties+ file:
+
+\begin{itemize}
+\item
+\verb+chord.main.class+ specifies the fully-qualified name of the main class of the
+program.
+\item
+\verb+chord.class.path+ specifies the classpath of the program.
+The value of pre-defined property \verb+${sun.boot.class.path}+ is implicitly appended
+to it.
+\item
+\verb+chord.src.path+ specifies the Java source path of the program.
+All program analyses in Chord operate on Java bytecode (specified by \verb+chord.class.path+).
+The only use of this property is to HTMLize the Java source files of the program so that the
+results of program analyses can be reported at the Java source code level.
+\item
+\verb+chord.run.ids+ specifies a list of IDs to identify runs of the program.
+It is used by dynamic program analyses to determine how many times the program must be run.
+An additional use of this property is to allow specifying the command-line arguments to use
+in the run having ID \verb+XXX+ via property \verb+chord.args.XXX+, as illustrated by
+properties \verb+chord.args.0+ and \verb+chord.args.1+ in the above example.
+\end{itemize}
+
+To run Chord on the above program, run the following command in Chord's \verb+main/+ directory:
+
+\begin{quote}
+\begin{verbatim}
+prompt> ant -Dchord.work.dir=<...>/example run
+\end{verbatim}
+\end{quote}
+
+where \verb+<...>+ denotes either the absolute path, or the path relative to Chord's main directory,
+of the parent of directory {\tt example/}.
+System property \verb+chord.work.dir+ specifies the working directory during Chord's execution.
+
+The above command causes Chord to load the \verb+chord.properties+ file if present.
+The location of this file may be specified explicitly via property
+\verb+chord.props.file+ on the above command line.
+By default, it is \verb+${chord.work.dir}/chord.properties+.
+
+In the above case, the above command does not do much beyond loading the sample \verb+chord.properties+ file.
+For Chord to do something interesting, you need to set additional properties, either
+on the above command line or in the \verb+chord.properties+ file, specifying the task(s)
+Chord must perform.
+All tasks are summarized in the ``Chord task properties" portion of the table in Section \ref{sec:chord-sysprops}.
+The two most common tasks, described next, are building program scope (Section \ref{sec:building-scope})
+and running program analyses (Section \ref{sec:running-analysis}).
+

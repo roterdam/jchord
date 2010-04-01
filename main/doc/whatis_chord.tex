@@ -1,0 +1,39 @@
+\section{What is Chord?}
+\label{sec:whatis-chord}
+
+\Chord\ is a static and dynamic program analysis framework for Java.
+It has the following key characteristics:
+
+\begin{itemize}
+\item
+Stand-alone: various off-the-shelf program analyses are provided (e.g., may-alias, thread-escape, datarace, deadlock, etc.).
+\item
+Extensible: users can build their own program analyses on top of the provided ones.
+\item
+Compositional: each program analysis can be written independently and yet made to interact in complex ways with other program analyses.
+\item
+Efficient: results computed by each program analysis are cached for reuse by other program analyses without re-computation.
+\item
+Flexible: a broad range of program analyses can be expressed, including those
+written imperatively in Java or declaratively in Datalog, summary-based as well as cloning-based context-sensitive analyses,
+iterative refinement-based analyses, client-driven analyses, and combined static and dynamic analyses.
+\end{itemize}
+
+\Chord\ is intended for use by a broad range of users:
+
+\begin{itemize}
+\item
+Program analysis writers: Program analysis researchers wanting to implement and evaluate new program analysis algorithms.
+\item
+Program analysis appliers: Researchers with possibly a limited program analysis background wanting to build applications on
+top of program analyses in Chord used as black boxes.
+\item
+Software engineers: Programmers wanting to use program analyses in Chord to assist with software development and testing.
+\end{itemize}
+
+\Chord\ is intended to work on a variety of platforms, including Linux, Windows/Cygwin, and MacOS.
+It has been tested most extensively on Linux.
+It is open source software distributed under the \myurl{http://www.opensource.org/licenses/bsd-license.php}{New BSD License}.
+Contributions from users are welcome and encouraged.
+The project website is located at \url{http://code.google.com/p/jchord/}.
+

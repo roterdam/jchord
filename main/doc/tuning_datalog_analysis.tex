@@ -1,0 +1,118 @@
+\section{Tuning a Program Analysis in Datalog}
+\label{sec:tuning-datalog-analysis}
+
+There are many tricks you can try to make \bddbddb\ run faster:
+
+\begin{enumerate}
+\item
+Set system properties \verb+noisy=yes+, \verb+tracesolve=yes+, and \verb+fulltracesolve=yes+
+while running \bddbddb\ and observe which rule gets ``stuck" (i.e. takes several seconds to solve).
+\verb+fulltracesolve+ is seldom useful, but \verb+noisy+ and \verb+tracesolve+ is
+often very useful.  Once you identify the rule that is getting stuck, it
+will also tell you which relations and which domains used in that rule
+and which operation on them is taking a long time to solve.  Then try
+to fix the slowdown problem with that rule by either simplifying the
+relations involved (e.g., breaking their set of attributes into two if
+possible) or changing the relative ordering of the domains of those
+relations in \verb+bddvarorder+ (doing the latter alone
+frequently causes the problem to go away).
+\item
+Once you have ensured that none of the rules is getting ``stuck",
+you will notice that some rules are applied too many times, and so
+although each application of the rule itself isn't taking too much
+time, the cumulative time for the rule is too much.  After finishing
+solving a Datalog program, \bddbddb\ prints how long each rule took to
+solve (both in terms of the number of times it was applied and the
+cumulative time it took).  It sorts the rules in the order of the
+cumulative time.  You need to focus on the rules that took the most
+time to solve (they will be at the bottom of the list).  Assuming you
+removed the problem of rules getting ``stuck", the rules will roughly
+be in the order of the number of times they were applied.  Here is an
+example:
+
+\begin{verbatim}
+OUT> Rule VH(u:V0,h:H0) :- VV(u:V0,v:V1), VH(v:V1,h:H0), VHfilter
+(u:V0,h:H0).
+OUT>    Updates: 2871
+OUT>    Time: 6798 ms
+OUT>    Longest Iteration: 0 (0 ms)
+OUT> Rule IM(i:I0,m:M0) :- reachableI(i:I0), specIMV(i:I0,m:M0,v:V0), VH(v:V0,_:H0).
+OUT>    Updates: 5031
+OUT>    Time: 6972 ms
+OUT>    Longest Iteration: 0 (0 ms)
+\end{verbatim}
+
+Notice that the second rule was applied 5031 times whereas the first
+was applied 2871 times.  More importantly, the second rule took 6972
+milliseconds in all, compared to 6798 for the first rule.  Hence, you
+should focus on the second rule first, and try to speed it up.  This
+means that you should focus only on relations IM, reachableI, specIMV,
+and VH, and the domains I0, M0, V0, and H0.  Any changes you make that
+do not affect these relations and domains are unlikely to make your
+solving faster.  In general, look at the last few rules, not just the
+last one, and try to identify the "sub-program" of the Datalog program
+that seems problematic, and then focus on speeding up just that sub-
+program.
+\item
+Tweak the BDD variable ordering in the Datalog file (the line that
+starts with \verb+bddvarorder+).  This is one of the most
+effective ways of making \bddbddb\ run faster.  As explained above, use
+\verb+noisy+ and \verb+tracesolve+ to find out which pairs of domains in the
+bddvarorder are responsible for the slowdown, and try to change their
+relative ordering (note that you can use either `\_' or `x' between a pair
+of domains, and the latter is commutative).
+\item
+You can add the \verb+.split+ keyword at the end of certain rules as a
+hint to \bddbddb\ to break up those rules into simpler ones that can be
+solved faster.  You can also set property \verb+split_all_rules=yes+ as shorthand
+for splitting all rules without adding the \verb+.split+ keyword to any of
+them, though I seldom find splitting all rules helpful.
+
+\item
+You can yourself break down rules by creating intermediate relations (the more
+relations you have on the RHS of a rule the slower it takes to solve
+that rule).  This is another very effective way to make \bddbddb\ run
+faster.
+
+\item
+5. Try breaking down a single Datalog program into two programs.  Of
+course, you cannot separate mutually-recursive rules into two
+different programs, but if you unnecessarily club
+together rules that could have gone into different programs, then they
+can put conflicting demands on \bddbddb\ (e.g., on \verb+bddvarorder+).
+So if rule 2 uses the result of rule 1 and rule 1 does not use the result of
+rule 2, then put rule 1 and rule 2 in two different Datalog programs.
+
+\item
+Observe the sizes of the BDDs representing the relations that are
+input and output.  \bddbddb\ tells both the number of tuples in each
+relation and the number of "nodes" in the BDD.  Try changing the
+bddvarorder for the domains of the relation, and observe how the
+number of "nodes" in the bdd for that relation change.  You will
+notice that some orderings do remarkably better than others.  Then
+note down these orderings as invariants that you will not violate as
+you tweak other things.
+
+\item
+The relative ordering of values *within* domains (e.g.
+in domains named \verb+M+, \verb+H+, \verb+C+, etc. in Chord) affects the
+solving time of \bddbddb, but
+I've never tried changing this and studying its effect.  It might be
+worth trying.  For instance, John Whaley's PLDI'04 paper describes a
+specific way in which he numbers contexts (in domain \verb+C+) and that it was
+fundamental to the speedup of his infinity-CFA points-to analysis.
+
+\item
+
+Finally, it is worth emphasizing that BDDs are not magic.
+If your algorithm itself is fundamentally hard to scale, then BDDs are
+unlikely to help you a whole lot.  Secondly, many things are awkward to
+encode as integers (e.g., the abstract contexts in the domain \verb+C+ 
+in Chord) or as Datalog rules.
+For instance, I've noticed that summary-based context-sensitive program
+analyses are hard to express in Datalog.  The may-happen-in-parallel
+analysis provided in Chord shows a relatively simple kind of summary-based
+analysis that uses the Reps-Horwitz-Sagiv tabulation algorithm.  But this
+is as far as I could get---more complicated summary-based algorithms are
+best written in Java itself instead of Datalog.
+\end{enumerate}
