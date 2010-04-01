@@ -1,0 +1,111 @@
+\section{Writing a Dynamic Program Analysis}
+\label{sec:writing-dynamic-analysis}
+
+{\bf Step 1: Setting up the Instrumentation Scheme}
+
+Determine the instrumentation scheme required by your dynamic analysis, that is,
+the kind and format of events to be generated during an instrumented program's
+execution. See class \verb+chord.instr.InstrScheme+ for the kinds of supported
+events and their formats.
+
+{\bf Step 2: Implementing the Analysis}
+
+Create a class extending \verb+chord.project.DynamicAnalysis+ and overriding
+the appropriate methods in it.
+
+The only method that must be compulsorily overridden is method \verb+getInstrScheme()+,
+which must return an instance of the instrumentation scheme chosen in Step 1 above,
+plus each \verb+process<event>(<args>)+ method that corresponds to event \verb+<event>+
+with format \verb+<args>+ enabled by the chosen instrumentation scheme.
+All other methods are no-ops if not overridden.
+
+A sample such class called \verb+MyDynamicAnalysis+ is shown below:
+
+\begin{verbatim}
+    import chord.project.DynamicAnalysis;
+    import chord.instr.InstrScheme;
+
+    // ***TODO***: analysis won't be recognized by Chord without this annotation
+    @Chord(name=<name-of-analysis>)    
+    
+    public class MyDynamicAnalysis extends DynamicAnalysis {
+        InstrScheme scheme;
+
+        public InstrScheme getInstrScheme() {
+            if (scheme != null)
+                return scheme;
+            scheme = new InstrScheme();
+            // ***TODO***: Choose (<event1>, <args1>), ... (<eventN>, <argsN>)
+            // depending upon the kind and format of events required by this
+            // dynamic analysis to be generated for this during an instrumented
+            // program's execution.
+            scheme.set<event1>(<args1>);
+            ...
+            scheme.set<eventN>(<argsN>);
+            return scheme;
+        }
+
+        public void initAllPasses() {
+            // ***TODO***: User code to be executed once and for all
+            // before all instrumented program runs start.
+        }
+
+        public void doneAllPasses() {
+            // ***TODO***: User code to be executed once and for all
+            // after all instrumented program runs finish.
+        }
+
+        public void initPass() {
+            // ***TODO***: User code to be executed once before each
+            // instrumented program run starts.
+        }
+
+        public void donePass() {
+            // ***TODO***: User code to be executed once after each
+            // instrumented program run finishes.
+        }
+
+        // User-defined event handlers for this dynamic analysis.
+        // No-ops if not overridden.
+        public void process<event1>(<args1>) {
+            // ***TODO***: User code for handling events of kind <event1> with format <args1>.
+        }
+        ...
+        public void process<eventN>(<argsN>) {
+            // ***TODO***: User code for handling events of kind <eventN> with format <argsN>.
+        }
+    }
+\end{verbatim}
+
+{\bf Step 3: Choosing or Implementing the Runtime Event Handler}
+
+Determine the runtime event handler for your dynamic analysis. There are two kinds of runtime event
+handlers, offline and online; see package \verb+chord.runtime+ for more details.
+
+For most dynamic analyses, an offline event hander suffices, in which case you don't need to do
+anything in this step (except that you may want to change the default values of system properties
+\verb+chord.trace.pipe+ and \verb+chord.trace.block.size+ for performance; see
+Section \ref{sec:chord-sysprops} for the meaning of these properties). Otherwise, you need to
+create a class extending class \verb+chord.runtime.Runtime+ and override the appropriate methods
+in it, and provide the fully-qualified name of the created class as the value of system property
+\verb+chord.runtime.class+ (whose default value is the class \verb+chord.runtime.BufferedRuntime+).
+
+{\bf Step 4: Compiling the Analysis}
+
+Compile the analysis by placing the directory containing class \verb+MyDynamicAnalysis+ created
+above in the path defined by system property \verb+chord.java.analysis.path+.
+
+{\bf Step 5: Specifying Program Inputs}
+
+Provide the IDs of program runs to be generated (say 1, 2, ..., M) and the command-line arguments to be
+used for the program in each of those runs (say <args1>, ..., <argsM>) via system properties
+\verb+chord.run.ids=1,2,...,N+ and \verb+chord.args.1=<args1>+, ..., \verb+chord.args.M=<argsM>+.
+
+By default, \verb+chord.run.ids=0+ and \verb+chord.args.0=""+, that is, the program will be run only
+once (using run ID 0) with no command-line arguments.
+
+{\bf Step 6: Running the Analysis}
+
+To run the analysis, set system property \verb+chord.run.analyses=<name-of-analysis>+ where
+\verb+<name-of-analysis>+ is the name that was provided in the \verb+@Chord+ annotation for class
+\verb+MyDynamicAnalysis+ created above.
