@@ -1,16 +1,15 @@
 \documentclass{article}
 \usepackage{html}
 \usepackage{hyperref}
-\usepackage{longtable}
 
-%\topmargin=-0.5in
 \oddsidemargin=0in
 \evensidemargin=0in
-\textwidth=6.5in
+\textwidth=6.0in
 \textheight=8.0in
 
-\def\myurl#1#2{\htmladdnormallink{#2}{#1}}
-\def\dir#1{{#1}}
+\html{\def\code#1{{\tt {#1}}}}
+\latex{\def\code#1{\path{#1}}}
+\def\url#1{\htmladdnormallink{#1}{#1}}
 \def\Mdom{{\bf M}}
 \def\Idom{{\bf I}}
 \def\Vdom{{\bf V}}
@@ -92,11 +91,10 @@
 \date{\today}
 \begin{document}
 \maketitle
-%\texonly{\tableofcontents}
 
 \input{whatis_chord}
 \newpage
-%\input{download_and_installation}
+\input{download_and_installation}
 \newpage
 \input{program_setup}
 \newpage
@@ -107,6 +105,8 @@
 \input{writing_analysis}
 \newpage
 \input{writing_dynamic_analysis}
+\newpage
+\input{instr_events}
 \newpage
 \input{writing_datalog_analysis}
 \newpage
@@ -122,6 +122,6 @@
 \newpage
 \input{chord_sysprops}
 \newpage
-%\input{acknowledgments}
+\input{acknowledgments}
 
 \end{document}

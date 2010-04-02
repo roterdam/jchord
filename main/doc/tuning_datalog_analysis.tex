@@ -16,6 +16,7 @@ relations involved (e.g., breaking their set of attributes into two if
 possible) or changing the relative ordering of the domains of those
 relations in \verb+bddvarorder+ (doing the latter alone
 frequently causes the problem to go away).
+
 \item
 Once you have ensured that none of the rules is getting ``stuck",
 you will notice that some rules are applied too many times, and so
@@ -53,6 +54,7 @@ solving faster.  In general, look at the last few rules, not just the
 last one, and try to identify the "sub-program" of the Datalog program
 that seems problematic, and then focus on speeding up just that sub-
 program.
+
 \item
 Tweak the BDD variable ordering in the Datalog file (the line that
 starts with \verb+bddvarorder+).  This is one of the most
@@ -61,6 +63,7 @@ effective ways of making \bddbddb\ run faster.  As explained above, use
 bddvarorder are responsible for the slowdown, and try to change their
 relative ordering (note that you can use either `\_' or `x' between a pair
 of domains, and the latter is commutative).
+
 \item
 You can add the \verb+.split+ keyword at the end of certain rules as a
 hint to \bddbddb\ to break up those rules into simpler ones that can be
@@ -75,7 +78,7 @@ that rule).  This is another very effective way to make \bddbddb\ run
 faster.
 
 \item
-5. Try breaking down a single Datalog program into two programs.  Of
+Try breaking down a single Datalog program into two programs.  Of
 course, you cannot separate mutually-recursive rules into two
 different programs, but if you unnecessarily club
 together rules that could have gone into different programs, then they
@@ -103,7 +106,6 @@ specific way in which he numbers contexts (in domain \verb+C+) and that it was
 fundamental to the speedup of his infinity-CFA points-to analysis.
 
 \item
-
 Finally, it is worth emphasizing that BDDs are not magic.
 If your algorithm itself is fundamentally hard to scale, then BDDs are
 unlikely to help you a whole lot.  Secondly, many things are awkward to

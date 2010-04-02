@@ -1,7 +1,7 @@
 \section{Deadlock Analysis}
 \label{sec:deadlock}
 
-Run the deadlock analysis provided in Chord by running the following command in Chord's \verb+main/+ directory:
+Run the deadlock analysis provided in Chord by running the following command in Chord's \code{main/} directory:
 
 \begin{quote}
 \begin{verbatim}
@@ -9,21 +9,16 @@ prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=deadlock-java run
 \end{verbatim}
 \end{quote}
 
-where directory \verb+<...>+ contains a file named \verb+chord.properties+ which 
-defines properties \verb+chord.main.class+, \verb+chord.class.path+, and \verb+chord.src.path+.
+\noindent where directory \code{<...>} contains a file named \code{chord.properties} which
+defines properties \code{chord.main.class}, \code{chord.class.path}, and \code{chord.src.path}.
 See Section \ref{sec:chord-sysprops} for the meaning of these properties.
 
-Directory \verb+main/examples/deadlock_test/+ provides a toy Java program on which you can run the deadlock
-analysis by first running \verb+ant+ in that directory (in order to compile the program's \verb+.java+ files to
-\verb+.class+ files) and then running the following command in Chord's \verb+main/+ directory:
-
-\begin{quote}
-\begin{verbatim}
-prompt> ant -Dchord.work.dir=examples/deadlock_test/ -Dchord.run.analyses=deadlock-java run
-\end{verbatim}
-\end{quote}
-
-Upon successful completion, the file \verb+deadlocks.html+ should be produced in directory
-\verb+main/examples/deadlock_test/chord_output/+.
+Directory \code{main/examples/deadlock_test/} provides a toy Java program on which you can run
+the deadlock analysis.
+First run \code{ant} in that directory (in order to compile the program's \code{.java} files to
+\code{.class} files) and then run the above command in Chord's \code{main/} directory with
+\code{<...>} replaced by \code{examples/deadlock_test/}.
+Upon successful completion, the file \code{deadlocks.html} should be produced in directory
+\code{main/examples/deadlock_test/chord_output/}.
 
 
