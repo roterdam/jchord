@@ -1,7 +1,7 @@
 \section{Datarace Analysis}
 \label{sec:datarace}
 
-Run the datarace analysis provided in Chord by running the following command in Chord's \verb+main/+ directory:
+Run the datarace analysis provided in Chord by running the following command in Chord's \code{main/} directory:
 
 \begin{quote}
 \begin{verbatim}
@@ -9,30 +9,25 @@ prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=datarace-java run
 \end{verbatim}
 \end{quote}
 
-where directory \verb+<...>+ contains a file named \verb+chord.properties+ which 
-defines properties \verb+chord.main.class+, \verb+chord.class.path+, and \verb+chord.src.path+.
+\noindent where directory \code{<...>} contains a file named \code{chord.properties} which
+defines properties \code{chord.main.class}, \code{chord.class.path}, and \code{chord.src.path}.
 See Section \ref{sec:chord-sysprops} for the meaning of these properties.
 
-Directory \verb+main/examples/datarace_test/+ provides a toy Java program on which you can run the datarace
-analysis by first running \verb+ant+ in that directory (in order to compile the program's \verb+.java+ files to
-\verb+.class+ files) and then running the following command in Chord's \verb+main/+ directory:
-
-\begin{quote}
-\begin{verbatim}
-prompt> ant -Dchord.work.dir=examples/datarace_test/ -Dchord.run.analyses=datarace-java run
-\end{verbatim}
-\end{quote}
-
+Directory \code{main/examples/datarace_test/} provides a toy Java program on which you can run the datarace
+analysis.
+First run \code{ant} in that directory (in order to compile the program's \code{.java} files to
+\code{.class} files) and then run the above command in Chord's \code{main/} directory
+with \code{<...>} replaced by \code{examples/datarace_test/}.
 Upon successful completion, the following files should be produced in directory
-\verb+main/examples/datarace_test/chord_output/+:
+\code{main/examples/datarace_test/chord_output/}:
 
 \begin{itemize}
 \item
-File \verb+dataraces_by_fld.html+, listing all dataraces grouped by the field on which they occur; all
+File \code{dataraces_by_fld.html}, listing all dataraces grouped by the field on which they occur; all
 dataraces on the same instance field or the same static field are listed in the same group, and so are
 all dataraces on array elements.
 \item
-File \verb+dataraces_by_obj.html+, listing all dataraces grouped by the abstract object on whose field they occur;
+File \code{dataraces_by_obj.html}, listing all dataraces grouped by the abstract object on whose field they occur;
 dataraces on all static fields are listed in the same group, and so are dataraces on different
 instance fields of the same abstract object.
 \end{itemize}

@@ -5,23 +5,22 @@ Ensure that the following software is installed on your machine:
 
 \begin{itemize}
 \item
-JDK 5 or higher, e.g. from \href{http://www.ibm.com/developerworks/java/jdk/}{IBM} or
-\href{http://java.sun.com/javase/downloads/index.jsp}{Sun}
+JDK 5 or higher, e.g. from \htmladdnormallink{IBM}{http://www.ibm.com/developerworks/java/jdk/} or
+\htmladdnormallink{Sun}{http://java.sun.com/javase/downloads/index.jsp}
 \item
-\href{http://ant.apache.org/}{Apache Ant}, a Java-based build tool
+\htmladdnormallink{Apache Ant}{http://ant.apache.org/}, a Java-based build tool
 \item
-a C++ compiler, e.g. \href{http://gcc.gnu.org/}{GCC}
+a C++ compiler, e.g. \htmladdnormallink{GCC}{http://gcc.gnu.org/}
 \item
-a Make utility, e.g. \href{http://www.gnu.org/software/make/}{GNU Make}
+a Make utility, e.g. \htmladdnormallink{GNU Make}{http://www.gnu.org/software/make/}
 \item
-\href{http://www.cygwin.com/}{Cygwin}, if it is a Windows machine
+\htmladdnormallink{Cygwin}{http://www.cygwin.com/}, if it is a Windows machine
 \end{itemize}
 
 Download a \Chord\ source release from \url{http://code.google.com/p/jchord/downloads/list} or
 the latest source from the SVN repository at \url{http://code.google.com/p/jchord/source/checkout}.
 
-Directory \dir{chord/main/} (henceforth called the main directory) contains a \verb+build.xml+
-file which is interpreted by Apache Ant.
+Directory \code{main/} contains a \code{build.xml} file which is interpreted by Apache Ant.
 To see the various targets available, run the following command in that directory:
 
 \begin{quote}
@@ -30,7 +29,7 @@ prompt> ant
 \end{verbatim}
 \end{quote}
 
-To compile \Chord, run the following command in the same directory:
+\noindent To compile \Chord, run the following command in the same directory:
 
 \begin{quote}
 \begin{verbatim}
@@ -38,19 +37,19 @@ prompt> ant compile
 \end{verbatim}
 \end{quote}
 
-This will compile the following:
+\noindent This will compile the following:
 \begin{itemize}
 \item
-the Java source code of \Chord\ from \dir{chord/main/src/java/} to Java bytecode in \dir{chord/main/classes/}
+the Java source code of \Chord\ from \code{main/src/java/} to Java bytecode in \code{main/classes/}
 \item
-the C source code of BDD library \href{http://buddy.sourceforge.net/}{BuDDy} from \dir{chord/main/src/bdd/}
-to a shared library in \dir{chord/main/lib/} (\verb+libbuddy.so+ on Linux, \verb+buddy.dll+ on Windows, and
-\verb+libbuddy.dylib+ on MacOS);
+the C source code of BDD library \htmladdnormallink{BuDDy}{http://buddy.sourceforge.net/} from \code{main/src/bdd/}
+to a shared library in \code{main/lib/} (\code{libbuddy.so} on Linux, \code{buddy.dll} on Windows, and
+\code{libbuddy.dylib} on MacOS);
 this library is needed for executing program analyses written in Datalog using
-\href{http://bddbddb.sourceforge.net/}{bddbddb} (a BDD-based Datalog solver).
+\htmladdnormallink{bddbddb}{http://bddbddb.sourceforge.net/} (a BDD-based Datalog solver).
 \item
-the C++ source code of the Chord instrumentation agent from \dir{chord/main/src/agent/} to a shared
-library in \dir{chord/main/lib/} (\verb+libchord_instr_agent.so+ on all architectures);
+the C++ source code of the Chord instrumentation agent from \code{main/src/agent/} to a shared
+library in \code{main/lib/} (\code{libchord_instr_agent.so} on all architectures);
 this agent is needed for building program scope dynamically
 and for executing dynamic program analyses.
 \end{itemize}

@@ -1,45 +1,46 @@
-\section{Building the Analysis Scope of a Java Program}
+\section{Building Analysis Scope}
 \label{sec:building-scope}
 
-Chord computes the analysis scope (i.e. reachable classes and methods) of a given Java program
-either if property \verb+chord.build.scope+ is set to \verb+true+ or if some other task (e.g.,
-a program analysis specified via property \verb+chord.run.analyses+) demands it by
-calling static method \verb+chord.program.Program.v()+.
+Chord computes the analysis scope (i.e., reachable classes and methods) of a given Java program
+either if property \code{chord.build.scope} is set to \code{true} or if some other task (e.g.,
+a program analysis specified via property \code{chord.run.analyses}) demands it by
+calling static method \code{chord.program.Program.v()}.
 
-The algorithm used to compute the analysis scope is specified by 
-properties \verb+chord.scope.kind+ and \verb+chord.reuse.scope+.
+The algorithm used to compute the analysis scope is as follows.
 
 \begin{itemize}
 \item
-If property \verb+chord.reuse.scope+ is set to \verb+true+ and the files specified by
-properties \verb+chord.classes.file+ and \verb+chord.methods.file+ exist,
+If property \code{chord.reuse.scope} has value \code{true} and the files specified by properties
+\code{chord.classes.file} and \code{chord.methods.file} exist,
 then Chord regards those files as specifying the classes and methods, respectively,
 to be regarded as reachable.  The format
-of the classes file is a class name per line (e.g. \verb+foo.Main+).  The format
-of the methods file is an entry of the form \verb+<method name>:<method descriptor>@<class name>+ per line,
+of the classes file is a fully-qualified class name per line (e.g., \code{foo.bar.Main}).  The format
+of the methods file is an entry of the form \code{<method name>:<method descriptor>@<class name>} per line,
 specifying the method's name, the method's descriptor, and the method's declaring class
-(e.g. \verb+main:([Ljava/lang/String;)V@foo.Main+).
+(e.g., \code{main:([Ljava/lang/String;)V@foo.bar.Main+}).
 Chord throws a runtime exception if the declaring class of a method in the methods file is not
 specified in the classes file.
+
 \item
-If property \verb+chord.reuse.scope+ is set to \verb+false+ or the file specified by
-property \verb+chord.classes.file+ or \verb+chord.methods.file+ does not exist,
+If property \code{chord.reuse.scope} has value \code{false} or the file specified by
+property \code{chord.classes.file} or \code{chord.methods.file} does not exist,
 then Chord computes the analysis scope
-using the algorithm specified by property \verb+chord.scope.kind+ and then
+using the algorithm specified by property \code{chord.scope.kind} and then
 writes the classes and methods deemed reachable by that algorithm to those files.
 
-The possible legal values of property \verb+chord.scope.kind+ are \verb+rta+ and \verb+dynamic+.
-In both cases, Chord expects properties \verb+chord.main.class+ and \verb+chord.class.path+
+The possible legal values of property \code{chord.scope.kind} are \code{rta} and \code{dynamic}.
+In both cases, Chord expects properties \code{chord.main.class} and \code{chord.class.path}
 to be set.
+
 \begin{itemize}
 \item
-The \verb+rta+ value instructs Chord to compute the analysis scope statically using Rapid Type Analysis.
+The \code{rta} value instructs Chord to compute the analysis scope statically using Rapid Type Analysis.
 \item
-The \verb+dynamic+ value instructs Chord to compute the analysis scope dynamically, by running the program
+The \code{dynamic} value instructs Chord to compute the analysis scope dynamically, by running the program
 and observing using JVMTI the classes that are loaded at run-time.
 The number of times the program is run and the command-line arguments to be supplied to
-the program in each run is specified by properties \verb+chord.run.ids+ and
-\verb+chord.args.XXX+ for each run ID \verb+XXX+.  By default, the program is run only once, using run ID \verb+0+,
+the program in each run is specified by properties \code{chord.run.ids} and
+\code{chord.args.<id>} for each run ID \code{<id>}.  By default, the program is run only once, using run ID \code{0},
 and without any command-line arguments.
 Only classes loaded in some run are regarded as reachable but {\it all} methods of each loaded class are regarded
 as reachable regardless of whether they were invoked in the run.
@@ -48,10 +49,10 @@ predictive power of program analyses performed using the computed analysis scope
 \end{itemize}
 \end{itemize}
 
-The default value of property \verb+chord.reuse.scope+ is \verb+false+ and that of
-property \verb+chord.scope.kind+ is \verb+rta+.
-The default values of properties \verb+chord.classes.file+ and \verb+chord.methods.file+ are
-\verb+${chord.out.dir}/classes.txt+ and \verb+${chord.out.dir}/methods.txt+, respectively,
-where property \verb+chord.out.dir+ defaults to \verb+${chord.work.dir}/chord_output/+,
-and property \verb+chord.work.dir+ defaults to the current working directory.
+The default value of property \code{chord.reuse.scope} is \code{false} and that of
+property \code{chord.scope.kind} is \code{rta}.
+The default values of properties \code{chord.classes.file} and \code{chord.methods.file} are
+\code{{chord.out.dir}/classes.txt} and \code{{chord.out.dir}/methods.txt}, respectively,
+where property \code{chord.out.dir} defaults to \code{{chord.work.dir}/chord_output/},
+and property \code{chord.work.dir} defaults to the current working directory.
 

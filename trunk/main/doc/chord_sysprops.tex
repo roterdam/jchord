@@ -4,221 +4,302 @@
 The following properties are recognized by Chord.
 The separator for list-valued properties can be either a blank space, a comma, a colon, or a semi-colon.
 
-\begin{longtable}{|l|p{0.4in}|p{4.0in}|}
-%\caption{TODO} \\
-\hline
-{\bf Property name} & {\bf Type} & {\bf Description and default value if any} \\
-\endfirsthead
-\hline
-{\bf Property name} & {\bf Type} & {\bf Description and default value if any} \\
-\endhead
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Chord resource properties}} \\
-\verb+chord.main.dir+ & location & \verb+main+ directory in Chord's installation. \\
-\hline
-\verb+chord.lib.dir+ & location & Directory containing libraries needed by Chord.
-\newline Default: \verb+${chord.main.dir}/lib/+ \\
-\hline
-\verb+chord.main.class.path+ & path & Classpath of Chord.
-It includes the path specified by property \verb+chord.java.analysis.path+
-to allow running user-defined program analyses.
-\newline Default: See \verb+${chord.main.dir}/build.xml+ \\
-\hline
-\verb+chord.bddbddb.class.path+ & path & Classpath of \verb+bddbddb+.
-\newline Default: See \verb+${chord.main.dir}/build.xml+ \\
-\hline
-\verb+chord.instr.agent.file+ & location &
-Shared library implementing Chord instrumentation agent. \\
-%\newline Default: \verb+${chord.main.dir}/lib/libchord_instr_agent.so+ \\
-\hline
-\verb+chord.javadoc.url+ & string & URL of the Javadoc location of program analyses.
-It is used when publishing targets (i.e., when property \verb+chord.publish.targets+
-is set to true).
-\newline Default: \verb+http://chord.stanford.edu/javadoc/+ \\
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Chord boot properties}} \\
-\hline
-\verb+chord.work.dir+ & location & Working directory during Chord's execution.
-\newline Default: current working directory \\
-\hline
-\verb+chord.props.file+ & location & Properties file loaded by \verb+${chord.main.dir}/build.xml+.
-Any of the below properties, as well as other user-defined properties to be passed to Chord
-(e.g., for user-defined analyses), may be set in this file.  Each relative (instead of absolute)
-path element in the value of any property named \verb+chord.<...>.path+ set in this file is
-converted to an absolute path element with respect to the directory containing this file.
-\newline Default: \verb+${chord.work.dir}/chord.properties+ \\
-\hline
-\verb+chord.max.heap+ & string & Maximum memory size of JVM running Chord.
-\newline Default: \verb+1024m+ \\
-\hline 
-\verb+chord.max.stack+ & string & Maximum thread stack size of JVM running Chord.
-\newline Default: \verb+32m+ \\
-\hline
-\verb+chord.jvmargs+ & string & Arguments passed to JVM running Chord. \\
-%\newline Default: \verb+"-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"+ \\
-\hline
-\verb+chord.bddbddb.max.heap+ & string & Maximum memory size of JVM running bddbddb.
-\newline Default: \verb+1024m+ \\
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Chord task properties}} \\
-\hline
-\verb+chord.build.scope+ & bool & Compute analysis scope (i.e., reachable classes and methods)
-using algorithm specified by properties \verb+chord.scope.kind+ and \verb+chord.reuse.scope+.
+\begin{enumerate}
+\item
+\code{chord.main.dir} \\
+{\bf Type:} location \\
+{\bf Description:} \code{main/} directory in Chord's installation.
+
+\item
+\code{chord.lib.dir} \\
+{\bf Type:} location \\
+{\bf Description:} Directory containing libraries needed by Chord. \\
+{\bf Default value:} \code{{chord.main.dir}/lib/}
+
+\item
+\code{chord.main.class.path} \\
+{\bf Type:} path \\
+{\bf Description:} Classpath of Chord.  It includes the path specified by property \code{chord.java.analysis.path} to allow running user-defined program analyses. \\
+{\bf Default value:} See \code{{chord.main.dir}/build.xml} 
+
+\item
+\code{chord.bddbddb.class.path} \\
+{\bf Type:} path \\
+{\bf Description:} Classpath of \code{bddbddb}. \\
+{\bf Default value:} See \code{{chord.main.dir}/build.xml} 
+
+\item
+\code{chord.instr.agent.file} \\
+{\bf Type:} location \\
+{\bf Description:} Shared library implementing Chord instrumentation agent. \\
+{\bf Default value:} \code{{chord.main.dir}/lib/libchord_instr_agent.so} 
+
+\item
+\code{chord.javadoc.url} \\
+{\bf Type:} string \\
+{\bf Description:} URL of the Javadoc location of program analyses.  It is used when publishing targets (i.e., when property \code{chord.publish.targets} is set to true). \\
+{\bf Default value:} \code{http://chord.stanford.edu/javadoc/}
+
+\item
+\code{chord.work.dir} \\
+{\bf Type:} location \\
+{\bf Description:} Working directory during Chord's execution. \\
+{\bf Default value:} current working directory
+
+\item
+\code{chord.props.file} \\
+{\bf Type:} location \\
+{\bf Description:} Properties file loaded by \code{{chord.main.dir}/build.xml}.  Any of the below properties, as well as other user-defined properties to be passed to Chord (e.g., for user-defined analyses), may be set in this file.  Each relative (instead of absolute) path element in the value of any property named \code{chord.<...>.path} set in this file is converted to an absolute path element with respect to the directory containing this file. \\
+{\bf Default value:} \code{{chord.work.dir}/chord.properties} 
+
+\item
+\code{chord.max.heap} \\
+{\bf Type:} string \\
+{\bf Description:} Maximum memory size of JVM running Chord. \\
+{\bf Default value:} \code{1024m} 
+
+\item 
+\code{chord.max.stack} \\
+{\bf Type:} string \\
+{\bf Description:} Maximum thread stack size of JVM running Chord. \\
+{\bf Default value:} \code{32m} 
+
+\item
+\code{chord.jvmargs} \\
+{\bf Type:} string \\
+{\bf Description:} Arguments passed to JVM running Chord. \\
+{\bf Default value:} \code{"-showversion -ea -Xmx{chord.max.heap} -Xss{chord.max.stack}"}
+
+\item
+\code{chord.bddbddb.max.heap} \\
+{\bf Type:} string \\
+{\bf Description:} Maximum memory size of JVM running \bddbddb. \\
+{\bf Default value:} \code{1024m} 
+
+\item
+\code{chord.build.scope} \\
+ bool \\
+ Compute analysis scope (i.e., reachable classes and methods)
+using algorithm specified by properties \code{chord.scope.kind} and \code{chord.reuse.scope}.
 Program scope is computed regardless of the value of this property if another task (e.g., a
 program analysis to be run) needs it.
-\newline Default: \verb+false+ \\
-\hline
-\verb+chord.run.analyses+ & string list & List of names of program analyses to be run
+{\bf Default value:} \code{false} \\
+
+\item
+\code{chord.run.analyses} \\
+ string list \\
+ List of names of program analyses to be run
 in order.
-\newline Default: \verb+""+ \\
-\hline
-\verb+chord.print.rels+ & string list & List of names of program relations whose contents
-must be printed to files \verb+${chord.out.dir}/<...>.txt+ where \verb+<...>+ denotes the
-relation name. 
-\newline Default: \verb+""+ \\
-\hline
-\verb+chord.publish.targets+ & bool & Publish all targets defined by program analyses in
-paths specified by properties \verb+chord.java.analysis.path+ and
-\verb+chord.dlog.analysis.path+.
-\newline Default: \verb+false+ \\
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Basic program properties}} \\
-\hline
-\verb+chord.main.class+ & class & Fully-qualified name of main class of given program
-(e.g., \verb+com.example.Main+). \\
-\hline
-\verb+chord.class.path+ & path & Classpath of given program. \verb+${sun.boot.class.path}+
+{\bf Default value:} \code{""} 
+
+\item
+\code{chord.print.rels} \\
+{\bf Type:} string list \\
+{\bf Description:} List of names of program relations whose contents must be printed to files \code{{chord.out.dir}/<...>.txt} where \code{<...>} denotes the relation name.  \\
+{\bf Default value:} \code{""} 
+
+\item
+\code{chord.publish.targets} \\
+ bool \\
+ Publish all targets defined by program analyses in
+paths specified by properties \code{chord.java.analysis.path} and
+\code{chord.dlog.analysis.path}.
+{\bf Default value:} \code{false} \\
+
+\item
+\code{chord.main.class} \\
+ class \\
+ Fully-qualified name of main class of given program
+(e.g., \code{com.example.Main}). \\
+
+\item
+\code{chord.class.path} \\
+{\bf Type:} path \\
+ Classpath of given program. \code{{sun.boot.class.path}}
 is implicitly appended to it.
-\newline Default: \verb+${sun.boot.class.path}+ \\
-\hline
-\verb+chord.src.path+ & path & Java source path of given program.
-\newline Default: \verb+""+ \\
-\hline
-\verb+chord.run.ids+ & string list & List of IDs to identify runs of given program.
-\newline Default: \verb+0+ \\
-\hline
-\verb+chord.args.XXX+ & string & Command-line argument string to be used for given
-program in run having ID \verb+XXX+.
-\newline Default: \verb+""+ \\
-\hline
-\verb+chord.runtime.jvmargs+ & string & Arguments to JVM when running given program.
-It is used when the program is executed to compute its scope (i.e., when property
-\verb+chord.scope.kind+ is set to \verb+dynamic+) as well as when the instrumented
-program is executed for dynamic analyses.
-\newline Default: \verb+"-ea -Xmx1024m"+ \\ 
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Program scope properties}} \\ 
-\hline
-\verb+chord.scope.kind+ & [\verb+rta+ $|$ \verb+dynamic+] & Algorithm to compute
-analysis scope (i.e., reachable classes and methods).  Current choices include
-\verb+rta+ (static Rapid Type Analysis) and \verb+dynamic+ (dynamic analysis).
-\newline Default: \verb+rta+ \\
-\hline
-\verb+chord.reuse.scope+ & bool & Treat analysis scope as the classes and methods listed
-in files specified by properties \verb+chord.classes.file+ and \verb+chord.methods.file+,
-respectively. Property \verb+chord.scope.kind+ is ignored if this property is set to
-\verb+true+ and the two files exist.
-\newline Default: \verb+false+ \\
-\hline
-\verb+chord.check.exclude+ & string list & List of prefixes of names of classes and
+{\bf Default value:} \code{{sun.boot.class.path}} 
+
+\item
+\code{chord.src.path} \\
+{\bf Type:} path \\
+ Java source path of given program. \\
+{\bf Default value:} \code{""} 
+
+\item
+\code{chord.run.ids} \\
+ string list \\
+ List of IDs to identify runs of given program.
+{\bf Default value:} \code{0} 
+
+\item
+\code{chord.args.XXX} \\
+ string \\
+ Command-line argument string to be used for given
+program in run having ID \code{XXX}.
+{\bf Default value:} \code{""}
+
+\item
+\code{chord.runtime.jvmargs} \\
+{\bf Type:} string \\
+{\bf Description:} Arguments to JVM when running given program.  It is used when the program is executed to compute its scope (i.e., when property \code{chord.scope.kind} is set to \code{dynamic}) as well as when the instrumented program is executed for dynamic analyses. \\
+{\bf Default value:} \code{"-ea -Xmx1024m"}
+
+\item
+\code{chord.scope.kind} \\
+{\bf Type:} [\code{rta} $|$ \code{dynamic}] \\
+{\bf Description:} Algorithm to compute analysis scope (i.e., reachable classes and methods).  Current choices include \code{rta} (static Rapid Type Analysis) and \code{dynamic} (dynamic analysis). \\
+{\bf Default value:} \code{rta}
+
+\item
+\code{chord.reuse.scope} \\
+ bool \\
+ Treat analysis scope as the classes and methods listed
+in files specified by properties \code{chord.classes.file} and \code{chord.methods.file},
+respectively. Property \code{chord.scope.kind} is ignored if this property is set to
+\code{true} and the two files exist.
+{\bf Default value:} \code{false} 
+
+\item
+\code{chord.check.exclude} \\
+ string list \\
+ List of prefixes of names of classes and
 packages to be excluded by program analyses.
 Interpretation of this property is analysis-specific. \\
-%\newline Default: \verb+"java.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil."+ \\
-\hline
-\verb+chord.instr.exclude+ & string list & List of prefixes of names of classes and
-packages to be excluded from being instrumented.  Classes in package \verb+java.lang.ref+
-are not instrumented regardless of the value of this property. \\
-%\newline Default: \verb+"java.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil."+ \\
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Program analysis properties}} \\
-\hline
-\verb+chord.java.analysis.path+ & path & Classpath containing program analyses written
-in Java (i.e., \verb+@Chord+-annotated classes).
-\newline Default: \verb+${chord.main.dir}/classes/+ \\
-\hline
-\verb+chord.dlog.analysis.path+ & path & Path of directories containing program analyses
-written in Datalog (i.e., \verb+*.datalog+ and \verb+*.dlog+ files).
-\newline Default: \verb+${chord.main.dir}/src/dlog/+ \\
-\hline
-\verb+chord.reuse.rels+ & bool & Construct program relations from BDDs stored on disk
+{\bf Default value:} \code{"java.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil."} \\
+
+\item
+\code{chord.instr.exclude} \\
+{\bf Type:} string list \\
+{\bf Description:} List of prefixes of names of classes and packages to be excluded from being instrumented.  Classes in package \code{java.lang.ref} are not instrumented regardless of the value of this property. \\
+{\bf Default value:} \code{"java.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil."} 
+
+\item
+\code{chord.java.analysis.path} \\
+{\bf Type:} path \\
+{\bf Description:} Classpath containing program analyses written in Java (i.e., \code{@Chord}-annotated classes). \\
+{\bf Default value:} \code{{chord.main.dir}/classes/} 
+
+\item
+\code{chord.dlog.analysis.path} \\
+{\bf Type:} path \\
+{\bf Description:} Path of directories containing program analyses written in Datalog (i.e., \code{*.datalog} and \code{*.dlog} files). \\
+{\bf Default value:} \code{{chord.main.dir}/src/dlog/} 
+
+\item
+\code{chord.reuse.rels} \\
+ bool \\
+ Construct program relations from BDDs stored on disk
 (from a previous run of Chord) whenever possible instead of re-computing them.
-\newline Default: \verb+false+ \\
-\hline
-\verb+chord.publish.results+ & bool & Publish the results of program analyses in HTML.
+{\bf Default value:} \code{false} \\
+\item
+\code{chord.publish.results} \\
+ bool \\
+ Publish the results of program analyses in HTML.
 Interpretation of this property is analysis-specific.
-\newline Default: \verb+true+ \\
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Program transformation properties}} \\
-\hline
-\verb+chord.ssa+ & bool & Do SSA transformation for all methods deemed reachable by the
+{\bf Default value:} \code{true} \\
+
+\item
+\code{chord.ssa} \\
+ bool \\
+ Do SSA transformation for all methods deemed reachable by the
 algorithm used to compute analysis scope.
-\newline Default: \verb+true+ \\
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Chord debug properties}} \\
-\hline
-\verb+chord.bddbddb.noisy+ & bool & Make bddbddb output debug info when solving Datalog programs.
-\newline Default: \verb+false+ \\
-\hline
-\verb+chord.save.maps+ & bool & Write to file \verb+${chord.bddbddb.work.dir}/<...>.map+
-when saving program domain named \verb+<...>+ (useful for debugging Datalog programs using
-\verb+debug+ target of \verb+${chord.main.dir}/build.xml+).
-\newline Default: \verb+true+ \\
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Chord instrumentation properties}} \\
-\hline
-\verb+chord.trace.pipe+ & bool & Implement the dynamic trace file as a POSIX pipe instead of a regular file.
-\newline Default: \verb+true+ \\
-\hline
-\verb+chord.trace.block.size+ & int & Number of bytes to read/write in a single operation from/to the dynamic trace file.
-\newline Default: \verb+4096+ \\
-\hline
-\verb+chord.runtime.class+ & class & Subclass of \verb+chord.project.Runtime+ used by dynamic program
-analyses to handle events generated during an instrumented program's execution.
-\newline Default: \verb+chord.project.BufferedRuntime+ \\
-\hline
-\hline
-\multicolumn{3}{|l|}{{\bf Chord output properties}} \\
-\hline
-\verb+chord.out.dir+ & location & Directory to which Chord dumps all files.
-\newline Default: \verb+${chord.work.dir}/chord_output/+ \\
-\hline
-\verb+chord.out.file+ & loc. & File to redirect standard output stream during Chord's execution.
-\newline Default: \verb+${chord.out.dir}/log.txt+ \\
-\hline
-\verb+chord.err.file+ & loc. & File to redirect standard error stream during Chord's execution.
-\newline Default: \verb+${chord.out.dir}/log.txt+ \\
-\hline
-\verb+chord.classes.file+ & loc. & File from/to which list of classes deemed reachable is read/written.
-\newline Default: \verb+${chord.out.dir}/classes.txt+ \\
-\hline
-\verb+chord.methods.file+ & loc. & File from/to which list of methods deemed reachable is read/written.
-\newline Default: \verb+${chord.out.dir}/methods.txt+ \\
-\hline
-\verb+chord.bddbddb.work.dir+ & loc. & Directory used by bddbddb as its input/output directory.
-\newline Default: \verb+${chord.out.dir}/bddbddb/+ \\
-\hline
-\verb+chord.boot.classes.dir+ & loc. & Directory containing instrumented JDK classes used by given program.
-\newline Default: \verb+${chord.out.dir}/boot_classes/+ \\
-\hline
-\verb+chord.user.classes.dir+ & loc. & Directory containing instrumented non-JDK classes of given program.
-\newline Default: \verb+${chord.out.dir}/user_classes/+  \\
-\hline
-\verb+chord.instr.scheme.file+ & loc. & File specifying kind and format of events in dynamic trace file.
-\newline Default: \verb+${chord.out.dir}/scheme.ser+ \\
-\hline
-\verb+chord.crude.trace.file+ & loc. & Crude dynamic trace file.
-\newline Default: \verb+${chord.out.dir}/crude_trace.txt+ \\
-\hline
-\verb+chord.final.trace.file+ & loc. & Final dynamic trace file.
-\newline Default: \verb+${chord.out.dir}/final_trace.txt+ \\
-\hline
-\end{longtable}
+{\bf Default value:} \code{true} \\
+
+\item
+\code{chord.bddbddb.noisy} \\
+ bool \\
+ Make \bddbddb\ output debug info when solving Datalog programs.
+{\bf Default value:} \code{false} \\
+
+\item
+\code{chord.save.maps} \\
+ bool \\
+ Write to file \code{{chord.bddbddb.work.dir}/<...>.map}
+when saving program domain named \code{<...>} (useful for debugging Datalog programs using
+\code{debug} target of \code{{chord.main.dir}/build.xml}).
+{\bf Default value:} \code{true} \\
+
+\item
+\code{chord.trace.pipe} \\
+ bool \\
+ Implement the dynamic trace file as a POSIX pipe instead of a regular file.
+{\bf Default value:} \code{true} \\
+
+\item
+\code{chord.trace.block.size} \\
+{\bf Type:} int \\
+{\bf Description:} Number of bytes to read/write in a single operation from/to the dynamic trace file.
+{\bf Default value:} \code{4096} \\
+
+\item
+\code{chord.runtime.class} \\
+{\bf Type:} class \\
+{\bf Description:} Subclass of \code{chord.project.Runtime} used by dynamic program analyses to handle events generated during an instrumented program's execution. \\
+{\bf Default value:} \code{chord.project.BufferedRuntime} 
+
+\item
+\code{chord.out.dir} \\
+{\bf Type:} location \\
+{\bf Description:} Directory to which Chord dumps all files. \\
+{\bf Default value:} \code{{chord.work.dir}/chord_output/} 
+
+\item
+\code{chord.out.file} \\
+{\bf Type:} location \\
+{\bf Description:} File to redirect standard output stream during Chord's execution. \\
+{\bf Default value:} \code{{chord.out.dir}/log.txt}
+
+\item
+\code{chord.err.file} \\
+{\bf Type:} location \\
+{\bf Description:} File to redirect standard error stream during Chord's execution. \\
+{\bf Default value:} \code{{chord.out.dir}/log.txt}
+
+\item
+\code{chord.classes.file} \\
+{\bf Type:} location \\
+{\bf Description:} File from/to which list of classes deemed reachable is read/written. \\
+{\bf Default value:} \code{{chord.out.dir}/classes.txt}
+
+\item
+\code{chord.methods.file} \\
+{\bf Type:} location \\
+{\bf Description:} File from/to which list of methods deemed reachable is read/written. \\
+{\bf Default value:} \code{{chord.out.dir}/methods.txt}
+
+\item
+\code{chord.bddbddb.work.dir} \\
+{\bf Type:} location \\
+{\bf Description:} Directory used by \bddbddb\ as its input/output directory. \\
+{\bf Default value:} \code{{chord.out.dir}/bddbddb/}
+
+\item
+\code{chord.boot.classes.dir} \\
+{\bf Type:} location \\
+{\bf Description:} Directory containing instrumented JDK classes used by given program. \\
+{\bf Default value:} \code{{chord.out.dir}/boot_classes/} 
+
+\item
+\code{chord.user.classes.dir} \\
+{\bf Type:} location \\
+{\bf Description:} Directory containing instrumented non-JDK classes of given program. \\
+{\bf Default value:} \code{{chord.out.dir}/user_classes/} 
+
+\item
+\code{chord.instr.scheme.file} \\
+{\bf Type:} location \\
+{\bf Description:} File specifying kind and format of events in dynamic trace file. \\
+{\bf Default value:} \code{{chord.out.dir}/scheme.ser}
+
+\item
+\code{chord.crude.trace.file} \\
+{\bf Type:} location \\
+{\bf Description:} Crude dynamic trace file. \\
+{\bf Default value:} \code{{chord.out.dir}/crude_trace.txt} 
+
+\item
+\code{chord.final.trace.file} \\
+{\bf Type:} location \\
+{\bf Description:} Final dynamic trace file. \\
+{\bf Default value:} \code{{chord.out.dir}/final_trace.txt}
+\end{enumerate}
