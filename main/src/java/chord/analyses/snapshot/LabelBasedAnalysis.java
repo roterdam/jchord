@@ -1,7 +1,7 @@
 /**
  * 
  */
-package chord.project.analyses;
+package chord.analyses.snapshot;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
@@ -13,6 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import chord.project.analyses.DynamicAnalysis;
 import chord.instr.InstrScheme;
 
 /**
