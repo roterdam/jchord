@@ -134,7 +134,6 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 				exit(1);
             }
 			enable_runtime = true;
-			cout << "OPTION runtime_class_name: " << runtime_class_name << endl;
 			continue;
         }
 		if (strcmp(token, "classes_file_name") == 0) {
@@ -145,7 +144,6 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 				exit(1);
             }
 			list_loaded_classes = true;
-			cout << "OPTION classes_file_name: " << classes_file_name << endl;
 			continue;
 		}
 	}
