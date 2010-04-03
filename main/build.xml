@@ -14,7 +14,6 @@
 		run       Run Chord
 		          Optional properties:
 		          See http://code.google.com/p/jchord/wiki/ChordProperties
-		run-XXX	  Run custom analysis XXX (e.g. datarace, deadlock, etc.)
 		j2h_xref  Convert .java files to .html with cross-references
 		          Required properties:
 		          - java.dir (dir containing Java source files)
@@ -329,36 +328,6 @@
 	</target>
 
 	<!--
-		SHORTHAND FOR DATARACE AND DEADLOCK CHECKERS
-	-->
-
-	<target name="run-datarace">
-		<path id="chord_java_analysis_path">
-			<pathelement location="classes"/>
-		</path>
-		<path id="chord_dlog_analysis_path">
-			<pathelement location="src/dlog"/>
-		</path>
-		<property name="chord.run.analyses" value="datarace-java"/>
-		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
-		<property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-		<antcall target="run"/>
-	</target>
-
-	<target name="run-deadlock">
-		<path id="chord_java_analysis_path">
-			<pathelement location="classes"/>
-		</path>
-		<path id="chord_dlog_analysis_path">
-			<pathelement location="src/dlog"/>
-		</path>
-		<property name="chord.run.analyses" value="deadlock-java"/>
-		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/>
-		<property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/>
-		<antcall target="run"/>
-	</target>
-
-	<!--
 		PROGRAM REPRESENTATION PRINTING UTILS
 	-->
 
@@ -489,9 +458,8 @@
 	</target>
 
 	<target name="htmldoc">
-		<exec executable="hyperlatex" dir="doc">
-			<arg value="-html"/>
-			<arg value="user_guide"/>
+		<exec executable="latex2html" dir="doc">
+			<arg value="user_guide.tex"/>
 		</exec>
 	</target>
 
