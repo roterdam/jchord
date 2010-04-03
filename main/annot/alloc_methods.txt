@@ -1,0 +1,2 @@
+newInstance:()Ljava/lang/Object;@java.lang.Class
+clone:()Ljava/lang/Object;@java.lang.Object

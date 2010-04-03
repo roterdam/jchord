@@ -33,5 +33,9 @@ public class Messages {
 			throw new RuntimeException("Message not found: " + key);
 		}
 	}
+	public static void fatal(String key, Object... args) {
+		log(key, args);
+		System.exit(1);
+	}
 }
 

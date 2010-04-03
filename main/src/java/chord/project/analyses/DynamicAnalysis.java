@@ -28,12 +28,12 @@ import chord.program.CFGLoopFinder;
 import chord.program.Program;
 import chord.project.Messages;
 import chord.project.Properties;
+import chord.project.OutDirUtils;
 import chord.runtime.BufferedRuntime;
 import chord.util.ByteBufferedFile;
 import chord.util.ChordRuntimeException;
 import chord.util.Executor;
 import chord.util.FileUtils;
-import chord.util.ProcessExecutor;
 import chord.util.ReadException;
 
 /**
@@ -160,8 +160,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 					FileUtils.deleteFile(finalTraceFileName);
 					final boolean doTracePipe = Properties.doTracePipe;
 					if (doTracePipe) {
-						ProcessExecutor.execute("mkfifo " + crudeTraceFileName);
-						ProcessExecutor.execute("mkfifo " + finalTraceFileName);
+						String cmd1 = "mkfifo " + crudeTraceFileName;
+						OutDirUtils.executeWithFailOnError(cmd1);
+						String cmd2 = "mkfifo " + finalTraceFileName;
+						OutDirUtils.executeWithFailOnError(cmd2);
 					}
 					Runnable traceTransformer = new Runnable() {
 						public void run() {
@@ -203,14 +205,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 						final String cmd = instrProgramCmd + args;
 						Runnable instrProgram = new Runnable() {
 							public void run() {
-								try {
-									int result = ProcessExecutor.execute(cmd);
-									if (result != 0)
-										instrJVMfailed(result);
-								} catch (Throwable ex) {
-									ex.printStackTrace();
-									System.exit(1);
-								}
+								OutDirUtils.executeWithFailOnError(cmd);
 							}
 						};
 						executor.execute(instrProgram);
@@ -232,9 +227,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 					final String args = System.getProperty("chord.args." + runID, "");
 					final String cmd = instrProgramCmd + args;
 					initPass();
-					int result = ProcessExecutor.execute(cmd);
-					if (result != 0)
-						instrJVMfailed(result);
+					OutDirUtils.executeWithFailOnError(cmd);
 					donePass();
 					Messages.log("DYNAMIC.FINISHED_RUN", runID);
 				}
@@ -246,11 +239,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 	}
 
-	private static void instrJVMfailed(int result) {
-		Messages.log("DYNAMIC.INSTRUMENTED_JVM_FAILED", result);
-		System.exit(1);
-	}
-	
 	private void init4loopConsistency() {
 		domM = instrumentor.getDomM();
 		domB = instrumentor.getDomB();
@@ -757,7 +745,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 		error("void processFinalize(int o)");
 	}
 	private void error(String mSign) {
-		Messages.log("DYNAMIC.EVENT_NOT_HANDLED", getName(), mSign);
-		System.exit(1);
+		Messages.fatal("DYNAMIC.EVENT_NOT_HANDLED", getName(), mSign);
 	}
 }

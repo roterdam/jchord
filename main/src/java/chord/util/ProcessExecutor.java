@@ -28,21 +28,13 @@ public final class ProcessExecutor {
 	 * @return	The exit value of the invoked process.
 	 * 			By convention, 0 indicates normal termination.
 	 */
-    public static final int execute(String cmd) {
-		System.out.println("EXEC " + cmd);
-        try {
-	    	Process proc = Runtime.getRuntime().exec(cmd);
-	    	StreamGobbler err =
-	    		new StreamGobbler(proc.getErrorStream(), "ERR");
-	        StreamGobbler out = 
-	        	new StreamGobbler(proc.getInputStream(), "OUT");
-	        err.start();
-	        out.start();
-	        return proc.waitFor();
-        } catch (Exception e) {
-        	throw new RuntimeException(e.getMessage());
-        }
-        
+    public static final int execute(String cmd) throws Throwable {
+	   	Process proc = Runtime.getRuntime().exec(cmd);
+		StreamGobbler err = new StreamGobbler(proc.getErrorStream(), "ERR");
+		StreamGobbler out = new StreamGobbler(proc.getInputStream(), "OUT");
+		err.start();
+		out.start();
+		return proc.waitFor();
     }
     private static class StreamGobbler extends Thread {
         private final InputStream s;
