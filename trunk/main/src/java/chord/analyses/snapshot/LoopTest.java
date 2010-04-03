@@ -5,7 +5,7 @@ package chord.analyses.snapshot;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.OutDirUtils;
+import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
 import chord.util.IndexMap;
 
@@ -39,8 +39,8 @@ public class LoopTest extends DynamicAnalysis {
 	public void processEnterLoop(int w, int t) {
 		String s = Bmap.get(w);
 		if (s.contains("V@T")) {
-			OutDirUtils.logOut("%s", "Entered loop: " + s);
-			OutDirUtils.logOut("%s", "Loop id: " + w);
+			Messages.logAnon("Entered loop: " + s);
+			Messages.logAnon("Loop id: " + w);
 		}
 	}
 	
@@ -48,7 +48,7 @@ public class LoopTest extends DynamicAnalysis {
 	public void processLeaveLoop(int w, int t) {
 		String s = Bmap.get(w);
 		if (s.contains("V@T")) {
-			OutDirUtils.logOut("%s", "Exited loop: " + s);
+			Messages.logAnon("Exited loop: " + s);
 		}
 	}
 	
@@ -56,7 +56,7 @@ public class LoopTest extends DynamicAnalysis {
 	public void processLoopIteration(int w, int t) {
 		String s = Bmap.get(w);
 		if (s.contains("V@T")) {
-			OutDirUtils.logOut("%s", "Loop iteration began: " + s);
+			Messages.logAnon("Loop iteration began: " + s);
 		}
 	}
 }

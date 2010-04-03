@@ -799,7 +799,7 @@ public class Project {
 				for (String taskName : consumerTaskNames)
 					msg += "\t'" + taskName + "'\n";
 			}
-			OutDirUtils.logOut(msg);
+			Messages.logAnon(msg);
 		}
 	}
 	
@@ -808,7 +808,7 @@ public class Project {
 			String msg = "WARNING: '" + name + "' declared as produced name of multiple tasks:\n";
 			for (String taskName : producerTaskNames) 
 				msg += "\t'" + taskName + "'\n";
-			OutDirUtils.logOut(msg);
+			Messages.logAnon(msg);
 		}
 	}
 	

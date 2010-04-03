@@ -70,10 +70,4 @@ public class OutDirUtils {
         }
         Messages.log("PROCESS.FINISHED", cmd);
     }
-	public static void logOut(String format, Object... args) {
-		System.out.println(String.format(format, args));
-	}
-	public static void logErr(String format, Object... args) {
-		System.err.println(String.format(format, args));
-	}
 }

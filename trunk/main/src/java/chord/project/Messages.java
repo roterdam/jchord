@@ -24,6 +24,11 @@ public class Messages {
 			throw new RuntimeException("Message not found: " + key);
 		}
 	}
+	public static void logAnon(String format, Object... args) {
+		String msg = String.format(format, args);
+        System.out.println(msg);
+    }
+
 	public static void log(String key, Object... args) {
 		try {
 			String format = RESOURCE_BUNDLE.getString(key);
