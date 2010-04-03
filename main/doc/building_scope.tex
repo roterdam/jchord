@@ -17,7 +17,7 @@ to be regarded as reachable.  The format
 of the classes file is a fully-qualified class name per line (e.g., \code{foo.bar.Main}).  The format
 of the methods file is an entry of the form \code{<method name>:<method descriptor>@<class name>} per line,
 specifying the method's name, the method's descriptor, and the method's declaring class
-(e.g., \code{main:([Ljava/lang/String;)V@foo.bar.Main+}).
+(e.g., \code{main:([Ljava/lang/String;)V@foo.bar.Main}).
 Chord throws a runtime exception if the declaring class of a method in the methods file is not
 specified in the classes file.
 
@@ -35,6 +35,7 @@ to be set.
 \begin{itemize}
 \item
 The \code{rta} value instructs Chord to compute the analysis scope statically using Rapid Type Analysis.
+
 \item
 The \code{dynamic} value instructs Chord to compute the analysis scope dynamically, by running the program
 and observing using JVMTI the classes that are loaded at run-time.
@@ -52,7 +53,7 @@ predictive power of program analyses performed using the computed analysis scope
 The default value of property \code{chord.reuse.scope} is \code{false} and that of
 property \code{chord.scope.kind} is \code{rta}.
 The default values of properties \code{chord.classes.file} and \code{chord.methods.file} are
-\code{{chord.out.dir}/classes.txt} and \code{{chord.out.dir}/methods.txt}, respectively,
-where property \code{chord.out.dir} defaults to \code{{chord.work.dir}/chord_output/},
+\code{[chord.out.dir]/classes.txt} and \code{[chord.out.dir]/methods.txt}, respectively,
+where property \code{chord.out.dir} defaults to \code{[chord.work.dir]/chord_output/},
 and property \code{chord.work.dir} defaults to the current working directory.
 
