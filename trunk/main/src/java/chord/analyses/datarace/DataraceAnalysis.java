@@ -59,10 +59,10 @@ import chord.util.tuple.object.Trio;
  * <p>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.include.escaping</tt> (default is true).</li>
- * <li><tt>chord.include.parallel</tt> (default is true).</li>
- * <li><tt>chord.include.nongrded</tt> (default is true).</li>
- * <li><tt>chord.publish.results</tt> (default is true).</li>
+ * <li><tt>chord.exclude.escaping</tt> (default is false).</li>
+ * <li><tt>chord.exclude.parallel</tt> (default is false).</li>
+ * <li><tt>chord.exclude.nongrded</tt> (default is false).</li>
+ * <li><tt>chord.publish.results</tt> (default is false).</li>
  * <li>All system properties recognized by abstract contexts analysis
  * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
  * </ul>

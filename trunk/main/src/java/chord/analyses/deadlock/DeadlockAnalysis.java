@@ -54,11 +54,11 @@ import chord.util.tuple.object.Pair;
  * <p>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.include.escaping</tt> (default is true).</li>
- * <li><tt>chord.include.parallel</tt> (default is true).</li>
- * <li><tt>chord.include.nonreent</tt> (default is true).</li>
- * <li><tt>chord.include.nongrded</tt> (default is true).</li>
- * <li><tt>chord.publish.results</tt> (default is true).</li>
+ * <li><tt>chord.exclude.escaping</tt> (default is false).</li>
+ * <li><tt>chord.exclude.parallel</tt> (default is false).</li>
+ * <li><tt>chord.exclude.nonreent</tt> (default is false).</li>
+ * <li><tt>chord.exclude.nongrded</tt> (default is false).</li>
+ * <li><tt>chord.publish.results</tt> (default is false).</li>
  * <li>All system properties recognized by abstract contexts analysis
  * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
  * </ul>
@@ -121,14 +121,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	}
 	
 	public void run() {
-		boolean excludeParallel = Boolean.getBoolean(
-			"chord.exclude.parallel");
-		boolean excludeEscaping = Boolean.getBoolean(
-			"chord.exclude.escaping");
-		boolean excludeNonreent = Boolean.getBoolean(
-			"chord.exclude.nonreent");
-		boolean excludeNongrded = Boolean.getBoolean(
-			"chord.exclude.nongrded");
+		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
+		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");
+		boolean excludeNonreent = Boolean.getBoolean("chord.exclude.nonreent");
+		boolean excludeNongrded = Boolean.getBoolean("chord.exclude.nongrded");
 
 		init();
 		
