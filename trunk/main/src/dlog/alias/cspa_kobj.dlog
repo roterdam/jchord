@@ -59,13 +59,11 @@ epsilonM(m:M) input
 kobjSenM(m:M) input
 ctxtCpyM(m:M) input
 epsilonV(v:V) input
-MV(m:M,v:V) input
 
 IHM(i:I,h:H,m:M)
 reachableT(t:T)
 
 MspcMethArg(m:M,v:V) input
-MkobjSenSpcMethArg(m:M,v:V)
 
 DIC(c:C,i:I,c:C) output
 DIH(c:C,i:I,h:H) output
