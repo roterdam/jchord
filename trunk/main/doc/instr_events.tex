@@ -7,122 +7,122 @@ following kinds of events during its execution.
 \begin{enumerate}
 \item
 Method entry and exit. \\
-{\bf Event:} \code{ENTER_METHOD} $m$ $t$ \\
-{\bf Desc.:} Generated after thread $t$ enters method $m$ respectively. \\
-{\bf Event:} \code{LEAVE_METHOD} $m$ $t$ \\
-{\bf Desc.:} Generated before thread $t$ leaves method $m$ respectively.
+{\bf Event:} \code{ENTER_METHOD} m t \\
+{\bf Desc.:} Generated after thread t enters method m respectively. \\
+{\bf Event:} \code{LEAVE_METHOD} m t \\
+{\bf Desc.:} Generated before thread t leaves method m respectively.
 
 \item
 Loop entry and exit. \\
-{\bf Event:} \code{ENTER_LOOP} $w$ $t$ \\
-{\bf Desc.:} Generated before thread $t$ enters loop $w$ respectively. \\
-{\bf Event:} \code{LEAVE_LOOP} $w$ $t$ \\
-{\bf Desc.:} Generated after thread $t$ leaves loop $w$ respectively.
+{\bf Event:} \code{ENTER_LOOP} w t \\
+{\bf Desc.:} Generated before thread t enters loop w respectively. \\
+{\bf Event:} \code{LEAVE_LOOP} w t \\
+{\bf Desc.:} Generated after thread t leaves loop w respectively.
 
 \item
 Object allocation \\
-{\bf Event:} \code{BEF_NEW} $h$ $t$ \\
-{\bf Desc.:} Generated only in the crude trace before thread $t$ executes a \code{new} bytecode instruction at program point $h$. \\
-{\bf Event:} \code{AFT_NEW} $h$ $t$ $o$ \\
-{\bf Desc.:} Generated only in the crude trace after thread $t$ executes a \code{new} bytecode instruction at program point $h$ and allocates new object $o$. \\
+{\bf Event:} \code{BEF_NEW} h t \\
+{\bf Desc.:} Generated only in the crude trace before thread t executes a \code{new} bytecode instruction at program point h. \\
+{\bf Event:} \code{AFT_NEW} h t o \\
+{\bf Desc.:} Generated only in the crude trace after thread t executes a \code{new} bytecode instruction at program point h and allocates new object o. \\
 %Note: Both above events are visible only in the crude trace and not in the final trace. They are generated only if argument \code{hasObj} of method {@link #setNewAndNewArrayEvent} is true.
-{\bf Event:} \code{NEW} $h$ $t$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ executes a \code{new} bytecode instruction at program point $h$ and allocates new object $o$. \\
-{\bf Event:} \code{NEW_ARRAY} $h$ $t$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ executes a \code{newarray} bytecode instruction at program point $h$ and allocates new object $o$.
+{\bf Event:} \code{NEW} h t o \\
+{\bf Desc.:} Generated after thread t executes a \code{new} bytecode instruction at program point h and allocates new object o. \\
+{\bf Event:} \code{NEW_ARRAY} h t o \\
+{\bf Desc.:} Generated after thread t executes a \code{newarray} bytecode instruction at program point h and allocates new object o.
 
 \item
 Getstatic primitive \\
-{\bf Event:} \code{GETSTATIC_PRIMITIVE} $e$ $t$ $f$ \\
-{\bf Desc.:} Generated after thread $t$ reads primitive-typed static field $f$ at program point $e$.
+{\bf Event:} \code{GETSTATIC_PRIMITIVE} e t f \\
+{\bf Desc.:} Generated after thread t reads primitive-typed static field f at program point e.
 
 \item
 Getstatic reference \\
-{\bf Event:} \code{GETSTATIC_REFERENCE} $e$ $t$ $f$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ reads object $o$ from reference-typed static field $f$ at program point $e$.
+{\bf Event:} \code{GETSTATIC_REFERENCE} e t f o \\
+{\bf Desc.:} Generated after thread t reads object o from reference-typed static field f at program point e.
 
 \item
 Putstatic primitive \\
-{\bf Event:} \code{PUTSTATIC_PRIMITIVE} $e$ $t$ $f$ \\
-{\bf Desc.:} Generated after thread $t$ writes primitive-typed static field $f$ at program point $e$.
+{\bf Event:} \code{PUTSTATIC_PRIMITIVE} e t f \\
+{\bf Desc.:} Generated after thread t writes primitive-typed static field f at program point e.
 
 \item
 Putstatic reference \\
-{\bf Event:} \code{PUTSTATIC_REFERENCE} $e$ $t$ $f$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ writes object $o$ to reference-typed static field $f$ at program point $e$.
+{\bf Event:} \code{PUTSTATIC_REFERENCE} e t f o \\
+{\bf Desc.:} Generated after thread t writes object o to reference-typed static field f at program point e.
 
 \item
 Getfield primitive \\
-{\bf Event:} \code{GETFIELD_PRIMITIVE} $e$ $t$ $b$ $f$ \\
-{\bf Desc.:} Generated after thread $t$ reads primitive-typed instance field $f$ of object $b$ at program point $e$.
+{\bf Event:} \code{GETFIELD_PRIMITIVE} e t b f \\
+{\bf Desc.:} Generated after thread t reads primitive-typed instance field f of object b at program point e.
 
 \item
 Getfield reference \\
-{\bf Event:} \code{GETFIELD_REFERENCE} $e$ $t$ $b$ $f$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ reads object $o$ from reference-typed instance field $f$ of object $b$ at program point $e$.
+{\bf Event:} \code{GETFIELD_REFERENCE} e t b f o \\
+{\bf Desc.:} Generated after thread t reads object o from reference-typed instance field f of object b at program point e.
 
 \item
 Putfield primitive \\
-{\bf Event:} \code{PUTFIELD_PRIMITIVE} $e$ $t$ $b$ $f$ \\
-{\bf Desc.:} Generated after thread $t$ writes primitive-typed instance field $f$ of object $b$ at program point $e$.
+{\bf Event:} \code{PUTFIELD_PRIMITIVE} e t b f \\
+{\bf Desc.:} Generated after thread t writes primitive-typed instance field f of object b at program point e.
 
 \item
 Putfield reference \\
-{\bf Event:} \code{PUTFIELD_REFERENCE} $e$ $t$ $b$ $f$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ writes object $o$ to reference-typed instance field $f$ of object $b$ at program point $e$.
+{\bf Event:} \code{PUTFIELD_REFERENCE} e t b f o \\
+{\bf Desc.:} Generated after thread t writes object o to reference-typed instance field f of object b at program point e.
 
 \item
 Aload primitive \\
-{\bf Event:} \code{ALOAD_PRIMITIVE} $e$ $t$ $b$ $i$ \\
-{\bf Desc.:} Generated after thread $t$ reads the primitive-typed element at index $i$ of array object $b$ at program point $e$.
+{\bf Event:} \code{ALOAD_PRIMITIVE} e t b i \\
+{\bf Desc.:} Generated after thread t reads the primitive-typed element at index i of array object b at program point e.
 
 \item
 Aload reference \\
-{\bf Event:} \code{ALOAD_REFERENCE} $e$ $t$ $b$ $i$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ reads object $o$ from the reference-typed element at index $i$ of array object $b$ at program point $e$.
+{\bf Event:} \code{ALOAD_REFERENCE} e t b i o \\
+{\bf Desc.:} Generated after thread t reads object o from the reference-typed element at index i of array object b at program point e.
 
 \item
 Astore primitive \\
-{\bf Event:} \code{ASTORE_PRIMITIVE} $e$ $t$ $b$ $i$ \\
-{\bf Desc.:} Generated after thread $t$ writes the primitive-typed element at index $i$ of array object $b$ at program point $e$.
+{\bf Event:} \code{ASTORE_PRIMITIVE} e t b i \\
+{\bf Desc.:} Generated after thread t writes the primitive-typed element at index i of array object b at program point e.
 
 \item
 Astore reference \\
-{\bf Event:} \code{ASTORE_REFERENCE} $e$ $t$ $b$ $i$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ writes object $o$ to the reference-typed element at index $i$ of array object $b$ at program point $e$.
+{\bf Event:} \code{ASTORE_REFERENCE} e t b i o \\
+{\bf Desc.:} Generated after thread t writes object o to the reference-typed element at index i of array object b at program point e.
 
 \item
 Method call \\
-{\bf Event:} \code{METHOD_CALL} $i$ $t$ \\
-{\bf Desc.:} Generated before or after thread $t$ executes the method invocation statement at program point $i$.
+{\bf Event:} \code{METHOD_CALL} i t \\
+{\bf Desc.:} Generated before or after thread t executes the method invocation statement at program point i.
 
 \item
 Thread start call \\
-{\bf Event:} \code{THREAD_START} $i$ $t$ $o$ \\
-{\bf Desc.:} Generated before thread $t$ calls the \code{start()} method of \code{java.lang.Thread} at program point $i$ and spawns a thread $o$. 
+{\bf Event:} \code{THREAD_START} i t o \\
+{\bf Desc.:} Generated before thread t calls the \code{start()} method of \code{java.lang.Thread} at program point i and spawns a thread o. 
 
 \item
 Thread join call \\
-{\bf Event:} \code{THREAD_JOIN} $i$ $t$ $o$ \\
-{\bf Desc.:} Generated before thread $t$ calls the \code{join()} method of \code{java.lang.Thread} at program point i to join with thread $o$.
+{\bf Event:} \code{THREAD_JOIN} i t o \\
+{\bf Desc.:} Generated before thread t calls the \code{join()} method of \code{java.lang.Thread} at program point i to join with thread o.
 
 \item
 Lock acquire \\
-{\bf Event:} \code{ACQUIRE_LOCK} $l$ $t$ $o$ \\
-{\bf Desc.:} Generated after thread $t$ executes a statement of the form monitorenter $o$ or enters a method synchronized on $o$ at program point $l$.
+{\bf Event:} \code{ACQUIRE_LOCK} l t o \\
+{\bf Desc.:} Generated after thread t executes a statement of the form monitorenter o or enters a method synchronized on o at program point l.
 
 \item
 Lock release \\
-{\bf Event:} \code{RELEASE_LOCK} $r$ $t$ $o$ \\
+{\bf Event:} \code{RELEASE_LOCK} r t o \\
 {\bf Desc.:} Generated before thread t executes a statement of the form monitorexit o or leaves a method synchronized on o at program point r.
 
 \item
 Thread wait call \\
-{\bf Event:} \code{WAIT} $i$ $t$ $o$ \\
-{\bf Desc.:} Generated before thread $t$ calls the \code{wait()} method of \code{java.lang.Object} at program point $i$ on object $o$.
+{\bf Event:} \code{WAIT} i t o \\
+{\bf Desc.:} Generated before thread t calls the \code{wait()} method of \code{java.lang.Object} at program point i on object o.
 
 \item
 Thread notify call \\
-{\bf Event:} \code{NOTIFY} $i$ $t$ $o$ \\
-{\bf Desc.:} Generated before thread $t$ calls the \code{notify()} or \code{notifyAll()} method of \code{java.lang.Object} at program point $i$ on object $o$.
+{\bf Event:} \code{NOTIFY} i t o \\
+{\bf Desc.:} Generated before thread t calls the \code{notify()} or \code{notifyAll()} method of \code{java.lang.Object} at program point i on object o.
 \end{enumerate}
