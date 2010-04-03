@@ -13,7 +13,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import chord.project.OutDirUtils;
+import chord.project.Messages;
 import chord.util.ArraySet;
 
 /**
@@ -111,7 +111,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 			result = refine(visited, result);
 		}
 		if (VERBOSE) {
-			OutDirUtils.logOut("%s", "The number of roots for label " + l
+			Messages.logAnon("The number of roots for label " + l
 					+ " is: " + result.size() + ".");
 		}
 		return result;
@@ -156,7 +156,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 	@Override
 	public void edgeCreated(int b, int f, int o) {
 		if (VERBOSE) {
-			OutDirUtils.logOut("%s", "So far " + (++numEdgesCreated)
+			Messages.logAnon("So far " + (++numEdgesCreated)
 					+ " edges were created.");
 		}
 		if (b != 0 && f >= 0) {
@@ -167,7 +167,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 	@Override
 	public void edgeDeleted(int b, int f, int o) {
 		if (VERBOSE) {
-			OutDirUtils.logOut("%s", "So far " + (++numEdgesDeleted)
+			Messages.logAnon("So far " + (++numEdgesDeleted)
 					+ " edges were deleted.");
 		}
 		if (b != 0 && f >= 0) {
@@ -223,7 +223,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 			}
 		} else {
 			if (VERBOSE) {
-				OutDirUtils.logOut("%s", "Entered updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
+				Messages.logAnon("Entered updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
 			}
 			doBookKeeping(b, f, o);
 			Set<Label> labels = collectLabels(b, f, o);
@@ -235,9 +235,8 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 					for (Label l : labels) {
 						TIntHashSet roots = getRoots(l, visited);
 						if (VERBOSE) {
-							OutDirUtils.logOut("%s",
-									"About to restart propagation of a label with "
-											+ roots.size() + " roots.");
+							Messages.logAnon("About to restart propagation of a label with "
+								+ roots.size() + " roots.");
 						}
 						for (TIntIterator it = roots.iterator(); it.hasNext();) {
 							int next = it.next();
@@ -271,7 +270,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 				}
 			}
 			if (VERBOSE) {
-				OutDirUtils.logOut("%s", "Left updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
+				Messages.logAnon("Left updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
 			}
 		}
 	}

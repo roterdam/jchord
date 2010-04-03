@@ -11,7 +11,7 @@ import joeq.Class.jq_Method;
 import chord.doms.DomM;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.OutDirUtils;
+import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.Project;
 
@@ -80,7 +80,7 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
     
     private boolean isAppMethod(jq_Method m) {
     	String className = m.getDeclaringClass().getName();
-//    	OutDirUtils.logOut("%s", className);
+//    	Messages.logAnon("%s", className);
     	for (String pref : LIB_PREFIXES) {
     		if (className.startsWith(pref)) {
     			return false;
@@ -90,11 +90,11 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
     }
     
     public void doneAllPasses() {
-    	OutDirUtils.logOut("=== # of visited classes: %d ===", visitedClasses.size());
-		OutDirUtils.logOut("=== # of visited app. classes: %d ===", visitedAppClasses.size());
-		OutDirUtils.logOut("=== # of visited methods: %d ===", visitedMethods.size());
-		OutDirUtils.logOut("=== # of visited app. methods: %d ===", visitedAppMethods.size());
-		OutDirUtils.logOut("=== Total bytecode: %d ===", totalBytecode);
-		OutDirUtils.logOut("=== Total app. bytecode: %d ===", totalAppBytecode);
+    	Messages.logAnon("=== # of visited classes: %d ===", visitedClasses.size());
+		Messages.logAnon("=== # of visited app. classes: %d ===", visitedAppClasses.size());
+		Messages.logAnon("=== # of visited methods: %d ===", visitedMethods.size());
+		Messages.logAnon("=== # of visited app. methods: %d ===", visitedAppMethods.size());
+		Messages.logAnon("=== Total bytecode: %d ===", totalBytecode);
+		Messages.logAnon("=== Total app. bytecode: %d ===", totalAppBytecode);
 	}
 }
