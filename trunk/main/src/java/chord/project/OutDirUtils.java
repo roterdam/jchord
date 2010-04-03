@@ -12,6 +12,7 @@ import java.io.FileNotFoundException;
 import chord.util.IndexMap;
 import chord.util.FileUtils;
 import chord.util.ChordRuntimeException;
+import chord.util.ProcessExecutor;
 
 /**
  * Shorthand for common operations on files in the directory specified
@@ -58,6 +59,17 @@ public class OutDirUtils {
 			throw new ChordRuntimeException(ex);
 		}
 	}
+    public static final void executeWithFailOnError(String cmd) {
+        Messages.log("PROCESS.STARTING", cmd);
+        try {
+            int result = ProcessExecutor.execute(cmd);
+            if (result != 0)
+                throw new ChordRuntimeException("Return value=" + result);
+        } catch (Throwable ex) {
+            Messages.fatal("PROCESS.FAILED", cmd, ex.getMessage());
+        }
+        Messages.log("PROCESS.FINISHED", cmd);
+    }
 	public static void logOut(String format, Object... args) {
 		System.out.println(String.format(format, args));
 	}

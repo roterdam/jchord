@@ -18,10 +18,10 @@ import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
+import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.IndexHashSet;
-import chord.util.ProcessExecutor;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
  
@@ -166,9 +166,11 @@ public class Program {
 
 	private void initFromDynamic() throws IOException {
 		String mainClassName = Properties.mainClassName;
-		assert (mainClassName != null);
+		if (mainClassName == null)
+			Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
 		String classPathName = Properties.classPathName;
-		assert (classPathName != null);
+		if (classPathName == null)
+			Messages.fatal("SCOPE.CLASS_PATH_NOT_DEFINED");
         String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
         final String cmd = "java " + Properties.runtimeJvmargs +
@@ -178,9 +180,8 @@ public class Program {
             " " + mainClassName + " ";
 		classes = new IndexHashSet<jq_Class>();
         for (String runID : runIDs) {
-            System.out.println("Processing Run ID: " + runID);
             String args = System.getProperty("chord.args." + runID, "");
-			ProcessExecutor.execute(cmd + args);
+			OutDirUtils.executeWithFailOnError(cmd + args);
 			loadClasses(Properties.classesFileName);
 		}
 		methods = new IndexHashSet<jq_Method>();
@@ -274,8 +275,7 @@ public class Program {
 		return methods;
 	}
 
-	public jq_Method getReachableMethod(String mName,
-			String mDesc, String cName) {
+	public jq_Method getReachableMethod(String mName, String mDesc, String cName) {
 		jq_Class c = getPreparedClass(cName);
 		if (c == null)
 			return null;
@@ -295,10 +295,11 @@ public class Program {
 	public jq_Method getMainMethod() {
 		if (mainMethod == null) {
 			String mainClassName = Properties.mainClassName;
-			assert (mainClassName != null);
-			mainMethod = getReachableMethod("main",
-				"([Ljava/lang/String;)V", mainClassName);
-			assert (mainMethod != null);
+			if (mainClassName == null)
+				Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+			mainMethod = getReachableMethod("main", "([Ljava/lang/String;)V", mainClassName);
+			if (mainMethod == null)
+				Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
 		}
 		return mainMethod;
 	}
@@ -395,9 +396,9 @@ public class Program {
 	public void HTMLizeJavaSrcFiles() {
 		if (!HTMLizedJavaSrcFiles) {
 			String srcPathName = Properties.srcPathName;
-			assert (srcPathName != null);
-			String[] srcDirNames =
-				srcPathName.split(File.pathSeparator);
+			if (srcPathName == null)
+				Messages.fatal("SCOPE.SRC_PATH_NOT_DEFINED");
+			String[] srcDirNames = srcPathName.split(File.pathSeparator);
 			try {
 				Java2HTML java2HTML = new Java2HTML();
 				java2HTML.setMarginSize(4);
@@ -406,7 +407,7 @@ public class Program {
 				java2HTML.setDestination(Properties.outDirName);
 				java2HTML.buildJava2HTML();
 			} catch (Exception ex) {
-				throw new RuntimeException(ex);
+				throw new ChordRuntimeException(ex);
 			}
 			HTMLizedJavaSrcFiles = true;
 		}

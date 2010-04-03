@@ -6,7 +6,7 @@
 package chord.bddbddb;
 
 import chord.project.Properties;
-import chord.util.ProcessExecutor;
+import chord.project.OutDirUtils;
 
 /**
  * Interface to bddbddb's BDD-based Datalog solver.
@@ -25,18 +25,12 @@ public class Solver {
 	 * @param	fileName	A file containing a Datalog program.
 	 */
 	public static void run(String fileName) {
-		String cmd =
-			"java -Xmx" + Properties.bddbddbMaxHeap +
+		String cmd = "java -Xmx" + Properties.bddbddbMaxHeap +
 			" -cp " + Properties.bddbddbClassPathName +
 			" -Dnoisy=" + (Properties.bddbddbNoisy ? "yes" : "no") +
 			" -Djava.library.path=" + Properties.libDirName +
 			" -Dbasedir=" + Properties.bddbddbWorkDirName +
 			" net.sf.bddbddb.Solver " + fileName;
-		int ret = ProcessExecutor.execute(cmd);
-		if (ret != 0) {
-			throw new RuntimeException("Command '" + cmd +
-				"' terminated with non-zero value '" +
-				ret + "'");
-		}
+		OutDirUtils.executeWithFailOnError(cmd);
 	}
 }
