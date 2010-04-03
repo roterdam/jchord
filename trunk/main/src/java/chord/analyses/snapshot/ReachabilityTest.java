@@ -12,7 +12,6 @@ import java.util.Set;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.analyses.LabelBasedAnalysis;
 import chord.util.IndexMap;
 
 /**
