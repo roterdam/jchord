@@ -10,15 +10,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import chord.project.Properties;
-import chord.util.Timer;
-import chord.util.IndexHashSet;
-import chord.util.ChordRuntimeException;
-
 import joeq.Class.PrimordialClassLoader;
-import joeq.Class.jq_Field;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_ClassInitializer;
+import joeq.Class.jq_Field;
 import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_NameAndDesc;
@@ -27,6 +22,8 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operand.TypeOperand;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
@@ -36,6 +33,10 @@ import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
 import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
+import chord.project.Properties;
+import chord.util.ChordRuntimeException;
+import chord.util.IndexHashSet;
+import chord.util.Timer;
 
 /**
  * Rapid Type Analysis algorithm for computing program scope
@@ -45,6 +46,7 @@ import joeq.Util.Templates.ListIterator;
  */
 public class RTA implements IBootstrapper {
 	public static final boolean DEBUG = false;
+	private static final boolean ENABLE_REFLECTION_SUPPORT = false;
     private IndexHashSet<jq_Class> reachableAllocClasses =
         new IndexHashSet<jq_Class>();
 	protected IndexHashSet<jq_Class> preparedClasses =
@@ -60,6 +62,7 @@ public class RTA implements IBootstrapper {
 	protected List<jq_Method> todoMethods = new ArrayList<jq_Method>();
 	protected boolean repeat = true;
 	protected jq_Class javaLangObject;
+	protected ClassHierarchy cha;
 	public IndexHashSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
@@ -71,6 +74,9 @@ public class RTA implements IBootstrapper {
 		Timer timer = new Timer();
 		timer.init();
         HostedVM.initialize();
+        if (ENABLE_REFLECTION_SUPPORT) {
+        	cha = ClassHierarchy.load();
+        }
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null) {
@@ -157,6 +163,21 @@ public class RTA implements IBootstrapper {
 						}
 					} else
 						assert (op instanceof InvokeStatic);
+				} else if (op instanceof CheckCast) {
+					if (ENABLE_REFLECTION_SUPPORT) {
+						// We optimistically assume that check-cast operations succeed.
+						if (DEBUG) System.out.println("Quad: " + q);
+						TypeOperand typeOperand = CheckCast.getType(q);
+						if (typeOperand != null) {
+							jq_Type type = typeOperand.getType();
+							if (type instanceof jq_Class) {
+								Set<jq_Class> classes = getConcreteClassesRootedAt((jq_Class) type);
+								for (jq_Class klass : classes) {
+									handleClass(klass);
+								}
+							}
+						}
+					}
 				} else if (op instanceof Getstatic) {
 					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Field f = Getstatic.getField(q).getField();
@@ -181,6 +202,28 @@ public class RTA implements IBootstrapper {
 		if (DEBUG) System.out.println("LEAVE handleTodoMethod: " + m);
 	}
 
+	private Set<jq_Class> getConcreteClassesRootedAt(jq_Class klass) {
+		Set<jq_Class> result = new HashSet<jq_Class>(2);
+		addIfEligible(result, klass);
+		if (klass.isInterface()) {
+			for (jq_Class c : cha.getImplementors(klass)) {
+				addIfEligible(result, c);
+			}
+		} else {
+			for (jq_Class c : cha.getSubclasses(klass)) {
+				addIfEligible(result, c);
+			}
+		}
+		return result;
+	}
+	
+	private void addIfEligible(Set<jq_Class> concreteClasses, jq_Class c) {
+		prepareClass(c);
+		if (!c.isAbstract() && !c.isInterface()) {
+			concreteClasses.add(c);
+		}
+	}
+	
 	protected void prepareClass(jq_Class c) {
 		if (preparedClasses.add(c)) {
 	        c.prepare();
