@@ -16,7 +16,7 @@ import java.util.Map;
 import chord.project.Chord;
 
 /**
- * @author omert
+ * @author omertripp
  *
  */
 @Chord(name="ss-thread-access")

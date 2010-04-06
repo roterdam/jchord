@@ -10,7 +10,7 @@ import chord.project.analyses.DynamicAnalysis;
 import chord.util.IndexMap;
 
 /**
- * @author omert
+ * @author omertripp
  *
  */
 @Chord(name="dynamic-loop-java")

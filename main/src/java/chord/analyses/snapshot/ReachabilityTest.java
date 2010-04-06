@@ -15,7 +15,7 @@ import chord.project.Chord;
 import chord.util.IndexMap;
 
 /**
- * @author omert
+ * @author omertripp
  *
  */
 @Chord(name="dynamic-reach-test")
