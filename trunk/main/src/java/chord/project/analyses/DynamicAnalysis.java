@@ -40,7 +40,7 @@ import chord.util.ReadException;
  * Generic implementation of a dynamic program analysis (a specialized kind of Java task).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
- * @author omert (omertrip@post.tau.ac.il)
+ * @author omertripp (omertrip@post.tau.ac.il)
  */
 public class DynamicAnalysis extends JavaAnalysis {
 	public final static boolean DEBUG = false;
