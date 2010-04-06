@@ -17,7 +17,7 @@ import chord.instr.InstrScheme;
 import chord.project.Chord;
 
 /**
- * @author omert
+ * @author omertripp
  *
  */
 @Chord(name="ss-shared-lock-access")

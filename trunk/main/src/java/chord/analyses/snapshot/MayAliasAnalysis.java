@@ -30,7 +30,7 @@ import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.object.Pair;
 
 /**
- * @author omert
+ * @author omertripp
  * @author pliang
  * 
  */

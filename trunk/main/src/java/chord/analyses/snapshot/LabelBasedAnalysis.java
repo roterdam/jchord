@@ -17,7 +17,7 @@ import chord.project.analyses.DynamicAnalysis;
 import chord.instr.InstrScheme;
 
 /**
- * @author omert
+ * @author omertripp
  *
  */
 public abstract class LabelBasedAnalysis extends DynamicAnalysis {

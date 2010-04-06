@@ -23,7 +23,7 @@ import java.util.Set;
  * depends on the graph.
  * 
  * @author Percy Liang (pliang@cs.berkeley.edu)
- * @author omert (omertrip@post.tau.ac.il)
+ * @author omertripp (omertrip@post.tau.ac.il)
  */
 public abstract class Abstraction {
 	public Execution X;

@@ -16,7 +16,7 @@ import chord.project.analyses.DynamicAnalysis;
 import chord.project.Project;
 
 /**
- * @author omert
+ * @author omertripp
  *
  */
 @Chord(name = "dynamic-visitcnt-java")
