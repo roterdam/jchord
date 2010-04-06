@@ -24,7 +24,7 @@ import chord.util.ArraySet;
  * An invariant resulting from the above invariant is that the set of labels associated with node <code>o</code> is 
  * the union of the sets of labels associated with <code>o</code>'s parents, plus the labels rooted at <code>o</code>.   
  * 
- * @author omert (omertrip@post.tau.ac.il)
+ * @author omertripp (omertrip@post.tau.ac.il)
  *
  */
 public abstract class LabelBasedAbstraction extends Abstraction {

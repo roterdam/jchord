@@ -8,16 +8,19 @@ import gnu.trove.TIntIterator;
 import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntProcedure;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
 import java.util.Set;
 
+/**
+ * Objects are partitioned based on (reflexive) reachability from allocation site augmented
+ * by the first field along the path. Constant <code>AllocPlusFieldLabel.SELF</code> supports 
+ * reflexivity.
+ * 
+ * @author omertripp (omertrip@post.tau.ac.il)
+ *
+ */
 public class ReachableFromAllocPlusFieldsAbstraction extends LabelBasedAbstraction {
 
 	private static class AllocPlusFieldLabel implements Label {
