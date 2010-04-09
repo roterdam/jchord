@@ -38,7 +38,6 @@ public class Properties {
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
 	public static String instrAgentFileName = mainRel2AbsPath("chord.instr.agent.file", "lib" + File.separator + "libchord_instr_agent.so");
 	public final static String javadocURL = System.getProperty("chord.javadoc.url", "http://chord.stanford.edu/javadoc_2_0/");
-	public static String messagesFileName = mainRel2AbsPath("chord.messages.file", "messages.txt");
 
 	// Chord boot properties
 
@@ -59,10 +58,10 @@ public class Properties {
 
 	// Chord task properties
 
-	public final static boolean buildScope = buildBoolProp("chord.build.scope", false);
+	public final static boolean buildScope = buildBoolProperty("chord.build.scope", false);
 	public final static String runAnalyses = System.getProperty("chord.run.analyses", "");
 	public final static String printRels = System.getProperty("chord.print.rels", "");
-	public final static boolean publishTargets = buildBoolProp("chord.publish.targets", false);
+	public final static boolean publishTargets = buildBoolProperty("chord.publish.targets", false);
 
 	// Basic program properties
 
@@ -78,23 +77,22 @@ public class Properties {
 	static {
 		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
 	}
-	public final static boolean reuseScope = buildBoolProp("chord.reuse.scope", false);
+	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
+
+	public final static String scopeExcludeStdStr = System.getProperty("chord.scope.exclude.std", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
-	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
-	static {
-		if (!scopeExcludeExtStr.equals("")) {
-			scopeExcludeStr = scopeExcludeStr.equals("") ? scopeExcludeExtStr :
-				scopeExcludeStr + "," + scopeExcludeExtStr;
-		}
-	}
+	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
+		scopeExcludeStdStr + "," + scopeExcludeExtStr);
+	public static String[] scopeExcludeAry = toArray(scopeExcludeStr);
+
+	public final static String checkExcludeStdStr = System.getProperty("chord.check.exclude.std", DEFAULT_CHECK_EXCLUDES);
 	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
-	public static String checkExcludeStr = System.getProperty("chord.check.exclude", DEFAULT_CHECK_EXCLUDES);
-	static {
-		if (!checkExcludeExtStr.equals("")) {
-			checkExcludeStr = checkExcludeStr.equals("") ? checkExcludeExtStr :
-				checkExcludeStr + "," + checkExcludeExtStr;
-		}
-	}
+	public static String checkExcludeStr = System.getProperty("chord.check.exclude",
+		checkExcludeStdStr + "," + checkExcludeExtStr);
+	public static String[] checkExcludeAry = toArray(checkExcludeStr);
+
+	public static boolean enableReflection = buildBoolProperty("chord.enable.reflection", false);
+
 	public static final String allocMethodsFileName =
 		mainRel2AbsPath("chord.alloc.methods.file", "annot" + File.separator + "alloc_methods.txt");
 
@@ -102,23 +100,23 @@ public class Properties {
 
 	public static String javaAnalysisPathName = mainRel2AbsPath("chord.java.analysis.path", "classes");
 	public static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path", "src" + File.separator + "dlog");
-	public final static boolean reuseRels = buildBoolProp("chord.reuse.rels", false);
-	public final static boolean publishResults = buildBoolProp("chord.publish.results", true);
+	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
+	public final static boolean publishResults = buildBoolProperty("chord.publish.results", true);
 
     // Program transformation properties
  
-	public final static boolean doSSA = buildBoolProp("chord.ssa", true);
+	public final static boolean doSSA = buildBoolProperty("chord.ssa", true);
 
     // Chord debug properites
 
-	public final static boolean bddbddbNoisy = buildBoolProp("chord.bddbddb.noisy", false);
-	public final static boolean saveDomMaps = buildBoolProp("chord.save.maps", true);
-	public final static boolean verbose = buildBoolProp("chord.verbose", false);
+	public final static boolean bddbddbNoisy = buildBoolProperty("chord.bddbddb.noisy", false);
+	public final static boolean saveDomMaps = buildBoolProperty("chord.save.maps", true);
+	public final static boolean verbose = buildBoolProperty("chord.verbose", false);
 
 	// Chord instrumentation properties
 
-	public final static boolean reuseTrace = buildBoolProp("chord.reuse.trace", false);
-	public final static boolean doTracePipe = buildBoolProp("chord.trace.pipe", true);
+	public final static boolean reuseTrace = buildBoolProperty("chord.reuse.trace", false);
+	public final static boolean doTracePipe = buildBoolProperty("chord.trace.pipe", true);
 	static {
 		if (reuseTrace) {
 			assert(!doTracePipe);
@@ -128,6 +126,7 @@ public class Properties {
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 	public final static String runtimeClassName =
 		System.getProperty("chord.runtime.class", chord.runtime.BufferedRuntime.class.getName());
+	public final static int maxConstr = Integer.getInteger("chord.max.constr", 50000000);
 
 	// Chord output properties
 
@@ -149,18 +148,16 @@ public class Properties {
 	public final static String classesFileName = outRel2AbsPath("chord.classes.file", "classes.txt");
 	public final static String methodsFileName = outRel2AbsPath("chord.methods.file", "methods.txt");
 	public static String bddbddbWorkDirName = outRel2AbsPath("chord.bddbddb.work.dir", "bddbddb");
+	// TODO: create this dir on demand
 	static {
 		FileUtils.mkdirs(bddbddbWorkDirName);
 	}
-
-	// Dynamic analysis properties
 
 	public final static String bootClassesDirName = outRel2AbsPath("chord.boot.classes.dir", "boot_classes");
 	public final static String userClassesDirName = outRel2AbsPath("chord.user.classes.dir", "user_classes");
 	public final static String instrSchemeFileName = outRel2AbsPath("chord.instr.scheme.file", "scheme.ser");
 	public final static String crudeTraceFileName = outRel2AbsPath("chord.crude.trace.file", "crude_trace.txt");
 	public final static String finalTraceFileName = outRel2AbsPath("chord.final.trace.file", "final_trace.txt");
-	public final static int maxConstr = Integer.getInteger("chord.max.constr", 50000000);
 
 	public static void print() {
 		System.out.println("*** Chord resource properties:");
@@ -170,7 +167,6 @@ public class Properties {
 		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
 		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
 		System.out.println("chord.javadoc.url: " + javadocURL);
-		System.out.println("chord.messages.file: " + messagesFileName);
 
 		System.out.println("*** Chord boot properties:");
 		System.out.println("chord.work.dir: " + workDirName);
@@ -197,10 +193,13 @@ public class Properties {
 		System.out.println("*** Program scope properties:");
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
+		System.out.println("chord.scope.exclude.std: " + scopeExcludeStdStr);
 		System.out.println("chord.scope.exclude.ext: " + scopeExcludeExtStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
+		System.out.println("chord.check.exclude.std: " + checkExcludeStdStr);
 		System.out.println("chord.check.exclude.ext: " + checkExcludeExtStr);
 		System.out.println("chord.check.exclude: " + checkExcludeStr);
+		System.out.println("chord.enable.reflection: " + enableReflection);
 		System.out.println("chord.alloc.methods.file: " + allocMethodsFileName);
 
 		System.out.println("*** Program analysis properties:");
@@ -248,7 +247,7 @@ public class Properties {
 		String val = System.getProperty(propName);
 		return (val != null) ? val : FileUtils.getAbsolutePath(workDirName, fileName);
 	}
-	private static boolean buildBoolProp(String propName, boolean defaultVal) {
+	private static boolean buildBoolProperty(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
 	}
 	public static String[] toArray(String str) {

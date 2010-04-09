@@ -26,11 +26,10 @@ import chord.project.analyses.ProgramRel;
 public class RelCheckExcludedT extends ProgramRel {
 	public void fill() {
 		DomT domT = (DomT) doms[0];
-		String[] checkExcludedPrefixes = Properties.toArray(
-			Properties.checkExcludeStr);
+		String[] checkExcludeAry = Properties.checkExcludeAry;
 		for (jq_Class c : Program.v().getPreparedClasses()) {
 			String cName = c.getName();
-			for (String prefix : checkExcludedPrefixes) {
+			for (String prefix : checkExcludeAry) {
 				if (cName.startsWith(prefix)) {
 					int tIdx = domT.indexOf(c);
 					add(tIdx);
