@@ -109,7 +109,6 @@ public class ClassHierarchy {
 				final Set<jq_Class> result = new HashSet<jq_Class>(implementors
 						.size());
 				implementors.forEach(new TIntProcedure() {
-					@Override
 					public boolean execute(int arg0) {
 						result.add((jq_Class) allTypes.get(arg0));
 						return true;
@@ -134,7 +133,6 @@ public class ClassHierarchy {
 			} else {
 				final Set<jq_Class> result = new HashSet<jq_Class>(subclasses.size());
 				subclasses.forEach(new TIntProcedure() {
-					@Override
 					public boolean execute(int arg0) {
 						result.add((jq_Class) allTypes.get(arg0));
 						return true;
