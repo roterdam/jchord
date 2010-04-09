@@ -103,7 +103,7 @@ public class Instrumentor {
 	protected Program program;
 	private String mainClassPathName;
 	private String userClassPathName;
-	private String[] scopeExcludedPrefixes;
+	private String[] scopeExcludeAry;
 	private String bootClassesDirName;
 	private String userClassesDirName;
 	private boolean verbose;
@@ -203,7 +203,7 @@ public class Instrumentor {
 		this.scheme = scheme;
 		mainClassPathName = Properties.mainClassPathName;
 		userClassPathName = Properties.classPathName;
-		scopeExcludedPrefixes = Properties.toArray(Properties.scopeExcludeStr);
+		scopeExcludeAry = Properties.scopeExcludeAry;
 		bootClassesDirName = Properties.bootClassesDirName;
 		userClassesDirName = Properties.userClassesDirName;
  		verbose = Properties.verbose;
@@ -359,7 +359,7 @@ public class Instrumentor {
 	private void instrClass(jq_Class c) {
 		String cName = c.getName();
 		boolean match = false;
-		for (String s : scopeExcludedPrefixes) {
+		for (String s : scopeExcludeAry) {
 			if (cName.startsWith(s)) {
 				match = true;
 	 			break;
