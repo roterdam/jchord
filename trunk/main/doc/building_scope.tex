@@ -1,10 +1,10 @@
 \section{Building Analysis Scope}
 \label{sec:building-scope}
 
-Chord computes the analysis scope (i.e., reachable classes and methods) of a given Java program
+Chord computes the analysis scope (i.e., reachable classes and methods) of the given program
 either if property \code{chord.build.scope} is set to \code{true} or if some other task (e.g.,
 a program analysis specified via property \code{chord.run.analyses}) demands it by
-calling static method \code{chord.program.Program.v()}.
+calling method \code{chord.program.Program.v()}.
 
 The algorithm used to compute the analysis scope is as follows.
 
