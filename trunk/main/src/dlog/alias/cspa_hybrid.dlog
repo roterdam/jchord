@@ -60,7 +60,6 @@ kobjSenM(m:M) input
 kcfaSenM(m:M) input
 ctxtCpyM(m:M) input
 epsilonV(v:V) input
-MV(m:M,v:V) input
 
 IHM(i:I,h:H,m:M)
 reachableT(t:T)
