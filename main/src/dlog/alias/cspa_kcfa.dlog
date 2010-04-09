@@ -58,7 +58,6 @@ CI(c:C,i:I) input
 epsilonM(m:M) input
 kcfaSenM(m:M) input
 epsilonV(v:V) input
-MV(m:M,v:V) input
 
 IHM(i:I,h:H,m:M)
 reachableT(t:T)
