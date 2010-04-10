@@ -82,17 +82,13 @@ public class Properties {
 	public final static String scopeExcludeStdStr = System.getProperty("chord.scope.exclude.std", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
 	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
-		scopeExcludeStdStr + "," + scopeExcludeExtStr);
+		concat(scopeExcludeStdStr, scopeExcludeExtStr));
 	public static String[] scopeExcludeAry = toArray(scopeExcludeStr);
 
-	public final static String checkExcludeStdStr = System.getProperty("chord.check.exclude.std", DEFAULT_CHECK_EXCLUDES);
-	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
-	public static String checkExcludeStr = System.getProperty("chord.check.exclude",
-		checkExcludeStdStr + "," + checkExcludeExtStr);
-	public static String[] checkExcludeAry = toArray(checkExcludeStr);
-
+	// TODO: document
 	public static boolean enableReflection = buildBoolProperty("chord.enable.reflection", false);
 
+	// TODO: document, possibly remove altogether
 	public static final String allocMethodsFileName =
 		mainRel2AbsPath("chord.alloc.methods.file", "annot" + File.separator + "alloc_methods.txt");
 
@@ -103,15 +99,21 @@ public class Properties {
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
 	public final static boolean publishResults = buildBoolProperty("chord.publish.results", true);
 
+	public final static String checkExcludeStdStr = System.getProperty("chord.check.exclude.std", DEFAULT_CHECK_EXCLUDES);
+	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
+	public static String checkExcludeStr = System.getProperty("chord.check.exclude",
+		concat(checkExcludeStdStr, checkExcludeExtStr));
+	public static String[] checkExcludeAry = toArray(checkExcludeStr);
+
     // Program transformation properties
  
 	public final static boolean doSSA = buildBoolProperty("chord.ssa", true);
 
     // Chord debug properites
 
-	public final static boolean bddbddbNoisy = buildBoolProperty("chord.bddbddb.noisy", false);
-	public final static boolean saveDomMaps = buildBoolProperty("chord.save.maps", true);
 	public final static boolean verbose = buildBoolProperty("chord.verbose", false);
+	public final static boolean bddbddbVerbose = buildBoolProperty("chord.bddbddb.verbose", false);
+	public final static boolean saveDomMaps = buildBoolProperty("chord.save.maps", true);
 
 	// Chord instrumentation properties
 
@@ -132,7 +134,7 @@ public class Properties {
 
 	public static String outDirName = workRel2AbsPath("chord.out.dir", "chord_output");
 	static {
-		// Automatically find a free subdirectory
+		// Automatically find a free subdirectory; this is Percy;s stuff
 		String outPoolPath = System.getProperty("chord.out.pooldir");
 		if (outPoolPath != null) {
 			for (int i = 0; true; i++) {
@@ -196,9 +198,6 @@ public class Properties {
 		System.out.println("chord.scope.exclude.std: " + scopeExcludeStdStr);
 		System.out.println("chord.scope.exclude.ext: " + scopeExcludeExtStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
-		System.out.println("chord.check.exclude.std: " + checkExcludeStdStr);
-		System.out.println("chord.check.exclude.ext: " + checkExcludeExtStr);
-		System.out.println("chord.check.exclude: " + checkExcludeStr);
 		System.out.println("chord.enable.reflection: " + enableReflection);
 		System.out.println("chord.alloc.methods.file: " + allocMethodsFileName);
 
@@ -207,13 +206,16 @@ public class Properties {
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
 		System.out.println("chord.reuse.rels: " + reuseRels);
 		System.out.println("chord.publish.results: " + publishResults);
+		System.out.println("chord.check.exclude.std: " + checkExcludeStdStr);
+		System.out.println("chord.check.exclude.ext: " + checkExcludeExtStr);
+		System.out.println("chord.check.exclude: " + checkExcludeStr);
 
 		System.out.println("*** Program transformation properties:");
 		System.out.println("chord.ssa: " + doSSA);
 
 		System.out.println("*** Chord debug properties:");
 		System.out.println("chord.verbose: " + verbose);
-		System.out.println("chord.bddbddb.noisy: " + bddbddbNoisy);
+		System.out.println("chord.bddbddb.verbose: " + bddbddbVerbose);
 		System.out.println("chord.save.maps: " + saveDomMaps);
 
 		System.out.println("*** Chord instrumentation properties:");
@@ -221,6 +223,7 @@ public class Properties {
 		System.out.println("chord.trace.pipe: " + doTracePipe);
 		System.out.println("chord.trace.block.size: " + traceBlockSize);
 		System.out.println("chord.runtime.class: " + runtimeClassName);
+		System.out.println("chord.max.constr: " + maxConstr);
 
 		System.out.println("*** Chord output properties:");
 		System.out.println("chord.out.dir: " + outDirName);
@@ -252,5 +255,10 @@ public class Properties {
 	}
 	public static String[] toArray(String str) {
         return str.equals("") ? new String[0] : str.split(LIST_SEPARATOR);
+	}
+	public static String concat(String s1, String s2) {
+		if (s1.equals("")) return s2;
+		if (s2.equals("")) return s1;
+		return s1 + "," + s2;
 	}
 }
