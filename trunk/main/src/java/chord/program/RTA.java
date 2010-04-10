@@ -46,7 +46,6 @@ import chord.util.Timer;
  */
 public class RTA implements IBootstrapper {
 	public static final boolean DEBUG = false;
-	private static final boolean ENABLE_REFLECTION_SUPPORT = false;
     private IndexHashSet<jq_Class> reachableAllocClasses =
         new IndexHashSet<jq_Class>();
 	protected IndexHashSet<jq_Class> preparedClasses =
@@ -74,8 +73,9 @@ public class RTA implements IBootstrapper {
 		Timer timer = new Timer();
 		timer.init();
         HostedVM.initialize();
-        if (ENABLE_REFLECTION_SUPPORT) {
-        	cha = ClassHierarchy.load();
+        if (Properties.enableReflection) {
+        	cha = new ClassHierarchy();
+			cha.run();
         }
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
@@ -164,7 +164,7 @@ public class RTA implements IBootstrapper {
 					} else
 						assert (op instanceof InvokeStatic);
 				} else if (op instanceof CheckCast) {
-					if (ENABLE_REFLECTION_SUPPORT) {
+					if (Properties.enableReflection) {
 						// We optimistically assume that check-cast operations succeed.
 						if (DEBUG) System.out.println("Quad: " + q);
 						TypeOperand typeOperand = CheckCast.getType(q);

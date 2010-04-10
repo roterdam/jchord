@@ -3,47 +3,78 @@
  */
 package chord.program;
 
-import gnu.trove.TIntHashSet;
-import gnu.trove.TIntObjectHashMap;
-import gnu.trove.TIntProcedure;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
+import java.util.HashMap;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Type;
 import chord.project.Messages;
 import chord.project.Properties;
+import joeq.Class.Classpath;
 
 /**
- * @author omertripp (omertrip@post.tau.ac.il)
- *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClassHierarchy {
-	
-	private static final String[] excludedPackagePrefixes = new String[] { "chord", "joeq", "jwutil", "com/ibm", "com/sun", "sun", "net/sf/bddbddb" };
-//	private static final String[] excludedPackageSuffixes = new String[] { "javabdd-1.0b2.jar", "joeq_core", "jwutil-1.0.jar" };
-	
 	// These members are for debugging purposes.
 	private static final boolean DEBUG = false;
-	private int numLoadedClasses = 0;
 	
-	private final List<jq_Type> allTypes = new ArrayList<jq_Type>(256);
-	private final TIntObjectHashMap<TIntHashSet> interface2implementors = new TIntObjectHashMap<TIntHashSet>(128);
-	private final TIntObjectHashMap<TIntHashSet> class2subclasses = new TIntObjectHashMap<TIntHashSet>(128);
-	private Set<jq_Type> loadedTypes = new HashSet<jq_Type>(256);
-	
-	private ClassHierarchy() {
+	private final Map<String, Set<String>> interface2implementors = new HashMap<String, Set<String>>();
+	private final Map<String, Set<String>> class2subclasses = new HashMap<String, Set<String>>();
+	private final Classpath classpath = new Classpath();
+	private final String[] scopeExcludeAry;
+
+	public ClassHierarchy() {
+		this.scopeExcludeAry = Properties.scopeExcludeAry;
 	}
 	
-	public static ClassHierarchy load() {
+	public void run() {
+	}
+	public Set<jq_Class> getImplementors(jq_Class interfaceType) {
+		return null;
+	}
+	public Set<jq_Class> getSubclasses(jq_Class classType) {
+		return null;
+	}
+/*
+	public void run() {
+        String systemClasspath = System.getProperty("sun.boot.class.path");
+        for (Iterator it = PrimordialClassLoader.classpaths(systemClasspath); it.hasNext();) {
+            String s = (String) it.next();
+            PrimordialClassLoader.loader.addToClasspath(s);
+        }
+        String javaHomeDir = System.getProperty("java.home");
+        assert (javaHomeDir != null);
+        File libExtDir = new File(javaHomeDir, File.separator + "lib" + File.separator + "ext");
+        if (libExtDir.exists()) {
+            final FilenameFilter filter = new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    if (name.endsWith(".jar"))
+                        return true;
+                    return false;
+                }
+            };
+            File[] subFiles = libExtDir.listFiles(filter);
+            for (File file : subFiles) {
+                String fileName = file.getAbsolutePath();
+                PrimordialClassLoader.loader.addToClasspath(fileName);
+            }
+        }
+        String classpath = System.getProperty("java.class.path");
+        for (Iterator it = PrimordialClassLoader.classpaths(classpath); it.hasNext();) {
+            String s = (String) it.next();
+            PrimordialClassLoader.loader.addToClasspath(s);
+        }
+
 		ClassHierarchy result = new ClassHierarchy();
 		for (Iterator<String> it = listPackages(); it.hasNext(); ) {
 			String packageName = it.next();
@@ -231,4 +262,5 @@ public class ClassHierarchy {
 //		}
 		return false;
 	}
+*/
 }
