@@ -59,7 +59,6 @@
 				<ant dir="${maindir}" target="run">
 					<property name="chord.work.dir" value="@{testdir}"/>
 					<property name="chord.build.scope" value="true"/>
-					<property name="chord.scope.exclude" value="java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.,joeq.,jwutil."/>
 					</ant>
 				<antcall target="sort-and-diff">
 					<param name="arg1" location="@{testdir}/chord_output/classes.txt"/>
