@@ -225,30 +225,37 @@ public class ClassHierarchyBuilder {
 			}
 		}
 
-		// build map concreteClassToAllSuperclasses
-		// also populate set missingTypes
+		// build maps concreteClassToAllSuperclasses and concreteClassToAllInterfaces
+		// and also populate set missingTypes
 		for (String c : allConcreteClasses) {
 			Set<String> superclasses = new ArraySet<String>(1);
-			concreteClassToAllSuperclasses.put(c, superclasses);
+			boolean success1 = true;
 			while (true) {
 				String d = classToDeclaredSuperclass.get(c);
 				if (d == null) {
-					if (!c.equals("java.lang.Object"))
+					if (!c.equals("java.lang.Object")) {
 						missingTypes.add(c);
+						success1 = false;
+					}
 					break;
 				}
 				boolean added = superclasses.add(d);
 				assert (added);
 				c = d;
 			}
-		}
-
-		// build map concreteClassToAllInterfaces
-		// also populate set missingTypes
-		for (String c : allConcreteClasses) {
 			Set<String> interfaces = new ArraySet<String>(2);
-			concreteClassToAllInterfaces.put(c, interfaces);
-			populateInterfaces(c, interfaces);
+			boolean success2 = populateInterfaces(c, interfaces);
+			if (success1 && success2) {
+				concreteClassToAllSuperclasses.put(c, superclasses);
+				concreteClassToAllInterfaces.put(c, interfaces);
+				continue;
+			}
+			if (!success1) {
+				; // TODO: warn
+			}
+			if (!success2) {
+				; // TODO: warn
+			}
 		}
 
 		if (!missingTypes.isEmpty()) {
@@ -264,7 +271,7 @@ public class ClassHierarchyBuilder {
 				subs.add(c);
 			classToConcreteSubclasses.put(c, subs);
 		}
-		for (String c : allConcreteClasses) {
+		for (String c : concreteClassToAllSuperclasses.keySet()) {
 			Set<String> supers = concreteClassToAllSuperclasses.get(c);
 			for (String d : supers) {
 				Set<String> subs = classToConcreteSubclasses.get(d);
@@ -281,7 +288,7 @@ public class ClassHierarchyBuilder {
 			Set<String> impls = new ArraySet<String>(2);
 			interfaceToConcreteImplementors.put(c, impls);
 		}
-		for (String c : allConcreteClasses) {
+		for (String c : concreteClassToAllInterfaces.keySet()) {
 			Set<String> interfaces = concreteClassToAllInterfaces.get(c);
 			for (String d : interfaces) {
 				Set<String> impls = interfaceToConcreteImplementors.get(d);
@@ -302,16 +309,19 @@ public class ClassHierarchyBuilder {
 		return (access_flags & jq_ClassFileConstants.ACC_ABSTRACT) != 0;
 	}
 
-	private void populateInterfaces(String c, Set<String> result) {
+	private boolean populateInterfaces(String c, Set<String> result) {
 		Set<String> interfaces = typeToDeclaredInterfaces.get(c);
 		if (interfaces == null) {
 			missingTypes.add(c);
-			return;
+			return false;
 		}
 		for (String d : interfaces) {
-			if (result.add(d))
-				populateInterfaces(d, result);
+			if (result.add(d)) {
+				if (!populateInterfaces(d, result))
+					return false;
+			}
 		}
+		return true;
 	}
 
 	private Object[] processConstantPool(DataInput in, int size) throws IOException {
