@@ -94,8 +94,10 @@ public class Program {
 					init(new RTA());
 				} else if (scopeKind.equals("dynamic")) {
 					initFromDynamic();
+				} else if (scopeKind.equals("cha")) {
+					init(new CHA());
 				} else
-					assert (false);
+					Messages.fatal("SCOPE.INVALID_BUILDER", scopeKind);
 			}
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);

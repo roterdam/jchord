@@ -31,7 +31,7 @@ public class Properties {
 	public final static String mainDirName = System.getProperty("chord.main.dir");
 	static {
 		if (mainDirName == null)
-			throw new ChordRuntimeException(Messages.get("PROPERTIES.CHORD_MAIN_DIR_UNDEFINED"));
+			Messages.fatal("PROPERTIES.CHORD_MAIN_DIR_UNDEFINED");
 	}
 	public static String libDirName = mainRel2AbsPath("chord.lib.dir", "lib");
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
@@ -74,9 +74,6 @@ public class Properties {
 	// Program scope properties
 
 	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
-	static {
-		assert (scopeKind.equals("rta") || scopeKind.equals("dynamic"));
-	}
 	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
 
 	public final static String scopeExcludeStdStr = System.getProperty("chord.scope.exclude.std", DEFAULT_SCOPE_EXCLUDES);
@@ -84,9 +81,6 @@ public class Properties {
 	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
 		concat(scopeExcludeStdStr, scopeExcludeExtStr));
 	public static String[] scopeExcludeAry = toArray(scopeExcludeStr);
-
-	// TODO: document
-	public static boolean enableReflection = buildBoolProperty("chord.enable.reflection", false);
 
 	// TODO: document, possibly remove altogether
 	public static final String allocMethodsFileName =
@@ -198,7 +192,6 @@ public class Properties {
 		System.out.println("chord.scope.exclude.std: " + scopeExcludeStdStr);
 		System.out.println("chord.scope.exclude.ext: " + scopeExcludeExtStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
-		System.out.println("chord.enable.reflection: " + enableReflection);
 		System.out.println("chord.alloc.methods.file: " + allocMethodsFileName);
 
 		System.out.println("*** Program analysis properties:");

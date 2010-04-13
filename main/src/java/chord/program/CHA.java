@@ -40,15 +40,14 @@ import chord.util.IndexHashSet;
 import chord.util.Timer;
 
 /**
- * Rapid Type Analysis algorithm for computing program scope
+ * Class Hierarchy Analysis algorithm for computing program scope
  * (reachable classes and methods).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class RTA implements IBootstrapper {
+public class CHA implements IBootstrapper {
 	public static final boolean DEBUG = false;
 	private IndexHashSet<jq_Class> preparedClasses = new IndexHashSet<jq_Class>();
-    private IndexHashSet<jq_Class> reachableAllocClasses = new IndexHashSet<jq_Class>();
 	// all classes whose clinits and super class/interface clinits have been
 	// processed so far in current interation
 	private Set<jq_Class> classesVisitedForClinit = new HashSet<jq_Class>();
@@ -57,8 +56,8 @@ public class RTA implements IBootstrapper {
 	// worklist for methods seen so far in current iteration but whose cfg's
 	// haven't been processed yet
 	private List<jq_Method> methodWorklist = new ArrayList<jq_Method>();
-	private boolean repeat = true;
 	private jq_Class javaLangObject;
+	private ClassHierarchyBuilder chb;
 	public IndexHashSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
@@ -66,35 +65,31 @@ public class RTA implements IBootstrapper {
 		return visitedMethods;
 	}
 	public void run() {
-		System.out.println("ENTER: RTA");
+		System.out.println("ENTER: CHA");
 		Timer timer = new Timer();
 		timer.init();
         HostedVM.initialize();
+       	chb = new ClassHierarchyBuilder();
+		chb.run();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null)
-            Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+			Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
        	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
 		prepareClass(mainClass);
 		jq_NameAndDesc nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
         jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(nd);
 		if (mainMethod == null)
-			Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
-		for (int i = 0; repeat; i++) {
-			System.out.println("Iteration: " + i);
-			repeat = false;
-         	classesVisitedForClinit.clear();
-        	visitedMethods.clear();
-			visitClinits(mainClass);
-        	visitMethod(mainMethod);
-	        while (!methodWorklist.isEmpty()) {
-	        	jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
-				ControlFlowGraph cfg = m.getCFG();
-				if (DEBUG) System.out.println("Processing CFG of method: " + m);
-	        	processCFG(cfg);
-	        }
+            Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
+		visitClinits(mainClass);
+       	visitMethod(mainMethod);
+        while (!methodWorklist.isEmpty()) {
+        	jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
+			ControlFlowGraph cfg = m.getCFG();
+			if (DEBUG) System.out.println("Processing CFG of method: " + m);
+			processCFG(cfg);
         }
-		System.out.println("LEAVE: RTA");
+		System.out.println("LEAVE: CHA");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
 	}
@@ -107,7 +102,7 @@ public class RTA implements IBootstrapper {
 			}
 		}
 	}
-	
+
 	private void processCFG(ControlFlowGraph cfg) {
 		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
@@ -122,25 +117,28 @@ public class RTA implements IBootstrapper {
 					visitMethod(n);
 					if (op instanceof InvokeVirtual || op instanceof InvokeInterface) {
 						jq_NameAndDesc nd = n.getNameAndDesc();
+						String cName = c.getName();
 						if (c.isInterface()) {
-							for (jq_Class d : reachableAllocClasses) {
+							Set<String> implementors = chb.getConcreteImplementors(cName);
+							for (String dName : implementors) {
+								jq_Class d = (jq_Class) jq_Type.parseType(dName);
+								visitClass(d);
 								assert (!d.isInterface());
 								assert (!d.isAbstract());
-								if (d.implementsInterface(c)) {
-									jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-									assert (m2 != null);
-									visitMethod(m2);
-								}
+								jq_InstanceMethod m2 = d.getVirtualMethod(nd);
+								assert (m2 != null);
+								visitMethod(m2);
 							}
 						} else {
-							for (jq_Class d : reachableAllocClasses) {
+							Set<String> subclasses = chb.getConcreteSubclasses(cName);
+							for (String dName : subclasses) {
+								jq_Class d = (jq_Class) jq_Type.parseType(dName);
+								visitClass(d);
 								assert (!d.isInterface());
 								assert (!d.isAbstract());
-								if (d.extendsClass(c)) {
-									jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-									assert (m2 != null);
-									visitMethod(m2);
-								}
+								jq_InstanceMethod m2 = d.getVirtualMethod(nd);
+								assert (m2 != null);
+								visitMethod(m2);
 							}
 						}
 					} else
@@ -159,26 +157,30 @@ public class RTA implements IBootstrapper {
 					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Class c = (jq_Class) New.getType(q).getType();
 					visitClass(c);
-					if (reachableAllocClasses.add(c)) {
-						repeat = true;
-					}
 				}
 			}
 		}
 	}
 
 	private void prepareClass(jq_Class c) {
-		if (preparedClasses.add(c)) {
-	        c.prepare();
-			if (DEBUG) System.out.println("\tAdding class: " + c);
-			jq_Class d = c.getSuperclass();
-			if (d == null)
-        		assert (c == javaLangObject);
-			else
-				prepareClass(d);
-			for (jq_Class i : c.getDeclaredInterfaces())
-				prepareClass(i);
+		if (preparedClasses.contains(c))
+			return;
+		try {
+        	c.prepare();
+		} catch (NoClassDefFoundError ex) {
+			Messages.log("SCOPE.EXCLUDING_CLASS", c.getName());
+			ex.printStackTrace();
+			System.exit(1);
 		}
+		preparedClasses.add(c);
+		if (DEBUG) System.out.println("\tAdding class: " + c);
+		jq_Class d = c.getSuperclass();
+		if (d == null)
+			assert (c == javaLangObject);
+		else
+			prepareClass(d);
+		for (jq_Class i : c.getDeclaredInterfaces())
+			prepareClass(i);
 	}
 
 	private void visitClass(jq_Class c) {
