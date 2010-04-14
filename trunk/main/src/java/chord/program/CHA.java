@@ -91,7 +91,7 @@ public class CHA implements IBootstrapper {
         while (!methodWorklist.isEmpty()) {
         	jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
 			ControlFlowGraph cfg = m.getCFG();
-			System.out.println("Processing CFG of method: " + m);
+			if (DEBUG) System.out.println("Processing CFG of method: " + m);
 			processCFG(cfg);
         }
 		System.out.println("LEAVE: CHA");
@@ -115,7 +115,7 @@ public class CHA implements IBootstrapper {
 				Quad q = it2.nextQuad();
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {
-					System.out.println("Quad: " + q);
+					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Method n = Invoke.getMethod(q).getMethod();
 					jq_Class c = n.getDeclaringClass();
 					visitClass(c);
@@ -125,6 +125,8 @@ public class CHA implements IBootstrapper {
 						String cName = c.getName();
 						if (c.isInterface()) {
 							Set<String> implementors = chb.getConcreteImplementors(cName);
+							if (implementors == null)
+								continue;
 							for (String dName : implementors) {
 								jq_Class d = (jq_Class) jq_Type.parseType(dName);
 								visitClass(d);
@@ -136,6 +138,8 @@ public class CHA implements IBootstrapper {
 							}
 						} else {
 							Set<String> subclasses = chb.getConcreteSubclasses(cName);
+							if (subclasses == null)
+								continue;
 							for (String dName : subclasses) {
 								jq_Class d = (jq_Class) jq_Type.parseType(dName);
 								visitClass(d);

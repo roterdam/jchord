@@ -39,6 +39,7 @@ public class ClassHierarchyBuilder {
 	 * extensions path followed by the user-defined classpath.
 	 */
 	private final Classpath classpath = new Classpath();
+	private final String[] elemsExcludeAry;
 	/**
 	 * List of prefixes of names of classes/packages to be excluded
 	 * from the class hierarchy.
@@ -110,7 +111,10 @@ public class ClassHierarchyBuilder {
 		new HashMap<String, Set<String>>();
 
 	public ClassHierarchyBuilder() {
-		this.scopeExcludeAry = Properties.scopeExcludeAry;
+		scopeExcludeAry = Properties.scopeExcludeAry;
+		String mainClassPathName = Properties.mainClassPathName;
+		elemsExcludeAry = mainClassPathName.equals("") ?  new String[0] :
+			mainClassPathName.split(File.pathSeparator);
 	}
 
 	/**
@@ -138,6 +142,15 @@ public class ClassHierarchyBuilder {
 		return interfaceToConcreteImplementors.get(iName);
 	}
 
+	private boolean exclude(ClasspathElement cpe) {
+		String cpe1 = cpe.toString();
+		for (String cpe2 : elemsExcludeAry) {
+			if (cpe1.equals(cpe2))
+				return true;
+		}
+		return false;
+	}
+
 	public void run() {
 		// maintain set of all classes/interfaces read so far to check for duplicates
 	 	final Set<String> allTypes = new HashSet<String>();
@@ -147,6 +160,8 @@ public class ClassHierarchyBuilder {
 		// build maps classToDeclaredSuperclass and typeToDeclaredInterfaces and
 		// sets allConcreteClasses and allInterfaces
 		for (ClasspathElement cpe : cpeList) {
+			boolean excludeCPE = exclude(cpe);
+			if (!excludeCPE) System.out.println("CPE: " + cpe);
 			for (String fileName : cpe.getEntries()) {
 				if (!fileName.endsWith(".class"))
 					continue;
@@ -154,6 +169,8 @@ public class ClassHierarchyBuilder {
 				String className = baseName.replace(File.separatorChar, '.');
 				// ignore duplicate classes in classpath
 				if (!allTypes.add(className))
+					continue;
+				if (excludeCPE)
 					continue;
 				boolean exclude = false;
 				for (String prefix : scopeExcludeAry) {

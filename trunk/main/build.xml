@@ -304,9 +304,9 @@
 		</fail>
 		<property name="chord.java.analysis.path" location="classes"/>
 		<property name="chord.main.dir" location="."/>
-		<property name="chord.max.heap" value="1024m"/>
+		<property name="chord.max.heap" value="2048m"/>
 		<property name="chord.max.stack" value="32m"/>
-		<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
+		<property name="chord.jvmargs" value="-showversion -ea -Xmx${chord.max.heap} -Xss${chord.max.stack} -XX:MaxPermSize=128m"/>
 
 		<java classname="chord.project.Main" fork="true" dir="${chord.work.dir}" resultproperty="chord.run.result">
 			<jvmarg line="${chord.jvmargs}"/>
