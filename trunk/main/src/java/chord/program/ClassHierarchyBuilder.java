@@ -227,21 +227,26 @@ public class ClassHierarchyBuilder {
 
 		// build maps concreteClassToAllSuperclasses and concreteClassToAllInterfaces
 		// and also populate set missingTypes
+		// the reason we only care about concrete classes in the domain of these two
+		// maps is because we will subsequently "invert" these maps when we build maps
+		// classToConcreteSubclasses and interfaceToConcreteImplementors, and these
+		// two maps only have concrete classes in their range.
 		for (String c : allConcreteClasses) {
 			Set<String> superclasses = new ArraySet<String>(1);
 			boolean success1 = true;
+			String d = c;
 			while (true) {
-				String d = classToDeclaredSuperclass.get(c);
-				if (d == null) {
-					if (!c.equals("java.lang.Object")) {
-						missingTypes.add(c);
+				String e = classToDeclaredSuperclass.get(d);
+				if (e == null) {
+					if (!d.equals("java.lang.Object")) {
+						missingTypes.add(d);
 						success1 = false;
 					}
 					break;
 				}
-				boolean added = superclasses.add(d);
+				boolean added = superclasses.add(e);
 				assert (added);
-				c = d;
+				d = e;
 			}
 			Set<String> interfaces = new ArraySet<String>(2);
 			boolean success2 = populateInterfaces(c, interfaces);
@@ -251,10 +256,12 @@ public class ClassHierarchyBuilder {
 				continue;
 			}
 			if (!success1) {
-				; // TODO: warn
+				Messages.logAnon("WARN: Ignoring class " + c +
+					" as some (direct or transitive) superclass of it is missing in scope");
 			}
 			if (!success2) {
-				; // TODO: warn
+				Messages.logAnon("WARN: Ignoring class/interface " + c +
+					" as some (direct or transitive) interface implemented/extended by it is missing in scope");
 			}
 		}
 
@@ -282,6 +289,14 @@ public class ClassHierarchyBuilder {
 				subs.add(c);
 			}
 		}
+/*
+		System.out.println("CLASS TO CONCRETE SUBS:");
+		for (String c : classToConcreteSubclasses.keySet()) {
+			System.out.println(c);
+			for (String d : classToConcreteSubclasses.get(c))
+				System.out.println("\t" + d);
+		}
+*/
 
 		// build map interfaceToConcreteImplementors
 		for (String c : allInterfaces) {
@@ -299,6 +314,21 @@ public class ClassHierarchyBuilder {
 				impls.add(c);
 			}
 		}
+/*
+		System.out.println("INTERFACE TO CONCRETE IMPLS:");
+		for (String c : interfaceToConcreteImplementors.keySet()) {
+			System.out.println(c);
+			for (String d : interfaceToConcreteImplementors.get(c))
+				System.out.println("\t" + d);
+		}
+*/
+		allTypes.clear();
+		allConcreteClasses.clear();
+		allInterfaces.clear();
+		classToDeclaredSuperclass.clear();
+		typeToDeclaredInterfaces.clear();
+		concreteClassToAllSuperclasses.clear();
+		concreteClassToAllInterfaces.clear();
 	}
 
 	private static boolean isInterface(char access_flags) {

@@ -59,12 +59,15 @@ public class RTA implements IBootstrapper {
 	private List<jq_Method> methodWorklist = new ArrayList<jq_Method>();
 	private boolean repeat = true;
 	private jq_Class javaLangObject;
+
 	public IndexHashSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
+
 	public IndexHashSet<jq_Method> getReachableMethods() {
 		return visitedMethods;
 	}
+
 	public void run() {
 		System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
@@ -102,7 +105,7 @@ public class RTA implements IBootstrapper {
 	private void visitMethod(jq_Method m) {
 		if (visitedMethods.add(m)) {
 			if (!m.isAbstract()) {
-				if (DEBUG) System.out.println("\tAdding method " + m + " to worklist");
+				if (DEBUG) System.out.println("\tAdding method: " + m);
 				methodWorklist.add(m);
 			}
 		}

@@ -58,19 +58,24 @@ public class CHA implements IBootstrapper {
 	private List<jq_Method> methodWorklist = new ArrayList<jq_Method>();
 	private jq_Class javaLangObject;
 	private ClassHierarchyBuilder chb;
+
 	public IndexHashSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
+
 	public IndexHashSet<jq_Method> getReachableMethods() {
 		return visitedMethods;
 	}
+
 	public void run() {
 		System.out.println("ENTER: CHA");
 		Timer timer = new Timer();
 		timer.init();
         HostedVM.initialize();
        	chb = new ClassHierarchyBuilder();
+		System.out.println("Starting to build class hierarchy; this may take a while ...");
 		chb.run();
+		System.out.println("Finished building class hierarchy.");
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null)
@@ -86,7 +91,7 @@ public class CHA implements IBootstrapper {
         while (!methodWorklist.isEmpty()) {
         	jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
 			ControlFlowGraph cfg = m.getCFG();
-			if (DEBUG) System.out.println("Processing CFG of method: " + m);
+			System.out.println("Processing CFG of method: " + m);
 			processCFG(cfg);
         }
 		System.out.println("LEAVE: CHA");
@@ -97,7 +102,7 @@ public class CHA implements IBootstrapper {
 	private void visitMethod(jq_Method m) {
 		if (visitedMethods.add(m)) {
 			if (!m.isAbstract()) {
-				if (DEBUG) System.out.println("\tAdding method " + m + " to worklist");
+				if (DEBUG) System.out.println("\tAdding method: " + m);
 				methodWorklist.add(m);
 			}
 		}
@@ -110,7 +115,7 @@ public class CHA implements IBootstrapper {
 				Quad q = it2.nextQuad();
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {
-					if (DEBUG) System.out.println("Quad: " + q);
+					System.out.println("Quad: " + q);
 					jq_Method n = Invoke.getMethod(q).getMethod();
 					jq_Class c = n.getDeclaringClass();
 					visitClass(c);
@@ -137,6 +142,8 @@ public class CHA implements IBootstrapper {
 								assert (!d.isInterface());
 								assert (!d.isAbstract());
 								jq_InstanceMethod m2 = d.getVirtualMethod(nd);
+								if (m2 == null)
+									System.out.println(d + " " + nd);
 								assert (m2 != null);
 								visitMethod(m2);
 							}
@@ -163,24 +170,17 @@ public class CHA implements IBootstrapper {
 	}
 
 	private void prepareClass(jq_Class c) {
-		if (preparedClasses.contains(c))
-			return;
-		try {
+		if (preparedClasses.add(c)) {
         	c.prepare();
-		} catch (NoClassDefFoundError ex) {
-			Messages.log("SCOPE.EXCLUDING_CLASS", c.getName());
-			ex.printStackTrace();
-			System.exit(1);
+			if (DEBUG) System.out.println("\tAdding class: " + c);
+			jq_Class d = c.getSuperclass();
+			if (d == null)
+				assert (c == javaLangObject);
+			else
+				prepareClass(d);
+			for (jq_Class i : c.getDeclaredInterfaces())
+				prepareClass(i);
 		}
-		preparedClasses.add(c);
-		if (DEBUG) System.out.println("\tAdding class: " + c);
-		jq_Class d = c.getSuperclass();
-		if (d == null)
-			assert (c == javaLangObject);
-		else
-			prepareClass(d);
-		for (jq_Class i : c.getDeclaredInterfaces())
-			prepareClass(i);
 	}
 
 	private void visitClass(jq_Class c) {
