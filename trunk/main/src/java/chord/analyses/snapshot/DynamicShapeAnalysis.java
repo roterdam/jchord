@@ -62,9 +62,9 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		OTHER
 	}
 	
-	private final static int DEBUG_LEVEL = 1;
+	private static final int DEBUG_LEVEL = 0;
 	private static final boolean HALT_ON_MISMATCH = false;
-	private static final boolean PRINT_CFG = true;
+	private static final boolean PRINT_CFG = false;
 	
 	private final TIntObjectHashMap<ControlFlowGraph> method2cfg = new TIntObjectHashMap<ControlFlowGraph>();
 	private final TIntObjectHashMap<Stack<MethodExecutionState>> t2m = new TIntObjectHashMap<Stack<MethodExecutionState>>();
@@ -81,7 +81,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		instrScheme.setEnterAndLeaveMethodEvent();
 		instrScheme.setBasicBlockEvent();
 //		instrScheme.setMethodCallEvent(false, false, true, true, true);
-		instrScheme.setNewAndNewArrayEvent(false, true, true);
+		instrScheme.setNewAndNewArrayEvent(true, true, true);
 		instrScheme.setAloadPrimitiveEvent(false, true, true, false);
 		instrScheme.setAloadReferenceEvent(false, true, true, false, true);
 		instrScheme.setAstorePrimitiveEvent(false, true, true, false);
