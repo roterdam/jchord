@@ -1,7 +1,7 @@
 \section{Building Analysis Scope}
 \label{sec:building-scope}
 
-Chord computes the analysis scope (i.e., reachable classes and methods) of the given program
+\Chord\ computes the analysis scope (i.e., reachable classes and methods) of the given program
 either if property \code{chord.build.scope} is set to \code{true} or if some other task (e.g.,
 a program analysis specified via property \code{chord.run.analyses}) demands it by
 calling method \code{chord.program.Program.v()}.
@@ -12,32 +12,33 @@ The algorithm used to compute the analysis scope is as follows.
 \item
 If property \code{chord.reuse.scope} has value \code{true} and the files specified by properties
 \code{chord.classes.file} and \code{chord.methods.file} exist,
-then Chord regards those files as specifying the classes and methods, respectively,
+then \Chord\ regards those files as specifying the classes and methods, respectively,
 to be regarded as reachable.  The format
 of the classes file is a fully-qualified class name per line (e.g., \code{foo.bar.Main}).  The format
 of the methods file is an entry of the form \code{<method name>:<method descriptor>@<class name>} per line,
 specifying the method's name, the method's descriptor, and the method's declaring class
 (e.g., \code{main:([Ljava/lang/String;)V@foo.bar.Main}).
-Chord throws a runtime exception if the declaring class of a method in the methods file is not
-specified in the classes file.
+
+The default value of property \code{chord.reuse.scope} is \code{false}, and
+the default values of properties \code{chord.classes.file} and \code{chord.methods.file} are
+\code{[chord.out.dir]/classes.txt} and \code{[chord.out.dir]/methods.txt}, respectively,
+where property \code{chord.out.dir} defaults to \code{[chord.work.dir]/chord_output/},
+and property \code{chord.work.dir} defaults to the current working directory.
 
 \item
 If property \code{chord.reuse.scope} has value \code{false} or the file specified by
 property \code{chord.classes.file} or \code{chord.methods.file} does not exist,
-then Chord computes the analysis scope
-using the algorithm specified by property \code{chord.scope.kind} and then
-writes the classes and methods deemed reachable by that algorithm to those files.
+then \Chord\ computes the analysis scope
+using the algorithm specified by property \code{chord.scope.kind} and
+then writes the classes and methods deemed reachable by that algorithm to those files.
 
-The possible legal values of property \code{chord.scope.kind} are \code{rta} and \code{dynamic}.
-In both cases, Chord expects properties \code{chord.main.class} and \code{chord.class.path}
+The possible legal values of property \code{chord.scope.kind} are [\code{dynamic}$|$\code{rta}$|$\code{rta_reflect}$|$\code{cha}].
+In each case, \Chord\ at least expects properties \code{chord.main.class} and \code{chord.class.path}
 to be set.
 
 \begin{itemize}
 \item
-The \code{rta} value instructs Chord to compute the analysis scope statically using Rapid Type Analysis.
-
-\item
-The \code{dynamic} value instructs Chord to compute the analysis scope dynamically, by running the program
+The \code{dynamic} value instructs \Chord\ to compute the analysis scope dynamically, by running the program
 and observing using JVMTI the classes that are loaded at run-time.
 The number of times the program is run and the command-line arguments to be supplied to
 the program in each run is specified by properties \code{chord.run.ids} and
@@ -47,13 +48,110 @@ Only classes loaded in some run are regarded as reachable but {\it all} methods 
 as reachable regardless of whether they were invoked in the run.
 The rationale behind this decision is to both reduce run-time overhead of JVMTI and to increase the
 predictive power of program analyses performed using the computed analysis scope.
+
+\item
+The \code{rta} value instructs \Chord\ to compute the analysis scope statically using Rapid Type Analysis (RTA).
+In this case, no attempt is made to resolve reflection.
+
+RTA is an iterative fixed-point algorithm.  It maintains a set of reachable methods $M$.
+The initial iteration starts by assuming that only the main method in the main class is reachable
+(\Chord\ also handles class initializer methods but we ignore them here for brevity; we also ignore
+the set of reachable classes maintained besides the set of reachable methods).
+All object allocation sites $H$ contained in methods in $M$ are deemed
+reachable (i.e., control-flow within method bodies is ignored).  Whenever a dynamically-dispatching
+method call site (i.e., an invokevirtual or invokeinterface site) with receiver of static
+type $t$ is encountered in a method in $M$, only subtypes of $t$ whose objects are allocated at some site in $H$
+are considered to determine the possible target methods, and each such target
+method is added to $M$.  The process terminates when no more methods can be added.
+
+RTA is a relatively inexpensive and precise algorithm in practice.  Its key shortcoming is that it makes
+no attempt to resolve reflection, which is rampant in real-world Java programs, and can therefore be
+unsound (i.e., underestimate the set of reachable classes and methods).
+The next option attempts to overcome this problem.
+
+\item
+The \code{rta_reflect} value instructs \Chord\ to compute the analysis scope statically using Rapid Type Analysis
+and, moreover, to resolve a common reflection pattern:
+
+\begin{quote}
+\begin{verbatim}
+String s = ...;
+Class c = Class.forName(s);
+Object o = c.newInstance();
+T t = (T) o;
+\end{verbatim}
+\end{quote}
+
+This analysis is identical to RTA except that it additionally inspects every cast statement in the program,
+such as the last statement in the above snippet,
+and queries the class hierarchy to find all concrete classes that subclass \code{T} (if \code{T} is a class)
+or that implement \code{T} (if \code{T} is an interface).
+\Chord\ allows users to control which classes are included in the class hierarchy (see below).
+
+\item
+The \code{cha} value instructs \Chord\ to compute the analysis scope statically using Class Hierarchy Analysis (CHA).
+The key difference between CHA and RTA is that for invokevirtual and invokeinterface sites with receiver of
+static type $t$, CHA considers {\it all} subtypes of $t$ in the class hierarchy to determine the possible
+target methods, whereas RTA restricts them to types of objects allocated in methods deemed reachable so far.
+As a result, CHA is highly imprecise in practice, and also expensive since it grossly overestimates the set
+of reachable classes and methods.
+Nevertheless, \Chord\ allows users to control which classes are included in the class hierarchy (see below)
+and thereby control the precision and cost of CHA.
+
 \end{itemize}
+The default value of property \code{chord.scope.kind} is \code{rta}.
 \end{itemize}
 
-The default value of property \code{chord.reuse.scope} is \code{false} and that of
-property \code{chord.scope.kind} is \code{rta}.
-The default values of properties \code{chord.classes.file} and \code{chord.methods.file} are
-\code{[chord.out.dir]/classes.txt} and \code{[chord.out.dir]/methods.txt}, respectively,
-where property \code{chord.out.dir} defaults to \code{[chord.work.dir]/chord_output/},
-and property \code{chord.work.dir} defaults to the current working directory.
+The class hierarchy is built if property \code{chord.scope.kind} has value \code{rta_reflect} or \code{cha}.
+Users can control which classes are included in building the class hierarchy.
+\Chord\ first constructs the entire classpath of the given program by concatenating in order the following
+classpaths:
+
+\begin{enumerate}
+\item
+The boot classpath, specified by property \code{sun.boot.class.path}.
+\item
+The library extensions classpath, comprising all jar files in directory \code{[java.home]/lib/dir/}.
+\item
+\Chord's classpath, specified by property \code{chord.main.class.path}.
+\item
+The classpath of user-defined Java analyses, specified by user-defined property \code{chord.java.analysis.path}
+(it is empty by default).
+\item
+The classpath of the given program, specified by user-defined property \code{chord.class.path}
+(it is empty by default).
+\end{enumerate}
+
+All classes in the entire classpath (resulting from items 1--5 above) are included in the class hierarchy
+with the following exceptions:
+\begin{itemize}
+\item
+Duplicate classes, i.e., classes with the same name occurring in more than one classpath element;
+in this case, all occurrences except the first are excluded. 
+\item
+All classes in \Chord's classpath are excluded, i.e., all classes in the classpath specified by property \code{chord.main.class.path},
+such as those in packages and sub-packages of \code{chord}, \code{joeq}, \code{net.sf.bddbddb}, \code{net.sf.javabdd}, \code{javassist}, \code{gnu.trove}, \code{net.sf.saxon}, etc.
+\item
+If property \code{chord.ch.kind} has value \code{dynamic}, then \Chord\ runs the given program and
+observes the set of all classes the JVM loads; any class not in this set is excluded.
+By default, property \code{chord.ch.dynamic} has value \code{static}.
+\item
+If the superclass of a class $c$ is missing or if an interface implemented/extended by a class/interface
+$c$ is missing, where ``missing" means that it is either not in the classpath resulting from items 1--5 above
+or it is excluded by one of these rules, then $c$ itself is excluded.  Note that this rule is recursive, e.g.,
+if $c$ has superclass $b$ which in turn has superclass $a$, and $a$ is missing, then both $b$ and $c$ are
+excluded.
+\end{itemize}
+
+%TODO: describe chord.scope.exclude?
+
+%\begin{tabular}
+%chord.scope.kind,chord.ch.dynamic & runs program? & \# reachable classes & \# reachable methods & running time \\
+%dynamic,-         & yes &    314 &  4,491 &   25s \\
+%cha,true          & yes &    427 &  1,532 &   28s \\
+%rta,-             &  no &    849 &  4,836 &    9s \\
+%rta_reflect,true  & yes &    849 &  4,836 &   34s \\
+%rta_reflect,false &  no &  9,871 & 58,726 &  7m6s \\
+%cha,false         &  no & 14,121 & 74,613 & 4m11s
+%\end{tabular}
 

@@ -141,18 +141,25 @@ This section describes properties of the JVM running \Chord, such as the working
 \subsection{Program Scope Properties}
 
 This section describes properties that specify how the analysis scope is computed.
+See Section \ref{sec:building-scope} for more details.
 
 \begin{itemize}
 \item
+\code{chord.reuse.scope} \\
+{\bf Type:} bool \\
+{\bf Description:} Treat analysis scope as the classes and methods listed in files specified by properties \code{chord.classes.file} and \code{chord.methods.file}, respectively.  Property \code{chord.scope.kind} is ignored if this property is set to \code{true} and the two files exist. \\
+{\bf Default value:} \code{false}
+
+\item
 \code{chord.scope.kind} \\
-{\bf Type:} [\code{rta} $|$ \code{dynamic}] \\
-{\bf Description:} Algorithm to compute analysis scope (i.e., reachable classes and methods).  Current choices include \code{rta} (static Rapid Type Analysis) and \code{dynamic} (dynamic analysis). \\
+{\bf Type:} [\code{dynamic}$|$\code{rta}$|$\code{rta_reflect}$|$\code{cha}] \\
+{\bf Description:} Algorithm to compute analysis scope (i.e., reachable classes and methods).  Current choices include \code{dynamic} (dynamic analysis), \code{rta} (static Rapid Type Analysis ignoring reflection), \code{rta_reflect} (static Rapid Type Analysis modeling a common reflection pattern), and \code{cha} (static Class Hierarchy Analysis). \\
 {\bf Default value:} \code{rta}
 
 \item
-\code{chord.reuse.scope} \\
+\code{chord.ch.dynamic} \\
 {\bf Type:} bool \\
-{\bf Description:} Treat analysis scope as the classes and methods listed in files specified by properties \code{chord.classes.file} and \code{chord.methods.file}, respectively. Property \code{chord.scope.kind} is ignored if this property is set to \code{true} and the two files exist. \\
+{\bf Description:} Compute the set of all classes loaded by the JVM while running the given program, and exclude classes not in this set (and their subclasses) while building the class hierarchy.  This property is relevant only if \code{chord.scope.kind} is \code{rta_reflect} or \code{cha}, since only these two scope computing algorithms query the class hierarchy. \\
 {\bf Default value:} \code{false} 
 
 % TODO: mention that below three properties are also used by instrumentor to decide which classes to exclude from instrumentation
@@ -160,19 +167,19 @@ This section describes properties that specify how the analysis scope is compute
 \item
 \code{chord.scope.exclude.std} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes and packages inside the standard library to be excluded by analysis scope building algorithms. \\
-{\bf Default value:} \code{"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,com.ibm.misc.,org.apache.harmony.,joeq.,jwutil.,java.,javax."} 
+{\bf Description:} List of prefixes of names of classes inside the standard library whose method bodies must be treated as no-ops by static scope building algorithms. \\
+{\bf Default value:} \code{[chord.main.class.path]}
 
 \item
 \code{chord.scope.exclude.ext} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes and packages outside the standard library to be excluded by analysis scope building algorithms. \\
+{\bf Description:} List of prefixes of names of classes outside the standard library whose method bodies must be treated as no-ops by static scope building algorithms. \\
 {\bf Default value:} \code{""}
 
 \item
 \code{chord.scope.exclude} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes and packages to be excluded by analysis scope building algorithms. \\
+{\bf Description:} List of prefixes of names of classes whose method bodies must be treated as no-ops by static scope building algorithms. \\
 {\bf Default value:} \code{"[chord.scope.exclude.std],[chord.scope.exclude.ext]"}
 \end{itemize}
 
