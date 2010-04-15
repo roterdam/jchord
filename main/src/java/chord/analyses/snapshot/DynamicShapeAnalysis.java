@@ -492,7 +492,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		TIntLongHashMap F = thr2formalBindings.get(t);
 		if (F != null) {
 			F.forEachEntry(new TIntLongProcedure() {
-				@Override
+				// @Override commeting because jdk 1.5 fails due to this
 				public boolean execute(int arg0, long arg1) {
 					execState.env.put(arg0, arg1);
 					return true;
@@ -605,7 +605,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	private void printCFG(ControlFlowGraph cfg) {
 		final BasicBlock[] bbs = new BasicBlock[cfg.getNumberOfBasicBlocks()];
 		cfg.visitBasicBlocks(new BasicBlockVisitor() {
-			@Override
+			// @Override commeting because jdk 1.5 fails due to this
 			public void visitBasicBlock(BasicBlock bb) {
 				bbs[bb.getID()] = bb;
 			}
