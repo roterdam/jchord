@@ -21,10 +21,6 @@ public class Properties {
 	private Properties() { }
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
-	public final static String DEFAULT_SCOPE_EXCLUDES =
-		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,com.ibm.misc.,org.apache.harmony.,joeq.,jwutil.,java.,javax.";
-	public final static String DEFAULT_CHECK_EXCLUDES =
-		"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,com.ibm.misc.,org.apache.harmony.,joeq.,jwutil.,java.,javax.";
 
 	// Chord resource properties
 
@@ -75,18 +71,17 @@ public class Properties {
 
 	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
-	// TODO: document
-	public final static boolean isCHdynamic = buildBoolProperty("chord.ch.dynamic", false);
+	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
+
+	public final static String DEFAULT_SCOPE_EXCLUDES = mainClassPathName;
+	public final static String DEFAULT_CHECK_EXCLUDES =
+		concat(mainClassPathName, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
 
 	public final static String scopeExcludeStdStr = System.getProperty("chord.scope.exclude.std", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
 	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
-		concat(scopeExcludeStdStr, scopeExcludeExtStr));
+		concat(scopeExcludeStdStr, ',', scopeExcludeExtStr));
 	public static String[] scopeExcludeAry = toArray(scopeExcludeStr);
-
-	// TODO: document, possibly remove altogether
-	public static final String allocMethodsFileName =
-		mainRel2AbsPath("chord.alloc.methods.file", "annot" + File.separator + "alloc_methods.txt");
 
 	// Program analysis properties
 
@@ -98,7 +93,7 @@ public class Properties {
 	public final static String checkExcludeStdStr = System.getProperty("chord.check.exclude.std", DEFAULT_CHECK_EXCLUDES);
 	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
 	public static String checkExcludeStr = System.getProperty("chord.check.exclude",
-		concat(checkExcludeStdStr, checkExcludeExtStr));
+		concat(checkExcludeStdStr, ',', checkExcludeExtStr));
 	public static String[] checkExcludeAry = toArray(checkExcludeStr);
 
     // Program transformation properties
@@ -185,17 +180,15 @@ public class Properties {
 		System.out.println("chord.class.path: " + classPathName);
 		System.out.println("chord.src.path: " + srcPathName);
 		System.out.println("chord.run.ids: " + runIDs);
-		// TODO: args.XXX
 		System.out.println("chord.runtime.jvmargs: " + runtimeJvmargs);
 
 		System.out.println("*** Program scope properties:");
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
-		System.out.println("chord.ch.dynamic: " + isCHdynamic);
+		System.out.println("chord.ch.kind: " + CHkind);
 		System.out.println("chord.scope.exclude.std: " + scopeExcludeStdStr);
 		System.out.println("chord.scope.exclude.ext: " + scopeExcludeExtStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
-		System.out.println("chord.alloc.methods.file: " + allocMethodsFileName);
 
 		System.out.println("*** Program analysis properties:");
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
@@ -252,9 +245,9 @@ public class Properties {
 	public static String[] toArray(String str) {
         return str.equals("") ? new String[0] : str.split(LIST_SEPARATOR);
 	}
-	public static String concat(String s1, String s2) {
+	public static String concat(String s1, char sep, String s2) {
 		if (s1.equals("")) return s2;
 		if (s2.equals("")) return s1;
-		return s1 + "," + s2;
+		return s1 + sep + s2;
 	}
 }
