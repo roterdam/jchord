@@ -12,7 +12,6 @@ import java.util.Stack;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.BasicBlockVisitor;
-import joeq.Compiler.Quad.BytecodeToQuad;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
@@ -64,9 +63,9 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	
 	private static final int DEBUG_LEVEL = 0;
 	private static final boolean HALT_ON_MISMATCH = false;
-	private static final boolean PRINT_CFG = false;
+	private static final boolean PRINT_CFG = true;
 	
-	private final TIntObjectHashMap<ControlFlowGraph> method2cfg = new TIntObjectHashMap<ControlFlowGraph>();
+//	private final TIntObjectHashMap<ControlFlowGraph> method2cfg = new TIntObjectHashMap<ControlFlowGraph>();
 	private final TIntObjectHashMap<Stack<MethodExecutionState>> t2m = new TIntObjectHashMap<Stack<MethodExecutionState>>();
 	private final TIntObjectHashMap<TIntIntHashMap> thr2formalBindings = new TIntObjectHashMap<TIntIntHashMap>(); 
 	private InstrScheme instrScheme;
@@ -75,12 +74,11 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 
 	@Override
 	public chord.instr.InstrScheme getInstrScheme() {
-		/* 4 now, we assume a single-threaded setting, so <code>hasThr=false</code>. */
 		if (instrScheme != null) return instrScheme;
 		instrScheme = new InstrScheme();
 		instrScheme.setEnterAndLeaveMethodEvent();
 		instrScheme.setBasicBlockEvent();
-//		instrScheme.setMethodCallEvent(false, false, true, true, true);
+		instrScheme.setMethodCallEvent(true, true, true, true, true);
 		instrScheme.setNewAndNewArrayEvent(true, true, true);
 		instrScheme.setAloadPrimitiveEvent(false, true, true, false);
 		instrScheme.setAloadReferenceEvent(false, true, true, false, true);
@@ -380,17 +378,17 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		}
 		
 		initEnv(t, m);
-		ControlFlowGraph cfg = method2cfg.get(m);
-		if (cfg == null) {
-			jq_Method mthd = M.get(m);
-			assert (mthd != null);
-			BytecodeToQuad b2q = new BytecodeToQuad(mthd);
-			method2cfg.put(m, cfg = b2q.convert());
-			if (PRINT_CFG || DEBUG_LEVEL >= 3) {
-				printCFG(cfg);
-			}
-		}
-		assert (cfg != null);
+//		ControlFlowGraph cfg = method2cfg.get(m);
+//		if (cfg == null) {
+//			jq_Method mthd = M.get(m);
+//			assert (mthd != null);
+//			BytecodeToQuad b2q = new BytecodeToQuad(mthd);
+//			method2cfg.put(m, cfg = b2q.convert());
+//			if (PRINT_CFG || DEBUG_LEVEL >= 3) {
+//				printCFG(cfg);
+//			}
+//		}
+//		assert (cfg != null);
 	}
 	
 	private void initEnv(int t, int m) {
@@ -510,6 +508,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		/* Do nothing 4 now. */
 	}
 	
+	@SuppressWarnings("unused")
 	private void printCFG(ControlFlowGraph cfg) {
 		final BasicBlock[] bbs = new BasicBlock[cfg.getNumberOfBasicBlocks()];
 		cfg.visitBasicBlocks(new BasicBlockVisitor() {
