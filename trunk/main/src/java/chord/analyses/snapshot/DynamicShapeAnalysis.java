@@ -178,7 +178,6 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		final int[] var = new int[] { -1 };
 		MethodExecutionState execState = thrStack.peek();
 		execState.env.forEachEntry(new TIntLongProcedure() {
-			@Override
 			public boolean execute(int arg0, long arg1) {
 				if (arg1 == lastFakeAddress) {
 					var[0] = arg0;
@@ -196,7 +195,6 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 				Messages.logAnon("INFO: Fake address is: " + lastFakeAddress + ".");
 				Messages.logAnon("INFO: Real address is: " + l + ".");
 				execState.env.forEachEntry(new TIntLongProcedure() {
-					@Override
 					public boolean execute(int arg0, long arg1) {
 						Messages.logAnon("INFO: " + arg0 + " ---> " + arg1);
 						return true;
