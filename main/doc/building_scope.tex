@@ -103,7 +103,8 @@ The default value of property \code{chord.scope.kind} is \code{rta}.
 \end{itemize}
 
 The class hierarchy is built if property \code{chord.scope.kind} has value \code{rta_reflect} or \code{cha}.
-Users can control which classes are included in building the class hierarchy.
+Users can control which classes are included in building the class hierarchy by setting property \code{chord.ch.kind},
+whose possible legal values are [\code{static}$|$\code{dynamic}].
 \Chord\ first constructs the entire classpath of the given program by concatenating in order the following
 classpaths:
 
@@ -134,7 +135,7 @@ such as those in packages and sub-packages of \code{chord}, \code{joeq}, \code{n
 \item
 If property \code{chord.ch.kind} has value \code{dynamic}, then \Chord\ runs the given program and
 observes the set of all classes the JVM loads; any class not in this set is excluded.
-By default, property \code{chord.ch.dynamic} has value \code{static}.
+By default, property \code{chord.ch.kind} has value \code{static}.
 \item
 If the superclass of a class $c$ is missing or if an interface implemented/extended by a class/interface
 $c$ is missing, where ``missing" means that it is either not in the classpath resulting from items 1--5 above
