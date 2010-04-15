@@ -45,16 +45,15 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CHA implements IBootstrapper {
+public class CHA implements IScopeBuilder {
 	public static final boolean DEBUG = false;
 	private IndexHashSet<jq_Class> preparedClasses = new IndexHashSet<jq_Class>();
 	// all classes whose clinits and super class/interface clinits have been
-	// processed so far in current interation
+	// processed so far
 	private Set<jq_Class> classesVisitedForClinit = new HashSet<jq_Class>();
-	// all methods deemed reachable so far in current iteration
+	// all methods deemed reachable so far
 	private IndexHashSet<jq_Method> visitedMethods = new IndexHashSet<jq_Method>();
-	// worklist for methods seen so far in current iteration but whose cfg's
-	// haven't been processed yet
+	// worklist for methods seen so far but whose cfg's haven't been processed yet
 	private List<jq_Method> methodWorklist = new ArrayList<jq_Method>();
 	private jq_Class javaLangObject;
 	private ClassHierarchyBuilder chb;
@@ -73,9 +72,7 @@ public class CHA implements IBootstrapper {
 		timer.init();
         HostedVM.initialize();
        	chb = new ClassHierarchyBuilder();
-		System.out.println("Starting to build class hierarchy; this may take a while ...");
 		chb.run();
-		System.out.println("Finished building class hierarchy.");
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null)

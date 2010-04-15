@@ -45,8 +45,9 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class RTA implements IBootstrapper {
+public class RTA implements IScopeBuilder {
 	public static final boolean DEBUG = false;
+	private final boolean handleReflection;
 	private IndexHashSet<jq_Class> preparedClasses = new IndexHashSet<jq_Class>();
     private IndexHashSet<jq_Class> reachableAllocClasses = new IndexHashSet<jq_Class>();
 	// all classes whose clinits and super class/interface clinits have been
@@ -57,8 +58,13 @@ public class RTA implements IBootstrapper {
 	// worklist for methods seen so far in current iteration but whose cfg's
 	// haven't been processed yet
 	private List<jq_Method> methodWorklist = new ArrayList<jq_Method>();
-	private boolean repeat = true;
 	private jq_Class javaLangObject;
+    private ClassHierarchyBuilder chb;
+	private boolean repeat = true;
+
+	public RTA(boolean handleReflection) {
+		this.handleReflection = handleReflection;
+	}
 
 	public IndexHashSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
@@ -73,6 +79,10 @@ public class RTA implements IBootstrapper {
 		Timer timer = new Timer();
 		timer.init();
         HostedVM.initialize();
+		if (handleReflection) {
+			chb = new ClassHierarchyBuilder();
+			chb.run();
+		}
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null)
@@ -164,6 +174,25 @@ public class RTA implements IBootstrapper {
 					visitClass(c);
 					if (reachableAllocClasses.add(c)) {
 						repeat = true;
+					}
+				} else if (handleReflection && op instanceof CheckCast) {
+					if (DEBUG) System.out.println("Quad: " + q);
+					TypeOperand typeOperand = CheckCast.getType(q);
+					if (typeOperand != null) {
+						jq_Type type = typeOperand.getType();
+						if (type instanceof jq_Class) {
+							String cName = type.getName();
+							Set<String> subclasses = chb.getConcreteSubclasses(cName);
+							if (subclasses == null)
+								continue;
+							for (String dName : subclasses) {
+                                jq_Class d = (jq_Class) jq_Type.parseType(dName);
+								visitClass(d);
+								if (reachableAllocClasses.add(d)) {
+									repeat = true;
+								}
+							}
+						}
 					}
 				}
 			}

@@ -29,22 +29,32 @@ import joeq.Class.ClasspathElement;
 import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.ArraySet;
+import chord.util.tuple.object.Pair;
 
 /**
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClassHierarchyBuilder {
+	private final boolean isCHdynamic;
 	/**
 	 * The entire classpath: the bootclasspath followed by the library
 	 * extensions path followed by the user-defined classpath.
 	 */
 	private final Classpath classpath = new Classpath();
+	/**
+	 * List of classpath elements in the classpath to be excluded
+	 * from the class hierarchy.
+	 */
 	private final String[] elemsExcludeAry;
 	/**
 	 * List of prefixes of names of classes/packages to be excluded
 	 * from the class hierarchy.
 	 */
 	private final String[] scopeExcludeAry;
+	/**
+	 * Set of all classes/interfaces read so far to check for duplicates.
+	 */
+	 private final Set<String> allTypes = new HashSet<String>();
 	/**
 	 * Set consisting of:
 	 * 1. each class not in scope but declared as the superclass of
@@ -111,38 +121,157 @@ public class ClassHierarchyBuilder {
 		new HashMap<String, Set<String>>();
 
 	public ClassHierarchyBuilder() {
+		isCHdynamic = Properties.isCHdynamic;
 		scopeExcludeAry = Properties.scopeExcludeAry;
+		// exclude chord's classpath in part because joeq has weird
+		// code that breaks cha, but also because it is not part of
+		// the program being analyzed
 		String mainClassPathName = Properties.mainClassPathName;
 		elemsExcludeAry = mainClassPathName.equals("") ?  new String[0] :
 			mainClassPathName.split(File.pathSeparator);
 	}
 
 	/**
-	 * Provides the set of all concrete classes that subclass a given class.
+	 * Provides the set of all concrete classes that subclass a
+	 * given class.
 	 *
 	 * @param	cName	The name of a (concrete or abstract) class.
 	 *
-	 * @return	The set of all concrete classes that subclass (directly or transitively)
-	 *			the class named <code>cName</code>, if it exists in the class hierarchy,
-	 *			and null otherwise.
+	 * @return	The set of all concrete classes that subclass
+	 *			(directly or transitively) the class named
+	 *			<code>cName</code>, if it exists in the class
+	 *			hierarchy, and null otherwise.
 	 */
 	public Set<String> getConcreteSubclasses(String cName) {
 		return classToConcreteSubclasses.get(cName);
 	}
 
 	/**
-	 * Provides the set of all concrete classes that implement a given interface.
+	 * Provides the set of all concrete classes that implement a
+	 * given interface.
 	 *
 	 * @param	iName	The name of an interface.
 	 *
-	 * @return	The set of all concrete classes that implement the interface named
-	 *			<code>iName</code>, if it exists in the class hierarchy, and null otherwise.
+	 * @return	The set of all concrete classes that implement the
+	 *			interface named	<code>iName</code>, if it exists in
+	 *			the class hierarchy, and null otherwise.
 	 */
 	public Set<String> getConcreteImplementors(String iName) {
 		return interfaceToConcreteImplementors.get(iName);
 	}
 
-	private boolean exclude(ClasspathElement cpe) {
+	public void run() {
+        System.out.println("Starting to build class hierarchy; this may take a while ...");
+		Set<String> dynLoadedTypes = null;
+		if (isCHdynamic) {
+			List<String> list = Program.getDynamicallyLoadedClasses();
+			dynLoadedTypes = new HashSet<String>(list.size());
+			dynLoadedTypes.addAll(list);
+		}
+		final Classpath cp = new Classpath();
+		cp.addStandardClasspath();
+		final List<ClasspathElement> cpeList = cp.getClasspathElements();
+
+		// logging info
+		List<String> excludedElems = new ArrayList<String>();
+		List<String> includedElems = new ArrayList<String>();
+		List<Pair<String, String>> duplicateTypes = new ArrayList<Pair<String, String>>();
+		List<String> typesInExcludedElems = new ArrayList<String>();
+		List<String> typesInExcludedScope = new ArrayList<String>();
+		List<String> typesNotDynLoaded = new ArrayList<String>();
+
+		for (ClasspathElement cpe : cpeList) {
+			boolean isInExcludedElems = isInExcludedElems(cpe);
+			if (isInExcludedElems)
+				excludedElems.add(cpe.toString());
+			else
+				includedElems.add(cpe.toString());
+			for (String fileName : cpe.getEntries()) {
+				if (!fileName.endsWith(".class"))
+					continue;
+				String baseName = fileName.substring(0, fileName.length() - 6);
+				String typeName = baseName.replace(File.separatorChar, '.');
+				// ignore duplicate types in classpath
+				if (!allTypes.add(typeName)) {
+					duplicateTypes.add(new Pair<String, String>(typeName, cpe.toString()));
+					continue;
+				}
+				// ignore types from excluded classpath elements
+				if (isInExcludedElems) {
+					typesInExcludedElems.add(typeName);
+					continue;
+				}
+				if (isInExcludedScope(typeName)) {
+					typesInExcludedScope.add(typeName);
+					continue;
+				}
+				if (dynLoadedTypes != null && !dynLoadedTypes.contains(typeName)) {
+					typesNotDynLoaded.add(typeName);
+					continue;
+				}
+				InputStream is = cpe.getResourceAsStream(fileName);
+				assert (is != null);
+				DataInputStream in = new DataInputStream(is);
+				processClassFile(in, typeName);
+			}
+		}
+
+		if (Properties.verbose) {
+			if (!excludedElems.isEmpty()) {
+				Messages.log("CH.EXCLUDED_ELEMS");
+				for (String cpe : excludedElems)
+					Messages.logAnon("\t" + cpe);
+			}
+			if (!includedElems.isEmpty()) {
+				Messages.log("CH.INCLUDED_ELEMS");
+				for (String cpe : includedElems)
+					Messages.logAnon("\t" + cpe);
+			}
+			if (!duplicateTypes.isEmpty()) {
+				Messages.log("CH.IGNORED_DUPLICATE_TYPES");
+				for (Pair<String, String> p : duplicateTypes)
+					Messages.logAnon("\t%s, %s", p.val0, p.val1);
+			}
+			if (!typesInExcludedElems.isEmpty()) {
+				Messages.log("CH.EXCLUDED_TYPES_IN_EXCLUDED_ELEMS");
+				for (String s : typesInExcludedElems)
+					Messages.logAnon("\t" + s);
+			}
+			if (!typesInExcludedScope.isEmpty()) {
+				Messages.log("CH.EXCLUDED_TYPES_IN_EXCLUDED_SCOPE");
+				for (String s : typesInExcludedScope)
+					Messages.logAnon("\t" + s);
+			}
+			if (!typesNotDynLoaded.isEmpty()) {
+				Messages.log("CH.EXCLUDED_TYPES_NOT_DYN_LOADED");
+				for (String s : typesNotDynLoaded)
+					Messages.logAnon("\t" + s);
+			}
+		}
+
+		createConcreteClassMaps();
+		invertConcreteClassMaps();
+
+		allTypes.clear();
+		allConcreteClasses.clear();
+		allInterfaces.clear();
+		classToDeclaredSuperclass.clear();
+		typeToDeclaredInterfaces.clear();
+		concreteClassToAllSuperclasses.clear();
+		concreteClassToAllInterfaces.clear();
+
+        System.out.println("Finished building class hierarchy.");
+	}
+
+	private boolean isInExcludedScope(String className) {
+		for (String prefix : scopeExcludeAry) {
+			if (className.startsWith(prefix))
+				return true;
+		}
+		return false;
+	}
+
+	private boolean isInExcludedElems(ClasspathElement cpe) {
 		String cpe1 = cpe.toString();
 		for (String cpe2 : elemsExcludeAry) {
 			if (cpe1.equals(cpe2))
@@ -151,103 +280,79 @@ public class ClassHierarchyBuilder {
 		return false;
 	}
 
-	public void run() {
-		// maintain set of all classes/interfaces read so far to check for duplicates
-	 	final Set<String> allTypes = new HashSet<String>();
-		final Classpath cp = new Classpath();
-		cp.addStandardClasspath();
-		final List<ClasspathElement> cpeList = cp.getClasspathElements();
-		// build maps classToDeclaredSuperclass and typeToDeclaredInterfaces and
-		// sets allConcreteClasses and allInterfaces
-		for (ClasspathElement cpe : cpeList) {
-			boolean excludeCPE = exclude(cpe);
-			if (!excludeCPE) System.out.println("CPE: " + cpe);
-			for (String fileName : cpe.getEntries()) {
-				if (!fileName.endsWith(".class"))
-					continue;
-				String baseName = fileName.substring(0, fileName.length() - 6);
-				String className = baseName.replace(File.separatorChar, '.');
-				// ignore duplicate classes in classpath
-				if (!allTypes.add(className))
-					continue;
-				if (excludeCPE)
-					continue;
-				boolean exclude = false;
-				for (String prefix : scopeExcludeAry) {
-					if (className.startsWith(prefix)) {
-						exclude = true;
-						break;
-					}
-				}
-				if (exclude)
-					continue;
-				InputStream is = cpe.getResourceAsStream(fileName);
-				assert (is != null);
-				DataInputStream in = new DataInputStream(is);
-				// description of superclass and interfaces sections in class file of class c:
-				// 1. superclass d:
-				//   if c is an interface then d is java.lang.Object
-				//   if c == java.lang.Object then d is null (has index 0 in constant pool)
-				//   if c is a class other than java.lang.Object then d is the declared
-				//   superclass of c
-				// 2. interfaces S:
-				//   if c is an interface then S is the set of interfaces c declares it extends
-				//   if c is a class then S is the set of interfaces c declares it implements
-				try {
-					int magicNum = in.readInt(); // 0xCAFEBABE
-					if (magicNum != 0xCAFEBABE) {
-						throw new ClassFormatError("bad magic number: " +
-							Integer.toHexString(magicNum));
-					}
-					in.readUnsignedShort(); // read minor_version
-					in.readUnsignedShort(); // read major_version
-					int constant_pool_count = in.readUnsignedShort();
-					Object[] constant_pool =
-						processConstantPool(in, constant_pool_count);
-					char access_flags = (char) in.readUnsignedShort();  // read access_flags
-					int self_index = in.readUnsignedShort();
-					int super_index = in.readUnsignedShort();
-					if (super_index == 0) {
-						assert (className.equals("java.lang.Object"));
-						classToDeclaredSuperclass.put(className, null);
+	// Build the following maps:
+	// classToDeclaredSuperclass and typeToDeclaredInterfaces
+	// and the following sets:
+	// allTypes, allConcreteClasses, allInterfaces
+	// Description of superclass and interfaces sections in class file of class c:
+	// 1. superclass d:
+	//   if c is an interface then d is java.lang.Object
+	//   if c == java.lang.Object then d is null (has index 0 in constant pool)
+	//   if c is a class other than java.lang.Object then d is the
+	//      declared superclass of c
+	// 2. interfaces S:
+	//   if c is an interface then S is the set of interfaces c declares it extends
+	//   if c is a class then S is the set of interfaces c declares it implements
+	private void processClassFile(DataInputStream in, String className) {
+		try {
+			int magicNum = in.readInt(); // 0xCAFEBABE
+			if (magicNum != 0xCAFEBABE) {
+				throw new ClassFormatError("bad magic number: " +
+					Integer.toHexString(magicNum));
+			}
+			in.readUnsignedShort(); // read minor_version
+			in.readUnsignedShort(); // read major_version
+			int constant_pool_count = in.readUnsignedShort();
+			Object[] constant_pool =
+				processConstantPool(in, constant_pool_count);
+			char access_flags = (char) in.readUnsignedShort();  // read access_flags
+			int self_index = in.readUnsignedShort();
+			int super_index = in.readUnsignedShort();
+			if (super_index == 0) {
+				assert (className.equals("java.lang.Object"));
+				classToDeclaredSuperclass.put(className, null);
+				allConcreteClasses.add(className);
+			} else {
+				int c = (Integer) constant_pool[super_index];
+				Utf8 utf8 = (Utf8) constant_pool[c];
+				String superclassName = utf8.toString().replace(File.separatorChar, '.');
+				if (isInterface(access_flags)) {
+					assert (superclassName.equals("java.lang.Object"));
+					allInterfaces.add(className);
+				} else {
+					classToDeclaredSuperclass.put(className, superclassName);
+					if (!isAbstract(access_flags))
 						allConcreteClasses.add(className);
-					} else {
-						int c = (Integer) constant_pool[super_index];
-						Utf8 utf8 = (Utf8) constant_pool[c];
-						String superclassName = utf8.toString().replace(File.separatorChar, '.');
-						if (isInterface(access_flags)) {
-							assert (superclassName.equals("java.lang.Object"));
-							allInterfaces.add(className);
-						} else {
-							classToDeclaredSuperclass.put(className, superclassName);
-							if (!isAbstract(access_flags))
-								allConcreteClasses.add(className);
-						}
-					}
-					int n_interfaces = (int) in.readUnsignedShort();
-					Set<String> interfaces = new ArraySet<String>(n_interfaces);
-					typeToDeclaredInterfaces.put(className, interfaces);
-					for (int i = 0; i < n_interfaces; ++i) {
-						int interface_index = in.readUnsignedShort();
-						int c = (Integer) constant_pool[interface_index];
-						Utf8 utf8 = (Utf8) constant_pool[c];
-						String interfaceName = utf8.toString().replace(File.separatorChar, '.');
-						interfaces.add(interfaceName);
-					}
-					in.close();
-				} catch (IOException ex) {
-					ex.printStackTrace();
-					System.exit(1);
 				}
 			}
+			int n_interfaces = (int) in.readUnsignedShort();
+			Set<String> interfaces = new ArraySet<String>(n_interfaces);
+			typeToDeclaredInterfaces.put(className, interfaces);
+			for (int i = 0; i < n_interfaces; ++i) {
+				int interface_index = in.readUnsignedShort();
+				int c = (Integer) constant_pool[interface_index];
+				Utf8 utf8 = (Utf8) constant_pool[c];
+				String interfaceName = utf8.toString().replace(File.separatorChar, '.');
+				interfaces.add(interfaceName);
+			}
+			in.close();
+		} catch (IOException ex) {
+			ex.printStackTrace();
+			System.exit(1);
 		}
+	}
 
-		// build maps concreteClassToAllSuperclasses and concreteClassToAllInterfaces
-		// and also populate set missingTypes
-		// the reason we only care about concrete classes in the domain of these two
-		// maps is because we will subsequently "invert" these maps when we build maps
-		// classToConcreteSubclasses and interfaceToConcreteImplementors, and these
-		// two maps only have concrete classes in their range.
+	// Build maps concreteClassToAllSuperclasses and concreteClassToAllInterfaces
+	// and also populate set missingTypes.
+	// The reason we only care about concrete classes in the domain of these two
+	// maps is because we will subsequently "invert" these maps when we build maps
+	// classToConcreteSubclasses and interfaceToConcreteImplementors, and these
+	// two maps only have concrete classes in their range.
+	private void createConcreteClassMaps() {
+		// the following two sets are to prevent cluttering of warnings to be
+		// printed to the log; they are cleaned up on exit of this method
+		Set<String> missingSuperclasses = new HashSet<String>();
+		Set<String> missingSupertypes = new HashSet<String>();
 		for (String c : allConcreteClasses) {
 			Set<String> superclasses = new ArraySet<String>(1);
 			boolean success1 = true;
@@ -272,22 +377,30 @@ public class ClassHierarchyBuilder {
 				concreteClassToAllInterfaces.put(c, interfaces);
 				continue;
 			}
-			if (!success1) {
-				Messages.logAnon("WARN: Ignoring class " + c +
-					" as some (direct or transitive) superclass of it is missing in scope");
-			}
-			if (!success2) {
-				Messages.logAnon("WARN: Ignoring class/interface " + c +
-					" as some (direct or transitive) interface implemented/extended by it is missing in scope");
-			}
+			if (!success1)
+				missingSuperclasses.add(c);
+			if (!success2)
+				missingSupertypes.add(c);
 		}
 
 		if (!missingTypes.isEmpty()) {
-			Messages.log("SCOPE.CLASSES_NOT_FOUND");
+			Messages.log("CH.MISSING_TYPES");
 			for (String c : missingTypes)
 				Messages.logAnon("\t" + c);
 		}
+		if (!missingSuperclasses.isEmpty()) {
+			Messages.log("CH.MISSING_SUPERCLASSES");
+			for (String c : missingSuperclasses)
+				Messages.logAnon("\t" + c);
+		}
+		if (!missingSupertypes.isEmpty()) {
+			Messages.log("CH.MISSING_SUPERTYPES");
+			for (String c : missingSupertypes)
+				Messages.logAnon("\t" + c);
+		}
+	}
 
+	private void invertConcreteClassMaps() {
 		// build map classToConcreteSubclasses
 		for (String c : classToDeclaredSuperclass.keySet()) {
 			Set<String> subs = new ArraySet<String>(2);
@@ -306,14 +419,6 @@ public class ClassHierarchyBuilder {
 				subs.add(c);
 			}
 		}
-/*
-		System.out.println("CLASS TO CONCRETE SUBS:");
-		for (String c : classToConcreteSubclasses.keySet()) {
-			System.out.println(c);
-			for (String d : classToConcreteSubclasses.get(c))
-				System.out.println("\t" + d);
-		}
-*/
 
 		// build map interfaceToConcreteImplementors
 		for (String c : allInterfaces) {
@@ -331,21 +436,6 @@ public class ClassHierarchyBuilder {
 				impls.add(c);
 			}
 		}
-/*
-		System.out.println("INTERFACE TO CONCRETE IMPLS:");
-		for (String c : interfaceToConcreteImplementors.keySet()) {
-			System.out.println(c);
-			for (String d : interfaceToConcreteImplementors.get(c))
-				System.out.println("\t" + d);
-		}
-*/
-		allTypes.clear();
-		allConcreteClasses.clear();
-		allInterfaces.clear();
-		classToDeclaredSuperclass.clear();
-		typeToDeclaredInterfaces.clear();
-		concreteClassToAllSuperclasses.clear();
-		concreteClassToAllInterfaces.clear();
 	}
 
 	private static boolean isInterface(char access_flags) {
