@@ -3,9 +3,10 @@
  */
 package chord.analyses.snapshot;
 
-import gnu.trove.TIntIntHashMap;
-import gnu.trove.TIntIntProcedure;
+import gnu.trove.TIntLongHashMap;
+import gnu.trove.TIntLongProcedure;
 import gnu.trove.TIntObjectHashMap;
+import gnu.trove.TLongArrayList;
 
 import java.util.Stack;
 
@@ -35,7 +36,11 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 
 	private static class MethodExecutionState {
 		protected final int m;
-		protected final TIntIntHashMap env = new TIntIntHashMap();
+		/* 
+		 * We need to use <code>Long</code>, instead of <code>Integer</code>, since we have to guarantee fresh fake addresses in case
+		 * we miss <code>NEW_OR_NEWARRAY</code> events. 
+		 */
+		protected final TIntLongHashMap env = new TIntLongHashMap();
 		protected int b = -1;
 		protected int ii = -1;
 		
@@ -63,11 +68,19 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	
 	private static final int DEBUG_LEVEL = 0;
 	private static final boolean HALT_ON_MISMATCH = false;
-	private static final boolean PRINT_CFG = true;
+	private static final boolean PRINT_CFG = false;
 	
-//	private final TIntObjectHashMap<ControlFlowGraph> method2cfg = new TIntObjectHashMap<ControlFlowGraph>();
+	/* 
+	 * In practice, there is a discrepancy between the <code>Operator.New</code> quads in the CFG and their
+	 * corresponding <code>NEW_OR_NEWARRAY</code> trace events. A temporary solution is to synthesize a heap address, and use
+	 * it until the actual address becomes available as part of the <code>NEW_OR_NEWARRAY</code> event. For that, we need a per-thread
+	 * stack of all the fake IDs that are currently alive. (In practice, we use a least, as that's cheaper.)
+	 *    
+	 */
+	private final TIntObjectHashMap<TLongArrayList> t2fakeHeapID = new TIntObjectHashMap<TLongArrayList>();
 	private final TIntObjectHashMap<Stack<MethodExecutionState>> t2m = new TIntObjectHashMap<Stack<MethodExecutionState>>();
-	private final TIntObjectHashMap<TIntIntHashMap> thr2formalBindings = new TIntObjectHashMap<TIntIntHashMap>(); 
+	private final TIntObjectHashMap<TIntLongHashMap> thr2formalBindings = new TIntObjectHashMap<TIntLongHashMap>(); 
+//	private final TIntObjectHashMap<ControlFlowGraph> method2cfg = new TIntObjectHashMap<ControlFlowGraph>();
 	private InstrScheme instrScheme;
 	private DomM M;
 	private DomB B;
@@ -95,50 +108,121 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		return instrScheme;
 	}
 
-	private void updateAbstraction(int t, InstructionType instrType, int ... args) {
-		L: do {
-			Quad q = nextQuad(t);
-			if (q == null) {
-				break L;
-			}
-			if (DEBUG_LEVEL >= 2) {
-				Messages.logAnon("About to process quad " + q + ".");
-			}
-			Operator o = q.getOperator();
-			if ((o instanceof Operator.New) ||
-					(o instanceof Operator.NewArray) ||
-					(o instanceof Operator.ALoad) ||
-					(o instanceof Operator.AStore) ||
-					(o instanceof Operator.Getfield) ||
-					(o instanceof Operator.Putfield) ||
-					(o instanceof Operator.Getstatic.GETSTATIC_A) ||
-					(o instanceof Operator.Putstatic.PUTSTATIC_A) ||
-					(o instanceof Operator.Invoke)) {
-				if (verifyMatch(o, instrType)) {
-					updatePointsTo(t, q, instrType, args);
+	private void updateAbstraction(int t, InstructionType instrType, long ... args) {
+		// Check if an allocation site we missed is now reported.
+		if ((instrType == InstructionType.NEW_OR_NEW_ARRAY) && (t2fakeHeapID.get(t) != null) && (!t2fakeHeapID.get(t).isEmpty())) {
+			adjustPointsToOnDelayedNew(t, args[0]);
+		} else {
+			L: do {
+				Quad q = nextQuad(t);
+				if (q == null) {
 					break L;
-				} else {
-					if (DEBUG_LEVEL >= 0) {
-						MethodExecutionState execState = t2m.get(t).peek();
-						jq_Method mthd = M.get(execState.m);
-						if (HALT_ON_MISMATCH) {
-							assert (false) : "ERROR: Mismatch between instruction type and quad when running " + 
-									mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ": " + instrType + " - " + q + ".";
-						} else {
-							Messages.logAnon("ERROR: Mismatch between instruction type and quad when running " +
-									mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ": " + instrType + " - " + q + ".");
+				}
+				if (DEBUG_LEVEL >= 2) {
+					Messages.logAnon("About to process quad " + q + ".");
+				}
+				Operator o = q.getOperator();
+				if ((o instanceof Operator.New) ||
+						(o instanceof Operator.NewArray) ||
+						(o instanceof Operator.ALoad) ||
+						(o instanceof Operator.AStore) ||
+						(o instanceof Operator.Getfield) ||
+						(o instanceof Operator.Putfield) ||
+						(o instanceof Operator.Getstatic.GETSTATIC_A) ||
+						(o instanceof Operator.Putstatic.PUTSTATIC_A) ||
+						(o instanceof Operator.Invoke)) {
+					// First, check if we've missed an allocation site.
+					if ((o instanceof Operator.New || o instanceof Operator.NewArray) && (instrType != InstructionType.NEW_OR_NEW_ARRAY)) {
+						if (DEBUG_LEVEL >= 2) {
+							MethodExecutionState execState = t2m.get(t).peek();
+							jq_Method mthd = M.get(execState.m);
+							Messages.logAnon("WARN: Handling mismatch between instruction-type " + instrType + " and quad " + q + 
+									" when analyzing method " + mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc().toString() + ".");
+						}
+						updatePointsTo(t, q, InstructionType.NEW_OR_NEW_ARRAY, fakeHeapID(t));
+						continue L;
+					}
+					// Otherwise we must guarantee a match.
+					if (verifyMatch(o, instrType)) {
+						updatePointsTo(t, q, instrType, args);
+						break L;
+					} else {
+						if (DEBUG_LEVEL >= 0) {
+							MethodExecutionState execState = t2m.get(t).peek();
+							jq_Method mthd = M.get(execState.m);
+							if (PRINT_CFG) {
+								printCFG(mthd.getCFG());
+							}
+							if (HALT_ON_MISMATCH) {
+								assert (false) : "ERROR: Mismatch between instruction type and quad when running " + 
+										mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ": " + instrType + " - " + q + ".";
+							} else {
+								Messages.logAnon("ERROR: Mismatch between instruction type and quad when running " +
+										mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ": " + instrType + " - " + q + ".");
+							}
 						}
 					}
+				} else if ((o instanceof Operator.Move.MOVE_A)) {
+					updatePointsTo(t, q, InstructionType.MOVE_R);
+				} else {
+					updatePointsTo(t, q, InstructionType.OTHER);
 				}
-			} else if ((o instanceof Operator.Move.MOVE_A)) {
-				updatePointsTo(t, q, InstructionType.MOVE_R);
-			} else {
-				updatePointsTo(t, q, InstructionType.OTHER);
-			}
-		} while (true);
-		
+			} while (true);
+		}
 	}
 	
+	private void adjustPointsToOnDelayedNew(int t, long l) {
+		TLongArrayList fakeIDs = t2fakeHeapID.get(t);
+		final long lastFakeAddress = fakeIDs.remove(fakeIDs.size()-1);
+		Stack<MethodExecutionState> thrStack = t2m.get(t);
+		final int[] var = new int[] { -1 };
+		MethodExecutionState execState = thrStack.peek();
+		execState.env.forEachEntry(new TIntLongProcedure() {
+			@Override
+			public boolean execute(int arg0, long arg1) {
+				if (arg1 == lastFakeAddress) {
+					var[0] = arg0;
+					return false;
+				} else {
+					return true;
+				}
+			}
+		});
+		if ((var[0] == -1)) {
+			if (DEBUG_LEVEL >= 2) {
+				Messages.logAnon("INFO: Attempted to replace fake heap ID with real one, but failed to find fake ID in environment.");
+				int m = t2m.get(t).peek().m;
+				printCFG(M.get(m).getCFG());
+				Messages.logAnon("INFO: Fake address is: " + lastFakeAddress + ".");
+				Messages.logAnon("INFO: Real address is: " + l + ".");
+				execState.env.forEachEntry(new TIntLongProcedure() {
+					@Override
+					public boolean execute(int arg0, long arg1) {
+						Messages.logAnon("INFO: " + arg0 + " ---> " + arg1);
+						return true;
+					}
+				});
+			}
+		} else {			
+			execState.env.put(var[0], l);
+		}
+	}
+
+	private long fakeHeapID(int t) {
+		TLongArrayList fakeIDs = t2fakeHeapID.get(t);
+		if (fakeIDs == null) {
+			t2fakeHeapID.put(t, fakeIDs = new TLongArrayList());
+		}
+		if (fakeIDs.isEmpty()) {
+			fakeIDs.add(Long.MAX_VALUE);
+			return Long.MAX_VALUE;
+		} else {
+			long last = fakeIDs.get(fakeIDs.size()-1);
+			fakeIDs.add(last-1);
+			return (last-1);
+		}
+	}
+
 	private boolean verifyMatch(Operator o, InstructionType instrType) {
 		if (!((o instanceof Operator.New && instrType == InstructionType.NEW_OR_NEW_ARRAY) || 
 				(o instanceof Operator.NewArray && instrType == InstructionType.NEW_OR_NEW_ARRAY) || 
@@ -159,14 +243,14 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		}
 	}
 
-	private void updatePointsTo(int t, Quad q, InstructionType instrType, int ... args) {
+	private void updatePointsTo(int t, Quad q, InstructionType instrType, long ... args) {
 		Stack<MethodExecutionState> thrStack = t2m.get(t);
 		if (thrStack.isEmpty()) {
 			if (DEBUG_LEVEL >= 0) {
 				Messages.logAnon("ERROR: Attempted to update points-to information with empty stack!");
 			}
 		}
-		TIntIntHashMap pts = thrStack.peek().env;
+		TIntLongHashMap pts = thrStack.peek().env;
 		switch (instrType) {
 		case MOVE_R:
 			Operand moprnd = Operator.Move.getSrc(q);
@@ -174,7 +258,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 				RegisterOperand src = (RegisterOperand) moprnd;
 				int srcRegNum = src.getRegister().getNumber();
 				if (pts.containsKey(srcRegNum)) {
-					int heapVal = pts.get(srcRegNum);
+					long heapVal = pts.get(srcRegNum);
 					pts.remove(srcRegNum);
 					RegisterOperand dest = Operator.Move.getDest(q);
 					pts.put(dest.getRegister().getNumber(), heapVal);
@@ -188,13 +272,13 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			
 		case ALOAD_R:
 			RegisterOperand def = Operator.ALoad.getDest(q);
-			int ld = args[1];
+			long ld = args[1];
 			pts.put(def.getRegister().getNumber(), ld);
 		case ALOAD_P:
 			Operand alpoprnd = Operator.ALoad.getBase(q);
 			if (alpoprnd instanceof RegisterOperand) {
 				RegisterOperand lbase = (RegisterOperand) alpoprnd;
-				int lb = args[0];
+				long lb = args[0];
 				pts.put(lbase.getRegister().getNumber(), lb);
 			}
 			break;
@@ -203,27 +287,27 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			Operand asroprnd = Operator.AStore.getValue(q);
 			if (asroprnd instanceof RegisterOperand) {
 				RegisterOperand val = (RegisterOperand) asroprnd;
-				int sv = args[1];
+				long sv = args[1];
 				pts.put(val.getRegister().getNumber(), sv);
 			}
 		case ASTORE_P:
 			Operand aspoprnd = Operator.AStore.getBase(q);
 			if (aspoprnd instanceof RegisterOperand) {
 				RegisterOperand sbase = (RegisterOperand) aspoprnd;
-				int sb = args[0];
+				long sb = args[0];
 				pts.put(sbase.getRegister().getNumber(), sb);
 			}
 			break;
 		
 		case GETFIELD_R:
 			RegisterOperand gfval = Operator.Getfield.GETFIELD_A.getDest(q);
-			int gfv = args[1];
+			long gfv = args[1];
 			pts.put(gfval.getRegister().getNumber(), gfv);
 		case GETFIELD_P:
 			Operand gfpoprnd = Operator.Getfield.getBase(q);
 			if (gfpoprnd instanceof RegisterOperand) {
 				RegisterOperand gfref = (RegisterOperand) gfpoprnd;
-				int gfr = args[0];
+				long gfr = args[0];
 				pts.put(gfref.getRegister().getNumber(), gfr);
 			}
 			break;
@@ -232,21 +316,21 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			Operand proprnd = Operator.Putfield.getSrc(q);
 			if (proprnd instanceof RegisterOperand) {
 				RegisterOperand pfval = (RegisterOperand) proprnd; 
-				int pfv = args[1];
+				long pfv = args[1];
 				pts.put(pfval.getRegister().getNumber(), pfv);
 			}
 		case PUTFIELD_P:
 			Operand ppoprnd = Operator.Putfield.getBase(q);
 			if (ppoprnd instanceof RegisterOperand) {
 				RegisterOperand pfref = (RegisterOperand) ppoprnd;
-				int pfr = args[0];
+				long pfr = args[0];
 				pts.put(pfref.getRegister().getNumber(), pfr);
 			}
 			break;
 			
 		case GETSTATIC_R:
 			RegisterOperand gsref = Operator.Getstatic.getDest(q);
-			int gsr = args[0];
+			long gsr = args[0];
 			pts.put(gsref.getRegister().getNumber(), gsr);
 			break;
 
@@ -254,15 +338,15 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			Operand psoprnd = Operator.Putstatic.getSrc(q);
 			if (psoprnd instanceof RegisterOperand) {
 				RegisterOperand psref = (RegisterOperand) psoprnd;
-				int psr = args[0];
+				long psr = args[0];
 				pts.put(psref.getRegister().getNumber(), psr);
 			}
 			break;
 			
 		case INVOKE:
-			TIntIntHashMap F = thr2formalBindings.get(t);
+			TIntLongHashMap F = thr2formalBindings.get(t);
 			if (F == null) {
-				thr2formalBindings.put(t, F = new TIntIntHashMap());
+				thr2formalBindings.put(t, F = new TIntLongHashMap());
 			}
 			F.clear();
 			ParamListOperand paramList = Invoke.getParamList(q);
@@ -279,12 +363,12 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			Operator o = q.getOperator();
 			if (o instanceof Operator.NewArray) {
 				RegisterOperand ndef = Operator.NewArray.getDest(q);
-				int nd = args[0];
+				long nd = args[0];
 				pts.put(ndef.getRegister().getNumber(), nd);
 			} else {
 				assert (o instanceof Operator.New);
 				RegisterOperand ndef = Operator.New.getDest(q);
-				int nd = args[0];
+				long nd = args[0];
 				pts.put(ndef.getRegister().getNumber(), nd);
 			}
 			break;
@@ -336,6 +420,14 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	}
 	
 	@Override
+	public void initPass() {
+		super.initPass();
+		t2fakeHeapID.clear();
+		t2m.clear();
+		thr2formalBindings.clear();
+	}
+	
+	@Override
 	public void processBasicBlock(int b, int t) {
 		BasicBlock currentBB = B.get(b);
 		Stack<MethodExecutionState> thrStack = t2m.get(t);
@@ -360,10 +452,12 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			t2m.put(t, thrStack = new Stack<MethodExecutionState>());
 		}
 		if (DEBUG_LEVEL >= 2) {
-			Messages.logAnon("INFO: Entering method " + M.get(m).getNameAndDesc() + ".");
+			jq_Method mthd = M.get(m);
+			Messages.logAnon("INFO: Entering method " + mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ".");
 			if (!thrStack.isEmpty()) {
 				MethodExecutionState execState = thrStack.peek();
-				Messages.logAnon("INFO: Caller method is " + M.get(execState.m).getNameAndDesc() + 
+				jq_Method caller = M.get(execState.m);
+				Messages.logAnon("INFO: Caller method is " + caller.getDeclaringClass().getName() + "." + caller.getNameAndDesc() + 
 						", b=" + B.get(execState.b).getID() + ", and ii=" + execState.ii + ".");
 			} else {
 				Messages.logAnon("INFO: Stack is empty at point of call.");
@@ -395,11 +489,11 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		Stack<MethodExecutionState> thrStack = t2m.get(t);
 		final MethodExecutionState execState = new MethodExecutionState(m);
 		thrStack.push(execState);
-		TIntIntHashMap F = thr2formalBindings.get(t);
+		TIntLongHashMap F = thr2formalBindings.get(t);
 		if (F != null) {
-			F.forEachEntry(new TIntIntProcedure() {
+			F.forEachEntry(new TIntLongProcedure() {
 				@Override
-				public boolean execute(int arg0, int arg1) {
+				public boolean execute(int arg0, long arg1) {
 					execState.env.put(arg0, arg1);
 					return true;
 				}
@@ -508,7 +602,6 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		/* Do nothing 4 now. */
 	}
 	
-	@SuppressWarnings("unused")
 	private void printCFG(ControlFlowGraph cfg) {
 		final BasicBlock[] bbs = new BasicBlock[cfg.getNumberOfBasicBlocks()];
 		cfg.visitBasicBlocks(new BasicBlockVisitor() {
