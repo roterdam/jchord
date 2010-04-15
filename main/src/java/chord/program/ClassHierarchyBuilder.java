@@ -35,22 +35,17 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClassHierarchyBuilder {
-	private final boolean isCHdynamic;
+	private final String CHkind;
 	/**
 	 * The entire classpath: the bootclasspath followed by the library
 	 * extensions path followed by the user-defined classpath.
 	 */
 	private final Classpath classpath = new Classpath();
 	/**
-	 * List of classpath elements in the classpath to be excluded
-	 * from the class hierarchy.
+	 * List of elements in Chord's classpath to be excluded from the
+	 * class hierarchy.
 	 */
-	private final String[] elemsExcludeAry;
-	/**
-	 * List of prefixes of names of classes/packages to be excluded
-	 * from the class hierarchy.
-	 */
-	private final String[] scopeExcludeAry;
+	private final String[] chordCPEary;
 	/**
 	 * Set of all classes/interfaces read so far to check for duplicates.
 	 */
@@ -62,8 +57,6 @@ public class ClassHierarchyBuilder {
 	 * 2. each interface not in scope but declared as an
 	 *    implemented/extended interface of some class/interface
 	 *    respectively in scope.
-     * Scope is defined as the set of classes in <code>classpath</code>
-	 * minus those that are excluded by <code>scopeExcludeAry</code>.
 	 */
 	private final Set<String> missingTypes = new HashSet<String>();
 	/**
@@ -121,13 +114,14 @@ public class ClassHierarchyBuilder {
 		new HashMap<String, Set<String>>();
 
 	public ClassHierarchyBuilder() {
-		isCHdynamic = Properties.isCHdynamic;
-		scopeExcludeAry = Properties.scopeExcludeAry;
+		CHkind = Properties.CHkind;
+		if (!CHkind.equals("static") && !CHkind.equals("dynamic"))
+			Messages.fatal("CH.INVALID_CH_KIND");
 		// exclude chord's classpath in part because joeq has weird
 		// code that breaks cha, but also because it is not part of
 		// the program being analyzed
 		String mainClassPathName = Properties.mainClassPathName;
-		elemsExcludeAry = mainClassPathName.equals("") ?  new String[0] :
+		chordCPEary = mainClassPathName.equals("") ?  new String[0] :
 			mainClassPathName.split(File.pathSeparator);
 	}
 
@@ -163,7 +157,7 @@ public class ClassHierarchyBuilder {
 	public void run() {
         System.out.println("Starting to build class hierarchy; this may take a while ...");
 		Set<String> dynLoadedTypes = null;
-		if (isCHdynamic) {
+		if (CHkind.equals("dynamic")) {
 			List<String> list = Program.getDynamicallyLoadedClasses();
 			dynLoadedTypes = new HashSet<String>(list.size());
 			dynLoadedTypes.addAll(list);
@@ -173,19 +167,18 @@ public class ClassHierarchyBuilder {
 		final List<ClasspathElement> cpeList = cp.getClasspathElements();
 
 		// logging info
-		List<String> excludedElems = new ArrayList<String>();
-		List<String> includedElems = new ArrayList<String>();
+		List<String> excludedCPEs = new ArrayList<String>();
+		List<String> includedCPEs = new ArrayList<String>();
 		List<Pair<String, String>> duplicateTypes = new ArrayList<Pair<String, String>>();
-		List<String> typesInExcludedElems = new ArrayList<String>();
-		List<String> typesInExcludedScope = new ArrayList<String>();
+		List<String> typesInChord = new ArrayList<String>();
 		List<String> typesNotDynLoaded = new ArrayList<String>();
 
 		for (ClasspathElement cpe : cpeList) {
-			boolean isInExcludedElems = isInExcludedElems(cpe);
-			if (isInExcludedElems)
-				excludedElems.add(cpe.toString());
+			boolean isInChord = isInChord(cpe);
+			if (isInChord)
+				excludedCPEs.add(cpe.toString());
 			else
-				includedElems.add(cpe.toString());
+				includedCPEs.add(cpe.toString());
 			for (String fileName : cpe.getEntries()) {
 				if (!fileName.endsWith(".class"))
 					continue;
@@ -196,13 +189,9 @@ public class ClassHierarchyBuilder {
 					duplicateTypes.add(new Pair<String, String>(typeName, cpe.toString()));
 					continue;
 				}
-				// ignore types from excluded classpath elements
-				if (isInExcludedElems) {
-					typesInExcludedElems.add(typeName);
-					continue;
-				}
-				if (isInExcludedScope(typeName)) {
-					typesInExcludedScope.add(typeName);
+				// ignore types from Chord classpath elements
+				if (isInChord) {
+					typesInChord.add(typeName);
 					continue;
 				}
 				if (dynLoadedTypes != null && !dynLoadedTypes.contains(typeName)) {
@@ -217,14 +206,14 @@ public class ClassHierarchyBuilder {
 		}
 
 		if (Properties.verbose) {
-			if (!excludedElems.isEmpty()) {
-				Messages.log("CH.EXCLUDED_ELEMS");
-				for (String cpe : excludedElems)
+			if (!excludedCPEs.isEmpty()) {
+				Messages.log("CH.EXCLUDED_CPE");
+				for (String cpe : excludedCPEs)
 					Messages.logAnon("\t" + cpe);
 			}
-			if (!includedElems.isEmpty()) {
-				Messages.log("CH.INCLUDED_ELEMS");
-				for (String cpe : includedElems)
+			if (!includedCPEs.isEmpty()) {
+				Messages.log("CH.INCLUDED_CPE");
+				for (String cpe : includedCPEs)
 					Messages.logAnon("\t" + cpe);
 			}
 			if (!duplicateTypes.isEmpty()) {
@@ -232,14 +221,9 @@ public class ClassHierarchyBuilder {
 				for (Pair<String, String> p : duplicateTypes)
 					Messages.logAnon("\t%s, %s", p.val0, p.val1);
 			}
-			if (!typesInExcludedElems.isEmpty()) {
-				Messages.log("CH.EXCLUDED_TYPES_IN_EXCLUDED_ELEMS");
-				for (String s : typesInExcludedElems)
-					Messages.logAnon("\t" + s);
-			}
-			if (!typesInExcludedScope.isEmpty()) {
-				Messages.log("CH.EXCLUDED_TYPES_IN_EXCLUDED_SCOPE");
-				for (String s : typesInExcludedScope)
+			if (!typesInChord.isEmpty()) {
+				Messages.log("CH.EXCLUDED_TYPES_IN_CHORD");
+				for (String s : typesInChord)
 					Messages.logAnon("\t" + s);
 			}
 			if (!typesNotDynLoaded.isEmpty()) {
@@ -263,17 +247,9 @@ public class ClassHierarchyBuilder {
         System.out.println("Finished building class hierarchy.");
 	}
 
-	private boolean isInExcludedScope(String className) {
-		for (String prefix : scopeExcludeAry) {
-			if (className.startsWith(prefix))
-				return true;
-		}
-		return false;
-	}
-
-	private boolean isInExcludedElems(ClasspathElement cpe) {
+	private boolean isInChord(ClasspathElement cpe) {
 		String cpe1 = cpe.toString();
-		for (String cpe2 : elemsExcludeAry) {
+		for (String cpe2 : chordCPEary) {
 			if (cpe1.equals(cpe2))
 				return true;
 		}

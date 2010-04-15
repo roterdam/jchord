@@ -99,7 +99,7 @@ public class Program {
 				} else if (scopeKind.equals("cha")) {
 					init(new CHA());
 				} else
-					Messages.fatal("SCOPE.INVALID_BUILDER", scopeKind);
+					Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
 			}
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
