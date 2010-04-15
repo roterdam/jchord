@@ -394,7 +394,18 @@ public class Program {
         for (String runID : runIDs) {
             String args = System.getProperty("chord.args." + runID, "");
 			OutDirUtils.executeWithFailOnError(cmd + args);
-			FileUtils.readFileToList(fileName, classNames);
+			try {
+				BufferedReader in = new BufferedReader(new FileReader(fileName));
+				String s;
+				while ((s = in.readLine()) != null) {
+					// convert "Lsun/misc/Signal;" to "sun.misc.Signal"
+					String cName = typesToStr(s);
+					classNames.add(cName);
+				}
+				in.close();
+			} catch (Exception ex) {
+				throw new ChordRuntimeException(ex);
+			}
 		}
 		return classNames;
 	}
