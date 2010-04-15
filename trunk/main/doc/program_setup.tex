@@ -57,12 +57,11 @@ sample \code{chord.properties} file:
 \code{chord.main.class} specifies the fully-qualified name of the main class of the
 program.
 \item
-\code{chord.class.path} specifies the classpath of the program.
-The value of pre-defined property \code{sun.boot.class.path} is implicitly appended
-to it.
+\code{chord.class.path} specifies the application-specific classpath of the program
+(the standard library classpath is implicitly included).
 \item
 \code{chord.src.path} specifies the Java source path of the program.
-All program analyses in Chord operate on Java bytecode (specified by \code{chord.class.path}).
+All program analyses in Chord operate on Java bytecode.
 The only use of this property is to HTMLize the Java source files of the program so that the
 results of program analyses can be reported at the Java source code level.
 \item
