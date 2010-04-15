@@ -18,6 +18,7 @@ import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
+import chord.util.FileUtils;
 import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Properties;
@@ -80,8 +81,7 @@ public class Program {
 			jq_Method.setVerbose();
 		if (Properties.doSSA)
 			jq_Method.doSSA();
-        String[] scopeExcludedPrefixes = Properties.toArray(Properties.scopeExcludeStr);
-		jq_Method.exclude(scopeExcludedPrefixes);
+		jq_Method.exclude(Properties.scopeExcludeAry);
 		try {
 			boolean filesExist =
 				(new File(Properties.classesFileName)).exists() &&
@@ -91,7 +91,9 @@ public class Program {
 			else {
 				String scopeKind = Properties.scopeKind;
 				if (scopeKind.equals("rta")) {
-					init(new RTA());
+					init(new RTA(false));
+				} else if (scopeKind.equals("rta_reflect")) {
+					init(new RTA(true));
 				} else if (scopeKind.equals("dynamic")) {
 					initFromDynamic();
 				} else if (scopeKind.equals("cha")) {
@@ -103,10 +105,11 @@ public class Program {
 			throw new ChordRuntimeException(ex);
 		}
 	}
-	private void loadClasses(String fileName) throws IOException {
-		BufferedReader r = new BufferedReader(new FileReader(fileName));
-		String s;
-		while ((s = r.readLine()) != null) {
+
+	// load and add each class in <code>classNames</code> to <code>classes</code>
+	private void loadClasses(List<String> classNames) {
+		classes = new IndexHashSet<jq_Class>();
+		for (String s : classNames) {
 			if (Properties.verbose)
 				Messages.log("SCOPE.LOADING_CLASS", s);
 			jq_Class c;
@@ -120,20 +123,16 @@ public class Program {
 			assert (c != null);
 			classes.add(c);
 		}
-		r.close();
-	}
-	private void initFromCache() throws IOException {
-		classes = new IndexHashSet<jq_Class>();
-		loadClasses(Properties.classesFileName);
-		methods = new IndexHashSet<jq_Method>();
-		readMethods(Properties.methodsFileName);
-		buildTypes();
 	}
 
-	private void readMethods(String fileName) throws IOException {
-		BufferedReader r = new BufferedReader(new FileReader(fileName));
-		String s;
-		while ((s = r.readLine()) != null) {
+	private void initFromCache() {
+		String classesFileName = Properties.classesFileName;
+		List<String> classNames = FileUtils.readFileToList(classesFileName);
+		loadClasses(classNames);
+		methods = new IndexHashSet<jq_Method>();
+		String methodsFileName = Properties.methodsFileName;
+		List<String> methodSigns = FileUtils.readFileToList(methodsFileName);
+		for (String s : methodSigns) {
 			MethodSign sign = MethodSign.parse(s);
 			String cName = sign.cName;
 			jq_Class c = getPreparedClass(cName);
@@ -146,16 +145,16 @@ public class Program {
 				methods.add(m);
 			}
 		}
-		r.close();
+		buildTypes();
 	}
 
-	private void init(IBootstrapper bootstrapper) throws IOException {
-		bootstrapper.run();
+	private void init(IScopeBuilder builder) throws IOException {
+		builder.run();
 		classes = new IndexHashSet<jq_Class>();
-		for (jq_Class c : bootstrapper.getPreparedClasses()) 
+		for (jq_Class c : builder.getPreparedClasses()) 
 			classes.add(c);
 		methods = new IndexHashSet<jq_Method>();
-		for (jq_Method m : bootstrapper.getReachableMethods()) {
+		for (jq_Method m : builder.getReachableMethods()) {
 			jq_Class c = m.getDeclaringClass();
 			if (!classes.contains(c))
 				Messages.log("SCOPE.EXCLUDING_METHOD", m);
@@ -167,25 +166,8 @@ public class Program {
 	}
 
 	private void initFromDynamic() throws IOException {
-		String mainClassName = Properties.mainClassName;
-		if (mainClassName == null)
-			Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
-		String classPathName = Properties.classPathName;
-		if (classPathName == null)
-			Messages.fatal("SCOPE.CLASS_PATH_NOT_DEFINED");
-        String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
-		assert(runIDs.length > 0);
-        final String cmd = "java " + Properties.runtimeJvmargs +
-            " -cp " + classPathName +
-            " -agentpath:" + Properties.instrAgentFileName +
-            "=classes_file_name=" + Properties.classesFileName +
-            " " + mainClassName + " ";
-		classes = new IndexHashSet<jq_Class>();
-        for (String runID : runIDs) {
-            String args = System.getProperty("chord.args." + runID, "");
-			OutDirUtils.executeWithFailOnError(cmd + args);
-			loadClasses(Properties.classesFileName);
-		}
+		List<String> classNames = getDynamicallyLoadedClasses();
+		loadClasses(classNames);
 		methods = new IndexHashSet<jq_Method>();
 		for (jq_Class c : classes) {
 			for (jq_Method m : c.getDeclaredInstanceMethods()) 
@@ -391,7 +373,31 @@ public class Program {
         }
         return result;
 	}
-	
+
+	public static List<String> getDynamicallyLoadedClasses() {
+		String mainClassName = Properties.mainClassName;
+		if (mainClassName == null)
+			Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+		String classPathName = Properties.classPathName;
+		if (classPathName == null)
+			Messages.fatal("SCOPE.CLASS_PATH_NOT_DEFINED");
+        String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
+		assert(runIDs.length > 0);
+        final String cmd = "java " + Properties.runtimeJvmargs +
+            " -cp " + classPathName +
+            " -agentpath:" + Properties.instrAgentFileName +
+            "=classes_file_name=" + Properties.classesFileName +
+            " " + mainClassName + " ";
+		List<String> classNames = new ArrayList<String>();
+		String fileName = Properties.classesFileName;
+        for (String runID : runIDs) {
+            String args = System.getProperty("chord.args." + runID, "");
+			OutDirUtils.executeWithFailOnError(cmd + args);
+			FileUtils.readFileToList(fileName, classNames);
+		}
+		return classNames;
+	}
+
 	/**
 	 * Dumps this program's Java source files in HTML form.
 	 */

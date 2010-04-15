@@ -99,23 +99,28 @@ public final class FileUtils {
 			throw new ChordRuntimeException(ex);
 		}
 	}
-
-	public static List<String> readFileToList(String fileName) {
-		return readFileToList(new File(fileName));
+	public static void readFileToList(String fileName, List<String> list) {
+		readFileToList(new File(fileName), list);
 	}
-	public static List<String> readFileToList(File file) {
+	public static void readFileToList(File file, List<String> list) {
         try {
             BufferedReader in = new BufferedReader(new FileReader(file));
-            List<String> list = new ArrayList<String>();
             String s;
             while ((s = in.readLine()) != null) {
                 list.add(s);
             }
             in.close();
-            return list;
         } catch (Exception ex) {
             throw new ChordRuntimeException(ex);
         }
+	}
+	public static List<String> readFileToList(String fileName) {
+		return readFileToList(new File(fileName));
+	}
+	public static List<String> readFileToList(File file) {
+        List<String> list = new ArrayList<String>();
+		readFileToList(file, list);
+		return list;
     }
 	public static IndexMap<String> readFileToMap(String fileName) {
 		return readFileToMap(new File(fileName));
