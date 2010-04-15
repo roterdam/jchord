@@ -141,6 +141,7 @@ public class Program {
 			else {
 				String mName = sign.mName;
 				String mDesc = sign.mDesc;
+				// TODO: what if member does not exist? warn
 				jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
 				methods.add(m);
 			}
