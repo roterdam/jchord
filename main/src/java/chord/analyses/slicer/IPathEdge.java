@@ -1,4 +1,4 @@
-package chord.project.analyses.rhs;
+package chord.project.analyses.slicer;
 
 public interface IPathEdge {
 	public boolean matchesSrcNodeOf(IPathEdge pe);
