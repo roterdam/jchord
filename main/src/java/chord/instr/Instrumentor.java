@@ -114,8 +114,9 @@ public class Instrumentor {
 
 	protected boolean genBasicBlockEvent;
 	protected boolean genQuadEvent;
-	protected boolean genEnterAndLeaveMethodEvent;
 	protected boolean genFinalizeEvent;
+	protected EventFormat enterMethodEvent;
+	protected EventFormat leaveMethodEvent;
 	protected EventFormat newAndNewArrayEvent;
 	protected EventFormat getstaticPrimitiveEvent;
 	protected EventFormat getstaticReferenceEvent;
@@ -276,8 +277,9 @@ public class Instrumentor {
 
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
-		genEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent();
 		genFinalizeEvent = scheme.hasFinalizeEvent();
+		enterMethodEvent = scheme.getEvent(InstrScheme.ENTER_METHOD);
+		leaveMethodEvent = scheme.getEvent(InstrScheme.LEAVE_METHOD);
 		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
 		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
 		getstaticReferenceEvent = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
@@ -342,7 +344,7 @@ public class Instrumentor {
 			domB = (DomB) Project.getTrgt("B");
 			Project.runTask(domB);
 		}
-		if (genEnterAndLeaveMethodEvent || releaseLockEvent.present()) {
+		if (leaveMethodEvent.present() || releaseLockEvent.present()) {
 			exType = pool.get("java.lang.Throwable");
 			assert (exType != null);
 		}
@@ -564,9 +566,13 @@ public class Instrumentor {
 				leaveStr += releaseLockEventCall + rId + "," + syncExpr + ");";
 			}
 		}
-		if (genEnterAndLeaveMethodEvent) {
-			enterStr = enterMethodEventCall + mId + ");" + enterStr;
-			leaveStr = leaveStr + leaveMethodEventCall + mId + ");";
+		if (enterMethodEvent.present()) {
+			int nId = enterMethodEvent.hasLoc() ? mId : Runtime.MISSING_FIELD_VAL;
+			enterStr = enterMethodEventCall + nId + ");" + enterStr;
+		}
+		if (leaveMethodEvent.present()) {
+			int nId = leaveMethodEvent.hasLoc() ? mId : Runtime.MISSING_FIELD_VAL;
+			leaveStr = leaveStr + leaveMethodEventCall + nId + ");";
 		}
 		if (!enterStr.equals("")) {
 			try {

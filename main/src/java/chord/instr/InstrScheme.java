@@ -51,7 +51,10 @@ public class InstrScheme implements Serializable {
     public static final int WAIT = 22;
     public static final int NOTIFY = 23;
     
-	public static final int MAX_NUM_EVENT_FORMATS = 24;
+	public static final int ENTER_METHOD = 24;
+	public static final int LEAVE_METHOD = 25;
+
+	public static final int MAX_NUM_EVENT_FORMATS = 26;
 
 	public class EventFormat implements Serializable {
 		private boolean present;
@@ -114,7 +117,6 @@ public class InstrScheme implements Serializable {
 		}
 	}
 
-	private boolean hasEnterAndLeaveMethodEvent;
 	private boolean hasEnterAndLeaveLoopEvent;
 	private boolean hasFinalizeEvent;
 	private boolean hasBasicBlockEvent;
@@ -125,14 +127,6 @@ public class InstrScheme implements Serializable {
 		events = new EventFormat[MAX_NUM_EVENT_FORMATS];
 		for (int i = 0; i < MAX_NUM_EVENT_FORMATS; i++)
 			events[i] = new EventFormat();
-	}
-
-	public void setEnterAndLeaveMethodEvent() {
-		hasEnterAndLeaveMethodEvent = true;
-	}
-
-	public boolean hasEnterAndLeaveMethodEvent() {
-		return hasEnterAndLeaveMethodEvent;
 	}
 
 	public void setEnterAndLeaveLoopEvent() {
@@ -173,7 +167,13 @@ public class InstrScheme implements Serializable {
 		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
-		if (hasObj) e.setObj();
+		if (hasObj) {
+			e.setObj();
+			// also set location and thread id as they will be needed to
+			// match BEF_NEW and AFT_NEW events
+			e.setLoc();
+			e.setThr();
+		}
 	}
 
 	public void setGetstaticPrimitiveEvent(boolean hasLoc, boolean hasThr,
@@ -401,6 +401,20 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 	
+	public void setEnterMethodEvent(boolean hasLoc, boolean hasThr) {
+		EventFormat e = events[ENTER_METHOD];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+	}
+
+	public void setLeaveMethodEvent(boolean hasLoc, boolean hasThr) {
+		EventFormat e = events[LEAVE_METHOD];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+	}
+
 	public void setFinalizeEvent() {
 		hasFinalizeEvent = true;
 	}
@@ -448,12 +462,12 @@ public class InstrScheme implements Serializable {
 	}
 
 	public boolean needsMmap() {
-		return hasEnterAndLeaveMethodEvent || hasEnterAndLeaveLoopEvent;
+		return events[ENTER_METHOD].hasLoc() ||
+			   events[LEAVE_METHOD].hasLoc();
 	}
 
 	public boolean needsHmap() {
-		EventFormat e = events[NEW_AND_NEWARRAY];
-		return e.hasLoc() || e.hasObj();
+		return events[NEW_AND_NEWARRAY].hasLoc();
 	}
 
 	public boolean needsEmap() {
