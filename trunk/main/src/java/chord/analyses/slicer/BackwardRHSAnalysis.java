@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.project.analyses.rhs;
+package chord.project.analyses.slicer;
 
 import java.util.ArrayList;
 import java.util.HashMap;
