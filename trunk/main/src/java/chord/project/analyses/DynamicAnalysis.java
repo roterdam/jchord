@@ -76,7 +76,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 	protected DomM domM;
 	protected DomB domB;
 	private boolean isUserRequestedBasicBlockEvent;
-	private boolean isUserRequestedEnterAndLeaveMethodEvent;
+	private boolean isUserRequestedEnterMethodEvent;
+	private boolean isUserRequestedLeaveMethodEvent;
 	private boolean hasEnterAndLeaveLoopEvent;
 	/* End of code handling loop consistency. */
 	
@@ -102,12 +103,16 @@ public class DynamicAnalysis extends JavaAnalysis {
 		try {
 			scheme = getInstrScheme();
 			assert (scheme != null);
-			isUserRequestedEnterAndLeaveMethodEvent = scheme.hasEnterAndLeaveMethodEvent(); 
+			isUserRequestedEnterMethodEvent =
+				scheme.getEvent(InstrScheme.ENTER_METHOD).present(); 
+			isUserRequestedLeaveMethodEvent =
+				scheme.getEvent(InstrScheme.LEAVE_METHOD).present(); 
 			isUserRequestedBasicBlockEvent = scheme.hasBasicBlockEvent(); 
 			hasEnterAndLeaveLoopEvent = scheme.hasEnterAndLeaveLoopEvent();
 			if (scheme.hasEnterAndLeaveLoopEvent()) {
 				/* These are mandatory for consistent handling of loop enter and leave events. */
-				scheme.setEnterAndLeaveMethodEvent();
+				scheme.setEnterMethodEvent(true, true);
+				scheme.setLeaveMethodEvent(true, true);
 				scheme.setBasicBlockEvent();
 			}
 			final String instrSchemeFileName = Properties.instrSchemeFileName;
@@ -346,24 +351,26 @@ public class DynamicAnalysis extends JavaAnalysis {
 			switch (opcode) {
 			case EventKind.ENTER_METHOD:
 			{
-				int m = buffer.getInt();
-				int t = buffer.getInt();
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_METHOD);
+				int m = ef.hasLoc() ? buffer.getInt() : -1;
+				int t = ef.hasThr() ? buffer.getInt() : -1;
 				if (hasEnterAndLeaveLoopEvent) {
 					processEnterMethod4loopConsistency(m, t);
 				}
-				if (isUserRequestedEnterAndLeaveMethodEvent) {
+				if (isUserRequestedEnterMethodEvent) {
 					processEnterMethod(m, t);
 				}
 				break;
 			}
 			case EventKind.LEAVE_METHOD:
 			{
-				int m = buffer.getInt();
-				int t = buffer.getInt();
+				EventFormat ef = scheme.getEvent(InstrScheme.LEAVE_METHOD);
+				int m = ef.hasLoc() ? buffer.getInt() : -1;
+				int t = ef.hasThr() ? buffer.getInt() : -1;
 				if (hasEnterAndLeaveLoopEvent) {
 					processLeaveMethod4loopConsistency(m, t);
 				}
-				if (isUserRequestedEnterAndLeaveMethodEvent) {
+				if (isUserRequestedLeaveMethodEvent) {
 					processLeaveMethod(m, t);
 				}
 				break;

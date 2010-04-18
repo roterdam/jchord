@@ -677,10 +677,14 @@ public class BufferedRuntime extends Runtime {
 		if (trace) {
 			trace = false;
 			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_METHOD);
 				buffer.putByte(EventKind.ENTER_METHOD);
-				buffer.putInt(mId);
-				int tId = getObjectId(Thread.currentThread());
-				buffer.putInt(tId);
+				if (mId != MISSING_FIELD_VAL)
+					buffer.putInt(mId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}
@@ -689,10 +693,14 @@ public class BufferedRuntime extends Runtime {
 		if (trace) {
 			trace = false;
 			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.LEAVE_METHOD);
 				buffer.putByte(EventKind.LEAVE_METHOD);
-				buffer.putInt(mId);
-				int tId = getObjectId(Thread.currentThread());
-				buffer.putInt(tId);
+				if (mId != MISSING_FIELD_VAL)
+					buffer.putInt(mId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
 		}

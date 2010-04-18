@@ -89,7 +89,8 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	public chord.instr.InstrScheme getInstrScheme() {
 		if (instrScheme != null) return instrScheme;
 		instrScheme = new InstrScheme();
-		instrScheme.setEnterAndLeaveMethodEvent();
+		instrScheme.setEnterMethodEvent(true, true);
+		instrScheme.setLeaveMethodEvent(true, true);
 		instrScheme.setBasicBlockEvent();
 		instrScheme.setMethodCallEvent(true, true, true, true, true);
 		instrScheme.setNewAndNewArrayEvent(true, true, true);

@@ -47,7 +47,8 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
 	public InstrScheme getInstrScheme() {
 		if (instrScheme != null) return instrScheme;
 		instrScheme = new InstrScheme();
-		instrScheme.setEnterAndLeaveMethodEvent();
+		instrScheme.setEnterMethodEvent(true, true);
+		instrScheme.setLeaveMethodEvent(true, true);
 		return instrScheme;
 	}
 	

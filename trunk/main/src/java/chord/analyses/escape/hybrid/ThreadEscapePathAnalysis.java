@@ -102,7 +102,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         instrScheme = new InstrScheme();
 		instrScheme.setBasicBlockEvent();
 		instrScheme.setQuadEvent();
-		instrScheme.setEnterAndLeaveMethodEvent();
+		instrScheme.setEnterMethodEvent(true, true);
+		instrScheme.setLeaveMethodEvent(true, true);
         return instrScheme;
     }
 

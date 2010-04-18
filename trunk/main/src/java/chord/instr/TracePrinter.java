@@ -67,17 +67,19 @@ public class TracePrinter {
 				switch (opcode) {
 				case EventKind.ENTER_METHOD:
 				{
-					int m = buffer.getInt();
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_METHOD);
+					int m = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String mStr = (m < 0) ? "null" : Mmap.get(m);
-					int t = buffer.getInt();
+					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					System.out.println("ENTER_METHOD " + mStr + " " + t);
 					break;
 				}
 				case EventKind.LEAVE_METHOD:
 				{
-					int m = buffer.getInt();
+					EventFormat ef = scheme.getEvent(InstrScheme.LEAVE_METHOD);
+					int m = ef.hasLoc() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					String mStr = (m < 0) ? "null" : Mmap.get(m);
-					int t = buffer.getInt();
+					int t = ef.hasThr() ? buffer.getInt() : Runtime.MISSING_FIELD_VAL;
 					System.out.println("LEAVE_METHOD " + mStr + " " + t);
 					break;
 				}
