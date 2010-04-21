@@ -73,9 +73,11 @@ public class Properties {
 	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
 	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
 
-	public final static String DEFAULT_SCOPE_EXCLUDES = mainClassPathName;
+	public final static String mainClassPathPackages = "chord.,javassist.,joeq.,net.sf.bddbddb.,net.sf.javabdd.";
+
+	public final static String DEFAULT_SCOPE_EXCLUDES = mainClassPathPackages;
 	public final static String DEFAULT_CHECK_EXCLUDES =
-		concat(mainClassPathName, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
+		concat(mainClassPathPackages, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
 
 	public final static String scopeExcludeStdStr = System.getProperty("chord.scope.exclude.std", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
