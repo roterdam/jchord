@@ -40,7 +40,7 @@ import chord.util.ArraySet;
  */
 public abstract class RHSAnalysis<PE extends IPathEdge, SE extends ISummaryEdge>
 		extends JavaAnalysis {
-    protected  static boolean DEBUG = false;
+    protected static boolean DEBUG = false;
 
 	// get the path edge at thread-root method m
 	// which may either be the main method or the java.lang.Thread.start() method
