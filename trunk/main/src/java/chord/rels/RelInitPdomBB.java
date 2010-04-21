@@ -23,10 +23,10 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "postDomsBB",
+	name = "initPdomBB",
 	sign = "B0,B1:B0xB1"
 )
-public class RelPostDomsBB extends ProgramRel implements IMethodVisitor {
+public class RelInitPdomBB extends ProgramRel implements IMethodVisitor {
 	private Dominators doms = new Dominators();
     public void visit(jq_Class c) { }
     public void visit(jq_Method m) {
