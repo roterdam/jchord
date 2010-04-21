@@ -17,6 +17,7 @@
 
 VT(v:V0,t:T0) input
 HT(h:H0,t:T1) input
+arrayH(h:H0) input
 sub(t1:T1,t2:T0) input
 
 VHfilter(v:V,h:H) output
@@ -26,4 +27,5 @@ VHfilter(v:V,h:H) output
 ###
 
 VHfilter(v,h) :- VT(v,t), HT(h,s), sub(s,t).
+VHfilter(_,h) :- arrayH(h).
 

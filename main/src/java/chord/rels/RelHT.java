@@ -17,7 +17,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (h,t) such that object allocation
- * statement h allocates objects of type t.
+ * statement h allocates objects of non-array type t.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
