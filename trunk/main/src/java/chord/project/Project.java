@@ -780,12 +780,12 @@ public class Project {
 	}
 
 	private static void ignoreDlogAnalysis(String name) {
-		Messages.log("IGNORING_DLOG_ANALYSIS", name);
+		Messages.log("PROJECT.IGNORING_DLOG_ANALYSIS", name);
 		hasNoErrors = false;
 	}
 	
 	private static void ignoreJavaAnalysis(String name) {
-		Messages.log("IGNORING_JAVA_ANALYSIS", name);
+		Messages.log("PROJECT.IGNORING_JAVA_ANALYSIS", name);
 		hasNoErrors = false;
 	}
 	
