@@ -38,7 +38,7 @@ import chord.util.ArraySet;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public abstract class RHSAnalysis<PE extends IPathEdge, SE extends ISummaryEdge>
+public abstract class ForwardRHSAnalysis<PE extends IPathEdge, SE extends ISummaryEdge>
 		extends JavaAnalysis {
     protected static boolean DEBUG = false;
 

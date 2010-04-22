@@ -43,7 +43,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
 import chord.project.analyses.ProgramRel;
-import chord.project.analyses.rhs.RHSAnalysis;
+import chord.project.analyses.rhs.ForwardRHSAnalysis;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Properties;
 import chord.util.ChordRuntimeException;
@@ -68,7 +68,7 @@ import chord.util.Timer;
 @Chord(
 	    name = "thresc-full-java"
 	)
-public class ThreadEscapeFullAnalysis extends RHSAnalysis<PathEdge, SummaryEdge> {
+public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, SummaryEdge> {
 	public static int ESC_VAL;
 	public final static Set<IntTrio> emptyHeap =
 		Collections.emptySet();
