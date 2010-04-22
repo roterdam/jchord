@@ -40,6 +40,7 @@ public class RelInitPdomBB extends ProgramRel implements IMethodVisitor {
 	}
 	private void process(DominatorNode n) {
 		BasicBlock bb = n.bb;
+		System.out.println("PROCESSING: " + bb);
 		for (Object o : n.children) {
 			DominatorNode n2 = (DominatorNode) o;
 			BasicBlock bb2 = n2.bb;
