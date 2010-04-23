@@ -57,6 +57,16 @@
 							</xsl:otherwise>
 						</xsl:choose>
 					</xsl:for-each>
+					<xsl:for-each select="../lock">
+						<xsl:variable name="Lelem" select="id(@Lid)"/>
+                        <xsl:variable name="Melem" select="id(@Mid)"/>
+                        <xsl:variable name="file" select="$Lelem/@file"/>
+                        <xsl:variable name="line" select="$Lelem/@line"/>
+                        <a href="{$file}.html#{$line}">
+                          	<xsl:value-of select="$Melem/@sign"/>
+						</a><br/>
+						<xsl:apply-templates select="id(@Oid)"/> <br/>
+					</xsl:for-each>
 					<xsl:text disable-output-escaping="yes">&lt;/td&gt;&lt;td&gt;</xsl:text>
 						<xsl:apply-templates select="id($eid)"/> <br/>
 							Context: <xsl:apply-templates select="id($cid)"/>
