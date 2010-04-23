@@ -177,6 +177,9 @@ public class DataraceAnalysis extends JavaAnalysis {
 		out.println("</dataracelist>");
 		out.close();
 
+		Project.runTask("LI");
+		Project.runTask("LE");
+		Project.runTask("syncCLC-dlog");
 		final ProgramRel relLI = (ProgramRel) Project.getTrgt("LI");
 		final ProgramRel relLE = (ProgramRel) Project.getTrgt("LE");
 		final ProgramRel relSyncCLC = (ProgramRel) Project.getTrgt("syncCLC");
