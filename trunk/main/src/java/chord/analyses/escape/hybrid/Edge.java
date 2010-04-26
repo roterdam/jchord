@@ -3,42 +3,45 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.analyses.slicer;
+package chord.analyses.escape.hybrid;
 
 import java.util.Set;
 
 import chord.util.ArraySet;
 import chord.util.IntArraySet;
-import chord.project.analyses.rhs.IPathEdge;
+import chord.project.analyses.rhs.IEdge;
 import chord.util.tuple.integer.IntTrio;
 
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class PathEdge implements IPathEdge {
+public class Edge implements IEdge {
 	final SrcNode srcNode;
 	// dstNode is intentionally not final: it is updated when this path edge
 	// is merged with another path edge with matching srcNode; see mergeWith
 	DstNode dstNode;
-	public PathEdge(SrcNode s, DstNode d) {
+	public Edge(SrcNode s, DstNode d) {
 		srcNode = s;
 		dstNode = d;
 	}
-	public boolean matchesSrcNodeOf(IPathEdge pe2) {
-		SrcNode srcNode2 = ((PathEdge) pe2).srcNode;
+	public boolean matchesSrcNodeOf(IEdge pe2) {
+		SrcNode srcNode2 = ((Edge) pe2).srcNode;
 		return srcNode.equals(srcNode2);
 	}
-	public boolean mergeWith(IPathEdge pe2) {
+	public boolean mergeWith(IEdge pe2) {
 		DstNode dstNode1 = this.dstNode;
-		DstNode dstNode2 = ((PathEdge) pe2).dstNode;
+		DstNode dstNode2 = ((Edge) pe2).dstNode;
+		boolean isRet1 = dstNode1.isRet;
+		boolean isRet2 = dstNode2.isRet;
+		assert (isRet1 == isRet2);
         boolean changed = false;
 		// merge esc's
 		IntArraySet esc1 = dstNode1.esc;
         IntArraySet esc2 = dstNode2.esc;
         if (!esc1.equals(esc2)) {
-			if (esc2 != Slicer.nilPts) {
-				if (esc1 == Slicer.nilPts)
+			if (esc2 != ThreadEscapeFullAnalysis.nilPts) {
+				if (esc1 == ThreadEscapeFullAnalysis.nilPts)
 					esc1 = esc2; 
 				else {
             		esc1 = new IntArraySet(esc1);
@@ -61,12 +64,12 @@ public class PathEdge implements IPathEdge {
 					env3[i] = pts1;
 				continue;
 			}
-			if (pts2 == Slicer.nilPts) {
+			if (pts2 == ThreadEscapeFullAnalysis.nilPts) {
 				if (env3 != null)
 					env3[i] = pts1;
 				continue;
 			}
-			if (pts1 == Slicer.nilPts)
+			if (pts1 == ThreadEscapeFullAnalysis.nilPts)
 				pts1 = pts2;
 			else {
 				pts1 = new IntArraySet(pts1);
@@ -92,7 +95,7 @@ public class PathEdge implements IPathEdge {
             changed = true;
         }
 		if (changed) {
-			this.dstNode = new DstNode(env1, heap1, esc1);
+			this.dstNode = new DstNode(env1, heap1, esc1, isRet1);
 			return true;
 		}
         return false;
@@ -103,9 +106,9 @@ public class PathEdge implements IPathEdge {
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
-		if (!(o instanceof PathEdge))
+		if (!(o instanceof Edge))
 			return false;
-		PathEdge that = (PathEdge) o;
+		Edge that = (Edge) o;
 		return srcNode.equals(that.srcNode) && dstNode.equals(that.dstNode);
 	}
 	public String toString() {

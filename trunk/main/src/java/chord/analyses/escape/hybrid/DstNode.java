@@ -16,13 +16,16 @@ import chord.util.tuple.integer.IntTrio;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class DstNode {
+	final boolean isRet;
 	final IntArraySet[] env;
 	final Set<IntTrio> heap;
 	final IntArraySet esc;
-	public DstNode(IntArraySet[] env, Set<IntTrio> heap, IntArraySet esc) {
+	public DstNode(IntArraySet[] env, Set<IntTrio> heap,
+			IntArraySet esc, boolean isRet) {
 		this.env = env;
 		this.heap = heap;
 		this.esc = esc;
+		this.isRet = isRet;
 	}
 	public int hashCode() {
 		return heap.hashCode();

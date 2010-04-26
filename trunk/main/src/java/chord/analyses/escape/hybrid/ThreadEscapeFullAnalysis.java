@@ -20,6 +20,7 @@ import java.io.IOException;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
@@ -40,8 +41,12 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
+import chord.analyses.alias.ICICG;
+import chord.analyses.alias.ThrOblAbbrCICGAnalysis;
+import chord.util.tuple.object.Pair;
 import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
+import chord.program.Location;
 import chord.project.analyses.ProgramRel;
 import chord.project.analyses.rhs.ForwardRHSAnalysis;
 import chord.bddbddb.Rel.IntPairIterable;
@@ -68,13 +73,17 @@ import chord.util.Timer;
 @Chord(
 	    name = "thresc-full-java"
 	)
-public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, SummaryEdge> {
+public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	public static int ESC_VAL;
-	public final static Set<IntTrio> emptyHeap =
-		Collections.emptySet();
+	public final static Set<IntTrio> emptyHeap = Collections.emptySet();
 	public final static IntArraySet nilPts = new IntArraySet(0);
 	public static IntArraySet escPts;
 	private IntArraySet tmpPts = new IntArraySet();
+	public final static IntArraySet[] emptyRetEnv;
+	static {
+		emptyRetEnv = new IntArraySet[1];
+		emptyRetEnv[0] = nilPts;
+	}
 	private DomM domM;
 	private DomI domI;
 	private DomV domV;
@@ -95,9 +104,12 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 	private Set<Quad> currLocHeapInsts = new HashSet<Quad>();
 	private Set<Quad> currEscHeapInsts = new HashSet<Quad>();
     private MyQuadVisitor qv = new MyQuadVisitor();
+	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
 
+	@Override
 	public void run() {
+		mainMethod = Program.v().getMainMethod();
 		threadStartMethod = Program.v().getThreadStartMethod();
         domI = (DomI) Project.getTrgt("I");
         Project.runTask(domI);
@@ -164,6 +176,8 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 			vIdx += n;
 		}
 
+		init();
+
 		for (Map.Entry<Set<Quad>, Set<Quad>> e :
 				allocInstsToHeapInsts.entrySet()) {
 			currAllocs = e.getKey();
@@ -181,7 +195,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 			Timer timer = new Timer("hybrid-thresc-timer");
 			timer.init();
 			try {
-				super.run();
+				runPass();
 			} catch (ThrEscException ex) {
 				// do nothing
 			}
@@ -215,59 +229,55 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 		}
 	}
 
-	public PathEdge getInitPathEdge(jq_Method root) {
-		int n = methToNumVars.get(root);
+	private ICICG cicg;
+
+	@Override
+	public ICICG getCallGraph() {
+		if (cicg == null) {
+        	ThrOblAbbrCICGAnalysis cicgAnalysis =
+				(ThrOblAbbrCICGAnalysis) Project.getTrgt("throbl-abbr-cicg-java");
+			Project.runTask(cicgAnalysis);
+			cicg = cicgAnalysis.getCallGraph();
+		}
+		return cicg;
+	}
+
+	// m is either the main method or the thread root method
+	private Edge getRootPathEdge(jq_Method m) {
+		assert (m == mainMethod || m == threadStartMethod);
+		int n = methToNumVars.get(m);
 		IntArraySet[] env = new IntArraySet[n];
 		for (int i = 0; i < n; i++)
 			env[i] = nilPts;
-		if (root == threadStartMethod) {
+		if (m == threadStartMethod) {
 			// arg of start method of java.lang.Thread escapes
 			env[0] = escPts;
 		}
 		SrcNode srcNode = new SrcNode(env, emptyHeap);
-		DstNode dstNode = new DstNode(env, emptyHeap, nilPts);
-		PathEdge pe = new PathEdge(srcNode, dstNode);
+		DstNode dstNode = new DstNode(env, emptyHeap, nilPts, false);
+		Edge pe = new Edge(srcNode, dstNode);
 		return pe;
 	}
 
-	public PathEdge getMiscSuccPathEdge(Quad q, PathEdge pe) {
-		DstNode dstNode = pe.dstNode;
-		qv.iDstNode = dstNode;
-		qv.oDstNode = dstNode;
-		q.accept(qv);
-		DstNode dstNode2 = qv.oDstNode;
-		PathEdge pe2 = // (dstNode2 == dstNode) ? pe :
-			new PathEdge(pe.srcNode, dstNode2);
-		return pe2;
+	@Override
+	public Set<Pair<Location, Edge>> getInitPathEdges() {
+		Set<Pair<Location, Edge>> initPEs =
+			new HashSet<Pair<Location, Edge>>(1);
+		Edge pe = getRootPathEdge(mainMethod);
+       	BasicBlock bb = mainMethod.getCFG().entry();
+		Location loc = new Location(mainMethod, bb, -1, null);
+		Pair<Location, Edge> pair =
+			new Pair<Location, Edge>(loc, pe);
+		initPEs.add(pair);
+		return initPEs;
 	}
 
-	public PathEdge getForkSuccPathEdge(Quad q, PathEdge pe) {
-		DstNode dstNode = pe.dstNode;
-		IntArraySet[] iEnv = dstNode.env;
-		RegisterOperand ao = Invoke.getParam(q, 0);
-		int aIdx = getIdx(ao);
-		IntArraySet aPts = iEnv[aIdx];
-		DstNode dstNode2;
-		if (aPts == escPts || aPts == nilPts)
-			dstNode2 = dstNode;
-		else {
-			Set<IntTrio> iHeap = dstNode.heap;
-			IntArraySet iEsc = dstNode.esc;
-			IntArraySet oEsc = propagateEsc(aPts, iHeap, iEsc);
-			if (oEsc == iEsc)
-				dstNode2 = dstNode;
-			else {
-				IntArraySet[] oEnv = updateEnv(iEnv, oEsc);
-				Set<IntTrio> oHeap = updateHeap(iHeap, oEsc);
-				dstNode2 = new DstNode(oEnv, oHeap, oEsc);
-			}
+	@Override
+	public Edge getInitPathEdge(Quad q, jq_Method m2, Edge pe) {
+		if (m2 == threadStartMethod) {
+			// ignore pe
+			return getRootPathEdge(m2);
 		}
-		PathEdge pe2 = // (dstNode == dstNode2) ? pe :
-			new PathEdge(pe.srcNode, dstNode2);
-		return pe2;
-	}
-
-	public PathEdge getInitPathEdge(Quad q, jq_Method m2, PathEdge pe) {
 		DstNode dstNode = pe.dstNode;
 		IntArraySet[] dstEnv = dstNode.env;
         ParamListOperand args = Invoke.getParamList(q);
@@ -286,32 +296,69 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 		while (mIdx < numVars)
 			env[mIdx++] = nilPts;
 		SrcNode srcNode2 = new SrcNode(env, dstNode.heap);
-		DstNode dstNode2 = new DstNode(env, dstNode.heap, nilPts);
-		PathEdge pe2 = new PathEdge(srcNode2, dstNode2);
+		DstNode dstNode2 = new DstNode(env, dstNode.heap, nilPts, false);
+		Edge pe2 = new Edge(srcNode2, dstNode2);
 		return pe2;
 	}
 
-	public SummaryEdge getSummaryEdge(Quad q, PathEdge pe) {
+	@Override
+	public Edge getMiscPathEdge(Quad q, Edge pe) {
 		DstNode dstNode = pe.dstNode;
-		IntArraySet rPts = nilPts;
-		// q may be null in which case pe.bb is exit basic block
-		if (q != null) {
-			Operand rx = Return.getSrc(q);
-			if (rx instanceof RegisterOperand) {
-				RegisterOperand ro = (RegisterOperand) rx;
-				if (ro.getType().isReferenceType()) {
-					int rIdx = getIdx(ro);
-					rPts = dstNode.env[rIdx];
-				}
+		qv.iDstNode = dstNode;
+		qv.oDstNode = dstNode;
+		q.accept(qv);
+		DstNode dstNode2 = qv.oDstNode;
+		Edge pe2 = // (dstNode2 == dstNode) ? pe :
+			new Edge(pe.srcNode, dstNode2);
+		return pe2;
+	}
+
+	private Edge getForkPathEdge(Quad q, Edge pe) {
+		DstNode dstNode = pe.dstNode;
+		IntArraySet[] iEnv = dstNode.env;
+		RegisterOperand ao = Invoke.getParam(q, 0);
+		int aIdx = getIdx(ao);
+		IntArraySet aPts = iEnv[aIdx];
+		DstNode dstNode2;
+		if (aPts == escPts || aPts == nilPts)
+			dstNode2 = dstNode;
+		else {
+			Set<IntTrio> iHeap = dstNode.heap;
+			IntArraySet iEsc = dstNode.esc;
+			IntArraySet oEsc = propagateEsc(aPts, iHeap, iEsc);
+			if (oEsc == iEsc)
+				dstNode2 = dstNode;
+			else {
+				IntArraySet[] oEnv = updateEnv(iEnv, oEsc);
+				Set<IntTrio> oHeap = updateHeap(iHeap, oEsc);
+				dstNode2 = new DstNode(oEnv, oHeap, oEsc, false);
 			}
 		}
-		RetNode retNode = new RetNode(rPts, dstNode.heap, dstNode.esc);
-		SummaryEdge se = new SummaryEdge(pe.srcNode, retNode);
+		Edge pe2 = // (dstNode == dstNode2) ? pe :
+			new Edge(pe.srcNode, dstNode2);
+		return pe2;
+	}
+
+	@Override
+	public Edge getSummaryEdge(jq_Method m, Edge pe) {
+		Edge se;
+		DstNode dstNode = pe.dstNode;
+		if (dstNode.isRet)
+			se = new Edge(pe.srcNode, dstNode);
+		else {
+			dstNode = new DstNode(emptyRetEnv, dstNode.heap,
+				dstNode.esc, true);
+			se = new Edge(pe.srcNode, dstNode);
+		}
 		return se;
 	}
 
-	public PathEdge getInvkSuccPathEdge(Quad q, PathEdge clrPE, 
-			SummaryEdge tgtSE) {
+	@Override
+	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
+		if (m == threadStartMethod) {
+			// ignore tgtSE
+			return getForkPathEdge(q, clrPE);
+		}
 		DstNode clrDstNode = clrPE.dstNode;
 		SrcNode tgtSrcNode = tgtSE.srcNode;
 		if (!clrDstNode.heap.equals(tgtSrcNode.heap))
@@ -331,14 +378,14 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
                 fIdx++;
 			}
 		}
-		RetNode tgtRetNode = tgtSE.retNode;
+		DstNode tgtRetNode = tgtSE.dstNode;
         int n = clrDstEnv.length;
         IntArraySet[] clrDstEnv2 = new IntArraySet[n];
         RegisterOperand ro = Invoke.getDest(q);
         int rIdx = -1;
         if (ro != null && ro.getType().isReferenceType()) {
         	rIdx = getIdx(ro);
-        	clrDstEnv2[rIdx] = tgtRetNode.pts;
+        	clrDstEnv2[rIdx] = tgtRetNode.env[0];
         }
 		IntArraySet tgtRetEsc = tgtRetNode.esc;
         for (int i = 0; i < n; i++) {
@@ -370,12 +417,13 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 			clrDstEsc2 = new IntArraySet(clrDstEsc);
         	clrDstEsc2.addAll(tgtRetEsc);
 		}
-        DstNode clrDstNode2 = new DstNode(clrDstEnv2,
-        	tgtRetNode.heap, clrDstEsc2);
-        PathEdge pe2 = new PathEdge(clrPE.srcNode, clrDstNode2);
+        DstNode clrDstNode2 = new DstNode(clrDstEnv2, tgtRetNode.heap,
+			clrDstEsc2, false);
+        Edge pe2 = new Edge(clrPE.srcNode, clrDstNode2);
 		return pe2;
 	}
 	
+	@Override
 	public boolean doMerge() {
 		return true;
 	}
@@ -383,9 +431,28 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 		DstNode iDstNode;
 		DstNode oDstNode;
+		@Override
+		public void visitReturn(Quad q) {
+			IntArraySet[] oEnv = emptyRetEnv;
+			Operand rx = Return.getSrc(q);
+			if (rx instanceof RegisterOperand) {
+				RegisterOperand ro = (RegisterOperand) rx;
+				if (ro.getType().isReferenceType()) {
+					int rIdx = getIdx(ro);
+					IntArraySet rPts = iDstNode.env[rIdx];
+					oEnv = new IntArraySet[1];
+					oEnv[0] = rPts;
+				}
+			}
+			Set<IntTrio> oHeap = iDstNode.heap;
+			IntArraySet oEsc = iDstNode.esc;
+			oDstNode = new DstNode(oEnv, oHeap, oEsc, true);
+		}
+		@Override
 		public void visitCheckCast(Quad q) {
 			visitMove(q);
 		}
+		@Override
 		public void visitMove(Quad q) {
 	        RegisterOperand lo = Move.getDest(q);
 			jq_Type t = lo.getType();
@@ -408,8 +475,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 			oEnv[lIdx] = olPts;
 			Set<IntTrio> oHeap = iDstNode.heap;
 			IntArraySet oEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, oHeap, oEsc);
+			oDstNode = new DstNode(oEnv, oHeap, oEsc, false);
 		}
+		@Override
 		public void visitPhi(Quad q) {
 			RegisterOperand lo = Phi.getDest(q);
 			jq_Type t = lo.getType();
@@ -447,8 +515,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 			oEnv[lIdx] = olPts;
 			Set<IntTrio> oHeap = iDstNode.heap;
 			IntArraySet oEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, oHeap, oEsc);
+			oDstNode = new DstNode(oEnv, oHeap, oEsc, false);
 		}
+		@Override
 		public void visitALoad(Quad q) {
 			if (currLocHeapInsts.contains(q))
 				check(q, ALoad.getBase(q));
@@ -469,8 +538,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 			IntArraySet[] oEnv = copy(iEnv);
 			oEnv[lIdx] = olPts;
 			IntArraySet iEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, iHeap, iEsc);
+			oDstNode = new DstNode(oEnv, iHeap, iEsc, false);
 		}
+		@Override
 		public void visitGetfield(Quad q) {
 			if (currLocHeapInsts.contains(q))
 				check(q, Getfield.getBase(q));
@@ -497,8 +567,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 			IntArraySet[] oEnv = copy(iEnv);
 			oEnv[lIdx] = olPts;
 			IntArraySet iEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, iHeap, iEsc);
+			oDstNode = new DstNode(oEnv, iHeap, iEsc, false);
 		}
+		@Override
 		public void visitAStore(Quad q) {
 			if (currLocHeapInsts.contains(q))
 				check(q, AStore.getBase(q));
@@ -521,6 +592,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 				return;
 			processWrite(bPts, rPts, null);
 		}
+		@Override
 		public void visitPutfield(Quad q) {
 			if (currLocHeapInsts.contains(q))
 				check(q, Putfield.getBase(q));
@@ -604,8 +676,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 					}
 				}
 			}
-			oDstNode = new DstNode(oEnv, oHeap, oEsc);
+			oDstNode = new DstNode(oEnv, oHeap, oEsc, false);
 		}
+		@Override
 		public void visitPutstatic(Quad q) {
 			jq_Field f = Putstatic.getField(q).getField();
 	        if (!f.getType().isReferenceType())
@@ -626,8 +699,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 				return;
 			IntArraySet[] oEnv = updateEnv(iEnv, oEsc);
 			Set<IntTrio> oHeap = updateHeap(iHeap, oEsc);
-			oDstNode = new DstNode(oEnv, oHeap, oEsc); 
+			oDstNode = new DstNode(oEnv, oHeap, oEsc, false); 
 		}
+		@Override
 		public void visitGetstatic(Quad q) {
 			jq_Field f = Getstatic.getField(q).getField();
 	        if (!f.getType().isReferenceType())
@@ -641,12 +715,14 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 	       	oEnv[lIdx] = escPts;
 			Set<IntTrio> iHeap = iDstNode.heap;
 			IntArraySet iEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, iHeap, iEsc);
+			oDstNode = new DstNode(oEnv, iHeap, iEsc, false);
 		}
+		@Override
 		public void visitNew(Quad q) {
 			RegisterOperand vo = New.getDest(q);
 			processAlloc(q, vo);
 		}
+		@Override
 		public void visitNewArray(Quad q) {
 			RegisterOperand vo = NewArray.getDest(q);
 			processAlloc(q, vo);
@@ -676,7 +752,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<PathEdge, Summa
 			IntArraySet[] oEnv = copy(iEnv);
 			oEnv[vIdx] = vPts;
 			Set<IntTrio> oHeap = iDstNode.heap;
-			oDstNode = new DstNode(oEnv, oHeap, iEsc);
+			oDstNode = new DstNode(oEnv, oHeap, iEsc, false);
 		}
 		private void check(Quad q, Operand bx) {
 			if (!(bx instanceof RegisterOperand))
