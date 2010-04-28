@@ -2,7 +2,8 @@
 # Copyright (c) 2006-2007, The Trustees of Stanford University.
 # All rights reserved.
 
-# 0-cfa may alias analysis with call-graph construction
+# Adaptor of context-insensitive may-alias/call-graph analysis
+# to a trivial context-sensitive one.
 
 # Author: Mayur Naik (mhn@cs.stanford.edu)
 # name=cspa-0cfa-dlog

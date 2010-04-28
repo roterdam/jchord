@@ -2,7 +2,7 @@
 # Copyright (c) 2006-2007, The Trustees of Stanford University.
 # All rights reserved.
 
-# k-object-sensitive may alias analysis with call-graph construction
+# k-object-sensitive may-alias/call-graph analysis.
 
 # Author: Mayur Naik (mhn@cs.stanford.edu)
 # name=cspa-kobj-dlog

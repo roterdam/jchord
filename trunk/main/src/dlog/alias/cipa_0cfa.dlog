@@ -2,7 +2,7 @@
 # Copyright (c) 2006-2007, The Trustees of Stanford University.
 # All rights reserved.
 
-# 0-CFA-based may alias analysis with call graph construction
+# Context-insensitive may-alias/call-graph analysis.
 
 # Author: Mayur Naik (mhn@cs.stanford.edu)
 # name=cipa-0cfa-dlog
