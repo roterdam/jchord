@@ -37,9 +37,7 @@ public class RelVirtIM extends ProgramRel {
 			Quad i = (Quad) domI.get(iIdx);
 			Operator op = i.getOperator();
 			if (op instanceof InvokeVirtual || op instanceof InvokeInterface) {
-				MethodOperand mo = Invoke.getMethod(i);
-				mo.resolve();
-				jq_Method m = mo.getMethod();
+				jq_Method m = Invoke.getMethod(i).getMethod();
 				int mIdx = domM.indexOf(m);
 				if (mIdx != -1)
 					add(iIdx, mIdx);

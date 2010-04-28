@@ -70,9 +70,7 @@ public class RelMgetInstFldInst extends ProgramRel
 			return;
 		}
 		if (op instanceof Getfield) {
-			FieldOperand fo = Getfield.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Getfield.getField(q).getField();
 			if (f.getType().isReferenceType()) {
 				Operand bx = Getfield.getBase(q);
 				if (bx instanceof RegisterOperand) {

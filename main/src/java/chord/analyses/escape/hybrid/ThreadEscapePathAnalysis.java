@@ -215,9 +215,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 							continue;
 						int pId = domP.indexOf(q);
 						assert (pId != -1);
-						MethodOperand mo = Invoke.getMethod(q);
-						mo.resolve();
-						jq_Method m2 = mo.getMethod();
+						jq_Method m2 = Invoke.getMethod(q).getMethod();
 						String mName2 = m2.getName().toString();
 						String mDesc2 = m2.getDesc().toString();
 						String mSign2 = mName2 + mDesc2;
@@ -670,9 +668,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				invkRetn = domU.getOrAdd(v);
 			}
 		}
-		MethodOperand mo = Invoke.getMethod(q);
-		mo.resolve();
-		jq_Method m = mo.getMethod();
+		jq_Method m = Invoke.getMethod(q).getMethod();
 		String mName = m.getName().toString();
 		String mDesc = m.getDesc().toString();
 		String mSign = mName + mDesc;
@@ -1236,9 +1232,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int bId = domU.indexOf(b);
 			assert (bId != -1);
 			basePUset.add(new IntPair(currPid, bId));
-			FieldOperand fo = Getfield.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Getfield.getField(q).getField();
 			if (!f.getType().isReferenceType())
 				return;
 			int fId = domF.indexOf(f);
@@ -1265,9 +1259,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int bId = domU.indexOf(b);
 			assert (bId != -1);
 			basePUset.add(new IntPair(currPid, bId));
-			FieldOperand fo = Putfield.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Putfield.getField(q).getField();
 			if (!f.getType().isReferenceType())
 				return;
 			Operand rx = Putfield.getSrc(q);

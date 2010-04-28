@@ -64,9 +64,7 @@ public class RelPgetInstFldInst extends ProgramRel
 			return;
 		}
 		if (op instanceof Getfield) {
-			FieldOperand fo = Getfield.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Getfield.getField(q).getField();
 			if (f.getType().isReferenceType()) {
 				RegisterOperand lo = Getfield.getDest(q);
 				Register l = lo.getRegister();
