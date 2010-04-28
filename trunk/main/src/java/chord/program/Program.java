@@ -68,7 +68,6 @@ public class Program {
 	}
 	private IndexSet<jq_Class> classes;
 	private IndexSet<jq_Method> methods;
-	private IndexSet<jq_Type> types;
 	private Map<String, jq_Class> nameToClassMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private jq_Method mainMethod;
@@ -146,7 +145,6 @@ public class Program {
 				methods.add(m);
 			}
 		}
-		buildTypes();
 	}
 
 	private void init(IScopeBuilder builder) throws IOException {
@@ -162,7 +160,6 @@ public class Program {
 			else
 				methods.add(m);
 		}
-		buildTypes();
 		write();
 	}
 
@@ -176,7 +173,6 @@ public class Program {
 			for (jq_Method m : c.getDeclaredStaticMethods()) 
 				methods.add(m);
 		}
-		buildTypes();
 		write();
 	}
 
@@ -207,12 +203,6 @@ public class Program {
 		return m;
 	}
 
-	private void buildTypes() {
-		types = new IndexHashSet<jq_Type>();
-		for (jq_Class c : classes)
-			types.add(c);
-	}
-
 	private void buildNameToClassMap() {
 		nameToClassMap = new HashMap<String, jq_Class>();
 		for (jq_Class c : classes) {
@@ -241,16 +231,12 @@ public class Program {
 		return methods;
 	}
 
-	public IndexSet<jq_Type> getReachableTypes() {
-		return types;
-	}
-	
 	public jq_Class getPreparedClass(String name) {
 		if (nameToClassMap == null)
 			buildNameToClassMap();
 		return nameToClassMap.get(name);
 	}
-	
+
 	public List<jq_Method> getReachableMethods(jq_Class c) {
 		if (classToMethodsMap == null)
 			buildClassToMethodsMap();
@@ -640,11 +626,19 @@ public class Program {
 		return "monitorenter " + s;
 	}
 	
-	public void print() {
+	public void printClass(String className) {
+		jq_Class c = getPreparedClass(className);
+		if (c == null)
+			Messages.fatal("SCOPE.CLASS_NOT_FOUND", className);
+		printClass(c);
+	}
+	private void printClass(jq_Class c) {
+		System.out.println("*** Class: " + c);
 		for (jq_Method m : getReachableMethods()) {
-			System.out.println(m);
+			System.out.println("Method: " + m);
 			if (!m.isAbstract()) {
 				ControlFlowGraph cfg = m.getCFG();
+/*
 				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
                 		it.hasNext();) {
 					BasicBlock bb = it.nextBasicBlock();
@@ -654,8 +648,13 @@ public class Program {
 						System.out.println("\t" + bci + "#" + q.getID());
 					}
 				}
+*/
 				System.out.println(cfg.fullDump());
 			}
 		}
+	}
+	public void printAllClasses() {
+		for (jq_Class c : getPreparedClasses())
+			printClass(c);
 	}
 }

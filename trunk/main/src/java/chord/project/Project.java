@@ -75,6 +75,17 @@ public class Project {
 			Program.v();
 		}
 
+		if (Properties.printAllClasses) {
+			Program.v().printAllClasses();
+
+		}
+		String[] printClasses = Properties.toArray(Properties.printClasses);
+		if (printClasses.length > 0) {
+			Program program = Program.v();
+			for (String className : printClasses)
+				program.printClass(className);
+		}
+
         String[] runAnalyses = Properties.toArray(Properties.runAnalyses);
         if (runAnalyses.length > 0) {
         	Project.init();

@@ -12,23 +12,22 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
 
 /**
- * Domain of types.
+ * Domain of classes.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
 	name = "T"
 )
-public class DomT extends ProgramDom<jq_Type> {
+public class DomT extends ProgramDom<jq_Class> {
 	public void fill() {
-		for (jq_Type t : Program.v().getReachableTypes()) {
-			getOrAdd(t);
+		for (jq_Class c : Program.v().getPreparedClasses()) {
+			getOrAdd(c);
 		}
 	}
-    public String toXMLAttrsString(jq_Type t) {
-        String name = t.getName();
-        String file = (t instanceof jq_Class) ?
-        	Program.getSourceFileName((jq_Class) t) : "null";
+    public String toXMLAttrsString(jq_Class c) {
+        String name = c.getName();
+        String file = Program.getSourceFileName(c);
         int line = 0;  // TODO
         return "name=\"" + name +
             "\" file=\"" + file +

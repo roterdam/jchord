@@ -56,6 +56,8 @@ public class Properties {
 
 	public final static boolean buildScope = buildBoolProperty("chord.build.scope", false);
 	public final static String runAnalyses = System.getProperty("chord.run.analyses", "");
+	public final static String printClasses = System.getProperty("chord.print.classes", "");
+	public final static boolean printAllClasses = buildBoolProperty("chord.print.all.classes", false);
 	public final static String printRels = System.getProperty("chord.print.rels", "");
 	public final static boolean publishTargets = buildBoolProperty("chord.publish.targets", false);
 
@@ -174,6 +176,8 @@ public class Properties {
 		System.out.println("*** Chord task properties:");
 		System.out.println("chord.build.scope: " + buildScope);
 		System.out.println("chord.run.analyses: " + runAnalyses);
+		System.out.println("chord.print.all.classes: " + printAllClasses);
+		System.out.println("chord.print.classes: " + printClasses);
 		System.out.println("chord.print.rels: " + printRels);
 		System.out.println("chord.publish.targets: " + publishTargets);
 
