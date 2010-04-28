@@ -18,14 +18,10 @@ public class T extends java.lang.Thread {
         B b2 = new B();
         for (int i = 0; i < 10; i++) {
             T t = new T(b1, b2);
-			if (i == 19)
-				throw new RuntimeException();
             t.start();
         }
         for (int i = 0; i < 10; i++) {
-            int j = b1.get();
-            if (j >= 1000)
-                break;
+            b1.get();
             synchronized (b2) {
                 b2.set(i);
             }
