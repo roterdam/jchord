@@ -72,9 +72,7 @@ public class RelMputInstFldInst extends ProgramRel
 			return;
 		}
 		if (op instanceof Putfield) {
-			FieldOperand fo = Putfield.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Putfield.getField(q).getField();
 			if (f.getType().isReferenceType()) {
 				Operand rx = Putfield.getSrc(q);
 				if (rx instanceof RegisterOperand) {

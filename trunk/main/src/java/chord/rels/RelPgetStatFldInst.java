@@ -46,9 +46,7 @@ public class RelPgetStatFldInst extends ProgramRel
 	public void visitHeapInst(Quad q) {
 		Operator op = q.getOperator();
 		if (op instanceof Getstatic) {
-			FieldOperand fo = Getstatic.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Getstatic.getField(q).getField();
 			if (f.getType().isReferenceType()) {
 				RegisterOperand lo = Getstatic.getDest(q);
 				Register l = lo.getRegister();

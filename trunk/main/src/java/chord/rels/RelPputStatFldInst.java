@@ -47,9 +47,7 @@ public class RelPputStatFldInst extends ProgramRel
 	public void visitHeapInst(Quad q) {
 		Operator op = q.getOperator();
 		if (op instanceof Putstatic) {
-			FieldOperand fo = Putstatic.getField(q);
-			fo.resolve();
-			jq_Field f = fo.getField();
+			jq_Field f = Putstatic.getField(q).getField();
 			if (f.getType().isReferenceType()) {
 				Operand rx = Putstatic.getSrc(q);
 				if (rx instanceof RegisterOperand) {

@@ -34,9 +34,7 @@ public class RelSpecIM extends ProgramRel {
 			Quad i = (Quad) domI.get(iIdx);
 			Operator op = i.getOperator();
 			if (op instanceof InvokeStatic) {
-				MethodOperand mo = InvokeStatic.getMethod(i);
-				mo.resolve();
-				jq_Method m = mo.getMethod();
+				jq_Method m = InvokeStatic.getMethod(i).getMethod();
 				if (!m.isStatic()) {
 					int mIdx = domM.indexOf(m);
 					if (mIdx != -1)
