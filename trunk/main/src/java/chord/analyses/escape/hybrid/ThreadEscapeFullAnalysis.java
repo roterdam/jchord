@@ -93,6 +93,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private int varId[];
 	private TObjectIntHashMap<jq_Method> methToNumVars =
 		new TObjectIntHashMap<jq_Method>();
+	private ICICG cicg;
 
 	// TODO: E -> CE in each of 3 below sets?
 	// set of heap insts deemed possibly escaping by
@@ -121,13 +122,10 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		Project.runTask(domF);
 		domH = (DomH) Project.getTrgt("H");
 		Project.runTask(domH);
-		domI = (DomI) Project.getTrgt("I");
-		Project.runTask(domI);
-		domM = (DomM) Project.getTrgt("M");
-		Project.runTask(domM);
 		domE = (DomE) Project.getTrgt("E");
 		Project.runTask(domE);
 		int numH = domH.size();
+		// todo: change this to 0
 		ESC_VAL = numH;
 		escPts = new IntArraySet(1);
 		escPts.add(ESC_VAL);
@@ -229,7 +227,10 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		}
 	}
 
-	private ICICG cicg;
+	@Override
+	public boolean doMerge() {
+		return true;
+	}
 
 	@Override
 	public ICICG getCallGraph() {
@@ -262,12 +263,11 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	@Override
 	public Set<Pair<Location, Edge>> getInitPathEdges() {
 		Set<Pair<Location, Edge>> initPEs =
-			new HashSet<Pair<Location, Edge>>(1);
+			new ArraySet<Pair<Location, Edge>>(1);
 		Edge pe = getRootPathEdge(mainMethod);
        	BasicBlock bb = mainMethod.getCFG().entry();
 		Location loc = new Location(mainMethod, bb, -1, null);
-		Pair<Location, Edge> pair =
-			new Pair<Location, Edge>(loc, pe);
+		Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
 		initPEs.add(pair);
 		return initPEs;
 	}
@@ -423,11 +423,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		return pe2;
 	}
 	
-	@Override
-	public boolean doMerge() {
-		return true;
-	}
-
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 		DstNode iDstNode;
 		DstNode oDstNode;

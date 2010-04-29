@@ -18,8 +18,8 @@ import chord.util.tuple.integer.IntTrio;
  */
 public class Edge implements IEdge {
 	final SrcNode srcNode;
-	// dstNode is intentionally not final: it is updated when this path edge
-	// is merged with another path edge with matching srcNode; see mergeWith
+	// dstNode is intentionally not final: it is updated when this edge
+	// is merged with another edge with matching srcNode; see mergeWith
 	DstNode dstNode;
 	public Edge(SrcNode s, DstNode d) {
 		srcNode = s;
