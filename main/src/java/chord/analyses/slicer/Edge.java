@@ -18,6 +18,12 @@ import chord.project.analyses.rhs.IEdge;
  */
 public class Edge implements IEdge {
 	final Expr srcExpr;
+    // dstExprs and dstQuads are intentionally not final: they are
+	// updated when this edge is merged with another edge with
+	// matching srcNode; see mergeWith
+	// dstExprs and dstQuads are unmodifiable sets, i.e., their
+	// contents must never be changed, since they may be shared by
+	// different edges.
 	Set<Expr> dstExprs;
 	Set<Quad> dstQuads;
 	public Edge(Expr expr, Set<Expr> exprs, Set<Quad> quads) {
@@ -31,13 +37,6 @@ public class Edge implements IEdge {
 	public boolean mergeWith(IEdge edge) {
         boolean changed = false;
 		Edge that = (Edge) edge;
-        Set<Expr> dstExprs1 = this.dstExprs;
-        Set<Expr> dstExprs2 = that.dstExprs;
-        if (!dstExprs1.equals(dstExprs2)) {
-			dstExprs1 = new ArraySet<Expr>(dstExprs1);
-			dstExprs1.addAll(dstExprs2);
-           	changed = true;
-        }
 		Set<Quad> dstQuads1 = this.dstQuads;
 		Set<Quad> dstQuads2 = that.dstQuads;
 		if (!dstQuads1.equals(dstQuads2)) {
@@ -45,6 +44,15 @@ public class Edge implements IEdge {
 			dstQuads1.addAll(dstQuads2);
 			changed = true;
 		}
+		// todo: can return in the 'else' case above
+		// as dstExprs is a function of dstQuads
+        Set<Expr> dstExprs1 = this.dstExprs;
+        Set<Expr> dstExprs2 = that.dstExprs;
+        if (!dstExprs1.equals(dstExprs2)) {
+			dstExprs1 = new ArraySet<Expr>(dstExprs1);
+			dstExprs1.addAll(dstExprs2);
+           	changed = true;
+        }
 		if (changed) {
 			this.dstExprs = dstExprs1;
 			this.dstQuads = dstQuads1;
@@ -62,8 +70,10 @@ public class Edge implements IEdge {
 			return false;
 		Edge that = (Edge) o;
 		return srcExpr.equals(that.srcExpr) &&
-			dstExprs.equals(that.dstExprs) &&
-			dstQuads.equals(that.dstQuads);
+			dstQuads.equals(that.dstQuads) &&
+  		// todo: perhaps can remove below line since
+		// dstExprs is a function of dstQuads
+			dstExprs.equals(that.dstExprs);
 	}
 	public String toString() {
 		String s = srcExpr.toString() + ",[";
