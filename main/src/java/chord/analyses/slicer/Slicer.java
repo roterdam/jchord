@@ -96,7 +96,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		Project.runTask(domM);
 
 		Set<Pair<Location, Expr>> seeds = new HashSet<Pair<Location, Expr>>();
-		// todo: populate seeds
+		List<String> fields = FileUtils.readFileToList("seeds.txt");
 
         for (Pair<Location, Expr> seed : seeds) {
 			currSlice.clear();
