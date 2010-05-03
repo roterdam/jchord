@@ -57,15 +57,21 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	// get the initial set of path edges
 	public abstract Set<Pair<Location, PE>> getInitPathEdges();
 
-	// get the path edge in callee for target method m called from call site q
+	// get the path edge(s) in callee for target method m called from call site q
 	// with caller path edge pe
-	public abstract PE getInitPathEdge(Quad q, jq_Method m, PE pe);
+	public abstract Set<PE> getInitPathEdges(Quad q, jq_Method m, PE pe);
 
-	// get outgoing path edge from q, given incoming path edge pe into q.
+	// get outgoing path edge(s) from q, given incoming path edge pe into q.
 	//  q is guaranteed to not be an invoke statement, return statement,
 	// entry basic block, or exit basic block
-	public abstract PE getMiscPathEdge(Quad q, PE pe);
+	// the set returned can be reused by client
+	public abstract Set<PE> getMiscPathEdges(Quad q, PE pe);
  
+	// q is an invoke statement
+	// get outgoing path edge(s) from q, given incoming path edge pe into q,
+	// for dataflow facts not affected by target method of call site q
+	public abstract Set<PE> getInvkPathEdges(Quad q, PE pe);
+
 	// q is an invoke statement and m is the target method.
 	// get path edge to successor of q given path edge into q and summary
 	// edge of a target method m of the call site q
@@ -155,6 +161,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		propagate();
 	}
 		
+	protected jq_Method currentMethod;
+
 	/**
 	 * Propagate forward or backward until fixpoint is reached.
 	 */
@@ -165,8 +173,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
             Location loc = pair.val0;
             PE pe = pair.val1;
             Quad q = loc.q;
+			jq_Method m = loc.m;
+			currentMethod = m;
             if (DEBUG) System.out.println("Processing loc: " + loc + " PE: " + pe);
             if (q == null) {
+				// method entry or method exit
                 BasicBlock bb = loc.bb;
                 if (bb.isEntry()) {
 					if (isForward) {
@@ -181,16 +192,16 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 								q2 = bb2.getQuad(0);
 								q2Idx = 0;
 							}
-							Location loc2 = new Location(loc.m, bb2, q2Idx, q2);
+							Location loc2 = new Location(m, bb2, q2Idx, q2);
 							addPathEdge(loc2, pe);
 						}
 					} else {
-						processEntry(loc.m, pe);
+						processEntry(m, pe);
 					}
                 } else {
                     assert (bb.isExit());
 					if (isForward) {
-                    	processExit(loc.m, pe);
+                    	processExit(m, pe);
 					} else {
 						for (Object o : bb.getPredecessorsList()) {
 							BasicBlock bb2 = (BasicBlock) o;
@@ -204,18 +215,44 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 								q2 = bb2.getQuad(n - 1);
 								q2Idx = 0;
 							}
-							Location loc2 = new Location(loc.m, bb2, q2Idx, q2);
+							Location loc2 = new Location(m, bb2, q2Idx, q2);
 							addPathEdge(loc2, pe);
 						}
 					}
                 }
             } else {
+				// invoke or misc quad
                 Operator op = q.getOperator();
                 if (op instanceof Invoke) {
-                    processInvoke(loc, pe);
-                } else {
-                    PE pe2 = getMiscPathEdge(q, pe);
-                    propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2);
+					for (jq_Method m2 : getTargets(q)) {
+						if (DEBUG) System.out.println("\tTarget: " + m2);
+						Set<PE> peSet = getInitPathEdges(q, m2, pe);
+						ControlFlowGraph cfg2 = m2.getCFG();
+						BasicBlock bb2 = isForward ? cfg2.entry() : cfg2.exit();
+						Location loc2 = new Location(m2, bb2, -1, null);
+						for (PE pe2 : peSet)
+							addPathEdge(loc2, pe2);
+						Set<SE> seSet = summEdges.get(m2);
+						if (seSet == null)
+							continue;
+						for (SE se : seSet) {
+							if (DEBUG) System.out.println("\tTesting SE: " + se);
+							if (propagateSEtoPE(pe, loc, m2, se)) {
+								if (DEBUG) System.out.println("\tMatched");
+								if (doMerge)
+									break;
+							} else {
+								if (DEBUG) System.out.println("\tDid not match");
+							}
+						}
+					}
+					Set<PE> peSet = getInvkPathEdges(q, pe);
+					for (PE pe2 : peSet)
+						propagatePEtoPE(m, loc.bb, loc.qIdx, pe2);
+				} else {
+					Set<PE> peSet = getMiscPathEdges(q, pe);
+					for (PE pe2 : peSet)
+						propagatePEtoPE(m, loc.bb, loc.qIdx, pe2);
                 }
             }
         }
@@ -271,7 +308,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
             Location loc2 = invkQuadToLoc.get(q2);
             for (PE pe2 : peSet) {
                 if (DEBUG) System.out.println("\tTesting PE: " + pe2);
-                boolean match = propagateSEtoPE(pe2, loc2, m2, seToAdd);
+                boolean match = propagateSEtoPE(pe2, loc2, m, seToAdd);
                 if (match) {
                     if (DEBUG) System.out.println("\tMatched");
                 } else {
@@ -327,11 +364,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
             // make a copy because propagateSEtoPE might add a
             // path edge to this set itself
             // TODO: fix this eventually
-            peSet = new ArraySet<PE>(peSet);
+            List<PE> peList = new ArrayList<PE>(peSet);
             Location loc2 = invkQuadToLoc.get(q2);
-            for (PE pe2 : peSet) {
+            for (PE pe2 : peList) {
                 if (DEBUG) System.out.println("\tTesting PE: " + pe2);
-                boolean match = propagateSEtoPE(pe2, loc2, m2, seToAdd);
+                boolean match = propagateSEtoPE(pe2, loc2, m, seToAdd);
                 if (match) {
                     if (DEBUG) System.out.println("\tMatched");
                 } else {
@@ -393,37 +430,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		workList.add(pair);
 	}
 
-	private void processInvoke(Location loc, PE pe) {
-		Quad q = loc.q;
-        jq_Method m = Program.v().getMethod(q);
-		for (jq_Method m2 : getTargets(q)) {
-			if (DEBUG) System.out.println("\tTarget: " + m2);
-			Set<SE> seSet = summEdges.get(m2);
-			boolean found = false;
-			if (seSet != null) {
-				for (SE se : seSet) {
-					if (DEBUG) System.out.println("\tTesting SE: " + se);
-					if (propagateSEtoPE(pe, loc, m, se)) {
-						if (DEBUG) System.out.println("\tMatched");
-						found = true;
-						if (doMerge)
-							break;
-					} else {
-						if (DEBUG) System.out.println("\tDid not match");
-					}
-				}
-			}
-			if (!found) {
-				if (DEBUG) System.out.println("\tNo SE found");
-				PE pe2 = getInitPathEdge(q, m2, pe);
-				ControlFlowGraph cfg2 = m2.getCFG();
-				BasicBlock bb2 = isForward ? cfg2.entry() : cfg2.exit();
-				Location loc2 = new Location(m2, bb2, -1, null);
-				addPathEdge(loc2, pe2);
-			}
-		}
-	}
-
 	private void propagatePEtoPE(jq_Method m, BasicBlock bb, int qIdx, PE pe) {
 		if (isForward) {
 			// forward propagate
@@ -475,9 +481,9 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		}
 	}
 
-	private boolean propagateSEtoPE(PE clrPE, Location loc, jq_Method clrM, SE tgtSE) {
+	private boolean propagateSEtoPE(PE clrPE, Location loc, jq_Method tgtM, SE tgtSE) {
 		Quad q = loc.q;
-        PE pe2 = getInvkPathEdge(q, clrPE, clrM, tgtSE);
+        PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
 		if (pe2 == null)
 			return false;
         propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2);

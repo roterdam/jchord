@@ -74,16 +74,14 @@ import chord.util.Timer;
 	    name = "thresc-full-java"
 	)
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
-	public static int ESC_VAL;
-	public final static Set<IntTrio> emptyHeap = Collections.emptySet();
-	public final static IntArraySet nilPts = new IntArraySet(0);
-	public static IntArraySet escPts;
-	private IntArraySet tmpPts = new IntArraySet();
-	public final static IntArraySet[] emptyRetEnv;
-	static {
-		emptyRetEnv = new IntArraySet[1];
-		emptyRetEnv[0] = nilPts;
-	}
+	public static final IntArraySet nilPts = new IntArraySet(0);
+	private final Set<IntTrio> emptyHeap = Collections.emptySet();
+	private int ESC_VAL;
+	private final IntArraySet escPts = new IntArraySet(1);
+	private final IntArraySet tmpPts = new IntArraySet();
+	private final IntArraySet[] emptyRetEnv = new IntArraySet[] { nilPts };
+	private final Set<Edge> tmpEdgeSet = new ArraySet<Edge>(1);
+	private final Set<Edge> emptyEdgeSet = Collections.emptySet();
 	private DomM domM;
 	private DomI domI;
 	private DomV domV;
@@ -127,7 +125,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		int numH = domH.size();
 		// todo: change this to 0
 		ESC_VAL = numH;
-		escPts = new IntArraySet(1);
 		escPts.add(ESC_VAL);
 		escPts.setReadOnly();
 
@@ -273,44 +270,54 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public Edge getInitPathEdge(Quad q, jq_Method m2, Edge pe) {
+	public Set<Edge> getInitPathEdges(Quad q, jq_Method m2, Edge pe) {
+		Edge pe2;
 		if (m2 == threadStartMethod) {
 			// ignore pe
-			return getRootPathEdge(m2);
-		}
-		DstNode dstNode = pe.dstNode;
-		IntArraySet[] dstEnv = dstNode.env;
-        ParamListOperand args = Invoke.getParamList(q);
-        int numArgs = args.length();
-		int numVars = methToNumVars.get(m2);
-		IntArraySet[] env = new IntArraySet[numVars];
-		int mIdx = 0;
-		for (int i = 0; i < numArgs; i++) {
-			RegisterOperand ao = args.get(i);
-			if (ao.getType().isReferenceType()) {
-				int aIdx = getIdx(ao);
-				IntArraySet pts = dstEnv[aIdx];
-				env[mIdx++] = pts;
+			pe2 = getRootPathEdge(m2);
+		} else {
+			DstNode dstNode = pe.dstNode;
+			IntArraySet[] dstEnv = dstNode.env;
+			ParamListOperand args = Invoke.getParamList(q);
+			int numArgs = args.length();
+			int numVars = methToNumVars.get(m2);
+			IntArraySet[] env = new IntArraySet[numVars];
+			int mIdx = 0;
+			for (int i = 0; i < numArgs; i++) {
+				RegisterOperand ao = args.get(i);
+				if (ao.getType().isReferenceType()) {
+					int aIdx = getIdx(ao);
+					IntArraySet pts = dstEnv[aIdx];
+					env[mIdx++] = pts;
+				}
 			}
+			while (mIdx < numVars)
+				env[mIdx++] = nilPts;
+			SrcNode srcNode2 = new SrcNode(env, dstNode.heap);
+			DstNode dstNode2 = new DstNode(env, dstNode.heap, nilPts, false);
+			pe2 = new Edge(srcNode2, dstNode2);
 		}
-		while (mIdx < numVars)
-			env[mIdx++] = nilPts;
-		SrcNode srcNode2 = new SrcNode(env, dstNode.heap);
-		DstNode dstNode2 = new DstNode(env, dstNode.heap, nilPts, false);
-		Edge pe2 = new Edge(srcNode2, dstNode2);
-		return pe2;
+		tmpEdgeSet.clear();
+		tmpEdgeSet.add(pe2);
+		return tmpEdgeSet;
 	}
 
 	@Override
-	public Edge getMiscPathEdge(Quad q, Edge pe) {
+	public Set<Edge> getMiscPathEdges(Quad q, Edge pe) {
 		DstNode dstNode = pe.dstNode;
 		qv.iDstNode = dstNode;
 		qv.oDstNode = dstNode;
 		q.accept(qv);
 		DstNode dstNode2 = qv.oDstNode;
-		Edge pe2 = // (dstNode2 == dstNode) ? pe :
-			new Edge(pe.srcNode, dstNode2);
-		return pe2;
+		Edge pe2 = new Edge(pe.srcNode, dstNode2);
+		tmpEdgeSet.clear();
+		tmpEdgeSet.add(pe2);
+		return tmpEdgeSet;
+	}
+
+	@Override
+	public Set<Edge> getInvkPathEdges(Quad q, Edge pe) {
+		return emptyEdgeSet;
 	}
 
 	private Edge getForkPathEdge(Quad q, Edge pe) {
@@ -897,8 +904,8 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	public static String toString(IntArraySet[] env) {
 		String s = null;
 		for (IntArraySet e : env) {
-			String x = (e == nilPts) ? "N" :
-				(e == escPts) ? "E" : toString(e);
+			String x = (e == nilPts) ? "N" : toString(e);
+				// (e == escPts) ? "E" : toString(e);
 			s = (s == null) ? x : s + "," + x;
 		}
 		if (s == null)
