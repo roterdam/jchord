@@ -27,7 +27,7 @@ import chord.util.ArraySet;
 import chord.util.graph.IPathVisitor;
 import chord.util.graph.ShortestPathBuilder;
 import chord.analyses.alias.Ctxt;
-import chord.analyses.alias.Obj;
+import chord.analyses.alias.CSObj;
 import chord.analyses.alias.CtxtsAnalysis;
 import chord.analyses.alias.ICSCG;
 import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
@@ -181,7 +181,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		finish();
 	}
 
-	private Obj getPointsTo(int cIdx, int lIdx) {
+	private CSObj getPointsTo(int cIdx, int lIdx) {
 		RelView view = relSyncCLC.getView();
 		view.selectAndDelete(0, cIdx);
 		view.selectAndDelete(1, lIdx);
@@ -190,7 +190,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		for (Ctxt ctxt : ctxts)
 			pts.add(ctxt);
 		view.free();
-		return new Obj(pts);
+		return new CSObj(pts);
 	}
 	
 	private void publishResults() {
@@ -265,10 +265,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			int m2 = domM.indexOf(m2Val);
 			int m3 = domM.indexOf(m3Val);
 			int m4 = domM.indexOf(m4Val);
-			Obj o1Val = getPointsTo(c1, l1);
-			Obj o2Val = getPointsTo(c2, l2);
-			Obj o3Val = getPointsTo(c3, l3);
-			Obj o4Val = getPointsTo(c4, l4);
+			CSObj o1Val = getPointsTo(c1, l1);
+			CSObj o2Val = getPointsTo(c2, l2);
+			CSObj o3Val = getPointsTo(c3, l3);
+			CSObj o4Val = getPointsTo(c4, l4);
 			int o1 = domO.getOrAdd(o1Val);
 			int o2 = domO.getOrAdd(o2Val);
 			int o3 = domO.getOrAdd(o3Val);

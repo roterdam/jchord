@@ -9,16 +9,16 @@ import java.util.Set;
 import java.io.Serializable;
 
 /**
- * Representation of an abstract object.
+ * Representation of a object-sensitive abstract object.
  * <p>
- * An abstract object (also called points-to set) is a set of
- * abstract contexts (see {@link chord.analyses.alias.Ctxt}).
+ * It is a set of abstract contexts
+ * (see {@link chord.analyses.alias.Ctxt}).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Obj implements Serializable {
+public class CSObj implements Serializable {
 	public final Set<Ctxt> pts;
-	public Obj(Set<Ctxt> pts) {
+	public CSObj(Set<Ctxt> pts) {
 		assert (pts != null);
 		this.pts = pts;
 	}
@@ -31,7 +31,7 @@ public class Obj implements Serializable {
 	 * @return	true iff this abstract object may alias with
 	 * 			the given abstract object.
 	 */
-	public boolean mayAlias(Obj that) {
+	public boolean mayAlias(CSObj that) {
 		for (Ctxt e : pts) {
 			if (that.pts.contains(e))
 				return true;
@@ -42,8 +42,8 @@ public class Obj implements Serializable {
 		return pts.hashCode();
 	}
 	public boolean equals(Object that) {
-		if (that instanceof Obj)
-			return pts.equals(((Obj) that).pts);
+		if (that instanceof CSObj)
+			return pts.equals(((CSObj) that).pts);
 		return false;
 	}
 	public String toString() {

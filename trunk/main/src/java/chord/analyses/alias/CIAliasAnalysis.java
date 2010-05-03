@@ -47,17 +47,17 @@ public class CIAliasAnalysis extends JavaAnalysis {
 	 * @return	The abstract object to which the given local variable
 	 * 			may point.
 	 */
-	public Obj pointsTo(Register var) {
+	public CIObj pointsTo(Register var) {
 		if (!relVH.isOpen())
 			relVH.load();
 		RelView view = relVH.getView();
 		view.selectAndDelete(0, var);
 		Iterable<Quad> res = view.getAry1ValTuples();
-		Set<Ctxt> pts = SetUtils.newSet(view.size());
+		Set<Quad> pts = SetUtils.newSet(view.size());
 		for (Quad inst : res)
-			pts.add(new Ctxt(new Quad[] { inst }));
+			pts.add(inst);
 		view.free();
-		return new Obj(pts);
+		return new CIObj(pts);
 	}
 	/**
 	 * Provides the abstract object to which a given static field
@@ -68,17 +68,17 @@ public class CIAliasAnalysis extends JavaAnalysis {
 	 * @return	The abstract object to which the given static field
 	 * 			may point.
 	 */
-	public Obj pointsTo(jq_Field field) {
+	public CIObj pointsTo(jq_Field field) {
 		if (!relFH.isOpen())
 			relFH.load();
 		RelView view = relFH.getView();
 		view.selectAndDelete(0, field);
 		Iterable<Quad> res = view.getAry1ValTuples();
-		Set<Ctxt> pts = SetUtils.newSet(view.size());
+		Set<Quad> pts = SetUtils.newSet(view.size());
 		for (Quad inst : res)
-			pts.add(new Ctxt(new Quad[] { inst }));
+			pts.add(inst);
 		view.free();
-		return new Obj(pts);
+		return new CIObj(pts);
 	}
 	/**
 	 * Provides the abstract object to which a given instance field
@@ -90,21 +90,20 @@ public class CIAliasAnalysis extends JavaAnalysis {
 	 * @return	The abstract object to which the given instance field
 	 * 			of the given abstract object may point.
 	 */
-	public Obj pointsTo(Obj obj, jq_Field field) {
+	public CIObj pointsTo(CIObj obj, jq_Field field) {
 		if (!relHFH.isOpen())
 			relHFH.load();
-		Set<Ctxt> pts = new HashSet<Ctxt>();
-		for (Ctxt ctxt : obj.pts) {
-			Quad site = ctxt.getElems()[0];
+		Set<Quad> pts = new HashSet<Quad>();
+		for (Quad site : obj.pts) {
 			RelView view = relHFH.getView();
 			view.selectAndDelete(0, site);
 			view.selectAndDelete(1, field);
 			Iterable<Quad> res = view.getAry1ValTuples();
 			for (Quad inst : res)
-				pts.add(new Ctxt(new Quad[] { inst }));
+				pts.add(inst);
 			view.free();
 		}
-		return new Obj(pts);
+		return new CIObj(pts);
 	}
 	/**
 	 * Frees relations used by this program analysis if they are in
