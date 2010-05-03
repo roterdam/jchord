@@ -45,7 +45,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 	 * @return	The abstract object to which the given local variable
 	 *  		may point in the given abstract context.
 	 */
-	public Obj pointsTo(Ctxt ctxt, Register var) {
+	public CSObj pointsTo(Ctxt ctxt, Register var) {
 		if (!relCVC.isOpen())
 			relCVC.load();
 		RelView view = relCVC.getView();
@@ -55,7 +55,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 		Set<Ctxt> pts = SetUtils.iterableToSet(
 				res, view.size());
 		view.free();
-		return new Obj(pts);
+		return new CSObj(pts);
 	}
 	/**
 	 * Provides the abstract object to which a given static field
@@ -66,7 +66,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 	 * @return	The abstract object to which the given static field
 	 * 			may point.
 	 */
-	public Obj pointsTo(jq_Field field) {
+	public CSObj pointsTo(jq_Field field) {
 		if (!relFC.isOpen())
 			relFC.load();
 		RelView view = relFC.getView();
@@ -75,7 +75,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 		Set<Ctxt> pts = SetUtils.iterableToSet(
 				res, view.size());
 		view.free();
-		return new Obj(pts);
+		return new CSObj(pts);
 	}
 	/**
 	 * Provides the abstract object to which a given instance field
@@ -87,7 +87,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 	 * @return	The abstract object to which the given instance field
 	 * 			of the given abstract object may point.
 	 */
-	public Obj pointsTo(Obj obj, jq_Field field) {
+	public CSObj pointsTo(CSObj obj, jq_Field field) {
 		if (!relCFC.isOpen())
 			relCFC.load();
 		Set<Ctxt> pts = new HashSet<Ctxt>();
@@ -100,7 +100,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 				pts.add(ctxt2);
 			view.free();
 		}
-		return new Obj(pts);
+		return new CSObj(pts);
 	}
 	/**
 	 * Frees relations used by this program analysis if they are in

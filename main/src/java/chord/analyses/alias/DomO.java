@@ -15,9 +15,9 @@ import chord.project.analyses.ProgramDom;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DomO extends ProgramDom<Obj> {
+public class DomO extends ProgramDom<CSObj> {
 	private DomC domC;
-	public String toXMLAttrsString(Obj oVal) {
+	public String toXMLAttrsString(CSObj oVal) {
 		if (domC == null)
 			domC = (DomC) Project.getTrgt("C");
 		Set<Ctxt> pts = oVal.pts;

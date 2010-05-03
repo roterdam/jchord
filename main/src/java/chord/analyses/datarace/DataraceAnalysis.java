@@ -20,7 +20,7 @@ import chord.util.graph.IPathVisitor;
 import chord.util.graph.ShortestPathBuilder;
 import chord.analyses.alias.ICSCG;
 import chord.analyses.alias.Ctxt;
-import chord.analyses.alias.Obj;
+import chord.analyses.alias.CSObj;
 import chord.analyses.alias.CtxtsAnalysis;
 import chord.analyses.alias.CSAliasAnalysis;
 import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
@@ -164,7 +164,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 				pts.add(ctxt);
 			}
 			view.free();
-			int p = domO.getOrAdd(new Obj(pts));
+			int p = domO.getOrAdd(new CSObj(pts));
 			jq_Field fld = Program.getField(tuple.val2);
 			int f = domF.indexOf(fld);
 			out.println("<datarace Oid=\"O" + p +
@@ -214,7 +214,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 						Set<Ctxt> pts = SetUtils.newSet(view2.size());
 						for (Ctxt ctxt : ctxts)
 							pts.add(ctxt);
-						int oIdx = domO.getOrAdd(new Obj(pts));
+						int oIdx = domO.getOrAdd(new CSObj(pts));
 						view2.free();
 						lockStr += "<lock Lid=\"L" + lIdx + "\" Mid=\"M" +
 							mIdx + "\" Oid=\"O" + oIdx + "\"/>";
@@ -251,7 +251,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 				Set<Ctxt> pts = SetUtils.newSet(view2.size());
 				for (Ctxt ctxt : ctxts)
 					pts.add(ctxt);
-				int oIdx = domO.getOrAdd(new Obj(pts));
+				int oIdx = domO.getOrAdd(new CSObj(pts));
 				view2.free();
 				out.println("<lock Lid=\"L" + lIdx + "\" Mid=\"M" +
 					mIdx + "\" Oid=\"O" + oIdx + "\"/>");
