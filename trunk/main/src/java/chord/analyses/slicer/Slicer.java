@@ -12,17 +12,20 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
 
+import joeq.Class.jq_Class;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -40,7 +43,10 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
+import chord.util.FileUtils;
+import chord.project.Messages;
 import chord.program.Location;
+import chord.program.MethodSign;
 import chord.analyses.alias.ICICG;
 import chord.analyses.alias.ThrOblAbbrCICGAnalysis;
 import chord.util.tuple.object.Pair;
@@ -71,17 +77,17 @@ import chord.util.Timer;
 	    name = "slicer-java"
 	)
 public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
-	private static final Set<Quad> emptyQuadSet = Collections.emptySet();
-	private static final Set<Expr> emptyExprSet = Collections.emptySet();
+	private final Set<Edge> emptyEdgeSet = Collections.emptySet();
+	private final Set<Edge> tmpEdgeSet = new ArraySet<Edge>();
+	private final Set<Expr> tmpExprSet = new ArraySet<Expr>();
 	private DomM domM;
 	private DomI domI;
 	private DomV domV;
 	private DomF domF;
     private ICICG cicg;
     private MyQuadVisitor qv = new MyQuadVisitor();
+	private Set<Quad> currSlice = new HashSet<Quad>();
 	private Pair<Location, Expr> currSeed;
-	private Set<Pair<jq_Method, Quad>> currSlice =
-		new HashSet<Pair<jq_Method, Quad>>();
 
 	public void run() {
         domM = (DomM) Project.getTrgt("M");
@@ -94,9 +100,31 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		Project.runTask(domI);
 		domM = (DomM) Project.getTrgt("M");
 		Project.runTask(domM);
+		Project.runTask("P");
 
-		Set<Pair<Location, Expr>> seeds = new HashSet<Pair<Location, Expr>>();
-		List<String> fields = FileUtils.readFileToList("seeds.txt");
+		List<String> fStrList = FileUtils.readFileToList("seeds.txt");
+		Set<Pair<Location, Expr>> seeds =
+			new HashSet<Pair<Location, Expr>>(fStrList.size());
+		Location mainExitLoc = getMainExitLoc();
+		for (String fStr : fStrList) {
+			System.out.println("XXX: " + fStr);
+			MethodSign sign = MethodSign.parse(fStr);
+			jq_Class c = Program.v().getPreparedClass(sign.cName);
+			if (c == null) {
+				Messages.logAnon("WARN: Ignoring slicing on field %s: " +
+					" its declaring class was not found.", fStr);
+				continue;
+			}
+			jq_Field f = (jq_Field) c.getDeclaredMember(sign.mName, sign.mDesc);
+			if (f == null) {
+				Messages.logAnon("WARN: Ignoring slicing on field %s: " +
+					"it was not found in its declaring class.", fStr);
+				continue;
+			}
+			assert(f.isStatic());
+			Expr e = new StatField(f);
+			seeds.add(new Pair<Location, Expr>(mainExitLoc, e));
+		}
 
         for (Pair<Location, Expr> seed : seeds) {
 			currSlice.clear();
@@ -105,17 +133,24 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			Timer timer = new Timer("slicer-timer");
 			timer.init();
 			runPass();
-			for (Pair<jq_Method, Quad> p : currSlice) {
-				System.out.println("\t" + p);
+			for (Quad p : currSlice) {
+				jq_Method m = Program.v().getMethod(p);
+				System.out.println("\t" + m + " " + p);
 			}
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
 	}
 
+	private static Location getMainExitLoc() {
+		jq_Method mainMethod = Program.v().getMainMethod();
+		BasicBlock bb = mainMethod.getCFG().exit();
+		return new Location(mainMethod, bb, -1, null);
+	}
+
 	@Override
 	public boolean doMerge() {
-		return true;
+		return false;
 	}
 
     @Override
@@ -135,146 +170,131 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
             new ArraySet<Pair<Location, Edge>>(1);
 		Location loc = currSeed.val0;
 		Expr e = currSeed.val1;
-        Edge pe = new Edge(e, emptyExprSet, emptyQuadSet);
+        Edge pe = new Edge(e, e);
         Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
         initPEs.add(pair);
         return initPEs;
     }
 
 	@Override
-	public Edge getInitPathEdge(Quad q, jq_Method m2, Edge pe) {
-		// todo
-/*
-		DstNode dstNode = pe.dstNode;
-		IntArraySet[] dstEnv = dstNode.env;
-        ParamListOperand args = Invoke.getParamList(q);
-        int numArgs = args.length();
-		int numVars = methToNumVars.get(m2);
-		IntArraySet[] env = new IntArraySet[numVars];
-		int mIdx = 0;
-		for (int i = 0; i < numArgs; i++) {
-			RegisterOperand ao = args.get(i);
-			if (ao.getType().isReferenceType()) {
-				int aIdx = getIdx(ao);
-				IntArraySet pts = dstEnv[aIdx];
-				env[mIdx++] = pts;
+	public Set<Edge> getInitPathEdges(Quad q, jq_Method m2, Edge pe) {
+		// check if pe.dstExpr is return var
+		// if so then create init edge srcExpr==dstExpr==null
+		// else if pe.dstExpr is non-local var then create init edge similarly
+		// else return emptyset
+		Expr dstExpr = pe.dstExpr;
+		if (dstExpr instanceof LocalVar) {
+			LocalVar x = (LocalVar) dstExpr;
+            RegisterOperand vo = Invoke.getDest(q);
+            if (vo != null) {
+                Register v = vo.getRegister();
+				if (x.v == v) {
+					tmpEdgeSet.clear();
+					Edge pe2 = new Edge(null, null);
+					tmpEdgeSet.add(pe2);
+					return tmpEdgeSet;
+				}
 			}
+			// ignore local vars other than return vars;
+			// they will be handled by getInvkPathEdges
+			return emptyEdgeSet;
 		}
-		while (mIdx < numVars)
-			env[mIdx++] = nilPts;
-		SrcNode srcNode2 = new SrcNode(env, dstNode.heap);
-		DstNode dstNode2 = new DstNode(env, dstNode.heap, nilPts);
-		Edge pe2 = new PathEdge(srcNode2, dstNode2);
-		return pe2;
-*/
-		return null;
+		tmpEdgeSet.clear();
+		tmpEdgeSet.add(pe);
+		return tmpEdgeSet;
 	}
 
 	@Override
-	public Edge getMiscPathEdge(Quad q, Edge pe) {
-		// todo
-/*
-		DstNode dstNode = pe.dstNode;
-		qv.iDstNode = dstNode;
-		qv.oDstNode = dstNode;
+	public Set<Edge> getMiscPathEdges(Quad q, Edge pe) {
+		qv.iDstExpr = pe.dstExpr;
+		qv.oDstExprSet = null;
 		q.accept(qv);
-		DstNode dstNode2 = qv.oDstNode;
-		PathEdge pe2 = // (dstNode2 == dstNode) ? pe :
-			new PathEdge(pe.srcNode, dstNode2);
-		return pe2;
-*/
-		return null;
+		Set<Expr> oDstExprSet = qv.oDstExprSet;
+		tmpEdgeSet.clear();
+		if (oDstExprSet == null) {
+			tmpEdgeSet.add(pe);
+			return tmpEdgeSet;
+		}
+		currSlice.add(q);
+		Expr srcExpr = pe.srcExpr;
+		// todo: use currentMethod and srcExpr to get control-dep info
+		for (Expr e : oDstExprSet) {
+			Edge pe2 = new Edge(srcExpr, e);
+			tmpEdgeSet.add(pe2);
+		}
+		return tmpEdgeSet;
+	}
+
+	@Override
+	public Set<Edge> getInvkPathEdges(Quad q, Edge pe) {
+		Expr dstExpr = pe.dstExpr;
+		if (dstExpr instanceof LocalVar) {
+			LocalVar x = (LocalVar) dstExpr;
+            RegisterOperand vo = Invoke.getDest(q);
+            if (vo != null) {
+                Register v = vo.getRegister();
+				if (x.v != v) {
+					tmpEdgeSet.clear();
+					tmpEdgeSet.add(pe);
+					return tmpEdgeSet;
+				}
+			}
+		}
+		return emptyEdgeSet;
 	}
 
 	@Override
 	public Edge getSummaryEdge(jq_Method m, Edge pe) {
-		// todo
-/*
-		DstNode dstNode = pe.dstNode;
-		IntArraySet rPts = nilPts;
-		RetNode retNode = new RetNode(rPts, dstNode.heap, dstNode.esc);
-		SummaryEdge se = new SummaryEdge(pe.srcNode, retNode);
-		return se;
-*/
-		return null;
+		return pe;
+	}
+
+	private Expr getArgExpr(Quad q, Expr e) {
+		if (e instanceof LocalVar) {
+			Register v = ((LocalVar) e).v;
+			int i = v.getNumber();
+            ParamListOperand l = Invoke.getParamList(q);
+            int numArgs = l.length();
+			assert(i >= 0 && i < numArgs);
+			Register u = l.get(i).getRegister();
+			return new LocalVar(u); 
+		}
+		return e;
 	}
 
 	@Override
-	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
-		// todo
-/*
-		DstNode clrDstNode = clrPE.dstNode;
-		SrcNode tgtSrcNode = tgtSE.srcNode;
-		if (!clrDstNode.heap.equals(tgtSrcNode.heap))
+	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method tgtM, Edge tgtSE) {
+		Expr dstExpr = clrPE.dstExpr;
+		Expr srcExpr = tgtSE.srcExpr;
+		if (dstExpr instanceof LocalVar) {
+            LocalVar x = (LocalVar) dstExpr;
+            RegisterOperand vo = Invoke.getDest(q);
+            if (vo != null) {
+                Register v = vo.getRegister();
+                if (x.v == v && srcExpr == null) {
+					Expr e = getArgExpr(q, tgtSE.dstExpr);
+					return new Edge(clrPE.srcExpr, e);
+                }
+			}
 			return null;
-		IntArraySet[] clrDstEnv = clrDstNode.env;
-		IntArraySet[] tgtSrcEnv = tgtSrcNode.env;
-        ParamListOperand args = Invoke.getParamList(q);
-        int numArgs = args.length();
-        for (int i = 0, fIdx = 0; i < numArgs; i++) {
-            RegisterOperand ao = args.get(i);
-            if (ao.getType().isReferenceType()) {
-                int aIdx = getIdx(ao);
-                IntArraySet aPts = clrDstEnv[aIdx];
-                IntArraySet fPts = tgtSrcEnv[fIdx];
-                if (!CompareUtils.areEqual(aPts, fPts))
-                	return null;
-                fIdx++;
-			}
 		}
-		RetNode tgtRetNode = tgtSE.retNode;
-        int n = clrDstEnv.length;
-        IntArraySet[] clrDstEnv2 = new IntArraySet[n];
-        RegisterOperand ro = Invoke.getDest(q);
-        int rIdx = -1;
-        if (ro != null && ro.getType().isReferenceType()) {
-        	rIdx = getIdx(ro);
-        	clrDstEnv2[rIdx] = tgtRetNode.pts;
-        }
-		IntArraySet tgtRetEsc = tgtRetNode.esc;
-        for (int i = 0; i < n; i++) {
-        	if (i == rIdx)
-        		continue;
-        	IntArraySet pts = clrDstEnv[i];
-        	if (pts != nilPts && pts != escPts && pts.overlaps(tgtRetEsc)) {
-				tmpPts.clear();
-				int k = pts.size();
-				for (int j = 0; j < k; j++) {
-					int x = pts.get(j);
-					if (x != ESC_VAL && !tgtRetEsc.contains(x))
-						tmpPts.addForcibly(x);
-				}
-				if (tmpPts.isEmpty())
-					pts = escPts;
-				else {
-					tmpPts.addForcibly(ESC_VAL);
-					pts = new IntArraySet(tmpPts);
-				}
-			}
-        	clrDstEnv2[i] = pts;
-        }
-        IntArraySet clrDstEsc = clrDstNode.esc;
-        IntArraySet clrDstEsc2;
-		if (tgtRetEsc == nilPts)
- 			clrDstEsc2 = clrDstEsc;
-		else {
-			clrDstEsc2 = new IntArraySet(clrDstEsc);
-        	clrDstEsc2.addAll(tgtRetEsc);
+		if (dstExpr.equals(srcExpr)) {
+			Expr e = getArgExpr(q, tgtSE.dstExpr);
+			return new Edge(clrPE.srcExpr, e);
 		}
-        DstNode clrDstNode2 = new DstNode(clrDstEnv2,
-        	tgtRetNode.heap, clrDstEsc2);
-        PathEdge pe2 = new PathEdge(clrPE.srcNode, clrDstNode2);
-		return pe2;
-*/
 		return null;
 	}
 	
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
-		// DstNode iDstNode;
-		// DstNode oDstNode;
+		// iDstExpr can be read by visit* methods (if it is null
+		// then the visited quad is guaranteed to be a return stmt).
+		// oDstExprSet is set to null and may be written by visit*
+		// methods; if it is null upon exit then it will be assumed
+		// that the visited quad is not relevant to the slice, and
+		// the outgoing pe will be the same as the incoming pe
+		Expr iDstExpr;
+		Set<Expr> oDstExprSet;
 		@Override
 		public void visitReturn(Quad q) {
-			// todo
 		}
 		@Override
 		public void visitCheckCast(Quad q) {
@@ -282,86 +302,50 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitMove(Quad q) {
-			// todo
-/*
-	        RegisterOperand lo = Move.getDest(q);
-			jq_Type t = lo.getType();
-	        if (!t.isReferenceType())
-	        	return;
-	        IntArraySet[] iEnv = iDstNode.env;
-			int lIdx = getIdx(lo);
-			IntArraySet ilPts = iEnv[lIdx];
-			Operand rx = Move.getSrc(q);
-			IntArraySet olPts;
-			if (rx instanceof RegisterOperand) {
-				RegisterOperand ro = (RegisterOperand) rx;
-				int rIdx = getIdx(ro);
-				olPts = iEnv[rIdx];
-			} else
-				olPts = nilPts;
-			if (olPts == ilPts)
-				return;
-			IntArraySet[] oEnv = copy(iEnv);
-			oEnv[lIdx] = olPts;
-			Set<IntTrio> oHeap = iDstNode.heap;
-			IntArraySet oEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, oHeap, oEsc);
-*/
+			assert (iDstExpr != null);
+			if (iDstExpr instanceof LocalVar) {
+				LocalVar x = (LocalVar) iDstExpr;
+				Register l = Move.getDest(q).getRegister();
+				if (x.v == l) {
+					tmpExprSet.clear();
+					Operand rx = Move.getSrc(q);
+					if (rx instanceof RegisterOperand) {
+						Register r = ((RegisterOperand) rx).getRegister();
+						tmpExprSet.add(new LocalVar(r));
+					}
+					oDstExprSet = tmpExprSet;
+				}
+			}
 		}
 		@Override
 		public void visitPhi(Quad q) {
-			// todo
-/*
-			RegisterOperand lo = Phi.getDest(q);
-			jq_Type t = lo.getType();
-			if (t == null || !t.isReferenceType())
-				return;
-	        IntArraySet[] iEnv = iDstNode.env;
-			ParamListOperand ros = Phi.getSrcs(q);
-			int n = ros.length();
-			tmpPts.clear();
-			IntArraySet pPts = tmpPts;
-			for (int i = 0; i < n; i++) {
-				RegisterOperand ro = ros.get(i);
-				if (ro != null) {
-					int rIdx = getIdx(ro);
-					IntArraySet rPts = iEnv[rIdx];
-					pPts.addAll(rPts);
+			assert (iDstExpr != null);
+		 	if (iDstExpr instanceof LocalVar) {
+				LocalVar x = (LocalVar) iDstExpr;
+				Register l = Phi.getDest(q).getRegister();
+				if (x.v == l) {
+					tmpExprSet.clear();
+					ParamListOperand ros = Phi.getSrcs(q);
+					int n = ros.length();
+					for (int i = 0; i < n; i++) {
+						RegisterOperand ro = ros.get(i);
+						if (ro != null) {
+							Register r = ro.getRegister();
+							LocalVar y = new LocalVar(r);
+							tmpExprSet.add(y);
+						}
+					}
+					oDstExprSet = tmpExprSet;
 				}
 			}
-			int lIdx = getIdx(lo);
-			IntArraySet ilPts = iEnv[lIdx];
-			IntArraySet olPts;
-			if (pPts.isEmpty()) {
-				if (ilPts == nilPts)
-					return;
-				olPts = nilPts;
-			} else {
-				if (pPts.equals(ilPts))
-					return;
-				if (pPts.size() == 1 && pPts.contains(ESC_VAL))
-					olPts = escPts;
-				else
-					olPts = new IntArraySet(pPts);
-			}
-			IntArraySet[] oEnv = copy(iEnv);
-			oEnv[lIdx] = olPts;
-			Set<IntTrio> oHeap = iDstNode.heap;
-			IntArraySet oEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, oHeap, oEsc);
-*/
 		}
 		@Override
 		public void visitALoad(Quad q) {
-			// todo
+			assert (iDstExpr != null);
 /*
-			Operator op = q.getOperator();
-			if (!((ALoad) op).getType().isReferenceType())
-				return;
-			IntArraySet[] iEnv = iDstNode.env;
-			Set<IntTrio> iHeap = iDstNode.heap;
 			RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
-			int bIdx = getIdx(bo);
+			Register b = bo.getRegister();
+			// CIObj bObj = cipa.pointsTo(b);
 			IntArraySet bPts = iEnv[bIdx];
 			RegisterOperand lo = ALoad.getDest(q);
 			int lIdx = getIdx(lo);
@@ -377,10 +361,9 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitGetfield(Quad q) {
+			assert (iDstExpr != null);
 /*
 			jq_Field f = Getfield.getField(q).getField();
-			if (!f.getType().isReferenceType())
-				return;
 			IntArraySet[] iEnv = iDstNode.env;
 			Set<IntTrio> iHeap = iDstNode.heap;
 			RegisterOperand lo = Getfield.getDest(q);
@@ -406,13 +389,10 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitAStore(Quad q) {
+			assert (iDstExpr != null);
 /*
 			Operator op = q.getOperator();
-			if (!((AStore) op).getType().isReferenceType())
-				return;
 			Operand rx = AStore.getValue(q);
-			if (!(rx instanceof RegisterOperand))
-				return;
 			RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 			RegisterOperand ro = (RegisterOperand) rx;
 			IntArraySet[] iEnv = iDstNode.env;
@@ -429,16 +409,11 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitPutfield(Quad q) {
+			assert (iDstExpr != null);
 /*
 			jq_Field f = Putfield.getField(q).getField();
-			if (!f.getType().isReferenceType())
-				return;
 			Operand rx = Putfield.getSrc(q);
-			if (!(rx instanceof RegisterOperand))
-				return;
 			Operand bx = Putfield.getBase(q);
-			if (!(bx instanceof RegisterOperand))
-				return;
 			IntArraySet[] iEnv = iDstNode.env;
 			RegisterOperand ro = (RegisterOperand) rx;
 			int rIdx = getIdx(ro);
@@ -517,13 +492,10 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitPutstatic(Quad q) {
+			assert (iDstExpr != null);
 /*
 			jq_Field f = Putstatic.getField(q).getField();
-	        if (!f.getType().isReferenceType())
-	        	return;
 	        Operand rx = Putstatic.getSrc(q);
-	        if (!(rx instanceof RegisterOperand))
-	        	return;
 			IntArraySet[] iEnv = iDstNode.env;
             RegisterOperand ro = (RegisterOperand) rx;
             int rIdx = getIdx(ro);
@@ -542,10 +514,9 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitGetstatic(Quad q) {
+			assert (iDstExpr != null);
 /*
 			jq_Field f = Getstatic.getField(q).getField();
-	        if (!f.getType().isReferenceType())
-	        	return;
 			IntArraySet[] iEnv = iDstNode.env;
 	        RegisterOperand lo = Getstatic.getDest(q);
 	        int lIdx = getIdx(lo);
@@ -559,46 +530,22 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitNew(Quad q) {
-/*
 			RegisterOperand vo = New.getDest(q);
 			processAlloc(q, vo);
-*/
 		}
 		@Override
 		public void visitNewArray(Quad q) {
-/*
 			RegisterOperand vo = NewArray.getDest(q);
 			processAlloc(q, vo);
-*/
 		}
 		private void processAlloc(Quad q, RegisterOperand vo) {
-/*
-			IntArraySet[] iEnv = iDstNode.env;
-			int vIdx = getIdx(vo);
-			IntArraySet vPts = iEnv[vIdx];
-			IntArraySet iEsc = iDstNode.esc;
-			if (!currAllocs.contains(q)) {
-				if (vPts == escPts)
-					return;
-				vPts = escPts;
-			} else {
-				int hIdx = domH.indexOf(q);
-				if (iEsc.contains(hIdx)) {
-					if (vPts == escPts)
-						return;
-					vPts = escPts;
-				} else {
-					if (vPts.size() == 1 && vPts.contains(hIdx))
-						return;
-					vPts = new IntArraySet(1);
-					vPts.add(hIdx);
-				}
+			assert (iDstExpr != null);
+		 	if (iDstExpr instanceof LocalVar) {
+				LocalVar x = (LocalVar) iDstExpr;
+				Register v = vo.getRegister();
+				if (x.v == v)
+					oDstExprSet = emptyExprSet;
 			}
-			IntArraySet[] oEnv = copy(iEnv);
-			oEnv[vIdx] = vPts;
-			Set<IntTrio> oHeap = iDstNode.heap;
-			oDstNode = new DstNode(oEnv, oHeap, iEsc);
-*/
 		}
 	}
 }
