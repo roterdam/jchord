@@ -78,6 +78,7 @@ import chord.util.Timer;
 	)
 public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 	private final Set<Edge> emptyEdgeSet = Collections.emptySet();
+	private final Set<Expr> emptyExprSet = Collections.emptySet();
 	private final Set<Edge> tmpEdgeSet = new ArraySet<Edge>();
 	private final Set<Expr> tmpExprSet = new ArraySet<Expr>();
 	private DomM domM;
@@ -527,6 +528,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			Set<IntTrio> iHeap = iDstNode.heap;
 			IntArraySet iEsc = iDstNode.esc;
 			oDstNode = new DstNode(oEnv, iHeap, iEsc);
+*/
 		}
 		@Override
 		public void visitNew(Quad q) {
