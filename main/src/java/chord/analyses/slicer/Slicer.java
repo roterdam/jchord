@@ -41,12 +41,21 @@ import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
+import joeq.Compiler.Quad.Operator.Unary;
+import joeq.Compiler.Quad.Operator.Binary;
+import joeq.Compiler.Quad.Operator.ALength;
+import joeq.Compiler.Quad.Operator.InstanceOf;
+import joeq.Compiler.Quad.Operator.IntIfCmp;
+import joeq.Compiler.Quad.Operator.LookupSwitch;
+import joeq.Compiler.Quad.Operator.TableSwitch;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.util.FileUtils;
 import chord.project.Messages;
 import chord.program.Location;
 import chord.program.MethodSign;
+import chord.analyses.alias.CIObj;
+import chord.analyses.alias.CIAliasAnalysis;
 import chord.analyses.alias.ICICG;
 import chord.analyses.alias.ThrOblAbbrCICGAnalysis;
 import chord.util.tuple.object.Pair;
@@ -57,10 +66,7 @@ import chord.project.analyses.rhs.BackwardRHSAnalysis;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Properties;
 import chord.util.ChordRuntimeException;
-import chord.doms.DomF;
-import chord.doms.DomI;
-import chord.doms.DomM;
-import chord.doms.DomV;
+import chord.doms.DomB;
 import chord.project.Chord;
 import chord.project.Project;
 import chord.util.ArraySet;
@@ -81,27 +87,40 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 	private final Set<Expr> emptyExprSet = Collections.emptySet();
 	private final Set<Edge> tmpEdgeSet = new ArraySet<Edge>();
 	private final Set<Expr> tmpExprSet = new ArraySet<Expr>();
-	private DomM domM;
-	private DomI domI;
-	private DomV domV;
-	private DomF domF;
+	private final Pair<Expr, jq_Method> tmpPair = new Pair<Expr, jq_Method>(null, null);
+	private DomB domB;
     private ICICG cicg;
+	private CIAliasAnalysis cipa;
     private MyQuadVisitor qv = new MyQuadVisitor();
 	private Set<Quad> currSlice = new HashSet<Quad>();
 	private Pair<Location, Expr> currSeed;
+    private Map<BasicBlock, Set<Quad>> fullCdepsMap =
+		new HashMap<BasicBlock, Set<Quad>>();
+    private Map<Pair<Expr, jq_Method>, Set<Quad>> todoCdepsMap =
+		new HashMap<Pair<Expr, jq_Method>, Set<Quad>>();
 
 	public void run() {
-        domM = (DomM) Project.getTrgt("M");
-        Project.runTask(domM);
-		domV = (DomV) Project.getTrgt("V");
-		Project.runTask(domV);
-		domF = (DomF) Project.getTrgt("F");
-		Project.runTask(domF);
-		domI = (DomI) Project.getTrgt("I");
-		Project.runTask(domI);
-		domM = (DomM) Project.getTrgt("M");
-		Project.runTask(domM);
+		domB = (DomB) Project.getTrgt("B");
+		Project.runTask(domB);
 		Project.runTask("P");
+
+		Project.runTask("cdep-dlog");
+		ProgramRel rel = (ProgramRel) Project.getTrgt("cdepBB");
+        rel.load();
+        IntPairIterable tuples = rel.getAry2IntTuples();
+        for (IntPair tuple : tuples) {
+            int b1Idx = tuple.idx0;
+            int b2Idx = tuple.idx1;
+            BasicBlock b1 = domB.get(b1Idx);
+            BasicBlock b2 = domB.get(b2Idx);
+			Quad q = b2.getLastQuad();
+            Set<Quad> qSet = fullCdepsMap.get(b1);
+			if (qSet == null) {
+				qSet = new ArraySet<Quad>(2);
+				fullCdepsMap.put(b1, qSet);
+			}
+			qSet.add(q);
+        }
 
 		List<String> fStrList = FileUtils.readFileToList("seeds.txt");
 		Set<Pair<Location, Expr>> seeds =
@@ -127,17 +146,23 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			seeds.add(new Pair<Location, Expr>(mainExitLoc, e));
 		}
 
+		cipa = (CIAliasAnalysis) Project.getTrgt("cipa-java");
+		Project.runTask(cipa);
+
+		init();
+
         for (Pair<Location, Expr> seed : seeds) {
 			currSlice.clear();
 			currSeed = seed;
-			System.out.println("*********** Seed: " + seed);
 			Timer timer = new Timer("slicer-timer");
 			timer.init();
+			System.out.println("***** SEED: " + seed);
 			runPass();
+			System.out.println("***** SLICE:");
 			for (Quad p : currSlice) {
-				jq_Method m = Program.v().getMethod(p);
-				System.out.println("\t" + m + " " + p);
+				System.out.println("\t" + Program.v().toVerboseStr(p));
 			}
+			
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
@@ -184,25 +209,26 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		// else if pe.dstExpr is non-local var then create init edge similarly
 		// else return emptyset
 		Expr dstExpr = pe.dstExpr;
+		Set<Edge> result;
 		if (dstExpr instanceof LocalVar) {
-			LocalVar x = (LocalVar) dstExpr;
+			LocalVar e = (LocalVar) dstExpr;
             RegisterOperand vo = Invoke.getDest(q);
-            if (vo != null) {
-                Register v = vo.getRegister();
-				if (x.v == v) {
-					tmpEdgeSet.clear();
-					Edge pe2 = new Edge(null, null);
-					tmpEdgeSet.add(pe2);
-					return tmpEdgeSet;
-				}
+            if (vo != null && vo.getRegister() == e.v) {
+				tmpEdgeSet.clear();
+				Edge pe2 = new Edge(null, null);
+				tmpEdgeSet.add(pe2);
+				result = tmpEdgeSet;
+			} else {
+				// ignore local vars other than return vars;
+				// they will be handled by getInvkPathEdges
+				result = emptyEdgeSet;
 			}
-			// ignore local vars other than return vars;
-			// they will be handled by getInvkPathEdges
-			return emptyEdgeSet;
+		} else {
+			tmpEdgeSet.clear();
+			tmpEdgeSet.add(pe);
+			result = tmpEdgeSet;
 		}
-		tmpEdgeSet.clear();
-		tmpEdgeSet.add(pe);
-		return tmpEdgeSet;
+		return result;
 	}
 
 	@Override
@@ -214,14 +240,28 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		tmpEdgeSet.clear();
 		if (oDstExprSet == null) {
 			tmpEdgeSet.add(pe);
-			return tmpEdgeSet;
-		}
-		currSlice.add(q);
-		Expr srcExpr = pe.srcExpr;
-		// todo: use currentMethod and srcExpr to get control-dep info
-		for (Expr e : oDstExprSet) {
-			Edge pe2 = new Edge(srcExpr, e);
-			tmpEdgeSet.add(pe2);
+		} else {
+			if (DEBUG) System.out.println("Adding to slice: " + q);
+			currSlice.add(q);
+			Expr srcExpr = pe.srcExpr;
+			Set<Quad> fullCdeps = fullCdepsMap.get(currentBB);
+			if (fullCdeps != null) {
+				Pair<Expr, jq_Method> pair =
+					new Pair<Expr, jq_Method>(srcExpr, currentMethod);
+				Set<Quad> todoCdeps = todoCdepsMap.get(pair);
+				if (todoCdeps == null) {
+					todoCdeps = new ArraySet<Quad>(2);
+					todoCdepsMap.put(pair, todoCdeps);
+				}
+				for (Quad q2 : fullCdeps) {
+					// System.out.println("Adding cdep " + q2);
+					todoCdeps.add(q2);
+				}
+			}
+			for (Expr e : oDstExprSet) {
+				Edge pe2 = new Edge(srcExpr, e);
+				tmpEdgeSet.add(pe2);
+			}
 		}
 		return tmpEdgeSet;
 	}
@@ -230,15 +270,12 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 	public Set<Edge> getInvkPathEdges(Quad q, Edge pe) {
 		Expr dstExpr = pe.dstExpr;
 		if (dstExpr instanceof LocalVar) {
-			LocalVar x = (LocalVar) dstExpr;
+			LocalVar e = (LocalVar) dstExpr;
             RegisterOperand vo = Invoke.getDest(q);
-            if (vo != null) {
-                Register v = vo.getRegister();
-				if (x.v != v) {
-					tmpEdgeSet.clear();
-					tmpEdgeSet.add(pe);
-					return tmpEdgeSet;
-				}
+            if (vo == null || vo.getRegister() != e.v) {
+				tmpEdgeSet.clear();
+				tmpEdgeSet.add(pe);
+				return tmpEdgeSet;
 			}
 		}
 		return emptyEdgeSet;
@@ -249,38 +286,40 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		return pe;
 	}
 
-	private Expr getArgExpr(Quad q, Expr e) {
-		if (e instanceof LocalVar) {
-			Register v = ((LocalVar) e).v;
-			int i = v.getNumber();
-            ParamListOperand l = Invoke.getParamList(q);
-            int numArgs = l.length();
-			assert(i >= 0 && i < numArgs);
-			Register u = l.get(i).getRegister();
-			return new LocalVar(u); 
-		}
-		return e;
-	}
-
 	@Override
 	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method tgtM, Edge tgtSE) {
 		Expr dstExpr = clrPE.dstExpr;
 		Expr srcExpr = tgtSE.srcExpr;
+		boolean matched = false;
+		// there are two cases in which a match may occur:
+		// case 1: clrPE ends in a local var which is the return var
+		// and tgtSE starts with null (representing return var)
+		// case 2: clrPE ends in an expr other than a local var
+		// and tgtSE starts in the same expr
 		if (dstExpr instanceof LocalVar) {
-            LocalVar x = (LocalVar) dstExpr;
+            LocalVar e = (LocalVar) dstExpr;
             RegisterOperand vo = Invoke.getDest(q);
             if (vo != null) {
                 Register v = vo.getRegister();
-                if (x.v == v && srcExpr == null) {
-					Expr e = getArgExpr(q, tgtSE.dstExpr);
-					return new Edge(clrPE.srcExpr, e);
-                }
+                if (e.v == v && srcExpr == null)
+					matched = true;
 			}
-			return null;
-		}
-		if (dstExpr.equals(srcExpr)) {
-			Expr e = getArgExpr(q, tgtSE.dstExpr);
-			return new Edge(clrPE.srcExpr, e);
+		} else if (dstExpr.equals(srcExpr))
+			matched = true;
+		if (matched) {
+			Expr dstExpr2 = tgtSE.dstExpr;
+			Expr dstExpr3;
+			if (dstExpr2 instanceof LocalVar) {
+				Register v = ((LocalVar) dstExpr2).v;
+				int i = v.getNumber();
+				ParamListOperand l = Invoke.getParamList(q);
+				int numArgs = l.length();
+				assert(i >= 0 && i < numArgs);
+				Register u = l.get(i).getRegister();
+				dstExpr3 = new LocalVar(u); 
+			} else
+				dstExpr3 = dstExpr2;
+			return new Edge(clrPE.srcExpr, dstExpr3);
 		}
 		return null;
 	}
@@ -296,6 +335,23 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		Set<Expr> oDstExprSet;
 		@Override
 		public void visitReturn(Quad q) {
+			if (iDstExpr == null) {
+				Operand rx = Return.getSrc(q);
+				assert (rx != null);
+				if (rx instanceof RegisterOperand) {
+					tmpExprSet.clear();
+					RegisterOperand ro = (RegisterOperand) rx;
+					Register r = ro.getRegister();
+					tmpExprSet.add(new LocalVar(r));
+					oDstExprSet = tmpExprSet;
+				} else
+					oDstExprSet = emptyExprSet;
+			} else {
+				// cannot be a local var
+				assert (iDstExpr instanceof InstField ||
+						iDstExpr instanceof ArrayElem ||
+						iDstExpr instanceof StatField);
+			}
 		}
 		@Override
 		public void visitCheckCast(Quad q) {
@@ -305,16 +361,17 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		public void visitMove(Quad q) {
 			assert (iDstExpr != null);
 			if (iDstExpr instanceof LocalVar) {
-				LocalVar x = (LocalVar) iDstExpr;
+				LocalVar e = (LocalVar) iDstExpr;
 				Register l = Move.getDest(q).getRegister();
-				if (x.v == l) {
-					tmpExprSet.clear();
+				if (e.v == l) {
 					Operand rx = Move.getSrc(q);
 					if (rx instanceof RegisterOperand) {
+						tmpExprSet.clear();
 						Register r = ((RegisterOperand) rx).getRegister();
 						tmpExprSet.add(new LocalVar(r));
-					}
-					oDstExprSet = tmpExprSet;
+						oDstExprSet = tmpExprSet;
+					} else
+						oDstExprSet = emptyExprSet;
 				}
 			}
 		}
@@ -322,9 +379,9 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		public void visitPhi(Quad q) {
 			assert (iDstExpr != null);
 		 	if (iDstExpr instanceof LocalVar) {
-				LocalVar x = (LocalVar) iDstExpr;
+				LocalVar e = (LocalVar) iDstExpr;
 				Register l = Phi.getDest(q).getRegister();
-				if (x.v == l) {
+				if (e.v == l) {
 					tmpExprSet.clear();
 					ParamListOperand ros = Phi.getSrcs(q);
 					int n = ros.length();
@@ -332,8 +389,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 						RegisterOperand ro = ros.get(i);
 						if (ro != null) {
 							Register r = ro.getRegister();
-							LocalVar y = new LocalVar(r);
-							tmpExprSet.add(y);
+							tmpExprSet.add(new LocalVar(r));
 						}
 					}
 					oDstExprSet = tmpExprSet;
@@ -343,192 +399,156 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		@Override
 		public void visitALoad(Quad q) {
 			assert (iDstExpr != null);
-/*
-			RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
-			Register b = bo.getRegister();
-			// CIObj bObj = cipa.pointsTo(b);
-			IntArraySet bPts = iEnv[bIdx];
-			RegisterOperand lo = ALoad.getDest(q);
-			int lIdx = getIdx(lo);
-			IntArraySet ilPts = iEnv[lIdx];
-			IntArraySet olPts = getPtsFromHeap(bPts, 0, iHeap, ilPts);
-			if (olPts == ilPts)
-				return;
-			IntArraySet[] oEnv = copy(iEnv);
-			oEnv[lIdx] = olPts;
-			IntArraySet iEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, iHeap, iEsc);
-*/
+		 	if (iDstExpr instanceof LocalVar) {
+				LocalVar e = (LocalVar) iDstExpr;
+				Register l = ALoad.getDest(q).getRegister();
+				if (e.v == l) {
+					tmpExprSet.clear();
+					// this stmt reads b, i, and b[i] in l = b[i], so add
+					// all three of them
+					RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
+					Register b = bo.getRegister();
+					tmpExprSet.add(new LocalVar(b));
+					Operand ix = ALoad.getIndex(q);
+					if (ix instanceof RegisterOperand) {
+						RegisterOperand io = (RegisterOperand) ix;
+						Register i = io.getRegister();
+						tmpExprSet.add(new LocalVar(i));
+					}
+					CIObj bObj = cipa.pointsTo(b);
+					for (Quad q2 : bObj.pts)
+						tmpExprSet.add(new ArrayElem(q2));
+					oDstExprSet = tmpExprSet;
+				}
+			}
 		}
 		@Override
 		public void visitGetfield(Quad q) {
 			assert (iDstExpr != null);
-/*
-			jq_Field f = Getfield.getField(q).getField();
-			IntArraySet[] iEnv = iDstNode.env;
-			Set<IntTrio> iHeap = iDstNode.heap;
-			RegisterOperand lo = Getfield.getDest(q);
-			int lIdx = getIdx(lo);
-			IntArraySet ilPts = iEnv[lIdx];
-			Operand bx = Getfield.getBase(q);
-			IntArraySet olPts;
-			if (bx instanceof RegisterOperand) {
-				RegisterOperand bo = (RegisterOperand) bx;
-				int bIdx = getIdx(bo);
-				IntArraySet bPts = iEnv[bIdx];
-				int fIdx = domF.indexOf(f);
-				olPts = getPtsFromHeap(bPts, fIdx, iHeap, ilPts);
-			} else
-				olPts = nilPts;
-			if (olPts == ilPts)
-				return;
-			IntArraySet[] oEnv = copy(iEnv);
-			oEnv[lIdx] = olPts;
-			IntArraySet iEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, iHeap, iEsc);
-*/
+		 	if (iDstExpr instanceof LocalVar) {
+				LocalVar e = (LocalVar) iDstExpr;
+				Register l = Getfield.getDest(q).getRegister();
+				if (e.v == l) {
+					tmpExprSet.clear();
+					// this stmt reads b and b.f in l = b.f, so add
+					// both of them
+					Operand bx = Getfield.getBase(q);
+					if (bx instanceof RegisterOperand) {
+						RegisterOperand bo = (RegisterOperand) bx;
+						Register b = bo.getRegister();
+						tmpExprSet.add(new LocalVar(b));
+						CIObj bObj = cipa.pointsTo(b);
+						jq_Field f = Getfield.getField(q).getField();
+						for (Quad q2 : bObj.pts)
+							tmpExprSet.add(new InstField(q2, f));
+					}
+					oDstExprSet = tmpExprSet;
+				}
+			}
 		}
 		@Override
 		public void visitAStore(Quad q) {
 			assert (iDstExpr != null);
-/*
-			Operator op = q.getOperator();
-			Operand rx = AStore.getValue(q);
-			RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
-			RegisterOperand ro = (RegisterOperand) rx;
-			IntArraySet[] iEnv = iDstNode.env;
-			int rIdx = getIdx(ro);
-			IntArraySet rPts = iEnv[rIdx];
-			if (rPts == nilPts)
-				return;
-			int bIdx = getIdx(bo);
-			IntArraySet bPts = iEnv[bIdx];
-			if (bPts == nilPts)
-				return;
-			processWrite(bPts, rPts, null);
-*/
+			if (iDstExpr instanceof ArrayElem) {
+				Quad q2 = ((ArrayElem) iDstExpr).q;
+				RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
+				Register b = bo.getRegister();
+				CIObj bObj = cipa.pointsTo(b);
+				for (Quad q3 : bObj.pts) {
+					if (q3 == q2) {
+						tmpExprSet.clear();
+						// propagate incoming expr as well since this is a
+						// may-alias check, not a must-alias check
+						tmpExprSet.add(iDstExpr);
+						// this stmt reads b, r, and i in b[i] = r, so add
+						// all three of them as well
+						tmpExprSet.add(new LocalVar(b));
+						Operand rx = AStore.getValue(q);
+						if (rx instanceof RegisterOperand) {
+							RegisterOperand ro = (RegisterOperand) rx;
+							Register r = ro.getRegister();
+							tmpExprSet.add(new LocalVar(r));
+						}
+						Operand ix = AStore.getIndex(q);
+						if (ix instanceof RegisterOperand) {
+							RegisterOperand io = (RegisterOperand) ix;
+							Register i = io.getRegister();
+							tmpExprSet.add(new LocalVar(i));
+						}
+						oDstExprSet = tmpExprSet;
+						break;
+					}
+				}
+			}
 		}
 		@Override
 		public void visitPutfield(Quad q) {
 			assert (iDstExpr != null);
-/*
-			jq_Field f = Putfield.getField(q).getField();
-			Operand rx = Putfield.getSrc(q);
-			Operand bx = Putfield.getBase(q);
-			IntArraySet[] iEnv = iDstNode.env;
-			RegisterOperand ro = (RegisterOperand) rx;
-			int rIdx = getIdx(ro);
-			IntArraySet rPts = iEnv[rIdx];
-			if (rPts == nilPts)
-				return;
-			RegisterOperand bo = (RegisterOperand) bx;
-			int bIdx = getIdx(bo);
-			IntArraySet bPts = iEnv[bIdx];
-			if (bPts == nilPts)
-				return;
-			processWrite(bPts, rPts, f);
-*/
-		}
-		private void processWrite(IntArraySet bPts, IntArraySet rPts, jq_Field f) {
-/*
-			IntArraySet oEsc;
-			IntArraySet[] oEnv;
-			Set<IntTrio> oHeap;
-			if (bPts == escPts) {
-				if (rPts == escPts)
-					return;
-				IntArraySet iEsc = iDstNode.esc;
-				Set<IntTrio> iHeap = iDstNode.heap;
-				oEsc = propagateEsc(rPts, iHeap, iEsc);
-				if (oEsc == iEsc)
-					return;
-				IntArraySet[] iEnv = iDstNode.env;
-				oEnv = updateEnv(iEnv, oEsc);
-				oHeap = updateHeap(iHeap, oEsc);
-			} else {
-				int nb = bPts.size();
-				int nr = rPts.size();
-				Set<IntTrio> iHeap = iDstNode.heap;
-				oHeap = iHeap;
-				int fIdx = (f == null) ? 0 : domF.indexOf(f); 
-				boolean foundEsc = false;
-				for (int i = 0; i < nb; i++) {
-					int hIdx = bPts.get(i);
-					if (hIdx == ESC_VAL) {
-						foundEsc = true;
-						continue;
-					}
-					for (int j = 0; j < nr; j++) {
-						int hIdx2 = rPts.get(j);
-						IntTrio trio = new IntTrio(hIdx, fIdx, hIdx2);
-						if (oHeap != iHeap)
-							oHeap.add(trio);
-						else if (!iHeap.contains(trio)) {
-							oHeap = new ArraySet<IntTrio>(iHeap);
-							((ArraySet) oHeap).addForcibly(trio);
+			if (iDstExpr instanceof InstField) {
+				InstField e = (InstField) iDstExpr;
+				jq_Field f = Putfield.getField(q).getField();
+				if (e.f == f) {
+					Operand bx = Putfield.getBase(q);
+					if (bx instanceof RegisterOperand) {
+						RegisterOperand bo = (RegisterOperand) bx;
+						Register b = bo.getRegister();
+						CIObj bObj = cipa.pointsTo(b);
+						Quad q2 = e.q;
+						for (Quad q3 : bObj.pts) {
+							if (q3 == q2) {
+								tmpExprSet.clear();
+								// propagate incoming expr as well since this is a
+								// may-alias check, not a must-alias check
+								tmpExprSet.add(iDstExpr);
+								// this stmt reads b and r in b.f = r, so add
+								// both of them
+								tmpExprSet.add(new LocalVar(b));
+								Operand rx = Putfield.getSrc(q);
+								if (rx instanceof RegisterOperand) {
+									RegisterOperand ro = (RegisterOperand) rx;
+									Register r = ro.getRegister();
+									tmpExprSet.add(new LocalVar(r));
+								}
+								oDstExprSet = tmpExprSet;
+								break;
+							}
 						}
 					}
 				}
-				if (rPts == escPts || !foundEsc) {
-					if (oHeap == iHeap)
-						return;
-					oEsc = iDstNode.esc;
-					oEnv = iDstNode.env;
-				} else {
-					IntArraySet iEsc = iDstNode.esc;
-					oEsc = propagateEsc(rPts, oHeap, iEsc);
-					if (oEsc == iEsc) {
-						if (oHeap == iHeap)
-							return;
-						oEnv = iDstNode.env;
-					} else {
-						IntArraySet[] iEnv = iDstNode.env;
-						oEnv = updateEnv(iEnv, oEsc);
-						oHeap = updateHeap(oHeap, oEsc);
-					}
-				}
 			}
-			oDstNode = new DstNode(oEnv, oHeap, oEsc);
-*/
 		}
 		@Override
 		public void visitPutstatic(Quad q) {
 			assert (iDstExpr != null);
-/*
-			jq_Field f = Putstatic.getField(q).getField();
-	        Operand rx = Putstatic.getSrc(q);
-			IntArraySet[] iEnv = iDstNode.env;
-            RegisterOperand ro = (RegisterOperand) rx;
-            int rIdx = getIdx(ro);
-            IntArraySet rPts = iEnv[rIdx];
-            if (rPts == escPts || rPts == nilPts)
-                return;
-			Set<IntTrio> iHeap = iDstNode.heap;
-			IntArraySet iEsc = iDstNode.esc;
-			IntArraySet oEsc = propagateEsc(rPts, iHeap, iEsc);
-			if (oEsc == iEsc)
-				return;
-			IntArraySet[] oEnv = updateEnv(iEnv, oEsc);
-			Set<IntTrio> oHeap = updateHeap(iHeap, oEsc);
-			oDstNode = new DstNode(oEnv, oHeap, oEsc); 
-*/
+			if (iDstExpr instanceof StatField) {
+				StatField e = (StatField) iDstExpr;
+				jq_Field f = Putstatic.getField(q).getField();
+				if (f == e.f) {
+					Operand rx = Putstatic.getSrc(q);
+					if (rx instanceof RegisterOperand) {
+						tmpExprSet.clear();
+						RegisterOperand ro = (RegisterOperand) rx;
+						Register r = ro.getRegister();
+						tmpExprSet.add(new LocalVar(r));
+						oDstExprSet = tmpExprSet;
+					} else
+						oDstExprSet = emptyExprSet;
+				}
+			}
 		}
 		@Override
 		public void visitGetstatic(Quad q) {
 			assert (iDstExpr != null);
-/*
-			jq_Field f = Getstatic.getField(q).getField();
-			IntArraySet[] iEnv = iDstNode.env;
-	        RegisterOperand lo = Getstatic.getDest(q);
-	        int lIdx = getIdx(lo);
-			if (iEnv[lIdx] == escPts)
-				return;
-	        IntArraySet[] oEnv = copy(iEnv);
-	       	oEnv[lIdx] = escPts;
-			Set<IntTrio> iHeap = iDstNode.heap;
-			IntArraySet iEsc = iDstNode.esc;
-			oDstNode = new DstNode(oEnv, iHeap, iEsc);
-*/
+			if (iDstExpr instanceof LocalVar) {
+				LocalVar e = (LocalVar) iDstExpr;
+				Register l = Getstatic.getDest(q).getRegister();
+				if (e.v == l) {
+					tmpExprSet.clear();
+					jq_Field f = Getstatic.getField(q).getField();
+					tmpExprSet.add(new StatField(f));
+					oDstExprSet = tmpExprSet;
+				}
+			}
 		}
 		@Override
 		public void visitNew(Quad q) {
@@ -543,12 +563,143 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		private void processAlloc(Quad q, RegisterOperand vo) {
 			assert (iDstExpr != null);
 		 	if (iDstExpr instanceof LocalVar) {
-				LocalVar x = (LocalVar) iDstExpr;
+				LocalVar e = (LocalVar) iDstExpr;
 				Register v = vo.getRegister();
-				if (x.v == v)
+				if (e.v == v)
 					oDstExprSet = emptyExprSet;
 			}
 		}
+		@Override
+		public void visitUnary(Quad q) {
+			assert (iDstExpr != null);
+			if (iDstExpr instanceof LocalVar) {
+				LocalVar e = (LocalVar) iDstExpr;
+				Register l = Unary.getDest(q).getRegister();
+				if (e.v == l) {
+					Operand rx = Unary.getSrc(q);
+					if (rx instanceof RegisterOperand) {
+						tmpExprSet.clear();
+						Register r = ((RegisterOperand) rx).getRegister();
+						tmpExprSet.add(new LocalVar(r));
+						oDstExprSet = tmpExprSet;
+					} else
+						oDstExprSet = emptyExprSet;
+				}
+			}
+		}
+		@Override
+		public void visitBinary(Quad q) {
+			assert (iDstExpr != null);
+			if (iDstExpr instanceof LocalVar) {
+				LocalVar e = (LocalVar) iDstExpr;
+				Register l = Binary.getDest(q).getRegister();
+				if (e.v == l) {
+					tmpExprSet.clear();
+					Operand rx1 = Binary.getSrc1(q);
+					if (rx1 instanceof RegisterOperand) {
+						Register r1 = ((RegisterOperand) rx1).getRegister();
+						tmpExprSet.add(new LocalVar(r1));
+					}
+					Operand rx2 = Binary.getSrc2(q);
+					if (rx2 instanceof RegisterOperand) {
+						Register r2 = ((RegisterOperand) rx2).getRegister();
+						tmpExprSet.add(new LocalVar(r2));
+					}
+					oDstExprSet = tmpExprSet;
+				}
+			}
+		}
+		@Override
+		public void visitInstanceOf(Quad q) {
+			assert (iDstExpr != null);
+			if (iDstExpr instanceof LocalVar) {
+				LocalVar e = (LocalVar) iDstExpr;
+				Register l = InstanceOf.getDest(q).getRegister();
+				if (e.v == l) {
+					Operand rx = InstanceOf.getSrc(q);
+					if (rx instanceof RegisterOperand) {
+						tmpExprSet.clear();
+						Register r = ((RegisterOperand) rx).getRegister();
+						tmpExprSet.add(new LocalVar(r));
+						oDstExprSet = tmpExprSet;
+					} else
+						oDstExprSet = emptyExprSet;
+				}
+			}
+		}
+		@Override
+		public void visitALength(Quad q) {
+			assert (iDstExpr != null);
+			if (iDstExpr instanceof LocalVar) {
+				LocalVar e = (LocalVar) iDstExpr;
+				Register l = ALength.getDest(q).getRegister();
+				if (e.v == l) {
+					Operand rx = ALength.getSrc(q);
+					if (rx instanceof RegisterOperand) {
+						tmpExprSet.clear();
+						Register r = ((RegisterOperand) rx).getRegister();
+						tmpExprSet.add(new LocalVar(r));
+						oDstExprSet = tmpExprSet;
+					} else
+						oDstExprSet = emptyExprSet;
+				}
+			}
+		}
+		@Override
+		public void visitIntIfCmp(Quad q) {
+			tmpPair.val0 = iDstExpr;
+			tmpPair.val1 = currentMethod;
+			Set<Quad> qSet = todoCdepsMap.get(tmpPair);
+			if (qSet != null && qSet.contains(q)) {
+				tmpExprSet.clear();
+				Operand rx1 = IntIfCmp.getSrc1(q);
+				if (rx1 instanceof RegisterOperand) {
+					Register r1 = ((RegisterOperand) rx1).getRegister();
+					tmpExprSet.add(new LocalVar(r1));
+				}
+				Operand rx2 = IntIfCmp.getSrc2(q);
+				if (rx2 instanceof RegisterOperand) {
+					Register r2 = ((RegisterOperand) rx2).getRegister();
+					tmpExprSet.add(new LocalVar(r2));
+				}
+				oDstExprSet = tmpExprSet;
+			}
+		}
+		@Override
+		public void visitLookupSwitch(Quad q) {
+			tmpPair.val0 = iDstExpr;
+			tmpPair.val1 = currentMethod;
+			Set<Quad> qSet = todoCdepsMap.get(tmpPair);
+			if (qSet != null && qSet.contains(q)) {
+				tmpExprSet.clear();
+				Operand rx = LookupSwitch.getSrc(q);
+				if (rx instanceof RegisterOperand) {
+					Register r = ((RegisterOperand) rx).getRegister();
+					tmpExprSet.add(new LocalVar(r));
+				}
+				oDstExprSet = tmpExprSet;
+			}
+		}
+		@Override
+		public void visitTableSwitch(Quad q) {
+			tmpPair.val0 = iDstExpr;
+			tmpPair.val1 = currentMethod;
+			Set<Quad> qSet = todoCdepsMap.get(tmpPair);
+			if (qSet != null && qSet.contains(q)) {
+				tmpExprSet.clear();
+				Operand rx = TableSwitch.getSrc(q);
+				if (rx instanceof RegisterOperand) {
+					Register r = ((RegisterOperand) rx).getRegister();
+					tmpExprSet.add(new LocalVar(r));
+				}
+				oDstExprSet = tmpExprSet;
+			}
+		}
+/*
+		@Override
+		public void visitMonitor(Quad q) {
+		}
+*/
 	}
 }
 

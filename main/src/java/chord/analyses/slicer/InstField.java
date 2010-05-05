@@ -5,7 +5,6 @@ import joeq.Compiler.Quad.Quad;
 
 public class InstField implements Expr {
 	public final Quad q;
-	// may be null if this represents an array element
 	public final jq_Field f;
 	public InstField(Quad q, jq_Field f) {
 		this.q = q;
@@ -22,5 +21,9 @@ public class InstField implements Expr {
 			return e.q == this.q && e.f == this.f;
 		}
 		return false;
+	}
+	@Override
+	public String toString() {
+		return "<" + f.toString() + "," + q.toString() + ">";
 	}
 }
