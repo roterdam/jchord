@@ -32,7 +32,7 @@ public class RelSuccBB extends ProgramRel {
 			List<BasicBlock> succs = bb.getSuccessorsList();
 			for (BasicBlock bb2 : succs) {
 				int bIdx2 = domB.indexOf(bb2);
-				System.out.println("ADDING BB: " + bb + " (" + bIdx + ") -> " + bb2 + "(" + bIdx2 + ")");
+				// System.out.println("ADDING BB: " + bb + " (" + bIdx + ") -> " + bb2 + "(" + bIdx2 + ")");
 				add(bIdx, bIdx2);
 			}
 		}

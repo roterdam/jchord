@@ -32,7 +32,7 @@ public class RelInitPdomBB extends ProgramRel implements IMethodVisitor {
     public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-		System.out.println("VISITING: " + m);
+		// System.out.println("VISITING: " + m);
 		ControlFlowGraph cfg = m.getCFG();
 		doms.visitCFG(cfg);
 		DominatorNode exit = doms.computeTree();
@@ -40,11 +40,11 @@ public class RelInitPdomBB extends ProgramRel implements IMethodVisitor {
 	}
 	private void process(DominatorNode n) {
 		BasicBlock bb = n.bb;
-		System.out.println("PROCESSING: " + bb);
+		// System.out.println("PROCESSING: " + bb);
 		for (Object o : n.children) {
 			DominatorNode n2 = (DominatorNode) o;
 			BasicBlock bb2 = n2.bb;
-			System.out.println("ADDING: " + bb + " -> " + bb2);
+			// System.out.println("ADDING: " + bb + " -> " + bb2);
 			add(bb, bb2);
 			process(n2);
 		}
