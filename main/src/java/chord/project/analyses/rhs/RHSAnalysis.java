@@ -162,6 +162,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	}
 		
 	protected jq_Method currentMethod;
+	protected BasicBlock currentBB;
 
 	/**
 	 * Propagate forward or backward until fixpoint is reached.
@@ -174,11 +175,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
             PE pe = pair.val1;
             Quad q = loc.q;
 			jq_Method m = loc.m;
+			BasicBlock bb = loc.bb;
 			currentMethod = m;
+			currentBB = bb;
             if (DEBUG) System.out.println("Processing loc: " + loc + " PE: " + pe);
             if (q == null) {
 				// method entry or method exit
-                BasicBlock bb = loc.bb;
                 if (bb.isEntry()) {
 					if (isForward) {
 						for (Object o : bb.getSuccessorsList()) {
@@ -213,7 +215,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 								q2Idx = -1;
 							} else {
 								q2 = bb2.getQuad(n - 1);
-								q2Idx = 0;
+								q2Idx = n - 1;
 							}
 							Location loc2 = new Location(m, bb2, q2Idx, q2);
 							addPathEdge(loc2, pe);
@@ -248,11 +250,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 					}
 					Set<PE> peSet = getInvkPathEdges(q, pe);
 					for (PE pe2 : peSet)
-						propagatePEtoPE(m, loc.bb, loc.qIdx, pe2);
+						propagatePEtoPE(m, bb, loc.qIdx, pe2);
 				} else {
 					Set<PE> peSet = getMiscPathEdges(q, pe);
 					for (PE pe2 : peSet)
-						propagatePEtoPE(m, loc.bb, loc.qIdx, pe2);
+						propagatePEtoPE(m, bb, loc.qIdx, pe2);
                 }
             }
         }
@@ -472,7 +474,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 					q2Idx = -1;
 					q2 = null;
 				} else {
-					q2Idx = 0;
+					q2Idx = n - 1;
 					q2 = bb2.getQuad(n - 1);
 				}
 				Location loc2 = new Location(m, bb2, q2Idx, q2);
