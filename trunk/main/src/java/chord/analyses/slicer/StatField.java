@@ -19,4 +19,8 @@ public class StatField implements Expr {
         }
         return false;
     }
+	@Override
+	public String toString() {
+		return f.toString();
+	}
 }

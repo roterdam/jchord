@@ -20,4 +20,8 @@ public class LocalVar implements Expr {
 		}
 		return false;
 	}
+	@Override
+	public String toString() {
+		return v.toString();
+	}
 }
