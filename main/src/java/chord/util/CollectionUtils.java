@@ -46,7 +46,8 @@ public final class CollectionUtils {
 		return false;
 	}
 
-	public static <T> String toString(final Collection<T> c, final String prefix, final String separator, final String suffix) {
+	public static <T> String toString(final Collection<T> c,
+			final String prefix, final String separator, final String suffix) {
 		if (c == null) {
 			throw new IllegalArgumentException();
 		}

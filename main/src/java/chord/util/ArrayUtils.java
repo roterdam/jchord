@@ -72,7 +72,7 @@ public final class ArrayUtils {
 	}
 
 	/**
-	 * Returns string representation of elements in given array. This method never returns {@code null}.
+	 * Returns string representation of elements in given array.
 	 *
 	 * @param array	 an array of elements.
 	 * @param begin	 string prefix.
@@ -82,7 +82,8 @@ public final class ArrayUtils {
 	 * @return string representation of elements in given array.
 	 * @throws IllegalArgumentException if {@code array} is {@code null}.
 	 */
-	public static <T> String toString(final T[] array, final String begin, final String separator, final String end) {
+	public static <T> String toString(final T[] array, final String begin,
+			final String separator, final String end) {
 		if (array == null) {
 			throw new IllegalArgumentException();
 		}
@@ -97,7 +98,7 @@ public final class ArrayUtils {
 	}
 
 	/**
-	 * Returns string representation of elements in given array. This method never returns {@code null}.
+	 * Returns string representation of elements in given array.
 	 *
 	 * @param array an array of elements.
 	 * @param <T>   The type of the array elements.
