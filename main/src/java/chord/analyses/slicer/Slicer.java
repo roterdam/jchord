@@ -50,6 +50,7 @@ import joeq.Compiler.Quad.Operator.LookupSwitch;
 import joeq.Compiler.Quad.Operator.TableSwitch;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
+import chord.util.CollectionUtils;
 import chord.util.FileUtils;
 import chord.project.Messages;
 import chord.program.Location;
@@ -122,12 +123,26 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			qSet.add(q);
         }
 
+		// first item in seeds.txt is a method name in format name:desc@type
+		// the following zero or more items are static field names in format
+		// name:desc@type
+		// slicing will be done on each of the static fields at the exit point
+		// of the denoted method
 		List<String> fStrList = FileUtils.readFileToList("seeds.txt");
-		Set<Pair<Location, Expr>> seeds =
-			new HashSet<Pair<Location, Expr>>(fStrList.size());
-		Location mainExitLoc = getMainExitLoc();
-		for (String fStr : fStrList) {
-			System.out.println("XXX: " + fStr);
+		int n = fStrList.size();
+		assert (n > 0);
+		Location seedLoc;
+		{
+			String signStr = fStrList.get(0);
+			MethodSign sign = MethodSign.parse(signStr);
+			jq_Method method = Program.v().getReachableMethod(sign);
+			assert (method != null);
+			BasicBlock bb = method.getCFG().exit();
+			seedLoc = new Location(method, bb, -1, null);
+		}
+		Set<Pair<Location, Expr>> seeds = new HashSet<Pair<Location, Expr>>(n - 1);
+		for (int i = 1; i < n; i++) {
+			String fStr = fStrList.get(i);
 			MethodSign sign = MethodSign.parse(fStr);
 			jq_Class c = Program.v().getPreparedClass(sign.cName);
 			if (c == null) {
@@ -143,7 +158,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			}
 			assert(f.isStatic());
 			Expr e = new StatField(f);
-			seeds.add(new Pair<Location, Expr>(mainExitLoc, e));
+			seeds.add(new Pair<Location, Expr>(seedLoc, e));
 		}
 
 		cipa = (CIAliasAnalysis) Project.getTrgt("cipa-java");
@@ -166,12 +181,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
-	}
-
-	private static Location getMainExitLoc() {
-		jq_Method mainMethod = Program.v().getMainMethod();
-		BasicBlock bb = mainMethod.getCFG().exit();
-		return new Location(mainMethod, bb, -1, null);
 	}
 
 	@Override
@@ -234,6 +243,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 	@Override
 	public Set<Edge> getMiscPathEdges(Quad q, Edge pe) {
 		qv.iDstExpr = pe.dstExpr;
+		qv.iSrcExpr = pe.srcExpr;
 		qv.oDstExprSet = null;
 		q.accept(qv);
 		Set<Expr> oDstExprSet = qv.oDstExprSet;
@@ -253,10 +263,12 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 					todoCdeps = new ArraySet<Quad>(2);
 					todoCdepsMap.put(pair, todoCdeps);
 				}
-				for (Quad q2 : fullCdeps) {
-					// System.out.println("Adding cdep " + q2);
+				for (Quad q2 : fullCdeps)
 					todoCdeps.add(q2);
-				}
+			}
+			if (DEBUG) {
+				System.out.println(CollectionUtils.toString(
+					oDstExprSet, "oDstExprSet: [", ",", "]"));
 			}
 			for (Expr e : oDstExprSet) {
 				Edge pe2 = new Edge(srcExpr, e);
@@ -332,6 +344,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		// that the visited quad is not relevant to the slice, and
 		// the outgoing pe will be the same as the incoming pe
 		Expr iDstExpr;
+		Expr iSrcExpr;
 		Set<Expr> oDstExprSet;
 		@Override
 		public void visitReturn(Quad q) {
@@ -647,7 +660,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitIntIfCmp(Quad q) {
-			tmpPair.val0 = iDstExpr;
+			tmpPair.val0 = iSrcExpr;
 			tmpPair.val1 = currentMethod;
 			Set<Quad> qSet = todoCdepsMap.get(tmpPair);
 			if (qSet != null && qSet.contains(q)) {
@@ -662,12 +675,13 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 					Register r2 = ((RegisterOperand) rx2).getRegister();
 					tmpExprSet.add(new LocalVar(r2));
 				}
+				tmpExprSet.add(iDstExpr);
 				oDstExprSet = tmpExprSet;
 			}
 		}
 		@Override
 		public void visitLookupSwitch(Quad q) {
-			tmpPair.val0 = iDstExpr;
+			tmpPair.val0 = iSrcExpr;
 			tmpPair.val1 = currentMethod;
 			Set<Quad> qSet = todoCdepsMap.get(tmpPair);
 			if (qSet != null && qSet.contains(q)) {
@@ -677,12 +691,13 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 					Register r = ((RegisterOperand) rx).getRegister();
 					tmpExprSet.add(new LocalVar(r));
 				}
+				tmpExprSet.add(iDstExpr);
 				oDstExprSet = tmpExprSet;
 			}
 		}
 		@Override
 		public void visitTableSwitch(Quad q) {
-			tmpPair.val0 = iDstExpr;
+			tmpPair.val0 = iSrcExpr;
 			tmpPair.val1 = currentMethod;
 			Set<Quad> qSet = todoCdepsMap.get(tmpPair);
 			if (qSet != null && qSet.contains(q)) {
@@ -692,6 +707,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 					Register r = ((RegisterOperand) rx).getRegister();
 					tmpExprSet.add(new LocalVar(r));
 				}
+				tmpExprSet.add(iDstExpr);
 				oDstExprSet = tmpExprSet;
 			}
 		}
