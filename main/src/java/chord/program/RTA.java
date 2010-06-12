@@ -80,8 +80,7 @@ public class RTA implements IScopeBuilder {
 		timer.init();
         HostedVM.initialize();
 		if (handleReflection) {
-			chb = new ClassHierarchyBuilder();
-			chb.run();
+			chb = Program.v().getClassHierarchy();
 		}
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
