@@ -22,7 +22,6 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operand.TypeOperand;
 import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
@@ -35,7 +34,6 @@ import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 import chord.project.Properties;
 import chord.project.Messages;
-import chord.util.ChordRuntimeException;
 import chord.util.IndexSet;
 import chord.util.Timer;
 

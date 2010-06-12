@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.RegisterFactory.Register;

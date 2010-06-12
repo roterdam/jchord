@@ -4,12 +4,8 @@
 package chord.program;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
@@ -21,9 +17,6 @@ import java.io.IOException;
 
 import joeq.Class.jq_ClassFileConstants;
 import joeq.UTF.Utf8;
-import joeq.Class.jq_Class;
-import joeq.Class.jq_Type;
-import joeq.Class.jq_ConstantPool;
 import joeq.Class.Classpath;
 import joeq.Class.ClasspathElement;
 import chord.project.Messages;
@@ -36,11 +29,6 @@ import chord.util.tuple.object.Pair;
  */
 public class ClassHierarchyBuilder {
 	private final String CHkind;
-	/**
-	 * The entire classpath: the bootclasspath followed by the library
-	 * extensions path followed by the user-defined classpath.
-	 */
-	private final Classpath classpath = new Classpath();
 	/**
 	 * List of elements in Chord's classpath to be excluded from the
 	 * class hierarchy.
