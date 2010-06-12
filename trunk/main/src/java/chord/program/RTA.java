@@ -176,20 +176,20 @@ public class RTA implements IScopeBuilder {
 					}
 				} else if (handleReflection && op instanceof CheckCast) {
 					if (DEBUG) System.out.println("Quad: " + q);
-					TypeOperand typeOperand = CheckCast.getType(q);
-					if (typeOperand != null) {
-						jq_Type type = typeOperand.getType();
-						if (type instanceof jq_Class) {
-							String cName = type.getName();
-							Set<String> subclasses = chb.getConcreteSubclasses(cName);
-							if (subclasses == null)
-								continue;
-							for (String dName : subclasses) {
-                                jq_Class d = (jq_Class) jq_Type.parseType(dName);
-								visitClass(d);
-								if (reachableAllocClasses.add(d)) {
-									repeat = true;
-								}
+					jq_Type type = CheckCast.getType(q).getType();
+					if (type instanceof jq_Class) {
+						String cName = type.getName();
+						jq_Class c = (jq_Class) type;
+						Set<String> concreteSubs = c.isInterface() ?
+							chb.getConcreteImplementors(cName) :
+							chb.getConcreteSubclasses(cName);
+						if (concreteSubs == null)
+							continue;
+						for (String dName : concreteSubs) {
+							jq_Class d = (jq_Class) jq_Type.parseType(dName);
+							visitClass(d);
+							if (reachableAllocClasses.add(d)) {
+								repeat = true;
 							}
 						}
 					}
