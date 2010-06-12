@@ -24,7 +24,7 @@ import java.util.Iterator;
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ArraySet<T> extends ArrayList<T> implements IndexSet<T> {
+public class ArraySet<T> extends ArrayList<T> implements Set<T> {
 	/**
 	 * 
 	 */

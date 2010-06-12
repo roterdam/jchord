@@ -20,7 +20,6 @@ import java.util.Set;
 import java.util.HashSet;
 
 import chord.util.IndexMap;
-import chord.util.IndexHashMap;
 import chord.util.ChordRuntimeException;
 import chord.project.analyses.ProgramDom;
 import chord.project.Messages;
@@ -54,7 +53,7 @@ public class DynamicThreadAccessAnalysis extends DynamicAnalysis {
 	DomF domF;
 
     protected <T> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {
-        IndexMap<String> map = new IndexHashMap<String>(dom.size());
+        IndexMap<String> map = new IndexMap<String>(dom.size());
         for (int i = 0; i < dom.size(); i++) {
             String s = dom.toUniqueString(dom.get(i));
             if (map.contains(s))

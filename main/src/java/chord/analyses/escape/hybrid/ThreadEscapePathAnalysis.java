@@ -26,7 +26,6 @@ import chord.project.Properties;
 import chord.util.ChordRuntimeException;
 import chord.util.ArraySet;
 import chord.util.IndexMap;
-import chord.util.IndexHashMap;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.integer.IntQuad;
@@ -236,7 +235,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         }
 		assert (fstP == numP);
 		isDoneMeth = new boolean[numM];
-		cIdMap = new IndexHashMap<String>();
+		cIdMap = new IndexMap<String>();
  		heapInstToAllocInsts = new HashMap<Quad, Set<Quad>>();
     }
 	

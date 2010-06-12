@@ -27,7 +27,6 @@ import chord.project.Project;
 import chord.project.Properties;
 import chord.project.analyses.ProgramDom;
 import chord.runtime.Runtime;
-import chord.util.IndexHashMap;
 import chord.util.IndexMap;
 import chord.util.IndexSet;
 import chord.util.FileUtils;
@@ -443,7 +442,7 @@ public class Instrumentor {
 	}
 
 	protected <T> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {
-		IndexMap<String> map = new IndexHashMap<String>(dom.size());
+		IndexMap<String> map = new IndexMap<String>(dom.size());
 		for (int i = 0; i < dom.size(); i++) {
 			String s = dom.toUniqueString(dom.get(i));
 			if (map.contains(s))
