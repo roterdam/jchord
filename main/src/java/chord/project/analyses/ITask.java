@@ -5,8 +5,6 @@
  */
 package chord.project.analyses;
 
-import chord.project.Project;
-
 /**
  * Specification of a program analysis.
  * 

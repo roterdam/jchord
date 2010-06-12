@@ -18,9 +18,7 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Inst;
-import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
-import joeq.Compiler.Quad.Operator.Return;
 
 import chord.util.tuple.object.Pair;
 import chord.program.Program;
