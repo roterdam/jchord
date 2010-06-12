@@ -15,6 +15,7 @@ import chord.doms.DomM;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
+import chord.util.IndexSet;
 
 /**
  * Relation containing each tuple (m1,t,m2) such that method m2 is the
@@ -30,7 +31,7 @@ import chord.project.analyses.ProgramRel;
 public class RelCHA extends ProgramRel {
 	public void fill() {
 		DomM domM = (DomM) doms[0];
-		Set<jq_Class> classes = Program.v().getPreparedClasses();
+		IndexSet<jq_Class> classes = Program.v().getPreparedClasses();
 		for (jq_Class c : classes) {
 			for (jq_InstanceMethod m : c.getDeclaredInstanceMethods()) {
 				if (m.isPrivate())

@@ -22,7 +22,7 @@ import chord.util.FileUtils;
 import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Properties;
-import chord.util.IndexHashSet;
+import chord.util.IndexSet;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
  
@@ -107,7 +107,7 @@ public class Program {
 
 	// load and add each class in <code>classNames</code> to <code>classes</code>
 	private void loadClasses(List<String> classNames) {
-		classes = new IndexHashSet<jq_Class>();
+		classes = new IndexSet<jq_Class>();
 		for (String s : classNames) {
 			if (Properties.verbose)
 				Messages.log("SCOPE.LOADING_CLASS", s);
@@ -128,7 +128,7 @@ public class Program {
 		String classesFileName = Properties.classesFileName;
 		List<String> classNames = FileUtils.readFileToList(classesFileName);
 		loadClasses(classNames);
-		methods = new IndexHashSet<jq_Method>();
+		methods = new IndexSet<jq_Method>();
 		String methodsFileName = Properties.methodsFileName;
 		List<String> methodSigns = FileUtils.readFileToList(methodsFileName);
 		for (String s : methodSigns) {
@@ -149,10 +149,10 @@ public class Program {
 
 	private void init(IScopeBuilder builder) throws IOException {
 		builder.run();
-		classes = new IndexHashSet<jq_Class>();
+		classes = new IndexSet<jq_Class>();
 		for (jq_Class c : builder.getPreparedClasses()) 
 			classes.add(c);
-		methods = new IndexHashSet<jq_Method>();
+		methods = new IndexSet<jq_Method>();
 		for (jq_Method m : builder.getReachableMethods()) {
 			jq_Class c = m.getDeclaringClass();
 			if (!classes.contains(c))
@@ -166,7 +166,7 @@ public class Program {
 	private void initFromDynamic() throws IOException {
 		List<String> classNames = getDynamicallyLoadedClasses();
 		loadClasses(classNames);
-		methods = new IndexHashSet<jq_Method>();
+		methods = new IndexSet<jq_Method>();
 		for (jq_Class c : classes) {
 			for (jq_Method m : c.getDeclaredInstanceMethods()) 
 				methods.add(m);

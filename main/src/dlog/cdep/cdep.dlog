@@ -25,6 +25,7 @@ cdepBB(b1:B0,b2:B1) output
 # Node w is control dependent on node u if there exists an edge u->v such that: 
 # 1. w postdominates v
 # 2. w postdominates u => w == u
+# Note: currently 2 is: w !postdominates u
 
 notFullPdomBBorEq(w,u) :- !fullPdomBB(w,u).
 #notFullPdomBBorEq(w,u) :- w=u.
