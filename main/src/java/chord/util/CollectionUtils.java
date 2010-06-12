@@ -46,22 +46,15 @@ public final class CollectionUtils {
 		return false;
 	}
 
-	public static <T> String toString(final Collection<T> c,
-			final String prefix, final String separator, final String suffix) {
-		if (c == null) {
-			throw new IllegalArgumentException();
-		}
-		final StringBuilder result = new StringBuilder(prefix);
-		if (c.size() > 0) {
-			final Iterator<T> it = c.iterator();
-			result.append(it.next());
-			while (it.hasNext()) {
-				result.append(separator).append(it.next());
-			}
-		}
-		return result.append(suffix).toString();
+	public static <T> String toString(Collection<T> c, String prefix, String sep, String suffix) {
+		if (c == null || c.size() == 0)
+			return prefix + suffix;
+		Iterator<T> it = c.iterator();
+		String result = prefix + it.next();
+		while (it.hasNext())
+			result += sep + it.next();
+		return result + suffix;
 	}
-
 
 	public static <T> String toString(final Collection<T> a) {
 		return toString(a, "", ",", "");

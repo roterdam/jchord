@@ -72,29 +72,23 @@ public final class ArrayUtils {
 	}
 
 	/**
-	 * Returns string representation of elements in given array.
+	 * Provides a string representation of the elements in the given array.
 	 *
-	 * @param array	 an array of elements.
-	 * @param begin	 string prefix.
-	 * @param separator elements separator.
-	 * @param end	   string suffix.
+	 * @param array		An array of elements.  It may be null.
+	 * @param prefix	String to be used as prefix.
+	 * @param sep		String to be used to separate array elements.
+	 * @param suffix	String to be used as suffix.
 	 * @param <T>       The type of array elements.
-	 * @return string representation of elements in given array.
-	 * @throws IllegalArgumentException if {@code array} is {@code null}.
+	 * @return			String representation of the elements in the array.
 	 */
-	public static <T> String toString(final T[] array, final String begin,
-			final String separator, final String end) {
-		if (array == null) {
-			throw new IllegalArgumentException();
+	public static <T> String toString(T[] array, String prefix, String sep, String suffix) {
+		if (array == null || array.length == 0) 
+			return prefix + suffix;
+		String result = prefix + array[0];
+		for (int i = 1; i < array.length; i++) {
+			result += sep + array[i];
 		}
-		final StringBuilder result = new StringBuilder(begin);
-		for (int i = 0; i < array.length; i++) {
-			result.append(array[i]);
-			if (i < array.length - 1) {
-				result.append(separator);
-			}
-		}
-		return result.append(end).toString();
+		return result + suffix;
 	}
 
 	/**
@@ -107,5 +101,4 @@ public final class ArrayUtils {
 	public static <T> String toString(final T[] array) {
 		return toString(array, "", ",", "");
 	}
-
 }
