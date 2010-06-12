@@ -112,6 +112,7 @@ public class ClassHierarchyBuilder {
 	 */
 	private final Map<String, Set<String>> interfaceToConcreteImplementors =
 		new HashMap<String, Set<String>>();
+	private final boolean verbose;
 
 	public ClassHierarchyBuilder() {
 		CHkind = Properties.CHkind;
@@ -121,8 +122,9 @@ public class ClassHierarchyBuilder {
 		// code that breaks cha, but also because it is not part of
 		// the program being analyzed
 		String mainClassPathName = Properties.mainClassPathName;
-		chordCPEary = mainClassPathName.equals("") ?  new String[0] :
+		chordCPEary = mainClassPathName.equals("") ? new String[0] :
 			mainClassPathName.split(File.pathSeparator);
+		verbose = Properties.verbose;
 	}
 
 	/**
@@ -183,7 +185,7 @@ public class ClassHierarchyBuilder {
 				if (!fileName.endsWith(".class"))
 					continue;
 				String baseName = fileName.substring(0, fileName.length() - 6);
-				String typeName = baseName.replace(File.separatorChar, '.');
+				String typeName = baseName.replace('/', '.');
 				// ignore duplicate types in classpath
 				if (!allTypes.add(typeName)) {
 					duplicateTypes.add(new Pair<String, String>(typeName, cpe.toString()));
@@ -201,11 +203,13 @@ public class ClassHierarchyBuilder {
 				InputStream is = cpe.getResourceAsStream(fileName);
 				assert (is != null);
 				DataInputStream in = new DataInputStream(is);
+				if (verbose)
+					Messages.logAnon("Processing class file %s from %s", fileName, cpe);
 				processClassFile(in, typeName);
 			}
 		}
 
-		if (Properties.verbose) {
+		if (verbose) {
 			if (!excludedCPEs.isEmpty()) {
 				Messages.log("CH.EXCLUDED_CPE");
 				for (String cpe : excludedCPEs)
@@ -291,14 +295,15 @@ public class ClassHierarchyBuilder {
 			} else {
 				int c = (Integer) constant_pool[super_index];
 				Utf8 utf8 = (Utf8) constant_pool[c];
-				String superclassName = utf8.toString().replace(File.separatorChar, '.');
+				String superclassName = utf8.toString().replace('/', '.');
 				if (isInterface(access_flags)) {
 					assert (superclassName.equals("java.lang.Object"));
 					allInterfaces.add(className);
 				} else {
 					classToDeclaredSuperclass.put(className, superclassName);
-					if (!isAbstract(access_flags))
+					if (!isAbstract(access_flags)) {
 						allConcreteClasses.add(className);
+					}
 				}
 			}
 			int n_interfaces = (int) in.readUnsignedShort();
@@ -308,7 +313,7 @@ public class ClassHierarchyBuilder {
 				int interface_index = in.readUnsignedShort();
 				int c = (Integer) constant_pool[interface_index];
 				Utf8 utf8 = (Utf8) constant_pool[c];
-				String interfaceName = utf8.toString().replace(File.separatorChar, '.');
+				String interfaceName = utf8.toString().replace('/', '.');
 				interfaces.add(interfaceName);
 			}
 			in.close();
