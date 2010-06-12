@@ -6,9 +6,6 @@
 package chord.project;
 
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.io.IOException;
 import chord.util.FileUtils;
 import chord.util.ChordRuntimeException;
 
