@@ -3,21 +3,16 @@
  */
 package chord.analyses.slicer;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Collections;
 
 import joeq.Compiler.Quad.Quad;
-import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import chord.doms.DomM;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
-import chord.project.Project;
 
 @Chord(name = "dynamic-cg-java")
 public class DynamicCallGraphAnalysis extends DynamicAnalysis {

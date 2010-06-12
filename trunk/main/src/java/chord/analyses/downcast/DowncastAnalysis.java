@@ -8,7 +8,6 @@ package chord.analyses.downcast;
 import chord.project.Chord;
 import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
-import chord.project.analyses.ProgramRel;
 import chord.analyses.alias.CtxtsAnalysis;
 
 /**

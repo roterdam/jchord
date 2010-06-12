@@ -25,12 +25,10 @@ import chord.project.Properties;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
  
-import joeq.Util.Templates.ListIterator;
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;

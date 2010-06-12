@@ -6,7 +6,6 @@ import chord.project.analyses.JavaAnalysis;
 import chord.program.Program;
 import chord.project.Chord;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.RegisterFactory.Register;

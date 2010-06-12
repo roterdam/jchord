@@ -5,25 +5,17 @@
  */
 package chord.analyses.slicer;
 
-import gnu.trove.TObjectIntHashMap;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.io.File;
-import java.io.IOException;
 
 import joeq.Class.jq_Class;
-import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operand;
-import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.QuadVisitor;
@@ -65,15 +57,10 @@ import chord.program.Program;
 import chord.project.analyses.ProgramRel;
 import chord.project.analyses.rhs.BackwardRHSAnalysis;
 import chord.bddbddb.Rel.IntPairIterable;
-import chord.project.Properties;
-import chord.util.ChordRuntimeException;
 import chord.doms.DomB;
 import chord.project.Chord;
 import chord.project.Project;
 import chord.util.ArraySet;
-import chord.util.CompareUtils;
-import chord.util.IntArraySet;
-import chord.util.tuple.integer.IntTrio;
 import chord.util.Timer;
 
 /**
