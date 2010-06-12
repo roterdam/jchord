@@ -497,5 +497,9 @@
 		<delete>
 			<fileset dir="doc" includes="*.html"/>
 		</delete>
+		<delete file="doc/user_guide.pdf"/>
+		<delete file="doc/user_guide.aux"/>
+		<delete file="doc/user_guide.log"/>
+		<delete file="doc/user_guide.out"/>
 	</target>
 </project>
