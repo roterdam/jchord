@@ -72,7 +72,8 @@ public class Project {
 		currTimer.init();
 
 		if (Properties.buildScope) {
-			Program.v();
+			Program program = Program.v();
+			program.init();
 		}
 
 		if (Properties.printAllClasses) {

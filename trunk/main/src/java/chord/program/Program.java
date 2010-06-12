@@ -23,7 +23,6 @@ import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.IndexSet;
-import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
  
 import joeq.Util.Templates.ListIterator;
@@ -60,10 +59,8 @@ import joeq.Main.Helper;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Program {
-	private static Program instance;
+	private static Program instance = new Program();
 	public static Program v() {
-		if (instance == null)
-			instance = new Program();
 		return instance;
 	}
 	private IndexSet<jq_Class> classes;
@@ -74,6 +71,8 @@ public class Program {
 	private boolean HTMLizedJavaSrcFiles;
 	private final Map<Inst, jq_Method> instToMethodMap = 
 		new HashMap<Inst, jq_Method>();
+	private ClassHierarchyBuilder chb;
+	private boolean isInited;
 
 	private Program() {
 		if (Properties.verbose)
@@ -81,6 +80,11 @@ public class Program {
 		if (Properties.doSSA)
 			jq_Method.doSSA();
 		jq_Method.exclude(Properties.scopeExcludeAry);
+	}
+
+	public void init() {
+		if (isInited)
+			return;
 		try {
 			boolean filesExist =
 				(new File(Properties.classesFileName)).exists() &&
@@ -103,6 +107,7 @@ public class Program {
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
 		}
+		isInited = true;
 	}
 
 	// load and add each class in <code>classNames</code> to <code>classes</code>
@@ -191,6 +196,14 @@ public class Program {
 		methodsFileWriter.close();
 	}
 
+	public ClassHierarchyBuilder getClassHierarchy() {
+		if (chb == null) {
+			chb = new ClassHierarchyBuilder();
+			chb.run();
+		}
+		return chb;
+	}
+
 	public void mapInstToMethod(Inst i, jq_Method m) {
 		instToMethodMap.put(i, m);
 	}
@@ -204,6 +217,7 @@ public class Program {
 	}
 
 	private void buildNameToClassMap() {
+		init();
 		nameToClassMap = new HashMap<String, jq_Class>();
 		for (jq_Class c : classes) {
 			nameToClassMap.put(c.getName(), c);
@@ -211,6 +225,7 @@ public class Program {
 	}
 	
 	private void buildClassToMethodsMap() {
+		init();
 		classToMethodsMap = new HashMap<jq_Class, List<jq_Method>>();
 		for (jq_Method m : methods) {
 			jq_Class c = m.getDeclaringClass();
@@ -224,10 +239,12 @@ public class Program {
 	}
 	
 	public IndexSet<jq_Class> getPreparedClasses() {
+		init();
 		return classes;
 	}
 	
 	public IndexSet<jq_Method> getReachableMethods() { 
+		init();
 		return methods;
 	}
 
