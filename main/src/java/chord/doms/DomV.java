@@ -39,22 +39,27 @@ public class DomV extends ProgramDom<Register>
 		implements IVarVisitor {
 	private Map<Register, jq_Method> varToMethodMap;
 	private jq_Method ctnrMethod;
+	@Override
 	public void init() {
 		varToMethodMap = new HashMap<Register, jq_Method>();
 	}
 	public jq_Method getMethod(Register v) {
 		return varToMethodMap.get(v);
 	}
+	@Override
 	public void visit(jq_Class c) { }
+	@Override
 	public void visit(jq_Method m) {
 		ctnrMethod = m;
 	}
+	@Override
 	public void visit(Register v) {
 		if (v.getType().isReferenceType()) {
 			varToMethodMap.put(v, ctnrMethod);
 			getOrAdd(v);
 		}
 	}
+	@Override
 	public String toUniqueString(Register v) {
 		return v + "!" + getMethod(v);
 	}

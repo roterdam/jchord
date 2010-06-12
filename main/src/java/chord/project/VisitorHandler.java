@@ -21,6 +21,7 @@ import chord.program.visitors.INewInstVisitor;
 import chord.program.visitors.IPhiInstVisitor;
 import chord.program.visitors.IRelLockInstVisitor;
 import chord.program.visitors.IReturnInstVisitor;
+import chord.program.visitors.ICastInstVisitor;
 import chord.program.visitors.IVarVisitor;
 import chord.project.analyses.ITask;
 import chord.util.IndexSet;
@@ -72,6 +73,7 @@ public class VisitorHandler {
 	private Collection<IAcqLockInstVisitor> acqivs;
 	private Collection<IRelLockInstVisitor> relivs;
 	private Collection<IMoveInstVisitor> mivs;
+	private Collection<ICastInstVisitor> civs;
 	private Collection<IPhiInstVisitor> pivs;
 	private Collection<IInstVisitor> ivs;
 	private boolean doCFGs;
@@ -149,13 +151,15 @@ public class VisitorHandler {
 						for (INewInstVisitor niv : nivs)
 							niv.visitNewInst(q);
 					}
-				} else if (op instanceof Move || op instanceof CheckCast) {
-					// note: fine to handle both Move and CheckCast together
-					// because Operator.Move and Operator.CheckCast use same operand indices
-					// for src and dst operands
+				} else if (op instanceof Move) {
 					if (mivs != null) {
 						for (IMoveInstVisitor miv : mivs)
 							miv.visitMoveInst(q);
+					}
+				} else if (op instanceof CheckCast) {
+					if (civs != null) {
+						for (ICastInstVisitor civ : civs)
+							civ.visitCastInst(q);
 					}
 				} else if (op instanceof Phi) {
 					if (pivs != null) {
@@ -230,6 +234,11 @@ public class VisitorHandler {
 					mivs = new ArrayList<IMoveInstVisitor>();
 				mivs.add((IMoveInstVisitor) task);
 			}
+			if (task instanceof ICastInstVisitor) {
+				if (civs == null)
+					civs = new ArrayList<ICastInstVisitor>();
+				civs.add((ICastInstVisitor) task);
+			}
 			if (task instanceof IPhiInstVisitor) {
 				if (pivs == null)
 					pivs = new ArrayList<IPhiInstVisitor>();
@@ -254,8 +263,8 @@ public class VisitorHandler {
 		reachableMethods = Program.v().getReachableMethods();
 		doInsts = (ivs != null) || (hivs != null) ||
 			(iivs != null) || (nivs != null) || (mivs != null) ||
-			(pivs != null) || (rivs != null) || (acqivs != null) ||
-			(relivs != null);
+			(civs != null) || (pivs != null) || (rivs != null) ||
+			(acqivs != null) || (relivs != null);
 		doCFGs = (vvs != null) || doInsts;
 		if (cvs != null) {
 			IndexSet<jq_Class> preparedClasses =

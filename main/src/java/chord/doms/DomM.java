@@ -35,6 +35,7 @@ import chord.project.analyses.ProgramDom;
 )
 public class DomM extends ProgramDom<jq_Method>
 		implements IMethodVisitor {
+	@Override
 	public void init() {
 		// Reserve index 0 for the main method of the program.
 		// Reserve index 1 for the start() method of java.lang.Thread
@@ -46,10 +47,13 @@ public class DomM extends ProgramDom<jq_Method>
 		if (startMethod != null)
 			getOrAdd(startMethod);
 	}
+	@Override
 	public void visit(jq_Class c) { }
+	@Override
 	public void visit(jq_Method m) {
 		getOrAdd(m);
 	}
+	@Override
 	public String toXMLAttrsString(jq_Method m) {
 		jq_Class c = m.getDeclaringClass();
 		String methName = m.getName().toString();

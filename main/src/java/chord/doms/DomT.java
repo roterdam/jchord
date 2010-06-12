@@ -6,7 +6,6 @@
 package chord.doms;
 
 import joeq.Class.jq_Class;
-import joeq.Class.jq_Type;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
@@ -20,11 +19,13 @@ import chord.project.analyses.ProgramDom;
 	name = "T"
 )
 public class DomT extends ProgramDom<jq_Class> {
+	@Override
 	public void fill() {
 		for (jq_Class c : Program.v().getPreparedClasses()) {
 			getOrAdd(c);
 		}
 	}
+	@Override
     public String toXMLAttrsString(jq_Class c) {
         String name = c.getName();
         String file = Program.getSourceFileName(c);

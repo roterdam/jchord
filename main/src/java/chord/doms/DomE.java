@@ -5,7 +5,8 @@
  */
 package chord.doms;
 
-import joeq.Compiler.Quad.Inst;
+import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Getfield;
@@ -14,6 +15,8 @@ import joeq.Compiler.Quad.Operand.RegisterOperand;
 import chord.program.Program;
 import chord.program.visitors.IHeapInstVisitor;
 import chord.project.Chord;
+import chord.project.Project;
+import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of statements that access (read or write) an
@@ -25,7 +28,21 @@ import chord.project.Chord;
 	name = "E",
 	consumedNames = { "M" }
 )
-public class DomE extends QuadDom implements IHeapInstVisitor {
+public class DomE extends ProgramDom<Quad> implements IHeapInstVisitor {
+	protected DomM domM;
+	protected jq_Method ctnrMethod;
+	@Override
+	public void init() {
+		domM = (DomM) Project.getTrgt("M");
+	}
+	@Override
+	public void visit(jq_Class c) { }
+	@Override
+	public void visit(jq_Method m) {
+		if (!m.isAbstract())
+			ctnrMethod = m;
+	}
+	@Override
 	public void visitHeapInst(Quad q) {
 		Operator op = q.getOperator();
 		if (op instanceof Getfield) {
@@ -38,10 +55,25 @@ public class DomE extends QuadDom implements IHeapInstVisitor {
 		}
 		getOrAdd(q);
 	}
-	public String toXMLAttrsString(Inst i) {
-		Quad q = (Quad) i;
+	@Override
+	public int getOrAdd(Quad q) {
+		assert (ctnrMethod != null);
+		Program.v().mapInstToMethod(q, ctnrMethod);
+		return super.getOrAdd(q);
+	}
+	@Override
+	public String toUniqueString(Quad q) {
+		return Program.v().toBytePosStr(q);
+	}
+	@Override
+	public String toXMLAttrsString(Quad q) {
 		Operator op = q.getOperator();
-		return super.toXMLAttrsString(q) +
+		jq_Method m = Program.v().getMethod(q);
+		String file = Program.getSourceFileName(m.getDeclaringClass());
+		int line = Program.getLineNumber(q, m);
+		int mIdx = domM.indexOf(m);
+		return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
+			"Mid=\"M" + mIdx + "\"" +
 			" rdwr=\"" + (Program.isWrHeapInst(op) ? "Wr" : "Rd") + "\"";
 	}
 }
