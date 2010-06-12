@@ -36,7 +36,7 @@ import joeq.Util.Templates.ListIterator;
 import chord.project.Properties;
 import chord.project.Messages;
 import chord.util.ChordRuntimeException;
-import chord.util.IndexHashSet;
+import chord.util.IndexSet;
 import chord.util.Timer;
 
 /**
@@ -47,22 +47,22 @@ import chord.util.Timer;
  */
 public class CHA implements IScopeBuilder {
 	public static final boolean DEBUG = false;
-	private IndexHashSet<jq_Class> preparedClasses = new IndexHashSet<jq_Class>();
+	private IndexSet<jq_Class> preparedClasses = new IndexSet<jq_Class>();
 	// all classes whose clinits and super class/interface clinits have been
 	// processed so far
 	private Set<jq_Class> classesVisitedForClinit = new HashSet<jq_Class>();
 	// all methods deemed reachable so far
-	private IndexHashSet<jq_Method> visitedMethods = new IndexHashSet<jq_Method>();
+	private IndexSet<jq_Method> visitedMethods = new IndexSet<jq_Method>();
 	// worklist for methods seen so far but whose cfg's haven't been processed yet
 	private List<jq_Method> methodWorklist = new ArrayList<jq_Method>();
 	private jq_Class javaLangObject;
 	private ClassHierarchyBuilder chb;
 
-	public IndexHashSet<jq_Class> getPreparedClasses() {
+	public IndexSet<jq_Class> getPreparedClasses() {
 		return preparedClasses;
 	}
 
-	public IndexHashSet<jq_Method> getReachableMethods() {
+	public IndexSet<jq_Method> getReachableMethods() {
 		return visitedMethods;
 	}
 

@@ -21,7 +21,6 @@ import chord.util.IntArraySet;
 import chord.util.ChordRuntimeException;
 import chord.project.Properties;
 import chord.util.IndexMap;
-import chord.util.IndexHashMap;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.analyses.DynamicAnalysis;

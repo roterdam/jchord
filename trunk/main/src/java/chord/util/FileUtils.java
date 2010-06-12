@@ -128,7 +128,7 @@ public final class FileUtils {
 	public static IndexMap<String> readFileToMap(File file) {
         try {
             BufferedReader in = new BufferedReader(new FileReader(file));
-            IndexMap<String> map = new IndexHashMap<String>();
+            IndexMap<String> map = new IndexMap<String>();
             String s;
             while ((s = in.readLine()) != null) {
                 map.getOrAdd(s);

@@ -12,7 +12,6 @@ import java.util.Collections;
 
 import chord.util.tuple.object.Pair;
 import chord.util.IndexMap;
-import chord.util.IndexHashMap;
 
 /**
  * Partial implementation of a directed graph that provides various
@@ -124,7 +123,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 
 	public IndexMap<Node> getNodeMap() {
 		if (nodeMap == null) {
-			nodeMap = new IndexHashMap<Node>();
+			nodeMap = new IndexMap<Node>();
 			for (Node node : getNodes())
 				nodeMap.getOrAdd(node);
 		}
@@ -165,7 +164,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
         return getNodes().hashCode();
     }
 	public String toString() {
-		IndexMap<Node> map = new IndexHashMap<Node>(numNodes());
+		IndexMap<Node> map = new IndexMap<Node>(numNodes());
 		String s = "";
 		for (Node node : getNodes())
 			s += "Node " + map.getOrAdd(node) + ": " + node + "\n";

@@ -26,31 +26,6 @@ public class SetUtils {
 	 */
 	public static final int THRESHOLD = 10;
 	/**
-	 * Create a new index set of the default estimated size.
-	 * {@link #THRESHOLD} is used to choose the implementation of
-	 * the created set based on the default estimated size.
-	 * 
-	 * @param	<T>	The type of elements in the set.
-	 * 
-	 * @return	The created index set.
-	 */
-	public static <T> IndexSet<T> newIndexSet() {
-		return newIndexSet(DEFAULT_ESTIMATED_SIZE);
-	}
-	/**
-	 * Create a new index set of the given estimated size.
-	 * {@link #THRESHOLD} is used to choose the implementation of
-	 * the created set based on the given estimated size.
-	 * 
-	 * @param	<T>	The type of elements in the set.
-	 * @param	size	The estimated size of the set.
-	 * @return	The created index set.
-	 */
-	public static <T> IndexSet<T> newIndexSet(int size) {
-		return (size < THRESHOLD) ? new ArraySet<T>(size) :
-			new IndexHashSet<T>(size);
-	}
-	/**
 	 * Create a new set of the default estimated size.
 	 * {@link #THRESHOLD} is used to choose the implementation of
 	 * the created set based on the default estimated size.
