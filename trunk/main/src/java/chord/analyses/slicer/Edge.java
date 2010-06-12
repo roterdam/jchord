@@ -5,10 +5,6 @@
  */
 package chord.analyses.slicer;
 
-import java.util.Set;
-
-import joeq.Compiler.Quad.Quad;
-
 import chord.project.analyses.rhs.IEdge;
 
 /**
