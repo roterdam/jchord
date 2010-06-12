@@ -5,9 +5,6 @@
  */
 package chord.doms;
 
-import java.util.Map;
-import java.util.HashMap;
-
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -39,8 +36,7 @@ import chord.project.analyses.ProgramDom;
 	consumedNames = { "M" }
 )
 public class DomP extends ProgramDom<Inst> {
-	private final Map<Quad, BasicBlock> quadToBasicBlock =
-		new HashMap<Quad, BasicBlock>();
+	@Override
 	public void fill() {
 		DomM domM = (DomM) Project.getTrgt("M");
 		int numM = domM.size();
@@ -60,16 +56,13 @@ public class DomP extends ProgramDom<Inst> {
 				}
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();
-					quadToBasicBlock.put(q, bb);
 					Program.v().mapInstToMethod(q, m);
 					getOrAdd(q);
 				}
 			}
 		}
 	}
-	public BasicBlock getBasicBlock(Quad q) {
-		return quadToBasicBlock.get(q);
-	}
+	@Override
 	public String toUniqueString(Inst i) {
 		int x;
 		if (i instanceof Quad) {

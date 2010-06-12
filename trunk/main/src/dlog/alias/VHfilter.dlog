@@ -28,4 +28,5 @@ VHfilter(v:V,h:H) output
 
 VHfilter(v,h) :- VT(v,t), HT(h,s), sub(s,t).
 VHfilter(_,h) :- arrayH(h).
+VHfilter(_,0).
 

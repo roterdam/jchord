@@ -255,14 +255,15 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				}
 			}
 		}
-		kobjValue = new int[domH.size()];
-		for (Inst inst : domH) {
-			int h = domH.indexOf(inst);
-			kobjValue[h] = kobjK;
+		int numA = domH.getLastRealHidx() + 1;
+		int numH = domH.size();
+		int numI = domI.size();
+		kobjValue = new int[numA];
+		for (int i = 1; i < numA; i++) {
+			kobjValue[i] = kobjK;
 		}
-		kcfaValue = new int[domI.size()];
-		for (Inst inst : domI) {
-			int i = domI.indexOf(inst);
+		kcfaValue = new int[numI];
+		for (int i = 0; i < numI; i++) {
 			kcfaValue[i] = kcfaK;
 		}
 
@@ -276,8 +277,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		epsilonCtxtSet.add(epsilon);
 
 		methToCtxtsMap = new HashMap<jq_Method, Set<Ctxt>>();
-		int numI = domI.size();
-		int numH = domH.size();
 
 		isCtxtSenI = new boolean[numI];
 		methToClrSitesMap = new HashMap<jq_Method, List<Quad>>();
@@ -302,7 +301,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				domC.setCtxt(newElems);
 			}
 		}
-		for (int hIdx = 1; hIdx < numH; hIdx++) {
+		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = Program.v().getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
@@ -313,7 +312,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				domC.setCtxt(newElems);
 			}
 		}
-
+		for (int hIdx = numA; hIdx < numH; hIdx++) {
+			// TODO
+		}
 		domC.save();
 
 		int numC = domC.size();
@@ -340,7 +341,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		assert (domC.size() == numC);
 
 		relCH.zero();
-		for (int hIdx = 1; hIdx < numH; hIdx++) {
+		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = Program.v().getMethod(inst);
 			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
@@ -352,6 +353,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				relCC.add(oldCtxt, newCtxt);
 				relCH.add(newCtxt, inst);
 			}
+		}
+		for (int hIdx = numA; hIdx < numH; hIdx++) {
+			// TODO
 		}
 		relCH.save();
 
@@ -393,14 +397,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				relEpsilonV.add(v);
 		}
 		relEpsilonV.save();
-	}
-
-	private static boolean contains(Quad[] elems, Quad q) {
-		for (Quad e : elems) {
-			if (e == q)
-				return true;
-		}
-		return false;
 	}
 
 	private void validate() {

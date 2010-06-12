@@ -25,8 +25,8 @@ import chord.project.analyses.ProgramRel;
 public class RelArrayH extends ProgramRel {
 	public void fill() {
 		DomH domH = (DomH) doms[0];
-		int numH = domH.size();
-		for (int hIdx = 1; hIdx < numH; hIdx++) {
+		int numA = domH.getLastRealHidx();
+		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad q = (Quad) domH.get(hIdx);
 			if (q.getOperator() instanceof NewArray)
 				add(q);
