@@ -22,7 +22,6 @@ import chord.program.visitors.IPhiInstVisitor;
 import chord.program.visitors.IRelLockInstVisitor;
 import chord.program.visitors.IReturnInstVisitor;
 import chord.program.visitors.ICastInstVisitor;
-import chord.program.visitors.IVarVisitor;
 import chord.project.analyses.ITask;
 import chord.util.IndexSet;
 
@@ -65,7 +64,6 @@ public class VisitorHandler {
 	private Collection<IClassVisitor> cvs;
 	private Collection<IFieldVisitor> fvs;
 	private Collection<IMethodVisitor> mvs;
-	private Collection<IVarVisitor> vvs;
 	private Collection<IHeapInstVisitor> hivs;
 	private Collection<INewInstVisitor> nivs;
 	private Collection<IInvokeInstVisitor> iivs;
@@ -77,7 +75,6 @@ public class VisitorHandler {
 	private Collection<IPhiInstVisitor> pivs;
 	private Collection<IInstVisitor> ivs;
 	private boolean doCFGs;
-	private boolean doInsts;
 	public VisitorHandler(ITask task) {
 		tasks = new ArrayList<ITask>(1);
 		tasks.add(task);
@@ -107,20 +104,9 @@ public class VisitorHandler {
 					if (m.isAbstract())
 						continue;
 					ControlFlowGraph cfg = m.getCFG();
-					if (vvs != null)
-						visitVars(cfg);
-					if (doInsts)
-						visitInsts(cfg);
+					visitInsts(cfg);
 				}
 			}
-		}
-	}
-	private void visitVars(ControlFlowGraph cfg) {
-		RegisterFactory rf = cfg.getRegisterFactory();
-		for (Object o : rf) {
-			Register v = (Register) o;
-			for (IVarVisitor vv : vvs)
-				vv.visit(v);
 		}
 	}
 	private void visitInsts(ControlFlowGraph cfg) {
@@ -204,11 +190,6 @@ public class VisitorHandler {
 					mvs = new ArrayList<IMethodVisitor>();
 				mvs.add((IMethodVisitor) task);
 			}
-			if (task instanceof IVarVisitor) {
-				if (vvs == null)
-					vvs = new ArrayList<IVarVisitor>();
-				vvs.add((IVarVisitor) task);
-			}
 			if (task instanceof IInstVisitor) {
 				if (ivs == null)
 					ivs = new ArrayList<IInstVisitor>();
@@ -261,11 +242,10 @@ public class VisitorHandler {
 			}
 		}
 		reachableMethods = Program.v().getReachableMethods();
-		doInsts = (ivs != null) || (hivs != null) ||
+		doCFGs = (ivs != null) || (hivs != null) ||
 			(iivs != null) || (nivs != null) || (mivs != null) ||
 			(civs != null) || (pivs != null) || (rivs != null) ||
 			(acqivs != null) || (relivs != null);
-		doCFGs = (vvs != null) || doInsts;
 		if (cvs != null) {
 			IndexSet<jq_Class> preparedClasses =
 				Program.v().getPreparedClasses();

@@ -26,9 +26,13 @@ import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
  
 import joeq.UTF.Utf8;
+import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
+import joeq.Class.PrimordialClassLoader;
+import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;
@@ -63,7 +67,9 @@ public class Program {
 	}
 	private IndexSet<jq_Class> classes;
 	private IndexSet<jq_Method> methods;
+	private ArrayList<jq_Type> types;
 	private Map<String, jq_Class> nameToClassMap;
+	private Map<String, jq_Type> nameToTypeMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private jq_Method mainMethod;
 	private boolean HTMLizedJavaSrcFiles;
@@ -104,6 +110,17 @@ public class Program {
 			}
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
+		}
+		PrimordialClassLoader loader = PrimordialClassLoader.loader;
+		int numTypes = loader.getNumTypes();
+		jq_Type[] typesAry = loader.getAllTypes();
+		types = new ArrayList<jq_Type>(numTypes + 2);
+		types.add(jq_NullType.NULL_TYPE);
+		types.add(jq_ReturnAddressType.INSTANCE);
+		for (int i = 0; i < numTypes; i++) {
+			jq_Type t = typesAry[i];
+			assert (t != null);
+			types.add(t);
 		}
 		isInited = true;
 	}
@@ -221,6 +238,14 @@ public class Program {
 			nameToClassMap.put(c.getName(), c);
 		}
 	}
+
+	private void buildNameToTypeMap() {
+		init();
+		nameToTypeMap = new HashMap<String, jq_Type>();
+		for (jq_Type t : types) {
+			nameToTypeMap.put(t.getName(), t);
+		}
+	}
 	
 	private void buildClassToMethodsMap() {
 		init();
@@ -246,10 +271,21 @@ public class Program {
 		return methods;
 	}
 
+	public ArrayList<jq_Type> getAllTypes() {
+		init();
+		return types;
+	}
+
 	public jq_Class getPreparedClass(String name) {
 		if (nameToClassMap == null)
 			buildNameToClassMap();
 		return nameToClassMap.get(name);
+	}
+
+	public jq_Type getType(String name) {
+		if (nameToTypeMap == null)
+			buildNameToTypeMap();
+		return nameToTypeMap.get(name);
 	}
 
 	public List<jq_Method> getReachableMethods(jq_Class c) {
@@ -314,54 +350,54 @@ public class Program {
 	// of those types in human-readable form
 	// e.g. convert <tt>[Ljava/lang/String;I</tt> to
 	// <tt>java.lang.String[],int</tt>
-	public static String typesToStr(String types) {
+	public static String typesToStr(String typesStr) {
     	String result = "";
     	boolean needsSep = false;
-        while (types.length() != 0) {
+        while (typesStr.length() != 0) {
             boolean isArray = false;
             int numDim = 0;
             String baseType;
             // Handle array case
-            while(types.startsWith("[")) {
+            while(typesStr.startsWith("[")) {
             	isArray = true;
             	numDim++;
-            	types = types.substring(1);
+            	typesStr = typesStr.substring(1);
             }
             // Determine base type
-            if (types.startsWith("B")) {
+            if (typesStr.startsWith("B")) {
             	baseType = "byte";
-            	types = types.substring(1);
-            } else if (types.startsWith("C")) {
+            	typesStr = typesStr.substring(1);
+            } else if (typesStr.startsWith("C")) {
             	baseType = "char";
-            	types = types.substring(1);
-            } else if (types.startsWith("D")) {
+            	typesStr = typesStr.substring(1);
+            } else if (typesStr.startsWith("D")) {
             	baseType = "double";
-            	types = types.substring(1);
-            } else if (types.startsWith("F")) {
+            	typesStr = typesStr.substring(1);
+            } else if (typesStr.startsWith("F")) {
             	baseType = "float";
-            	types = types.substring(1);
-            } else if (types.startsWith("I")) {
+            	typesStr = typesStr.substring(1);
+            } else if (typesStr.startsWith("I")) {
             	baseType = "int";
-            	types = types.substring(1);
-            } else if(types.startsWith("J")) {
+            	typesStr = typesStr.substring(1);
+            } else if (typesStr.startsWith("J")) {
             	baseType = "long";
-            	types = types.substring(1);
-            } else if(types.startsWith("L")) {
-            	int index = types.indexOf(';');
+            	typesStr = typesStr.substring(1);
+            } else if (typesStr.startsWith("L")) {
+            	int index = typesStr.indexOf(';');
             	if(index == -1)
             		throw new RuntimeException("Class reference has no ending ;");
-            	String className = types.substring(1, index);
+            	String className = typesStr.substring(1, index);
             	baseType = className.replace('/', '.');
-            	types = types.substring(index + 1);
-            } else if(types.startsWith("S")) {
+            	typesStr = typesStr.substring(index + 1);
+            } else if (typesStr.startsWith("S")) {
             	baseType = "short";
-            	types = types.substring(1);
-            } else if(types.startsWith("Z")) {
+            	typesStr = typesStr.substring(1);
+            } else if (typesStr.startsWith("Z")) {
             	baseType = "boolean";
-            	types = types.substring(1);
-            } else if(types.startsWith("V")) {
+            	typesStr = typesStr.substring(1);
+            } else if (typesStr.startsWith("V")) {
             	baseType = "void";
-            	types = types.substring(1);
+            	typesStr = typesStr.substring(1);
             } else
             	throw new RuntimeException("Unknown field type!");
             if (needsSep)
