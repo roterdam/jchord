@@ -7,10 +7,10 @@ package chord.rels;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import joeq.Compiler.Quad.RegisterFactory.Register;
-import chord.program.visitors.IVarVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
+import joeq.Compiler.Quad.RegisterFactory.Register;
+import chord.doms.DomV;
 
 /**
  * Relation containing each tuple (m,v) such that method m
@@ -23,14 +23,12 @@ import chord.project.analyses.ProgramRel;
 	name = "MV",
 	sign = "M0,V0:M0_V0"
 )
-public class RelMV extends ProgramRel implements IVarVisitor {
-	private jq_Method ctnrMethod;
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		ctnrMethod = m;
-	}
-	public void visit(Register v) {
-		if (v.getType().isReferenceType())
-			add(ctnrMethod, v);
+public class RelMV extends ProgramRel {
+	public void fill() {
+		DomV domV = (DomV) doms[1];
+		for (Register v : domV) {
+			jq_Method m = domV.getMethod(v);
+			add(m, v);
+		}
 	}
 }
