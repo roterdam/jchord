@@ -57,7 +57,7 @@ public class ClassHierarchyBuilder {
 	private final Set<String> allInterfaces = new HashSet<String>();
 	/**
 	 * Map from each (concrete or abstract) class c in scope to the
-	 * class/interface d (not necessarily in scope) such that:
+	 * class d (not necessarily in scope) such that:
 	 * 1. if c == java.lang.Object then d == null, and
 	 * 2. if c is a class other than java.lang.Object then d is the
 	 *    declared superclass of c.
@@ -102,6 +102,12 @@ public class ClassHierarchyBuilder {
 		new HashMap<String, Set<String>>();
 	private final boolean verbose;
 
+	public String getDeclaredSuperclass(String c) {
+		return classToDeclaredSuperclass.get(c);
+	}
+	public Set<String> getDeclaredInterfaces(String t) {
+		return typeToDeclaredInterfaces.get(t);
+	}
 	public ClassHierarchyBuilder() {
 		CHkind = Properties.CHkind;
 		if (!CHkind.equals("static") && !CHkind.equals("dynamic"))
@@ -231,8 +237,6 @@ public class ClassHierarchyBuilder {
 		allTypes.clear();
 		allConcreteClasses.clear();
 		allInterfaces.clear();
-		classToDeclaredSuperclass.clear();
-		typeToDeclaredInterfaces.clear();
 		concreteClassToAllSuperclasses.clear();
 		concreteClassToAllInterfaces.clear();
 
