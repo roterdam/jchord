@@ -5,11 +5,12 @@
  */
 package chord.rels;
 
-import joeq.Class.jq_Type;
+import joeq.Class.jq_Class;
 
-import chord.doms.DomT;
+import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
+import chord.util.IndexSet;
 
 /**
  * Relation containing each tuple (s,t) such that type s is a
@@ -23,18 +24,11 @@ import chord.project.analyses.ProgramRel;
 )
 public class RelSub extends ProgramRel {
 	public void fill() {
-		DomT domT = (DomT) doms[0];
-		int numT = domT.size();
-		for (int t1Idx = 0; t1Idx < numT; t1Idx++) {
-			jq_Type t1 = domT.get(t1Idx);
-			if (!t1.isPrepared())
-				continue;
-			for (int t2Idx = 0; t2Idx < numT; t2Idx++) {
-				jq_Type t2 = domT.get(t2Idx);
-				if (!t2.isPrepared())
-					continue;
+		IndexSet<jq_Class> preparedClasses = Program.v().getPreparedClasses();
+		for (jq_Class t1 : preparedClasses) {
+			for (jq_Class t2 : preparedClasses) {
 				if (t1.isSubtypeOf(t2)) {
-					add(t1Idx, t2Idx);
+					add(t1, t2);
 				}
 			}
 		}

@@ -18,13 +18,13 @@ import joeq.Class.jq_Class;
  * @author Omer Tripp (omertrip@post.tau.ac.il)
  */
 @Chord(
-	name = "fakeTH",
-	sign = "T0,H0:T0_H0"
+	name = "reflectHT",
+	sign = "H0,T0:T0_H0"
 )
-public class RelFakeTH extends ProgramRel {
+public class RelReflectHT extends ProgramRel {
 	public void fill() {
-		DomT domT = (DomT) doms[0];
-		DomH domH = (DomH) doms[1];
+		DomH domH = (DomH) doms[0];
+		DomT domT = (DomT) doms[1];
 		IndexSet<jq_Class> reflectAllocTypes = domH.getReflectAllocTypes();
 		if (reflectAllocTypes == null)
 			return;
@@ -32,7 +32,7 @@ public class RelFakeTH extends ProgramRel {
 		for (jq_Class c : reflectAllocTypes) {
 			int tIdx = domT.indexOf(c);
 			assert (tIdx != -1);
-			add(tIdx, hIdx);
+			add(hIdx, tIdx);
 			hIdx++;
 		}
 	}
