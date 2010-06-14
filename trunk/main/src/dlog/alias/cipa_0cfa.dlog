@@ -36,8 +36,9 @@
 # Relations
 ###
 
-VHfilter(v:V,h:H) input
+VT(v:V0,t:T0) input
 HT(h:H0,t:T1) input
+arrayH(h:H0) input
 cha(n:M1,t:T1,m:M0) input
 sub(t1:T1,t2:T0) input
 MmethArg(m:M0,n:Z0,v:V0) input
@@ -57,24 +58,14 @@ MputInstFldInst(m:M,b:V,f:F,r:V) input
 MgetStatFldInst(m:M,l:V,f:F) input
 MputStatFldInst(m:M,f:F,r:V) input
 MnewInstanceInvkInst(m:M,l:V) input
-fakeTH(t:T,h:H) input
 classT(t:T) input
 staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
-reachableT(t:T) output
+reflectHT(h:H,t:T) input
+
 IHM(i:I,h:H,m:M)
 VV(v1:V,v2:V)
-
-VH(v:V,h:H) output
-FH(f:F,h:H) output
-HFH(h1:H,f:F,h2:H) output
-rootM(m:M) output
-reachableI(i:I) output
-reachableM(m:M) output
-IM(i:I,m:M) output
-MM(m:M,n:M) output
-
 specIMV(i:I,m:M,v:V)
 objValAsgnInst(l:V,h:H) 
 objVarAsgnInst(l:V,r:V) 
@@ -84,9 +75,24 @@ putInstFldInst(b:V,f:F,r:V)
 getStatFldInst(l:V,f:F) 
 putStatFldInst(f:F,r:V) 
 
+reachableT(t:T) output
+VHfilter(v:V,h:H) output
+VH(v:V,h:H) output
+FH(f:F,h:H) output
+HFH(h1:H,f:F,h2:H) output
+rootM(m:M) output
+reachableI(i:I) output
+reachableM(m:M) output
+IM(i:I,m:M) output
+MM(m:M,n:M) output
+
 ###
 # Constraints
 ###
+
+VHfilter(v,h) :- VT(v,t), HT(h,s), sub(s,t).
+VHfilter(_,h) :- arrayH(h).
+VHfilter(_,0).
 
 IHM(i,h,m2) :- virtIM(i,m1), HT(h,t), cha(m1,t,m2).
 
@@ -129,7 +135,7 @@ FH(f,h) :- putStatFldInst(f,r), VH(r,h).
 VH(l,h) :- checkCastInst(l,_,r), VH(r,h), h != 0.
 
 VH(l,0) :- reachableM(m), MnewInstanceInvkInst(m,l).
-VH(l,h) :- checkCastInst(l,t,r), VH(r,0), sub(t2,t), fakeTH(t2,h).
+VH(l,h) :- checkCastInst(l,t,r), VH(r,0), sub(t2,t), reflectHT(h,t2).
 
 ## See: http://java.sun.com/docs/books/jls/second_edition/html/execution.doc.html
 ## Section 12.4 Initialization of Classes and Interfaces
@@ -137,7 +143,8 @@ VH(l,h) :- checkCastInst(l,t,r), VH(r,0), sub(t2,t), fakeTH(t2,h).
 ## the first occurrence of any one of the following:
 
 # 1. T is a class and an instance of T is created.
-reachableT(t) :- reachableM(m), MobjValAsgnInst(m,_,h), HT(h,t).
+# this covers both normal allocation and reflective allocation
+reachableT(t) :- VH(_,h), HT(h,t).
 # 2. T is a class and a static method declared by T is invoked
 reachableT(t) :- reachableM(m), staticTM(t,m).
 # 3. A static field declared by T is assigned. 

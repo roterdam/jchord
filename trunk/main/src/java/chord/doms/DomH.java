@@ -46,7 +46,6 @@ public class DomH extends ProgramDom<Object> {
 	protected jq_Method ctnrMethod;
 	protected boolean handleReflection;
 	protected IndexSet<jq_Class> reflectAllocTypes;
-	protected ClassHierarchyBuilder chb;
 	protected int lastRealHidx;
 	public IndexSet<jq_Class> getReflectAllocTypes() {
 		return reflectAllocTypes;
@@ -62,11 +61,11 @@ public class DomH extends ProgramDom<Object> {
 		handleReflection = Properties.scopeKind.equals("rta_reflect");
  		if (handleReflection) {
 			reflectAllocTypes = new IndexSet<jq_Class>();
-			chb = Program.v().getClassHierarchy();
 		}
 	}
 	@Override
 	public void fill() {
+		IndexSet<jq_Class> preparedClasses = Program.v().getPreparedClasses();
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
@@ -85,16 +84,10 @@ public class DomH extends ProgramDom<Object> {
 					} else if (handleReflection && op instanceof CheckCast) {
 						jq_Type type = CheckCast.getType(q).getType();
 						if (type instanceof jq_Class) {
-							String cName = type.getName();
 							jq_Class c = (jq_Class) type;
-							Set<String> concreteSubs = c.isInterface() ?
-								chb.getConcreteImplementors(cName) :
-								chb.getConcreteSubclasses(cName);
-							if (concreteSubs == null)
-								continue;
-							for (String dName : concreteSubs) {
-								jq_Class d = (jq_Class) jq_Type.parseType(dName);
-								reflectAllocTypes.add(d);
+							for (jq_Class d : preparedClasses) {
+								if (!d.isInterface() && !d.isAbstract() && d.isSubtypeOf(c))
+									reflectAllocTypes.add(d);
 							}
 						}
 					}

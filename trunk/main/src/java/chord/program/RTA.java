@@ -138,8 +138,11 @@ public class RTA implements IScopeBuilder {
 								assert (!d.isAbstract());
 								if (d.implementsInterface(c)) {
 									jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-									assert (m2 != null);
-									visitMethod(m2);
+									if (m2 == null) {
+										Messages.logAnon("WARNING: Expected instance method " + nd +
+											" in class " + d + " implementing interface " + c);
+									} else
+										visitMethod(m2);
 								}
 							}
 						} else {
@@ -148,8 +151,11 @@ public class RTA implements IScopeBuilder {
 								assert (!d.isAbstract());
 								if (d.extendsClass(c)) {
 									jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-									assert (m2 != null);
-									visitMethod(m2);
+									if (m2 == null) {
+										Messages.logAnon("WARNING: Expected instance method " + nd +
+											" in class " + d + " subclassing class " + c);
+									} else
+										visitMethod(m2);
 								}
 							}
 						}
@@ -178,16 +184,26 @@ public class RTA implements IScopeBuilder {
 					if (type instanceof jq_Class) {
 						String cName = type.getName();
 						jq_Class c = (jq_Class) type;
-						Set<String> concreteSubs = c.isInterface() ?
-							chb.getConcreteImplementors(cName) :
-							chb.getConcreteSubclasses(cName);
-						if (concreteSubs == null)
-							continue;
-						for (String dName : concreteSubs) {
-							jq_Class d = (jq_Class) jq_Type.parseType(dName);
-							visitClass(d);
-							if (reachableAllocClasses.add(d)) {
-								repeat = true;
+						// we don't want to check whether c is a class or interface
+						// here by calling c.isInterface() because c may not
+						// be prepared yet, causing an exception
+						Set<String> concreteImps = chb.getConcreteImplementors(cName);
+						Set<String> concreteSubs = chb.getConcreteSubclasses(cName);
+						assert (concreteImps == null || concreteSubs == null);
+						if (concreteImps != null) {
+							for (String dName : concreteImps) {
+								jq_Class d = (jq_Class) jq_Type.parseType(dName);
+								visitClass(d);
+								if (reachableAllocClasses.add(d)) 
+									repeat = true;
+							}
+						}
+						if (concreteSubs != null) {
+							for (String dName : concreteSubs) {
+								jq_Class d = (jq_Class) jq_Type.parseType(dName);
+								visitClass(d);
+								if (reachableAllocClasses.add(d)) 
+									repeat = true;
 							}
 						}
 					}
