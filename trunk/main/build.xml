@@ -328,47 +328,6 @@
 	</target>
 
 	<!--
-		PROGRAM REPRESENTATION PRINTING UTILS
-	-->
-
-	<target name="quadcode" depends="props-file">
-		<if>
-			<isset property="chord.class.path"/>
-			<then>
-				<property name="cp" value="${chord.class.path}"/>
-			</then>
-		</if>
-		<fail unless="class" message="Class must be specified via -Dclass=..."/>
-		<fail unless="cp" message="Classpath must be specified via -Dcp=..."/>
-		<java classname="joeq.Main.PrintCFG" fork="true" failonerror="true">
-			<arg value="${class}"/>
-			<classpath>
-				<pathelement location="lib/joeq.jar"/>
-				<pathelement location="lib/jwutil.jar"/>
-				<pathelement path="${cp}"/>
-			</classpath>
-		</java>
-	</target>
-
-	<target name="bytecode" depends="props-file">
-		<if>
-			<isset property="chord.class.path"/>
-			<then>
-				<property name="cp" value="${chord.class.path}"/>
-			</then>
-		</if>
-		<fail unless="class" message="Class must be specified via -Dclass=..."/>
-		<fail unless="cp" message="Classpath must be specified via -Dcp=..."/>
-		<exec executable="javap">
-			<arg value="-classpath"/>
-			<arg value="${cp}"/>
-			<arg value="-private"/>
-			<arg value="-verbose"/>
-			<arg value="${class}"/>
-		</exec>
-	</target>
-
-	<!--
 		JAVA TO HTML UTILS
 	-->
 
