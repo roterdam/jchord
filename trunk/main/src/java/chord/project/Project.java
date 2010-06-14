@@ -71,20 +71,25 @@ public class Project {
 		currTimer = new Timer("chord");
 		currTimer.init();
 
+		Program program = Program.v();
+
 		if (Properties.buildScope) {
-			Program program = Program.v();
 			program.init();
 		}
 
 		if (Properties.printAllClasses) {
-			Program.v().printAllClasses();
+			program.printAllClasses();
 
 		}
 		String[] printClasses = Properties.toArray(Properties.printClasses);
 		if (printClasses.length > 0) {
-			Program program = Program.v();
 			for (String className : printClasses)
 				program.printClass(className);
+		}
+		String[] printMethods = Properties.toArray(Properties.printMethods);
+		if (printMethods.length > 0) {
+			for (String methodSign : printMethods)
+				program.printMethod(methodSign);
 		}
 
         String[] runAnalyses = Properties.toArray(Properties.runAnalyses);

@@ -314,6 +314,10 @@ public class Program {
 		return getReachableMethod(sign.mName, sign.mDesc, sign.cName);
 	}
 
+	public jq_Method getReachableMethod(String sign) {
+		return getReachableMethod(MethodSign.parse(sign));
+	}
+
 	public jq_Method getMainMethod() {
 		if (mainMethod == null) {
 			String mainClassName = Properties.mainClassName;
@@ -677,6 +681,12 @@ public class Program {
 		return "monitorenter " + s;
 	}
 	
+	public void printMethod(String sign) {
+		jq_Method m = getReachableMethod(sign);
+		if (m == null)
+			Messages.fatal("SCOPE.METHOD_NOT_FOUND", sign);
+		printMethod(m);
+	}
 	public void printClass(String className) {
 		jq_Class c = getPreparedClass(className);
 		if (c == null)
@@ -685,23 +695,14 @@ public class Program {
 	}
 	private void printClass(jq_Class c) {
 		System.out.println("*** Class: " + c);
-		for (jq_Method m : getReachableMethods()) {
-			System.out.println("Method: " + m);
-			if (!m.isAbstract()) {
-				ControlFlowGraph cfg = m.getCFG();
-/*
-				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-                		it.hasNext();) {
-					BasicBlock bb = it.nextBasicBlock();
-					for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-						Quad q = it2.nextQuad();			
-						int bci = m.getBCI(q);
-						System.out.println("\t" + bci + "#" + q.getID());
-					}
-				}
-*/
-				System.out.println(cfg.fullDump());
-			}
+		for (jq_Method m : getReachableMethods(c))
+			printMethod(m);
+	}
+	private void printMethod(jq_Method m) {
+		System.out.println("Method: " + m);
+		if (!m.isAbstract()) {
+			ControlFlowGraph cfg = m.getCFG();
+			System.out.println(cfg.fullDump());
 		}
 	}
 	public void printAllClasses() {
