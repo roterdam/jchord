@@ -104,7 +104,7 @@ public class Project {
 			Project.init();
 			for (String relName : printRels) {
 				ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
-				assert(rel != null);
+				assert rel != null : "failed to load relation " + relName;
 				rel.load();
 				rel.print();
 			}

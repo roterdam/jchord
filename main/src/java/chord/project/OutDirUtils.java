@@ -70,4 +70,16 @@ public class OutDirUtils {
         }
         Messages.log("PROCESS.FINISHED", cmd);
     }
+	public static final void executeWithWarnOnError(String cmd, int timeout) {
+		Messages.log("PROCESS.STARTING", cmd);
+		try {
+			int result = ProcessExecutor.execute(cmd, timeout);
+			if (result != 0) {
+				Messages.log("PROCESS.FINISHED", cmd);
+			}
+		} catch (Throwable ex) {
+			Messages.fatal("PROCESS.FAILED", cmd, ex.getMessage());
+		}
+		Messages.log("PROCESS.FINISHED", cmd);
+	}
 }

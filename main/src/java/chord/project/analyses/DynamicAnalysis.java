@@ -46,6 +46,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public final static boolean DEBUG = false;
 	protected InstrScheme scheme;
 	protected Instrumentor instrumentor;
+	public static boolean continueAfterError = System.getProperty("chord.dynamic.continueonerror", "true").equals("true");
 	
 	/* Code for handling loops consistently. */
 	private static abstract class Record {
@@ -232,7 +233,12 @@ public class DynamicAnalysis extends JavaAnalysis {
 					final String args = System.getProperty("chord.args." + runID, "");
 					final String cmd = instrProgramCmd + args;
 					initPass();
-					OutDirUtils.executeWithFailOnError(cmd);
+					int timeout = Integer.parseInt(System.getProperty("chord.dynamic.timeoutMs", "-1"));
+					System.out.println("Starting subprocess with timeout = " + timeout);
+					if(continueAfterError)
+						OutDirUtils.executeWithWarnOnError(cmd, timeout);
+					else
+						OutDirUtils.executeWithFailOnError(cmd);
 					donePass();
 					Messages.log("DYNAMIC.FINISHED_RUN", runID);
 				}
