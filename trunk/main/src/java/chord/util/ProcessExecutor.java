@@ -9,6 +9,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.TimerTask;
+import java.util.Timer;
 
 /**
  * Utility to execute a system command specified as a string in a
@@ -17,6 +19,10 @@ import java.io.InputStreamReader;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public final class ProcessExecutor {
+
+	public static final int execute(String cmd) throws Throwable {
+		return execute(cmd, -1);
+	}
 	/**
 	 * Executes a given system command specified as a string in a
 	 * separate process.
@@ -28,14 +34,26 @@ public final class ProcessExecutor {
 	 * @return	The exit value of the invoked process.
 	 * 			By convention, 0 indicates normal termination.
 	 */
-    public static final int execute(String cmd) throws Throwable {
+    public static final int execute(String cmd, int timeout) throws Throwable {
 	   	Process proc = Runtime.getRuntime().exec(cmd);
 		StreamGobbler err = new StreamGobbler(proc.getErrorStream(), "ERR");
 		StreamGobbler out = new StreamGobbler(proc.getInputStream(), "OUT");
 		err.start();
 		out.start();
-		return proc.waitFor();
-    }
+
+		TimerTask killOnDelay = null;
+
+		if(timeout > 0) {
+ 			Timer t = new Timer();
+			killOnDelay = new KillOnTimeout(proc);
+			t.schedule(killOnDelay, timeout);
+		}
+		int exitValue = proc.waitFor();
+		if(timeout > 0)
+			killOnDelay.cancel();
+
+		return exitValue;
+	}
     private static class StreamGobbler extends Thread {
         private final InputStream s;
         private final String n;
@@ -55,5 +73,14 @@ public final class ProcessExecutor {
             }
         }
     }
+	private static class KillOnTimeout extends TimerTask {
+		Process p;
+		public KillOnTimeout(Process p) {
+			this.p = p;
+		}
+		public void run() {
+			p.destroy();
+		}
+	}
 }
 
