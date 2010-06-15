@@ -115,21 +115,17 @@ public class IndexMap<T> implements Iterable<T> {
     	}
     	return result;
     }
-	@Override
 	public Iterator<T> iterator() {
 		return new Itr();
 	}
 	private class Itr implements Iterator<T> {
 		int cursor = 0;
-		@Override
 		public boolean hasNext() {
 			return cursor != list.size();
 		}
-		@Override
 		public T next() {
 			return list.get(cursor++);
 		}
-		@Override
 		public void remove() {
 			throw new UnsupportedOperationException();
 		}

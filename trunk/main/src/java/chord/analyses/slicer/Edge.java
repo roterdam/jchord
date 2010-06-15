@@ -20,19 +20,15 @@ public class Edge implements IEdge {
 		srcExpr = e1;
 		dstExpr = e2;
 	}
-	@Override
 	public boolean matchesSrcNodeOf(IEdge edge) {
 		throw new RuntimeException();
 	}
-	@Override
 	public boolean mergeWith(IEdge edge) {
 		throw new RuntimeException();
 	}
-	@Override
 	public int hashCode() {
 		return srcExpr.hashCode() + dstExpr.hashCode();
 	}
-	@Override
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
@@ -42,7 +38,6 @@ public class Edge implements IEdge {
 		return srcExpr.equals(that.srcExpr) &&
 			dstExpr.equals(that.dstExpr);
 	}
-	@Override
 	public String toString() {
 		return "[" + srcExpr.toString() + "," + dstExpr.toString() + "]";
 	}

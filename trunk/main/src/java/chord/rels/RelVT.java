@@ -41,9 +41,7 @@ import joeq.Util.Templates.ListIterator;
 	sign = "V0,T0:T0_V0"
 )
 public class RelVT extends ProgramRel implements IMethodVisitor {
-	@Override
 	public void visit(jq_Class c) { }
-	@Override
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;

@@ -34,10 +34,11 @@ public class RelMobjValAsgnInst extends ProgramRel {
 		DomM domM = (DomM) doms[0];
 		DomV domV = (DomV) doms[1];
 		DomH domH = (DomH) doms[2];
-		int lastRealHidx = domH.getLastRealHidx();
-		for (int hIdx = 1; hIdx <= lastRealHidx; hIdx++) {
+		Program program = Program.getProgram();
+		int numA = domH.getLastRealHidx();
+		for (int hIdx = 1; hIdx <= numA; hIdx++) {
 			Quad q = (Quad) domH.get(hIdx);
-			jq_Method m = Program.v().getMethod(q);
+			jq_Method m = program.getMethod(q);
 			int mIdx = domM.indexOf(m);
 			Operator op = q.getOperator();
 			RegisterOperand vo;

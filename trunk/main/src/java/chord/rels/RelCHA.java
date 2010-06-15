@@ -31,7 +31,8 @@ import chord.util.IndexSet;
 public class RelCHA extends ProgramRel {
 	public void fill() {
 		DomM domM = (DomM) doms[0];
-		IndexSet<jq_Class> classes = Program.v().getPreparedClasses();
+		Program program = Program.getProgram();
+		IndexSet<jq_Class> classes = program.getClasses();
 		for (jq_Class c : classes) {
 			for (jq_InstanceMethod m : c.getDeclaredInstanceMethods()) {
 				if (m.isPrivate())

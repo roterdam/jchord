@@ -108,8 +108,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public void run() {
-		mainMethod = Program.v().getMainMethod();
-		threadStartMethod = Program.v().getThreadStartMethod();
+		Program program = Program.getProgram();
+		mainMethod = program.getMainMethod();
+		threadStartMethod = program.getThreadStartMethod();
         domI = (DomI) Project.getTrgt("I");
         Project.runTask(domI);
         domM = (DomM) Project.getTrgt("M");
@@ -182,11 +183,11 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			System.out.println("currHeapInsts:");
 			for (Quad q : currLocHeapInsts) {
 				int x = domE.indexOf(q);
-				System.out.println("\t" + Program.v().toVerboseStr(q) + " " + x);
+				System.out.println("\t" + program.toVerboseStr(q) + " " + x);
 			}
 			System.out.println("currAllocInsts:");
 			for (Quad q : currAllocs)
-				System.out.println("\t" + Program.v().toVerboseStr(q));
+				System.out.println("\t" + program.toVerboseStr(q));
 			Timer timer = new Timer("hybrid-thresc-timer");
 			timer.init();
 			try {
@@ -195,9 +196,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				// do nothing
 			}
 			for (Quad q : currLocHeapInsts)
-				System.out.println("LOC: " + Program.v().toVerboseStr(q));
+				System.out.println("LOC: " + program.toVerboseStr(q));
 			for (Quad q : currEscHeapInsts)
-				System.out.println("ESC: " + Program.v().toVerboseStr(q));
+				System.out.println("ESC: " + program.toVerboseStr(q));
 			locHeapInsts.addAll(currLocHeapInsts);
 			escHeapInsts.addAll(currEscHeapInsts);
 			timer.done();
@@ -209,14 +210,14 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_fullEscE.txt")));
 				for (Quad e : escHeapInsts)
-					writer.println(Program.v().toPosStr(e));
+					writer.println(program.toPosStr(e));
 				writer.close();
 			}
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_fullLocE.txt")));
 				for (Quad e : locHeapInsts)
-					writer.println(Program.v().toPosStr(e));
+					writer.println(program.toPosStr(e));
 				writer.close();
 			}
 		} catch (IOException ex) {

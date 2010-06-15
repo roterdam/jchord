@@ -241,15 +241,15 @@ public class VisitorHandler {
 				relivs.add((IRelLockInstVisitor) task);
 			}
 		}
-		reachableMethods = Program.v().getReachableMethods();
+		Program program = Program.getProgram();
+		reachableMethods = program.getMethods();
 		doCFGs = (ivs != null) || (hivs != null) ||
 			(iivs != null) || (nivs != null) || (mivs != null) ||
 			(civs != null) || (pivs != null) || (rivs != null) ||
 			(acqivs != null) || (relivs != null);
 		if (cvs != null) {
-			IndexSet<jq_Class> preparedClasses =
-				Program.v().getPreparedClasses();
-			for (jq_Class c : preparedClasses) {
+			IndexSet<jq_Class> classes = program.getClasses();
+			for (jq_Class c : classes) {
 				for (IClassVisitor cv : cvs)
 					cv.visit(c);
 				if (fvs != null)

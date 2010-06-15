@@ -24,9 +24,10 @@ import chord.util.IndexSet;
 )
 public class RelSub extends ProgramRel {
 	public void fill() {
-		IndexSet<jq_Class> preparedClasses = Program.v().getPreparedClasses();
-		for (jq_Class t1 : preparedClasses) {
-			for (jq_Class t2 : preparedClasses) {
+		Program program = Program.getProgram();
+		IndexSet<jq_Class> classes = program.getClasses();
+		for (jq_Class t1 : classes) {
+			for (jq_Class t2 : classes) {
 				if (t1.isSubtypeOf(t2)) {
 					add(t1, t2);
 				}

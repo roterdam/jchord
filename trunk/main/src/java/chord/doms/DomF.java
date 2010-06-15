@@ -28,19 +28,15 @@ import chord.project.analyses.ProgramDom;
 )
 public class DomF extends ProgramDom<jq_Field>
 		implements IFieldVisitor {
-	@Override
 	public void init() {
 		// Reserve index 0 for the distinguished hypothetical field 
 		// representing all array elements
 		getOrAdd(null);
 	}
-	@Override
 	public void visit(jq_Class c) { }
-	@Override
 	public void visit(jq_Field f) {
 		getOrAdd(f);
 	}
-	@Override
 	public String toXMLAttrsString(jq_Field f) {
 		String sign;
 		String file;

@@ -118,11 +118,12 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		List<String> fStrList = FileUtils.readFileToList("seeds.txt");
 		int n = fStrList.size();
 		assert (n > 0);
+		Program program = Program.getProgram();
 		Location seedLoc;
 		{
 			String signStr = fStrList.get(0);
 			MethodSign sign = MethodSign.parse(signStr);
-			jq_Method method = Program.v().getReachableMethod(sign);
+			jq_Method method = program.getMethod(sign);
 			assert (method != null);
 			BasicBlock bb = method.getCFG().exit();
 			seedLoc = new Location(method, bb, -1, null);
@@ -131,7 +132,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		for (int i = 1; i < n; i++) {
 			String fStr = fStrList.get(i);
 			MethodSign sign = MethodSign.parse(fStr);
-			jq_Class c = Program.v().getPreparedClass(sign.cName);
+			jq_Class c = program.getClass(sign.cName);
 			if (c == null) {
 				Messages.logAnon("WARN: Ignoring slicing on field %s: " +
 					" its declaring class was not found.", fStr);
@@ -162,7 +163,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			runPass();
 			System.out.println("***** SLICE:");
 			for (Quad p : currSlice) {
-				System.out.println("\t" + Program.v().toVerboseStr(p));
+				System.out.println("\t" + program.toVerboseStr(p));
 			}
 			
 			timer.done();

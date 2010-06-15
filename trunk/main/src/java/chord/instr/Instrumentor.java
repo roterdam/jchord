@@ -351,7 +351,7 @@ public class Instrumentor {
 		FileUtils.deleteFile(bootClassesDirName);
 		FileUtils.deleteFile(userClassesDirName);
 
-		IndexSet<jq_Class> classes = program.getPreparedClasses();
+		IndexSet<jq_Class> classes = program.getClasses();
 		Messages.log("INSTR.STARTING");
 		for (jq_Class c : classes)
 			instrClass(c);
@@ -393,7 +393,7 @@ public class Instrumentor {
 		} catch (NotFoundException ex) {
 			throw new ChordRuntimeException(ex);
 		}
-		List<jq_Method> methods = program.getReachableMethods(c);
+		List<jq_Method> methods = program.getMethods(c);
 		CtBehavior[] inits = clazz.getDeclaredConstructors();
 		CtBehavior[] meths = clazz.getDeclaredMethods();
 		for (jq_Method m : methods) {

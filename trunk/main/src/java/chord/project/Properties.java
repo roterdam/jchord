@@ -142,6 +142,7 @@ public class Properties {
 	public final static String errFileName = outRel2AbsPath("chord.err.file", "log.txt");
 	public final static String classesFileName = outRel2AbsPath("chord.classes.file", "classes.txt");
 	public final static String methodsFileName = outRel2AbsPath("chord.methods.file", "methods.txt");
+	public final static String rfcastsFileName = outRel2AbsPath("chord.rfcasts.file", "rfcasts.txt");
 	public static String bddbddbWorkDirName = outRel2AbsPath("chord.bddbddb.work.dir", "bddbddb");
 	// TODO: create this dir on demand
 	static {

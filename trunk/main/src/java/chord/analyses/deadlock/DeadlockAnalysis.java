@@ -134,8 +134,9 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		Project.runTask(thrSenAbbrCSCGAnalysis);
 		thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
 		domN.clear();
+		Program program = Program.getProgram();
 		for (Inst i : domL) {
-			jq_Method m = Program.v().getMethod(i);
+			jq_Method m = program.getMethod(i);
 			Set<Ctxt> cs = thrSenAbbrCSCG.getContexts(m);
 			for (Ctxt c : cs) {
 				domN.getOrAdd(new Pair<Ctxt, Inst>(c, i));
@@ -202,6 +203,8 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		relDeadlock.load();
 		relSyncCLC.load();
 
+		Program program = Program.getProgram();
+
 		out = OutDirUtils.newPrintWriter("deadlocklist.xml");
 		out.println("<deadlocklist>");
 		for (Object[] tuple : relDeadlock.getAryNValTuples()) {
@@ -257,10 +260,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			jq_Method t2mVal = t2Val.val1;
 			int t1m = domM.indexOf(t1mVal);
 			int t2m = domM.indexOf(t2mVal);
-			jq_Method m1Val = Program.v().getMethod(l1Val);
-			jq_Method m2Val = Program.v().getMethod(l2Val);
-			jq_Method m3Val = Program.v().getMethod(l3Val);
-			jq_Method m4Val = Program.v().getMethod(l4Val);
+			jq_Method m1Val = program.getMethod(l1Val);
+			jq_Method m2Val = program.getMethod(l2Val);
+			jq_Method m3Val = program.getMethod(l3Val);
+			jq_Method m4Val = program.getMethod(l4Val);
 			int m1 = domM.indexOf(m1Val);
 			int m2 = domM.indexOf(m2Val);
 			int m3 = domM.indexOf(m3Val);
@@ -356,7 +359,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
         OutDirUtils.runSaxon("results.xml", "group.xsl");
         OutDirUtils.runSaxon("results.xml", "paths.xsl");
 
-        Program.v().HTMLizeJavaSrcFiles();
+        program.HTMLizeJavaSrcFiles();
 	}
 
 	private class CM extends Pair<Ctxt, jq_Method> {
