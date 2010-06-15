@@ -35,7 +35,6 @@ import chord.project.Properties;
 import chord.project.Messages;
 import chord.util.IndexSet;
 import chord.util.Timer;
-import chord.util.tuple.object.Pair;
 
 /**
  * Class Hierarchy Analysis algorithm for computing program scope

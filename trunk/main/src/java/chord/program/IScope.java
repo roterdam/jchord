@@ -1,11 +1,8 @@
 package chord.program;
 
-import java.util.Set;
 import chord.util.IndexSet;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Class;
-import joeq.Compiler.Quad.Quad;
-import chord.util.tuple.object.Pair;
 
 /**
  * Generic interface for algorithms computing analysis scope
