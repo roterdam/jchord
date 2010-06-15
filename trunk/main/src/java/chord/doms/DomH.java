@@ -24,6 +24,7 @@ import chord.project.Properties;
 import chord.project.analyses.ProgramDom;
 import chord.program.Program;
 import chord.util.IndexSet;
+import chord.util.tuple.object.Pair;
 
 /**
  * Domain of object allocation statements.
@@ -56,7 +57,7 @@ public class DomH extends ProgramDom<Object> {
 		Program program = Program.getProgram();
 		IndexSet<jq_Class> classes = program.getClasses();
 		IndexSet<jq_Class> rfClasses = null;
-		Set<Quad> rfCasts = null;
+		Set<Pair<Quad, jq_Method>> rfCasts = null;
 		boolean handleRf = Properties.scopeKind.equals("rta_reflect");
 		if (handleRf) {
  			rfClasses = new IndexSet<jq_Class>();
@@ -78,7 +79,7 @@ public class DomH extends ProgramDom<Object> {
 					if (op instanceof New || op instanceof NewArray) {
 						getOrAdd(q);
 					} else if (handleRf && op instanceof CheckCast &&
-							rfCasts.contains(q)) {
+							rfCasts.contains(new Pair<Quad, jq_Method>(q, m))) {
 						jq_Class c = (jq_Class) CheckCast.getType(q).getType();
 						for (jq_Class d : classes) {
 							if (!d.isInterface() && !d.isAbstract() &&
