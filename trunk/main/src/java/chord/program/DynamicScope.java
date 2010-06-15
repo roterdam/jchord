@@ -25,7 +25,6 @@ import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
-import chord.util.tuple.object.Pair;
  
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Type;
@@ -68,11 +67,11 @@ public class DynamicScope implements IScope {
 	public IndexSet<jq_Class> getClasses() {
 		return classes;
 	}
+	public IndexSet<jq_Class> getNewInstancedClasses() {
+		return null;
+	}
 	public IndexSet<jq_Method> getMethods() {
 		return methods;
-	}
-	public Set<Pair<Quad, jq_Method>> getRfCasts() {
-		return null;
 	}
 	public void build() {
 		if (isBuilt)

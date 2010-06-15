@@ -25,7 +25,6 @@ import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
-import chord.util.tuple.object.Pair;
  
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Type;
@@ -65,8 +64,8 @@ import joeq.Main.Helper;
 public class Program {
 	private boolean isBuilt = false;
 	private IndexSet<jq_Class> classes;
+	private IndexSet<jq_Class> newInstancedClasses;
 	private IndexSet<jq_Method> methods;
-	private Set<Pair<Quad, jq_Method>> rfCasts;
 	private Map<String, jq_Class> nameToClassMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private IndexSet<jq_Type> types;
@@ -117,8 +116,8 @@ public class Program {
 		}
 		scope.build();
 		classes = scope.getClasses();
+		newInstancedClasses = scope.getNewInstancedClasses();
 		methods = scope.getMethods();
-		rfCasts = scope.getRfCasts();
 		if (!fromCache)
 			CachedScope.write(scope);
 		isBuilt = true;
@@ -128,13 +127,13 @@ public class Program {
 		build();
 		return classes;
 	}
+	public IndexSet<jq_Class> getNewInstancedClasses() {
+		build();
+		return newInstancedClasses;
+	}
 	public IndexSet<jq_Method> getMethods() {
 		build();
 		return methods;
-	}
-	public Set<Pair<Quad, jq_Method>> getRfCasts() {
-		build();
-		return rfCasts;
 	}
 
 	// load and add each class in <code>classNames</code>

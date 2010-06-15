@@ -48,11 +48,11 @@ import chord.util.tuple.object.Pair;
 public class RTAScope implements IScope {
 	public static final boolean DEBUG = false;
 	private boolean isBuilt = false;
-	private final boolean findRfCasts;
+	private final boolean findNewInstancedClasses;
 
-	// set only if findRfCasts is true
-	private Set<Pair<Quad, jq_Method>> rfCasts;
-	private Set<Register> rfVars;
+	// set only if findNewInstancedClasses is true
+	private IndexSet<jq_Class> newInstancedClasses;
+	private Set<Register> newInstancedVars;
     private ClassHierarchy ch;
 
 	private IndexSet<jq_Class> classes;
@@ -68,17 +68,17 @@ public class RTAScope implements IScope {
 	private jq_Class javaLangObject;
 	private boolean repeat = true;
 
-	public RTAScope(boolean _findRfCasts) {
-		this.findRfCasts = _findRfCasts;
+	public RTAScope(boolean _findNewInstancedClasses) {
+		this.findNewInstancedClasses = _findNewInstancedClasses;
 	}
 	public IndexSet<jq_Class> getClasses() {
 		return classes;
 	}
+	public IndexSet<jq_Class> getNewInstancedClasses() {
+		return newInstancedClasses;
+	}
 	public IndexSet<jq_Method> getMethods() {
 		return methods;
-	}
-	public Set<Pair<Quad, jq_Method>> getRfCasts() {
-		return rfCasts;
 	}
 	public void build() {
 		if (isBuilt)
@@ -91,10 +91,10 @@ public class RTAScope implements IScope {
  		classesVisitedForClinit = new HashSet<jq_Class>();
  		methods = new IndexSet<jq_Method>();
 		methodWorklist = new ArrayList<jq_Method>();
-		if (findRfCasts) {
+		if (findNewInstancedClasses) {
 			ch = Program.getProgram().getClassHierarchy();
-			rfCasts = new HashSet<Pair<Quad, jq_Method>>();
-			rfVars = new HashSet<Register>();
+			newInstancedClasses = new IndexSet<jq_Class>();
+			newInstancedVars = new HashSet<Register>();
 		}
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
@@ -196,7 +196,7 @@ public class RTAScope implements IScope {
 					if (reachableAllocClasses.add(c)) {
 						repeat = true;
 					}
-				} else if (findRfCasts && op instanceof CheckCast) {
+				} else if (findNewInstancedClasses && op instanceof CheckCast) {
 					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Type type = CheckCast.getType(q).getType();
 					if (type instanceof jq_Class) {

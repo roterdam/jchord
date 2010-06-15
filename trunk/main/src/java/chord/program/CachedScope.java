@@ -68,11 +68,11 @@ public class CachedScope implements IScope {
 	public IndexSet<jq_Class> getClasses() {
 		return classes;
 	}
+	public IndexSet<jq_Class> getNewInstancedClasses() {
+		return null;
+	}
 	public IndexSet<jq_Method> getMethods() {
 		return methods;
-	}
-	public Set<Pair<Quad, jq_Method>> getRfCasts() {
-		return null;
 	}
 	public void build() {
 		if (isBuilt)
@@ -116,11 +116,11 @@ public class CachedScope implements IScope {
             for (jq_Method m : methods)
                 out.println(m);
             out.close();
-            Set<Pair<Quad, jq_Method>> rfCasts = scope.getRfCasts();
-            out = new PrintWriter(Properties.rfcastsFileName);
-			if (rfCasts != null) {
-				for (Pair<Quad, jq_Method> p : rfCasts)
-					out.println(Program.toBytePosStr(p.val0, p.val1));
+            IndexSet<jq_Class> newInstancedClasses = scope.getNewInstancedClasses();
+            out = new PrintWriter(Properties.newInstancedClassesFileName);
+			if (newInstancedClasses != null) {
+				for (jq_Class c : newInstancedClasses)
+					out.println(c);
 			}
 			out.close();
         } catch (IOException ex) {
