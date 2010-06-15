@@ -8,18 +8,14 @@ package chord.program;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
-import java.io.PrintWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.Collections;
 
 import com.java2html.Java2HTML;
 
-import chord.util.FileUtils;
 import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Properties;

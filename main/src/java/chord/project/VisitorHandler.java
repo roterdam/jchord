@@ -33,7 +33,6 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Getfield;
@@ -50,7 +49,6 @@ import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Return.THROW_A;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
 import joeq.Compiler.Quad.Operator.Monitor.MONITOREXIT;
-import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.Templates.ListIterator;
 
 /**

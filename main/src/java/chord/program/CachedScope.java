@@ -5,57 +5,20 @@
  */
 package chord.program;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.PrintWriter;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.Collections;
-
-import com.java2html.Java2HTML;
 
 import chord.util.FileUtils;
-import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
-import chord.util.tuple.object.Pair;
  
-import joeq.UTF.Utf8;
-import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
-import joeq.Class.jq_Reference.jq_NullType;
-import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
-import joeq.Class.PrimordialClassLoader;
-import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
-import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.Inst;
-import joeq.Compiler.Quad.Operator;
-import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operand;
-import joeq.Compiler.Quad.Operand.ParamListOperand;
-import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operator.Move;
-import joeq.Compiler.Quad.Operator.CheckCast;
-import joeq.Compiler.Quad.Operator.ALoad;
-import joeq.Compiler.Quad.Operator.AStore;
-import joeq.Compiler.Quad.Operator.Getfield;
-import joeq.Compiler.Quad.Operator.Getstatic;
-import joeq.Compiler.Quad.Operator.Invoke;
-import joeq.Compiler.Quad.Operator.Monitor;
-import joeq.Compiler.Quad.Operator.New;
-import joeq.Compiler.Quad.Operator.NewArray;
-import joeq.Compiler.Quad.Operator.Putfield;
-import joeq.Compiler.Quad.Operator.Putstatic;
-import joeq.Main.Helper;
 
 /**
  * 
