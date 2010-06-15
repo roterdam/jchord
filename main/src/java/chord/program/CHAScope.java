@@ -58,15 +58,13 @@ public class CHAScope implements IScope {
 	private ClassHierarchy ch;
 
 	public IndexSet<jq_Class> getClasses() {
-		build();
 		return classes;
 	}
-	public IndexSet<jq_Method> getMethods() {
-		build();
-		return methods;
-	}
-	public Set<Pair<Quad, jq_Method>> getRfCasts() {
+	public IndexSet<jq_Class> getNewInstancedClasses() {
 		return null;
+	}
+	public IndexSet<jq_Method> getMethods() {
+		return methods;
 	}
 	public void build() {
 		if (isBuilt)

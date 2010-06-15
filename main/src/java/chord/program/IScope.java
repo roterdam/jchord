@@ -16,6 +16,6 @@ import chord.util.tuple.object.Pair;
 public interface IScope {
 	public void build();
 	public IndexSet<jq_Class> getClasses();
+	public IndexSet<jq_Class> getNewInstancedClasses();
 	public IndexSet<jq_Method> getMethods();
-	public Set<Pair<Quad, jq_Method>> getRfCasts();
 }

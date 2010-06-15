@@ -43,7 +43,6 @@ import chord.util.tuple.object.Pair;
 public class DomH extends ProgramDom<Object> {
 	protected DomM domM;
 	protected DomT domT;
-	protected jq_Method ctnrMethod;
 	protected int lastRealHidx;
 	public int getLastRealHidx() {
 		return lastRealHidx;
@@ -56,20 +55,12 @@ public class DomH extends ProgramDom<Object> {
 	public void fill() {
 		Program program = Program.getProgram();
 		IndexSet<jq_Class> classes = program.getClasses();
-		IndexSet<jq_Class> rfClasses = null;
-		Set<Pair<Quad, jq_Method>> rfCasts = null;
-		boolean handleRf = Properties.scopeKind.equals("rta_reflect");
-		if (handleRf) {
- 			rfClasses = new IndexSet<jq_Class>();
-			rfCasts = program.getRfCasts();
-		}
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
 			if (m.isAbstract())
 				continue;
 			ControlFlowGraph cfg = m.getCFG();
-			ctnrMethod = m;
 			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
 					it.hasNext();) {
 				BasicBlock bb = it.nextBasicBlock();
@@ -77,33 +68,19 @@ public class DomH extends ProgramDom<Object> {
 					Quad q = it2.nextQuad();
 					Operator op = q.getOperator();
 					if (op instanceof New || op instanceof NewArray) {
+						program.mapInstToMethod(q, m);
 						getOrAdd(q);
-					} else if (handleRf && op instanceof CheckCast &&
-							rfCasts.contains(new Pair<Quad, jq_Method>(q, m))) {
-						jq_Class c = (jq_Class) CheckCast.getType(q).getType();
-						for (jq_Class d : classes) {
-							if (!d.isInterface() && !d.isAbstract() &&
-									d.isSubtypeOf(c)) {
-								rfClasses.add(d);
-							}
-						}
 					}
 				}
 			}
 		}
 		lastRealHidx = size() - 1;
-		if (handleRf) {
-			for (jq_Class c : rfClasses)
+		boolean handleNewInstancedClasses =
+			Properties.scopeKind.equals("rta_reflect");
+		if (handleNewInstancedClasses) {
+			for (jq_Class c : program.getNewInstancedClasses())
 				getOrAdd(c);
 		}
-	}
-	public int getOrAdd(Object o) {
-		if (o instanceof Quad) {
-			assert (ctnrMethod != null);
-			Quad q = (Quad) o;
-			Program.getProgram().mapInstToMethod(q, ctnrMethod);
-		}
-		return super.getOrAdd(o);
 	}
 	public String toUniqueString(Object o) {
 		if (o instanceof Quad) {
