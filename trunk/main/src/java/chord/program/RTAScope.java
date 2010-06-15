@@ -201,15 +201,25 @@ public class RTAScope implements IScope {
 					if (type instanceof jq_Class) {
 						String cName = type.getName();
 						jq_Class c = (jq_Class) type;
-						visitClass(c);
-						Set<String> concreteSubs;
-						if (c.isInterface())
-							concreteSubs = ch.getConcreteImplementors(cName);
-						else
-							concreteSubs = ch.getConcreteSubclasses(cName);
+						// don't call c.isInterface() here, c may not be prepared
+						Set<String> concreteImps = ch.getConcreteImplementors(cName);
+						Set<String> concreteSubs = ch.getConcreteSubclasses(cName);
+						assert (concreteImps == null || concreteSubs == null);
+						if (concreteImps != null) {
+							visitClass(c);
+							for (String dName : concreteImps) {
+								jq_Class d = (jq_Class) jq_Type.parseType(dName);
+								newInstancedClasses.add(d);
+								visitClass(d);
+								if (reachableAllocClasses.add(d)) 
+									repeat = true;
+							}
+						}
 						if (concreteSubs != null) {
+							visitClass(c);
 							for (String dName : concreteSubs) {
 								jq_Class d = (jq_Class) jq_Type.parseType(dName);
+								newInstancedClasses.add(d);
 								visitClass(d);
 								if (reachableAllocClasses.add(d)) 
 									repeat = true;
