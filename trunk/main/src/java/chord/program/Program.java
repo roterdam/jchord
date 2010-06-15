@@ -234,7 +234,6 @@ public class Program {
 		jq_Class c = getClass(cName);
 		if (c == null)
 			return null;
-		System.out.println("C: " + c);
 		List<jq_Method> mList = getMethods(c);
 		for (jq_Method m : mList) {
 			if (m.getName().toString().equals(mName) &&
@@ -257,7 +256,6 @@ public class Program {
 			String mainClassName = Properties.mainClassName;
 			if (mainClassName == null)
 				Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
-			System.out.println("XXX: " + mainClassName);
 			mainMethod = getMethod("main", "([Ljava/lang/String;)V", mainClassName);
 			if (mainMethod == null)
 				Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
