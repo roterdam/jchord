@@ -6,14 +6,15 @@
 package chord.analyses.slicer;
 
 import chord.project.analyses.rhs.IEdge;
+import chord.util.CompareUtils;
 
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Edge implements IEdge {
-	// may be null if this is a summary edge and srcExpr
-	// represents return variable
+	// srcExpr/dstExpr may be null if expression represents
+	// return variable
 	final Expr srcExpr;
 	final Expr dstExpr;
 	public Edge(Expr e1, Expr e2) {
@@ -27,7 +28,9 @@ public class Edge implements IEdge {
 		throw new RuntimeException();
 	}
 	public int hashCode() {
-		return srcExpr.hashCode() + dstExpr.hashCode();
+		return
+			(srcExpr == null ? 0 : srcExpr.hashCode()) +
+			(dstExpr == null ? 0 : dstExpr.hashCode());
 	}
 	public boolean equals(Object o) {
 		if (o == this)
@@ -35,10 +38,12 @@ public class Edge implements IEdge {
 		if (!(o instanceof Edge))
 			return false;
 		Edge that = (Edge) o;
-		return srcExpr.equals(that.srcExpr) &&
-			dstExpr.equals(that.dstExpr);
+		return CompareUtils.areEqual(srcExpr, that.srcExpr) &&
+			   CompareUtils.areEqual(dstExpr, that.dstExpr);
 	}
 	public String toString() {
-		return "[" + srcExpr.toString() + "," + dstExpr.toString() + "]";
+		return "[" +
+			(srcExpr == null ? "null" : srcExpr.toString()) + "," +
+			(dstExpr == null ? "null" : dstExpr.toString()) + "]";
 	}
 }
