@@ -27,7 +27,7 @@ import chord.util.tuple.object.Pair;
 /**
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ClassHierarchyBuilder {
+public class ClassHierarchy {
 	private final String CHkind;
 	/**
 	 * List of elements in Chord's classpath to be excluded from the
@@ -108,7 +108,7 @@ public class ClassHierarchyBuilder {
 	public Set<String> getDeclaredInterfaces(String t) {
 		return typeToDeclaredInterfaces.get(t);
 	}
-	public ClassHierarchyBuilder() {
+	public ClassHierarchy() {
 		CHkind = Properties.CHkind;
 		if (!CHkind.equals("static") && !CHkind.equals("dynamic"))
 			Messages.fatal("CH.INVALID_CH_KIND");
@@ -150,7 +150,7 @@ public class ClassHierarchyBuilder {
 		return interfaceToConcreteImplementors.get(iName);
 	}
 
-	public void run() {
+	public void build() {
         System.out.println("Starting to build class hierarchy; this may take a while ...");
 		Set<String> dynLoadedTypes = null;
 		if (CHkind.equals("dynamic")) {

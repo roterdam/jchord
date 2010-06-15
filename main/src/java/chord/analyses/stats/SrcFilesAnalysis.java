@@ -38,7 +38,7 @@ public class SrcFilesAnalysis extends JavaAnalysis {
 			List<String> methodList = FileUtils.readFileToList(methodsFileName);
 			Set<jq_Method> methodSet = new HashSet<jq_Method>(methodList.size());
 			for (String s : methodList) {
-				jq_Method m = Program.v().getReachableMethod(MethodSign.parse(s));
+				jq_Method m = Program.getProgram().getMethod(MethodSign.parse(s));
 				if (m == null)
 					throw new RuntimeException("Method: " + s + " not found");
 				methodSet.add(m);

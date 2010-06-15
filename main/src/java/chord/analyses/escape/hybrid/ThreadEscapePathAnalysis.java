@@ -183,7 +183,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		isIgnoredMeth = new boolean[numM];
 		startInvks = new int[10];
 		int fstP = 0;
-		Program program = Program.v();
+		Program program = Program.getProgram();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
 			if (m.isAbstract())
@@ -193,7 +193,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			String mSign = mName + mDesc;
 			String cName = m.getDeclaringClass().getName();
 			methToSign[mIdx] = mSign;
-			jq_Class cls = program.getPreparedClass(cName);
+			jq_Class cls = program.getClass(cName);
 			if (cls == null) {
 				System.out.println("WARNING: Ingoring method " + m);
 				isIgnoredMeth[mIdx] = true;
@@ -301,12 +301,13 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		relEH.save();
 
 		try {
+			Program program = Program.getProgram();
 			String outDirName = Properties.outDirName;
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_pathEscE.txt")));
 				for (Quad e : escHeapInsts)
-					writer.println(Program.v().toPosStr(e));
+					writer.println(program.toPosStr(e));
 				writer.close();
 			}
 
@@ -314,9 +315,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_pathLocE.txt")));
    		     	for (Quad e : heapInstToAllocInsts.keySet()) {
-					writer.println(Program.v().toPosStr(e));
+					writer.println(Program.getProgram().toPosStr(e));
 					for (Quad h : heapInstToAllocInsts.get(e)) {
-						writer.println("\t" + Program.v().toPosStr(h));
+						writer.println("\t" + program.toPosStr(h));
 					}
 				}
 				writer.close();

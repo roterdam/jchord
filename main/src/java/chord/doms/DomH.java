@@ -18,7 +18,6 @@ import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Util.Templates.ListIterator;
-import chord.program.ClassHierarchyBuilder;
 import chord.project.Chord;
 import chord.project.Project;
 import chord.project.Properties;
@@ -44,28 +43,25 @@ public class DomH extends ProgramDom<Object> {
 	protected DomM domM;
 	protected DomT domT;
 	protected jq_Method ctnrMethod;
-	protected boolean handleReflection;
-	protected IndexSet<jq_Class> reflectAllocTypes;
 	protected int lastRealHidx;
-	public IndexSet<jq_Class> getReflectAllocTypes() {
-		return reflectAllocTypes;
-	}
 	public int getLastRealHidx() {
 		return lastRealHidx;
 	}
-	@Override
 	public void init() {		
 		domM = (DomM) Project.getTrgt("M");
 		domT = (DomT) Project.getTrgt("T");
 		getOrAdd(null);	
-		handleReflection = Properties.scopeKind.equals("rta_reflect");
- 		if (handleReflection) {
-			reflectAllocTypes = new IndexSet<jq_Class>();
-		}
 	}
-	@Override
 	public void fill() {
-		IndexSet<jq_Class> preparedClasses = Program.v().getPreparedClasses();
+		Program program = Program.getProgram();
+		IndexSet<jq_Class> classes = program.getClasses();
+		IndexSet<jq_Class> rfClasses = null;
+		Set<Quad> rfCasts = null;
+		boolean handleRf = Properties.scopeKind.equals("rta_reflect");
+		if (handleRf) {
+ 			rfClasses = new IndexSet<jq_Class>();
+			rfCasts = program.getRfCasts();
+		}
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
@@ -81,13 +77,13 @@ public class DomH extends ProgramDom<Object> {
 					Operator op = q.getOperator();
 					if (op instanceof New || op instanceof NewArray) {
 						getOrAdd(q);
-					} else if (handleReflection && op instanceof CheckCast) {
-						jq_Type type = CheckCast.getType(q).getType();
-						if (type instanceof jq_Class) {
-							jq_Class c = (jq_Class) type;
-							for (jq_Class d : preparedClasses) {
-								if (!d.isInterface() && !d.isAbstract() && d.isSubtypeOf(c))
-									reflectAllocTypes.add(d);
+					} else if (handleRf && op instanceof CheckCast &&
+							rfCasts.contains(q)) {
+						jq_Class c = (jq_Class) CheckCast.getType(q).getType();
+						for (jq_Class d : classes) {
+							if (!d.isInterface() && !d.isAbstract() &&
+									d.isSubtypeOf(c)) {
+								rfClasses.add(d);
 							}
 						}
 					}
@@ -95,25 +91,23 @@ public class DomH extends ProgramDom<Object> {
 			}
 		}
 		lastRealHidx = size() - 1;
-		if (handleReflection) {
-			for (jq_Class c : reflectAllocTypes)
+		if (handleRf) {
+			for (jq_Class c : rfClasses)
 				getOrAdd(c);
 		}
 	}
-	@Override
 	public int getOrAdd(Object o) {
 		if (o instanceof Quad) {
 			assert (ctnrMethod != null);
 			Quad q = (Quad) o;
-			Program.v().mapInstToMethod(q, ctnrMethod);
+			Program.getProgram().mapInstToMethod(q, ctnrMethod);
 		}
 		return super.getOrAdd(o);
 	}
-	@Override
 	public String toUniqueString(Object o) {
 		if (o instanceof Quad) {
 			Quad q = (Quad) o;
-			return Program.v().toBytePosStr(q);
+			return Program.getProgram().toBytePosStr(q);
 		}
 		if (o instanceof jq_Class) {
 			jq_Class c = (jq_Class) o;
@@ -122,14 +116,13 @@ public class DomH extends ProgramDom<Object> {
 		assert (o == null);
 		return "null";
 	}
-	@Override
 	public String toXMLAttrsString(Object o) {
 		if (o instanceof Quad) {
 			Quad q = (Quad) o;
 			Operator op = q.getOperator();
 			String type = (op instanceof New) ? New.getType(q).getType().getName() :
 				(op instanceof NewArray) ? NewArray.getType(q).getType().getName() : "unknown";
-			jq_Method m = Program.v().getMethod(q);
+			jq_Method m = Program.getProgram().getMethod(q);
 			String file = Program.getSourceFileName(m.getDeclaringClass());
 			int line = Program.getLineNumber(q, m);
 			int mIdx = domM.indexOf(m);

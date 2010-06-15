@@ -25,15 +25,13 @@ public class RelReflectHT extends ProgramRel {
 	public void fill() {
 		DomH domH = (DomH) doms[0];
 		DomT domT = (DomT) doms[1];
-		IndexSet<jq_Class> reflectAllocTypes = domH.getReflectAllocTypes();
-		if (reflectAllocTypes == null)
-			return;
-		int hIdx = domH.getLastRealHidx() + 1;
-		for (jq_Class c : reflectAllocTypes) {
+		int numH = domH.size();
+		int fstT = domH.getLastRealHidx() + 1;
+		for (int hIdx = fstT; hIdx < numH; hIdx++) {
+			jq_Class c = (jq_Class) domH.get(hIdx);
 			int tIdx = domT.indexOf(c);
 			assert (tIdx != -1);
 			add(hIdx, tIdx);
-			hIdx++;
 		}
 	}
 }

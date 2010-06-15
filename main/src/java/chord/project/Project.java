@@ -71,10 +71,10 @@ public class Project {
 		currTimer = new Timer("chord");
 		currTimer.init();
 
-		Program program = Program.v();
+		Program program = Program.getProgram();
 
 		if (Properties.buildScope) {
-			program.init();
+			program.build();
 		}
 
 		if (Properties.printAllClasses) {

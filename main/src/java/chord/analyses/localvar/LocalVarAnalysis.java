@@ -17,7 +17,7 @@ import joeq.Class.jq_LocalVarTableEntry;
 )
 public class LocalVarAnalysis extends JavaAnalysis {
 	public void run() {
-		jq_Method m = Program.v().getMainMethod();
+		jq_Method m = Program.getProgram().getMainMethod();
 		ControlFlowGraph cfg = m.getCFG();
 		RegisterFactory rf = cfg.getRegisterFactory();
 		Map<Pair,Register> localNumberingMap = rf.getLocalNumberingMap();

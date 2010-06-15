@@ -108,10 +108,11 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
     int E = domE.size();
     int[] e2f = new int[E];
     boolean[] isWrite = new boolean[E];
+	Program program = Program.getProgram();
     for(int e = 0; e < E; e++) {
-      Quad q = (Quad)domE.get(e);
+      Quad q = (Quad) domE.get(e);
       Operator op = q.getOperator();
-      jq_Field field = Program.v().getField(q);
+      jq_Field field = program.getField(q);
       if (field == null) {
         assert (op instanceof ALoad || op instanceof AStore);
         e2f[e] = 0;

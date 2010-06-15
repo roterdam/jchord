@@ -36,7 +36,6 @@ import chord.project.analyses.ProgramDom;
 	consumedNames = { "M" }
 )
 public class DomP extends ProgramDom<Inst> {
-	@Override
 	public void fill() {
 		DomM domM = (DomM) Project.getTrgt("M");
 		int numM = domM.size();
@@ -50,19 +49,18 @@ public class DomP extends ProgramDom<Inst> {
 				BasicBlock bb = it.nextBasicBlock();
 				int n = bb.size();
 				if (n == 0) {
-					Program.v().mapInstToMethod(bb, m);
+					Program.getProgram().mapInstToMethod(bb, m);
 					getOrAdd(bb);
 					continue;
 				}
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();
-					Program.v().mapInstToMethod(q, m);
+					Program.getProgram().mapInstToMethod(q, m);
 					getOrAdd(q);
 				}
 			}
 		}
 	}
-	@Override
 	public String toUniqueString(Inst i) {
 		int x;
 		if (i instanceof Quad) {
@@ -76,6 +74,6 @@ public class DomP extends ProgramDom<Inst> {
 				x = -2;
 			}
 		}
-		return x + "!" + Program.v().getMethod(i);
+		return x + "!" + Program.getProgram().getMethod(i);
 	}
 }

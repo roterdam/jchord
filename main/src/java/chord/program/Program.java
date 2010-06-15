@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.Collections;
 
 import com.java2html.Java2HTML;
@@ -24,6 +25,7 @@ import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
+import chord.util.tuple.object.Pair;
  
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Type;
@@ -61,73 +63,84 @@ import joeq.Main.Helper;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Program {
-	private static Program instance = new Program();
-	public static Program v() {
-		return instance;
-	}
+	private boolean isBuilt = false;
 	private IndexSet<jq_Class> classes;
 	private IndexSet<jq_Method> methods;
-	private ArrayList<jq_Type> types;
+	private Set<Pair<Quad, jq_Method>> rfCasts;
 	private Map<String, jq_Class> nameToClassMap;
-	private Map<String, jq_Type> nameToTypeMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
+	private IndexSet<jq_Type> types;
+	private Map<String, jq_Type> nameToTypeMap;
 	private jq_Method mainMethod;
 	private boolean HTMLizedJavaSrcFiles;
 	private final Map<Inst, jq_Method> instToMethodMap = 
 		new HashMap<Inst, jq_Method>();
-	private ClassHierarchyBuilder chb;
-	private boolean isInited;
-
-	private Program() {
-		if (Properties.verbose)
-			jq_Method.setVerbose();
-		if (Properties.doSSA)
-			jq_Method.doSSA();
-		jq_Method.exclude(Properties.scopeExcludeAry);
+	private ClassHierarchy ch;
+	private Program() { }
+	private static Program program;
+	public static Program getProgram() {
+		if (program == null) {
+			if (Properties.verbose)
+				jq_Method.setVerbose();
+			if (Properties.doSSA)
+				jq_Method.doSSA();
+			jq_Method.exclude(Properties.scopeExcludeAry);
+			program = new Program();
+		}
+		return program;
 	}
 
-	public void init() {
-		if (isInited)
+	public void build() {
+		if (isBuilt)
 			return;
-		try {
-			boolean filesExist =
-				(new File(Properties.classesFileName)).exists() &&
-				(new File(Properties.methodsFileName)).exists();
-			if (Properties.reuseScope && filesExist)
-				initFromCache();
-			else {
-				String scopeKind = Properties.scopeKind;
-				if (scopeKind.equals("rta")) {
-					init(new RTA(false));
-				} else if (scopeKind.equals("rta_reflect")) {
-					init(new RTA(true));
-				} else if (scopeKind.equals("dynamic")) {
-					initFromDynamic();
-				} else if (scopeKind.equals("cha")) {
-					init(new CHA());
-				} else
-					Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
-			}
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+		boolean filesExist =
+			(new File(Properties.classesFileName)).exists() &&
+			(new File(Properties.methodsFileName)).exists();
+		boolean fromCache;
+		IScope scope = null;
+		if (Properties.reuseScope && filesExist) {
+			fromCache = true;
+			scope = new CachedScope();
+		} else {
+			fromCache = false;
+			String scopeKind = Properties.scopeKind;
+			if (scopeKind.equals("rta")) {
+				scope = new RTAScope(false);
+			} else if (scopeKind.equals("rta_reflect")) {
+				scope = new RTAScope(true);
+			} else if (scopeKind.equals("dynamic")) {
+				scope = new DynamicScope();
+			} else if (scopeKind.equals("cha")) {
+				scope = new CHAScope();
+			} else
+				Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
 		}
-		PrimordialClassLoader loader = PrimordialClassLoader.loader;
-		int numTypes = loader.getNumTypes();
-		jq_Type[] typesAry = loader.getAllTypes();
-		types = new ArrayList<jq_Type>(numTypes + 2);
-		types.add(jq_NullType.NULL_TYPE);
-		types.add(jq_ReturnAddressType.INSTANCE);
-		for (int i = 0; i < numTypes; i++) {
-			jq_Type t = typesAry[i];
-			assert (t != null);
-			types.add(t);
-		}
-		isInited = true;
+		scope.build();
+		classes = scope.getClasses();
+		methods = scope.getMethods();
+		rfCasts = scope.getRfCasts();
+		if (!fromCache)
+			CachedScope.write(scope);
+		isBuilt = true;
 	}
 
-	// load and add each class in <code>classNames</code> to <code>classes</code>
-	private void loadClasses(List<String> classNames) {
-		classes = new IndexSet<jq_Class>();
+	public IndexSet<jq_Class> getClasses() {
+		build();
+		return classes;
+	}
+	public IndexSet<jq_Method> getMethods() {
+		build();
+		return methods;
+	}
+	public Set<Pair<Quad, jq_Method>> getRfCasts() {
+		build();
+		return rfCasts;
+	}
+
+	// load and add each class in <code>classNames</code>
+	// to <code>classes</code>
+	protected static IndexSet<jq_Class> loadClasses(List<String> classNames) {
+		IndexSet<jq_Class> cList = new IndexSet<jq_Class>();
 		for (String s : classNames) {
 			if (Properties.verbose)
 				Messages.log("SCOPE.LOADING_CLASS", s);
@@ -140,84 +153,135 @@ public class Program {
 				continue;
 			}
 			assert (c != null);
-			classes.add(c);
+			cList.add(c);
+		}
+		return cList;
+	}
+
+	public ClassHierarchy getClassHierarchy() {
+		if (ch == null) {
+			ch = new ClassHierarchy();
+			ch.build();
+		}
+		return ch;
+	}
+
+
+	private void buildNameToClassMap() {
+		assert (nameToClassMap == null);
+		IndexSet<jq_Class> cList = getClasses();
+		nameToClassMap = new HashMap<String, jq_Class>();
+		for (jq_Class c : cList) {
+			nameToClassMap.put(c.getName(), c);
 		}
 	}
 
-	private void initFromCache() {
-		String classesFileName = Properties.classesFileName;
-		List<String> classNames = FileUtils.readFileToList(classesFileName);
-		loadClasses(classNames);
-		methods = new IndexSet<jq_Method>();
-		String methodsFileName = Properties.methodsFileName;
-		List<String> methodSigns = FileUtils.readFileToList(methodsFileName);
-		for (String s : methodSigns) {
-			MethodSign sign = MethodSign.parse(s);
-			String cName = sign.cName;
-			jq_Class c = getPreparedClass(cName);
-			if (c == null)
-				Messages.log("SCOPE.EXCLUDING_METHOD", s);
-			else {
-				String mName = sign.mName;
-				String mDesc = sign.mDesc;
-				// TODO: what if member does not exist? warn
-				jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
-				methods.add(m);
-			}
-		}
-	}
-
-	private void init(IScopeBuilder builder) throws IOException {
-		builder.run();
-		classes = new IndexSet<jq_Class>();
-		for (jq_Class c : builder.getPreparedClasses()) 
-			classes.add(c);
-		methods = new IndexSet<jq_Method>();
-		for (jq_Method m : builder.getReachableMethods()) {
+	private void buildClassToMethodsMap() {
+		assert (classToMethodsMap == null);
+		classToMethodsMap = new HashMap<jq_Class, List<jq_Method>>();
+		IndexSet<jq_Method> mList = getMethods();
+		for (jq_Method m : mList) {
 			jq_Class c = m.getDeclaringClass();
-			if (!classes.contains(c))
-				Messages.log("SCOPE.EXCLUDING_METHOD", m);
-			else
-				methods.add(m);
+			List<jq_Method> mList2 = classToMethodsMap.get(c);
+			if (mList2 == null) {
+				mList2 = new ArrayList<jq_Method>();
+				classToMethodsMap.put(c, mList2);
+			}
+			mList2.add(m);
 		}
-		write();
 	}
 
-	private void initFromDynamic() throws IOException {
-		List<String> classNames = getDynamicallyLoadedClasses();
-		loadClasses(classNames);
-		methods = new IndexSet<jq_Method>();
-		for (jq_Class c : classes) {
-			for (jq_Method m : c.getDeclaredInstanceMethods()) 
-				methods.add(m);
-			for (jq_Method m : c.getDeclaredStaticMethods()) 
-				methods.add(m);
+	private void buildTypes() {
+		assert (types == null);
+		PrimordialClassLoader loader = PrimordialClassLoader.loader;
+		int numTypes = loader.getNumTypes();
+		jq_Type[] typesAry = loader.getAllTypes();
+		types = new IndexSet<jq_Type>(numTypes + 2);
+		types.add(jq_NullType.NULL_TYPE);
+		types.add(jq_ReturnAddressType.INSTANCE);
+		for (int i = 0; i < numTypes; i++) {
+			jq_Type t = typesAry[i];
+			assert (t != null);
+			types.add(t);
 		}
-		write();
+	}
+	
+	private void buildNameToTypeMap() {
+		assert (nameToTypeMap == null);
+		IndexSet<jq_Type> types = getTypes();
+		nameToTypeMap = new HashMap<String, jq_Type>();
+		for (jq_Type t : types) {
+			nameToTypeMap.put(t.getName(), t);
+		}
 	}
 
-	private void write() throws IOException {
-		PrintWriter classesFileWriter =
-			new PrintWriter(Properties.classesFileName);
-		for (jq_Class c : classes) {
-			classesFileWriter.println(c);
-		}
-		classesFileWriter.close();
-		PrintWriter methodsFileWriter =
-			new PrintWriter(Properties.methodsFileName);
-		for (jq_Method m : methods) {
-			methodsFileWriter.println(m);
-		}
-		methodsFileWriter.close();
+	public jq_Class getClass(String name) {
+		if (nameToClassMap == null)
+			buildNameToClassMap();
+		return nameToClassMap.get(name);
 	}
 
-	public ClassHierarchyBuilder getClassHierarchy() {
-		if (chb == null) {
-			chb = new ClassHierarchyBuilder();
-			chb.run();
-		}
-		return chb;
+	public List<jq_Method> getMethods(jq_Class c) {
+		if (classToMethodsMap == null)
+			buildClassToMethodsMap();
+		List<jq_Method> mList = classToMethodsMap.get(c);
+		if (mList == null)
+			return Collections.emptyList();
+		return mList;
 	}
+
+	public jq_Method getMethod(String mName, String mDesc, String cName) {
+		jq_Class c = getClass(cName);
+		if (c == null)
+			return null;
+		System.out.println("C: " + c);
+		List<jq_Method> mList = getMethods(c);
+		for (jq_Method m : mList) {
+			if (m.getName().toString().equals(mName) &&
+				m.getDesc().toString().equals(mDesc))
+				return m;
+		}
+		return null;
+	}
+	
+	public jq_Method getMethod(MethodSign sign) {
+		return getMethod(sign.mName, sign.mDesc, sign.cName);
+	}
+
+	public jq_Method getMethod(String sign) {
+		return getMethod(MethodSign.parse(sign));
+	}
+
+	public jq_Method getMainMethod() {
+		if (mainMethod == null) {
+			String mainClassName = Properties.mainClassName;
+			if (mainClassName == null)
+				Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+			System.out.println("XXX: " + mainClassName);
+			mainMethod = getMethod("main", "([Ljava/lang/String;)V", mainClassName);
+			if (mainMethod == null)
+				Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
+		}
+		return mainMethod;
+	}
+
+	public jq_Method getThreadStartMethod() {
+		return getMethod("start", "()V", "java.lang.Thread");
+	}
+
+	public IndexSet<jq_Type> getTypes() {
+		if (types == null)
+			buildTypes();
+		return types;
+	}
+
+	public jq_Type getType(String name) {
+		if (nameToTypeMap == null)
+			buildNameToTypeMap();
+		return nameToTypeMap.get(name);
+	}
+
+	////////
 
 	public void mapInstToMethod(Inst i, jq_Method m) {
 		instToMethodMap.put(i, m);
@@ -231,108 +295,7 @@ public class Program {
 		return m;
 	}
 
-	private void buildNameToClassMap() {
-		init();
-		nameToClassMap = new HashMap<String, jq_Class>();
-		for (jq_Class c : classes) {
-			nameToClassMap.put(c.getName(), c);
-		}
-	}
-
-	private void buildNameToTypeMap() {
-		init();
-		nameToTypeMap = new HashMap<String, jq_Type>();
-		for (jq_Type t : types) {
-			nameToTypeMap.put(t.getName(), t);
-		}
-	}
-	
-	private void buildClassToMethodsMap() {
-		init();
-		classToMethodsMap = new HashMap<jq_Class, List<jq_Method>>();
-		for (jq_Method m : methods) {
-			jq_Class c = m.getDeclaringClass();
-			List<jq_Method> methods = classToMethodsMap.get(c);
-			if (methods == null) {
-				methods = new ArrayList<jq_Method>();
-				classToMethodsMap.put(c, methods);
-			}
-			methods.add(m);
-		}
-	}
-	
-	public IndexSet<jq_Class> getPreparedClasses() {
-		init();
-		return classes;
-	}
-	
-	public IndexSet<jq_Method> getReachableMethods() { 
-		init();
-		return methods;
-	}
-
-	public ArrayList<jq_Type> getAllTypes() {
-		init();
-		return types;
-	}
-
-	public jq_Class getPreparedClass(String name) {
-		if (nameToClassMap == null)
-			buildNameToClassMap();
-		return nameToClassMap.get(name);
-	}
-
-	public jq_Type getType(String name) {
-		if (nameToTypeMap == null)
-			buildNameToTypeMap();
-		return nameToTypeMap.get(name);
-	}
-
-	public List<jq_Method> getReachableMethods(jq_Class c) {
-		if (classToMethodsMap == null)
-			buildClassToMethodsMap();
-		List<jq_Method> methods = classToMethodsMap.get(c);
-		if (methods == null)
-			return Collections.emptyList();
-		return methods;
-	}
-
-	public jq_Method getReachableMethod(String mName, String mDesc, String cName) {
-		jq_Class c = getPreparedClass(cName);
-		if (c == null)
-			return null;
-		List<jq_Method> methods = getReachableMethods(c);
-		for (jq_Method m : methods) {
-			if (m.getName().toString().equals(mName) &&
-				m.getDesc().toString().equals(mDesc))
-				return m;
-		}
-		return null;
-	}
-	
-	public jq_Method getReachableMethod(MethodSign sign) {
-		return getReachableMethod(sign.mName, sign.mDesc, sign.cName);
-	}
-
-	public jq_Method getReachableMethod(String sign) {
-		return getReachableMethod(MethodSign.parse(sign));
-	}
-
-	public jq_Method getMainMethod() {
-		if (mainMethod == null) {
-			String mainClassName = Properties.mainClassName;
-			if (mainClassName == null)
-				Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
-			mainMethod = getReachableMethod("main", "([Ljava/lang/String;)V", mainClassName);
-			if (mainMethod == null)
-				Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
-		}
-		return mainMethod;
-	}
-
-	public jq_Method getThreadStartMethod() {
-		return getReachableMethod("start", "()V", "java.lang.Thread");
-	}
+	////////
 
 	public static String getSign(jq_Method m) {
 		String d = m.getDesc().toString();
@@ -574,6 +537,14 @@ public class Program {
         return toString(bci, mName, mDesc, cName);
 	}
 
+	public static String toBytePosStr(Quad q, jq_Method m) {
+        int bci = m.getBCI(q);
+        String mName = m.getName().toString();
+        String mDesc = m.getDesc().toString();
+        String cName = m.getDeclaringClass().getName();
+        return toString(bci, mName, mDesc, cName);
+	}
+
 	public String toQuadStr(Quad q) {
 		Operator op = q.getOperator();
 		if (op instanceof Move || op instanceof CheckCast) {
@@ -682,20 +653,20 @@ public class Program {
 	}
 	
 	public void printMethod(String sign) {
-		jq_Method m = getReachableMethod(sign);
+		jq_Method m = getMethod(sign);
 		if (m == null)
 			Messages.fatal("SCOPE.METHOD_NOT_FOUND", sign);
 		printMethod(m);
 	}
 	public void printClass(String className) {
-		jq_Class c = getPreparedClass(className);
+		jq_Class c = getClass(className);
 		if (c == null)
 			Messages.fatal("SCOPE.CLASS_NOT_FOUND", className);
 		printClass(c);
 	}
 	private void printClass(jq_Class c) {
 		System.out.println("*** Class: " + c);
-		for (jq_Method m : getReachableMethods(c))
+		for (jq_Method m : getMethods(c))
 			printMethod(m);
 	}
 	private void printMethod(jq_Method m) {
@@ -706,7 +677,7 @@ public class Program {
 		}
 	}
 	public void printAllClasses() {
-		for (jq_Class c : getPreparedClasses())
+		for (jq_Class c : getClasses())
 			printClass(c);
 	}
 }

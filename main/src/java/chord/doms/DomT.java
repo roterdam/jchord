@@ -10,6 +10,7 @@ import joeq.Class.jq_Class;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
+import chord.util.IndexSet;
 
 /**
  * Domain of classes.
@@ -20,13 +21,12 @@ import chord.project.analyses.ProgramDom;
 	name = "T"
 )
 public class DomT extends ProgramDom<jq_Type> {
-	@Override
 	public void fill() {
-		for (jq_Type t : Program.v().getAllTypes()) {
+		Program program = Program.getProgram();
+		IndexSet<jq_Type> types = program.getTypes();
+		for (jq_Type t : types)
 			getOrAdd(t);
-		}
 	}
-	@Override
     public String toXMLAttrsString(jq_Type t) {
         String name = t.getName();
 		String file;

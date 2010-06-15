@@ -22,6 +22,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
@@ -29,79 +30,112 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 import chord.project.Properties;
 import chord.project.Messages;
 import chord.util.IndexSet;
 import chord.util.Timer;
+import chord.util.tuple.object.Pair;
 
 /**
- * Class Hierarchy Analysis algorithm for computing program scope
+ * Rapid Type Analysis algorithm for computing program scope
  * (reachable classes and methods).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CHA implements IScopeBuilder {
+public class RTAScope implements IScope {
 	public static final boolean DEBUG = false;
-	private IndexSet<jq_Class> preparedClasses = new IndexSet<jq_Class>();
+	private boolean isBuilt = false;
+	private final boolean findRfCasts;
+
+	// set only if findRfCasts is true
+	private Set<Pair<Quad, jq_Method>> rfCasts;
+	private Set<Register> rfVars;
+    private ClassHierarchy ch;
+
+	private IndexSet<jq_Class> classes;
+    private IndexSet<jq_Class> reachableAllocClasses;
 	// all classes whose clinits and super class/interface clinits have been
-	// processed so far
-	private Set<jq_Class> classesVisitedForClinit = new HashSet<jq_Class>();
-	// all methods deemed reachable so far
-	private IndexSet<jq_Method> visitedMethods = new IndexSet<jq_Method>();
-	// worklist for methods seen so far but whose cfg's haven't been processed yet
-	private List<jq_Method> methodWorklist = new ArrayList<jq_Method>();
+	// processed so far in current interation
+	private Set<jq_Class> classesVisitedForClinit;
+	// all methods deemed reachable so far in current iteration
+	private IndexSet<jq_Method> methods;
+	// worklist for methods seen so far in current iteration but whose cfg's
+	// haven't been processed yet
+	private List<jq_Method> methodWorklist;
 	private jq_Class javaLangObject;
-	private ClassHierarchyBuilder chb;
+	private boolean repeat = true;
 
-	public IndexSet<jq_Class> getPreparedClasses() {
-		return preparedClasses;
+	public RTAScope(boolean _findRfCasts) {
+		this.findRfCasts = _findRfCasts;
 	}
-
-	public IndexSet<jq_Method> getReachableMethods() {
-		return visitedMethods;
+	public IndexSet<jq_Class> getClasses() {
+		return classes;
 	}
-
-	public void run() {
-		System.out.println("ENTER: CHA");
+	public IndexSet<jq_Method> getMethods() {
+		return methods;
+	}
+	public Set<Pair<Quad, jq_Method>> getRfCasts() {
+		return rfCasts;
+	}
+	public void build() {
+		if (isBuilt)
+			return;
+		System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
+ 		classes = new IndexSet<jq_Class>();
+ 		reachableAllocClasses = new IndexSet<jq_Class>();
+ 		classesVisitedForClinit = new HashSet<jq_Class>();
+ 		methods = new IndexSet<jq_Method>();
+		methodWorklist = new ArrayList<jq_Method>();
+		if (findRfCasts) {
+			ch = Program.getProgram().getClassHierarchy();
+			rfCasts = new HashSet<Pair<Quad, jq_Method>>();
+			rfVars = new HashSet<Register>();
+		}
         HostedVM.initialize();
-       	chb = new ClassHierarchyBuilder();
-		chb.run();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null)
-			Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+            Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
        	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
 		prepareClass(mainClass);
 		jq_NameAndDesc nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
         jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(nd);
 		if (mainMethod == null)
-            Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
-		visitClinits(mainClass);
-       	visitMethod(mainMethod);
-        while (!methodWorklist.isEmpty()) {
-        	jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
-			ControlFlowGraph cfg = m.getCFG();
-			if (DEBUG) System.out.println("Processing CFG of method: " + m);
-			processCFG(cfg);
+			Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
+		for (int i = 0; repeat; i++) {
+			System.out.println("Iteration: " + i);
+			repeat = false;
+         	classesVisitedForClinit.clear();
+        	methods.clear();
+			visitClinits(mainClass);
+        	visitMethod(mainMethod);
+	        while (!methodWorklist.isEmpty()) {
+	        	jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
+				ControlFlowGraph cfg = m.getCFG();
+				if (DEBUG) System.out.println("Processing CFG of method: " + m);
+	        	processCFG(cfg);
+	        }
         }
-		System.out.println("LEAVE: CHA");
+		isBuilt = true;
+		System.out.println("LEAVE: RTA");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
 	}
 	
 	private void visitMethod(jq_Method m) {
-		if (visitedMethods.add(m)) {
+		if (methods.add(m)) {
 			if (!m.isAbstract()) {
 				if (DEBUG) System.out.println("\tAdding method: " + m);
 				methodWorklist.add(m);
 			}
 		}
 	}
-
+	
 	private void processCFG(ControlFlowGraph cfg) {
 		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
@@ -116,34 +150,31 @@ public class CHA implements IScopeBuilder {
 					visitMethod(n);
 					if (op instanceof InvokeVirtual || op instanceof InvokeInterface) {
 						jq_NameAndDesc nd = n.getNameAndDesc();
-						String cName = c.getName();
 						if (c.isInterface()) {
-							Set<String> implementors = chb.getConcreteImplementors(cName);
-							if (implementors == null)
-								continue;
-							for (String dName : implementors) {
-								jq_Class d = (jq_Class) jq_Type.parseType(dName);
-								visitClass(d);
+							for (jq_Class d : reachableAllocClasses) {
 								assert (!d.isInterface());
 								assert (!d.isAbstract());
-								jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-								assert (m2 != null);
-								visitMethod(m2);
+								if (d.implementsInterface(c)) {
+									jq_InstanceMethod m2 = d.getVirtualMethod(nd);
+									if (m2 == null) {
+										Messages.logAnon("WARNING: Expected instance method " + nd +
+											" in class " + d + " implementing interface " + c);
+									} else
+										visitMethod(m2);
+								}
 							}
 						} else {
-							Set<String> subclasses = chb.getConcreteSubclasses(cName);
-							if (subclasses == null)
-								continue;
-							for (String dName : subclasses) {
-								jq_Class d = (jq_Class) jq_Type.parseType(dName);
-								visitClass(d);
+							for (jq_Class d : reachableAllocClasses) {
 								assert (!d.isInterface());
 								assert (!d.isAbstract());
-								jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-								if (m2 == null)
-									System.out.println(d + " " + nd);
-								assert (m2 != null);
-								visitMethod(m2);
+								if (d.extendsClass(c)) {
+									jq_InstanceMethod m2 = d.getVirtualMethod(nd);
+									if (m2 == null) {
+										Messages.logAnon("WARNING: Expected instance method " + nd +
+											" in class " + d + " subclassing class " + c);
+									} else
+										visitMethod(m2);
+								}
 							}
 						}
 					} else
@@ -162,18 +193,42 @@ public class CHA implements IScopeBuilder {
 					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Class c = (jq_Class) New.getType(q).getType();
 					visitClass(c);
+					if (reachableAllocClasses.add(c)) {
+						repeat = true;
+					}
+				} else if (findRfCasts && op instanceof CheckCast) {
+					if (DEBUG) System.out.println("Quad: " + q);
+					jq_Type type = CheckCast.getType(q).getType();
+					if (type instanceof jq_Class) {
+						String cName = type.getName();
+						jq_Class c = (jq_Class) type;
+						visitClass(c);
+						Set<String> concreteSubs;
+						if (c.isInterface())
+							concreteSubs = ch.getConcreteImplementors(cName);
+						else
+							concreteSubs = ch.getConcreteSubclasses(cName);
+						if (concreteSubs != null) {
+							for (String dName : concreteSubs) {
+								jq_Class d = (jq_Class) jq_Type.parseType(dName);
+								visitClass(d);
+								if (reachableAllocClasses.add(d)) 
+									repeat = true;
+							}
+						}
+					}
 				}
 			}
 		}
 	}
 
 	private void prepareClass(jq_Class c) {
-		if (preparedClasses.add(c)) {
-        	c.prepare();
+		if (classes.add(c)) {
+	        c.prepare();
 			if (DEBUG) System.out.println("\tAdding class: " + c);
 			jq_Class d = c.getSuperclass();
 			if (d == null)
-				assert (c == javaLangObject);
+        		assert (c == javaLangObject);
 			else
 				prepareClass(d);
 			for (jq_Class i : c.getDeclaredInterfaces())

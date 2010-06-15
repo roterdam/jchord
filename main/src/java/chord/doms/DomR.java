@@ -31,13 +31,10 @@ import chord.project.analyses.ProgramDom;
 public class DomR extends ProgramDom<Inst> implements IRelLockInstVisitor {
 	protected DomM domM;
 	protected jq_Method ctnrMethod;
-	@Override
 	public void init() {
 		domM = (DomM) Project.getTrgt("M");
 	}
-	@Override
 	public void visit(jq_Class c) { }
-	@Override
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
@@ -48,23 +45,19 @@ public class DomR extends ProgramDom<Inst> implements IRelLockInstVisitor {
 			getOrAdd(tail);
 		}
 	}
-	@Override
 	public void visitRelLockInst(Quad q) {
 		getOrAdd(q);
 	}
-	@Override
 	public int getOrAdd(Inst i) {
 		assert (ctnrMethod != null);
-		Program.v().mapInstToMethod(i, ctnrMethod);
+		Program.getProgram().mapInstToMethod(i, ctnrMethod);
 		return super.getOrAdd(i);
 	}
-	@Override
 	public String toUniqueString(Inst o) {
-		return Program.v().toBytePosStr(o);
+		return Program.getProgram().toBytePosStr(o);
 	}
-	@Override
 	public String toXMLAttrsString(Inst o) {
-		jq_Method m = Program.v().getMethod(o);
+		jq_Method m = Program.getProgram().getMethod(o);
 		String file = Program.getSourceFileName(m.getDeclaringClass());
 		int line = Program.getLineNumber(o, m);
 		int mIdx = domM.indexOf(m);

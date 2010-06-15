@@ -47,16 +47,13 @@ import joeq.Util.Templates.ListIterator;
 public class DomV extends ProgramDom<Register> implements IMethodVisitor {
 	private Map<Register, jq_Method> varToMethodMap;
 	private jq_Method ctnrMethod;
-	@Override
 	public void init() {
 		varToMethodMap = new HashMap<Register, jq_Method>();
 	}
 	public jq_Method getMethod(Register v) {
 		return varToMethodMap.get(v);
 	}
-	@Override
 	public void visit(jq_Class c) { }
-	@Override
     public void visit(jq_Method m) {
         if (m.isAbstract())
             return;
@@ -97,7 +94,6 @@ public class DomV extends ProgramDom<Register> implements IMethodVisitor {
             }
         }
     }
-	@Override
 	public String toUniqueString(Register v) {
 		return v + "!" + getMethod(v);
 	}

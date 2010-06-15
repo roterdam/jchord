@@ -28,13 +28,10 @@ import joeq.Util.Templates.ListIterator;
 public class DomB extends ProgramDom<BasicBlock>
 		implements IMethodVisitor {
 	protected Map<BasicBlock, jq_Method> basicBlockToMethodMap;
-	@Override
 	public void init() {
 		basicBlockToMethodMap = new HashMap<BasicBlock, jq_Method>();
 	}
-	@Override
 	public void visit(jq_Class c) { }
-	@Override
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
@@ -49,7 +46,6 @@ public class DomB extends ProgramDom<BasicBlock>
 	public jq_Method getMethod(BasicBlock b) {
 		return basicBlockToMethodMap.get(b);
 	}
-	@Override
     public String toUniqueString(BasicBlock b) {
         return b.getID() + "!" + getMethod(b);
     }

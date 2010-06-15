@@ -183,7 +183,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		relEscE.save();
 
 		DomE domE = instrumentor.getDomE();
-		Program program = Program.v();
+		Program program = Program.getProgram();
 		PrintWriter writer1 =
 			 OutDirUtils.newPrintWriter("dynamic_visitedE.txt");
 		PrintWriter writer2 =

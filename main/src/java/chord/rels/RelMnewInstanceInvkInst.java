@@ -44,7 +44,6 @@ public class RelMnewInstanceInvkInst extends ProgramRel
         domV = (DomV) doms[1];
     }
 	
-	@Override
 	public void visitInvokeInst(Quad q) {
 		jq_Method mthd = Invoke.getMethod(q).getMethod();
 		String mName = mthd.getName().toString();

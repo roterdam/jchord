@@ -296,7 +296,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
             return;
         }
         for (Quad q2 : getCallers(m)) {
-            jq_Method m2 = Program.v().getMethod(q2);
+            jq_Method m2 = Program.getProgram().getMethod(q2);
             if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
             Set<PE> peSet = pathEdges.get(q2);
             if (peSet == null)
@@ -355,8 +355,9 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
             if (DEBUG) System.out.println("\tYes, not adding");
             return;
         }
+		Program program = Program.getProgram();
         for (Quad q2 : getCallers(m)) {
-            jq_Method m2 = Program.v().getMethod(q2);
+            jq_Method m2 = program.getMethod(q2);
             if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
             Set<PE> peSet = pathEdges.get(q2);
             if (peSet == null)

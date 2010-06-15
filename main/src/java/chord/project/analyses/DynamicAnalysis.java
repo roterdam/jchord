@@ -119,7 +119,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 			final String instrSchemeFileName = Properties.instrSchemeFileName;
 			scheme.save(instrSchemeFileName);
 			if (!Properties.reuseTrace) {
-				instrumentor = new Instrumentor(Program.v(), scheme);
+				Program program = Program.getProgram();
+				instrumentor = new Instrumentor(program, scheme);
 				instrumentor.run();
 			}
 			if (scheme.hasEnterAndLeaveLoopEvent()) {
