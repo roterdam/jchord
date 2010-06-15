@@ -1,0 +1,25 @@
+# Author: Omer Tripp (omertrip@post.tau.ac.il)
+# name=datarace-startingRaces
+
+.include "E.dom"
+.include "F.dom"
+
+.bddvarorder F0_E0xE1
+
+###
+# Relations
+###
+
+EF(e:E0,f:F0) input
+writeE(e:E0) input
+
+startingRaces(e1:E0,e2:E1) output
+
+###
+# Constraints
+###
+
+startingRaces(e1,e2) :- e1<e2, writeE(e1), writeE(e2), EF(e1,f), EF(e2,f).
+startingRaces(e1,e2) :- e1=e2, writeE(e1), writeE(e2), EF(e1,f), EF(e2,f).
+startingRaces(e1,e2) :- !writeE(e1), writeE(e2), EF(e1,f), EF(e2,f).
+

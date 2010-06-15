@@ -1,0 +1,22 @@
+# Author: Omer Tripp (omertrip@post.tau.ac.il)
+# name=datarace-filteredStartingRaces
+
+.include "E.dom"
+
+.bddvarorder E0xE1
+
+###
+# Relations
+###
+
+startingRaces(e1:E0,e2:E1) input
+escE(e:E0) input
+
+filteredStartingRaces(e1:E0,e2:E1) output
+
+###
+# Constraints
+###
+
+filteredStartingRaces(e1,e2) :- startingRaces(e1,e2), escE(e1), escE(e2).
+
