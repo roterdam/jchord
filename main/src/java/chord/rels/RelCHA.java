@@ -6,11 +6,14 @@
 package chord.rels;
 
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Array;
 import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Initializer;
 import joeq.Class.jq_NameAndDesc;
 
 import java.util.Set;
+import java.util.HashSet;
 import chord.doms.DomM;
 import chord.program.Program;
 import chord.project.Chord;
@@ -32,8 +35,21 @@ public class RelCHA extends ProgramRel {
 	public void fill() {
 		DomM domM = (DomM) doms[0];
 		Program program = Program.getProgram();
-		IndexSet<jq_Class> classes = program.getClasses();
-		for (jq_Class c : classes) {
+		Set<jq_InstanceMethod> objClsInstanceMethods = new HashSet<jq_InstanceMethod>();
+		IndexSet<jq_Reference> classes = program.getClasses();
+		jq_Class objCls = (jq_Class) program.getClass("java.lang.Object");
+		for (jq_InstanceMethod m : objCls.getDeclaredInstanceMethods()) {
+			// only add methods deemed reachable
+			if (domM.contains(m))
+				objClsInstanceMethods.add(m);
+		}
+		for (jq_Reference r : classes) {
+			if (r instanceof jq_Array) {
+				for (jq_InstanceMethod m : objClsInstanceMethods)
+					add(m, r, m);
+				continue;
+			}
+			jq_Class c = (jq_Class) r;
 			for (jq_InstanceMethod m : c.getDeclaredInstanceMethods()) {
 				if (m.isPrivate())
 					continue;
@@ -43,7 +59,10 @@ public class RelCHA extends ProgramRel {
 					continue;
 				jq_NameAndDesc nd = m.getNameAndDesc();
 				if (c.isInterface()) {
-					for (jq_Class d : classes) {
+					for (jq_Reference s : classes) {
+						if (s instanceof jq_Array)
+							continue;
+						jq_Class d = (jq_Class) s;
 						if (d.isInterface() || d.isAbstract())
 							continue;
 						if (d.implementsInterface(c)) {
@@ -54,7 +73,10 @@ public class RelCHA extends ProgramRel {
 						}
 					}
 				} else {
-					for (jq_Class d : classes) {
+					for (jq_Reference s : classes) {
+						if (s instanceof jq_Array) 
+							continue;
+						jq_Class d = (jq_Class) s;
 						if (d.isInterface() || d.isAbstract())
 							continue;
 						if (d.extendsClass(c)) {

@@ -6,6 +6,7 @@
 package chord.rels;
 
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Operand;
@@ -45,7 +46,7 @@ public class RelMcheckCastInst extends ProgramRel
 		Operand rx = CheckCast.getSrc(q);
 		if (rx instanceof RegisterOperand) {
 			jq_Type t = CheckCast.getType(q).getType();
-			if (t instanceof jq_Class) {
+			if (t instanceof jq_Reference) {
 				RegisterOperand ro = (RegisterOperand) rx;
 				Register r = ro.getRegister();
 				RegisterOperand lo = CheckCast.getDest(q);

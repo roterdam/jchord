@@ -25,7 +25,8 @@ import chord.program.visitors.ICastInstVisitor;
 import chord.project.analyses.ITask;
 import chord.util.IndexSet;
 
-
+import joeq.Class.jq_Reference;
+import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
@@ -246,8 +247,11 @@ public class VisitorHandler {
 			(civs != null) || (pivs != null) || (rivs != null) ||
 			(acqivs != null) || (relivs != null);
 		if (cvs != null) {
-			IndexSet<jq_Class> classes = program.getClasses();
-			for (jq_Class c : classes) {
+			IndexSet<jq_Reference> classes = program.getClasses();
+			for (jq_Reference r : classes) {
+				if (r instanceof jq_Array)
+					continue;
+				jq_Class c = (jq_Class) r;
 				for (IClassVisitor cv : cvs)
 					cv.visit(c);
 				if (fvs != null)

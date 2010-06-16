@@ -10,6 +10,8 @@ import java.util.List;
 import chord.util.IndexSet;
  
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
 
 /**
@@ -18,12 +20,12 @@ import joeq.Class.jq_Method;
  */
 public class DynamicScope implements IScope {
 	private boolean isBuilt = false;
-	private IndexSet<jq_Class> classes;
+	private IndexSet<jq_Reference> classes;
 	private IndexSet<jq_Method> methods;
-	public IndexSet<jq_Class> getClasses() {
+	public IndexSet<jq_Reference> getClasses() {
 		return classes;
 	}
-	public IndexSet<jq_Class> getNewInstancedClasses() {
+	public IndexSet<jq_Reference> getNewInstancedClasses() {
 		return null;
 	}
 	public IndexSet<jq_Method> getMethods() {
@@ -35,7 +37,10 @@ public class DynamicScope implements IScope {
 		List<String> classNames = Program.getDynamicallyLoadedClasses();
 		classes = Program.loadClasses(classNames);
 		methods = new IndexSet<jq_Method>();
-		for (jq_Class c : classes) {
+		for (jq_Reference r : classes) {
+			if (r instanceof jq_Array)
+				continue;
+			jq_Class c = (jq_Class) r;
 			for (jq_Method m : c.getDeclaredStaticMethods()) 
 				methods.add(m);
 			for (jq_Method m : c.getDeclaredInstanceMethods()) 

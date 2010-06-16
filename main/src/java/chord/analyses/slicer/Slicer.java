@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.List;
 
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operand;
@@ -132,12 +133,14 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		for (int i = 1; i < n; i++) {
 			String fStr = fStrList.get(i);
 			MethodSign sign = MethodSign.parse(fStr);
-			jq_Class c = program.getClass(sign.cName);
-			if (c == null) {
+			jq_Reference r = program.getClass(sign.cName);
+			if (r == null) {
 				Messages.logAnon("WARN: Ignoring slicing on field %s: " +
 					" its declaring class was not found.", fStr);
 				continue;
 			}
+			assert (r instanceof jq_Class);
+			jq_Class c = (jq_Class) r;
 			jq_Field f = (jq_Field) c.getDeclaredMember(sign.mName, sign.mDesc);
 			if (f == null) {
 				Messages.logAnon("WARN: Ignoring slicing on field %s: " +

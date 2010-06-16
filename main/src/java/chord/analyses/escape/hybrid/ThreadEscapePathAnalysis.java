@@ -48,6 +48,7 @@ import chord.instr.InstrScheme;
 import chord.instr.Instrumentor;
 
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Reference;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Class.jq_Class;
@@ -193,11 +194,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			String mSign = mName + mDesc;
 			String cName = m.getDeclaringClass().getName();
 			methToSign[mIdx] = mSign;
-			jq_Class cls = program.getClass(cName);
-			if (cls == null) {
+			jq_Reference r = program.getClass(cName);
+			if (r == null) {
 				System.out.println("WARNING: Ingoring method " + m);
 				isIgnoredMeth[mIdx] = true;
 			}
+			assert (r instanceof jq_Class);
 			methToFstP[mIdx] = fstP;
 			ControlFlowGraph cfg = m.getCFG();
 			int numQ = 0;

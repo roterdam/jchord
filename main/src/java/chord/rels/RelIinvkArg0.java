@@ -19,8 +19,7 @@ import chord.project.analyses.ProgramRel;
 /**
  * Relation containing each tuple (i,v) such that local variable v
  * is the 0th argument variable of method invocation statement i,
- * if i has >= 0 arguments and if the target method of i is not a
- * synthesized method.
+ * if i has >= 0 arguments.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
