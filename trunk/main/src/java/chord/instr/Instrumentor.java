@@ -54,6 +54,7 @@ import java.util.HashSet;
  * its execution.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
+ * @author Zhifeng Lai (zflai.cn@gmail.com)
  */
 public class Instrumentor {
 	protected static final String runtimeClassName = Properties.runtimeClassName + ".";
@@ -340,10 +341,12 @@ public class Instrumentor {
 		if (scheme.needsPmap()) {
 			domP = (DomP) Project.getTrgt("P");
 			Project.runTask(domP);
+			Pmap = getUniqueStringMap(domP);
 		}
 		if (scheme.needsBmap()) {
 			domB = (DomB) Project.getTrgt("B");
 			Project.runTask(domB);
+			Bmap = getUniqueStringMap(domB);
 		}
 		if (leaveMethodEvent.present() || releaseLockEvent.present()) {
 			exType = pool.get("java.lang.Throwable");
