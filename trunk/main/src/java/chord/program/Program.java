@@ -22,16 +22,15 @@ import chord.project.Properties;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
  
+import joeq.Main.HostedVM;
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Reference;
-import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.PrimordialClassLoader;
-import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;
@@ -61,13 +60,13 @@ import joeq.Main.Helper;
  */
 public class Program {
 	private boolean isBuilt = false;
+	private IndexSet<jq_Type> types;
 	private IndexSet<jq_Reference> classes;
 	private IndexSet<jq_Reference> newInstancedClasses;
 	private IndexSet<jq_Method> methods;
+	private Map<String, jq_Type> nameToTypeMap;
 	private Map<String, jq_Reference> nameToClassMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
-	private IndexSet<jq_Type> types;
-	private Map<String, jq_Type> nameToTypeMap;
 	private jq_Method mainMethod;
 	private boolean HTMLizedJavaSrcFiles;
 	private final Map<Inst, jq_Method> instToMethodMap = 
@@ -94,7 +93,7 @@ public class Program {
 			(new File(Properties.classesFileName)).exists() &&
 			(new File(Properties.methodsFileName)).exists();
 		boolean fromCache;
-		IScope scope = null;
+		Scope scope = null;
 		if (Properties.reuseScope && filesExist) {
 			fromCache = true;
 			scope = new CachedScope();
@@ -113,12 +112,18 @@ public class Program {
 				Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
 		}
 		scope.build();
+		types = scope.getTypes();
 		classes = scope.getClasses();
 		newInstancedClasses = scope.getNewInstancedClasses();
 		methods = scope.getMethods();
 		if (!fromCache)
-			CachedScope.write(scope);
+			scope.write();
 		isBuilt = true;
+	}
+
+	public IndexSet<jq_Type> getTypes() {
+		build();
+		return types;
 	}
 
 	public IndexSet<jq_Reference> getClasses() {
@@ -137,13 +142,15 @@ public class Program {
 	// load and add each class in <code>classNames</code>
 	// to <code>classes</code>
 	protected static IndexSet<jq_Reference> loadClasses(List<String> classNames) {
+		HostedVM.initialize();
 		IndexSet<jq_Reference> cList = new IndexSet<jq_Reference>();
 		for (String s : classNames) {
-			if (Properties.verbose)
+			// if (Properties.verbose)
 				Messages.log("SCOPE.LOADING_CLASS", s);
 			jq_Reference c;
 			try {
-				c = (jq_Reference) Helper.load(s);
+				c = (jq_Reference) jq_Type.parseType(s);
+				c.prepare();
 			} catch (Exception ex) {
 				Messages.log("SCOPE.EXCLUDING_CLASS", s);
 				ex.printStackTrace();
@@ -163,6 +170,14 @@ public class Program {
 		return ch;
 	}
 
+	private void buildNameToTypeMap() {
+		assert (nameToTypeMap == null);
+		IndexSet<jq_Type> types = getTypes();
+		nameToTypeMap = new HashMap<String, jq_Type>();
+		for (jq_Type t : types) {
+			nameToTypeMap.put(t.getName(), t);
+		}
+	}
 
 	private void buildNameToClassMap() {
 		assert (nameToClassMap == null);
@@ -185,31 +200,6 @@ public class Program {
 				classToMethodsMap.put(c, mList2);
 			}
 			mList2.add(m);
-		}
-	}
-
-	private void buildTypes() {
-		assert (types == null);
-		build();
-		PrimordialClassLoader loader = PrimordialClassLoader.loader;
-		int numTypes = loader.getNumTypes();
-		jq_Type[] typesAry = loader.getAllTypes();
-		types = new IndexSet<jq_Type>(numTypes + 2);
-		types.add(jq_NullType.NULL_TYPE);
-		types.add(jq_ReturnAddressType.INSTANCE);
-		for (int i = 0; i < numTypes; i++) {
-			jq_Type t = typesAry[i];
-			assert (t != null);
-			types.add(t);
-		}
-	}
-	
-	private void buildNameToTypeMap() {
-		assert (nameToTypeMap == null);
-		IndexSet<jq_Type> types = getTypes();
-		nameToTypeMap = new HashMap<String, jq_Type>();
-		for (jq_Type t : types) {
-			nameToTypeMap.put(t.getName(), t);
 		}
 	}
 
@@ -264,12 +254,6 @@ public class Program {
 
 	public jq_Method getThreadStartMethod() {
 		return getMethod("start", "()V", "java.lang.Thread");
-	}
-
-	public IndexSet<jq_Type> getTypes() {
-		if (types == null)
-			buildTypes();
-		return types;
 	}
 
 	public jq_Type getType(String name) {

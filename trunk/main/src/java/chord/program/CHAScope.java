@@ -45,9 +45,7 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CHAScope implements IScope {
-	public static final boolean DEBUG = false;
-	private boolean isBuilt = false;
+public class CHAScope extends Scope {
 	private IndexSet<jq_Reference> classes;
 	// all classes whose clinits and super class/interface clinits have been
 	// processed so far
@@ -59,9 +57,6 @@ public class CHAScope implements IScope {
 	private jq_Class javaLangObject;
 	private ClassHierarchy ch;
 
-	public IndexSet<jq_Reference> getClasses() {
-		return classes;
-	}
 	public IndexSet<jq_Reference> getNewInstancedClasses() {
 		return null;
 	}

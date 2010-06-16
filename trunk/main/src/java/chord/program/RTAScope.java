@@ -47,9 +47,7 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class RTAScope implements IScope {
-	public static final boolean DEBUG = false;
-	private boolean isBuilt = false;
+public class RTAScope extends Scope {
 	private final boolean findNewInstancedClasses;
 
 	// set only if findNewInstancedClasses is true
@@ -72,9 +70,6 @@ public class RTAScope implements IScope {
 
 	public RTAScope(boolean _findNewInstancedClasses) {
 		this.findNewInstancedClasses = _findNewInstancedClasses;
-	}
-	public IndexSet<jq_Reference> getClasses() {
-		return classes;
 	}
 	public IndexSet<jq_Reference> getNewInstancedClasses() {
 		return newInstancedClasses;
