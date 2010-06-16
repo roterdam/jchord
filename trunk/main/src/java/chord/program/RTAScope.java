@@ -18,6 +18,8 @@ import joeq.Class.jq_InstanceMethod;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Type;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Reference;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
@@ -26,6 +28,7 @@ import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
@@ -50,12 +53,12 @@ public class RTAScope implements IScope {
 	private final boolean findNewInstancedClasses;
 
 	// set only if findNewInstancedClasses is true
-	private IndexSet<jq_Class> newInstancedClasses;
+	private IndexSet<jq_Reference> newInstancedClasses;
 	private Set<Register> newInstancedVars;
     private ClassHierarchy ch;
 
-	private IndexSet<jq_Class> classes;
-    private IndexSet<jq_Class> reachableAllocClasses;
+	private IndexSet<jq_Reference> classes;
+    private IndexSet<jq_Reference> reachableAllocClasses;
 	// all classes whose clinits and super class/interface clinits have been
 	// processed so far in current interation
 	private Set<jq_Class> classesVisitedForClinit;
@@ -70,10 +73,10 @@ public class RTAScope implements IScope {
 	public RTAScope(boolean _findNewInstancedClasses) {
 		this.findNewInstancedClasses = _findNewInstancedClasses;
 	}
-	public IndexSet<jq_Class> getClasses() {
+	public IndexSet<jq_Reference> getClasses() {
 		return classes;
 	}
-	public IndexSet<jq_Class> getNewInstancedClasses() {
+	public IndexSet<jq_Reference> getNewInstancedClasses() {
 		return newInstancedClasses;
 	}
 	public IndexSet<jq_Method> getMethods() {
@@ -85,14 +88,14 @@ public class RTAScope implements IScope {
 		System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
- 		classes = new IndexSet<jq_Class>();
- 		reachableAllocClasses = new IndexSet<jq_Class>();
+ 		classes = new IndexSet<jq_Reference>();
+ 		reachableAllocClasses = new IndexSet<jq_Reference>();
  		classesVisitedForClinit = new HashSet<jq_Class>();
  		methods = new IndexSet<jq_Method>();
 		methodWorklist = new ArrayList<jq_Method>();
 		if (findNewInstancedClasses) {
 			ch = Program.getProgram().getClassHierarchy();
-			newInstancedClasses = new IndexSet<jq_Class>();
+			newInstancedClasses = new IndexSet<jq_Reference>();
 			newInstancedVars = new HashSet<Register>();
 		}
         HostedVM.initialize();
@@ -150,7 +153,10 @@ public class RTAScope implements IScope {
 					if (op instanceof InvokeVirtual || op instanceof InvokeInterface) {
 						jq_NameAndDesc nd = n.getNameAndDesc();
 						if (c.isInterface()) {
-							for (jq_Class d : reachableAllocClasses) {
+							for (jq_Reference r : reachableAllocClasses) {
+								if (r instanceof jq_Array)
+									continue;
+								jq_Class d = (jq_Class) r;
 								assert (!d.isInterface());
 								assert (!d.isAbstract());
 								if (d.implementsInterface(c)) {
@@ -163,7 +169,10 @@ public class RTAScope implements IScope {
 								}
 							}
 						} else {
-							for (jq_Class d : reachableAllocClasses) {
+							for (jq_Reference r : reachableAllocClasses) {
+								if (r instanceof jq_Array)
+									continue;
+								jq_Class d = (jq_Class) r;
 								assert (!d.isInterface());
 								assert (!d.isAbstract());
 								if (d.extendsClass(c)) {
@@ -195,18 +204,25 @@ public class RTAScope implements IScope {
 					if (reachableAllocClasses.add(c)) {
 						repeat = true;
 					}
+				} else if (op instanceof NewArray) {
+					if (DEBUG) System.out.println("Quad: " + q);
+					jq_Array a = (jq_Array) NewArray.getType(q).getType();
+					visitClass(a);
+					if (reachableAllocClasses.add(a)) {
+						repeat = true;
+					}
 				} else if (findNewInstancedClasses && op instanceof CheckCast) {
 					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Type type = CheckCast.getType(q).getType();
-					if (type instanceof jq_Class) {
-						String cName = type.getName();
-						jq_Class c = (jq_Class) type;
-						// don't call c.isInterface() here, c may not be prepared
-						Set<String> concreteImps = ch.getConcreteImplementors(cName);
-						Set<String> concreteSubs = ch.getConcreteSubclasses(cName);
+					if (type instanceof jq_Reference) {
+						String rName = type.getName();
+						jq_Reference r = (jq_Reference) type;
+						// Note: r may not be prepared, so do not call any of its methods
+						Set<String> concreteImps = ch.getConcreteImplementors(rName);
+						Set<String> concreteSubs = ch.getConcreteSubclasses(rName);
 						assert (concreteImps == null || concreteSubs == null);
 						if (concreteImps != null) {
-							visitClass(c);
+							visitClass(r);
 							for (String dName : concreteImps) {
 								jq_Class d = (jq_Class) jq_Type.parseType(dName);
 								newInstancedClasses.add(d);
@@ -216,7 +232,7 @@ public class RTAScope implements IScope {
 							}
 						}
 						if (concreteSubs != null) {
-							visitClass(c);
+							visitClass(r);
 							for (String dName : concreteSubs) {
 								jq_Class d = (jq_Class) jq_Type.parseType(dName);
 								newInstancedClasses.add(d);
@@ -231,13 +247,16 @@ public class RTAScope implements IScope {
 		}
 	}
 
-	private void prepareClass(jq_Class c) {
-		if (classes.add(c)) {
-	        c.prepare();
-			if (DEBUG) System.out.println("\tAdding class: " + c);
+	private void prepareClass(jq_Reference r) {
+		if (classes.add(r)) {
+	        r.prepare();
+			if (DEBUG) System.out.println("\tAdding class: " + r);
+			if (r instanceof jq_Array)
+				return;
+			jq_Class c = (jq_Class) r;
 			jq_Class d = c.getSuperclass();
 			if (d == null)
-        		assert (c == javaLangObject);
+				assert (c == javaLangObject);
 			else
 				prepareClass(d);
 			for (jq_Class i : c.getDeclaredInterfaces())
@@ -245,8 +264,11 @@ public class RTAScope implements IScope {
 		}
 	}
 
-	private void visitClass(jq_Class c) {
-		prepareClass(c);
+	private void visitClass(jq_Reference r) {
+		prepareClass(r);
+		if (r instanceof jq_Array)
+			return;
+		jq_Class c = (jq_Class) r;
 		visitClinits(c);
 	}
 

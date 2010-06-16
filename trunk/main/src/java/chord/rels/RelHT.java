@@ -6,7 +6,7 @@
 package chord.rels;
 
 import joeq.Class.jq_Type;
-import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.New;
@@ -36,15 +36,20 @@ public class RelHT extends ProgramRel {
 		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad h = (Quad) domH.get(hIdx);
 			Operator op = h.getOperator();
-			if (op instanceof New) {
-				jq_Type t = New.getType(h).getType();
-				int tIdx = domT.indexOf(t);
-				assert (tIdx >= 0);
-				add(hIdx, tIdx);
+			jq_Type t;
+			// Note: do NOT merge handling of New and NewArray
+			if (op instanceof New)
+				t = New.getType(h).getType();
+			else {
+				assert (op instanceof NewArray);
+				t = NewArray.getType(h).getType();
 			}
+			int tIdx = domT.indexOf(t);
+			assert (tIdx >= 0);
+			add(hIdx, tIdx);
 		}
 		for (int hIdx = numA; hIdx < numH; hIdx++) {
-			jq_Class c = (jq_Class) domH.get(hIdx);
+			jq_Reference c = (jq_Reference) domH.get(hIdx);
 			int tIdx = domT.indexOf(c);
 			assert (tIdx >= 0);
 			add(hIdx, tIdx);

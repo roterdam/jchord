@@ -2,7 +2,7 @@ package chord.program;
 
 import chord.util.IndexSet;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
 
 /**
  * Generic interface for algorithms computing analysis scope
@@ -12,7 +12,7 @@ import joeq.Class.jq_Class;
  */
 public interface IScope {
 	public void build();
-	public IndexSet<jq_Class> getClasses();
-	public IndexSet<jq_Class> getNewInstancedClasses();
+	public IndexSet<jq_Reference> getClasses();
+	public IndexSet<jq_Reference> getNewInstancedClasses();
 	public IndexSet<jq_Method> getMethods();
 }

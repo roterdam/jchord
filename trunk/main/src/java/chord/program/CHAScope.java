@@ -12,6 +12,8 @@ import java.util.Set;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_InstanceMethod;
@@ -25,6 +27,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
@@ -45,7 +48,7 @@ import chord.util.Timer;
 public class CHAScope implements IScope {
 	public static final boolean DEBUG = false;
 	private boolean isBuilt = false;
-	private IndexSet<jq_Class> classes;
+	private IndexSet<jq_Reference> classes;
 	// all classes whose clinits and super class/interface clinits have been
 	// processed so far
 	private Set<jq_Class> classesVisitedForClinit;
@@ -56,10 +59,10 @@ public class CHAScope implements IScope {
 	private jq_Class javaLangObject;
 	private ClassHierarchy ch;
 
-	public IndexSet<jq_Class> getClasses() {
+	public IndexSet<jq_Reference> getClasses() {
 		return classes;
 	}
-	public IndexSet<jq_Class> getNewInstancedClasses() {
+	public IndexSet<jq_Reference> getNewInstancedClasses() {
 		return null;
 	}
 	public IndexSet<jq_Method> getMethods() {
@@ -71,7 +74,7 @@ public class CHAScope implements IScope {
 		System.out.println("ENTER: CHA");
 		Timer timer = new Timer();
 		timer.init();
- 		classes = new IndexSet<jq_Class>();
+ 		classes = new IndexSet<jq_Reference>();
  		classesVisitedForClinit = new HashSet<jq_Class>();
 		methods = new IndexSet<jq_Method>();
  		methodWorklist = new ArrayList<jq_Method>();
@@ -171,15 +174,22 @@ public class CHAScope implements IScope {
 					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Class c = (jq_Class) New.getType(q).getType();
 					visitClass(c);
+				} else if (op instanceof NewArray) {
+					if (DEBUG) System.out.println("Quad: " + q);
+					jq_Array a = (jq_Array) NewArray.getType(q).getType();
+					visitClass(a);
 				}
 			}
 		}
 	}
 
-	private void prepareClass(jq_Class c) {
-		if (classes.add(c)) {
-        	c.prepare();
-			if (DEBUG) System.out.println("\tAdding class: " + c);
+	private void prepareClass(jq_Reference r) {
+		if (classes.add(r)) {
+        	r.prepare();
+			if (DEBUG) System.out.println("\tAdding class: " + r);
+			if (r instanceof jq_Array)
+				return;
+			jq_Class c = (jq_Class) r;
 			jq_Class d = c.getSuperclass();
 			if (d == null)
 				assert (c == javaLangObject);
@@ -190,8 +200,11 @@ public class CHAScope implements IScope {
 		}
 	}
 
-	private void visitClass(jq_Class c) {
-		prepareClass(c);
+	private void visitClass(jq_Reference r) {
+		prepareClass(r);
+		if (r instanceof jq_Array)
+			return;
+		jq_Class c = (jq_Class) r;
 		visitClinits(c);
 	}
 

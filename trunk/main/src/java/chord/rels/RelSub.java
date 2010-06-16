@@ -5,7 +5,7 @@
  */
 package chord.rels;
 
-import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
 
 import chord.program.Program;
 import chord.project.Chord;
@@ -25,9 +25,9 @@ import chord.util.IndexSet;
 public class RelSub extends ProgramRel {
 	public void fill() {
 		Program program = Program.getProgram();
-		IndexSet<jq_Class> classes = program.getClasses();
-		for (jq_Class t1 : classes) {
-			for (jq_Class t2 : classes) {
+		IndexSet<jq_Reference> classes = program.getClasses();
+		for (jq_Reference t1 : classes) {
+			for (jq_Reference t2 : classes) {
 				if (t1.isSubtypeOf(t2)) {
 					add(t1, t2);
 				}

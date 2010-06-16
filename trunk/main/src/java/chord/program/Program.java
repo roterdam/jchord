@@ -25,6 +25,8 @@ import chord.util.ChordRuntimeException;
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
@@ -59,10 +61,10 @@ import joeq.Main.Helper;
  */
 public class Program {
 	private boolean isBuilt = false;
-	private IndexSet<jq_Class> classes;
-	private IndexSet<jq_Class> newInstancedClasses;
+	private IndexSet<jq_Reference> classes;
+	private IndexSet<jq_Reference> newInstancedClasses;
 	private IndexSet<jq_Method> methods;
-	private Map<String, jq_Class> nameToClassMap;
+	private Map<String, jq_Reference> nameToClassMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private IndexSet<jq_Type> types;
 	private Map<String, jq_Type> nameToTypeMap;
@@ -119,11 +121,11 @@ public class Program {
 		isBuilt = true;
 	}
 
-	public IndexSet<jq_Class> getClasses() {
+	public IndexSet<jq_Reference> getClasses() {
 		build();
 		return classes;
 	}
-	public IndexSet<jq_Class> getNewInstancedClasses() {
+	public IndexSet<jq_Reference> getNewInstancedClasses() {
 		build();
 		return newInstancedClasses;
 	}
@@ -134,14 +136,14 @@ public class Program {
 
 	// load and add each class in <code>classNames</code>
 	// to <code>classes</code>
-	protected static IndexSet<jq_Class> loadClasses(List<String> classNames) {
-		IndexSet<jq_Class> cList = new IndexSet<jq_Class>();
+	protected static IndexSet<jq_Reference> loadClasses(List<String> classNames) {
+		IndexSet<jq_Reference> cList = new IndexSet<jq_Reference>();
 		for (String s : classNames) {
 			if (Properties.verbose)
 				Messages.log("SCOPE.LOADING_CLASS", s);
-			jq_Class c;
+			jq_Reference c;
 			try {
-				c = (jq_Class) Helper.load(s);
+				c = (jq_Reference) Helper.load(s);
 			} catch (Exception ex) {
 				Messages.log("SCOPE.EXCLUDING_CLASS", s);
 				ex.printStackTrace();
@@ -164,9 +166,9 @@ public class Program {
 
 	private void buildNameToClassMap() {
 		assert (nameToClassMap == null);
-		IndexSet<jq_Class> cList = getClasses();
-		nameToClassMap = new HashMap<String, jq_Class>();
-		for (jq_Class c : cList) {
+		IndexSet<jq_Reference> cList = getClasses();
+		nameToClassMap = new HashMap<String, jq_Reference>();
+		for (jq_Reference c : cList) {
 			nameToClassMap.put(c.getName(), c);
 		}
 	}
@@ -188,6 +190,7 @@ public class Program {
 
 	private void buildTypes() {
 		assert (types == null);
+		build();
 		PrimordialClassLoader loader = PrimordialClassLoader.loader;
 		int numTypes = loader.getNumTypes();
 		jq_Type[] typesAry = loader.getAllTypes();
@@ -210,7 +213,7 @@ public class Program {
 		}
 	}
 
-	public jq_Class getClass(String name) {
+	public jq_Reference getClass(String name) {
 		if (nameToClassMap == null)
 			buildNameToClassMap();
 		return nameToClassMap.get(name);
@@ -226,9 +229,10 @@ public class Program {
 	}
 
 	public jq_Method getMethod(String mName, String mDesc, String cName) {
-		jq_Class c = getClass(cName);
-		if (c == null)
+		jq_Reference r = getClass(cName);
+		if (r == null || r instanceof jq_Array)
 			return null;
+		jq_Class c = (jq_Class) r;
 		List<jq_Method> mList = getMethods(c);
 		for (jq_Method m : mList) {
 			if (m.getName().toString().equals(mName) &&
@@ -652,13 +656,16 @@ public class Program {
 		printMethod(m);
 	}
 	public void printClass(String className) {
-		jq_Class c = getClass(className);
+		jq_Reference c = getClass(className);
 		if (c == null)
 			Messages.fatal("SCOPE.CLASS_NOT_FOUND", className);
 		printClass(c);
 	}
-	private void printClass(jq_Class c) {
-		System.out.println("*** Class: " + c);
+	private void printClass(jq_Reference r) {
+		System.out.println("*** Class: " + r);
+		if (r instanceof jq_Array)
+			return;
+		jq_Class c = (jq_Class) r;
 		for (jq_Method m : getMethods(c))
 			printMethod(m);
 	}
@@ -670,7 +677,7 @@ public class Program {
 		}
 	}
 	public void printAllClasses() {
-		for (jq_Class c : getClasses())
+		for (jq_Reference c : getClasses())
 			printClass(c);
 	}
 }

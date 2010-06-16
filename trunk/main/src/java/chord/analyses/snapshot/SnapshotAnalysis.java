@@ -15,6 +15,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.Stack;
 
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Compiler.Quad.Quad;
@@ -75,7 +76,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   // We have a graph over abstract values (determined by updateAbstraction); each node impliciting representing a set of objects
   State state = new State();
   TIntObjectHashMap<ThreadInfo> threadInfos = new TIntObjectHashMap<ThreadInfo>(); // thread t -> ThreadInfo
-  Set<jq_Class> excludedClasses = new HashSet<jq_Class>();
+  Set<jq_Reference> excludedClasses = new HashSet<jq_Reference>();
   boolean[] statementIsExcluded, fieldIsExcluded, lockIsExcluded; // For answering queries (precomputed)
 
   HashMap<Query, QueryResult> queryResults = new HashMap<Query, QueryResult>();
@@ -186,11 +187,11 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   public void computedExcludedClasses() {
     String[] checkExcludedPrefixes = Properties.toArray(Properties.checkExcludeStr);
     Program program = Program.getProgram();
-    for (jq_Class c : program.getClasses()) {
-      String cName = c.getName();
+    for (jq_Reference r : program.getClasses()) {
+      String rName = r.getName();
       for (String prefix : checkExcludedPrefixes) {
-        if (cName.startsWith(prefix))
-          excludedClasses.add(c);
+        if (rName.startsWith(prefix))
+          excludedClasses.add(r);
       }
     }
   }

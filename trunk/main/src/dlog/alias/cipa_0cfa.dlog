@@ -38,7 +38,6 @@
 
 VT(v:V0,t:T0) input
 HT(h:H0,t:T1) input
-arrayH(h:H0) input
 cha(n:M1,t:T1,m:M0) input
 sub(t1:T1,t2:T0) input
 MmethArg(m:M0,n:Z0,v:V0) input
@@ -91,7 +90,6 @@ MM(m:M,n:M) output
 ###
 
 VHfilter(v,h) :- VT(v,t), HT(h,s), sub(s,t).
-VHfilter(_,h) :- arrayH(h).
 VHfilter(_,0).
 
 IHM(i,h,m2) :- virtIM(i,m1), HT(h,t), cha(m1,t,m2).
@@ -127,12 +125,12 @@ putStatFldInst(f,r)   :- reachableM(m), MputStatFldInst(m,f,r).
 checkCastInst(l,t,r)  :- reachableM(m), McheckCastInst(m,l,t,r).
 
 VH(l,h) :- objValAsgnInst(l,h).
-VH(l,h) :- objVarAsgnInst(l,r), VH(r,h).
+VH(l,h) :- objVarAsgnInst(l,r), VH(r,h), VHfilter(l,h).
 VH(l,h2) :- getInstFldInst(l,b,f), VH(b,h1), HFH(h1,f,h2). split
 HFH(h1,f,h2) :- putInstFldInst(b,f,r), VH(b,h1), VH(r,h2). split
 VH(l,h) :- getStatFldInst(l,f), FH(f,h).
 FH(f,h) :- putStatFldInst(f,r), VH(r,h).
-VH(l,h) :- checkCastInst(l,_,r), VH(r,h), h != 0.
+VH(l,h) :- checkCastInst(l,_,r), VH(r,h), VHfilter(l,h), h != 0.
 
 VH(l,0) :- reachableM(m), MnewInstanceInvkInst(m,l).
 VH(l,h) :- checkCastInst(l,t,r), VH(r,0), sub(t2,t), reflectHT(h,t2).

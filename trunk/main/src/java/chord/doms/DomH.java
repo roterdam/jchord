@@ -7,7 +7,7 @@ package chord.doms;
 
 import java.util.Set;
 
-import joeq.Class.jq_Class;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
@@ -54,7 +54,6 @@ public class DomH extends ProgramDom<Object> {
 	}
 	public void fill() {
 		Program program = Program.getProgram();
-		IndexSet<jq_Class> classes = program.getClasses();
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
@@ -78,7 +77,7 @@ public class DomH extends ProgramDom<Object> {
 		boolean handleNewInstancedClasses =
 			Properties.scopeKind.equals("rta_reflect");
 		if (handleNewInstancedClasses) {
-			for (jq_Class c : program.getNewInstancedClasses())
+			for (jq_Reference c : program.getNewInstancedClasses())
 				getOrAdd(c);
 		}
 	}
@@ -87,9 +86,9 @@ public class DomH extends ProgramDom<Object> {
 			Quad q = (Quad) o;
 			return Program.getProgram().toBytePosStr(q);
 		}
-		if (o instanceof jq_Class) {
-			jq_Class c = (jq_Class) o;
-			return c.getName();
+		if (o instanceof jq_Reference) {
+			jq_Reference r = (jq_Reference) o;
+			return r.getName();
 		}
 		assert (o == null);
 		return "null";

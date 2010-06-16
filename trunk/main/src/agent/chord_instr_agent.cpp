@@ -97,8 +97,8 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 			jclass klass = classes[i];
 			char* class_name;
 			jvmti_env->GetClassSignature(klass, &class_name, NULL);
-			if (class_name[0] == '[')
-				continue;
+			// if (class_name[0] == '[')
+			//	continue;
 			classes_out << class_name << endl;
 		}
 		classes_out.close();

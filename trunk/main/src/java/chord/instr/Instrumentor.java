@@ -32,6 +32,8 @@ import chord.util.IndexSet;
 import chord.util.FileUtils;
 
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Array;
+import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -351,10 +353,14 @@ public class Instrumentor {
 		FileUtils.deleteFile(bootClassesDirName);
 		FileUtils.deleteFile(userClassesDirName);
 
-		IndexSet<jq_Class> classes = program.getClasses();
+		IndexSet<jq_Reference> classes = program.getClasses();
 		Messages.log("INSTR.STARTING");
-		for (jq_Class c : classes)
+		for (jq_Reference r : classes) {
+			if (r instanceof jq_Array)
+				continue;
+			jq_Class c = (jq_Class) r;
 			instrClass(c);
+		}
 		Messages.log("INSTR.FINISHED");
 	}
 	private void instrClass(jq_Class c) {
