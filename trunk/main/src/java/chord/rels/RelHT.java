@@ -45,7 +45,8 @@ public class RelHT extends ProgramRel {
 				t = NewArray.getType(h).getType();
 			}
 			int tIdx = domT.indexOf(t);
-			assert (tIdx >= 0);
+			assert tIdx >= 0 : "Could not find type `" + t +
+				"` of allocation site `" + h + "` in domain T";
 			add(hIdx, tIdx);
 		}
 		for (int hIdx = numA; hIdx < numH; hIdx++) {
