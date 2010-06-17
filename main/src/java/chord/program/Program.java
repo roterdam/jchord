@@ -22,6 +22,7 @@ import chord.project.Properties;
 import chord.util.IndexSet;
 import chord.util.ChordRuntimeException;
  
+import joeq.Util.Templates.ListIterator;
 import joeq.Main.HostedVM;
 import joeq.UTF.Utf8;
 import joeq.Class.jq_Type;
@@ -657,6 +658,17 @@ public class Program {
 		System.out.println("Method: " + m);
 		if (!m.isAbstract()) {
 			ControlFlowGraph cfg = m.getCFG();
+/*
+			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+					it.hasNext();) {
+				BasicBlock bb = it.nextBasicBlock();
+				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
+					Quad q = it2.nextQuad();                        
+					int bci = m.getBCI(q);
+					System.out.println("\t" + bci + "#" + q.getID());
+				}
+			}
+*/
 			System.out.println(cfg.fullDump());
 		}
 	}
