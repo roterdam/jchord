@@ -363,7 +363,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
 					Register v = (Register) o;
 					if (v.getType().isReferenceType()) {
 						int vIdx = domV.indexOf(v);
-						isCtxtSenV[vIdx] = true;
+						// locals unused by any quad in cfg are not in domain V
+						if (vIdx != -1)
+							isCtxtSenV[vIdx] = true;
 					}
 				}
 			}
