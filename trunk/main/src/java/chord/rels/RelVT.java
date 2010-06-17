@@ -22,6 +22,7 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -75,7 +76,18 @@ public class RelVT extends ProgramRel implements IMethodVisitor {
                 Register v = ro.getRegister();
 				add(v, t);
             }
-        }
+        } else if (op instanceof ParamListOperand) {
+            ParamListOperand ros = (ParamListOperand) op;
+            int n = ros.length();
+            for (int i = 0; i < n; i++) {
+                RegisterOperand ro = ros.get(i);
+                Register v = ro.getRegister();
+                jq_Type t = ro.getType();
+                if (t != null && t.isReferenceType()) {
+                    add(v, t);
+                }
+            }			
+		}
     }
 }
 
