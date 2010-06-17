@@ -28,7 +28,7 @@
 		          - dlog.file  (file containing Datalog program)
 		          Optional properties:
 		          - max.tuples (default=1000)
-		          - max.heap   (default=1024m)
+		          - max.heap   (default=2048m)
 		          - noisy      ([yes|no]; default=yes)
 		debug     Run bddbddb's interactive interpreter
 		          Required properties:
@@ -36,7 +36,7 @@
 		          - dlog.file  (file containing Datalog program)
 		          Optional properties:
 		          - max.tuples (default=1000)
-		          - max.heap   (default=1024m)
+		          - max.heap   (default=2048m)
 		javadoc   Generate javadoc for Chord source code
 		htmldoc   Generate HTML user guide (needs Hyperlatex installed)
 		clean     Cleanup all generated class files
@@ -369,7 +369,7 @@
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.tuples" value="1000"/>
-		<property name="max.heap" value="1024m"/>
+		<property name="max.heap" value="2048m"/>
 		<property name="noisy" value="yes"/>
 		<java classname="net.sf.bddbddb.Solver"
 			fork="true" failonerror="true" maxmemory="${max.heap}"
@@ -387,7 +387,7 @@
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.tuples" value="1000"/>
-		<property name="max.heap" value="1024m"/>
+		<property name="max.heap" value="2048m"/>
 		<java classname="net.sf.bddbddb.Interactive"
 			fork="true" failonerror="true" maxmemory="${max.heap}"
 			classpath="${chord.bddbddb.class.path}">
