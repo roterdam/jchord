@@ -3,29 +3,15 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.analyses.datarace;
+package chord.analyses.escape;
 
 import java.io.PrintWriter;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
 
-import joeq.Class.jq_Field;
-import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 
-import chord.util.ArraySet;
-import chord.util.graph.IPathVisitor;
-import chord.util.graph.ShortestPathBuilder;
-import chord.analyses.alias.ICSCG;
-import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.CtxtsAnalysis;
-import chord.analyses.alias.CSAliasAnalysis;
-import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
-import chord.analyses.alias.DomO;
 import chord.analyses.alias.DomC;
-import chord.bddbddb.Rel.RelView;
 import chord.program.Program;
 import chord.analyses.thread.DomA;
 import chord.doms.DomL;
@@ -36,18 +22,11 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.project.Chord;
 import chord.project.Project;
-import chord.project.Properties;
 import chord.project.OutDirUtils;
 import chord.project.analyses.JavaAnalysis;
-import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
-import chord.util.SetUtils;
-import chord.util.tuple.object.Hext;
-import chord.util.tuple.object.Pair;
-import chord.util.tuple.object.Trio;
 
 import chord.util.fig.Execution;
-import chord.bddbddb.Rel.PairIterable;
 
 /**
  * Adapated from DataraceAnalysis.java
