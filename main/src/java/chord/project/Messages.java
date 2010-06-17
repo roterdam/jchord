@@ -1,8 +1,18 @@
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.project;
 
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
+/**
+ * Utility for logging messages during Chord's execution.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class Messages {
 	private static final ResourceBundle RESOURCE_BUNDLE =
 		ResourceBundle.getBundle("chord.project.messages");

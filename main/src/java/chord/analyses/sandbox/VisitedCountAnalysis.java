@@ -1,7 +1,9 @@
-/**
- * 
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
  */
-package chord.analyses.stats;
+package chord.analyses.sandbox;
 
 import java.util.HashSet;
 import java.util.Set;

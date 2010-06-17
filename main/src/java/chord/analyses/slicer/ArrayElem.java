@@ -1,7 +1,16 @@
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.analyses.slicer;
 
 import joeq.Compiler.Quad.Quad;
 
+/**
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class ArrayElem implements Expr {
 	public final Quad q;
 	public ArrayElem(Quad q) {

@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.program;
 
 import chord.util.IndexSet;
@@ -20,7 +25,7 @@ import chord.util.ChordRuntimeException;
 
 /**
  * Generic interface for algorithms computing analysis scope
- * (i.e., reachable classes and methods).
+ * (reachable classes and methods).
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
