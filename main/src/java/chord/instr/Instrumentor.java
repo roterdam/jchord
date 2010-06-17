@@ -434,6 +434,7 @@ public class Instrumentor {
 			} catch (ChordRuntimeException ex) {
 				Messages.log("INSTR.CANNOT_INSTRUMENT_METHOD", method.getLongName());
 				ex.printStackTrace();
+				return;
 			}
 		}
 		try {
