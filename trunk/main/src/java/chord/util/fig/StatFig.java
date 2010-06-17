@@ -1,3 +1,8 @@
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ */
 package chord.util.fig;
 
 import java.io.File;
@@ -13,6 +18,10 @@ import java.util.Random;
 
 import chord.project.Properties;
 
+/**
+ *
+ * @author Percy Liang (pliang@cs.berkeley.edu)
+ */
 public class StatFig {
   public double min = Double.POSITIVE_INFINITY, max = Double.NEGATIVE_INFINITY, sum = 0;
   public int n = 0;

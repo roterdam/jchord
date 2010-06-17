@@ -1,5 +1,7 @@
-/**
- * 
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
  */
 package chord.analyses.slicer;
 
@@ -14,6 +16,10 @@ import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.analyses.DynamicAnalysis;
 
+/**
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 @Chord(name = "dynamic-cg-java")
 public class DynamicCallGraphAnalysis extends DynamicAnalysis {
 	private final Set<jq_Method> emptySet = Collections.emptySet();

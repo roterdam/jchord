@@ -1,5 +1,7 @@
-/**
- * 
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
  */
 package chord.program;
 
@@ -25,6 +27,8 @@ import chord.util.ArraySet;
 import chord.util.tuple.object.Pair;
 
 /**
+ * Class hierarchy implementation.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClassHierarchy {
