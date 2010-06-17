@@ -25,6 +25,10 @@ import chord.program.Program;
 import chord.project.Properties;
 import chord.project.analyses.DynamicAnalysis;
 
+import chord.util.fig.Execution;
+import chord.util.fig.Utils;
+import chord.util.fig.StatFig;
+
 import chord.project.Project;
 import chord.doms.DomE;
 import chord.doms.DomF;
@@ -108,22 +112,6 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     throw new RuntimeException("Unknown abstraction: "+abstractionType+" (possibilities: none|alloc|recency|reachability)");
   }
 
-  public String getStringArg(String key, String defaultValue) {
-    return System.getProperty("chord.partition."+key, defaultValue);
-  }
-  public boolean getBooleanArg(String key, boolean defaultValue) {
-    String s = getStringArg(key, null);
-    return s == null ? defaultValue : s.equals("true");
-  }
-  public int getIntArg(String key, int defaultValue) {
-    String s = getStringArg(key, null);
-    return s == null ? defaultValue : Integer.parseInt(s);
-  }
-  public double getDoubleArg(String key, double defaultValue) {
-    String s = getStringArg(key, null);
-    return s == null ? defaultValue : Double.parseDouble(s);
-  }
-
 	public void run() {
     domE = (DomE)Project.getTrgt("E"); Project.runTask(domE);
     domF = (DomF)Project.getTrgt("F"); Project.runTask(domF);
@@ -132,27 +120,28 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     domL = (DomL)Project.getTrgt("L"); Project.runTask(domL);
     domM = (DomM)Project.getTrgt("M"); Project.runTask(domM);
 
-    X = new Execution();
+    X = new Execution("partition");
+    X.addSaveFiles("queries.out", "graph", "fieldAccessed", "snapshot-abstractions");
     boolean success = false;
     try {
       // Parse options
-      verbose = getIntArg("verbose", 0);
+      verbose = X.getIntArg("verbose", 0);
 
-      kCFA = getIntArg("kCFA", 0);
-      recencyOrder = getIntArg("recencyOrder", 1);
-      randSize = getIntArg("randSize", 1);
+      kCFA = X.getIntArg("kCFA", 0);
+      recencyOrder = X.getIntArg("recencyOrder", 1);
+      randSize = X.getIntArg("randSize", 1);
 
-      includeAllQueries = getBooleanArg("includeAllQueries", false);
-      collapseArrayIndices = getBooleanArg("collapseArrayIndices", false);
+      includeAllQueries = X.getBooleanArg("includeAllQueries", false);
+      collapseArrayIndices = X.getBooleanArg("collapseArrayIndices", false);
 
-      useStrongUpdates = getBooleanArg("useStrongUpdates", true);
-      abstraction = parseAbstraction(getStringArg("abstraction", ""));
+      useStrongUpdates = X.getBooleanArg("useStrongUpdates", true);
+      abstraction = parseAbstraction(X.getStringArg("abstraction", ""));
 
       // For debugging
-      maxCommands = getIntArg("graph.maxCommands", 100000);
-      if (getBooleanArg("outputGraph", false))
+      maxCommands = X.getIntArg("graph.maxCommands", 100000);
+      if (X.getBooleanArg("outputGraph", false))
         graphMonitor = new SerializingGraphMonitor(X.path("graph"), maxCommands);
-      maxFieldAccessesToPrint = getIntArg("maxFieldAccessesToPrint", 0);
+      maxFieldAccessesToPrint = X.getIntArg("maxFieldAccessesToPrint", 0);
       if (maxFieldAccessesToPrint > 0)
         fieldAccessOut = new PrintWriter(X.path("fieldAccesses"));
 
@@ -163,25 +152,17 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
       options.put("verbose", verbose);
       options.put("useStrongUpdates", useStrongUpdates);
       options.put("abstraction", abstraction);
-      options.put("exclude", getStringArg("exclude", ""));
+      options.put("exclude", X.getStringArg("exclude", ""));
       options.put("includeAllQueries", includeAllQueries);
       options.put("collapseArrayIndices", collapseArrayIndices);
       X.writeMap("options.map", options);
-      X.output.put("exec.status", "running");
 
       super.run();
 
-      // Save output
-      X.output.put("exec.status", "done");
-      success = true;
+      X.finish(null);
     } catch (Throwable t) {
-      X.output.put("exec.status", "failed");
-      X.errors("%s", t);
-      for (StackTraceElement e : t.getStackTrace())
-        X.logs("  %s", e);
+      X.finish(t);
     }
-    X.finish();
-    if (!success) System.exit(1);
 	}
 
   public void computedExcludedClasses() {

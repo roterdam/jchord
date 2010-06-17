@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import chord.project.Chord;
+import chord.util.fig.BoolRef;
 
 /**
  * @author omertripp

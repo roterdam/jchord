@@ -15,9 +15,11 @@ import java.util.Map;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
+import chord.util.fig.BoolRef;
 
 /**
  * @author omertripp
+ * @author pliang
  *
  */
 @Chord(name="ss-shared-lock-access")

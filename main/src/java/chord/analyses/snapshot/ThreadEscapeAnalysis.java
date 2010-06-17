@@ -27,6 +27,7 @@ import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.project.Project;
 import chord.program.Program;
+import chord.util.fig.BoolRef;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
