@@ -21,6 +21,7 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Class.jq_Type;
 import joeq.Util.Templates.ListIterator;
 
@@ -73,10 +74,10 @@ public class DomV extends ProgramDom<Register> implements IMethodVisitor {
             BasicBlock bb = it.nextBasicBlock();
             for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
                 Quad q = it2.nextQuad();
-                process(q.getOp1());
-                process(q.getOp2());
-                process(q.getOp3());
-                process(q.getOp4());
+                process(q.getOp1(), q);
+                process(q.getOp2(), q);
+                process(q.getOp3(), q);
+                process(q.getOp4(), q);
             }
         }
     }
@@ -84,15 +85,26 @@ public class DomV extends ProgramDom<Register> implements IMethodVisitor {
 		varToMethodMap.put(v, ctnrMethod);
 		getOrAdd(v);
 	}
-    private void process(Operand op) {
+    private void process(Operand op, Quad q) {
         if (op instanceof RegisterOperand) {
             RegisterOperand ro = (RegisterOperand) op;
+			Register v = ro.getRegister();
             jq_Type t = ro.getType();
             if (t != null && t.isReferenceType()) {
-                Register v = ro.getRegister();
-                addVar(v);
+				addVar(v);
+			}
+        } else if (op instanceof ParamListOperand) {
+            ParamListOperand ros = (ParamListOperand) op;
+            int n = ros.length();
+            for (int i = 0; i < n; i++) {
+                RegisterOperand ro = ros.get(i);
+				Register v = ro.getRegister();
+				jq_Type t = ro.getType();
+				if (t != null && t.isReferenceType()) {
+					addVar(v);
+				}
             }
-        }
+		}
     }
 	public String toUniqueString(Register v) {
 		return v + "!" + getMethod(v);

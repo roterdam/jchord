@@ -59,7 +59,8 @@ public class RelMobjVarAsgnInst extends ProgramRel
 			int n = ros.length();
 			for (int i = 0; i < n; i++) {
 				RegisterOperand ro = ros.get(i);
-				if (ro != null) {
+				jq_Type t2 = ro.getType();
+				if (t2 != null) {
 					Register r = ro.getRegister();
 					add(ctnrMethod, l, r);
 				}
