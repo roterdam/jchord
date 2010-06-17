@@ -146,7 +146,7 @@ public class Program {
 		HostedVM.initialize();
 		IndexSet<jq_Reference> cList = new IndexSet<jq_Reference>();
 		for (String s : classNames) {
-			// if (Properties.verbose)
+			if (Properties.verbose)
 				Messages.log("SCOPE.LOADING_CLASS", s);
 			jq_Reference c;
 			try {
@@ -658,7 +658,6 @@ public class Program {
 		System.out.println("Method: " + m);
 		if (!m.isAbstract()) {
 			ControlFlowGraph cfg = m.getCFG();
-/*
 			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
 					it.hasNext();) {
 				BasicBlock bb = it.nextBasicBlock();
@@ -668,7 +667,6 @@ public class Program {
 					System.out.println("\t" + bci + "#" + q.getID());
 				}
 			}
-*/
 			System.out.println(cfg.fullDump());
 		}
 	}
