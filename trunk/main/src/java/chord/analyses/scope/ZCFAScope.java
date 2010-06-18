@@ -3,10 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.analyses.alias;
-
-import java.util.HashSet;
-import java.util.Set;
+package chord.analyses.scope;
 
 import joeq.Class.jq_Method;
 
