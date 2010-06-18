@@ -45,7 +45,8 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CHAScope extends Scope {
+public class CHAScope implements IScope {
+    public static final boolean DEBUG = false;
 	private IndexSet<jq_Reference> classes;
 	// all classes whose clinits and super class/interface clinits have been
 	// processed so far
@@ -57,15 +58,12 @@ public class CHAScope extends Scope {
 	private jq_Class javaLangObject;
 	private ClassHierarchy ch;
 
-	public IndexSet<jq_Reference> getNewInstancedClasses() {
-		return null;
-	}
 	public IndexSet<jq_Method> getMethods() {
+		if (methods == null)
+			build();
 		return methods;
 	}
-	public void build() {
-		if (isBuilt)
-			return;
+	private void build() {
 		System.out.println("ENTER: CHA");
 		Timer timer = new Timer();
 		timer.init();
@@ -94,7 +92,6 @@ public class CHAScope extends Scope {
 			if (DEBUG) System.out.println("Processing CFG of method: " + m);
 			processCFG(cfg);
         }
-		isBuilt = true;
 		System.out.println("LEAVE: CHA");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());

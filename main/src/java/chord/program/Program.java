@@ -12,16 +12,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.Arrays;
+
+import java.io.PrintWriter;
+import java.io.IOException;
 
 import com.java2html.Java2HTML;
 
+import chord.project.Project;
 import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Properties;
 import chord.util.IndexSet;
+import chord.util.FileUtils;
 import chord.util.ChordRuntimeException;
  
+import joeq.Class.jq_Reference.jq_NullType;
+import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Util.Templates.ListIterator;
 import joeq.Main.HostedVM;
 import joeq.UTF.Utf8;
@@ -60,7 +71,6 @@ import joeq.Main.Helper;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Program {
-	private boolean isBuilt = false;
 	private IndexSet<jq_Type> types;
 	private IndexSet<jq_Reference> classes;
 	private IndexSet<jq_Reference> newInstancedClasses;
@@ -87,80 +97,144 @@ public class Program {
 		return program;
 	}
 
-	public void build() {
-		if (isBuilt)
-			return;
-		boolean filesExist =
-			(new File(Properties.classesFileName)).exists() &&
-			(new File(Properties.methodsFileName)).exists();
-		boolean fromCache;
-		Scope scope = null;
-		if (Properties.reuseScope && filesExist) {
-			fromCache = true;
-			scope = new CachedScope();
-		} else {
-			fromCache = false;
-			String scopeKind = Properties.scopeKind;
-			if (scopeKind.equals("rta")) {
-				scope = new RTAScope(false);
-			} else if (scopeKind.equals("rta_reflect")) {
-				scope = new RTAScope(true);
-			} else if (scopeKind.equals("dynamic")) {
-				scope = new DynamicScope();
-			} else if (scopeKind.equals("cha")) {
-				scope = new CHAScope();
-			} else
-				Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
-		}
-		scope.build();
-		types = scope.getTypes();
-		classes = scope.getClasses();
-		newInstancedClasses = scope.getNewInstancedClasses();
-		methods = scope.getMethods();
-		if (!fromCache)
-			scope.write();
-		isBuilt = true;
-	}
 
-	public IndexSet<jq_Type> getTypes() {
-		build();
-		return types;
-	}
-
-	public IndexSet<jq_Reference> getClasses() {
-		build();
-		return classes;
-	}
 	public IndexSet<jq_Reference> getNewInstancedClasses() {
+		return null;
+/*
 		build();
 		return newInstancedClasses;
+*/
 	}
+
 	public IndexSet<jq_Method> getMethods() {
-		build();
+		if (methods == null)
+			computeReachableMethods();
 		return methods;
 	}
 
-	// load and add each class in <code>classNames</code>
-	// to <code>classes</code>
-	protected static IndexSet<jq_Reference> loadClasses(List<String> classNames) {
-		HostedVM.initialize();
-		IndexSet<jq_Reference> cList = new IndexSet<jq_Reference>();
-		for (String s : classNames) {
-			if (Properties.verbose)
-				Messages.log("SCOPE.LOADING_CLASS", s);
-			jq_Reference c;
-			try {
-				c = (jq_Reference) jq_Type.parseType(s);
-				c.prepare();
-			} catch (Exception ex) {
-				Messages.log("SCOPE.EXCLUDING_CLASS", s);
-				ex.printStackTrace();
-				continue;
-			}
-			assert (c != null);
-			cList.add(c);
+    public final IndexSet<jq_Reference> getClasses() {
+        if (types == null)
+            computeClassesAndTypes();
+        return classes;
+    }
+
+    public final IndexSet<jq_Type> getTypes() {
+        if (types == null)
+            computeClassesAndTypes();
+        return types;
+    }
+
+	private void computeReachableMethods() {
+		assert (methods == null);
+		boolean filesExist =
+			(new File(Properties.classesFileName)).exists() &&
+			(new File(Properties.methodsFileName)).exists();
+		IScope scope = null;
+		if (Properties.reuseScope && filesExist) {
+			loadMethods();
+			return;
 		}
-		return cList;
+		String scopeKind = Properties.scopeKind;
+		boolean flag = false;
+		if (scopeKind.equals("rta")) {
+			scope = new RTAScope(false);
+		} else if (scopeKind.equals("rta_reflect")) {
+			scope = new RTAScope(true);
+		} else if (scopeKind.equals("dynamic")) {
+			assert (false);
+			// scope = new DynamicScope();
+		} else if (scopeKind.equals("cha")) {
+			scope = new CHAScope();
+		} else if (scopeKind.equals("0cfa")) {
+			scope = new RTAScope(false);
+			flag = true;
+		} else
+			Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
+		methods = scope.getMethods();
+		if (flag) {
+			Project.init();
+			Project.runTask("0cfa-scope-java");
+			Project.resetAll();
+		} else
+			write();
+	}
+
+    private void computeClassesAndTypes() {
+        assert (classes == null);
+        assert (types == null);
+		if (methods == null)
+			computeReachableMethods();
+        PrimordialClassLoader loader = PrimordialClassLoader.loader;
+        jq_Type[] typesAry = loader.getAllTypes();
+        int numTypes = loader.getNumTypes();
+        Arrays.sort(typesAry, 0, numTypes, comparator);
+        types = new IndexSet<jq_Type>(numTypes + 2);
+        classes = new IndexSet<jq_Reference>();
+        types.add(jq_NullType.NULL_TYPE);
+        types.add(jq_ReturnAddressType.INSTANCE);
+        for (int i = 0; i < numTypes; i++) {
+            jq_Type t = typesAry[i];
+            assert (t != null);
+            types.add(t);
+            if (t instanceof jq_Reference && t.isPrepared()) {
+                jq_Reference r = (jq_Reference) t;
+                classes.add(r);
+            }
+        }
+    }
+
+	private void loadMethods() {
+		assert (methods == null);
+		HostedVM.initialize();
+        methods = new IndexSet<jq_Method>();
+        String methodsFileName = Properties.methodsFileName;
+        List<String> methodSigns = FileUtils.readFileToList(methodsFileName);
+		Map<String, jq_Class> map = new HashMap<String, jq_Class>();
+		Set<String> excludedClasses = new HashSet<String>();
+        for (String s : methodSigns) {
+            MethodSign sign = MethodSign.parse(s);
+            String cName = sign.cName;
+			jq_Class c  = map.get(cName);
+			if (c == null) {
+				if (excludedClasses.contains(cName))
+					continue;
+				if (Properties.verbose)
+					Messages.log("SCOPE.LOADING_CLASS", cName);
+				try {
+					c = (jq_Class) jq_Type.parseType(cName);
+					c.prepare();
+				} catch (Exception ex) {
+					Messages.log("SCOPE.EXCLUDING_CLASS", cName);
+					ex.printStackTrace();
+					excludedClasses.add(cName);
+					continue;
+				}
+				map.put(cName, c);
+			}
+            String mName = sign.mName;
+            String mDesc = sign.mDesc;
+            jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
+            assert (m != null);
+			m.getCFG();
+            methods.add(m);
+		}
+	}
+
+	private void write() {
+		assert (methods != null);
+		write(methods);
+	}
+
+	public static void write(IndexSet<jq_Method> mList) {
+        try {
+            PrintWriter out;
+            out = new PrintWriter(Properties.methodsFileName);
+            for (jq_Method m : mList)
+                out.println(m);
+            out.close();
+        } catch (IOException ex) {
+            throw new ChordRuntimeException(ex);
+        }
 	}
 
 	public ClassHierarchy getClassHierarchy() {
@@ -674,4 +748,13 @@ public class Program {
 		for (jq_Reference c : getClasses())
 			printClass(c);
 	}
+    private static Comparator comparator = new Comparator() {
+        public int compare(Object o1, Object o2) {
+            jq_Type t1 = (jq_Type) o1;
+            jq_Type t2 = (jq_Type) o2;
+            String s1 = t1.getName();
+            String s2 = t2.getName();
+            return s1.compareTo(s2);
+        }
+    };
 }

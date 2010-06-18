@@ -47,7 +47,8 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class RTAScope extends Scope {
+public class RTAScope implements IScope {
+    public static final boolean DEBUG = false;
 	private final boolean findNewInstancedClasses;
 
 	// set only if findNewInstancedClasses is true
@@ -71,15 +72,12 @@ public class RTAScope extends Scope {
 	public RTAScope(boolean _findNewInstancedClasses) {
 		this.findNewInstancedClasses = _findNewInstancedClasses;
 	}
-	public IndexSet<jq_Reference> getNewInstancedClasses() {
-		return newInstancedClasses;
-	}
 	public IndexSet<jq_Method> getMethods() {
+		if (methods == null)
+			build();
 		return methods;
 	}
-	public void build() {
-		if (isBuilt)
-			return;
+	private void build() {
 		System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
@@ -118,7 +116,6 @@ public class RTAScope extends Scope {
 	        	processCFG(cfg);
 	        }
         }
-		isBuilt = true;
 		System.out.println("LEAVE: RTA");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
