@@ -126,11 +126,9 @@ public class Program {
 
 	private void computeReachableMethods() {
 		assert (methods == null);
-		boolean filesExist =
-			(new File(Properties.classesFileName)).exists() &&
-			(new File(Properties.methodsFileName)).exists();
+		boolean fileExists = (new File(Properties.methodsFileName)).exists();
 		IScope scope = null;
-		if (Properties.reuseScope && filesExist) {
+		if (Properties.reuseScope && fileExists) {
 			loadMethods();
 			return;
 		}
@@ -141,8 +139,7 @@ public class Program {
 		} else if (scopeKind.equals("rta_reflect")) {
 			scope = new RTAScope(true);
 		} else if (scopeKind.equals("dynamic")) {
-			assert (false);
-			// scope = new DynamicScope();
+			scope = new DynamicScope();
 		} else if (scopeKind.equals("cha")) {
 			scope = new CHAScope();
 		} else if (scopeKind.equals("0cfa")) {
@@ -151,7 +148,6 @@ public class Program {
 		} else
 			Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
 		methods = scope.getMethods();
-		System.out.println("NUM METHODS: " + methods.size());
 		if (flag) {
 			Project.init();
 			// write file methods.txt
@@ -186,6 +182,20 @@ public class Program {
         }
     }
 
+	public static jq_Class loadClass(String s) {
+		if (Properties.verbose)
+			Messages.log("SCOPE.LOADING_CLASS", s);
+		try {
+			jq_Class c = (jq_Class) jq_Type.parseType(s);
+			c.prepare();
+			return c;
+		} catch (Exception ex) {
+			Messages.log("SCOPE.EXCLUDING_CLASS", s);
+			ex.printStackTrace();
+			return null;
+		}
+	}
+
 	private void loadMethods() {
 		assert (methods == null);
 		HostedVM.initialize();
@@ -201,14 +211,8 @@ public class Program {
 			if (c == null) {
 				if (excludedClasses.contains(cName))
 					continue;
-				if (Properties.verbose)
-					Messages.log("SCOPE.LOADING_CLASS", cName);
-				try {
-					c = (jq_Class) jq_Type.parseType(cName);
-					c.prepare();
-				} catch (Exception ex) {
-					Messages.log("SCOPE.EXCLUDING_CLASS", cName);
-					ex.printStackTrace();
+				c = loadClass(cName);
+				if (c == null) {
 					excludedClasses.add(cName);
 					continue;
 				}
@@ -218,7 +222,8 @@ public class Program {
             String mDesc = sign.mDesc;
             jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
             assert (m != null);
-			m.getCFG();
+			if (!m.isAbstract())
+				m.getCFG();
             methods.add(m);
 		}
 	}
