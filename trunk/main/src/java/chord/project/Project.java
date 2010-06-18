@@ -74,7 +74,7 @@ public class Project {
 		Program program = Program.getProgram();
 
 		if (Properties.buildScope) {
-			program.build();
+			program.getMethods();
 		}
 
 		if (Properties.printAllClasses) {
