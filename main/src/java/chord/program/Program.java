@@ -153,10 +153,15 @@ public class Program {
 		methods = scope.getMethods();
 		if (flag) {
 			Project.init();
+			// write file methods.txt
 			Project.runTask("0cfa-scope-java");
 			Project.resetAll();
-		} else
+			methods = null;
+			loadMethods();
+		} else {
+			// write file methods.txt
 			write();
+		}
 	}
 
     private void computeClassesAndTypes() {
