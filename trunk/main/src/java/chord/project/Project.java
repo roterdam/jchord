@@ -25,6 +25,7 @@ import java.util.Stack;
 
 import org.scannotation.AnnotationDB;
 
+import chord.program.QuadToJasmin;
 import chord.program.Program;
 import chord.project.analyses.DlogAnalysis;
 import chord.project.analyses.ITask;
@@ -75,6 +76,10 @@ public class Project {
 
 		if (Properties.buildScope) {
 			program.getMethods();
+		}
+
+		if (Properties.buildBoolProperty("chord.qj", false)) {
+			QuadToJasmin.main(null);
 		}
 
 		if (Properties.printAllClasses) {
