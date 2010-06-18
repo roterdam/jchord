@@ -151,13 +151,11 @@ public class Program {
 		} else
 			Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
 		methods = scope.getMethods();
+		System.out.println("NUM METHODS: " + methods.size());
 		if (flag) {
 			Project.init();
 			// write file methods.txt
 			Project.runTask("0cfa-scope-java");
-			Project.resetAll();
-			methods = null;
-			loadMethods();
 		} else {
 			// write file methods.txt
 			write();
