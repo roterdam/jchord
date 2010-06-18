@@ -37,6 +37,5 @@ public class ZCFAScope extends JavaAnalysis {
 			methods.add(m);
 		relReachableM.close();
 		Program.write(methods);
-			
 	}
 }
