@@ -247,7 +247,7 @@ public class Properties {
 		String val = System.getProperty(propName);
 		return (val != null) ? val : FileUtils.getAbsolutePath(workDirName, fileName);
 	}
-	private static boolean buildBoolProperty(String propName, boolean defaultVal) {
+	public static boolean buildBoolProperty(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
 	}
 	public static String[] toArray(String str) {
