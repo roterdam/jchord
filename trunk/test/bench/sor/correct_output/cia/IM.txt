@@ -1,4 +1,0 @@
-<300!main:([Ljava/lang/String;)V@sor.Sor,<init>:(II)V@sor.sor_first_row_odd>
-<318!main:([Ljava/lang/String;)V@sor.Sor,<init>:(II)V@sor.sor_first_row_even>
-<3!<init>:(I)V@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier,<init>:(ILjava/lang/Runnable;)V@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>
-<76!main:([Ljava/lang/String;)V@sor.Sor,<init>:(I)V@EDU.oswego.cs.dl.util.concurrent.CyclicBarrier>

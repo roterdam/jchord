@@ -1,4 +1,0 @@
-<[0!main:([Ljava/lang/String;)V@Philo],0!main:([Ljava/lang/String;)V@Philo>
-<[22!main:([Ljava/lang/String;)V@Philo],22!main:([Ljava/lang/String;)V@Philo>
-<[6!<init>:()V@Table],6!<init>:()V@Table>
-<[9!main:([Ljava/lang/String;)V@Philo],9!main:([Ljava/lang/String;)V@Philo>

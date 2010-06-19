@@ -1,2 +1,0 @@
-<MAX_EAT:I@Philo>
-<NUM_PHIL:I@Philo>

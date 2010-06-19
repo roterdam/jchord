@@ -1,2 +1,0 @@
-<[],main:([Ljava/lang/String;)V@Philo,[],<init>:(ILTable;)V@Philo>
-<[],main:([Ljava/lang/String;)V@Philo,[],<init>:()V@Table>

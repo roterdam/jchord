@@ -1,7 +1,0 @@
-<barrier:Ljava/lang/Integer;@TspSolver,[40!<clinit>:()V@TspSolver]>
-<MinLock:Ljava/lang/Integer;@TspSolver,[18!<clinit>:()V@TspSolver]>
-<MinTour:[I@TspSolver,[13!<clinit>:()V@TspSolver]>
-<PrioQ:[LPrioQElement;@TspSolver,[54!<clinit>:()V@TspSolver]>
-<TourLock:Ljava/lang/Integer;@TspSolver,[29!<clinit>:()V@TspSolver]>
-<Tours:[LTourElement;@TspSolver,[71!<clinit>:()V@TspSolver]>
-<TourStack:[I@TspSolver,[63!<clinit>:()V@TspSolver]>

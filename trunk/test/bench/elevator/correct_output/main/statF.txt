@@ -1,4 +1,0 @@
-<count:I@elevator.Lift>
-<DOWN:I@elevator.Lift>
-<IDLE:I@elevator.Lift>
-<UP:I@elevator.Lift>

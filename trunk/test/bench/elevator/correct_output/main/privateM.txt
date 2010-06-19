@@ -1,9 +1,0 @@
-<addPeople:(Ljava/util/Vector;)V@elevator.Lift>
-<begin:()V@elevator.Elevator>
-<doIdle:()V@elevator.Lift>
-<doMoving:()V@elevator.Lift>
-<<init>:(Ljava/lang/String;)V@elevator.Elevator>
-<readNum:(Ljava/io/StreamTokenizer;)I@elevator.Elevator>
-<stopsAbove:()Z@elevator.Lift>
-<stopsBelow:()Z@elevator.Lift>
-<waitForLiftsToFinishOperation:()V@elevator.Elevator>

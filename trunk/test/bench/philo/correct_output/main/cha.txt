@@ -1,3 +1,0 @@
-<getForks:(I)I@Table,Table,getForks:(I)I@Table>
-<putForks:(I)V@Table,Table,putForks:(I)V@Table>
-<run:()V@Philo,Philo,run:()V@Philo>

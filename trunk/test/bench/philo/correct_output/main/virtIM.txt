@@ -1,2 +1,0 @@
-<197!run:()V@Philo,putForks:(I)V@Table>
-<72!run:()V@Philo,getForks:(I)I@Table>

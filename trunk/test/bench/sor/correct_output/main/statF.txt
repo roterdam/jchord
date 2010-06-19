@@ -1,8 +1,0 @@
-<barrier:LEDU/oswego/cs/dl/util/concurrent/CyclicBarrier;@sor.Sor>
-<black_:[[F@sor.Sor>
-<iterations:I@sor.Sor>
-<M:I@sor.Sor>
-<N:I@sor.Sor>
-<nprocs:I@sor.Sor>
-<red_:[[F@sor.Sor>
-<t:[Ljava/lang/Thread;@sor.Sor>

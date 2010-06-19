@@ -1,3 +1,0 @@
-<53!main:([Ljava/lang/String;)V@Philo,R4!main:([Ljava/lang/String;)V@Philo,null,T7!main:([Ljava/lang/String;)V@Philo>
-<5!<init>:()V@Table,R0!<init>:()V@Table,forks:[Z@Table,T1!<init>:()V@Table>
-<6!<init>:(ILTable;)V@Philo,R0!<init>:(ILTable;)V@Philo,t:LTable;@Philo,R2!<init>:(ILTable;)V@Philo>
