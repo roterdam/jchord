@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Random;
 
 import chord.project.Properties;
-import chord.util.fig.Utils;
 
 public interface GraphMonitor {
   public void finish();

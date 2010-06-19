@@ -12,10 +12,10 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.lang.Boolean;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.util.fig.BoolRef;
 
 /**
  * @author omertripp
