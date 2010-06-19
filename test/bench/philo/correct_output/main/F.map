@@ -1,7 +1,0 @@
-eatctr:I@Table
-forks:[Z@Table
-id:I@Philo
-MAX_EAT:I@Philo
-null
-NUM_PHIL:I@Philo
-t:LTable;@Philo

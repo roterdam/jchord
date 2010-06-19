@@ -1,2 +1,0 @@
-<<clinit>:()V@elevator.Lift>
-<main:([Ljava/lang/String;)V@elevator.Elevator>

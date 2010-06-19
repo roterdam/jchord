@@ -1,2 +1,0 @@
-<-1!getForks:(I)I@Table,-1!getForks:(I)I@Table>
-<-1!putForks:(I)V@Table,-1!putForks:(I)V@Table>

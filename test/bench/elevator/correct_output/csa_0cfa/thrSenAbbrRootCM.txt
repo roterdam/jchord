@@ -1,2 +1,0 @@
-<[],<init>:(III)V@elevator.ButtonPress>
-<[],main:([Ljava/lang/String;)V@elevator.Elevator>

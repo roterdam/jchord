@@ -1,6 +1,0 @@
-<getForks:(I)I@Table,-1!getForks:(I)I@Table>
-<<init>:(ILTable;)V@Philo,-1!<init>:(ILTable;)V@Philo>
-<<init>:()V@Table,-1!<init>:()V@Table>
-<main:([Ljava/lang/String;)V@Philo,-1!main:([Ljava/lang/String;)V@Philo>
-<putForks:(I)V@Table,-1!putForks:(I)V@Table>
-<run:()V@Philo,-1!run:()V@Philo>

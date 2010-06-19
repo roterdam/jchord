@@ -1,9 +1,0 @@
-<[],begin:()V@elevator.Elevator,[],pushDown:(II)V@elevator.Controls>
-<[],begin:()V@elevator.Elevator,[],pushUp:(II)V@elevator.Controls>
-<[],<init>:(I)V@elevator.Controls,[],<init>:()V@elevator.Floor>
-<[],<init>:(Ljava/lang/String;)V@elevator.Elevator,[],<init>:(ILelevator/Controls;)V@elevator.Lift>
-<[],<init>:(Ljava/lang/String;)V@elevator.Elevator,[],<init>:(I)V@elevator.Controls>
-<[],<init>:(Ljava/lang/String;)V@elevator.Elevator,[],readNum:(Ljava/io/StreamTokenizer;)I@elevator.Elevator>
-<[],main:([Ljava/lang/String;)V@elevator.Elevator,[],begin:()V@elevator.Elevator>
-<[],main:([Ljava/lang/String;)V@elevator.Elevator,[],<init>:(Ljava/lang/String;)V@elevator.Elevator>
-<[],main:([Ljava/lang/String;)V@elevator.Elevator,[],waitForLiftsToFinishOperation:()V@elevator.Elevator>

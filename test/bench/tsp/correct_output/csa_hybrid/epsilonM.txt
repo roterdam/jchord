@@ -1,3 +1,0 @@
-<<clinit>:()V@Tsp>
-<<clinit>:()V@TspSolver>
-<main:([Ljava/lang/String;)V@Tsp>

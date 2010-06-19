@@ -1,5 +1,0 @@
-<<init>:(III)V@elevator.ButtonPress>
-<<init>:(ILelevator/Controls;)V@elevator.Lift>
-<<init>:(I)V@elevator.Controls>
-<<init>:(Ljava/lang/String;)V@elevator.Elevator>
-<<init>:()V@elevator.Floor>
