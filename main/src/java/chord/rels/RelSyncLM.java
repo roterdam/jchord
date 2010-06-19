@@ -35,6 +35,7 @@ public class RelSyncLM extends ProgramRel {
 			if (!(i instanceof Quad)) {
 				jq_Method m = program.getMethod(i);
 				int mIdx = domM.indexOf(m);
+				assert (mIdx >= 0);
 				add(lIdx, mIdx);
 			}
 		}

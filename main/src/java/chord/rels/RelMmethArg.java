@@ -41,6 +41,7 @@ public class RelMmethArg extends ProgramRel {
 				Register v = rf.get(zIdx);
 				if (v.getType().isReferenceType()) {
 					int vIdx = domV.indexOf(v);
+					assert (vIdx >= 0);
 					add(mIdx, zIdx, vIdx);
 				}
 			}

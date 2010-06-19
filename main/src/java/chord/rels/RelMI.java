@@ -33,6 +33,7 @@ public class RelMI extends ProgramRel {
 			Quad q = (Quad) domI.get(iIdx);
 			jq_Method m = program.getMethod(q);
 			int mIdx = domM.indexOf(m);
+			assert (mIdx >= 0);
 			add(mIdx, iIdx);
 		}
 	}

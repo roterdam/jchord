@@ -51,6 +51,7 @@ public class RelLL extends ProgramRel implements IMethodVisitor {
 		TIntArrayList locks = new TIntArrayList();
 		if (m.isSynchronized()) {
 			int lIdx = domL.indexOf(entry);
+			assert (lIdx >= 0);
 			locks.add(lIdx);
 		}
 		process(entry, locks);
@@ -65,6 +66,7 @@ public class RelLL extends ProgramRel implements IMethodVisitor {
 			if (op instanceof Monitor) {
 				if (op instanceof MONITORENTER) {
 					int lIdx = domL.indexOf(q);
+					assert (lIdx >= 0);
 					TIntArrayList locks2 = new TIntArrayList(k + 1);
 					if (k > 0) {
 						int lIdx2 = locks.get(k - 1);

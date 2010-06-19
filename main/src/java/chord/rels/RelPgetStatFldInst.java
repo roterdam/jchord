@@ -51,15 +51,12 @@ public class RelPgetStatFldInst extends ProgramRel
 				RegisterOperand lo = Getstatic.getDest(q);
 				Register l = lo.getRegister();
 				int pIdx = domP.indexOf(q);
-				assert (pIdx != -1);
+				assert (pIdx >= 0);
 				int lIdx = domV.indexOf(l);
-				assert (lIdx != -1);
+				assert (lIdx >= 0);
 				int fIdx = domF.indexOf(f);
-				if (fIdx == -1) {
-					System.out.println("WARNING: PgetStatFldInst: " +
-						" quad: " + q);
-				} else
-					add(pIdx, lIdx, fIdx);
+				assert (fIdx >= 0);
+				add(pIdx, lIdx, fIdx);
 			}
 		}
 	}

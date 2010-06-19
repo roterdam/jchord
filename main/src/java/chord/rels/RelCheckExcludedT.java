@@ -34,8 +34,7 @@ public class RelCheckExcludedT extends ProgramRel {
 			String cName = c.getName();
 			for (String prefix : checkExcludeAry) {
 				if (cName.startsWith(prefix)) {
-					int tIdx = domT.indexOf(c);
-					add(tIdx);
+					add(c);
 					break;
 				}
 			}

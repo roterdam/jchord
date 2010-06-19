@@ -37,7 +37,7 @@ public class RelHT extends ProgramRel {
 			Quad h = (Quad) domH.get(hIdx);
 			Operator op = h.getOperator();
 			jq_Type t;
-			// Note: do NOT merge handling of New and NewArray
+			// do NOT merge handling of New and NewArray
 			if (op instanceof New)
 				t = New.getType(h).getType();
 			else {
@@ -45,8 +45,7 @@ public class RelHT extends ProgramRel {
 				t = NewArray.getType(h).getType();
 			}
 			int tIdx = domT.indexOf(t);
-			assert tIdx >= 0 : "Could not find type `" + t +
-				"` of allocation site `" + h + "` in domain T";
+			assert (tIdx >= 0);
 			add(hIdx, tIdx);
 		}
 		for (int hIdx = numA; hIdx < numH; hIdx++) {

@@ -59,11 +59,11 @@ public class RelMgetInstFldInst extends ProgramRel
 				RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
 				Register b = bo.getRegister();
 				int mIdx = domM.indexOf(ctnrMethod);
-				assert (mIdx != -1);
+				assert (mIdx >= 0);
 				int lIdx = domV.indexOf(l);
-				assert (lIdx != -1);
+				assert (lIdx >= 0);
 				int bIdx = domV.indexOf(b);
-				assert (bIdx != -1);
+				assert (bIdx >= 0);
 				int fIdx = 0;
 				add(mIdx, lIdx, bIdx, fIdx);
 			}
@@ -79,17 +79,14 @@ public class RelMgetInstFldInst extends ProgramRel
 					RegisterOperand lo = Getfield.getDest(q);
 					Register l = lo.getRegister();
 					int mIdx = domM.indexOf(ctnrMethod);
-					assert (mIdx != -1);
+					assert (mIdx >= 0);
 					int bIdx = domV.indexOf(b);
-					assert (bIdx != -1);
+					assert (bIdx >= 0);
 					int lIdx = domV.indexOf(l);
-					assert (lIdx != -1);
+					assert (lIdx >= 0);
 					int fIdx = domF.indexOf(f);
-					if (fIdx == -1) {
-						System.out.println("WARNING: MgetInstFldInst: method: " +
-							ctnrMethod + " quad: " + q);
-					} else
-						add(mIdx, lIdx, bIdx, fIdx);
+					assert (fIdx >= 0);
+					add(mIdx, lIdx, bIdx, fIdx);
 				} else
 					assert (bx instanceof AConstOperand);
 			}

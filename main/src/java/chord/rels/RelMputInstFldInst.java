@@ -60,11 +60,11 @@ public class RelMputInstFldInst extends ProgramRel
 					RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 					Register b = bo.getRegister();
 					int mIdx = domM.indexOf(ctnrMethod);
-					assert (mIdx != -1);
+					assert (mIdx >= 0);
 					int rIdx = domV.indexOf(r);
-					assert (rIdx != -1);
+					assert (rIdx >= 0);
 					int bIdx = domV.indexOf(b);
-					assert (bIdx != -1);
+					assert (bIdx >= 0);
 					int fIdx = 0;
 					add(mIdx, bIdx, fIdx, rIdx);
 				}
@@ -83,17 +83,14 @@ public class RelMputInstFldInst extends ProgramRel
 						Register b = bo.getRegister();
 						Register r = ro.getRegister();
 						int mIdx = domM.indexOf(ctnrMethod);
-						assert (mIdx != -1);
+						assert (mIdx >= 0);
 						int bIdx = domV.indexOf(b);
-						assert (bIdx != -1);
+						assert (bIdx >= 0);
 						int rIdx = domV.indexOf(r);
-						assert (rIdx != -1);
+						assert (rIdx >= 0);
 						int fIdx = domF.indexOf(f);
-						if (fIdx == -1) {
-							System.out.println("WARNING: MputInstFldInst: method: " +
-								ctnrMethod + " quad: " + q);
-						} else
-							add(mIdx, bIdx, fIdx, rIdx);
+						assert (fIdx >= 0);
+						add(mIdx, bIdx, fIdx, rIdx);
 					}
 				}
 			}

@@ -54,15 +54,12 @@ public class RelPputStatFldInst extends ProgramRel
 					RegisterOperand ro = (RegisterOperand) rx;
 					Register r = ro.getRegister();
 					int pIdx = domP.indexOf(q);
-					assert (pIdx != -1);
+					assert (pIdx >= 0);
 					int rIdx = domV.indexOf(r);
-					assert (rIdx != -1);
+					assert (rIdx >= 0);
 					int fIdx = domF.indexOf(f);
-					if (fIdx == -1) {
-						System.out.println("WARNING: PputStatFldInst: " +
-							" quad: " + q);
-					} else
-						add(pIdx, fIdx, rIdx);
+					assert (fIdx >= 0);
+					add(pIdx, fIdx, rIdx);
 				}
 			}
 		}

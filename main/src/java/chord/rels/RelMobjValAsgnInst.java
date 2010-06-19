@@ -40,6 +40,7 @@ public class RelMobjValAsgnInst extends ProgramRel {
 			Quad q = (Quad) domH.get(hIdx);
 			jq_Method m = program.getMethod(q);
 			int mIdx = domM.indexOf(m);
+			assert (mIdx >= 0);
 			Operator op = q.getOperator();
 			RegisterOperand vo;
 			if (op instanceof New)
@@ -48,6 +49,7 @@ public class RelMobjValAsgnInst extends ProgramRel {
 				vo = NewArray.getDest(q);
 			Register v = vo.getRegister();
 			int vIdx = domV.indexOf(v);
+			assert (vIdx >= 0);
 			add(mIdx, vIdx, hIdx);
 		}
 	}

@@ -33,8 +33,8 @@ public class RelEF extends ProgramRel {
 			Quad e = (Quad) domE.get(eIdx);
 			jq_Field f = Program.getField(e);
 			int fIdx = domF.indexOf(f);
-			if (fIdx != -1)
-				add(eIdx, fIdx);
+			assert (fIdx >= 0);
+			add(eIdx, fIdx);
 		}
 	}
 }

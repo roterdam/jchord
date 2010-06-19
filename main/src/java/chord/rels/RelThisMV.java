@@ -38,6 +38,7 @@ public class RelThisMV extends ProgramRel {
 			RegisterFactory rf = cfg.getRegisterFactory();
 			Register v = rf.get(0);
 			int vIdx = domV.indexOf(v);
+			assert (vIdx >= 0);
 			add(mIdx, vIdx);
 		}
 	}

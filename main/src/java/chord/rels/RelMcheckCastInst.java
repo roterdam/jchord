@@ -35,14 +35,19 @@ import chord.program.visitors.ICastInstVisitor;
 public class RelMcheckCastInst extends ProgramRel
 		implements ICastInstVisitor {
 	private jq_Method ctnrMethod;
+	private DomM domM;
+	private DomV domV;
+	private DomT domT;
+	public void init() {
+		domM = (DomM) doms[0];
+		domV = (DomV) doms[1];
+		domT = (DomT) doms[2];
+	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
 		ctnrMethod = m;
 	}
 	public void visitCastInst(Quad q) {
-		DomM domM = (DomM) doms[0];
-		DomV domV = (DomV) doms[1];
-		DomT domT = (DomT) doms[2];
 		Operand rx = CheckCast.getSrc(q);
 		if (rx instanceof RegisterOperand) {
 			jq_Type t = CheckCast.getType(q).getType();
@@ -52,13 +57,13 @@ public class RelMcheckCastInst extends ProgramRel
 				RegisterOperand lo = CheckCast.getDest(q);
 				Register l = lo.getRegister();
 				int mIdx = domM.indexOf(ctnrMethod);
-				assert (mIdx != -1);
+				assert (mIdx >= 0);
 				int lIdx = domV.indexOf(l);
-				assert (lIdx != -1);
+				assert (lIdx >= 0);
 				int tIdx = domT.indexOf(t);
-				assert (tIdx != -1);
+				assert (tIdx >= 0);
 				int rIdx = domV.indexOf(r);
-				assert (rIdx != -1);
+				assert (rIdx >= 0);
 				add(mIdx, lIdx, tIdx, rIdx);
 			}
 		}

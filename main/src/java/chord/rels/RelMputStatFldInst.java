@@ -57,15 +57,12 @@ public class RelMputStatFldInst extends ProgramRel
 					RegisterOperand ro = (RegisterOperand) rx;
 					Register r = ro.getRegister();
 					int mIdx = domM.indexOf(ctnrMethod);
-					assert (mIdx != -1);
+					assert (mIdx >= 0);
 					int rIdx = domV.indexOf(r);
-					assert (rIdx != -1);
+					assert (rIdx >= 0);
 					int fIdx = domF.indexOf(f);
-					if (fIdx == -1) {
-						System.out.println("WARNING: MputStatFldInst: method: " +
-							ctnrMethod + " quad: " + q);
-					} else
-						add(mIdx, fIdx, rIdx);
+					assert (fIdx >= 0);
+					add(mIdx, fIdx, rIdx);
 				}
 			}
 		}

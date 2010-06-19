@@ -16,6 +16,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
+import chord.program.Program;
 
 /**
  * Relation containing each tuple (i,m) such that m is the resolved
@@ -39,8 +40,8 @@ public class RelVirtIM extends ProgramRel {
 			if (op instanceof InvokeVirtual || op instanceof InvokeInterface) {
 				jq_Method m = Invoke.getMethod(i).getMethod();
 				int mIdx = domM.indexOf(m);
-				if (mIdx != -1)
-					add(iIdx, mIdx);
+				assert (mIdx >= 0);
+				add(iIdx, mIdx);
 			}
 		}
 	}

@@ -38,8 +38,8 @@ public class RelStatIM extends ProgramRel {
 				jq_Method m = InvokeStatic.getMethod(i).getMethod();
 				if (m.isStatic()) {
 					int mIdx = domM.indexOf(m);
-					if (mIdx != -1)
-						add(iIdx, mIdx);
+					assert (mIdx >= 0);
+					add(iIdx, mIdx);
 				}
 			}
 		}

@@ -14,6 +14,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
+import chord.program.Program;
 
 /**
  * Relation containing each tuple (i,m) such that m is the resolved
@@ -37,8 +38,8 @@ public class RelSpecIM extends ProgramRel {
 				jq_Method m = InvokeStatic.getMethod(i).getMethod();
 				if (!m.isStatic()) {
 					int mIdx = domM.indexOf(m);
-					if (mIdx != -1)
-						add(iIdx, mIdx);
+					assert (mIdx >= 0);
+					add(iIdx, mIdx);
 				}
 			}
 		}

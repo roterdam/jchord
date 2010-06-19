@@ -37,6 +37,7 @@ public class RelPobjValAsgnInst extends ProgramRel {
 		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad h = (Quad) domH.get(hIdx);
 			int pIdx = domP.indexOf(h);
+			assert (pIdx >= 0);
 			Operator op = h.getOperator();
 			RegisterOperand vo;
 			if (op instanceof New)
@@ -45,6 +46,7 @@ public class RelPobjValAsgnInst extends ProgramRel {
 				vo = NewArray.getDest(h);
 			Register v = vo.getRegister();
 			int vIdx = domV.indexOf(v);
+			assert (vIdx >= 0);
 			add(pIdx, vIdx, hIdx);
 		}
 	}

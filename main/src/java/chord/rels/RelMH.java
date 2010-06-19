@@ -34,6 +34,7 @@ public class RelMH extends ProgramRel {
 			Quad q = (Quad) domH.get(hIdx);
 			jq_Method m = program.getMethod(q);
 			int mIdx = domM.indexOf(m);
+			assert (mIdx >= 0);
 			add(mIdx, hIdx);
 		}
 	}

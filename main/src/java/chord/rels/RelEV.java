@@ -51,6 +51,7 @@ public class RelEV extends ProgramRel {
 			if (bo != null) {
 				Register b = bo.getRegister();
 				int vIdx = domV.indexOf(b);
+				assert (vIdx >= 0);
 				add(eIdx, vIdx);
 			}
 		}

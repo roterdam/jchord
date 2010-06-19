@@ -54,15 +54,12 @@ public class RelMgetStatFldInst extends ProgramRel
 				RegisterOperand lo = Getstatic.getDest(q);
 				Register l = lo.getRegister();
 				int mIdx = domM.indexOf(ctnrMethod);
-				assert (mIdx != -1);
+				assert (mIdx >= 0);
 				int lIdx = domV.indexOf(l);
-				assert (lIdx != -1);
+				assert (lIdx >= 0);
 				int fIdx = domF.indexOf(f);
-				if (fIdx == -1) {
-					System.out.println("WARNING: MgetStatFldInst: method: " +
-						ctnrMethod + " quad: " + q);
-				} else
-					add(mIdx, lIdx, fIdx);
+				assert (fIdx >= 0);
+				add(mIdx, lIdx, fIdx);
 			}
 		}
 	}
