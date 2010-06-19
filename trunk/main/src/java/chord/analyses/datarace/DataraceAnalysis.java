@@ -47,7 +47,6 @@ import chord.util.tuple.object.Hext;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
 
-import chord.util.fig.Execution;
 import chord.bddbddb.Rel.PairIterable;
 
 /**
@@ -87,8 +86,6 @@ public class DataraceAnalysis extends JavaAnalysis {
 	private CSAliasAnalysis hybridAnalysis;
 	private ThrSenAbbrCSCGAnalysis thrSenAbbrCSCGAnalysis;
 
-  Execution X;
-
 	private void init() {
 		domM = (DomM) Project.getTrgt("M");
 		domI = (DomI) Project.getTrgt("I");
@@ -104,11 +101,6 @@ public class DataraceAnalysis extends JavaAnalysis {
 	}
 
 	public void run() {
-    X = Execution.v("adaptive");
-    X.addSaveFiles("inputs.dat", "outputs.dat");
-    if (X.getBooleanArg("saveStrings", false))
-      X.addSaveFiles("inputs.strings", "outputs.strings");
-
 		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
 		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");
 		boolean excludeNongrded = Boolean.getBoolean("chord.exclude.nongrded");
@@ -134,45 +126,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		if (Properties.publishResults)
 			publishResults();
-
-    outputRaces();
-
-    X.finish(null);
 	}
-
-	private void outputRaces() {
-    if (!X.getBooleanArg("enable", false)) return;
-
-    PrintWriter datOut = OutDirUtils.newPrintWriter("outputs.dat");
-
-		final ProgramRel relDatarace = (ProgramRel) Project.getTrgt("ctxtInsDatarace");
-		relDatarace.load();
-		final PairIterable<Inst, Inst> tuples = relDatarace.getAry2ValTuples();
-    int numRaces = 0;
-		for (Pair<Inst, Inst> p : tuples) {
-			Quad quad0 = (Quad) p.val0;
-			int e1 = domE.indexOf(quad0);
-			Quad quad1 = (Quad) p.val1;
-			int e2 = domE.indexOf(quad1);
-      datOut.println(e1 + " " + e2);
-      numRaces++;
-		}
-		relDatarace.close();
-
-    datOut.close();
-    X.output.put("numRaces", numRaces);
-
-    PrintWriter strOut = OutDirUtils.newPrintWriter("outputs.strings");
-    for (int e = 0; e < domE.size(); e++)
-      strOut.println("E"+e + " " + estr(e));
-    strOut.close();
-	}
-
-  public String estr(int e) {
-    if (e < 0) return "-";
-    Quad quad = (Quad)domE.get(e);
-    return Program.getProgram().toJavaPosStr(quad)+" "+Program.getProgram().toQuadStr(quad);
-  }
 
 	private void publishResults() {
 		Project.runTask(hybridAnalysis);

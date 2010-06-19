@@ -25,10 +25,6 @@ import chord.program.Program;
 import chord.project.Properties;
 import chord.project.analyses.DynamicAnalysis;
 
-import chord.util.fig.Execution;
-import chord.util.fig.Utils;
-import chord.util.fig.StatFig;
-
 import chord.project.Project;
 import chord.doms.DomE;
 import chord.doms.DomF;
