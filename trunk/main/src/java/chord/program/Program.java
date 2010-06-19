@@ -133,7 +133,6 @@ public class Program {
 			return;
 		}
 		String scopeKind = Properties.scopeKind;
-		boolean flag = false;
 		if (scopeKind.equals("rta")) {
 			scope = new RTAScope(false);
 		} else if (scopeKind.equals("rta_reflect")) {
@@ -142,20 +141,10 @@ public class Program {
 			scope = new DynamicScope();
 		} else if (scopeKind.equals("cha")) {
 			scope = new CHAScope();
-		} else if (scopeKind.equals("0cfa")) {
-			scope = new RTAScope(false);
-			flag = true;
 		} else
 			Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
 		methods = scope.getMethods();
-		if (flag) {
-			Project.init();
-			// write file methods.txt
-			Project.runTask("0cfa-scope-java");
-		} else {
-			// write file methods.txt
-			write();
-		}
+		write();
 	}
 
     private void computeClassesAndTypes() {
