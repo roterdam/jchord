@@ -53,11 +53,11 @@ public class RelPgetInstFldInst extends ProgramRel
 				RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
 				Register b = bo.getRegister();
 				int pIdx = domP.indexOf(q);
-				assert (pIdx != -1);
+				assert (pIdx >= 0);
 				int lIdx = domV.indexOf(l);
-				assert (lIdx != -1);
+				assert (lIdx >= 0);
 				int bIdx = domV.indexOf(b);
-				assert (bIdx != -1);
+				assert (bIdx >= 0);
 				int fIdx = 0;
 				add(pIdx, lIdx, fIdx, bIdx);
 			}
@@ -71,17 +71,14 @@ public class RelPgetInstFldInst extends ProgramRel
 				RegisterOperand bo = (RegisterOperand) Getfield.getBase(q);
 				Register b = bo.getRegister();
 				int pIdx = domP.indexOf(q);
-				assert (pIdx != -1);
+				assert (pIdx >= 0);
 				int lIdx = domV.indexOf(l);
-				assert (lIdx != -1);
+				assert (lIdx >= 0);
 				int bIdx = domV.indexOf(b);
-				assert (bIdx != -1);
+				assert (bIdx >= 0);
 				int fIdx = domF.indexOf(f);
-				if (fIdx == -1) {
-					System.out.println("WARNING: PgetInstFldInst: " +
-						" quad: " + q);
-				} else
-					add(pIdx, lIdx, fIdx, bIdx);
+				assert (fIdx >= 0);
+				add(pIdx, lIdx, fIdx, bIdx);
 			}
 		}
 	}

@@ -56,11 +56,11 @@ public class RelPputInstFldInst extends ProgramRel
 					RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
 					Register b = bo.getRegister();
 					int pIdx = domP.indexOf(q);
-					assert (pIdx != -1);
+					assert (pIdx >= 0);
 					int bIdx = domV.indexOf(b);
-					assert (bIdx != -1);
+					assert (bIdx >= 0);
 					int rIdx = domV.indexOf(r);
-					assert (rIdx != -1);
+					assert (rIdx >= 0);
 					int fIdx = 0;
 					add(pIdx, bIdx, fIdx, rIdx);
 				}
@@ -77,17 +77,14 @@ public class RelPputInstFldInst extends ProgramRel
 					RegisterOperand bo = (RegisterOperand) Putfield.getBase(q);
 					Register b = bo.getRegister();
 					int pIdx = domP.indexOf(q);
-					assert (pIdx != -1);
+					assert (pIdx >= 0);
 					int bIdx = domV.indexOf(b);
-					assert (bIdx != -1);
+					assert (bIdx >= 0);
 					int rIdx = domV.indexOf(r);
-					assert (rIdx != -1);
+					assert (rIdx >= 0);
 					int fIdx = domF.indexOf(f);
-					if (fIdx == -1) {
-						System.out.println("WARNING: PputInstFldInst: " +
-							" quad: " + q);
-					} else
-						add(pIdx, bIdx, fIdx, rIdx);
+					assert (fIdx >= 0);
+					add(pIdx, bIdx, fIdx, rIdx);
 				}
 			}
 		}

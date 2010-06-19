@@ -30,7 +30,7 @@ public class RelReflectHT extends ProgramRel {
 		for (int hIdx = fstT; hIdx < numH; hIdx++) {
 			jq_Class c = (jq_Class) domH.get(hIdx);
 			int tIdx = domT.indexOf(c);
-			assert (tIdx != -1);
+			assert (tIdx >= 0);
 			add(hIdx, tIdx);
 		}
 	}

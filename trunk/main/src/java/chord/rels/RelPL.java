@@ -31,6 +31,7 @@ public class RelPL extends ProgramRel {
 		for (int lIdx = 0; lIdx < numL; lIdx++) {
 			Inst i = domL.get(lIdx);
 			int pIdx = domP.indexOf(i);
+			assert (pIdx >= 0);
 			add(pIdx, lIdx);
 		}
 	}

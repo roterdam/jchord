@@ -33,6 +33,7 @@ public class RelML extends ProgramRel {
 			Inst i = domL.get(lIdx);
 			jq_Method m = program.getMethod(i);
 			int mIdx = domM.indexOf(m);
+			assert (mIdx >= 0);
 			add(mIdx, lIdx);
 		}
 	}

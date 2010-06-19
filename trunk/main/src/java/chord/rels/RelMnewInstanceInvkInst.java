@@ -51,9 +51,9 @@ public class RelMnewInstanceInvkInst extends ProgramRel
 		if ((mName.equals("newInstance") && cName.equals("java.lang.Class"))) {
 			Register l = Invoke.getDest(q).getRegister();
 			int lIdx = domV.indexOf(l);
-			assert (lIdx != -1);
+			assert (lIdx >= 0);
 			int mIdx = domM.indexOf(ctnrMethod);
-			assert (mIdx != -1);
+			assert (mIdx >= 0);
 			add(mIdx, lIdx);
 		}
 	}

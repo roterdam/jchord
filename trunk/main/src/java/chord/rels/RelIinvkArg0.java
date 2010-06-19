@@ -40,6 +40,7 @@ public class RelIinvkArg0 extends ProgramRel {
 				Register v = vo.getRegister();
 				if (v.getType().isReferenceType()) {
 					int vIdx = domV.indexOf(v);
+					assert (vIdx >= 0);
 					add(iIdx, vIdx);
 				}
 			}

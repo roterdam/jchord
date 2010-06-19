@@ -58,6 +58,7 @@ public class RelLI extends ProgramRel implements IMethodVisitor {
 		TIntArrayList locks = new TIntArrayList();
 		if (m.isSynchronized()) {
 			int lIdx = domL.indexOf(entry);
+			assert (lIdx >= 0);
 			locks.add(lIdx);
 		}
 		process(entry, locks);
@@ -75,6 +76,7 @@ public class RelLI extends ProgramRel implements IMethodVisitor {
 					for (int j = 0; j < k; j++)
 						locks2.add(locks.get(j));
 					int lIdx = domL.indexOf(q);
+					assert (lIdx >= 0);
 					locks2.add(lIdx);
 					locks = locks2;
 					k++;
@@ -87,6 +89,7 @@ public class RelLI extends ProgramRel implements IMethodVisitor {
 				}
 			} else if (op instanceof Invoke && k > 0) {
 				int iIdx = domI.indexOf(q);
+				assert (iIdx >= 0);
 				add(locks.get(k - 1), iIdx);
 			}
 		}

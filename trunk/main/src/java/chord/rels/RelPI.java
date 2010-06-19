@@ -29,6 +29,7 @@ public class RelPI extends ProgramRel {
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			Quad i = (Quad) domI.get(iIdx);
 			int pIdx = domP.indexOf(i);
+			assert (pIdx >= 0);
 			add(pIdx, iIdx);
 		}
 	}
