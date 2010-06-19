@@ -11,6 +11,7 @@ import chord.project.Project;
 import chord.project.Properties;
 import chord.project.VisitorHandler;
 import chord.util.ChordRuntimeException;
+import chord.project.Messages;
 
 /**
  * Generic implementation of a program relation (a specialized kind
@@ -50,5 +51,8 @@ public class ProgramRel extends Rel implements ITask {
 	}
 	public String toString() {
 		return name;
+	}
+	public void skip(Object elem, ProgramDom dom) {
+		Messages.log("RELATION.SKIP_TUPLE", getClass().getName(), elem, dom.getClass().getName());
 	}
 }
