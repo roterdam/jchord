@@ -4,7 +4,7 @@
 -->
 <project name="chord-tester" default="help" basedir=".">
 
-	<property name="test.dirs" value="philo,sor,elevator,tsp,hedc"/>
+	<property name="test.dirs" value="hsqldb,lusearch"/>
 
 	<target name="help">
 		<echo>
