@@ -57,12 +57,14 @@ public class CHAScope implements IScope {
 	private List<jq_Method> methodWorklist;
 	private jq_Class javaLangObject;
 	private ClassHierarchy ch;
-
 	public IndexSet<jq_Method> getMethods() {
 		if (methods == null)
 			build();
 		return methods;
 	}
+    public IndexSet<jq_Reference> getReflectClasses() {
+        return new IndexSet<jq_Reference>(0);
+    }
 	private void build() {
 		System.out.println("ENTER: CHA");
 		Timer timer = new Timer();

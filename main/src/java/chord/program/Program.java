@@ -73,7 +73,7 @@ import joeq.Main.Helper;
 public class Program {
 	private IndexSet<jq_Type> types;
 	private IndexSet<jq_Reference> classes;
-	private IndexSet<jq_Reference> newInstancedClasses;
+	private IndexSet<jq_Reference> reflectClasses;
 	private IndexSet<jq_Method> methods;
 	private Map<String, jq_Type> nameToTypeMap;
 	private Map<String, jq_Reference> nameToClassMap;
@@ -98,12 +98,10 @@ public class Program {
 	}
 
 
-	public IndexSet<jq_Reference> getNewInstancedClasses() {
-		return null;
-/*
-		build();
-		return newInstancedClasses;
-*/
+	public IndexSet<jq_Reference> getReflectClasses() {
+		if (reflectClasses == null)
+			computeReachableMethods();
+		return reflectClasses;
 	}
 
 	public IndexSet<jq_Method> getMethods() {
@@ -113,7 +111,7 @@ public class Program {
 	}
 
     public final IndexSet<jq_Reference> getClasses() {
-        if (types == null)
+        if (classes == null)
             computeClassesAndTypes();
         return classes;
     }
@@ -126,9 +124,12 @@ public class Program {
 
 	private void computeReachableMethods() {
 		assert (methods == null);
-		boolean fileExists = (new File(Properties.methodsFileName)).exists();
+		assert (reflectClasses == null);
+		boolean filesExist =
+			(new File(Properties.methodsFileName)).exists() &&
+			(new File(Properties.reflectFileName)).exists();
 		IScope scope = null;
-		if (Properties.reuseScope && fileExists) {
+		if (Properties.reuseScope && filesExist) {
 			loadMethods();
 			return;
 		}
@@ -144,6 +145,7 @@ public class Program {
 		} else
 			Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
 		methods = scope.getMethods();
+		reflectClasses = scope.getReflectClasses();
 		write();
 	}
 
@@ -171,11 +173,11 @@ public class Program {
         }
     }
 
-	public static jq_Class loadClass(String s) {
+	public static jq_Reference loadClass(String s) {
 		if (Properties.verbose)
 			Messages.log("SCOPE.LOADING_CLASS", s);
 		try {
-			jq_Class c = (jq_Class) jq_Type.parseType(s);
+			jq_Reference c = (jq_Reference) jq_Type.parseType(s);
 			c.prepare();
 			return c;
 		} catch (Exception ex) {
@@ -191,44 +193,55 @@ public class Program {
         methods = new IndexSet<jq_Method>();
         String methodsFileName = Properties.methodsFileName;
         List<String> methodSigns = FileUtils.readFileToList(methodsFileName);
-		Map<String, jq_Class> map = new HashMap<String, jq_Class>();
 		Set<String> excludedClasses = new HashSet<String>();
         for (String s : methodSigns) {
             MethodSign sign = MethodSign.parse(s);
             String cName = sign.cName;
-			jq_Class c  = map.get(cName);
-			if (c == null) {
-				if (excludedClasses.contains(cName))
-					continue;
-				c = loadClass(cName);
-				if (c == null) {
+			if (!excludedClasses.contains(cName)) {
+				jq_Class c = (jq_Class) loadClass(cName);
+				if (c != null) {
+            		String mName = sign.mName;
+            		String mDesc = sign.mDesc;
+					jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
+					assert (m != null);
+					if (!m.isAbstract())
+						m.getCFG();
+					methods.add(m);
+				} else
 					excludedClasses.add(cName);
-					continue;
-				}
-				map.put(cName, c);
 			}
-            String mName = sign.mName;
-            String mDesc = sign.mDesc;
-            jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
-            assert (m != null);
-			if (!m.isAbstract())
-				m.getCFG();
-            methods.add(m);
+		}
+		reflectClasses = new IndexSet<jq_Reference>();
+		String reflectFileName = Properties.reflectFileName;
+		List<String> reflectClassNames = FileUtils.readFileToList(reflectFileName);
+		for (String cName : reflectClassNames) {
+			if (!excludedClasses.contains(cName)) {
+				jq_Reference r = loadClass(cName);
+				if (r != null)
+					reflectClasses.add(r);
+				else
+					excludedClasses.add(cName);
+			}
 		}
 	}
 
 	private void write() {
 		assert (methods != null);
-		write(methods);
+		assert (reflectClasses != null);
+		write(methods, reflectClasses);
 	}
 
-	public static void write(IndexSet<jq_Method> mList) {
+	public static void write(IndexSet<jq_Method> mList, IndexSet<jq_Reference> rList) {
         try {
             PrintWriter out;
             out = new PrintWriter(Properties.methodsFileName);
             for (jq_Method m : mList)
                 out.println(m);
             out.close();
+            out = new PrintWriter(Properties.reflectFileName);
+			for (jq_Reference r : rList)
+           	    out.println(r);
+			out.close();
         } catch (IOException ex) {
             throw new ChordRuntimeException(ex);
         }

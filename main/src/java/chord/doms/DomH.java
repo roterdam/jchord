@@ -74,12 +74,8 @@ public class DomH extends ProgramDom<Object> {
 			}
 		}
 		lastRealHidx = size() - 1;
-		boolean handleNewInstancedClasses =
-			Properties.scopeKind.equals("rta_reflect");
-		if (handleNewInstancedClasses) {
-			for (jq_Reference c : program.getNewInstancedClasses())
-				getOrAdd(c);
-		}
+		for (jq_Reference c : program.getReflectClasses())
+			getOrAdd(c);
 	}
 	public String toUniqueString(Object o) {
 		if (o instanceof Quad) {
