@@ -140,10 +140,9 @@ public class Properties {
 	}
 	public final static String outFileName = outRel2AbsPath("chord.out.file", "log.txt");
 	public final static String errFileName = outRel2AbsPath("chord.err.file", "log.txt");
-	public final static String classesFileName = outRel2AbsPath("chord.classes.file", "classes.txt");
+	public final static String reflectFileName = outRel2AbsPath("chord.reflect.file", "reflect.txt");
 	public final static String methodsFileName = outRel2AbsPath("chord.methods.file", "methods.txt");
-	public final static String newInstancedClassesFileName =
-		outRel2AbsPath("chord.new.instanced.classes.file", "new_instanced_classes.txt");
+	public final static String classesFileName = outRel2AbsPath("chord.classes.file", "classes.txt");
 	public static String bddbddbWorkDirName = outRel2AbsPath("chord.bddbddb.work.dir", "bddbddb");
 	// TODO: create this dir on demand
 	static {
@@ -225,9 +224,9 @@ public class Properties {
 		System.out.println("chord.out.dir: " + outDirName);
 		System.out.println("chord.out.file: " + outFileName);
 		System.out.println("chord.err.file: " + errFileName);
-		System.out.println("chord.classes.file: " + classesFileName);
-		System.out.println("chord.new.instanced.classes.file: " + newInstancedClassesFileName);
+		System.out.println("chord.reflect.file: " + reflectFileName);
 		System.out.println("chord.methods.file: " + methodsFileName);
+		System.out.println("chord.classes.file: " + classesFileName);
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
 		System.out.println("chord.user.classes.dir: " + userClassesDirName);

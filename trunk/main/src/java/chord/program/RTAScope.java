@@ -49,11 +49,11 @@ import chord.util.Timer;
  */
 public class RTAScope implements IScope {
     public static final boolean DEBUG = false;
-	private final boolean findNewInstancedClasses;
+	private final boolean handleReflection;
 
-	// set only if findNewInstancedClasses is true
-	private IndexSet<jq_Reference> newInstancedClasses;
-	private Set<Register> newInstancedVars;
+	// set only if handleReflection is true
+	private IndexSet<jq_Reference> reflectClasses;
+	private Set<Register> reflectVars;
     private ClassHierarchy ch;
 
 	private IndexSet<jq_Reference> classes;
@@ -69,13 +69,20 @@ public class RTAScope implements IScope {
 	private jq_Class javaLangObject;
 	private boolean repeat = true;
 
-	public RTAScope(boolean _findNewInstancedClasses) {
-		this.findNewInstancedClasses = _findNewInstancedClasses;
+	public RTAScope(boolean _handleReflection) {
+		this.handleReflection = _handleReflection;
 	}
 	public IndexSet<jq_Method> getMethods() {
 		if (methods == null)
 			build();
 		return methods;
+	}
+	public IndexSet<jq_Reference> getReflectClasses() {
+		if (!handleReflection)
+			return new IndexSet<jq_Reference>(0);
+		if (reflectClasses == null)
+			build();
+		return reflectClasses;
 	}
 	private void build() {
 		System.out.println("ENTER: RTA");
@@ -86,10 +93,10 @@ public class RTAScope implements IScope {
  		classesVisitedForClinit = new HashSet<jq_Class>();
  		methods = new IndexSet<jq_Method>();
 		methodWorklist = new ArrayList<jq_Method>();
-		if (findNewInstancedClasses) {
+		if (handleReflection) {
 			ch = Program.getProgram().getClassHierarchy();
-			newInstancedClasses = new IndexSet<jq_Reference>();
-			newInstancedVars = new HashSet<Register>();
+			reflectClasses = new IndexSet<jq_Reference>();
+			reflectVars = new HashSet<Register>();
 		}
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
@@ -161,6 +168,11 @@ public class RTAScope implements IScope {
 								}
 							}
 						} else {
+							if (c.getName().equals("java.lang.Class") &&
+								n.getName().toString().equals("newInstance") &&
+								n.getDesc().toString().equals("()Ljava/lang/Object")) {
+								System.out.println("FOUND");
+							}
 							for (jq_Reference r : reachableAllocClasses) {
 								if (r instanceof jq_Array)
 									continue;
@@ -203,7 +215,7 @@ public class RTAScope implements IScope {
 					if (reachableAllocClasses.add(a)) {
 						repeat = true;
 					}
-				} else if (findNewInstancedClasses && op instanceof CheckCast) {
+				} else if (handleReflection && op instanceof CheckCast) {
 					if (DEBUG) System.out.println("Quad: " + q);
 					jq_Type type = CheckCast.getType(q).getType();
 					if (type instanceof jq_Reference) {
@@ -217,7 +229,7 @@ public class RTAScope implements IScope {
 							visitClass(r);
 							for (String dName : concreteImps) {
 								jq_Class d = (jq_Class) jq_Type.parseType(dName);
-								newInstancedClasses.add(d);
+								reflectClasses.add(d);
 								visitClass(d);
 								if (reachableAllocClasses.add(d)) 
 									repeat = true;
@@ -227,7 +239,7 @@ public class RTAScope implements IScope {
 							visitClass(r);
 							for (String dName : concreteSubs) {
 								jq_Class d = (jq_Class) jq_Type.parseType(dName);
-								newInstancedClasses.add(d);
+								reflectClasses.add(d);
 								visitClass(d);
 								if (reachableAllocClasses.add(d)) 
 									repeat = true;
