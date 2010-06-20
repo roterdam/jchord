@@ -81,9 +81,11 @@ public class RelVT extends ProgramRel implements IMethodVisitor {
             int n = ros.length();
             for (int i = 0; i < n; i++) {
                 RegisterOperand ro = ros.get(i);
-                Register v = ro.getRegister();
+				if (ro == null)
+					continue;
                 jq_Type t = ro.getType();
                 if (t != null && t.isReferenceType()) {
+                	Register v = ro.getRegister();
                     add(v, t);
                 }
             }			
