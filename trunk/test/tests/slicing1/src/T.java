@@ -1,5 +1,3 @@
-package test;
-
 public class T {
 	static A g;
 	static int g2;

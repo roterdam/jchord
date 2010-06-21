@@ -1,2 +1,3 @@
-g:Ltest/A;@test.T
-g2:I@test.T
+main:([Ljava/lang/String;)V@T
+g:Ltest/A;@T
+g2:I@T
