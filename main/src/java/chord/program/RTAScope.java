@@ -63,20 +63,36 @@ public class RTAScope implements IScope {
     public static final boolean DEBUG = false;
 	private final boolean handleReflection;
 
-	// set only if handleReflection is true
+	/*
+	 * data structures used only if handleReflection is true
+	 */
+
 	private IndexSet<jq_Reference> reflectClasses;
-    private Set<jq_Method> reflectReturn;
+	// set of vars to which return value of some Class.newInstance() call is
+	// assigned directly or transitively via move/phi stmts until a checkcast
+	// stmt is encountered
 	private Set<Register> reflectVars;
+	// set of methods containing a "return v" stmt where v is in reflectVars
+    private Set<jq_Method> reflectRetMeths;
 	private Map<jq_Method, Set<Quad>> methToInvks;
     private ClassHierarchy ch;
 
-	private IndexSet<jq_Reference> classes;
-    private IndexSet<jq_Reference> reachableAllocClasses;
+	/*
+	 * data structures reset after every iteration
+	 */
+
 	// all classes whose clinits and super class/interface clinits have been
 	// processed so far in current interation
 	private Set<jq_Class> classesVisitedForClinit;
 	// all methods deemed reachable so far in current iteration
 	private IndexSet<jq_Method> methods;
+
+	/*
+	 * persistent data structures
+	 */
+
+	private IndexSet<jq_Reference> classes;
+    private IndexSet<jq_Reference> reachableAllocClasses;
 	// worklist for methods seen so far in current iteration but whose cfg's
 	// haven't been processed yet
 	private List<jq_Method> methodWorklist;
@@ -102,17 +118,17 @@ public class RTAScope implements IScope {
 		System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
- 		classes = new IndexSet<jq_Reference>();
- 		reachableAllocClasses = new IndexSet<jq_Reference>();
  		classesVisitedForClinit = new HashSet<jq_Class>();
  		methods = new IndexSet<jq_Method>();
+ 		classes = new IndexSet<jq_Reference>();
+ 		reachableAllocClasses = new IndexSet<jq_Reference>();
 		methodWorklist = new ArrayList<jq_Method>();
 		if (handleReflection) {
-			ch = Program.getProgram().getClassHierarchy();
 			reflectClasses = new IndexSet<jq_Reference>();
 			reflectVars = new HashSet<Register>();
-            reflectReturn = new HashSet<jq_Method>();
+            reflectRetMeths = new HashSet<jq_Method>();
 			methToInvks = new HashMap<jq_Method, Set<Quad>>();
+			ch = Program.getProgram().getClassHierarchy();
 		}
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
@@ -275,7 +291,7 @@ public class RTAScope implements IScope {
 			methToInvks.put(m2, invks);
 		}
 		invks.add(q);
-		if (reflectReturn.contains(m2) && lo != null) {
+		if (reflectRetMeths.contains(m2) && lo != null) {
 			Register l = lo.getRegister();
 			if (reflectVars.add(l)) {
 				if (DEBUG) System.out.println("\tAdding var: " + l);
@@ -368,7 +384,7 @@ public class RTAScope implements IScope {
 		if (ro instanceof RegisterOperand) {
 			Register r = ((RegisterOperand) ro).getRegister();
 			if (reflectVars.contains(r)) {
-				if (reflectReturn.add(m)) {
+				if (reflectRetMeths.add(m)) {
 					Set<Quad> clrs = methToInvks.get(m);
 					if (clrs != null) {
 						for (Quad clr : clrs) {
