@@ -26,6 +26,11 @@ public class T extends B implements I, J{
   public int foo(int i, A a){
     return i + a.f2;
   }
+
+  public I bar(){
+    return this;
+  }
+
 }
 
 class A {
