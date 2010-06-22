@@ -1,6 +1,6 @@
-public class T {
-	static A g;
-	static int g2;
+public class T extends B implements I, J{
+	static A g = new A();
+	static int g2 = 99999;
     public static void main(String[] a) {
 		A v1 = new A();	
 		A v2 = new A();	
@@ -18,9 +18,35 @@ public class T {
 		int z = v4.f2;		
 		g2 = z;
 	}
+
+  public int testAbst(){
+    return g2;
+  }
+
+  public int foo(int i, A a){
+    return i + a.f2;
+  }
 }
 
 class A {
 	A f1;
 	int f2;
+}
+
+abstract class B {
+
+  abstract public int testAbst();
+
+}
+
+interface I {
+
+    char field1 = 0x00;
+
+}
+
+interface J {
+
+    char field1 = 0x01;
+
 }
