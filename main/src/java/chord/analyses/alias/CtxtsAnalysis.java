@@ -44,6 +44,8 @@ import chord.project.OutDirUtils;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.ChordRuntimeException;
+import chord.analyses.snapshot.Execution;
+import chord.analyses.snapshot.StatFig;
 
 /**
  * Abstract contexts analysis.
@@ -130,10 +132,10 @@ import chord.util.ChordRuntimeException;
 	types = { DomC.class }
 )
 public class CtxtsAnalysis extends JavaAnalysis {
-	private static final Set<Ctxt> emptyCtxtSet =
-		Collections.emptySet();
-	private static final Set<jq_Method> emptyMethSet =
-		Collections.emptySet();
+	private static final boolean percy = false;
+
+	private static final Set<Ctxt> emptyCtxtSet = Collections.emptySet();
+	private static final Set<jq_Method> emptyMethSet = Collections.emptySet();
 	private static final Quad[] emptyElems = new Quad[0];
 
 	// includes all methods in domain
@@ -184,6 +186,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	private ProgramRel relCtxtCpyM;
 	private ProgramRel relEpsilonV;
 
+	private Execution X;
+
 	private void init() {
 		domV = (DomV) Project.getTrgt("V");
 		domI = (DomI) Project.getTrgt("I");
@@ -228,9 +232,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
         	assert false;
 
 		kobjK = Integer.getInteger("chord.kobj.k", 1);
-		//assert (kobjK > 0);
 		kcfaK = Integer.getInteger("chord.kcfa.k", 1);
-		//assert (kcfaK > 0);
 		assert (kobjK <= kcfaK+1);
 	}
 	
@@ -241,7 +243,106 @@ public class CtxtsAnalysis extends JavaAnalysis {
         return m.isStatic() ? statCtxtKind : instCtxtKind;
 	}
 
+	// {04/19/10} Percy: experiment with different values of k
+	private void setAdaptiveValues() {
+		if (!X.getBooleanArg("enable", false)) return;
+
+		double senProb = X.getDoubleArg("senProb", 0.5);
+		int randSeed = X.getIntArg("randSeed", 1);
+		int kobjRange = X.getIntArg("kobjRange", 1);
+		int kcfaRange = X.getIntArg("kcfaRange", 1);
+		String inValuesPath = X.getStringArg("inValuesPath", null); // Specifies which values to use
+
+        // Link back results to where the in values came from
+        if (inValuesPath != null) X.symlinkPath = inValuesPath+".results";
+
+        // Save options
+        HashMap<Object,Object> options = new LinkedHashMap<Object,Object>();
+        options.put("version", 1);
+        options.put("program", System.getProperty("chord.work.dir"));
+        options.put("senProb", senProb);
+        options.put("randSeed", randSeed);
+        options.put("kobj", kobjK);
+        options.put("kcfa", kcfaK);
+        options.put("kobjRange", kobjRange);
+        options.put("kcfaRange", kcfaRange);
+        options.put("inValuesPath", inValuesPath);
+        X.writeMap("options.map", options);
+
+        Random random = randSeed != 0 ? new Random(randSeed) : new Random();
+        kobjValue = new int[domH.size()];
+        PrintWriter datOut = OutDirUtils.newPrintWriter("inputs.dat");
+        PrintWriter strOut = OutDirUtils.newPrintWriter("inputs.strings");
+
+        if (inValuesPath != null) {
+          System.out.println("Reading k values from "+inValuesPath);
+          try {
+            BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(inValuesPath)));
+            String line;
+            while ((line = in.readLine()) != null) {
+              // Format: H32 2 or I3 5
+              String[] tokens = line.split(" ");         
+              assert tokens.length == 2;
+              int idx = Integer.parseInt(tokens[0].substring(1));
+              int value = Integer.parseInt(tokens[1]);
+              switch (tokens[0].charAt(0)) {
+                case 'H': kobjValue[idx] = value; break;
+                case 'I': kcfaValue[idx] = value; break;
+                default: assert false;
+              }
+            }
+            in.close();
+          } catch (IOException e) {
+            throw new RuntimeException(e);
+          }
+        }
+        else {
+          System.out.println("Generating k values with senProb="+senProb);
+          for (Object inst : domH) {
+            int h = domH.indexOf(inst);
+            kobjValue[h] = kobjK + sampleBinomial(random, kobjRange, senProb);
+            datOut.println("H"+h+" " + kobjValue[h]);
+            strOut.println("H"+h+" " + (h == 0 ? inst : Program.getProgram().toVerboseStr((Quad)inst)));
+          }
+          kcfaValue = new int[domI.size()];
+          for (Inst inst : domI) {
+            int i = domI.indexOf(inst);
+            kcfaValue[i] = kcfaK + sampleBinomial(random, kcfaRange, senProb);
+            datOut.println("I"+i+" " + kcfaValue[i]);
+            strOut.println("I"+i+" " + Program.getProgram().toVerboseStr((Quad)inst));
+          }
+        }
+
+        // Compute statistics on the k values actually used
+        StatFig kobjFig = new StatFig();
+        StatFig kcfaFig = new StatFig();
+        for (Object inst : domH) {
+          int h = domH.indexOf(inst);
+          kobjFig.add(kobjValue[h]);
+        }
+        for (Inst inst : domI) {
+          int i = domI.indexOf(inst);
+          kcfaFig.add(kcfaValue[i]);
+        }
+        X.output.put("avg.kobj", kobjFig.mean());
+        X.output.put("avg.kcfa", kcfaFig.mean());
+
+        datOut.close();
+		strOut.close();
+	}
+
+	private int sampleBinomial(Random random, int n, double p) {
+		int c = 0;
+		for (int i = 0; i < n; i++)
+			c += random.nextDouble() < p ? 1 : 0;
+		return c;
+	}
+
 	public void run() {
+		if (percy) {
+			X = Execution.v("adaptive");	
+		}
+
 		init();
 		Program program = Program.getProgram();
 
@@ -279,6 +380,10 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		kcfaValue = new int[numI];
 		for (int i = 0; i < numI; i++) {
 			kcfaValue[i] = kcfaK;
+		}
+
+		if (percy) {
+			setAdaptiveValues();
 		}
 
 		validate();
