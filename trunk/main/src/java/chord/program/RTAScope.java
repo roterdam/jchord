@@ -61,42 +61,72 @@ import chord.util.ArraySet;
  */
 public class RTAScope implements IScope {
     public static final boolean DEBUG = false;
+
+	// flag determining whether scope construction must analyze calls
+	// to Class.newInstance()
 	private final boolean handleReflection;
 
 	/*
 	 * data structures used only if handleReflection is true
 	 */
 
+	// set of classes instantiated by calls to Class.newInstance()
 	private IndexSet<jq_Reference> reflectClasses;
-	// set of vars to which return value of some Class.newInstance() call is
-	// assigned directly or transitively via move/phi stmts until a checkcast
-	// stmt is encountered
+
+	// set of local variables to which the return value of some call to
+	// Class.newInstance() is assigned either directly, or transitively
+	// via move/phi statements, until a checkcast statement is found
 	private Set<Register> reflectVars;
-	// set of methods containing a "return v" stmt where v is in reflectVars
+
+	// set of methods containing a "return v" statement where v is in
+	// set reflectVars
     private Set<jq_Method> reflectRetMeths;
+
+	// map from each method to all its call sites encountered so far
 	private Map<jq_Method, Set<Quad>> methToInvks;
+
+	// program class hierarchy built either statically or dynamically
     private ClassHierarchy ch;
 
 	/*
 	 * data structures reset after every iteration
 	 */
 
-	// all classes whose clinits and super class/interface clinits have been
-	// processed so far in current interation
+	// set of all classes whose clinits and super class/interface clinits
+	// have been processed so far in current interation; this set is kept
+	// to avoid repeatedly visiting super classes/interfaces within an
+	// iteration (which incurs a huge runtime penalty) only to find that
+ 	// all their clinits have already been processed in that iteration.
 	private Set<jq_Class> classesVisitedForClinit;
-	// all methods deemed reachable so far in current iteration
+
+	// set of all methods deemed reachable so far in current iteration
 	private IndexSet<jq_Method> methods;
 
 	/*
 	 * persistent data structures
 	 */
 
+	// set of all classes deemed reachable so far
 	private IndexSet<jq_Reference> classes;
+
+	// set of all (concrete) classes deemed instantiated so far either
+	// by a reachable new/newarray statement or by a call to
+	// Class.newInstance(); the latter is only if handleReflection is
+	// set to true
     private IndexSet<jq_Reference> reachableAllocClasses;
-	// worklist for methods seen so far in current iteration but whose cfg's
-	// haven't been processed yet
+
+	// worklist for methods seen so far in current iteration but whose
+	// CFGs haven't been processed yet
 	private List<jq_Method> methodWorklist;
+
+	// handle to the representation of class java.lang.Object
 	private jq_Class javaLangObject;
+
+	// flag indicating that another iteration is needed; it is set if
+	// any of the following sets grows in the current iteration:
+	// reachableAllocClasses, reflectVars, reflectRetMeths
+	// Note: sets reflectVars and reflectRetMeths are maintained only
+	// if handleReflection is set to true
 	private boolean repeat = true;
 
 	public RTAScope(boolean _handleReflection) {
@@ -166,10 +196,9 @@ public class RTAScope implements IScope {
 	}
 	private void visitMethod(jq_Method m) {
 		if (methods.add(m)) {
-			if (!m.isAbstract()) {
-				if (DEBUG) System.out.println("\tAdding method: " + m);
+			if (DEBUG) System.out.println("\tAdding method: " + m);
+			if (!m.isAbstract()) 
 				methodWorklist.add(m);
-			}
 		}
 	}
 	private void processMethod(jq_Method m) {
@@ -314,39 +343,34 @@ public class RTAScope implements IScope {
 		}
 	}
 	private void processCast(Quad q) {
-		jq_Type type = CheckCast.getType(q).getType();
-		if (type instanceof jq_Reference) {
+		jq_Type t = CheckCast.getType(q).getType();
+		if (t instanceof jq_Reference) {
 			Operand ro = CheckCast.getSrc(q);
 			if (ro instanceof RegisterOperand) {
 				Register r = ((RegisterOperand) ro).getRegister();
 				if (reflectVars.contains(r)) {
-					String rName = type.getName();
-					jq_Reference ref = (jq_Reference) type;
+					String tName = t.getName();
+					jq_Reference ref = (jq_Reference) t;
 					// Note: ref may not be prepared; don't call any methods on it
-					Set<String> concreteImps = ch.getConcreteImplementors(rName);
-					Set<String> concreteSubs = ch.getConcreteSubclasses(rName);
+					Set<String> concreteImps = ch.getConcreteImplementors(tName);
+					Set<String> concreteSubs = ch.getConcreteSubclasses(tName);
 					assert (concreteImps == null || concreteSubs == null);
-					if (concreteImps != null) {
-						visitClass(ref);
-						for (String dName : concreteImps) {
-							jq_Class d = (jq_Class) jq_Type.parseType(dName);
-							reflectClasses.add(d);
-							visitClass(d);
-							if (reachableAllocClasses.add(d)) 
-								repeat = true;
-						}
-					}
-					if (concreteSubs != null) {
-						visitClass(ref);
-						for (String dName : concreteSubs) {
-							jq_Class d = (jq_Class) jq_Type.parseType(dName);
-							reflectClasses.add(d);
-							visitClass(d);
-							if (reachableAllocClasses.add(d)) 
-								repeat = true;
-						}
-					}
+					visitClass(ref);
+					processConcreteClasses(concreteImps);
+					processConcreteClasses(concreteSubs);
 				}
+			}
+		}
+	}
+	// set may be null
+	private void processConcreteClasses(Set<String> set) {
+		if (set != null) {
+			for (String s : set) {
+				jq_Class d = (jq_Class) jq_Type.parseType(s);
+				reflectClasses.add(d);
+				visitClass(d);
+				if (reachableAllocClasses.add(d)) 
+					repeat = true;
 			}
 		}
 	}
