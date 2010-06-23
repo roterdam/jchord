@@ -14,8 +14,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.Map.Entry;
 
-import com.sun.org.apache.bcel.internal.generic.RETURN;
-
 import chord.program.Program;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Array;
