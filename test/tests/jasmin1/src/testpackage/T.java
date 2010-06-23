@@ -1,3 +1,5 @@
+package testpackage;
+
 public class T extends B implements I, J{
 	static A g = new A();
 	static int g2 = 99999;
