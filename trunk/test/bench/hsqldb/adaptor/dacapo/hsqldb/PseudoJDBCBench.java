@@ -203,7 +203,9 @@ public class PseudoJDBCBench {
     System.out.println();
 
     try {
-      Class.forName(DriverName);
+	  // MAYUR
+      // Class.forName(DriverName);
+      new org.hsqldb.jdbcDriver();
 
       new PseudoJDBCBench(DBUrl, DBUser, DBPassword,
               initialize_dataset);
