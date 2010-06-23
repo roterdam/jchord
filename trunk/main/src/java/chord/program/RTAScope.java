@@ -284,18 +284,20 @@ public class RTAScope implements IScope {
 			propagateReflectArgsAndRet(q, n);
 	}
 	private void propagateReflectArgsAndRet(Quad q, jq_Method m2) {
-		RegisterOperand lo = Invoke.getDest(q);
 		Set<Quad> invks = methToInvks.get(m2);
 		if (invks == null) {
 			invks = new ArraySet<Quad>(1);
 			methToInvks.put(m2, invks);
 		}
 		invks.add(q);
-		if (reflectRetMeths.contains(m2) && lo != null) {
-			Register l = lo.getRegister();
-			if (reflectVars.add(l)) {
-				if (DEBUG) System.out.println("\tAdding var: " + l);
-				repeat = true;
+		if (reflectRetMeths.contains(m2)) {
+			RegisterOperand lo = Invoke.getDest(q);
+			if (lo != null) {
+				Register l = lo.getRegister();
+				if (reflectVars.add(l)) {
+					if (DEBUG) System.out.println("\tAdding var: " + l);
+					repeat = true;
+				}
 			}
 		}
 		RegisterFactory rf = m2.getCFG().getRegisterFactory();
@@ -383,22 +385,9 @@ public class RTAScope implements IScope {
 		Operand ro = Return.getSrc(q);
 		if (ro instanceof RegisterOperand) {
 			Register r = ((RegisterOperand) ro).getRegister();
-			if (reflectVars.contains(r)) {
-				if (reflectRetMeths.add(m)) {
-					Set<Quad> clrs = methToInvks.get(m);
-					if (clrs != null) {
-						for (Quad clr : clrs) {
-							RegisterOperand lo = Invoke.getDest(clr);
-							if (lo != null) {
-								Register l = lo.getRegister();
-								if (reflectVars.add(l)) {
-									if (DEBUG) System.out.println("\tAdding var: " + l);
-									repeat = true;
-								}
-							}
-						}
-					}
-				}
+			if (reflectVars.contains(r) && reflectRetMeths.add(m)) {
+				if (DEBUG) System.out.println("\tAdding ret: " + q);
+				repeat = true;
 			}
 		}
 	}
