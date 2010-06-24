@@ -74,6 +74,8 @@ putInstFldInst(b:V,f:F,r:V)
 getStatFldInst(l:V,f:F) 
 putStatFldInst(f:F,r:V) 
 
+relevantV(v:V)
+
 reachableT(t:T) output
 VHfilter(v:V,h:H) output
 VH(v:V,h:H) output
@@ -140,9 +142,12 @@ VH(l,h) :- checkCastInst(l,t,r), VH(r,0), sub(t2,t), reflectHT(h,t2).
 ## A class or interface type T will be initialized immediately before
 ## the first occurrence of any one of the following:
 
+relevantV(l) :- MobjValAsgnInst(_,l,_).
+relevantV(l) :- McheckCastInst(_,l,_,_).
+
 # 1. T is a class and an instance of T is created.
-# this covers both normal allocation and reflective allocation
-reachableT(t) :- VH(_,h), HT(h,t).
+# this handles both normal allocation and reflective allocation
+reachableT(t) :- relevantV(v), VH(v,h), HT(h,t).
 # 2. T is a class and a static method declared by T is invoked
 reachableT(t) :- reachableM(m), staticTM(t,m).
 # 3. A static field declared by T is assigned. 
