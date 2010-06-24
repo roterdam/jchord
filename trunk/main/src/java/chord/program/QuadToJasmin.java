@@ -356,7 +356,6 @@ public class QuadToJasmin {
 
 		Set<RegisterOperand> registers = new TreeSet<RegisterOperand>(
 				new Comparator<RegisterOperand>(){
-					@Override
 					public int compare(RegisterOperand arg0, RegisterOperand arg1) {
 						return 
 						new Integer(arg0.getRegister().getNumber()).compareTo(
