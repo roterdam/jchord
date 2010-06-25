@@ -1,0 +1,42 @@
+*** Class: T
+Method: main:([Ljava/lang/String;)V@T
+	0#1
+	3#2
+	4#3
+	7#4
+	9#5
+	12#6
+	15#7
+Control flow graph for main:([Ljava/lang/String;)V@T:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB1 (EXIT))
+1: NEW T1, A
+2: MOVE_A T2, T1
+3: INVOKESTATIC_V <init>:()V@A, (T2)
+4: MOVE_A R3, T1
+5: GETFIELD_I T5, R3, .f
+6: PUTSTATIC_I T5, .g
+7: RETURN_V
+
+BB1 (EXIT)	(in: BB2, out: <none>)
+
+Exception handlers: []
+Register factory: Registers: 6
+*** Class: A
+Method: <init>:()V@A
+	1#1
+	6#2
+	9#3
+Control flow graph for <init>:()V@A:
+BB0 (ENTRY)	(in: <none>, out: BB2)
+
+BB2	(in: BB0 (ENTRY), out: BB1 (EXIT))
+1: INVOKESTATIC_V <init>:()V@java.lang.Object, (R0)
+2: PUTFIELD_I R0, .f, IConst: 5
+3: RETURN_V
+
+BB1 (EXIT)	(in: BB2, out: <none>)
+
+Exception handlers: []
+Register factory: Registers: 1
