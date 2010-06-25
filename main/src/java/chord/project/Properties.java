@@ -72,6 +72,8 @@ public class Properties {
 	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
 	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
+	public final static boolean handleNewInstReflection = buildBoolProperty("chord.reflect.newinst", false);
+	public final static boolean handleForNameReflection = buildBoolProperty("chord.reflect.forname", false);
 
 	public final static String mainClassPathPackages = "chord.,javassist.,joeq.,net.sf.bddbddb.,net.sf.javabdd.";
 
@@ -192,6 +194,8 @@ public class Properties {
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
 		System.out.println("chord.ch.kind: " + CHkind);
+		System.out.println("chord.reflect.newinst: " + handleNewInstReflection);
+		System.out.println("chord.reflect.forname: " + handleForNameReflection);
 		System.out.println("chord.scope.exclude.std: " + scopeExcludeStdStr);
 		System.out.println("chord.scope.exclude.ext: " + scopeExcludeExtStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);

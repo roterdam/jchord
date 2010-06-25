@@ -135,9 +135,8 @@ public class Program {
 		}
 		String scopeKind = Properties.scopeKind;
 		if (scopeKind.equals("rta")) {
-			scope = new RTAScope(false);
-		} else if (scopeKind.equals("rta_reflect")) {
-			scope = new RTAScope(true);
+			scope = new RTAScope(Properties.handleNewInstReflection,
+				Properties.handleForNameReflection);
 		} else if (scopeKind.equals("dynamic")) {
 			scope = new DynamicScope();
 		} else if (scopeKind.equals("cha")) {
