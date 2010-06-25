@@ -233,8 +233,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 						for (PE pe2 : peSet)
 							addPathEdge(loc2, pe2);
 						Set<SE> seSet = summEdges.get(m2);
-						if (seSet == null)
+						if (seSet == null) {
+							if (DEBUG) System.out.println("\tSE set empty");
 							continue;
+						}
 						for (SE se : seSet) {
 							if (DEBUG) System.out.println("\tTesting SE: " + se);
 							if (propagateSEtoPE(pe, loc, m2, se)) {
