@@ -31,6 +31,9 @@ public class T extends B implements I, J{
 class A {
 	A f1;
 	int f2;
+	public A() {
+		this.f2 = 5;
+	}
 }
 
 abstract class B {
@@ -50,3 +53,7 @@ interface J {
     char field1 = 0x01;
 
 }
+
+/*
+
+*/
