@@ -36,22 +36,37 @@ import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
 import joeq.Compiler.Quad.Operand.Const4Operand;
 import joeq.Compiler.Quad.Operand.Const8Operand;
 import joeq.Compiler.Quad.Operand.ConstOperand;
+import joeq.Compiler.Quad.Operand.IntValueTableOperand;
 import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
+import joeq.Compiler.Quad.Operand.TypeOperand;
+import joeq.Compiler.Quad.Operator.ALength;
+import joeq.Compiler.Quad.Operator.ALoad;
+import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Binary;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Goto;
+import joeq.Compiler.Quad.Operator.InstanceOf;
 import joeq.Compiler.Quad.Operator.IntIfCmp;
 import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.Operator.Jsr;
+import joeq.Compiler.Quad.Operator.LookupSwitch;
+import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
+import joeq.Compiler.Quad.Operator.TableSwitch;
+import joeq.Compiler.Quad.Operator.Unary;
+import joeq.Compiler.Quad.Operator.ALoad.ALOAD_P;
+import joeq.Compiler.Quad.Operator.AStore.ASTORE_P;
 import joeq.Compiler.Quad.Operator.IntIfCmp.IFCMP_A;
 import joeq.Compiler.Quad.Operator.IntIfCmp.IFCMP_I;
 import joeq.Compiler.Quad.Operator.Return.RETURN_A;
@@ -219,14 +234,49 @@ public class QuadToJasmin {
 		current_method = m;
 		methodBody.clear();
 		ControlFlowGraph cfg = m.getCFG();
+//		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.reversePostOrder(cfg.entry());
 		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.postOrderOnReverseGraph(cfg.exit());
-		
+//		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.reversePostOrderOnReverseGraph(cfg.exit());
 		// PreProcess PHI info
 		PhiElementMap.clear();
+		/*
+		for (ListIterator.BasicBlock it = basicBlockList.basicBlockIterator();
+		it.hasNext();) {
+			BasicBlock bb = it.nextBasicBlock();
+			System.out.println(bb);
+			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
+				
+				Quad q = it2.nextQuad();
+				System.out.println(q);
+			}
+		}
+		
+		BasicBlock prevBB = null;
+		Quad prevQuad = null;
+		for (ListIterator.BasicBlock it = basicBlockList.basicBlockIterator();
+		it.hasNext();) {
+			
+			BasicBlock bb = it.nextBasicBlock();
+//			
+//			if(bb.getFallthroughPredecessor() != null){				
+//				assert prevBB.getID() == bb.getFallthroughPredecessor().getID() : "pred : " + bb.getFallthroughPredecessor() + ", prevBB : " + prevBB;
+//			}
+//			prevBB = bb;
+			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
+				
+				Quad q = it2.nextQuad();
+				
+				if(prevQuad != null && m.getBCI(q) >0 && m.getBCI(prevQuad) > 0){
+					assert m.getBCI(q) >= m.getBCI(prevQuad) : "currQuad : " + q + " at " + m.getBCI(q)+", prevQuad : " + prevQuad + " at " + m.getBCI(prevQuad); 
+				}
+				prevQuad = q;				
+			}			
+		}*/
 		
 		for (ListIterator.BasicBlock it = basicBlockList.basicBlockIterator();
 		it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
+			
 			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {        		
 				Quad q = it2.nextQuad();
 				if(q.getOperator() instanceof Phi){
@@ -313,7 +363,6 @@ public class QuadToJasmin {
 			this.src = src;
 		}
 
-		@Override
 		public int hashCode() {
 			final int prime = 31;
 			int result = 1;			
@@ -322,7 +371,6 @@ public class QuadToJasmin {
 			return result;
 		}
 
-		@Override
 		public boolean equals(Object obj) {
 			if (this == obj)
 				return true;
@@ -401,7 +449,25 @@ public class QuadToJasmin {
 			QuadToJasmin.putInst("\t"+getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());
 
 			checkPhiElement(dst);
-
+		}
+		
+		public void visitNewArray(Quad d){
+			Operand sizeOperand = NewArray.getSize(d);
+			QuadToJasmin.putInst(getOperandLoadingInst(sizeOperand));
+			TypeOperand typeOperand = NewArray.getType(d);
+			jq_Type type = ((jq_Array)typeOperand.getType()).getElementType();
+			
+			if(type.isPrimitiveType()){
+				QuadToJasmin.putInst("\tnewarray " + type.getName());
+			} else if (type.isReferenceType()){
+				QuadToJasmin.putInst("\tanewarray " + type.getName().replace(".", "/"));
+			} else {
+				assert false : "HANDLE this case: " + d;
+			}
+			RegisterOperand dst = NewArray.getDest(d);
+			QuadToJasmin.putInst("\t"+getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());
+			
+			checkPhiElement(dst);			
 		}
 
 		public void visitMove(Quad d){
@@ -442,7 +508,7 @@ public class QuadToJasmin {
 		private static String getStoreInst(jq_Type type){
 
 			String typeDesc = type.getDesc()+"";
-			if(typeDesc.startsWith("I")){
+			if(type.isIntLike()){
 				return "istore";
 			} else if (typeDesc.startsWith("J")){
 				return "lstore";
@@ -450,18 +516,18 @@ public class QuadToJasmin {
 				return "fstore";
 			} else if (typeDesc.startsWith("D")){
 				return "dstore";
-			} else if (typeDesc.startsWith("L")){
+			} else if (typeDesc.startsWith("L") || typeDesc.startsWith("[") ){
 				return "astore";
 			}
+			
 			assert false : "Unhandled type " + type + " : desc = " + type.getDesc();
-
 			return "?????";
 		}
 
 		private static String getLoadInst(jq_Type type){
 
 			String typeDesc = type.getDesc()+"";
-			if(typeDesc.startsWith("I")){
+			if(type.isIntLike()){
 				return "iload";
 			} else if (typeDesc.startsWith("J")){
 				return "lload";
@@ -469,11 +535,11 @@ public class QuadToJasmin {
 				return "fload";
 			} else if (typeDesc.startsWith("D")){
 				return "dload";
-			} else if (typeDesc.startsWith("L")){
+			} else if (typeDesc.startsWith("L") || typeDesc.startsWith("[") ){
 				return "aload";
 			}
+			
 			assert false : "Unhandled type " + type + " : desc = " + type.getDesc();
-
 			return "?????";
 		}
 
@@ -603,7 +669,7 @@ public class QuadToJasmin {
 			QuadToJasmin.putInst("\tgoto " + targetOp.toString());
 		}		
 
-		public void visitCondBranch(Quad d){
+		public void visitIntIfCmp(Quad d){
 
 			IntIfCmp iic = (IntIfCmp) d.getOperator();
 			if(iic instanceof IFCMP_A){
@@ -675,20 +741,161 @@ public class QuadToJasmin {
 			
 		}
 
+		public void visitInstanceOf(Quad d){
+			QuadToJasmin.putInst(getOperandLoadingInst(InstanceOf.getSrc(d)));
+			QuadToJasmin.putInst("\tinstanceof "+InstanceOf.getType(d).getType().getName().replace(".", "/"));
+			
+			RegisterOperand dst = InstanceOf.getDest(d);				
+			String storeInstName = getStoreInst(dst.getType());
+			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
+
+			checkPhiElement(dst);
+			
+		}
+				
+		public void visitALoad(Quad d){
+			QuadToJasmin.putInst(getOperandLoadingInst(ALoad.getBase(d)));
+			QuadToJasmin.putInst(getOperandLoadingInst(ALoad.getIndex(d)));
+			ALoad operator = (ALoad)d.getOperator();
+			assert !(operator instanceof ALOAD_P) : d;
+			String jasminInstOperator = operator.toString().split("_")[1].toLowerCase()+"aload";
+			QuadToJasmin.putInst("\t"+jasminInstOperator);
+			RegisterOperand dst = ALoad.getDest(d);
+			String storeInstName = getStoreInst(dst.getType());
+			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
+
+			checkPhiElement(dst);			
+		}
+		
+		public void visitAStore(Quad d){			
+			QuadToJasmin.putInst(getOperandLoadingInst(AStore.getBase(d)));
+			QuadToJasmin.putInst(getOperandLoadingInst(AStore.getIndex(d)));
+			QuadToJasmin.putInst(getOperandLoadingInst(AStore.getValue(d)));
+			AStore operator = (AStore)d.getOperator();
+			assert !(operator instanceof ASTORE_P) : d;
+			String jasminInstOperator = operator.toString().split("_")[1].toLowerCase()+"astore";
+			QuadToJasmin.putInst("\t"+jasminInstOperator);			
+		}
+		
+		public void visitCheckCast(Quad d){
+			QuadToJasmin.putInst(getOperandLoadingInst(CheckCast.getSrc(d)));
+			QuadToJasmin.putInst("\tcheckcast " 
+					+ CheckCast.getType(d).getType().getName().replace(".", "/"));
+			
+			RegisterOperand dst = CheckCast.getDest(d);				
+			String storeInstName = getStoreInst(dst.getType());
+			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
+
+			checkPhiElement(dst);			
+		}
+		
+		public void visitMonitor(Quad d){
+			QuadToJasmin.putInst(getOperandLoadingInst(Monitor.getSrc(d)));
+			Monitor monitorOperator = (Monitor)d.getOperator();
+			if(monitorOperator instanceof Monitor.MONITORENTER){
+				QuadToJasmin.putInst("\tmonitorenter");
+			} else if (monitorOperator instanceof Monitor.MONITOREXIT) {
+				QuadToJasmin.putInst("\tmonitorexit");
+			} else assert false : d;			
+		}
+		
+		public void visitUnary(Quad d){
+			Operand src = Unary.getSrc(d);
+			QuadToJasmin.putInst(getOperandLoadingInst(src));
+			Unary unaryOperator = (Unary) d.getOperator();
+			String strUnary = unaryOperator.toString();
+			String jasminInstOperator = null;						
+			
+			if(strUnary.startsWith("NEG")){
+				jasminInstOperator = strUnary.split("_")[1].toLowerCase() + "neg";
+			} else if (strUnary.startsWith("INT_2")){
+				if(unaryOperator instanceof Unary.INT_2BYTE
+						|| unaryOperator instanceof Unary.INT_2CHAR
+						|| unaryOperator instanceof Unary.INT_2SHORT){
+					jasminInstOperator = "int2" + strUnary.split("_2")[1].toLowerCase();
+				} else {
+					jasminInstOperator = "i2" + strUnary.charAt((strUnary.indexOf('2')+1));
+					jasminInstOperator = jasminInstOperator.toLowerCase();					
+				}				
+			} else if (strUnary.startsWith("FLOAT_2")){
+				assert !(unaryOperator instanceof Unary.FLOAT_2INTBITS) : d;
+				jasminInstOperator = "f2" + strUnary.charAt((strUnary.indexOf('2')+1));
+				jasminInstOperator = jasminInstOperator.toLowerCase();					
+			} else if (strUnary.startsWith("DOUBLE_2")) {
+				assert !(unaryOperator instanceof Unary.DOUBLE_2LONGBITS) : d;
+				jasminInstOperator = "d2" + strUnary.charAt((strUnary.indexOf('2')+1));
+				jasminInstOperator = jasminInstOperator.toLowerCase();					
+			} else if (strUnary.startsWith("LONG_2")) { 				
+				jasminInstOperator = "l2" + strUnary.charAt((strUnary.indexOf('2')+1));
+				jasminInstOperator = jasminInstOperator.toLowerCase();
+			} else assert false : d;
+			
+			QuadToJasmin.putInst("\t"+jasminInstOperator);
+			
+			RegisterOperand dst = Unary.getDest(d);
+			String storeInstName = getStoreInst(dst.getType());
+			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
+
+			checkPhiElement(dst);
+		}
+		
+		public void visitAlength(Quad d){
+			QuadToJasmin.putInst(getOperandLoadingInst(ALength.getSrc(d)));
+			
+			QuadToJasmin.putInst("\tarraylength");
+			
+			RegisterOperand dst = ALength.getDest(d);
+			String storeInstName = getStoreInst(dst.getType());
+			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
+
+			checkPhiElement(dst);
+		}
+		
 		public void visitRet(Quad d){
+			
 			assert false : d;
 		}
 
-		public void visitJsr(Quad d){
+		public void visitMemLoad(Quad d){
 			assert false : d;
+		}
+		
+		public void visitMemStore(Quad d){
+			assert false : d;
+		}		
+		
+		public void visitJsr(Quad d){
+			TargetOperand target = Jsr.getTarget(d);
+			QuadToJasmin.putInst("\tjsr " + target.getTarget());
+			
+			
+			
 		}
 
 		public void visitTableSwitch(Quad d){
-			assert false : d;
+			Operand src = TableSwitch.getSrc(d);
+			QuadToJasmin.putInst(getOperandLoadingInst(src));
+			BasicBlockTableOperand targetTable = TableSwitch.getTargetTable(d);
+			int low = TableSwitch.getLow(d).getValue();
+			int size = targetTable.size();
+			QuadToJasmin.putInst("\ttableswitch " + low + " " + (low+size-1));
+			for(int i=0; i < size; i++){
+				QuadToJasmin.putInst("\t\t"+targetTable.get(i));				
+			}
+			QuadToJasmin.putInst("\t\tdefault: "+TableSwitch.getDefault(d).getTarget());						
 		}
 
 		public void visitLookupSwitch(Quad d){
-			assert false : d;
+			Operand src = LookupSwitch.getSrc(d);
+			QuadToJasmin.putInst(getOperandLoadingInst(src));
+			QuadToJasmin.putInst("\tlookupswitch");
+			IntValueTableOperand valTable = LookupSwitch.getValueTable(d);
+			BasicBlockTableOperand targetTable = LookupSwitch.getTargetTable(d);
+			int size = valTable.size();
+			for(int i=0; i < size; i++){
+				QuadToJasmin.putInst("\t\t"+valTable.get(i)+" : "+targetTable.get(i));				
+			}
+			QuadToJasmin.putInst("\t\tdefault: "+LookupSwitch.getDefault(d).getTarget());
 		}
 		// TODO: add all other visit* methods from EmptyVisitor
 	}
