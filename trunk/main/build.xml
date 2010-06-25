@@ -157,9 +157,11 @@
 	<!--
 		Classpath of Chord
 	-->
+
+	<property name="chord.java.analysis.path" location="classes"/>
 	<path id="main_class_path">
+		<pathelement path="${chord.java.analysis.path}"/>
 		<pathelement location="classes"/>
-    <pathelement location="dist/chord.jar"/>
 		<pathelement path="${chord.bddbddb.class.path}"/>
 		<path refid="ext_util_class_path"/>
 		<pathelement location="lib/joeq.jar"/>
@@ -302,7 +304,6 @@
 				<isset property="chord.main.dir"/>
 			</condition>
 		</fail>
-		<property name="chord.java.analysis.path" location="classes"/>
 		<property name="chord.main.dir" location="."/>
 		<property name="chord.max.heap" value="2048m"/>
 		<property name="chord.max.stack" value="32m"/>
@@ -315,7 +316,6 @@
 			</syspropertyset>
 			<classpath>
 				<pathelement path="${chord.main.class.path}"/>
-				<pathelement path="${chord.java.analysis.path}"/>
 				<pathelement path="${chord.class.path}"/>
 			</classpath>
 		</java>
