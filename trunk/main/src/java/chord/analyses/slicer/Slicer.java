@@ -214,7 +214,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
             RegisterOperand vo = Invoke.getDest(q);
             if (vo != null && vo.getRegister() == e.v) {
 				tmpEdgeSet.clear();
-				Edge pe2 = new Edge(RetExpr.instance, RetExpr.instance, false);
+				Edge pe2 = new Edge(RetnExpr.instance, RetnExpr.instance, false);
 				tmpEdgeSet.add(pe2);
 				result = tmpEdgeSet;
 			} else {
