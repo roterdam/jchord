@@ -13,13 +13,15 @@ import chord.util.CompareUtils;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Edge implements IEdge {
-	// srcExpr/dstExpr may be null if expression represents
-	// return variable
 	final Expr srcExpr;
 	final Expr dstExpr;
-	public Edge(Expr e1, Expr e2) {
+	final boolean affectedSlice;
+	public Edge(Expr e1, Expr e2, boolean affectedSlice) {
+		assert (e1 != null);
 		srcExpr = e1;
+		assert (e2 != null);
 		dstExpr = e2;
+		this.affectedSlice = affectedSlice;
 	}
 	public boolean matchesSrcNodeOf(IEdge edge) {
 		throw new RuntimeException();
@@ -28,9 +30,7 @@ public class Edge implements IEdge {
 		throw new RuntimeException();
 	}
 	public int hashCode() {
-		return
-			(srcExpr == null ? 0 : srcExpr.hashCode()) +
-			(dstExpr == null ? 0 : dstExpr.hashCode());
+		return srcExpr.hashCode() + dstExpr.hashCode();
 	}
 	public boolean equals(Object o) {
 		if (o == this)
@@ -38,12 +38,11 @@ public class Edge implements IEdge {
 		if (!(o instanceof Edge))
 			return false;
 		Edge that = (Edge) o;
-		return CompareUtils.areEqual(srcExpr, that.srcExpr) &&
-			   CompareUtils.areEqual(dstExpr, that.dstExpr);
+		return srcExpr.equals(that.srcExpr) &&
+			   dstExpr.equals(that.dstExpr) &&
+			   affectedSlice == that.affectedSlice;
 	}
 	public String toString() {
-		return "[" +
-			(srcExpr == null ? "null" : srcExpr.toString()) + "," +
-			(dstExpr == null ? "null" : dstExpr.toString()) + "]";
+		return "[" + srcExpr.toString() + "," + dstExpr.toString() + "," + affectedSlice + "]";
 	}
 }

@@ -8,11 +8,13 @@ package chord.analyses.slicer;
 import joeq.Compiler.Quad.Quad;
 
 /**
+ * Abstract location denoting any element of any array allocated
+ * at a particular array allocation site.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ArrayElem implements Expr {
-	public final Quad q;
+	public final Quad q;	// array allocation site (newarray)
 	public ArrayElem(Quad q) {
 		this.q = q;
 	}
