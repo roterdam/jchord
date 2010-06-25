@@ -23,12 +23,44 @@ public class T extends B implements I, J{
 	}
 
   public int testAbst(){
-    return g2;
+
+    //try{
+      switch(g2){
+        case 500:
+          g2++;
+          return g2;
+        case 501:
+          g2++;
+        case 502:
+          g2 *= 5;
+          break;
+        default:
+          break;
+
+      } 
+      return g2;
+    //} finally {
+    //    System.out.println("END OF testAbst()");
+    //}
   }
 
   public int foo(int i, A a) throws Exception{
     if(a == null){
-        throw new Exception();
+      try{
+        switch(i){
+            case 1:
+              i++;
+              break;
+            case 50:
+              throw new Exception("50");
+            case 99:
+              break;
+            default:
+              throw new Exception("default!");
+        }
+      } finally {
+          System.out.println("Escaping switch!");
+      }
     }
     return i + a.f2;
   }
@@ -38,7 +70,7 @@ public class T extends B implements I, J{
     try{
       foo(3, null);
     } catch (Exception e){
-      System.out.println("Caught an exception!");
+      System.out.println("Caught an exception! : " + e);
     }
     (new T_B()).testAbst();
     return this;
@@ -52,7 +84,14 @@ public class T extends B implements I, J{
       int fb;
 
       public int testAbst(){
-          new T_A();
+          T_A t_a = new T_A();
+          if( t_a instanceof A ){
+            T_A[] arrT_A = new T_A[10];
+            arrT_A[8] = t_a;
+            int[] arrInt = new int[100];
+            arrInt[40] = 4;
+            fb = arrInt[40] + arrT_A.length;
+          }
           return fb;
       }
   }
