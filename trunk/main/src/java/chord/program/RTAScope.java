@@ -22,6 +22,7 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
+import joeq.Class.Classpath;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand;
@@ -30,12 +31,13 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operator.CheckCast;
+import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
@@ -62,31 +64,63 @@ import chord.util.ArraySet;
 public class RTAScope implements IScope {
     public static final boolean DEBUG = false;
 
+    // flag determining whether scope construction must analyze calls
+    // to Class.newInstance()
+	private final boolean handleNewInstReflection;
+
 	// flag determining whether scope construction must analyze calls
-	// to Class.newInstance()
+	// to Class.forName()
+	private final boolean handleForNameReflection;
+
 	private final boolean handleReflection;
 
 	/*
-	 * data structures used only if handleReflection is true
+	 * data structures used if handleNewInstReflection or
+	 * handleForNameReflection is true.
 	 */
 
-	// set of classes instantiated by calls to Class.newInstance()
+	// set of classes loaded/instantiated reflectively
 	private IndexSet<jq_Reference> reflectClasses;
 
-	// set of local variables to which the return value of some call to
-	// Class.newInstance() is assigned either directly, or transitively
-	// via move/phi statements, until a checkcast statement is found
-	private Set<Register> reflectVars;
+	/*
+	 * data structures used only if handleNewInstReflection is true
+	 */
 
-	// set of methods containing a "return v" statement where v is in
-	// set reflectVars
+    // program class hierarchy built either statically or dynamically
+    private ClassHierarchy ch;
+
+    // map from each method to all its call sites encountered so far
+    private Map<jq_Method, Set<Quad>> methToInvks;
+
+    // set of local variables to which the return value of some call to
+    // Class.newInstance() is assigned either directly, or transitively
+    // via move/phi/invk statements, until a checkcast statement is found
+    private Set<Register> newInstReflectVars;
+
+    // set of methods containing a "return v" statement where v is in
+    // set newInstReflectVars
     private Set<jq_Method> reflectRetMeths;
 
-	// map from each method to all its call sites encountered so far
-	private Map<jq_Method, Set<Quad>> methToInvks;
+	/*
+	 * data structures used only if handleForNameReflection is true
+	 */
 
-	// program class hierarchy built either statically or dynamically
-    private ClassHierarchy ch;
+	// classpath of program being analyzed
+	private Classpath classpath;
+
+	// set of local variables flowing to Class.forName() either directly
+	// or transitively via move/phi/actual-to-formal copy statements
+	private Set<Register> forNameReflectVars;
+
+	// subset of forNameReflectVars whose tracking has stopped because
+	// it has become too complicated
+	// maintained only to prevent redundant warning messages
+	private Set<Register> warnedReflectVars;
+
+	// set of string constants (supposedly class names) that flowed to
+	// some Class.forName() call but were not found in the classpath
+	// maintained only to prevent redundant warning messages
+	private Set<String> warnedReflectClassNames;
 
 	/*
 	 * data structures reset after every iteration
@@ -110,9 +144,7 @@ public class RTAScope implements IScope {
 	private IndexSet<jq_Reference> classes;
 
 	// set of all (concrete) classes deemed instantiated so far either
-	// by a reachable new/newarray statement or by a call to
-	// Class.newInstance(); the latter is only if handleReflection is
-	// set to true
+	// by a reachable new/newarray statement or due to reflection
     private IndexSet<jq_Reference> reachableAllocClasses;
 
 	// worklist for methods seen so far in current iteration but whose
@@ -124,13 +156,15 @@ public class RTAScope implements IScope {
 
 	// flag indicating that another iteration is needed; it is set if
 	// any of the following sets grows in the current iteration:
-	// reachableAllocClasses, reflectVars, reflectRetMeths
-	// Note: sets reflectVars and reflectRetMeths are maintained only
-	// if handleReflection is set to true
+	// reachableAllocClasses, newInstReflectVars, forNameReflectVars,
+	// reflectRetMeths
 	private boolean repeat = true;
 
-	public RTAScope(boolean _handleReflection) {
-		this.handleReflection = _handleReflection;
+	public RTAScope(boolean _handleNewInstReflection,
+					boolean _handleForNameReflection) {
+		handleNewInstReflection = _handleNewInstReflection;
+		handleForNameReflection = _handleForNameReflection;
+		handleReflection = _handleNewInstReflection || _handleForNameReflection;
 	}
 	public IndexSet<jq_Method> getMethods() {
 		if (methods == null)
@@ -138,7 +172,7 @@ public class RTAScope implements IScope {
 		return methods;
 	}
 	public IndexSet<jq_Reference> getReflectClasses() {
-		if (!handleReflection)
+		if (!handleNewInstReflection && !handleForNameReflection)
 			return new IndexSet<jq_Reference>(0);
 		if (reflectClasses == null)
 			build();
@@ -153,12 +187,19 @@ public class RTAScope implements IScope {
  		classes = new IndexSet<jq_Reference>();
  		reachableAllocClasses = new IndexSet<jq_Reference>();
 		methodWorklist = new ArrayList<jq_Method>();
-		if (handleReflection) {
+		if (handleReflection)
 			reflectClasses = new IndexSet<jq_Reference>();
-			reflectVars = new HashSet<Register>();
+		if (handleNewInstReflection) {
+            ch = Program.getProgram().getClassHierarchy();
+            methToInvks = new HashMap<jq_Method, Set<Quad>>();
+			newInstReflectVars = new HashSet<Register>();
             reflectRetMeths = new HashSet<jq_Method>();
-			methToInvks = new HashMap<jq_Method, Set<Quad>>();
-			ch = Program.getProgram().getClassHierarchy();
+		}
+		if (handleForNameReflection) {
+			classpath = PrimordialClassLoader.loader.getClasspath();
+			forNameReflectVars = new HashSet<Register>();
+			warnedReflectVars = new HashSet<Register>();
+			warnedReflectClassNames = new HashSet<String>();
 		}
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
@@ -179,17 +220,12 @@ public class RTAScope implements IScope {
 			visitClinits(mainClass);
         	visitMethod(mainMethod);
 	        while (!methodWorklist.isEmpty()) {
-	        	jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
-				if (DEBUG) System.out.println("Processing CFG of method: " + m);
+				int n = methodWorklist.size();
+	        	jq_Method m = methodWorklist.remove(n - 1);
+				if (DEBUG) System.out.println("Processing CFG of " + m);
 	        	processMethod(m);
 	        }
         }
-		if (DEBUG && handleReflection) {
-			System.out.println("Reflectively instantiated classes:");
-			for (jq_Reference ref : reflectClasses) {
-				System.out.println("\t" + ref);
-			}
-		}
 		System.out.println("LEAVE: RTA");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
@@ -203,7 +239,8 @@ public class RTAScope implements IScope {
 	}
 	private void processMethod(jq_Method m) {
 		ControlFlowGraph cfg = m.getCFG();
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
+		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+				it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
 			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 				Quad q = it2.nextQuad();
@@ -211,9 +248,9 @@ public class RTAScope implements IScope {
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {
 					if (op instanceof InvokeVirtual || op instanceof InvokeInterface)
-						processVirtualInvk(q);
+						processVirtualInvk(m, q);
 					else
-						processStaticInvk(q);
+						processStaticInvk(m, q);
 				} else if (op instanceof Getstatic) {
 					jq_Field f = Getstatic.getField(q).getField();
 					jq_Class c = f.getDeclaringClass();
@@ -225,196 +262,262 @@ public class RTAScope implements IScope {
 				} else if (op instanceof New) {
 					jq_Class c = (jq_Class) New.getType(q).getType();
 					visitClass(c);
-					if (reachableAllocClasses.add(c)) {
+					if (reachableAllocClasses.add(c))
 						repeat = true;
-					}
 				} else if (op instanceof NewArray) {
 					jq_Array a = (jq_Array) NewArray.getType(q).getType();
 					visitClass(a);
-					if (reachableAllocClasses.add(a)) {
+					if (reachableAllocClasses.add(a))
 						repeat = true;
+				} else {
+					if (handleNewInstReflection) {
+						if (op instanceof Move) {
+							processNewInstReflectionInMove(q);
+						} else if (op instanceof Phi) {
+							processNewInstReflectionInPhi(q);
+						} else if (op instanceof CheckCast) {
+                      	 	processNewInstReflectionInCast(q);
+                   		} else if (op instanceof Return) {
+							processNewInstReflectionInRetn(q, m);
+                   		}
 					}
-				} else if (handleReflection) {
-					if (op instanceof Move) {
-						processMove(q);
-					} else if (op instanceof CheckCast) {
-						processCast(q);
-					} else if (op instanceof Phi) {
-						processPhi(q);
-					} else if (op instanceof Return) {
-						processReturn(q, m);
+					if (handleForNameReflection) {
+						if (op instanceof Move) {
+							processForNameReflectionInMove(q);
+						} else if (op instanceof Phi) {
+							processForNameReflectionInPhi(q);
+						}
 					}
 				}
 			}
 		}
 	}
-	private void processVirtualInvk(Quad q) {
+	private void processVirtualInvk(jq_Method m, Quad q) {
 		jq_Method n = Invoke.getMethod(q).getMethod();
 		jq_Class c = n.getDeclaringClass();
 		visitClass(c);
 		visitMethod(n);
 		jq_NameAndDesc nd = n.getNameAndDesc();
-		if (c.isInterface()) {
-			for (jq_Reference r : reachableAllocClasses) {
-				if (r instanceof jq_Array)
-					continue;
-				jq_Class d = (jq_Class) r;
-				assert (!d.isInterface());
-				assert (!d.isAbstract());
-				if (d.implementsInterface(c)) {
-					jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-					if (m2 == null) {
-						Messages.logAnon("WARNING: Expected instance method " + nd +
-							" in class " + d + " implementing interface " + c);
-					} else {
-						if (handleReflection)
-							propagateReflectArgsAndRet(q, m2);
-						visitMethod(m2);
-					}
-				}
-			}
-		} else {
-			if (handleReflection && c.getName().equals("java.lang.Class") &&
-					n.getName().toString().equals("newInstance") &&
-					n.getDesc().toString().equals("()Ljava/lang/Object;")) {
-				RegisterOperand ro = Invoke.getDest(q);
-				Register r = ro.getRegister();
-				if (reflectVars.add(r)) {
-					if (DEBUG) System.out.println("\tAdding var: " + r);
-					repeat = true;
-				}
-			}
-			for (jq_Reference r : reachableAllocClasses) {
-				if (r instanceof jq_Array)
-					continue;
-				jq_Class d = (jq_Class) r;
-				assert (!d.isInterface());
-				assert (!d.isAbstract());
-				if (d.extendsClass(c)) {
-					jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-					if (m2 == null) {
-						Messages.logAnon("WARNING: Expected instance method " + nd +
-								" in class " + d + " subclassing class " + c);
-					} else {
-						visitMethod(m2);
-						if (handleReflection)
-							propagateReflectArgsAndRet(q, m2);
-					}
+		boolean isInterface = c.isInterface();
+		if (handleNewInstReflection && !isInterface &&
+				c.getName().equals("java.lang.Class") &&
+				n.getName().toString().equals("newInstance") &&
+				n.getDesc().toString().equals("()Ljava/lang/Object;")) {
+			Register r = Invoke.getDest(q).getRegister();
+			if (newInstReflectVars.add(r))
+				repeat = true;
+		}
+		for (jq_Reference r : reachableAllocClasses) {
+			if (r instanceof jq_Array)
+				continue;
+			jq_Class d = (jq_Class) r;
+			assert (!d.isInterface());
+			assert (!d.isAbstract());
+			boolean matches = isInterface ? d.implementsInterface(c) : d.extendsClass(c);
+			if (matches) {
+				jq_InstanceMethod m2 = d.getVirtualMethod(nd);
+				if (m2 == null) {
+					Messages.log("SCOPE.METHOD_NOT_FOUND_IN_SUBTYPE",
+						nd.toString(), d.getName(), c.getName());
+				} else {
+					if (handleReflection)
+						propagateReflectArgsAndRet(m, q, m2, true);
+					visitMethod(m2);
 				}
 			}
 		}
 	}
-	private void processStaticInvk(Quad q) {
+	private void processStaticInvk(jq_Method m, Quad q) {
 		jq_Method n = Invoke.getMethod(q).getMethod();
 		jq_Class c = n.getDeclaringClass();
 		visitClass(c);
 		visitMethod(n);
-		if (handleReflection)
-			propagateReflectArgsAndRet(q, n);
-	}
-	private void propagateReflectArgsAndRet(Quad q, jq_Method m2) {
-		Set<Quad> invks = methToInvks.get(m2);
-		if (invks == null) {
-			invks = new ArraySet<Quad>(1);
-			methToInvks.put(m2, invks);
+		boolean check = false;
+		if (handleForNameReflection) {
+			if (c.getName().equals("java.lang.Class") &&
+				n.getName().toString().equals("forName")) {
+				RegisterOperand ro = Invoke.getParamList(q).get(0);
+				Register r = ro.getRegister();
+				if (forNameReflectVars.add(r))
+					repeat = true;
+			} else
+				check = true;
 		}
-		invks.add(q);
-		if (reflectRetMeths.contains(m2)) {
-			RegisterOperand lo = Invoke.getDest(q);
+		if (handleReflection)
+			propagateReflectArgsAndRet(m, q, n, check);
+	}
+	private void propagateReflectArgsAndRet(jq_Method m, Quad q, jq_Method n, boolean check) {
+		ParamListOperand iArgs = Invoke.getParamList(q);
+		RegisterOperand lo = Invoke.getDest(q);
+		RegisterFactory rf = n.getCFG().getRegisterFactory();
+		if (handleNewInstReflection) {
+			Set<Quad> invks = methToInvks.get(n);
+			if (invks == null) {
+				invks = new ArraySet<Quad>(1);
+				methToInvks.put(n, invks);
+			}
+			invks.add(q);
+			if (reflectRetMeths.contains(n)) {
+				if (lo != null) {
+					Register l = lo.getRegister();
+					if (newInstReflectVars.add(l))
+						repeat = true;
+				}
+			}
+			int k = iArgs.length();
+			for (int i = 0; i < k; ++i) {
+				Register iArg = iArgs.get(i).getRegister();
+				if (newInstReflectVars.contains(iArg)) {
+					Register fArg = rf.get(i);
+					if (newInstReflectVars.add(fArg)) 
+						repeat = true;
+				}
+			}
+		}
+		if (handleForNameReflection) {
 			if (lo != null) {
 				Register l = lo.getRegister();
-				if (reflectVars.add(l)) {
-					if (DEBUG) System.out.println("\tAdding var: " + l);
-					repeat = true;
+				if (forNameReflectVars.contains(l) && check && warnedReflectVars.add(l)) {
+					Messages.log("SCOPE.STOP_TRACKING_REFLECTION",
+						l.toString(), m.toString(), q.toString());
 				}
 			}
-		}
-		RegisterFactory rf = m2.getCFG().getRegisterFactory();
-		ParamListOperand iArgs = Invoke.getParamList(q);
-		for (int i = 0; i < iArgs.length(); ++i) {
-			Register iArg = iArgs.get(i).getRegister();
-			if (reflectVars.contains(iArg)) {
+			int k = n.getParamTypes().length;
+			for (int i = 0; i < k; i++) {
 				Register fArg = rf.get(i);
-				if (reflectVars.add(fArg)) {
-					if (DEBUG) System.out.println("\tAdding var: " + fArg);
-					repeat = true;
+				if (forNameReflectVars.contains(fArg)) {
+					Register iArg = iArgs.get(i).getRegister();
+					if (forNameReflectVars.add(iArg)) 
+						repeat = true;
 				}
 			}
 		}
 	}
-	private void processCast(Quad q) {
-		jq_Type t = CheckCast.getType(q).getType();
-		if (t instanceof jq_Reference) {
-			Operand ro = CheckCast.getSrc(q);
-			if (ro instanceof RegisterOperand) {
-				Register r = ((RegisterOperand) ro).getRegister();
-				if (reflectVars.contains(r)) {
-					String tName = t.getName();
-					jq_Reference ref = (jq_Reference) t;
-					// Note: ref may not be prepared; don't call any methods on it
-					Set<String> concreteImps = ch.getConcreteImplementors(tName);
-					Set<String> concreteSubs = ch.getConcreteSubclasses(tName);
-					assert (concreteImps == null || concreteSubs == null);
-					visitClass(ref);
-					processConcreteClasses(concreteImps);
-					processConcreteClasses(concreteSubs);
-				}
-			}
-		}
-	}
-	// set may be null
-	private void processConcreteClasses(Set<String> set) {
-		if (set != null) {
-			for (String s : set) {
-				jq_Class d = (jq_Class) jq_Type.parseType(s);
-				reflectClasses.add(d);
-				visitClass(d);
-				if (reachableAllocClasses.add(d)) 
-					repeat = true;
-			}
-		}
-	}
-	private void processMove(Quad q) {
-		Operand ro = Move.getSrc(q);
+	private void processNewInstReflectionInMove(Quad q) {
+       	Operand ro = Move.getSrc(q);
 		if (ro instanceof RegisterOperand) {
 			Register r = ((RegisterOperand) ro).getRegister();
-			if (reflectVars.contains(r)) {
+			if (newInstReflectVars.contains(r)) {
 				Register l = Move.getDest(q).getRegister();
-				if (reflectVars.add(l)) {
-					if (DEBUG) System.out.println("\tAdding var: " + l);
+				if (newInstReflectVars.add(l)) 
 					repeat = true;
+			}
+		}
+	}
+	private void processForNameReflectionInMove(Quad q) {
+		Register l = Move.getDest(q).getRegister();
+		if (forNameReflectVars.contains(l)) {
+			Operand ro = Move.getSrc(q);
+			if (ro instanceof RegisterOperand) {
+				Register r = ((RegisterOperand) ro).getRegister();
+				if (forNameReflectVars.add(r)) 
+					repeat = true;
+			} else if (ro instanceof AConstOperand) {
+				Object v = ((AConstOperand) ro).getValue();
+				if (v instanceof String) {
+					String clsName = (String) v;
+					// check whether class is present in the classpath to avoid
+					// a NoClassDefFoundError
+					String resName = Classpath.classnameToResource(clsName);
+					if (classpath.getResourcePath(resName) == null) {
+						if (warnedReflectClassNames.add(clsName))
+							Messages.log("SCOPE.DYNAMIC_CLASS_NOT_FOUND", clsName);
+					} else {
+						jq_Reference r = (jq_Reference) jq_Type.parseType(clsName);
+						reflectClasses.add(r);
+						visitClass(r);
+						// optimistically assume this class will be instantiated
+						if (r instanceof jq_Array) {
+							if (reachableAllocClasses.add(r))
+								repeat = true;
+						} else {
+							jq_Class c = (jq_Class) r;
+							if (!c.isAbstract() && !c.isInterface() &&
+									reachableAllocClasses.add(r))
+								repeat = true;
+							// optimistically assume any method may be called
+							for (jq_Method m : c.getDeclaredStaticMethods())
+								visitMethod(m);
+							for (jq_Method m : c.getDeclaredInstanceMethods()) 
+								visitMethod(m);
+						}
+					}
 				}
 			}
 		}
 	}
-	private void processPhi(Quad q) {
+	private void processNewInstReflectionInPhi(Quad q) {
 		ParamListOperand roList = Phi.getSrcs(q);
 		int n = roList.length();
 		for (int i = 0; i < n; i++) {
 			RegisterOperand ro = roList.get(i);
 			if (ro != null) {
 				Register r = ro.getRegister();
-				if (reflectVars.contains(r)) {
+				if (newInstReflectVars.contains(r)) {
 					Register l = Phi.getDest(q).getRegister();
-					if (reflectVars.add(l)) {
-						if (DEBUG) System.out.println("\tAdding var: " + l);
+					if (newInstReflectVars.add(l)) 
 						repeat = true;
-					}
 					break;
 				}
 			}
 		}
 	}
-	private void processReturn(Quad q, jq_Method m) {
-		Operand ro = Return.getSrc(q);
-		if (ro instanceof RegisterOperand) {
-			Register r = ((RegisterOperand) ro).getRegister();
-			if (reflectVars.contains(r) && reflectRetMeths.add(m)) {
-				if (DEBUG) System.out.println("\tAdding ret: " + q);
-				repeat = true;
+	private void processForNameReflectionInPhi(Quad q) {
+		Register l = Phi.getDest(q).getRegister();
+		if (forNameReflectVars.contains(l)) {
+			ParamListOperand roList = Phi.getSrcs(q);
+			int n = roList.length();
+			for (int i = 0; i < n; i++) {
+				RegisterOperand ro = roList.get(i);
+				if (ro != null) {
+					Register r = ro.getRegister();
+					if (forNameReflectVars.add(r)) {
+						repeat = true;
+					}
+				}
 			}
 		}
 	}
+    private void processNewInstReflectionInCast(Quad q) {
+        jq_Type t = CheckCast.getType(q).getType();
+        if (t instanceof jq_Reference) {
+            Operand ro = CheckCast.getSrc(q);
+            if (ro instanceof RegisterOperand) {
+                Register r = ((RegisterOperand) ro).getRegister();
+                if (newInstReflectVars.contains(r)) {
+                    String tName = t.getName();
+                    jq_Reference ref = (jq_Reference) t;
+                    // Note: ref may not be prepared; don't call any methods on it
+                    Set<String> concreteImps = ch.getConcreteImplementors(tName);
+                    Set<String> concreteSubs = ch.getConcreteSubclasses(tName);
+                    assert (concreteImps == null || concreteSubs == null);
+                    visitClass(ref);
+                    processConcreteClasses(concreteImps);
+                    processConcreteClasses(concreteSubs);
+                }
+            }
+        }
+    }
+    // set may be null
+    private void processConcreteClasses(Set<String> set) {
+        if (set != null) {
+            for (String s : set) {
+                jq_Class d = (jq_Class) jq_Type.parseType(s);
+                reflectClasses.add(d);
+                visitClass(d);
+                if (reachableAllocClasses.add(d))
+                    repeat = true;
+            }
+        }
+    }
+    private void processNewInstReflectionInRetn(Quad q, jq_Method m) {
+        Operand ro = Return.getSrc(q);
+        if (ro instanceof RegisterOperand) {
+            Register r = ((RegisterOperand) ro).getRegister();
+            if (newInstReflectVars.contains(r) && reflectRetMeths.add(m)) 
+                repeat = true;
+        }
+    }
 	private void prepareClass(jq_Reference r) {
 		if (classes.add(r)) {
 	        r.prepare();
