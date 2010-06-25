@@ -203,7 +203,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Set<Edge> getInitPathEdges(Quad q, jq_Method m2, Edge pe) {
-		System.out.println("\tgetInitPathEdges called: " + pe);
 		// check if pe.dstExpr is return var
 		// if so then create init edge srcExpr==dstExpr==RetExpr.instance
 		// else if pe.dstExpr is non-local var then create init edge similarly
@@ -272,7 +271,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Set<Edge> getInvkPathEdges(Quad q, Edge pe) {
-		System.out.println("\tgetInvkPathEdges called: " + pe);
 		Expr dstExpr = pe.dstExpr;
 		if (dstExpr instanceof LocalVar) {
 			LocalVar e = (LocalVar) dstExpr;
