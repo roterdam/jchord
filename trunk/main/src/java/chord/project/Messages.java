@@ -52,5 +52,9 @@ public class Messages {
 		log(key, args);
 		System.exit(1);
 	}
+	public static void fatalAnon(String format, Object... args) {
+		logAnon(format, args);
+		System.exit(1);
+	}
 }
 
