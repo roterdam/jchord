@@ -1,8 +1,11 @@
 public class T {
-	static int g;
+	static int g1;
+	static int g2;
     public static void main(String[] args) {
 		A a = new A();
-		g = a.f;
+		A b = new A();
+		g1 = a.f;
+		g2 = b.f;
 	}
 }
 
