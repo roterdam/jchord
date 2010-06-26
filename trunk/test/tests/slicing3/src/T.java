@@ -1,3 +1,5 @@
+// check that backward propagation does not stop
+// in the middle of a method (foo in the below case)
 public class T {
 	static A g;
 
