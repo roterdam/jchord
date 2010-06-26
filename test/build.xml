@@ -3,30 +3,32 @@
   Test runner for Chord.
 -->
 <project name="chord-tester" default="help" basedir=".">
+	<property name="debuglevel" value="source,lines,vars"/>
+	<property name="target" value="1.5"/>
+	<property name="source" value="1.5"/>
 
-	<property name="test.dirs" value="hsqldb,lusearch"/>
+	<property name="test.dirs" value="tsp,hedc"/>
 
 	<target name="help">
 		<echo>
 		test-all Test all Chord components
-		         Optional properties:
-		         - test.dirs       (comma-separated list of directories under programs/ to be included; default="${test.dirs}")
+				Optional properties:
+				- test.dirs       (comma-separated list of directories under bench/ to be included; default="${test.dirs}")
 		test     Test only chosen Chord components
-		         Optional properties:
-		         - test.dirs       (comma-separated list of directories under programs/ to be included; default="${test.dirs}")
-		         - test.main       (test basic program domains and relations; default=false)
-		         - test.cia        (test 0-CFA may alias and call graph analyses; default=false)
-		         - test.csa.0cfa   (test context-sensitive adaptor for 0-CFA may alias and call graph analyses; default=false)
-		         - test.csa.kobj   (test k-object-sensitive may alias and call graph analyses; default=false)
-		         - test.csa.kcfa   (test k-CFA may alias and call graph analyses; default=false)
-		         - test.csa.hybrid (test hybrid context-sensitive may alias and call graph analyses; default=false)
+				Optional properties:
+				- test.dirs       (comma-separated list of directories under bench/ to be included; default="${test.dirs}")
+				- test.main       (test basic program domains and relations; default=false)
+				- test.cia        (test 0-CFA may alias and call graph analyses; default=false)
+				- test.csa.0cfa   (test context-sensitive adaptor for 0-CFA may alias and call graph analyses; default=false)
+				- test.csa.kobj   (test k-object-sensitive may alias and call graph analyses; default=false)
+				- test.csa.kcfa   (test k-CFA may alias and call graph analyses; default=false)
+				- test.csa.hybrid (test hybrid context-sensitive may alias and call graph analyses; default=false)
 		</echo>
 	</target>
 
 	<property name="maindir" location="../main"/>
-	<property name="chord.main.doms" value="M,F,V,P,I,E,H,L,R,Z"/>
-	
-	<property name="chord.main.rels" value="aryElemE,cha,clinitM,EF,EV,HT,IinvkArg0,IinvkArg,IinvkRet,initM,instF,instFldE,instI,instM,LE,LI,LL,ME,MgetInstFldInst,MgetStatFldInst,MH,MI,ML,MmethArg,MmethRet,MobjValAsgnInst,MobjVarAsgnInst,MPhead,MP,MPtail,MputInstFldInst,MputStatFldInst,MV,PE,PgetInstFldInst,PgetStatFldInst,PI,PL,PobjValAsgnInst,PobjVarAsgnInst,PP,PputInstFldInst,PputStatFldInst,privateM,specIM,statF,statFldE,statIM,statM,syncLM,syncLV,syncM,thisMV,virtIM,VT,writeE"/>
+    <property name="chord.main.doms" value="M,F,V,P,I,E,H,L,R,Z"/>
+    <property name="chord.main.rels" value="aryElemE,cha,clinitM,EF,EV,HT,IinvkArg0,IinvkArg,IinvkRet,initM,instF,instFldE,instI,instM,LE,LI,LL,ME,MgetInstFldInst,MgetStatFldInst,MH,MI,ML,MmethArg,MmethRet,MobjValAsgnInst,MobjVarAsgnInst,MPhead,MP,MPtail,MputInstFldInst,MputStatFldInst,MV,PE,PgetInstFldInst,PgetStatFldInst,PI,PL,PobjValAsgnInst,PobjVarAsgnInst,PP,PputInstFldInst,PputStatFldInst,privateM,specIM,statF,statFldE,statIM,statM,syncLM,syncLV,syncM,thisMV,virtIM,VT,writeE"/>
 	<property name="chord.main.doms_and_rels" value="${chord.main.doms},${chord.main.rels}"/>
 	<property name="chord.cia.rels" value="FH,VH,HFH,IM,MM,rootM,reachableM,thrOblAbbrRootM,thrOblAbbrReachableM,thrOblAbbrIM,thrOblAbbrMM,thrSenAbbrRootM,thrSenAbbrReachableM,thrSenAbbrIM,thrSenAbbrMM"/>
 	<property name="chord.csa.rels" value="FC,CVC,CFC,CICM,CMCM,rootCM,reachableCM,thrOblAbbrRootCM,thrOblAbbrReachableCM,thrOblAbbrCICM,thrOblAbbrCMCM,thrSenAbbrRootCM,thrSenAbbrReachableCM,thrSenAbbrCICM,thrSenAbbrCMCM,epsilonV,epsilonM,kcfaSenM,kobjSenM,ctxtCpyM,CC,CH,CI"/>
@@ -51,7 +53,7 @@
 	-->
 	<target name="test">
 		<for param="testdir">
-			<dirset dir="programs" includes="${test.dirs}"/>
+			<dirset dir="bench" includes="${test.dirs}"/>
 			<sequential>
 				<echo message="===== Benchmark: @{testdir}"/>
 				<ant dir="@{testdir}" target="clean"/>
@@ -59,14 +61,10 @@
 				<ant dir="${maindir}" target="run">
 					<property name="chord.work.dir" value="@{testdir}"/>
 					<property name="chord.build.scope" value="true"/>
-					</ant>
-				<antcall target="sort-and-diff">
-					<param name="arg1" location="@{testdir}/chord_output/classes.txt"/>
-					<param name="arg2" location="@{testdir}/correct_output/classes.txt"/>
-				</antcall> 
-				<antcall target="sort-and-diff">
-					<param name="arg1" location="@{testdir}/chord_output/methods.txt"/>
-					<param name="arg2" location="@{testdir}/correct_output/methods.txt"/>
+				</ant>
+				<antcall target="subset">
+					<param name="arg1" location="@{testdir}/correct_output/methods.txt"/>
+					<param name="arg2" location="@{testdir}/chord_output/methods.txt"/>
 				</antcall> 
 				<if>
 					<isset property="test.main"/>
@@ -247,14 +245,14 @@
 	params: testdir, correctdir, domnames
 	-->
 	<target name="compare-doms">
-	<for param="domname" list="${domnames}">
-	<sequential>
-	<antcall target="sort-and-diff">
-	<param name="arg1" location="${testdir}/chord_output/bddbddb/@{domname}.map"/>
-	<param name="arg2" location="${correctdir}/@{domname}.map"/>
-	</antcall>
-	</sequential>
-	</for>
+		<for param="domname" list="${domnames}">
+			<sequential>
+				<antcall target="subset">
+				<param name="arg1" location="${correctdir}/@{domname}.map"/>
+				<param name="arg2" location="${testdir}/chord_output/bddbddb/@{domname}.map"/>
+				</antcall>
+			</sequential>
+		</for>
 	</target>
 
 	<!--
@@ -263,9 +261,9 @@
 	<target name="compare-rels">
 		<for param="relname" list="${relnames}">
 			<sequential>
-				<antcall target="sort-and-diff">
-					<param name="arg1" location="${testdir}/chord_output/@{relname}.txt"/>
-					<param name="arg2" location="${correctdir}/@{relname}.txt"/>
+				<antcall target="subset">
+					<param name="arg1" location="${correctdir}/@{relname}.txt"/>
+					<param name="arg2" location="${testdir}/chord_output/@{relname}.txt"/>
 				</antcall>
 			</sequential>
 		</for>
@@ -274,22 +272,28 @@
 	<!--
 		params: arg1, arg2
 	-->
-	<target name="sort-and-diff">
-		<exec executable="sort">
-			<arg line="${arg1} -o ${arg1}"/>
-		</exec>
-		<exec executable="sort">
-			<arg line="${arg2} -o ${arg2}"/>
-		</exec>
-		<exec executable="diff" resultproperty="retval">
-			<arg line="--strip-trailing-cr ${arg1} ${arg2}"/> 
-		</exec>
-		<if>
-			<not><equals arg1="${retval}" arg2="0"/></not>
-			<then>
-				<echo message="ERROR: diff ${arg1} ${arg2} failed"/>
-			</then>
-		</if>
+	<target name="eqset" depends="compile">
+		<java classname="FileCmp" fork="true" classpath="classes">
+			<arg line="-eq ${arg1} ${arg2}"/> 
+		</java>
+	</target>
+	<!--
+		params: arg1, arg2
+	-->
+	<target name="subset" depends="compile">
+		<java classname="FileCmp" fork="true" classpath="classes">
+			<arg line="-sub ${arg1} ${arg2}"/> 
+		</java>
+	</target>
+
+	<target name="compile">
+		<mkdir dir="classes"/>
+		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="src" destdir="classes"/>
+	</target>
+
+	<target name="clean">
+		<delete dir="classes"/>
 	</target>
 </project>
 
