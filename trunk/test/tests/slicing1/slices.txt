@@ -1,9 +1,0 @@
-***** SEED: <<main:([Ljava/lang/String;)V@T, null>, g:I@T>
-***** SLICE: (incorrect, must include call to Object.<init> in A.<init>)
-	0!main:([Ljava/lang/String;)V@T (T.java:4) [<A T1> = new A]
-	3!main:([Ljava/lang/String;)V@T (T.java:4) [T2 = T1]
-	6!<init>:()V@A (T.java:12) [<A R0>.f:I@A = IConst: 5]
-	4!main:([Ljava/lang/String;)V@T (T.java:4) [<init> ()V(<A T2>)]
-	7!main:([Ljava/lang/String;)V@T (T.java:4) [R3 = T1]
-	9!main:([Ljava/lang/String;)V@T (T.java:5) [<int T5> = <A R3>.f:I@A]
-	12!main:([Ljava/lang/String;)V@T (T.java:5) [g:I@T = <int T5>]
