@@ -167,6 +167,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	 */
     private void propagate() {
         while (!workList.isEmpty()) {
+			if (DEBUG) {
+				System.out.println("WORKLIST:");
+				for (Pair<Location, PE> pair : workList)
+					System.out.println("\t" + pair);
+			}
             int last = workList.size() - 1;
             Pair<Location, PE> pair = workList.remove(last);
             Location loc = pair.val0;
@@ -381,7 +386,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		}
 	}
 
-	private void addPathEdge(Location loc, PE pe) {
+	protected void addPathEdge(Location loc, PE pe) {
 		if (DEBUG) System.out.println("\tChecking if " + loc + " has PE: " + pe);
 		Quad q = loc.q;
 		Inst i = (q != null) ? q : loc.bb;
