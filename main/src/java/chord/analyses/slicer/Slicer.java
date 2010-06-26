@@ -17,6 +17,7 @@ import joeq.Class.jq_Reference;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.QuadVisitor;
@@ -51,7 +52,7 @@ import chord.program.MethodSign;
 import chord.analyses.alias.CIObj;
 import chord.analyses.alias.CIAliasAnalysis;
 import chord.analyses.alias.ICICG;
-import chord.analyses.alias.ThrOblAbbrCICGAnalysis;
+import chord.analyses.alias.CICGAnalysis;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
@@ -77,15 +78,17 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 	private final Set<Edge> tmpEdgeSet = new ArraySet<Edge>();
 	private final Set<Expr> tmpExprSet = new ArraySet<Expr>();
 	private final Pair<Expr, jq_Method> tmpPair = new Pair<Expr, jq_Method>(null, null);
+	private final Set<Location> clinitAndThreadExits = new HashSet<Location>();
+	private final Set<Expr> globalExprs = new HashSet<Expr>();
 	private DomB domB;
-    private ICICG cicg;
-	private CIAliasAnalysis cipa;
-    private MyQuadVisitor qv = new MyQuadVisitor();
-	private Set<Quad> currSlice = new HashSet<Quad>();
+    private final MyQuadVisitor qv = new MyQuadVisitor();
+	private final Set<Quad> currSlice = new HashSet<Quad>();
 	private Pair<Location, Expr> currSeed;
-    private Map<BasicBlock, Set<Quad>> fullCdepsMap =
+	private CIAliasAnalysis cipa;
+    private ICICG cicg;
+    private final Map<BasicBlock, Set<Quad>> fullCdepsMap =
 		new HashMap<BasicBlock, Set<Quad>>();
-    private Map<Pair<Expr, jq_Method>, Set<Quad>> todoCdepsMap =
+    private final Map<Pair<Expr, jq_Method>, Set<Quad>> todoCdepsMap =
 		new HashMap<Pair<Expr, jq_Method>, Set<Quad>>();
 
 	public void run() {
@@ -124,10 +127,8 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		{
 			String signStr = fStrList.get(0);
 			MethodSign sign = MethodSign.parse(signStr);
-			jq_Method method = program.getMethod(sign);
-			assert (method != null);
-			BasicBlock bb = method.getCFG().exit();
-			seedLoc = new Location(method, bb, -1, null);
+			jq_Method m = program.getMethod(sign);
+			seedLoc = getExitLoc(m);
 		}
 		Set<Pair<Location, Expr>> seeds = new HashSet<Pair<Location, Expr>>(n - 1);
 		for (int i = 1; i < n; i++) {
@@ -143,7 +144,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			jq_Class c = (jq_Class) r;
 			jq_Field f = (jq_Field) c.getDeclaredMember(sign.mName, sign.mDesc);
 			if (f == null) {
-				Messages.fatal("ERROR: Cannot slice on field %s: " +
+				Messages.fatalAnon("ERROR: Cannot slice on field %s: " +
 					"it was not found in its declaring class.", fStr);
 			}
 			assert(f.isStatic());
@@ -153,6 +154,21 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 
 		cipa = (CIAliasAnalysis) Project.getTrgt("cipa-java");
 		Project.runTask(cipa);
+		CICGAnalysis cicgAnalysis = (CICGAnalysis) Project.getTrgt("cicg-java");
+		Project.runTask(cicgAnalysis);
+		cicg = cicgAnalysis.getCallGraph();
+
+		Set<jq_Method> roots = cicg.getRoots();
+		jq_Method mainMethod = program.getMainMethod();
+		for (jq_Method m : roots) {
+			Location loc = getExitLoc(m);
+			clinitAndThreadExits.add(loc);
+		}
+		jq_Method threadStartMethod = program.getThreadStartMethod();
+		if (threadStartMethod != null) {
+			Location loc = getExitLoc(threadStartMethod);
+			clinitAndThreadExits.add(loc);
+		}
 
 		init();
 
@@ -173,6 +189,25 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 	}
 
+	private Location getExitLoc(jq_Method m) {
+		ControlFlowGraph cfg = m.getCFG();
+		BasicBlock bb = cfg.exit();
+		return new Location(m, bb, -1, null);
+	}
+
+	private void prepare(Expr e) {
+		assert (e instanceof ArrayElem ||
+			    e instanceof InstField ||
+			    e instanceof StatField);
+		if (globalExprs.add(e)) {
+			Edge pe = new Edge(e, e, false);
+			if (DEBUG) System.out.println("\tprepare: " + pe);
+			for (Location loc : clinitAndThreadExits) {
+				addPathEdge(loc, pe);
+			}
+		}
+	}
+
 	@Override
 	public boolean doMerge() {
 		return false;
@@ -180,13 +215,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 
     @Override
     public ICICG getCallGraph() {
-        if (cicg == null) {
-            ThrOblAbbrCICGAnalysis cicgAnalysis =
-                (ThrOblAbbrCICGAnalysis) Project.getTrgt("throbl-abbr-cicg-java");
-            Project.runTask(cicgAnalysis);
-            cicg = cicgAnalysis.getCallGraph();
-        }
-        return cicg;
+		return cicg;
     }
 
     @Override
@@ -195,6 +224,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
             new ArraySet<Pair<Location, Edge>>(1);
 		Location loc = currSeed.val0;
 		Expr e = currSeed.val1;
+		prepare(e);
         Edge pe = new Edge(e, e, false);
         Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
         initPEs.add(pair);
@@ -261,9 +291,16 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 				System.out.println(CollectionUtils.toString(
 					oDstExprSet, "oDstExprSet: [", ",", "]"));
 			}
-			for (Expr e : oDstExprSet) {
-				Edge pe2 = new Edge(srcExpr, e, true);
-				tmpEdgeSet.add(pe2);
+			if (oDstExprSet.isEmpty()) {
+				if (pe.affectedSlice) {
+					Edge pe2 = new Edge(srcExpr, null, true);
+					tmpEdgeSet.add(pe2);
+				}
+			} else {
+				for (Expr e : oDstExprSet) {
+					Edge pe2 = new Edge(srcExpr, e, true);
+					tmpEdgeSet.add(pe2);
+				}
 			}
 		}
 		return tmpEdgeSet;
@@ -426,8 +463,11 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 						tmpExprSet.add(new LocalVar(i));
 					}
 					CIObj bObj = cipa.pointsTo(b);
-					for (Quad q2 : bObj.pts)
-						tmpExprSet.add(new ArrayElem(q2));
+					for (Quad q2 : bObj.pts) {
+						Expr e2 = new ArrayElem(q2);
+						prepare(e2);
+						tmpExprSet.add(e2);
+					}
 					oDstExprSet = tmpExprSet;
 				}
 			}
@@ -449,8 +489,11 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 						tmpExprSet.add(new LocalVar(b));
 						CIObj bObj = cipa.pointsTo(b);
 						jq_Field f = Getfield.getField(q).getField();
-						for (Quad q2 : bObj.pts)
-							tmpExprSet.add(new InstField(q2, f));
+						for (Quad q2 : bObj.pts) {
+							Expr e2 = new InstField(q2, f);
+							prepare(e2);
+							tmpExprSet.add(e2);
+						}
 					}
 					oDstExprSet = tmpExprSet;
 				}
@@ -555,7 +598,9 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 				if (e.v == l) {
 					tmpExprSet.clear();
 					jq_Field f = Getstatic.getField(q).getField();
-					tmpExprSet.add(new StatField(f));
+					Expr e2 = new StatField(f);
+					prepare(e2);
+					tmpExprSet.add(e2);
 					oDstExprSet = tmpExprSet;
 				}
 			}
