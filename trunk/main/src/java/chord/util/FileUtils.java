@@ -184,4 +184,7 @@ public final class FileUtils {
 		if (!file.delete())
 			throw new ChordRuntimeException("Failed to delete file: " + file);
 	}
+	public static boolean exists(String fileName) {
+		return (new File(fileName)).exists();
+	}
 }
