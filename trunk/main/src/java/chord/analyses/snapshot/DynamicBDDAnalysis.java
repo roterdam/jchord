@@ -15,9 +15,10 @@ import gnu.trove.TIntProcedure;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.Properties;
+import chord.project.Project;
 import chord.program.Program;
 import chord.project.analyses.DynamicAnalysis;
-import chord.util.IndexMap;
+import chord.doms.DomH;
 import joeq.Class.jq_Field;
 import joeq.Compiler.Quad.Quad;
 
@@ -36,7 +37,7 @@ public class DynamicBDDAnalysis extends DynamicAnalysis {
 	InstrScheme instrScheme;
 	TIntObjectHashMap<List<FldObj>> objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
 	TIntIntHashMap objToHidx = new TIntIntHashMap();
-	IndexMap<String> Hmap;
+	DomH domH;
 	int numDoms;
 	int H0_IDX, F0_IDX, O0_IDX, O1_IDX;
 	String[] domNames;
@@ -52,18 +53,18 @@ public class DynamicBDDAnalysis extends DynamicAnalysis {
 	// BDD iterLabelsBdd;
 
 	public void initAllPasses() {
-		Hmap = instrumentor.getHmap();
+		domH = (DomH) Project.getTrgt("H");
 		String varOrder;
 		if (sound) {
 			numDoms = 4;
 			H0_IDX = 0; O0_IDX = 1; O1_IDX = 2; F0_IDX = 3;
-			domSizes = new int[] { Hmap.size(), NUM_OBJS, NUM_OBJS, NUM_FLDS };
+			domSizes = new int[] { domH.size(), NUM_OBJS, NUM_OBJS, NUM_FLDS };
 			domNames = new String[] { "H0", "O0", "O1", "F0" };
 			varOrder = "O0xH0_O1_F0";
 		} else {
 			H0_IDX = 0; O0_IDX = 1; O1_IDX = 2;
 			numDoms = 3;
-			domSizes = new int[] { Hmap.size(), NUM_OBJS, NUM_OBJS };
+			domSizes = new int[] { domH.size(), NUM_OBJS, NUM_OBJS };
 			domNames = new String[] { "H0", "O0", "O1" };
 			// varOrder = "O0_H0_O1";
 			// varOrder = "O0_O1_H0";

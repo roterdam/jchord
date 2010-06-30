@@ -23,6 +23,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import chord.doms.DomB;
 import chord.doms.DomM;
 import chord.instr.InstrScheme;
+import chord.project.Project;
 import chord.project.Chord;
 import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
@@ -414,8 +415,8 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	@Override
 	public void initAllPasses() {
 		super.initAllPasses();
-		M = instrumentor.getDomM();
-		B = instrumentor.getDomB();
+		M = (DomM) Project.getTrgt("M");
+		B = (DomB) Project.getTrgt("B");
 	}
 	
 	@Override

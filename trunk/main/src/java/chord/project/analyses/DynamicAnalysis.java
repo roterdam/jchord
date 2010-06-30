@@ -27,6 +27,7 @@ import chord.instr.InstrScheme.EventFormat;
 import chord.program.CFGLoopFinder;
 import chord.program.Program;
 import chord.project.Messages;
+import chord.project.Project;
 import chord.project.Properties;
 import chord.project.OutDirUtils;
 import chord.runtime.BufferedRuntime;
@@ -37,51 +38,51 @@ import chord.util.FileUtils;
 import chord.util.ReadException;
 
 /**
- * Generic implementation of a dynamic program analysis (a specialized kind of Java task).
+ * Generic implementation of a dynamic program analysis
+ * (a specialized kind of Java task).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  * @author omertripp (omertrip@post.tau.ac.il)
  */
 public class DynamicAnalysis extends JavaAnalysis {
 	public final static boolean DEBUG = false;
+	/**
+	 * The instrumentation scheme for this dynamic analysis.
+	 */
 	protected InstrScheme scheme;
-	protected Instrumentor instrumentor;
-	public static boolean continueAfterError = System.getProperty("chord.dynamic.continueonerror", "true").equals("true");
 	
-	/* Code for handling loops consistently. */
+	/*
+	 * data structures for loop entry/iter/leave events
+	 */
+
 	private static abstract class Record {
-		
-		/* We must not implement state-dependent versions of <code>hashCode</code> and <code>equals</code>. */
+		// we must not implement state-dependent versions of
+		// hashCode and equals
 	}
-	
 	private static class LoopRecord extends Record {
 		public final int b;
-		
 		public LoopRecord(int b) {
 			this.b = b;
 		}
 	}
-	
-	private static class MethodRecord extends Record {
+	private static class MethRecord extends Record {
 		public final int m;
-		
-		public MethodRecord(int m) {
+		public MethRecord(int m) {
 			this.m = m;
 		}
 	}
-	
-	private final TIntObjectHashMap<Stack<Record>> stacks = new TIntObjectHashMap<Stack<Record>>(1);
-	private final TIntObjectHashMap<TIntHashSet> loopHead2body = new TIntObjectHashMap<TIntHashSet>(16);
-	private TIntHashSet visited4loops = new TIntHashSet();
-	
-	protected DomM domM;
-	protected DomB domB;
-	private boolean isUserRequestedBasicBlockEvent;
-	private boolean isUserRequestedEnterMethodEvent;
-	private boolean isUserRequestedLeaveMethodEvent;
+	private DomM domM;
+	private DomB domB;
+	private boolean isUserReqEnterMethodEvent;
+	private boolean isUserReqLeaveMethodEvent;
+	private boolean isUserReqBasicBlockEvent;
 	private boolean hasEnterAndLeaveLoopEvent;
-	/* End of code handling loop consistency. */
-	
+	private final TIntObjectHashMap<Stack<Record>> stacks =
+		new TIntObjectHashMap<Stack<Record>>(1);
+	private final TIntObjectHashMap<TIntHashSet> loopHead2body =
+		new TIntObjectHashMap<TIntHashSet>(16);
+	private TIntHashSet visited4loops = new TIntHashSet();
+
 	public void initPass() {
 		// signals beginning of parsing of a trace
 		// do nothing by default; subclasses can override
@@ -96,164 +97,212 @@ public class DynamicAnalysis extends JavaAnalysis {
 	public void doneAllPasses() {
 		// do nothing by default; subclasses can override
 	}
-	// subclass must override
+
+	// subclasses MUST override unless this dynamic analysis
+	// is performed using an instrumentation scheme (and traces)
+	// stored on disk from a previous run of Chord
 	public InstrScheme getInstrScheme() {
-		throw new ChordRuntimeException();
+		Messages.fatalAnon("DYNAMIC.NO_INSTR_SCHEME", getName());
+		return null;
 	}
+
+	// provides name of regular (i.e. non-pipe) file to store entire trace
+	private static String getNameOfFullFile(String runID, String fileName) {
+		return fileName + "_" + runID + "_full.txt";
+	}
+	// provides name of POSIX pipe file to store streaming trace as it is
+	// written/read by event generating/processing JVMs
+	private static String getNameOfPipeFile(String runID, String fileName) {
+		return fileName + "_" + runID + "_pipe.txt";
+	}
+
+	private static String getNameOfFullCrudeTraceFile(String runID) {
+		return getNameOfFullFile(runID, Properties.crudeTraceFileName);
+	}
+	private static String getNameOfFullFinalTraceFile(String runID) {
+		return getNameOfFullFile(runID, Properties.finalTraceFileName);
+	}
+	private static String getNameOfPipeCrudeTraceFile(String runID) {
+		return getNameOfPipeFile(runID, Properties.crudeTraceFileName);
+	}
+	private static String getNameOfPipeFinalTraceFile(String runID) {
+		return getNameOfPipeFile(runID, Properties.finalTraceFileName);
+	}
+
 	public void run() {
-		try {
+		final String[] runIDs =
+			Properties.runIDs.split(Properties.LIST_SEPARATOR);
+		final String instrSchemeFileName = Properties.instrSchemeFileName;
+		boolean doReuse = false;
+		if (Properties.reuseTrace) {
+			// check if instrumentation scheme file exists and
+			// all trace files from a previous run of Chord exist;
+			// only then can those files be reused
+			if (FileUtils.exists(instrSchemeFileName)) {
+				boolean failed = false;
+				for (String runID : runIDs) {
+					String s = getNameOfFullFinalTraceFile(runID);
+					if (!FileUtils.exists(s)) {
+						failed = true;
+						break;
+					}
+				}
+				if (!failed)
+					doReuse = true;
+			}
+		}
+		if (doReuse)
+			scheme = InstrScheme.load(instrSchemeFileName);
+		else
 			scheme = getInstrScheme();
-			assert (scheme != null);
-			isUserRequestedEnterMethodEvent =
-				scheme.getEvent(InstrScheme.ENTER_METHOD).present(); 
-			isUserRequestedLeaveMethodEvent =
-				scheme.getEvent(InstrScheme.LEAVE_METHOD).present(); 
-			isUserRequestedBasicBlockEvent = scheme.hasBasicBlockEvent(); 
-			hasEnterAndLeaveLoopEvent = scheme.hasEnterAndLeaveLoopEvent();
-			if (scheme.hasEnterAndLeaveLoopEvent()) {
-				/* These are mandatory for consistent handling of loop enter and leave events. */
+		isUserReqEnterMethodEvent =
+			scheme.getEvent(InstrScheme.ENTER_METHOD).present(); 
+		isUserReqLeaveMethodEvent =
+			scheme.getEvent(InstrScheme.LEAVE_METHOD).present(); 
+		isUserReqBasicBlockEvent = scheme.hasBasicBlockEvent(); 
+		hasEnterAndLeaveLoopEvent = scheme.hasEnterAndLeaveLoopEvent();
+		if (scheme.hasEnterAndLeaveLoopEvent()) {
+			// below events are mandatory for consistent handling of
+			// loop enter and leave events
+			if (doReuse) {
+				// TODO: assert that scheme has below events
+			} else {
 				scheme.setEnterMethodEvent(true, true);
 				scheme.setLeaveMethodEvent(true, true);
 				scheme.setBasicBlockEvent();
 			}
-			final String instrSchemeFileName = Properties.instrSchemeFileName;
-			scheme.save(instrSchemeFileName);
-			if (!Properties.reuseTrace) {
-				Program program = Program.getProgram();
-				instrumentor = new Instrumentor(program, scheme);
-				instrumentor.run();
+			init4loopConsistency();
+		}
+		if (doReuse) {
+			initAllPasses();
+			for (String runID : runIDs) {
+				Messages.log("DYNAMIC.STARTING_RUN", runID);
+				String s = getNameOfFullFinalTraceFile(runID);
+				processTrace(s);
+				Messages.log("DYNAMIC.FINISHED_RUN", runID);
 			}
-			if (scheme.hasEnterAndLeaveLoopEvent()) {
-				init4loopConsistency();
-			}
-			final String mainClassName = Properties.mainClassName;
-			assert (mainClassName != null);
-			final String classPathName = Properties.classPathName;
-			assert (classPathName != null);
-			final String bootClassesDirName = Properties.bootClassesDirName;
-			final String userClassesDirName = Properties.userClassesDirName;
-			final String runtimeClassName = Properties.runtimeClassName;
-			String instrProgramCmd = "java " + Properties.runtimeJvmargs +
-				" -Xbootclasspath/p:" +
-				Properties.mainClassPathName + File.pathSeparator + bootClassesDirName +
-				" -Xverify:none" + // " -verbose" + 
-				" -cp " + userClassesDirName + File.pathSeparator + classPathName +
-				" -agentpath:" + Properties.instrAgentFileName +
-				"=instr_scheme_file_name=" + instrSchemeFileName +
-				"=runtime_class_name=" + runtimeClassName.replace('.', '/');
-			final String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
-			final boolean processBuffer =
-				runtimeClassName.equals(BufferedRuntime.class.getName());
-			if (processBuffer) {
-				final String finalTraceFileName = Properties.finalTraceFileName;
-				if (Properties.reuseTrace) {
-					initAllPasses();
-					for (String runID : runIDs) {
-						Messages.log("DYNAMIC.STARTING_RUN", runID);
-						processTrace(finalTraceFileName);
-						Messages.log("DYNAMIC.FINISHED_RUN", runID);
-					}
-					doneAllPasses();
-				} else {
-					final String crudeTraceFileName = Properties.crudeTraceFileName;
-					boolean needsTraceTransform = scheme.needsTraceTransform();
-					final String traceFileName = needsTraceTransform ?
-						crudeTraceFileName : finalTraceFileName;
-					instrProgramCmd += 
-						"=trace_block_size=" + Properties.traceBlockSize +
-						"=trace_file_name=" + traceFileName +
-						" " + mainClassName + " ";
-					FileUtils.deleteFile(crudeTraceFileName);
-					FileUtils.deleteFile(finalTraceFileName);
-					final boolean doTracePipe = Properties.doTracePipe;
-					if (doTracePipe) {
-						String cmd1 = "mkfifo " + crudeTraceFileName;
-						OutDirUtils.executeWithFailOnError(cmd1);
-						String cmd2 = "mkfifo " + finalTraceFileName;
-						OutDirUtils.executeWithFailOnError(cmd2);
-					}
-					Runnable traceTransformer = new Runnable() {
-						public void run() {
-							try {
-								if (DEBUG) {
-									System.out.println("ENTER TRACE_TRANSFORMER");
-									(new TracePrinter(crudeTraceFileName, instrumentor)).run();
-									System.out.println("LEAVE TRACE_TRANSFORMER");
-								}
-								(new TraceTransformer(crudeTraceFileName,
-								 	finalTraceFileName, scheme)).run();
-							} catch (Throwable ex) {
-								ex.printStackTrace();
-								System.exit(1);
-							}
-						}
-					};
-					Runnable traceProcessor = new Runnable() {
-						public void run() {
-							try {
-								if (DEBUG) {
-									System.out.println("ENTER TRACE_PROCESSOR");
-									(new TracePrinter(finalTraceFileName, instrumentor)).run();
-									System.out.println("LEAVE TRACE_PROCESSOR");
-								}
-								processTrace(finalTraceFileName);
-							} catch (Throwable ex) {
-								ex.printStackTrace();
-								System.exit(1);
-							}
-						}
-					};
-					final boolean serial = doTracePipe ? false : true;
-					final Executor executor = new Executor(serial);
-					initAllPasses();
-					for (String runID : runIDs) {
-						Messages.log("DYNAMIC.STARTING_RUN", runID);
-						final String args = System.getProperty("chord.args." + runID, "");
-						final String cmd = instrProgramCmd + args;
-						Runnable instrProgram = new Runnable() {
-							public void run() {
-								OutDirUtils.executeWithFailOnError(cmd);
-							}
-						};
-						executor.execute(instrProgram);
-						if (processBuffer) {
-							if (needsTraceTransform)
-								executor.execute(traceTransformer);
-							executor.execute(traceProcessor);
-							executor.waitForCompletion();
-						}
-						Messages.log("DYNAMIC.FINISHED_RUN", runID);
-					}
-					doneAllPasses();
-				}
-			} else {
-				instrProgramCmd += " " + mainClassName + " ";
-				initAllPasses();
-				for (String runID : runIDs) {
-					Messages.log("DYNAMIC.STARTING_RUN", runID);
-					final String args = System.getProperty("chord.args." + runID, "");
-					final String cmd = instrProgramCmd + args;
-					initPass();
-					int timeout = Integer.parseInt(System.getProperty("chord.dynamic.timeoutMs", "-1"));
-					System.out.println("Starting subprocess with timeout = " + timeout);
-					if(continueAfterError)
-						OutDirUtils.executeWithWarnOnError(cmd, timeout);
-					else
-						OutDirUtils.executeWithFailOnError(cmd);
-					donePass();
-					Messages.log("DYNAMIC.FINISHED_RUN", runID);
-				}
-				doneAllPasses();
-			}
+			doneAllPasses();
+			return;
+		}
+		scheme.save(instrSchemeFileName);
+		final Program program = Program.getProgram();
+		final Instrumentor instrumentor = new Instrumentor(program, scheme);
+		try {
+			instrumentor.run();
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 			System.exit(1);
 		}
+		final String mainClassName = Properties.mainClassName;
+		assert (mainClassName != null);
+		final String classPathName = Properties.classPathName;
+		assert (classPathName != null);
+		final String bootClassesDirName = Properties.bootClassesDirName;
+		final String userClassesDirName = Properties.userClassesDirName;
+		final String runtimeClassName = Properties.runtimeClassName;
+		String instrProgramCmd = "java " + Properties.runtimeJvmargs +
+			" -Xbootclasspath/p:" + Properties.mainClassPathName +
+			File.pathSeparator + bootClassesDirName +
+			" -Xverify:none" + " -cp " + userClassesDirName +
+			File.pathSeparator + classPathName +
+			" -agentpath:" + Properties.instrAgentFileName +
+			"=instr_scheme_file_name=" + instrSchemeFileName +
+			"=runtime_class_name=" + runtimeClassName.replace('.', '/');
+		final boolean runInSameJVM = !runtimeClassName.equals(
+			BufferedRuntime.class.getName());
+		if (runInSameJVM) {
+			instrProgramCmd += " " + mainClassName + " ";
+			initAllPasses();
+			for (String runID : runIDs) {
+				Messages.log("DYNAMIC.STARTING_RUN", runID);
+				final String args = System.getProperty("chord.args." + runID, "");
+				final String cmd = instrProgramCmd + args;
+				initPass();
+				int timeout = Properties.dynamicTimeoutMs;
+				if (Properties.dynamicContinueOnError)
+					OutDirUtils.executeWithWarnOnError(cmd, timeout);
+				else
+					OutDirUtils.executeWithFailOnError(cmd);
+				donePass();
+				Messages.log("DYNAMIC.FINISHED_RUN", runID);
+			}
+			doneAllPasses();
+			return;
+		}
+		final boolean usePipe = Properties.doTracePipe;
+		final boolean doTransform = scheme.needsTraceTransform();
+		instrProgramCmd += "=trace_block_size=" + Properties.traceBlockSize +
+			"=trace_file_name=";
+		initAllPasses();
+		for (String runID : runIDs) {
+			final String crudeTraceFileName = usePipe ?
+				getNameOfPipeCrudeTraceFile(runID) :
+				getNameOfFullCrudeTraceFile(runID);
+			final String finalTraceFileName = usePipe ?
+				getNameOfPipeFinalTraceFile(runID) :
+				getNameOfFullFinalTraceFile(runID);
+			final String traceFileName = doTransform ?
+				crudeTraceFileName : finalTraceFileName;
+			FileUtils.deleteFile(crudeTraceFileName);
+			FileUtils.deleteFile(finalTraceFileName);
+			if (usePipe) {
+				String cmd1 = "mkfifo " + crudeTraceFileName;
+				OutDirUtils.executeWithFailOnError(cmd1);
+				String cmd2 = "mkfifo " + finalTraceFileName;
+				OutDirUtils.executeWithFailOnError(cmd2);
+			}
+			Runnable traceTransformer = !doTransform ? null : new Runnable() {
+				public void run() {
+					if (DEBUG) {
+						System.out.println("ENTER TRACE_TRANSFORMER");
+						(new TracePrinter(crudeTraceFileName, instrumentor)).run();
+						System.out.println("LEAVE TRACE_TRANSFORMER");
+					}
+					(new TraceTransformer(crudeTraceFileName,
+						 finalTraceFileName, scheme)).run();
+				}
+			};
+			Runnable traceProcessor = new Runnable() {
+				public void run() {
+					if (DEBUG) {
+						System.out.println("ENTER TRACE_PROCESSOR");
+						(new TracePrinter(finalTraceFileName, instrumentor)).run();
+						System.out.println("LEAVE TRACE_PROCESSOR");
+					}
+					processTrace(finalTraceFileName);
+				}
+			};
+			boolean serial = usePipe ? false : true;
+			Executor executor = new Executor(serial);
+			final String args = System.getProperty("chord.args." + runID, "");
+			final String cmd = instrProgramCmd + traceFileName +
+				" " + mainClassName + " " + args;
+			Runnable instrProgram = new Runnable() {
+				public void run() {
+					OutDirUtils.executeWithFailOnError(cmd);
+				}
+			};
+			Messages.log("DYNAMIC.STARTING_RUN", runID);
+			executor.execute(instrProgram);
+			if (doTransform)
+				executor.execute(traceTransformer);
+			executor.execute(traceProcessor);
+			try {
+				executor.waitForCompletion();
+			} catch (InterruptedException ex) {
+				ex.printStackTrace();
+				System.exit(1);
+			}
+			Messages.log("DYNAMIC.FINISHED_RUN", runID);
+		}
+		doneAllPasses();
 	}
 
 	private void init4loopConsistency() {
-		domM = instrumentor.getDomM();
-		domB = instrumentor.getDomB();
+		domM = (DomM) Project.getTrgt("M");
+		Project.runTask(domM);
+		domB = (DomB) Project.getTrgt("B");
+		Project.runTask(domB);
 	}
 	
 	private void onLoopStart(int b, int t) {
@@ -285,7 +334,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		boolean isLoopHead = loopHead2body.containsKey(b);
 		if (isLoopHead) {
 			Record r = stack.peek();
-			if (r instanceof MethodRecord) {
+			if (r instanceof MethRecord) {
 				onLoopStart(b, t);
 			} else {
 				assert (r instanceof LoopRecord);
@@ -310,8 +359,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 			
 			// The present method should be at the stop of the stack.
 			Record top = stack.peek();
-			assert (top instanceof MethodRecord);
-			MethodRecord mr = (MethodRecord) top;
+			assert (top instanceof MethRecord);
+			MethRecord mr = (MethRecord) top;
 			if (mr.m == m) {
 				stack.pop();
 			}
@@ -324,7 +373,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			stack = new Stack<Record>();
 			stacks.put(t, stack);
 		}
-		stack.add(new MethodRecord(m));
+		stack.add(new MethRecord(m));
 		if (!visited4loops.contains(m)) {
 			visited4loops.add(m);
 			jq_Method mthd = domM.get(m);
@@ -348,9 +397,11 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 	}
 	
-	private void processTrace(String fileName) throws IOException, ReadException {
+	private void processTrace(String fileName) {
+		try {
 		initPass();
-		ByteBufferedFile buffer = new ByteBufferedFile(Properties.traceBlockSize, fileName, true);
+		ByteBufferedFile buffer = new ByteBufferedFile(
+			Properties.traceBlockSize, fileName, true);
 		long count = 0;
 		while (!buffer.isDone()) {
 			byte opcode = buffer.getByte();
@@ -364,7 +415,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				if (hasEnterAndLeaveLoopEvent) {
 					processEnterMethod4loopConsistency(m, t);
 				}
-				if (isUserRequestedEnterMethodEvent) {
+				if (isUserReqEnterMethodEvent) {
 					processEnterMethod(m, t);
 				}
 				break;
@@ -377,7 +428,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				if (hasEnterAndLeaveLoopEvent) {
 					processLeaveMethod4loopConsistency(m, t);
 				}
-				if (isUserRequestedLeaveMethodEvent) {
+				if (isUserReqLeaveMethodEvent) {
 					processLeaveMethod(m, t);
 				}
 				break;
@@ -639,7 +690,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				if (hasEnterAndLeaveLoopEvent) {
 					processBasicBlock4loopConsistency(b, t);
 				}
-				if (isUserRequestedBasicBlockEvent) {
+				if (isUserReqBasicBlockEvent) {
 					processBasicBlock(b, t);
 				}
 				break;
@@ -656,6 +707,13 @@ public class DynamicAnalysis extends JavaAnalysis {
 		}
 		donePass();
 		Messages.log("DYNAMIC.FINISHED_PROCESSING_TRACE", count);
+	} catch (IOException ex) {
+		ex.printStackTrace();
+		System.exit(1);
+	} catch (ReadException ex) {
+		ex.printStackTrace();
+		System.exit(1);
+	}
 	}
 	
 	public void processLoopIteration(int w, int t) {

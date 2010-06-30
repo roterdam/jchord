@@ -66,7 +66,7 @@ public class DynamicLocksetAnalysis extends DynamicAnalysis {
 		}
 		relNoLckSync.save();
 		
-		DomE domE = instrumentor.getDomE();
+		DomE domE = (DomE) Project.getTrgt("E");
 		Program program = Program.getProgram();
 		PrintWriter writer =
 			 OutDirUtils.newPrintWriter("dynamic_noLckSync.txt");

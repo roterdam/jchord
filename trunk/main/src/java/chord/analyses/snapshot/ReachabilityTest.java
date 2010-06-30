@@ -12,7 +12,8 @@ import java.util.Set;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.util.IndexMap;
+import chord.project.Project;
+import chord.doms.DomE;
 
 /**
  * @author omertripp
@@ -52,7 +53,7 @@ public class ReachabilityTest extends LabelBasedAnalysis {
 	}
 	
 	private final TIntObjectHashMap<TIntHashSet> alloc2objects = new TIntObjectHashMap<TIntHashSet>();
-	private IndexMap<String> Emap;
+	private DomE domE;
 	
 	@Override
 	public InstrScheme getInstrScheme() {
@@ -88,7 +89,7 @@ public class ReachabilityTest extends LabelBasedAnalysis {
 	@Override
 	public void initAllPasses() {
 		super.initAllPasses();
-		Emap = instrumentor.getEmap();
+		domE = (DomE) Project.getTrgt("E");
 	}
 	
 	@Override
@@ -103,7 +104,7 @@ public class ReachabilityTest extends LabelBasedAnalysis {
 					for (Label l : arg1) {
 						assert (l instanceof AllocationSiteLabel);
 						AllocationSiteLabel allocLabel = (AllocationSiteLabel) l;
-						String s = Emap.get(allocLabel.h);
+						String s = domE.toUniqueString(allocLabel.h);
 						if (s == null) {
 							System.out.println("\t" + allocLabel.h);
 						} else {

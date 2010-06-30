@@ -5,9 +5,10 @@ package chord.analyses.snapshot;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
+import chord.project.Project;
 import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
-import chord.util.IndexMap;
+import chord.doms.DomB;
 
 /**
  * @author omertripp
@@ -16,7 +17,7 @@ import chord.util.IndexMap;
 @Chord(name="dynamic-loop-java")
 public class LoopTest extends DynamicAnalysis {
 
-	private IndexMap<String> Bmap;
+	private DomB domB;
 	private InstrScheme scheme;
 	
 	@Override
@@ -32,12 +33,12 @@ public class LoopTest extends DynamicAnalysis {
 	@Override
 	public void initAllPasses() {
 		super.initAllPasses();
-		Bmap = instrumentor.getBmap();
+		domB = (DomB) Project.getTrgt("B");
 	}
 	
 	@Override
 	public void processEnterLoop(int w, int t) {
-		String s = Bmap.get(w);
+		String s = domB.toUniqueString(w);
 		if (s.contains("V@T")) {
 			Messages.logAnon("Entered loop: " + s);
 			Messages.logAnon("Loop id: " + w);
@@ -46,7 +47,7 @@ public class LoopTest extends DynamicAnalysis {
 	
 	@Override
 	public void processLeaveLoop(int w, int t) {
-		String s = Bmap.get(w);
+		String s = domB.toUniqueString(w);
 		if (s.contains("V@T")) {
 			Messages.logAnon("Exited loop: " + s);
 		}
@@ -54,7 +55,7 @@ public class LoopTest extends DynamicAnalysis {
 	
 	@Override
 	public void processLoopIteration(int w, int t) {
-		String s = Bmap.get(w);
+		String s = domB.toUniqueString(w);
 		if (s.contains("V@T")) {
 			Messages.logAnon("Loop iteration began: " + s);
 		}

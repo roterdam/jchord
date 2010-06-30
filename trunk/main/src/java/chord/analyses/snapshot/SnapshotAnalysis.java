@@ -422,17 +422,17 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
     if (f >= ARRAY_FIELD) return "["+(f-ARRAY_FIELD)+"]";
     return f < 0 ? "-" : domF.get(f).toString();
   }
-  public String hstr(int h) { return h < 0 ? "-" : domH.toUniqueString(domH.get(h)); } // heap allocation site
+  public String hstr(int h) { return h < 0 ? "-" : domH.toUniqueString(h); } // heap allocation site
   public String estr(int e) {
     if (e < 0) return "-";
     Quad quad = (Quad)domE.get(e);
     return Program.getProgram().toJavaPosStr(quad)+" "+Program.getProgram().toQuadStr(quad);
   }
-  public String mstr(int m) { return m < 0 ? "-" : domM.toUniqueString(domM.get(m)); } // method
-  public String istr(int i) { return i < 0 ? "-" : domI.toUniqueString(domI.get(i)); } // call site
+  public String mstr(int m) { return m < 0 ? "-" : domM.toUniqueString(m); } // method
+  public String istr(int i) { return i < 0 ? "-" : domI.toUniqueString(i); } // call site
   public String ostr(int o) { return o < 0 ? "-" : (o == 0 ? "null" : "O"+o); } // concrete object
   public String tstr(int t) { return t < 0 ? "-" : "T"+t; } // thread
-  public String lstr(int l) { return l < 0 ? "-" : domL.toUniqueString(domL.get(l)); } // lock
+  public String lstr(int l) { return l < 0 ? "-" : domL.toUniqueString(l); } // lock
 
   public String astr(Object a) {
     if (abstraction instanceof NoneAbstraction) return a.toString();
