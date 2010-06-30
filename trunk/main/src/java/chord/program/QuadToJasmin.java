@@ -5,10 +5,12 @@ import java.io.FileNotFoundException;
 import java.io.PrintStream;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.Map.Entry;
 
 import chord.program.Program;
 import chord.project.Properties;
@@ -30,6 +32,7 @@ import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Util.Templates.ListIterator;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
@@ -62,6 +65,7 @@ import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
+import joeq.Compiler.Quad.Operator.Ret;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.TableSwitch;
 import joeq.Compiler.Quad.Operator.Unary;
@@ -83,27 +87,50 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.util.IndexSet;
 
 public class QuadToJasmin {
+	// include Quads as comments in .j files
+	private static final boolean IncludeQuad = false;
+	
 	private static final JasminQuadVisitor visitor = new JasminQuadVisitor();
 	private static PrintStream out;
-
-	static void put(String jasminCode){
+	
+	// map from register to var table index
+	private static HashMap<Register, Integer> Register2VariableTableIdx = new HashMap<Register, Integer>();
+	
+	private static List<String> methodBody = new LinkedList<String>();
+	
+	/**
+	 * Output Jasmin code to the output stream
+	 * @param jasminCode
+	 */
+	private static void put(String jasminCode){
 		out.println(jasminCode);
 	}
-
-	static List<String> methodBody = new LinkedList<String>(); 
-
-	static void putInst(String jasminInstCode){
+	
+	/**
+	 * Append a Jasmin instruction to the body of current method 
+	 * @param jasminInstCode string representation of Jasmin code
+	 */
+	private static void putInst(String jasminInstCode){
 		methodBody.add(jasminInstCode);
 	}
 
+	/**
+	 * Filter out classes which we don't want to translate 
+	 * @param className
+	 * @return true if we want to translate this class
+	 */
 	private static boolean filterOut(String className){
 		for(String s : Properties.checkExcludeAry){
 			if(className.startsWith(s)) return true;
 		}
-
+		
 		return false;
 	}
 
+	/**
+	 * Create a output file for a class
+	 * @param c class that is being translated
+	 */
 	private static void prepareOutputStream(jq_Class c){
 
 		File outFile = new File(Properties.outDirName + "/" +c.getName().replace(".", "/")+".j");
@@ -117,98 +144,14 @@ public class QuadToJasmin {
 			e.printStackTrace();
 			System.exit(-1);
 		}
+	}	
 
-	}
-
-	public static void main(String[] args) {
-
-		Program program = Program.getProgram();
-		IndexSet<jq_Reference> classes = program.getClasses();		
-		for (jq_Reference r : classes) {
-
-			if (r instanceof jq_Array)
-				continue;
-
-			System.out.println("\n#### class : " + r);
-
-			jq_Class c = (jq_Class) r;
-			String cname = c.getName();
-			if(filterOut(cname))
-				continue;
-
-			prepareOutputStream(c);
-
-			String fileName = Program.getSourceFileName(c);
-			if (fileName != null)
-				put(".source " + fileName);			
-
-			if(c.isPublic()) cname = "public " + cname;
-			if(c.isFinal()) cname = "final " + cname;		
-			if(c.isAbstract()) cname = "abstract " + cname;
-
-			String type = null;
-			if(c.isClassType()){
-				type = ".class";
-				if (c.isInterface()){
-					type = ".interface";
-				}
-			}
-			put(type + " " + cname.replace(".", "/"));
-
-			jq_Class super_c = c.getSuperclass();
-			if(super_c != null){
-				put(".super " + super_c.getName().replace(".", "/"));												
-			}			
-
-			for(jq_Class jqif : c.getDeclaredInterfaces()){
-				put(".implements " + jqif.getName().replace(".", "/"));
-			}
-			put("");
-
-			jq_StaticField[] arrSF = c.getDeclaredStaticFields();
-
-			for(jq_StaticField jqsf : arrSF){
-				String name = jqsf.getName().toString();
-				String attrName = ".field";
-				String access = getAccessString(jqsf);				
-				String typeDesc = jqsf.getType().getDesc().toString();				
-				String attr = attrName + access + " "+ name + " " + typeDesc;
-				Object o = jqsf.getConstantValue();
-				if(o != null){
-					attr += " = " + o;
-				}
-				put(attr);
-			}
-
-			for(jq_InstanceField jqif : c.getDeclaredInstanceFields()){
-				String name = jqif.getName().toString();
-				String attrName = ".field";
-				String access = getAccessString(jqif);				
-				String typeDesc = jqif.getType().getDesc().toString();				
-				String attr = attrName + access + " "+ name + " " + typeDesc;
-
-				put(attr);
-			}
-
-			put("");			
-
-
-			// TODO: read joeq.Class.jq_Class to get things like
-			// access modifier, superclass, implemented interfaces, fields, etc.
-			// superclass will be null iff c == javalangobject
-			for (jq_Method m : c.getDeclaredStaticMethods()) {
-				processMethod(m);
-			}
-			for (jq_Method m : c.getDeclaredInstanceMethods()) {
-				processMethod(m);
-			}
-		}
-
-		out.flush();
-		out.close();
-	}
-
-	private static String getAccessString(jq_Member member){
+	/**
+	 * Return access modifier string of this member
+	 * @param member
+	 * @return String representation of the access modifier of this member
+	 */
+	private static String getAccessModifier(jq_Member member){
 		String ret = "";
 		if(member.isPublic()) ret += " public";
 		if(member.isPrivate()) ret += " private";
@@ -218,10 +161,165 @@ public class QuadToJasmin {
 		return ret;		
 	}
 
+	private static String replaceEscapedCharacters(String str){
+		str = str.replaceAll("\\\\", "\\\\\\\\");
+		str = str.replaceAll("\\n", "\\\\n");
+		str = str.replaceAll("\\t", "\\\\t");
+		str = str.replaceAll("\\f", "\\\\f");
+		str = str.replaceAll("\\r", "\\\\r");
+		str = str.replaceAll("\\'", "\\\\\'");
+		str = str.replaceAll("\\\"", "\\\\\\\"");
+		
+		return str;
+	}
+	
+	public static void main(String[] args) {
+		
+		Program program = Program.getProgram();
+		IndexSet<jq_Reference> classes = program.getClasses();		
+		for (jq_Reference r : classes) {
+			if (r instanceof jq_Array)
+				continue;
+
+			System.out.println("\n#### class : " + r);
+			jq_Class c = (jq_Class) r;
+			String cname = c.getName();			
+			// Filter out classes
+			if(filterOut(cname))
+				continue;
+
+			// create an output file and the associated output stream
+			prepareOutputStream(c);
+						
+			// output "source" attribute
+			String fileName = Program.getSourceFileName(c);
+			if (fileName != null)
+				put(".source " + fileName);			
+
+			// output class name
+			if(c.isPublic()) cname = "public " + cname;
+			if(c.isFinal()) cname = "final " + cname;		
+			if(c.isAbstract()) cname = "abstract " + cname;
+			String type = null;
+			if(c.isClassType()){
+				type = ".class";
+				if (c.isInterface()){
+					type = ".interface";
+				}
+			}
+			put(type + " " + cname.replace(".", "/"));
+
+			// output "superclass" attribute
+			jq_Class super_c = c.getSuperclass();
+			if(super_c != null){
+				put(".super " + super_c.getName().replace(".", "/"));												
+			}			
+			// output "implements" attribute
+			for(jq_Class jqif : c.getDeclaredInterfaces()){
+				put(".implements " + jqif.getName().replace(".", "/"));
+			}
+			put("");
+
+			// output static fields
+			for(jq_StaticField jqsf : c.getDeclaredStaticFields()){
+				String name = jqsf.getName().toString();
+				String attrName = ".field";
+				String access = getAccessModifier(jqsf);				
+				String typeDesc = jqsf.getType().getDesc().toString();				
+				String attr = attrName + access + " "+ name + " " + typeDesc;
+				Object o = jqsf.getConstantValue();
+				if(o != null){
+					if(o instanceof String){
+						String s = (String)o;
+						attr += " = \"" + replaceEscapedCharacters(s) + "\"";
+					} else {
+						attr += " = " + o;
+					}
+				}
+				put(attr);
+			}
+			
+			// output non-static fields
+			for(jq_InstanceField jqif : c.getDeclaredInstanceFields()){
+				String name = jqif.getName().toString();
+				String attrName = ".field";
+				String access = getAccessModifier(jqif);				
+				String typeDesc = jqif.getType().getDesc().toString();				
+				String attr = attrName + access + " "+ name + " " + typeDesc;				
+				put(attr);
+			}
+			put("");			
+
+			// process static methods
+			for (jq_Method m : c.getDeclaredStaticMethods()) {
+				processMethod(m);
+			}
+			
+			// process non-static methods
+			for (jq_Method m : c.getDeclaredInstanceMethods()) {
+				processMethod(m);
+			}
+		}
+
+		out.flush();
+		out.close();
+	}
+
+
+	private static BasicBlock current_BB;
+
+	// map from basic block id to set of Quads to be added
+	private static HashMap<Integer, Set<Quad>> PhiOperandsMap = new HashMap<Integer, Set<Quad>>();
+
+	/**
+	 * Create a Quad which stores src to dst, associate it with bb.
+	 * The created Quad will be added to the bb to handle a variable (dst)
+	 * whose value (src) depends on its predecessor basic block (bb).
+	 * @param bb
+	 * @param src
+	 * @param dst
+	 */
+	static void addPhiOperands(BasicBlock bb, RegisterOperand src, RegisterOperand dst){
+		
+		Set<Quad> s;
+		if(PhiOperandsMap.containsKey(bb.getID())){
+			s = PhiOperandsMap.get(bb.getID());
+		} else {
+			s = new HashSet<Quad>();
+			PhiOperandsMap.put(bb.getID(), s);
+		}
+		if(src != null){
+			jq_Type type = src.getType();
+			if( type == null) type = dst.getType();
+			Quad q = Operator.Move.create(-1, dst.getRegister(), src.getRegister(), type);
+			s.add(q);
+		} else {
+            // in this case, the register is never defined along
+            // this particular control flow path into the basic
+            // block.
+		}						
+	}
+	
+	/**
+	 * check if this Quad is unconditional branch operation
+	 * @param d Quad to check
+	 * @return true if it is unconditional branch, false otherwise
+	 */
+	static private boolean isUncondBranch(Quad d){
+		Operator operator = d.getOperator();
+		if(operator instanceof Operator.Return
+				|| operator instanceof Operator.Goto
+				|| operator instanceof Operator.Jsr
+				|| operator instanceof Operator.Ret){
+			return true;
+		}
+		return false;		
+	}	
+	
 	private static void processMethod(jq_Method m) {
 
 		jq_NameAndDesc nd = m.getNameAndDesc();
-		String access = getAccessString(m);
+		String access = getAccessModifier(m);
 		if(m.isAbstract()) access += " abstract";
 
 		put(".method" + access + " "  + nd.getName() + nd.getDesc());
@@ -230,49 +328,60 @@ public class QuadToJasmin {
 			put(".end method");
 			return;
 		}
+		ControlFlowGraph cfg = m.getCFG();		
+		RegisterFactory rf = cfg.getRegisterFactory();
+		
+		methodBody.clear();				
+		PhiOperandsMap.clear();		
+		Register2VariableTableIdx.clear();
+		int sizeLocalVarTable = 0;
+		
+		for(int i=0; i < rf.size(); i ++){
+			Register reg = rf.get(i);
+			jq_Type type = reg.getType();
+			Register2VariableTableIdx.put(reg, sizeLocalVarTable);
+			System.out.println(reg + ", " + type + ", " + sizeLocalVarTable + ", " + type.getDesc());
+			sizeLocalVarTable += (type.getReferenceSize() / 4);
+		}		
+		
+		
+		// insert a temporary basic block after an entry BB as its fall-through BB
+		// (since we can't add a Quad to entry BB)
+		{
+			// We could do this only if necessary but for now we add this for all entry BBes
+			BasicBlock entry = cfg.entry();
+			assert entry.getSuccessors().size() == 1;
+			BasicBlock newBB = cfg.createBasicBlock(1, 1, 1, null);
+			BasicBlock orgSuccessor = entry.getSuccessors().getBasicBlock(0);
+			newBB.addSuccessor(orgSuccessor);
+			orgSuccessor.removePredecessor(entry);
+			orgSuccessor.addPredecessor(newBB);
+			newBB.addPredecessor(entry);
+			entry.removeSuccessor(0);
+			entry.addSuccessor(newBB);
+		}
+		
+		// get a list of basic blocks
+		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.reversePostOrder(cfg.entry());				
+		int numBasicBlocks = basicBlockList.size();
+		
+		// add goto if the next block in the list is not a fall-through successor
+		for(int i=0; i<numBasicBlocks; i++){
+			BasicBlock bb = basicBlockList.getBasicBlock(i);			
+			BasicBlock next_bb = i+1 < numBasicBlocks ? basicBlockList.getBasicBlock(i+1) : null;
+			
+			//assert bb.size() > 0 || bb.isEntry() || bb.isExit() || bb.getPredecessors().getBasicBlock(0).isEntry(): "\n~~~\n"+bb.fullDump()+"\n~~~"+cfg.fullDump();
 
-		current_method = m;
-		methodBody.clear();
-		ControlFlowGraph cfg = m.getCFG();
-//		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.reversePostOrder(cfg.entry());
-		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.postOrderOnReverseGraph(cfg.exit());
-//		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.reversePostOrderOnReverseGraph(cfg.exit());
-		// PreProcess PHI info
-		PhiElementMap.clear();
-		/*
-		for (ListIterator.BasicBlock it = basicBlockList.basicBlockIterator();
-		it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			System.out.println(bb);
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				
-				Quad q = it2.nextQuad();
-				System.out.println(q);
+			if(next_bb != null
+					&& bb.getFallthroughSuccessor() != null
+					&& !bb.getFallthroughSuccessor().isExit()
+					&& bb.getFallthroughSuccessor().getID() != next_bb.getID()
+					&& (bb.size() == 0 || !isUncondBranch(bb.getLastQuad())) ){
+						bb.appendQuad(Operator.Goto.create(-1, Operator.Goto.GOTO.INSTANCE, new TargetOperand(bb.getFallthroughSuccessor())));				
 			}
 		}
 		
-		BasicBlock prevBB = null;
-		Quad prevQuad = null;
-		for (ListIterator.BasicBlock it = basicBlockList.basicBlockIterator();
-		it.hasNext();) {
-			
-			BasicBlock bb = it.nextBasicBlock();
-//			
-//			if(bb.getFallthroughPredecessor() != null){				
-//				assert prevBB.getID() == bb.getFallthroughPredecessor().getID() : "pred : " + bb.getFallthroughPredecessor() + ", prevBB : " + prevBB;
-//			}
-//			prevBB = bb;
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				
-				Quad q = it2.nextQuad();
-				
-				if(prevQuad != null && m.getBCI(q) >0 && m.getBCI(prevQuad) > 0){
-					assert m.getBCI(q) >= m.getBCI(prevQuad) : "currQuad : " + q + " at " + m.getBCI(q)+", prevQuad : " + prevQuad + " at " + m.getBCI(prevQuad); 
-				}
-				prevQuad = q;				
-			}			
-		}*/
-		
+		// Collect Phi operands info
 		for (ListIterator.BasicBlock it = basicBlockList.basicBlockIterator();
 		it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
@@ -284,10 +393,21 @@ public class QuadToJasmin {
 					BasicBlockTableOperand bbto = Phi.getPreds(q);
 					ParamListOperand plo = Phi.getSrcs(q);			
 					for(int i=0; i < plo.length(); i++){
-						addPhiElements(bbto.get(i), plo.get(i), dst);
+						BasicBlock  srcBB = bbto.get(i);
+						Quad lastQuad = srcBB.getLastQuad();
+						// JSR is handled differently (by JasminQuadVistor.visitPhi())
+						if(lastQuad != null 
+								&& lastQuad.getOperator() instanceof Operator.Jsr){
+							continue;
+						}
+						// if source path is entry, use the temp BB instead
+						if(srcBB.isEntry())
+							srcBB = srcBB.getFallthroughSuccessor();
+						
+						addPhiOperands(srcBB, plo.get(i), dst);
 					}
-				}  		
-			}        	
+				}
+			}
 		}
 
 		// see src/java/chord/analyses/sandbox/LocalVarAnalysis.java if you want
@@ -296,34 +416,79 @@ public class QuadToJasmin {
 		// formal arguments from temporary variables
 		visitor.init();
 		
-		for (ListIterator.BasicBlock it = basicBlockList.basicBlockIterator();
-		it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
+		numBasicBlocks = basicBlockList.size();
+
+		for(int i=0; i<numBasicBlocks; i++){
+			BasicBlock bb = basicBlockList.getBasicBlock(i);
 			current_BB = bb;
+			// peek next BB
+			BasicBlock next_BB = i+1 < numBasicBlocks ? basicBlockList.getBasicBlock(i+1) : null;			
+			
+			Quad lastQuad = bb.getLastQuad();
+			// sanity check
+			if(bb.size() > 0 && !(lastQuad.getOperator() instanceof Operator.Branch)
+					&& !(lastQuad.getOperator() instanceof Operator.Return)){
+				assert current_BB.getFallthroughSuccessor().getID() == next_BB.getID() || next_BB == null : current_BB.fullDump() +"\n##" + next_BB.fullDump();
+			}
+
 			System.out.println(bb);
 			putInst(bb.toString().split("\\s+")[0]+":");
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {            	
-				Quad q = it2.nextQuad();
+			
+			// If this basic block is a predecessor of a basic block containing Phi operation,
+			// insert an appropriate Quad
+			if(PhiOperandsMap.containsKey(bb.getID())){
+				int idx = bb.getQuadIndex(lastQuad);
+				for(Quad q : PhiOperandsMap.get(bb.getID())){					
+					if(idx >=0 && (lastQuad.getOperator() instanceof Operator.Branch
+							|| lastQuad.getOperator() instanceof Operator.Return)){
+						// if the last Quad is a branch, insert it before the branch
+						bb.addQuad(idx, q);
+					} else {
+						// otherwise append it at the end
+						bb.appendQuad(q);
+					}
+				}
+			}
+			
+			// Process each quad in this basic block
+			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {         	
+				Quad q = it2.nextQuad();				
 				System.out.println(q);
 				q.accept(visitor);
 			}
+			putInst(bb.toString().split("\\s+")[0]+"_END:");
 		}
-
+		
 		put(".limit stack " + visitor.maxStackSize);
-		put(".limit locals " + visitor.registers.size()*2);
-
-		for(RegisterOperand r : visitor.registers){
-			put(".var " + r.getRegister().getNumber() +
-					" is " + r.getRegister() + " " + r.getType().getDesc() + " from BB0 to BB1");
-		}
-
+		put(".limit locals " + sizeLocalVarTable);
+		
+		//Sort the local variables by index
+		Set<Entry<Register, Integer>> sortedSet = new TreeSet<Entry<Register, Integer>>(
+				new Comparator<Entry<Register, Integer>>() {
+			public int compare(Entry<Register, Integer> o1,
+					Entry<Register, Integer> o2) {
+				return o1.getValue().compareTo(o2.getValue());
+			}});
+		sortedSet.addAll(Register2VariableTableIdx.entrySet());
+		for(Entry<Register, Integer> e : sortedSet){
+			Register reg = e.getKey();
+			int idx = e.getValue();
+			jq_Type type = visitor.regToTypeMap.containsKey(reg)?visitor.regToTypeMap.get(reg):reg.getType();
+			String endLabel = basicBlockList.getBasicBlock(numBasicBlocks-1).toString().split("\\s+")[0] + "_END";
+			put(".var " + idx + " is " + reg + " " 
+					+ type.getDesc() + " from BB0 to "
+					+ endLabel);
+		}		
+		
 		put("");
+		
+		// output bodies of this method
 		for(String s : methodBody){
 			put(s);
 		}
 
 		put("");
-		// thrown exceptions
+		// Thrown exceptions
 		jq_Class[] thrownExceptionTable = m.getThrownExceptionsTable();
 		if(thrownExceptionTable != null){
 			for(jq_Class exception : thrownExceptionTable){
@@ -336,109 +501,51 @@ public class QuadToJasmin {
 		while(iter.hasNext()){
 			joeq.Compiler.Quad.ExceptionHandler handler = iter.nextExceptionHandler();
 			joeq.Util.Templates.List.BasicBlock handledBBList = handler.getHandledBasicBlocks();
-			BasicBlock startBB = handledBBList.getBasicBlock(0);			
-			BasicBlock endBBInclusive = handledBBList.getBasicBlock(handledBBList.size()-1);															
-			BasicBlock endBBExclusive = basicBlockList.getBasicBlock(basicBlockList.indexOf(endBBInclusive)+1);
-			put(".catch " + handler.getExceptionType().getName().replace(".", "/")
-					+ " from " + startBB + " to " + endBBExclusive + " using " 
-					+ handler.getEntry());
+			for(joeq.Util.Templates.ListIterator.BasicBlock bbIter = handledBBList.basicBlockIterator();  bbIter.hasNext();){
+				BasicBlock handledBB = bbIter.nextBasicBlock();
+				put(".catch " + handler.getExceptionType().getName().replace(".", "/")
+						+ " from " + handledBB.toString() + " to " + handledBB.toString() + "_END" + " using " 
+						+ handler.getEntry());
+			}
 		}
 		
 		put(".end method\n");
-	}
+	} // end of processMethod()
 
-	static jq_Method current_method;
-	static BasicBlock current_BB;
-
-	// map from PhiElementKey to dst register
-	private static HashMap<PhiElementKey, RegisterOperand> PhiElementMap = new HashMap<PhiElementKey, RegisterOperand>();
-
-	static class PhiElementKey {
-
-		BasicBlock bb;
-		RegisterOperand src;
-
-		private PhiElementKey(BasicBlock bb, RegisterOperand src){
-			this.bb = bb;
-			this.src = src;
-		}
-
-		public int hashCode() {
-			final int prime = 31;
-			int result = 1;			
-			result = prime * result + ((bb == null) ? 0 : bb.getID());
-			result = prime * result + ((src == null) ? 0 : src.getRegister().getNumber());
-			return result;
-		}
-
-		public boolean equals(Object obj) {
-			if (this == obj)
-				return true;
-			if (obj == null)
-				return false;
-			if (getClass() != obj.getClass())
-				return false;
-			PhiElementKey other = (PhiElementKey) obj;
-			if (bb == null) {
-				if (other.bb != null)
-					return false;
-			} else if (bb.getID() != other.bb.getID())
-				return false;
-			if (src == null) {
-				if (other.src != null)
-					return false;
-			} else if (src.getRegister().getNumber() != other.src.getRegister().getNumber())
-				return false;
-			return true;
-		}
-
-	}
-
-	static void addPhiElements(BasicBlock bb, RegisterOperand src, RegisterOperand dst){		
-		PhiElementMap.put(new PhiElementKey(bb, src), dst);		
-	}
 
 	static class JasminQuadVisitor extends EmptyVisitor {
 
 		int curStackSize, maxStackSize;
-
-		Set<RegisterOperand> registers = new TreeSet<RegisterOperand>(
-				new Comparator<RegisterOperand>(){
-					public int compare(RegisterOperand arg0, RegisterOperand arg1) {
-						return 
-						new Integer(arg0.getRegister().getNumber()).compareTo(
-								arg1.getRegister().getNumber());
-					}});
+		
+		HashMap<Register, jq_Type> regToTypeMap = new HashMap<Register, jq_Type>();
 
 		void init(){
+			// A Quad takes at most 4 operands. 
+			// Thus, when no optimization applied, setting maxStackSize to 10 
+			// should be safe except for method invocation which loads all
+			// arguments to the stack. visitInvoke() adjusts maxStackSize
+			// appropriately
 			curStackSize = maxStackSize = 10;
-			registers.clear();
+			regToTypeMap.clear();
 		}
 
 		/**
-		 * Collects used registers
+		 * Collects type information of the used registers
 		 */
 		public void visitQuad(Quad q){
+			if(IncludeQuad){
+				QuadToJasmin.putInst("; " + q);
+			}
 			joeq.Util.Templates.List.Operand opList = q.getAllOperands();
 			ListIterator.Operand iter = opList.operandIterator();
 			while(iter.hasNext()){
 				Operand op = iter.nextOperand();
 				if(op instanceof RegisterOperand){
 					RegisterOperand regOp = (RegisterOperand)op;					
-					if(regOp.getRegister().getNumber() >= 0){
-						registers.add(regOp);
+					if(regOp.getRegister().getNumber() >= 0 && !(regOp.getType() instanceof jq_NullType)){
+						regToTypeMap.put(regOp.getRegister(), regOp.getType());
 					}
 				}								
-			}
-		}
-
-		private void checkPhiElement(RegisterOperand src){
-			PhiElementKey key = new PhiElementKey(current_BB, src);
-			if(PhiElementMap.containsKey(key)){				
-				RegisterOperand dst = PhiElementMap.get(key);
-				QuadToJasmin.putInst(";; PHI RESOLUTION ");
-				QuadToJasmin.putInst(getOperandLoadingInst(src));
-				QuadToJasmin.putInst("\t"+getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());				
 			}
 		}
 
@@ -446,9 +553,7 @@ public class QuadToJasmin {
 			QuadToJasmin.putInst("\tnew " + New.getType(d).getType().toString().replace(".", "/"));
 
 			RegisterOperand dst = New.getDest(d);
-			QuadToJasmin.putInst("\t"+getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);
+			QuadToJasmin.putInst(getStoreInstruction(dst));
 		}
 		
 		public void visitNewArray(Quad d){
@@ -465,18 +570,13 @@ public class QuadToJasmin {
 				assert false : "HANDLE this case: " + d;
 			}
 			RegisterOperand dst = NewArray.getDest(d);
-			QuadToJasmin.putInst("\t"+getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());
-			
-			checkPhiElement(dst);			
+			QuadToJasmin.putInst(getStoreInstruction(dst));			
 		}
 
 		public void visitMove(Quad d){
 			QuadToJasmin.putInst(getOperandLoadingInst(Move.getSrc(d))); // load
 			RegisterOperand dst = Move.getDest(d);
-			QuadToJasmin.putInst("\t"+getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);
-
+			QuadToJasmin.putInst(getStoreInstruction(dst));
 		}
 
 		public void visitReturn(Quad q){
@@ -505,54 +605,82 @@ public class QuadToJasmin {
 
 		}
 
-		private static String getStoreInst(jq_Type type){
-
+		private static String getStoreInstruction(RegisterOperand regOper){
+			jq_Type type = regOper.getType();
+			String operator = "";
 			String typeDesc = type.getDesc()+"";
 			if(type.isIntLike()){
-				return "istore";
+				operator = "istore";
 			} else if (typeDesc.startsWith("J")){
-				return "lstore";
+				operator = "lstore";
 			} else if (typeDesc.startsWith("F")){
-				return "fstore";
+				operator = "fstore";
 			} else if (typeDesc.startsWith("D")){
-				return "dstore";
+				operator = "dstore";
 			} else if (typeDesc.startsWith("L") || typeDesc.startsWith("[") ){
-				return "astore";
-			}
+				operator = "astore";
+			} else assert false : regOper;			
 			
-			assert false : "Unhandled type " + type + " : desc = " + type.getDesc();
-			return "?????";
-		}
-
-		private static String getLoadInst(jq_Type type){
-
-			String typeDesc = type.getDesc()+"";
-			if(type.isIntLike()){
-				return "iload";
-			} else if (typeDesc.startsWith("J")){
-				return "lload";
-			} else if (typeDesc.startsWith("F")){
-				return "fload";
-			} else if (typeDesc.startsWith("D")){
-				return "dload";
-			} else if (typeDesc.startsWith("L") || typeDesc.startsWith("[") ){
-				return "aload";
-			}
+			Integer varTableIdx = Register2VariableTableIdx.get(regOper.getRegister());
+			assert varTableIdx != null;
 			
-			assert false : "Unhandled type " + type + " : desc = " + type.getDesc();
-			return "?????";
+			return "\t" + operator + " " + varTableIdx;
 		}
+		
+		private static String getOperandLoadingInst(Operand operand){
+			String inst = "";
+			if(operand instanceof RegisterOperand){
+				RegisterOperand regOper = (RegisterOperand)operand;
+				jq_Type type = regOper.getType();
+				String operator = "";
+				String typeDesc = type.getDesc()+"";
+				if(type.isIntLike()){
+					operator = "iload";
+				} else if (typeDesc.startsWith("J")){
+					operator = "lload";
+				} else if (typeDesc.startsWith("F")){
+					operator = "fload";
+				} else if (typeDesc.startsWith("D")){
+					operator = "dload";
+				} else if (typeDesc.startsWith("L") || typeDesc.startsWith("[") ){
+					operator = "aload";
+				} else assert false : regOper;			
+				
+				Integer varTableIdx = Register2VariableTableIdx.get(regOper.getRegister());
+				assert varTableIdx != null;
+
+				inst = "\t" + operator + " " + varTableIdx;
+				
+			} else if (operand instanceof ConstOperand){
+				if(operand instanceof AConstOperand &&
+						((AConstOperand) operand).getValue() == null){
+						inst = "\taconst_null";
+				} else if (operand instanceof AConstOperand &&
+						((AConstOperand) operand).getValue() instanceof String) {
+					String value = (String)((AConstOperand) operand).getValue();
+						inst = "\tldc_w \""+ replaceEscapedCharacters(value) + "\"";
+				} else if (operand instanceof AConstOperand) {
+					Object val = ((AConstOperand) operand).getValue();
+					String[] tmps = val.toString().split("\\s+");
+					inst = "\tldc_w " + tmps[tmps.length-1];
+				} else if(operand instanceof Const4Operand){
+					inst = "\tldc_w " + ((ConstOperand)operand).getWrapped();
+				} else if (operand instanceof Const8Operand){
+					inst = "\tldc2_w " + ((ConstOperand)operand).getWrapped();
+				} else assert false : "Unknown Const Type: " + operand;
+			} else assert false : "Unknown Operand Type: " + operand;
+
+			return inst;
+		}		
 
 		public void visitGetfield(Quad d){			
-
 			RegisterOperand base = (RegisterOperand) Getfield.getBase(d);
 			jq_Field field = Getfield.getField(d).getField();
 			QuadToJasmin.putInst("\taload " + base.getRegister().getNumber()); // load base
 			QuadToJasmin.putInst("\tgetfield " + field.getDeclaringClass().getName().replace(".", "/") +"/"+ field.getName() + " " + field.getDesc());
 			RegisterOperand dst = Getfield.getDest(d);
-			QuadToJasmin.putInst("\t" + getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());
+			QuadToJasmin.putInst(getStoreInstruction(dst));
 
-			checkPhiElement(dst);
 		}
 
 		public void visitPutfield(Quad d){
@@ -561,17 +689,14 @@ public class QuadToJasmin {
 			Operand src = Putfield.getSrc(d);
 			QuadToJasmin.putInst(getOperandLoadingInst(src)); // load src
 			jq_Field field = Putfield.getField(d).getField();
-			QuadToJasmin.putInst("\tputfield " + field.getDeclaringClass().getName().replace(".", "/")+"/"+ field.getName() + " " + field.getDesc());			
-
+			QuadToJasmin.putInst("\tputfield " + field.getDeclaringClass().getName().replace(".", "/")+"/"+ field.getName() + " " + field.getDesc());
 		}
 
 		public void visitGetstatic(Quad d){
 			jq_Field field = Getstatic.getField(d).getField();
 			QuadToJasmin.putInst("\tgetstatic " + field.getDeclaringClass().getName().replace(".", "/") +"/"+ field.getName() + " " + field.getDesc());
 			RegisterOperand dst = Getstatic.getDest(d);
-			QuadToJasmin.putInst("\t" + getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);
+			QuadToJasmin.putInst(getStoreInstruction(dst));
 		}
 
 		public void visitPutstatic(Quad d){
@@ -581,34 +706,25 @@ public class QuadToJasmin {
 			QuadToJasmin.putInst("\tputstatic " + field.getDeclaringClass().getName().replace(".", "/")+"/"+ field.getName() + " " + field.getDesc());
 		}
 
-		private String getBinaryOpName(Binary binOp){
+		static private String getBinaryOpName(Binary binOp){
 			String[] strs = binOp.toString().split("_");
 			assert strs.length == 2;
+			
+			if(binOp == Binary.CMP_DG.INSTANCE){
+				return "dcmpg";
+			} else if (binOp == Binary.CMP_DL.INSTANCE){
+				return "dcmpl";
+			} else if (binOp == Binary.CMP_FG.INSTANCE){
+				return "fcmpg";
+			} else if (binOp == Binary.CMP_FL.INSTANCE){
+				return "fcmpl";
+			} else if (binOp == Binary.CMP_L.INSTANCE){
+				return "lcmp";
+			} 
+			
 			return strs[1].toLowerCase() + strs[0].toLowerCase();
 		}
 
-		private String getOperandLoadingInst(Operand operand){
-			String inst = "";
-			if(operand instanceof RegisterOperand){
-				Register reg = ((RegisterOperand)operand).getRegister();
-				String loadInstName = getLoadInst(reg.getType());
-				inst = "\t" + loadInstName + " " + reg.getNumber();
-			} else if (operand instanceof ConstOperand){
-				if(operand instanceof AConstOperand &&
-						((AConstOperand) operand).getValue() == null){
-						inst = "\taconst_null";
-				} else if (operand instanceof AConstOperand &&
-						((AConstOperand) operand).getValue() instanceof String) {
-						inst = "\tldc \""+ ((AConstOperand) operand).getValue() + "\"";
-				} else if(operand instanceof Const4Operand){
-					inst = "\tldc " + ((ConstOperand)operand).getWrapped();
-				} else if (operand instanceof Const8Operand){
-					inst = "\tldc_w " + ((ConstOperand)operand).getWrapped();
-				} else assert false : "Unknown Const Type: " + operand;
-			} else assert false : "Unknown Operand Type: " + operand;
-
-			return inst;
-		}
 
 		public void visitBinary(Quad d){
 			Binary operator = (Binary) d.getOperator();
@@ -619,11 +735,8 @@ public class QuadToJasmin {
 			String opname = getBinaryOpName(operator);									
 			QuadToJasmin.putInst("\t" + opname);
 
-			RegisterOperand dst = (RegisterOperand)Binary.getDest(d);			
-			String storeInstName = getStoreInst(dst.getType());
-			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);
+			RegisterOperand dst = (RegisterOperand)Binary.getDest(d);		
+			QuadToJasmin.putInst(getStoreInstruction(dst));
 		}
 
 		public void visitInvoke(Quad d){
@@ -633,7 +746,8 @@ public class QuadToJasmin {
 
 			String instName = "";
 			String strInvoke = operator.toString();
-			
+			String suffix = "";
+			ParamListOperand paramlist = Invoke.getParamList(d);
 			if( m instanceof jq_Initializer){
 				instName = "invokespecial";
 			} else if(strInvoke.startsWith("INVOKESPECIAL")){
@@ -644,22 +758,26 @@ public class QuadToJasmin {
 				instName = "invokevirtual";
 			} else if (strInvoke.startsWith("INVOKEINTERFACE")){
 				instName = "invokeinterface";
+				suffix = " "+paramlist.length();
 			} else assert false : "Unexpected operator: " + operator; 
 
-			ParamListOperand paramlist = Invoke.getParamList(d);
+			
+			
+			if(paramlist.length() + 1 > this.maxStackSize){
+				this.maxStackSize = paramlist.length() + 1;
+			}
+			
 			for(int i=0; i < paramlist.length(); i++){
 				RegisterOperand regOpr = paramlist.get(i);
 				QuadToJasmin.putInst(getOperandLoadingInst(regOpr));
 			}
-
-			QuadToJasmin.putInst("\t" + instName + " " + m.getDeclaringClass().getName().replace(".", "/") + "/" + m.getName() + m.getDesc());
+			String inst = "\t" + instName + " " + m.getDeclaringClass().getName().replace(".", "/") + "/" + m.getName() + m.getDesc();
+			
+			QuadToJasmin.putInst(inst + suffix);
 
 			RegisterOperand dst = Invoke.getDest(d);
 			if(dst != null){
-				String storeInstName = getStoreInst(dst.getType());
-				QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
-
-				checkPhiElement(dst);
+				QuadToJasmin.putInst(getStoreInstruction(dst));
 			}
 
 		}
@@ -670,7 +788,7 @@ public class QuadToJasmin {
 		}		
 
 		public void visitIntIfCmp(Quad d){
-
+			
 			IntIfCmp iic = (IntIfCmp) d.getOperator();
 			if(iic instanceof IFCMP_A){
 				// To handle null comparison case
@@ -736,7 +854,7 @@ public class QuadToJasmin {
 			Operator operator = d.getOperator();
 			if(operator instanceof GET_EXCEPTION){
 				RegisterOperand dst = (RegisterOperand) GET_EXCEPTION.getOp1(d);
-				QuadToJasmin.putInst("\t" + getStoreInst(dst.getType()) + " " + dst.getRegister().getNumber());
+				QuadToJasmin.putInst(getStoreInstruction(dst));
 			} else assert false : d;				
 			
 		}
@@ -745,12 +863,8 @@ public class QuadToJasmin {
 			QuadToJasmin.putInst(getOperandLoadingInst(InstanceOf.getSrc(d)));
 			QuadToJasmin.putInst("\tinstanceof "+InstanceOf.getType(d).getType().getName().replace(".", "/"));
 			
-			RegisterOperand dst = InstanceOf.getDest(d);				
-			String storeInstName = getStoreInst(dst.getType());
-			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);
-			
+			RegisterOperand dst = InstanceOf.getDest(d);		
+			QuadToJasmin.putInst(getStoreInstruction(dst));			
 		}
 				
 		public void visitALoad(Quad d){
@@ -761,10 +875,7 @@ public class QuadToJasmin {
 			String jasminInstOperator = operator.toString().split("_")[1].toLowerCase()+"aload";
 			QuadToJasmin.putInst("\t"+jasminInstOperator);
 			RegisterOperand dst = ALoad.getDest(d);
-			String storeInstName = getStoreInst(dst.getType());
-			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);			
+			QuadToJasmin.putInst(getStoreInstruction(dst));			
 		}
 		
 		public void visitAStore(Quad d){			
@@ -782,11 +893,8 @@ public class QuadToJasmin {
 			QuadToJasmin.putInst("\tcheckcast " 
 					+ CheckCast.getType(d).getType().getName().replace(".", "/"));
 			
-			RegisterOperand dst = CheckCast.getDest(d);				
-			String storeInstName = getStoreInst(dst.getType());
-			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);			
+			RegisterOperand dst = CheckCast.getDest(d);
+			QuadToJasmin.putInst(getStoreInstruction(dst));	
 		}
 		
 		public void visitMonitor(Quad d){
@@ -833,27 +941,16 @@ public class QuadToJasmin {
 			QuadToJasmin.putInst("\t"+jasminInstOperator);
 			
 			RegisterOperand dst = Unary.getDest(d);
-			String storeInstName = getStoreInst(dst.getType());
-			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);
+			QuadToJasmin.putInst(getStoreInstruction(dst));
 		}
 		
-		public void visitAlength(Quad d){
+		public void visitALength(Quad d){
 			QuadToJasmin.putInst(getOperandLoadingInst(ALength.getSrc(d)));
 			
 			QuadToJasmin.putInst("\tarraylength");
 			
 			RegisterOperand dst = ALength.getDest(d);
-			String storeInstName = getStoreInst(dst.getType());
-			QuadToJasmin.putInst("\t" + storeInstName + " " + dst.getRegister().getNumber());
-
-			checkPhiElement(dst);
-		}
-		
-		public void visitRet(Quad d){
-			
-			assert false : d;
+			QuadToJasmin.putInst(getStoreInstruction(dst));
 		}
 
 		public void visitMemLoad(Quad d){
@@ -865,13 +962,36 @@ public class QuadToJasmin {
 		}		
 		
 		public void visitJsr(Quad d){
+			// jsr instruction stores the address of the next immediate opcode
+			// as its return address. However it is not guaranteed that the next basic
+			// block we handle is the one jsr expected. To get around this, we add an extra
+			// goto with its target as jsr's successor
 			TargetOperand target = Jsr.getTarget(d);
+			TargetOperand successor = Jsr.getSuccessor(d);			
+			assert current_BB.getLastQuad() == d;			
 			QuadToJasmin.putInst("\tjsr " + target.getTarget());
-			
-			
-			
+			QuadToJasmin.putInst("\tgoto " + successor.getTarget());									
+		}
+		
+		public void visitRet(Quad d){			
+			RegisterOperand reg = Ret.getTarget(d);
+			QuadToJasmin.putInst("\tret " + reg.getRegister().getNumber());
 		}
 
+		public void visitPhi(Quad d){
+			// If this Phi is associated with JSR operations,
+			// save the return address on the top of the stack
+			// to the destination register
+			BasicBlockTableOperand t = Phi.getPreds(d);
+			RegisterOperand dst = Phi.getDest(d);
+			assert t.size() > 0 : current_BB.fullDump();
+			Quad lastQuad = t.get(0).getLastQuad();
+			if ( lastQuad != null && lastQuad.getOperator() == Operator.Jsr.JSR.INSTANCE ){
+				QuadToJasmin.putInst(getStoreInstruction(dst));
+			}
+			// Other branches are handled by processMethod()
+		}
+		
 		public void visitTableSwitch(Quad d){
 			Operand src = TableSwitch.getSrc(d);
 			QuadToJasmin.putInst(getOperandLoadingInst(src));
@@ -897,8 +1017,12 @@ public class QuadToJasmin {
 			}
 			QuadToJasmin.putInst("\t\tdefault: "+LookupSwitch.getDefault(d).getTarget());
 		}
-		// TODO: add all other visit* methods from EmptyVisitor
+		
 	}
 
 }
 
+abstract class JasminInst {
+		
+	
+}
