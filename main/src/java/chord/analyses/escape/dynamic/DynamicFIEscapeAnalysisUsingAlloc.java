@@ -217,7 +217,7 @@ public class DynamicFIEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		}
 		relEscE.save();
 		
-		DomE domE = instrumentor.getDomE();
+		DomE domE = (DomE) Project.getTrgt("E");
 		Program program = Program.getProgram();
 		String outDirName = Properties.outDirName;
 		try {

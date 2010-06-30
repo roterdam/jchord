@@ -53,8 +53,8 @@ public class Properties {
 
 	public final static boolean buildScope = buildBoolProperty("chord.build.scope", false);
 	public final static String runAnalyses = System.getProperty("chord.run.analyses", "");
-	public final static String printMethods = System.getProperty("chord.print.methods", "");
-	public final static String printClasses = System.getProperty("chord.print.classes", "");
+	public final static String printMethods = System.getProperty("chord.print.methods", "").replace('#', '$');
+	public final static String printClasses = System.getProperty("chord.print.classes", "").replace('#', '$');
 	public final static boolean printAllClasses = buildBoolProperty("chord.print.all.classes", false);
 	public final static String printRels = System.getProperty("chord.print.rels", "");
 	public final static boolean publishTargets = buildBoolProperty("chord.publish.targets", false);
@@ -114,16 +114,13 @@ public class Properties {
 
 	public final static boolean reuseTrace = buildBoolProperty("chord.reuse.trace", false);
 	public final static boolean doTracePipe = buildBoolProperty("chord.trace.pipe", true);
-	static {
-		if (reuseTrace) {
-			assert(!doTracePipe);
-			assert(reuseScope);
-		}
-	}
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 	public final static String runtimeClassName =
 		System.getProperty("chord.runtime.class", chord.runtime.BufferedRuntime.class.getName());
 	public final static int maxConstr = Integer.getInteger("chord.max.constr", 50000000);
+	public final static int dynamicTimeoutMs = Integer.getInteger("chord.dynamic.timeout.ms", -1);
+    public final static boolean dynamicContinueOnError =
+		buildBoolProperty("chord.dynamic.continueonerror", true);
 
 	// Chord output properties
 
@@ -154,8 +151,8 @@ public class Properties {
 	public final static String bootClassesDirName = outRel2AbsPath("chord.boot.classes.dir", "boot_classes");
 	public final static String userClassesDirName = outRel2AbsPath("chord.user.classes.dir", "user_classes");
 	public final static String instrSchemeFileName = outRel2AbsPath("chord.instr.scheme.file", "scheme.ser");
-	public final static String crudeTraceFileName = outRel2AbsPath("chord.crude.trace.file", "crude_trace.txt");
-	public final static String finalTraceFileName = outRel2AbsPath("chord.final.trace.file", "final_trace.txt");
+	public final static String crudeTraceFileName = outRel2AbsPath("chord.crude.trace.file", "crude_trace");
+	public final static String finalTraceFileName = outRel2AbsPath("chord.final.trace.file", "final_trace");
 
 	public static void print() {
 		System.out.println("*** Chord resource properties:");
@@ -223,6 +220,8 @@ public class Properties {
 		System.out.println("chord.trace.block.size: " + traceBlockSize);
 		System.out.println("chord.runtime.class: " + runtimeClassName);
 		System.out.println("chord.max.constr: " + maxConstr);
+		System.out.println("chord.dynamic.timeout.ms: " + dynamicTimeoutMs);
+		System.out.println("chord.dynamic.continueonerror: " + dynamicContinueOnError);
 
 		System.out.println("*** Chord output properties:");
 		System.out.println("chord.out.dir: " + outDirName);

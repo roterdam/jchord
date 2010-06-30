@@ -140,7 +140,7 @@ public class DynamicMHPAnalysis extends DynamicAnalysis {
 			relMHP.add(pair.idx0, pair.idx1);
 		}
 		relMHP.save();
-		DomE domE = instrumentor.getDomE();
+		DomE domE = (DomE) Project.getTrgt("E");
 		Program program = Program.getProgram();
 		PrintWriter writer =
 			 OutDirUtils.newPrintWriter("dynamic_mhp.txt");

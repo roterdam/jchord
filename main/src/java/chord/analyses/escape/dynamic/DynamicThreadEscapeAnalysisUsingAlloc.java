@@ -23,7 +23,8 @@ import chord.project.Properties;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.ChordRuntimeException;
-import chord.util.IndexMap;
+import chord.doms.DomH;
+import chord.doms.DomE;
 
 /**
  * Dynamic thread-escape analysis where concrete objects are abstracted using
@@ -97,7 +98,7 @@ public class DynamicThreadEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
 		objToHidx = new TIntIntHashMap();
-		numE = instrumentor.getEmap().size();
+		numE = ((DomE) Project.getTrgt("E")).size();
 		isEidxVisited = new boolean[numE];
 		isEidxEsc = new boolean[numE];
 		relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
@@ -139,7 +140,7 @@ public class DynamicThreadEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		relVisitedE.save();
 		relEscE.save();
 
-		IndexMap<String> Emap = instrumentor.getEmap();
+		DomE domE = (DomE) Project.getTrgt("E");
 		String outDirName = Properties.outDirName;
 		try {
 			PrintWriter writer;
@@ -147,14 +148,14 @@ public class DynamicThreadEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 					"dynamic_visitedE.txt")));
 			for (int i = 0; i < numE; i++) {
 				if (isEidxVisited[i])
-					writer.println(Emap.get(i));
+					writer.println(domE.toUniqueString(i));
 			}
 			writer.close();
 			writer = new PrintWriter(new FileWriter(new File(outDirName,
 					"dynamic_escE.txt")));
 			for (int i = 0; i < numE; i++) {
 				if (isEidxEsc[i])
-					writer.println(Emap.get(i));
+					writer.println(domE.toUniqueString(i));
 			}
 			writer.close();
 		} catch (IOException ex) {

@@ -16,6 +16,7 @@ import java.util.List;
 
 import joeq.Compiler.Quad.Quad;
 import chord.doms.DomE;
+import chord.doms.DomH;
 import chord.instr.InstrScheme;
 import chord.program.Program;
 import chord.project.Chord;
@@ -121,13 +122,17 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public void initAllPasses() {
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
-		numE = instrumentor.getEmap().size();
+		DomE domE = (DomE) Project.getTrgt("E");
+		Project.runTask(domE);
+		numE = domE.size();
 		isEidxVisited = new boolean[numE];
 		isEidxEsc = new boolean[numE];
 		relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
 		relEscE = (ProgramRel) Project.getTrgt("escE");
 		if (isFlowIns) {
-			numH = instrumentor.getHmap().size();
+			DomH domH = (DomH) Project.getTrgt("H");
+			Project.runTask(domH);
+			numH = domH.size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
 			isHidxEsc = new boolean[numH];
 			objToHidx = new TIntIntHashMap();
@@ -183,7 +188,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		relVisitedE.save();
 		relEscE.save();
 
-		DomE domE = instrumentor.getDomE();
+		DomE domE = (DomE) Project.getTrgt("E");
 		Program program = Program.getProgram();
 		PrintWriter writer1 =
 			 OutDirUtils.newPrintWriter("dynamic_visitedE.txt");
