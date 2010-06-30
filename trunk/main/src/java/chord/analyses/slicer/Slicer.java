@@ -23,6 +23,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Getfield;
@@ -233,13 +234,17 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Set<Edge> getInitPathEdges(Quad q, jq_Method m2, Edge pe) {
-		// check if pe.dstExpr is return var
-		// if so then create init edge srcExpr==dstExpr==RetExpr.instance
-		// else if pe.dstExpr is non-local var then create init edge similarly
-		// else return emptyset
 		Expr dstExpr = pe.dstExpr;
+		// id dstExpr is null then return empty set (it is dummy being propagated)
+		// if dstExpr is local var which is return result of the call site then
+		//    create init edge (RetExpr.instance, RetExpr.instance) at callee exit
+		// if dstExpr is local var other than return result then return empty set
+		// if dstExpr is global expr (instfield, statfield, or arrayelem) then
+		//    create init edge (dstExpr, dstExpr) at callee exit
 		Set<Edge> result;
-		if (dstExpr instanceof LocalVar) {
+		if (dstExpr == null)
+			result = emptyEdgeSet;
+		else if (dstExpr instanceof LocalVar) {
 			LocalVar e = (LocalVar) dstExpr;
             RegisterOperand vo = Invoke.getDest(q);
             if (vo != null && vo.getRegister() == e.v) {
@@ -275,18 +280,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			if (DEBUG) System.out.println("Adding to slice: " + q);
 			currSlice.add(q);
 			Expr srcExpr = pe.srcExpr;
-			Set<Quad> fullCdeps = fullCdepsMap.get(currentBB);
-			if (fullCdeps != null) {
-				Pair<Expr, jq_Method> pair =
-					new Pair<Expr, jq_Method>(srcExpr, currentMethod);
-				Set<Quad> todoCdeps = todoCdepsMap.get(pair);
-				if (todoCdeps == null) {
-					todoCdeps = new ArraySet<Quad>(2);
-					todoCdepsMap.put(pair, todoCdeps);
-				}
-				for (Quad q2 : fullCdeps)
-					todoCdeps.add(q2);
-			}
+			processCdeps(srcExpr);
 			if (DEBUG) {
 				System.out.println(CollectionUtils.toString(
 					oDstExprSet, "oDstExprSet: [", ",", "]"));
@@ -306,6 +300,21 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		return tmpEdgeSet;
 	}
 
+	private void processCdeps(Expr srcExpr) {
+		Set<Quad> fullCdeps = fullCdepsMap.get(currentBB);
+		if (fullCdeps != null) {
+			Pair<Expr, jq_Method> pair =
+				new Pair<Expr, jq_Method>(srcExpr, currentMethod);
+			Set<Quad> todoCdeps = todoCdepsMap.get(pair);
+			if (todoCdeps == null) {
+				todoCdeps = new ArraySet<Quad>(2);
+				todoCdepsMap.put(pair, todoCdeps);
+			}
+			for (Quad q2 : fullCdeps)
+				todoCdeps.add(q2);
+		}
+	}
+
 	@Override
 	public Set<Edge> getInvkPathEdges(Quad q, Edge pe) {
 		Expr dstExpr = pe.dstExpr;
@@ -323,49 +332,60 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Edge getSummaryEdge(jq_Method m, Edge pe) {
+		Expr dstExpr = pe.dstExpr;
+		if (dstExpr instanceof LocalVar) {
+			Register v = ((LocalVar) dstExpr).v;
+			int i = v.getNumber();
+			if (i >= m.getParamTypes().length)
+				return null;
+		}
 		return pe;
 	}
 
 	@Override
 	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method tgtM, Edge tgtSE) {
-		Expr dstExpr = clrPE.dstExpr;
-		Expr srcExpr = tgtSE.srcExpr;
+		Expr clrDstExpr = clrPE.dstExpr;
+		Expr tgtSrcExpr = tgtSE.srcExpr;
+		if (clrDstExpr == null)
+			return null;
 		boolean matched = false;
 		// there are two cases in which a match may occur:
 		// case 1: clrPE ends in a local var which is the return var
 		// and tgtSE starts with RetnExpr.instance (representing return var)
-		// case 2: clrPE ends in an expr other than a local var
+		// case 2: clrPE ends in a global expr (instfield, statfield, or arrayelem)
 		// and tgtSE starts in the same expr
-		if (dstExpr instanceof LocalVar) {
-            LocalVar e = (LocalVar) dstExpr;
+		if (clrDstExpr instanceof LocalVar) {
+            LocalVar e = (LocalVar) clrDstExpr;
             RegisterOperand vo = Invoke.getDest(q);
             if (vo != null) {
                 Register v = vo.getRegister();
-                if (e.v == v && srcExpr == RetnExpr.instance)
+                if (e.v == v && tgtSrcExpr == RetnExpr.instance)
 					matched = true;
 			}
-		} else if (dstExpr.equals(srcExpr))
+		} else if (clrDstExpr.equals(tgtSrcExpr))
 			matched = true;
 		if (matched) {
-			Expr dstExpr2 = tgtSE.dstExpr;
-			Expr dstExpr3;
-			if (dstExpr2 instanceof LocalVar) {
-				Register v = ((LocalVar) dstExpr2).v;
+			Expr tgtDstExpr = tgtSE.dstExpr;
+			Expr newDstExpr;
+			if (tgtDstExpr instanceof LocalVar) {
+				Register v = ((LocalVar) tgtDstExpr).v;
 				int i = v.getNumber();
 				ParamListOperand l = Invoke.getParamList(q);
 				int numArgs = l.length();
-				assert(i >= 0 && i < numArgs);
+				assert (i >= 0 && i < numArgs);
 				Register u = l.get(i).getRegister();
-				dstExpr3 = new LocalVar(u); 
+				newDstExpr = new LocalVar(u); 
 			} else
-				dstExpr3 = dstExpr2;
+				newDstExpr = tgtDstExpr;
 			boolean affectedSlice;
+			Expr clrSrcExpr = clrPE.srcExpr;
 			if (tgtSE.affectedSlice) {
 				currSlice.add(q);
+				processCdeps(clrSrcExpr);
 				affectedSlice = true;
 			} else
 				affectedSlice = clrPE.affectedSlice;
-			return new Edge(clrPE.srcExpr, dstExpr3, affectedSlice);
+			return new Edge(clrSrcExpr, newDstExpr, affectedSlice);
 		}
 		return null;
 	}
@@ -384,7 +404,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		public void visitReturn(Quad q) {
 			if (iDstExpr == RetnExpr.instance) {
 				Operand rx = Return.getSrc(q);
-				assert (rx != null);
 				if (rx instanceof RegisterOperand) {
 					tmpExprSet.clear();
 					RegisterOperand ro = (RegisterOperand) rx;
@@ -394,7 +413,7 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 				} else
 					oDstExprSet = emptyExprSet;
 			} else {
-				// cannot be a local var
+				// cannot be a local var or null
 				assert (iDstExpr instanceof InstField ||
 						iDstExpr instanceof ArrayElem ||
 						iDstExpr instanceof StatField);
@@ -406,7 +425,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitMove(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = Move.getDest(q).getRegister();
@@ -424,7 +442,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitPhi(Quad q) {
-			assert (iDstExpr != null);
 		 	if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = Phi.getDest(q).getRegister();
@@ -445,7 +462,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitALoad(Quad q) {
-			assert (iDstExpr != null);
 		 	if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = ALoad.getDest(q).getRegister();
@@ -474,7 +490,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitGetfield(Quad q) {
-			assert (iDstExpr != null);
 		 	if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = Getfield.getDest(q).getRegister();
@@ -501,7 +516,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitAStore(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof ArrayElem) {
 				Quad q2 = ((ArrayElem) iDstExpr).q;
 				RegisterOperand bo = (RegisterOperand) AStore.getBase(q);
@@ -536,7 +550,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitPutfield(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof InstField) {
 				InstField e = (InstField) iDstExpr;
 				jq_Field f = Putfield.getField(q).getField();
@@ -572,7 +585,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitPutstatic(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof StatField) {
 				StatField e = (StatField) iDstExpr;
 				jq_Field f = Putstatic.getField(q).getField();
@@ -591,7 +603,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitGetstatic(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = Getstatic.getDest(q).getRegister();
@@ -616,7 +627,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 			processAlloc(q, vo);
 		}
 		private void processAlloc(Quad q, RegisterOperand vo) {
-			assert (iDstExpr != null);
 		 	if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register v = vo.getRegister();
@@ -626,7 +636,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitUnary(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = Unary.getDest(q).getRegister();
@@ -644,7 +653,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitBinary(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = Binary.getDest(q).getRegister();
@@ -666,7 +674,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitInstanceOf(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = InstanceOf.getDest(q).getRegister();
@@ -684,7 +691,6 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 		}
 		@Override
 		public void visitALength(Quad q) {
-			assert (iDstExpr != null);
 			if (iDstExpr instanceof LocalVar) {
 				LocalVar e = (LocalVar) iDstExpr;
 				Register l = ALength.getDest(q).getRegister();
@@ -717,7 +723,8 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 					Register r2 = ((RegisterOperand) rx2).getRegister();
 					tmpExprSet.add(new LocalVar(r2));
 				}
-				tmpExprSet.add(iDstExpr);
+				if (iDstExpr != null)
+					tmpExprSet.add(iDstExpr);
 				oDstExprSet = tmpExprSet;
 			}
 		}
@@ -733,7 +740,8 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 					Register r = ((RegisterOperand) rx).getRegister();
 					tmpExprSet.add(new LocalVar(r));
 				}
-				tmpExprSet.add(iDstExpr);
+				if (iDstExpr != null)
+					tmpExprSet.add(iDstExpr);
 				oDstExprSet = tmpExprSet;
 			}
 		}
@@ -749,15 +757,24 @@ public class Slicer extends BackwardRHSAnalysis<Edge, Edge> {
 					Register r = ((RegisterOperand) rx).getRegister();
 					tmpExprSet.add(new LocalVar(r));
 				}
-				tmpExprSet.add(iDstExpr);
+				if (iDstExpr != null)
+					tmpExprSet.add(iDstExpr);
 				oDstExprSet = tmpExprSet;
 			}
 		}
-/*
 		@Override
 		public void visitMonitor(Quad q) {
+			// this instruction must always be added to the slice,
+			// so oDstExprSet must be set to non-null
+			Operand rx = Monitor.getSrc(q);		
+			if (rx instanceof RegisterOperand) {
+				tmpExprSet.clear();
+				Register r = ((RegisterOperand) rx).getRegister();
+				tmpExprSet.add(new LocalVar(r));
+				oDstExprSet = tmpExprSet;
+			} else
+				oDstExprSet = emptyExprSet;
 		}
-*/
 	}
 }
 
