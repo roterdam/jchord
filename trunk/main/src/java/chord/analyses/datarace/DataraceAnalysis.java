@@ -76,7 +76,8 @@ import chord.bddbddb.Rel.PairIterable;
 	name="datarace-java"
 )
 public class DataraceAnalysis extends JavaAnalysis {
-	private static final boolean percy = false;
+	private static final boolean percy = System.getProperty("percy", "false").equals("true");
+
 	private DomM domM;
 	private DomI domI;
 	private DomF domF;
@@ -143,9 +144,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 		}
 	}
 
-	private void outputRaces() {		
-		if (!X.getBooleanArg("enable", false)) return;		
-
+	private void outputRaces() {
 		PrintWriter datOut = OutDirUtils.newPrintWriter("outputs.dat");		
 			
 		final ProgramRel relDatarace = (ProgramRel) Project.getTrgt("ctxtInsDatarace");		
@@ -162,8 +161,8 @@ public class DataraceAnalysis extends JavaAnalysis {
 		}		
 		relDatarace.close();		
 		
-	    datOut.close();		
-	    X.output.put("numRaces", numRaces);		
+    datOut.close();		
+    X.output.put("numRaces", numRaces);		
 			
 		PrintWriter strOut = OutDirUtils.newPrintWriter("outputs.strings");		
 		for (int e = 0; e < domE.size(); e++)		

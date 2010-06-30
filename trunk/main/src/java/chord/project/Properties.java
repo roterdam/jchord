@@ -126,7 +126,7 @@ public class Properties {
 
 	public static String outDirName = workRel2AbsPath("chord.out.dir", "chord_output");
 	static {
-		// Automatically find a free subdirectory; this is Percy;s stuff
+		// Automatically find a free subdirectory; this is Percy's stuff
 		String outPoolPath = System.getProperty("chord.out.pooldir");
 		if (outPoolPath != null) {
 			for (int i = 0; true; i++) {

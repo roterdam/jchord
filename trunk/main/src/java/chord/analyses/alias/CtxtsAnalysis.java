@@ -132,7 +132,7 @@ import chord.analyses.snapshot.StatFig;
 	types = { DomC.class }
 )
 public class CtxtsAnalysis extends JavaAnalysis {
-	private static final boolean percy = false;
+	private static final boolean percy = System.getProperty("percy", "false").equals("true");
 
 	private static final Set<Ctxt> emptyCtxtSet = Collections.emptySet();
 	private static final Set<jq_Method> emptyMethSet = Collections.emptySet();
@@ -245,8 +245,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	// {04/19/10} Percy: experiment with different values of k
 	private void setAdaptiveValues() {
-		if (!X.getBooleanArg("enable", false)) return;
-
 		double senProb = X.getDoubleArg("senProb", 0.5);
 		int randSeed = X.getIntArg("randSeed", 1);
 		int kobjRange = X.getIntArg("kobjRange", 1);
