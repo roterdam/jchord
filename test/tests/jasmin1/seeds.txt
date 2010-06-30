@@ -1,3 +1,0 @@
-main:([Ljava/lang/String;)V@T
-g:Ltest/A;@T
-g2:I@T
