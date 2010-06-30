@@ -79,9 +79,14 @@ public class Dom<T> extends IndexMap<T> {
 		out.println(name + " " + size + " " + mapFileName);
 		out.close();
 	}
+	// subclasses may override
     public String toUniqueString(T val) {
     	return val == null ? "null" : val.toString();
     }
+	public String toUniqueString(int idx) {
+		T val = get(idx);
+    	return toUniqueString(val);
+	}
 	/**
 	 * Prints the values in the domain in memory to the standard
 	 * output stream.
