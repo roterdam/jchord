@@ -1,2 +1,2 @@
 main:([Ljava/lang/String;)V@T
-g:LA;@T
+result:I@T

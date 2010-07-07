@@ -1,24 +1,22 @@
-// check that backward propagation does not stop
-// in the middle of a method (foo in the below case)
 public class T {
-	static A g;
-
-	private static A foo() {
-		return new A(0);
-	}
-
-	public static void main(String[] a) {
-		g = foo();
+	static final int NUM_THREADS = 10;
+	static int[] g = new int[NUM_THREADS];
+	static int result;
+	public static void main(String[] a) throws Exception {
+		Thread[] threads = new Thread[NUM_THREADS];
+		for (int i = 0; i < NUM_THREADS; i++) {
+			Thread t = new Thread() {
+				public void run() {
+					g[5]++;
+				}
+			};
+			threads[i] = t;
+		}
+		for (int i = 0; i < NUM_THREADS; i++)
+			threads[i].start();
+		for (int i = 0; i < NUM_THREADS; i++)
+			threads[i].join();
+		result = g[5];   
 	}
 }
 
-class B {
-	int i;
-    public B(int i) { this.i = i; }
-}
-
-class A extends B {
-	public A(int i) {
-		super(i);
-	}
-}
