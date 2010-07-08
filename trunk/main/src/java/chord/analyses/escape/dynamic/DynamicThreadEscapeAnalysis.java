@@ -196,8 +196,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			OutDirUtils.newPrintWriter("dynamic_escE.txt");
 		for (int i = 0; i < numE; i++) {
 			if (isEidxVisited[i]) {
-				Quad q = (Quad) domE.get(i);
-				String s = program.toVerboseStr(q);
+				Quad q = domE.get(i);
+				String s = q.toVerboseStr();
 				writer1.println(s);
 				if (isEidxEsc[i])
 					writer2.println(s);

@@ -136,7 +136,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		domN.clear();
 		Program program = Program.getProgram();
 		for (Inst i : domL) {
-			jq_Method m = program.getMethod(i);
+			jq_Method m = i.getMethod();
 			Set<Ctxt> cs = thrSenAbbrCSCG.getContexts(m);
 			for (Ctxt c : cs) {
 				domN.getOrAdd(new Pair<Ctxt, Inst>(c, i));
@@ -260,10 +260,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			jq_Method t2mVal = t2Val.val1;
 			int t1m = domM.indexOf(t1mVal);
 			int t2m = domM.indexOf(t2mVal);
-			jq_Method m1Val = program.getMethod(l1Val);
-			jq_Method m2Val = program.getMethod(l2Val);
-			jq_Method m3Val = program.getMethod(l3Val);
-			jq_Method m4Val = program.getMethod(l4Val);
+			jq_Method m1Val = l1Val.getMethod();
+			jq_Method m2Val = l2Val.getMethod();
+			jq_Method m3Val = l3Val.getMethod();
+			jq_Method m4Val = l4Val.getMethod();
 			int m1 = domM.indexOf(m1Val);
 			int m2 = domM.indexOf(m2Val);
 			int m3 = domM.indexOf(m3Val);

@@ -75,7 +75,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	// edge of a target method m of the call site q
 	// returns null if the path edge into q is not compatible with the
 	// summary edge
-	public abstract PE getInvkPathEdge(Quad q, PE clrPE, jq_Method m, SE tgtSE);
+	public abstract Set<PE> getInvkPathEdges(Quad q, PE clrPE, jq_Method m, SE tgtSE);
 
 
     // m is a method and pe is a path edge from entry to exit of m
@@ -268,6 +268,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	// called by backward analysis
     private void processEntry(jq_Method m, PE pe) {
         SE se = getSummaryEdge(m, pe);
+		if (se == null)
+			return;
         Set<SE> seSet = summEdges.get(m);
         if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
         SE seToAdd = se;
@@ -303,7 +305,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
             return;
         }
         for (Quad q2 : getCallers(m)) {
-            jq_Method m2 = Program.getProgram().getMethod(q2);
+            jq_Method m2 = q2.getMethod();
             if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
             Set<PE> peSet = pathEdges.get(q2);
             if (peSet == null)
@@ -328,6 +330,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	// called by forward analysis
     private void processExit(jq_Method m, PE pe) {
         SE se = getSummaryEdge(m, pe);
+		if (se == null)
+			return;
         Set<SE> seSet = summEdges.get(m);
         if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
         SE seToAdd = se;
@@ -364,7 +368,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
         }
 		Program program = Program.getProgram();
         for (Quad q2 : getCallers(m)) {
-            jq_Method m2 = program.getMethod(q2);
+            jq_Method m2 = q2.getMethod();
             if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
             Set<PE> peSet = pathEdges.get(q2);
             if (peSet == null)
@@ -491,10 +495,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 
 	private boolean propagateSEtoPE(PE clrPE, Location loc, jq_Method tgtM, SE tgtSE) {
 		Quad q = loc.q;
-        PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
-		if (pe2 == null)
+        Set<PE> peSet = getInvkPathEdges(q, clrPE, tgtM, tgtSE);
+		if (peSet == null)
 			return false;
-        propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2);
+		assert (!peSet.isEmpty());
+		for (PE pe : peSet)
+       	 propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe);
         return true;
 	}
 }

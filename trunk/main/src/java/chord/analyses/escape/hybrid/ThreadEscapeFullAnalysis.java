@@ -165,7 +165,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		for (int vIdx = 0; vIdx < numV;) {
 			Register v = domV.get(vIdx);
 			jq_Method m = domV.getMethod(v);
-			int n = m.getNumVarsOfRefType();
+			int n = m.getCFG().getRegisterFactory().size(); // XXX getNumVarsOfRefType();
 			methToNumVars.put(m, n);
 			for (int i = 0; i < n; i++)
 				varId[vIdx + i] = i;
@@ -183,11 +183,11 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			System.out.println("currHeapInsts:");
 			for (Quad q : currLocHeapInsts) {
 				int x = domE.indexOf(q);
-				System.out.println("\t" + program.toVerboseStr(q) + " " + x);
+				System.out.println("\t" + q.toVerboseStr() + " " + x);
 			}
 			System.out.println("currAllocInsts:");
 			for (Quad q : currAllocs)
-				System.out.println("\t" + program.toVerboseStr(q));
+				System.out.println("\t" + q.toVerboseStr());
 			Timer timer = new Timer("hybrid-thresc-timer");
 			timer.init();
 			try {
@@ -196,9 +196,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				// do nothing
 			}
 			for (Quad q : currLocHeapInsts)
-				System.out.println("LOC: " + program.toVerboseStr(q));
+				System.out.println("LOC: " + q.toVerboseStr());
 			for (Quad q : currEscHeapInsts)
-				System.out.println("ESC: " + program.toVerboseStr(q));
+				System.out.println("ESC: " + q.toVerboseStr());
 			locHeapInsts.addAll(currLocHeapInsts);
 			escHeapInsts.addAll(currEscHeapInsts);
 			timer.done();
@@ -210,14 +210,14 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_fullEscE.txt")));
 				for (Quad e : escHeapInsts)
-					writer.println(program.toPosStr(e));
+					writer.println(e.toLocStr());
 				writer.close();
 			}
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_fullLocE.txt")));
 				for (Quad e : locHeapInsts)
-					writer.println(program.toPosStr(e));
+					writer.println(e.toLocStr());
 				writer.close();
 			}
 		} catch (IOException ex) {
@@ -362,10 +362,13 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
+	public Set<Edge> getInvkPathEdges(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
 		if (m == threadStartMethod) {
 			// ignore tgtSE
-			return getForkPathEdge(q, clrPE);
+			Edge pe2 = getForkPathEdge(q, clrPE);
+			tmpEdgeSet.clear();
+			tmpEdgeSet.add(pe2);
+			return tmpEdgeSet;
 		}
 		DstNode clrDstNode = clrPE.dstNode;
 		SrcNode tgtSrcNode = tgtSE.srcNode;
@@ -428,7 +431,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
         DstNode clrDstNode2 = new DstNode(clrDstEnv2, tgtRetNode.heap,
 			clrDstEsc2, false);
         Edge pe2 = new Edge(clrPE.srcNode, clrDstNode2);
-		return pe2;
+		tmpEdgeSet.clear();
+		tmpEdgeSet.add(pe2);
+		return tmpEdgeSet;
 	}
 	
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {

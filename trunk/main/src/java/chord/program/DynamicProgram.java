@@ -6,6 +6,8 @@
 package chord.program;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Collections;
 
 import chord.util.IndexSet;
  
@@ -14,20 +16,23 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.Quad;
 
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DynamicScope implements IScope {
+public class DynamicProgram extends Program {
 	private IndexSet<jq_Method> methods;
-	public IndexSet<jq_Method> getMethods() {
+	@Override
+	protected IndexSet<jq_Method> computeMethods() {
 		if (methods == null)
 			build();
 		return methods;
 	}
-	public IndexSet<jq_Reference> getReflectClasses() {
-		return new IndexSet<jq_Reference>(0);
+	@Override
+	protected ReflectInfo computeReflectInfo() {
+		return new ReflectInfo();
 	}
 	private void build() {
 		List<String> classNames = Program.getDynamicallyLoadedClasses();

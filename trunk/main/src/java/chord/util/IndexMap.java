@@ -75,7 +75,7 @@ public class IndexMap<T> implements Iterable<T> {
     public int getOrAdd(T val) {
         Integer idx = hmap.get(val);
         if (idx == null) {
-			int i = size();
+			int i = list.size();
         	idx = new Integer(i);
             list.add(val);
             hmap.put(val, idx);
@@ -94,8 +94,8 @@ public class IndexMap<T> implements Iterable<T> {
     public boolean add(T val) {
         Integer idx = hmap.get(val);
         if (idx == null) {
+			int i = list.size();
             list.add(val);
-			int i = size();
         	idx = new Integer(i);
             hmap.put(val, idx);
             return true;

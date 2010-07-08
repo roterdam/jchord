@@ -62,7 +62,7 @@ public class DomM extends ProgramDom<jq_Method>
 		else
 			sign += methName;
 		sign += Program.methodDescToStr(m.getDesc().toString());
-		String file = Program.getSourceFileName(c);
+		String file = c.getSourceFileName();
 		int line = 0;  // TODO
 		return "sign=\"" + sign +
 			"\" file=\"" + file +

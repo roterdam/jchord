@@ -14,7 +14,6 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
-import chord.program.Program;
 
 /**
  * Relation containing each tuple (i,m) such that m is the resolved

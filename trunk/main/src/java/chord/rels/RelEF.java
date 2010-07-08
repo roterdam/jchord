@@ -30,8 +30,8 @@ public class RelEF extends ProgramRel {
 		DomF domF = (DomF) doms[1];
 		int numE = domE.size();
 		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad e = (Quad) domE.get(eIdx);
-			jq_Field f = Program.getField(e);
+			Quad e = domE.get(eIdx);
+			jq_Field f = e.getField();
 			int fIdx = domF.indexOf(f);
 			assert (fIdx >= 0);
 			add(eIdx, fIdx);

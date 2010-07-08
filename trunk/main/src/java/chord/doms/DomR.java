@@ -7,7 +7,7 @@ package chord.doms;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
@@ -30,7 +30,6 @@ import chord.project.analyses.ProgramDom;
 )
 public class DomR extends ProgramDom<Inst> implements IRelLockInstVisitor {
 	protected DomM domM;
-	protected jq_Method ctnrMethod;
 	public void init() {
 		domM = (DomM) Project.getTrgt("M");
 	}
@@ -38,28 +37,22 @@ public class DomR extends ProgramDom<Inst> implements IRelLockInstVisitor {
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-		ctnrMethod = m;
 		if (m.isSynchronized()) {
 			ControlFlowGraph cfg = m.getCFG();
-			BasicBlock tail = cfg.exit();
-			getOrAdd(tail);
+			EntryOrExitBasicBlock tail = cfg.exit();
+			add(tail);
 		}
 	}
 	public void visitRelLockInst(Quad q) {
-		getOrAdd(q);
-	}
-	public int getOrAdd(Inst i) {
-		assert (ctnrMethod != null);
-		Program.getProgram().mapInstToMethod(i, ctnrMethod);
-		return super.getOrAdd(i);
+		add(q);
 	}
 	public String toUniqueString(Inst o) {
-		return Program.getProgram().toBytePosStr(o);
+		return o.toByteLocStr();
 	}
 	public String toXMLAttrsString(Inst o) {
-		jq_Method m = Program.getProgram().getMethod(o);
-		String file = Program.getSourceFileName(m.getDeclaringClass());
-		int line = Program.getLineNumber(o, m);
+		jq_Method m = o.getMethod();
+		String file = m.getDeclaringClass().getSourceFileName();
+		int line = o.getLineNumber();
 		int mIdx = domM.indexOf(m);
 		return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
 			"Mid=\"M" + mIdx + "\"";

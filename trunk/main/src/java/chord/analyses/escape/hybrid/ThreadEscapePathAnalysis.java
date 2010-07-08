@@ -309,7 +309,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_pathEscE.txt")));
 				for (Quad e : escHeapInsts)
-					writer.println(program.toPosStr(e));
+					writer.println(e.toLocStr());
 				writer.close();
 			}
 
@@ -317,9 +317,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_pathLocE.txt")));
    		     	for (Quad e : heapInstToAllocInsts.keySet()) {
-					writer.println(Program.getProgram().toPosStr(e));
+					writer.println(e.toLocStr());
 					for (Quad h : heapInstToAllocInsts.get(e)) {
-						writer.println("\t" + program.toPosStr(h));
+						writer.println("\t" + h.toLocStr());
 					}
 				}
 				writer.close();

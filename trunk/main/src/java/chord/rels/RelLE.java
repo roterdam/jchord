@@ -89,7 +89,7 @@ public class RelLE extends ProgramRel implements IMethodVisitor {
 						locks2.add(locks.get(j));
 					locks = locks2;
 				}
-			} else if (Program.isHeapInst(op) && k > 0) {
+			} else if (op.isHeapInst() && k > 0) {
 				int eIdx = domE.indexOf(q);
 				assert (eIdx >= 0);
 				add(locks.get(k - 1), eIdx);

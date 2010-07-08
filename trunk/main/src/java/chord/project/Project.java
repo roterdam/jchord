@@ -75,7 +75,7 @@ public class Project {
 
 		if (Properties.buildScope) {
 			program.getMethods();
-			// program.getReflectInfo();
+			program.getReflectInfo();
 		}
 
 		if (Properties.printAllClasses) {

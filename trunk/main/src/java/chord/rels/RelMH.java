@@ -27,12 +27,10 @@ public class RelMH extends ProgramRel {
 	public void fill() {
 		DomM domM = (DomM) doms[0];
 		DomH domH = (DomH) doms[1];
-		int numH = domH.size();
-		int numA = domH.getLastRealHidx();
-		Program program = Program.getProgram();
-		for (int hIdx = 1; hIdx < numA; hIdx++) {
+		int n = domH.getLastRealIdx();
+		for (int hIdx = 1; hIdx < n; hIdx++) {
 			Quad q = (Quad) domH.get(hIdx);
-			jq_Method m = program.getMethod(q);
+			jq_Method m = q.getMethod();
 			int mIdx = domM.indexOf(m);
 			assert (mIdx >= 0);
 			add(mIdx, hIdx);

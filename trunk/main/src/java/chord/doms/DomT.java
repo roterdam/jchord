@@ -25,14 +25,15 @@ public class DomT extends ProgramDom<jq_Type> {
 		Program program = Program.getProgram();
 		IndexSet<jq_Type> types = program.getTypes();
 		for (jq_Type t : types)
-			getOrAdd(t);
+			add(t);
 	}
     public String toXMLAttrsString(jq_Type t) {
         String name = t.getName();
 		String file;
-		if (t instanceof jq_Class)
-        	file = Program.getSourceFileName((jq_Class) t);
-		else
+		if (t instanceof jq_Class) {
+			jq_Class c = (jq_Class) t;
+        	file = c.getSourceFileName();
+		} else
 			file = "";
         int line = 0;  // TODO
         return "name=\"" + name +
