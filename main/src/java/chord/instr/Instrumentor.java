@@ -465,7 +465,7 @@ public class Instrumentor {
 		int n = b.size();
 		for (int i = 0; i < n; i++) {
 			Quad q = b.getQuad(i);
-			int bci = m.getBCI(q);
+			int bci = q.getBCI();
 			if (bci != -1)
 				return bci;
 		}
@@ -492,7 +492,7 @@ public class Instrumentor {
 			mName = javassistMethod.getName();
 		String mDesc = javassistMethod.getSignature();
 		String cName = javassistMethod.getDeclaringClass().getName();
-		mStr = Program.toString(mName, mDesc, cName);
+		mStr = mName + ":" + mDesc + "@" + cName;
 		if (Mmap != null) {
 			mId = Mmap.indexOf(mStr);
 			if (mId == -1) {
@@ -532,7 +532,7 @@ public class Instrumentor {
 						for (int i = 0; i < n; i++) {
 							Quad q = bb.getQuad(i);
 							if (isRelevant(q)) {
-								int bci = joeqMethod.getBCI(q);
+								int bci = q.getBCI();
 								assert (bci != -1);
 								int pId = domP.indexOf(q);
 								assert (pId != -1);
@@ -646,7 +646,7 @@ public class Instrumentor {
 		String fName = field.getName();
 		String fDesc = field.getSignature();
 		String cName = field.getDeclaringClass().getName();
-		String s = Program.toString(fName, fDesc, cName);
+		String s = fName + ":" + fDesc + "@" + cName;
 		int id = Fmap.indexOf(s);
 		if (id == -1) {
 			Messages.log("INSTR.NOT_IN_DOMAIN", "F", s);

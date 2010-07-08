@@ -29,7 +29,7 @@ public class RelWriteE extends ProgramRel {
 		for (int eIdx = 0; eIdx < numE; eIdx++) {
 			Quad e = (Quad) domE.get(eIdx);
 			Operator op = e.getOperator();
-			if (Program.isWrHeapInst(op))
+			if (op.isWrHeapInst())
 				add(eIdx);
 		}
 	}

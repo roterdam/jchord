@@ -48,7 +48,7 @@ public class DomF extends ProgramDom<jq_Field>
 		} else {
 			jq_Class c = f.getDeclaringClass();
 			sign = c.getName() + "." + f.getName();
-			file = Program.getSourceFileName(c);
+			file = c.getSourceFileName();
 			line = 0; // TODO
 		}
         return "sign=\"" + sign +

@@ -173,7 +173,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 	public String estr(int e) {		
 		if (e < 0) return "-";		
 		Quad quad = (Quad)domE.get(e);		
-		return Program.getProgram().toJavaPosStr(quad)+" "+Program.getProgram().toQuadStr(quad);
+		return quad.toJavaLocStr()+" "+quad.toString();
 	}
 
 	private void publishResults() {
@@ -215,7 +215,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 			}
 			view.free();
 			int p = domO.getOrAdd(new CSObj(pts));
-			jq_Field fld = Program.getField(tuple.val2);
+			jq_Field fld = tuple.val2.getField();
 			int f = domF.indexOf(fld);
 			out.println("<datarace Oid=\"O" + p +
 				"\" Fid=\"F" + f + "\" " +
@@ -287,7 +287,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 				"Tid=\"A" + domA.indexOf(srcCM)    + "\" " +
 				"Cid=\"C" + cIdx + "\" " +
 				"Eid=\"E" + eIdx + "\">");
-			jq_Method dstM = Program.getProgram().getMethod(heapInst);
+			jq_Method dstM = heapInst.getMethod();
 			int mIdx = domM.indexOf(dstM);
 			RelView view = relLE.getView();
 			view.selectAndDelete(1, eIdx);

@@ -29,10 +29,9 @@ public class RelME extends ProgramRel {
 		DomM domM = (DomM) doms[0];
 		DomE domE = (DomE) doms[1];
 		int numE = domE.size();
-		Program program = Program.getProgram();
 		for (int hIdx = 0; hIdx < numE; hIdx++) {
 			Quad q = (Quad) domE.get(hIdx);
-			jq_Method m = program.getMethod(q);
+			jq_Method m = q.getMethod();
 			int mIdx = domM.indexOf(m);
 			assert (mIdx >= 0);
 			add(mIdx, hIdx);

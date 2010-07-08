@@ -64,7 +64,7 @@ public class SrcFilesAnalysis extends JavaAnalysis {
 			if (seenClasses.add(c)) {
 				if (c.getName().contains("$"))
 					continue;
-				String fileName = Program.getSourceFileName(c);
+				String fileName = c.getSourceFileName();
 				if (fileName == null) {
 					System.out.println("WARNING: file not found for class: " + c);
 					continue;

@@ -18,7 +18,6 @@ import joeq.Compiler.Quad.Quad;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.doms.DomE;
 import chord.instr.InstrScheme;
-import chord.program.Program;
 import chord.project.Chord;
 import chord.project.OutDirUtils;
 import chord.project.Project;
@@ -141,14 +140,13 @@ public class DynamicMHPAnalysis extends DynamicAnalysis {
 		}
 		relMHP.save();
 		DomE domE = (DomE) Project.getTrgt("E");
-		Program program = Program.getProgram();
 		PrintWriter writer =
 			 OutDirUtils.newPrintWriter("dynamic_mhp.txt");
 		for (IntPair pair : mhp) {
 			Quad q1 = (Quad) domE.get(pair.idx0);
-			String s1 = program.toVerboseStr(q1);
+			String s1 = q1.toVerboseStr();
 			Quad q2 = (Quad) domE.get(pair.idx1);
-			String s2 = program.toVerboseStr(q2);
+			String s2 = q2.toVerboseStr();
 			writer.println(s1);
 			writer.println("\t" + s2);
 		}

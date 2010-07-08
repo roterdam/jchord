@@ -9,7 +9,6 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import chord.doms.DomI;
 import chord.doms.DomM;
-import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
@@ -28,10 +27,9 @@ public class RelMI extends ProgramRel {
 		DomM domM = (DomM) doms[0];
 		DomI domI = (DomI) doms[1];
 		int numI = domI.size();
-		Program program = Program.getProgram();
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			Quad q = (Quad) domI.get(iIdx);
-			jq_Method m = program.getMethod(q);
+			jq_Method m = q.getMethod();
 			int mIdx = domM.indexOf(m);
 			assert (mIdx >= 0);
 			add(mIdx, iIdx);

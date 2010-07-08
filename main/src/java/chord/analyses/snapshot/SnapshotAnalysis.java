@@ -175,8 +175,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
   private boolean computeStatementIsExcluded(int e) {
     if (includeAllQueries) return false;
-    Quad q = (Quad) domE.get(e);
-    jq_Class c = Program.getProgram().getMethod(q).getDeclaringClass();
+    Quad q = domE.get(e);
+    jq_Class c = q.getMethod().getDeclaringClass();
     return excludedClasses.contains(c);
   }
   private boolean computeFieldIsExcluded(int f) {
@@ -186,8 +186,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   }
   private boolean computeLockIsExcluded(int l) {
     if (includeAllQueries) return false;
-    Inst inst = (Inst)domL.get(l);
-    jq_Class c = Program.getProgram().getMethod(inst).getDeclaringClass();
+    Inst inst = domL.get(l);
+    jq_Class c = inst.getMethod().getDeclaringClass();
     return excludedClasses.contains(c);
   }
   public boolean statementIsExcluded(int e) { return statementIsExcluded[e]; }
@@ -426,7 +426,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   public String estr(int e) {
     if (e < 0) return "-";
     Quad quad = (Quad)domE.get(e);
-    return Program.getProgram().toJavaPosStr(quad)+" "+Program.getProgram().toQuadStr(quad);
+    return quad.toJavaLocStr()+" "+quad.toString();
   }
   public String mstr(int m) { return m < 0 ? "-" : domM.toUniqueString(m); } // method
   public String istr(int i) { return i < 0 ? "-" : domI.toUniqueString(i); } // call site

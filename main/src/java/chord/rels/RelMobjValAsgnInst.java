@@ -15,7 +15,6 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.doms.DomH;
 import chord.doms.DomM;
 import chord.doms.DomV;
-import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
@@ -34,11 +33,10 @@ public class RelMobjValAsgnInst extends ProgramRel {
 		DomM domM = (DomM) doms[0];
 		DomV domV = (DomV) doms[1];
 		DomH domH = (DomH) doms[2];
-		Program program = Program.getProgram();
-		int numA = domH.getLastRealHidx();
-		for (int hIdx = 1; hIdx <= numA; hIdx++) {
+		int n = domH.getLastRealIdx();
+		for (int hIdx = 1; hIdx <= n; hIdx++) {
 			Quad q = (Quad) domH.get(hIdx);
-			jq_Method m = program.getMethod(q);
+			jq_Method m = q.getMethod();
 			int mIdx = domM.indexOf(m);
 			assert (mIdx >= 0);
 			Operator op = q.getOperator();

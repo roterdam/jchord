@@ -8,6 +8,8 @@ package chord.program;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Collections;
 import java.util.Set;
 
 import joeq.Class.PrimordialClassLoader;
@@ -34,6 +36,7 @@ import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
 import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
+
 import chord.project.Properties;
 import chord.project.Messages;
 import chord.util.IndexSet;
@@ -45,7 +48,7 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CHAScope implements IScope {
+public class CHAProgram extends Program {
     public static final boolean DEBUG = false;
 	private IndexSet<jq_Reference> classes;
 	// all classes whose clinits and super class/interface clinits have been
@@ -57,14 +60,16 @@ public class CHAScope implements IScope {
 	private List<jq_Method> methodWorklist;
 	private jq_Class javaLangObject;
 	private ClassHierarchy ch;
-	public IndexSet<jq_Method> getMethods() {
+	@Override
+	protected IndexSet<jq_Method> computeMethods() {
 		if (methods == null)
 			build();
 		return methods;
 	}
-    public IndexSet<jq_Reference> getReflectClasses() {
-        return new IndexSet<jq_Reference>(0);
-    }
+	@Override
+	protected ReflectInfo computeReflectInfo() {
+		return new ReflectInfo();
+	}
 	private void build() {
 		System.out.println("ENTER: CHA");
 		Timer timer = new Timer();
@@ -73,8 +78,7 @@ public class CHAScope implements IScope {
  		classesVisitedForClinit = new HashSet<jq_Class>();
 		methods = new IndexSet<jq_Method>();
  		methodWorklist = new ArrayList<jq_Method>();
-       	ch = new ClassHierarchy();
-		ch.build();
+       	ch = getClassHierarchy();
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
@@ -109,7 +113,8 @@ public class CHAScope implements IScope {
 	}
 
 	private void processCFG(ControlFlowGraph cfg) {
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
+		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+				it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
 			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 				Quad q = it2.nextQuad();
@@ -120,37 +125,23 @@ public class CHAScope implements IScope {
 					jq_Class c = n.getDeclaringClass();
 					visitClass(c);
 					visitMethod(n);
-					if (op instanceof InvokeVirtual || op instanceof InvokeInterface) {
+					if (op instanceof InvokeVirtual ||
+							op instanceof InvokeInterface) {
 						jq_NameAndDesc nd = n.getNameAndDesc();
 						String cName = c.getName();
-						if (c.isInterface()) {
-							Set<String> implementors = ch.getConcreteImplementors(cName);
-							if (implementors == null)
-								continue;
-							for (String dName : implementors) {
-								jq_Class d = (jq_Class) jq_Type.parseType(dName);
-								visitClass(d);
-								assert (!d.isInterface());
-								assert (!d.isAbstract());
-								jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-								assert (m2 != null);
-								visitMethod(m2);
-							}
-						} else {
-							Set<String> subclasses = ch.getConcreteSubclasses(cName);
-							if (subclasses == null)
-								continue;
-							for (String dName : subclasses) {
-								jq_Class d = (jq_Class) jq_Type.parseType(dName);
-								visitClass(d);
-								assert (!d.isInterface());
-								assert (!d.isAbstract());
-								jq_InstanceMethod m2 = d.getVirtualMethod(nd);
-								if (m2 == null)
-									System.out.println(d + " " + nd);
-								assert (m2 != null);
-								visitMethod(m2);
-							}
+						Set<String> subs = ch.getConcreteSubclasses(cName);
+						if (subs == null)
+							continue;
+						for (String dName : subs) {
+							jq_Class d = (jq_Class) jq_Type.parseType(dName);
+							visitClass(d);
+							assert (!d.isInterface());
+							assert (!d.isAbstract());
+							jq_InstanceMethod m2 = d.getVirtualMethod(nd);
+							if (m2 == null)
+								System.out.println(d + " " + nd);
+							assert (m2 != null);
+							visitMethod(m2);
 						}
 					} else
 						assert (op instanceof InvokeStatic);

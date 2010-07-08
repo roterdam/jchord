@@ -7,7 +7,7 @@ package chord.rels;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
-import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import chord.doms.DomL;
 import chord.doms.DomM;
 import chord.program.Program;
@@ -29,11 +29,10 @@ public class RelSyncLM extends ProgramRel {
 		DomL domL = (DomL) doms[0];
 		DomM domM = (DomM) doms[1];
 		int numL = domL.size();
-		Program program = Program.getProgram();
 		for (int lIdx = 0; lIdx < numL; lIdx++) {
 			Inst i = domL.get(lIdx);
-			if (!(i instanceof Quad)) {
-				jq_Method m = program.getMethod(i);
+			if (i instanceof EntryOrExitBasicBlock) {
+				jq_Method m = i.getMethod();
 				int mIdx = domM.indexOf(m);
 				assert (mIdx >= 0);
 				add(lIdx, mIdx);

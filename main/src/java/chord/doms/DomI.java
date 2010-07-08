@@ -26,31 +26,25 @@ import chord.project.analyses.ProgramDom;
 )
 public class DomI extends ProgramDom<Quad> implements IInvokeInstVisitor {
 	protected DomM domM;
-	protected jq_Method ctnrMethod;
 	public void init() {
 		domM = (DomM) Project.getTrgt("M");
 	}
 	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (!m.isAbstract())
-			ctnrMethod = m;
-	}
+	public void visit(jq_Method m) { }
 	public void visitInvokeInst(Quad q) {
-		assert (ctnrMethod != null);
-		Program.getProgram().mapInstToMethod(q, ctnrMethod);
-		getOrAdd(q);
+		add(q);
 	}
 	public String toUniqueString(Quad q) {
-		return Program.getProgram().toBytePosStr(q);
+		return q.toByteLocStr();
 	}
 	public String toXMLAttrsString(Quad q) {
 		Operator op = q.getOperator();
-		jq_Method m = Program.getProgram().getMethod(q);
-		String file = Program.getSourceFileName(m.getDeclaringClass());
-		int line = Program.getLineNumber(q, m);
+		jq_Method m = q.getMethod();
+		String file = m.getDeclaringClass().getSourceFileName();
+		int line = q.getLineNumber();
 		int mIdx = domM.indexOf(m);
 		return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
 			"Mid=\"M" + mIdx + "\"" +
-			" rdwr=\"" + (Program.isWrHeapInst(op) ? "Wr" : "Rd") + "\"";
+			" rdwr=\"" + (op.isWrHeapInst() ? "Wr" : "Rd") + "\"";
 	}
 }

@@ -227,8 +227,8 @@ public class DynamicFIEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 			while (iterator3.hasNext()) {
 				int next = iterator3.next();
 				if (next != -1) {
-					Quad q = (Quad) domE.get(next);
-					String s = program.toVerboseStr(q);
+					Quad q = domE.get(next);
+					String s = q.toVerboseStr();
 					writer.println(s);
 				}
 			}
@@ -241,8 +241,8 @@ public class DynamicFIEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 					while (iterator4.hasNext()) {
 						int next = iterator4.next();
 						if (next != -1) {
-							Quad q = (Quad) domE.get(next);
-							String s = program.toVerboseStr(q);
+							Quad q = domE.get(next);
+							String s = q.toVerboseStr();
 							writer.println(s);
 						}
 					}

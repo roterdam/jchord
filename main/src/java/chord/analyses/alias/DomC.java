@@ -10,6 +10,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
+import joeq.Compiler.Quad.Operator.MultiNewArray;
 import chord.project.Project;
 import chord.project.analyses.ProgramDom;
 import chord.doms.DomI;
@@ -48,7 +49,8 @@ public class DomC extends ProgramDom<Ctxt> {
 		for (int i = 0; i < n; i++) {
 			Quad eVal = elems[i];
 			Operator op = eVal.getOperator();
-			if (op instanceof New || op instanceof NewArray) {
+			if (op instanceof New || op instanceof NewArray ||
+					op instanceof MultiNewArray) {
 				int hIdx = domH.indexOf(eVal);
 				s += "H" + hIdx;
 			} else if (op instanceof Invoke) {

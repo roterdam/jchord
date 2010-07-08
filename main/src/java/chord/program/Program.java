@@ -5,6 +5,7 @@
  */
 package chord.program;
 
+import java.util.Iterator;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -23,10 +24,12 @@ import java.io.IOException;
 
 import com.java2html.Java2HTML;
 
+import chord.util.tuple.object.Pair;
 import chord.project.Project;
 import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Properties;
+import chord.util.ArraySet;
 import chord.util.IndexSet;
 import chord.util.FileUtils;
 import chord.util.ChordRuntimeException;
@@ -45,7 +48,6 @@ import joeq.Class.jq_Method;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand;
@@ -70,89 +72,111 @@ import joeq.Main.Helper;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Program {
+public abstract class Program {
+	private IndexSet<jq_Method> methods;
+	private ReflectInfo reflectInfo;
 	private IndexSet<jq_Type> types;
 	private IndexSet<jq_Reference> classes;
-	private IndexSet<jq_Reference> reflectClasses;
-	private IndexSet<jq_Method> methods;
 	private Map<String, jq_Type> nameToTypeMap;
 	private Map<String, jq_Reference> nameToClassMap;
 	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
 	private jq_Method mainMethod;
 	private boolean HTMLizedJavaSrcFiles;
-	private final Map<Inst, jq_Method> instToMethodMap = 
-		new HashMap<Inst, jq_Method>();
-	private ClassHierarchy ch;
-	private Program() { }
+	private final boolean reuseScope;
+    private ClassHierarchy ch;
 	private static Program program;
-	public static Program getProgram() {
+	protected Program() {
+		if (Properties.verbose)
+			jq_Method.setVerbose();
+		if (Properties.doSSA)
+			jq_Method.doSSA();
+		jq_Method.exclude(Properties.scopeExcludeAry);
+		reuseScope = Properties.reuseScope;
+	}
+	public final static Program getProgram() {
 		if (program == null) {
-			if (Properties.verbose)
-				jq_Method.setVerbose();
-			if (Properties.doSSA)
-				jq_Method.doSSA();
-			jq_Method.exclude(Properties.scopeExcludeAry);
-			program = new Program();
+			String scopeKind = Properties.scopeKind;
+			if (scopeKind.equals("rta")) {
+				program = new RTAProgram(
+					Properties.handleForNameReflection,
+					Properties.handleNewInstReflection);
+			} else if (scopeKind.equals("dynamic")) {
+				program = new DynamicProgram();
+			} else if (scopeKind.equals("cha")) {
+				program = new CHAProgram();
+			} else {
+				Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
+				program = null;
+			}
 		}
 		return program;
 	}
-
-
-	public IndexSet<jq_Reference> getReflectClasses() {
-		if (reflectClasses == null)
-			computeReachableMethods();
-		return reflectClasses;
-	}
-
-	public IndexSet<jq_Method> getMethods() {
-		if (methods == null)
-			computeReachableMethods();
+    /**
+     * Provides the class hierarchy.
+     */
+    public final ClassHierarchy getClassHierarchy() {
+        if (ch == null)
+            ch = new ClassHierarchy();
+        return ch;
+    }
+    /**
+     * Provides all methods deemed reachable.
+     */
+    public final IndexSet<jq_Method> getMethods() {
+		if (methods == null) {
+			String methodsFileName = Properties.methodsFileName;
+			File methodsFile = new File(methodsFileName);
+			if (reuseScope && methodsFile.exists()) {
+				loadMethodsFile(methodsFile);
+			} else {
+				methods = computeMethods();
+				saveMethodsFile(methodsFile);
+			}
+		}
 		return methods;
 	}
-
+	/**
+	 * Provides resolved reflection information.
+	 */
+	public final ReflectInfo getReflectInfo() {
+		if (reflectInfo == null) {
+			String reflectFileName = Properties.reflectFileName;
+			File reflectFile = new File(reflectFileName);
+			if (reuseScope && reflectFile.exists()) {
+				loadReflectFile(reflectFile);
+			} else {
+				reflectInfo = computeReflectInfo();
+				saveReflectFile(reflectFile);
+			}
+		}
+		return reflectInfo;
+	}
+	/**
+	 * Computes reachable methods.
+	 * Subclasses must override.
+	 */
+	protected IndexSet<jq_Method> computeMethods() {
+		throw new ChordRuntimeException();
+	}
+	/**
+	 * Resolves reflection.
+	 * Subclasses must override.
+	 */
+	protected ReflectInfo computeReflectInfo() {
+		throw new ChordRuntimeException();
+	}
     public final IndexSet<jq_Reference> getClasses() {
         if (classes == null)
             computeClassesAndTypes();
         return classes;
     }
-
     public final IndexSet<jq_Type> getTypes() {
         if (types == null)
             computeClassesAndTypes();
         return types;
     }
-
-	private void computeReachableMethods() {
-		assert (methods == null);
-		assert (reflectClasses == null);
-		boolean filesExist =
-			(new File(Properties.methodsFileName)).exists() &&
-			(new File(Properties.reflectFileName)).exists();
-		IScope scope = null;
-		if (Properties.reuseScope && filesExist) {
-			loadMethods();
-			return;
-		}
-		String scopeKind = Properties.scopeKind;
-		if (scopeKind.equals("rta")) {
-			scope = new RTAScope(Properties.handleNewInstReflection,
-				Properties.handleForNameReflection);
-		} else if (scopeKind.equals("dynamic")) {
-			scope = new DynamicScope();
-		} else if (scopeKind.equals("cha")) {
-			scope = new CHAScope();
-		} else
-			Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
-		methods = scope.getMethods();
-		reflectClasses = scope.getReflectClasses();
-		write();
-	}
-
     private void computeClassesAndTypes() {
-        assert (classes == null);
-        assert (types == null);
-		if (methods == null)
-			computeReachableMethods();
+		getMethods();
         PrimordialClassLoader loader = PrimordialClassLoader.loader;
         jq_Type[] typesAry = loader.getAllTypes();
         int numTypes = loader.getNumTypes();
@@ -171,37 +195,21 @@ public class Program {
             }
         }
     }
-
-	public static jq_Reference loadClass(String s) {
-		if (Properties.verbose)
-			Messages.log("SCOPE.LOADING_CLASS", s);
-		try {
-			jq_Reference c = (jq_Reference) jq_Type.parseType(s);
-			c.prepare();
-			return c;
-		} catch (Exception ex) {
-			Messages.log("SCOPE.EXCLUDING_CLASS", s);
-			ex.printStackTrace();
-			return null;
-		}
-	}
-
-	private void loadMethods() {
-		assert (methods == null);
-		HostedVM.initialize();
-        methods = new IndexSet<jq_Method>();
-        String methodsFileName = Properties.methodsFileName;
-        List<String> methodSigns = FileUtils.readFileToList(methodsFileName);
+	private void loadMethodsFile(File file) {
+		List<String> l = FileUtils.readFileToList(file);
 		Set<String> excludedClasses = new HashSet<String>();
-        for (String s : methodSigns) {
-            MethodSign sign = MethodSign.parse(s);
-            String cName = sign.cName;
+		methods = new IndexSet<jq_Method>(l.size());
+		HostedVM.initialize();
+		for (String s : l) {
+			MethodSign sign = MethodSign.parse(s);
+			String cName = sign.cName;
 			if (!excludedClasses.contains(cName)) {
 				jq_Class c = (jq_Class) loadClass(cName);
 				if (c != null) {
-            		String mName = sign.mName;
-            		String mDesc = sign.mDesc;
-					jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
+					String mName = sign.mName;
+					String mDesc = sign.mDesc;
+					jq_Method m =
+						(jq_Method) c.getDeclaredMember(mName, mDesc);
 					assert (m != null);
 					if (!m.isAbstract())
 						m.getCFG();
@@ -210,50 +218,115 @@ public class Program {
 					excludedClasses.add(cName);
 			}
 		}
-		reflectClasses = new IndexSet<jq_Reference>();
-		String reflectFileName = Properties.reflectFileName;
-		List<String> reflectClassNames = FileUtils.readFileToList(reflectFileName);
-		for (String cName : reflectClassNames) {
-			if (!excludedClasses.contains(cName)) {
-				jq_Reference r = loadClass(cName);
-				if (r != null)
-					reflectClasses.add(r);
-				else
-					excludedClasses.add(cName);
-			}
-		}
 	}
-
-	private void write() {
-		assert (methods != null);
-		assert (reflectClasses != null);
-		write(methods, reflectClasses);
-	}
-
-	public static void write(IndexSet<jq_Method> mList, IndexSet<jq_Reference> rList) {
-        try {
-            PrintWriter out;
-            out = new PrintWriter(Properties.methodsFileName);
-            for (jq_Method m : mList)
-                out.println(m);
-            out.close();
-            out = new PrintWriter(Properties.reflectFileName);
-			for (jq_Reference r : rList)
-           	    out.println(r);
+	private void saveMethodsFile(File file) {
+		try {
+			PrintWriter out = new PrintWriter(file);
+			for (jq_Method m : methods)
+				out.println(m);
 			out.close();
-        } catch (IOException ex) {
-            throw new ChordRuntimeException(ex);
-        }
-	}
-
-	public ClassHierarchy getClassHierarchy() {
-		if (ch == null) {
-			ch = new ClassHierarchy();
-			ch.build();
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
 		}
-		return ch;
 	}
 
+	private void loadReflectFile(File file) {
+		List<String> l = FileUtils.readFileToList(file);
+		int n = l.size();
+		assert (n >= 3);
+		int i = 0;
+		assert (l.get(i++).equals("# reflectClasses"));
+		Set<jq_Reference> reflectClasses = new ArraySet<jq_Reference>();
+		for (; true; i++) {
+			String s = l.get(i);
+			if (s.startsWith("#"))
+				break;
+			jq_Reference r = loadClass(s);
+			if (r != null)
+				reflectClasses.add(r);
+		}
+		assert (l.get(i++).equals("# resolvedForNameSites"));
+		Set<Pair<Quad, Set<jq_Reference>>> resolvedForNameSites =
+			new ArraySet<Pair<Quad, Set<jq_Reference>>>();
+		for (; true; i++) {
+			String s = l.get(i);
+			if (s.startsWith("#"))
+				break;
+			Pair<Quad, Set<jq_Reference>> site = strToSite(s);
+			resolvedForNameSites.add(site);
+		}
+		assert (l.get(i++).equals("# resolvedNewInstSites"));
+		Set<Pair<Quad, Set<jq_Reference>>> resolvedNewInstSites =
+			new ArraySet<Pair<Quad, Set<jq_Reference>>>();
+		for (; i < n; i++) {
+			String s = l.get(i);
+			Pair<Quad, Set<jq_Reference>> site = strToSite(s);
+			resolvedNewInstSites.add(site);
+		}
+		reflectInfo = new ReflectInfo(reflectClasses, resolvedForNameSites,
+			resolvedNewInstSites);
+	}
+	private Pair<Quad, Set<jq_Reference>> strToSite(String s) {
+		String[] a = s.split("->");
+		assert (a.length == 2);
+		MethodElem e = MethodElem.parse(a[0]);
+		Quad q = getQuad(e, Invoke.class);
+		assert (q != null);
+		String[] rNames = a[1].split(",");
+		Set<jq_Reference> rTypes = new ArraySet<jq_Reference>(rNames.length);
+		for (String rName : rNames) {
+			jq_Reference r = loadClass(rName);
+			if (r != null)
+				rTypes.add(r);
+		}
+		return new Pair<Quad, Set<jq_Reference>>(q, rTypes);
+	}
+	private String siteToStr(Pair<Quad, Set<jq_Reference>> p) {
+		Set<jq_Reference> l = p.val1;
+		assert (l != null);
+		int n = l.size();
+		Iterator<jq_Reference> it = l.iterator();
+ 		assert (n > 0);
+		String s = p.val0.toByteLocStr() + "->" + it.next();
+		for (int i = 1; i < n; i++)
+			s += "," + it.next();
+		return s;
+	}
+	private void saveReflectFile(File file) {
+		try {
+            PrintWriter out = new PrintWriter(file);
+			out.println("# reflectClasses");
+			for (jq_Reference r : reflectInfo.getReflectClasses())
+           	    out.println(r);
+			out.println("# resolvedForNameSites");
+			for (Pair<Quad, Set<jq_Reference>> p : reflectInfo.getResolvedForNameSites()) {
+				String s = siteToStr(p);
+				out.println(s);
+			}
+			out.println("# resolvedNewInstSites");
+			for (Pair<Quad, Set<jq_Reference>> p : reflectInfo.getResolvedNewInstSites()) {
+				String s = siteToStr(p);
+				out.println(s);
+			}
+			out.close();
+		} catch (IOException ex) {
+			throw new ChordRuntimeException(ex);
+		}
+	}
+
+	public static jq_Reference loadClass(String s) {
+		if (Properties.verbose)
+			Messages.log("SCOPE.LOADING_CLASS", s);
+		try {
+			jq_Reference c = (jq_Reference) jq_Type.parseType(s);
+			c.prepare();
+			return c;
+		} catch (Throwable ex) {
+			Messages.log("SCOPE.EXCLUDING_CLASS", s);
+			ex.printStackTrace();
+			return null;
+		}
+	}
 	private void buildNameToTypeMap() {
 		assert (nameToTypeMap == null);
 		IndexSet<jq_Type> types = getTypes();
@@ -346,21 +419,12 @@ public class Program {
 		return nameToTypeMap.get(name);
 	}
 
-	////////
-
-	public void mapInstToMethod(Inst i, jq_Method m) {
-		instToMethodMap.put(i, m);
+	public Quad getQuad(MethodElem e, Class quadOpClass) {
+		int offset = e.offset;
+		jq_Method m = getMethod(e.mName, e.mDesc, e.cName);
+		assert (m != null);
+		return m.getQuad(offset, quadOpClass);
 	}
-
-	public jq_Method getMethod(Inst i) {
-		jq_Method m = instToMethodMap.get(i);
-		if (m == null) {
-			throw new ChordRuntimeException("Cannot find method containing inst: " + i);
-		}
-		return m;
-	}
-
-	////////
 
 	public static String getSign(jq_Method m) {
 		String d = m.getDesc().toString();
@@ -502,221 +566,10 @@ public class Program {
 		}
 	}
 	
-	public static int getLineNumber(Quad q, jq_Method m) {
-		int bci = m.getBCI(q);
-		if (bci == -1)
-			return 0;
-		return m.getLineNumber(bci);
-	}
-	
-	public static int getLineNumber(Inst i, jq_Method m) {
-		if (i instanceof Quad)
-			return getLineNumber((Quad) i, m);
-		return 0;
-	}
-	
-	public static String toString(int bci, String mName, String mDesc,
-			String cName) {
-		return bci + "!" + mName + ":" + mDesc + "@" + cName;
-	}
-	
-	public static String toString(String name, String desc, String cName) {
-		return name + ":" + desc + "@" + cName;
-	}
-
-	public static jq_Field getField(Quad e) {
-		Operator op = e.getOperator();
-		if (op instanceof ALoad || op instanceof AStore)
-			return null;
-		if (op instanceof Getfield)
-			return Getfield.getField(e).getField();
-		if (op instanceof Putfield)
-			return Putfield.getField(e).getField();
-		if (op instanceof Getstatic)
-			return Getstatic.getField(e).getField();
-		if (op instanceof Putstatic)
-			return Putstatic.getField(e).getField();
-		throw new RuntimeException();
-	}
-	
-	public static boolean isHeapInst(Operator op) {
-		return op instanceof ALoad || op instanceof AStore ||
-			op instanceof Getfield || op instanceof Putfield ||
-			op instanceof Getstatic || op instanceof Putstatic;
-	}
-	
-	public static boolean isWrHeapInst(Operator op) {
-		return op instanceof Putfield || op instanceof AStore ||
-			op instanceof Putstatic;
-	}
-	
-	public static String getSourceFileName(jq_Class c) {
-		Utf8 f = c.getSourceFile();
-		if (f == null)
-			return null;
-		String t = c.getName();
-		int i = t.lastIndexOf('.') + 1;
-		String s = t.substring(0, i);
-		return s.replace('.', '/') + f;
-	}
-
 	/**************************************************************
-	 * Functions for printing program structures in various formats
+	 * Functions for printing methods and classes
 	 **************************************************************/
 
-	public String toVerboseStr(Quad q) {
-		return toBytePosStr(q) + " (" + toJavaPosStr(q) + ") [" + toQuadStr(q) + "]";
-	}
-
-	public String toPosStr(Quad q) {
-		return toBytePosStr(q) + " (" + toJavaPosStr(q) + ")";
-	}
-
-	public String toJavaPosStr(Quad q) {
-		jq_Method m = getMethod(q);
-		jq_Class c = m.getDeclaringClass();
-		String fileName = getSourceFileName(c);
-		int lineNumber = getLineNumber(q, m);
-		return fileName + ":" + lineNumber;
-	}
-
-	public String toBytePosStr(Inst i) {
-        if (i == null)
-            return "null";
-        jq_Method m = getMethod(i);
-        int bci;
-        if (i instanceof Quad)
-            bci = m.getBCI((Quad) i);
-        else {
-            BasicBlock b = (BasicBlock) i;
-            if (b.isEntry())
-                bci = -1;
-            else {
-                assert (b.isExit());
-                bci = -2;
-            }
-        }
-        String mName = m.getName().toString();
-        String mDesc = m.getDesc().toString();
-        String cName = m.getDeclaringClass().getName();
-        return toString(bci, mName, mDesc, cName);
-	}
-
-	public static String toBytePosStr(Quad q, jq_Method m) {
-        int bci = m.getBCI(q);
-        String mName = m.getName().toString();
-        String mDesc = m.getDesc().toString();
-        String cName = m.getDeclaringClass().getName();
-        return toString(bci, mName, mDesc, cName);
-	}
-
-	public String toQuadStr(Quad q) {
-		Operator op = q.getOperator();
-		if (op instanceof Move || op instanceof CheckCast) {
-			return Move.getDest(q) + " = " + Move.getSrc(q);
-		}
-		if (op instanceof Getfield || op instanceof Putfield ||
-				op instanceof ALoad || op instanceof AStore ||
-				op instanceof Getstatic || op instanceof Putstatic) {
-			return toStringHeapInst(q);
-		}
-		if (op instanceof New || op instanceof NewArray)
-			return toStringNewInst(q);
-		if (op instanceof Invoke)
-			return toStringInvokeInst(q);
-		return q.toString();
-	}
-
-	public static String toString(RegisterOperand op) {
-		return "<" + op.getType().getName() + " " + op.getRegister() + ">";
-	}
-
-	public static String toString(Operand op) {
-		if (op instanceof RegisterOperand)
-			return toString((RegisterOperand) op);
-		return op.toString();
-	}
-
-	public String toStringInvokeInst(Quad q) {
-		String s = "";
-		RegisterOperand ro = Invoke.getDest(q);
-		if (ro != null) 
-			s = toString(ro) + " = ";
-		else
-			s = "";
-		jq_Method m = Invoke.getMethod(q).getMethod();
-		s += m.getNameAndDesc().toString() + "(";
-		ParamListOperand po = Invoke.getParamList(q);
-		int n = po.length();
-		for (int i = 0; i < n; i++) {
-			s += toString(po.get(i));
-			if (i < n - 1)
-				s += ",";
-		}
-		return s + ")";
-	}
-	
-	public String toStringNewInst(Quad q) {
-		String t, l;
-		if (q.getOperator() instanceof New) {
-			l = toString(New.getDest(q));
-			t = New.getType(q).getType().getName();
-		} else {
-			l = toString(NewArray.getDest(q));
-			t = NewArray.getType(q).getType().getName();
-		}
-		return l + " = new " + t;
-	}
-	
-	public String toStringHeapInst(Quad q) {
-		Operator op = q.getOperator();
-		String s;
-		if (isWrHeapInst(op)) {
-			String b, f, r;
-			if (op instanceof Putfield) {
-				b = toString(Putfield.getBase(q)) + ".";
-				f = Putfield.getField(q).getField().toString();
-				r = toString(Putfield.getSrc(q));
-			} else if (op instanceof AStore) {
-				b = toString(AStore.getBase(q));
-				f = "[*]";
-				r = toString(AStore.getValue(q));
-			} else {
-				b = "";
-				f = Putstatic.getField(q).getField().toString();
-				r = toString(Putstatic.getSrc(q));
-			}
-			s = b + f + " = " + r;
-		} else {
-			String l, b, f;
-			if (op instanceof Getfield) {
-				l = toString(Getfield.getDest(q));
-				b = toString(Getfield.getBase(q)) + ".";
-				f = Getfield.getField(q).getField().toString();
-			} else if (op instanceof ALoad) {
-				l = toString(ALoad.getDest(q));
-				b = toString(ALoad.getBase(q));
-				f = "[*]";
-			} else {
-				l = toString(Getstatic.getDest(q));
-				b = "";
-				f = Getstatic.getField(q).getField().toString();
-			}
-			s = l + " = " + b + f;
-			
-		}
-		return s;
-	}
-	
-	public String toStringLockInst(Inst q) {
-		String s;
-		if (q instanceof Quad)
-			s = Monitor.getSrc((Quad) q).toString();
-		else
-			s = getMethod(q).toString();
-		return "monitorenter " + s;
-	}
-	
 	public void printMethod(String sign) {
 		jq_Method m = getMethod(sign);
 		if (m == null)
@@ -746,7 +599,7 @@ public class Program {
 				BasicBlock bb = it.nextBasicBlock();
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();                        
-					int bci = m.getBCI(q);
+					int bci = q.getBCI();
 					System.out.println("\t" + bci + "#" + q.getID());
 				}
 			}

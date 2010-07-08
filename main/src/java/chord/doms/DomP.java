@@ -6,6 +6,7 @@
 package chord.doms;
 
 import joeq.Class.jq_Method;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;
@@ -49,14 +50,13 @@ public class DomP extends ProgramDom<Inst> {
 				BasicBlock bb = it.nextBasicBlock();
 				int n = bb.size();
 				if (n == 0) {
-					Program.getProgram().mapInstToMethod(bb, m);
-					getOrAdd(bb);
+					assert (bb.isEntry() || bb.isExit());
+					add((EntryOrExitBasicBlock) bb);
 					continue;
 				}
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();
-					Program.getProgram().mapInstToMethod(q, m);
-					getOrAdd(q);
+					add(q);
 				}
 			}
 		}
@@ -66,7 +66,7 @@ public class DomP extends ProgramDom<Inst> {
 		if (i instanceof Quad) {
 			x = ((Quad) i).getID();
 		} else {
-			BasicBlock bb = (BasicBlock) i;
+			EntryOrExitBasicBlock bb = (EntryOrExitBasicBlock) i;
 			if (bb.isEntry())
 				x = -1;
 			else {
@@ -74,6 +74,6 @@ public class DomP extends ProgramDom<Inst> {
 				x = -2;
 			}
 		}
-		return x + "!" + Program.getProgram().getMethod(i);
+		return x + "!" + i.getMethod();
 	}
 }

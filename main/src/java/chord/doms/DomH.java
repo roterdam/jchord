@@ -12,14 +12,19 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Operand.TypeOperand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
+import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Util.Templates.ListIterator;
+
 import chord.project.Chord;
 import chord.project.Project;
+import chord.program.PhantomObjVal;
+import chord.program.PhantomClsVal;
 import chord.project.Properties;
 import chord.project.analyses.ProgramDom;
 import chord.program.Program;
@@ -42,19 +47,21 @@ import chord.util.tuple.object.Pair;
 )
 public class DomH extends ProgramDom<Object> {
 	protected DomM domM;
-	protected DomT domT;
-	protected int lastRealHidx;
-	public int getLastRealHidx() {
-		return lastRealHidx;
+	protected int lastRealIdx;
+	protected int lastPhantomObjIdx;
+	public int getLastRealIdx() {
+		return lastRealIdx;
 	}
-	public void init() {		
+	public int getLastPhantomObjIdx() {
+		return lastPhantomObjIdx;
+	}
+	public void init() {
 		domM = (DomM) Project.getTrgt("M");
-		domT = (DomT) Project.getTrgt("T");
-		getOrAdd(null);	
 	}
 	public void fill() {
 		Program program = Program.getProgram();
 		int numM = domM.size();
+		add(null);	
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
 			if (m.isAbstract())
@@ -66,25 +73,37 @@ public class DomH extends ProgramDom<Object> {
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();
 					Operator op = q.getOperator();
-					if (op instanceof New || op instanceof NewArray) {
-						program.mapInstToMethod(q, m);
-						getOrAdd(q);
-					}
+					if (op instanceof New || op instanceof NewArray ||
+							op instanceof MultiNewArray) 
+						add(q);
 				}
 			}
 		}
-		lastRealHidx = size() - 1;
-		for (jq_Reference c : program.getReflectClasses())
-			getOrAdd(c);
+		lastRealIdx = size() - 1;
+/*
+		for (jq_Reference r : program.getReflectInfo().getReflectClasses()) {
+			add(new PhantomObjVal(r));
+		}
+*/
+		lastPhantomObjIdx = size() - 1;
+/*
+		for (jq_Reference r : program.getClasses()) {
+			add(new PhantomClsVal(r));
+		}
+*/
 	}
 	public String toUniqueString(Object o) {
 		if (o instanceof Quad) {
 			Quad q = (Quad) o;
-			return Program.getProgram().toBytePosStr(q);
+			return q.toByteLocStr();
 		}
-		if (o instanceof jq_Reference) {
-			jq_Reference r = (jq_Reference) o;
-			return r.getName();
+		if (o instanceof PhantomObjVal) {
+			jq_Reference r = ((PhantomObjVal) o).r;
+			return r.getName() + "@phantom_obj";
+		}
+		if (o instanceof PhantomClsVal) {
+			jq_Reference r = ((PhantomClsVal) o).r;
+			return r.getName() + "@phantom_cls";
 		}
 		assert (o == null);
 		return "null";
@@ -93,11 +112,19 @@ public class DomH extends ProgramDom<Object> {
 		if (o instanceof Quad) {
 			Quad q = (Quad) o;
 			Operator op = q.getOperator();
-			String type = (op instanceof New) ? New.getType(q).getType().getName() :
-				(op instanceof NewArray) ? NewArray.getType(q).getType().getName() : "unknown";
-			jq_Method m = Program.getProgram().getMethod(q);
-			String file = Program.getSourceFileName(m.getDeclaringClass());
-			int line = Program.getLineNumber(q, m);
+			TypeOperand to;
+			if (op instanceof New) 
+				to = New.getType(q);
+			else if (op instanceof NewArray) 
+				to = NewArray.getType(q);
+			else {
+				assert (op instanceof MultiNewArray);
+				to = MultiNewArray.getType(q);
+			}
+			String type = to.getType().getName();
+			jq_Method m = q.getMethod();
+			String file = m.getDeclaringClass().getSourceFileName();
+			int line = q.getLineNumber();
 			int mIdx = domM.indexOf(m);
 			return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
 				"Mid=\"M" + mIdx + "\"" + " type=\"" + type + "\"";

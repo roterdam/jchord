@@ -93,7 +93,7 @@ public class Ctxt implements Serializable {
 		int n = elems.length;
 		for (int i = 0; i < n; i++) {
 			Quad q = elems[i];
-			s += Program.getProgram().toBytePosStr(q);
+			s += q.toByteLocStr();
 			if (i < n - 1)
 				s += ",";
 		}
