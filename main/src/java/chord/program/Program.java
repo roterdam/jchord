@@ -73,6 +73,16 @@ import joeq.Main.Helper;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public abstract class Program {
+	private static final String INVALID_SCOPE_KIND = "ERROR: Invalid value `%s` used for property chord.scope.kind; must be one of [dynamic|rta|cha].";
+	private static final String LOADING_CLASS = "INFO: Loading class %s.";
+	private static final String EXCLUDING_CLASS = "WARN: Excluding class %s from analysis scope; reason follows.";
+	private static final String MAIN_CLASS_NOT_DEFINED = "ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
+	private static final String MAIN_METHOD_NOT_FOUND = "ERROR: Could not find main class `%s` or main method in that class.";
+	private static final String CLASS_PATH_NOT_DEFINED = "ERROR: Property chord.class.path must be set to specify location(s) of .class files of program to be analyzed.";
+	private static final String SRC_PATH_NOT_DEFINED = "ERROR: Property chord.src.path must be set to specify location(s) of .java files of program to be analyzed.";
+	private static final String METHOD_NOT_FOUND = "ERROR: Could not find method `%s`.";
+	private static final String CLASS_NOT_FOUND = "ERROR: Could not find class `%s`.";
+
 	private IndexSet<jq_Method> methods;
 	private ReflectInfo reflectInfo;
 	private IndexSet<jq_Type> types;
@@ -105,7 +115,7 @@ public abstract class Program {
 			} else if (scopeKind.equals("cha")) {
 				program = new CHAProgram();
 			} else {
-				Messages.fatal("SCOPE.INVALID_SCOPE_KIND", scopeKind);
+				Messages.fatal(INVALID_SCOPE_KIND, scopeKind);
 				program = null;
 			}
 		}
@@ -316,13 +326,13 @@ public abstract class Program {
 
 	public static jq_Reference loadClass(String s) {
 		if (Properties.verbose)
-			Messages.log("SCOPE.LOADING_CLASS", s);
+			Messages.log(LOADING_CLASS, s);
 		try {
 			jq_Reference c = (jq_Reference) jq_Type.parseType(s);
 			c.prepare();
 			return c;
 		} catch (Throwable ex) {
-			Messages.log("SCOPE.EXCLUDING_CLASS", s);
+			Messages.log(EXCLUDING_CLASS, s);
 			ex.printStackTrace();
 			return null;
 		}
@@ -401,10 +411,10 @@ public abstract class Program {
 		if (mainMethod == null) {
 			String mainClassName = Properties.mainClassName;
 			if (mainClassName == null)
-				Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+				Messages.fatal(MAIN_CLASS_NOT_DEFINED);
 			mainMethod = getMethod("main", "([Ljava/lang/String;)V", mainClassName);
 			if (mainMethod == null)
-				Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
+				Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
 		}
 		return mainMethod;
 	}
@@ -511,10 +521,10 @@ public abstract class Program {
 	public static List<String> getDynamicallyLoadedClasses() {
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null)
-			Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
 		String classPathName = Properties.classPathName;
 		if (classPathName == null)
-			Messages.fatal("SCOPE.CLASS_PATH_NOT_DEFINED");
+			Messages.fatal(CLASS_PATH_NOT_DEFINED);
         String[] runIDs = Properties.runIDs.split(Properties.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
         final String cmd = "java " + Properties.runtimeJvmargs +
@@ -550,7 +560,7 @@ public abstract class Program {
 		if (!HTMLizedJavaSrcFiles) {
 			String srcPathName = Properties.srcPathName;
 			if (srcPathName == null)
-				Messages.fatal("SCOPE.SRC_PATH_NOT_DEFINED");
+				Messages.fatal(SRC_PATH_NOT_DEFINED);
 			String[] srcDirNames = srcPathName.split(File.pathSeparator);
 			try {
 				Java2HTML java2HTML = new Java2HTML();
@@ -573,13 +583,13 @@ public abstract class Program {
 	public void printMethod(String sign) {
 		jq_Method m = getMethod(sign);
 		if (m == null)
-			Messages.fatal("SCOPE.METHOD_NOT_FOUND", sign);
+			Messages.fatal(METHOD_NOT_FOUND, sign);
 		printMethod(m);
 	}
 	public void printClass(String className) {
 		jq_Reference c = getClass(className);
 		if (c == null)
-			Messages.fatal("SCOPE.CLASS_NOT_FOUND", className);
+			Messages.fatal(CLASS_NOT_FOUND, className);
 		printClass(c);
 	}
 	private void printClass(jq_Reference r) {

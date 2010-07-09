@@ -54,6 +54,8 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ForNameReflectionAnalyzer {
+	private static final String DYNAMIC_CLASS_NOT_FOUND =
+		"WARN: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
 	private static final boolean DEBUG = false;
 	private final Classpath classpath;
 	private ControlFlowGraph cfg;
@@ -330,7 +332,7 @@ public class ForNameReflectionAnalyzer {
 		// NoClassDefFoundError
 		String resName = Classpath.classnameToResource(clsName);
 		if (classpath.getResourcePath(resName) == null) {
-			Messages.log("SCOPE.DYNAMIC_CLASS_NOT_FOUND", clsName);
+			Messages.log(DYNAMIC_CLASS_NOT_FOUND, clsName);
 			return null;
 		}
 		return (jq_Reference) jq_Type.parseType(clsName);

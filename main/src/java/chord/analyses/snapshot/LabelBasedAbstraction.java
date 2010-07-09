@@ -111,7 +111,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 			result = refine(visited, result);
 		}
 		if (VERBOSE) {
-			Messages.logAnon("The number of roots for label " + l
+			Messages.log("The number of roots for label " + l
 					+ " is: " + result.size() + ".");
 		}
 		return result;
@@ -156,7 +156,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 	@Override
 	public void edgeCreated(int b, int f, int o) {
 		if (VERBOSE) {
-			Messages.logAnon("So far " + (++numEdgesCreated)
+			Messages.log("So far " + (++numEdgesCreated)
 					+ " edges were created.");
 		}
 		if (b != 0 && f >= 0) {
@@ -167,7 +167,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 	@Override
 	public void edgeDeleted(int b, int f, int o) {
 		if (VERBOSE) {
-			Messages.logAnon("So far " + (++numEdgesDeleted)
+			Messages.log("So far " + (++numEdgesDeleted)
 					+ " edges were deleted.");
 		}
 		if (b != 0 && f >= 0) {
@@ -223,7 +223,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 			}
 		} else {
 			if (VERBOSE) {
-				Messages.logAnon("Entered updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
+				Messages.log("Entered updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
 			}
 			doBookKeeping(b, f, o);
 			Set<Label> labels = collectLabels(b, f, o);
@@ -235,7 +235,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 					for (Label l : labels) {
 						TIntHashSet roots = getRoots(l, visited);
 						if (VERBOSE) {
-							Messages.logAnon("About to restart propagation of a label with "
+							Messages.log("About to restart propagation of a label with "
 								+ roots.size() + " roots.");
 						}
 						for (TIntIterator it = roots.iterator(); it.hasNext();) {
@@ -270,7 +270,7 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 				}
 			}
 			if (VERBOSE) {
-				Messages.logAnon("Left updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
+				Messages.log("Left updateHeapGraph with arguments <" + b + "," + f + "," + o + ">.");
 			}
 		}
 	}

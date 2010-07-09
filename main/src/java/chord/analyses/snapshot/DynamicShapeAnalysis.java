@@ -121,7 +121,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 					break L;
 				}
 				if (DEBUG_LEVEL >= 2) {
-					Messages.logAnon("About to process quad " + q + ".");
+					Messages.log("About to process quad " + q + ".");
 				}
 				Operator o = q.getOperator();
 				if ((o instanceof Operator.New) ||
@@ -138,7 +138,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 						if (DEBUG_LEVEL >= 2) {
 							MethodExecutionState execState = t2m.get(t).peek();
 							jq_Method mthd = M.get(execState.m);
-							Messages.logAnon("WARN: Handling mismatch between instruction-type " + instrType + " and quad " + q + 
+							Messages.log("WARN: Handling mismatch between instruction-type " + instrType + " and quad " + q + 
 									" when analyzing method " + mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc().toString() + ".");
 						}
 						updatePointsTo(t, q, InstructionType.NEW_OR_NEW_ARRAY, fakeHeapID(t));
@@ -159,7 +159,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 								assert (false) : "ERROR: Mismatch between instruction type and quad when running " + 
 										mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ": " + instrType + " - " + q + ".";
 							} else {
-								Messages.logAnon("ERROR: Mismatch between instruction type and quad when running " +
+								Messages.log("ERROR: Mismatch between instruction type and quad when running " +
 										mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ": " + instrType + " - " + q + ".");
 							}
 						}
@@ -191,14 +191,14 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		});
 		if ((var[0] == -1)) {
 			if (DEBUG_LEVEL >= 2) {
-				Messages.logAnon("INFO: Attempted to replace fake heap ID with real one, but failed to find fake ID in environment.");
+				Messages.log("INFO: Attempted to replace fake heap ID with real one, but failed to find fake ID in environment.");
 				int m = t2m.get(t).peek().m;
 				printCFG(M.get(m).getCFG());
-				Messages.logAnon("INFO: Fake address is: " + lastFakeAddress + ".");
-				Messages.logAnon("INFO: Real address is: " + l + ".");
+				Messages.log("INFO: Fake address is: " + lastFakeAddress + ".");
+				Messages.log("INFO: Real address is: " + l + ".");
 				execState.env.forEachEntry(new TIntLongProcedure() {
 					public boolean execute(int arg0, long arg1) {
-						Messages.logAnon("INFO: " + arg0 + " ---> " + arg1);
+						Messages.log("INFO: " + arg0 + " ---> " + arg1);
 						return true;
 					}
 				});
@@ -247,7 +247,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		Stack<MethodExecutionState> thrStack = t2m.get(t);
 		if (thrStack.isEmpty()) {
 			if (DEBUG_LEVEL >= 0) {
-				Messages.logAnon("ERROR: Attempted to update points-to information with empty stack!");
+				Messages.log("ERROR: Attempted to update points-to information with empty stack!");
 			}
 		}
 		TIntLongHashMap pts = thrStack.peek().env;
@@ -264,7 +264,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 					pts.put(dest.getRegister().getNumber(), heapVal);
 				} else {
 					if (DEBUG_LEVEL >= 2) {
-						Messages.logAnon("WARN: Cannot find heap value pointed-to by source register!");
+						Messages.log("WARN: Cannot find heap value pointed-to by source register!");
 					}
 				}
 			}
@@ -375,7 +375,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			
 		case OTHER:
 			if (DEBUG_LEVEL >= 3) {
-				Messages.logAnon("INFO: Ignoring quad " + q + " in points-to update.");
+				Messages.log("INFO: Ignoring quad " + q + " in points-to update.");
 			}
 		}
 	}
@@ -384,7 +384,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		Stack<MethodExecutionState> thrStack = t2m.get(t);
 		if (thrStack == null || thrStack.isEmpty()) {
 			if (DEBUG_LEVEL >= 0) {
-				Messages.logAnon("ERROR: Encountered a null/empty stack when running nextQuad with t=" + t + ".");
+				Messages.log("ERROR: Encountered a null/empty stack when running nextQuad with t=" + t + ".");
 			}
 			return null;
 		} else {
@@ -392,7 +392,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			BasicBlock currentBB = B.get(execState.b);
 			if ((currentBB == null) || (currentBB.size() <= (incrementInstruction(t)))) {
 				if (DEBUG_LEVEL >= 1) {
-					Messages.logAnon("ERROR: Instruction index out of bounds, where t=" + t + ".");
+					Messages.log("ERROR: Instruction index out of bounds, where t=" + t + ".");
 				}
 				return null;
 			} else {
@@ -407,7 +407,7 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		MethodExecutionState execState = thrStack.peek();
 		++execState.ii;
 		if (DEBUG_LEVEL >= 3) {
-			Messages.logAnon("INFO: Current II=" + execState.ii + ".");
+			Messages.log("INFO: Current II=" + execState.ii + ".");
 		}
 		return execState.ii;
 	}
@@ -437,11 +437,11 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 			top.ii = -1;
 		} else {
 			if (DEBUG_LEVEL >= 1) {
-				Messages.logAnon("ERROR: Encountered call to processBasicBlock with empty stack!");
+				Messages.log("ERROR: Encountered call to processBasicBlock with empty stack!");
 			}
 		}
 		if (DEBUG_LEVEL >= 3) {
-			Messages.logAnon("INFO: Current BB="+currentBB.getID() + ".");
+			Messages.log("INFO: Current BB="+currentBB.getID() + ".");
 		}
 	}
 	
@@ -453,14 +453,14 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		}
 		if (DEBUG_LEVEL >= 2) {
 			jq_Method mthd = M.get(m);
-			Messages.logAnon("INFO: Entering method " + mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ".");
+			Messages.log("INFO: Entering method " + mthd.getDeclaringClass().getName() + "." + mthd.getNameAndDesc() + ".");
 			if (!thrStack.isEmpty()) {
 				MethodExecutionState execState = thrStack.peek();
 				jq_Method caller = M.get(execState.m);
-				Messages.logAnon("INFO: Caller method is " + caller.getDeclaringClass().getName() + "." + caller.getNameAndDesc() + 
+				Messages.log("INFO: Caller method is " + caller.getDeclaringClass().getName() + "." + caller.getNameAndDesc() + 
 						", b=" + B.get(execState.b).getID() + ", and ii=" + execState.ii + ".");
 			} else {
-				Messages.logAnon("INFO: Stack is empty at point of call.");
+				Messages.log("INFO: Stack is empty at point of call.");
 			}
 		}
 		/* 
@@ -504,25 +504,25 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	@Override
 	public void processLeaveMethod(int m, int t) {
 		if (DEBUG_LEVEL >= 2) {
-			Messages.logAnon("INFO: Leaving method " + M.get(m).getNameAndDesc() + ".");
+			Messages.log("INFO: Leaving method " + M.get(m).getNameAndDesc() + ".");
 		}
 		Stack<MethodExecutionState> thrStack = t2m.get(t);
 		if (!thrStack.isEmpty()) {
 			thrStack.pop();
 		} else {
 			if (DEBUG_LEVEL >= 0) {
-				Messages.logAnon("ERROR: Encountered empty stack while leaving method " + M.get(m).getNameAndDesc() + ".");
+				Messages.log("ERROR: Encountered empty stack while leaving method " + M.get(m).getNameAndDesc() + ".");
 			}
 		}
 		if (!thrStack.isEmpty()) {
 			MethodExecutionState execState = thrStack.peek();
 			if (DEBUG_LEVEL >= 2) {
-				Messages.logAnon("INFO: Returned to method " + M.get(execState.m).getNameAndDesc() +
+				Messages.log("INFO: Returned to method " + M.get(execState.m).getNameAndDesc() +
 						" with b=" + B.get(execState.b).getID() + " and ii=" + execState.ii + ".");
 			}
 		} else {
 			if (DEBUG_LEVEL >= 2) {
-				Messages.logAnon("INFO: Execution stack is now empty.");
+				Messages.log("INFO: Execution stack is now empty.");
 			}
 		}
 	}

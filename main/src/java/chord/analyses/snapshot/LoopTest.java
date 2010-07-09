@@ -40,8 +40,8 @@ public class LoopTest extends DynamicAnalysis {
 	public void processEnterLoop(int w, int t) {
 		String s = domB.toUniqueString(w);
 		if (s.contains("V@T")) {
-			Messages.logAnon("Entered loop: " + s);
-			Messages.logAnon("Loop id: " + w);
+			Messages.log("Entered loop: " + s);
+			Messages.log("Loop id: " + w);
 		}
 	}
 	
@@ -49,7 +49,7 @@ public class LoopTest extends DynamicAnalysis {
 	public void processLeaveLoop(int w, int t) {
 		String s = domB.toUniqueString(w);
 		if (s.contains("V@T")) {
-			Messages.logAnon("Exited loop: " + s);
+			Messages.log("Exited loop: " + s);
 		}
 	}
 	
@@ -57,7 +57,7 @@ public class LoopTest extends DynamicAnalysis {
 	public void processLoopIteration(int w, int t) {
 		String s = domB.toUniqueString(w);
 		if (s.contains("V@T")) {
-			Messages.logAnon("Loop iteration began: " + s);
+			Messages.log("Loop iteration began: " + s);
 		}
 	}
 }

@@ -22,7 +22,11 @@ import chord.util.ProcessExecutor;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class OutDirUtils {
-	private final static String outDirName = Properties.outDirName;
+	private static final String PROCESS_STARTING = "Starting command: `%s`";
+	private static final String PROCESS_FINISHED = "Finished command: `%s`";
+	private static final String PROCESS_FAILED = "Command `%s` terminated abnormally: %s";
+
+	private static final String outDirName = Properties.outDirName;
 	public static PrintWriter newPrintWriter(String fileName) {
 		try {
 			return new PrintWriter(new File(outDirName, fileName));
@@ -60,26 +64,26 @@ public class OutDirUtils {
 		}
 	}
     public static final void executeWithFailOnError(String cmd) {
-        Messages.log("PROCESS.STARTING", cmd);
+        Messages.log(PROCESS_STARTING, cmd);
         try {
             int result = ProcessExecutor.execute(cmd);
             if (result != 0)
                 throw new ChordRuntimeException("Return value=" + result);
         } catch (Throwable ex) {
-            Messages.fatal("PROCESS.FAILED", cmd, ex.getMessage());
+            Messages.fatal(PROCESS_FAILED, cmd, ex.getMessage());
         }
-        Messages.log("PROCESS.FINISHED", cmd);
+        Messages.log(PROCESS_FINISHED, cmd);
     }
 	public static final void executeWithWarnOnError(String cmd, int timeout) {
-		Messages.log("PROCESS.STARTING", cmd);
+		Messages.log(PROCESS_STARTING, cmd);
 		try {
 			int result = ProcessExecutor.execute(cmd, timeout);
 			if (result != 0) {
-				Messages.log("PROCESS.FINISHED", cmd);
+				Messages.log(PROCESS_FINISHED, cmd);
 			}
 		} catch (Throwable ex) {
-			Messages.fatal("PROCESS.FAILED", cmd, ex.getMessage());
+			Messages.fatal(PROCESS_FAILED, cmd, ex.getMessage());
 		}
-		Messages.log("PROCESS.FINISHED", cmd);
+		Messages.log(PROCESS_FINISHED, cmd);
 	}
 }

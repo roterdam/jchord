@@ -83,7 +83,7 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
     
     private boolean isAppMethod(jq_Method m) {
     	String className = m.getDeclaringClass().getName();
-//    	Messages.logAnon("%s", className);
+//    	Messages.log("%s", className);
     	for (String pref : LIB_PREFIXES) {
     		if (className.startsWith(pref)) {
     			return false;
@@ -93,11 +93,11 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
     }
     
     public void doneAllPasses() {
-    	Messages.logAnon("=== # of visited classes: %d ===", visitedClasses.size());
-		Messages.logAnon("=== # of visited app. classes: %d ===", visitedAppClasses.size());
-		Messages.logAnon("=== # of visited methods: %d ===", visitedMethods.size());
-		Messages.logAnon("=== # of visited app. methods: %d ===", visitedAppMethods.size());
-		Messages.logAnon("=== Total bytecode: %d ===", totalBytecode);
-		Messages.logAnon("=== Total app. bytecode: %d ===", totalAppBytecode);
+    	Messages.log("=== # of visited classes: %d ===", visitedClasses.size());
+		Messages.log("=== # of visited app. classes: %d ===", visitedAppClasses.size());
+		Messages.log("=== # of visited methods: %d ===", visitedMethods.size());
+		Messages.log("=== # of visited app. methods: %d ===", visitedAppMethods.size());
+		Messages.log("=== Total bytecode: %d ===", totalBytecode);
+		Messages.log("=== Total app. bytecode: %d ===", totalAppBytecode);
 	}
 }

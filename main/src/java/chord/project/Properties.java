@@ -15,6 +15,10 @@ import chord.util.ChordRuntimeException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Properties {
+	private static final String USER_DIR_AS_CHORD_WORK_DIR = "WARN: Property chord.work.dir not set; using value of user.dir (`%s`) instead.";
+	private static final String CHORD_MAIN_DIR_UNDEFINED = "ERROR: Property chord.main.dir not set; must be set to the absolute location of the directory named 'main' in your Chord installation.";
+	private static final String CHORD_WORK_DIR_UNDEFINED = "ERROR: Property chord.work.dir not set; must be set to the absolute location of the working directory desired during Chord's execution.";
+
 	private Properties() { }
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
@@ -24,7 +28,7 @@ public class Properties {
 	public final static String mainDirName = System.getProperty("chord.main.dir");
 	static {
 		if (mainDirName == null)
-			Messages.fatal("PROPERTIES.CHORD_MAIN_DIR_UNDEFINED");
+			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 	}
 	public static String libDirName = mainRel2AbsPath("chord.lib.dir", "lib");
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
@@ -39,8 +43,8 @@ public class Properties {
 		if (workDirName == null) {
 			workDirName = System.getProperty("user.dir");
 			if (workDirName == null)
-				throw new ChordRuntimeException(Messages.get("PROPERTIES.CHORD_WORK_DIR_UNDEFINED"));
-			Messages.log("PROPERTIES.USER_DIR_AS_CHORD_WORK_DIR", workDirName);
+				Messages.fatal(CHORD_WORK_DIR_UNDEFINED);
+			Messages.log(USER_DIR_AS_CHORD_WORK_DIR, workDirName);
 		}
 	}
 	public final static String propsFileName = System.getProperty("chord.props.file");

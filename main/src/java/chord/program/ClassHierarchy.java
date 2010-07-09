@@ -33,6 +33,16 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClassHierarchy {
+	private static final String INVALID_CH_KIND = "ERROR: Invalid value `%s` used for property chord.ch.kind; must be one of [static|dynamic]";
+	private static final String EXCLUDED_CPE = "WARN: Class hierarchy builder: Excluded the following classpath elements:";
+	private static final String INCLUDED_CPE = "INFO: Class hierarchy builder: Included the following classpath elements:";
+	private static final String IGNORED_DUPLICATE_TYPES = "INFO: Class hierarchy builder: Ignored the following duplicate classes/interfaces coming from the indicated classpath elements:";
+	private static final String EXCLUDED_TYPES_IN_CHORD = "WARN: Excluded the following classes/interfaces from scope because the classpath elements from which they originate are in chord.main.class.path:";
+	private static final String EXCLUDED_TYPES_NOT_DYN_LOADED = "WARN: Excluded the following classes/interfaces from scope because they were not loaded dynamically and chord.ch.dynamic=true:";
+	private static final String MISSING_TYPES = "WARN: Class hierarchy builder: Following classes/interfaces were not found in scope but each of them was either declared as a superclass or an implemented/extended interface of some class/interface in scope:";
+	private static final String MISSING_SUPERCLASSES = "WARN: Class hierarchy builder: Ignored the following classes as some (direct or transitive) superclass of each of them is missing in scope:";
+	private static final String MISSING_SUPERINTERFS = "WARN: Class hierarchy builder: Ignored the following classes/interfaces as some (direct or transitive) interface implemented/extended by each of them is missing in scope:";
+
 	private final String CHkind;
 	/**
 	 * List of elements in Chord's classpath to be excluded from the
@@ -153,19 +163,19 @@ public class ClassHierarchy {
 					missingSuperInterfs.add(c);
 			}
 			if (!missingClints.isEmpty()) {
-				Messages.log("CH.MISSING_TYPES");
+				Messages.log(MISSING_TYPES);
 				for (String c : missingClints)
-					Messages.logAnon("\t" + c);
+					Messages.log("\t" + c);
 			}
 			if (!missingSuperclasses.isEmpty()) {
-				Messages.log("CH.MISSING_SUPERCLASSES");
+				Messages.log(MISSING_SUPERCLASSES);
 				for (String c : missingSuperclasses)
-					Messages.logAnon("\t" + c);
+					Messages.log("\t" + c);
 			}
 			if (!missingSuperInterfs.isEmpty()) {
-				Messages.log("CH.MISSING_SUPERINTERFS");
+				Messages.log(MISSING_SUPERINTERFS);
 				for (String c : missingSuperInterfs)
-					Messages.logAnon("\t" + c);
+					Messages.log("\t" + c);
 			}
 			for (String c : concreteClassToAllSups.keySet()) {
 				Set<String> sups = concreteClassToAllSups.get(c);
@@ -187,7 +197,7 @@ public class ClassHierarchy {
 	public ClassHierarchy() {
 		CHkind = Properties.CHkind;
 		if (!CHkind.equals("static") && !CHkind.equals("dynamic"))
-			Messages.fatal("CH.INVALID_CH_KIND");
+			Messages.fatal(INVALID_CH_KIND);
 		// exclude chord's classpath in part because joeq has weird
 		// code that breaks cha, but also because it is not part of
 		// the program being analyzed
@@ -250,36 +260,36 @@ public class ClassHierarchy {
 				assert (is != null);
 				DataInputStream in = new DataInputStream(is);
 				if (verbose)
-					Messages.logAnon("Processing class file %s from %s", fileName, cpe);
+					Messages.log("Processing class file %s from %s", fileName, cpe);
 				processClassFile(in, typeName);
 			}
 		}
 
 		if (verbose) {
 			if (!excludedCPEs.isEmpty()) {
-				Messages.log("CH.EXCLUDED_CPE");
+				Messages.log(EXCLUDED_CPE);
 				for (String cpe : excludedCPEs)
-					Messages.logAnon("\t" + cpe);
+					Messages.log("\t" + cpe);
 			}
 			if (!includedCPEs.isEmpty()) {
-				Messages.log("CH.INCLUDED_CPE");
+				Messages.log(INCLUDED_CPE);
 				for (String cpe : includedCPEs)
-					Messages.logAnon("\t" + cpe);
+					Messages.log("\t" + cpe);
 			}
 			if (!duplicateTypes.isEmpty()) {
-				Messages.log("CH.IGNORED_DUPLICATE_TYPES");
+				Messages.log(IGNORED_DUPLICATE_TYPES);
 				for (Pair<String, String> p : duplicateTypes)
-					Messages.logAnon("\t%s, %s", p.val0, p.val1);
+					Messages.log("\t%s, %s", p.val0, p.val1);
 			}
 			if (!typesInChord.isEmpty()) {
-				Messages.log("CH.EXCLUDED_TYPES_IN_CHORD");
+				Messages.log(EXCLUDED_TYPES_IN_CHORD);
 				for (String s : typesInChord)
-					Messages.logAnon("\t" + s);
+					Messages.log("\t" + s);
 			}
 			if (!typesNotDynLoaded.isEmpty()) {
-				Messages.log("CH.EXCLUDED_TYPES_NOT_DYN_LOADED");
+				Messages.log(EXCLUDED_TYPES_NOT_DYN_LOADED);
 				for (String s : typesNotDynLoaded)
-					Messages.logAnon("\t" + s);
+					Messages.log("\t" + s);
 			}
 		}
         System.out.println("Finished building class hierarchy.");

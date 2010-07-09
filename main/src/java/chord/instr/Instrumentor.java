@@ -57,6 +57,22 @@ import java.util.HashSet;
  * @author Zhifeng Lai (zflai.cn@gmail.com)
  */
 public class Instrumentor {
+	private static final String INSTR_STARTING = "INFO: Instrumentor: Starting to instrument all classes; this may take a while (use -Dchord.verbose=true for more detailed info) ...";
+	private static final String INSTR_FINISHED = "INFO: Instrumentor: Finished instrumenting all classes.";
+	private static final String WROTE_INSTRUMENTED_CLASS = "INFO: Instrumentor: Wrote instrumented class %s.";
+	private static final String EXPLICITLY_EXCLUDING_CLASS = "WARN: Instrumentor: Not instrumenting class %s as it is excluded by chord.scope.exclude.";
+	private static final String IMPLICITLY_EXCLUDING_CLASS = "WARN: Instrumentor: Not instrumenting class %s.";
+	private static final String CLASS_NOT_FOUND = "WARN: Instrumentor: Could not find class %s.";
+	private static final String CLASS_NOT_BOOT_NOR_USER = "WARN: Instrumentor: Not instrumenting class %s; its defining resource %s is neither in the boot nor user classpath.";
+	private static final String NOT_IN_DOMAIN = "WARN: Instrumentor: Domain %s does not contain %s.";
+	private static final String NON_EXISTENT_PATH_ELEM = "WARN: Instrumentor: Ignoring non-existent path element %s.";
+	private static final String CANNOT_INSTRUMENT_METHOD = "WARN: Instrumentor: Skipping instrumenting method %s; reason follows.";
+	private static final String CANNOT_INSTRUMENT_CLASS = "WARN: Instrumentor: Skipping instrumenting class %s; reason follows.";
+	private static final String METHOD_NOT_FOUND = "WARN: Instrumentor: Skipping instrumenting method %s; it was not deemed reachable by Chord's program scope builder.";
+	private static final String METHOD_BYTECODE_NOT_FOUND = "WARN: Instrumentor: Skipping instrumenting method %s; its bytecode does not exist.";
+	private static final String DUPLICATE_IN_DOMAIN = "ERROR: Instrumentor: Map for domain %s already contains '%s'.";
+	private static final String NO_BCI_IN_BASIC_BLOCK = "ERROR: Instrumentor: Couldn't find index of first bytecode instruction in basic block %s of method %s.";
+
 	protected static final String runtimeClassName = Properties.runtimeClassName + ".";
 
 	protected static final String enterMethodEventCall = runtimeClassName + "enterMethodEvent(";
@@ -214,7 +230,7 @@ public class Instrumentor {
 	private static boolean checkExists(String pathElem) {
 		File file = new File(pathElem);
 		if (!file.exists()) {
-			Messages.log("INSTR.NON_EXISTENT_PATH_ELEM", pathElem);
+			Messages.log(NON_EXISTENT_PATH_ELEM, pathElem);
 			return false;
 		}
 		return true;
@@ -357,14 +373,14 @@ public class Instrumentor {
 		FileUtils.deleteFile(userClassesDirName);
 
 		IndexSet<jq_Reference> classes = program.getClasses();
-		Messages.log("INSTR.STARTING");
+		Messages.log(INSTR_STARTING);
 		for (jq_Reference r : classes) {
 			if (r instanceof jq_Array)
 				continue;
 			jq_Class c = (jq_Class) r;
 			instrClass(c);
 		}
-		Messages.log("INSTR.FINISHED");
+		Messages.log(INSTR_FINISHED);
 	}
 	private void instrClass(jq_Class c) {
 		String cName = c.getName();
@@ -376,24 +392,24 @@ public class Instrumentor {
 			}
 		}
 		if (match) {
-			if (verbose) Messages.log("INSTR.EXPLICITLY_EXCLUDING_CLASS", cName);
+			if (verbose) Messages.log(EXPLICITLY_EXCLUDING_CLASS, cName);
 			return;
 		}
 		if (cName.equals("java.lang.J9VMInternals") || cName.startsWith("java.lang.ref.")) {
-			Messages.log("INSTR.IMPLICITLY_EXCLUDING_CLASS", cName);
+			Messages.log(IMPLICITLY_EXCLUDING_CLASS, cName);
 			return;
 		}
 		String outDirName = null;
 		String resourceName = pool.getResource(cName);
 		if (resourceName == null) {
-			Messages.log("INSTR.CLASS_NOT_FOUND", cName);
+			Messages.log(CLASS_NOT_FOUND, cName);
 			return;
 		} else if (bootClassPathResourceNames.contains(resourceName)) {
 			outDirName = bootClassesDirName;
 		} else if (userClassPathResourceNames.contains(resourceName)) {
 			outDirName = userClassesDirName;
 		} else {
-			Messages.log("INSTR.CLASS_NOT_BOOT_NOR_USER", cName, resourceName);
+			Messages.log(CLASS_NOT_BOOT_NOR_USER, cName, resourceName);
 			return;
 		}
 		CtClass clazz;
@@ -432,7 +448,7 @@ public class Instrumentor {
 			try {
 				process(method, m);
 			} catch (ChordRuntimeException ex) {
-				Messages.log("INSTR.CANNOT_INSTRUMENT_METHOD", method.getLongName());
+				Messages.log(CANNOT_INSTRUMENT_METHOD, method.getLongName());
 				ex.printStackTrace();
 				return;
 			}
@@ -444,11 +460,11 @@ public class Instrumentor {
 		} catch (NotFoundException ex) {
 			throw new ChordRuntimeException(ex);
 		} catch (CannotCompileException ex) {
-			Messages.log("INSTR.CANNOT_INSTRUMENT_CLASS", cName);
+			Messages.log(CANNOT_INSTRUMENT_CLASS, cName);
 			ex.printStackTrace();
 			return;
 		}
-		if (verbose) Messages.log("INSTR.WROTE_INSTRUMENTED_CLASS", cName);
+		if (verbose) Messages.log(WROTE_INSTRUMENTED_CLASS, cName);
 	}
 
 	protected <T> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {
@@ -456,7 +472,7 @@ public class Instrumentor {
 		for (int i = 0; i < dom.size(); i++) {
 			String s = dom.toUniqueString(dom.get(i));
 			if (map.contains(s))
-				throw new ChordRuntimeException(Messages.get("INSTR.DUPLICATE_IN_DOMAIN"));
+				Messages.fatal(DUPLICATE_IN_DOMAIN);
 			map.getOrAdd(s);
 		}
 		return map;
@@ -469,7 +485,8 @@ public class Instrumentor {
 			if (bci != -1)
 				return bci;
 		}
-		throw new ChordRuntimeException(Messages.get("INSTR.NO_BCI_IN_BASIC_BLOCK", b, m));
+		Messages.fatal(NO_BCI_IN_BASIC_BLOCK, b, m);
+		return 0;
 	}
 	// order must be tail -> head -> rest
 	protected void attachInstrToBCIAft(String str, int bci) {
@@ -496,7 +513,7 @@ public class Instrumentor {
 		if (Mmap != null) {
 			mId = Mmap.indexOf(mStr);
 			if (mId == -1) {
-				Messages.log("INSTR.METHOD_NOT_FOUND", mStr);
+				Messages.log(METHOD_NOT_FOUND, mStr);
 				return;
 			}
 		}
@@ -505,12 +522,12 @@ public class Instrumentor {
 			try{
 				bcMap = joeqMethod.getBCMap();
 			} catch (RuntimeException ex) {
-				Messages.log("INSTR.CANNOT_INSTRUMENT_METHOD", mStr);
+				Messages.log(CANNOT_INSTRUMENT_METHOD, mStr);
 				ex.printStackTrace();
 				return;
 			}
 			if (bcMap == null) {
-				Messages.log("INSTR.METHOD_BYTECODE_NOT_FOUND", mStr);
+				Messages.log(METHOD_BYTECODE_NOT_FOUND, mStr);
 				return;
 			}
 			ControlFlowGraph cfg = joeqMethod.getCFG();
@@ -637,7 +654,7 @@ public class Instrumentor {
 		String s = bci + "!" + mStr;
 		int id = map.indexOf(s);
 		if (id == -1) {
-			Messages.log("INSTR.NOT_IN_DOMAIN", getDomainName(map), s);
+			Messages.log(NOT_IN_DOMAIN, getDomainName(map), s);
 			id = Runtime.UNKNOWN_FIELD_VAL;
 		}
 		return id;
@@ -649,7 +666,7 @@ public class Instrumentor {
 		String s = fName + ":" + fDesc + "@" + cName;
 		int id = Fmap.indexOf(s);
 		if (id == -1) {
-			Messages.log("INSTR.NOT_IN_DOMAIN", "F", s);
+			Messages.log(NOT_IN_DOMAIN, "F", s);
 			id = Runtime.UNKNOWN_FIELD_VAL;
 		}
 		return id;
