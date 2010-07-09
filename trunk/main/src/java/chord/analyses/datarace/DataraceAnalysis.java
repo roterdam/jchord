@@ -14,41 +14,40 @@ import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
-
-import chord.util.ArraySet;
-import chord.util.graph.IPathVisitor;
-import chord.util.graph.ShortestPathBuilder;
-import chord.analyses.alias.ICSCG;
-import chord.analyses.alias.Ctxt;
-import chord.analyses.alias.CSObj;
-import chord.analyses.alias.CtxtsAnalysis;
 import chord.analyses.alias.CSAliasAnalysis;
-import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
-import chord.analyses.alias.DomO;
+import chord.analyses.alias.CSObj;
+import chord.analyses.alias.Ctxt;
+import chord.analyses.alias.CtxtsAnalysis;
 import chord.analyses.alias.DomC;
-import chord.bddbddb.Rel.RelView;
-import chord.program.Program;
+import chord.analyses.alias.DomO;
+import chord.analyses.alias.ICSCG;
+import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
+import chord.analyses.snapshot.Execution;
 import chord.analyses.thread.DomA;
-import chord.doms.DomL;
+import chord.bddbddb.Rel.PairIterable;
+import chord.bddbddb.Rel.RelView;
 import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.doms.DomH;
 import chord.doms.DomI;
+import chord.doms.DomL;
 import chord.doms.DomM;
+import chord.program.Program;
 import chord.project.Chord;
+import chord.project.Messages;
+import chord.project.OutDirUtils;
 import chord.project.Project;
 import chord.project.Properties;
-import chord.project.OutDirUtils;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
+import chord.util.ArraySet;
 import chord.util.SetUtils;
+import chord.util.graph.IPathVisitor;
+import chord.util.graph.ShortestPathBuilder;
 import chord.util.tuple.object.Hext;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
-import chord.analyses.snapshot.Execution;
-
-import chord.bddbddb.Rel.PairIterable;
 
 /**
  * Static datarace analysis.
@@ -71,13 +70,19 @@ import chord.bddbddb.Rel.PairIterable;
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
+ * @author Omer Tripp (omertrip@post.tau.ac.il)
  */
 @Chord(
-	name="datarace-java"
+	name="datarace-java",
+	consumedNames="P"
 )
 public class DataraceAnalysis extends JavaAnalysis {
 	private static final boolean percy = System.getProperty("percy", "false").equals("true");
 
+	private ProgramRel relRefineH;
+	private ProgramRel relRefineM;
+	private ProgramRel relRefineV;
+	private ProgramRel relRefineI;
 	private DomM domM;
 	private DomI domI;
 	private DomF domF;
@@ -92,6 +97,10 @@ public class DataraceAnalysis extends JavaAnalysis {
 	private Execution X;
 
 	private void init() {
+		relRefineH = (ProgramRel) Project.getTrgt("refineH");
+		relRefineM = (ProgramRel) Project.getTrgt("refineM");
+		relRefineV = (ProgramRel) Project.getTrgt("refineV");
+		relRefineI = (ProgramRel) Project.getTrgt("refineI");
 		domM = (DomM) Project.getTrgt("M");
 		domI = (DomI) Project.getTrgt("I");
 		domF = (DomF) Project.getTrgt("F");
@@ -112,29 +121,57 @@ public class DataraceAnalysis extends JavaAnalysis {
 			if (X.getBooleanArg("saveStrings", false))		
 				X.addSaveFiles("inputs.strings", "outputs.strings");
 		}
+		
+		int maxIters = Integer.getInteger("chord.max.iters", 0);
+		assert (maxIters >= 0);
+		
 		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
 		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");
 		boolean excludeNongrded = Boolean.getBoolean("chord.exclude.nongrded");
 
 		init();
 
-		Project.runTask(CtxtsAnalysis.getCspaKind());
-		Project.runTask("datarace-prologue-dlog");
-		if (excludeParallel)
-			Project.runTask("datarace-parallel-exclude-dlog");
-		else
-			Project.runTask("datarace-parallel-include-dlog");
-		if (excludeEscaping)
-			Project.runTask("datarace-escaping-exclude-dlog");
-		else
-			Project.runTask("datarace-escaping-include-dlog");
-		if (excludeNongrded)
-			Project.runTask("datarace-nongrded-exclude-dlog");
-		else
-			Project.runTask("datarace-nongrded-include-dlog");
-		Project.runTask("datarace-dlog");
-		Project.runTask("datarace-stats-dlog");
-
+		Messages.logAnon("maxIters=" + maxIters);
+		for (int numIters = 0; true; numIters++) {
+			Messages.logAnon("Starting iteration " + numIters);
+			Project.runTask(CtxtsAnalysis.getCspaKind());
+			Project.runTask("datarace-prologue-dlog");
+			if (excludeParallel)
+				Project.runTask("datarace-parallel-exclude-dlog");
+			else
+				Project.runTask("datarace-parallel-include-dlog");
+			if (excludeEscaping)
+				Project.runTask("datarace-escaping-exclude-dlog");
+			else
+				Project.runTask("datarace-escaping-include-dlog");
+			if (excludeNongrded)
+				Project.runTask("datarace-nongrded-exclude-dlog");
+			else
+				Project.runTask("datarace-nongrded-include-dlog");
+			Project.runTask("datarace-dlog");
+			Project.runTask("datarace-stats-dlog");
+			if (numIters == maxIters)
+				break;
+			Project.runTask("datarace-feedback-dlog");
+			Project.runTask("refine-hybrid-dlog");
+			relRefineH.load();
+			int numRefineH = relRefineH.size();
+			relRefineH.close();
+			relRefineM.load();
+			int numRefineM = relRefineM.size();
+			relRefineM.close();
+			relRefineV.load();
+			int numRefineV = relRefineV.size();
+			relRefineV.close();
+			relRefineI.load();
+			int numRefineI = relRefineI.size();
+			relRefineI.close();
+			if (numRefineH == 0 && numRefineM == 0 &&
+				numRefineV == 0 && numRefineI == 0)
+				break;
+			Project.resetTaskDone("ctxts-java");
+		}
+		
 		if (Properties.publishResults)
 			publishResults();
 
@@ -142,6 +179,26 @@ public class DataraceAnalysis extends JavaAnalysis {
 			outputRaces();		
 			X.finish(null);
 		}
+	}
+
+	private void outputCtxtInsDataraces() {
+		PrintWriter writer =
+			 OutDirUtils.newPrintWriter("ctxtInsDatarace.txt");
+		final ProgramRel relDatarace = (ProgramRel) Project.getTrgt("ctxtInsDatarace");		
+		relDatarace.load();		
+		final PairIterable<Inst, Inst> tuples = relDatarace.getAry2ValTuples();		
+		int numRaces = 0;		
+		for (Pair<Inst, Inst> p : tuples) {		
+			Quad quad0 = (Quad) p.val0;	
+			int e1 = domE.indexOf(quad0);
+			Quad quad1 = (Quad) p.val1;	
+			int e2 = domE.indexOf(quad1);
+			writer.println(numRaces + ":" + estr(e1));
+			writer.println("\t" + estr(e2));
+			numRaces++;		
+		}		
+		relDatarace.close();
+		writer.close();
 	}
 
 	private void outputRaces() {
@@ -177,6 +234,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 	}
 
 	private void publishResults() {
+		outputCtxtInsDataraces();
 		Project.runTask(hybridAnalysis);
 		Project.runTask(thrSenAbbrCSCGAnalysis);
 	    final ICSCG thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();

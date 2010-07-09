@@ -14,10 +14,12 @@ import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Phi;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.program.visitors.IMoveInstVisitor;
 import chord.program.visitors.IPhiInstVisitor;
+import chord.program.visitors.ICastInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
@@ -32,7 +34,7 @@ import chord.project.analyses.ProgramRel;
 	sign = "M0,V0,V1:M0_V0xV1"
 )
 public class RelMobjVarAsgnInst extends ProgramRel
-		implements IMoveInstVisitor, IPhiInstVisitor {
+		implements IMoveInstVisitor, IPhiInstVisitor { // , ICastInstVisitor {
 	private jq_Method ctnrMethod;
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
@@ -69,4 +71,18 @@ public class RelMobjVarAsgnInst extends ProgramRel
 			}
 		}
 	}
+/*
+    public void visitCastInst(Quad q) {
+        Operand rx = CheckCast.getSrc(q);
+        if (rx instanceof RegisterOperand) {
+			RegisterOperand ro = (RegisterOperand) rx;
+            if (ro.getType().isReferenceType()) {
+                Register r = ro.getRegister();
+                RegisterOperand lo = CheckCast.getDest(q);
+                Register l = lo.getRegister();
+				add(ctnrMethod, l, r);
+            }
+        }
+    }
+*/
 }
