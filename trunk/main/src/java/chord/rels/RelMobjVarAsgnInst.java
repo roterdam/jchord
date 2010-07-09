@@ -34,7 +34,7 @@ import chord.project.analyses.ProgramRel;
 	sign = "M0,V0,V1:M0_V0xV1"
 )
 public class RelMobjVarAsgnInst extends ProgramRel
-		implements IMoveInstVisitor, IPhiInstVisitor { // , ICastInstVisitor {
+		implements IMoveInstVisitor, IPhiInstVisitor, ICastInstVisitor {
 	private jq_Method ctnrMethod;
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
@@ -71,7 +71,6 @@ public class RelMobjVarAsgnInst extends ProgramRel
 			}
 		}
 	}
-/*
     public void visitCastInst(Quad q) {
         Operand rx = CheckCast.getSrc(q);
         if (rx instanceof RegisterOperand) {
@@ -84,5 +83,4 @@ public class RelMobjVarAsgnInst extends ProgramRel
             }
         }
     }
-*/
 }
