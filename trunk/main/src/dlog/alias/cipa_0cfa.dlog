@@ -15,21 +15,6 @@
 .include "V.dom"
 .include "Z.dom"
 
-# Relation HFH: 2.1157674E7 elements 
-#F0_H0_H1: 54819 nodes
-#F0_H1_H0: 121148 nodes
-#H0_H1_F0: 137432 nodes
-#H0_F0_H1: 21642 nodes
-#H1_F0_H0: 23795 nodes
-#H1_H0_F0: ?
-#F0_H0xH1: 572534 nodes
-#H0_F0xH1: 23795 nodes
-#H1_F0xH0: 70483 nodes
-#H0xH1_F0: ?
-#F0xH1_H0: 150250 nodes
-#F0xH0_H1: 73039 nodes
-#H0xF0xH1: 3411490 nodes
-
 .bddvarorder I0xM0xM1_T0_V0xV1_T1_H0_F0_H1_Z0
 
 ###

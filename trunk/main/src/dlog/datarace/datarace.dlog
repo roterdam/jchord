@@ -9,9 +9,8 @@
 .include "F.dom"
 .include "C.dom"
 .include "E.dom"
-.include "P.dom"
 
-.bddvarorder F0_E0_E1_A0xA1_P0_C0xC1xC2
+.bddvarorder F0_E0_E1_A0xA1_C0xC1xC2
 
 ###
 # Relations
