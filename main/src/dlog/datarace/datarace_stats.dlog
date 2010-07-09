@@ -9,7 +9,7 @@
 .include "A.dom"
 .include "E.dom"
 
-.bddvarorder E0_E1_A0xA1_M0_C0xC1
+.bddvarorder E0_E1_A0xA1_C0xC1
 
 ###
 # Relations
