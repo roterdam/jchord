@@ -131,9 +131,9 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		init();
 
-		Messages.logAnon("maxIters=" + maxIters);
+		Messages.log("maxIters=" + maxIters);
 		for (int numIters = 0; true; numIters++) {
-			Messages.logAnon("Starting iteration " + numIters);
+			Messages.log("Starting iteration " + numIters);
 			Project.runTask(CtxtsAnalysis.getCspaKind());
 			Project.runTask("datarace-prologue-dlog");
 			if (excludeParallel)

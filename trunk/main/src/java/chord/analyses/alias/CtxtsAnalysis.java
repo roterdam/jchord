@@ -459,7 +459,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				histogramH[kobjValue[i]]++;
 			}
 			for (int i = 0; i <= maxIters; i++) {
-				Messages.logAnon("H " + i + " " + histogramH[i]);
+				Messages.log("H " + i + " " + histogramH[i]);
 			}
 		}
 		

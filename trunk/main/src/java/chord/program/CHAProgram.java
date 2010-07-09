@@ -49,6 +49,9 @@ import chord.util.Timer;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class CHAProgram extends Program {
+	private static final String MAIN_CLASS_NOT_DEFINED = "ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
+	private static final String MAIN_METHOD_NOT_FOUND = "ERROR: Could not find main class `%s` or main method in that class.";
+
     public static final boolean DEBUG = false;
 	private IndexSet<jq_Reference> classes;
 	// all classes whose clinits and super class/interface clinits have been
@@ -83,13 +86,13 @@ public class CHAProgram extends Program {
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null)
-			Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
        	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
 		prepareClass(mainClass);
 		jq_NameAndDesc nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
         jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(nd);
 		if (mainMethod == null)
-            Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
+            Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
 		visitClinits(mainClass);
        	visitMethod(mainMethod);
         while (!methodWorklist.isEmpty()) {

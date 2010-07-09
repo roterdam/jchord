@@ -45,6 +45,13 @@ import chord.util.ReadException;
  * @author omertripp (omertrip@post.tau.ac.il)
  */
 public class DynamicAnalysis extends JavaAnalysis {
+	private static final String STARTING_RUN = "INFO: Dynamic analysis: Starting Run ID %s.";
+	private static final String FINISHED_RUN = "INFO: Dynamic analysis: Finished Run ID %s.";
+	private static final String FINISHED_PROCESSING_TRACE = "INFO: Dynamic analysis: Finished processing trace with %d events.";
+	private static final String EVENT_NOT_HANDLED =
+		"ERROR: Dynamic analysis '%s' must either override method '%s' or omit the corresponding event from its instrumentation scheme.";
+	private static final String NO_INSTR_SCHEME = "ERROR: Dynamic analysis %s must override method 'InstrScheme getInstrScheme()'.";
+
 	public final static boolean DEBUG = false;
 	/**
 	 * The instrumentation scheme for this dynamic analysis.
@@ -102,7 +109,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 	// is performed using an instrumentation scheme (and traces)
 	// stored on disk from a previous run of Chord
 	public InstrScheme getInstrScheme() {
-		Messages.fatalAnon("DYNAMIC.NO_INSTR_SCHEME", getName());
+		Messages.fatal(NO_INSTR_SCHEME, getName());
 		return null;
 	}
 
@@ -176,10 +183,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 		if (doReuse) {
 			initAllPasses();
 			for (String runID : runIDs) {
-				Messages.log("DYNAMIC.STARTING_RUN", runID);
+				Messages.log(STARTING_RUN, runID);
 				String s = getNameOfFullFinalTraceFile(runID);
 				processTrace(s);
-				Messages.log("DYNAMIC.FINISHED_RUN", runID);
+				Messages.log(FINISHED_RUN, runID);
 			}
 			doneAllPasses();
 			return;
@@ -214,7 +221,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			instrProgramCmd += " " + mainClassName + " ";
 			initAllPasses();
 			for (String runID : runIDs) {
-				Messages.log("DYNAMIC.STARTING_RUN", runID);
+				Messages.log(STARTING_RUN, runID);
 				final String args = System.getProperty("chord.args." + runID, "");
 				final String cmd = instrProgramCmd + args;
 				initPass();
@@ -224,7 +231,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				else
 					OutDirUtils.executeWithFailOnError(cmd);
 				donePass();
-				Messages.log("DYNAMIC.FINISHED_RUN", runID);
+				Messages.log(FINISHED_RUN, runID);
 			}
 			doneAllPasses();
 			return;
@@ -282,7 +289,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 					OutDirUtils.executeWithFailOnError(cmd);
 				}
 			};
-			Messages.log("DYNAMIC.STARTING_RUN", runID);
+			Messages.log(STARTING_RUN, runID);
 			executor.execute(instrProgram);
 			if (doTransform)
 				executor.execute(traceTransformer);
@@ -293,7 +300,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 				ex.printStackTrace();
 				System.exit(1);
 			}
-			Messages.log("DYNAMIC.FINISHED_RUN", runID);
+			Messages.log(FINISHED_RUN, runID);
 		}
 		doneAllPasses();
 	}
@@ -706,7 +713,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			}
 		}
 		donePass();
-		Messages.log("DYNAMIC.FINISHED_PROCESSING_TRACE", count);
+		Messages.log(FINISHED_PROCESSING_TRACE, count);
 	} catch (IOException ex) {
 		ex.printStackTrace();
 		System.exit(1);
@@ -817,6 +824,6 @@ public class DynamicAnalysis extends JavaAnalysis {
 		error("void processFinalize(int o)");
 	}
 	private void error(String mSign) {
-		Messages.fatal("DYNAMIC.EVENT_NOT_HANDLED", getName(), mSign);
+		Messages.fatal(EVENT_NOT_HANDLED, getName(), mSign);
 	}
 }

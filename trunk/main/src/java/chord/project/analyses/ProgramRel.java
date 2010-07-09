@@ -22,6 +22,8 @@ import chord.project.Messages;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ProgramRel extends Rel implements ITask {
+	private static final String SKIP_TUPLE =
+		"WARN: Skipping a tuple from relation '%s' as element '%s' was not found in domain '%s'.";
 	public void run() {
 		zero();
 		init();
@@ -53,6 +55,6 @@ public class ProgramRel extends Rel implements ITask {
 		return name;
 	}
 	public void skip(Object elem, ProgramDom dom) {
-		Messages.log("RELATION.SKIP_TUPLE", getClass().getName(), elem, dom.getClass().getName());
+		Messages.log(SKIP_TUPLE, getClass().getName(), elem, dom.getClass().getName());
 	}
 }

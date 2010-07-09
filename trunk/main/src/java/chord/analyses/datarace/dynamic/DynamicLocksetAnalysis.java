@@ -136,7 +136,7 @@ public class DynamicLocksetAnalysis extends DynamicAnalysis {
 		if (r >= 0 && t >= 0 && o != 0) {
 			TIntHashSet L = t2lcks.get(t);
 			if (!L.contains(o)) {
-				Messages.logAnon("WARN: [DynamicLocksetAnalysis.processReleaseLock] Cannot find lock to remove: t=" + t + ",o=" + o);
+				Messages.log("WARN: [DynamicLocksetAnalysis.processReleaseLock] Cannot find lock to remove: t=" + t + ",o=" + o);
 			} else {
 				L.remove(o);
 			}

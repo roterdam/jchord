@@ -64,6 +64,10 @@ import chord.util.tuple.object.Pair;
  * @author Omer Tripp (omertripp@post.tau.ac.il)
  */
 public class RTAProgram extends Program {
+	private static final String MAIN_CLASS_NOT_DEFINED = "ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
+	private static final String MAIN_METHOD_NOT_FOUND = "ERROR: Could not find main class `%s` or main method in that class.";
+	private static final String METHOD_NOT_FOUND_IN_SUBTYPE = "WARN: Expected instance method %s in class %s implementing/extending interface/class %s.";
+
     public static final boolean DEBUG = false;
 
 	// Flag enabling inference of the class loaded by calls to
@@ -206,13 +210,13 @@ public class RTAProgram extends Program {
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Properties.mainClassName;
 		if (mainClassName == null)
-            Messages.fatal("SCOPE.MAIN_CLASS_NOT_DEFINED");
+            Messages.fatal(MAIN_CLASS_NOT_DEFINED);
        	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
 		prepareClass(mainClass);
         jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(
 			new jq_NameAndDesc("main", "([Ljava/lang/String;)V"));
 		if (mainMethod == null)
-			Messages.fatal("SCOPE.MAIN_METHOD_NOT_FOUND", mainClassName);
+			Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
 		for (int i = 0; repeat; i++) {
 			System.out.println("Iteration: " + i);
 			repeat = false;
@@ -357,7 +361,7 @@ public class RTAProgram extends Program {
 			if (matches) {
 				jq_InstanceMethod m2 = d.getVirtualMethod(nd);
 				if (m2 == null) {
-					Messages.log("SCOPE.METHOD_NOT_FOUND_IN_SUBTYPE",
+					Messages.log(METHOD_NOT_FOUND_IN_SUBTYPE,
 						nd.toString(), d.getName(), c.getName());
 				} else {
 					if (handleNewInstReflection)
