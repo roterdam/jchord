@@ -65,7 +65,6 @@ IHM(i:I,h:H,m:M)
 reachableT(t:T)
 
 MspcMethArg(m:M,v:V) input
-MkobjSenSpcMethArg(m:M,v:V)
 
 kcfaDIC(c:C,i:I,c:C) output
 DIC(c:C,i:I,c:C) output

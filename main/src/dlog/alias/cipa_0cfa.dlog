@@ -51,7 +51,6 @@ specIM(i:I,m:M) input
 virtIM(i:I,m:M) input
 MobjValAsgnInst(m:M0,l:V0,h:H0) input
 MobjVarAsgnInst(m:M0,l:V0,r:V1) input
-McheckCastInst(m:M,l:V0,t:T0,r:V1) input
 MgetInstFldInst(m:M0,l:V0,b:V1,f:F0) input
 MputInstFldInst(m:M0,b:V0,f:F0,r:V1) input
 MgetStatFldInst(m:M0,l:V0,f:F0) input
@@ -73,14 +72,10 @@ VV(v1:V,v2:V)
 specIMV(i:I,m:M,v:V)
 objValAsgnInst(l:V,h:H) 
 objVarAsgnInst(l:V,r:V) 
-checkCastInst(l:V,t:T,r:V) 
-easyNewInstInvkInst(l:V,b:V)
 getInstFldInst(l:V,b:V,f:F) 
 putInstFldInst(b:V,f:F,r:V) 
 getStatFldInst(l:V,f:F) 
 putStatFldInst(f:F,r:V) 
-
-relevantV(v:V)
 
 reachableT(t:T) output
 VHfilter(v:V,h:H) output
@@ -130,12 +125,6 @@ getInstFldInst(l,b,f) :- reachableM(m), MgetInstFldInst(m,l,b,f).
 putInstFldInst(b,f,r) :- reachableM(m), MputInstFldInst(m,b,f,r).
 getStatFldInst(l,f)   :- reachableM(m), MgetStatFldInst(m,l,f).
 putStatFldInst(f,r)   :- reachableM(m), MputStatFldInst(m,f,r).
-checkCastInst(l,t,r)  :- reachableM(m), McheckCastInst(m,l,t,r).
-#easyNewInstInvkInst(l,b) :- reachableM(m), MeasyNewInstInvkInst(m,l,b).
-#VH(l,0) :- reachableM(m), MhardNewInstanceInvkInst(m,l).
-
-# XXX
-# VH(b,h), easyNewInstInvkInst(l,b), clsTH(t,h).
 
 VH(l,h) :- objValAsgnInst(l,h).
 VH(l,h) :- objVarAsgnInst(l,r), VH(r,h), VHfilter(l,h).
@@ -143,27 +132,22 @@ VH(l,h2) :- getInstFldInst(l,b,f), VH(b,h1), HFH(h1,f,h2). split
 HFH(h1,f,h2) :- putInstFldInst(b,f,r), VH(b,h1), VH(r,h2). split
 VH(l,h) :- getStatFldInst(l,f), FH(f,h).
 FH(f,h) :- putStatFldInst(f,r), VH(r,h).
-VH(l,h) :- checkCastInst(l,_,r), VH(r,h), VHfilter(l,h), h != 0.
-#VH(l,h) :- checkCastInst(l,t,r), VH(r,0), sub(t2,t), objTH(t2,h).
 
 ## See: http://java.sun.com/docs/books/jls/second_edition/html/execution.doc.html
 ## Section 12.4 Initialization of Classes and Interfaces
 ## A class or interface type T will be initialized immediately before
 ## the first occurrence of any one of the following:
 
-relevantV(l) :- MobjValAsgnInst(_,l,_).
-#relevantV(l) :- McheckCastInst(_,l,_,_).
-
 # 1. T is a class and an instance of T is created.
 # this handles both normal allocation and reflective allocation
-reachableT(t) :- relevantV(v), VH(v,h), HT(h,t).
+reachableT(t) :- objValAsgnInst(_,h), HT(h,t).
 # 2. T is a class and a static method declared by T is invoked
 reachableT(t) :- reachableM(m), staticTM(t,m).
 # 3. A static field declared by T is assigned. 
-reachableT(t) :- reachableM(m), MputStatFldInst(m,f,_), staticTF(t,f).
+reachableT(t) :- putStatFldInst(f,_), staticTF(t,f).
 # 4. A static field declared by T is used and the reference to the
 #    field is not a compile-time constant.
-reachableT(t) :- reachableM(m), MgetStatFldInst(m,_,f), staticTF(t,f).
+reachableT(t) :- getStatFldInst(_,f), staticTF(t,f).
 # 5. Before a class is initialized, its direct superclass must be
 #    initialized.
 reachableT(t) :- classT(t), reachableT(s), sub(s,t).
