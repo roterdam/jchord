@@ -44,6 +44,7 @@ import chord.project.analyses.ProgramRel;
 import chord.util.ArraySet;
 import chord.util.graph.IGraph;
 import chord.util.graph.MutableGraph;
+import chord.util.AdaptiveSet;
 
 /**
  * Abstract contexts analysis.
@@ -261,7 +262,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		kobjK = Integer.getInteger("chord.kobj.k", 1);
 		assert (kobjK > 0);
 		kcfaK = Integer.getInteger("chord.kcfa.k", 1);
-		assert (kobjK <= kcfaK+1);
+		// assert (kobjK <= kcfaK+1)
 		
 		if (maxIters > 0) {
 			assert (instCtxtKind == KOBJSEN ||
@@ -796,7 +797,11 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				}
 			}
 		}
-		System.out.println("DONE");
+		System.out.println("DONE:" +
+			" min: " + minCtxtSetSize +
+			" max: " + maxCtxtSetSize +
+			" num: " + numCtxtSets +
+			" avg: " + (numCtxtSets == 0 ? 0 : cumCtxtSetSizes/numCtxtSets));
 	}
 
 	private Iterable<Quad> getPointsTo(Register var) {
@@ -870,8 +875,17 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		default:
 			assert false;
 		}
+		int size = newCtxts.size();
+		if (size > maxCtxtSetSize)
+			maxCtxtSetSize = size;
+		if (size < minCtxtSetSize)
+			minCtxtSetSize = size;
+		cumCtxtSetSizes += size;
+		numCtxtSets++;
 		return newCtxts;
 	}
+	private int minCtxtSetSize, maxCtxtSetSize, cumCtxtSetSizes, numCtxtSets;
+
 	public static String getCspaKind() {
 //        String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
 //        String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
