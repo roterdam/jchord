@@ -513,6 +513,17 @@ int bdd_load(FILE *ifile, BDD *root)
 {
    int n, vnum, tmproot;
 
+   while (1) {
+      int c = getc(ifile);
+      if (c == '#') {
+          char s[10000];
+          fgets(s, 10000, ifile);
+      } else {
+          ungetc(c, ifile);
+          break;
+      }
+   }
+
    if (fscanf(ifile, "%d %d", &lh_nodenum, &vnum) != 2)
       return bdd_error(BDD_FORMAT);
 
