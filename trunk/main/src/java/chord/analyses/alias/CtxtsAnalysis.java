@@ -44,7 +44,6 @@ import chord.project.analyses.ProgramRel;
 import chord.util.ArraySet;
 import chord.util.graph.IGraph;
 import chord.util.graph.MutableGraph;
-import chord.util.AdaptiveSet;
 
 /**
  * Abstract contexts analysis.
@@ -286,6 +285,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		int kobjRange = X.getIntArg("kobjRange", 1);
 		int kcfaRange = X.getIntArg("kcfaRange", 1);
 		String inValuesPath = X.getStringArg("inValuesPath", null); // Specifies which values to use
+		boolean keepOnlyReachable = X.getBooleanArg("keepOnlyReachable", false);
 
     // Link back results to where the in values came from
     if (inValuesPath != null) X.symlinkPath = inValuesPath+".results";
@@ -306,6 +306,28 @@ public class CtxtsAnalysis extends JavaAnalysis {
     Random random = randSeed != 0 ? new Random(randSeed) : new Random();
     kobjValue = new int[domH.size()];
     kcfaValue = new int[domI.size()];
+
+    // Only modify k values of sites in reachable methods
+    ProgramRel relReachableM = (ProgramRel) Project.getTrgt("reachableM");
+    Set<jq_Method> reachableMethods = new HashSet<jq_Method>();
+    relReachableM.load();
+    final Iterable<jq_Method> tuples = relReachableM.getAry1ValTuples();
+    for (jq_Method m : tuples)
+      reachableMethods.add(m);
+    relReachableM.close();
+
+    // The sites we actually care about
+    Set<Inst> hSet = new HashSet<Inst>();
+    Set<Inst> iSet = new HashSet<Inst>();
+    for (Object inst : domH) {
+      if (inst == null) continue; // Skip null
+      if (keepOnlyReachable && !reachableMethods.contains(((Inst)inst).getMethod())) continue;
+      hSet.add((Inst)inst);
+    }
+    for (Inst inst : domI) {
+      if (keepOnlyReachable && !reachableMethods.contains(inst.getMethod())) continue;
+      iSet.add(inst);
+    }
 
     if (inValuesPath != null) {
       System.out.println("Reading k values from "+inValuesPath);
@@ -331,11 +353,11 @@ public class CtxtsAnalysis extends JavaAnalysis {
     }
     else {
       System.out.println("Generating k values with senProb="+senProb);
-      for (Object inst : domH) {
+      for (Inst inst : hSet) {
         int h = domH.indexOf(inst);
         kobjValue[h] = kobjK + sampleBinomial(random, kobjRange, senProb);
       }
-      for (Inst inst : domI) {
+      for (Inst inst : iSet) {
         int i = domI.indexOf(inst);
         kcfaValue[i] = kcfaK + sampleBinomial(random, kcfaRange, senProb);
       }
@@ -344,12 +366,12 @@ public class CtxtsAnalysis extends JavaAnalysis {
     // Output k-values and strings
     PrintWriter datOut = OutDirUtils.newPrintWriter("inputs.dat");
     PrintWriter strOut = OutDirUtils.newPrintWriter("inputs.strings");
-    for (Object inst : domH) {
+    for (Inst inst : hSet) {
       int h = domH.indexOf(inst);
       datOut.println("H"+h+" " + kobjValue[h]);
-      strOut.println("H"+h+" " + (h == 0 ? inst : ((Inst)inst).toVerboseStr()));
+      strOut.println("H"+h+" " + inst.toVerboseStr());
     }
-    for (Inst inst : domI) {
+    for (Inst inst : iSet) {
       int i = domI.indexOf(inst);
       datOut.println("I"+i+" " + kcfaValue[i]);
       strOut.println("I"+i+" " + inst.toVerboseStr());
@@ -360,11 +382,11 @@ public class CtxtsAnalysis extends JavaAnalysis {
     // Compute statistics on the k values actually used
     StatFig kobjFig = new StatFig();
     StatFig kcfaFig = new StatFig();
-    for (Object inst : domH) {
+    for (Inst inst : hSet) {
       int h = domH.indexOf(inst);
       kobjFig.add(kobjValue[h]);
     }
-    for (Inst inst : domI) {
+    for (Inst inst : iSet) {
       int i = domI.indexOf(inst);
       kcfaFig.add(kcfaValue[i]);
     }

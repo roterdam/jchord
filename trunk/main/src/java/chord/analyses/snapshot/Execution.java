@@ -103,6 +103,16 @@ public class Execution {
     output.put("exec.errors", numErrors);
     writeMap("output.map", output);
 
+    // Delete stuff
+    String files = System.getProperty("chord."+name+".deleteFiles");
+    if (files != null) {
+      for (String file : files.split(",")) {
+        if (file.equals("")) continue;
+        logs("Deleting %s", file);
+        system(new String[] { "rm", "-r", basePath+"/"+file });
+      }
+    }
+
     String finalPoolPath = System.getProperty("chord."+name+".finalPoolPath");
     if (finalPoolPath != null) {
       String path;
