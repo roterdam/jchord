@@ -25,7 +25,7 @@ public class Solver {
 	 * @param	fileName	A file containing a Datalog program.
 	 */
 	public static void run(String fileName) {
-		String cmd = "java -Xmx" + Properties.bddbddbMaxHeap +
+		String cmd = "java -ea -Xmx" + Properties.bddbddbMaxHeap +
 			" -cp " + Properties.bddbddbClassPathName +
 			" -Dnoisy=" + (Properties.bddbddbVerbose ? "yes" : "no") +
 			" -Djava.library.path=" + Properties.libDirName +
