@@ -230,9 +230,12 @@ public abstract class Program {
 		}
 	}
 	private void saveMethodsFile(File file) {
+		saveMethodsFile(methods, file);
+	}
+	public static void saveMethodsFile(IndexSet<jq_Method> mList, File file) {
 		try {
 			PrintWriter out = new PrintWriter(file);
-			for (jq_Method m : methods)
+			for (jq_Method m : mList)
 				out.println(m);
 			out.close();
 		} catch (IOException ex) {
@@ -291,7 +294,7 @@ public abstract class Program {
 		}
 		return new Pair<Quad, Set<jq_Reference>>(q, rTypes);
 	}
-	private String siteToStr(Pair<Quad, Set<jq_Reference>> p) {
+	private static String siteToStr(Pair<Quad, Set<jq_Reference>> p) {
 		Set<jq_Reference> l = p.val1;
 		assert (l != null);
 		int n = l.size();
@@ -303,18 +306,21 @@ public abstract class Program {
 		return s;
 	}
 	private void saveReflectFile(File file) {
+		saveReflectFile(reflectInfo, file);
+	}
+	public static void saveReflectFile(ReflectInfo rInfo, File file) {
 		try {
             PrintWriter out = new PrintWriter(file);
 			out.println("# reflectClasses");
-			for (jq_Reference r : reflectInfo.getReflectClasses())
+			for (jq_Reference r : rInfo.getReflectClasses())
            	    out.println(r);
 			out.println("# resolvedForNameSites");
-			for (Pair<Quad, Set<jq_Reference>> p : reflectInfo.getResolvedForNameSites()) {
+			for (Pair<Quad, Set<jq_Reference>> p : rInfo.getResolvedForNameSites()) {
 				String s = siteToStr(p);
 				out.println(s);
 			}
 			out.println("# resolvedNewInstSites");
-			for (Pair<Quad, Set<jq_Reference>> p : reflectInfo.getResolvedNewInstSites()) {
+			for (Pair<Quad, Set<jq_Reference>> p : rInfo.getResolvedNewInstSites()) {
 				String s = siteToStr(p);
 				out.println(s);
 			}
