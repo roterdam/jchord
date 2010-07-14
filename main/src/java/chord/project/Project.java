@@ -692,7 +692,8 @@ public class Project {
 			redefinedDlogTask(fileName, name, getSourceName(task2));
 			return;
 		}
-		for (String domName : task.getDomNames()) {
+		Set<String> domNames = task.getDomNames();
+		for (String domName : domNames) {
 			createTrgt(domName, ProgramDom.class, fileName);
 		}
 		Map<String, RelSign> consumedRelsMap =
@@ -709,10 +710,9 @@ public class Project {
 			RelSign relSign = e.getValue();
 			createTrgt(relName, ProgramRel.class, fileName, relSign);
 		}
-		taskToConsumedNamesMap.put(task,
-			consumedRelsMap.keySet());
-		taskToProducedNamesMap.put(task,
-			producedRelsMap.keySet());
+		taskToConsumedNamesMap.put(task, consumedRelsMap.keySet());
+		taskToConsumedNamesMap.put(task, domNames);
+		taskToProducedNamesMap.put(task, producedRelsMap.keySet());
 		task.setName(name);
 		nameToTaskMap.put(name, task);
 	}
