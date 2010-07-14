@@ -20,6 +20,9 @@ import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+import gnu.trove.TIntArrayList;
+import gnu.trove.TIntProcedure;
+
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -44,6 +47,7 @@ import chord.project.analyses.ProgramRel;
 import chord.util.ArraySet;
 import chord.util.graph.IGraph;
 import chord.util.graph.MutableGraph;
+import chord.util.ChordRuntimeException;
 
 /**
  * Abstract contexts analysis.
@@ -139,14 +143,14 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	private static final Quad[] emptyElems = new Quad[0];
 
 	// includes all methods in domain
-	private Map<jq_Method, Set<Ctxt>> methToCtxtsMap;
+	private Set<Ctxt>[] methToCtxts;
 	
 	// ctxt kind is KCFASEN
-	private Map<jq_Method, List<Quad>> methToClrSitesMap;
+	private TIntArrayList[] methToClrSites;
     // ctxt kind is KOBJSEN
-    private Map<jq_Method, List<Quad>> methToRcvSitesMap;
+    private TIntArrayList[] methToRcvSites;
 	// ctxt kind is CTXTCPY
-	private Map<jq_Method, Set<jq_Method>> methToClrMethsMap;
+	private Set<jq_Method>[] methToClrMeths;
 	
 	private Set<Ctxt> epsilonCtxtSet;
 
@@ -155,8 +159,12 @@ public class CtxtsAnalysis extends JavaAnalysis {
     public static final int KCFASEN = 2;  // abbr cs
     public static final int CTXTCPY = 3;  // abbr cc
 
+	private int[] ItoM;
+	private int[] HtoM;
+	private Quad[] ItoQ;
+	private Quad[] HtoQ;
+
 	private jq_Method mainMeth;
-	private boolean[] isCtxtSenI;	// indexed by domI
 	private boolean[] isCtxtSenV;	// indexed by domV
 	private int[] methKind;         // indexed by domM
 	private int[] kobjValue;        // indexed by domH
@@ -436,12 +444,24 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				}
 			}
 			kobjValue = new int[numA];
+			HtoM = new int[numA];
+			HtoQ = new Quad[numA];
 			for (int i = 1; i < numA; i++) {
 				kobjValue[i] = kobjK;
+				Quad site = (Quad) domH.get(i);
+				jq_Method m = site.getMethod();
+				HtoM[i] = domM.indexOf(m);
+				HtoQ[i] = site;
 			}
 			kcfaValue = new int[numI];
+			ItoM = new int[numI];
+			ItoQ = new Quad[numI];
 			for (int i = 0; i < numI; i++) {
 				kcfaValue[i] = kcfaK;
+				Quad invk =domI.get(i);
+				jq_Method m = invk.getMethod();
+				ItoM[i] = domM.indexOf(m);
+				ItoQ[i] = invk;
 			}
 
 			if (percy) {
@@ -460,12 +480,11 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		epsilonCtxtSet = new ArraySet<Ctxt>(1);
 		epsilonCtxtSet.add(epsilon);
 
-		methToCtxtsMap = new HashMap<jq_Method, Set<Ctxt>>();
+		methToCtxts = new Set[numM];
 
-		isCtxtSenI = new boolean[numI];
-		methToClrSitesMap = new HashMap<jq_Method, List<Quad>>();
-        methToRcvSitesMap = new HashMap<jq_Method, List<Quad>>();
-		methToClrMethsMap = new HashMap<jq_Method, Set<jq_Method>>();
+		methToClrSites = new TIntArrayList[numM];
+        methToRcvSites = new TIntArrayList[numM];
+		methToClrMeths = new Set[numM];
 
 		if (maxIters > 0) {
 			int[] histogramI = new int[maxIters + 1];
@@ -491,11 +510,10 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		relVH.close();
 
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			if (!isCtxtSenI[iIdx])
-				continue;
 			Quad invk = (Quad) domI.get(iIdx);
 			jq_Method meth = invk.getMethod();
-			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
+			int mIdx = domM.indexOf(meth);
+			Set<Ctxt> ctxts = methToCtxts[mIdx];
 			int k = kcfaValue[iIdx];
 			for (Ctxt oldCtxt : ctxts) {
 				Quad[] oldElems = oldCtxt.getElems();
@@ -506,7 +524,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = inst.getMethod();
-			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
+			int mIdx = domM.indexOf(meth);
+			Set<Ctxt> ctxts = methToCtxts[mIdx];
 			int k = kobjValue[hIdx];
 			for (Ctxt oldCtxt : ctxts) {
 				Quad[] oldElems = oldCtxt.getElems();
@@ -525,19 +544,16 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		if (!isLastIter)
 			relRefinableCI.zero();
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			if (!isCtxtSenI[iIdx])
-				continue;
 			Quad invk = (Quad) domI.get(iIdx);
 			jq_Method meth = invk.getMethod();
-			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
+			Set<Ctxt> ctxts = methToCtxts[domM.indexOf(meth)];
 			int k = kcfaValue[iIdx];
 			for (Ctxt oldCtxt : ctxts) {
 				Quad[] oldElems = oldCtxt.getElems();
 				Quad[] newElems = combine(k, invk, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
-				if (!isLastIter && newElems.length < oldElems.length + 1
-						&& !contains(oldElems, invk)) {
+				if (!isLastIter && newElems.length < oldElems.length + 1) {
 					relRefinableCI.add(oldCtxt, invk);
 				}
 				relCI.add(newCtxt, invk);
@@ -555,15 +571,15 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = inst.getMethod();
-			Set<Ctxt> ctxts = methToCtxtsMap.get(meth);
+			int mIdx = domM.indexOf(meth);
+			Set<Ctxt> ctxts = methToCtxts[mIdx];
 			int k = kobjValue[hIdx];
 			for (Ctxt oldCtxt : ctxts) {
 				Quad[] oldElems = oldCtxt.getElems();
 				Quad[] newElems = combine(k, inst, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
-				if (!isLastIter && newElems.length < oldElems.length + 1
-						&& !contains(oldElems, inst)) {
+				if (!isLastIter && newElems.length < oldElems.length + 1) {
 					relRefinableCH.add(oldCtxt, inst);
 				}
 				relCH.add(newCtxt, inst);
@@ -726,38 +742,38 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			{
 				roots.add(meth);
 				methToPredsMap.put(meth, emptyMethSet);
-				methToCtxtsMap.put(meth, epsilonCtxtSet);
+				methToCtxts[mIdx] = epsilonCtxtSet;
 				break;
 			}
             case KCFASEN:
             {
                 Set<jq_Method> predMeths = new HashSet<jq_Method>();
-                List<Quad> clrSites = new ArrayList<Quad>();
+                TIntArrayList clrSites = new TIntArrayList();
                 for (Quad invk : getCallers(meth)) {
-                    int iIdx = domI.indexOf(invk);
-                    isCtxtSenI[iIdx] = true;
                     predMeths.add(invk.getMethod());
-                    clrSites.add(invk);
+                    int iIdx = domI.indexOf(invk);
+                    clrSites.add(iIdx);
                 }
-                methToClrSitesMap.put(meth, clrSites);
+                methToClrSites[mIdx] = clrSites;
                 methToPredsMap.put(meth, predMeths);
-                methToCtxtsMap.put(meth, emptyCtxtSet);
+                methToCtxts[mIdx] = emptyCtxtSet;
                 break;
             }
 			case KOBJSEN:
             {
             	Set<jq_Method> predMeths = new HashSet<jq_Method>();
-                List<Quad> rcvSites = new ArrayList<Quad>();
+                TIntArrayList rcvSites = new TIntArrayList();
 				ControlFlowGraph cfg = meth.getCFG();
                 Register thisVar = cfg.getRegisterFactory().get(0);
                 Iterable<Quad> pts = getPointsTo(thisVar);
                 for (Quad inst : pts) {
                     predMeths.add(inst.getMethod());
-                    rcvSites.add(inst);
+					int hIdx = domH.indexOf(inst);
+                    rcvSites.add(hIdx);
                 }
-                methToRcvSitesMap.put(meth, rcvSites);
+                methToRcvSites[mIdx] = rcvSites;
                 methToPredsMap.put(meth, predMeths);
-                methToCtxtsMap.put(meth, emptyCtxtSet);
+                methToCtxts[mIdx] = emptyCtxtSet;
                 break;
 			}
 			case CTXTCPY:
@@ -766,9 +782,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				for (Quad invk : getCallers(meth)) {
 					predMeths.add(invk.getMethod());
 				}
-				methToClrMethsMap.put(meth, predMeths);
+				methToClrMeths[mIdx] = predMeths;
 				methToPredsMap.put(meth, predMeths);
-				methToCtxtsMap.put(meth, emptyCtxtSet);
+				methToCtxts[mIdx] = emptyCtxtSet;
 				break;
 			}
 			default:
@@ -792,7 +808,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				if (roots.contains(cle))
 					continue;
 				if (!graph.hasEdge(cle, cle)) {
-					methToCtxtsMap.put(cle, getNewCtxts(cle));
+					int cleIdx = domM.indexOf(cle);
+					methToCtxts[cleIdx] = getNewCtxts(cleIdx);
 					continue;
 				}
 			}
@@ -804,18 +821,22 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				System.out.println("\tIteration  #" + count);
 				changed = false;
 				for (jq_Method cle : scc) {
-					Set<Ctxt> newCtxts = getNewCtxts(cle);
+					int mIdx = domM.indexOf(cle);
+					Set<Ctxt> newCtxts = getNewCtxts(mIdx);
 					if (!changed) {
-						Set<Ctxt> oldCtxts =
-							methToCtxtsMap.get(cle);
-						for (Ctxt ctxt : newCtxts) {
-							if (!oldCtxts.contains(ctxt)) {
-								changed = true;
-								break;
+						Set<Ctxt> oldCtxts = methToCtxts[mIdx];
+						if (newCtxts.size() > oldCtxts.size())
+							changed = true;
+						else {
+							for (Ctxt ctxt : newCtxts) {
+								if (!oldCtxts.contains(ctxt)) {
+									changed = true;
+									break;
+								}
 							}
 						}
 					}
-					methToCtxtsMap.put(cle, newCtxts);
+					methToCtxts[mIdx] = newCtxts;
 				}
 			}
 		}
@@ -848,48 +869,54 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		return newElems;
 	}
 
-	private Set<Ctxt> getNewCtxts(jq_Method cle) {
-		Set<Ctxt> newCtxts = new HashSet<Ctxt>();
-		int mIdx = domM.indexOf(cle);
-		int kind = methKind[mIdx];
+	private Set<Ctxt> getNewCtxts(int cleIdx) {
+		final Set<Ctxt> newCtxts = new HashSet<Ctxt>();
+		int kind = methKind[cleIdx];
 		switch (kind) {
         case KCFASEN:
 		{
-			List<Quad> invks = methToClrSitesMap.get(cle);
-            for (Quad invk : invks) {
-                int k = kcfaValue[domI.indexOf(invk)];
-                jq_Method clr = invk.getMethod();
-                Set<Ctxt> clrCtxts = methToCtxtsMap.get(clr);
-                for (Ctxt oldCtxt : clrCtxts) {
+			TIntArrayList invks = methToClrSites[cleIdx];
+			int n = invks.size();
+			for (int i = 0; i < n; i++) {
+				int iIdx = invks.get(i);
+				Quad invk = ItoQ[iIdx];
+				int k = kcfaValue[iIdx];
+				int clrIdx = ItoM[iIdx];
+				Set<Ctxt> clrCtxts = methToCtxts[clrIdx];
+				for (Ctxt oldCtxt : clrCtxts) {
 					Quad[] oldElems = oldCtxt.getElems();
 					Quad[] newElems = combine(k, invk, oldElems);
-                    Ctxt newCtxt = domC.setCtxt(newElems);
-                    newCtxts.add(newCtxt);
-                }
-            }
+					Ctxt newCtxt = domC.setCtxt(newElems);
+					newCtxts.add(newCtxt);
+				}
+			}
             break;
 		}
         case KOBJSEN:
 		{
-			List<Quad> rcvs = methToRcvSitesMap.get(cle);
-            for (Quad rcv : rcvs) {
-                int k = kobjValue[domH.indexOf(rcv)];
-                jq_Method clr = rcv.getMethod();
-                Set<Ctxt> rcvCtxts = methToCtxtsMap.get(clr);
-                for (Ctxt oldCtxt : rcvCtxts) {
+			TIntArrayList rcvs = methToRcvSites[cleIdx];
+			int n = rcvs.size();
+			for (int i = 0; i < n; i++) {
+				int hIdx = rcvs.get(i);
+				Quad rcv = HtoQ[hIdx];
+				int k = kobjValue[hIdx];
+				int clrIdx = HtoM[hIdx];
+				Set<Ctxt> rcvCtxts = methToCtxts[clrIdx];
+				for (Ctxt oldCtxt : rcvCtxts) {
 					Quad[] oldElems = oldCtxt.getElems();
 					Quad[] newElems = combine(k, rcv, oldElems);
-                    Ctxt newCtxt = domC.setCtxt(newElems);
-                    newCtxts.add(newCtxt);
-                }
-            }
-            break;
+					Ctxt newCtxt = domC.setCtxt(newElems);
+					newCtxts.add(newCtxt);
+				}
+			}
+			break;
 		}
 		case CTXTCPY:
 		{
-			Set<jq_Method> clrs = methToClrMethsMap.get(cle);
+			Set<jq_Method> clrs = methToClrMeths[cleIdx];
 			for (jq_Method clr : clrs) {
-				Set<Ctxt> clrCtxts = methToCtxtsMap.get(clr);
+				int clrIdx = domM.indexOf(clr);
+				Set<Ctxt> clrCtxts = methToCtxts[clrIdx];
 				newCtxts.addAll(clrCtxts);
 			}
 			break;
@@ -909,37 +936,37 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	private int minCtxtSetSize, maxCtxtSetSize, cumCtxtSetSizes, numCtxtSets;
 
 	public static String getCspaKind() {
-//        String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
-//        String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
-//        String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
-//        int instCtxtKind, statCtxtKind;
-//        if (instCtxtKindStr.equals("ci")) {
-//            instCtxtKind = CtxtsAnalysis.CTXTINS;
-//        } else if (instCtxtKindStr.equals("cs")) {
-//            instCtxtKind = CtxtsAnalysis.KCFASEN;
-//        } else if (instCtxtKindStr.equals("co")) {
-//            instCtxtKind = CtxtsAnalysis.KOBJSEN;
-//        } else
-//            throw new ChordRuntimeException();
-//        if (statCtxtKindStr.equals("ci")) {
-//            statCtxtKind = CtxtsAnalysis.CTXTINS;
-//        } else if (statCtxtKindStr.equals("cs")) {
-//            statCtxtKind = CtxtsAnalysis.KCFASEN;
-//        } else if (statCtxtKindStr.equals("cc")) {
-//            statCtxtKind = CtxtsAnalysis.CTXTCPY;
-//        } else
-//            throw new ChordRuntimeException();
+        String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
+        String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
+        String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
+        int instCtxtKind, statCtxtKind;
+        if (instCtxtKindStr.equals("ci")) {
+            instCtxtKind = CtxtsAnalysis.CTXTINS;
+        } else if (instCtxtKindStr.equals("cs")) {
+            instCtxtKind = CtxtsAnalysis.KCFASEN;
+        } else if (instCtxtKindStr.equals("co")) {
+            instCtxtKind = CtxtsAnalysis.KOBJSEN;
+        } else
+            throw new ChordRuntimeException();
+        if (statCtxtKindStr.equals("ci")) {
+            statCtxtKind = CtxtsAnalysis.CTXTINS;
+        } else if (statCtxtKindStr.equals("cs")) {
+            statCtxtKind = CtxtsAnalysis.KCFASEN;
+        } else if (statCtxtKindStr.equals("cc")) {
+            statCtxtKind = CtxtsAnalysis.CTXTCPY;
+        } else
+            throw new ChordRuntimeException();
         String cspaKind;
-//        if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
-//            statCtxtKind == CtxtsAnalysis.CTXTINS)
-//            cspaKind = "cspa-0cfa-dlog";
-//        else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
-//            statCtxtKind == CtxtsAnalysis.CTXTCPY)
-//            cspaKind = "cspa-kobj-dlog";
-//        else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
-//            statCtxtKind == CtxtsAnalysis.KCFASEN)
-//            cspaKind = "cspa-kcfa-dlog";
-//        else
+        if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
+            statCtxtKind == CtxtsAnalysis.CTXTINS)
+            cspaKind = "cspa-0cfa-dlog";
+        else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
+            statCtxtKind == CtxtsAnalysis.CTXTCPY)
+            cspaKind = "cspa-kobj-dlog";
+        else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
+            statCtxtKind == CtxtsAnalysis.KCFASEN)
+            cspaKind = "cspa-kcfa-dlog";
+        else
             cspaKind = "cspa-hybrid-dlog";
 		return cspaKind;
 	}
