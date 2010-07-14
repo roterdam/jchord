@@ -710,8 +710,10 @@ public class Project {
 			RelSign relSign = e.getValue();
 			createTrgt(relName, ProgramRel.class, fileName, relSign);
 		}
-		taskToConsumedNamesMap.put(task, consumedRelsMap.keySet());
-		taskToConsumedNamesMap.put(task, domNames);
+		Set<String> consumedNames = new HashSet<String>();
+		consumedNames.addAll(consumedRelsMap.keySet());
+		consumedNames.addAll(domNames);
+		taskToConsumedNamesMap.put(task, consumedNames);
 		taskToProducedNamesMap.put(task, producedRelsMap.keySet());
 		task.setName(name);
 		nameToTaskMap.put(name, task);
