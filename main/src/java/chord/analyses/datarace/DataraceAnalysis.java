@@ -177,8 +177,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 		}
 		
 		if (Properties.publishResults)
-			outputCtxtInsDataraces();
-//			publishResults();
+			publishResults();
 
 		if (percy) {
 			outputRaces();		
