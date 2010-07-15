@@ -7,14 +7,16 @@
 
 .include "F.dom"
 .include "C.dom"
+.include "V.dom"
+.include "P.dom"
 
-.bddvarorder F0_C0xC1
+.bddvarorder P0_V0_C0xC1_F0
 
 ###
 # Relations
 ###
 
-escO(o:C) input
+escCPVO(c:C0,p:P0,v:V0,o:C1) input
 
 toBeRefinedFC(f:F0,c:C0) output
 toBeRefinedCFC(c:C0,f:F0,d:C1) output
@@ -23,5 +25,5 @@ toBeRefinedCFC(c:C0,f:F0,d:C1) output
 # Constraints
 ###
 
-toBeRefinedFC(_,o) :- escO(o).
-toBeRefinedCFC(c,_,_) :- escO(c).
+toBeRefinedFC(_,o) :- escCPVO(_,_,_,o).
+toBeRefinedCFC(o,_,_) :- escCPVO(_,_,_,o).
