@@ -153,6 +153,10 @@ public class DataraceAnalysis extends JavaAnalysis {
 			if (numIters == maxIters)
 				break;
 			Project.runTask("datarace-feedback-dlog");
+			if (!excludeParallel)
+				Project.runTask("refine-mhp-dlog");
+			if (!excludeEscaping)
+				Project.runTask("refine-esc-dlog");
 			Project.runTask("refine-hybrid-dlog");
 			relRefineH.load();
 			int numRefineH = relRefineH.size();
@@ -173,7 +177,8 @@ public class DataraceAnalysis extends JavaAnalysis {
 		}
 		
 		if (Properties.publishResults)
-			publishResults();
+			outputCtxtInsDataraces();
+//			publishResults();
 
 		if (percy) {
 			outputRaces();		
@@ -193,11 +198,11 @@ public class DataraceAnalysis extends JavaAnalysis {
 			int e1 = domE.indexOf(quad0);
 			Quad quad1 = (Quad) p.val1;	
 			int e2 = domE.indexOf(quad1);
-			writer.println(numRaces + ":" + estr(e1));
-			writer.println("\t" + estr(e2));
+			writer.println(e1 + " - " + e2);
 			numRaces++;		
 		}		
 		relDatarace.close();
+		writer.println("Total # of races=" + numRaces);
 		writer.close();
 	}
 
