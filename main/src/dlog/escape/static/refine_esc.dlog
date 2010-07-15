@@ -1,0 +1,27 @@
+# Copyright (c) 2008-2009, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+
+# Author: Omer Tripp (omertrip@post.tau.ac.il)
+# name=refine-esc-dlog
+
+.include "F.dom"
+.include "C.dom"
+
+.bddvarorder F0_C0xC1
+
+###
+# Relations
+###
+
+escO(o:C) input
+
+toBeRefinedFC(f:F0,c:C0) output
+toBeRefinedCFC(c:C0,f:F0,d:C1) output
+
+###
+# Constraints
+###
+
+toBeRefinedFC(_,o) :- escO(o).
+toBeRefinedCFC(c,_,_) :- escO(c).

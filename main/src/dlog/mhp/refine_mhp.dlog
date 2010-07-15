@@ -90,8 +90,9 @@ refinePathEdge(c,p,a,b,x) :- ForkPHcs(c,p,d,h), PathEdge(c,p,a,b,x), forkAC(x,e)
 refinePathEdge(c,p,t1,_,t2) :- toBeRefinedMHP(c,p,t1,t2).
 
 # from deadlock feedback.dlog:
-toBeRefinedCMCM(c:C0,m:M0,d:C1,m:M1) input
+# toBeRefinedCMCM(c:C0,m:M0,d:C1,m:M1) input
 MI(m:M0,i:I0) input
 thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0) input
 
-toBeRefinedCICM(c,i,d,n) :- toBeRefinedCMCM(c,m,d,n), MI(m,i), thrSenAbbrCICM(c,i,d,n).
+#toBeRefinedCICM(c,i,d,n) :- toBeRefinedCMCM(c,m,d,n), MI(m,i), thrSenAbbrCICM(c,i,d,n).
+toBeRefinedCICM(c,i,d,n) :- MI(_,i), thrSenAbbrCICM(c,i,d,n).
