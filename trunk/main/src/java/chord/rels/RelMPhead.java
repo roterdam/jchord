@@ -7,7 +7,7 @@ package chord.rels;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
@@ -30,7 +30,7 @@ public class RelMPhead extends ProgramRel
 		if (m.isAbstract())
 			return;
 		ControlFlowGraph cfg = m.getCFG();
-		BasicBlock be = cfg.entry();
+		EntryOrExitBasicBlock be = cfg.entry();
 		add(m, be);
 	}
 }
