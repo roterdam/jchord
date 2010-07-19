@@ -13,7 +13,7 @@ import java.io.PrintWriter;
 import chord.bddbddb.Dom;
 import chord.program.visitors.IClassVisitor;
 import chord.project.Project;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.VisitorHandler;
 import chord.project.analyses.ProgramDom;
 import chord.util.ChordRuntimeException;
@@ -43,7 +43,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 	public void save() {
 		System.out.println("SAVING dom " + name + " size: " + size());
 		try {
-			super.save(Properties.bddbddbWorkDirName, Properties.saveDomMaps);
+			super.save(ChordProperties.bddbddbWorkDirName, ChordProperties.saveDomMaps);
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
 		}
@@ -92,7 +92,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 		String fileName = tag + ".xml";
 		PrintWriter out;
 		try {
-			File file = new File(Properties.outDirName, fileName);
+			File file = new File(ChordProperties.outDirName, fileName);
 			out = new PrintWriter(new FileWriter(file));
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);

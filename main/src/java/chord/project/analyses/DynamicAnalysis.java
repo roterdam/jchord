@@ -28,7 +28,7 @@ import chord.program.CFGLoopFinder;
 import chord.program.Program;
 import chord.project.Messages;
 import chord.project.Project;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.OutDirUtils;
 import chord.runtime.BufferedRuntime;
 import chord.util.ByteBufferedFile;
@@ -124,24 +124,24 @@ public class DynamicAnalysis extends JavaAnalysis {
 	}
 
 	private static String getNameOfFullCrudeTraceFile(String runID) {
-		return getNameOfFullFile(runID, Properties.crudeTraceFileName);
+		return getNameOfFullFile(runID, ChordProperties.crudeTraceFileName);
 	}
 	private static String getNameOfFullFinalTraceFile(String runID) {
-		return getNameOfFullFile(runID, Properties.finalTraceFileName);
+		return getNameOfFullFile(runID, ChordProperties.finalTraceFileName);
 	}
 	private static String getNameOfPipeCrudeTraceFile(String runID) {
-		return getNameOfPipeFile(runID, Properties.crudeTraceFileName);
+		return getNameOfPipeFile(runID, ChordProperties.crudeTraceFileName);
 	}
 	private static String getNameOfPipeFinalTraceFile(String runID) {
-		return getNameOfPipeFile(runID, Properties.finalTraceFileName);
+		return getNameOfPipeFile(runID, ChordProperties.finalTraceFileName);
 	}
 
 	public void run() {
 		final String[] runIDs =
-			Properties.runIDs.split(Properties.LIST_SEPARATOR);
-		final String instrSchemeFileName = Properties.instrSchemeFileName;
+			ChordProperties.runIDs.split(ChordProperties.LIST_SEPARATOR);
+		final String instrSchemeFileName = ChordProperties.instrSchemeFileName;
 		boolean doReuse = false;
-		if (Properties.reuseTrace) {
+		if (ChordProperties.reuseTrace) {
 			// check if instrumentation scheme file exists and
 			// all trace files from a previous run of Chord exist;
 			// only then can those files be reused
@@ -200,19 +200,19 @@ public class DynamicAnalysis extends JavaAnalysis {
 			ex.printStackTrace();
 			System.exit(1);
 		}
-		final String mainClassName = Properties.mainClassName;
+		final String mainClassName = ChordProperties.mainClassName;
 		assert (mainClassName != null);
-		final String classPathName = Properties.classPathName;
+		final String classPathName = ChordProperties.classPathName;
 		assert (classPathName != null);
-		final String bootClassesDirName = Properties.bootClassesDirName;
-		final String userClassesDirName = Properties.userClassesDirName;
-		final String runtimeClassName = Properties.runtimeClassName;
-		String instrProgramCmd = "java " + Properties.runtimeJvmargs +
-			" -Xbootclasspath/p:" + Properties.mainClassPathName +
+		final String bootClassesDirName = ChordProperties.bootClassesDirName;
+		final String userClassesDirName = ChordProperties.userClassesDirName;
+		final String runtimeClassName = ChordProperties.runtimeClassName;
+		String instrProgramCmd = "java " + ChordProperties.runtimeJvmargs +
+			" -Xbootclasspath/p:" + ChordProperties.mainClassPathName +
 			File.pathSeparator + bootClassesDirName +
 			" -Xverify:none" + " -cp " + userClassesDirName +
 			File.pathSeparator + classPathName +
-			" -agentpath:" + Properties.instrAgentFileName +
+			" -agentpath:" + ChordProperties.instrAgentFileName +
 			"=instr_scheme_file_name=" + instrSchemeFileName +
 			"=runtime_class_name=" + runtimeClassName.replace('.', '/');
 		final boolean runInSameJVM = !runtimeClassName.equals(
@@ -225,8 +225,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 				final String args = System.getProperty("chord.args." + runID, "");
 				final String cmd = instrProgramCmd + args;
 				initPass();
-				int timeout = Properties.dynamicTimeoutMs;
-				if (Properties.dynamicContinueOnError)
+				int timeout = ChordProperties.dynamicTimeoutMs;
+				if (ChordProperties.dynamicContinueOnError)
 					OutDirUtils.executeWithWarnOnError(cmd, timeout);
 				else
 					OutDirUtils.executeWithFailOnError(cmd);
@@ -236,9 +236,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 			doneAllPasses();
 			return;
 		}
-		final boolean usePipe = Properties.doTracePipe;
+		final boolean usePipe = ChordProperties.doTracePipe;
 		final boolean doTransform = scheme.needsTraceTransform();
-		instrProgramCmd += "=trace_block_size=" + Properties.traceBlockSize +
+		instrProgramCmd += "=trace_block_size=" + ChordProperties.traceBlockSize +
 			"=trace_file_name=";
 		initAllPasses();
 		for (String runID : runIDs) {
@@ -408,7 +408,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		try {
 		initPass();
 		ByteBufferedFile buffer = new ByteBufferedFile(
-			Properties.traceBlockSize, fileName, true);
+			ChordProperties.traceBlockSize, fileName, true);
 		long count = 0;
 		while (!buffer.isDone()) {
 			byte opcode = buffer.getByte();

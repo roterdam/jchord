@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
 
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.util.ChordRuntimeException;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
@@ -89,7 +89,7 @@ public class TraceTransformer {
 	private final int leaveMethodNumBytes;
 
 	private ByteBufferedFile reader, writer;
-	private static final int MAX_CONSTR_SIZE = Properties.maxConstr;
+	private static final int MAX_CONSTR_SIZE = ChordProperties.maxConstr;
 	// accumulates bytes that have yet to be written to 'writer'
 	private byte[] tmp;
 	// the number of bytes currently accumulated in 'tmp'
@@ -163,8 +163,8 @@ public class TraceTransformer {
 	 */
 	public void run() {
 		try {
-			reader = new ByteBufferedFile(Properties.traceBlockSize, rdFileName, true);
-			writer = new ByteBufferedFile(Properties.traceBlockSize, wrFileName, false);
+			reader = new ByteBufferedFile(ChordProperties.traceBlockSize, rdFileName, true);
+			writer = new ByteBufferedFile(ChordProperties.traceBlockSize, wrFileName, false);
 			pending = new ArrayList<IntTrio>();
  			tmp = new byte[100000];
 			count = 0; // size of tmp

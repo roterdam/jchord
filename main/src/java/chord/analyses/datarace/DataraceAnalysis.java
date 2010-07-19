@@ -37,7 +37,7 @@ import chord.project.Chord;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
 import chord.project.Project;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
@@ -176,7 +176,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 			Project.resetTaskDone("ctxts-java");
 		}
 		
-		if (Properties.publishResults)
+		if (ChordProperties.publishResults)
 			publishResults();
 
 		if (percy) {

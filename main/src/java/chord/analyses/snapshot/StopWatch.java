@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import chord.project.Properties;
+import chord.project.ChordProperties;
 
 /**
  * Simple class for measuring elapsed time.

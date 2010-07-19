@@ -17,8 +17,8 @@ public class Main {
 	public static void main(String[] args) throws Exception {
         PrintStream outStream = null;
         PrintStream errStream = null;
-		String outFileName = Properties.outFileName;
-		String errFileName = Properties.errFileName;
+		String outFileName = ChordProperties.outFileName;
+		String errFileName = ChordProperties.errFileName;
 		System.out.println("Redirecting stdout to file: " + outFileName);
 		System.out.println("Redirecting stderr to file: " + errFileName);
 		File outFile = new File(outFileName);
@@ -31,7 +31,7 @@ public class Main {
 			errStream = new PrintStream(errFile);
 		System.setErr(errStream);
 
-		Properties.print();
+		ChordProperties.print();
 		Project.run();
 
 		outStream.close();

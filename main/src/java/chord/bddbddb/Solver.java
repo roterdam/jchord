@@ -5,7 +5,7 @@
  */
 package chord.bddbddb;
 
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.OutDirUtils;
 
 /**
@@ -25,11 +25,11 @@ public class Solver {
 	 * @param	fileName	A file containing a Datalog program.
 	 */
 	public static void run(String fileName) {
-		String cmd = "java -ea -Xmx" + Properties.bddbddbMaxHeap +
-			" -cp " + Properties.bddbddbClassPathName +
-			" -Dnoisy=" + (Properties.bddbddbVerbose ? "yes" : "no") +
-			" -Djava.library.path=" + Properties.libDirName +
-			" -Dbasedir=" + Properties.bddbddbWorkDirName +
+		String cmd = "java -ea -Xmx" + ChordProperties.bddbddbMaxHeap +
+			" -cp " + ChordProperties.bddbddbClassPathName +
+			" -Dnoisy=" + (ChordProperties.bddbddbVerbose ? "yes" : "no") +
+			" -Djava.library.path=" + ChordProperties.libDirName +
+			" -Dbasedir=" + ChordProperties.bddbddbWorkDirName +
 			" net.sf.bddbddb.Solver " + fileName;
 		OutDirUtils.executeWithFailOnError(cmd);
 	}
