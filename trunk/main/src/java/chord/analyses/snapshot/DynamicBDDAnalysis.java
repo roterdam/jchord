@@ -14,7 +14,7 @@ import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntProcedure;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.Project;
 import chord.program.Program;
 import chord.project.analyses.DynamicAnalysis;
@@ -307,7 +307,7 @@ public class DynamicBDDAnalysis extends DynamicAnalysis {
 		}
 	}
 	private void saveBdd(String name, int[] idxs, BDD bdd) throws IOException {
-		File file = new File(Properties.bddbddbWorkDirName, name + ".bdd");
+		File file = new File(ChordProperties.bddbddbWorkDirName, name + ".bdd");
 		BufferedWriter out = new BufferedWriter(new FileWriter(file));
 		out.write('#');
 		for (int idx : idxs) {

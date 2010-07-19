@@ -44,7 +44,7 @@ import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 
 import chord.project.Messages;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.util.ArraySet;
 import chord.util.Timer;
 import chord.util.tuple.object.Pair;

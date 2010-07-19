@@ -9,7 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.instr.InstrScheme.EventFormat;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
@@ -61,7 +61,7 @@ public class TracePrinter {
 		IndexMap<String> Bmap = instrumentor.getBmap();
 		try {
 			ByteBufferedFile buffer = new ByteBufferedFile(
-				Properties.traceBlockSize, traceFileName, true);
+				ChordProperties.traceBlockSize, traceFileName, true);
 			while (!buffer.isDone()) {
 				byte opcode = buffer.getByte();
 				switch (opcode) {

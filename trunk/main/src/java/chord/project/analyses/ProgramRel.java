@@ -8,7 +8,7 @@ package chord.project.analyses;
 import chord.bddbddb.Rel;
 import chord.program.visitors.IClassVisitor;
 import chord.project.Project;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.VisitorHandler;
 import chord.util.ChordRuntimeException;
 import chord.project.Messages;
@@ -33,11 +33,11 @@ public class ProgramRel extends Rel implements ITask {
 	public void init() { }
 	public void save() {
 		System.out.println("SAVING rel " + name + " size: " + size());
-		super.save(Properties.bddbddbWorkDirName);
+		super.save(ChordProperties.bddbddbWorkDirName);
 		Project.setTrgtDone(this);
 	}
 	public void load() {
-		super.load(Properties.bddbddbWorkDirName);
+		super.load(ChordProperties.bddbddbWorkDirName);
 	}
 	public void fill() {
 		if (this instanceof IClassVisitor) {
@@ -49,7 +49,7 @@ public class ProgramRel extends Rel implements ITask {
 		}
 	}
 	public void print() {
-		super.print(Properties.outDirName);
+		super.print(ChordProperties.outDirName);
 	}
 	public String toString() {
 		return name;

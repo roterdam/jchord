@@ -37,7 +37,7 @@ import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
 import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.Messages;
 import chord.util.IndexSet;
 import chord.util.Timer;
@@ -84,7 +84,7 @@ public class CHAProgram extends Program {
        	ch = getClassHierarchy();
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
-		String mainClassName = Properties.mainClassName;
+		String mainClassName = ChordProperties.mainClassName;
 		if (mainClassName == null)
 			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
        	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);

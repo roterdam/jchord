@@ -22,7 +22,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Inst;
 import chord.instr.InstrScheme;
 import chord.program.Program;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.analyses.DynamicAnalysis;
 
 import chord.project.Project;
@@ -162,7 +162,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 	}
 
   public void computedExcludedClasses() {
-    String[] checkExcludedPrefixes = Properties.toArray(Properties.checkExcludeStr);
+    String[] checkExcludedPrefixes = ChordProperties.toArray(ChordProperties.checkExcludeStr);
     Program program = Program.getProgram();
     for (jq_Reference r : program.getClasses()) {
       String rName = r.getName();

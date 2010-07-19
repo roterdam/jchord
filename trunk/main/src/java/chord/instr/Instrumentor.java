@@ -24,7 +24,7 @@ import chord.instr.InstrScheme.EventFormat;
 import chord.program.Program;
 import chord.util.ChordRuntimeException;
 import chord.project.Project;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.analyses.ProgramDom;
 import chord.runtime.Runtime;
 import chord.util.IndexMap;
@@ -73,7 +73,7 @@ public class Instrumentor {
 	private static final String DUPLICATE_IN_DOMAIN = "ERROR: Instrumentor: Map for domain %s already contains '%s'.";
 	private static final String NO_BCI_IN_BASIC_BLOCK = "ERROR: Instrumentor: Couldn't find index of first bytecode instruction in basic block %s of method %s.";
 
-	protected static final String runtimeClassName = Properties.runtimeClassName + ".";
+	protected static final String runtimeClassName = ChordProperties.runtimeClassName + ".";
 
 	protected static final String enterMethodEventCall = runtimeClassName + "enterMethodEvent(";
 	protected static final String leaveMethodEventCall = runtimeClassName + "leaveMethodEvent(";
@@ -220,12 +220,12 @@ public class Instrumentor {
 	public Instrumentor(Program program, InstrScheme scheme) {
 		this.program = program;
 		this.scheme = scheme;
-		mainClassPathName = Properties.mainClassPathName;
-		userClassPathName = Properties.classPathName;
-		scopeExcludeAry = Properties.scopeExcludeAry;
-		bootClassesDirName = Properties.bootClassesDirName;
-		userClassesDirName = Properties.userClassesDirName;
- 		verbose = Properties.verbose;
+		mainClassPathName = ChordProperties.mainClassPathName;
+		userClassPathName = ChordProperties.classPathName;
+		scopeExcludeAry = ChordProperties.scopeExcludeAry;
+		bootClassesDirName = ChordProperties.bootClassesDirName;
+		userClassesDirName = ChordProperties.userClassesDirName;
+ 		verbose = ChordProperties.verbose;
 	}
 	private static boolean checkExists(String pathElem) {
 		File file = new File(pathElem);

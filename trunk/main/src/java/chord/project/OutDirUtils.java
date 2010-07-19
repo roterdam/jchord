@@ -26,7 +26,7 @@ public class OutDirUtils {
 	private static final String PROCESS_FINISHED = "Finished command: `%s`";
 	private static final String PROCESS_FAILED = "Command `%s` terminated abnormally: %s";
 
-	private static final String outDirName = Properties.outDirName;
+	private static final String outDirName = ChordProperties.outDirName;
 	public static PrintWriter newPrintWriter(String fileName) {
 		try {
 			return new PrintWriter(new File(outDirName, fileName));
@@ -45,7 +45,7 @@ public class OutDirUtils {
 			dstFile.getAbsolutePath());
 	}
 	public static void copyFileFromMainDir(String fileName) {
-		String mainDirName = Properties.mainDirName;
+		String mainDirName = ChordProperties.mainDirName;
 		copyFile(mainDirName, fileName);
 	}
 	public static void writeMapToFile(IndexMap<String> map, String fileName) {

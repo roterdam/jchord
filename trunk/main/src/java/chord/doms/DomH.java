@@ -25,7 +25,7 @@ import chord.project.Chord;
 import chord.project.Project;
 import chord.program.PhantomObjVal;
 import chord.program.PhantomClsVal;
-import chord.project.Properties;
+import chord.project.ChordProperties;
 import chord.project.analyses.ProgramDom;
 import chord.program.Program;
 import chord.util.IndexSet;
