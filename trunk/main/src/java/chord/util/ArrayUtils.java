@@ -101,4 +101,14 @@ public final class ArrayUtils {
 	public static <T> String toString(final T[] array) {
 		return toString(array, "", ",", "");
 	}
+
+	public static String[] concat(String[] a, String[] b) {
+		String[] c = new String[a.length + b.length];
+		int i = 0;
+		for (String s : a)
+			c[i++] = s;
+		for (String s : b)
+			c[i++] = s;
+		return c;
+	}
 }

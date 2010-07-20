@@ -5,6 +5,10 @@
  */
 package chord.util;
 
+import java.util.StringTokenizer;
+import java.util.List;
+import java.util.ArrayList;
+
 /**
  * String related utilities.
  *
@@ -63,5 +67,13 @@ public final class StringUtils {
 		System.arraycopy(a, 0, result, 0, a.length);
 		System.arraycopy(b, 0, result, a.length, b.length);
 		return result;
+	}
+
+	public static List<String> tokenize(String s) {
+		StringTokenizer st = new StringTokenizer(s);
+		List<String> l = new ArrayList<String>(st.countTokens());
+        for (int i = 0; st.hasMoreTokens(); i++)
+            l.add(st.nextToken());
+		return l;
 	}
 }

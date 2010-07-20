@@ -25,12 +25,18 @@ public class Solver {
 	 * @param	fileName	A file containing a Datalog program.
 	 */
 	public static void run(String fileName) {
-		String cmd = "java -ea -Xmx" + ChordProperties.bddbddbMaxHeap +
-			" -cp " + ChordProperties.bddbddbClassPathName +
-			" -Dnoisy=" + (ChordProperties.bddbddbVerbose ? "yes" : "no") +
-			" -Djava.library.path=" + ChordProperties.libDirName +
-			" -Dbasedir=" + ChordProperties.bddbddbWorkDirName +
-			" net.sf.bddbddb.Solver " + fileName;
-		OutDirUtils.executeWithFailOnError(cmd);
+		String[] cmdArray = new String[] {
+			"java",
+			"-ea",
+			"-Xmx" + ChordProperties.bddbddbMaxHeap,
+			"-cp",
+			ChordProperties.bddbddbClassPathName,
+			"-Dnoisy=" + (ChordProperties.bddbddbVerbose ? "yes" : "no"),
+			"-Djava.library.path=" + ChordProperties.libDirName,
+			"-Dbasedir=" + ChordProperties.bddbddbWorkDirName,
+			"net.sf.bddbddb.Solver",
+			fileName
+		};
+		OutDirUtils.executeWithFailOnError(cmdArray);
 	}
 }

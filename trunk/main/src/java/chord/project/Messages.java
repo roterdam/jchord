@@ -20,5 +20,9 @@ public class Messages {
 		log(format, args);
 		System.exit(1);
 	}
+	public static void fatal(Exception ex) {
+		ex.printStackTrace();
+		System.exit(1);
+	}
 }
 
