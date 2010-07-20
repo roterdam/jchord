@@ -32,8 +32,12 @@ import chord.project.ChordProperties;
 import chord.util.ArraySet;
 import chord.util.IndexSet;
 import chord.util.FileUtils;
+import chord.util.StringUtils;
 import chord.util.ChordRuntimeException;
  
+import chord.instr.OnlineTransformer;
+import chord.instr.LoadedClassesInstrumentor;
+
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Util.Templates.ListIterator;
@@ -524,6 +528,8 @@ public abstract class Program {
         return result;
 	}
 
+	private static boolean useJVMTI = true;
+
 	public static List<String> getDynamicallyLoadedClasses() {
 		String mainClassName = ChordProperties.mainClassName;
 		if (mainClassName == null)
@@ -533,27 +539,38 @@ public abstract class Program {
 			Messages.fatal(CLASS_PATH_NOT_DEFINED);
         String[] runIDs = ChordProperties.runIDs.split(ChordProperties.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
-        final String cmd = "java " + ChordProperties.runtimeJvmargs +
-            " -cp " + classPathName +
-            " -agentpath:" + ChordProperties.instrAgentFileName +
-            "=classes_file_name=" + ChordProperties.classesFileName +
-            " " + mainClassName + " ";
+		String agentArgs = "=classes_file_name=" + ChordProperties.classesFileName;
+		if (!useJVMTI)
+			agentArgs += "=instr_class_name=" + LoadedClassesInstrumentor.class.getName();
 		List<String> classNames = new ArrayList<String>();
 		String fileName = ChordProperties.classesFileName;
         for (String runID : runIDs) {
             String args = System.getProperty("chord.args." + runID, "");
-			OutDirUtils.executeWithFailOnError(cmd + args);
+        	List<String> cmdList;
+			if (useJVMTI) {
+				cmdList = new ArrayList<String>();
+				cmdList.add("java");
+				cmdList.addAll(StringUtils.tokenize(ChordProperties.runtimeJvmargs));
+         		cmdList.add("-agentpath:" + ChordProperties.cInstrAgentFileName + agentArgs);
+				cmdList.add("-cp");
+				cmdList.add(classPathName);
+				cmdList.add(mainClassName);
+				cmdList.addAll(StringUtils.tokenize(args));
+			} else
+				cmdList = OnlineTransformer.getCmd(
+					classPathName, mainClassName, agentArgs, args);
+			OutDirUtils.executeWithFailOnError(cmdList);
 			try {
 				BufferedReader in = new BufferedReader(new FileReader(fileName));
 				String s;
 				while ((s = in.readLine()) != null) {
-					// convert "Lsun/misc/Signal;" to "sun.misc.Signal"
-					String cName = typesToStr(s);
+					// convert "Ljava/lang/Object;" to "java.lang.Object"
+					String cName = useJVMTI ? typesToStr(s) : s;
 					classNames.add(cName);
 				}
 				in.close();
 			} catch (Exception ex) {
-				throw new ChordRuntimeException(ex);
+				Messages.fatal(ex);
 			}
 		}
 		return classNames;

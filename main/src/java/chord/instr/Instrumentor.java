@@ -54,20 +54,11 @@ import java.util.HashSet;
  * its execution.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
- * @author Zhifeng Lai (zflai.cn@gmail.com)
  */
-public class Instrumentor {
-	private static final String INSTR_STARTING = "INFO: Instrumentor: Starting to instrument all classes; this may take a while (use -Dchord.verbose=true for more detailed info) ...";
-	private static final String INSTR_FINISHED = "INFO: Instrumentor: Finished instrumenting all classes.";
-	private static final String WROTE_INSTRUMENTED_CLASS = "INFO: Instrumentor: Wrote instrumented class %s.";
-	private static final String EXPLICITLY_EXCLUDING_CLASS = "WARN: Instrumentor: Not instrumenting class %s as it is excluded by chord.scope.exclude.";
-	private static final String IMPLICITLY_EXCLUDING_CLASS = "WARN: Instrumentor: Not instrumenting class %s.";
-	private static final String CLASS_NOT_FOUND = "WARN: Instrumentor: Could not find class %s.";
-	private static final String CLASS_NOT_BOOT_NOR_USER = "WARN: Instrumentor: Not instrumenting class %s; its defining resource %s is neither in the boot nor user classpath.";
+public class Instrumentor extends AbstractInstrumentor {
 	private static final String NOT_IN_DOMAIN = "WARN: Instrumentor: Domain %s does not contain %s.";
 	private static final String NON_EXISTENT_PATH_ELEM = "WARN: Instrumentor: Ignoring non-existent path element %s.";
 	private static final String CANNOT_INSTRUMENT_METHOD = "WARN: Instrumentor: Skipping instrumenting method %s; reason follows.";
-	private static final String CANNOT_INSTRUMENT_CLASS = "WARN: Instrumentor: Skipping instrumenting class %s; reason follows.";
 	private static final String METHOD_NOT_FOUND = "WARN: Instrumentor: Skipping instrumenting method %s; it was not deemed reachable by Chord's program scope builder.";
 	private static final String METHOD_BYTECODE_NOT_FOUND = "WARN: Instrumentor: Skipping instrumenting method %s; its bytecode does not exist.";
 	private static final String DUPLICATE_IN_DOMAIN = "ERROR: Instrumentor: Map for domain %s already contains '%s'.";
@@ -117,18 +108,8 @@ public class Instrumentor {
 
 	protected static final String finalizeEventCall = runtimeClassName + "finalizeEvent(";
 
-	protected InstrScheme scheme;
-	protected Program program;
-	private String mainClassPathName;
-	private String userClassPathName;
-	private String[] scopeExcludeAry;
-	private String bootClassesDirName;
-	private String userClassesDirName;
-	private boolean verbose;
-
-	private ClassPool pool;
-	private Set<String> bootClassPathResourceNames;
-	private Set<String> userClassPathResourceNames;
+	protected final InstrScheme scheme;
+	protected final Program program;
 
 	protected boolean genBasicBlockEvent;
 	protected boolean genQuadEvent;
@@ -181,7 +162,7 @@ public class Instrumentor {
 	protected IndexMap<String> Bmap;
 
 	private CtClass exType;
-	private MyExprEditor exprEditor = new MyExprEditor();
+	private final MyExprEditor exprEditor = new MyExprEditor();
 
 	protected String mStr;
 	protected TIntObjectHashMap<String> bciToInstrMap =
@@ -209,6 +190,10 @@ public class Instrumentor {
 	public IndexMap<String> getPmap() { return Pmap; }
 	public IndexMap<String> getBmap() { return Bmap; }
 
+	public Instrumentor(Map<String, String> argsMap) {
+		this(argsMap, InstrScheme.load(ChordProperties.instrSchemeFileName));
+	}
+
 	/**
 	 * Initializes the instrumentor.
 	 * 
@@ -217,82 +202,10 @@ public class Instrumentor {
 	 * of events to generate during the execution of the
 	 * instrumented program. 
 	 */
-	public Instrumentor(Program program, InstrScheme scheme) {
-		this.program = program;
-		this.scheme = scheme;
-		mainClassPathName = ChordProperties.mainClassPathName;
-		userClassPathName = ChordProperties.classPathName;
-		scopeExcludeAry = ChordProperties.scopeExcludeAry;
-		bootClassesDirName = ChordProperties.bootClassesDirName;
-		userClassesDirName = ChordProperties.userClassesDirName;
- 		verbose = ChordProperties.verbose;
-	}
-	private static boolean checkExists(String pathElem) {
-		File file = new File(pathElem);
-		if (!file.exists()) {
-			Messages.log(NON_EXISTENT_PATH_ELEM, pathElem);
-			return false;
-		}
-		return true;
-	}
-
-	/**
-	 * Runs the instrumentor which reads each .class file of the
-	 * given program and writes a corresponding .class file with
-	 * instrumentation for generating the specified kind and format
-	 * of events during the execution of the instrumented program.
-	 */
-	public void run() throws NotFoundException, CannotCompileException, IOException {
-		pool = new ClassPool();
-
-		String[] mainClassPathElems = mainClassPathName.split(File.pathSeparator);
-		for (String pathElem : mainClassPathElems) {
-			if (checkExists(pathElem)) {
-				pool.appendClassPath(pathElem);
-			}
-		}
-
-		bootClassPathResourceNames = new HashSet<String>();
-
-		String bootClassPathName = System.getProperty("sun.boot.class.path");
-		String[] bootClassPathElems = bootClassPathName.split(File.pathSeparator);
-		for (String pathElem : bootClassPathElems) {
-			if (checkExists(pathElem)) {
-				bootClassPathResourceNames.add(pathElem);
-				pool.appendClassPath(pathElem);
-			}
-		}
-
-		userClassPathResourceNames = new HashSet<String>();
-
-        String javaHomeDir = System.getProperty("java.home");
-        assert (javaHomeDir != null);
-
-		File libExtDir = new File(javaHomeDir, File.separator + "lib" + File.separator + "ext");
-		if (libExtDir.exists()) {
-			final FilenameFilter filter = new FilenameFilter() {
-				public boolean accept(File dir, String name) {
-					if (name.endsWith(".jar"))
-						return true;
-					return false;
-				}
-			};
-			File[] subFiles = libExtDir.listFiles(filter);
-			for (File file : subFiles) {
-				String fileName = file.getAbsolutePath();
-				userClassPathResourceNames.add(fileName);
-				pool.appendClassPath(fileName);
-			}
-		}
-
-		String[] userClassPathElems = userClassPathName.split(File.pathSeparator);
-		for (String pathElem : userClassPathElems) {
-			if (checkExists(pathElem)) {
-				userClassPathResourceNames.add(pathElem);
-				pool.appendClassPath(pathElem);
-			}
-		}
-
+	public Instrumentor(Map<String, String> argsMap, InstrScheme _scheme) {
+		super(argsMap);
+		program = Program.getProgram();
+		scheme = _scheme;
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
 		genFinalizeEvent = scheme.hasFinalizeEvent();
@@ -318,7 +231,6 @@ public class Instrumentor {
 		waitEvent = scheme.getEvent(InstrScheme.WAIT);
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 		methodCallEvent = scheme.getEvent(InstrScheme.METHOD_CALL);
-		
 		if (scheme.needsFmap()) {
 			domF = (DomF) Project.getTrgt("F");
 			Project.runTask(domF);
@@ -365,58 +277,22 @@ public class Instrumentor {
 			Bmap = getUniqueStringMap(domB);
 		}
 		if (leaveMethodEvent.present() || releaseLockEvent.present()) {
-			exType = pool.get("java.lang.Throwable");
-			assert (exType != null);
-		}
-		
-		FileUtils.deleteFile(bootClassesDirName);
-		FileUtils.deleteFile(userClassesDirName);
-
-		IndexSet<jq_Reference> classes = program.getClasses();
-		Messages.log(INSTR_STARTING);
-		for (jq_Reference r : classes) {
-			if (r instanceof jq_Array)
-				continue;
-			jq_Class c = (jq_Class) r;
-			instrClass(c);
-		}
-		Messages.log(INSTR_FINISHED);
-	}
-	private void instrClass(jq_Class c) {
-		String cName = c.getName();
-		boolean match = false;
-		for (String s : scopeExcludeAry) {
-			if (cName.startsWith(s)) {
-				match = true;
-	 			break;
+			try {
+				exType = pool.get("java.lang.Throwable");
+			} catch (NotFoundException ex) {
+				Messages.fatal("Could not find class java.lang.Throwable");
 			}
 		}
-		if (match) {
-			if (verbose) Messages.log(EXPLICITLY_EXCLUDING_CLASS, cName);
-			return;
-		}
-		if (cName.equals("java.lang.J9VMInternals") || cName.startsWith("java.lang.ref.")) {
-			Messages.log(IMPLICITLY_EXCLUDING_CLASS, cName);
-			return;
-		}
-		String outDirName = null;
-		String resourceName = pool.getResource(cName);
-		if (resourceName == null) {
-			Messages.log(CLASS_NOT_FOUND, cName);
-			return;
-		} else if (bootClassPathResourceNames.contains(resourceName)) {
-			outDirName = bootClassesDirName;
-		} else if (userClassPathResourceNames.contains(resourceName)) {
-			outDirName = userClassesDirName;
-		} else {
-			Messages.log(CLASS_NOT_BOOT_NOR_USER, cName, resourceName);
-			return;
-		}
-		CtClass clazz;
-		try {
-			clazz = pool.get(cName);
-		} catch (NotFoundException ex) {
-			throw new ChordRuntimeException(ex);
+	}
+
+	@Override
+	public CtClass instrument(CtClass clazz)
+			throws NotFoundException, CannotCompileException {
+		String cName = clazz.getName();
+		jq_Class c = (jq_Class) program.getClass(cName);
+		if (c == null) {
+			// TODO: Warn
+			return null;
 		}
 		List<jq_Method> methods = program.getMethods(c);
 		CtBehavior[] inits = clazz.getDeclaredConstructors();
@@ -450,21 +326,10 @@ public class Instrumentor {
 			} catch (ChordRuntimeException ex) {
 				Messages.log(CANNOT_INSTRUMENT_METHOD, method.getLongName());
 				ex.printStackTrace();
-				return;
+				return null;
 			}
 		}
-		try {
-			clazz.writeFile(outDirName);
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
-		} catch (NotFoundException ex) {
-			throw new ChordRuntimeException(ex);
-		} catch (CannotCompileException ex) {
-			Messages.log(CANNOT_INSTRUMENT_CLASS, cName);
-			ex.printStackTrace();
-			return;
-		}
-		if (verbose) Messages.log(WROTE_INSTRUMENTED_CLASS, cName);
+		return clazz;
 	}
 
 	protected <T> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {

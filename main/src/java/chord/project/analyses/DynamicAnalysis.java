@@ -10,22 +10,25 @@ import gnu.trove.TIntObjectHashMap;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Set;
 import java.util.Stack;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import chord.util.StringUtils;
 import chord.doms.DomB;
 import chord.doms.DomM;
 import chord.instr.EventKind;
 import chord.instr.InstrScheme;
 import chord.instr.Instrumentor;
+import chord.instr.OfflineTransformer;
 import chord.instr.TracePrinter;
 import chord.instr.TraceTransformer;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.CFGLoopFinder;
-import chord.program.Program;
 import chord.project.Messages;
 import chord.project.Project;
 import chord.project.ChordProperties;
@@ -192,10 +195,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 			return;
 		}
 		scheme.save(instrSchemeFileName);
-		final Program program = Program.getProgram();
-		final Instrumentor instrumentor = new Instrumentor(program, scheme);
+		final Instrumentor instrumentor = new Instrumentor(null, scheme);
+		final OfflineTransformer transformer = new OfflineTransformer(instrumentor);
 		try {
-			instrumentor.run();
+			transformer.run();
 		} catch (Throwable ex) {
 			ex.printStackTrace();
 			System.exit(1);
@@ -207,39 +210,42 @@ public class DynamicAnalysis extends JavaAnalysis {
 		final String bootClassesDirName = ChordProperties.bootClassesDirName;
 		final String userClassesDirName = ChordProperties.userClassesDirName;
 		final String runtimeClassName = ChordProperties.runtimeClassName;
-		String instrProgramCmd = "java " + ChordProperties.runtimeJvmargs +
-			" -Xbootclasspath/p:" + ChordProperties.mainClassPathName +
-			File.pathSeparator + bootClassesDirName +
-			" -Xverify:none" + " -cp " + userClassesDirName +
-			File.pathSeparator + classPathName +
-			" -agentpath:" + ChordProperties.instrAgentFileName +
+		List<String> cmdList = new ArrayList<String>();
+		cmdList.add("java");
+		cmdList.addAll(StringUtils.tokenize(ChordProperties.runtimeJvmargs));
+		cmdList.add("-Xbootclasspath/p:" + ChordProperties.mainClassPathName +
+			File.pathSeparator + bootClassesDirName);
+		cmdList.add("-Xverify:none");
+		cmdList.add("-cp");
+		cmdList.add(userClassesDirName + File.pathSeparator + classPathName);
+		String agentCmd = "-agentpath:" + ChordProperties.cInstrAgentFileName +
 			"=instr_scheme_file_name=" + instrSchemeFileName +
 			"=runtime_class_name=" + runtimeClassName.replace('.', '/');
-		final boolean runInSameJVM = !runtimeClassName.equals(
-			BufferedRuntime.class.getName());
+		cmdList.add(agentCmd);
+		boolean runInSameJVM = !runtimeClassName.equals(BufferedRuntime.class.getName());
 		if (runInSameJVM) {
-			instrProgramCmd += " " + mainClassName + " ";
+			cmdList.add(mainClassName);
 			initAllPasses();
 			for (String runID : runIDs) {
 				Messages.log(STARTING_RUN, runID);
-				final String args = System.getProperty("chord.args." + runID, "");
-				final String cmd = instrProgramCmd + args;
+				String args = System.getProperty("chord.args." + runID, "");
+				List<String> fullCmdList = new ArrayList<String>(cmdList);
+				fullCmdList.addAll(StringUtils.tokenize(args));
 				initPass();
 				int timeout = ChordProperties.dynamicTimeoutMs;
 				if (ChordProperties.dynamicContinueOnError)
-					OutDirUtils.executeWithWarnOnError(cmd, timeout);
+					OutDirUtils.executeWithWarnOnError(fullCmdList, timeout);
 				else
-					OutDirUtils.executeWithFailOnError(cmd);
+					OutDirUtils.executeWithFailOnError(fullCmdList);
 				donePass();
 				Messages.log(FINISHED_RUN, runID);
 			}
 			doneAllPasses();
 			return;
 		}
-		final boolean usePipe = ChordProperties.doTracePipe;
-		final boolean doTransform = scheme.needsTraceTransform();
-		instrProgramCmd += "=trace_block_size=" + ChordProperties.traceBlockSize +
-			"=trace_file_name=";
+		boolean usePipe = ChordProperties.doTracePipe;
+		boolean doTransform = scheme.needsTraceTransform();
+		agentCmd += "=trace_block_size=" + ChordProperties.traceBlockSize + "=trace_file_name=";
 		initAllPasses();
 		for (String runID : runIDs) {
 			final String crudeTraceFileName = usePipe ?
@@ -253,10 +259,10 @@ public class DynamicAnalysis extends JavaAnalysis {
 			FileUtils.deleteFile(crudeTraceFileName);
 			FileUtils.deleteFile(finalTraceFileName);
 			if (usePipe) {
-				String cmd1 = "mkfifo " + crudeTraceFileName;
-				OutDirUtils.executeWithFailOnError(cmd1);
-				String cmd2 = "mkfifo " + finalTraceFileName;
-				OutDirUtils.executeWithFailOnError(cmd2);
+				String[] cmdArray1 = new String[] { "mkfifo", crudeTraceFileName };
+				OutDirUtils.executeWithFailOnError(cmdArray1);
+				String[] cmdArray2 = new String[] { "mkfifo", finalTraceFileName };
+				OutDirUtils.executeWithFailOnError(cmdArray2);
 			}
 			Runnable traceTransformer = !doTransform ? null : new Runnable() {
 				public void run() {
@@ -281,12 +287,14 @@ public class DynamicAnalysis extends JavaAnalysis {
 			};
 			boolean serial = usePipe ? false : true;
 			Executor executor = new Executor(serial);
-			final String args = System.getProperty("chord.args." + runID, "");
-			final String cmd = instrProgramCmd + traceFileName +
-				" " + mainClassName + " " + args;
+			String args = System.getProperty("chord.args." + runID, "");
+			final List<String> fullCmdList = new ArrayList<String>(cmdList);
+			fullCmdList.set(cmdList.size() - 1, agentCmd + traceFileName);
+			fullCmdList.add(mainClassName);
+			fullCmdList.addAll(StringUtils.tokenize(args));
 			Runnable instrProgram = new Runnable() {
 				public void run() {
-					OutDirUtils.executeWithFailOnError(cmd);
+					OutDirUtils.executeWithFailOnError(fullCmdList);
 				}
 			};
 			Messages.log(STARTING_RUN, runID);

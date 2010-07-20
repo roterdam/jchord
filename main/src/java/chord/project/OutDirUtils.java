@@ -8,6 +8,8 @@ package chord.project;
 import java.io.File;
 import java.io.PrintWriter;
 import java.io.FileNotFoundException;
+import java.util.List;
+import java.util.ArrayList;
 
 import chord.util.IndexMap;
 import chord.util.FileUtils;
@@ -55,18 +57,31 @@ public class OutDirUtils {
 		String dummyFileName = (new File(outDirName, "dummy")).getAbsolutePath();
 		xmlFileName = (new File(outDirName, xmlFileName)).getAbsolutePath();
 		xslFileName = (new File(outDirName, xslFileName)).getAbsolutePath();
-		try {
-			net.sf.saxon.Transform.main(new String[] {
-				"-o", dummyFileName, xmlFileName, xslFileName
-			});
-		} catch (Exception ex) {
-			throw new ChordRuntimeException(ex);
-		}
+		String[] cmdarray = { "java",
+			"-cp", ChordProperties.libDirName + File.separator + "saxon9.jar",
+			"net.sf.saxon.Transform",
+			"-o", dummyFileName, xmlFileName, xslFileName
+		};
+		executeWithFailOnError(cmdarray);
+/*
+		// commented out to reduce footprint of chord.main.class.path
+		// (i.e. to enable excluding saxon9.jar from it)
+		net.sf.saxon.Transform.main(new String[] {
+			"-o", dummyFileName, xmlFileName, xslFileName
+		});
+*/
 	}
-    public static final void executeWithFailOnError(String cmd) {
+    public static final void executeWithFailOnError(List<String> cmdlist) {
+		String[] cmdarray = new String[cmdlist.size()];
+		executeWithFailOnError(cmdlist.toArray(cmdarray));
+	}
+    public static final void executeWithFailOnError(String[] cmdarray) {
+		String cmd = "";
+		for (String s : cmdarray)
+			cmd += s + " ";
         Messages.log(PROCESS_STARTING, cmd);
         try {
-            int result = ProcessExecutor.execute(cmd);
+            int result = ProcessExecutor.execute(cmdarray);
             if (result != 0)
                 throw new ChordRuntimeException("Return value=" + result);
         } catch (Throwable ex) {
@@ -74,10 +89,17 @@ public class OutDirUtils {
         }
         Messages.log(PROCESS_FINISHED, cmd);
     }
-	public static final void executeWithWarnOnError(String cmd, int timeout) {
+	public static final void executeWithWarnOnError(List<String> cmdlist, int timeout) {
+		String[] cmdarray = new String[cmdlist.size()];
+		executeWithWarnOnError(cmdlist.toArray(cmdarray), timeout);
+	}
+	public static final void executeWithWarnOnError(String[] cmdarray, int timeout) {
+		String cmd = "";
+		for (String s : cmdarray)
+			cmd += s + " ";
 		Messages.log(PROCESS_STARTING, cmd);
 		try {
-			int result = ProcessExecutor.execute(cmd, timeout);
+			int result = ProcessExecutor.execute(cmdarray, timeout);
 			if (result != 0) {
 				Messages.log(PROCESS_FINISHED, cmd);
 			}

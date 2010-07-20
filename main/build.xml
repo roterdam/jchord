@@ -74,16 +74,6 @@
 	<property name="source" value="1.5"/>
 
 	<!--
-		Distribution directory; our artifacts are placed here.
-	-->
-	<property name="dist.home" location="dist"/>
-
-	<!--
-		Release directory. 
-	-->
-	<property name="release.dir" location="release"/>
-
-	<!--
 		DYNAMIC PROPERTIES
 	-->
 	
@@ -138,14 +128,6 @@
 	-->
 	
 	<!--
-		Classpath of external utilities used by Chord
-	-->
-	<path id="ext_util_class_path">
-		<pathelement location="${lib.home}/trove-2.0.4.jar"/>
-		<pathelement location="${lib.home}/scannotation-1.0.2.jar"/>
-	</path>
-
-	<!--
 		Classpath of bddbddb
 	-->
 	<path id="bddbddb_class_path">
@@ -163,11 +145,11 @@
 		<pathelement path="${chord.java.analysis.path}"/>
 		<pathelement location="classes"/>
 		<pathelement path="${chord.bddbddb.class.path}"/>
-		<path refid="ext_util_class_path"/>
+		<pathelement location="${lib.home}/trove-2.0.4.jar"/>
+		<pathelement location="${lib.home}/scannotation-1.0.2.jar"/>
 		<pathelement location="lib/joeq.jar"/>
 		<pathelement location="lib/javassist.jar"/>
 		<pathelement location="lib/j2h.jar"/>
-		<pathelement location="lib/saxon9.jar"/>
 	</path>
 	<property name="chord.main.class.path" refid="main_class_path"/>
 
@@ -179,30 +161,36 @@
 		A meta-target just for fast checking whether java part is
 		compilable from scratch. Useful for refactoring.
 	-->
-	<target name="check" depends="clean, compile-java-part"
+	<target name="check" depends="clean, jcompile"
 		description="Fast check whether project can be compiled from scratch."/>
 
 	<!--
 		Compilation meta-target. It only calls compilation targets
 		for Java and C part.
 	-->
-	<target name="compile" depends="compile-java-part, compile-c-part"
+	<target name="compile" depends="jcompile, ccompile"
 		description="Compiles entire project."/>
 
 	<!--
 		Compiles Java part of the project.
 	-->
-	<target name="compile-java-part" description="Compiles Java part of the project">
+	<target name="jcompile" description="Compiles Java part of the project">
 		<property environment="env"/>
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
 			srcdir="src/java" destdir="classes" classpathref="main_class_path"/>
+		<jar destfile="${lib.home}/chord_instr_agent.jar">
+			<manifest>
+				<attribute name="Premain-Class" value="chord.instr.OnlineTransformer"/>
+				<attribute name="Boot-Class-Path" value="${chord.main.class.path}"/>
+			</manifest>
+		</jar>
 	</target>
 
 	<!--
 		Compiles C part of the project.
 	-->
-	<target name="compile-c-part" depends="select-make-implementation, select-architecture"
+	<target name="ccompile" depends="select-make-implementation, select-architecture"
 			description="Compiles C part of the project">
 		<path id="jdk_root">
 			<pathelement location="${java.home}/.."/>
@@ -217,35 +205,6 @@
 			<arg value="M32_FLAG=${architecture}"/>
 		</exec>
 	</target>
-
-	<!--
-		Builds output artifacts.
-	-->
-	<target name="dist" description="Builds output artifacts.">
-		<mkdir dir="${dist.home}"/>
-		<jar destfile="${dist.home}/chord.jar" basedir="classes"/>
-	</target>
-
-	<!--
-		Prepares a binary release of the project.
-	-->
-	<target name="release" depends="clean, compile, dist"
-			description="Prepares a binary release of the project.">
-		<mkdir dir="${release.dir}"/>
-		<mkdir dir="${release.dir}/lib"/>
-		<copy todir="${release.dir}/lib">
-			<fileset dir="${dist.home}" includes="*.jar"/>
-		</copy>
-		<mkdir dir="${release.dir}/bin"/>
-		<copy todir="${release.dir}/bin">
-			<fileset dir="${basedir}/bin"/>
-		</copy>
-		<chmod perm="755">
-			<fileset dir="${release.dir}/bin"/>
-		</chmod>
-		<mkdir dir="${release.dir}/etc"/>
-	</target>
-
 
 	<!--
 		LOAD USER-DEFINED CHORD PROPERTIES FROM FILE
@@ -284,11 +243,11 @@
 		<then>
 			<property file="${chord.props.file}"/>
 			<dirname property="chord.props.dir" file="${chord.props.file}"/>
-			<!--
 			<propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
+			<!--
 			Commented out due to "supported regular expression pattern matcher not found" error.
+      		<property name="chord.path.prop.list" value="chord.class.path,chord.src.path"/>
 			-->
-      <property name="chord.path.prop.list" value="chord.class.path,chord.src.path"/>
 			<antfetch antfile="${tool.home}/pathconvert.xml" dir="${chord.props.dir}"
         target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
 		</then>
@@ -427,9 +386,8 @@
 	<target name="clean" depends="select-make-implementation"
 			description="Cleans everything produced by the build.">
 		<parallel>
-			<delete dir="${dist.home}"/>
-			<delete dir="${release.dir}"/>
 			<delete dir="classes"/>
+			<delete file="${lib.home}/chord_instr_agent.jar"/>
 			<sequential>
 				<path id="jdk_root">
 					<pathelement location="${java.home}/.."/>

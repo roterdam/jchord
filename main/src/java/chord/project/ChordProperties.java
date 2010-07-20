@@ -29,11 +29,12 @@ public class ChordProperties {
 		if (mainDirName == null)
 			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 	}
-	public static String libDirName = mainRel2AbsPath("chord.lib.dir", "lib");
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
-	public static String instrAgentFileName = mainRel2AbsPath("chord.instr.agent.file", "lib" + File.separator + "libchord_instr_agent.so");
-	public final static String javadocURL = System.getProperty("chord.javadoc.url", "http://chord.stanford.edu/javadoc_2_0/");
+	public static String libDirName = FileUtils.getAbsolutePath(mainDirName, "lib");
+	public static String cInstrAgentFileName = libDirName + File.separator + "libchord_instr_agent.so";
+	public static String jInstrAgentFileName = libDirName + File.separator + "chord_instr_agent.jar";
+	public final static String javadocURL = "http://chord.stanford.edu/javadoc_2_0/";
 
 	// Chord boot properties
 
@@ -160,11 +161,8 @@ public class ChordProperties {
 	public static void print() {
 		System.out.println("*** Chord resource properties:");
 		System.out.println("chord.main.dir: " + mainDirName);
-		System.out.println("chord.lib.dir: " + libDirName);
 		System.out.println("chord.main.class.path: " + mainClassPathName);
 		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
-		System.out.println("chord.instr.agent.file: " + instrAgentFileName);
-		System.out.println("chord.javadoc.url: " + javadocURL);
 
 		System.out.println("*** Chord boot properties:");
 		System.out.println("chord.work.dir: " + workDirName);

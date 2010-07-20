@@ -20,8 +20,8 @@ import java.util.Timer;
  */
 public final class ProcessExecutor {
 
-	public static final int execute(String cmd) throws Throwable {
-		return execute(cmd, -1);
+	public static final int execute(String[] cmdarray) throws Throwable {
+		return execute(cmdarray, -1);
 	}
 	/**
 	 * Executes a given system command specified as a string in a
@@ -29,13 +29,13 @@ public final class ProcessExecutor {
 	 * <p>
 	 * The invoking process waits till the invoked process finishes.
 	 * 
-	 * @param	cmd	A system command to be executed.
+	 * @param	cmdarray	A system command to be executed.
 	 * 
 	 * @return	The exit value of the invoked process.
 	 * 			By convention, 0 indicates normal termination.
 	 */
-    public static final int execute(String cmd, int timeout) throws Throwable {
-	   	Process proc = Runtime.getRuntime().exec(cmd);
+    public static final int execute(String[] cmdarray, int timeout) throws Throwable {
+	   	Process proc = Runtime.getRuntime().exec(cmdarray);
 		StreamGobbler err = new StreamGobbler(proc.getErrorStream(), "ERR");
 		StreamGobbler out = new StreamGobbler(proc.getInputStream(), "OUT");
 		err.start();
