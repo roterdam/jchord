@@ -18,7 +18,7 @@ import javassist.NotFoundException;
 
 import chord.program.Program;
 import chord.project.Messages;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.util.FileUtils;
 
 /**
@@ -41,9 +41,9 @@ public class OfflineTransformer {
 	private final AbstractInstrumentor instrumentor;
 	private final JavassistPool pool;
 	public OfflineTransformer(AbstractInstrumentor _instrumentor) {
-		bootClassesDirName = ChordProperties.bootClassesDirName;
-		userClassesDirName = ChordProperties.userClassesDirName;
-		verbose = ChordProperties.verbose;
+		bootClassesDirName = Config.bootClassesDirName;
+		userClassesDirName = Config.userClassesDirName;
+		verbose = Config.verbose;
 		instrumentor = _instrumentor;
 		pool = instrumentor.getPool();
 	}

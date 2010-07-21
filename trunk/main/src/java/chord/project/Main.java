@@ -18,8 +18,8 @@ public class Main {
 	public static void main(String[] args) throws Exception {
         PrintStream outStream = null;
         PrintStream errStream = null;
-		String outFileName = ChordProperties.outFileName;
-		String errFileName = ChordProperties.errFileName;
+		String outFileName = Config.outFileName;
+		String errFileName = Config.errFileName;
 		System.out.println("Redirecting stdout to file: " + outFileName);
 		System.out.println("Redirecting stderr to file: " + errFileName);
 		File outFile = new File(outFileName);
@@ -32,7 +32,7 @@ public class Main {
 			errStream = new PrintStream(errFile);
 		System.setErr(errStream);
 
-		ChordProperties.print();
+		Config.print();
 		Project.run();
 
 		outStream.close();

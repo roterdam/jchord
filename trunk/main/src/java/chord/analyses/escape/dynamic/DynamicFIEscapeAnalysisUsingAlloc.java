@@ -27,7 +27,7 @@ import chord.instr.InstrScheme;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.Project;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.ChordRuntimeException;
@@ -220,7 +220,7 @@ public class DynamicFIEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		
 		DomE domE = (DomE) Project.getTrgt("E");
 		Program program = Program.getProgram();
-		String outDirName = ChordProperties.outDirName;
+		String outDirName = Config.outDirName;
 		try {
 			PrintWriter writer;
 			writer = new PrintWriter(new FileWriter(new File(outDirName, "dynamic_visitedE.txt")));

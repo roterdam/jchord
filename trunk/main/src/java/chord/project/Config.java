@@ -14,12 +14,15 @@ import chord.util.FileUtils;
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ChordProperties {
-	private static final String USER_DIR_AS_CHORD_WORK_DIR = "WARN: Property chord.work.dir not set; using value of user.dir (`%s`) instead.";
-	private static final String CHORD_MAIN_DIR_UNDEFINED = "ERROR: Property chord.main.dir not set; must be set to the absolute location of the directory named 'main' in your Chord installation.";
-	private static final String CHORD_WORK_DIR_UNDEFINED = "ERROR: Property chord.work.dir not set; must be set to the absolute location of the working directory desired during Chord's execution.";
+public class Config {
+	private static final String USER_DIR_AS_CHORD_WORK_DIR =
+		"WARN: Property chord.work.dir not set; using value of user.dir (`%s`) instead.";
+	private static final String CHORD_MAIN_DIR_UNDEFINED =
+		"ERROR: Property chord.main.dir not set; must be set to the absolute location of the directory named 'main' in your Chord installation.";
+	private static final String CHORD_WORK_DIR_UNDEFINED =
+		"ERROR: Property chord.work.dir not set; must be set to the absolute location of the working directory desired during Chord's execution.";
 
-	private ChordProperties() { }
+	private Config() { }
 
 	public final static String LIST_SEPARATOR = " |,|:|;";
 

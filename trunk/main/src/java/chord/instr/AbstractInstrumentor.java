@@ -23,7 +23,7 @@ import javassist.expr.MonitorExit;
 import javassist.CtClass;
 
 import chord.project.Messages;
-import chord.project.ChordProperties;
+import chord.project.Config;
 
 /**
  * 
@@ -40,10 +40,10 @@ public class AbstractInstrumentor extends ExprEditor {
 	protected Map<String, String> argsMap;
 
 	public AbstractInstrumentor(Map<String, String> _argsMap) {
-		scopeExcludeAry = ChordProperties.scopeExcludeAry;
- 		verbose = ChordProperties.verbose;
-		String mainClassPathName = ChordProperties.mainClassPathName;
-		String userClassPathName = ChordProperties.classPathName;
+		scopeExcludeAry = Config.scopeExcludeAry;
+ 		verbose = Config.verbose;
+		String mainClassPathName = Config.mainClassPathName;
+		String userClassPathName = Config.classPathName;
 		pool = new JavassistPool(mainClassPathName, userClassPathName);
 		argsMap = _argsMap;
     }

@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
-import chord.project.ChordProperties;
+import chord.project.Config;
 
 /**
  * Allow for organized execution of experiments.
@@ -38,7 +38,7 @@ public class Execution {
 
   public Execution(String name) {
     this.name = name;
-    basePath = ChordProperties.outDirName;
+    basePath = Config.outDirName;
     System.out.println("Execution directory: "+basePath);
     logOut = new PrintWriter(System.out);
     output.put("hostname", getHostName());

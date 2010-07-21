@@ -24,7 +24,7 @@ import chord.doms.DomB;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.Program;
 import chord.project.Project;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.project.analyses.ProgramDom;
 import chord.runtime.Runtime;
 import chord.util.IndexMap;
@@ -64,7 +64,7 @@ public class Instrumentor extends AbstractInstrumentor {
 	private static final String DUPLICATE_IN_DOMAIN = "ERROR: Instrumentor: Map for domain %s already contains '%s'.";
 	private static final String NO_BCI_IN_BASIC_BLOCK = "ERROR: Instrumentor: Couldn't find index of first bytecode instruction in basic block %s of method %s.";
 
-	protected static final String runtimeClassName = ChordProperties.runtimeClassName + ".";
+	protected static final String runtimeClassName = Config.runtimeClassName + ".";
 
 	protected static final String enterMethodEventCall = runtimeClassName + "enterMethodEvent(";
 	protected static final String leaveMethodEventCall = runtimeClassName + "leaveMethodEvent(";
@@ -192,7 +192,7 @@ public class Instrumentor extends AbstractInstrumentor {
 	public IndexMap<String> getBmap() { return Bmap; }
 
 	public Instrumentor(Map<String, String> argsMap) {
-		this(argsMap, InstrScheme.load(ChordProperties.instrSchemeFileName));
+		this(argsMap, InstrScheme.load(Config.instrSchemeFileName));
 	}
 
 	/**

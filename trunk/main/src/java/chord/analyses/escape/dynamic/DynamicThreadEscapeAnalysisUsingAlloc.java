@@ -20,7 +20,7 @@ import java.util.List;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.Project;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.ChordRuntimeException;
@@ -142,7 +142,7 @@ public class DynamicThreadEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		relEscE.save();
 
 		DomE domE = (DomE) Project.getTrgt("E");
-		String outDirName = ChordProperties.outDirName;
+		String outDirName = Config.outDirName;
 		try {
 			PrintWriter writer;
 			writer = new PrintWriter(new FileWriter(new File(outDirName,

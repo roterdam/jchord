@@ -6,7 +6,7 @@
  */
 package chord.bddbddb;
 
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.project.OutDirUtils;
 
 /**
@@ -29,12 +29,12 @@ public class Solver {
 		String[] cmdArray = new String[] {
 			"java",
 			"-ea",
-			"-Xmx" + ChordProperties.bddbddbMaxHeap,
+			"-Xmx" + Config.bddbddbMaxHeap,
 			"-cp",
-			ChordProperties.bddbddbClassPathName,
-			"-Dnoisy=" + (ChordProperties.bddbddbVerbose ? "yes" : "no"),
-			"-Djava.library.path=" + ChordProperties.libDirName,
-			"-Dbasedir=" + ChordProperties.bddbddbWorkDirName,
+			Config.bddbddbClassPathName,
+			"-Dnoisy=" + (Config.bddbddbVerbose ? "yes" : "no"),
+			"-Djava.library.path=" + Config.libDirName,
+			"-Dbasedir=" + Config.bddbddbWorkDirName,
 			"net.sf.bddbddb.Solver",
 			fileName
 		};

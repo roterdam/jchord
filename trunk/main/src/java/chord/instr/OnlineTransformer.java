@@ -20,7 +20,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
 import chord.util.StringUtils;
-import chord.project.ChordProperties;
+import chord.project.Config;
 
 import javassist.CtClass;
 import javassist.CannotCompileException;
@@ -54,14 +54,14 @@ public class OnlineTransformer implements ClassFileTransformer {
 			String agentArgs, String args) {
 		List<String> cmd = new ArrayList<String>();
 		cmd.add("java");
-		cmd.addAll(StringUtils.tokenize(ChordProperties.runtimeJvmargs));
+		cmd.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
 		Properties props = System.getProperties();
 		for (Map.Entry e : props.entrySet()) {
 			String key = (String) e.getKey();
 			if (key.startsWith("chord."))
 				cmd.add("-D" + key + "=" + e.getValue());
 		}
-		cmd.add("-javaagent:" + ChordProperties.jInstrAgentFileName + agentArgs);
+		cmd.add("-javaagent:" + Config.jInstrAgentFileName + agentArgs);
 		cmd.add("-cp");
 		cmd.add(classPathName);
 		cmd.add(mainClassName);
