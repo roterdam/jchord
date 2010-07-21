@@ -10,6 +10,15 @@ import java.util.HashMap;
 
 import javassist.NotFoundException;
 import javassist.CannotCompileException;
+import javassist.CtBehavior;
+import javassist.expr.ExprEditor;
+import javassist.expr.NewExpr;
+import javassist.expr.NewArray;
+import javassist.expr.ArrayAccess;
+import javassist.expr.FieldAccess;
+import javassist.expr.MethodCall;
+import javassist.expr.MonitorEnter;
+import javassist.expr.MonitorExit;
 import javassist.CtClass;
 
 import chord.project.Messages;
@@ -19,7 +28,7 @@ import chord.project.ChordProperties;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class AbstractInstrumentor {
+public class AbstractInstrumentor extends ExprEditor {
 	private static final String EXPLICITLY_EXCLUDING_CLASS =
 		"WARN: Instrumentor: Not instrumenting class %s as it is excluded by chord.scope.exclude.";
 	private static final String IMPLICITLY_EXCLUDING_CLASS =
@@ -68,12 +77,11 @@ public class AbstractInstrumentor {
 		return false;
 	}
 
-	public CtClass instrument(String cName)
-			throws NotFoundException, CannotCompileException {
+	public CtClass edit(String cName) throws NotFoundException, CannotCompileException {
 		if (isExcluded(cName))
 			return null;
 		CtClass clazz = pool.get(cName);
-		return instrument(clazz);
+		return edit(clazz);
 	}
 
     /**
@@ -82,9 +90,39 @@ public class AbstractInstrumentor {
      * instrumentation for generating the specified kind and format
      * of events during the execution of the instrumented program.
      */
-	public CtClass instrument(CtClass clazz)
-		throws NotFoundException, CannotCompileException {
+	public CtClass edit(CtClass clazz) throws CannotCompileException {
+		CtBehavior clinit = clazz.getClassInitializer();
+		if (clinit != null)
+			edit(clinit);
+        CtBehavior[] inits = clazz.getDeclaredConstructors();
+        CtBehavior[] meths = clazz.getDeclaredMethods();
+        for (CtBehavior m : inits)
+			edit(m);
+		for (CtBehavior m : meths)
+			edit(m);
 		return clazz;
 	}
+
+	public void edit(CtBehavior method) throws CannotCompileException {
+		method.instrument(this);
+	}
+
+    public String insertBefore(int pos) {
+		return null;
+	}
+
+	public void edit(NewExpr e) throws CannotCompileException { }
+
+	public void edit(NewArray e) throws CannotCompileException { }
+
+	public void edit(FieldAccess e) throws CannotCompileException { }
+
+	public void edit(ArrayAccess e) throws CannotCompileException { }
+
+	public void edit(MonitorEnter e) throws CannotCompileException { }
+
+	public void edit(MonitorExit e) throws CannotCompileException { }
+
+	public void edit(MethodCall e) throws CannotCompileException { }
 }
 

@@ -58,7 +58,7 @@ public class OfflineTransformer {
 			String cName = c.getName();
 			Exception ex = null;
 			try {
-				CtClass clazz = instrumentor.instrument(cName);
+				CtClass clazz = instrumentor.edit(cName);
 				if (clazz != null) {
 					String outDir = getOutDir(cName);
 					if (outDir != null) {

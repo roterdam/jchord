@@ -22,7 +22,6 @@ import chord.doms.DomP;
 import chord.doms.DomB;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.Program;
-import chord.util.ChordRuntimeException;
 import chord.project.Project;
 import chord.project.ChordProperties;
 import chord.project.analyses.ProgramDom;
@@ -162,8 +161,9 @@ public class Instrumentor extends AbstractInstrumentor {
 	protected IndexMap<String> Bmap;
 
 	private CtClass exType;
-	private final MyExprEditor exprEditor = new MyExprEditor();
 
+	jq_Class joeqClass;
+	jq_Method joeqMethod;
 	protected String mStr;
 	protected TIntObjectHashMap<String> bciToInstrMap =
 		new TIntObjectHashMap<String>();
@@ -285,51 +285,27 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 	}
 
-	@Override
-	public CtClass instrument(CtClass clazz)
-			throws NotFoundException, CannotCompileException {
-		String cName = clazz.getName();
-		jq_Class c = (jq_Class) program.getClass(cName);
-		if (c == null) {
-			// TODO: Warn
-			return null;
+	protected int getBCI(BasicBlock b, jq_Method m) {
+		int n = b.size();
+		for (int i = 0; i < n; i++) {
+			Quad q = b.getQuad(i);
+			int bci = q.getBCI();
+			if (bci != -1)
+				return bci;
 		}
-		List<jq_Method> methods = program.getMethods(c);
-		CtBehavior[] inits = clazz.getDeclaredConstructors();
-		CtBehavior[] meths = clazz.getDeclaredMethods();
-		for (jq_Method m : methods) {
-			CtBehavior method = null;
-			String mName = m.getName().toString();
-			if (mName.equals("<clinit>")) {
-				method = clazz.getClassInitializer();
-			} else if (mName.equals("<init>")) {
-				String mDesc = m.getDesc().toString();
-				for (CtBehavior x : inits) {
-					if (x.getSignature().equals(mDesc)) {
-						method = x;
-						break;
-					}
-				}
-			} else {
-				String mDesc = m.getDesc().toString();
-				for (CtBehavior x : meths) {
-					if (x.getName().equals(mName) &&
-						x.getSignature().equals(mDesc)) {
-						method = x;
-						break;
-					}
-				}
-			}
-			assert (method != null);
-			try {
-				process(method, m);
-			} catch (ChordRuntimeException ex) {
-				Messages.log(CANNOT_INSTRUMENT_METHOD, method.getLongName());
-				ex.printStackTrace();
-				return null;
-			}
-		}
-		return clazz;
+		Messages.fatal(NO_BCI_IN_BASIC_BLOCK, b, m);
+		return 0;
+	}
+
+	// order must be tail -> head -> rest
+	protected void attachInstrToBCIAft(String str, int bci) {
+		String s = bciToInstrMap.get(bci);
+		bciToInstrMap.put(bci, (s == null) ? str : s + str);
+	}
+
+	protected void attachInstrToBCIBef(String str, int bci) {
+		String s = bciToInstrMap.get(bci);
+		bciToInstrMap.put(bci, (s == null) ? str : str + s);
 	}
 
 	protected <T> IndexMap<String> getUniqueStringMap(ProgramDom<T> dom) {
@@ -342,38 +318,36 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return map;
 	}
-	protected int getBCI(BasicBlock b, jq_Method m) {
-		int n = b.size();
-		for (int i = 0; i < n; i++) {
-			Quad q = b.getQuad(i);
-			int bci = q.getBCI();
-			if (bci != -1)
-				return bci;
+
+	@Override
+	public CtClass edit(CtClass clazz) throws CannotCompileException {
+		String cName = clazz.getName();
+		joeqClass = (jq_Class) program.getClass(cName);
+		if (joeqClass == null) {
+			// TODO: Warn
+			return null;
 		}
-		Messages.fatal(NO_BCI_IN_BASIC_BLOCK, b, m);
-		return 0;
+		return super.edit(clazz);
 	}
-	// order must be tail -> head -> rest
-	protected void attachInstrToBCIAft(String str, int bci) {
-		String s = bciToInstrMap.get(bci);
-		bciToInstrMap.put(bci, (s == null) ? str : s + str);
-	}
-	protected void attachInstrToBCIBef(String str, int bci) {
-		String s = bciToInstrMap.get(bci);
-		bciToInstrMap.put(bci, (s == null) ? str : str + s);
-	}
-	protected void process(CtBehavior javassistMethod, jq_Method joeqMethod) {
-		int mods = javassistMethod.getModifiers();
+
+	@Override
+	public void edit(CtBehavior method) throws CannotCompileException {
+		int mods = method.getModifiers();
 		if (Modifier.isNative(mods) || Modifier.isAbstract(mods))
 			return;
-		int mId = -1;
 		String mName;
-		if (javassistMethod instanceof CtConstructor) {
-			mName = ((CtConstructor) javassistMethod).isClassInitializer() ?  "<clinit>" : "<init>";
-		} else
-			mName = javassistMethod.getName();
-		String mDesc = javassistMethod.getSignature();
-		String cName = javassistMethod.getDeclaringClass().getName();
+		if (method instanceof CtConstructor)
+			mName = ((CtConstructor) method).isClassInitializer() ? "<clinit>" : "<init>";
+		else
+			mName = method.getName();
+		String mDesc = method.getSignature();
+		joeqMethod = program.getMethod(mName, mDesc, joeqClass);
+		if (joeqMethod == null) {
+			// TODO: warn
+			return;
+		}
+		int mId = -1;
+		String cName = joeqClass.getName();
 		mStr = mName + ":" + mDesc + "@" + cName;
 		if (Mmap != null) {
 			mId = Mmap.indexOf(mStr);
@@ -426,11 +400,7 @@ public class Instrumentor extends AbstractInstrumentor {
 				}
 			}
 		}
-		try {
-			javassistMethod.instrument(exprEditor);
-		} catch (CannotCompileException ex) {
-			throw new ChordRuntimeException(ex);
-		}
+		super.edit(method);
 		// NOTE: do not move insertBefore or insertAfter or addCatch
 		// calls to a method to before bytecode instrumentation, else
 		// bytecode instrumentation offsets could get messed up 
@@ -466,20 +436,12 @@ public class Instrumentor extends AbstractInstrumentor {
 			leaveStr = leaveStr + leaveMethodEventCall + nId + ");";
 		}
 		if (!enterStr.equals("")) {
-			try {
-				javassistMethod.insertBefore("{" + enterStr + "}");
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
-			}
+			method.insertBefore("{" + enterStr + "}");
 		}
 		if (!leaveStr.equals("")) {
-			try {
-				javassistMethod.insertAfter("{" + leaveStr + "}");
-				String eventCall = "{" + leaveStr + "throw($e);" + "}";
-				javassistMethod.addCatch(eventCall, exType);
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
-			}
+			method.insertAfter("{" + leaveStr + "}");
+			String eventCall = "{" + leaveStr + "throw($e);" + "}";
+			method.addCatch(eventCall, exType);
 		}
 	}
 
@@ -513,8 +475,10 @@ public class Instrumentor extends AbstractInstrumentor {
 		if (map == Rmap) return "R";
 		if (map == Pmap) return "P";
 		if (map == Bmap) return "B";
-		throw new ChordRuntimeException();
+		assert (false);
+		return null;
 	}
+
 	protected int set(IndexMap<String> map, int bci) {
 		String s = bci + "!" + mStr;
 		int id = map.indexOf(s);
@@ -524,6 +488,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return id;
 	}
+
 	protected int getFid(CtField field) {
 		String fName = field.getName();
 		String fDesc = field.getSignature();
@@ -537,204 +502,189 @@ public class Instrumentor extends AbstractInstrumentor {
 		return id;
 	}
 
-	class MyExprEditor extends ExprEditor {
-		public String insertBefore(int pos) {
-			String s = bciToInstrMap.get(pos);
-			// s may be null in which case this method won't
-			// add any instrumentation
-			if (s != null)
-				s = "{ " + s + " }";
-			return s;
-		}
-		public void edit(NewExpr e) {
-			if (newAndNewArrayEvent.present()) {
-				String instr1, instr2;
-				if (newAndNewArrayEvent.hasObj()) {
-					// instrument hId regardless of whether client wants it
-					int hId = set(Hmap, e);
-					instr1 = befNewEventCall + hId + ");";
-					instr2 = aftNewEventCall + hId + ",$_);";
-				} else {
- 					int hId = newAndNewArrayEvent.hasLoc() ?
-						set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
-					instr1 = newEventCall + hId + ");";
-					instr2 = "";
-				}
-				try {
-					e.replace("{ " + instr1 + " $_ = $proceed($$); " +
-						instr2 + " }");
-				} catch (CannotCompileException ex) {
-					throw new ChordRuntimeException(ex);
-				}
-			}
-		}
-		public void edit(NewArray e) {
-			if (newAndNewArrayEvent.present()) {
-				int hId = newAndNewArrayEvent.hasLoc() ?
-					set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
-				String o = newAndNewArrayEvent.hasObj() ? "$_" : "null";
-				String instr = newArrayEventCall + hId + "," + o + ");";
-				try {
-					e.replace("{ $_ = $proceed($$); " + instr + " }");
-				} catch (CannotCompileException ex) {
-					throw new ChordRuntimeException(ex);
-				}
-			}
-		}
-		public void edit(FieldAccess e) {
-			boolean isStatic = e.isStatic();
-			CtField field;
-			CtClass type;
-			try {
-				field = e.getField();
-				type = field.getType();
-			} catch (NotFoundException ex) {
-				throw new ChordRuntimeException(ex);
-			}
-			boolean isPrim = type.isPrimitive();
-			boolean isWr = e.isWriter();
-			String instr;
-			if (isStatic) {
-				if (!scheme.hasStaticEvent())
-					return;
-				if (isWr) {
-					instr = isPrim ? putstaticPrimitive(e, field) : putstaticReference(e, field);
-				} else {
-					instr = isPrim ? getstaticPrimitive(e, field) : getstaticReference(e, field);
-				}
+	@Override
+	public String insertBefore(int pos) {
+		String s = bciToInstrMap.get(pos);
+		// s may be null in which case this method won't
+		// add any instrumentation
+		if (s != null)
+			s = "{ " + s + " }";
+		return s;
+	}
+
+	@Override
+	public void edit(NewExpr e) throws CannotCompileException {
+		if (newAndNewArrayEvent.present()) {
+			String instr1, instr2;
+			if (newAndNewArrayEvent.hasObj()) {
+				// instrument hId regardless of whether the client wants it
+				int hId = set(Hmap, e);
+				instr1 = befNewEventCall + hId + ");";
+				instr2 = aftNewEventCall + hId + ",$_);";
 			} else {
-				if (!scheme.hasFieldEvent())
-					return;
-				if (isWr) {
-					instr = isPrim ? putfieldPrimitive(e, field) : putfieldReference(e, field);
-				} else {
-					instr = isPrim ? getfieldPrimitive(e, field) : getfieldReference(e, field);
-				}
+ 				int hId = newAndNewArrayEvent.hasLoc() ?
+					set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
+				instr1 = newEventCall + hId + ");";
+				instr2 = "";
 			}
-			if (instr != null) {
-				try {
-					e.replace(instr);
-				} catch (CannotCompileException ex) {
-					throw new ChordRuntimeException(ex);
-				}
-			}
-		}
-		public void edit(ArrayAccess e) {
-			if (scheme.hasArrayEvent()) {
-				boolean isWr = e.isWriter();
-				boolean isPrim = e.getElemType().isPrimitive();
-				String instr;
-				if (isWr) {
-					instr = isPrim ? astorePrimitive(e) : astoreReference(e);
-				} else {
-					instr = isPrim ? aloadPrimitive(e) : aloadReference(e);
-				}
-				if (instr != null) {
-					try {
-						e.replace(instr);
-					} catch (CannotCompileException ex) {
-						throw new ChordRuntimeException(ex);
-					}
-				}
-			}
-		}
-		public void edit(MonitorEnter e) {
-			if (acquireLockEvent.present()) {
-				int lId = acquireLockEvent.hasLoc() ? set(Lmap, e) : Runtime.MISSING_FIELD_VAL;
-				String o = acquireLockEvent.hasObj() ? "$0" : "null";
-				String instr = acquireLockEventCall + lId + "," + o + ");";
-				try {
-					e.replace("{ $proceed(); " + instr + " }");
-				} catch (CannotCompileException ex) {
-					throw new ChordRuntimeException(ex);
-				}
-			}
-		}
-		public void edit(MonitorExit e) {
-			if (releaseLockEvent.present()) {
-				int rId = releaseLockEvent.hasLoc() ? set(Rmap, e) : Runtime.MISSING_FIELD_VAL;
-				String o = releaseLockEvent.hasObj() ? "$0" : "null";
-				String instr = releaseLockEventCall + rId + "," + o + ");";
-				try {
-					e.replace("{ " + instr + " $proceed(); }");
-				} catch (CannotCompileException ex) {
-					throw new ChordRuntimeException(ex);
-				}
-			}
-		}
-		public void edit(MethodCall e) {
-			String befInstr = "";
-			String aftInstr = "";
-			// Part 1: add METHOD_CALL event if present
-			if (methodCallEvent.present()) {
-				int iId = methodCallEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
-				String o = methodCallEvent.hasObj() ? "$0" : "null";
-				if (methodCallEvent.isBef())
-					befInstr += methodCallBefEventCall + iId + "," + o + ");";
-				if (methodCallEvent.isAft())
-					aftInstr += methodCallAftEventCall + iId + "," + o + ");";
-			}
-			CtMethod m;
-			try {
-				m = e.getMethod();
-			} catch (NotFoundException ex) {
-				throw new ChordRuntimeException(ex);
-			}
-			// Part 2: add BEF_NEW and AFT_NEW, or just NEW, event
-			// if present and applicable
-			if (newAndNewArrayEvent.present()) {
-				String mDesc = m.getSignature();
-				if (mDesc.equals("()Ljava/lang/Object;")) {
-					String mName = m.getName();
-					String cName = m.getDeclaringClass().getName();
-					if ((mName.equals("newInstance") && cName.equals("java.lang.Class")) ||
-						(mName.equals("clone") && cName.equals("java.lang.Object"))) {
-						int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
-						if (newAndNewArrayEvent.hasObj()) {
-							befInstr += befNewEventCall + hId + ");";
-							aftInstr += aftNewEventCall + hId + ",$_);";
-						} else {
-							befInstr += newEventCall + hId + ");";
-						}
-					}
-				}
-			}
-			// Part 3: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
-			// if present and applicable
-			String instr = processThreadRelatedCall(e, m);
-			if (instr != null)
-				befInstr += instr;
-			if (befInstr.equals("") && aftInstr.equals(""))
-				return;
-			// NOTE: the following must be executed only if at least
-			// befInstr or aftInstr is non-null.  Otherwise, all call sites
-			// in the program will be replaced, and this can cause null
-			// pointer exceptions in certain cases (i.e. $_ = $proceed($$)
-			// does not seem to be safe usage for all call sites).
-			try {
-				// Hack: check if the target method declares exceptions it might throw
-				// and don't put try...catch around the call site if it does.
-				// This is because IBM J9 JVM does not like try...catch blocks around
-				// call sites that call methods it wants to inline, and it does not seem
-				// to inline methods that may throw exceptions.
-				// This is a hack because the target method may throw an undeclared
-				// exception like RuntimeException, which will cause aftInstr to be
-				// bypassed.
-				if (!aftInstr.equals("") && m.getExceptionTypes().length != 0) {
-					e.replace("{ " + befInstr + " try { $_ = $proceed($$); } " +
-						"catch (java.lang.Throwable ex) { " + aftInstr + "; throw ex; }; " +
-						aftInstr + " }");
-				} else {
-					e.replace("{ " + befInstr + " $_ = $proceed($$); " +
-						aftInstr + " }");
-				}
-			} catch (CannotCompileException ex) {
-				throw new ChordRuntimeException(ex);
-			} catch (NotFoundException ex) {
-				throw new ChordRuntimeException(ex);
-			}
+			e.replace("{ " + instr1 + " $_ = $proceed($$); " + instr2 + " }");
 		}
 	}
+
+	@Override
+	public void edit(NewArray e) throws CannotCompileException {
+		if (newAndNewArrayEvent.present()) {
+			int hId = newAndNewArrayEvent.hasLoc() ?
+				set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
+			String o = newAndNewArrayEvent.hasObj() ? "$_" : "null";
+			String instr = newArrayEventCall + hId + "," + o + ");";
+			e.replace("{ $_ = $proceed($$); " + instr + " }");
+		}
+	}
+
+	@Override
+	public void edit(FieldAccess e) throws CannotCompileException {
+		boolean isStatic = e.isStatic();
+		CtField field;
+		CtClass type;
+		try {
+			field = e.getField();
+			type = field.getType();
+		} catch (NotFoundException ex) {
+			throw new CannotCompileException(ex);
+		}
+		boolean isPrim = type.isPrimitive();
+		boolean isWr = e.isWriter();
+		String instr;
+		if (isStatic) {
+			if (!scheme.hasStaticEvent())
+				return;
+			if (isWr) {
+				instr = isPrim ? putstaticPrimitive(e, field) : putstaticReference(e, field);
+			} else {
+				instr = isPrim ? getstaticPrimitive(e, field) : getstaticReference(e, field);
+			}
+		} else {
+			if (!scheme.hasFieldEvent())
+				return;
+			if (isWr) {
+				instr = isPrim ? putfieldPrimitive(e, field) : putfieldReference(e, field);
+			} else {
+				instr = isPrim ? getfieldPrimitive(e, field) : getfieldReference(e, field);
+			}
+		}
+		if (instr != null)
+			e.replace(instr);
+	}
+
+	@Override
+	public void edit(ArrayAccess e) throws CannotCompileException {
+		if (scheme.hasArrayEvent()) {
+			boolean isWr = e.isWriter();
+			boolean isPrim = e.getElemType().isPrimitive();
+			String instr;
+			if (isWr) {
+				instr = isPrim ? astorePrimitive(e) : astoreReference(e);
+			} else {
+				instr = isPrim ? aloadPrimitive(e) : aloadReference(e);
+			}
+			if (instr != null)
+				e.replace(instr);
+		}
+	}
+
+	@Override
+	public void edit(MonitorEnter e) throws CannotCompileException {
+		if (acquireLockEvent.present()) {
+			int lId = acquireLockEvent.hasLoc() ? set(Lmap, e) : Runtime.MISSING_FIELD_VAL;
+			String o = acquireLockEvent.hasObj() ? "$0" : "null";
+			String instr = acquireLockEventCall + lId + "," + o + ");";
+			e.replace("{ $proceed(); " + instr + " }");
+		}
+	}
+
+	@Override
+	public void edit(MonitorExit e) throws CannotCompileException {
+		if (releaseLockEvent.present()) {
+			int rId = releaseLockEvent.hasLoc() ? set(Rmap, e) : Runtime.MISSING_FIELD_VAL;
+			String o = releaseLockEvent.hasObj() ? "$0" : "null";
+			String instr = releaseLockEventCall + rId + "," + o + ");";
+			e.replace("{ " + instr + " $proceed(); }");
+		}
+	}
+
+	@Override
+	public void edit(MethodCall e) throws CannotCompileException {
+		String befInstr = "";
+		String aftInstr = "";
+		// Part 1: add METHOD_CALL event if present
+		if (methodCallEvent.present()) {
+			int iId = methodCallEvent.hasLoc() ? set(Imap, e) : Runtime.MISSING_FIELD_VAL;
+			String o = methodCallEvent.hasObj() ? "$0" : "null";
+			if (methodCallEvent.isBef())
+				befInstr += methodCallBefEventCall + iId + "," + o + ");";
+			if (methodCallEvent.isAft())
+				aftInstr += methodCallAftEventCall + iId + "," + o + ");";
+		}
+		CtMethod m;
+		try {
+			m = e.getMethod();
+		} catch (NotFoundException ex) {
+			throw new CannotCompileException(ex);
+		}
+		// Part 2: add BEF_NEW and AFT_NEW, or just NEW, event
+		// if present and applicable
+		if (newAndNewArrayEvent.present()) {
+			String mDesc = m.getSignature();
+			if (mDesc.equals("()Ljava/lang/Object;")) {
+				String mName = m.getName();
+				String cName = m.getDeclaringClass().getName();
+				if ((mName.equals("newInstance") && cName.equals("java.lang.Class")) ||
+					(mName.equals("clone") && cName.equals("java.lang.Object"))) {
+					int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) : Runtime.MISSING_FIELD_VAL;
+					if (newAndNewArrayEvent.hasObj()) {
+						befInstr += befNewEventCall + hId + ");";
+						aftInstr += aftNewEventCall + hId + ",$_);";
+					} else {
+						befInstr += newEventCall + hId + ");";
+					}
+				}
+			}
+		}
+		// Part 3: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
+		// if present and applicable
+		String instr = processThreadRelatedCall(e, m);
+		if (instr != null)
+			befInstr += instr;
+		if (befInstr.equals("") && aftInstr.equals(""))
+			return;
+		// NOTE: the following must be executed only if at least
+		// befInstr or aftInstr is non-null.  Otherwise, all call sites
+		// in the program will be replaced, and this can cause null
+		// pointer exceptions in certain cases (i.e. $_ = $proceed($$)
+		// does not seem to be safe usage for all call sites).
+		// Hack: check if the target method declares exceptions it might throw
+		// and don't put try...catch around the call site if it does.
+		// This is because IBM J9 JVM does not like try...catch blocks around
+		// call sites that call methods it wants to inline, and it does not seem
+		// to inline methods that may throw exceptions.
+		// This is a hack because the target method may throw an undeclared
+		// exception like RuntimeException, which will cause aftInstr to be
+		// bypassed.
+		try {
+			if (!aftInstr.equals("") && m.getExceptionTypes().length != 0) {
+				e.replace("{ " + befInstr + " try { $_ = $proceed($$); } " +
+					"catch (java.lang.Throwable ex) { " + aftInstr + "; throw ex; }; " +
+					aftInstr + " }");
+			} else {
+				e.replace("{ " + befInstr + " $_ = $proceed($$); " +
+					aftInstr + " }");
+			}
+		} catch (NotFoundException ex) {
+			throw new CannotCompileException(ex);
+		}
+	}
+
 	protected String getstaticPrimitive(FieldAccess e, CtField f) {
 		if (getstaticPrimitiveEvent.present()) {
 			int eId = getstaticPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -750,6 +700,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String getstaticReference(FieldAccess e, CtField f) {
 		if (getstaticReferenceEvent.present()) {
 			int eId = getstaticReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -766,6 +717,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String putstaticPrimitive(FieldAccess e, CtField f) {
 		if (putstaticPrimitiveEvent.present()) {
 			int eId = putstaticPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -781,6 +733,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String putstaticReference(FieldAccess e, CtField f) {
 		if (putstaticReferenceEvent.present()) {
 			int eId = putstaticReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -797,6 +750,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String getfieldPrimitive(FieldAccess e, CtField f) {
 		if (getfieldPrimitiveEvent.present()) {
 			int eId = getfieldPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -807,6 +761,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String getfieldReference(FieldAccess e, CtField f) {
 		if (getfieldReferenceEvent.present()) {
 			int eId = getfieldReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -818,6 +773,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String putfieldPrimitive(FieldAccess e, CtField f) {
 		if (putfieldPrimitiveEvent.present()) {
 			int eId = putfieldPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -828,6 +784,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String putfieldReference(FieldAccess e, CtField f) {
 		if (putfieldReferenceEvent.present()) {
 			int eId = putfieldReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -839,6 +796,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String aloadPrimitive(ArrayAccess e) {
 		if (aloadPrimitiveEvent.present()) {
 			int eId = aloadPrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -849,6 +807,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String aloadReference(ArrayAccess e) {
 		if (aloadReferenceEvent.present()) {
 			int eId = aloadReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -860,6 +819,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String astorePrimitive(ArrayAccess e) {
 		if (astorePrimitiveEvent.present()) {
 			int eId = astorePrimitiveEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -870,6 +830,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String astoreReference(ArrayAccess e) {
 		if (astoreReferenceEvent.present()) {
 			int eId = astoreReferenceEvent.hasLoc() ? set(Emap, e) : Runtime.MISSING_FIELD_VAL;
@@ -881,6 +842,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		}
 		return null;
 	}
+
 	protected String processThreadRelatedCall(MethodCall e, CtMethod m) {
 		String instr = null;
 		String cName = m.getDeclaringClass().getName();
