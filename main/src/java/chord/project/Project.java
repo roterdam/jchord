@@ -88,7 +88,7 @@ public class Project {
 	private static Set<Object> doneTrgts = new HashSet<Object>();
 	private static Stack<Timer> timers = new Stack<Timer>();
 	private static Timer currTimer;
-	private static boolean verbose = ChordProperties.verbose;
+	private static boolean verbose = Config.verbose;
 
 	private Project() { }
 
@@ -99,34 +99,34 @@ public class Project {
 
 		Program program = Program.getProgram();
 
-		if (ChordProperties.buildScope) {
+		if (Config.buildScope) {
 			program.getMethods();
 			program.getReflectInfo();
 		}
 
-		if (ChordProperties.printAllClasses) {
+		if (Config.printAllClasses) {
 			program.printAllClasses();
 
 		}
-		String[] printClasses = ChordProperties.toArray(ChordProperties.printClasses);
+		String[] printClasses = Config.toArray(Config.printClasses);
 		if (printClasses.length > 0) {
 			for (String className : printClasses)
 				program.printClass(className);
 		}
-		String[] printMethods = ChordProperties.toArray(ChordProperties.printMethods);
+		String[] printMethods = Config.toArray(Config.printMethods);
 		if (printMethods.length > 0) {
 			for (String methodSign : printMethods)
 				program.printMethod(methodSign);
 		}
 
-        String[] runAnalyses = ChordProperties.toArray(ChordProperties.runAnalyses);
+        String[] runAnalyses = Config.toArray(Config.runAnalyses);
         if (runAnalyses.length > 0) {
         	Project.init();
 			for (String name : runAnalyses)
 				runTask(name);
         }
 
-		String[] printRels = ChordProperties.toArray(ChordProperties.printRels);
+		String[] printRels = Config.toArray(Config.printRels);
 		if (printRels.length > 0) {
 			Project.init();
 			for (String relName : printRels) {
@@ -137,18 +137,18 @@ public class Project {
 			}
 		}
 
-		if (ChordProperties.publishTargets) {
+		if (Config.publishTargets) {
 			Project.init();
 			PrintWriter out;
 			try {
-				File file = new File(ChordProperties.outDirName, "targets.xml");
+				File file = new File(Config.outDirName, "targets.xml");
 				out = new PrintWriter(new FileWriter(file));
 			} catch (IOException ex) {
 				throw new ChordRuntimeException(ex);
 			}
 			out.println("<targets " +
-				"java_analysis_path=\"" + ChordProperties.javaAnalysisPathName + "\" " +
-				"dlog_analysis_path=\"" + ChordProperties.dlogAnalysisPathName + "\">");
+				"java_analysis_path=\"" + Config.javaAnalysisPathName + "\" " +
+				"dlog_analysis_path=\"" + Config.dlogAnalysisPathName + "\">");
 			for (String name : nameToTrgtMap.keySet()) {
 				Object trgt = nameToTrgtMap.get(name);
 				String kind;
@@ -518,8 +518,8 @@ public class Project {
 			}
 		}
 
-		if (ChordProperties.reuseRels) {
-			File file = new File(ChordProperties.bddbddbWorkDirName);
+		if (Config.reuseRels) {
+			File file = new File(Config.bddbddbWorkDirName);
 			File[] subFiles = file.listFiles(filter);
 			for (File subFile : subFiles) {
 				String fileName = subFile.getName();
@@ -548,7 +548,7 @@ public class Project {
 			loc = (new File(loc)).getName();
 		} else
 			loc = clazz.getName().replace(".", "/") + ".html";
-		loc = ChordProperties.javadocURL + loc;
+		loc = Config.javadocURL + loc;
 		return "producer_name=\"" + task.getName() +
 			"\" producer_url=\"" + loc + "\"";
 	}
@@ -595,7 +595,7 @@ public class Project {
 	};
 
 	private static void buildDlogAnalysisMap() {
-		String dlogAnalysisPathName = ChordProperties.dlogAnalysisPathName;
+		String dlogAnalysisPathName = Config.dlogAnalysisPathName;
 		if (dlogAnalysisPathName.equals(""))
 			return;
 		String[] fileNames = dlogAnalysisPathName.split(File.pathSeparator);
@@ -610,7 +610,7 @@ public class Project {
 	}
 
 	private static void buildJavaAnalysisMap() {
-		String javaAnalysisPathName = ChordProperties.javaAnalysisPathName;
+		String javaAnalysisPathName = Config.javaAnalysisPathName;
 		if (javaAnalysisPathName.equals(""))
 			return;
 		ArrayList<URL> list = new ArrayList<URL>();

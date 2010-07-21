@@ -51,7 +51,7 @@ import chord.program.Location;
 import chord.project.analyses.ProgramRel;
 import chord.project.analyses.rhs.ForwardRHSAnalysis;
 import chord.bddbddb.Rel.IntPairIterable;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.util.ChordRuntimeException;
 import chord.doms.DomE;
 import chord.doms.DomF;
@@ -206,7 +206,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			System.out.println(timer.getInclusiveTimeStr());
 		}
 		try {
-			String outDirName = ChordProperties.outDirName;
+			String outDirName = Config.outDirName;
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_fullEscE.txt")));

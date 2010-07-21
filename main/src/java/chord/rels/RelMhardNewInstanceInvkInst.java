@@ -18,7 +18,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import chord.doms.DomM;
 import chord.doms.DomI;
 import chord.program.visitors.IInvokeInstVisitor;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
@@ -52,7 +52,7 @@ public class RelMhardNewInstanceInvkInst extends ProgramRel
 		ctnrMethod = m;
 	}
 	public void visitInvokeInst(Quad q) {
-		if (!ChordProperties.handleNewInstReflection ||
+		if (!Config.handleNewInstReflection ||
 				resolvedNewInstSites.contains(q))
 			return;
 		jq_Method meth = Invoke.getMethod(q).getMethod();

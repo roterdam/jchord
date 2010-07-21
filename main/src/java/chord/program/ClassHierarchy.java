@@ -24,7 +24,7 @@ import joeq.UTF.Utf8;
 import joeq.Class.Classpath;
 import joeq.Class.ClasspathElement;
 import chord.project.Messages;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.util.ArraySet;
 import chord.util.tuple.object.Pair;
 
@@ -196,16 +196,16 @@ public class ClassHierarchy {
 	}
 
 	public ClassHierarchy() {
-		CHkind = ChordProperties.CHkind;
+		CHkind = Config.CHkind;
 		if (!CHkind.equals("static") && !CHkind.equals("dynamic"))
 			Messages.fatal(INVALID_CH_KIND);
 		// exclude chord's classpath in part because joeq has weird
 		// code that breaks cha, but also because it is not part of
 		// the program being analyzed
-		String mainClassPathName = ChordProperties.mainClassPathName;
+		String mainClassPathName = Config.mainClassPathName;
 		chordCPEary = mainClassPathName.equals("") ? new String[0] :
 			mainClassPathName.split(File.pathSeparator);
-		verbose = ChordProperties.verbose;
+		verbose = Config.verbose;
 	}
 
 	// builds maps clintToKind, classToDeclaredSuperclass, and clintToDeclaredInterfaces

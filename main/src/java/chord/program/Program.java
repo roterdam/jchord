@@ -29,7 +29,7 @@ import chord.util.tuple.object.Pair;
 import chord.project.Project;
 import chord.project.OutDirUtils;
 import chord.project.Messages;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.util.ArraySet;
 import chord.util.IndexSet;
 import chord.util.FileUtils;
@@ -101,20 +101,20 @@ public abstract class Program {
     private ClassHierarchy ch;
 	private static Program program;
 	protected Program() {
-		if (ChordProperties.verbose)
+		if (Config.verbose)
 			jq_Method.setVerbose();
-		if (ChordProperties.doSSA)
+		if (Config.doSSA)
 			jq_Method.doSSA();
-		jq_Method.exclude(ChordProperties.scopeExcludeAry);
-		reuseScope = ChordProperties.reuseScope;
+		jq_Method.exclude(Config.scopeExcludeAry);
+		reuseScope = Config.reuseScope;
 	}
 	public final static Program getProgram() {
 		if (program == null) {
-			String scopeKind = ChordProperties.scopeKind;
+			String scopeKind = Config.scopeKind;
 			if (scopeKind.equals("rta")) {
 				program = new RTAProgram(
-					ChordProperties.handleForNameReflection,
-					ChordProperties.handleNewInstReflection);
+					Config.handleForNameReflection,
+					Config.handleNewInstReflection);
 			} else if (scopeKind.equals("dynamic")) {
 				program = new DynamicProgram();
 			} else if (scopeKind.equals("cha")) {
@@ -139,7 +139,7 @@ public abstract class Program {
      */
     public final IndexSet<jq_Method> getMethods() {
 		if (methods == null) {
-			String methodsFileName = ChordProperties.methodsFileName;
+			String methodsFileName = Config.methodsFileName;
 			File methodsFile = new File(methodsFileName);
 			if (reuseScope && methodsFile.exists()) {
 				loadMethodsFile(methodsFile);
@@ -155,7 +155,7 @@ public abstract class Program {
 	 */
 	public final ReflectInfo getReflectInfo() {
 		if (reflectInfo == null) {
-			String reflectFileName = ChordProperties.reflectFileName;
+			String reflectFileName = Config.reflectFileName;
 			File reflectFile = new File(reflectFileName);
 			if (reuseScope && reflectFile.exists()) {
 				loadReflectFile(reflectFile);
@@ -336,7 +336,7 @@ public abstract class Program {
 	}
 
 	public static jq_Reference loadClass(String s) {
-		if (ChordProperties.verbose)
+		if (Config.verbose)
 			Messages.log(LOADING_CLASS, s);
 		try {
 			jq_Reference c = (jq_Reference) jq_Type.parseType(s);
@@ -424,7 +424,7 @@ public abstract class Program {
 
 	public jq_Method getMainMethod() {
 		if (mainMethod == null) {
-			String mainClassName = ChordProperties.mainClassName;
+			String mainClassName = Config.mainClassName;
 			if (mainClassName == null)
 				Messages.fatal(MAIN_CLASS_NOT_DEFINED);
 			mainMethod = getMethod("main", "([Ljava/lang/String;)V", mainClassName);
@@ -536,27 +536,27 @@ public abstract class Program {
 	private static boolean useJVMTI = true;
 
 	public static List<String> getDynamicallyLoadedClasses() {
-		String mainClassName = ChordProperties.mainClassName;
+		String mainClassName = Config.mainClassName;
 		if (mainClassName == null)
 			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
-		String classPathName = ChordProperties.classPathName;
+		String classPathName = Config.classPathName;
 		if (classPathName == null)
 			Messages.fatal(CLASS_PATH_NOT_DEFINED);
-        String[] runIDs = ChordProperties.runIDs.split(ChordProperties.LIST_SEPARATOR);
+        String[] runIDs = Config.runIDs.split(Config.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
-		String agentArgs = "=classes_file_name=" + ChordProperties.classesFileName;
+		String agentArgs = "=classes_file_name=" + Config.classesFileName;
 		if (!useJVMTI)
 			agentArgs += "=instr_class_name=" + LoadedClassesInstrumentor.class.getName();
 		List<String> classNames = new ArrayList<String>();
-		String fileName = ChordProperties.classesFileName;
+		String fileName = Config.classesFileName;
         for (String runID : runIDs) {
             String args = System.getProperty("chord.args." + runID, "");
         	List<String> cmdList;
 			if (useJVMTI) {
 				cmdList = new ArrayList<String>();
 				cmdList.add("java");
-				cmdList.addAll(StringUtils.tokenize(ChordProperties.runtimeJvmargs));
-         		cmdList.add("-agentpath:" + ChordProperties.cInstrAgentFileName + agentArgs);
+				cmdList.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
+         		cmdList.add("-agentpath:" + Config.cInstrAgentFileName + agentArgs);
 				cmdList.add("-cp");
 				cmdList.add(classPathName);
 				cmdList.add(mainClassName);
@@ -586,7 +586,7 @@ public abstract class Program {
 	 */
 	public void HTMLizeJavaSrcFiles() {
 		if (!HTMLizedJavaSrcFiles) {
-			String srcPathName = ChordProperties.srcPathName;
+			String srcPathName = Config.srcPathName;
 			if (srcPathName == null)
 				Messages.fatal(SRC_PATH_NOT_DEFINED);
 			String[] srcDirNames = srcPathName.split(File.pathSeparator);
@@ -595,7 +595,7 @@ public abstract class Program {
 				java2HTML.setMarginSize(4);
 				java2HTML.setTabSize(4);
 				java2HTML.setJavaDirectorySource(srcDirNames);
-				java2HTML.setDestination(ChordProperties.outDirName);
+				java2HTML.setDestination(Config.outDirName);
 				java2HTML.buildJava2HTML();
 			} catch (Exception ex) {
 				throw new ChordRuntimeException(ex);

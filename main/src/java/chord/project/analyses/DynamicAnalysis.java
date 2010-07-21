@@ -32,7 +32,7 @@ import chord.instr.InstrScheme.EventFormat;
 import chord.program.CFGLoopFinder;
 import chord.project.Messages;
 import chord.project.Project;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.project.OutDirUtils;
 import chord.runtime.BufferedRuntime;
 import chord.util.ByteBufferedFile;
@@ -128,24 +128,24 @@ public class DynamicAnalysis extends JavaAnalysis {
 	}
 
 	private static String getNameOfFullCrudeTraceFile(String runID) {
-		return getNameOfFullFile(runID, ChordProperties.crudeTraceFileName);
+		return getNameOfFullFile(runID, Config.crudeTraceFileName);
 	}
 	private static String getNameOfFullFinalTraceFile(String runID) {
-		return getNameOfFullFile(runID, ChordProperties.finalTraceFileName);
+		return getNameOfFullFile(runID, Config.finalTraceFileName);
 	}
 	private static String getNameOfPipeCrudeTraceFile(String runID) {
-		return getNameOfPipeFile(runID, ChordProperties.crudeTraceFileName);
+		return getNameOfPipeFile(runID, Config.crudeTraceFileName);
 	}
 	private static String getNameOfPipeFinalTraceFile(String runID) {
-		return getNameOfPipeFile(runID, ChordProperties.finalTraceFileName);
+		return getNameOfPipeFile(runID, Config.finalTraceFileName);
 	}
 
 	public void run() {
 		final String[] runIDs =
-			ChordProperties.runIDs.split(ChordProperties.LIST_SEPARATOR);
-		final String instrSchemeFileName = ChordProperties.instrSchemeFileName;
+			Config.runIDs.split(Config.LIST_SEPARATOR);
+		final String instrSchemeFileName = Config.instrSchemeFileName;
 		boolean doReuse = false;
-		if (ChordProperties.reuseTrace) {
+		if (Config.reuseTrace) {
 			// check if instrumentation scheme file exists and
 			// all trace files from a previous run of Chord exist;
 			// only then can those files be reused
@@ -204,22 +204,22 @@ public class DynamicAnalysis extends JavaAnalysis {
 			ex.printStackTrace();
 			System.exit(1);
 		}
-		final String mainClassName = ChordProperties.mainClassName;
+		final String mainClassName = Config.mainClassName;
 		assert (mainClassName != null);
-		final String classPathName = ChordProperties.classPathName;
+		final String classPathName = Config.classPathName;
 		assert (classPathName != null);
-		final String bootClassesDirName = ChordProperties.bootClassesDirName;
-		final String userClassesDirName = ChordProperties.userClassesDirName;
-		final String runtimeClassName = ChordProperties.runtimeClassName;
+		final String bootClassesDirName = Config.bootClassesDirName;
+		final String userClassesDirName = Config.userClassesDirName;
+		final String runtimeClassName = Config.runtimeClassName;
 		List<String> cmdList = new ArrayList<String>();
 		cmdList.add("java");
-		cmdList.addAll(StringUtils.tokenize(ChordProperties.runtimeJvmargs));
-		cmdList.add("-Xbootclasspath/p:" + ChordProperties.mainClassPathName +
+		cmdList.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
+		cmdList.add("-Xbootclasspath/p:" + Config.mainClassPathName +
 			File.pathSeparator + bootClassesDirName);
 		cmdList.add("-Xverify:none");
 		cmdList.add("-cp");
 		cmdList.add(userClassesDirName + File.pathSeparator + classPathName);
-		String agentCmd = "-agentpath:" + ChordProperties.cInstrAgentFileName +
+		String agentCmd = "-agentpath:" + Config.cInstrAgentFileName +
 			"=instr_scheme_file_name=" + instrSchemeFileName +
 			"=runtime_class_name=" + runtimeClassName.replace('.', '/');
 		cmdList.add(agentCmd);
@@ -233,8 +233,8 @@ public class DynamicAnalysis extends JavaAnalysis {
 				List<String> fullCmdList = new ArrayList<String>(cmdList);
 				fullCmdList.addAll(StringUtils.tokenize(args));
 				initPass();
-				int timeout = ChordProperties.dynamicTimeoutMs;
-				if (ChordProperties.dynamicContinueOnError)
+				int timeout = Config.dynamicTimeoutMs;
+				if (Config.dynamicContinueOnError)
 					OutDirUtils.executeWithWarnOnError(fullCmdList, timeout);
 				else
 					OutDirUtils.executeWithFailOnError(fullCmdList);
@@ -244,9 +244,9 @@ public class DynamicAnalysis extends JavaAnalysis {
 			doneAllPasses();
 			return;
 		}
-		boolean usePipe = ChordProperties.doTracePipe;
+		boolean usePipe = Config.doTracePipe;
 		boolean doTransform = scheme.needsTraceTransform();
-		agentCmd += "=trace_block_size=" + ChordProperties.traceBlockSize + "=trace_file_name=";
+		agentCmd += "=trace_block_size=" + Config.traceBlockSize + "=trace_file_name=";
 		initAllPasses();
 		for (String runID : runIDs) {
 			final String crudeTraceFileName = usePipe ?
@@ -417,7 +417,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 		try {
 		initPass();
 		ByteBufferedFile buffer = new ByteBufferedFile(
-			ChordProperties.traceBlockSize, fileName, true);
+			Config.traceBlockSize, fileName, true);
 		long count = 0;
 		while (!buffer.isDone()) {
 			byte opcode = buffer.getByte();

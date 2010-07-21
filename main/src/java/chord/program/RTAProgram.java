@@ -51,7 +51,7 @@ import joeq.Main.HostedVM;
 import joeq.Util.Templates.ListIterator;
 
 import chord.project.Messages;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.util.IndexSet;
 import chord.util.Timer;
 import chord.util.ArraySet;
@@ -209,7 +209,7 @@ public class RTAProgram extends Program {
 		reflectInfo = new ReflectInfo();
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
-		String mainClassName = ChordProperties.mainClassName;
+		String mainClassName = Config.mainClassName;
 		if (mainClassName == null)
             Messages.fatal(MAIN_CLASS_NOT_DEFINED);
        	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);

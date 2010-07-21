@@ -15,7 +15,7 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.program.Program;
 import chord.project.Project;
 import chord.project.Chord;
@@ -176,7 +176,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		Project.runTask("deadlock-dlog");
 		Project.runTask("deadlock-stats-dlog");
 
-		if (ChordProperties.publishResults) {
+		if (Config.publishResults) {
 			publishResults();
 		}
 		

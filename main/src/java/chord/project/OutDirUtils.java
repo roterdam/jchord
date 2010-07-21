@@ -29,7 +29,7 @@ public class OutDirUtils {
 	private static final String PROCESS_FINISHED = "Finished command: `%s`";
 	private static final String PROCESS_FAILED = "Command `%s` terminated abnormally: %s";
 
-	private static final String outDirName = ChordProperties.outDirName;
+	private static final String outDirName = Config.outDirName;
 	public static PrintWriter newPrintWriter(String fileName) {
 		try {
 			return new PrintWriter(new File(outDirName, fileName));
@@ -48,7 +48,7 @@ public class OutDirUtils {
 			dstFile.getAbsolutePath());
 	}
 	public static void copyFileFromMainDir(String fileName) {
-		String mainDirName = ChordProperties.mainDirName;
+		String mainDirName = Config.mainDirName;
 		copyFile(mainDirName, fileName);
 	}
 	public static void writeMapToFile(IndexMap<String> map, String fileName) {
@@ -59,7 +59,7 @@ public class OutDirUtils {
 		xmlFileName = (new File(outDirName, xmlFileName)).getAbsolutePath();
 		xslFileName = (new File(outDirName, xslFileName)).getAbsolutePath();
 		String[] cmdarray = { "java",
-			"-cp", ChordProperties.libDirName + File.separator + "saxon9.jar",
+			"-cp", Config.libDirName + File.separator + "saxon9.jar",
 			"net.sf.saxon.Transform",
 			"-o", dummyFileName, xmlFileName, xslFileName
 		};

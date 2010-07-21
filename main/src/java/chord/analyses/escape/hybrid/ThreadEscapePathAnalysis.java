@@ -23,7 +23,7 @@ import gnu.trove.TIntObjectHashMap;
 import gnu.trove.TIntArrayList;
 
 import chord.program.Program;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.util.ChordRuntimeException;
 import chord.util.ArraySet;
 import chord.util.IndexMap;
@@ -305,7 +305,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 		try {
 			Program program = Program.getProgram();
-			String outDirName = ChordProperties.outDirName;
+			String outDirName = Config.outDirName;
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
 					new File(outDirName, "hybrid_pathEscE.txt")));

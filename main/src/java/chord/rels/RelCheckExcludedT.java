@@ -10,7 +10,7 @@ import joeq.Class.jq_Reference;
 import chord.doms.DomT;
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.ChordProperties;
+import chord.project.Config;
 import chord.project.analyses.ProgramRel;
 import chord.util.IndexSet;
 
@@ -30,7 +30,7 @@ public class RelCheckExcludedT extends ProgramRel {
 		DomT domT = (DomT) doms[0];
         Program program = Program.getProgram();
 		IndexSet<jq_Reference> classes = program.getClasses();
-		String[] checkExcludeAry = ChordProperties.checkExcludeAry;
+		String[] checkExcludeAry = Config.checkExcludeAry;
 		for (jq_Reference c : classes) {
 			String cName = c.getName();
 			for (String prefix : checkExcludeAry) {
