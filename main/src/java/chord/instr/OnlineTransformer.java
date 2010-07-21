@@ -40,6 +40,8 @@ public class OnlineTransformer implements ClassFileTransformer {
 		"ERROR: OnlineTransformer: Failed to retransform alreaded loaded classes; reason follows.";
 	private static final String CANNOT_INSTRUMENT_CLASS =
 		"ERROR: OnlineTransformer: Skipping instrumenting class %s; reason follows.";
+	private static final String CANNOT_MODIFY_CLASS =
+		"WARN: OnlineTransformer: Cannot modify class %s.";
 
 	protected final AbstractInstrumentor instrumentor;
 
@@ -108,19 +110,20 @@ public class OnlineTransformer implements ClassFileTransformer {
         OnlineTransformer transformer = new OnlineTransformer(instrumentor);
         instrumentation.addTransformer(transformer, true);
         Class[] classes = instrumentation.getAllLoadedClasses();
-        int k = 0;
+        List<Class> retransformClasses = new ArrayList<Class>();
         for (Class c : classes) {
-            if (!c.getName().startsWith("["))
-                k++;
+            if (c.getName().startsWith("[")) 
+				continue;
+			if (!instrumentation.isModifiableClass(c)) {
+				Messages.log(CANNOT_MODIFY_CLASS, c.getName());
+				continue;
+			}
+			retransformClasses.add(c);
         }
-        Class[] retransformClasses = new Class[k];
-        int i = 0;
-        for (Class c : classes) {
-            if (!c.getName().startsWith("["))
-                retransformClasses[i++] = c;
-        }
+		Class[] retransformClassesAry =
+			retransformClasses.toArray(new Class[retransformClasses.size()]);
         try {
-            instrumentation.retransformClasses(retransformClasses);
+            instrumentation.retransformClasses(retransformClassesAry);
         } catch (UnmodifiableClassException e) {
 			Messages.log(CANNOT_RETRANSFORM_LOADED_CLASSES);
 			e.printStackTrace();
@@ -147,7 +150,7 @@ public class OnlineTransformer implements ClassFileTransformer {
 			Messages.log(CANNOT_INSTRUMENT_CLASS, cName);
 			ex.printStackTrace();
 		}
-		return classfile;
+		return null;
     }
 }
 
