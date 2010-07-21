@@ -22,7 +22,7 @@ import chord.project.Messages;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class LoadedClassesInstrumentor extends Instrumentor {
+public class LoadedClassesInstrumentor extends AbstractInstrumentor {
 	List<String> loadedClasses = new ArrayList<String>();
 	public LoadedClassesInstrumentor(Map<String, String> argsMap) {
 		super(argsMap);
@@ -44,16 +44,14 @@ public class LoadedClassesInstrumentor extends Instrumentor {
     }
 
 	@Override
-	public final CtClass instrument(String cName)
-			throws NotFoundException, CannotCompileException {
+	public CtClass edit(String cName) throws NotFoundException, CannotCompileException {
 		if (!isExcluded(cName))
 			loadedClasses.add(cName);
 		return null;
 	}
 
 	@Override
-	public CtClass instrument(CtClass clazz)
-			throws NotFoundException, CannotCompileException {
+	public CtClass edit(CtClass clazz) throws CannotCompileException {
 		assert(false);
 		return null;
 	}

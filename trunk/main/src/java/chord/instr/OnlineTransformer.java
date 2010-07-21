@@ -133,7 +133,7 @@ public class OnlineTransformer implements ClassFileTransformer {
 		cName = cName.replace('/', '.');
 		Exception ex = null;
 		try {
-			CtClass clazz = instrumentor.instrument(cName);
+			CtClass clazz = instrumentor.edit(cName);
 			if (clazz != null)
 				return clazz.toBytecode();
 		} catch (IOException e) {
