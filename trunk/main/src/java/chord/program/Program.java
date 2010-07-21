@@ -395,11 +395,7 @@ public abstract class Program {
 		return mList;
 	}
 
-	public jq_Method getMethod(String mName, String mDesc, String cName) {
-		jq_Reference r = getClass(cName);
-		if (r == null || r instanceof jq_Array)
-			return null;
-		jq_Class c = (jq_Class) r;
+	public jq_Method getMethod(String mName, String mDesc, jq_Class c) {
 		List<jq_Method> mList = getMethods(c);
 		for (jq_Method m : mList) {
 			if (m.getName().toString().equals(mName) &&
@@ -407,6 +403,14 @@ public abstract class Program {
 				return m;
 		}
 		return null;
+	}
+
+	public jq_Method getMethod(String mName, String mDesc, String cName) {
+		jq_Reference r = getClass(cName);
+		if (r == null || r instanceof jq_Array)
+			return null;
+		jq_Class c = (jq_Class) r;
+		return getMethod(mName, mDesc, c);
 	}
 	
 	public jq_Method getMethod(MethodSign sign) {
