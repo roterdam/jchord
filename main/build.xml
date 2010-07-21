@@ -183,6 +183,7 @@
 			<manifest>
 				<attribute name="Premain-Class" value="chord.instr.OnlineTransformer"/>
 				<attribute name="Boot-Class-Path" value="${chord.main.class.path}"/>
+				<attribute name="Can-Retransform-Classes" value="true"/>
 			</manifest>
 		</jar>
 	</target>
