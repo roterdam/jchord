@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.datarace.dynamic;
+package chord.analyses.sandbox.datarace.dynamic;
 
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntObjectHashMap;
