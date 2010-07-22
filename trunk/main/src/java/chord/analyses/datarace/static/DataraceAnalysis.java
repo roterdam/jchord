@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.datarace;
+package chord.analyses.datarace.static;
 
 import java.io.PrintWriter;
 import java.util.HashMap;
