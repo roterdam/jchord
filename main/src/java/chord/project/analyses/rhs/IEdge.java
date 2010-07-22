@@ -7,8 +7,8 @@
 package chord.project.analyses.rhs;
 
 /**
- * Specification of a path or summary edge in the Reps-Horwitz-Sagiv
- * algorithm for summary-based dataflow analysis.
+ * Specification of a path edge or a summary edge in the
+ * Reps-Horwitz-Sagiv algorithm for context-sensitive dataflow analysis.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

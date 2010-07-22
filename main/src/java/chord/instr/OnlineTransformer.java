@@ -31,7 +31,8 @@ import java.util.Properties;
 import chord.project.Messages;
 
 /**
- * 
+ * Online (load-time) class-file transformer.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class OnlineTransformer implements ClassFileTransformer {

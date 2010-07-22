@@ -17,6 +17,11 @@ import javassist.NotFoundException;
 import javassist.ClassPool;
 import javassist.CtClass;
 
+/**
+ * Class pool specifying program classpath for Javassist bytecode instrumentor.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class JavassistPool {
     private static final String IGNORE_PATH_ELEMENT =
         "WARN: Instrumentor: Ignoring path element %s from %s";

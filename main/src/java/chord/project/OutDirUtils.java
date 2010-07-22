@@ -18,9 +18,8 @@ import chord.util.ChordRuntimeException;
 import chord.util.ProcessExecutor;
 
 /**
- * Shorthand for common operations on files in the directory specified
- * by system property <tt>chord.out.dir</tt> to which Chord outputs
- * all files.
+ * Common operations on files in the directory specified by system property
+ * <tt>chord.out.dir</tt> to which Chord outputs all files.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

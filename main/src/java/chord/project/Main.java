@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.PrintStream;
 
 /**
- * Entry point of Chord.
+ * Main entry point of Chord.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

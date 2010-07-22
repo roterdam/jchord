@@ -20,6 +20,7 @@ import javassist.CtClass;
 import chord.project.Messages;
 
 /**
+ * Bytecode instrumentor for determining all loaded classes.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
