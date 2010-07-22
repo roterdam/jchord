@@ -198,10 +198,12 @@ public class Instrumentor extends AbstractInstrumentor {
 	/**
 	 * Initializes the instrumentor.
 	 * 
-	 * @param	program	The program to instrument.
-	 * @param	scheme	The scheme specifying the kind and format
-	 * of events to generate during the execution of the
-	 * instrumented program. 
+	 * @param	argsMap	Arguments passed to the online (load-time)
+	 *			instrumentation agent.  This instrumentor is offline if
+	 *			argsMap	is null and online otherwise.
+	 * @param	scheme	Scheme specifying the kind and format of events
+	 *			to generate during the execution of the instrumented
+	 *			program. 
 	 */
 	public Instrumentor(Map<String, String> argsMap, InstrScheme _scheme) {
 		super(argsMap);
