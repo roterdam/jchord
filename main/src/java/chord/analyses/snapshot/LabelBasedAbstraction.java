@@ -24,7 +24,7 @@ import chord.util.ArraySet;
 
 /**
  * 
- * The abstraction of concrete node <code>o</code> is a set of {@link Labels}s. {@link LabelBasedAbstraction} 
+ * The abstraction of concrete node <code>o</code> is a set of {@link Label}s. {@link LabelBasedAbstraction} 
  * enforces and maintains the following invariant: If <code>o2</code> is reachable from <code>o1</code>, then the set 
  * of labels associated with <code>o2</code> is a superset of the set of labels associated with <code>o1</code>.
  * An invariant resulting from the above invariant is that the set of labels associated with node <code>o</code> is 

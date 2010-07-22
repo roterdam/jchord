@@ -19,7 +19,7 @@ public interface IEdge {
 	 *
 	 * @param edge	A path or summary edge.
 	 *
-	 * @returns		true iff the source node of <code>edge</code>
+	 * @return		true iff the source node of <code>edge</code>
 	 *				is identical to the source node of this edge.
 	 */
 	public boolean matchesSrcNodeOf(IEdge edge);
@@ -31,7 +31,7 @@ public interface IEdge {
 	 *
 	 * @param edge	A path or summary edge.
 	 *
-	 * @returns		true iff this edge changes due to the merge.
+	 * @return		true iff this edge changes due to the merge.
 	 */
 	public boolean mergeWith(IEdge edge);
 }

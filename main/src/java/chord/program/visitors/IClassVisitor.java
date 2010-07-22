@@ -17,7 +17,7 @@ public interface IClassVisitor {
 	/**
 	 * Visits all classes in the program.
 	 *
-	 * @param	r	A class.
+	 * @param	c	A class.
 	 */
 	public void visit(jq_Class c);
 }

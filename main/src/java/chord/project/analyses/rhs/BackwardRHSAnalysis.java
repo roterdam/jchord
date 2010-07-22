@@ -7,8 +7,8 @@
 package chord.project.analyses.rhs;
 
 /**
- * Implementation of the Reps-Horwitz-Sagiv algorithm for
- * summary-based backward dataflow analysis.
+ * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive
+ * backward dataflow analysis.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
