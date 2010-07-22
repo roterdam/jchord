@@ -49,9 +49,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 /**
- * Functionality for offline instrumentation and rewriting of a
- * program's bytecode to generate the specified events during
- * its execution.
+ * Bytecode instrumentor for instrumenting a variety of common events.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

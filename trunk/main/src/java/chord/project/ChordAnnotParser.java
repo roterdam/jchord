@@ -16,9 +16,9 @@ import chord.project.analyses.ProgramRel;
 import chord.util.ClassUtils;
 
 /**
- * Parser of a Chord annotation on a class defining a Java task.
+ * Parser for Chord annotations on classes defining program analyses.
  *
- * The annotation specifies aspects of the task such as its name,
+ * The annotation specifies aspects of the analysis such as its name,
  * its consumed and produced targets, etc.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)

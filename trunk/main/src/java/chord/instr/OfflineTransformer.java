@@ -22,6 +22,7 @@ import chord.project.Config;
 import chord.util.FileUtils;
 
 /**
+ * Offline class-file transformer.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

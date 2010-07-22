@@ -26,6 +26,8 @@ import chord.project.Messages;
 import chord.project.Config;
 
 /**
+ * Bytecode instrumentor providing hooks for transforming classes,
+ * methods, and instructions.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
