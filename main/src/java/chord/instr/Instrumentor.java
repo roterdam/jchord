@@ -205,10 +205,10 @@ public class Instrumentor extends AbstractInstrumentor {
 	 *			to generate during the execution of the instrumented
 	 *			program. 
 	 */
-	public Instrumentor(Map<String, String> argsMap, InstrScheme _scheme) {
+	public Instrumentor(Map<String, String> argsMap, InstrScheme scheme) {
 		super(argsMap);
 		program = Program.getProgram();
-		scheme = _scheme;
+		this.scheme = scheme;
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
 		genFinalizeEvent = scheme.hasFinalizeEvent();
