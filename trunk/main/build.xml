@@ -376,6 +376,7 @@
 
 	<target name="htmldoc">
 		<exec executable="latex2html" dir="doc">
+			<arg value="-local_icons"/>
 			<arg value="user_guide.tex"/>
 		</exec>
 	</target>
