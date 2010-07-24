@@ -78,7 +78,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	/***** for tracking statistics *****/
 	private long numNew;
-	private long numNewArray;
 	private long numGetfield;
 	private long numPutfield;
 	private long numAload;
@@ -272,7 +271,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	public void doneAllPasses() {
 		System.out.println("STATS:" +
 		 	"\nnew: " + numNew + 
-			"\nnewarray: " + numNewArray +
 			"\ngetfield: " + numGetfield + 
 			"\nputfield: " + numPutfield + 
 			"\naload: " + numAload + 
@@ -1056,12 +1054,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			} else if (op instanceof Putstatic) {
 				numPutstatic++;
 				processPutstatic(q);
-			} else if (op instanceof New) {
+			} else if (op instanceof New || op instanceof NewArray ||
+					op instanceof MultiNewArray) {
 				numNew++;
-				processNewOrNewArray(q, true);
-			} else if (op instanceof NewArray) {
-				numNewArray++;
-				processNewOrNewArray(q, false);
+				processNew(q);
 			} else if (op instanceof CheckCast) {
 				numCheckCast++;
 				processMove(q);
@@ -1100,9 +1096,18 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			copyPset.add(new IntTrio(currPid, lId, rId));
 			done.add(q);
 		}
-		private void processNewOrNewArray(Quad q, boolean isNew) {
+		private void processNew(Quad q) {
 			setCurrQid(q);
-			RegisterOperand vo = isNew ? New.getDest(q) : NewArray.getDest(q);
+			Operator op = q.getOperator();
+			RegisterOperand vo;
+			if (op instanceof New)
+				vo = New.getDest(q);
+			else if (op instanceof NewArray)
+				vo = NewArray.getDest(q);
+			else {
+				assert (op instanceof MultiNewArray);
+				vo = MultiNewArray.getDest(q);
+			}
 			Register v = vo.getRegister();
 			int vId = domU.indexOf(v);
 			assert (vId != -1);

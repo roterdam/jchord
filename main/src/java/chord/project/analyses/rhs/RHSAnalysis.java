@@ -32,8 +32,8 @@ import chord.project.analyses.JavaAnalysis;
 import chord.util.ArraySet;
 
 /**
- * Partial implementation of the Reps-Horwitz-Sagiv algorithm for
- * summary-based dataflow analysis.
+ * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive
+ * dataflow analysis.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -58,26 +58,22 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 
 	// get the path edge(s) in callee for target method m called from call site q
 	// with caller path edge pe
-	public abstract Set<PE> getInitPathEdges(Quad q, jq_Method m, PE pe);
+	public abstract PE getInitPathEdge(Quad q, jq_Method m, PE pe);
 
 	// get outgoing path edge(s) from q, given incoming path edge pe into q.
 	//  q is guaranteed to not be an invoke statement, return statement,
 	// entry basic block, or exit basic block
 	// the set returned can be reused by client
-	public abstract Set<PE> getMiscPathEdges(Quad q, PE pe);
+	public abstract PE getMiscPathEdge(Quad q, PE pe);
  
-	// q is an invoke statement
-	// get outgoing path edge(s) from q, given incoming path edge pe into q,
-	// for dataflow facts not affected by target method of call site q
-	public abstract Set<PE> getInvkPathEdges(Quad q, PE pe);
-
 	// q is an invoke statement and m is the target method.
 	// get path edge to successor of q given path edge into q and summary
 	// edge of a target method m of the call site q
 	// returns null if the path edge into q is not compatible with the
 	// summary edge
-	public abstract Set<PE> getInvkPathEdges(Quad q, PE clrPE, jq_Method m, SE tgtSE);
+	public abstract PE getInvkPathEdge(Quad q, PE clrPE, jq_Method m, SE tgtSE);
 
+	public abstract PE getCopy(PE pe);
 
     // m is a method and pe is a path edge from entry to exit of m
 	// (in case of forward analysis) or vice versa (in case of backward analysis)
@@ -169,9 +165,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
     private void propagate() {
         while (!workList.isEmpty()) {
 			if (DEBUG) {
+/*
 				System.out.println("WORKLIST:");
 				for (Pair<Location, PE> pair : workList)
 					System.out.println("\t" + pair);
+*/
 			}
             int last = workList.size() - 1;
             Pair<Location, PE> pair = workList.remove(last);
@@ -199,7 +197,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 								q2Idx = 0;
 							}
 							Location loc2 = new Location(m, bb2, q2Idx, q2);
-							addPathEdge(loc2, pe);
+							PE pe2 = doMerge ? getCopy(pe) : pe;
+							addPathEdge(loc2, pe2);
 						}
 					} else {
 						processEntry(m, pe);
@@ -222,7 +221,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 								q2Idx = n - 1;
 							}
 							Location loc2 = new Location(m, bb2, q2Idx, q2);
-							addPathEdge(loc2, pe);
+							PE pe2 = doMerge ? getCopy(pe) : pe;
+							addPathEdge(loc2, pe2);
 						}
 					}
                 }
@@ -230,37 +230,38 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				// invoke or misc quad
                 Operator op = q.getOperator();
                 if (op instanceof Invoke) {
-					for (jq_Method m2 : getTargets(q)) {
-						if (DEBUG) System.out.println("\tTarget: " + m2);
-						Set<PE> peSet = getInitPathEdges(q, m2, pe);
-						ControlFlowGraph cfg2 = m2.getCFG();
-						BasicBlock bb2 = isForward ? cfg2.entry() : cfg2.exit();
-						Location loc2 = new Location(m2, bb2, -1, null);
-						for (PE pe2 : peSet)
+					Set<jq_Method> targets = getTargets(q);
+					if (targets.isEmpty()) {
+						PE pe2 = doMerge ? getCopy(pe) : pe;
+						propagatePEtoPE(m, bb, loc.qIdx, pe2);
+					} else {
+						for (jq_Method m2 : targets) {
+							if (DEBUG) System.out.println("\tTarget: " + m2);
+							PE pe2 = getInitPathEdge(q, m2, pe);
+							ControlFlowGraph cfg2 = m2.getCFG();
+							BasicBlock bb2 = isForward ? cfg2.entry() : cfg2.exit();
+							Location loc2 = new Location(m2, bb2, -1, null);
 							addPathEdge(loc2, pe2);
-						Set<SE> seSet = summEdges.get(m2);
-						if (seSet == null) {
-							if (DEBUG) System.out.println("\tSE set empty");
-							continue;
-						}
-						for (SE se : seSet) {
-							if (DEBUG) System.out.println("\tTesting SE: " + se);
-							if (propagateSEtoPE(pe, loc, m2, se)) {
-								if (DEBUG) System.out.println("\tMatched");
-								if (doMerge)
-									break;
-							} else {
-								if (DEBUG) System.out.println("\tDid not match");
+							Set<SE> seSet = summEdges.get(m2);
+							if (seSet == null) {
+								if (DEBUG) System.out.println("\tSE set empty");
+								continue;
+							}
+							for (SE se : seSet) {
+								if (DEBUG) System.out.println("\tTesting SE: " + se);
+								if (propagateSEtoPE(pe, loc, m2, se)) {
+									if (DEBUG) System.out.println("\tMatched");
+									if (doMerge)
+										break;
+								} else {
+									if (DEBUG) System.out.println("\tDid not match");
+								}
 							}
 						}
 					}
-					Set<PE> peSet = getInvkPathEdges(q, pe);
-					for (PE pe2 : peSet)
-						propagatePEtoPE(m, bb, loc.qIdx, pe2);
 				} else {
-					Set<PE> peSet = getMiscPathEdges(q, pe);
-					for (PE pe2 : peSet)
-						propagatePEtoPE(m, bb, loc.qIdx, pe2);
+					PE pe2 = getMiscPathEdge(q, pe);
+					propagatePEtoPE(m, bb, loc.qIdx, pe2);
                 }
             }
         }
@@ -269,8 +270,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	// called by backward analysis
     private void processEntry(jq_Method m, PE pe) {
         SE se = getSummaryEdge(m, pe);
-		if (se == null)
-			return;
         Set<SE> seSet = summEdges.get(m);
         if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
         SE seToAdd = se;
@@ -331,8 +330,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	// called by forward analysis
     private void processExit(jq_Method m, PE pe) {
         SE se = getSummaryEdge(m, pe);
-		if (se == null)
-			return;
         Set<SE> seSet = summEdges.get(m);
         if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
         SE seToAdd = se;
@@ -391,7 +388,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		}
 	}
 
-	protected void addPathEdge(Location loc, PE pe) {
+	private void addPathEdge(Location loc, PE pe) {
 		if (DEBUG) System.out.println("\tChecking if " + loc + " has PE: " + pe);
 		Quad q = loc.q;
 		Inst i = (q != null) ? q : loc.bb;
@@ -453,6 +450,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				addPathEdge(loc2, pe);
 				return;
 			}
+			boolean isFirst = true;
 			for (Object o : bb.getSuccessorsList()) {
 				BasicBlock bb2 = (BasicBlock) o;
 				int q2Idx;
@@ -465,7 +463,17 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 					q2 = bb2.getQuad(0);
 				}
 				Location loc2 = new Location(m, bb2, q2Idx, q2);
-				addPathEdge(loc2, pe);
+				PE pe2;
+				if (!doMerge)
+					pe2 = pe;
+				else {
+					if (isFirst) {
+						pe2 = pe;
+						isFirst = false;
+					} else
+						pe2 = getCopy(pe);
+				}
+				addPathEdge(loc2, pe2);
 			}
 		} else {
 			// backward propagate
@@ -476,6 +484,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				addPathEdge(loc2, pe);
 				return;
 			}
+			boolean isFirst = true;
 			for (Object o : bb.getPredecessorsList()) {
 				BasicBlock bb2 = (BasicBlock) o;
 				int q2Idx;
@@ -489,19 +498,27 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 					q2 = bb2.getQuad(n - 1);
 				}
 				Location loc2 = new Location(m, bb2, q2Idx, q2);
-				addPathEdge(loc2, pe);
+				PE pe2;
+				if (!doMerge)
+					pe2 = pe;
+				else {
+					if (isFirst) {
+						pe2 = pe;
+						isFirst = false;
+					} else
+						pe2 = getCopy(pe);
+				}
+				addPathEdge(loc2, pe2);
 			}
 		}
 	}
 
 	private boolean propagateSEtoPE(PE clrPE, Location loc, jq_Method tgtM, SE tgtSE) {
 		Quad q = loc.q;
-        Set<PE> peSet = getInvkPathEdges(q, clrPE, tgtM, tgtSE);
-		if (peSet == null)
+        PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
+		if (pe2 == null)
 			return false;
-		assert (!peSet.isEmpty());
-		for (PE pe : peSet)
-       	 propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe);
+       	propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2);
         return true;
 	}
 }

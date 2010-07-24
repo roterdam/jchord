@@ -37,6 +37,7 @@ import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.NewArray;
+import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
@@ -44,6 +45,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.analyses.alias.ICICG;
 import chord.analyses.alias.ThrOblAbbrCICGAnalysis;
+import chord.util.Alarm;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
@@ -81,7 +83,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private final IntArraySet escPts = new IntArraySet(1);
 	private final IntArraySet tmpPts = new IntArraySet();
 	private final IntArraySet[] emptyRetEnv = new IntArraySet[] { nilPts };
-	private final Set<Edge> tmpEdgeSet = new ArraySet<Edge>(1);
 	private final Set<Edge> emptyEdgeSet = Collections.emptySet();
 	private DomM domM;
 	private DomI domI;
@@ -106,6 +107,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
     private MyQuadVisitor qv = new MyQuadVisitor();
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
+	private final Alarm alarm = new Alarm(1 * 60 * 1000);
 
 	@Override
 	public void run() {
@@ -166,17 +168,20 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		for (int vIdx = 0; vIdx < numV;) {
 			Register v = domV.get(vIdx);
 			jq_Method m = domV.getMethod(v);
-			int n = m.getCFG().getRegisterFactory().size(); // XXX getNumVarsOfRefType();
+			int n = m.getLiveRefVars().size();
 			methToNumVars.put(m, n);
-			for (int i = 0; i < n; i++)
+			for (int i = 0; i < n; i++) {
+				System.out.println(i + ":" + domV.get(vIdx +i) + "@" + m);
 				varId[vIdx + i] = i;
+			}
 			vIdx += n;
 		}
 
 		init();
 
-		for (Map.Entry<Set<Quad>, Set<Quad>> e :
-				allocInstsToHeapInsts.entrySet()) {
+		alarm.initAllPasses();
+		for (Map.Entry<Set<Quad>, Set<Quad>> e : allocInstsToHeapInsts.entrySet()) {
+			alarm.initNewPass();
 			currAllocs = e.getKey();
 			currLocHeapInsts = e.getValue();
 			currEscHeapInsts.clear();
@@ -195,6 +200,10 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				runPass();
 			} catch (ThrEscException ex) {
 				// do nothing
+			} catch (AlarmException ex) {
+				System.out.println("TIMED OUT");
+				currEscHeapInsts.addAll(currLocHeapInsts);
+				currLocHeapInsts.clear();
 			}
 			for (Quad q : currLocHeapInsts)
 				System.out.println("LOC: " + q.toVerboseStr());
@@ -205,6 +214,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
+		alarm.doneAllPasses();
 		try {
 			String outDirName = Config.outDirName;
 			{
@@ -272,7 +282,12 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public Set<Edge> getInitPathEdges(Quad q, jq_Method m2, Edge pe) {
+	public Edge getInitPathEdge(Quad q, jq_Method m2, Edge pe) {
+/*
+		int xxx = domM.indexOf(m2);
+		if (xxx == 246)
+			DEBUG = true;
+*/
 		Edge pe2;
 		if (m2 == threadStartMethod) {
 			// ignore pe
@@ -299,27 +314,19 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			DstNode dstNode2 = new DstNode(env, dstNode.heap, nilPts, false);
 			pe2 = new Edge(srcNode2, dstNode2);
 		}
-		tmpEdgeSet.clear();
-		tmpEdgeSet.add(pe2);
-		return tmpEdgeSet;
+		return pe2;
 	}
 
 	@Override
-	public Set<Edge> getMiscPathEdges(Quad q, Edge pe) {
+	public Edge getMiscPathEdge(Quad q, Edge pe) {
+		if (alarm.passTimedOut())
+			throw new AlarmException();
 		DstNode dstNode = pe.dstNode;
 		qv.iDstNode = dstNode;
 		qv.oDstNode = dstNode;
 		q.accept(qv);
 		DstNode dstNode2 = qv.oDstNode;
-		Edge pe2 = new Edge(pe.srcNode, dstNode2);
-		tmpEdgeSet.clear();
-		tmpEdgeSet.add(pe2);
-		return tmpEdgeSet;
-	}
-
-	@Override
-	public Set<Edge> getInvkPathEdges(Quad q, Edge pe) {
-		return emptyEdgeSet;
+		return new Edge(pe.srcNode, dstNode2);
 	}
 
 	private Edge getForkPathEdge(Quad q, Edge pe) {
@@ -363,13 +370,15 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public Set<Edge> getInvkPathEdges(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
+	public Edge getCopy(Edge pe) {
+		return new Edge(pe.srcNode, pe.dstNode);
+	}
+
+	@Override
+	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
 		if (m == threadStartMethod) {
 			// ignore tgtSE
-			Edge pe2 = getForkPathEdge(q, clrPE);
-			tmpEdgeSet.clear();
-			tmpEdgeSet.add(pe2);
-			return tmpEdgeSet;
+			return getForkPathEdge(q, clrPE);
 		}
 		DstNode clrDstNode = clrPE.dstNode;
 		SrcNode tgtSrcNode = tgtSE.srcNode;
@@ -431,10 +440,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		}
         DstNode clrDstNode2 = new DstNode(clrDstEnv2, tgtRetNode.heap,
 			clrDstEsc2, false);
-        Edge pe2 = new Edge(clrPE.srcNode, clrDstNode2);
-		tmpEdgeSet.clear();
-		tmpEdgeSet.add(pe2);
-		return tmpEdgeSet;
+		return new Edge(clrPE.srcNode, clrDstNode2);
 	}
 	
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
@@ -736,6 +742,11 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			RegisterOperand vo = NewArray.getDest(q);
 			processAlloc(q, vo);
 		}
+		@Override
+		public void visitMultiNewArray(Quad q) {
+			RegisterOperand vo = MultiNewArray.getDest(q);
+			processAlloc(q, vo);
+		}
 		private void processAlloc(Quad q, RegisterOperand vo) {
 			IntArraySet[] iEnv = iDstNode.env;
 			int vIdx = getIdx(vo);
@@ -769,6 +780,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			RegisterOperand bo = (RegisterOperand) bx;
 			int bIdx = getIdx(bo);
 			IntArraySet pts = iDstNode.env[bIdx];
+			// System.out.println("FOUND: " + q + " pts: " + ThreadEscapeFullAnalysis.toString(pts));
 			if (pts.contains(ESC_VAL)) {
 				currLocHeapInsts.remove(q);
 				currEscHeapInsts.add(q);
