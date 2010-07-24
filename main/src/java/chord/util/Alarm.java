@@ -13,7 +13,7 @@ package chord.util;
  */
 public class Alarm {
 	private final Object lock = new Object();
-	private final long sleepTime;
+	private final long sleepTimeMs;
 	private volatile boolean passTimedOut;
 	private volatile boolean doneAllPasses;
 	private volatile boolean donePass;
@@ -27,7 +27,7 @@ public class Alarm {
 					donePass = false;
 					lock.notify();
 					try {
-						lock.wait(sleepTime);
+						lock.wait(sleepTimeMs);
 					} catch (InterruptedException ex) {
 						throw new RuntimeException(ex);
 					}
@@ -45,8 +45,8 @@ public class Alarm {
 			}
 		}
 	};
-	public Alarm(long sleepTime) {
-		this.sleepTime = sleepTime;
+	public Alarm(long sleepTimeMs) {
+		this.sleepTimeMs = sleepTimeMs;
 	}
 	public boolean passTimedOut() {
 		return passTimedOut;
