@@ -24,7 +24,7 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (m,b,f,v) such that the statement
+ * Relation containing each tuple (p,b,f,v) such that the statement
  * at program point p is of the form <tt>b.f = v</tt>.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
