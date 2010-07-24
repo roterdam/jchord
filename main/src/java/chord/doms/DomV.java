@@ -8,6 +8,7 @@ package chord.doms;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -48,7 +49,6 @@ import joeq.Util.Templates.ListIterator;
 )
 public class DomV extends ProgramDom<Register> implements IMethodVisitor {
 	private Map<Register, jq_Method> varToMethodMap;
-	private jq_Method ctnrMethod;
 	public void init() {
 		varToMethodMap = new HashMap<Register, jq_Method>();
 	}
@@ -59,56 +59,12 @@ public class DomV extends ProgramDom<Register> implements IMethodVisitor {
     public void visit(jq_Method m) {
         if (m.isAbstract())
             return;
-		ctnrMethod = m;
-        ControlFlowGraph cfg = m.getCFG();
-        RegisterFactory rf = cfg.getRegisterFactory();
-        jq_Type[] paramTypes = m.getParamTypes();
-        int numArgs = paramTypes.length;
-        for (int i = 0; i < numArgs; i++) {
-            jq_Type t = paramTypes[i];
-            if (t.isReferenceType()) {
-                Register v = rf.get(i);
-				addVar(v);
-            }
-        }
-        for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-            BasicBlock bb = it.nextBasicBlock();
-            for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-                Quad q = it2.nextQuad();
-                process(q.getOp1(), q);
-                process(q.getOp2(), q);
-                process(q.getOp3(), q);
-                process(q.getOp4(), q);
-            }
-        }
-    }
-	private void addVar(Register v) {
-		varToMethodMap.put(v, ctnrMethod);
-		getOrAdd(v);
-	}
-    private void process(Operand op, Quad q) {
-        if (op instanceof RegisterOperand) {
-            RegisterOperand ro = (RegisterOperand) op;
-			Register v = ro.getRegister();
-            jq_Type t = ro.getType();
-            if (t != null && t.isReferenceType()) {
-				addVar(v);
-			}
-        } else if (op instanceof ParamListOperand) {
-            ParamListOperand ros = (ParamListOperand) op;
-            int n = ros.length();
-            for (int i = 0; i < n; i++) {
-                RegisterOperand ro = ros.get(i);
-				if (ro == null)
-					continue;
-				jq_Type t = ro.getType();
-				if (t != null && t.isReferenceType()) {
-					Register v = ro.getRegister();
-					addVar(v);
-				}
-            }
+		List<Register> vars = m.getLiveRefVars();
+		for (Register v : vars) {
+			varToMethodMap.put(v, m);
+			add(v);
 		}
-    }
+	}
 	public String toUniqueString(Register v) {
 		return v + "!" + getMethod(v);
 	}
