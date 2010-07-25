@@ -31,23 +31,31 @@ import chord.project.Config;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class AbstractInstrumentor extends ExprEditor {
+public class BasicInstrumentor extends ExprEditor {
 	private static final String EXPLICITLY_EXCLUDING_CLASS =
-		"WARN: Instrumentor: Not instrumenting class %s as it is excluded by chord.scope.exclude.";
+		"WARN: Not instrumenting class %s as it is excluded by chord.scope.exclude.";
 	private static final String IMPLICITLY_EXCLUDING_CLASS =
-		"WARN: Instrumentor: Not instrumenting class %s.";
+		"WARN: Not instrumenting class %s.";
 	protected boolean verbose;
 	protected final JavassistPool pool;
 	protected String[] scopeExcludeAry;
 	protected Map<String, String> argsMap;
 
-	public AbstractInstrumentor(Map<String, String> _argsMap) {
+	// called by online transformer
+	// argsMap contains (key,value) pairs passed to online transformer agent 
+	public BasicInstrumentor(Map<String, String> argsMap) {
+		this.argsMap = argsMap;
 		scopeExcludeAry = Config.scopeExcludeAry;
  		verbose = Config.verbose;
 		String mainClassPathName = Config.mainClassPathName;
 		String userClassPathName = Config.classPathName;
 		pool = new JavassistPool(mainClassPathName, userClassPathName);
-		argsMap = _argsMap;
+	}
+
+	// called by offline transformer
+	// argsMap will be null
+	public BasicInstrumentor() {
+		this(null);
     }
 
     public JavassistPool getPool() {
@@ -87,12 +95,6 @@ public class AbstractInstrumentor extends ExprEditor {
 		return edit(clazz);
 	}
 
-    /**
-     * Runs the instrumentor which reads each .class file of the
-     * given program and writes a corresponding .class file with
-     * instrumentation for generating the specified kind and format
-     * of events during the execution of the instrumented program.
-     */
 	public CtClass edit(CtClass clazz) throws CannotCompileException {
 		CtBehavior clinit = clazz.getClassInitializer();
 		if (clinit != null)

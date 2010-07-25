@@ -24,7 +24,7 @@ import chord.project.Messages;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class LoadedClassesInstrumentor extends AbstractInstrumentor {
+public class LoadedClassesInstrumentor extends BasicInstrumentor {
 	List<String> loadedClasses = new ArrayList<String>();
 	public LoadedClassesInstrumentor(Map<String, String> argsMap) {
 		super(argsMap);
