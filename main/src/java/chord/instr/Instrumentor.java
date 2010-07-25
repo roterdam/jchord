@@ -53,7 +53,7 @@ import java.util.HashSet;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Instrumentor extends AbstractInstrumentor {
+public class Instrumentor extends BasicInstrumentor {
 	private static final String NOT_IN_DOMAIN = "WARN: Instrumentor: Domain %s does not contain %s.";
 	private static final String NON_EXISTENT_PATH_ELEM = "WARN: Instrumentor: Ignoring non-existent path element %s.";
 	private static final String CANNOT_INSTRUMENT_METHOD = "WARN: Instrumentor: Skipping instrumenting method %s; reason follows.";
@@ -89,10 +89,6 @@ public class Instrumentor extends AbstractInstrumentor {
 
 	protected static final String methodCallBefEventCall = runtimeClassName + "methodCallBefEvent(";
 	protected static final String methodCallAftEventCall = runtimeClassName + "methodCallAftEvent(";
-	protected static final String returnPriEventCall = runtimeClassName + "returnPrimtiveEvent(";
-	protected static final String returnRefEventCall = runtimeClassName + "returnReferenceEvent(";
-	protected static final String explicitThrowEventCall = runtimeClassName + "explicitThrowEvent(";
-	protected static final String implicitThrowEventCall = runtimeClassName + "implicitThrowEvent(";
 	protected static final String quadEventCall = runtimeClassName + "quadEvent(";
 	protected static final String basicBlockEventCall = runtimeClassName + "basicBlockEvent(";
 
@@ -109,35 +105,31 @@ public class Instrumentor extends AbstractInstrumentor {
 	protected final InstrScheme scheme;
 	protected final Program program;
 
-	protected boolean genBasicBlockEvent;
-	protected boolean genQuadEvent;
-	protected boolean genFinalizeEvent;
-	protected EventFormat enterMethodEvent;
-	protected EventFormat leaveMethodEvent;
-	protected EventFormat newAndNewArrayEvent;
-	protected EventFormat getstaticPrimitiveEvent;
-	protected EventFormat getstaticReferenceEvent;
-	protected EventFormat putstaticPrimitiveEvent;
-	protected EventFormat putstaticReferenceEvent;
-	protected EventFormat getfieldPrimitiveEvent;
-	protected EventFormat getfieldReferenceEvent;
-	protected EventFormat putfieldPrimitiveEvent;
-	protected EventFormat putfieldReferenceEvent;
-	protected EventFormat aloadPrimitiveEvent;
-	protected EventFormat aloadReferenceEvent;
-	protected EventFormat astorePrimitiveEvent;
-	protected EventFormat astoreReferenceEvent;
-	protected EventFormat threadStartEvent;
-	protected EventFormat threadJoinEvent;
-	protected EventFormat acquireLockEvent;
-	protected EventFormat releaseLockEvent;
-	protected EventFormat waitEvent;
-	protected EventFormat notifyEvent;
-	protected EventFormat methodCallEvent;
-	protected EventFormat returnPrimitiveEvent;
-	protected EventFormat returnReferenceEvent;
-	protected EventFormat explicitThrowEvent;
-	protected EventFormat implicitThrowEvent;
+	protected final boolean genBasicBlockEvent;
+	protected final boolean genQuadEvent;
+	protected final boolean genFinalizeEvent;
+	protected final EventFormat enterMethodEvent;
+	protected final EventFormat leaveMethodEvent;
+	protected final EventFormat newAndNewArrayEvent;
+	protected final EventFormat getstaticPrimitiveEvent;
+	protected final EventFormat getstaticReferenceEvent;
+	protected final EventFormat putstaticPrimitiveEvent;
+	protected final EventFormat putstaticReferenceEvent;
+	protected final EventFormat getfieldPrimitiveEvent;
+	protected final EventFormat getfieldReferenceEvent;
+	protected final EventFormat putfieldPrimitiveEvent;
+	protected final EventFormat putfieldReferenceEvent;
+	protected final EventFormat aloadPrimitiveEvent;
+	protected final EventFormat aloadReferenceEvent;
+	protected final EventFormat astorePrimitiveEvent;
+	protected final EventFormat astoreReferenceEvent;
+	protected final EventFormat threadStartEvent;
+	protected final EventFormat threadJoinEvent;
+	protected final EventFormat acquireLockEvent;
+	protected final EventFormat releaseLockEvent;
+	protected final EventFormat waitEvent;
+	protected final EventFormat notifyEvent;
+	protected final EventFormat methodCallEvent;
 
 	protected DomF domF;
 	protected DomM domM;
@@ -161,8 +153,8 @@ public class Instrumentor extends AbstractInstrumentor {
 
 	private CtClass exType;
 
-	jq_Class joeqClass;
-	jq_Method joeqMethod;
+	jq_Class currentClass;
+	jq_Method currentMethod;
 	protected String mStr;
 	protected TIntObjectHashMap<String> bciToInstrMap =
 		new TIntObjectHashMap<String>();
@@ -189,8 +181,18 @@ public class Instrumentor extends AbstractInstrumentor {
 	public IndexMap<String> getPmap() { return Pmap; }
 	public IndexMap<String> getBmap() { return Bmap; }
 
+	private static InstrScheme loadInstrScheme(Map<String, String> argsMap) {
+		String instrSchemeFileName = argsMap.get("instr_scheme_file_name");
+		assert (instrSchemeFileName != null);
+		return InstrScheme.load(instrSchemeFileName);
+	}
+
+	public Instrumentor(InstrScheme scheme) {
+		this(null, scheme);
+	}
+
 	public Instrumentor(Map<String, String> argsMap) {
-		this(argsMap, InstrScheme.load(Config.instrSchemeFileName));
+		this(argsMap, loadInstrScheme(argsMap));
 	}
 
 	/**
@@ -203,7 +205,7 @@ public class Instrumentor extends AbstractInstrumentor {
 	 *			to generate during the execution of the instrumented
 	 *			program. 
 	 */
-	public Instrumentor(Map<String, String> argsMap, InstrScheme scheme) {
+	private Instrumentor(Map<String, String> argsMap, InstrScheme scheme) {
 		super(argsMap);
 		program = Program.getProgram();
 		this.scheme = scheme;
@@ -323,8 +325,8 @@ public class Instrumentor extends AbstractInstrumentor {
 	@Override
 	public CtClass edit(CtClass clazz) throws CannotCompileException {
 		String cName = clazz.getName();
-		joeqClass = (jq_Class) program.getClass(cName);
-		if (joeqClass == null) {
+		currentClass = (jq_Class) program.getClass(cName);
+		if (currentClass == null) {
 			// TODO: Warn
 			return null;
 		}
@@ -342,13 +344,13 @@ public class Instrumentor extends AbstractInstrumentor {
 		else
 			mName = method.getName();
 		String mDesc = method.getSignature();
-		joeqMethod = program.getMethod(mName, mDesc, joeqClass);
-		if (joeqMethod == null) {
+		currentMethod = program.getMethod(mName, mDesc, currentClass);
+		if (currentMethod == null) {
 			// TODO: warn
 			return;
 		}
 		int mId = -1;
-		String cName = joeqClass.getName();
+		String cName = currentClass.getName();
 		mStr = mName + ":" + mDesc + "@" + cName;
 		if (Mmap != null) {
 			mId = Mmap.indexOf(mStr);
@@ -360,7 +362,7 @@ public class Instrumentor extends AbstractInstrumentor {
 		if (genQuadEvent || genBasicBlockEvent) {
 			Map<Quad, Integer> bcMap;
 			try{
-				bcMap = joeqMethod.getBCMap();
+				bcMap = currentMethod.getBCMap();
 			} catch (RuntimeException ex) {
 				Messages.log(CANNOT_INSTRUMENT_METHOD, mStr);
 				ex.printStackTrace();
@@ -370,7 +372,7 @@ public class Instrumentor extends AbstractInstrumentor {
 				Messages.log(METHOD_BYTECODE_NOT_FOUND, mStr);
 				return;
 			}
-			ControlFlowGraph cfg = joeqMethod.getCFG();
+			ControlFlowGraph cfg = currentMethod.getCFG();
 			bciToInstrMap.clear();
 			if (genQuadEvent || genBasicBlockEvent) {
 				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
@@ -381,7 +383,7 @@ public class Instrumentor extends AbstractInstrumentor {
 						int bId = domB.indexOf(bb);
 						assert (bId != -1);
 						String instr = basicBlockEventCall + bId + ");";
-						int bci = getBCI(bb, joeqMethod);
+						int bci = getBCI(bb, currentMethod);
 						attachInstrToBCIAft(instr, bci);
 					}
 					if (genQuadEvent) {

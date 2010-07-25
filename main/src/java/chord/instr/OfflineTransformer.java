@@ -26,28 +26,35 @@ import chord.util.FileUtils;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class OfflineTransformer {
+public final class OfflineTransformer {
     private static final String INSTR_STARTING =
-		"INFO: Instrumentor: Starting to instrument all classes; this may take a while (use -Dchord.verbose=true for more detailed info) ...";
-    private static final String INSTR_FINISHED = "INFO: Instrumentor: Finished instrumenting all classes.";
+		"INFO: Starting to instrument all classes; this may take a while (use -Dchord.verbose=true for more detailed info) ...";
+    private static final String INSTR_FINISHED =
+		"INFO: Finished instrumenting all classes.";
     private static final String CANNOT_INSTRUMENT_CLASS =
-        "ERROR: OfflineTransformer: Skipping instrumenting class %s; reason follows.";
+        "ERROR: Skipping instrumenting class %s; reason follows.";
     private static final String CLASS_NOT_BOOT_NOR_USER =
-		"ERROR: OfflineTransformer: Skipping instrumenting class %s; its defining resource %s is neither in the boot nor user classpath.";
-    private static final String WROTE_INSTRUMENTED_CLASS = "INFO: Instrumentor: Wrote instrumented class %s.";
-    private static final String CLASS_NOT_FOUND = "WARN: Instrumentor: Could not find class %s.";
+		"ERROR: Skipping instrumenting class %s; its defining resource %s is neither in the boot nor user classpath.";
+    private static final String WROTE_INSTRUMENTED_CLASS =
+		"INFO: Wrote instrumented class %s.";
+    private static final String CLASS_NOT_FOUND =
+		"WARN: Could not find class %s in Javassist class pool.";
+
     private final String bootClassesDirName;
     private final String userClassesDirName;
 	private final boolean verbose;
-	private final AbstractInstrumentor instrumentor;
 	private final JavassistPool pool;
-	public OfflineTransformer(AbstractInstrumentor _instrumentor) {
+
+    private final BasicInstrumentor instrumentor;
+
+	public OfflineTransformer(BasicInstrumentor instr) {
+		instrumentor = instr;
 		bootClassesDirName = Config.bootClassesDirName;
 		userClassesDirName = Config.userClassesDirName;
 		verbose = Config.verbose;
-		instrumentor = _instrumentor;
-		pool = instrumentor.getPool();
+		pool = instr.getPool();
 	}
+
 	public void run() {
 		Messages.log(INSTR_STARTING);
         FileUtils.deleteFile(bootClassesDirName);
@@ -82,6 +89,7 @@ public class OfflineTransformer {
 		}
 		Messages.log(INSTR_FINISHED);
 	}
+
 	private String getOutDir(String cName) {
         String rName = pool.getResource(cName);
         if (rName == null) {

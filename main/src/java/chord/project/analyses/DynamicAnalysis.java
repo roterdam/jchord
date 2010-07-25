@@ -196,7 +196,7 @@ public class DynamicAnalysis extends JavaAnalysis {
 			return;
 		}
 		scheme.save(instrSchemeFileName);
-		final Instrumentor instrumentor = new Instrumentor(null, scheme);
+		final Instrumentor instrumentor = new Instrumentor(scheme);
 		final OfflineTransformer transformer = new OfflineTransformer(instrumentor);
 		try {
 			transformer.run();

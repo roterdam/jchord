@@ -27,7 +27,6 @@ import javassist.CannotCompileException;
 import javassist.NotFoundException;
 import java.util.Properties;
 
-
 import chord.project.Messages;
 
 /**
@@ -35,20 +34,20 @@ import chord.project.Messages;
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class OnlineTransformer implements ClassFileTransformer {
+public final class OnlineTransformer implements ClassFileTransformer {
 	private static final String RETRANSFORM_NOT_SUPPORTED =
-		"JVM does not support retransforming classes.";
+		"ERROR: JVM does not support retransforming classes.";
 	private static final String CANNOT_RETRANSFORM_LOADED_CLASSES =
-		"ERROR: OnlineTransformer: Failed to retransform alreaded loaded classes; reason follows.";
+		"ERROR: Failed to retransform alreaded loaded classes; reason follows.";
 	private static final String CANNOT_INSTRUMENT_CLASS =
-		"ERROR: OnlineTransformer: Skipping instrumenting class %s; reason follows.";
+		"ERROR: Skipping instrumenting class %s; reason follows.";
 	private static final String CANNOT_MODIFY_CLASS =
-		"WARN: OnlineTransformer: Cannot modify class %s.";
+		"WARN: Cannot modify class %s.";
 
-	protected final AbstractInstrumentor instrumentor;
+    private final BasicInstrumentor instrumentor;
 
-	public OnlineTransformer(AbstractInstrumentor _instrumentor) {
-		instrumentor = _instrumentor;
+	public OnlineTransformer(BasicInstrumentor instr) {
+		instrumentor = instr;
 	}
 
 	public static List<String> getCmd(String classPathName, String mainClassName,
@@ -78,10 +77,8 @@ public class OnlineTransformer implements ClassFileTransformer {
 		Map<String, String> argsMap = new HashMap<String, String>();
 		String[] args = agentArgs.split("=");
 		int n = args.length / 2;
-		for (int i = 0; i < n; i++) {
-			System.out.println("ARG: " + args[i*2] + "=" + args[i*2+1]);
+		for (int i = 0; i < n; i++)
 			argsMap.put(args[i*2], args[i*2+1]);
-		}
 		String instrClassName = argsMap.get("instr_class_name");
 		Class instrClass = null;
 		if (instrClassName != null) {
@@ -91,13 +88,13 @@ public class OnlineTransformer implements ClassFileTransformer {
 				Messages.fatal(ex);
 			}
 		} else
-			instrClass = AbstractInstrumentor.class;
-		AbstractInstrumentor instrumentor = null;
+			instrClass = BasicInstrumentor.class;
+		BasicInstrumentor instr = null;
 		Exception ex = null;
 		try {
 			Constructor c = instrClass.getConstructor(new Class[] { Map.class });
 			Object o = c.newInstance(new Object[] { argsMap });
-			instrumentor = (AbstractInstrumentor) o;
+			instr = (BasicInstrumentor) o;
 		} catch (InstantiationException e) {
 			ex = e;
 		} catch (NoSuchMethodException e) {
@@ -109,7 +106,7 @@ public class OnlineTransformer implements ClassFileTransformer {
 		}
 		if (ex != null)
 			Messages.fatal(ex);
-        OnlineTransformer transformer = new OnlineTransformer(instrumentor);
+        OnlineTransformer transformer = new OnlineTransformer(instr);
         instrumentation.addTransformer(transformer, true);
         Class[] classes = instrumentation.getAllLoadedClasses();
         List<Class> retransformClasses = new ArrayList<Class>();
