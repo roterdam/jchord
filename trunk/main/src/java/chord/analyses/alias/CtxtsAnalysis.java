@@ -937,37 +937,37 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	private int minCtxtSetSize, maxCtxtSetSize, cumCtxtSetSizes, numCtxtSets;
 
 	public static String getCspaKind() {
-//        String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
-//        String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
-//        String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
-//        int instCtxtKind, statCtxtKind;
-//        if (instCtxtKindStr.equals("ci")) {
-//            instCtxtKind = CtxtsAnalysis.CTXTINS;
-//        } else if (instCtxtKindStr.equals("cs")) {
-//            instCtxtKind = CtxtsAnalysis.KCFASEN;
-//        } else if (instCtxtKindStr.equals("co")) {
-//            instCtxtKind = CtxtsAnalysis.KOBJSEN;
-//        } else
-//            throw new ChordRuntimeException();
-//        if (statCtxtKindStr.equals("ci")) {
-//            statCtxtKind = CtxtsAnalysis.CTXTINS;
-//        } else if (statCtxtKindStr.equals("cs")) {
-//            statCtxtKind = CtxtsAnalysis.KCFASEN;
-//        } else if (statCtxtKindStr.equals("cc")) {
-//            statCtxtKind = CtxtsAnalysis.CTXTCPY;
-//        } else
-//            throw new ChordRuntimeException();
+        String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
+        String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
+        String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
+        int instCtxtKind, statCtxtKind;
+        if (instCtxtKindStr.equals("ci")) {
+            instCtxtKind = CtxtsAnalysis.CTXTINS;
+        } else if (instCtxtKindStr.equals("cs")) {
+            instCtxtKind = CtxtsAnalysis.KCFASEN;
+        } else if (instCtxtKindStr.equals("co")) {
+            instCtxtKind = CtxtsAnalysis.KOBJSEN;
+        } else
+            throw new ChordRuntimeException();
+        if (statCtxtKindStr.equals("ci")) {
+            statCtxtKind = CtxtsAnalysis.CTXTINS;
+        } else if (statCtxtKindStr.equals("cs")) {
+            statCtxtKind = CtxtsAnalysis.KCFASEN;
+        } else if (statCtxtKindStr.equals("cc")) {
+            statCtxtKind = CtxtsAnalysis.CTXTCPY;
+        } else
+            throw new ChordRuntimeException();
         String cspaKind;
-//        if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
-//            statCtxtKind == CtxtsAnalysis.CTXTINS)
-//            cspaKind = "cspa-0cfa-dlog";
-//        else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
-//            statCtxtKind == CtxtsAnalysis.CTXTCPY)
-//            cspaKind = "cspa-kobj-dlog";
-//        else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
-//            statCtxtKind == CtxtsAnalysis.KCFASEN)
-//            cspaKind = "cspa-kcfa-dlog";
-//        else
+        if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
+            statCtxtKind == CtxtsAnalysis.CTXTINS)
+            cspaKind = "cspa-0cfa-dlog";
+        else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
+            statCtxtKind == CtxtsAnalysis.CTXTCPY)
+            cspaKind = "cspa-kobj-dlog";
+        else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
+            statCtxtKind == CtxtsAnalysis.KCFASEN)
+            cspaKind = "cspa-kcfa-dlog";
+        else
             cspaKind = "cspa-hybrid-dlog";
                 return cspaKind;
 	}
