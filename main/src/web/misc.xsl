@@ -66,6 +66,7 @@
 
 <xsl:template match="A">
     <xsl:apply-templates select="id(@Mid)"/> <br/>
+    Object:  <xsl:apply-templates select="id(@Oid)"/> <br/>
     Context: <xsl:apply-templates select="id(@Cid)"/>
 </xsl:template>
 

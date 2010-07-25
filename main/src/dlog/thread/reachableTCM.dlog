@@ -18,7 +18,7 @@
 ###
 
 thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0) input
-forkACM(t:A0,c:C0,m:M0) input
+threadAOCM(t:A0,o:C0,c:C1,m:M0) input
 MI(m:M0,i:I0) input
 
 reachableTCM(t:A0,c:C0,m:M0) output
@@ -27,6 +27,6 @@ reachableTCM(t:A0,c:C0,m:M0) output
 # Constraints
 ###
 
-reachableTCM(t,c,m) :- forkACM(t,c,m).
+reachableTCM(t,c,m) :- threadAOCM(t,_,c,m).
 reachableTCM(t,d,n) :- reachableTCM(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
 

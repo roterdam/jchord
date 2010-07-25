@@ -11,7 +11,7 @@ import chord.project.Project;
 import chord.project.analyses.ProgramDom;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.DomC;
-import chord.util.tuple.object.Pair;
+import chord.util.tuple.object.Trio;
 import chord.doms.DomM;
 
 /**
@@ -39,18 +39,19 @@ import chord.doms.DomM;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DomA extends ProgramDom<Pair<Ctxt, jq_Method>> {
+public class DomA extends ProgramDom<Trio<Ctxt, Ctxt, jq_Method>> {
 	private DomC domC;
 	private DomM domM;
-    public String toXMLAttrsString(Pair<Ctxt, jq_Method> aVal) {
+    public String toXMLAttrsString(Trio<Ctxt, Ctxt, jq_Method> aVal) {
 		if (domC == null)
 			domC = (DomC) Project.getTrgt("C");
 		if (domM == null)
 			domM = (DomM) Project.getTrgt("M");
 		if (aVal == null)
 			return "";
-		int c = domC.indexOf(aVal.val0);
-		int m = domM.indexOf(aVal.val1);
-		return "Cid=\"C" + c + "\" Mid=\"M" + m + "\"";
+		int o = domC.indexOf(aVal.val0);
+		int c = domC.indexOf(aVal.val1);
+		int m = domM.indexOf(aVal.val2);
+		return "Oid=\"C" + o + "\" Cid=\"C" + c + "\" Mid=\"M" + m + "\"";
     }
 }

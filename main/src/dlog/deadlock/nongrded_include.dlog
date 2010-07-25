@@ -20,7 +20,7 @@
 # Relations
 ###
 
-forkACM(a:A0,c:C0,m:M0) input
+threadAOCM(a:A0,o:C0,c:C1,m:M0) input
 MI(m:M0,i:I0) input
 thrSenAbbrCMCM(c:C0,m:M0,d:C1,n:M1) input
 thrSenAbbrCICM(c:C0,i:I0,d:C1,n:M0) input
@@ -59,10 +59,10 @@ syncO(o) :- syncNO(_,o).
 
 invkLock(c,i,o) :- transLI(l,i), syncCLC(c,l,o).
 
-relevantTCM(t,c,m) :- forkACM(t,c,m).
+relevantTCM(t,c,m) :- threadAOCM(t,_,c,m).
 relevantTCM(t,d,n) :- relevantTCM(t,c,m), thrSenAbbrCMCM(c,m,d,n).
 
-unguardedCM(t,c,m,o) :- syncO(o), forkACM(t,c,m).
+unguardedCM(t,c,m,o) :- syncO(o), forkAOCM(t,_,c,m).
 unguardedCI(t,d,i,o) :- unguardedCM(t,d,m,o), MI(m,i), !invkLock(d,i,o).
 unguardedCM(t,d,n,o) :- unguardedCI(t,c,i,o), thrSenAbbrCICM(c,i,d,n).
 
