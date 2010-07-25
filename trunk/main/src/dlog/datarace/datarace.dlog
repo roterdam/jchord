@@ -69,8 +69,6 @@ parallelRaceHext(t1,c1,e1,t2,c2,e2) :- escapingRaceHext(t1,c1,e1,t2,c2,e2), \
 
 unlikelyRaceHext(t1,c1,e1,t2,c2,e2) :- parallelRaceHext(t1,c1,e1,t2,c2,e2), \
 	guardedE(t1,c1,e1,o), guardedE(t2,c2,e2,o).
-### REMOVE THIS RULE IF NEEDED
-#unlikelyRaceHext(t1,c1,e1,t2,c2,e2) :- parallelRaceHext(t1,c1,e1,t2,c2,e2), t1=t2.
 
 datarace(t1,c1,e1,t2,c2,e2) :- parallelRaceHext(t1,c1,e1,t2,c2,e2), \
 	!unlikelyRaceHext(t1,c1,e1,t2,c2,e2).

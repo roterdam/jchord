@@ -24,7 +24,7 @@ NC(n:N0,c:C0) input
 NL(n:N0,l:L0) input
 ML(m:M0,l:L0) input
 MI(m:M0,i:I0) input
-forkACM(a:A0,c:C0,m:M0) input
+threadAOCM(a:A0,o:C0,c:C1,m:M0) input
 thrSenAbbrCICM(c:C0,i:I0,d:C1,n:M0) input
 transLI(l:L0,i:I0) input
 transLL(l1:L0,l2:L1) input
@@ -58,5 +58,5 @@ syncCINN(c,i,n1,n2) :- thrSenAbbrCICM(c,i,d,m), syncCMNN(d,m,n1,n2).
 
 syncCMNN(c,m,n1,n2) :- MI(m,i), syncCINN(c,i,n1,n2).
 
-syncTNN(t,n1,n2) :- forkACM(t,c,m), syncCMNN(c,m,n1,n2).
+syncTNN(t,n1,n2) :- threadAOCM(t,_,c,m), syncCMNN(c,m,n1,n2).
 

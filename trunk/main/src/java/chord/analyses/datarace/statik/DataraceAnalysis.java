@@ -244,8 +244,8 @@ public class DataraceAnalysis extends JavaAnalysis {
 		Project.runTask(thrSenAbbrCSCGAnalysis);
 	    final ICSCG thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
 		Project.runTask("datarace-epilogue-dlog");
-		final ProgramDom<Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>> domTCE =
-			new ProgramDom<Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>>();
+		final ProgramDom<Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>> domTCE =
+			new ProgramDom<Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>>();
 		domTCE.setName("TCE");
 		final DomO domO = new DomO();
 		domO.setName("O");
@@ -258,13 +258,13 @@ public class DataraceAnalysis extends JavaAnalysis {
 		relDatarace.load();
 		final ProgramRel relRaceCEC = (ProgramRel) Project.getTrgt("raceCEC");
 		relRaceCEC.load();
-		final Iterable<Hext<Pair<Ctxt, jq_Method>, Ctxt, Quad,
-				Pair<Ctxt, jq_Method>, Ctxt, Quad>> tuples = relDatarace.getAry6ValTuples();
-		for (Hext<Pair<Ctxt, jq_Method>, Ctxt, Quad,
-				  Pair<Ctxt, jq_Method>, Ctxt, Quad> tuple : tuples) {
-			int tce1 = domTCE.getOrAdd(new Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>(
+		final Iterable<Hext<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad,
+				Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>> tuples = relDatarace.getAry6ValTuples();
+		for (Hext<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad,
+				  Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad> tuple : tuples) {
+			int tce1 = domTCE.getOrAdd(new Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>(
 				tuple.val0, tuple.val1, tuple.val2));
-			int tce2 = domTCE.getOrAdd(new Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad>(
+			int tce2 = domTCE.getOrAdd(new Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>(
 				tuple.val3, tuple.val4, tuple.val5));
 			RelView view = relRaceCEC.getView();
 			view.selectAndDelete(0, tuple.val1);
@@ -340,14 +340,14 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		out = OutDirUtils.newPrintWriter("TCElist.xml");
 		out.println("<TCElist>");
-		for (Trio<Pair<Ctxt, jq_Method>, Ctxt, Quad> tce : domTCE) {
-			Pair<Ctxt, jq_Method> srcCM = tce.val0;
+		for (Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad> tce : domTCE) {
+			Trio<Ctxt, Ctxt, jq_Method> srcOCM = tce.val0;
 			Ctxt methCtxt = tce.val1;
 			Quad heapInst = tce.val2;
 			int cIdx = domC.indexOf(methCtxt);
 			int eIdx = domE.indexOf(heapInst);
 			out.println("<TCE id=\"TCE" + domTCE.indexOf(tce) + "\" " +
-				"Tid=\"A" + domA.indexOf(srcCM)    + "\" " +
+				"Tid=\"A" + domA.indexOf(srcOCM)    + "\" " +
 				"Cid=\"C" + cIdx + "\" " +
 				"Eid=\"E" + eIdx + "\">");
 			jq_Method dstM = heapInst.getMethod();
@@ -370,6 +370,8 @@ public class DataraceAnalysis extends JavaAnalysis {
 					mIdx + "\" Oid=\"O" + oIdx + "\"/>");
 			}
 			view.free();
+			Pair<Ctxt, jq_Method> srcCM =
+				new Pair<Ctxt, jq_Method>(srcOCM.val1, srcOCM.val2);
 			ShortestPathBuilder spb = srcNodeToSPB.get(srcCM);
 			if (spb == null) {
 				spb = new ShortestPathBuilder(thrSenAbbrCSCG, srcCM, visitor);

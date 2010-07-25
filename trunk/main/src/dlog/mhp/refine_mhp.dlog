@@ -25,8 +25,8 @@ MPhead(m:M,p:P) input
 MPtail(m:M,p:P) input
 PI(p:P,i:I) input
 CICM(c1:C,i:I,c2:C,m:M) input
-forkACM(t:A,c:C,m:M) input
-forkAC(t:A,c:C) 
+threadAOCM(t:A,o:C,c:C,m:M) input
+threadAC(t:A,c:C) 
 ForkPMcs   (caller:C,p1:P,callee:C) input
 ForkPHcs   (caller:C,p1:P,callee:C,p2:P) input
 NonForkPMcs(caller:C,p1:P,callee:C,m2:M) input
@@ -59,7 +59,7 @@ toBeRefinedCICM(c,i,d,1) :- refineForkPMcs(c,p,d), CICM(c,i,d,1), PI(p,i).
 
 refineForkPMcs(c,p,d) :- refineForkPHcs(c,p,d,h), ForkPMcs(c,p,d), MPhead(1,h).
 
-forkAC(a,c) :- forkACM(a,c,1).
+threadAC(a,c) :- threadAOCM(a,_,c,1).
 
 refinePathEdge(c,p,t,t1,t2) :- PathEdge(c,p,t,t1,t2), PP(p,q), refinePathEdge(c,q,t,t1,t2).
 
@@ -72,21 +72,21 @@ refinePathEdge(d,q,t,t1,t2) :- NonForkPTcs(c,p,d,q), PathEdge(d,q,t,t1,t2), refi
 refineSummEdge(c,p,t,t2,t3) :- SummEdge(c,p,t,t2,t3), PathEdge(c,p,t,t1,t2), PP(p,r), refinePathEdge(c,r,t,t1,t3). 
 refinePathEdge(c,p,t,t1,t2) :- SummEdge(c,p,t,t2,t3), PathEdge(c,p,t,t1,t2), PP(p,r), refinePathEdge(c,r,t,t1,t3).
 
-refineForkPMcs(c,p,d)       :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_ ), PP(p,r), forkAC(t2,d), refinePathEdge(c,r,t,t1,t2).
-refinePathEdge(c,p,t,t1,t3) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,t3), PP(p,r), forkAC(t2,d), refinePathEdge(c,r,t,t1,t2).
+refineForkPMcs(c,p,d)       :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_ ), PP(p,r), threadAC(t2,d), refinePathEdge(c,r,t,t1,t2).
+refinePathEdge(c,p,t,t1,t3) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,t3), PP(p,r), threadAC(t2,d), refinePathEdge(c,r,t,t1,t2).
 
-refineForkPMcs(c,p,d)     :- ForkPMcs(c,p,d), PathEdge(c,p,x,y,_), PP(p,r), forkAC(z,d), PathEdge(d,q,z,0,u), MPtail(1,q), refinePathEdge(c,r,x,y,u). 
-refinePathEdge(c,p,x,y,v) :- ForkPMcs(c,p,d), PathEdge(c,p,x,y,v), PP(p,r), forkAC(z,d), PathEdge(d,q,z,0,u), MPtail(1,q), refinePathEdge(c,r,x,y,u).
-refinePathEdge(d,q,z,0,u) :- ForkPMcs(c,p,d), PathEdge(c,p,x,y,_), PP(p,r), forkAC(z,d), PathEdge(d,q,z,0,u), MPtail(1,q), refinePathEdge(c,r,x,y,u). 
+refineForkPMcs(c,p,d)     :- ForkPMcs(c,p,d), PathEdge(c,p,x,y,_), PP(p,r), threadAC(z,d), PathEdge(d,q,z,0,u), MPtail(1,q), refinePathEdge(c,r,x,y,u). 
+refinePathEdge(c,p,x,y,v) :- ForkPMcs(c,p,d), PathEdge(c,p,x,y,v), PP(p,r), threadAC(z,d), PathEdge(d,q,z,0,u), MPtail(1,q), refinePathEdge(c,r,x,y,u).
+refinePathEdge(d,q,z,0,u) :- ForkPMcs(c,p,d), PathEdge(c,p,x,y,_), PP(p,r), threadAC(z,d), PathEdge(d,q,z,0,u), MPtail(1,q), refinePathEdge(c,r,x,y,u). 
 
-refineForkPHcs(c,p,d,h)   :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,_,_), forkAC(x,d), z=y, refinePathEdge(d,h,x,y,z).
-refinePathEdge(c,p,y,a,b) :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,a,b), forkAC(x,d), z=y, refinePathEdge(d,h,x,y,z).
+refineForkPHcs(c,p,d,h)   :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,_,_), threadAC(x,d), z=y, refinePathEdge(d,h,x,y,z).
+refinePathEdge(c,p,y,a,b) :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,a,b), threadAC(x,d), z=y, refinePathEdge(d,h,x,y,z).
 
-refineForkPHcs(c,p,d,h)   :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,y), forkAC(x,d), z=y, refinePathEdge(d,h,x,y,z).
-refinePathEdge(c,p,a,b,y) :- ForkPHcs(c,p,d,h), PathEdge(c,p,a,b,y), forkAC(x,d), z=y, refinePathEdge(d,h,x,y,z).
+refineForkPHcs(c,p,d,h)   :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,y), threadAC(x,d), z=y, refinePathEdge(d,h,x,y,z).
+refinePathEdge(c,p,a,b,y) :- ForkPHcs(c,p,d,h), PathEdge(c,p,a,b,y), threadAC(x,d), z=y, refinePathEdge(d,h,x,y,z).
 
-refineForkPHcs(c,p,d,h)   :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), forkAC(x,e), forkAC(y,d), z=y, refinePathEdge(e,h,x,y,z).
-refinePathEdge(c,p,a,b,x) :- ForkPHcs(c,p,d,h), PathEdge(c,p,a,b,x), forkAC(x,e), forkAC(y,d), z=y, refinePathEdge(e,h,x,y,z).
+refineForkPHcs(c,p,d,h)   :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), threadAC(x,e), threadAC(y,d), z=y, refinePathEdge(e,h,x,y,z).
+refinePathEdge(c,p,a,b,x) :- ForkPHcs(c,p,d,h), PathEdge(c,p,a,b,x), threadAC(x,e), threadAC(y,d), z=y, refinePathEdge(e,h,x,y,z).
 
 refinePathEdge(c,p,t1,_,t2) :- toBeRefinedMHP(c,p,t1,t2).
 

@@ -25,8 +25,8 @@ MPhead(m:M,p:P) input
 MPtail(m:M,p:P) input
 PI(p:P,i:I) input
 CICM(c1:C,i:I,c2:C,m:M) input
-forkACM(t:A,c:C,m:M) input
-forkAC(t:A,c:C)
+threadAOCM(t:A,o:C,c:C,m:M) input
+threadAC(t:A,c:C) 
 
 ForkPMcs   (caller:C,p1:P,callee:C) output
 ForkPHcs   (caller:C,p1:P,callee:C,p2:P) output
@@ -49,7 +49,7 @@ NonForkPHcs(c,p,d,h) :- NonForkPMcs(c,p,d,m), MPhead(m,h).
 NonForkPTcs(c,p,d,t) :- NonForkPMcs(c,p,d,m), MPtail(m,t).
 ForkPMcs(c,p,d) :- CICM(c,i,d,1), PI(p,i).
 ForkPHcs(c,p,d,h) :- ForkPMcs(c,p,d), MPhead(1,h).
-forkAC(a,c) :- forkACM(a,c,1).
+threadAC(t,c) :- threadAOCM(t,_,c,1).
 
 # PathEdge(c,p,this,sThat,tThat) 
 # There exists a unique method m such that:
@@ -74,13 +74,13 @@ PathEdge(c,r,t,t1,t3) :- SummEdge(c,p,t,t2,t3), PathEdge(c,p,t,t1,t2), PP(p,r).
 
 # thread fork calls
 
-PathEdge(c,r,t,t1,t2) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), forkAC(t2,d).
+PathEdge(c,r,t,t1,t2) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadAC(t2,d).
 PathEdge(c,r,t,t1,t3) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), \
-	PP(p,r), forkAC(t2,d), PathEdge(d,q,t2,0,t3), MPtail(1,q). 
+	PP(p,r), threadAC(t2,d), PathEdge(d,q,t2,0,t3), MPtail(1,q). 
 
-PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,_,_), forkAC(x,d), z=y. split
-PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,y), forkAC(x,d), z=y. split
-PathEdge(e,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), forkAC(x,e), forkAC(y,d), z=y. split
+PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,_,_), threadAC(x,d), z=y. split
+PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,y), threadAC(x,d), z=y. split
+PathEdge(e,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), threadAC(x,e), threadAC(y,d), z=y. split
 
 mhp(c,p,t1,t2) :- PathEdge(c,p,t1,_,t2), t1!=0, t2!=0.
 
