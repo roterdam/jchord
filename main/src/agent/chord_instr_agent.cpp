@@ -1,3 +1,12 @@
+/*
+ * This agent takes following arguments:
+ * runtime_class_name, classes_file_name
+ * If runtime_class_name is set then after the VMInit event is called by JVMTI, this agent 
+ * calls the static "void open(String)" method in the class denoted by runtime_class_name;
+ * also, all agent options are passed on via the string argument to that method.
+ * If classes_file_name is set then this agent writes the list of all loaded classes to the 
+ * file denoted by it.
+ */
 #include <jvmti.h>
 #include <assert.h>
 #include <stdlib.h>
