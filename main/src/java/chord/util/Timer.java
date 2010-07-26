@@ -87,6 +87,17 @@ public class Timer {
 		return getTimeStr(elapsedExclusiveTime);
 	}
 	public static String getTimeStr(long time) {
+        String ms = String.valueOf(time % 1000);
+		switch (ms.length()) {
+		case 2:
+			ms = "0" + ms;
+			break;
+		case 1:
+			ms = "00" + ms;
+			break;
+		default:
+			break;
+		}
         time /= 1000;
         String ss = String.valueOf(time % 60);
         if (ss.length() == 1)
@@ -104,7 +115,7 @@ public class Timer {
         if (time > 0)
         	timeStr = "&gt; 1 day";
         else
-        	timeStr = hh + ":" + mm + ":" + ss + " hh:mm:ss";
+        	timeStr = hh + ":" + mm + ":" + ss + ":" + ms + " hh:mm:ss:ms";
         return timeStr;
 	}
 }
