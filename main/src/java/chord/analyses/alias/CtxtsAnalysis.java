@@ -309,6 +309,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
     options.put("kcfa", kcfaK);
     options.put("kobjRange", kobjRange);
     options.put("kcfaRange", kcfaRange);
+    options.put("numRefineIters", System.getProperty("chord.max.iters"));
     options.put("inValuesPath", inValuesPath);
     X.writeMap("options.map", options);
 
@@ -503,6 +504,21 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			for (int i = 0; i <= maxIters; i++) {
 				Messages.log("H " + i + " " + histogramH[i]);
 			}
+
+      /*String path = null;
+      for (int i = 0; ; i++) {
+        path = X.path("iter"+i+".cause.values");
+        if (!new java.io.File(path).exists()) break;
+      }
+      PrintWriter out = chord.analyses.snapshot.Utils.openOut(path);*/
+
+      // Output values
+      PrintWriter out = OutDirUtils.newPrintWriter("inputs.dat");
+      for (int h = 0; h < numH; h++)
+        if (kobjValue[h] > 0) out.println("H"+h+" " + kobjValue[h]);
+      for (int i = 0; i < numI; i++)
+        if (kcfaValue[i] > 0) out.println("I"+i+" " + kcfaValue[i]);
+      out.close();
 		}
 		
 		doAnalysis();

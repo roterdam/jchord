@@ -117,7 +117,7 @@ public class Execution {
     String finalPoolPath = System.getProperty("chord."+name+".finalPoolPath");
     if (finalPoolPath != null) {
       String path;
-      for (int i = random.nextInt(1000); new File(path = finalPoolPath+"/"+i+".exec").exists(); i++);
+      for (int i = random.nextInt(10000); new File(path = finalPoolPath+"/"+i+".exec").exists(); i++);
       if (!new File(path).mkdir()) throw new RuntimeException("Tried to created directory "+path+" but it already exists");
       for (String file : saveFiles)
         system(new String[] { "cp", basePath+"/"+file, path });
