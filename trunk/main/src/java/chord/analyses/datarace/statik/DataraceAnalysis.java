@@ -133,8 +133,10 @@ public class DataraceAnalysis extends JavaAnalysis {
 		init();
 
 		Messages.log("maxIters=" + maxIters);
-		for (int numIters = 0; true; numIters++) {
-			Messages.log("Starting iteration " + numIters);
+    int numIters = 0; // Number of refinement iterations
+    while (true) {
+      // Run analysis
+			Messages.log("Running datarace analysis (numIters="+numIters+")");
 			Project.runTask(CtxtsAnalysis.getCspaKind());
 			Project.runTask("datarace-prologue-dlog");
 			if (excludeParallel)
@@ -175,6 +177,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 				numRefineV == 0 && numRefineI == 0)
 				break;
 			Project.resetTaskDone("ctxts-java");
+      numIters++;
 		}
 		
 		if (Config.publishResults)

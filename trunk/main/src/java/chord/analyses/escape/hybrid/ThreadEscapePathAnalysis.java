@@ -34,6 +34,7 @@ import chord.util.tuple.object.Pair;
 import chord.bddbddb.Rel.PairIterable;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.bddbddb.Rel.IntTrioIterable;
+import chord.doms.DomE;
 import chord.doms.DomH;
 import chord.doms.DomM;
 import chord.doms.DomF;
@@ -65,12 +66,18 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Util.Templates.ListIterator;
 
+import chord.analyses.snapshot.Execution;
+import chord.project.OutDirUtils;
+
 @Chord(
     name = "thresc-path-java",
     namesOfSigns = { "EH" },
     signs = { "E0,H0:E0_H0" }
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
+	private static final boolean percy = System.getProperty("percy", "false").equals("true");
+	private Execution X;
+
 	public final static int REDIRECTED = -1;
 	public final static int NULL_Q_VAL = 0;
 	public final static int NULL_U_VAL = -2;
@@ -130,6 +137,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	private DomF domF;
 	private DomM domM;
+	private DomE domE;
 	private DomH domH;
 	private DomP domP;
 	private DomB domB;
@@ -157,10 +165,21 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
     public void initAllPasses() {
+		if (percy) {
+          X = Execution.v("hints");	
+	      X.addSaveFiles("hybrid_pathEscE.txt", "hybrid_pathLocE.txt", "hints.txt");
+          java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
+          options.put("version", 1);
+          options.put("program", System.getProperty("chord.work.dir"));
+          X.writeMap("options.map", options);
+        }
+
 		domF = (DomF) Project.getTrgt("F");
 		Project.runTask(domF);
 		domM = (DomM) Project.getTrgt("M");
 		Project.runTask(domM);
+		domE = (DomE) Project.getTrgt("E");
+		Project.runTask(domE);
 		domH = (DomH) Project.getTrgt("H");
 		Project.runTask(domH);
 		domP = (DomP) Project.getTrgt("P");
@@ -196,7 +215,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			methToSign[mIdx] = mSign;
 			jq_Reference r = program.getClass(cName);
 			if (r == null) {
-				System.out.println("WARNING: Ingoring method " + m);
+				System.out.println("WARNING: Ignoring method " + m);
 				isIgnoredMeth[mIdx] = true;
 			}
 			assert (r instanceof jq_Class);
@@ -326,6 +345,30 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
 		}
+
+        if (percy) {
+          X.output.put("numEscaping", escHeapInsts.size());
+          X.output.put("numLocal", heapInstToAllocInsts.size());
+          int sumHintSize = 0;
+          int maxHintSize = 0;
+          for (Quad e : heapInstToAllocInsts.keySet()) {
+            int size = heapInstToAllocInsts.get(e).size();
+            sumHintSize += size;
+            maxHintSize = Math.max(maxHintSize, size);
+          }
+          X.output.put("avgHintSize", 1.0*sumHintSize/heapInstToAllocInsts.size());
+          X.output.put("maxHintSize", maxHintSize);
+
+          PrintWriter writer = OutDirUtils.newPrintWriter("hints.txt");
+          for (Quad e : heapInstToAllocInsts.keySet()) {
+              for (Quad h : heapInstToAllocInsts.get(e)) {
+                  writer.println(domE.indexOf(e) + "\t" + domH.indexOf(h));
+              }
+          }
+          writer.close();
+
+          X.finish(null);
+        }
 	}
 
 	public void donePass() {
@@ -1336,4 +1379,3 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 	}
 }
-
