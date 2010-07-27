@@ -79,7 +79,7 @@ import chord.util.Timer;
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	public static final IntArraySet nilPts = new IntArraySet(0);
 	private final Set<IntTrio> emptyHeap = Collections.emptySet();
-	private int ESC_VAL;
+	private final int ESC_VAL = 0;
 	private final IntArraySet escPts = new IntArraySet(1);
 	private final IntArraySet tmpPts = new IntArraySet();
 	private final IntArraySet[] emptyRetEnv = new IntArraySet[] { nilPts };
@@ -107,7 +107,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
     private MyQuadVisitor qv = new MyQuadVisitor();
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
-	private final Alarm alarm = new Alarm(1 * 60 * 1000);
+	private final Alarm alarm = new Alarm(5 * 60 * 1000);
 
 	@Override
 	public void run() {
@@ -127,8 +127,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		domE = (DomE) Project.getTrgt("E");
 		Project.runTask(domE);
 		int numH = domH.size();
-		// todo: change this to 0
-		ESC_VAL = numH;
 		escPts.add(ESC_VAL);
 		escPts.setReadOnly();
 
@@ -283,11 +281,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Edge getInitPathEdge(Quad q, jq_Method m2, Edge pe) {
-/*
-		int xxx = domM.indexOf(m2);
-		if (xxx == 246)
-			DEBUG = true;
-*/
 		Edge pe2;
 		if (m2 == threadStartMethod) {
 			// ignore pe
@@ -757,7 +750,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 					return;
 				vPts = escPts;
 			} else {
-				int hIdx = domH.indexOf(q);
+				int hIdx = 1; // domH.indexOf(q);
 				if (iEsc.contains(hIdx)) {
 					if (vPts == escPts)
 						return;
@@ -780,7 +773,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			RegisterOperand bo = (RegisterOperand) bx;
 			int bIdx = getIdx(bo);
 			IntArraySet pts = iDstNode.env[bIdx];
-			// System.out.println("FOUND: " + q + " pts: " + ThreadEscapeFullAnalysis.toString(pts));
 			if (pts.contains(ESC_VAL)) {
 				currLocHeapInsts.remove(q);
 				currEscHeapInsts.add(q);
