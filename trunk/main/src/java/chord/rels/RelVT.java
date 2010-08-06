@@ -9,6 +9,7 @@ package chord.rels;
 import java.util.Map;
 import java.util.HashMap;
 
+import chord.program.Program;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
@@ -28,6 +29,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
+import joeq.Class.jq_Reference;
 import joeq.Util.Templates.ListIterator;
 
 /**
@@ -43,6 +45,11 @@ import joeq.Util.Templates.ListIterator;
 	sign = "V0,T0:T0_V0"
 )
 public class RelVT extends ProgramRel implements IMethodVisitor {
+	private jq_Reference javaLangObject;
+	public void init() {
+		javaLangObject = Program.getProgram().getClass("java.lang.Object");
+		assert (javaLangObject != null);
+	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
@@ -73,10 +80,12 @@ public class RelVT extends ProgramRel implements IMethodVisitor {
         if (op instanceof RegisterOperand) {
             RegisterOperand ro = (RegisterOperand) op;
             jq_Type t = ro.getType();
-            if (t != null && t.isReferenceType()) {
+            if (t == null)
+				t = javaLangObject;
+			if (t.isReferenceType()) {
                 Register v = ro.getRegister();
 				add(v, t);
-            }
+			}
         } else if (op instanceof ParamListOperand) {
             ParamListOperand ros = (ParamListOperand) op;
             int n = ros.length();
@@ -85,8 +94,10 @@ public class RelVT extends ProgramRel implements IMethodVisitor {
 				if (ro == null)
 					continue;
                 jq_Type t = ro.getType();
-                if (t != null && t.isReferenceType()) {
-                	Register v = ro.getRegister();
+                if (t == null)
+					t = javaLangObject;
+                if (t.isReferenceType()) {
+					Register v = ro.getRegister();
                     add(v, t);
                 }
             }			
