@@ -115,7 +115,7 @@ public class ClassHierarchy {
 	 *
 	 * @return	The set of all concrete classes that subclass/implement
 	 *			(directly or transitively) the class/interface named
-	 *			<code>s</code>, if it exists in the class hierarcy, and
+	 *			<code>s</code>, if it exists in the class hierarchy, and
 	 *			null otherwise.
 	 */
 	public Set<String> getConcreteSubclasses(final String s) {
@@ -139,8 +139,10 @@ public class ClassHierarchy {
 				Set<String> clints = new ArraySet<String>(2);
 				clints.add(c);
 				boolean success1 = true;
+				boolean success2 = true;
 				String d = c;
 				while (true) {
+					success2 &= populateInterfaces(d, clints);
 					String e = classToDeclaredSuperclass.get(d);
 					if (e == null) {
 						if (!d.equals("java.lang.Object")) {
@@ -153,7 +155,6 @@ public class ClassHierarchy {
 					assert (added);
 					d = e;
 				}
-				boolean success2 = populateInterfaces(c, clints);
 				if (success1 && success2) {
 					concreteClassToAllSups.put(c, clints);
 					continue;
@@ -379,13 +380,13 @@ public class ClassHierarchy {
 			missingClints.add(c);
 			return false;
 		}
+		boolean success = true;
 		for (String d : interfaces) {
 			if (result.add(d)) {
-				if (!populateInterfaces(d, result))
-					return false;
+				success &= populateInterfaces(d, result);
 			}
 		}
-		return true;
+		return success;
 	}
 
 	private Object[] processConstantPool(DataInput in, int size) throws IOException {
