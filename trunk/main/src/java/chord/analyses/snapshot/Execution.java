@@ -68,7 +68,7 @@ public class Execution {
   }
 
   public void writeMap(String name, HashMap<Object,Object> map) {
-    PrintWriter out = Utils.openOut(path(name));
+    PrintWriter out = Utils.openOutAppend(path(name));
     for (Object key : map.keySet()) {
       out.println(key+"\t"+map.get(key));
     }
@@ -85,6 +85,18 @@ public class Execution {
     } catch (Exception e) {
       return false;
     }
+  }
+  public static <T> String join(T[] l) {
+    StringBuilder buf = new StringBuilder();
+    for (T x : l) {
+      if (buf.length() > 0) buf.append(' ');
+      buf.append(x);
+    }
+    return buf.toString();
+  }
+  public static void systemHard(String[] cmd) {
+    if (!system(cmd))
+      throw new RuntimeException("Command failed: " + join(cmd));
   }
 
   Random random = new Random();
@@ -110,7 +122,7 @@ public class Execution {
       for (String file : files.split(",")) {
         if (file.equals("")) continue;
         logs("Deleting %s", file);
-        system(new String[] { "rm", "-r", basePath+"/"+file });
+        systemHard(new String[] { "rm", "-rf", basePath+"/"+file });
       }
     }
 
@@ -118,15 +130,18 @@ public class Execution {
     if (finalPoolPath != null) {
       String path;
       for (int i = random.nextInt(10000); new File(path = finalPoolPath+"/"+i+".exec").exists(); i++);
+      logs("Copying %s to %s", saveFiles, path);
       if (!new File(path).mkdir()) throw new RuntimeException("Tried to created directory "+path+" but it already exists");
       for (String file : saveFiles)
-        system(new String[] { "cp", basePath+"/"+file, path });
+        systemHard(new String[] { "cp", basePath+"/"+file, path });
 
-      if (symlinkPath != null) system(new String[] { "ln", "-s", path, symlinkPath });
+      if (symlinkPath != null) systemHard(new String[] { "ln", "-s", path, symlinkPath });
     }
     else {
-      if (symlinkPath != null) system(new String[] { "ln", "-s", basePath, symlinkPath });
+      if (symlinkPath != null) systemHard(new String[] { "ln", "-s", basePath, symlinkPath });
     }
+
+    logs("Execution.finish() done");
 
     if (t != null) System.exit(1); // Die violently
   }
