@@ -45,7 +45,6 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.analyses.alias.ICICG;
 import chord.analyses.alias.ThrOblAbbrCICGAnalysis;
-import chord.util.Alarm;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
@@ -107,7 +106,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
     private MyQuadVisitor qv = new MyQuadVisitor();
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
-	private final Alarm alarm = new Alarm(5 * 60 * 1000);
 
 	@Override
 	public void run() {
@@ -176,9 +174,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 		init();
 
-		alarm.initAllPasses();
 		for (Map.Entry<Set<Quad>, Set<Quad>> e : allocInstsToHeapInsts.entrySet()) {
-			alarm.initNewPass();
 			currAllocs = e.getKey();
 			currLocHeapInsts = e.getValue();
 			currEscHeapInsts.clear();
@@ -197,10 +193,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				runPass();
 			} catch (ThrEscException ex) {
 				// do nothing
-			} catch (AlarmException ex) {
-				System.out.println("TIMED OUT");
-				currEscHeapInsts.addAll(currLocHeapInsts);
-				currLocHeapInsts.clear();
 			}
 			for (Quad q : currLocHeapInsts)
 				System.out.println("LOC: " + q.toVerboseStr());
@@ -211,7 +203,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
-		alarm.doneAllPasses();
 		try {
 			String outDirName = Config.outDirName;
 			{
@@ -311,8 +302,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Edge getMiscPathEdge(Quad q, Edge pe) {
-		if (alarm.passTimedOut())
-			throw new AlarmException();
 		DstNode dstNode = pe.dstNode;
 		qv.iDstNode = dstNode;
 		qv.oDstNode = dstNode;
