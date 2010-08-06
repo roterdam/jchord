@@ -411,12 +411,11 @@
 
 	<target name="cleandoc" description="Cleans Javadoc and HTML user guide.">
 		<delete dir="javadoc"/>
-		<delete>
-			<fileset dir="doc" includes="*.html"/>
-		</delete>
+		<delete dir="doc/user_guide"/>
 		<delete file="doc/user_guide.pdf"/>
 		<delete file="doc/user_guide.aux"/>
 		<delete file="doc/user_guide.log"/>
 		<delete file="doc/user_guide.out"/>
+		<delete file="doc/user_guide.dvi"/>
 	</target>
 </project>
