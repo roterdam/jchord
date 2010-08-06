@@ -14,11 +14,13 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Phi;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 
 import chord.program.visitors.IMoveInstVisitor;
 import chord.program.visitors.IPhiInstVisitor;
+import chord.program.visitors.ICastInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
@@ -33,7 +35,7 @@ import chord.project.analyses.ProgramRel;
 	sign = "P0,V0,V1:P0_V0xV1"
 )
 public class RelPobjVarAsgnInst extends ProgramRel
-		implements IMoveInstVisitor, IPhiInstVisitor {
+		implements IMoveInstVisitor, IPhiInstVisitor, ICastInstVisitor {
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) { }
 	public void visitMoveInst(Quad q) {
@@ -51,8 +53,7 @@ public class RelPobjVarAsgnInst extends ProgramRel
     public void visitPhiInst(Quad q) {
         RegisterOperand lo = Phi.getDest(q);
         jq_Type t = lo.getType();
-        assert (t != null);
-        if (t.isReferenceType()) {
+        if (t == null || t.isReferenceType()) {
             Register l = lo.getRegister();
             ParamListOperand ros = Phi.getSrcs(q);
             int n = ros.length();
@@ -65,4 +66,16 @@ public class RelPobjVarAsgnInst extends ProgramRel
             }
         }
 	}
+    public void visitCastInst(Quad q) {
+        Operand rx = CheckCast.getSrc(q);
+        if (rx instanceof RegisterOperand) {
+            RegisterOperand ro = (RegisterOperand) rx;
+            if (ro.getType().isReferenceType()) {
+                Register r = ro.getRegister();
+                RegisterOperand lo = CheckCast.getDest(q);
+                Register l = lo.getRegister();
+                add(q, l, r);
+            }
+        }
+    }
 }

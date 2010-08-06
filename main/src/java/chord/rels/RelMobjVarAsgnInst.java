@@ -56,16 +56,13 @@ public class RelMobjVarAsgnInst extends ProgramRel
 	public void visitPhiInst(Quad q) {
 		RegisterOperand lo = Phi.getDest(q);
 		jq_Type t = lo.getType();
-		if (t != null && t.isReferenceType()) {
+		if (t == null || t.isReferenceType()) {
 			Register l = lo.getRegister();
 			ParamListOperand ros = Phi.getSrcs(q);
 			int n = ros.length();
 			for (int i = 0; i < n; i++) {
 				RegisterOperand ro = ros.get(i);
-				if (ro == null)
-					continue;
-				jq_Type t2 = ro.getType();
-				if (t2 != null) {
+				if (ro != null) {
 					Register r = ro.getRegister();
 					add(ctnrMethod, l, r);
 				}
