@@ -17,6 +17,9 @@ import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.InputStreamReader;
 
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
@@ -68,14 +71,18 @@ import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.Timer;
 
+import chord.analyses.snapshot.Execution;
+import chord.project.OutDirUtils;
+
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-	    name = "thresc-full-java"
-	)
+@Chord(name = "thresc-full-java")
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
+	private static final boolean percy = System.getProperty("percy", "false").equals("true");
+	private Execution X;
+
 	public static final IntArraySet nilPts = new IntArraySet(0);
 	private final Set<IntTrio> emptyHeap = Collections.emptySet();
 	private final int ESC_VAL = 0;
@@ -107,8 +114,25 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
 
+  // Hints is a set of allocation sites (e.g., A, B, C)
+  // useSingletons = false: abstraction = {A,B,C}, glob
+  // useSingletons = true: abstraction = {A}, {B}, {C}, glob
+	private final boolean useSingletons = System.getProperty("chord.use.singletons", "false").equals("true");
+
 	@Override
 	public void run() {
+		if (percy) {
+      X = Execution.v("hints");	
+	    X.addSaveFiles("hybrid_fullEscE.txt", "hybrid_fullLocE.txt");
+      java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
+      options.put("version", 1);
+      options.put("program", System.getProperty("chord.work.dir"));
+      options.put("useSingletons", useSingletons);
+      options.put("hintsPath", X.getStringArg("hintsPath", null));
+      options.put("hintsType", X.getStringArg("hintsType", null));
+      X.writeMap("options.map", options);
+    }
+
 		Program program = Program.getProgram();
 		mainMethod = program.getMainMethod();
 		threadStartMethod = program.getThreadStartMethod();
@@ -128,23 +152,48 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		escPts.add(ESC_VAL);
 		escPts.setReadOnly();
 
-		ProgramRel rel = (ProgramRel) Project.getTrgt("EH");
-		rel.load();
-		IntPairIterable tuples = rel.getAry2IntTuples();
-        Map<Quad, Set<Quad>> heapInstToAllocInsts =
-			new HashMap<Quad, Set<Quad>>();
-		for (IntPair tuple : tuples) {
-			int eIdx = tuple.idx0;
-			int hIdx = tuple.idx1;
-			Quad e = (Quad) domE.get(eIdx);
-			Quad h = (Quad) domH.get(hIdx);
-            Set<Quad> allocs = heapInstToAllocInsts.get(e);
-            if (allocs == null) {
-                allocs = new ArraySet<Quad>();
-                heapInstToAllocInsts.put(e, allocs);
-            }
-            allocs.add(h);
-		}
+    Map<Quad, Set<Quad>> heapInstToAllocInsts = new HashMap<Quad, Set<Quad>>();
+    if (percy) {
+      // Read the hings from a file
+      try {
+        String hintsPath = X.getStringArg("hintsPath", null);
+        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(hintsPath)));
+        String line;
+        while ((line = in.readLine()) != null) {
+          String[] tokens = line.split("\\s+");
+          Quad e = domE.get(Integer.parseInt(tokens[0]));
+          Set<Quad> hs = heapInstToAllocInsts.get(e);
+          if (hs == null) heapInstToAllocInsts.put(e, hs = new ArraySet<Quad>());
+          int hidx = Integer.parseInt(tokens[1]);
+          if (hidx != 0 && hidx != -1) {
+            Quad h = (Quad)domH.get(hidx);
+            hs.add(h);
+          }
+        }
+        in.close();
+        X.logs("Read hints for %s queries from %s", heapInstToAllocInsts.size(), hintsPath);
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+    else {
+      ProgramRel rel = (ProgramRel) Project.getTrgt("EH");
+      rel.load();
+      IntPairIterable tuples = rel.getAry2IntTuples();
+      for (IntPair tuple : tuples) {
+        int eIdx = tuple.idx0;
+        int hIdx = tuple.idx1;
+        Quad e = (Quad) domE.get(eIdx);
+        Quad h = (Quad) domH.get(hIdx);
+              Set<Quad> allocs = heapInstToAllocInsts.get(e);
+              if (allocs == null) {
+                  allocs = new ArraySet<Quad>();
+                  heapInstToAllocInsts.put(e, allocs);
+              }
+              allocs.add(h);
+      }
+    }
+
 		Map<Set<Quad>, Set<Quad>> allocInstsToHeapInsts =
         	new HashMap<Set<Quad>, Set<Quad>>();
         for (Map.Entry<Quad, Set<Quad>> e :
@@ -222,6 +271,19 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
 		}
+
+    if (percy) {
+      int numEscaping = escHeapInsts.size();
+      int numLocal = locHeapInsts.size();
+      int numQueries = heapInstToAllocInsts.size();
+
+      X.output.put("numQueries", numQueries);
+      X.output.put("numEscaping", numEscaping);
+      X.output.put("numLocal", numLocal);
+      X.output.put("fracProven", 1.0*numLocal/numQueries);
+      X.finish(null);
+    }
+    System.out.println("DONE with run()");
 	}
 
 	@Override
@@ -738,7 +800,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 					return;
 				vPts = escPts;
 			} else {
-				int hIdx = 1; // domH.indexOf(q);
+				int hIdx = useSingletons ? domH.indexOf(q) : 1;
 				if (iEsc.contains(hIdx)) {
 					if (vPts == escPts)
 						return;

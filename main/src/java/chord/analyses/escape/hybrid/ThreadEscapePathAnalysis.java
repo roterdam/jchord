@@ -164,15 +164,15 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		return allocInstsToHeapInsts;
 	}
 
-    public void initAllPasses() {
+  public void initAllPasses() {
 		if (percy) {
-          X = Execution.v("hints");	
-	      X.addSaveFiles("hybrid_pathEscE.txt", "hybrid_pathLocE.txt", "hints.txt");
-          java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
-          options.put("version", 1);
-          options.put("program", System.getProperty("chord.work.dir"));
-          X.writeMap("options.map", options);
-        }
+      X = Execution.v("hints");	
+	    X.addSaveFiles("hybrid_pathEscE.txt", "hybrid_pathLocE.txt", "hints.txt");
+      java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
+      options.put("version", 1);
+      options.put("program", System.getProperty("chord.work.dir"));
+      X.writeMap("options.map", options);
+    }
 
 		domF = (DomF) Project.getTrgt("F");
 		Project.runTask(domF);

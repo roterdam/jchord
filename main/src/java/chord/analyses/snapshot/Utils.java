@@ -8,6 +8,7 @@ package chord.analyses.snapshot;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.io.FileOutputStream;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
@@ -34,6 +35,14 @@ public class Utils {
   public static PrintWriter openOut(String path) {
     try {
       return new PrintWriter(path);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  public static PrintWriter openOutAppend(String path) {
+    try {
+      return new PrintWriter(new FileOutputStream(path, true));
     } catch (Exception e) {
       throw new RuntimeException(e);
     }

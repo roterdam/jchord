@@ -289,7 +289,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	// {04/19/10} Percy: experiment with different values of k
 	private void setAdaptiveValues() {
-		double senProb = X.getDoubleArg("senProb", 0.5);
+		double senProb = X.getDoubleArg("senProb", 0);
 		int randSeed = X.getIntArg("randSeed", 1);
 		int kobjRange = X.getIntArg("kobjRange", 1);
 		int kcfaRange = X.getIntArg("kcfaRange", 1);
