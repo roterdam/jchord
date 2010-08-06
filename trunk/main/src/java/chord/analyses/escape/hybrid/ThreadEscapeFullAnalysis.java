@@ -169,7 +169,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			int n = m.getLiveRefVars().size();
 			methToNumVars.put(m, n);
 			for (int i = 0; i < n; i++) {
-				System.out.println(i + ":" + domV.get(vIdx +i) + "@" + m);
 				varId[vIdx + i] = i;
 			}
 			vIdx += n;
@@ -773,6 +772,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			RegisterOperand bo = (RegisterOperand) bx;
 			int bIdx = getIdx(bo);
 			IntArraySet pts = iDstNode.env[bIdx];
+			int e = domE.indexOf(q);
 			if (pts.contains(ESC_VAL)) {
 				currLocHeapInsts.remove(q);
 				currEscHeapInsts.add(q);
