@@ -70,7 +70,7 @@ public class Ctxt implements Serializable {
 	public int hashCode() {
 		int i = 5381;
 		for (Quad inst : elems) {
-			int q = inst.getID();
+			int q = inst == null ? 9999 : inst.getID();
 			i = ((i << 5) + i) + q; // i*33 + q
 		}
 		return i;
@@ -96,10 +96,38 @@ public class Ctxt implements Serializable {
 		int n = elems.length;
 		for (int i = 0; i < n; i++) {
 			Quad q = elems[i];
-			s += q.toByteLocStr();
+			s += q == null ? "null" : q.toByteLocStr();
 			if (i < n - 1)
 				s += ",";
 		}
 		return s + "]";
 	}
+
+  public int length() { return elems.length; }
+  public Quad get(int i) { return elems[i]; }
+  public Quad head() { return elems[0]; }
+  public Ctxt tail() { return suffix(elems.length-1); }
+  public Ctxt suffix(int k) {
+    if (k >= elems.length) return this;
+    Quad[] newElems = new Quad[k];
+    if (k > 0) System.arraycopy(elems, elems.length-k, newElems, 0, k);
+    return new Ctxt(newElems);
+  }
+
+  // Maximize length of returned context is max
+  public Ctxt prepend(Quad q, int max) {
+    int oldLen = elems.length;
+    int newLen = Math.min(max, oldLen+1);
+    Quad[] newElems = new Quad[newLen];
+    if (newLen > 0) newElems[0] = q;
+    if (newLen > 1) System.arraycopy(elems, 0, newElems, 1, newLen-1);
+    return new Ctxt(newElems);
+  }
+
+  public Ctxt append(Quad q) {
+    Quad[] newElems = new Quad[elems.length+1];
+    System.arraycopy(elems, 0, newElems, 0, elems.length);
+    newElems[newElems.length-1] = q;
+    return new Ctxt(newElems);
+  }
 }

@@ -424,11 +424,13 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		int numI = domI.size();
 		if (currIter == 0) {
 			isCtxtSenV = new boolean[numV];
+      // Set the context-sensitivity of various methods
 			methKind = new int[numM];
 			for (int mIdx = 0; mIdx < numM; mIdx++) {
 				jq_Method mVal = domM.get(mIdx);
 				methKind[mIdx] = (maxIters > 0) ? CTXTINS : getCtxtKind(mVal);
 			}
+      // Based on context-sensitivity of methods, set the context-sensitivity of variables inside the method
 			for (int mIdx = 0; mIdx < numM; mIdx++) {
 				if (methKind[mIdx] != CTXTINS) {
 					jq_Method m = domM.get(mIdx);
@@ -446,7 +448,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				}
 			}
 			kobjValue = new int[numA];
-			HtoM = new int[numA];
+			HtoM = new int[numA]; // Which method is h located in?
 			HtoQ = new Quad[numA];
 			for (int i = 1; i < numA; i++) {
 				kobjValue[i] = kobjK;
@@ -456,7 +458,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				HtoQ[i] = site;
 			}
 			kcfaValue = new int[numI];
-			ItoM = new int[numI];
+			ItoM = new int[numI]; // Which method is i located in?
 			ItoQ = new Quad[numI];
 			for (int i = 0; i < numI; i++) {
 				kcfaValue[i] = kcfaK;
@@ -521,11 +523,13 @@ public class CtxtsAnalysis extends JavaAnalysis {
       out.close();
 		}
 		
+    // Do the heavy crunching
 		doAnalysis();
 
 		relIM.close();
 		relVH.close();
 
+    // Populate domC
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			Quad invk = (Quad) domI.get(iIdx);
 			jq_Method meth = invk.getMethod();
@@ -749,9 +753,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	private void doAnalysis() {
 		Set<jq_Method> roots = new HashSet<jq_Method>();
-		Map<jq_Method, Set<jq_Method>> methToPredsMap =
-			new HashMap<jq_Method, Set<jq_Method>>();
-		for (int mIdx = 0; mIdx < domM.size(); mIdx++) {
+		Map<jq_Method, Set<jq_Method>> methToPredsMap = new HashMap<jq_Method, Set<jq_Method>>();
+		for (int mIdx = 0; mIdx < domM.size(); mIdx++) { // For each method...
 			jq_Method meth = domM.get(mIdx);
 			int kind = methKind[mIdx];
 			switch (kind) {
@@ -767,9 +770,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
                 Set<jq_Method> predMeths = new HashSet<jq_Method>();
                 TIntArrayList clrSites = new TIntArrayList();
                 for (Quad invk : getCallers(meth)) {
-                    predMeths.add(invk.getMethod());
+                    predMeths.add(invk.getMethod()); // Which method can point to this method...?
                     int iIdx = domI.indexOf(invk);
-                    clrSites.add(iIdx);
+                    clrSites.add(iIdx); // sites that can call me
                 }
                 methToClrSites[mIdx] = clrSites;
                 methToPredsMap.put(meth, predMeths);
@@ -811,16 +814,16 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		process(roots, methToPredsMap);
 	}
 
+  // Compute all the contexts that each method can be called in
 	private void process(Set<jq_Method> roots,
 			Map<jq_Method, Set<jq_Method>> methToPredsMap) {
-		IGraph<jq_Method> graph =
-			new MutableGraph<jq_Method>(roots, methToPredsMap, null);
+		IGraph<jq_Method> graph = new MutableGraph<jq_Method>(roots, methToPredsMap, null);
 		List<Set<jq_Method>> sccList = graph.getTopSortedSCCs();
 		System.out.println("numSCCs: " + sccList.size());
-		for (int i = 0; i < sccList.size(); i++) {
+		for (int i = 0; i < sccList.size(); i++) { // For each SCC...
 			Set<jq_Method> scc = sccList.get(i);
 			System.out.println("Processing SCC #" + i + " of size: " + scc.size());
-			if (scc.size() == 1) {
+			if (scc.size() == 1) { // Singleton
 				jq_Method cle = scc.iterator().next();
 				if (roots.contains(cle))
 					continue;
@@ -834,10 +837,10 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				assert (!roots.contains(cle));
 			}
 			boolean changed = true;
-			for (int count = 0; changed; count++) {
+			for (int count = 0; changed; count++) { // Iterate...
 				System.out.println("\tIteration  #" + count);
 				changed = false;
-				for (jq_Method cle : scc) {
+				for (jq_Method cle : scc) { // For each node (method) in SCC
 					int mIdx = domM.indexOf(cle);
 					Set<Ctxt> newCtxts = getNewCtxts(mIdx);
 					if (!changed) {
@@ -886,23 +889,23 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		return newElems;
 	}
 
-	private Set<Ctxt> getNewCtxts(int cleIdx) {
+	private Set<Ctxt> getNewCtxts(int cleIdx) { // Update contexts for this method (callee)
 		final Set<Ctxt> newCtxts = new HashSet<Ctxt>();
 		int kind = methKind[cleIdx];
 		switch (kind) {
         case KCFASEN:
 		{
-			TIntArrayList invks = methToClrSites[cleIdx];
+			TIntArrayList invks = methToClrSites[cleIdx]; // which call sites point to me
 			int n = invks.size();
 			for (int i = 0; i < n; i++) {
 				int iIdx = invks.get(i);
 				Quad invk = ItoQ[iIdx];
 				int k = kcfaValue[iIdx];
 				int clrIdx = ItoM[iIdx];
-				Set<Ctxt> clrCtxts = methToCtxts[clrIdx];
+				Set<Ctxt> clrCtxts = methToCtxts[clrIdx]; // method of caller
 				for (Ctxt oldCtxt : clrCtxts) {
 					Quad[] oldElems = oldCtxt.getElems();
-					Quad[] newElems = combine(k, invk, oldElems);
+					Quad[] newElems = combine(k, invk, oldElems); // Append
 					Ctxt newCtxt = domC.setCtxt(newElems);
 					newCtxts.add(newCtxt);
 				}

@@ -3,10 +3,11 @@
 # All rights reserved.
 # Licensed under the terms of the New BSD License.
 
-# k-CFA may-alias/call-graph analysis.
+# k-CFA may-alias analysis.
+# Assume call graph construction is fixed.
 
-# Author: Mayur Naik (mhn@cs.stanford.edu)
-# name=cspa-kcfa-dlog
+# Author: Mayur Naik (mhn@cs.stanford.edu), Percy Liang (pliang@cs.berkeley.edu)
+# name=cspa-kcfa-sliver-dlog
 
 .include "F.dom"
 .include "H.dom"
@@ -53,26 +54,34 @@ argCopy(i:I0,u:V1,m:M0,v:V0) input
 retCopy(i:I0,u:V0,m:M0,v:V1) input
 VCfilter(v:V,c:C) input
 
-CC(c:C,d:C) input # d = [* c]
-CH(c:C,h:H) input # c = [h ...]
-CI(c:C,i:I) input # c = [i ...]
-epsilonM(m:M) input # treat method m context insensitively
-kcfaSenM(m:M) input # treat method m context sensitively
-epsilonV(v:V) input # treat variable v context insensitively
+# d = [* c]
+CC(c:C,d:C) input
+# c = [h ...]
+CH(c:C,h:H) input
+# c = [i ...]
+CI(c:C,i:I) input
+epsilonM(m:M) input
+kcfaSenM(m:M) input
+epsilonV(v:V) input
 
-IHM(i:I,h:H,m:M) # at call site i, if h is the allocation site of "this" argument, can get to method m
+#IHM(i:I,h:H,m:M) # at call site i, if h is the allocation site of "this" argument, can get to method m
+IM(i:I,m:M) input
 reachableT(t:T)
 
 MspcMethArg(m:M,v:V) input
 
 kcfaDIC(c:C,i:I,c:C) output
-DIC(c:C,i:I,c:C) output # in context c, at call site i, c can be the "this" argument
+# in context c, at call site i, c can be the "this" argument
+DIC(c:C,i:I,c:C) output
 DIH(c:C,i:I,h:H) output
 
-DVDV(c:C0,u:V0,d:C1,v:V1) output # u in context c can point to same stuff as v in context d
+# u in context c can point to same stuff as v in context d
+DVDV(c:C0,u:V0,d:C1,v:V1) output
 
-ctxtInsIHM(i:I,h:H,m:M)
-kcfaSenIHM(i:I,h:H,m:M)
+#ctxtInsIHM(i:I,h:H,m:M)
+#kcfaSenIHM(i:I,h:H,m:M)
+ctxtInsIM(i:I,m:M)
+kcfaSenIM(i:I,m:M)
 
 ctxtInsSpecIM(i:I,m:M) output
 kcfaSenSpecIM(i:I,m:M) output
@@ -84,17 +93,23 @@ reachableCI(c:C,i:I) output
 reachableCM(c:C,m:M) output
 
 rootCM(c:C,m:M) output
-CICM(c:C,i:I,d:C,m:M) output # in context c, call site i can call method m in context d
-CMCM(c:C,m:M,d:C,n:M) output # true if exists some i in m
+# in context c, call site i can call method m in context d
+CICM(c:C,i:I,d:C,m:M) output
+CMCM(c:C,m:M,d:C,n:M) output
 
-DVC(c1:C,v:V,c2:C) output # in context c1, variable v can point to abstract object c2
-CVC(c1:C,v:V,c2:C) output # filtered version
+# in context c1, variable v can point to abstract object c2
+DVC(c1:C,v:V,c2:C) output
+CVC(c1:C,v:V,c2:C) output
 
-FC(f:F,c:C) output # static field can point to abstract object c2
-CFC(c1:C,f:F,c2:C) output # abstract object c1 can point to abstract object c2 via field f
+# static field can point to abstract object c2
+FC(f:F,c:C) output
+# abstract object c1 can point to abstract object c2 via field f
+CFC(c1:C,f:F,c2:C) output
 
-CIC(c:C,i:I,d:C) output # d = [i, c]
-CHC(c:C,h:H,d:C) output # d = [h, c]
+# d = [i, c]
+CIC(c:C,i:I,d:C) output
+# d = [h, c]
+CHC(c:C,h:H,d:C) output
 
 ###
 # Constraints
@@ -105,9 +120,11 @@ CHC(c,h,d) :- CC(c,d), CH(d,h).
 
 ###
 
-IHM(i,h,m2) :- virtIM(i,m1), HT(h,t), cha(m1,t,m2).
-ctxtInsIHM(i,h,m) :- IHM(i,h,m), epsilonM(m).
-kcfaSenIHM(i,h,m) :- IHM(i,h,m), kcfaSenM(m).
+#IHM(i,h,m2) :- virtIM(i,m1), HT(h,t), cha(m1,t,m2).
+#ctxtInsIHM(i,h,m) :- IHM(i,h,m), epsilonM(m).
+#kcfaSenIHM(i,h,m) :- IHM(i,h,m), kcfaSenM(m).
+ctxtInsIM(i,m) :- IM(i,m), epsilonM(m).
+kcfaSenIM(i,m) :- IM(i,m), kcfaSenM(m).
 
 kcfaSenSpecIM(i,m) :- specIM(i,m), kcfaSenM(m).
 ctxtInsSpecIM(i,m) :- specIM(i,m), epsilonM(m).
@@ -135,8 +152,10 @@ kcfaDIC(c,i,d) :- CIC(c,i,d), MI(m,i), kcfaSenM(m).
 
 ###
 
-CICM(c,i,0,m) :- reachableCI(c,i), ctxtInsIHM(i,h,m), DIH(c,i,h).
-CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenIHM(i,h,m), DIH(c,i,h), kcfaDIC(c,i,d).
+#CICM(c,i,0,m) :- reachableCI(c,i), ctxtInsIHM(i,h,m), DIH(c,i,h).
+#CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenIHM(i,h,m), DIH(c,i,h), kcfaDIC(c,i,d).
+CICM(c,i,0,m) :- reachableCI(c,i), ctxtInsIM(i,m).
+CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenIM(i,m), kcfaDIC(c,i,d).
 
 CICM(c,i,0,m) :- reachableCI(c,i), ctxtInsSpecIM(i,m), DI(c,i).
 CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenSpecIM(i,m), DI(c,i), kcfaDIC(c,i,d).
@@ -205,4 +224,3 @@ CVC(c,v,o) :- DVC(c,v,o), !epsilonV(v).
 rootCM(0,0).
 rootCM(0,m) :- reachableT(t), clinitTM(t,m).
 CMCM(c,m,d,n) :- CICM(c,i,d,n), MI(m,i).
-
