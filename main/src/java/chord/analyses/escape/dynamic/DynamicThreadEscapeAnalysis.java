@@ -93,6 +93,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	private ProgramRel relVisitedE;
 	private ProgramRel relEscE;
 
+	@Override
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null)
     		return instrScheme;
@@ -114,12 +115,14 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     	return instrScheme;
     }
 
+	@Override
 	public void run() {
 		isFlowIns = System.getProperty(
 			"chord.escape.dynamic.flowins", "false").equals("true");
 		super.run();
 	}
 
+	@Override
 	public void initAllPasses() {
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
@@ -140,6 +143,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		}
 	}
 
+	@Override
 	public void initPass() {
 		escObjs.clear();
 		objToFldObjs.clear();
@@ -153,6 +157,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		}
 	}
 
+	@Override
 	public void donePass() {
 		System.out.println("***** STATS *****");
 		int numAllocEsc = 0;
@@ -176,6 +181,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			" numEscE: " + numEscE);
 	}
 
+	@Override
 	public void doneAllPasses() {
 		relVisitedE.zero();
 		relEscE.zero();
