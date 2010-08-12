@@ -99,10 +99,7 @@ public class OutDirUtils {
 			cmd += s + " ";
 		Messages.log(PROCESS_STARTING, cmd);
 		try {
-			int result = ProcessExecutor.execute(cmdarray, timeout);
-			if (result != 0) {
-				Messages.log(PROCESS_FINISHED, cmd);
-			}
+			ProcessExecutor.execute(cmdarray, timeout);
 		} catch (Throwable ex) {
 			Messages.fatal(PROCESS_FAILED, cmd, ex.getMessage());
 		}
