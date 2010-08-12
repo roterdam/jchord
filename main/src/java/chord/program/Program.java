@@ -37,7 +37,6 @@ import chord.util.StringUtils;
 import chord.util.ChordRuntimeException;
  
 import chord.instr.OnlineTransformer;
-import chord.instr.LoadedClassesInstrumentor;
 
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
