@@ -131,6 +131,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		
 		Project.runTask(domL);
 
+		Project.runTask("ctxts-java");
 		Project.runTask(CtxtsAnalysis.getCspaKind());
 		Project.runTask(thrSenAbbrCSCGAnalysis);
 		thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();

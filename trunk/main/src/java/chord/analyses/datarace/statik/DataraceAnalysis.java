@@ -137,6 +137,7 @@ public class DataraceAnalysis extends JavaAnalysis {
     while (true) {
       // Run analysis
 			Messages.log("Running datarace analysis (numIters="+numIters+")");
+			Project.runTask("ctxts-java");
 			Project.runTask(CtxtsAnalysis.getCspaKind());
 			Project.runTask("datarace-prologue-dlog");
 			if (excludeParallel)

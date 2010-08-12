@@ -988,6 +988,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
             cspaKind = "cspa-kcfa-dlog";
         else
             cspaKind = "cspa-hybrid-dlog";
-                return cspaKind;
+		return cspaKind;
 	}
 }
