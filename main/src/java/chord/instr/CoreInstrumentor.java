@@ -31,32 +31,34 @@ import chord.project.Config;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class BasicInstrumentor extends ExprEditor {
-	private static final String EXPLICITLY_EXCLUDING_CLASS =
+public class CoreInstrumentor extends ExprEditor {
+    public final static String ARG_KEY = "instrumentor_class_name";
+
+	private final static String EXPLICITLY_EXCLUDING_CLASS =
 		"WARN: Not instrumenting class %s as it is excluded by chord.scope.exclude.";
-	private static final String IMPLICITLY_EXCLUDING_CLASS =
+	private final static String IMPLICITLY_EXCLUDING_CLASS =
 		"WARN: Not instrumenting class %s.";
-	protected boolean verbose;
+
+	protected boolean silent;
 	protected final JavassistPool pool;
 	protected String[] scopeExcludeAry;
 	protected Map<String, String> argsMap;
 
-	// called by online transformer
-	// argsMap contains (key,value) pairs passed to online transformer agent 
-	public BasicInstrumentor(Map<String, String> argsMap) {
+	/**
+	 * Constructor.
+	 *
+	 * @param	argsMap	Arguments to the instrumentor in the form of a
+	 *			map of (key, value) pairs.
+	 */
+	public CoreInstrumentor(Map<String, String> argsMap) {
+		assert (argsMap != null);
 		this.argsMap = argsMap;
 		scopeExcludeAry = Config.scopeExcludeAry;
- 		verbose = Config.verbose;
+		silent = Config.dynamicSilent;
 		String mainClassPathName = Config.mainClassPathName;
 		String userClassPathName = Config.classPathName;
 		pool = new JavassistPool(mainClassPathName, userClassPathName);
 	}
-
-	// called by offline transformer
-	// argsMap will be null
-	public BasicInstrumentor() {
-		this(null);
-    }
 
     public JavassistPool getPool() {
         return pool;
@@ -78,40 +80,95 @@ public class BasicInstrumentor extends ExprEditor {
 
 	public boolean isExcluded(String cName) {
 		if (isImplicitlyExcluded(cName)) {
-			if (verbose) Messages.log(IMPLICITLY_EXCLUDING_CLASS, cName);
+			if (!silent) Messages.log(IMPLICITLY_EXCLUDING_CLASS, cName);
 			return true;
 		}
 		if (isExplicitlyExcluded(cName)) {
-			if (verbose) Messages.log(EXPLICITLY_EXCLUDING_CLASS, cName);
+			if (!silent) Messages.log(EXPLICITLY_EXCLUDING_CLASS, cName);
 			return true;
 		}
 		return false;
 	}
 
-	public CtClass edit(String cName) throws NotFoundException, CannotCompileException {
+	/**
+	 * Provides a hook to instrument a class specified by name.
+	 *
+	 * The default implementation excludes instrumenting classes that
+	 * are excluded implicitly or explicitly; for each class that is
+	 * not excluded, it calls the {@link #edit(CtClass)} method.
+	 * 
+	 * @param	cName	Name of the class to be instrumented
+	 *			(e.g., java.lang.Object).
+	 * @return	The instrumented class in Javassist's representation.
+	 *			It must be null if the class is not instrumented.
+	 * @throws	NotFoundException	If Javassist fails to find the class.
+	 * @throws	CannotCompileException	If Javassist fails to correctly
+	 *			instrument the class.
+	 */
+	public CtClass edit(String cName)
+			throws NotFoundException, CannotCompileException {
 		if (isExcluded(cName))
 			return null;
 		CtClass clazz = pool.get(cName);
 		return edit(clazz);
 	}
 
+	/**
+	 * Provides a hook to instrument a class specified in Javassist's
+	 * representation.
+	 *
+	 * The default implementation calls the hooks to instrument all
+	 * its methods, including its class initializer method (if any),
+	 * all its declared constructors, and all its declared methods.
+	 *
+	 * @param	clazz	Javassist's representation of the class to be
+	 *			instrumented.
+	 * @return	The instrumented class in Javassist's representation.	
+	 *			It must be null if the class is not instrumented.
+	 * @throws	CannotCompileException	If Javassist fails to correctly
+	 *			instrument the class. 
+	 */
 	public CtClass edit(CtClass clazz) throws CannotCompileException {
 		CtBehavior clinit = clazz.getClassInitializer();
 		if (clinit != null)
 			edit(clinit);
         CtBehavior[] inits = clazz.getDeclaredConstructors();
-        CtBehavior[] meths = clazz.getDeclaredMethods();
         for (CtBehavior m : inits)
 			edit(m);
+        CtBehavior[] meths = clazz.getDeclaredMethods();
 		for (CtBehavior m : meths)
 			edit(m);
 		return clazz;
 	}
 
+	/**
+	 * Provides a hook to instrument a method specified in Javassist's
+	 * representation.
+	 *
+	 * The default implementation visits each bytecode instruction in
+	 * the method's code, calling the {@link @insertBefore(int)}
+	 * method for each instruction, ws well as the relevant edit
+	 * method for certain kinds of instructions (namely, object
+	 * allocation, field access, array access, monitor enter/exit,
+	 * and method invocation).
+	 *
+	 * @param	method	Javassist's representation of the method to be
+	 *			instrumented in the currently instrumented class.
+	 * @throws	CannotCompileException	If Javassist fails to correctly
+	 *			instrument the class.
+	 */
 	public void edit(CtBehavior method) throws CannotCompileException {
 		method.instrument(this);
 	}
 
+	/**
+	 * Provides a hook to insert instrumentation just before the
+	 * specified bytecode instruction in its containing method.
+	 *
+	 * @param	pos	Index of a bytecode instruction in the currently
+	 *			instrumented method.
+	 * @return	Code string to be inserted just before the index.
+	 */
     public String insertBefore(int pos) {
 		return null;
 	}

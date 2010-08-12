@@ -6,13 +6,11 @@
  */
 package chord.runtime;
 
+import java.io.IOException;
+
 import chord.instr.EventKind;
 import chord.instr.InstrScheme;
 import chord.instr.InstrScheme.EventFormat;
-import chord.util.ByteBufferedFile;
-import chord.util.WeakIdentityHashMap;
-
-import java.io.IOException;
 
 /**
  * Buffered file-based offline handler of events generated during an
@@ -22,11 +20,26 @@ import java.io.IOException;
  * instrumented program (which produces events) and the JVM running
  * the dynamic program analysis (which consumes events).
  *
+ * This handler should suffice for offline dynamic program analyses
+ * (i.e. those that handle the events in a separate JVM, either during
+ * or after the instrumented program's execution, depending upon
+ * whether the value of system property <tt>chord.trace.pipe</tt> is
+ * true or false, respectively).
+ * 
+ * Online analyses (i.e. those that handle events during the
+ * instrumented program's execution in the same JVM) must subclass this
+ * class and define the relevant event handling methods, i.e. static
+ * methods named ".*Event", e.g. {@link #acquireLockEvent(int, Object)}.
+ * Which methods are relevant depends upon the instrumentation scheme
+ * chosen by the dynamic program analysis;
+ * see {@link chord.project.analyses.DynamicAnalysis#getInstrScheme()}.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class BufferedRuntime extends Runtime {
-	private static boolean trace = false;
-	private static ByteBufferedFile buffer;
+public class EventHandler extends CoreEventHandler {
+    public static final int MISSING_FIELD_VAL = -1;
+    public static final int UNKNOWN_FIELD_VAL = -2;
+    protected static InstrScheme scheme;
 
 	// befNew event is present => h,t,o present
 	public synchronized static void befNewEvent(int hId) {
@@ -114,8 +127,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void getstaticReferenceEvent(int eId, Object b, int fId,
-			Object o) {
+	public synchronized static void getstaticReferenceEvent(int eId, Object b, int fId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -163,8 +175,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void putstaticReferenceEvent(int eId, Object b, int fId,
-			Object o) {
+	public synchronized static void putstaticReferenceEvent(int eId, Object b, int fId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -190,8 +201,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void getfieldPrimitiveEvent(int eId,
-			Object b, int fId) {
+	public synchronized static void getfieldPrimitiveEvent(int eId, Object b, int fId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -213,8 +223,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void getfieldReferenceEvent(int eId,
-			Object b, int fId, Object o) {
+	public synchronized static void getfieldReferenceEvent(int eId, Object b, int fId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -240,8 +249,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void putfieldPrimitiveEvent(int eId,
-			Object b, int fId) {
+	public synchronized static void putfieldPrimitiveEvent(int eId, Object b, int fId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -263,8 +271,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void putfieldReferenceEvent(int eId,
-			Object b, int fId, Object o) {
+	public synchronized static void putfieldReferenceEvent(int eId, Object b, int fId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -290,8 +297,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void aloadPrimitiveEvent(int eId,
-			Object b, int iId) {
+	public synchronized static void aloadPrimitiveEvent(int eId, Object b, int iId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -313,8 +319,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void aloadReferenceEvent(int eId,
-			Object b, int iId, Object o) {
+	public synchronized static void aloadReferenceEvent(int eId, Object b, int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -340,8 +345,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void astorePrimitiveEvent(int eId,
-			Object b, int iId) {
+	public synchronized static void astorePrimitiveEvent(int eId, Object b, int iId) {
 		if (trace) {
 			trace = false;
 			try {
@@ -363,8 +367,7 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-	public synchronized static void astoreReferenceEvent(int eId,
-			Object b, int iId, Object o) {
+	public synchronized static void astoreReferenceEvent(int eId, Object b, int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
@@ -716,29 +719,18 @@ public class BufferedRuntime extends Runtime {
 			trace = true;
 		}
 	}
-    public synchronized static void open(String args) {
-		Runtime.open(args);
+    public synchronized static void init(String args) {
         String[] a = args.split("=");
-		int traceBlockSize = 0;
-		String traceFileName = null;
-		for (int i = 0; i < a.length; i += 2) {
-			String k = a[i];
-			if (k.equals("trace_block_size"))
-				traceBlockSize = Integer.parseInt(a[i+1]);
-			else if (k.equals("trace_file_name"))
-				traceFileName = a[i+1];
-		}
-        try {
-            buffer = new ByteBufferedFile(traceBlockSize, traceFileName, false);
-        } catch (IOException ex) { throw new RuntimeException(ex); }
-        trace = true;
-	}
-	// DO NOT REMOVE THIS SYNCHRONIZATION
-	public synchronized static void close() {
-        trace = false;
-		try {
-			buffer.flush();
-		} catch (IOException ex) { throw new RuntimeException(ex); }
+        String instrSchemeFileName = null;
+        for (int i = 0; i < a.length; i += 2) {
+            if (a[i].equals("instr_scheme_file_name")) {
+                instrSchemeFileName = a[i+1];
+                break;
+            }
+        }
+        assert (instrSchemeFileName != null);
+        scheme = InstrScheme.load(instrSchemeFileName);
+		CoreEventHandler.init(args);
 	}
 }
 

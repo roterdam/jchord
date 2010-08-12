@@ -21,6 +21,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import chord.util.StringUtils;
 import chord.project.Config;
+import chord.project.Project;
 
 import javassist.CtClass;
 import javassist.CannotCompileException;
@@ -44,29 +45,10 @@ public final class OnlineTransformer implements ClassFileTransformer {
 	private static final String CANNOT_MODIFY_CLASS =
 		"WARN: Cannot modify class %s.";
 
-    private final BasicInstrumentor instrumentor;
+    private final CoreInstrumentor instrumentor;
 
-	public OnlineTransformer(BasicInstrumentor instr) {
+	public OnlineTransformer(CoreInstrumentor instr) {
 		instrumentor = instr;
-	}
-
-	public static List<String> getCmd(String classPathName, String mainClassName,
-			String agentArgs, String args) {
-		List<String> cmd = new ArrayList<String>();
-		cmd.add("java");
-		cmd.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
-		Properties props = System.getProperties();
-		for (Map.Entry e : props.entrySet()) {
-			String key = (String) e.getKey();
-			if (key.startsWith("chord."))
-				cmd.add("-D" + key + "=" + e.getValue());
-		}
-		cmd.add("-javaagent:" + Config.jInstrAgentFileName + agentArgs);
-		cmd.add("-cp");
-		cmd.add(classPathName);
-		cmd.add(mainClassName);
-		cmd.addAll(StringUtils.tokenize(args));
-		return cmd;
 	}
 
     public static void premain(String agentArgs, Instrumentation instrumentation) {
@@ -75,26 +57,29 @@ public final class OnlineTransformer implements ClassFileTransformer {
             Messages.fatal(RETRANSFORM_NOT_SUPPORTED);
         }
 		Map<String, String> argsMap = new HashMap<String, String>();
-		String[] args = agentArgs.split("=");
-		int n = args.length / 2;
-		for (int i = 0; i < n; i++)
-			argsMap.put(args[i*2], args[i*2+1]);
-		String instrClassName = argsMap.get("instr_class_name");
+		if (agentArgs != null) {
+			String[] args = agentArgs.split("=");
+			int n = args.length / 2;
+			for (int i = 0; i < n; i++)
+				argsMap.put(args[i*2], args[i*2+1]);
+		}
+		String instrClassName = argsMap.get(CoreInstrumentor.ARG_KEY);
 		Class instrClass = null;
 		if (instrClassName != null) {
 			try {
-				instrClass = Class.forName(instrClassName);
+				instrClass = Class.forName(instrClassName.replace('/', '.'));
 			} catch (ClassNotFoundException ex) {
 				Messages.fatal(ex);
 			}
 		} else
-			instrClass = BasicInstrumentor.class;
-		BasicInstrumentor instr = null;
+			instrClass = CoreInstrumentor.class;
+		CoreInstrumentor instr = null;
 		Exception ex = null;
+		Project.init();
 		try {
 			Constructor c = instrClass.getConstructor(new Class[] { Map.class });
 			Object o = c.newInstance(new Object[] { argsMap });
-			instr = (BasicInstrumentor) o;
+			instr = (CoreInstrumentor) o;
 		} catch (InstantiationException e) {
 			ex = e;
 		} catch (NoSuchMethodException e) {
@@ -114,7 +99,8 @@ public final class OnlineTransformer implements ClassFileTransformer {
             if (c.getName().startsWith("[")) 
 				continue;
 			if (!instrumentation.isModifiableClass(c)) {
-				Messages.log(CANNOT_MODIFY_CLASS, c.getName());
+				if (!Config.dynamicSilent)
+					Messages.log(CANNOT_MODIFY_CLASS, c.getName());
 				continue;
 			}
 			retransformClasses.add(c);
@@ -124,20 +110,28 @@ public final class OnlineTransformer implements ClassFileTransformer {
         try {
             instrumentation.retransformClasses(retransformClassesAry);
         } catch (UnmodifiableClassException e) {
-			Messages.log(CANNOT_RETRANSFORM_LOADED_CLASSES);
-			e.printStackTrace();
+			Messages.fatal("UNREACHABLE");
         }
     }
 
-    public byte[] transform(ClassLoader loader, String cName, Class<?> cls,
-			ProtectionDomain pd, byte[] classfile) throws IllegalClassFormatException {
-		// cName is of the form "java/lang/Object"
-		cName = cName.replace('/', '.');
+	@Override
+    public byte[] transform(ClassLoader loader, String className,
+			Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
+			byte[] classfileBuffer) throws IllegalClassFormatException {
+		// Note from javadoc:
+		//  If this method determines that no transformations are
+		//  needed, it should return null. Otherwise, it should create
+		//  a new byte[] array, copy the input classfileBuffer into it,
+		//  along with all desired transformations, and return the new
+		//  array. The input classfileBuffer must not be modified.
+		// className is of the form "java/lang/Object"
+		String cName = className.replace('/', '.');
 		Exception ex = null;
 		try {
 			CtClass clazz = instrumentor.edit(cName);
-			if (clazz != null)
+			if (clazz != null) {
 				return clazz.toBytecode();
+			}
 		} catch (IOException e) {
 			ex = e;
 		} catch (NotFoundException e) {
@@ -146,8 +140,10 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			ex = e; 
 		}
 		if (ex != null) {
-			Messages.log(CANNOT_INSTRUMENT_CLASS, cName);
-			ex.printStackTrace();
+			if (!Config.dynamicSilent) {
+				Messages.log(CANNOT_INSTRUMENT_CLASS, cName);
+				ex.printStackTrace();
+			}
 		}
 		return null;
     }
