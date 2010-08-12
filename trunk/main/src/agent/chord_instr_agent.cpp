@@ -1,11 +1,12 @@
 /*
  * This agent takes following arguments:
- * runtime_class_name, classes_file_name
- * If runtime_class_name is set then after the VMInit event is called by JVMTI, this agent 
- * calls the static "void open(String)" method in the class denoted by runtime_class_name;
- * also, all agent options are passed on via the string argument to that method.
- * If classes_file_name is set then this agent writes the list of all loaded classes to the 
- * file denoted by it.
+ * event_handler_class_name, classes_file_name
+ * If event_handler_class_name is set then after the VMInit event is
+ * called by JVMTI, this agent calls the static "void init(String)"
+ * method in the class denoted by event_handler_class_name; also, all
+ * agent options are passed via the string argument to that method.
+ * If classes_file_name is set then this agent writes the list of 
+ * all loaded classes to the file denoted by it.
  */
 #include <jvmti.h>
 #include <assert.h>
@@ -26,9 +27,9 @@ static jvmtiEnv* jvmti_env;
 static bool list_loaded_classes = false;
 static char classes_file_name[MAX];
 
-static bool enable_runtime = false;
-static char runtime_class_name[MAX];
-static char* runtime_args_str = NULL;
+static bool enable_event_handler = false;
+static char event_handler_class_name[MAX];
+static char* event_handler_args_str = NULL;
 
 char* get_token(char *str, char *seps, char *buf, int max)
 {
@@ -49,19 +50,19 @@ char* get_token(char *str, char *seps, char *buf, int max)
     return str + len;
 }
 
-static void call_runtime_class_method(JNIEnv* jni_env,
+static void call_event_handler_class_method(JNIEnv* jni_env,
 	const char* mName, const char* mSign, const char* args)
 {
-	jclass c = jni_env->FindClass(runtime_class_name);
+	jclass c = jni_env->FindClass(event_handler_class_name);
 	if (c == NULL) {
 		cout << "ERROR: JNI: Cannot find class: " <<
-			runtime_class_name << endl;
+			event_handler_class_name << endl;
 		exit(1);
 	}
 	jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
 	if (m == NULL) {
 		cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
-			" from class: " << runtime_class_name << endl;
+			" from class: " << event_handler_class_name << endl;
 		exit(1);
 	}
 	if (args != NULL) {
@@ -81,10 +82,10 @@ static void JNICALL VMInit(jvmtiEnv *jvmti_env, JNIEnv* jni_env, jthread thread)
 {
     cout << "ENTER VMInit" << endl;
 
-	if (enable_runtime) {
-		const char* mName = "open";
+	if (enable_event_handler) {
+		const char* mName = "init";
 		const char* mSign = "(Ljava/lang/String;)V";
-		call_runtime_class_method(jni_env, mName, mSign, runtime_args_str);
+		call_event_handler_class_method(jni_env, mName, mSign, event_handler_args_str);
 	}
 
 	cout << "LEAVE VMInit" << endl;
@@ -113,10 +114,10 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 		classes_out.close();
 	}
 
-	if (enable_runtime) {
-		const char* mName = "close";
+	if (enable_event_handler) {
+		const char* mName = "done";
 		const char* mSign = "()V";
-		call_runtime_class_method(jni_env, mName, mSign, NULL);
+		call_event_handler_class_method(jni_env, mName, mSign, NULL);
 	}
 
 	cout << "LEAVE VMDeath" << endl;
@@ -135,14 +136,14 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 		next = get_token(next, (char*) ",=", token, sizeof(token));
 		if (next == NULL)
 			break;
-        if (strcmp(token, "runtime_class_name") == 0) {
-            next = get_token(next, (char*) ",=", runtime_class_name, MAX);
+        if (strcmp(token, "event_handler_class_name") == 0) {
+            next = get_token(next, (char*) ",=", event_handler_class_name, MAX);
             if (next == NULL) {
-                cerr << "ERROR: Bad option runtime_class_name=<name>: "
+                cerr << "ERROR: Bad option event_handler_class_name=<name>: "
 					<< options << endl;
 				exit(1);
             }
-			enable_runtime = true;
+			enable_event_handler = true;
 			continue;
         }
 		if (strcmp(token, "classes_file_name") == 0) {
@@ -156,9 +157,9 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 			continue;
 		}
 	}
-	if (enable_runtime) {
-		runtime_args_str = strdup(options);
-		assert(runtime_args_str != NULL);
+	if (enable_event_handler) {
+		event_handler_args_str = strdup(options);
+		assert(event_handler_args_str != NULL);
 	}
 
     jvmtiError retval;

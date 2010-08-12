@@ -45,9 +45,9 @@ public final class OfflineTransformer {
 	private final boolean verbose;
 	private final JavassistPool pool;
 
-    private final BasicInstrumentor instrumentor;
+    private final CoreInstrumentor instrumentor;
 
-	public OfflineTransformer(BasicInstrumentor instr) {
+	public OfflineTransformer(CoreInstrumentor instr) {
 		instrumentor = instr;
 		bootClassesDirName = Config.bootClassesDirName;
 		userClassesDirName = Config.userClassesDirName;

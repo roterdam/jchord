@@ -225,8 +225,11 @@ public class Project {
 			System.out.println("ALREADY DONE.");
 			return;
 		}
-		currTimer.pause();
-		timers.push(currTimer);
+		boolean hasCurrTimer = currTimer != null;
+		if (hasCurrTimer) {
+			currTimer.pause();
+			timers.push(currTimer);
+		}
 		currTimer = new Timer(task.getName());
 		currTimer.init();
 		Set<Object> consumedTrgts = taskToConsumedTrgtsMap.get(task);
@@ -240,8 +243,10 @@ public class Project {
         System.out.println("LEAVE: " + task);
         currTimer.done();
 		printCurrTimer();
-		currTimer = timers.pop();
-		currTimer.resume();
+		if (hasCurrTimer) {
+			currTimer = timers.pop();
+			currTimer.resume();
+		}
 		setTaskDone(task);
 		Set<Object> producedTrgts = taskToProducedTrgtsMap.get(task);
 		assert(producedTrgts != null);

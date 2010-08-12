@@ -25,11 +25,11 @@ import java.io.IOException;
 
 import com.java2html.Java2HTML;
 
-import chord.util.tuple.object.Pair;
 import chord.project.Project;
 import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Config;
+import chord.util.tuple.object.Pair;
 import chord.util.ArraySet;
 import chord.util.IndexSet;
 import chord.util.FileUtils;
@@ -533,8 +533,6 @@ public abstract class Program {
         return result;
 	}
 
-	private static boolean useJVMTI = true;
-
 	public static List<String> getDynamicallyLoadedClasses() {
 		String mainClassName = Config.mainClassName;
 		if (mainClassName == null)
@@ -544,33 +542,27 @@ public abstract class Program {
 			Messages.fatal(CLASS_PATH_NOT_DEFINED);
         String[] runIDs = Config.runIDs.split(Config.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
-		String agentArgs = "=classes_file_name=" + Config.classesFileName;
-		if (!useJVMTI)
-			agentArgs += "=instr_class_name=" + LoadedClassesInstrumentor.class.getName();
 		List<String> classNames = new ArrayList<String>();
 		String fileName = Config.classesFileName;
+		List<String> basecmd = new ArrayList<String>();
+		basecmd.add("java");
+		basecmd.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
+		String agentArgs = "=classes_file_name=" + Config.classesFileName;
+        basecmd.add("-agentpath:" + Config.cInstrAgentFileName + agentArgs);
+		basecmd.add("-cp");
+		basecmd.add(classPathName);
+		basecmd.add(mainClassName);
         for (String runID : runIDs) {
             String args = System.getProperty("chord.args." + runID, "");
-        	List<String> cmdList;
-			if (useJVMTI) {
-				cmdList = new ArrayList<String>();
-				cmdList.add("java");
-				cmdList.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
-         		cmdList.add("-agentpath:" + Config.cInstrAgentFileName + agentArgs);
-				cmdList.add("-cp");
-				cmdList.add(classPathName);
-				cmdList.add(mainClassName);
-				cmdList.addAll(StringUtils.tokenize(args));
-			} else
-				cmdList = OnlineTransformer.getCmd(
-					classPathName, mainClassName, agentArgs, args);
-			OutDirUtils.executeWithFailOnError(cmdList);
+			List<String> fullcmd = new ArrayList<String>(basecmd);
+			fullcmd.addAll(StringUtils.tokenize(args));
+			OutDirUtils.executeWithFailOnError(fullcmd);
 			try {
 				BufferedReader in = new BufferedReader(new FileReader(fileName));
 				String s;
 				while ((s = in.readLine()) != null) {
 					// convert "Ljava/lang/Object;" to "java.lang.Object"
-					String cName = useJVMTI ? typesToStr(s) : s;
+					String cName = typesToStr(s);
 					classNames.add(cName);
 				}
 				in.close();

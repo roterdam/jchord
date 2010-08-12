@@ -57,6 +57,7 @@ import chord.util.tuple.integer.IntTrio;
 public class TraceTransformer {
 	private final String rdFileName;
 	private final String wrFileName;
+	private final boolean silent;
 
 	// cached values from scheme for efficiency
 	private final boolean newAndNewArrayHasHid;
@@ -90,11 +91,11 @@ public class TraceTransformer {
 	private final int leaveMethodNumBytes;
 
 	private ByteBufferedFile reader, writer;
-	private static final int MAX_CONSTR_SIZE = Config.maxConstr;
+	private static final int MAX_CONS_SIZE = Config.maxConsSize;
 	// accumulates bytes that have yet to be written to 'writer'
 	private byte[] tmp;
 	// the number of bytes currently accumulated in 'tmp'
-	// invariant: count < MAX_CONSTR_SIZE
+	// invariant: count < MAX_CONS_SIZE
 	private int count;
 	// The pending list contains triples (h, t, count) such that
 	// event "BEF_NEW h t" has been seen but event "AFT_NEW h t o"
@@ -103,11 +104,11 @@ public class TraceTransformer {
 	// index of byte ? of the placeholder event "NEW h t ?" kept
 	// in 'tmp'.  If the matching AFT_NEW event is encountered
 	// before the number of bytes accumulated in 'tmp' exceeds
-	// MAX_CONSTR_SIZE, the ? in the placeholder event is replaced
+	// MAX_CONS_SIZE, the ? in the placeholder event is replaced
 	// by o.  Otherwise, a warning is printed that the object
 	// allocated at site h could not be determined, in which case
 	// ? takes value 0 which is the value of null.  This may
-	// happen either because MAX_CONSTR_SIZE is not big enough or
+	// happen either because MAX_CONS_SIZE is not big enough or
 	// because the constructor threw an exception, causing the
 	// matching AFT_NEW event to be bypassed.
 	private List<IntTrio> pending;
@@ -125,6 +126,7 @@ public class TraceTransformer {
 	public TraceTransformer(String rdFileName, String wrFileName, InstrScheme scheme) {
 		this.rdFileName = rdFileName;
 		this.wrFileName = wrFileName;
+		this.silent = Config.dynamicSilent;
 		newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasLoc();
 		newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasThr();
 		newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasObj();
@@ -164,16 +166,17 @@ public class TraceTransformer {
 	 */
 	public void run() {
 		try {
-			reader = new ByteBufferedFile(Config.traceBlockSize, rdFileName, true);
-			writer = new ByteBufferedFile(Config.traceBlockSize, wrFileName, false);
+			int traceBlockSize = Config.traceBlockSize;
+			reader = new ByteBufferedFile(traceBlockSize, rdFileName, true);
+			writer = new ByteBufferedFile(traceBlockSize, wrFileName, false);
 			pending = new ArrayList<IntTrio>();
  			tmp = new byte[100000];
 			count = 0; // size of tmp
 			while (!reader.isDone()) {
 				if (count != 0) {
-					if (count >= MAX_CONSTR_SIZE) {
+					if (count >= MAX_CONS_SIZE) {
 						warn();
-						System.out.println("Evicting oldest.");
+						if (!silent) System.out.println("Evicting oldest.");
 						// remove 1st item in pending, it is oldest
 						pending.remove(0);
 						adjust();
@@ -374,11 +377,13 @@ public class TraceTransformer {
 		tmp[count++] = v;
 	}
 	private void warn() {
-		System.out.println("WARN: Active constructors in order are as follows:");
-		for (int i = 0; i < pending.size(); i++) {
-			IntTrio trio = pending.get(i);
-			int size = MAX_CONSTR_SIZE - trio.idx2;
-			System.out.println("\thId=" + trio.idx0 + ", tId=" + trio.idx1 + ", size=" + size);
+		if (!silent) {
+			System.out.println("WARN: Active constructors in order are as follows:");
+			for (int i = 0; i < pending.size(); i++) {
+				IntTrio trio = pending.get(i);
+				int size = MAX_CONS_SIZE - trio.idx2;
+				System.out.println("\thId=" + trio.idx0 + ", tId=" + trio.idx1 + ", size=" + size);
+			}
 		}
 	}
 }

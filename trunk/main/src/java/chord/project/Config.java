@@ -17,6 +17,8 @@ import chord.util.FileUtils;
 public class Config {
 	private static final String USER_DIR_AS_CHORD_WORK_DIR =
 		"WARN: Property chord.work.dir not set; using value of user.dir (`%s`) instead.";
+	private static final String BAD_OPTION =
+		"ERROR: Unknown value '%s' for system property '%s'; expected: %s";
 	private static final String CHORD_MAIN_DIR_UNDEFINED =
 		"ERROR: Property chord.main.dir not set; must be set to the absolute location of the directory named 'main' in your Chord installation.";
 	private static final String CHORD_WORK_DIR_UNDEFINED =
@@ -36,7 +38,11 @@ public class Config {
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
 	public static String libDirName = FileUtils.getAbsolutePath(mainDirName, "lib");
+	// This source of this agent is defined in main/src/agent/chord_instr_agent.cpp.
+	// See the ccompile target in main/build.xml and main/src/agent/Makefile for how it is built.
 	public static String cInstrAgentFileName = libDirName + File.separator + "libchord_instr_agent.so";
+	// This source of this agent is defined in main/src/java/chord/instr/OnlineTransformer.java.
+	// See the jcompile target in main/build.xml for how it is built.
 	public static String jInstrAgentFileName = libDirName + File.separator + "chord_instr_agent.jar";
 	public final static String javadocURL = "http://chord.stanford.edu/javadoc_2_0/";
 
@@ -89,7 +95,7 @@ public class Config {
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		concat(mainClassPathPackages, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
 
-	public final static String scopeExcludeStdStr = System.getProperty("chord.scope.exclude.std", DEFAULT_SCOPE_EXCLUDES);
+	public final static String scopeExcludeStdStr = DEFAULT_SCOPE_EXCLUDES;
 	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
 	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
 		concat(scopeExcludeStdStr, ',', scopeExcludeExtStr));
@@ -97,16 +103,16 @@ public class Config {
 
 	// Program analysis properties
 
-	public static String javaAnalysisPathName = mainRel2AbsPath("chord.java.analysis.path", "classes");
-	public static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path", "src" + File.separator + "dlog");
+	public final static String javaAnalysisPathName = mainRel2AbsPath("chord.java.analysis.path", "classes");
+	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path", "src" + File.separator + "dlog");
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
 	public final static boolean publishResults = buildBoolProperty("chord.publish.results", true);
 
-	public final static String checkExcludeStdStr = System.getProperty("chord.check.exclude.std", DEFAULT_CHECK_EXCLUDES);
+	public final static String checkExcludeStdStr = DEFAULT_CHECK_EXCLUDES;
 	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
-	public static String checkExcludeStr = System.getProperty("chord.check.exclude",
+	public final static String checkExcludeStr = System.getProperty("chord.check.exclude",
 		concat(checkExcludeStdStr, ',', checkExcludeExtStr));
-	public static String[] checkExcludeAry = toArray(checkExcludeStr);
+	public final static String[] checkExcludeAry = toArray(checkExcludeStr);
 
     // Program transformation properties
  
@@ -120,15 +126,22 @@ public class Config {
 
 	// Chord instrumentation properties
 
-	public final static boolean reuseTrace = buildBoolProperty("chord.reuse.trace", false);
-	public final static boolean doTracePipe = buildBoolProperty("chord.trace.pipe", true);
+	public final static String instrKind = System.getProperty("chord.instr.kind", "offline");
+	static {
+		if (!instrKind.equals("offline") && !instrKind.equals("online"))
+			Messages.fatal(BAD_OPTION, instrKind, "chord.instr.kind", "[offline|online]");
+	}
+	public final static String traceKind = System.getProperty("chord.trace.kind", "pipe");
+	static {
+		if (!traceKind.equals("none") && !traceKind.equals("full") && !traceKind.equals("pipe"))
+			Messages.fatal(BAD_OPTION, traceKind, "chord.trace.kind", "[full|pipe|none]");
+	}
+	public final static boolean reuseTraces = buildBoolProperty("chord.reuse.traces", false);
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
-	public final static String runtimeClassName =
-		System.getProperty("chord.runtime.class", chord.runtime.BufferedRuntime.class.getName());
-	public final static int maxConstr = Integer.getInteger("chord.max.constr", 50000000);
-	public final static int dynamicTimeoutMs = Integer.getInteger("chord.dynamic.timeout.ms", -1);
-    public final static boolean dynamicContinueOnError =
-		buildBoolProperty("chord.dynamic.continueonerror", true);
+	public final static boolean dynamicHaltOnErr = buildBoolProperty("chord.dynamic.haltonerr", true);
+	public final static int dynamicTimeout = Integer.getInteger("chord.dynamic.timeout", -1);
+	public final static int maxConsSize = Integer.getInteger("chord.max.cons.size", 50000000);
+	public final static boolean dynamicSilent = buildBoolProperty("chord.dynamic.silent", false);
 
 	// Chord output properties
 
@@ -159,8 +172,7 @@ public class Config {
 	public final static String bootClassesDirName = outRel2AbsPath("chord.boot.classes.dir", "boot_classes");
 	public final static String userClassesDirName = outRel2AbsPath("chord.user.classes.dir", "user_classes");
 	public final static String instrSchemeFileName = outRel2AbsPath("chord.instr.scheme.file", "scheme.ser");
-	public final static String crudeTraceFileName = outRel2AbsPath("chord.crude.trace.file", "crude_trace");
-	public final static String finalTraceFileName = outRel2AbsPath("chord.final.trace.file", "final_trace");
+	public final static String traceFileName = outRel2AbsPath("chord.trace.file", "trace");
 
 	public static void print() {
 		System.out.println("*** Chord resource properties:");
@@ -220,13 +232,14 @@ public class Config {
 		System.out.println("chord.save.maps: " + saveDomMaps);
 
 		System.out.println("*** Chord instrumentation properties:");
-		System.out.println("chord.reuse.trace: " + reuseTrace);
-		System.out.println("chord.trace.pipe: " + doTracePipe);
+		System.out.println("chord.instr.kind: " + instrKind);
+		System.out.println("chord.trace.kind: " + traceKind);
+		System.out.println("chord.reuse.traces: " + reuseTraces);
 		System.out.println("chord.trace.block.size: " + traceBlockSize);
-		System.out.println("chord.runtime.class: " + runtimeClassName);
-		System.out.println("chord.max.constr: " + maxConstr);
-		System.out.println("chord.dynamic.timeout.ms: " + dynamicTimeoutMs);
-		System.out.println("chord.dynamic.continueonerror: " + dynamicContinueOnError);
+		System.out.println("chord.dynamic.haltonerr: " + dynamicHaltOnErr);
+		System.out.println("chord.dynamic.timeout: " + dynamicTimeout);
+		System.out.println("chord.max.cons.size: " + maxConsSize);
+		System.out.println("chord.dynamic.silent: " + dynamicSilent);
 
 		System.out.println("*** Chord output properties:");
 		System.out.println("chord.out.dir: " + outDirName);
@@ -239,8 +252,7 @@ public class Config {
 		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
 		System.out.println("chord.user.classes.dir: " + userClassesDirName);
 		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
-		System.out.println("chord.crude.trace.file: " + crudeTraceFileName);
-		System.out.println("chord.final.trace.file: " + finalTraceFileName);
+		System.out.println("chord.trace.file: " + traceFileName);
 	}
 	private static String outRel2AbsPath(String propName, String fileName) {
 		String val = System.getProperty(propName);
