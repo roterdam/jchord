@@ -23,7 +23,7 @@ import chord.analyses.alias.DomC;
 import chord.analyses.alias.DomO;
 import chord.analyses.alias.ICSCG;
 import chord.analyses.alias.ThrSenAbbrCSCGAnalysis;
-import chord.analyses.snapshot.Execution;
+import chord.util.Execution;
 import chord.analyses.thread.DomA;
 import chord.bddbddb.Rel.PairIterable;
 import chord.bddbddb.Rel.RelView;
