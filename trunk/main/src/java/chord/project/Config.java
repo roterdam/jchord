@@ -104,7 +104,9 @@ public class Config {
 	// Program analysis properties
 
 	public final static String javaAnalysisPathName = mainRel2AbsPath("chord.java.analysis.path", "classes");
-	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path", "src" + File.separator + "dlog");
+	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path",
+		"src" + File.separator + "dlog" + File.pathSeparator +
+		".." + File.separator + "extra" + File.separator + "dlog");
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
 	public final static boolean publishResults = buildBoolProperty("chord.publish.results", true);
 
