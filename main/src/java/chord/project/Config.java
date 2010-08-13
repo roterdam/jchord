@@ -105,8 +105,8 @@ public class Config {
 
 	public final static String javaAnalysisPathName = mainRel2AbsPath("chord.java.analysis.path", "classes");
 	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path",
-		"src" + File.separator + "dlog" + File.pathSeparator +
-		".." + File.separator + "extra" + File.separator + "dlog");
+		"src" + File.separator + "dlog",
+		".." + File.separator + "extra" + File.separator + "src" + File.separator + "dlog");
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
 	public final static boolean publishResults = buildBoolProperty("chord.publish.results", true);
 
@@ -256,17 +256,23 @@ public class Config {
 		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
 		System.out.println("chord.trace.file: " + traceFileName);
 	}
-	private static String outRel2AbsPath(String propName, String fileName) {
-		String val = System.getProperty(propName);
-		return (val != null) ? val : FileUtils.getAbsolutePath(outDirName, fileName);
+	private static String rel2absPath(String dirName, String...fileNames) {
+		String path = FileUtils.getAbsolutePath(dirName, fileNames[0]);
+		for (int i = 1; i < fileNames.length; i++)
+			path += File.pathSeparator + FileUtils.getAbsolutePath(dirName, fileNames[i]);
+		return path;
 	}
-	private static String mainRel2AbsPath(String propName, String fileName) {
+	private static String outRel2AbsPath(String propName, String... fileNames) {
 		String val = System.getProperty(propName);
-		return (val != null) ? val : FileUtils.getAbsolutePath(mainDirName, fileName);
+		return (val != null) ? val : rel2absPath(outDirName, fileNames);
 	}
-	private static String workRel2AbsPath(String propName, String fileName) {
+	private static String mainRel2AbsPath(String propName, String... fileNames) {
 		String val = System.getProperty(propName);
-		return (val != null) ? val : FileUtils.getAbsolutePath(workDirName, fileName);
+		return (val != null) ? val : rel2absPath(mainDirName, fileNames);
+	}
+	private static String workRel2AbsPath(String propName, String... fileNames) {
+		String val = System.getProperty(propName);
+		return (val != null) ? val : rel2absPath(workDirName, fileNames);
 	}
 	public static boolean buildBoolProperty(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
