@@ -131,8 +131,8 @@
 		Classpath of bddbddb
 	-->
 	<path id="bddbddb_class_path">
-		<fileset dir="lib/bddbddb" includes="*.jar"/>
-		<pathelement location="lib/jwutil.jar"/>
+		<fileset dir="${lib.home}/bddbddb" includes="*.jar"/>
+		<pathelement location="${lib.home}/jwutil.jar"/>
 	</path>
 	<property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
 
@@ -147,9 +147,9 @@
 		<pathelement path="${chord.bddbddb.class.path}"/>
 		<pathelement location="${lib.home}/trove-2.0.4.jar"/>
 		<pathelement location="${lib.home}/scannotation-1.0.2.jar"/>
-		<pathelement location="lib/joeq.jar"/>
-		<pathelement location="lib/javassist.jar"/>
-		<pathelement location="lib/j2h.jar"/>
+		<pathelement location="${lib.home}/joeq.jar"/>
+		<pathelement location="${lib.home}/javassist.jar"/>
+		<pathelement location="${lib.home}/j2h.jar"/>
 	</path>
 	<property name="chord.main.class.path" refid="main_class_path"/>
 
@@ -175,10 +175,17 @@
 		Compiles Java part of the project.
 	-->
 	<target name="jcompile" description="Compiles Java part of the project">
+		<if>
+			<available file="../extra/src/java" type="dir"/>
+			<then><property name="srcdirs" value="src/java:../extra/src/java"/></then>
+			<else><property name="srcdirs" value="src/java"/></else>
+		</if>
 		<property environment="env"/>
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			srcdir="src/java" destdir="classes" classpathref="main_class_path"/>
+			destdir="classes" classpathref="main_class_path">
+			<src path="${srcdirs}"/>
+		</javac>
 		<jar destfile="${lib.home}/chord_instr_agent.jar">
 			<manifest>
 				<attribute name="Premain-Class" value="chord.instr.OnlineTransformer"/>
@@ -302,7 +309,7 @@
 			<arg value="-t"/>
 			<arg value="4"/>
 			<classpath>
-				<pathelement location="lib/j2h.jar"/>
+				<pathelement location="${lib.home}/j2h.jar"/>
 			</classpath>
 		</java>
   </target>
