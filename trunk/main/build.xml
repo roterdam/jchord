@@ -13,7 +13,7 @@
 		compile   Compile Chord source code
 		run       Run Chord
 		          Optional properties:
-		          See http://code.google.com/p/jchord/wiki/ChordProperties
+		          See http://jchord.googlecode.com/svn/wiki/user_guide/index.html
 		j2h_xref  Convert .java files to .html with cross-references
 		          Required properties:
 		          - java.dir (dir containing Java source files)
