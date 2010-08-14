@@ -55,10 +55,8 @@ import java.util.HashSet;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor extends CoreInstrumentor {
-	public final static String INSTR_SCHEME_KEY = "instr_scheme_file_name";
-
 	private static final String INSTR_SCHEME_UNDEFINED =
-		"ERROR: Instrumentor: expected value for option `" + INSTR_SCHEME_KEY + "`.";
+		"ERROR: Instrumentor: expected value for option `" + InstrScheme.INSTR_SCHEME_FILE_KEY + "`.";
 	private static final String NOT_IN_DOMAIN =
 		"WARN: Instrumentor: Domain '%s' does not contain '%s'";
 	private static final String NON_EXISTENT_PATH_ELEM =
@@ -188,14 +186,14 @@ public class Instrumentor extends CoreInstrumentor {
 	public IndexMap<String> getBmap() { return Bmap; }
 
 	private static InstrScheme loadInstrScheme(Map<String, String> argsMap) {
-		String s = argsMap.get(INSTR_SCHEME_KEY);
+		String s = argsMap.get(InstrScheme.INSTR_SCHEME_FILE_KEY);
 		if (s == null)
 			Messages.fatal(INSTR_SCHEME_UNDEFINED);
 		return InstrScheme.load(s);
 	}
 
 	private static String getEventHandlerClassName(Map<String, String> argsMap) {
-		String s = argsMap.get(CoreEventHandler.ARG_KEY);
+		String s = argsMap.get(CoreEventHandler.EVENT_HANDLER_CLASS_KEY);
 		if (s == null)
 			s = EventHandler.class.getName();
 		return s;

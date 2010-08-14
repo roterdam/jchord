@@ -324,7 +324,8 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			Pair<Class, Map<String, String>> kind = getEventHandler();
 			String name = kind.val0.getName().replace('.', '/');
 			String args = mapToStr(kind.val1);
-			String cAgentArgs = "=" + CoreEventHandler.ARG_KEY + "=" + name + args;
+			String cAgentArgs = "=" + CoreEventHandler.EVENT_HANDLER_CLASS_KEY +
+				"=" + name + args;
 			if (isWithTrace) {
 				int traceBlockSize = getTraceBlockSize();
 				String traceFileName = getTraceFileName(numTransformers);
@@ -337,7 +338,8 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			Pair<Class, Map<String, String>> kind = getInstrumentor();
 			String name = kind.val0.getName().replace('.', '/');
 			String args = mapToStr(kind.val1);
-			String jAgentArgs = "=" + CoreInstrumentor.ARG_KEY + "=" + name + args;
+			String jAgentArgs = "=" + CoreInstrumentor.INSTRUMENTOR_CLASS_KEY +
+				"=" + name + args;
 			basecmd.add("-javaagent:" + Config.jInstrAgentFileName + jAgentArgs);
 		}
 		basecmd.add(mainClassName);

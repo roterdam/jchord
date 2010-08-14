@@ -19,7 +19,7 @@ import chord.util.ByteBufferedFile;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class CoreEventHandler {
-	public final static String ARG_KEY = "event_handler_class_name";
+	public final static String EVENT_HANDLER_CLASS_KEY = "event_handler_class_name";
 	/**
 	 * Flag determining when it is safe to start handling events at runtime.
 	 * It is false when the JVM starts.  It is set to true in the
