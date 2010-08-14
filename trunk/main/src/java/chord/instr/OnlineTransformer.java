@@ -63,7 +63,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			for (int i = 0; i < n; i++)
 				argsMap.put(args[i*2], args[i*2+1]);
 		}
-		String instrClassName = argsMap.get(CoreInstrumentor.ARG_KEY);
+		String instrClassName = argsMap.get(CoreInstrumentor.INSTRUMENTOR_CLASS_KEY);
 		Class instrClass = null;
 		if (instrClassName != null) {
 			try {
