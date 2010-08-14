@@ -1,0 +1,6 @@
+Source code for the generalized dynamic deadlock detector presented in the paper:
+
+An Effective Dynamic Analysis for Detecting Generalized Deadlocks  
+Pallavi Joshi, Mayur Naik, Koushik Sen, and David Gay 
+FSE'10: ACM Symposium on Foundations of Software Engineering 
+

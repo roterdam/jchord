@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="waitnotify" default="compile">
+	<property name="chord.home.dir" location="../../main"/>
+	<target name="compile">
+		<mkdir dir="classes"/>
+		<javac debug="true" debuglevel="source,lines,vars" source="1.5" target="1.5"
+				srcdir="src/java" destdir="classes">
+			<classpath>
+				<pathelement location="classes"/>
+				<pathelement location="${chord.home.dir}/classes/"/>
+				<pathelement location="${chord.home.dir}/lib/joeq.jar"/>
+				<pathelement location="${chord.home.dir}/lib/jwutil.jar"/>
+				<pathelement location="${chord.home.dir}/lib/trove-2.0.4.jar"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="run-wn">
+		<path id="chord_java_analysis_path">
+			<pathelement location="${chord.home.dir}/classes"/>
+			<pathelement location="classes"/>
+		</path>
+		<property name="chord.run.analyses" value="wn-log"/> 
+		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/> 
+		<property name="chord.max.heap" value="3072m"/>
+		<property name="chord.scope.exclude.ext" value="java.,sun.,com.ibm.,org.apache.harmony.,org.jruby.parser."/>
+		<property name="wn.dir" location="."/>
+		<ant dir="${chord.home.dir}" target="run"/>
+	</target>
+</project>
