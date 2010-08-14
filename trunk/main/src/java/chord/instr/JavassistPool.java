@@ -29,6 +29,8 @@ public class JavassistPool {
 	private final Set<String> userClassPathResourceNames;
 	private final ClassPool pool;
 	public JavassistPool(String mainClassPathName, String userClassPathName) {
+		assert (mainClassPathName != null);
+		assert (userClassPathName != null);
 		pool = new ClassPool();
 
         bootClassPathResourceNames = new HashSet<String>();
