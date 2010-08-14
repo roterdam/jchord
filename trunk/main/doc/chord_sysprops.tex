@@ -7,7 +7,7 @@
 Users can use system properties to control \Chord's functionality.
 The following properties are recognized by \Chord.
 The separator for list-valued properties can be either a blank space, a comma, a colon, or a semi-colon.
-Notation \code{[<...>]} is used in this section to denote the value of the property named \code{<...>}.
+Notation {\tt [<...>]} is used in this section to denote the value of the property named {\tt <...>}.
 
 \subsection{Basic Program Properties}
 
@@ -25,74 +25,92 @@ to be used to run the program.
 \item
 \code{chord.class.path} \\
 {\bf Type:} path \\
-{\bf Description:} Classpath of the given program.  It does not need to include boot classes (i.e., classes in \code{[sun.boot.class.path]}) or standard extensions (i.e., classes in \code{.jar} files in directory \code{[java.home]/lib/ext/}). \\
-{\bf Default value:} \code{""} \\
+{\bf Description:} Classpath of the given program.  It does not need to include boot classes (i.e., classes in \code{[sun.boot.class.path]}) or standard extensions (i.e., classes in {\tt .jar} files in directory \code{[java.home]/lib/ext/}). \\
+{\bf Default value:} {\tt ""} \\
 {\bf Note:} This property is required by virtually every task \Chord\ performs.
 
 \item
 \code{chord.src.path} \\
 {\bf Type:} path \\
 {\bf Description:} Java source path of the given program. \\
-{\bf Default value:} \code{""}  \\
-{\bf Note:} \Chord\ analyzes only Java bytecode, not Java source code.  This property is used only by the task of converting Java source files into HTML files by program analyses that need to present their analysis results at the Java source code level (by calling method \code{chord.program.Program.v().HTMLizeJavaSrcFiles())}.
+{\bf Default value:} {\tt ""}  \\
+{\bf Note:} \Chord\ analyzes only Java bytecode, not Java source code.  This property is used only by the task of converting Java source files into HTML files by program analyses that need to present their analysis results at the Java source code level (by calling method \code{chord.program.Program.getProgram().HTMLizeJavaSrcFiles())}.
 
 \item
 \code{chord.run.ids} \\
 {\bf Type:} string list \\
 {\bf Description:} List of IDs to identify runs of the given program. \\
-{\bf Default value:} \code{0} \\
-{\bf Note:} This property is used only when \Chord\ executes the given program, namely, when it is asked to build the analysis scope dynamically (i.e., when \code{[chord.scope.kind]=dynamic}) or when it is asked to execute a dynamic program analysis.
+{\bf Default value:} {\tt 0} \\
+{\bf Note:} This property is used only when \Chord\ executes the given program, namely, when it is asked to compute the program scope dynamically (i.e., when \code{[chord.scope.kind]=dynamic}) or when it is asked to execute a dynamic program analysis.
 
 \item
 \code{chord.args.<id>} \\
 {\bf Type:} string \\
-{\bf Description:} Command-line arguments string to be used for the given program in the run having ID \code{<id>}. \\
-{\bf Default value:} \code{""} \\
-{\bf Note:} This property is used only when \Chord\ executes the given program, namely, when it is asked to build the analysis scope dynamically (i.e., when \code{[chord.scope.kind]=dynamic}) or when it is asked to execute a dynamic program analysis.
+{\bf Description:} Command-line arguments string to be used for the given program in the run having ID {\tt <id>}. \\
+{\bf Default value:} {\tt ""} \\
+{\bf Note:} This property is used only when \Chord\ executes the given program, namely, when it is asked to compute the program scope dynamically (i.e., when \code{[chord.scope.kind]=dynamic}) or when it is asked to execute a dynamic program analysis.
 
 \item
 \code{chord.runtime.jvmargs} \\
 {\bf Type:} string \\
 {\bf Description:} Arguments to JVM which runs the given program. \\
-{\bf Default value:} \code{"-ea} \code{-Xmx1024m"} \\
-{\bf Note:} This property is used only when \Chord\ executes the given program, namely, when it is asked to build the analysis scope dynamically (i.e., when \code{[chord.scope.kind]=dynamic}) or when it is asked to execute a dynamic program analysis.
+{\bf Default value:} {\tt "-ea -Xmx1024m"} \\
+{\bf Note:} This property is used only when \Chord\ executes the given program, namely, when it is asked to compute the program scope dynamically (i.e., when \code{[chord.scope.kind]=dynamic}) or when it is asked to execute a dynamic program analysis.
 \end{itemize}
 
 \subsection{Chord Task Properties}
 \label{sec:chord-sysprops:task}
 
 This section describes properties that specify what task(s) \Chord\ must perform, 
-such as computing the analysis scope of the given program or running program analyses on the given program.
+such as computing the scope of the given program or running program analyses on the given program.
 
 \begin{itemize}
 \item
 \code{chord.build.scope} \\
 {\bf Type:} bool \\
-{\bf Description:} Compute the analysis scope (i.e., reachable classes and methods) of the given program using the algorithm specified by properties \code{chord.scope.kind} and \code{chord.reuse.scope}. \\
-{\bf Default value:} \code{false} \\
-{\bf Note:} The analysis scope is computed regardless of the value of this property if another task
-(e.g., a program analysis specified via property \code{chord.run.analyses}) demands it by
-calling method \code{chord.program.Program.v()}.
+{\bf Description:} Compute the scope (i.e., reachable classes and methods) of the given program using the algorithm specified by properties \code{chord.scope.kind} and \code{chord.reuse.scope}. \\
+{\bf Default value:} {\tt false} \\
+{\bf Note:} The program scope is computed regardless of the value of this property if another task (e.g., a program analysis specified via property \code{chord.run.analyses}) demands it by calling method \code{chord.program.Program.getProgram()}.
 
 \item
 \code{chord.run.analyses} \\
 {\bf Type:} string list \\
 {\bf Description:} List of names of program analyses to be run in order. \\
-{\bf Default value:} \code{""} \\
-{\bf Note:} If the analysis is written in Java, its name is specified via statement \code{name=<...>} in its \code{@Chord} annotation, and is the name of the class itself if this statement is missing.  If the analysis is written in Datalog, its name is specified via a line of the form \code{"#} \code{name=<...>"}, and is the absolute location of the file itself if this line is missing.
+{\bf Default value:} {\tt ""} \\
+{\bf Note:} If the analysis is written in Java, its name is specified via statement {\tt name=<...>} in its {\tt @Chord} annotation, and is the name of the class itself if this statement is missing.  If the analysis is written in Datalog, its name is specified via a line of the form ``{\tt \# name=<...>}", and is the absolute location of the file itself if this line is missing.
+
+\item
+\code{chord.print.classes} \\
+{\bf Type:} string list \\
+{\bf Description:} List of classes in scope whose intermediate representation to print to standard output. \\
+{\bf Default value:} {\tt ""} \\
+{\bf Note:} In class names, use `.' instead of `/', and use {\tt \#} instead of the dollar character.
+
+\item
+\code{chord.print.methods} \\
+{\bf Type:} string list \\
+{\bf Description:} List of methods in scope whose intermediate representation to print to standard output. \\
+{\bf Default value:} {\tt ""} \\
+{\bf Note:} Specify each method in format \code{<mname>:<mdesc>@<cname>} where {\tt <mname>} is the method's name, {\tt <mdesc>} is the method's descriptor, and {\tt <cname>} is the name of the method's declaring class. In {\tt <cname>}, use `.' instead of `/', and use {\tt \#} instead of the dollar character.
+
+\item
+\code{chord.print.all.classes} \\
+{\bf Type:} bool \\
+{\bf Description:} Print intermediate representation of all classes in scope to standard output. \\
+{\bf Default value:} {\tt false}
 
 \item
 \code{chord.print.rels} \\
 {\bf Type:} string list \\
-{\bf Description:} List of names of program relations whose contents must be printed to files \code{[chord.out.dir]/<...>.txt} where \code{<...>} denotes the relation name. \\
-{\bf Default value:} \code{""} \\
-{\bf Note:} This task must be used with caution as certain program relations, albeit represented compactly as BDDs, may contain a large number (e.g., billions) of tuples, resulting in voluminous output when printed to a file.  See Section \ref{sec:tuning-datalog-analysis} for a more efficient way to query the contents of program relations (namely, by using the \code{debug} target provided in file \code{build.xml} in \Chord's \code{main/} directory).
+{\bf Description:} List of names of program relations whose contents must be printed to files \code{[chord.out.dir]/<...>.txt} where {\tt <...>} denotes the relation name. \\
+{\bf Default value:} {\tt ""} \\
+{\bf Note:} This task must be used with caution as certain program relations, albeit represented compactly as BDDs, may contain a large number (e.g., billions) of tuples, resulting in voluminous output when printed to a file.  See Section \ref{sec:tuning-datalog-analysis} for a more efficient way to query the contents of program relations (namely, by using the {\tt debug} target provided in file {\tt build.xml} in \Chord's {\tt main/} directory).
 
 \item
 \code{chord.publish.targets} \\
 {\bf Type:} bool \\
 {\bf Description:} Create files \code{targets_sortby_name.html}, \code{targets_sortby_kind.html}, and \code{targets_sortby_producers.html} in directory \code{[chord.out.dir]}, publishing all targets defined by program analyses in paths \code{[chord.java.analysis.path]} and \code{[chord.dlog.analysis.path]}. \\
-{\bf Default value:} \code{false}
+{\bf Default value:} {\tt false}
 \end{itemize}
 
 \subsection{Chord Boot Properties}
@@ -116,13 +134,13 @@ This section describes properties of the JVM running \Chord, such as the working
 \code{chord.max.heap} \\
 {\bf Type:} string \\
 {\bf Description:} Maximum memory size of JVM running \Chord. \\
-{\bf Default value:} \code{1024m} 
+{\bf Default value:} {\tt 1024m} 
 
 \item 
 \code{chord.max.stack} \\
 {\bf Type:} string \\
 {\bf Description:} Maximum thread stack size of JVM running \Chord. \\
-{\bf Default value:} \code{32m} 
+{\bf Default value:} {\tt 32m} 
 
 \item
 \code{chord.jvmargs} \\
@@ -134,7 +152,7 @@ This section describes properties of the JVM running \Chord, such as the working
 \code{chord.bddbddb.max.heap} \\
 {\bf Type:} string \\
 {\bf Description:} Maximum memory size of JVM running \bddbddb. \\
-{\bf Default value:} \code{1024m} \\
+{\bf Default value:} {\tt 1024m} \\
 {\bf Note:} Each program analysis written in Datalog is run in a separate JVM because there may be multiple invocations of the Datalog solver \bddbddb\ in a single run of \Chord\ and it is difficult to reset the global state of \bddbddb\ on each invocation.
 \end{itemize}
 
@@ -147,22 +165,22 @@ See Section \ref{sec:building-scope} for more details.
 \item
 \code{chord.reuse.scope} \\
 {\bf Type:} bool \\
-{\bf Description:} Treat analysis scope as the classes and methods listed in files specified by properties \code{chord.classes.file} and \code{chord.methods.file}, respectively.  Property \code{chord.scope.kind} is ignored if this property is set to \code{true} and the two files exist. \\
-{\bf Default value:} \code{false}
+{\bf Description:} Treat analysis scope as the classes and methods listed in files specified by properties \code{chord.classes.file} and \code{chord.methods.file}, respectively.  Property \code{chord.scope.kind} is ignored if this property is set to {\tt true} and the two files exist. \\
+{\bf Default value:} {\tt false}
 
 \item
 \code{chord.scope.kind} \\
-{\bf Type:} [\code{dynamic}$|$\code{rta}$|$\code{rta_reflect}$|$\code{cha}] \\
-{\bf Description:} Algorithm to compute analysis scope (i.e., reachable classes and methods).  Current choices include \code{dynamic} (dynamic analysis), \code{rta} (static Rapid Type Analysis ignoring reflection), \code{rta_reflect} (static Rapid Type Analysis modeling a common reflection pattern), and \code{cha} (static Class Hierarchy Analysis). \\
-{\bf Default value:} \code{rta}
+{\bf Type:} [\code{dynamic}$|$\code{rta}$|$\code{cha}] \\
+{\bf Description:} Algorithm to compute analysis scope (i.e., reachable classes and methods).  Current choices include {\tt dynamic} (dynamic analysis), {\tt rta} (static Rapid Type Analysis), and {\tt cha} (static Class Hierarchy Analysis). \\
+{\bf Default value:} {\tt rta}
 
 \item
-\code{chord.ch.dynamic} \\
-{\bf Type:} bool \\
-{\bf Description:} Compute the set of all classes loaded by the JVM while running the given program, and exclude classes not in this set (and their subclasses) while building the class hierarchy.  This property is relevant only if \code{chord.scope.kind} is \code{rta_reflect} or \code{cha}, since only these two scope computing algorithms query the class hierarchy. \\
-{\bf Default value:} \code{false} 
+\code{chord.ch.kind} \\
+{\bf Type:} [\code{static}$|$\code{dynamic}] \\
+{\bf Description:} Algorithm to build the class hierarchy.  If it is {\tt dynamic}, then the given program is executed and classes not loaded by the JVM while running the program are excluded while building the class hierarchy.  This property is relevant only if \code{chord.scope.kind} is {\tt cha} since only this scope computing algorithm queries the class hierarchy. \\
+{\bf Default value:} {\tt static} 
 
-% TODO: mention that below three properties are also used by instrumentor to decide which classes to exclude from instrumentation
+% TODO: mention that below two properties are also used by instrumentor to decide which classes to exclude from instrumentation
 
 \item
 \code{chord.scope.exclude.std} \\
@@ -174,13 +192,13 @@ See Section \ref{sec:building-scope} for more details.
 \code{chord.scope.exclude.ext} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes outside the standard library whose method bodies must be treated as no-ops by static scope building algorithms. \\
-{\bf Default value:} \code{""}
+{\bf Default value:} {\tt ""}
 
 \item
 \code{chord.scope.exclude} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes whose method bodies must be treated as no-ops by static scope building algorithms. \\
-{\bf Default value:} \code{"[chord.scope.exclude.std],[chord.scope.exclude.ext]"}
+{\bf Default value:} \code{"[chord.main.class.path],[chord.scope.exclude.ext]"}
 \end{itemize}
 
 \subsection{Program Analysis Properties}
@@ -191,29 +209,28 @@ This section describes properties regarding program analyses executed by \Chord.
 \item
 \code{chord.java.analysis.path} \\
 {\bf Type:} path \\
-{\bf Description:} Classpath containing program analyses written in Java (i.e., \code{@Chord}-annotated classes). \\
+{\bf Description:} Classpath containing program analyses written in Java (i.e., {\tt @Chord}-annotated classes). \\
 {\bf Default value:} \code{[chord.main.dir]/classes/} 
 
 \item
 \code{chord.dlog.analysis.path} \\
 {\bf Type:} path \\
-{\bf Description:} Path of directories containing program analyses written in Datalog (i.e., \code{*.datalog} and \code{*.dlog} files). \\
-{\bf Default value:} \code{[chord.main.dir]/src/dlog/} 
+{\bf Description:} Path of directories containing program analyses written in Datalog (i.e., files with suffix {\tt .dlog} or {\tt .datalog}). \\
+{\bf Default value:} \code{[chord.main.dir]/src/dlog/:[chord.main.dir]/../extra/src/dlog/} 
 
 \item
 \code{chord.reuse.rels} \\
 {\bf Type:} bool \\
 {\bf Description:} Construct program relations from BDDs stored on disk (from a previous run of \Chord) whenever possible instead of re-computing them. \\
-{\bf Default value:} \code{false} 
+{\bf Default value:} {\tt false} 
 % TODO: tell when this doesn't work
 
 \item
 \code{chord.publish.results} \\
 {\bf Type:} bool \\
 {\bf Description:} Publish the results of program analyses in HTML.  Interpretation of this property is analysis-specific. \\
-{\bf Default value:} \code{true} 
+{\bf Default value:} {\tt true} 
 
-\item
 \code{chord.check.exclude.std} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes and packages inside the standard library to be excluded by program analyses.  Interpretation of this property is analysis-specific. \\
@@ -223,7 +240,7 @@ This section describes properties regarding program analyses executed by \Chord.
 \code{chord.check.exclude.ext} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes and packages outside the standard library to be excluded by program analyses.  Interpretation of this property is analysis-specific. \\
-{\bf Default value:} \code{""}
+{\bf Default value:} {\tt ""}
 
 \item
 \code{chord.check.exclude} \\
@@ -241,7 +258,7 @@ This section describes properties regarding program transformations performed by
 \code{chord.ssa} \\
 {\bf Type:} bool \\
 {\bf Description:} Do SSA transformation for all methods deemed reachable by the algorithm used to compute analysis scope. \\
-{\bf Default value:} \code{true} 
+{\bf Default value:} {\tt true} 
 \end{itemize}
 
 \subsection{Chord Debug Properties}
@@ -253,20 +270,20 @@ This section describes properties that specify the amount of debug information t
 \code{chord.verbose} \\
 {\bf Type:} bool \\
 {\bf Description:} Produce more verbose output during \Chord's execution. \\
-{\bf Default value:} \code{false} 
+{\bf Default value:} {\tt false} 
 
 \item
 \code{chord.bddbddb.noisy} \\
 {\bf Type:} bool \\
 {\bf Description:} Produce more verbose output during the Datalog solver \bddbddb's execution. \\
-{\bf Default value:} \code{false} 
+{\bf Default value:} {\tt false} 
 
 \item
 \code{chord.save.maps} \\
 {\bf Type:} bool \\
-{\bf Description:} Write to file \code{[chord.bddbddb.work.dir]/<...>.map} when saving program domain named \code{<...>}. \\
-{\bf Default value:} \code{true}  \\
-{\bf Note:} This functionality is useful for debugging Datalog programs using the \code{debug} target provided in file \code{build.xml} in \Chord's \code{main/} directory (see Section \ref{sec:tuning-datalog-analysis}).
+{\bf Description:} Write to file \code{[chord.bddbddb.work.dir]/<...>.map} when saving program domain named {\tt <...>}. \\
+{\bf Default value:} {\tt true}  \\
+{\bf Note:} This functionality is useful for debugging Datalog programs using the {\tt debug} target provided in file {\tt build.xml} in \Chord's {\tt main/} directory (see Section \ref{sec:tuning-datalog-analysis}).
 \end{itemize}
 
 \subsection{Chord Instrumentation Properties}
@@ -277,37 +294,48 @@ This section describes properties regarding execution of instrumented programs f
 
 \begin{itemize}
 \item
-\code{chord.reuse.trace} \\
+\code{chord.reuse.traces} \\
 {\bf Type:} bool \\
-{\bf Description:} Reuse the dynamic trace file specified by property \code{chord.final.trace.file} (computed by a previous run of \Chord) if it exists. \\
-{\bf Default value:} \code{false} \\
-{\bf Note:} Property \code{chord.trace.pipe} must be set to \code{false} if this property is set to \code{true}.
+{\bf Description:} Reuse dynamic traces computed by a previous run of \Chord\ if they exist. \\
+{\bf Default value:} {\tt false} \\
+{\bf Note:} Property \code{chord.trace.kind} must be set to {\tt full} if this property is set to {\tt true}.
 
 \item
-\code{chord.trace.pipe} \\
-{\bf Type:} bool \\
-{\bf Description:} Implement the dynamic trace file as a POSIX pipe instead of a regular file. \\
-{\bf Default value:} \code{true}  \\
-{\bf Note:} Property \code{chord.reuse.trace} must be set to \code{false} if this property is set to \code{true}.
+\code{chord.trace.kind} \\
+{\bf Type:} [\code{none}$|$\code{full}$|$\code{pipe}] \\
+{\bf Description:} The medium to store dynamic traces (none, regular file, or POSIX pipe). \\
+{\bf Default value:} {\tt full} 
 
 \item
 \code{chord.trace.block.size} \\
 {\bf Type:} int \\
 {\bf Description:} Number of bytes to read/write in a single operation from/to the dynamic trace file. \\
-{\bf Default value:} \code{4096} 
+{\bf Default value:} {\tt 4096} 
 
 \item
-\code{chord.runtime.class} \\
-{\bf Type:} class \\
-{\bf Description:} Subclass of \code{chord.project.Runtime} used by dynamic program analyses to handle events generated during an instrumented program's execution. \\
-{\bf Default value:} \code{chord.project.BufferedRuntime} 
-
-\item
-\code{chord.max.constr} \\
+\code{chord.max.cons.size} \\
 {\bf Type:} int \\
 {\bf Description:} Maximum number of bytes over which events generated during the execution of any constructor in the given program may span. \\
 {\bf Default value:} 50000000 \\
-{\bf Note:} This property is relevant only for dynamic analyses which want events of the form \code{NEW} $h$ $t$ $o$ to be generated (see Section \ref{sec:instr-events}).  The problem with generating such events at run-time is that the ID \code{o} of the object freshly created by thread \code{t} at object allocation site \code{h} cannot be instrumented until the object is fully initialized (i.e., its constructor has finished executing).  Hence, \Chord\ first generates a ``crude dynamic trace", which has events of the form \code{BEF_NEW} $h$ $t$ and \code{AFT_NEW} $h$ $t$ $o$ generated before and after the execution of the constructor, respectively.  A subsequent pass generates a ``final dynamic trace", which replaces the \code{BEF_NEW} $h$ $t$ events by \code{NEW} $h$ $t$ $o$ and discards the \code{AFT_NEW} $h$ $t$ $o$ events.  For this purpose, however, \Chord\ must buffer all events generated between the \code{BEF_NEW} and \code{AFT_NEW} events, and this property specifies the number of bytes over which these events may span.  If the actual number of bytes exceeds the value specified by this property (e.g., if the constructor throws an exception and the \code{AFT_NEW} event is not generated at all), then \Chord\ simply generates event \code{NEW} $h$ $i$ $0$ (i.e., it treats the created object as having ID 0, which is the ID also used for \code{null}).
+{\bf Note:} This property is relevant only for dynamic analyses which want events of the form {\tt NEW} $h$ $t$ $o$ to be generated (see Section \ref{sec:instr-events}).  The problem with generating such events at run-time is that the ID $o$ of the object freshly created by thread $t$ at object allocation site $h$ cannot be instrumented until the object is fully initialized (i.e., its constructor has finished executing).  Hence, \Chord\ first generates a ``crude dynamic trace", which has events of the form {\tt BEF\_NEW} $h$ $t$ and {\tt AFT\_NEW} $h$ $t$ $o$ generated before and after the execution of the constructor, respectively.  A subsequent pass generates a ``final dynamic trace", which replaces the {\tt BEF\_NEW} $h$ $t$ events by {\tt NEW} $h$ $t$ $o$ and discards the {\tt AFT\_NEW} $h$ $t$ $o$ events.  For this purpose, however, \Chord\ must buffer all events generated between the {\tt BEF\_NEW} and {\tt AFT\_NEW} events, and this property specifies the number of bytes over which these events may span.  If the actual number of bytes exceeds the value specified by this property (e.g., if the constructor throws an exception and the {\tt AFT\_NEW} event is not generated at all), then \Chord\ simply generates event {\tt NEW} $h$ $i$ $0$ (i.e., it treats the created object as having ID 0, which is the ID also used for {\tt null}).
+
+\item
+\code{chord.dynamic.haltonerr} \\
+{\bf Type:} bool \\
+{\bf Description:} Whether or not to terminate Chord if the given program terminates abnormally during dynamic analysis. \\
+{\bf Default value:} true
+
+\item
+\code{chord.dynamic.timeout} \\
+{\bf Type:} int \\
+{\bf Description:} The amount of time, in milliseconds, after which to kill the process running the given program during dynamic analysis, or -1 if the process must never be killed. \\
+{\bf Default value:} -1
+
+\item
+\code{chord.dynamic.silent} \\
+{\bf Type:} bool \\
+{\bf Description:} Whether or not to emit warnings while running the given program during dynamic analysis. \\
+{\bf Default value:} false
 \end{itemize}
 
 \subsection{Chord Output Properties}
@@ -349,7 +377,7 @@ Most users will not want to alter the default values of these properties.
 \item
 \code{chord.bddbddb.work.dir} \\
 {\bf Type:} location \\
-{\bf Description:} Absolute location of the directory used by the Datalog solver \bddbddb\ as its input/output directory (namely, for program domain files \code{*.dom} and \code{*.map}, and program relation files \code{*.bdd}). \\
+{\bf Description:} Absolute location of the directory used by the Datalog solver \bddbddb\ as its input/output directory (namely, for program domain files {\tt *.dom} and {\tt *.map}, and program relation files {\tt *.bdd}). \\
 {\bf Default value:} \code{[chord.out.dir]/bddbddb/}
 
 \item
@@ -371,16 +399,11 @@ Most users will not want to alter the default values of these properties.
 {\bf Default value:} \code{[chord.out.dir]/scheme.ser}
 
 \item
-\code{chord.crude.trace.file} \\
+\code{chord.trace.file} \\
 {\bf Type:} location \\
-{\bf Description:} Absolute location of the crude dynamic trace file. \\
-{\bf Default value:} \code{[chord.out.dir]/crude_trace.txt} 
-
-\item
-\code{chord.final.trace.file} \\
-{\bf Type:} location \\
-{\bf Description:} Absolute location of the final dynamic trace file. \\
-{\bf Default value:} \code{[chord.out.dir]/final_trace.txt}
+{\bf Description:} Absolute location of the dynamic trace file. \\
+{\bf Default value:} \code{[chord.out.dir]/trace}  \\
+{\bf Note:} \code{_full_verN.txt} or \code{_pipe_verN.txt} is appended to the name of the file, depending upon whether it is a regular file or a POSIX pipe, respectively, where {\tt N} is the version of the file (multiple versions are maintained if the trace is transformed by filters defined by the dynamic analysis; 0 is the final version).  If \code{chord.reuse.traces} is set to {\tt true}, then \code{_full_verN_runM.txt} is appended to the name of the file, where {\tt M} is the run ID.
 \end{itemize}
 
 \subsection{Chord Resource Properties}
@@ -393,7 +416,7 @@ Ordinarily, users must not alter the default values of these properties.
 \item
 \code{chord.main.dir} \\
 {\bf Type:} location \\
-{\bf Description:} Absolute location of the \code{main/} directory in Chord's installation.
+{\bf Description:} Absolute location of the {\tt main/} directory in Chord's installation.
 
 \item
 \code{chord.lib.dir} \\
@@ -410,19 +433,13 @@ Ordinarily, users must not alter the default values of these properties.
 \item
 \code{chord.bddbddb.class.path} \\
 {\bf Type:} path \\
-{\bf Description:} Classpath of \code{bddbddb}. \\
+{\bf Description:} Classpath of {\tt bddbddb}. \\
 {\bf Default value:} See \code{[chord.main.dir]/build.xml} 
-
-\item
-\code{chord.instr.agent.file} \\
-{\bf Type:} location \\
-{\bf Description:} Shared library implementing Chord instrumentation agent. \\
-{\bf Default value:} \code{[chord.main.dir]/lib/libchord_instr_agent.so} 
 
 \item
 \code{chord.javadoc.url} \\
 {\bf Type:} string \\
-{\bf Description:} URL of the Javadoc location of program analyses.  It is used when publishing targets (i.e., when property \code{chord.publish.targets} is set to \code{true}). \\
-{\bf Default value:} \code{http://chord.stanford.edu/javadoc/}
+{\bf Description:} URL of the Javadoc location of program analyses.  It is used when publishing targets (i.e., when property \code{chord.publish.targets} is set to {\tt true}). \\
+{\bf Default value:} \code{http://jchord.googlecode.com/svn/wiki/javadoc/}
 \end{itemize}
 

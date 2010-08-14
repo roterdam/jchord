@@ -1,5 +1,92 @@
-\section{Writing a Program Analysis in Datalog}
+\section{Writing a Datalog Analysis}
 \label{sec:writing-datalog-analysis}
 
-TODO
+Chord interprets each file with extension {\tt .dlog} or {\tt .datalog} in the path specified by
+property \code{chord.dlog.analysis.path} as a program analysis expressed in Datalog.
+A Datalog analysis declares a bunch of input/output program relations,
+each over one or more program domains, and provides a bunch of rules (constraints)
+specifying how to compute the output relations from the input relations.
+An example of such an analysis is as follows:
 
+\begin{quote}
+\begin{verbatim}
+# name=datarace-dlog
+
+# Program domains
+.include "E.dom"
+.include "F.dom"
+.include "T.dom"
+
+# BDD variable order
+.bddvarorder E0xE1_T0_T1_F0
+
+# Input/intermediate/output program relations
+field(e:E0,f:F0) input
+write(e:E0) input
+reach(t:T0,e:E0) input
+alias(e1:E0,e2:E1) input
+escape(e:E0) input
+unguarded(t1:T0,e1:E0,t2:T1,e2:E1) input
+hasWrite(e1:E0,e2:E1)
+candidate(e1:E0,e2:E1) 
+datarace(t1:T0,e1:E0, t2:T1,e2:E1) output
+
+# Analysis constraints
+hasWrite(e1,e2) :- write(e1).
+hasWrite(e1,e2) :- write(e2).
+candidate(e1,e2) :- field(e1,f), field(e2,f), hasWrite(e1,e2), e1 <= e2.
+datarace(t1,e1,t2,e2) :- candidate(e1,e2), reach(t1,e1), reach(t2,e2), \
+    alias(e1,e2), escape(e1), escape(e2), unguarded(t1,e1,t2,e2).
+\end{verbatim}
+\end{quote}
+
+Any line that begins with a {\tt \#} is regarded a comment, except a
+line of the form {\tt \#} {\tt name=<...>}, which specifies the name
+{\tt <...>} of the Datalog analysis.
+Each Datalog analysis is expected to have exactly one such line.
+The above Datalog analysis is named {\tt datarace-dlog}.
+In Chord, all Datalog analysis names have suffix
+{\tt -dlog} and all Java analysis names have suffix {\tt -java}, but
+this is merely a convention that user-defined analyses are free to deviate from.
+The name of each analysis, written in Datalog or in Java, is expected to be
+unique across all analyses in scope (i.e., across all analyses in paths
+specified by properties \code{chord.dlog.analysis.path} and \code{chord.java.analysis.path}).
+
+The {\tt .include "<...>.dom"} lines specify each program domain named
+{\tt <...>} that is needed by the Datalog analysis, i.e., each domain over which
+any program relation that is input/output by the Datalog analysis is defined. 
+The declaration of each such relation specifies the domain of each of the relation's attributes.
+If the same domain appears in multiple attributes of a relation then
+contiguous integers starting from 0 must be used to distinguish them; for instance,
+in the above example, {\tt candidate} is a binary relation, both of whose
+attributes have domain E, and they are distinguished as E0 and E1.
+
+Each relation is represented symbolically (as opposed to explicitly)
+using a graph-based data structure called a Binary Decision Diagram (BDD for short).
+Each domain containing N elements is assigned log2(N) BDD variables.
+The size of a BDD and the efficiency of operations on it depends heavily
+on the order of these BDD variables.
+The {\tt .bddvarorder <...>} line in the Datalog analysis enables the Datalog
+analysis writer to specify this order.
+It must list all domains along with their numerical suffixes, separated
+by {\tt \_} or {\tt x}.
+Using a {\tt \_} between two domains, such as {\tt T0\_T1}, means that the BDD variables assigned
+to domain {\tt T0} precede those assigned to domain {\tt T1} in the BDD variable
+order for this Datalog analysis.
+Using a {\tt x} between two domains, such as {\tt E0xE1}, means that the
+BDD variables assigned to domains {\tt E0} and {\tt E1}
+will be interleaved in the BDD variable order for this Datalog analysis.
+See Section \ref{sec:bdd-representation} for more details on BDD representations.
+
+Each Datalog analysis rule is a Horn clause of the form
+{\tt R(t) :- R1(t1), ..., Rn(tn)}
+meaning that if relations {\tt R1}, ..., {\tt Rn} contain tuples {\tt t1}, ..., {\tt tn}
+respectively, then relation {\tt R} contains tuple {\tt t}.
+A backslash may be used at the end of a line to break long rules for readability.
+The Datalog analysis solver \bddbddb\ used in \Chord\ does not apply any
+sophisticated optimizations to simplify the rules; besides the BDD variable order,
+the manner in which these rules are expressed heavily affects the performance of
+the solver.  For instance, an important manual optimization involves breaking down
+long rules into multiple shorter rules communicating via intermediate relations.
+See Section \ref{sec:tuning-datalog-analysis} for hints on tuning the performance
+of Datalog analyses.

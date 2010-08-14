@@ -1,21 +1,21 @@
 \section{BDD Representation}
 \label{sec:bdd-representation}
 
-Each domain containing $N$ elements is assigned $log_2 N$ BDD variables in the underlying BDD factory with contiguous IDs.
+Each domain containing N elements is assigned log2(N) BDD variables in the underlying BDD factory with contiguous IDs.
 For instance,
-domain {\tt F0} containing [2048..4096) elements will be assigned 12 variables with IDs (say) 59,60,61,62,63,64,65,66,67,68,69,70 and
+domain {\tt F0} containing [128..256) elements will be assigned 8 variables with IDs (say) 63,64,65,66,67,68,69,70 and
 domain {\tt Z0} containing [8..16) elements will be assigned 4 variables with IDs (say) 105,106,107,108.
 
 If two domains are uninterleaved in the declared domain order in a Datalog program (i.e., {\tt \_} is used instead of {\tt x} between them),
 then the BDD variables assigned to those domains are ordered in reverse order in the underlying BDD factory.
 For instance, the BDD variable order corresponding to the declared domain order {\tt F0\_Z0} is (in level2var format)
-``70,69,68,67,66,65,64,63,62,61,60,59,108,107,106,105".
+``70,69,68,67,66,65,64,63,108,107,106,105".
 
 If two domains are interleaved in the declared domain order in a Datalog program (i.e., {\tt x} is used instead of {\tt \_} between them),
 then the BDD variables assigned to those domains are still ordered in reverse order of IDs in the underlying BDD factory,
 but they are also interleaved.
 For instance, the BDD variable order corresponding to the declared domain order {\tt F0xZ0} is (in level2var format)
-``70,108,69,107,68,106,67,105,66,65,64,63,62,61,60,59".
+``70,108,69,107,68,106,67,105,66,65,64,63".
 
 Each BDD variable is at a unique ``level" which is its 0-based position in the BDD variable order in the underlying BDD factory.
 

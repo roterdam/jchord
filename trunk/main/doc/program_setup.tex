@@ -24,8 +24,8 @@ example/
 \end{verbatim}
 \end{quote}
 
-\noindent The above structure is typical: the program's Java source files are under \code{src/},
-its class files are under \code{classes/}, the source and jar files of the libraries
+\noindent The above structure is typical: the program's Java source files are under {\tt src/},
+its class files are under {\tt classes/}, the source and jar files of the libraries
 used by the program are under \code{lib/src/} and \code{lib/jar/}, respectively.
 
 File \code{chord.properties} specifies properties to be passed to Chord (alternatively,
@@ -68,11 +68,11 @@ results of program analyses can be reported at the Java source code level.
 \code{chord.run.ids} specifies a list of IDs to identify runs of the program.
 It is used by dynamic program analyses to determine how many times the program must be run.
 An additional use of this property is to allow specifying the command-line arguments to use
-in the run having ID \code{<id>} via property \code{chord.args.<id>}, as illustrated by
+in the run having ID {\tt <id>} via property \code{chord.args.<id>}, as illustrated by
 properties \code{chord.args.0} and \code{chord.args.1} in the above example.
 \end{itemize}
 
-To run Chord on the above program, run the following command in Chord's \code{main/} directory:
+To run Chord on the above program, run the following command in Chord's {\tt main/} directory:
 
 \begin{quote}
 \begin{verbatim}
@@ -80,7 +80,7 @@ prompt> ant -Dchord.work.dir=<...>/example run
 \end{verbatim}
 \end{quote}
 
-\noindent where \code{<...>} denotes either the absolute path, or the path relative to Chord's \code{main/} directory,
+\noindent where {\tt <...>} denotes either the absolute path, or the path relative to Chord's {\tt main/} directory,
 of the parent of directory {\tt example/}.
 System property \code{chord.work.dir} specifies the working directory during Chord's execution.
 
@@ -94,6 +94,6 @@ For Chord to do something interesting, you need to set additional properties, ei
 on the above command line or in the \code{chord.properties} file, specifying the task(s)
 Chord must perform.
 All tasks are summarized in Section \ref{sec:chord-sysprops:task}.
-The two most common tasks, described next, are building the analysis scope of the given program (Section \ref{sec:building-scope})
-and running program analyses on the given program (Section \ref{sec:running-analysis}).
+The two most common tasks, described next, are computing the scope of the given program (Section \ref{sec:building-scope})
+and running analyses on the given program (Section \ref{sec:running-analysis}).
 
