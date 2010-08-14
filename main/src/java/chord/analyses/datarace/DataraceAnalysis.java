@@ -133,9 +133,9 @@ public class DataraceAnalysis extends JavaAnalysis {
 		init();
 
 		Messages.log("maxIters=" + maxIters);
-    int numIters = 0; // Number of refinement iterations
-    while (true) {
-      // Run analysis
+		int numIters = 0; // Number of refinement iterations
+		while (true) {
+			// Run analysis
 			Messages.log("Running datarace analysis (numIters="+numIters+")");
 			Project.runTask("ctxts-java");
 			Project.runTask(CtxtsAnalysis.getCspaKind());
@@ -178,7 +178,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 				numRefineV == 0 && numRefineI == 0)
 				break;
 			Project.resetTaskDone("ctxts-java");
-      numIters++;
+			numIters++;
 		}
 		
 		if (Config.publishResults)
