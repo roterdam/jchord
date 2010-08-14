@@ -1,20 +1,22 @@
-\section{Tuning a Program Analysis in Datalog}
+\section{Tuning a Datalog Analysis}
 \label{sec:tuning-datalog-analysis}
 
-There are many tricks you can try to make \bddbddb\ run faster:
+There are several tricks analysis writers can try to improve the
+performance of \bddbddb, the Datalog solver used by \Chord, often
+by several orders of magnitude:
 
 \begin{enumerate}
 \item
 Set system properties \verb+noisy=yes+, \verb+tracesolve=yes+, and \verb+fulltracesolve=yes+
-while running \bddbddb\ and observe which rule gets ``stuck" (i.e. takes several seconds to solve).
+while running \bddbddb\ and observe which rule gets ``stuck" (i.e., takes several seconds to solve).
 \verb+fulltracesolve+ is seldom useful, but \verb+noisy+ and \verb+tracesolve+ is
 often very useful.  Once you identify the rule that is getting stuck, it
 will also tell you which relations and which domains used in that rule
 and which operation on them is taking a long time to solve.  Then try
 to fix the slowdown problem with that rule by either simplifying the
 relations involved (e.g., breaking their set of attributes into two if
-possible) or changing the relative ordering of the domains of those
-relations in \verb+bddvarorder+ (doing the latter alone
+possible) or changing the relative order of the domains of those
+relations in the BDD variable order (doing the latter alone
 frequently causes the problem to go away).
 
 \item
@@ -22,7 +24,7 @@ Once you have ensured that none of the rules is getting ``stuck",
 you will notice that some rules are applied too many times, and so
 although each application of the rule itself isn't taking too much
 time, the cumulative time for the rule is too much.  After finishing
-solving a Datalog program, \bddbddb\ prints how long each rule took to
+solving a Datalog analysis, \bddbddb\ prints how long each rule took to
 solve (both in terms of the number of times it was applied and the
 cumulative time it took).  It sorts the rules in the order of the
 cumulative time.  You need to focus on the rules that took the most

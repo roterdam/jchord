@@ -1,4 +1,4 @@
-\section{Writing a Dynamic Program Analysis}
+\section{Writing a Dynamic Analysis}
 \label{sec:writing-dynamic-analysis}
 
 Follow the following steps to write your own dynamic analysis.
@@ -16,8 +16,8 @@ Create a class extending \code{chord.project.DynamicAnalysis} and override
 the appropriate methods in it.
 The only method that must be compulsorily overridden is method \code{getInstrScheme()},
 which must return an instance of the instrumentation scheme chosen in Step 1 above,
-plus each \code{process<event>(<args>)} method that corresponds to event \code{<event>}
-with format \code{<args>} enabled by the chosen instrumentation scheme.
+plus each \code{process<event>(<args>)} method that corresponds to event {\tt <event>}
+with format {\tt <args>} enabled by the chosen instrumentation scheme.
 All other methods are no-ops if not overridden.
 
 A sample such class called \code{MyDynamicAnalysis} is shown below:
