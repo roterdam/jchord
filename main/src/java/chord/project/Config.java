@@ -44,7 +44,7 @@ public class Config {
 	// This source of this agent is defined in main/src/java/chord/instr/OnlineTransformer.java.
 	// See the jcompile target in main/build.xml for how it is built.
 	public static String jInstrAgentFileName = libDirName + File.separator + "chord_instr_agent.jar";
-	public final static String javadocURL = "http://chord.stanford.edu/javadoc_2_0/";
+	public final static String javadocURL = "http://jchord.googlecode.com/svn/wiki/javadoc/";
 
 	// Chord boot properties
 
@@ -95,7 +95,7 @@ public class Config {
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		concat(mainClassPathPackages, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
 
-	public final static String scopeExcludeStdStr = DEFAULT_SCOPE_EXCLUDES;
+	public final static String scopeExcludeStdStr = System.getProperty("chord.scope.exclude.std", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
 	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
 		concat(scopeExcludeStdStr, ',', scopeExcludeExtStr));
@@ -110,7 +110,7 @@ public class Config {
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
 	public final static boolean publishResults = buildBoolProperty("chord.publish.results", true);
 
-	public final static String checkExcludeStdStr = DEFAULT_CHECK_EXCLUDES;
+	public final static String checkExcludeStdStr = System.getProperty("chord.check.exclude.std", DEFAULT_CHECK_EXCLUDES);
 	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
 	public final static String checkExcludeStr = System.getProperty("chord.check.exclude",
 		concat(checkExcludeStdStr, ',', checkExcludeExtStr));
@@ -133,7 +133,7 @@ public class Config {
 		if (!instrKind.equals("offline") && !instrKind.equals("online"))
 			Messages.fatal(BAD_OPTION, instrKind, "chord.instr.kind", "[offline|online]");
 	}
-	public final static String traceKind = System.getProperty("chord.trace.kind", "pipe");
+	public final static String traceKind = System.getProperty("chord.trace.kind", "full");
 	static {
 		if (!traceKind.equals("none") && !traceKind.equals("full") && !traceKind.equals("pipe"))
 			Messages.fatal(BAD_OPTION, traceKind, "chord.trace.kind", "[full|pipe|none]");
