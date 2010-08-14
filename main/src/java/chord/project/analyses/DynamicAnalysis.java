@@ -110,7 +110,8 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	public Pair<Class, Map<String, String>> getInstrumentor() {
 		Class instrumentorClass = Instrumentor.class;
 		Map<String, String> instrumentorArgs = new HashMap(1);
-		instrumentorArgs.put(Instrumentor.INSTR_SCHEME_KEY, getInstrSchemeFileName());
+		instrumentorArgs.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
+		instrumentorArgs.put(CoreEventHandler.EVENT_HANDLER_CLASS_KEY, getEventHandler().val0.getName());
 		return new Pair<Class, Map<String, String>>(instrumentorClass, instrumentorArgs);
 	}
 
@@ -118,7 +119,7 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	public Pair<Class, Map<String, String>> getEventHandler() {
 		Class eventHandlerClass = EventHandler.class;
 		Map<String, String> eventHandlerArgs = new HashMap(1);
-		eventHandlerArgs.put("instr_scheme_file_name", getInstrSchemeFileName());
+		eventHandlerArgs.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
         return new Pair<Class, Map<String, String>>(eventHandlerClass, eventHandlerArgs);
     }
 

@@ -32,7 +32,7 @@ import chord.project.Config;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class CoreInstrumentor extends ExprEditor {
-    public final static String ARG_KEY = "instrumentor_class_name";
+    public final static String INSTRUMENTOR_CLASS_KEY = "instrumentor_class_name";
 
 	private final static String EXPLICITLY_EXCLUDING_CLASS =
 		"WARN: Not instrumenting class %s as it is excluded by chord.scope.exclude.";

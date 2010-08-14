@@ -723,7 +723,7 @@ public class EventHandler extends CoreEventHandler {
         String[] a = args.split("=");
         String instrSchemeFileName = null;
         for (int i = 0; i < a.length; i += 2) {
-            if (a[i].equals("instr_scheme_file_name")) {
+            if (a[i].equals(InstrScheme.INSTR_SCHEME_FILE_KEY)) {
                 instrSchemeFileName = a[i+1];
                 break;
             }
