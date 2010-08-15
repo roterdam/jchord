@@ -35,7 +35,7 @@ import chord.doms.DomM;
  * <tt>java.lang.Thread</tt> and <tt>c</tt> is an abstract context
  * of that method.
  * 
- * @see chord.analyses.thread.ForkCtxtsAnalysis
+ * @see chord.analyses.thread.ThreadsAnalysis
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

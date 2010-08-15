@@ -23,7 +23,7 @@ public class CoreEventHandler {
 	/**
 	 * Flag determining when it is safe to start handling events at runtime.
 	 * It is false when the JVM starts.  It is set to true in the
-	 * {@link #open(String)} method which is called by the handler for the
+	 * {@link #init(String)} method which is called by the handler for the
 	 * JVMTI event "VMInit" (see file main/src/agent/chord_instr_agent.cpp
 	 * for the definition of this handler).
 	 */

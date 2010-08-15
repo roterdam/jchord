@@ -36,10 +36,8 @@ public class TracePrinter {
 	/**
 	 * Initializes a trace printer.
 	 * 
-	 * @param	traceFileName	The location of the file containing the
-	 * trace to be printed.
-	 * @param	instrumentor	The instrumentor used to instrument the
-	 * program from which the trace was generated.
+	 * @param	traceFileName	Location of the file containing the trace to be printed.
+	 * @param	scheme			Instrumentation scheme used to generate this trace.
 	 */
 	public TracePrinter(String traceFileName, InstrScheme scheme) {
 		this.traceFileName = traceFileName;

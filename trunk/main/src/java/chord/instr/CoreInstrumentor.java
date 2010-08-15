@@ -146,7 +146,7 @@ public class CoreInstrumentor extends ExprEditor {
 	 * representation.
 	 *
 	 * The default implementation visits each bytecode instruction in
-	 * the method's code, calling the {@link @insertBefore(int)}
+	 * the method's code, calling the {@link #insertBefore(int)}
 	 * method for each instruction, ws well as the relevant edit
 	 * method for certain kinds of instructions (namely, object
 	 * allocation, field access, array access, monitor enter/exit,
