@@ -3,35 +3,30 @@
 
 Follow the following steps to write your own dynamic analysis.
 
-{\bf Step 1: Setting up the Instrumentation Scheme}
+\subsection{Implementing the Analysis}
 
-Determine the instrumentation scheme required by your dynamic analysis, that is,
-the kind and format of events to be generated during an instrumented program's
-execution. See Section \ref{sec:instr-events} 
-for the kinds of supported events and their formats.
-
-{\bf Step 2: Implementing the Analysis}
-
-Create a class extending \code{chord.project.DynamicAnalysis} and override
+Create a class extending \code{chord.project.analyses.DynamicAnalysis} and override
 the appropriate methods in it.
-The only method that must be compulsorily overridden is method \code{getInstrScheme()},
-which must return an instance of the instrumentation scheme chosen in Step 1 above,
+The only methods that must be compulsorily overridden are method \code{getInstrScheme()},
+which must return an instance of the ``instrumentation scheme" required by
+your dynamic analysis (i.e., the kind and format of events to be generated during an
+instrumented program's execution)
 plus each \code{process<event>(<args>)} method that corresponds to event {\tt <event>}
 with format {\tt <args>} enabled by the chosen instrumentation scheme.
-All other methods are no-ops if not overridden.
+See Section \ref{sec:instr-events} for the kinds of supported events and their formats.
 
-A sample such class called \code{MyDynamicAnalysis} is shown below:
+A sample such class \code{MyDynamicAnalysis} is shown below:
 
 \begin{verbatim}
-    import chord.project.DynamicAnalysis;
+    import chord.project.analyses.DynamicAnalysis;
     import chord.instr.InstrScheme;
 
     // ***TODO***: analysis won't be recognized by Chord without this annotation
     @Chord(name=<name-of-analysis>)    
-    
     public class MyDynamicAnalysis extends DynamicAnalysis {
         InstrScheme scheme;
 
+        @Override
         public InstrScheme getInstrScheme() {
             if (scheme != null)
                 return scheme;
@@ -46,21 +41,25 @@ A sample such class called \code{MyDynamicAnalysis} is shown below:
             return scheme;
         }
 
+        @Override
         public void initAllPasses() {
             // ***TODO***: User code to be executed once and for all
             // before all instrumented program runs start.
         }
 
+        @Override
         public void doneAllPasses() {
             // ***TODO***: User code to be executed once and for all
             // after all instrumented program runs finish.
         }
 
+        @Override
         public void initPass() {
             // ***TODO***: User code to be executed once before each
             // instrumented program run starts.
         }
 
+        @Override
         public void donePass() {
             // ***TODO***: User code to be executed once after each
             // instrumented program run finishes.
@@ -68,11 +67,13 @@ A sample such class called \code{MyDynamicAnalysis} is shown below:
 
         // User-defined event handlers for this dynamic analysis.
         // No-ops if not overridden.
+        @Override
         public void process<event1>(<args1>) {
             // ***TODO***: User code for handling events of kind
             // <event1> with format <args1>.
         }
         ...
+        @Override
         public void process<eventN>(<argsN>) {
             // ***TODO***: User code for handling events of kind
             // <eventN> with format <argsN>.
@@ -80,23 +81,60 @@ A sample such class called \code{MyDynamicAnalysis} is shown below:
     }
 \end{verbatim}
 
-{\bf Step 3: Choosing or Implementing the Runtime Event Handler}
+\subsection{Configuring the Analysis}
 
-Determine the runtime event handler for your dynamic analysis. There are two kinds of runtime event
-handlers, offline and online; see package \code{chord.runtime} for more details.
+You can change the default values of various properties for configuring your dynamic analysis;
+see Sections \ref{sec:scope-props} and \ref{sec:instr-props}.
+For instance:
+\begin{itemize}
+\item
+You can set property \code{chord.scope.kind} to {\tt dynamic} so that the program scope
+is computed dynamically (i.e., by running the program) instead of statically.
+\item
+You can exclude certain classes (e.g., JDK classes) from being instrumented by setting
+properties \code{chord.scope.exclude.std}, \code{chord.scope.exclude.ext}, and
+\code{chord.scope.exclude}.
+\item
+You can choose between online (i.e. load-time) and offline bytecode instrumentation by
+setting property \code{chord.instr.kind} to {\tt online} or {\tt offline}.
+\item
+You can require the event-generating and event-handling JVMs to be one and the same (by setting
+property \code{chord.trace.kind} to {\tt none}),
+or to be separate (by setting property {\tt chord.trace.kind} to {\tt full} or {\tt pipe}, depending upon
+whether you want the two JVMs to exchange events by a regular file or a POSIX pipe, respectively).
+Using a single JVM can cause correctness/performance issues if event-handling Java code itself is instrumented
+(e.g., say the event-handling code uses class \code{java.util.ArrayList} which is not excluded from program scope).
+Using separate JVMs prevents such issues since the event-handling JVM runs uninstrumented bytecode (only
+the event-generating JVM runs instrumented bytecode).
+If a regular file is used to exchange events between the two JVMs, then the JVMs run serially:
+the event-generating JVM first runs to completion, dumps the entire dynamic trace to the regular file,
+and then the event-handling JVM processes the dynamic trace.
+If a POSIX pipe is used to exchange events between the two JVMs, then the JVMs run in lockstep.
+Obviously, a pipe is more efficient for very long traces, but it 
+not portable (e.g., it does not currently work on Windows/Cygwin), and the traces cannot be reused
+across Chord runs (see the following item).
+\item
+You can reuse dynamic traces from a previous \Chord\ run by setting property
+\code{chord.reuse.traces} to {\tt true}.  In this case, you must also set property
+{\tt chord.trace.kind} to {\tt full}.
+\item
+You can set property \code{chord.dynamic.haltonerr} to {\tt false} to prevent \Chord\ from terminating
+even if the program on which dynamic analysis is being performed crashes.
+\end{itemize}
 
-For most dynamic analyses, an offline event hander suffices, in which case you don't need to do
-anything in this step.
-Otherwise, you need to create a class extending \code{chord.runtime.Runtime} and override the
-appropriate methods in it, and provide the fully-qualified name of the created class as the value of property
-\code{chord.runtime.class} (whose default value is \code{chord.runtime.BufferedRuntime}).
+\Chord\ offers much more flexibility in crafting dynamic analyses.
+You can define your own instrumentor (by subclassing \code{chord.instr.CoreInstrumentor}
+instead of using the default \code{chord.instr.Instrumentor}) and your own event handler (by subclassing \code{chord.runtime.CoreEventHandler}
+instead of using the default \code{chord.runtime.EventHandler}).
+You can ask the dynamic analysis to use your custom instrumentor and/or your custom event handler by overriding
+methods \code{getInstrumentor()} and \code{getEventHandler()}, respectively, defined in \code{chord.project.analyses.CoreDynamicAnalysis}.
+Finally, you can define your own dynamic analysis template by subclassing \code{chord.project.analyses.CoreDynamicAnalysis}
+instead of subclassing the default \code{chord.project.analyses.DynamicAnalysis}.
 
-{\bf Step 4: Compiling the Analysis}
+\subsection{Compiling and Running the Analysis}
 
 Compile the analysis by placing the directory containing class \code{MyDynamicAnalysis} created
 above in the path defined by property \code{chord.java.analysis.path}.
-
-{\bf Step 5: Specifying Program Inputs}
 
 Provide the IDs of program runs to be generated (say 1, 2, ..., M) and the command-line arguments to be
 used for the program in each of those runs (say \code{<args1>}, ..., \code{<argsM>}) via properties
@@ -104,13 +142,7 @@ used for the program in each of those runs (say \code{<args1>}, ..., \code{<args
 By default, \code{chord.run.ids=0} and \code{chord.args.0=""}, that is, the program will be run only
 once (using run ID 0) with no command-line arguments.
 
-{\bf Step 6: Running the Analysis}
-
 To run the analysis, set property \code{chord.run.analyses} to \code{<name-of-analysis>}
 (recall that \code{<name-of-analysis>} is the name provided in the \code{@Chord} annotation for class
 \code{MyDynamicAnalysis} created above).
 
-%(except that you may want to change the default values of properties
-%\code{chord.trace.pipe} and \code{chord.trace.block.size} for performance, or the default values
-%of properties \code{chord.trace.pipe} and \code{chord.reuse.trace} for determinism across; see
-%Section \ref{sec:chord-sysprops} for the meaning of these properties). 

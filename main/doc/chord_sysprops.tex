@@ -157,6 +157,7 @@ This section describes properties of the JVM running \Chord, such as the working
 \end{itemize}
 
 \subsection{Program Scope Properties}
+\label{sec:scope-props}
 
 This section describes properties that specify how the analysis scope is computed.
 See Section \ref{sec:building-scope} for more details.
@@ -170,13 +171,13 @@ See Section \ref{sec:building-scope} for more details.
 
 \item
 \code{chord.scope.kind} \\
-{\bf Type:} [\code{dynamic}$|$\code{rta}$|$\code{cha}] \\
+{\bf Type:} {\tt [dynamic|rta|cha]} \\
 {\bf Description:} Algorithm to compute analysis scope (i.e., reachable classes and methods).  Current choices include {\tt dynamic} (dynamic analysis), {\tt rta} (static Rapid Type Analysis), and {\tt cha} (static Class Hierarchy Analysis). \\
 {\bf Default value:} {\tt rta}
 
 \item
 \code{chord.ch.kind} \\
-{\bf Type:} [\code{static}$|$\code{dynamic}] \\
+{\bf Type:} {\tt [static|dynamic]} \\
 {\bf Description:} Algorithm to build the class hierarchy.  If it is {\tt dynamic}, then the given program is executed and classes not loaded by the JVM while running the program are excluded while building the class hierarchy.  This property is relevant only if \code{chord.scope.kind} is {\tt cha} since only this scope computing algorithm queries the class hierarchy. \\
 {\bf Default value:} {\tt static} 
 
@@ -287,6 +288,7 @@ This section describes properties that specify the amount of debug information t
 \end{itemize}
 
 \subsection{Chord Instrumentation Properties}
+\label{sec:instr-props}
 
 This section describes properties regarding execution of instrumented programs for dynamic analyses.
 
@@ -302,7 +304,7 @@ This section describes properties regarding execution of instrumented programs f
 
 \item
 \code{chord.trace.kind} \\
-{\bf Type:} [\code{none}$|$\code{full}$|$\code{pipe}] \\
+{\bf Type:} {\tt [none|full|pipe]} \\
 {\bf Description:} The medium to store dynamic traces (none, regular file, or POSIX pipe). \\
 {\bf Default value:} {\tt full} 
 

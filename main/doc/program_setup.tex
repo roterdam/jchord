@@ -3,26 +3,24 @@
 
 Suppose the program to be analyzed has the following directory structure:
 
-\begin{quote}
 \begin{verbatim}
-example/
-    src/
-        foo/
-            Main.java
-            ...
-    classes/
-        foo/
-            Main.class
-            ...
-    lib/
+    example/
         src/
-            taz/
+            foo/
+                Main.java
                 ...
-        jar/
-            taz.jar
-    chord.properties
+        classes/
+            foo/
+                Main.class
+                ...
+        lib/
+            src/
+                taz/
+                    ...
+            jar/
+                taz.jar
+        chord.properties
 \end{verbatim}
-\end{quote}
 
 \noindent The above structure is typical: the program's Java source files are under {\tt src/},
 its class files are under {\tt classes/}, the source and jar files of the libraries
@@ -32,16 +30,14 @@ File \code{chord.properties} specifies properties to be passed to Chord (alterna
 these properties may be passed on the command-line, in format \code{-D<name>=<value>}).
 A sample such file for the above program is as follows:
 
-\begin{quote}
 \begin{verbatim}
-chord.main.class=foo.Main
-chord.class.path=classes:lib/jar/taz.jar
-chord.src.path=src:../lib/src
-chord.run.ids=0,1
-chord.args.0="-thread 1 -n 10"
-chord.args.1="-thread 2 -n 50"
+    chord.main.class=foo.Main
+    chord.class.path=classes:lib/jar/taz.jar
+    chord.src.path=src:../lib/src
+    chord.run.ids=0,1
+    chord.args.0="-thread 1 -n 10"
+    chord.args.1="-thread 2 -n 50"
 \end{verbatim}
-\end{quote}
 
 Each relative path element in the value of any property
 named \code{chord.<...>.path} defined in this file is converted to an absolute path element with respect
@@ -74,11 +70,9 @@ properties \code{chord.args.0} and \code{chord.args.1} in the above example.
 
 To run Chord on the above program, run the following command in Chord's {\tt main/} directory:
 
-\begin{quote}
 \begin{verbatim}
-prompt> ant -Dchord.work.dir=<...>/example run
+    prompt> ant -Dchord.work.dir=<...>/example run
 \end{verbatim}
-\end{quote}
 
 \noindent where {\tt <...>} denotes either the absolute path, or the path relative to Chord's {\tt main/} directory,
 of the parent of directory {\tt example/}.

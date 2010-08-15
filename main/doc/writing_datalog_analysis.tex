@@ -8,37 +8,35 @@ each over one or more program domains, and provides a bunch of rules (constraint
 specifying how to compute the output relations from the input relations.
 An example of such an analysis is as follows:
 
-\begin{quote}
 \begin{verbatim}
-# name=datarace-dlog
+    # name=datarace-dlog
 
-# Program domains
-.include "E.dom"
-.include "F.dom"
-.include "T.dom"
+    # Program domains
+    .include "E.dom"
+    .include "F.dom"
+    .include "T.dom"
 
-# BDD variable order
-.bddvarorder E0xE1_T0_T1_F0
+    # BDD variable order
+    .bddvarorder E0xE1_T0_T1_F0
 
-# Input/intermediate/output program relations
-field(e:E0,f:F0) input
-write(e:E0) input
-reach(t:T0,e:E0) input
-alias(e1:E0,e2:E1) input
-escape(e:E0) input
-unguarded(t1:T0,e1:E0,t2:T1,e2:E1) input
-hasWrite(e1:E0,e2:E1)
-candidate(e1:E0,e2:E1) 
-datarace(t1:T0,e1:E0, t2:T1,e2:E1) output
+    # Input/intermediate/output program relations
+    field(e:E0,f:F0) input
+    write(e:E0) input
+    reach(t:T0,e:E0) input
+    alias(e1:E0,e2:E1) input
+    escape(e:E0) input
+    unguarded(t1:T0,e1:E0,t2:T1,e2:E1) input
+    hasWrite(e1:E0,e2:E1)
+    candidate(e1:E0,e2:E1) 
+    datarace(t1:T0,e1:E0, t2:T1,e2:E1) output
 
-# Analysis constraints
-hasWrite(e1,e2) :- write(e1).
-hasWrite(e1,e2) :- write(e2).
-candidate(e1,e2) :- field(e1,f), field(e2,f), hasWrite(e1,e2), e1 <= e2.
-datarace(t1,e1,t2,e2) :- candidate(e1,e2), reach(t1,e1), reach(t2,e2), \
-    alias(e1,e2), escape(e1), escape(e2), unguarded(t1,e1,t2,e2).
+    # Analysis constraints
+    hasWrite(e1,e2) :- write(e1).
+    hasWrite(e1,e2) :- write(e2).
+    candidate(e1,e2) :- field(e1,f), field(e2,f), hasWrite(e1,e2), e1 <= e2.
+    datarace(t1,e1,t2,e2) :- candidate(e1,e2), reach(t1,e1), reach(t2,e2), \
+        alias(e1,e2), escape(e1), escape(e2), unguarded(t1,e1,t2,e2).
 \end{verbatim}
-\end{quote}
 
 Any line that begins with a {\tt \#} is regarded a comment, except a
 line of the form {\tt \#} {\tt name=<...>}, which specifies the name
