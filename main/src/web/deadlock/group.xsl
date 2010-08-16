@@ -7,11 +7,9 @@
 <xsl:include href="misc.xsl"/>
 
 <xsl:function name="chord:printThrd">
-    <xsl:param name="Celem"/>
-    <xsl:param name="Melem"/>
-	<td>Thread spawned by method
-		<xsl:apply-templates select="$Melem"/> <br/>
-		in context <xsl:apply-templates select="$Celem"/>
+    <xsl:param name="Telem"/>
+	<td>Thread:
+		<xsl:apply-templates select="$Telem"/> <br/>
 	</td>
 </xsl:function>
 
@@ -53,13 +51,11 @@
 			<col width="50%"/>
 			<col width="50%"/>
 		</colgroup>
-		<xsl:variable name="T1Celem" select="id(@T1Cid)"/>
-		<xsl:variable name="T2Celem" select="id(@T2Cid)"/>
-		<xsl:variable name="T1Melem" select="id(@T1Mid)"/>
-		<xsl:variable name="T2Melem" select="id(@T2Mid)"/>
+		<xsl:variable name="T1elem" select="id(@T1id)"/>
+		<xsl:variable name="T2elem" select="id(@T2id)"/>
 		<tr>
-			<xsl:copy-of select="chord:printThrd($T1Celem, $T1Melem)"/>
-			<xsl:copy-of select="chord:printThrd($T2Celem, $T2Melem)"/>
+			<xsl:copy-of select="chord:printThrd($T1elem)"/>
+			<xsl:copy-of select="chord:printThrd($T2elem)"/>
 		</tr>
 		<xsl:variable name="C1elem" select="id(@C1id)"/>
 		<xsl:variable name="C2elem" select="id(@C2id)"/>
@@ -87,8 +83,8 @@
 		</tr>
 		<tr>
 			<td>
-				<xsl:variable name="T1Cid" select="@T1Cid"/>
-				<xsl:variable name="T1Mid" select="@T1Mid"/>
+				<xsl:variable name="T1Cid" select="id(@T1id)/@Cid"/>
+				<xsl:variable name="T1Mid" select="id(@T1id)/@Mid"/>
 				<xsl:variable name="C1id" select="@C1id"/>
 				<xsl:variable name="M1id" select="@M1id"/>
 				<xsl:variable name="C2id" select="@C2id"/>
@@ -99,8 +95,8 @@
 				</xsl:if>
 			</td>
 			<td>
-				<xsl:variable name="T2Cid" select="@T2Cid"/>
-				<xsl:variable name="T2Mid" select="@T2Mid"/>
+				<xsl:variable name="T2Cid" select="id(@T2id)/@Cid"/>
+				<xsl:variable name="T2Mid" select="id(@T2id)/@Mid"/>
 				<xsl:variable name="C3id" select="@C3id"/>
 				<xsl:variable name="M3id" select="@M3id"/>
 				<xsl:variable name="C4id" select="@C4id"/>
