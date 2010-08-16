@@ -17,24 +17,10 @@ import chord.doms.DomM;
 /**
  * Domain of abstract threads.
  * <p>
- * Each abstract thread is a pair <tt>(c,m)</tt> such that <tt>m</tt>
- * is the thread's entry-point method and <tt>c</tt> is an abstract
- * context of the method.
- * <p>
- * The 0th element in this domain is null and does not denote any
- * abstract thread.
- * <p>
- * The 1st element in this domain denotes the implicitly created main
- * thread and is of the form <tt>(epsilon, main)</tt> where
- * <tt>main</tt> is the main method of the program and <tt>epsilon</tt>
- * is its lone abstract context.
- * <p>
- * The 2nd element onwards in this domain denotes an explicitly
- * created thread and is of the form <tt>(c, start)</tt> where
- * <tt>start</tt> denotes the <tt>start()</tt> method of class
- * <tt>java.lang.Thread</tt> and <tt>c</tt> is an abstract context
- * of that method.
- * 
+ * An abstract thread is a triple <tt>(o,c,m)</tt> denoting the thread
+ * whose abstract object is 'o' and which starts at method 'm' in
+ * abstract context 'c'.
+ *
  * @see chord.analyses.thread.ThreadsAnalysis
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
