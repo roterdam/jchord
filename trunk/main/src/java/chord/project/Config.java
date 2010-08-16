@@ -91,7 +91,8 @@ public class Config {
 
 	public final static String mainClassPathPackages = "chord.,javassist.,joeq.,net.sf.bddbddb.,net.sf.javabdd.";
 
-	public final static String DEFAULT_SCOPE_EXCLUDES = mainClassPathPackages;
+	public final static String DEFAULT_SCOPE_EXCLUDES = 
+		concat(mainClassPathPackages, ',', "sun.,com.sun.,com.ibm.,org.apache.harmony.");
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		concat(mainClassPathPackages, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
 

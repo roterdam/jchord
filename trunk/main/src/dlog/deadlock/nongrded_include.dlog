@@ -62,7 +62,7 @@ invkLock(c,i,o) :- transLI(l,i), syncCLC(c,l,o).
 relevantTCM(t,c,m) :- threadAOCM(t,_,c,m).
 relevantTCM(t,d,n) :- relevantTCM(t,c,m), thrSenAbbrCMCM(c,m,d,n).
 
-unguardedCM(t,c,m,o) :- syncO(o), forkAOCM(t,_,c,m).
+unguardedCM(t,c,m,o) :- syncO(o), threadAOCM(t,_,c,m).
 unguardedCI(t,d,i,o) :- unguardedCM(t,d,m,o), MI(m,i), !invkLock(d,i,o).
 unguardedCM(t,d,n,o) :- unguardedCI(t,c,i,o), thrSenAbbrCICM(c,i,d,n).
 

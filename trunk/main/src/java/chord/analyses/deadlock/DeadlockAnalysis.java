@@ -42,6 +42,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.util.SetUtils;
 import chord.util.tuple.object.Pair;
+import chord.util.tuple.object.Trio;
 
 /**
  * Static deadlock analysis.
@@ -68,7 +69,9 @@ import chord.util.tuple.object.Pair;
  * @author Zhifeng Lai (zflai@cse.ust.hk)
  */
 @Chord(
-	name="deadlock-java"
+	name="deadlock-java",
+    namesOfTypes = { "N" },
+    types = { DomN.class }
 )
 public class DeadlockAnalysis extends JavaAnalysis {
 	private DomA domA;
@@ -77,7 +80,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	private DomI domI;
     private DomL domL;
     private DomM domM;
-    private ProgramDom<Pair<Ctxt, Inst>> domN;
+    private DomN domN;
 	
 	private ProgramRel relNC;
 	private ProgramRel relNL;
@@ -95,7 +98,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		domI = (DomI) Project.getTrgt("I");
 		domL = (DomL) Project.getTrgt("L");
 		domM = (DomM) Project.getTrgt("M");
-		domN = (ProgramDom) Project.getTrgt("N");
+		domN = (DomN) Project.getTrgt("N");
 		
 		relNC = (ProgramRel) Project.getTrgt("NC");
 		relNL = (ProgramRel) Project.getTrgt("NL");
@@ -141,7 +144,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			jq_Method m = i.getMethod();
 			Set<Ctxt> cs = thrSenAbbrCSCG.getContexts(m);
 			for (Ctxt c : cs) {
-				domN.getOrAdd(new Pair<Ctxt, Inst>(c, i));
+				domN.add(new Pair<Ctxt, Inst>(c, i));
 			}
 		}
 		domN.save();
@@ -210,14 +213,14 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		out = OutDirUtils.newPrintWriter("deadlocklist.xml");
 		out.println("<deadlocklist>");
 		for (Object[] tuple : relDeadlock.getAryNValTuples()) {
-			Pair<Ctxt, jq_Method> t1Val = (Pair) tuple[0];
+			Trio<Ctxt, Ctxt, jq_Method> t1Val = (Trio) tuple[0];
 			Pair<Ctxt, Inst> n1Val = (Pair) tuple[1];
 			Ctxt c1Val = n1Val.val0;
 			Inst l1Val = n1Val.val1;
 			Pair<Ctxt, Inst> n2Val = (Pair) tuple[2];
 			Ctxt c2Val = n2Val.val0;
 			Inst l2Val = n2Val.val1;
-			Pair<Ctxt, jq_Method> t2Val = (Pair) tuple[3];
+			Trio<Ctxt, Ctxt, jq_Method> t2Val = (Trio) tuple[3];
 			Pair<Ctxt, Inst> n3Val = (Pair) tuple[4];
 			Ctxt c3Val = n3Val.val0;
 			Inst l3Val = n3Val.val1;
@@ -246,20 +249,22 @@ public class DeadlockAnalysis extends JavaAnalysis {
 					tmp = c2Val; c2Val = c4Val; c4Val = tmp;
 				}
 				{
-					Pair<Ctxt, jq_Method> tmp;
+					Trio<Ctxt, Ctxt, jq_Method> tmp;
 					tmp = t1Val; t1Val = t2Val; t2Val = tmp;
 				}
 			}
+			int t1 = domA.indexOf(t1Val);
+			int t2 = domA.indexOf(t2Val);
 			int c1 = domC.indexOf(c1Val);
 			int c2 = domC.indexOf(c2Val);
 			int c3 = domC.indexOf(c3Val);
 			int c4 = domC.indexOf(c4Val);
-			Ctxt t1cVal = t1Val.val0;
-			Ctxt t2cVal = t2Val.val0;
+			Ctxt t1cVal = t1Val.val1;
+			Ctxt t2cVal = t2Val.val1;
 			int t1c = domC.indexOf(t1cVal);
 			int t2c = domC.indexOf(t2cVal);
-			jq_Method t1mVal = t1Val.val1;
-			jq_Method t2mVal = t2Val.val1;
+			jq_Method t1mVal = t1Val.val2;
+			jq_Method t2mVal = t2Val.val2;
 			int t1m = domM.indexOf(t1mVal);
 			int t2m = domM.indexOf(t2mVal);
 			jq_Method m1Val = l1Val.getMethod();
@@ -284,8 +289,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 			addToCMCMMap(c3Val , m3Val , c4Val, m4Val);
 			out.println("<deadlock " +
 				"group=\"" + l1 + "_" + l2 + "_" + l3 + "_" + l4 + "\" " +
-				"T1Cid=\"C" + t1c + "\" T1Mid=\"M" + t1m + "\" " +
-				"T2Cid=\"C" + t2c + "\" T2Mid=\"M" + t2m + "\" " +
+				"T1id=\"A" + t1 + "\" T2id=\"A" + t2 + "\" " +
 				"C1id=\"C"  + c1 + "\" M1id=\"M" + m1 + "\" L1id=\"L" + l1 + "\" O1id=\"O" + o1 + "\" " +
 				"C2id=\"C"  + c2 + "\" M2id=\"M" + m2 + "\" L2id=\"L" + l2 + "\" O2id=\"O" + o2 + "\" " +
 				"C3id=\"C"  + c3 + "\" M3id=\"M" + m3 + "\" L3id=\"L" + l3 + "\" O3id=\"O" + o3 + "\" " +
