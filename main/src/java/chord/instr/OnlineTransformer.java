@@ -151,13 +151,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			l.add(c);
         }
 		Class[] a = l.toArray(new Class[l.size()]);
-		// try {
-			retransformClasses(i, a);
-/*
-		} catch (UnmodifiableClassException e) {
-			Messages.fatal(e);
-		}
-*/
+		retransformClasses(i, a);
     }
 
     private final CoreInstrumentor instrumentor;
