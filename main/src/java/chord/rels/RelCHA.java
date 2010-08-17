@@ -7,6 +7,7 @@
 package chord.rels;
 
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Method;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_InstanceMethod;
@@ -20,6 +21,7 @@ import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 import chord.util.IndexSet;
+import chord.util.tuple.object.Trio;
 import chord.project.Messages;
 
 /**
@@ -34,8 +36,6 @@ import chord.project.Messages;
 	sign = "M1,T1,M0:M0xM1_T1"
 )
 public class RelCHA extends ProgramRel {
-	private final static String METHOD_NOT_FOUND =
-		"WARN: CHA: Method %s in class %s extending/implementing class/interface %s not found in domain M";
 	public void fill() {
 		DomM domM = (DomM) doms[0];
 		Program program = Program.getProgram();
@@ -72,11 +72,8 @@ public class RelCHA extends ProgramRel {
 						if (d.implementsInterface(c)) {
 							jq_InstanceMethod n = d.getVirtualMethod(nd);
 							assert (n != null);
-							if (!domM.contains(n))
-								Messages.log(METHOD_NOT_FOUND, n, d, c);
-							else
+							if (domM.contains(n))
 								add(m, d, n);
-									
 						}
 					}
 				} else {
@@ -89,9 +86,7 @@ public class RelCHA extends ProgramRel {
 						if (d.extendsClass(c)) {
 							jq_InstanceMethod n = d.getVirtualMethod(nd);
 							assert (n != null);
-							if (!domM.contains(n))
-								Messages.log(METHOD_NOT_FOUND, n, d, c);
-							else
+							if (domM.contains(n))
 								add(m, d, n);
 						}
 					}
