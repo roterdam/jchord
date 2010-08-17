@@ -35,7 +35,7 @@ public class ReflectInfo {
 		resolvedNewInstSites = new ArraySet<Pair<Quad, Set<jq_Reference>>>();
 	}
     /**
-     * Provides all classes whose objects may be reflectively loaded.
+     * Provides all classes whose objects may be reflectively created.
      */
     public Set<jq_Reference> getReflectClasses() {
 		return reflectClasses;
