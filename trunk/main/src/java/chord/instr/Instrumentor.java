@@ -192,10 +192,16 @@ public class Instrumentor extends CoreInstrumentor {
 		return InstrScheme.load(s);
 	}
 
+	// doesn't matter if the class name is in '.' or '/' separated form
 	private static String getEventHandlerClassName(Map<String, String> argsMap) {
 		String s = argsMap.get(CoreEventHandler.EVENT_HANDLER_CLASS_KEY);
 		if (s == null)
 			s = EventHandler.class.getName();
+		try {
+			Class.forName(s);
+		} catch (ClassNotFoundException ex) {
+			Messages.fatal(ex);
+		}
 		return s;
 	}
 
@@ -222,7 +228,7 @@ public class Instrumentor extends CoreInstrumentor {
 		super(argsMap);
 		program = Program.getProgram();
 		this.scheme = _scheme;
-		this.eventHandlerClassName = _eventHandlerClassName + ".";
+		this.eventHandlerClassName = _eventHandlerClassName.replace('/', '.') + ".";
 
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
