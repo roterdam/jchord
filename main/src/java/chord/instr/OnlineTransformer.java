@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
@@ -45,37 +46,82 @@ public final class OnlineTransformer implements ClassFileTransformer {
 	private static final String CANNOT_MODIFY_CLASS =
 		"WARN: Cannot modify class %s.";
 
-    private final CoreInstrumentor instrumentor;
+	// use reflection for Java 1.6 API (class retransformation) so that
+	// Chord is usable with Java 1.5
 
-	public OnlineTransformer(CoreInstrumentor instr) {
-		instrumentor = instr;
+	private static Class instrumentationClass;
+	private static Method isRetransformClassesSupportedMethod;
+	private static Method addTransformerMethod;
+	private static Method isModifiableClassMethod;
+	private static Method retransformClassesMethod;
+
+	private static boolean isRetransformClassesSupported(Instrumentation i) {
+		return (Boolean) invoke(isRetransformClassesSupportedMethod, i);
+	}
+	private static void addTransformer(Instrumentation i,
+			ClassFileTransformer t, boolean b) {
+		invoke(addTransformerMethod, i, new Object[] { t, b });
+	}
+	private static boolean isModifiableClass(Instrumentation i, Class c) {
+		return (Boolean) invoke(isModifiableClassMethod, i, new Object[] { c });
+	}
+	private static void retransformClasses(Instrumentation i, Class[] a) {
+		invoke(retransformClassesMethod, i, new Object[] { a });
 	}
 
-    public static void premain(String agentArgs, Instrumentation instrumentation) {
-        boolean isSupported = instrumentation.isRetransformClassesSupported();
-        if (!isSupported) {
-            Messages.fatal(RETRANSFORM_NOT_SUPPORTED);
+	private static Object invoke(Method m, Object o, Object... args) {
+		Exception ex = null;
+		try {
+			return m.invoke(o, args);
+		} catch (IllegalArgumentException e) {
+			ex = e;
+		} catch (InvocationTargetException e) {
+			ex = e;
+		} catch (IllegalAccessException e) {
+			ex = e;
+		}
+		if (ex != null)
+			Messages.fatal(ex);
+		return null;
+	}
+
+	private static void initReflectiveMethods(Instrumentation i) {
+		try {
+			instrumentationClass = i.getClass();
+			isRetransformClassesSupportedMethod = instrumentationClass.getMethod("isRetransformClassesSupported", (Class[]) null);
+			addTransformerMethod = instrumentationClass.getMethod("addTransformer", new Class[] { ClassFileTransformer.class, boolean.class });
+			isModifiableClassMethod = instrumentationClass.getMethod("isModifiableClass", new Class[] { Class.class });
+			retransformClassesMethod = instrumentationClass.getMethod("retransformClasses", new Class[] { Class[].class });
+		} catch (NoSuchMethodException e) {
+            Messages.fatal(e);
         }
+	}
+
+    public static void premain(String agentArgs, Instrumentation i) {
+		initReflectiveMethods(i);
+		boolean isSupported = isRetransformClassesSupported(i);
+        if (!isSupported)
+           	Messages.fatal(RETRANSFORM_NOT_SUPPORTED);
 		Map<String, String> argsMap = new HashMap<String, String>();
 		if (agentArgs != null) {
 			String[] args = agentArgs.split("=");
 			int n = args.length / 2;
-			for (int i = 0; i < n; i++)
-				argsMap.put(args[i*2], args[i*2+1]);
+			for (int k = 0; k < n; k++)
+				argsMap.put(args[k*2], args[k*2+1]);
 		}
 		String instrClassName = argsMap.get(CoreInstrumentor.INSTRUMENTOR_CLASS_KEY);
 		Class instrClass = null;
 		if (instrClassName != null) {
 			try {
 				instrClass = Class.forName(instrClassName.replace('/', '.'));
-			} catch (ClassNotFoundException ex) {
-				Messages.fatal(ex);
+			} catch (ClassNotFoundException e) {
+				Messages.fatal(e);
 			}
 		} else
 			instrClass = CoreInstrumentor.class;
 		CoreInstrumentor instr = null;
-		Exception ex = null;
 		Project.init();
+		Exception ex = null;
 		try {
 			Constructor c = instrClass.getConstructor(new Class[] { Map.class });
 			Object o = c.newInstance(new Object[] { argsMap });
@@ -91,30 +137,36 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		}
 		if (ex != null)
 			Messages.fatal(ex);
-        OnlineTransformer transformer = new OnlineTransformer(instr);
-        instrumentation.addTransformer(transformer, true);
-        Class[] classes = instrumentation.getAllLoadedClasses();
-        List<Class> retransformClasses = new ArrayList<Class>();
-        for (Class c : classes) {
+        OnlineTransformer t = new OnlineTransformer(instr);
+        addTransformer(i, t, true);
+        List<Class> l = new ArrayList<Class>();
+        for (Class c : i.getAllLoadedClasses()) {
             if (c.getName().startsWith("[")) 
 				continue;
-			if (!instrumentation.isModifiableClass(c)) {
+			if (!isModifiableClass(i, c)) {
 				if (!Config.dynamicSilent)
 					Messages.log(CANNOT_MODIFY_CLASS, c.getName());
 				continue;
 			}
-			retransformClasses.add(c);
+			l.add(c);
         }
-		Class[] retransformClassesAry =
-			retransformClasses.toArray(new Class[retransformClasses.size()]);
-        try {
-            instrumentation.retransformClasses(retransformClassesAry);
-        } catch (UnmodifiableClassException e) {
-			Messages.fatal("UNREACHABLE");
-        }
+		Class[] a = l.toArray(new Class[l.size()]);
+		// try {
+			retransformClasses(i, a);
+/*
+		} catch (UnmodifiableClassException e) {
+			Messages.fatal(e);
+		}
+*/
     }
 
-	@Override
+    private final CoreInstrumentor instrumentor;
+
+	public OnlineTransformer(CoreInstrumentor instr) {
+		instrumentor = instr;
+	}
+
+	// @Override
     public byte[] transform(ClassLoader loader, String className,
 			Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
 			byte[] classfileBuffer) throws IllegalClassFormatException {
