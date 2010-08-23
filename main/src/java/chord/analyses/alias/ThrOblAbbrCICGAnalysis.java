@@ -19,7 +19,7 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(
 	name = "throbl-abbr-cicg-java",
-	consumedNames = { "thrOblAbbrIM", "thrOblAbbrMM",
+	consumes = { "thrOblAbbrIM", "thrOblAbbrMM",
 		"thrOblAbbrRootM", "thrOblAbbrReachableM" }
 )
 public class ThrOblAbbrCICGAnalysis extends CICGAnalysis {

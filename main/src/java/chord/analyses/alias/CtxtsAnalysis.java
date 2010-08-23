@@ -11,7 +11,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -22,7 +21,6 @@ import java.util.Random;
 import java.util.Set;
 
 import gnu.trove.TIntArrayList;
-import gnu.trove.TIntProcedure;
 
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Method;
@@ -128,8 +126,8 @@ import chord.util.ChordRuntimeException;
  */
 @Chord(
 	name = "ctxts-java",
-	consumedNames = { "IM", "VH" },
-	producedNames = { "C", "CC", "CH", "CI",
+	consumes = { "IM", "VH" },
+	produces = { "C", "CC", "CH", "CI",
 		"epsilonV", "epsilonM", "kcfaSenM", "kobjSenM", "ctxtCpyM",
 		"refinableCH", "refinableCI", "refinableM", "refinableV" },
 

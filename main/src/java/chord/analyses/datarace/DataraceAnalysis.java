@@ -75,7 +75,7 @@ import chord.util.tuple.object.Trio;
  */
 @Chord(
 	name="datarace-java",
-	consumedNames="P"
+	consumes="P"
 )
 public class DataraceAnalysis extends JavaAnalysis {
 	private static final boolean percy = System.getProperty("percy", "false").equals("true");

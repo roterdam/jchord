@@ -19,7 +19,7 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(
 	name = "thrsen-abbr-cscg-java",
-	consumedNames = { "thrSenAbbrCICM", "thrSenAbbrCMCM",
+	consumes = { "thrSenAbbrCICM", "thrSenAbbrCMCM",
 		"thrSenAbbrRootCM", "thrSenAbbrReachableCM" }
 )
 public class ThrSenAbbrCSCGAnalysis extends CSCGAnalysis {

@@ -20,9 +20,9 @@ public class Config {
 	private static final String BAD_OPTION =
 		"ERROR: Unknown value '%s' for system property '%s'; expected: %s";
 	private static final String CHORD_MAIN_DIR_UNDEFINED =
-		"ERROR: Property chord.main.dir not set; must be set to the absolute location of the directory named 'main' in your Chord installation.";
+		"ERROR: Property chord.main.dir must be set to absolute location of directory named 'main' in your Chord installation.";
 	private static final String CHORD_WORK_DIR_UNDEFINED =
-		"ERROR: Property chord.work.dir not set; must be set to the absolute location of the working directory desired during Chord's execution.";
+		"ERROR: Property chord.work.dir must be set to absolute location of working directory desired during Chord's execution.";
 
 	private Config() { }
 
@@ -40,10 +40,10 @@ public class Config {
 	public static String libDirName = FileUtils.getAbsolutePath(mainDirName, "lib");
 	// This source of this agent is defined in main/src/agent/chord_instr_agent.cpp.
 	// See the ccompile target in main/build.xml and main/src/agent/Makefile for how it is built.
-	public static String cInstrAgentFileName = libDirName + File.separator + "libchord_instr_agent.so";
+	public final static String cInstrAgentFileName = libDirName + File.separator + "libchord_instr_agent.so";
 	// This source of this agent is defined in main/src/java/chord/instr/OnlineTransformer.java.
 	// See the jcompile target in main/build.xml for how it is built.
-	public static String jInstrAgentFileName = libDirName + File.separator + "chord_instr_agent.jar";
+	public final static String jInstrAgentFileName = libDirName + File.separator + "chord_instr_agent.jar";
 	public final static String javadocURL = "http://jchord.googlecode.com/svn/wiki/javadoc/";
 
 	// Chord boot properties

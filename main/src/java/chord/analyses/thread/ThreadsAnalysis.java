@@ -50,8 +50,8 @@ import chord.bddbddb.Rel.PairIterable;
  */
 @Chord(
 	name = "threads-java",
-	consumedNames = { "threadOC" },
-	producedNames = { "A", "threadAOCM" },
+	consumes = { "threadOC" },
+	produces = { "A", "threadAOCM" },
     namesOfSigns = { "threadAOCM" },
     signs = { "A0,C0,C1,M0:A0_M0_C0xC1" },
 	namesOfTypes = { "A" },
