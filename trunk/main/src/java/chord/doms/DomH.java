@@ -6,17 +6,13 @@
  */
 package chord.doms;
 
-import java.util.Set;
-
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand.TypeOperand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
@@ -26,11 +22,7 @@ import chord.project.Chord;
 import chord.project.Project;
 import chord.program.PhantomObjVal;
 import chord.program.PhantomClsVal;
-import chord.project.Config;
 import chord.project.analyses.ProgramDom;
-import chord.program.Program;
-import chord.util.IndexSet;
-import chord.util.tuple.object.Pair;
 
 /**
  * Domain of object allocation statements.
@@ -44,7 +36,7 @@ import chord.util.tuple.object.Pair;
  */
 @Chord(
 	name = "H",
-	consumedNames = { "M", "T" }
+	consumes = { "M", "T" }
 )
 public class DomH extends ProgramDom<Object> {
 	protected DomM domM;
@@ -60,7 +52,6 @@ public class DomH extends ProgramDom<Object> {
 		domM = (DomM) Project.getTrgt("M");
 	}
 	public void fill() {
-		Program program = Program.getProgram();
 		int numM = domM.size();
 		add(null);	
 		for (int mIdx = 0; mIdx < numM; mIdx++) {

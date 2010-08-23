@@ -19,7 +19,7 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(
 	name = "cicg-java",
-	consumedNames = { "IM", "MM", "rootM", "reachableM" }
+	consumes = { "IM", "MM", "rootM", "reachableM" }
 )
 public class CICGAnalysis extends JavaAnalysis {
 	protected DomM domM;

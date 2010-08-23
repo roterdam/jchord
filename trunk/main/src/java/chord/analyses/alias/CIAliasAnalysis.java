@@ -28,7 +28,7 @@ import chord.util.SetUtils;
  */
 @Chord(
 	name = "cipa-java",
-	consumedNames = { "VH", "FH", "HFH" }
+	consumes = { "VH", "FH", "HFH" }
 )
 public class CIAliasAnalysis extends JavaAnalysis {
 	private ProgramRel relVH;

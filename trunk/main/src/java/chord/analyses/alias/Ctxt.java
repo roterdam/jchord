@@ -6,7 +6,6 @@
  */
 package chord.analyses.alias;
 
-import chord.program.Program;
 import joeq.Compiler.Quad.Quad;
 import java.io.Serializable;
 

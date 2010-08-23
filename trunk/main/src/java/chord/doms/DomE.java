@@ -13,7 +13,6 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
-import chord.program.Program;
 import chord.program.visitors.IHeapInstVisitor;
 import chord.project.Chord;
 import chord.project.Project;
@@ -27,7 +26,7 @@ import chord.project.analyses.ProgramDom;
  */
 @Chord(
 	name = "E",
-	consumedNames = { "M" }
+	consumes = { "M" }
 )
 public class DomE extends ProgramDom<Quad> implements IHeapInstVisitor {
 	protected DomM domM;

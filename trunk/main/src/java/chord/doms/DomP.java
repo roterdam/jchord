@@ -14,7 +14,6 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Util.Templates.ListIterator;
 
-import chord.program.Program;
 import chord.project.Project;
 import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
@@ -35,7 +34,7 @@ import chord.project.analyses.ProgramDom;
  */
 @Chord(
 	name = "P",
-	consumedNames = { "M" }
+	consumes = { "M" }
 )
 public class DomP extends ProgramDom<Inst> {
 	public void fill() {

@@ -10,7 +10,6 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import chord.program.Program;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
 import chord.project.Project;
@@ -23,7 +22,7 @@ import chord.project.analyses.ProgramDom;
  */
 @Chord(
 	name = "I",
-	consumedNames = { "M" }
+	consumes = { "M" }
 )
 public class DomI extends ProgramDom<Quad> implements IInvokeInstVisitor {
 	protected DomM domM;

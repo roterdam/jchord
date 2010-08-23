@@ -24,8 +24,9 @@ public @interface Chord {
 	String name() default "";	// may be empty
 	String sign() default "";	// if non-empty then annotated class must be a subclass of ProgramRel
 								// format e.g.: "M0,F0,V0:M0_V0xF0" or just "M0,F0,V0"
-	String[] consumedNames() default { };
-	String[] producedNames() default { };
+	String control() default "";
+	String[] consumes() default { };
+	String[] produces() default { };
 	String[] namesOfTypes() default { };
 	Class [] types() default { };
 	String[] namesOfSigns() default { };

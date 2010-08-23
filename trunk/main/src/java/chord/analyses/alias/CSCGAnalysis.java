@@ -19,7 +19,7 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(
 	name = "cscg-java",
-	consumedNames = { "CICM", "CMCM", "rootCM", "reachableM" }
+	consumes = { "CICM", "CMCM", "rootCM", "reachableM" }
 )
 public class CSCGAnalysis extends JavaAnalysis {
     protected DomM domM;

@@ -26,11 +26,12 @@ import chord.util.ClassUtils;
 public class ChordAnnotParser {
 	private final Class type;
 	private String name;
+	private String control;
+	private Set<String> consumedNames;
+	private Set<String> producedNames;
 	private Map<String, RelSign> nameToSignMap;
 	private Map<String, Class> nameToTypeMap;
 	private boolean hasNoErrors;
-	private Set<String> consumedNames;
-	private Set<String> producedNames;
 	/**
 	 * Constructor.
 	 * 
@@ -48,16 +49,17 @@ public class ChordAnnotParser {
 		Chord chord = (Chord) type.getAnnotation(Chord.class);
 		assert (chord != null);
 		hasNoErrors = true;
-		this.name = chord.name();
-
+		name = chord.name();
+		control = chord.control();
+		if (control.equals(""))
+			control = name;
 		String[] names;
-
-		names = chord.consumedNames();
+		names = chord.consumes();
 		consumedNames = new HashSet<String>(names.length);
 		for (String name2 : names) {
 			consumedNames.add(name2);
 		}
-		names = chord.producedNames();
+		names = chord.produces();
 		producedNames = new HashSet<String>(names.length);
 		for (String name2 : names) {
 			producedNames.add(name2);
@@ -94,7 +96,7 @@ public class ChordAnnotParser {
         } else {
 			for (int i = 0; i < namesOfTypes.length; i++) {
 				String name2 = namesOfTypes[i];
-				if (name2.equals(this.name) || name2.equals(".")) {
+				if (name2.equals(name) || name2.equals(".")) {
 					error("Method namesOfTypes() cannot return the same " +
 						"name as that returned by name()");
 					continue;

@@ -13,7 +13,6 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 
-import chord.program.Program;
 import chord.program.visitors.IAcqLockInstVisitor;
 import chord.project.Chord;
 import chord.project.Project;
@@ -27,7 +26,7 @@ import chord.project.analyses.ProgramDom;
  */
 @Chord(
 	name = "L",
-	consumedNames = { "M" }
+	consumes = { "M" }
 )
 public class DomL extends ProgramDom<Inst> implements IAcqLockInstVisitor {
 	protected DomM domM;
