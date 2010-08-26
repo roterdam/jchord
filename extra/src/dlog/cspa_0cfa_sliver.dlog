@@ -9,6 +9,8 @@
 
 # Author: Mayur Naik (mhn@cs.stanford.edu), Percy Liang (pliang@cs.berkeley.edu)
 # name=cspa-0cfa-sliver-dlog
+#
+# DON'T USE THIS!!!!!!!!!
 
 .include "F.dom"
 .include "H.dom"

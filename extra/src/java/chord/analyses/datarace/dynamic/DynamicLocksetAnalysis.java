@@ -31,8 +31,8 @@ import chord.util.tuple.integer.IntPair;
  *
  */
 @Chord(	name="dynamic-lockset-java",
-		consumedNames = { "aliasEE" },
-		producedNames = { "noLckSyncEE" },
+		consumes = { "aliasEE" },
+		produces = { "noLckSyncEE" },
 		namesOfSigns = { "noLckSyncEE" },
 		signs = { "E0,E1:E0xE1" })
 public class DynamicLocksetAnalysis extends DynamicAnalysis {

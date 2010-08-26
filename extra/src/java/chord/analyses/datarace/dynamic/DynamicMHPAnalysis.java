@@ -33,8 +33,8 @@ import chord.util.tuple.integer.IntPair;
  *
  */
 @Chord(	name="dynamic-mhp-java",
-		consumedNames = { "noLckSyncEE" },
-		producedNames = { "mhpEE" }, 
+		consumes = { "noLckSyncEE" },
+		produces = { "mhpEE" }, 
 		namesOfSigns = { "mhpEE" },
 		signs = { "E0,E1:E0xE1" })
 public class DynamicMHPAnalysis extends DynamicAnalysis {

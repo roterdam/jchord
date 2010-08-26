@@ -26,8 +26,8 @@ import chord.util.tuple.integer.IntPair;
  *
  */
 @Chord(	name="dynamic-alias-java",
-		consumedNames = { "startingRaces", "filteredStartingRaces" },
-		producedNames = { "aliasEE" }, 
+		consumes = { "startingRaces", "filteredStartingRaces" },
+		produces = { "aliasEE" }, 
 		namesOfSigns = { "aliasEE" },
 		signs = { "E0,E1:E0xE1" })
 public class DynamicAliasAnalysis extends DynamicAnalysis {
