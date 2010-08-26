@@ -46,7 +46,7 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(
 	name = "dynamic-thresc-java",
-	producedNames = { "escE" }, 
+	produces = { "escE" }, 
 	namesOfSigns = { "visitedE", "escE" },
 	signs = { "E0", "E0" }
 )

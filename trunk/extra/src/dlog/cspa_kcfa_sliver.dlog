@@ -18,19 +18,20 @@
 .include "Z.dom"
 .include "C.dom"
 
-.bddvarorder F0_I0xM0xM1_T0_V0xV1_T1_H0_C0xC1xC2
+.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0_C0xC1xC2
 
 ###
 # Relations
 ###
 
 HT(h:H0,t:T1) input
-cha(n:M1,t:T1,m:M0) input
+#cha(n:M1,t:T1,m:M0) input
 sub(t1:T1,t2:T0) input
 MI(m:M,i:I) input
+MH(m:M,h:H) input
 statIM(i:I,m:M) input
 specIM(i:I,m:M) input
-virtIM(i:I,m:M) input
+#virtIM(i:I,m:M) input
 MobjValAsgnInst(m:M,l:V,h:H) input
 MobjVarAsgnInst(m:M,l:V,r:V) input
 MgetInstFldInst(m:M,l:V,b:V,f:F) input
@@ -65,7 +66,9 @@ kcfaSenM(m:M) input
 epsilonV(v:V) input
 
 #IHM(i:I,h:H,m:M) # at call site i, if h is the allocation site of "this" argument, can get to method m
+# From 0-CFA
 IM(i:I,m:M) input
+reachableM(m:M) input
 reachableT(t:T)
 
 MspcMethArg(m:M,v:V) input
@@ -110,6 +113,10 @@ CFC(c1:C,f:F,c2:C) output
 CIC(c:C,i:I,d:C) output
 # d = [h, c]
 CHC(c:C,h:H,d:C) output
+
+ItoH(i:I,h:H) output
+ItoI(i:I,j:I) output
+reachableH(h:H) output
 
 ###
 # Constraints
@@ -224,3 +231,8 @@ CVC(c,v,o) :- DVC(c,v,o), !epsilonV(v).
 rootCM(0,0).
 rootCM(0,m) :- reachableT(t), clinitTM(t,m).
 CMCM(c,m,d,n) :- CICM(c,i,d,n), MI(m,i).
+
+# Possible extensions based on fixed call graph.
+ItoH(i,h) :- IM(i,m), MH(m,h).
+ItoI(i,j) :- IM(i,m), MI(m,j).
+reachableH(h) :- reachableM(m), MH(m,h).

@@ -6,6 +6,7 @@
  */
 package chord.analyses.alias;
 
+import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -108,14 +109,14 @@ import gnu.trove.TObjectIntProcedure;
  */
 @Chord(
   name = "sliver-ctxts-java",
-  producedNames = { "C", "CC", "CH", "CI", "epsilonV", "epsilonM", "kcfaSenM", "kobjSenM" },
+  produces = { "C", "CC", "CH", "CI", "epsilonV", "epsilonM", "kcfaSenM", "kobjSenM" },
   namesOfTypes = { "C" },
   types = { DomC.class }
 )
 public class SliverCtxtsAnalysis extends JavaAnalysis {
   private Execution X;
 
-  static final String zcfaTaskName = "cspa-0cfa-sliver-dlog";
+  //static final String zcfaTaskName = "cspa-0cfa-sliver-dlog";
   static final String kcfaTaskName = "cspa-kcfa-sliver-dlog";
 
   public static final int CTXTINS = 0;  // abbr ci; must be 0
@@ -152,8 +153,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   Quad _H;
   Register _V;
 
-  //final Quad glob = null;
-  //final Ctxt globCtxt = new Ctxt(new Quad[] {glob});
   final Ctxt emptyCtxt = new Ctxt(new Quad[0]);
 
   // Options
@@ -386,7 +385,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     for (int iter = 1; ; iter++) {
       X.logs("====== Iteration %s", iter);
-      refinementRadius = initRefinementRadius + iter;
+      backupRelations(iter);
+      refinementRadius = initRefinementRadius + (iter-1);
 
       if (computeInfSlivers()) { // Step (1)
         X.logs("Found satisfactory chosenInfSlivers, exiting...");
@@ -402,13 +402,34 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       computeC(); // Step (3)
       relCICM.close();
 
-			Project.resetTaskDone(zcfaTaskName);
-			Project.resetTaskDone(kcfaTaskName);
+			Project.resetTrgtDone(domC);
+			Project.setTaskDone(this);
+			Project.setTrgtDone(domC);
+			Project.setTrgtDone(relCI);
+			Project.setTrgtDone(relCH);
+			Project.setTrgtDone(relCC);
       Project.runTask(kcfaTaskName); // Step (4)
     }
 
     finish();
   }
+
+  void backupRelations(int iter) {
+    X.logs("backupRelations");
+    try {
+      String path = X.path(""+iter);
+      new File(path).mkdir();
+      domC.save(path, true);
+      for (ProgramRel rel : new ProgramRel[] { relCC, relCI, relCH, relCVC, relCFC }) {
+        rel.load();
+        rel.print(path);
+        rel.close();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  //void backup(String path, int iter) { Execution.system("cp", path, path+"."+iter); }
 
   // Step (0)
   void init0CFA() {
@@ -430,8 +451,34 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       relCH.add(h2c[h], domH.get(h));
     }
     relCH.save();
+    relCI.zero();
+    for (int i = 0; i < domI.size(); i++)
+      relCI.add(emptyCtxt, domI.get(i));
+    relCI.save();
+    relCC.zero();
+    for (Ctxt c : domC) relCC.add(emptyCtxt, c);
+    relCC.save();
 
-    Project.runTask(zcfaTaskName); 
+    Project.runTask(kcfaTaskName); 
+
+    // Only consider reachable stuff
+    {
+      ProgramRel rel = (ProgramRel)Project.getTrgt("reachableH"); rel.load();
+      Iterable<Quad> result = rel.getAry1ValTuples();
+      for (Quad h : result) hSet.add(h);
+      rel.close();
+    }
+    {
+      ProgramRel rel = (ProgramRel)Project.getTrgt("reachableI"); rel.load();
+      Iterable<Quad> result = rel.getAry1ValTuples();
+      for (Quad i : result) iSet.add(i);
+      rel.close();
+    }
+
+    for (Quad i : iSet) {
+      i2h.put(i, new ArrayList<Quad>());
+      i2i.put(i, new ArrayList<Quad>());
+    }
 
     // Used fixed call graph to determine:
     //  - set of reachable H and I.
@@ -442,11 +489,9 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       for (Pair<Quad,Quad> pair : result) {
         Quad i = pair.val0;
         Quad h = pair.val1;
-        iSet.add(i);
-        hSet.add(h);
-        List<Quad> l = i2h.get(i);
-        if (l == null) i2h.put(i, l = new ArrayList<Quad>());
-        l.add(h);
+        assert iSet.contains(i) : istr(i);
+        assert hSet.contains(h) : hstr(h);
+        i2h.get(i).add(h);
       }
       relItoH.close();
     }
@@ -456,14 +501,13 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       for (Pair<Quad,Quad> pair : result) {
         Quad i = pair.val0;
         Quad j = pair.val1;
-        iSet.add(i);
-        iSet.add(j);
-        List<Quad> l = i2i.get(i);
-        if (l == null) i2i.put(i, l = new ArrayList<Quad>());
-        l.add(j);
+        assert iSet.contains(i) : istr(i);
+        assert iSet.contains(j) : istr(j);
+        i2i.get(i).add(j);
       }
       relItoI.close();
     }
+
     X.logs("Finished 0-CFA: |hSet| = %s, |iSet| = %s", hSet.size(), iSet.size());
   }
 
@@ -479,6 +523,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     // When tracing back...
     Map<Ctxt,Set<Ctxt>> c2chosenHint = new HashMap<Ctxt,Set<Ctxt>>();
     Map<Ctxt,Set<Ctxt>> c2hint = new HashMap<Ctxt,Set<Ctxt>>();
+    Map<Ctxt,Histogram> c2hist = new HashMap<Ctxt,Histogram>();
 
     int numDone = 0;
     for (Quad e : queryE) { // For each query...
@@ -501,24 +546,24 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       }
       view.free();
 
+      Histogram hist = new Histogram();
       for (Ctxt c : pointsTo) {  
         // Trace back from each pivot c (use cache if possible)
         Set<Ctxt> myHint = c2hint.get(c);
         if (myHint == null) {
           c2hint.put(c, myHint = new HashSet<Ctxt>());
-          traceBack(myHint, c, Integer.MAX_VALUE);
+          c2hist.put(c, traceBack(myHint, c, Integer.MAX_VALUE));
         }
         hint.addAll(myHint);
+        hist.add(c2hist.get(c));
       }
-      String distHist = "-";
-      //String distHist = traceBack(hint, pointsTo, Integer.MAX_VALUE);
       infSlivers.addAll(hint);
 
       if (hint.size() <= maxHintSize) {
         // Done - no more refinement
         numDone++;
-        X.logs("QUERY DONE: [%s] |hint| = %s <= %s (|pts|=%s): %s",
-            distHist, hint.size(), maxHintSize, pointsTo.size(), estr(e));
+        X.logs("QUERY DONE: %s |hint| = %s <= %s (|pts|=%s): %s",
+            hist, hint.size(), maxHintSize, pointsTo.size(), estr(e));
       }
       else {
         // Choose some influential slivers to refine
@@ -530,11 +575,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
           }
           chosenHint.addAll(myChosenHint);
         }
-        //traceBack(chosenHint, pointsTo, refinementRadius);
         chosenInfSlivers.addAll(chosenHint);
 
-        X.logs("QUERY REFINE: [%s] chose %s/%s as hint [radius<=%s] (|pts|=%s): %s",
-            distHist,
+        X.logs("QUERY REFINE: %s chose %s/%s as hint [radius<=%s] (|pts|=%s): %s",
+            hist,
             chosenHint.size(), hint.size(), refinementRadius,
             pointsTo.size(), estr(e));
       }
@@ -553,11 +597,11 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     return numDone == queryE.size();
   }
 
-  String traceBack(Set<Ctxt> visited, Ctxt c, int maxDist) {
+  Histogram traceBack(Set<Ctxt> visited, Ctxt c, int maxDist) {
     if (verbose >= 2) X.logs("traceBack from %s", cstr(c));
     return traceBack(visited, Collections.singletonList(c), maxDist);
   }
-  String traceBack(Set<Ctxt> visited, List<Ctxt> cs, int maxDist) {
+  Histogram traceBack(Set<Ctxt> visited, List<Ctxt> cs, int maxDist) {
     TObjectIntHashMap<Ctxt> dists = new TObjectIntHashMap<Ctxt>();
     LinkedList<Ctxt> queue = new LinkedList<Ctxt>();
     for (Ctxt c : cs) {
@@ -600,11 +644,12 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     for (Ctxt c : infSlivers) { // For each candidate...
       assert c.length() == 0 || isAlloc(c.head());
-      if (true || !chosenInfSlivers.contains(c)) { // Don't refine TMP
+      if (!chosenInfSlivers.contains(c)) {
         refinedSlivers.add(c);
         continue;
       }
 
+      assert c.length() > 0; // Should not be trying to refine the glob
       jq_Method m = c.head().getMethod(); // Containing method
 
       // See which call sites can call this method
@@ -625,46 +670,12 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     X.logs("LENGTH(refinedSlivers): %s", lengthHistogram(refinedSlivers));
   }
 
-  void test0CFA() {
-    X.logs("Installing 0-CFA into C, CH, CC, CI");
-    // Construct C, CH (trivially)
-    domC.clear();
-    domC.getOrAdd(emptyCtxt); // Empty context
-    Ctxt[] h2c = new Ctxt[domH.size()];
-    for (int h = 1; h < domH.size(); h++) {
-      // Create a separate context for each reachable allocation site
-      Ctxt c = emptyCtxt.append((Quad)domH.get(h));
-      domC.getOrAdd(c);
-      h2c[h] = c;
-    }
-    domC.save();
-
-    relCH.zero();
-    for (int h = 1; h < domH.size(); h++) {
-      // Create a separate context for each reachable allocation site
-      relCH.add(h2c[h], domH.get(h));
-    }
-    relCH.save();
-
-    // Use k-CFA code to do 0-CFA (sanity check)
-    relCI.zero();
-    for (int i = 0; i < domI.size(); i++)
-      relCI.add(emptyCtxt, domI.get(i));
-    relCI.save();
-    relCC.zero();
-    for (Ctxt c : domC) relCC.add(emptyCtxt, c);
-    relCC.save();
-  }
-
   // Step (4): Use refinedSlivers to populate C, CC, CI, CH
   void computeC() {
-    //test0CFA();
-    //if (true) return;
-
     X.logs("computeC()");
 
     // DomC will consist of all suffixes of all refinedSlivers
-    {
+    if (true) {
       domC.clear();
       //domC.getOrAdd(globCtxt); // plus a special glob
       for (Ctxt sliver : refinedSlivers) {
@@ -674,15 +685,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       domC.save();
       X.logs("Converted %s refinedSlivers into %s domain C elements", refinedSlivers.size(), domC.size());
     }
-
-    /*{
+    else {
+      // Temporary test - if do this, results shouldn't change
       X.logs("Filling C with 0-CFA");
       domC.clear();
       domC.getOrAdd(emptyCtxt); // Empty context
       for (Quad h : hSet)
         domC.getOrAdd(emptyCtxt.append(h));
       domC.save();
-    }*/
+    }
 
     Set<Quad> inSomeContext = new HashSet<Quad>(); // set of heads of some context
     for (Ctxt c : domC)
@@ -786,31 +797,38 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     }
   }
 
-  String lengthHistogram(Set<Ctxt> slivers) {
-    int[] counts = new int[1000];
+  Histogram lengthHistogram(Set<Ctxt> slivers) {
+    Histogram hist = new Histogram();
     for (Ctxt c : slivers)
-      counts[c.length()]++;
-    return formatCounts(counts);
+      hist.counts[c.length()]++;
+    return hist;
   }
 
-  String distHistogram(TObjectIntHashMap<Ctxt> dists) {
-    final int[] counts = new int[1000];
+  Histogram distHistogram(TObjectIntHashMap<Ctxt> dists) {
+    final Histogram hist = new Histogram();
     dists.forEachEntry(new TObjectIntProcedure<Ctxt>() {
       public boolean execute(Ctxt c, int dist) {
-        counts[dist]++;
+        hist.counts[dist]++;
         return true;
       }
     });
-    return formatCounts(counts);
+    return hist;
   }
 
-  String formatCounts(int[] counts) {
-    StringBuilder buf = new StringBuilder();
-    for (int n = 0; n < counts.length; n++) {
-      if (counts[n] == 0) continue;
-      if (buf.length() > 0) buf.append(" ");
-      buf.append(n+":"+counts[n]);
+  class Histogram {
+    int[] counts = new int[1000];
+    public void add(Histogram h) {
+      for (int i = 0; i < counts.length; i++)
+        counts[i] += h.counts[i];
     }
-    return '['+buf.toString()+']';
+    @Override public String toString() {
+      StringBuilder buf = new StringBuilder();
+      for (int n = 0; n < counts.length; n++) {
+        if (counts[n] == 0) continue;
+        if (buf.length() > 0) buf.append(" ");
+        buf.append(n+":"+counts[n]);
+      }
+      return '['+buf.toString()+']';
+    }
   }
 }
