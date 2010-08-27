@@ -66,7 +66,7 @@ kcfaSenM(m:M) input
 epsilonV(v:V) input
 
 #IHM(i:I,h:H,m:M) # at call site i, if h is the allocation site of "this" argument, can get to method m
-# From 0-CFA
+# From 0-CFA: we don't want the call graph changing on us during refinement.
 IM(i:I,m:M) input
 reachableM(m:M) input
 reachableT(t:T)
@@ -117,6 +117,10 @@ CHC(c:C,h:H,d:C) output
 ItoH(i:I,h:H) output
 ItoI(i:I,j:I) output
 reachableH(h:H) output
+
+# TMP
+#reachM(m:M) output
+#reachI(i:I) output
 
 ###
 # Constraints
@@ -236,3 +240,6 @@ CMCM(c,m,d,n) :- CICM(c,i,d,n), MI(m,i).
 ItoH(i,h) :- IM(i,m), MH(m,h).
 ItoI(i,j) :- IM(i,m), MI(m,j).
 reachableH(h) :- reachableM(m), MH(m,h).
+
+#reachM(m) :- reachableCM(_, m).
+#reachI(i) :- reachableCI(_, i).

@@ -105,6 +105,7 @@ public class Ctxt implements Serializable {
   public int length() { return elems.length; }
   public Quad get(int i) { return elems[i]; }
   public Quad head() { return elems[0]; }
+  public Quad last() { return elems[elems.length-1]; }
   public Ctxt tail() { return suffix(elems.length-1); }
   public Ctxt suffix(int k) {
     if (k >= elems.length) return this;

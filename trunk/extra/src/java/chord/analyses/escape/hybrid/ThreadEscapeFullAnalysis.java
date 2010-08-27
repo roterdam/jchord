@@ -154,7 +154,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
     Map<Quad, Set<Quad>> heapInstToAllocInsts = new HashMap<Quad, Set<Quad>>();
     if (percy) {
-      // Read the hings from a file
+      // Read the hints from a file
       try {
         String hintsPath = X.getStringArg("hintsPath", null);
         BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(hintsPath)));
@@ -165,10 +165,12 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
           Set<Quad> hs = heapInstToAllocInsts.get(e);
           if (hs == null) heapInstToAllocInsts.put(e, hs = new ArraySet<Quad>());
           int hidx = Integer.parseInt(tokens[1]);
-          if (hidx != 0 && hidx != -1) {
+          if (hidx >= domH.size()) throw new RuntimeException("Bad index: "+hidx+ " >= "+domH.size());
+          if (hidx > 0) {
             Quad h = (Quad)domH.get(hidx);
             hs.add(h);
           }
+          // TODO: handle the call sites
         }
         in.close();
         X.logs("Read hints for %s queries from %s", heapInstToAllocInsts.size(), hintsPath);
