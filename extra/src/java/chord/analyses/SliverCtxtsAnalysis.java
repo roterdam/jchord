@@ -28,6 +28,7 @@ import gnu.trove.TIntProcedure;
 
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Class;
+import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Reference;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -52,6 +53,7 @@ import chord.project.Project;
 import chord.project.Config;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
+import chord.util.IndexMap;
 import chord.util.ArraySet;
 import chord.util.graph.IGraph;
 import chord.util.graph.MutableGraph;
@@ -63,40 +65,45 @@ import gnu.trove.TObjectIntProcedure;
 
 /**
  * Performs a refinement-based pointer analysis.
- * At the end, computes for a set of variables of interest,
- * the set of abstract objects.
  *
- * An abstract object is a sliver: [h, i_1, ... i_k],
- * where h is an allocation site and i_1, ... i_k is the context (a chain of call sites).
+ * A context is a sequence of call sites [i_1, ..., i_k].
+ * An abstract object is a sliver: [h, i_1, ... i_k], where h is an allocation site.
  *
- * An abstraction is specified by a set of slivers.
- * Note that importantly, we don't have to have uniform k values at all.
+ * An abstraction is specified:
+ *   - A set of contexts (closed under suffixes) [refinedContexts]
+ *   - A set of slivers (supported by the contexts) [refinedSlivers]
+ *
+ * Input: given a set of variables we're interested in.
+ * Output: for each variable v, a small set of slivers that can reach an object
+ * that v points with respect to the given abstraction.
  *
  * Example:
  *
- * CI1 --[CICM]--+--> CM1 --+--[MI]--> CI3
+ * CI1 --[CICM]--+--> CM1 --+
  *               |          |
  * CI2 --[CICM]--+          +--[MH]--> CH1 --[CFC]--> CH2 <--[CVC]-- V1
  *
- * Input: given a set of variables we're interested in.
- * Output: for each variable v, a set of slivers that can influence the value of v.
- *
- * 0) Initialize C, call 0-CFA to get in CFC, CICM.
+ * (INIT) Initialize C, call 0-CFA to get CVC,CFC,CICM and ItoI,ItoH and reachableH,reachableI.
  * Iterate:
- *   1) Follow CVC pointers forward once and CFC pointers backwards to find the *influential slivers*.
+ *   (PRUNE_CONTEXT) Use congruence tests to reduce the number of contexts.
+ *   (PRUNE_SLIVER) Follow CVC pointers forward once and CFC pointers backwards to find the *influential slivers* [infSlivers].
  *   Choose a subset of these slivers which are within a fixed number of hops from something that a query variable points to;
- *   these are the ones we want to refine.
+ *   these are the ones we want to refine [chosenInfSlivers].
  *   Terminology: a hint is the *influencing slivers* of a particular query e.
  *   If the influence set is small enough, then we break out.
- *   2) Given the chosen influential slivers, follow MH, CICM, and MI
- *   pointers backwards, splitting these slivers to produce refined slivers.
- *   3) Compute C,CC,CI,CH from these refined slivers to reflect the new changes.
- *   4) Call k-CFA to obtain CFC and CICM.
- * 5) Set the heap abstraction to be the influential slivers and run the
+ *   (REFINE) Given the chosen influential slivers, follow MH, CICM, and MI
+ *   pointers backwards, splitting these slivers to produce refined slivers, expanding contexts if necessary
+ *   The refined slivers determines our abstraction [refinedSlivers,refinedContexts].
+ *   (COMPUTE_C) Compute C,CC,CI,CH from our computed abstraction.
+ *   (ANALYSIS) Call k-CFA to obtain CVC,CFC,CICM.
+ * (FULL) Set the heap abstraction to be the influential slivers and run the
  * flow-sensitive, context-sensitive full program analysis.
  *
  * MH, MI: fixed in advance
- * C --(0)--> CFC,CICM --(1,2,3)--> refinedSlivers --(4)--> C,CC,CI,CH --(5)--> CFC,CICM
+ * C,CC,CI,CH --(INIT)--> ItoI,ItoH,CVC,CFC,CICM --(PRUNE_CONTEXT,PRUNE_SLIVER,REFINE)--> refinedContexts,refinedSlivers
+ *                                        ^                                                              |
+ *                                        |                                                              |
+ *                                        +-------------(ANALYSIS)-- C,CC,CI,CH <--(COMPUTE_C)-----------+
  *
  * For thread-escape, input variables are those whose field is accessed in
  * client code (get these by looking at EV).
@@ -161,17 +168,22 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   int maxHintSize;
   int initRefinementRadius;
 
+  IndexMap<Ctxt> globalC = new IndexMap<Ctxt>(); // dom C will change over time, but keep a consistent indexing for comparison
+
   // Compute once using 0-CFA
   Set<Quad> hSet = new HashSet<Quad>();
   Set<Quad> iSet = new HashSet<Quad>();
   HashMap<Quad,List<Quad>> i2h = new HashMap<Quad,List<Quad>>(); // i -> list of allocation sites that can be prepended to i
   HashMap<Quad,List<Quad>> i2i = new HashMap<Quad,List<Quad>>(); // i -> list of call sites that can be prepended to i
+  HashMap<Quad,List<Quad>> rev_i2i = new HashMap<Quad,List<Quad>>();
+  HashMap<jq_Method,List<Quad>> callees = new HashMap<jq_Method,List<Quad>>(); // m -> list of call sites (reverse of IM)
 
   // Current state
   Set<Ctxt> chosenInfSlivers = new HashSet<Ctxt>(); // Slivers backward reachable (truncated at refinementRadius)
   Set<Ctxt> infSlivers = new HashSet<Ctxt>(); // Slivers backward reachable (no truncation)
-  Set<Ctxt> refinedSlivers = new HashSet<Ctxt>(); // InfSlivers extended even further (used to populate domain C)
-  Map<Quad,Set<Ctxt>> e2hints = new HashMap<Quad,Set<Ctxt>>();
+  Set<Ctxt> refinedContexts = new HashSet<Ctxt>(); // Specifies abstraction
+  Set<Ctxt> refinedSlivers = new HashSet<Ctxt>(); // Specifies abstraction
+  Map<Quad,Set<Ctxt>> e2hints = new HashMap<Quad,Set<Ctxt>>(); // infSlivers
   int refinementRadius; // Maximum number of hops that any candidate is away from a pivot
 
   // Determine the queries in client code (for thread-escape)
@@ -217,14 +229,18 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     for (Register v : sel0(_V, relEV, e)) return v;
     return null;
   }
-  //String hstr(Quad h) { return h == glob ? "glob" : String.format("%s[%s]", domH.indexOf(h), h.toVerboseStr()); }
-  String hstr(Quad h) { return String.format("%s[%s]", domH.indexOf(h), h.toVerboseStr()); }
-  String istr(Quad i) { return String.format("%s[%s]", domI.indexOf(i), i.toVerboseStr()); }
-  String estr(Quad e) { return String.format("%s[%s]", domE.indexOf(e), e.toVerboseStr()); }
+  String qstr(Quad q) { return q.toJavaLocStr()+"("+q.toString()+")"; }
+  String hstr(Quad h) { return String.format("%s[%s]", domH.indexOf(h), qstr(h)); }
+  String istr(Quad i) { return String.format("%s[%s]", domI.indexOf(i), qstr(i)); }
+  String estr(Quad e) { return String.format("%s[%s]", domE.indexOf(e), qstr(e)); }
   String vstr(Register v) { return String.format("%s[%s]", domV.indexOf(v), v); }
-  String cstr(Ctxt c) {
+  String cstr(Ctxt c) { return cstr(c, true); }
+  String cstr(Ctxt c, boolean showIndex) {
     StringBuilder buf = new StringBuilder();
-    buf.append(domC.indexOf(c));
+    if (showIndex) buf.append(domC.indexOf(c));
+    //buf.append('(');
+    //buf.append(c.length());
+    //buf.append(')');
     buf.append('{');
     for (int i = 0; i < c.length(); i++) {
       if (i > 0) buf.append(" | ");
@@ -234,14 +250,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     buf.append('}');
     return buf.toString();
   }
+  String cvstr(Ctxt c) { return cstr(c, false)+(c.length() > 0 ? "_"+c.head().toByteLocStr() : ""); }
 
-  //boolean isAlloc(Quad q) { return q == glob || domH.indexOf(q) != -1; }
   boolean isAlloc(Quad q) { return domH.indexOf(q) != -1; }
 
   ////////////////////////////////////////////////////////////
 
   private void init() {
     X = Execution.v("hints");  
+    X.addSaveFiles("hints.txt", "hints-str.txt");
 
     // Immutable inputs
     domV = (DomV) Project.getTrgt("V"); Project.runTask(domV);
@@ -324,8 +341,17 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     _V = domV.get(1);
 
     // Compute which queries we should answer in the whole program
-    computedExcludedClasses();
-    for (Quad e : domE) if (!computeStatementIsExcluded(e) && e2v(e) != null) queryE.add(e);
+    String focus = X.getStringArg("eFocus", null);
+    if (focus != null) {
+      for (String e : focus.split(","))
+        queryE.add(domE.get(Integer.parseInt(e)));
+    }
+    else {
+      computedExcludedClasses();
+      for (Quad e : domE)
+        if (!computeStatementIsExcluded(e) && e2v(e) != null) queryE.add(e);
+    }
+
     for (Quad e : queryE) e2hints.put(e, new HashSet<Ctxt>());
   }
 
@@ -381,14 +407,18 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     options.put("initRefinementRadius", initRefinementRadius);
     X.writeMap("options.map", options);
 
-    init0CFA();
+    init0CFA(); // STEP (INIT)
 
     for (int iter = 1; ; iter++) {
       X.logs("====== Iteration %s", iter);
       backupRelations(iter);
       refinementRadius = initRefinementRadius + (iter-1);
 
-      if (computeInfSlivers()) { // Step (1)
+      pruneContexts(); // STEP (PRUNE_CONTEXT)
+      boolean done = computeInfSlivers(); // STEP (PRUNE_SLIVER)
+      outputHint(iter);
+
+      if (done) {
         X.logs("Found satisfactory chosenInfSlivers, exiting...");
         break;
       }
@@ -398,17 +428,17 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       }
 
       relCICM.load();
-      refineSlivers(); // Step (2)
-      computeC(); // Step (3)
+      refineSlivers(); // Step (REFINE)
+      computeC(); // Step (COMPUTE_C)
       relCICM.close();
 
-			Project.resetTrgtDone(domC);
-			Project.setTaskDone(this);
+			Project.resetTrgtDone(domC); // Make everything that depends on domC undone
+			Project.setTaskDone(this); // We are generating all this stuff, so mark it as done...
 			Project.setTrgtDone(domC);
 			Project.setTrgtDone(relCI);
 			Project.setTrgtDone(relCH);
 			Project.setTrgtDone(relCC);
-      Project.runTask(kcfaTaskName); // Step (4)
+      Project.runTask(kcfaTaskName); // Step (ANALYSIS)
     }
 
     finish();
@@ -423,17 +453,21 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       for (ProgramRel rel : new ProgramRel[] { relCC, relCI, relCH, relCVC, relCFC }) {
         rel.load();
         rel.print(path);
-        rel.close();
+        //rel.close();
       }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
-  }
-  //void backup(String path, int iter) { Execution.system("cp", path, path+"."+iter); }
 
-  // Step (0)
+    PrintWriter out = OutDirUtils.newPrintWriter("globalC.txt");
+    for (int i = 0; i < globalC.size(); i++)
+      out.println(cvstr(globalC.get(i)));
+    out.close();
+  }
+
+  // Step (INIT)
   void init0CFA() {
-    // Construct C, CH (trivially)
+    // Construct C
     domC.clear();
     domC.getOrAdd(emptyCtxt); // Empty context
     Ctxt[] h2c = new Ctxt[domH.size()];
@@ -445,16 +479,21 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     }
     domC.save();
 
+    for (Ctxt c : domC) globalC.getOrAdd(c);
+
+    // Construct CH
     relCH.zero();
-    for (int h = 1; h < domH.size(); h++) {
-      // Create a separate context for each reachable allocation site
-      relCH.add(h2c[h], domH.get(h));
-    }
+    for (int h = 1; h < domH.size(); h++)
+      relCH.add(h2c[h], domH.get(h)); // Create a separate context for each reachable allocation site
     relCH.save();
+
+    // Construct CI
     relCI.zero();
     for (int i = 0; i < domI.size(); i++)
       relCI.add(emptyCtxt, domI.get(i));
     relCI.save();
+
+    // Construct CC
     relCC.zero();
     for (Ctxt c : domC) relCC.add(emptyCtxt, c);
     relCC.save();
@@ -478,6 +517,22 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     for (Quad i : iSet) {
       i2h.put(i, new ArrayList<Quad>());
       i2i.put(i, new ArrayList<Quad>());
+      rev_i2i.put(i, new ArrayList<Quad>());
+    }
+
+    // Build callees
+    {
+      ProgramRel relIM = (ProgramRel)Project.getTrgt("IM"); relIM.load();
+      PairIterable<Quad,jq_Method> result = relIM.getAry2ValTuples();
+      for (Pair<Quad,jq_Method> pair : result) {
+        Quad i = pair.val0;
+        jq_Method m = pair.val1;
+        assert iSet.contains(i) : istr(i);
+        List<Quad> l = callees.get(m);
+        if (l == null) callees.put(m, l = new ArrayList<Quad>());
+        l.add(i);
+      }
+      relIM.close();
     }
 
     // Used fixed call graph to determine:
@@ -504,6 +559,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
         assert iSet.contains(i) : istr(i);
         assert iSet.contains(j) : istr(j);
         i2i.get(i).add(j);
+        rev_i2i.get(j).add(i);
       }
       relItoI.close();
     }
@@ -511,7 +567,12 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     X.logs("Finished 0-CFA: |hSet| = %s, |iSet| = %s", hSet.size(), iSet.size());
   }
 
-  // Step (1): compute influential slivers
+  // Step (PRUNE_SLIVER)
+  void pruneContexts() {
+    // FUTURE WORK
+  }
+
+  // Step (PRUNE_SLIVER): compute influential slivers (and also choose subset for refinement)
   boolean computeInfSlivers() {
     X.logs("computeInfSlivers()");
     relCVC.load();
@@ -533,7 +594,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
       Register v = e2v(e); // ...which accesses a field of v
 
-      // Find all slivers that v could point to...
+      // Find all slivers that v could point to... [pointsTo]
       RelView view = relCVC.getView();
       view.delete(0);
       view.selectAndDelete(1, v);
@@ -597,6 +658,53 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     return numDone == queryE.size();
   }
 
+  void outputHint(int iter) {
+    // Output hints
+    PrintWriter out = OutDirUtils.newPrintWriter("hints.txt");
+    PrintWriter sout = OutDirUtils.newPrintWriter("hints-str.txt");
+    for (Quad e : e2hints.keySet()) {
+      sout.println(estr(e));
+      Set<Ctxt> hint = e2hints.get(e);
+      int ei = domE.indexOf(e);
+      if (hint.size() == 0) { // Null hint
+        sout.println("  NULL (query points to nothing)");
+        out.println(ei + " -2"); // Query trivially true
+      }
+      else if (hint.size() <= maxHintSize) {
+        for (Ctxt c : hint) {
+          sout.println("  "+cstr(c));
+          StringBuilder sb = new StringBuilder();
+          for (int i = 0; i < c.length(); i++) {
+            if (i == 0) sb.append(domH.indexOf(c.get(i)));
+            else sb.append(" "+domI.indexOf(c.get(i)));
+          }
+          out.println(ei + " " + sb);
+        }
+      }
+      else {
+        sout.println("  GIVE_UP");
+        out.println(ei + " -1"); // Just give up
+      }
+    }
+    out.close();
+    sout.close();
+
+    // Print hint statistics
+    int sumHintSize = 0;
+    int maxHintSize = 0;
+    for (Set<Ctxt> hint : e2hints.values()) {
+      int size = hint.size();
+      sumHintSize += size;
+      maxHintSize = Math.max(maxHintSize, size);
+    }
+    X.putOutput("currIter", iter);
+    X.putOutput("avgHintSize", 1.0*sumHintSize/e2hints.size());
+    X.putOutput("maxHintSize", maxHintSize);
+    X.putOutput("numQueries", e2hints.size());
+    X.putOutput("numChosenInfSlivers", chosenInfSlivers.size());
+    X.putOutput("numInfSlivers", infSlivers.size());
+  }
+
   Histogram traceBack(Set<Ctxt> visited, Ctxt c, int maxDist) {
     if (verbose >= 2) X.logs("traceBack from %s", cstr(c));
     return traceBack(visited, Collections.singletonList(c), maxDist);
@@ -615,12 +723,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       int cdist = dists.get(c);
 
       RelView view = relCFC.getView();
-      view.delete(1);
+      //view.delete(1);
       view.selectAndDelete(2, c);
-      Iterable<Ctxt> result = view.getAry1ValTuples();
-      for (Ctxt b : result) {
+      PairIterable<Ctxt,jq_Field> result = view.getAry2ValTuples();
+      for (Pair<Ctxt,jq_Field> pair : result) {
+        Ctxt b = pair.val0;
+        jq_Field f = pair.val1;
         if (verbose >= 3 && maxDist == Integer.MAX_VALUE)
-          X.logs("EDGE %s %s", domC.indexOf(b), domC.indexOf(c));
+          //X.logs("EDGE %s %s", globalC.getOrAdd(b), globalC.getOrAdd(c));
+          X.logs("EDGE %s %s_%s %s_%s", f, globalC.getOrAdd(b), cstr(b, false), globalC.getOrAdd(c), cstr(c, false));
         if (visited.contains(b)) continue;
         if (b.length() == 0)
           X.errors("Invariant broken: glob can reach %s", cstr(c));
@@ -630,58 +741,112 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
         if (bdist < maxDist)
           queue.addLast(b);
       }
+
+      /*RelView view = relCFC.getView();
+      view.delete(1);
+      view.selectAndDelete(2, c);
+      Iterable<Ctxt> result = view.getAry1ValTuples();
+      for (Ctxt b : result) {
+        if (verbose >= 3 && maxDist == Integer.MAX_VALUE)
+          //X.logs("EDGE %s %s", globalC.getOrAdd(b), globalC.getOrAdd(c));
+          X.logs("EDGE %s_%s %s_%s", globalC.getOrAdd(b), cstr(b, false), globalC.getOrAdd(c), cstr(c, false));
+        if (visited.contains(b)) continue;
+        if (b.length() == 0)
+          X.errors("Invariant broken: glob can reach %s", cstr(c));
+        visited.add(b);
+        int bdist = cdist+1;
+        dists.put(b, bdist);
+        if (bdist < maxDist)
+          queue.addLast(b);
+      }*/
     }
 
     return distHistogram(dists);
   }
 
-  // Step (3): Refine the chosenInfSlivers
+  // Step (REFINE): Refine the chosenInfSlivers to produce refinedSlivers and refinedContexts
   void refineSlivers() {
     X.logs("refineSlivers()");
     // Refine only chosenInfSlivers, not infSlivers
-    int numOldSlivers = refinedSlivers.size();
+    int oldNumSlivers = refinedSlivers.size();
+    int oldNumContexts = refinedContexts.size();
     refinedSlivers.clear();
+    // Note: don't clear refinedContexts
 
     for (Ctxt c : infSlivers) { // For each candidate...
       assert c.length() == 0 || isAlloc(c.head());
+
+      if (true) { // TMP
+        refinedSlivers.add(c);
+        continue;
+      }
+
+      // Keep as is
       if (!chosenInfSlivers.contains(c)) {
         refinedSlivers.add(c);
         continue;
       }
 
-      assert c.length() > 0; // Should not be trying to refine the glob
-      jq_Method m = c.head().getMethod(); // Containing method
+      if (c.length() == 0) // Should not be trying to refine the glob
+        throw new RuntimeException("We are trying to refine the glob - something went wrong!");
 
-      // See which call sites can call this method
-      RelView view = relCICM.getView();
-      view.delete(0);
-      view.selectAndDelete(2, c.tail());
-      view.selectAndDelete(3, m);
+      // See which call sites can call this method - broken
+      /*RelView view = relCICM.getView();
+      //view.delete(0); // C
+      view.delete(1); // I
+      view.selectAndDelete(2, c.tail()); // C
+      view.selectAndDelete(3, m); // M
       Iterable<Quad> result = view.getAry1ValTuples();
       if (verbose >= 1) X.logs("Refining sliver %s:", cstr(c));
+      boolean extended = false;
       for(Quad i : result) { // i can call method m in context c
         refinedSlivers.add(c.append(i));
         if (verbose >= 2) X.logs("  New sliver: %s", cstr(c.append(i)));
+        extended = true;
       }
-      view.free();
+      view.free();*/
+
+      if (verbose >= 1) X.logs("Refining sliver %s:", cstr(c));
+      List<Quad> extensions = c.length() == 1 ?
+        callees.get(c.head().getMethod()) : // Call sites that call the containing method of this allocation site (c.head())
+        rev_i2i.get(c.last()); // Call sites that lead to the last call site in the current chain
+
+      // If didn't extend, then assume that the last call site (c.last()) exists in an initial method,
+      // which is not called by anything.
+      // ASSUMPTION: initial methods are never called by some intermediate method.
+      if (extensions == null || extensions.size() == 0) {
+        if (verbose >= 2) X.logs("  Keep same sliver (no extensions): %s", cstr(c));
+        refinedSlivers.add(c);
+      }
+      else {
+        for (Quad i : extensions) {
+          refinedSlivers.add(c.append(i));
+          if (verbose >= 2) X.logs("  New sliver: %s", cstr(c.append(i)));
+        }
+      }
     }
 
-    X.logs("Refinement yielded %s refinedSlivers (from %s) using %s/%s chosenInfSlivers", refinedSlivers.size(), numOldSlivers, chosenInfSlivers.size(), infSlivers.size());
+    // Update refinedContexts to support refinedSlivers
+    for (Ctxt c : refinedSlivers) {
+      for (int i = 0; i < c.length(); i++)
+        refinedContexts.add(c.suffix(i));
+    }
+
+    X.logs("Refinement yielded %s refinedSlivers (previous: %s), %s refinedContexts (previous: %s) using %s/%s chosenInfSlivers",
+        refinedSlivers.size(), oldNumSlivers, refinedContexts.size(), oldNumContexts, chosenInfSlivers.size(), infSlivers.size());
     X.logs("LENGTH(refinedSlivers): %s", lengthHistogram(refinedSlivers));
   }
 
-  // Step (4): Use refinedSlivers to populate C, CC, CI, CH
+  // Step (COMPUTE_C): Use refinedSlivers,refinedContexts to populate C,CC,CI,CH
   void computeC() {
     X.logs("computeC()");
 
-    // DomC will consist of all suffixes of all refinedSlivers
+    // Populate dom C
     if (true) {
       domC.clear();
-      //domC.getOrAdd(globCtxt); // plus a special glob
-      for (Ctxt sliver : refinedSlivers) {
-        for (int k = 0; k <= sliver.length(); k++)
-          domC.getOrAdd(sliver.suffix(k));
-      }
+      domC.getOrAdd(emptyCtxt); // Empty context
+      for (Ctxt c : refinedSlivers) domC.getOrAdd(c);
+      for (Ctxt c : refinedContexts) domC.getOrAdd(c);
       domC.save();
       X.logs("Converted %s refinedSlivers into %s domain C elements", refinedSlivers.size(), domC.size());
     }
@@ -711,7 +876,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       else {
         Quad q = c.head();
         if (isAlloc(q)) relCH.add(c, q);
-        else relCI.add(c, q);
+        else            relCI.add(c, q);
       }
     }
 		relCI.save();
@@ -725,10 +890,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       // So we have to anticipate what kind of prepending we'll encounter.
       if (c.length() == 0) {
         // Can extend the empty context to any singleton or empty context
-        for (Ctxt d : domC) {
-          if (d.length() <= 1)
-            relCC.add(c, d);
-        }
+        for (Ctxt d : domC)
+          if (d.length() <= 1) relCC.add(c, d);
         continue;
       }
 
@@ -738,47 +901,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       Quad i = c.head();
       for (Quad h : i2h.get(i)) extend(h, c);
       for (Quad j : i2i.get(i)) extend(j, c);
-
-      // WARNING
-      // We are using old information (CICM) to determine the posible extensions.
-      // We must assume that the new CICM can only get smaller because we are making finer distinctions.
-
-      // Extend c with call sites
-      /*{
-        RelView view = relCICM.getView();
-        view.selectAndDelete(0, c.tail());
-        view.selectAndDelete(1, c.head());
-        view.delete(2);
-        Iterable<jq_Method> result = view.getAry1ValTuples();
-        for(jq_Method m : result) { // For each method that we can invoke from c...
-          // For all call sites in this method...
-          RelView viewMI = relMI.getView();
-          viewMI.selectAndDelete(0, m);
-          Iterable<Quad> resultMI = viewMI.getAry1ValTuples();
-          for (Quad i : resultMI) extend(i, c); // Can prepend i to c
-          viewMI.free();
-
-        }
-        view.free();
-      }
-
-      // Extend c with allocation sites
-      {
-        RelView view = relCICM.getView();
-        view.delete(0);
-        view.delete(1);
-        view.selectAndDelete(2, c);
-        Iterable<jq_Method> result = view.getAry1ValTuples();
-        for(jq_Method m : result) { // For each method that we can be in (in context c)
-          // For all allocation sites in this method...
-          RelView viewMH = relMH.getView();
-          viewMH.selectAndDelete(0, m);
-          Iterable<Quad> resultMH = viewMH.getAry1ValTuples();
-          for (Quad h : resultMH) extend(h, c);
-          viewMH.free();
-        }
-        view.free();
-      }*/
     }
 
 		relCC.save();
@@ -792,8 +914,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
         relCC.add(c, d);
         break;
       }
-      //if (k == 0 && isAlloc(q)) // This allocation site goes in the glob
-        //relCC.add(c, globCtxt);
     }
   }
 

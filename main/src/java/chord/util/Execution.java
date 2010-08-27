@@ -67,6 +67,11 @@ public class Execution {
     logOut.flush();
   }
 
+  public void putOutput(String key, Object value) {
+    logs("OUT %s = %s", key, value);
+    output.put(key, value);
+  }
+
   public void writeMap(String name, HashMap<Object,Object> map) {
     PrintWriter out = Utils.openOutAppend(path(name));
     for (Object key : map.keySet()) {
