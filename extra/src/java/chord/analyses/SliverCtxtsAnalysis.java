@@ -116,22 +116,14 @@ import gnu.trove.TObjectIntProcedure;
  */
 @Chord(
   name = "sliver-ctxts-java",
-  produces = { "C", "CC", "CH", "CI", "epsilonV", "epsilonM", "kcfaSenM", "kobjSenM" },
+  produces = { "C", "CC", "CH", "CI" },
   namesOfTypes = { "C" },
   types = { DomC.class }
 )
 public class SliverCtxtsAnalysis extends JavaAnalysis {
   private Execution X;
 
-  //static final String zcfaTaskName = "cspa-0cfa-sliver-dlog";
   static final String kcfaTaskName = "cspa-kcfa-sliver-dlog";
-
-  public static final int CTXTINS = 0;  // abbr ci; must be 0
-  public static final int KCFASEN = 2;  // abbr cs
-
-  private jq_Method mainMeth;
-  private boolean[] isCtxtSenV;   // indexed by domV
-  private int[] methKind;         // indexed by domM
 
   // Immutable inputs
   private DomV domV;
@@ -151,10 +143,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   private ProgramRel relCC;
   private ProgramRel relCH;
   private ProgramRel relCI;
-  private ProgramRel relKcfaSenM;
-  private ProgramRel relKobjSenM;
-  private ProgramRel relEpsilonM;
-  private ProgramRel relEpsilonV;
 
   // Canonical
   Quad _H;
@@ -238,9 +226,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   String cstr(Ctxt c, boolean showIndex) {
     StringBuilder buf = new StringBuilder();
     if (showIndex) buf.append(domC.indexOf(c));
-    //buf.append('(');
-    //buf.append(c.length());
-    //buf.append(')');
     buf.append('{');
     for (int i = 0; i < c.length(); i++) {
       if (i > 0) buf.append(" | ");
@@ -278,64 +263,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     relCC = (ProgramRel) Project.getTrgt("CC");
     relCH = (ProgramRel) Project.getTrgt("CH");
     relCI = (ProgramRel) Project.getTrgt("CI");
-    relKcfaSenM = (ProgramRel) Project.getTrgt("kcfaSenM");
-    relKobjSenM = (ProgramRel) Project.getTrgt("kobjSenM");
-    relEpsilonM = (ProgramRel) Project.getTrgt("epsilonM");
-    relEpsilonV = (ProgramRel) Project.getTrgt("epsilonV");
-
-    mainMeth = Program.getProgram().getMainMethod();
-
-    int numV = domV.size();
-    int numM = domM.size();
-    int numH = domH.size();
-    int numI = domI.size();
-
-    // Set the context-sensitivity of various methods
-    methKind = new int[numM];
-    for (int mIdx = 0; mIdx < numM; mIdx++) {
-      jq_Method mVal = domM.get(mIdx);
-      methKind[mIdx] = getCtxtKind(mVal);
-    }
-
-    // Based on context-sensitivity of methods, set the context-sensitivity of variables inside the method
-    isCtxtSenV = new boolean[numV];
-    for (int mIdx = 0; mIdx < numM; mIdx++) {
-      if (methKind[mIdx] != CTXTINS) {
-        jq_Method m = domM.get(mIdx);
-        ControlFlowGraph cfg = m.getCFG();
-        RegisterFactory rf = cfg.getRegisterFactory();
-        for (Object o : rf) {
-          Register v = (Register) o;
-          if (v.getType().isReferenceType()) {
-            int vIdx = domV.indexOf(v);
-            // locals unused by any quad in cfg are not in domain V
-            if (vIdx != -1)
-              isCtxtSenV[vIdx] = true;
-          }
-        }
-      }
-    }
-    validate();
-
-    // Mark which methods and variables to be context sensitive
-    relEpsilonM.zero();
-    relKcfaSenM.zero();
-    relKobjSenM.zero();
-    for (int mIdx = 0; mIdx < numM; mIdx++) {
-      int kind = methKind[mIdx];
-      switch (kind) {
-        case CTXTINS: relEpsilonM.add(mIdx); break;
-        case KCFASEN: relKcfaSenM.add(mIdx); break;
-        default: assert false;
-      }
-    }
-    relEpsilonM.save();
-    relKcfaSenM.save();
-    relKobjSenM.save();
-		relEpsilonV.zero();
-		for (int v = 0; v < numV; v++)
-			if (!isCtxtSenV[v]) relEpsilonV.add(v);
-		relEpsilonV.save();
 
     _H = (Quad)domH.get(1);
     _V = domV.get(1);
@@ -358,37 +285,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   void finish() {
     relEV.close();
     X.finish(null);
-  }
-  
-  private void validate() {
-    // check that the main jq_Method and each class initializer method
-    // and each method without a body is not asked to be analyzed
-    // context sensitively.
-    int numM = domM.size();
-    for (int m = 0; m < numM; m++) {
-      int kind = methKind[m];
-      if (kind != CTXTINS) {
-        jq_Method meth = domM.get(m);
-        assert (meth != mainMeth);
-        assert (!(meth instanceof jq_ClassInitializer));
-      }
-    }
-    // check that each variable in a context insensitive method is
-    // not asked to be treated context sensitively.
-    int numV = domV.size();
-    for (int v = 0; v < numV; v++) {
-      if (isCtxtSenV[v]) {
-        Register var = domV.get(v);
-        jq_Method meth = domV.getMethod(var);
-        int m = domM.indexOf(meth);
-        int kind = methKind[m];
-        assert (kind != CTXTINS);
-      }
-    }
-  }
-
-  private int getCtxtKind(jq_Method m) {
-    return m == mainMeth || m instanceof jq_ClassInitializer || m.isAbstract() ? CTXTINS : KCFASEN;
   }
 
   public void run() {
@@ -607,7 +503,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       }
       view.free();
 
-      Histogram hist = new Histogram();
+      Histogram hist = new Histogram(); // Note: overcounts
       for (Ctxt c : pointsTo) {  
         // Trace back from each pivot c (use cache if possible)
         Set<Ctxt> myHint = c2hint.get(c);
@@ -790,22 +686,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       if (c.length() == 0) // Should not be trying to refine the glob
         throw new RuntimeException("We are trying to refine the glob - something went wrong!");
 
-      // See which call sites can call this method - broken
-      /*RelView view = relCICM.getView();
-      //view.delete(0); // C
-      view.delete(1); // I
-      view.selectAndDelete(2, c.tail()); // C
-      view.selectAndDelete(3, m); // M
-      Iterable<Quad> result = view.getAry1ValTuples();
-      if (verbose >= 1) X.logs("Refining sliver %s:", cstr(c));
-      boolean extended = false;
-      for(Quad i : result) { // i can call method m in context c
-        refinedSlivers.add(c.append(i));
-        if (verbose >= 2) X.logs("  New sliver: %s", cstr(c.append(i)));
-        extended = true;
-      }
-      view.free();*/
-
       if (verbose >= 1) X.logs("Refining sliver %s:", cstr(c));
       List<Quad> extensions = c.length() == 1 ?
         callees.get(c.head().getMethod()) : // Call sites that call the containing method of this allocation site (c.head())
@@ -850,7 +730,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       domC.save();
       X.logs("Converted %s refinedSlivers into %s domain C elements", refinedSlivers.size(), domC.size());
     }
-    else {
+    else { // TMP
       // Temporary test - if do this, results shouldn't change
       X.logs("Filling C with 0-CFA");
       domC.clear();
