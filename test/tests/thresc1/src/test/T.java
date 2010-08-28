@@ -1,3 +1,5 @@
+package test;
+
 public class T {
 	static {
 		(new Thread() { public void run() { }}).start();
