@@ -41,7 +41,6 @@
 81!read_tsp:(Ljava/lang/String;)I@Tsp
 101!read_tsp:(Ljava/lang/String;)I@Tsp
 105!read_tsp:(Ljava/lang/String;)I@Tsp
-4!<clinit>:()V@TspSolver
 23!<clinit>:()V@TspSolver
 34!<clinit>:()V@TspSolver
 45!<clinit>:()V@TspSolver
