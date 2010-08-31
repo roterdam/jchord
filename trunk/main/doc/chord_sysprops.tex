@@ -34,7 +34,7 @@ to be used to run the program.
 {\bf Type:} path \\
 {\bf Description:} Java source path of the given program. \\
 {\bf Default value:} {\tt ""}  \\
-{\bf Note:} \Chord\ analyzes only Java bytecode, not Java source code.  This property is used only by the task of converting Java source files into HTML files by program analyses that need to present their analysis results at the Java source code level (by calling method \code{chord.program.Program.getProgram().HTMLizeJavaSrcFiles())}.
+{\bf Note:} \Chord\ analyzes only Java bytecode, not Java source code.  This property is used only by the task of converting Java source files into HTML files by program analyses that need to present their analysis results at the Java source code level (by calling method \code{chord.program.Program.g().HTMLizeJavaSrcFiles())}.
 
 \item
 \code{chord.run.ids} \\
@@ -70,7 +70,7 @@ such as computing the scope of the given program or running program analyses on 
 {\bf Type:} bool \\
 {\bf Description:} Compute the scope (i.e., reachable classes and methods) of the given program using the algorithm specified by properties \code{chord.scope.kind} and \code{chord.reuse.scope}. \\
 {\bf Default value:} {\tt false} \\
-{\bf Note:} The program scope is computed regardless of the value of this property if another task (e.g., a program analysis specified via property \code{chord.run.analyses}) demands it by calling method \code{chord.program.Program.getProgram()}.
+{\bf Note:} The program scope is computed regardless of the value of this property if another task (e.g., a program analysis specified via property \code{chord.run.analyses}) demands it by calling method \code{chord.program.Program.g()}.
 
 \item
 \code{chord.run.analyses} \\
@@ -269,15 +269,15 @@ This section describes properties that specify the amount of debug information t
 \begin{itemize}
 \item
 \code{chord.verbose} \\
-{\bf Type:} bool \\
-{\bf Description:} Produce more verbose output during \Chord's execution. \\
-{\bf Default value:} {\tt false} 
+{\bf Type:} int in the range [0..3] \\
+{\bf Description:} Control the verbosity of logging during \Chord's execution. \\
+{\bf Default value:} {\tt 2} 
 
 \item
-\code{chord.bddbddb.noisy} \\
-{\bf Type:} bool \\
-{\bf Description:} Produce more verbose output during the Datalog solver \bddbddb's execution. \\
-{\bf Default value:} {\tt false} 
+\code{chord.bddbddb.verbose} \\
+{\bf Type:} int in the range [0..5] \\
+{\bf Description:} Control the verbosity of logging during the execution of JavaBDD (BDD library) and \bddbddb\ (Datalog solver). \\
+{\bf Default value:} {\tt 0} 
 
 \item
 \code{chord.save.maps} \\
