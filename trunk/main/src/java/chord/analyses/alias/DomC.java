@@ -12,7 +12,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;
 import chord.doms.DomI;
 import chord.doms.DomH;
@@ -39,9 +39,9 @@ public class DomC extends ProgramDom<Ctxt> {
 	}
 	public String toXMLAttrsString(Ctxt cVal) {
 		if (domH == null)
-			domH = (DomH) Project.getTrgt("H");
+			domH = (DomH) ClassicProject.g().getTrgt("H");
 		if (domI == null)
-			domI = (DomI) Project.getTrgt("I");
+			domI = (DomI) ClassicProject.g().getTrgt("I");
 		Quad[] elems = cVal.getElems();
 		int n = elems.length;
 		if (n == 0)

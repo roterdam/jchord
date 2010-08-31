@@ -93,8 +93,6 @@ public class ClassHierarchy {
 	 */
 	private Set<String> missingClints;
 
-	private final boolean verbose;
-
 	public String getDeclaredSuperclass(String c) {
 		if (classToDeclaredSuperclass == null)
 			build();
@@ -206,7 +204,6 @@ public class ClassHierarchy {
 		String mainClassPathName = Config.mainClassPathName;
 		chordCPEary = mainClassPathName.equals("") ? new String[0] :
 			mainClassPathName.split(File.pathSeparator);
-		verbose = Config.verbose;
 	}
 
 	// builds maps clintToKind, classToDeclaredSuperclass, and clintToDeclaredInterfaces
@@ -261,13 +258,13 @@ public class ClassHierarchy {
 				InputStream is = cpe.getResourceAsStream(fileName);
 				assert (is != null);
 				DataInputStream in = new DataInputStream(is);
-				if (verbose)
+				if (Config.verbose > 2)
 					Messages.log("Processing class file %s from %s", fileName, cpe);
 				processClassFile(in, typeName);
 			}
 		}
 
-		if (verbose) {
+		if (Config.verbose > 2) {
 			if (!excludedCPEs.isEmpty()) {
 				Messages.log(EXCLUDED_CPE);
 				for (String cpe : excludedCPEs)

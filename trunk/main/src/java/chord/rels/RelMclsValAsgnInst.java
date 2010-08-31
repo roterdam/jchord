@@ -48,7 +48,7 @@ public class RelMclsValAsgnInst extends ProgramRel
 				// s is in encoded form only if it is an array type
 				if (s.startsWith("["))
 					s = Program.typesToStr(s);
-				jq_Reference t = Program.getProgram().getClass(s);
+				jq_Reference t = Program.g().getClass(s);
 				assert t != null : s + "@" + ctnrMethod;
 				RegisterOperand lo = Move.getDest(q);
 				Register l = lo.getRegister();

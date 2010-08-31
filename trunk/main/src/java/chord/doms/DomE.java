@@ -15,7 +15,8 @@ import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import chord.program.visitors.IHeapInstVisitor;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
+import chord.project.Config;
 import chord.project.analyses.ProgramDom;
 
 /**
@@ -31,7 +32,8 @@ import chord.project.analyses.ProgramDom;
 public class DomE extends ProgramDom<Quad> implements IHeapInstVisitor {
 	protected DomM domM;
 	public void init() {
-		domM = (DomM) Project.getTrgt("M");
+		domM = (DomM) (Config.classic ?
+			ClassicProject.g().getTrgt("M") : consumes[0]);
 	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) { }

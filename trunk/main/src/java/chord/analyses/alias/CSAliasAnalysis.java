@@ -15,6 +15,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.bddbddb.Rel.RelView;
 import chord.util.SetUtils;
 import chord.project.Chord;
+import chord.project.ClassicProject;
 import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
@@ -32,9 +33,9 @@ public class CSAliasAnalysis extends JavaAnalysis {
 	private ProgramRel relFC;
 	private ProgramRel relCFC;
 	public void run() {
-		relCVC = (ProgramRel) Project.getTrgt("CVC");
-		relFC  = (ProgramRel) Project.getTrgt("FC");
-		relCFC = (ProgramRel) Project.getTrgt("CFC");
+		relCVC = (ProgramRel) ClassicProject.g().getTrgt("CVC");
+		relFC  = (ProgramRel) ClassicProject.g().getTrgt("FC");
+		relCFC = (ProgramRel) ClassicProject.g().getTrgt("CFC");
 	}
 	/**
 	 * Provides the abstract object to which a given local variable

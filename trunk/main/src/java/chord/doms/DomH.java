@@ -19,7 +19,8 @@ import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Util.Templates.ListIterator;
 
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.Config;
+import chord.project.ClassicProject;
 import chord.program.PhantomObjVal;
 import chord.program.PhantomClsVal;
 import chord.project.analyses.ProgramDom;
@@ -36,7 +37,7 @@ import chord.project.analyses.ProgramDom;
  */
 @Chord(
 	name = "H",
-	consumes = { "M", "T" }
+	consumes = { "M" }
 )
 public class DomH extends ProgramDom<Object> {
 	protected DomM domM;
@@ -49,7 +50,8 @@ public class DomH extends ProgramDom<Object> {
 		return lastPhantomObjIdx;
 	}
 	public void init() {
-		domM = (DomM) Project.getTrgt("M");
+		domM = (DomM) (Config.classic ?
+			ClassicProject.g().getTrgt("M") : consumes[0]);
 	}
 	public void fill() {
 		int numM = domM.size();

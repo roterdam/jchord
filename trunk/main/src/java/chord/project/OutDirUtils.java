@@ -79,7 +79,7 @@ public class OutDirUtils {
 		String cmd = "";
 		for (String s : cmdarray)
 			cmd += s + " ";
-        Messages.log(PROCESS_STARTING, cmd);
+        if (Config.verbose > 1) Messages.log(PROCESS_STARTING, cmd);
         try {
             int result = ProcessExecutor.execute(cmdarray);
             if (result != 0)
@@ -87,7 +87,7 @@ public class OutDirUtils {
         } catch (Throwable ex) {
             Messages.fatal(PROCESS_FAILED, cmd, ex.getMessage());
         }
-        Messages.log(PROCESS_FINISHED, cmd);
+        if (Config.verbose > 1) Messages.log(PROCESS_FINISHED, cmd);
     }
 	public static final void executeWithWarnOnError(List<String> cmdlist, int timeout) {
 		String[] cmdarray = new String[cmdlist.size()];

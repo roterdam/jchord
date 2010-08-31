@@ -8,7 +8,7 @@ package chord.analyses.thread;
 
 import joeq.Class.jq_Method;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.program.Program;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.DomC;
@@ -59,10 +59,10 @@ import chord.bddbddb.Rel.PairIterable;
 )
 public class ThreadsAnalysis extends JavaAnalysis {
 	public void run() {
-		Program program = Program.getProgram();
-        DomC domC = (DomC) Project.getTrgt("C");
-        DomM domM = (DomM) Project.getTrgt("M");
-        DomA domA = (DomA) Project.getTrgt("A");
+		Program program = Program.g();
+        DomC domC = (DomC) ClassicProject.g().getTrgt("C");
+        DomM domM = (DomM) ClassicProject.g().getTrgt("M");
+        DomA domA = (DomA) ClassicProject.g().getTrgt("A");
         domA.clear();
 		domA.add(null);
         jq_Method mainMeth = program.getMainMethod();
@@ -70,7 +70,7 @@ public class ThreadsAnalysis extends JavaAnalysis {
         domA.add(new Trio<Ctxt, Ctxt, jq_Method>(epsilon, epsilon, mainMeth));
         jq_Method threadStartMeth = program.getThreadStartMethod();
 		if (threadStartMeth != null) {
-        	ProgramRel relThreadOC = (ProgramRel) Project.getTrgt("threadOC");
+        	ProgramRel relThreadOC = (ProgramRel) ClassicProject.g().getTrgt("threadOC");
 			relThreadOC.load();
 			PairIterable<Ctxt, Ctxt> tuples = relThreadOC.getAry2ValTuples();
 			for (Pair<Ctxt, Ctxt> p : tuples) {
@@ -81,7 +81,7 @@ public class ThreadsAnalysis extends JavaAnalysis {
         	relThreadOC.close();
 		}
 		domA.save();
-        ProgramRel relThreadAOCM = (ProgramRel) Project.getTrgt("threadAOCM");
+        ProgramRel relThreadAOCM = (ProgramRel) ClassicProject.g().getTrgt("threadAOCM");
         relThreadAOCM.zero();
         for (int a = 1; a < domA.size(); a++) {
 			Trio<Ctxt, Ctxt, jq_Method> ocm = domA.get(a);

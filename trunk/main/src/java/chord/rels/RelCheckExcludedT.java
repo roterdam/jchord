@@ -28,7 +28,7 @@ import chord.util.IndexSet;
 public class RelCheckExcludedT extends ProgramRel {
 	public void fill() {
 		DomT domT = (DomT) doms[0];
-        Program program = Program.getProgram();
+        Program program = Program.g();
 		IndexSet<jq_Reference> classes = program.getClasses();
 		String[] checkExcludeAry = Config.checkExcludeAry;
 		for (jq_Reference c : classes) {

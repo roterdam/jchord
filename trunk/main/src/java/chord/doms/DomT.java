@@ -23,7 +23,7 @@ import chord.util.IndexSet;
 )
 public class DomT extends ProgramDom<jq_Type> {
 	public void fill() {
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		IndexSet<jq_Type> types = program.getTypes();
 		for (jq_Type t : types)
 			add(t);

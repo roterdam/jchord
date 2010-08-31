@@ -28,7 +28,7 @@ import chord.util.FileUtils;
  */
 public final class OfflineTransformer {
     private static final String INSTR_STARTING =
-		"INFO: Starting to instrument all classes; this may take a while (use -Dchord.verbose=true for more detailed info) ...";
+		"INFO: Starting to instrument all classes; this may take a while (use -Dchord.verbose=3 for more detailed info) ...";
     private static final String INSTR_FINISHED =
 		"INFO: Finished instrumenting all classes.";
     private static final String CANNOT_INSTRUMENT_CLASS =
@@ -42,7 +42,6 @@ public final class OfflineTransformer {
 
     private final String bootClassesDirName;
     private final String userClassesDirName;
-	private final boolean verbose;
 	private final JavassistPool pool;
 
     private final CoreInstrumentor instrumentor;
@@ -51,7 +50,6 @@ public final class OfflineTransformer {
 		instrumentor = instr;
 		bootClassesDirName = Config.bootClassesDirName;
 		userClassesDirName = Config.userClassesDirName;
-		verbose = Config.verbose;
 		pool = instr.getPool();
 	}
 
@@ -59,7 +57,7 @@ public final class OfflineTransformer {
 		Messages.log(INSTR_STARTING);
         FileUtils.deleteFile(bootClassesDirName);
         FileUtils.deleteFile(userClassesDirName);
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		for (jq_Reference r : program.getClasses()) {
 			if (r instanceof jq_Array)
 				continue;
@@ -72,7 +70,8 @@ public final class OfflineTransformer {
 					String outDir = getOutDir(cName);
 					if (outDir != null) {
 						clazz.writeFile(outDir);
-						if (verbose) Messages.log(WROTE_INSTRUMENTED_CLASS, cName);
+						if (Config.verbose > 2)
+							Messages.log(WROTE_INSTRUMENTED_CLASS, cName);
 					}
 				}
 			} catch (IOException e) {

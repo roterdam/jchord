@@ -8,6 +8,7 @@ package chord.analyses.alias;
 
 import chord.doms.DomM;
 import chord.project.Chord;
+import chord.project.ClassicProject;
 import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
@@ -29,11 +30,11 @@ public class CICGAnalysis extends JavaAnalysis {
 	protected ProgramRel relMM;
 	protected CICG callGraph;
 	public void run() {
-		domM = (DomM) Project.getTrgt("M");
-		relRootM = (ProgramRel) Project.getTrgt("rootM");
-		relReachableM = (ProgramRel) Project.getTrgt("reachableM");
-		relIM = (ProgramRel) Project.getTrgt("IM");
-		relMM = (ProgramRel) Project.getTrgt("MM");
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		relRootM = (ProgramRel) ClassicProject.g().getTrgt("rootM");
+		relReachableM = (ProgramRel) ClassicProject.g().getTrgt("reachableM");
+		relIM = (ProgramRel) ClassicProject.g().getTrgt("IM");
+		relMM = (ProgramRel) ClassicProject.g().getTrgt("MM");
 	}
 	/**
 	 * Provides the program's context-insensitive call graph.

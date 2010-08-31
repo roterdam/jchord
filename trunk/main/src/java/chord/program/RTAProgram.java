@@ -187,7 +187,7 @@ public class RTAProgram extends Program {
 		return reflectInfo;
 	}
 	private void build() {
-		System.out.println("ENTER: RTA");
+		if (Config.verbose > 1) System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
 		if (handleForNameReflection) {
@@ -196,7 +196,7 @@ public class RTAProgram extends Program {
 			forNameAnalyzedMethods = new HashSet<jq_Method>();
 		}
 		if (handleNewInstReflection) {
-            ch = Program.getProgram().getClassHierarchy();
+            ch = Program.g().getClassHierarchy();
             methToInvks = new HashMap<jq_Method, Set<Quad>>();
 			newInstVars = new HashSet<Register>();
             reflectRetMeths = new HashSet<jq_Method>();
@@ -219,7 +219,7 @@ public class RTAProgram extends Program {
 		if (mainMethod == null)
 			Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
 		for (int i = 0; repeat; i++) {
-			System.out.println("Iteration: " + i);
+			if (Config.verbose > 1) System.out.println("Iteration: " + i);
 			repeat = false;
          	classesVisitedForClinit.clear();
         	methods.clear();
@@ -232,9 +232,10 @@ public class RTAProgram extends Program {
 	        	processMethod(m);
 	        }
         }
-		System.out.println("LEAVE: RTA");
+		if (Config.verbose > 1) System.out.println("LEAVE: RTA");
 		timer.done();
-		System.out.println("Time: " + timer.getInclusiveTimeStr());
+		if (Config.verbose > 1)
+			System.out.println("Time: " + timer.getInclusiveTimeStr());
 	}
 	private void visitMethod(jq_Method m) {
 		if (methods.add(m)) {

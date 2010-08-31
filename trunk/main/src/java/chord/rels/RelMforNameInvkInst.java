@@ -38,7 +38,7 @@ public class RelMforNameInvkInst extends ProgramRel {
 		DomM domM = (DomM) doms[0];
 		DomI domI = (DomI) doms[1];
 		DomT domT = (DomT) doms[2];
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		Set<Pair<Quad, Set<jq_Reference>>> resolvedForNameSites =
 			program.getReflectInfo().getResolvedForNameSites();
 		for (Pair<Quad, Set<jq_Reference>> p : resolvedForNameSites) {

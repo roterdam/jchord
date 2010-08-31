@@ -35,6 +35,7 @@ import chord.doms.DomL;
 import chord.doms.DomM;
 import chord.program.Program;
 import chord.project.Chord;
+import chord.project.ClassicProject;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
 import chord.project.Project;
@@ -98,21 +99,21 @@ public class DataraceAnalysis extends JavaAnalysis {
 	private Execution X;
 
 	private void init() {
-		relRefineH = (ProgramRel) Project.getTrgt("refineH");
-		relRefineM = (ProgramRel) Project.getTrgt("refineM");
-		relRefineV = (ProgramRel) Project.getTrgt("refineV");
-		relRefineI = (ProgramRel) Project.getTrgt("refineI");
-		domM = (DomM) Project.getTrgt("M");
-		domI = (DomI) Project.getTrgt("I");
-		domF = (DomF) Project.getTrgt("F");
-		domE = (DomE) Project.getTrgt("E");
-		domA = (DomA) Project.getTrgt("A");
-		domH = (DomH) Project.getTrgt("H");
-		domC = (DomC) Project.getTrgt("C");
-		domL = (DomL) Project.getTrgt("L");
-		hybridAnalysis = (CSAliasAnalysis) Project.getTrgt("cs-alias-java");
+		relRefineH = (ProgramRel) ClassicProject.g().getTrgt("refineH");
+		relRefineM = (ProgramRel) ClassicProject.g().getTrgt("refineM");
+		relRefineV = (ProgramRel) ClassicProject.g().getTrgt("refineV");
+		relRefineI = (ProgramRel) ClassicProject.g().getTrgt("refineI");
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		domI = (DomI) ClassicProject.g().getTrgt("I");
+		domF = (DomF) ClassicProject.g().getTrgt("F");
+		domE = (DomE) ClassicProject.g().getTrgt("E");
+		domA = (DomA) ClassicProject.g().getTrgt("A");
+		domH = (DomH) ClassicProject.g().getTrgt("H");
+		domC = (DomC) ClassicProject.g().getTrgt("C");
+		domL = (DomL) ClassicProject.g().getTrgt("L");
+		hybridAnalysis = (CSAliasAnalysis) ClassicProject.g().getTrgt("cs-alias-java");
 	    thrSenAbbrCSCGAnalysis = (ThrSenAbbrCSCGAnalysis)
-			Project.getTrgt("thrsen-abbr-cscg-java");
+			ClassicProject.g().getTrgt("thrsen-abbr-cscg-java");
 	}
 
 	public void run() {
@@ -137,31 +138,31 @@ public class DataraceAnalysis extends JavaAnalysis {
 		while (true) {
 			// Run analysis
 			Messages.log("Running datarace analysis (numIters="+numIters+")");
-			Project.runTask("ctxts-java");
-			Project.runTask(CtxtsAnalysis.getCspaKind());
-			Project.runTask("datarace-prologue-dlog");
+			ClassicProject.g().runTask("ctxts-java");
+			ClassicProject.g().runTask(CtxtsAnalysis.getCspaKind());
+			ClassicProject.g().runTask("datarace-prologue-dlog");
 			if (excludeParallel)
-				Project.runTask("datarace-parallel-exclude-dlog");
+				ClassicProject.g().runTask("datarace-parallel-exclude-dlog");
 			else
-				Project.runTask("datarace-parallel-include-dlog");
+				ClassicProject.g().runTask("datarace-parallel-include-dlog");
 			if (excludeEscaping)
-				Project.runTask("datarace-escaping-exclude-dlog");
+				ClassicProject.g().runTask("datarace-escaping-exclude-dlog");
 			else
-				Project.runTask("datarace-escaping-include-dlog");
+				ClassicProject.g().runTask("datarace-escaping-include-dlog");
 			if (excludeNongrded)
-				Project.runTask("datarace-nongrded-exclude-dlog");
+				ClassicProject.g().runTask("datarace-nongrded-exclude-dlog");
 			else
-				Project.runTask("datarace-nongrded-include-dlog");
-			Project.runTask("datarace-dlog");
-			Project.runTask("datarace-stats-dlog");
+				ClassicProject.g().runTask("datarace-nongrded-include-dlog");
+			ClassicProject.g().runTask("datarace-dlog");
+			ClassicProject.g().runTask("datarace-stats-dlog");
 			if (numIters == maxIters)
 				break;
-			Project.runTask("datarace-feedback-dlog");
+			ClassicProject.g().runTask("datarace-feedback-dlog");
 			if (!excludeParallel)
-				Project.runTask("refine-mhp-dlog");
+				ClassicProject.g().runTask("refine-mhp-dlog");
 			if (!excludeEscaping)
-				Project.runTask("refine-esc-dlog");
-			Project.runTask("refine-hybrid-dlog");
+				ClassicProject.g().runTask("refine-esc-dlog");
+			ClassicProject.g().runTask("refine-hybrid-dlog");
 			relRefineH.load();
 			int numRefineH = relRefineH.size();
 			relRefineH.close();
@@ -177,7 +178,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 			if (numRefineH == 0 && numRefineM == 0 &&
 				numRefineV == 0 && numRefineI == 0)
 				break;
-			Project.resetTaskDone("ctxts-java");
+			ClassicProject.g().resetTaskDone("ctxts-java");
 			numIters++;
 		}
 		
@@ -193,7 +194,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 	private void outputCtxtInsDataraces() {
 		PrintWriter writer =
 			 OutDirUtils.newPrintWriter("ctxtInsDatarace.txt");
-		final ProgramRel relDatarace = (ProgramRel) Project.getTrgt("ctxtInsDatarace");		
+		final ProgramRel relDatarace = (ProgramRel) ClassicProject.g().getTrgt("ctxtInsDatarace");		
 		relDatarace.load();		
 		final PairIterable<Inst, Inst> tuples = relDatarace.getAry2ValTuples();		
 		int numRaces = 0;		
@@ -213,7 +214,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 	private void outputRaces() {
 		PrintWriter datOut = OutDirUtils.newPrintWriter("outputs.dat");		
 			
-		final ProgramRel relDatarace = (ProgramRel) Project.getTrgt("ctxtInsDatarace");		
+		final ProgramRel relDatarace = (ProgramRel) ClassicProject.g().getTrgt("ctxtInsDatarace");		
 		relDatarace.load();		
 		final PairIterable<Inst, Inst> tuples = relDatarace.getAry2ValTuples();		
 		int numRaces = 0;		
@@ -244,10 +245,10 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 	private void publishResults() {
 		outputCtxtInsDataraces();
-		Project.runTask(hybridAnalysis);
-		Project.runTask(thrSenAbbrCSCGAnalysis);
+		ClassicProject.g().runTask(hybridAnalysis);
+		ClassicProject.g().runTask(thrSenAbbrCSCGAnalysis);
 	    final ICSCG thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
-		Project.runTask("datarace-epilogue-dlog");
+		ClassicProject.g().runTask("datarace-epilogue-dlog");
 		final ProgramDom<Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>> domTCE =
 			new ProgramDom<Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>>();
 		domTCE.setName("TCE");
@@ -258,9 +259,9 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		out = OutDirUtils.newPrintWriter("dataracelist.xml");
 		out.println("<dataracelist>");
-		final ProgramRel relDatarace = (ProgramRel) Project.getTrgt("datarace");
+		final ProgramRel relDatarace = (ProgramRel) ClassicProject.g().getTrgt("datarace");
 		relDatarace.load();
-		final ProgramRel relRaceCEC = (ProgramRel) Project.getTrgt("raceCEC");
+		final ProgramRel relRaceCEC = (ProgramRel) ClassicProject.g().getTrgt("raceCEC");
 		relRaceCEC.load();
 		final Iterable<Hext<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad,
 				Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>> tuples = relDatarace.getAry6ValTuples();
@@ -294,12 +295,12 @@ public class DataraceAnalysis extends JavaAnalysis {
 		out.println("</dataracelist>");
 		out.close();
 
-		Project.runTask("LI");
-		Project.runTask("LE");
-		Project.runTask("syncCLC-dlog");
-		final ProgramRel relLI = (ProgramRel) Project.getTrgt("LI");
-		final ProgramRel relLE = (ProgramRel) Project.getTrgt("LE");
-		final ProgramRel relSyncCLC = (ProgramRel) Project.getTrgt("syncCLC");
+		ClassicProject.g().runTask("LI");
+		ClassicProject.g().runTask("LE");
+		ClassicProject.g().runTask("syncCLC-dlog");
+		final ProgramRel relLI = (ProgramRel) ClassicProject.g().getTrgt("LI");
+		final ProgramRel relLE = (ProgramRel) ClassicProject.g().getTrgt("LE");
+		final ProgramRel relSyncCLC = (ProgramRel) ClassicProject.g().getTrgt("syncCLC");
 		relLI.load();
 		relLE.load();
 		relSyncCLC.load();
@@ -427,6 +428,6 @@ public class DataraceAnalysis extends JavaAnalysis {
 		OutDirUtils.runSaxon("results.xml", "paths.xsl");
 		OutDirUtils.runSaxon("results.xml", "races.xsl");
 
-		Program.getProgram().HTMLizeJavaSrcFiles();
+		Program.g().HTMLizeJavaSrcFiles();
 	}
 }

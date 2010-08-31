@@ -42,7 +42,7 @@ public class RelMhardNewInstanceInvkInst extends ProgramRel
 		domM = (DomM) doms[0];
 		domI = (DomI) doms[1];
         resolvedNewInstSites = new HashSet<Quad>();
-		for (Pair<Quad, Set<jq_Reference>> p : Program.getProgram().
+		for (Pair<Quad, Set<jq_Reference>> p : Program.g().
 				getReflectInfo().getResolvedNewInstSites()) {
 			resolvedNewInstSites.add(p.val0);
 		}

@@ -36,7 +36,7 @@ public class RelMeasyNewInstanceInvkInst extends ProgramRel {
 	public void fill() {
 		DomM domM = (DomM) doms[0];
 		DomI domI = (DomI) doms[1];
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		Set<Pair<Quad, Set<jq_Reference>>> resolvedNewInstSites =
 			program.getReflectInfo().getResolvedNewInstSites();
 		for (Pair<Quad, Set<jq_Reference>> p : resolvedNewInstSites) {

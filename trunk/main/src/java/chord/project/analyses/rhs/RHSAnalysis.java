@@ -27,7 +27,7 @@ import chord.program.Location;
 import chord.analyses.alias.ICICG;
 import chord.doms.DomI;
 import chord.doms.DomM;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
 import chord.util.ArraySet;
 
@@ -127,10 +127,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	protected void init() {
 		if (isInited)
 			return;
-		domI = (DomI) Project.getTrgt("I");
-		Project.runTask(domI);
-		domM = (DomM) Project.getTrgt("M");
-		Project.runTask(domM);
+		domI = (DomI) ClassicProject.g().getTrgt("I");
+		ClassicProject.g().runTask(domI);
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		ClassicProject.g().runTask(domM);
 		cicg = getCallGraph();
 		isInited = true;
 	}
@@ -364,7 +364,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
             if (DEBUG) System.out.println("\tYes, not adding");
             return;
         }
-		Program program = Program.getProgram();
+		Program program = Program.g();
         for (Quad q2 : getCallers(m)) {
             jq_Method m2 = q2.getMethod();
             if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);

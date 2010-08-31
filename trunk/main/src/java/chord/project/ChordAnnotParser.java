@@ -6,12 +6,13 @@
  */
 package chord.project;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.HashMap;
 
 import chord.bddbddb.RelSign;
+import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 import chord.util.ClassUtils;
 
@@ -24,11 +25,13 @@ import chord.util.ClassUtils;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ChordAnnotParser {
+	private static final String ERROR = "ERROR: @Chord annotation of class '%s': %s";
 	private final Class type;
 	private String name;
-	private String control;
-	private Set<String> consumedNames;
-	private Set<String> producedNames;
+	private String prescriber;
+	private List<String> consumes;
+	private List<String> produces;
+	private List<String> controls;
 	private Map<String, RelSign> nameToSignMap;
 	private Map<String, Class> nameToTypeMap;
 	private boolean hasNoErrors;
@@ -50,44 +53,68 @@ public class ChordAnnotParser {
 		assert (chord != null);
 		hasNoErrors = true;
 		name = chord.name();
-		control = chord.control();
-		if (control.equals(""))
-			control = name;
-		String[] names;
-		names = chord.consumes();
-		consumedNames = new HashSet<String>(names.length);
-		for (String name2 : names) {
-			consumedNames.add(name2);
-		}
-		names = chord.produces();
-		producedNames = new HashSet<String>(names.length);
-		for (String name2 : names) {
-			producedNames.add(name2);
-		}
-		producedNames.add(name);
 
-		nameToTypeMap = new HashMap<String, Class>();
-		nameToSignMap = new HashMap<String, RelSign>();
-
-		nameToTypeMap.put(name, type);
+		prescriber = chord.prescriber();
+		if (prescriber.equals(""))
+			prescriber = name;
 
 		String sign = chord.sign();
+		RelSign relSign = null;
 		if (ClassUtils.isSubclass(type, ProgramRel.class)) {
 			if (sign.equals("")) {
 				error("Method sign() cannot return empty string " +
 					"for Java analysis '" + type + "'");
 			} else {
-				RelSign relSign = parseRelSign(sign);
-				nameToSignMap.put(this.name, relSign);
-				for (String domName : relSign.getDomKinds()) {
-					consumedNames.add(domName);
-				}
+				relSign = parseRelSign(sign);
 			}
 		} else if (!sign.equals("")) {
 			error("Method sign() cannot return non-empty string " +
 		 		"for Java analysis '" + type + "'");
 		}
 
+		{
+			String[] a = chord.consumes();
+			consumes = new ArrayList<String>(a.length);
+			if (relSign != null) {
+				for (String domName : relSign.getDomKinds())
+					consumes.add(domName);
+			}
+			for (String s : a)
+				consumes.add(s);
+		}
+
+		{
+			String[] a = chord.produces();
+			produces = new ArrayList<String>(a.length);
+			for (String s : a)
+				produces.add(s);
+		}
+
+		{
+			String[] a = chord.controls();
+			controls = new ArrayList<String>(a.length);
+			for (String s : a)
+				controls.add(s);
+		}
+
+		// program rels and doms should not declare any produces/controls
+		if (ClassUtils.isSubclass(type, ProgramRel.class) ||
+			ClassUtils.isSubclass(type, ProgramDom.class)) {
+			if (produces.size() > 0) {
+				error("Method produces() cannot return non-empty string " +
+					" for Java analysis '" + type + "'");
+				produces.clear();
+			}
+			produces.add(name);
+			if (controls.size() > 0) {
+				error("Method controls() cannot return non-empty string " +
+					" for Java analysis '" + type + "'");
+				controls.clear();
+			}
+		}
+
+		nameToTypeMap = new HashMap<String, Class>();
+		nameToTypeMap.put(name, type);
         String[] namesOfTypes = chord.namesOfTypes();
         Class [] types = chord.types();
         if (namesOfTypes.length != types.length) {
@@ -110,6 +137,9 @@ public class ChordAnnotParser {
 			}
 		}
 
+		nameToSignMap = new HashMap<String, RelSign>();
+		if (relSign != null)
+			nameToSignMap.put(this.name, relSign);
         String[] namesOfSigns = chord.namesOfSigns();
         String[] signs = chord.signs();
         if (namesOfSigns.length != signs.length) {
@@ -118,7 +148,7 @@ public class ChordAnnotParser {
         } else {
 			for (int i = 0; i < namesOfSigns.length; i++) {
 				String name2 = namesOfSigns[i];
-				if (name2.equals(this.name) || name2.equals(".")) {
+				if (name2.equals(name) || name2.equals(".")) {
 					error("Method namesOfSigns() cannot return the same " +
 						"name as that returned by name(); use sign().");
 					continue;
@@ -166,63 +196,81 @@ public class ChordAnnotParser {
 		}
 	}
 	private void error(String msg) {
-		System.err.println("ERROR: @Chord annotation of" +
-			" class '" + type.getName() + "': " + msg);
+		Messages.log(ERROR, type.getName(), msg);
 		hasNoErrors = false;
 	}
 	/**
-	 * Provides the names of targets specified by this Chord annotation
-	 * as consumed by the associated program analysis.
-	 * 
-	 * @return	The names of targets consumed by the underlying
-	 * 			program analysis as declared by this Chord annotation.
-	 */
-	public Set<String> getConsumedNames() {
-		return consumedNames;
-	}
-	/**
-	 * Provides the names of targets specified by this Chord annotation
-	 * as produced by the associated program analysis.
-	 * 
-	 * @return	The names of targets produced by the underlying
-	 * 			program analysis as declared by this Chord annotation.
-	 */
-	public Set<String> getProducedNames() {
-		return producedNames;
-	}
-	/**
 	 * Provides the name specified by this Chord annotation of the
-	 * associated program analysis.
+	 * associated analysis.
 	 * 
 	 * @return	The name specified by this Chord annotation of the
-	 * 			associated program analysis.
+	 * associated analysis.
 	 */
 	public String getName() {
 		return name;
 	}
 	/**
+	 * Provides the name of the control target specified by this
+	 * Chord annotation as prescribing the associated analysis.
+	 * 
+	 * @return	The name of the control target specified by this
+	 * Chord annotation as prescribing the associated analysis.
+	 */
+	public String getPrescriber() {
+		return prescriber;
+	}
+	/**
+	 * Provides the names of data targets specified by this Chord
+	 * annotation as consumed by the associated analysis.
+	 * 
+	 * @return	The names of data targets specified by this Chord
+	 * annotation as consumed by the associated analysis.
+	 */
+	public List<String> getConsumes() {
+		return consumes;
+	}
+	/**
+	 * Provides the names of data targets specified by this Chord
+	 * annotation as produced by the associated analysis.
+	 * 
+	 * @return	The names of data targets specified by this Chord
+	 * annotation as produced by the associated analysis.
+	 */
+	public List<String> getProduces() {
+		return produces;
+	}
+	/**
+	 * Provides the names of control targets specified by this Chord
+	 * annotation as produced by the associated analysis.
+	 * 
+	 * @return	The names of control targets specified by this Chord
+	 * annotation as produced by the associated analysis.
+	 */
+	public List<String> getControls() {
+		return controls;
+	}
+	/**
 	 * Provides a partial map specified by this Chord annotation from
 	 * names of program relation targets consumed/produced by the
-	 * associated program analysis to their signatures.
+	 * associated analysis to their signatures.
 	 * 
 	 * @return	A partial map specified by this Chord annotation from
-	 *			names of program relation targets consumed/produced by
-	 *			the associated program analysis to their signatures.
+	 * names of program relation targets consumed/produced by the
+	 * associated analysis to their signatures.
 	 */
 	public Map<String, RelSign> getNameToSignMap() {
 		return nameToSignMap;
 	}
 	/**
 	 * Provides a partial map specified by this Chord annotation from
-	 * names of targets consumed/produced by the associated program
+	 * names of data targets consumed/produced by the associated
 	 * analysis to their types.
 	 * 
 	 * @return	A partial map specified by this Chord annotation from
-	 *			names of targets consumed/produced by the associated
-	 *			program analysis to their types.
+	 * names of data targets consumed/produced by the associated
+	 * analysis to their types.
 	 */
 	public Map<String, Class> getNameToTypeMap() {
 		return nameToTypeMap;
 	}
 };
-

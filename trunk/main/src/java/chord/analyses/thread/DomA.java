@@ -7,6 +7,7 @@
 package chord.analyses.thread;
 
 import joeq.Class.jq_Method;
+import chord.project.ClassicProject;
 import chord.project.Project;
 import chord.project.analyses.ProgramDom;
 import chord.analyses.alias.Ctxt;
@@ -30,9 +31,9 @@ public class DomA extends ProgramDom<Trio<Ctxt, Ctxt, jq_Method>> {
 	private DomM domM;
     public String toXMLAttrsString(Trio<Ctxt, Ctxt, jq_Method> aVal) {
 		if (domC == null)
-			domC = (DomC) Project.getTrgt("C");
+			domC = (DomC) ClassicProject.g().getTrgt("C");
 		if (domM == null)
-			domM = (DomM) Project.getTrgt("M");
+			domM = (DomM) ClassicProject.g().getTrgt("M");
 		if (aVal == null)
 			return "";
 		int o = domC.indexOf(aVal.val0);

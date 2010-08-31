@@ -14,8 +14,9 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Util.Templates.ListIterator;
 
-import chord.project.Project;
 import chord.project.Chord;
+import chord.project.ClassicProject;
+import chord.project.Config;
 import chord.project.analyses.ProgramDom;
 
 /**
@@ -38,7 +39,8 @@ import chord.project.analyses.ProgramDom;
 )
 public class DomP extends ProgramDom<Inst> {
 	public void fill() {
-		DomM domM = (DomM) Project.getTrgt("M");
+		DomM domM = (DomM) (Config.classic ?
+			ClassicProject.g().getTrgt("M") : consumes[0]);
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);

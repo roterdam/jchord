@@ -38,7 +38,7 @@ public class RelScopeExcludedM extends ProgramRel {
   }
   
   public void fill() {
-    Program program = Program.getProgram();
+    Program program = Program.g();
     IndexSet<jq_Method> methods = program.getMethods();
     for(jq_Method m: methods) {
       if(isOutOfScope(m))
