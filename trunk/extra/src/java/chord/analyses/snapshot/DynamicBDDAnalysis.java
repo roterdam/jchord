@@ -21,7 +21,7 @@ import gnu.trove.TIntProcedure;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.Config;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.program.Program;
 import chord.project.analyses.DynamicAnalysis;
 import chord.doms.DomH;
@@ -59,7 +59,7 @@ public class DynamicBDDAnalysis extends DynamicAnalysis {
 	// BDD iterLabelsBdd;
 
 	public void initAllPasses() {
-		domH = (DomH) Project.getTrgt("H");
+		domH = (DomH) ClassicProject.g().getTrgt("H");
 		String varOrder;
 		if (sound) {
 			numDoms = 4;

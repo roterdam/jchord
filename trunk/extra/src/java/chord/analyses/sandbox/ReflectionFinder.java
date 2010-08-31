@@ -22,7 +22,7 @@ import joeq.Compiler.Quad.Quad;
 
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
@@ -35,8 +35,8 @@ import chord.project.analyses.ProgramRel;
 )
 public class ReflectionFinder extends JavaAnalysis {
 	public void run() {
-		Project.runTask("cipa-0cfa-dlog");
-		ProgramRel relReachableM = (ProgramRel) Project.getTrgt("reachableM");
+		ClassicProject.g().runTask("cipa-0cfa-dlog");
+		ProgramRel relReachableM = (ProgramRel) ClassicProject.g().getTrgt("reachableM");
 		relReachableM.load();
 		Iterable<jq_Method> methods = relReachableM.getAry1ValTuples();
 		for (jq_Method m : methods) {

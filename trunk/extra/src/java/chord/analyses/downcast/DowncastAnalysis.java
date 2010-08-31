@@ -7,7 +7,7 @@
 package chord.analyses.downcast;
 
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
 import chord.analyses.alias.CtxtsAnalysis;
 
@@ -33,7 +33,7 @@ import chord.analyses.alias.CtxtsAnalysis;
 )
 public class DowncastAnalysis extends JavaAnalysis {
 	public void run() {
-		Project.runTask(CtxtsAnalysis.getCspaKind());
-		Project.runTask("downcast-dlog");
+		ClassicProject.g().runTask(CtxtsAnalysis.getCspaKind());
+		ClassicProject.g().runTask("downcast-dlog");
 	}
 }

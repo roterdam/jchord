@@ -21,7 +21,7 @@ import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.integer.IntPair;
@@ -48,8 +48,8 @@ public class DynamicLocksetAnalysis extends DynamicAnalysis {
 	public void initAllPasses() {
 		t2lcks = new TIntObjectHashMap<TIntHashSet>();
 		e2lckset = new TIntObjectHashMap<TIntHashSet>();
-		relAlias = (ProgramRel) Project.getTrgt("aliasEE");
-		relNoLckSync = (ProgramRel) Project.getTrgt("noLckSyncEE");
+		relAlias = (ProgramRel) ClassicProject.g().getTrgt("aliasEE");
+		relNoLckSync = (ProgramRel) ClassicProject.g().getTrgt("noLckSyncEE");
 		noLckSync = new HashSet<IntPair>();
 	}
 	
@@ -68,7 +68,7 @@ public class DynamicLocksetAnalysis extends DynamicAnalysis {
 		}
 		relNoLckSync.save();
 		
-		DomE domE = (DomE) Project.getTrgt("E");
+		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
 		PrintWriter writer =
 			 OutDirUtils.newPrintWriter("dynamic_noLckSync.txt");
 		for (IntPair pair : noLckSync) {

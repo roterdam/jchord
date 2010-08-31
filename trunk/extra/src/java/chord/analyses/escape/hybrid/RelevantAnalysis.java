@@ -6,7 +6,7 @@
  */
 package chord.analyses.escape.hybrid;
 
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.ProgramRel;
 
 /**
@@ -62,7 +62,7 @@ public class RelevantAnalysis {
 			numLive += live[q][0];
 		System.out.println("NUM LIVE: " + numLive);
 
-        ProgramRel liveQU_o = (ProgramRel) Project.getTrgt("liveQU_o");
+        ProgramRel liveQU_o = (ProgramRel) ClassicProject.g().getTrgt("liveQU_o");
         liveQU_o.zero();
         for (int q = 0; q < numQ; q++) {
             final int[] Q = live[q];

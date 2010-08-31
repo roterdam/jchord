@@ -49,7 +49,7 @@ import chord.program.Program;
 import chord.project.Chord;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.Config;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
@@ -177,7 +177,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   // Determine the queries in client code (for thread-escape)
   public void computedExcludedClasses() {
     String[] checkExcludedPrefixes = Config.toArray(Config.checkExcludeStr);
-    Program program = Program.getProgram();
+    Program program = Program.g();
     for (jq_Reference r : program.getClasses()) {
       String rName = r.getName();
       for (String prefix : checkExcludedPrefixes) {
@@ -246,23 +246,23 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     X.addSaveFiles("hints.txt", "hints-str.txt");
 
     // Immutable inputs
-    domV = (DomV) Project.getTrgt("V"); Project.runTask(domV);
-    domM = (DomM) Project.getTrgt("M"); Project.runTask(domM);
-    domI = (DomI) Project.getTrgt("I"); Project.runTask(domI);
-    domH = (DomH) Project.getTrgt("H"); Project.runTask(domH);
-    domE = (DomE) Project.getTrgt("E"); Project.runTask(domE);
-		relEV = (ProgramRel) Project.getTrgt("EV"); Project.runTask(relEV); relEV.load();
+    domV = (DomV) ClassicProject.g().getTrgt("V"); ClassicProject.g().runTask(domV);
+    domM = (DomM) ClassicProject.g().getTrgt("M"); ClassicProject.g().runTask(domM);
+    domI = (DomI) ClassicProject.g().getTrgt("I"); ClassicProject.g().runTask(domI);
+    domH = (DomH) ClassicProject.g().getTrgt("H"); ClassicProject.g().runTask(domH);
+    domE = (DomE) ClassicProject.g().getTrgt("E"); ClassicProject.g().runTask(domE);
+		relEV = (ProgramRel) ClassicProject.g().getTrgt("EV"); ClassicProject.g().runTask(relEV); relEV.load();
 
     // Mutable inputs
-		relCVC = (ProgramRel) Project.getTrgt("CVC");
-		relCFC = (ProgramRel) Project.getTrgt("CFC");
-		relCICM = (ProgramRel) Project.getTrgt("CICM");
+		relCVC = (ProgramRel) ClassicProject.g().getTrgt("CVC");
+		relCFC = (ProgramRel) ClassicProject.g().getTrgt("CFC");
+		relCICM = (ProgramRel) ClassicProject.g().getTrgt("CICM");
 
     // Output
-    domC = (DomC) Project.getTrgt("C");
-    relCC = (ProgramRel) Project.getTrgt("CC");
-    relCH = (ProgramRel) Project.getTrgt("CH");
-    relCI = (ProgramRel) Project.getTrgt("CI");
+    domC = (DomC) ClassicProject.g().getTrgt("C");
+    relCC = (ProgramRel) ClassicProject.g().getTrgt("CC");
+    relCH = (ProgramRel) ClassicProject.g().getTrgt("CH");
+    relCI = (ProgramRel) ClassicProject.g().getTrgt("CI");
 
     _H = (Quad)domH.get(1);
     _V = domV.get(1);
@@ -328,13 +328,13 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       computeC(); // Step (COMPUTE_C)
       relCICM.close();
 
-			Project.resetTrgtDone(domC); // Make everything that depends on domC undone
-			Project.setTaskDone(this); // We are generating all this stuff, so mark it as done...
-			Project.setTrgtDone(domC);
-			Project.setTrgtDone(relCI);
-			Project.setTrgtDone(relCH);
-			Project.setTrgtDone(relCC);
-      Project.runTask(kcfaTaskName); // Step (ANALYSIS)
+      ClassicProject.g().resetTrgtDone(domC); // Make everything that depends on domC undone
+	  ClassicProject.g().setTaskDone(this); // We are generating all this stuff, so mark it as done...
+      ClassicProject.g().setTrgtDone(domC);
+      ClassicProject.g().setTrgtDone(relCI);
+      ClassicProject.g().setTrgtDone(relCH);
+	  ClassicProject.g().setTrgtDone(relCC);
+	  ClassicProject.g().runTask(kcfaTaskName); // Step (ANALYSIS)
     }
 
     finish();
@@ -394,17 +394,17 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     for (Ctxt c : domC) relCC.add(emptyCtxt, c);
     relCC.save();
 
-    Project.runTask(kcfaTaskName); 
+    ClassicProject.g().runTask(kcfaTaskName); 
 
     // Only consider reachable stuff
     {
-      ProgramRel rel = (ProgramRel)Project.getTrgt("reachableH"); rel.load();
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("reachableH"); rel.load();
       Iterable<Quad> result = rel.getAry1ValTuples();
       for (Quad h : result) hSet.add(h);
       rel.close();
     }
     {
-      ProgramRel rel = (ProgramRel)Project.getTrgt("reachableI"); rel.load();
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("reachableI"); rel.load();
       Iterable<Quad> result = rel.getAry1ValTuples();
       for (Quad i : result) iSet.add(i);
       rel.close();
@@ -418,7 +418,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     // Build callees
     {
-      ProgramRel relIM = (ProgramRel)Project.getTrgt("IM"); relIM.load();
+      ProgramRel relIM = (ProgramRel)ClassicProject.g().getTrgt("IM"); relIM.load();
       PairIterable<Quad,jq_Method> result = relIM.getAry2ValTuples();
       for (Pair<Quad,jq_Method> pair : result) {
         Quad i = pair.val0;
@@ -435,7 +435,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     //  - set of reachable H and I.
     //  - information for building slivers (overapproximation suffices)
     {
-      ProgramRel relItoH = (ProgramRel)Project.getTrgt("ItoH"); relItoH.load();
+      ProgramRel relItoH = (ProgramRel)ClassicProject.g().getTrgt("ItoH"); relItoH.load();
       PairIterable<Quad,Quad> result = relItoH.getAry2ValTuples();
       for (Pair<Quad,Quad> pair : result) {
         Quad i = pair.val0;
@@ -447,7 +447,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       relItoH.close();
     }
     {
-      ProgramRel relItoI = (ProgramRel)Project.getTrgt("ItoI"); relItoI.load();
+      ProgramRel relItoI = (ProgramRel)ClassicProject.g().getTrgt("ItoI"); relItoI.load();
       PairIterable<Quad,Quad> result = relItoI.getAry2ValTuples();
       for (Pair<Quad,Quad> pair : result) {
         Quad i = pair.val0;

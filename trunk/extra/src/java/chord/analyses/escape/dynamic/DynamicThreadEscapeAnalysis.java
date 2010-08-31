@@ -22,7 +22,7 @@ import chord.instr.InstrScheme;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.OutDirUtils;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 
@@ -126,16 +126,16 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public void initAllPasses() {
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
-		DomE domE = (DomE) Project.getTrgt("E");
-		Project.runTask(domE);
+		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
+		ClassicProject.g().runTask(domE);
 		numE = domE.size();
 		isEidxVisited = new boolean[numE];
 		isEidxEsc = new boolean[numE];
-		relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
-		relEscE = (ProgramRel) Project.getTrgt("escE");
+		relVisitedE = (ProgramRel) ClassicProject.g().getTrgt("visitedE");
+		relEscE = (ProgramRel) ClassicProject.g().getTrgt("escE");
 		if (isFlowIns) {
-			DomH domH = (DomH) Project.getTrgt("H");
-			Project.runTask(domH);
+			DomH domH = (DomH) ClassicProject.g().getTrgt("H");
+			ClassicProject.g().runTask(domH);
 			numH = domH.size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
 			isHidxEsc = new boolean[numH];
@@ -195,8 +195,8 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		relVisitedE.save();
 		relEscE.save();
 
-		DomE domE = (DomE) Project.getTrgt("E");
-		Program program = Program.getProgram();
+		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
+		Program program = Program.g();
 		PrintWriter writer1 =
 			 OutDirUtils.newPrintWriter("dynamic_visitedE.txt");
 		PrintWriter writer2 =

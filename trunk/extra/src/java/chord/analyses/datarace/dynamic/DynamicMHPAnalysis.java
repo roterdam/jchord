@@ -23,7 +23,7 @@ import chord.doms.DomE;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.OutDirUtils;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.integer.IntPair;
@@ -58,8 +58,8 @@ public class DynamicMHPAnalysis extends DynamicAnalysis {
 		t2startAndEnd = new TIntObjectHashMap<ThrStrtAndEnd>();
 		e2TCs = new TIntObjectHashMap<TLongHashSet>();
 		e2thrds = new TIntObjectHashMap<TIntHashSet>();
-		relNoLckSync = (ProgramRel) Project.getTrgt("noLckSyncEE");
-		relMHP =  (ProgramRel) Project.getTrgt("mhpEE");
+		relNoLckSync = (ProgramRel) ClassicProject.g().getTrgt("noLckSyncEE");
+		relMHP =  (ProgramRel) ClassicProject.g().getTrgt("mhpEE");
 	}
 	
 	@Override
@@ -142,7 +142,7 @@ public class DynamicMHPAnalysis extends DynamicAnalysis {
 			relMHP.add(pair.idx0, pair.idx1);
 		}
 		relMHP.save();
-		DomE domE = (DomE) Project.getTrgt("E");
+		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
 		PrintWriter writer =
 			 OutDirUtils.newPrintWriter("dynamic_mhp.txt");
 		for (IntPair pair : mhp) {

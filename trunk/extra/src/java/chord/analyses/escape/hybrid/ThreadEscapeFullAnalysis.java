@@ -64,7 +64,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.util.ArraySet;
 import chord.util.CompareUtils;
 import chord.util.IntArraySet;
@@ -133,21 +133,21 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
       X.writeMap("options.map", options);
     }
 
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		mainMethod = program.getMainMethod();
 		threadStartMethod = program.getThreadStartMethod();
-        domI = (DomI) Project.getTrgt("I");
-        Project.runTask(domI);
-        domM = (DomM) Project.getTrgt("M");
-        Project.runTask(domM);
-		domV = (DomV) Project.getTrgt("V");
-		Project.runTask(domV);
-		domF = (DomF) Project.getTrgt("F");
-		Project.runTask(domF);
-		domH = (DomH) Project.getTrgt("H");
-		Project.runTask(domH);
-		domE = (DomE) Project.getTrgt("E");
-		Project.runTask(domE);
+        domI = (DomI) ClassicProject.g().getTrgt("I");
+        ClassicProject.g().runTask(domI);
+        domM = (DomM) ClassicProject.g().getTrgt("M");
+        ClassicProject.g().runTask(domM);
+		domV = (DomV) ClassicProject.g().getTrgt("V");
+		ClassicProject.g().runTask(domV);
+		domF = (DomF) ClassicProject.g().getTrgt("F");
+		ClassicProject.g().runTask(domF);
+		domH = (DomH) ClassicProject.g().getTrgt("H");
+		ClassicProject.g().runTask(domH);
+		domE = (DomE) ClassicProject.g().getTrgt("E");
+		ClassicProject.g().runTask(domE);
 		int numH = domH.size();
 		escPts.add(ESC_VAL);
 		escPts.setReadOnly();
@@ -179,7 +179,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
       }
     }
     else {
-      ProgramRel rel = (ProgramRel) Project.getTrgt("EH");
+      ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("EH");
       rel.load();
       IntPairIterable tuples = rel.getAry2IntTuples();
       for (IntPair tuple : tuples) {
@@ -297,8 +297,8 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	public ICICG getCallGraph() {
 		if (cicg == null) {
         	ThrOblAbbrCICGAnalysis cicgAnalysis =
-				(ThrOblAbbrCICGAnalysis) Project.getTrgt("throbl-abbr-cicg-java");
-			Project.runTask(cicgAnalysis);
+				(ThrOblAbbrCICGAnalysis) ClassicProject.g().getTrgt("throbl-abbr-cicg-java");
+			ClassicProject.g().runTask(cicgAnalysis);
 			cicg = cicgAnalysis.getCallGraph();
 		}
 		return cicg;

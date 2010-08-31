@@ -18,7 +18,7 @@ import chord.program.MethodSign;
 import chord.program.Program;
 import chord.doms.DomM;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
@@ -39,16 +39,16 @@ public class SrcFilesAnalysis extends JavaAnalysis {
 			List<String> methodList = FileUtils.readFileToList(methodsFileName);
 			Set<jq_Method> methodSet = new HashSet<jq_Method>(methodList.size());
 			for (String s : methodList) {
-				jq_Method m = Program.getProgram().getMethod(MethodSign.parse(s));
+				jq_Method m = Program.g().getMethod(MethodSign.parse(s));
 				if (m == null)
 					throw new RuntimeException("Method: " + s + " not found");
 				methodSet.add(m);
 			}
 			methods = methodSet;
 		} else {
-			DomM domM = (DomM) Project.getTrgt("M");
-			Project.runTask(domM);
-			relReachableM = (ProgramRel) Project.getTrgt("reachableM");
+			DomM domM = (DomM) ClassicProject.g().getTrgt("M");
+			ClassicProject.g().runTask(domM);
+			relReachableM = (ProgramRel) ClassicProject.g().getTrgt("reachableM");
 			relReachableM.load();
 			methods = relReachableM.getAry1ValTuples();
 		}

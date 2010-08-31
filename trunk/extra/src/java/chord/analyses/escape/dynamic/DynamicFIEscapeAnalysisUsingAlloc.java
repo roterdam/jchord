@@ -26,7 +26,7 @@ import chord.doms.DomE;
 import chord.instr.InstrScheme;
 import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.Config;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
@@ -135,8 +135,8 @@ public class DynamicFIEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		reachabilityGraph = new HashMap<Node, Set<Node>>();
 		node2locs = new HashMap<Node, TIntHashSet>();
 		
-		relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
-		relEscE = (ProgramRel) Project.getTrgt("escE");
+		relVisitedE = (ProgramRel) ClassicProject.g().getTrgt("visitedE");
+		relEscE = (ProgramRel) ClassicProject.g().getTrgt("escE");
 	}
 
 	public void initPass() {
@@ -218,8 +218,8 @@ public class DynamicFIEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		}
 		relEscE.save();
 		
-		DomE domE = (DomE) Project.getTrgt("E");
-		Program program = Program.getProgram();
+		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
+		Program program = Program.g();
 		String outDirName = Config.outDirName;
 		try {
 			PrintWriter writer;

@@ -41,7 +41,7 @@ import chord.doms.DomF;
 import chord.doms.DomP;
 import chord.doms.DomB;
 import chord.doms.DomT;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 import chord.project.Chord;
@@ -174,23 +174,23 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
       X.writeMap("options.map", options);
     }
 
-		domF = (DomF) Project.getTrgt("F");
-		Project.runTask(domF);
-		domM = (DomM) Project.getTrgt("M");
-		Project.runTask(domM);
-		domE = (DomE) Project.getTrgt("E");
-		Project.runTask(domE);
-		domH = (DomH) Project.getTrgt("H");
-		Project.runTask(domH);
-		domP = (DomP) Project.getTrgt("P");
-		Project.runTask(domP);
+		domF = (DomF) ClassicProject.g().getTrgt("F");
+		ClassicProject.g().runTask(domF);
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		ClassicProject.g().runTask(domM);
+		domE = (DomE) ClassicProject.g().getTrgt("E");
+		ClassicProject.g().runTask(domE);
+		domH = (DomH) ClassicProject.g().getTrgt("H");
+		ClassicProject.g().runTask(domH);
+		domP = (DomP) ClassicProject.g().getTrgt("P");
+		ClassicProject.g().runTask(domP);
 		int numP = domP.size();
-		domB = (DomB) Project.getTrgt("B");
-		Project.runTask(domB);
-		domT = (DomT) Project.getTrgt("T");
-		Project.runTask(domT);
-        domQ = (ProgramDom) Project.getTrgt("Q");
-		domU = (ProgramDom) Project.getTrgt("U");
+		domB = (DomB) ClassicProject.g().getTrgt("B");
+		ClassicProject.g().runTask(domB);
+		domT = (DomT) ClassicProject.g().getTrgt("T");
+		ClassicProject.g().runTask(domT);
+        domQ = (ProgramDom) ClassicProject.g().getTrgt("Q");
+		domU = (ProgramDom) ClassicProject.g().getTrgt("U");
 		int numM = domM.size();
     	escHeapInsts = new HashSet<Quad>();
 
@@ -203,7 +203,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		isIgnoredMeth = new boolean[numM];
 		startInvks = new int[10];
 		int fstP = 0;
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
 			if (m.isAbstract())
@@ -302,7 +302,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			"\ngetstatic: " + numGetstatic +
 			"\nputstatic: " + numPutstatic);
 
-		ProgramRel relEH = (ProgramRel) Project.getTrgt("EH");
+		ProgramRel relEH = (ProgramRel) ClassicProject.g().getTrgt("EH");
 		relEH.zero();
 		allocInstsToHeapInsts = new HashMap<Set<Quad>, Set<Quad>>();
         for (Map.Entry<Quad, Set<Quad>> e :
@@ -321,7 +321,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		relEH.save();
 
 		try {
-			Program program = Program.getProgram();
+			Program program = Program.g();
 			String outDirName = Config.outDirName;
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
@@ -376,7 +376,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		domQ.save();
 		domU.save();
 
-		ProgramRel relSucc = (ProgramRel) Project.getTrgt("succ");
+		ProgramRel relSucc = (ProgramRel) ClassicProject.g().getTrgt("succ");
 		relSucc.zero();
 		final int numQ = domQ.size();
 		for (int q = 0; q < numQ; q++) {
@@ -394,7 +394,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 		relSucc.save();
 
-		ProgramRel relAsgn = (ProgramRel) Project.getTrgt("asgnP");
+		ProgramRel relAsgn = (ProgramRel) ClassicProject.g().getTrgt("asgnP");
 		relAsgn.zero();
 		for (IntPair p : asgnSet) {
 			int q = p.idx0;
@@ -404,7 +404,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		asgnSet.clear();
 		relAsgn.save();
 
-		ProgramRel relPcopy = (ProgramRel) Project.getTrgt("copyP");
+		ProgramRel relPcopy = (ProgramRel) ClassicProject.g().getTrgt("copyP");
 		relPcopy.zero();
 		for (IntTrio t : copyPset) {
 			int p = t.idx0;
@@ -415,7 +415,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		copyPset.clear();
 		relPcopy.save();
 
-		ProgramRel relQcopy = (ProgramRel) Project.getTrgt("copyQ");
+		ProgramRel relQcopy = (ProgramRel) ClassicProject.g().getTrgt("copyQ");
 		relQcopy.zero();
 		for (IntTrio t : copyQset) {
 			int q = t.idx0;
@@ -426,7 +426,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		copyQset.clear();
 		relQcopy.save();
 
-		ProgramRel relAlloc = (ProgramRel) Project.getTrgt("allocP");
+		ProgramRel relAlloc = (ProgramRel) ClassicProject.g().getTrgt("allocP");
 		relAlloc.zero();
 		for (IntTrio p : allocSet) {
 			int q = p.idx0;
@@ -437,7 +437,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		allocSet.clear();
 		relAlloc.save();
 
-		ProgramRel relGetinst = (ProgramRel) Project.getTrgt("getinstP");
+		ProgramRel relGetinst = (ProgramRel) ClassicProject.g().getTrgt("getinstP");
 		relGetinst.zero();
 		for (IntQuad p : getinstSet) {
 			int q = p.idx0;
@@ -449,7 +449,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		getinstSet.clear();
 		relGetinst.save();
 
-		ProgramRel relPutinst = (ProgramRel) Project.getTrgt("putinstP");
+		ProgramRel relPutinst = (ProgramRel) ClassicProject.g().getTrgt("putinstP");
 		relPutinst.zero();
 		for (IntQuad p : putinstSet) {
 			int q = p.idx0;
@@ -461,7 +461,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		putinstSet.clear();
 		relPutinst.save();
 
-		ProgramRel relGetstat = (ProgramRel) Project.getTrgt("getstatP");
+		ProgramRel relGetstat = (ProgramRel) ClassicProject.g().getTrgt("getstatP");
 		relGetstat.zero();
 		for (IntPair p : getstatSet) {
 			int q = p.idx0;
@@ -471,7 +471,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		getstatSet.clear();
 		relGetstat.save();
 
-		ProgramRel relPutstat = (ProgramRel) Project.getTrgt("putstatP");
+		ProgramRel relPutstat = (ProgramRel) ClassicProject.g().getTrgt("putstatP");
 		relPutstat.zero();
 		for (IntPair p : putstatSet) {
 			int q = p.idx0;
@@ -481,7 +481,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		putstatSet.clear();
 		relPutstat.save();
 
-		ProgramRel relSpawn = (ProgramRel) Project.getTrgt("spawnP");
+		ProgramRel relSpawn = (ProgramRel) ClassicProject.g().getTrgt("spawnP");
 		relSpawn.zero();
 		for (IntPair p : spawnSet) {
 			int q = p.idx0;
@@ -491,7 +491,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		spawnSet.clear();
 		relSpawn.save();
 
-		ProgramRel relStart = (ProgramRel) Project.getTrgt("startP");
+		ProgramRel relStart = (ProgramRel) ClassicProject.g().getTrgt("startP");
 		relStart.zero();
 		for (IntPair t : startSet) {
 			int p = t.idx0;
@@ -501,7 +501,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		startSet.clear();
 		relStart.save();
 
-		ProgramRel relBasePU = (ProgramRel) Project.getTrgt("basePU");
+		ProgramRel relBasePU = (ProgramRel) ClassicProject.g().getTrgt("basePU");
 		relBasePU.zero();
 		for (IntPair t : basePUset) {
 			int p = t.idx0;
@@ -511,7 +511,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		basePUset.clear();
 		relBasePU.save();
 
-		ProgramRel relPQ = (ProgramRel) Project.getTrgt("PQ");
+		ProgramRel relPQ = (ProgramRel) ClassicProject.g().getTrgt("PQ");
 		relPQ.zero();
 		for (IntPair t : PQset) {
 			int p = t.idx0;
@@ -521,17 +521,17 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		PQset.clear();
 		relPQ.save();
 
-		Project.resetTaskDone("relevant-Q-dlog");
-		Project.runTask("relevant-Q-dlog");
+		ClassicProject.g().resetTaskDone("relevant-Q-dlog");
+		ClassicProject.g().runTask("relevant-Q-dlog");
 
 		boolean useLivenessAnalysis = false;
 
 		if (useLivenessAnalysis) {
-			Project.resetTaskDone("liveness-def-use-dlog");
-			Project.runTask("liveness-def-use-dlog");
+			ClassicProject.g().resetTaskDone("liveness-def-use-dlog");
+			ClassicProject.g().runTask("liveness-def-use-dlog");
 		} else {
-			Project.resetTaskDone("relevant-def-use-dlog");
-			Project.runTask("relevant-def-use-dlog");
+			ClassicProject.g().resetTaskDone("relevant-def-use-dlog");
+			ClassicProject.g().runTask("relevant-def-use-dlog");
 		}
 
 		int[] def = new int[numQ];
@@ -544,7 +544,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 
 		{
-			ProgramRel defQU = (ProgramRel) Project.getTrgt("defQU");
+			ProgramRel defQU = (ProgramRel) ClassicProject.g().getTrgt("defQU");
 			defQU.load();
 			IntPairIterable tuples = defQU.getAry2IntTuples();
 			for (IntPair tuple : tuples) {
@@ -577,7 +577,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 
 		{
-			ProgramRel useQU = (ProgramRel) Project.getTrgt("useQU");
+			ProgramRel useQU = (ProgramRel) ClassicProject.g().getTrgt("useQU");
 			useQU.load();
 			IntPairIterable tuples = useQU.getAry2IntTuples();
 			for (IntPair tuple : tuples) {
@@ -612,11 +612,11 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		
 		if (useLivenessAnalysis) {
 			LivenessAnalysis.run(def, defs, use, uses, succ, succs, numQ);
-			Project.resetTaskDone("liveness-pres-dlog");
-			Project.runTask("liveness-pres-dlog");
+			ClassicProject.g().resetTaskDone("liveness-pres-dlog");
+			ClassicProject.g().runTask("liveness-pres-dlog");
 		} else {
 			int[][] movs = new int[numQ][];
-			ProgramRel movsRel = (ProgramRel) Project.getTrgt("movs");
+			ProgramRel movsRel = (ProgramRel) ClassicProject.g().getTrgt("movs");
 			movsRel.load();
 			IntTrioIterable tuples = movsRel.getAry3IntTuples();
 			for (IntTrio tuple : tuples) {
@@ -646,14 +646,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			}
 			movsRel.close();
 			RelevantAnalysis.run(def, defs, use, uses, movs, succ, succs, numQ);
-			Project.resetTaskDone("relevant-pres-dlog");
-			Project.runTask("relevant-pres-dlog");
+			ClassicProject.g().resetTaskDone("relevant-pres-dlog");
+			ClassicProject.g().runTask("relevant-pres-dlog");
 		}
-        Project.resetTaskDone("hybrid-thresc-dlog");
-        Project.runTask("hybrid-thresc-dlog");
+        ClassicProject.g().resetTaskDone("hybrid-thresc-dlog");
+        ClassicProject.g().runTask("hybrid-thresc-dlog");
 
         ProgramRel relRelevantEH =
-            (ProgramRel) Project.getTrgt("relevantEH");
+            (ProgramRel) ClassicProject.g().getTrgt("relevantEH");
         relRelevantEH.load();
         PairIterable<Quad, Quad> tuples =
             relRelevantEH.getAry2ValTuples();
@@ -676,7 +676,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         relRelevantEH.close();
 
         ProgramRel relHybridEscE =
-            (ProgramRel) Project.getTrgt("hybridEscE");
+            (ProgramRel) ClassicProject.g().getTrgt("hybridEscE");
         relHybridEscE.load();
         Iterable<Quad> tuples2 = relHybridEscE.getAry1ValTuples();
         for (Quad e : tuples2) {

@@ -14,7 +14,7 @@ import joeq.Class.jq_Method;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;
 import chord.project.analyses.DynamicAnalysis;
 import chord.program.MethodElem;
@@ -100,8 +100,8 @@ public class WNLogger extends DynamicAnalysis {
 	}
 
 	private void writeProcessedMap(String domName, String name, boolean isLmapOrRmap) {
-		ProgramDom dom = (ProgramDom) Project.getTrgt(domName);
-		Project.runTask(dom);
+		ProgramDom dom = (ProgramDom) ClassicProject.g().getTrgt(domName);
+		ClassicProject.g().runTask(dom);
 		LinkedList<String> locs = new LinkedList<String>();
 		for(int i = 0; i < dom.size(); i++){
 			String loc = iidToString(i, dom, isLmapOrRmap);		
@@ -254,7 +254,7 @@ public class WNLogger extends DynamicAnalysis {
 	public static String iidToString(int iid, ProgramDom dom, boolean isLmapOrRmap) {
 		String s;
 		String res = "";
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		
 		s = dom.toUniqueString(iid);
 	
