@@ -329,9 +329,9 @@ public class ClassicProject extends Project {
 
 	@Override
 	public void printRels(String[] relNames) {
+		run(relNames);
 		for (String relName : relNames) {
 			ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
-			assert rel != null : "failed to load relation " + relName;
 			rel.load();
 			rel.print();
 		}
