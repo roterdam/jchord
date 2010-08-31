@@ -66,6 +66,34 @@ public class ModernProject extends Project {
 		TaskParser taskParser = new TaskParser();
 		if (!taskParser.run())
 			abort();
+		Map<String, Class<ITask>> nameToJavaTaskMap =
+			taskParser.getNameToJavaTaskMap();
+		Map<String, DlogAnalysis> nameToDlogTaskMap =
+			taskParser.getNameToDlogTaskMap();
+		for (Map.Entry<String, Class<ITask>> entry :
+				nameToJavaTaskMap.entrySet()) {
+			StepCollectionForStatelessTask step = new StepCollectionForStatelessTask();
+		}
+		for (Map.Entry<String, DlogAnalysis> entry :
+				nameToDlogTaskMap.entrySet()) {
+			StepCollectionForTaskWithState step = new StepCollectionForTaskWithState();
+		}
+		// todo: get names of all data collections and ctrl collections
+		// in scope by going over above two maps; go over prescriber
+		// and controls fields for ctrl collections, and over consumes and
+		// produces for data collections
+		// todo: call ItemCollectionFactory.Create(<name>) for each data
+		// collection name and put (<name>, <returned coll>) into
+		// nameToDataCollection map
+		// todo: create instance of DefaultCtrlCollection for each ctrl
+		// collection name, call the setName method and setPrescribedCollections
+		// method for that instance, and put it into nameToCtrlCollection map
+		// todo: create an instance of a StepCollection for each name
+		// in domain of nameToJavaTaskMap and nameToDlogTaskMap,
+		// call the setName(), setTask()/setTaskKind(), and various
+		// setPrescribingCollection etc. methods on that instance, and put it
+		// into nameToStepCollection map
+		
 		Map<String, Set<TrgtInfo>> nameToTrgtInfosMap =
 			taskParser.getNameToTrgtInfosMap();
 		TrgtParser trgtParser = new TrgtParser(nameToTrgtInfosMap);

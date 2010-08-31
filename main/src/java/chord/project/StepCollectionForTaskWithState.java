@@ -1,6 +1,6 @@
 package chord.project;
 
-public class StepCollectionForTasksWithState extends AbstractStepCollection {
+public class StepCollectionForTaskWithState extends AbstractStepCollection {
     protected Class<ITask> taskKind;
 	// must be called in step collection initialization stage
 	public void setTaskKind(Class<ITask> taskKind) {
