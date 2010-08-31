@@ -30,7 +30,7 @@ public class RelObjTH extends ProgramRel {
 	public void fill() {
 		DomT domT = (DomT) doms[0];
 		DomH domH = (DomH) doms[1];
-		for (jq_Reference r : Program.getProgram().getReflectInfo().getReflectClasses()) {
+		for (jq_Reference r : Program.g().getReflectInfo().getReflectClasses()) {
 			int tIdx = domT.indexOf(r);
 			assert (tIdx >= 0);
 			int hIdx = domH.indexOf(new PhantomObjVal(r));

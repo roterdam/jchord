@@ -47,7 +47,7 @@ import joeq.Util.Templates.ListIterator;
 public class RelVT extends ProgramRel implements IMethodVisitor {
 	private jq_Reference javaLangObject;
 	public void init() {
-		javaLangObject = Program.getProgram().getClass("java.lang.Object");
+		javaLangObject = Program.g().getClass("java.lang.Object");
 		assert (javaLangObject != null);
 	}
 	public void visit(jq_Class c) { }

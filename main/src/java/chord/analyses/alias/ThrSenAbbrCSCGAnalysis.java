@@ -8,7 +8,7 @@ package chord.analyses.alias;
 
 import chord.doms.DomM;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.ProgramRel;
 
 /**
@@ -24,11 +24,11 @@ import chord.project.analyses.ProgramRel;
 )
 public class ThrSenAbbrCSCGAnalysis extends CSCGAnalysis {
 	public void run() {
-		domM = (DomM) Project.getTrgt("M");
-		relCICM = (ProgramRel) Project.getTrgt("thrSenAbbrCICM");
-		relCMCM = (ProgramRel) Project.getTrgt("thrSenAbbrCMCM");
-		relRootCM = (ProgramRel) Project.getTrgt("thrSenAbbrRootCM");
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		relCICM = (ProgramRel) ClassicProject.g().getTrgt("thrSenAbbrCICM");
+		relCMCM = (ProgramRel) ClassicProject.g().getTrgt("thrSenAbbrCMCM");
+		relRootCM = (ProgramRel) ClassicProject.g().getTrgt("thrSenAbbrRootCM");
 		relReachableCM = (ProgramRel)
-			Project.getTrgt("thrSenAbbrReachableCM");
+			ClassicProject.g().getTrgt("thrSenAbbrReachableCM");
 	}
 }

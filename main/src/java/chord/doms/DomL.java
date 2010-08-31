@@ -15,7 +15,8 @@ import joeq.Compiler.Quad.Quad;
 
 import chord.program.visitors.IAcqLockInstVisitor;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
+import chord.project.Config;
 import chord.project.analyses.ProgramDom;
 
 /**
@@ -32,7 +33,8 @@ public class DomL extends ProgramDom<Inst> implements IAcqLockInstVisitor {
 	protected DomM domM;
 	protected jq_Method ctnrMethod;
 	public void init() {
-		domM = (DomM) Project.getTrgt("M");
+		domM = (DomM) (Config.classic ?
+			ClassicProject.g().getTrgt("M") : consumes[0]);
 	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {

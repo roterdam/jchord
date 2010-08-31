@@ -149,6 +149,8 @@
 		<pathelement location="${lib.home}/joeq.jar"/>
 		<pathelement location="${lib.home}/javassist.jar"/>
 		<pathelement location="${lib.home}/j2h.jar"/>
+		<pathelement location="${lib.home}/hj.jar"/>
+		<pathelement location="${lib.home}/CnCHj.jar"/>
 	</path>
 	<property name="chord.main.class.path" refid="main_class_path"/>
 

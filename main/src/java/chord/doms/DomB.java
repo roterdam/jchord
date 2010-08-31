@@ -26,8 +26,7 @@ import joeq.Util.Templates.ListIterator;
 @Chord(
 	name = "B"
 )
-public class DomB extends ProgramDom<BasicBlock>
-		implements IMethodVisitor {
+public class DomB extends ProgramDom<BasicBlock> implements IMethodVisitor {
 	protected Map<BasicBlock, jq_Method> basicBlockToMethodMap;
 	public void init() {
 		basicBlockToMethodMap = new HashMap<BasicBlock, jq_Method>();

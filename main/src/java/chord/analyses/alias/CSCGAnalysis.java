@@ -8,7 +8,7 @@ package chord.analyses.alias;
 
 import chord.doms.DomM;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
@@ -29,11 +29,11 @@ public class CSCGAnalysis extends JavaAnalysis {
     protected ProgramRel relReachableCM;
     protected CSCG callGraph;
     public void run() {
-    	domM = (DomM) Project.getTrgt("M");
-    	relRootCM = (ProgramRel) Project.getTrgt("rootCM");
-    	relReachableCM = (ProgramRel) Project.getTrgt("reachableCM");
-    	relCICM = (ProgramRel) Project.getTrgt("CICM");
-    	relCMCM = (ProgramRel) Project.getTrgt("CMCM");
+    	domM = (DomM) ClassicProject.g().getTrgt("M");
+    	relRootCM = (ProgramRel) ClassicProject.g().getTrgt("rootCM");
+    	relReachableCM = (ProgramRel) ClassicProject.g().getTrgt("reachableCM");
+    	relCICM = (ProgramRel) ClassicProject.g().getTrgt("CICM");
+    	relCMCM = (ProgramRel) ClassicProject.g().getTrgt("CMCM");
     }
     /**
      * Provides the program's context-sensitive call graph.

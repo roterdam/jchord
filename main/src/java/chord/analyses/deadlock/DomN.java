@@ -7,6 +7,7 @@
 package chord.analyses.deadlock;
 
 import joeq.Compiler.Quad.Inst;
+import chord.project.ClassicProject;
 import chord.project.Project;
 import chord.project.analyses.ProgramDom;
 import chord.analyses.alias.Ctxt;
@@ -35,9 +36,9 @@ public class DomN extends ProgramDom<Pair<Ctxt, Inst>> {
 	@Override
     public String toXMLAttrsString(Pair<Ctxt, Inst> v) {
 		if (domC == null)
-			domC = (DomC) Project.getTrgt("C");
+			domC = (DomC) ClassicProject.g().getTrgt("C");
 		if (domL == null)
-			domL = (DomL) Project.getTrgt("L");
+			domL = (DomL) ClassicProject.g().getTrgt("L");
 		if (v == null)
 			return "";
 		int c = domC.indexOf(v.val0);

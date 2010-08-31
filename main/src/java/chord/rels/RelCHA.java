@@ -38,7 +38,7 @@ import chord.project.Messages;
 public class RelCHA extends ProgramRel {
 	public void fill() {
 		DomM domM = (DomM) doms[0];
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		Set<jq_InstanceMethod> objClsInstanceMethods = new HashSet<jq_InstanceMethod>();
 		IndexSet<jq_Reference> classes = program.getClasses();
 		jq_Class objCls = (jq_Class) program.getClass("java.lang.Object");

@@ -63,7 +63,7 @@ public class RelHT extends ProgramRel {
 			assert (tIdx >= 0);
 			add(hIdx, tIdx);
 		}
-		jq_Reference cls = Program.getProgram().getClass("java.lang.Class");
+		jq_Reference cls = Program.g().getClass("java.lang.Class");
 		if (cls != null) {
 			int tIdx = domT.indexOf(cls);
 			assert (tIdx >= 0);

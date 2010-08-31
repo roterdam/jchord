@@ -8,7 +8,6 @@ package chord.instr;
 
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.IllegalClassFormatException;
-import java.lang.instrument.UnmodifiableClassException;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;
 import java.io.IOException;
@@ -20,14 +19,12 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 
-import chord.util.StringUtils;
+import chord.project.ClassicProject;
 import chord.project.Config;
-import chord.project.Project;
 
 import javassist.CtClass;
 import javassist.CannotCompileException;
 import javassist.NotFoundException;
-import java.util.Properties;
 
 import chord.project.Messages;
 
@@ -39,8 +36,6 @@ import chord.project.Messages;
 public final class OnlineTransformer implements ClassFileTransformer {
 	private static final String RETRANSFORM_NOT_SUPPORTED =
 		"ERROR: JVM does not support retransforming classes.";
-	private static final String CANNOT_RETRANSFORM_LOADED_CLASSES =
-		"ERROR: Failed to retransform alreaded loaded classes; reason follows.";
 	private static final String CANNOT_INSTRUMENT_CLASS =
 		"ERROR: Skipping instrumenting class %s; reason follows.";
 	private static final String CANNOT_MODIFY_CLASS =
@@ -120,7 +115,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		} else
 			instrClass = CoreInstrumentor.class;
 		CoreInstrumentor instr = null;
-		Project.init();
+		ClassicProject.g().build();
 		Exception ex = null;
 		try {
 			Constructor c = instrClass.getConstructor(new Class[] { Map.class });

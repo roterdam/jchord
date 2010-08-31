@@ -21,7 +21,7 @@ public class Messages {
 		log(format, args);
 		System.exit(1);
 	}
-	public static void fatal(Exception ex) {
+	public static void fatal(Throwable ex) {
 		ex.printStackTrace();
 		System.exit(1);
 	}

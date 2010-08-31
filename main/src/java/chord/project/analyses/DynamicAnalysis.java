@@ -9,7 +9,6 @@ package chord.project.analyses;
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntObjectHashMap;
 
-import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.ArrayList;
@@ -22,26 +21,21 @@ import java.util.Collections;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import chord.util.StringUtils;
 import chord.doms.DomB;
 import chord.doms.DomM;
 import chord.instr.EventKind;
 import chord.instr.InstrScheme;
 import chord.instr.Instrumentor;
-import chord.instr.OfflineTransformer;
-import chord.instr.TracePrinter;
 import chord.instr.TraceTransformer;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.CFGLoopFinder;
+import chord.project.ClassicProject;
 import chord.project.Messages;
-import chord.project.Project;
 import chord.project.Config;
-import chord.project.OutDirUtils;
 import chord.runtime.CoreEventHandler;
 import chord.runtime.EventHandler;
 import chord.util.ByteBufferedFile;
 import chord.util.ChordRuntimeException;
-import chord.util.Executor;
 import chord.util.FileUtils;
 import chord.util.ReadException;
 import chord.util.tuple.object.Pair;
@@ -172,10 +166,10 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	}
 
 	private void init4loopConsistency() {
-		domM = (DomM) Project.getTrgt("M");
-		Project.runTask(domM);
-		domB = (DomB) Project.getTrgt("B");
-		Project.runTask(domB);
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		ClassicProject.g().runTask(domM);
+		domB = (DomB) ClassicProject.g().getTrgt("B");
+		ClassicProject.g().runTask(domB);
 	}
 	
 	private void onLoopStart(int b, int t) {

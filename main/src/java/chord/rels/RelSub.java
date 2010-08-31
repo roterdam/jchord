@@ -25,7 +25,7 @@ import chord.util.IndexSet;
 )
 public class RelSub extends ProgramRel {
 	public void fill() {
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		IndexSet<jq_Reference> classes = program.getClasses();
 		for (jq_Reference t1 : classes) {
 			for (jq_Reference t2 : classes) {

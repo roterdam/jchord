@@ -38,9 +38,9 @@ import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.program.Program;
 import chord.project.Chord;
+import chord.project.ClassicProject;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
-import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.ArraySet;
@@ -212,34 +212,34 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	private void init() {
 		if (isInitialized) return;
-		domV = (DomV) Project.getTrgt("V");
-		domI = (DomI) Project.getTrgt("I");
-		domM = (DomM) Project.getTrgt("M");
-		domH = (DomH) Project.getTrgt("H");
-		domC = (DomC) Project.getTrgt("C");
+		domV = (DomV) ClassicProject.g().getTrgt("V");
+		domI = (DomI) ClassicProject.g().getTrgt("I");
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		domH = (DomH) ClassicProject.g().getTrgt("H");
+		domC = (DomC) ClassicProject.g().getTrgt("C");
 
-		relIM = (ProgramRel) Project.getTrgt("IM");
-		relVH = (ProgramRel) Project.getTrgt("VH");
+		relIM = (ProgramRel) ClassicProject.g().getTrgt("IM");
+		relVH = (ProgramRel) ClassicProject.g().getTrgt("VH");
 		
-		relRefineH = (ProgramRel) Project.getTrgt("refineH");
-        relRefineI = (ProgramRel) Project.getTrgt("refineI");
-        relRefineM = (ProgramRel) Project.getTrgt("refineM");
-        relRefineV = (ProgramRel) Project.getTrgt("refineV");
-        relRefinableM = (ProgramRel) Project.getTrgt("refinableM");
-        relRefinableV = (ProgramRel) Project.getTrgt("refinableV");
-		relRefinableCH = (ProgramRel) Project.getTrgt("refinableCH");
-		relRefinableCI = (ProgramRel) Project.getTrgt("refinableCI");
+		relRefineH = (ProgramRel) ClassicProject.g().getTrgt("refineH");
+        relRefineI = (ProgramRel) ClassicProject.g().getTrgt("refineI");
+        relRefineM = (ProgramRel) ClassicProject.g().getTrgt("refineM");
+        relRefineV = (ProgramRel) ClassicProject.g().getTrgt("refineV");
+        relRefinableM = (ProgramRel) ClassicProject.g().getTrgt("refinableM");
+        relRefinableV = (ProgramRel) ClassicProject.g().getTrgt("refinableV");
+		relRefinableCH = (ProgramRel) ClassicProject.g().getTrgt("refinableCH");
+		relRefinableCI = (ProgramRel) ClassicProject.g().getTrgt("refinableCI");
 		
-		relCC = (ProgramRel) Project.getTrgt("CC");
-		relCH = (ProgramRel) Project.getTrgt("CH");
-		relCI = (ProgramRel) Project.getTrgt("CI");
-		relEpsilonM = (ProgramRel) Project.getTrgt("epsilonM");
-		relKcfaSenM = (ProgramRel) Project.getTrgt("kcfaSenM");
-		relKobjSenM = (ProgramRel) Project.getTrgt("kobjSenM");
-		relCtxtCpyM = (ProgramRel) Project.getTrgt("ctxtCpyM");
-		relEpsilonV = (ProgramRel) Project.getTrgt("epsilonV");
+		relCC = (ProgramRel) ClassicProject.g().getTrgt("CC");
+		relCH = (ProgramRel) ClassicProject.g().getTrgt("CH");
+		relCI = (ProgramRel) ClassicProject.g().getTrgt("CI");
+		relEpsilonM = (ProgramRel) ClassicProject.g().getTrgt("epsilonM");
+		relKcfaSenM = (ProgramRel) ClassicProject.g().getTrgt("kcfaSenM");
+		relKobjSenM = (ProgramRel) ClassicProject.g().getTrgt("kobjSenM");
+		relCtxtCpyM = (ProgramRel) ClassicProject.g().getTrgt("ctxtCpyM");
+		relEpsilonV = (ProgramRel) ClassicProject.g().getTrgt("epsilonV");
 
-		mainMeth = Program.getProgram().getMainMethod();
+		mainMeth = Program.g().getMainMethod();
 		
         maxIters = Integer.getInteger("chord.max.iters", 0);
 		
@@ -316,7 +316,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
     kcfaValue = new int[domI.size()];
 
     // Only modify k values of sites in reachable methods
-    ProgramRel relReachableM = (ProgramRel) Project.getTrgt("reachableM");
+    ProgramRel relReachableM = (ProgramRel) ClassicProject.g().getTrgt("reachableM");
     Set<jq_Method> reachableMethods = new HashSet<jq_Method>();
     relReachableM.load();
     final Iterable<jq_Method> tuples = relReachableM.getAry1ValTuples();

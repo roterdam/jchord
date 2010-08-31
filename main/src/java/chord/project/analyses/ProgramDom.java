@@ -10,13 +10,18 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.List;
+
+import CnCHJ.api.ItemCollection;
 
 import chord.bddbddb.Dom;
 import chord.program.visitors.IClassVisitor;
-import chord.project.Project;
+import chord.project.ICtrlCollection;
+import chord.project.IStepCollection;
 import chord.project.Config;
 import chord.project.VisitorHandler;
 import chord.project.analyses.ProgramDom;
+import chord.project.ITask;
 import chord.util.ChordRuntimeException;
 
 /**
@@ -34,21 +39,40 @@ import chord.util.ChordRuntimeException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ProgramDom<T> extends Dom<T> implements ITask {
+	protected Object[] consumes;
+	@Override
 	public void run() {
 		clear();
 		init();
 		fill();
 		save();
 	}
+	@Override
+	public void run(Object ctrl, IStepCollection sc) {
+		List<ItemCollection> cdcList = sc.getConsumedDataCollections();
+		int n = cdcList.size();
+		consumes = new Object[n];
+		for (int i = 0; i < n; i++) {
+			ItemCollection cdc = cdcList.get(i);
+			consumes[i] = cdc.Get(ctrl);
+		}
+		run();
+		List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
+		assert (pccList.size() == 0);
+		List<ItemCollection> pdcList = sc.getProducedDataCollections();
+		assert (pdcList.size() == 1);
+		ItemCollection pdc = pdcList.get(0);
+		pdc.Put(ctrl, this);
+	}
 	public void init() { }
 	public void save() {
-		System.out.println("SAVING dom " + name + " size: " + size());
+		if (Config.verbose > 1)
+			System.out.println("SAVING dom " + name + " size: " + size());
 		try {
 			super.save(Config.bddbddbWorkDirName, Config.saveDomMaps);
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
 		}
-		Project.setTrgtDone(this);
 	}
 	public void fill() {
 		if (this instanceof IClassVisitor) {
@@ -109,6 +133,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 		out.println("</" + tag + ">");
 		out.close();
 	}
+	@Override
 	public String toString() {
 		return name;
 	}

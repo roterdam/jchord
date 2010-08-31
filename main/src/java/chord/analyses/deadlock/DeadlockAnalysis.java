@@ -17,11 +17,10 @@ import joeq.Compiler.Quad.Quad;
 
 import chord.project.Config;
 import chord.program.Program;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.Chord;
 import chord.project.OutDirUtils;
 import chord.project.analyses.JavaAnalysis;
-import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 
 import chord.util.ArraySet;
@@ -92,21 +91,21 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	private final Map<CM, Set<CM>> CMCMMap = new HashMap<CM, Set<CM>>();
 
 	private void init() {
-		domA = (DomA) Project.getTrgt("A");
-		domC = (DomC) Project.getTrgt("C");
-		domH = (DomH) Project.getTrgt("H");
-		domI = (DomI) Project.getTrgt("I");
-		domL = (DomL) Project.getTrgt("L");
-		domM = (DomM) Project.getTrgt("M");
-		domN = (DomN) Project.getTrgt("N");
+		domA = (DomA) ClassicProject.g().getTrgt("A");
+		domC = (DomC) ClassicProject.g().getTrgt("C");
+		domH = (DomH) ClassicProject.g().getTrgt("H");
+		domI = (DomI) ClassicProject.g().getTrgt("I");
+		domL = (DomL) ClassicProject.g().getTrgt("L");
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		domN = (DomN) ClassicProject.g().getTrgt("N");
 		
-		relNC = (ProgramRel) Project.getTrgt("NC");
-		relNL = (ProgramRel) Project.getTrgt("NL");
-		relDeadlock = (ProgramRel) Project.getTrgt("deadlock");
-		relSyncCLC = (ProgramRel) Project.getTrgt("syncCLC");
+		relNC = (ProgramRel) ClassicProject.g().getTrgt("NC");
+		relNL = (ProgramRel) ClassicProject.g().getTrgt("NL");
+		relDeadlock = (ProgramRel) ClassicProject.g().getTrgt("deadlock");
+		relSyncCLC = (ProgramRel) ClassicProject.g().getTrgt("syncCLC");
 		
 		thrSenAbbrCSCGAnalysis = (ThrSenAbbrCSCGAnalysis)
-			Project.getTrgt("thrsen-abbr-cscg-java");
+			ClassicProject.g().getTrgt("thrsen-abbr-cscg-java");
 	}
 	
 	private void finish() {
@@ -132,14 +131,14 @@ public class DeadlockAnalysis extends JavaAnalysis {
 
 		init();
 		
-		Project.runTask(domL);
+		ClassicProject.g().runTask(domL);
 
-		Project.runTask("ctxts-java");
-		Project.runTask(CtxtsAnalysis.getCspaKind());
-		Project.runTask(thrSenAbbrCSCGAnalysis);
+		ClassicProject.g().runTask("ctxts-java");
+		ClassicProject.g().runTask(CtxtsAnalysis.getCspaKind());
+		ClassicProject.g().runTask(thrSenAbbrCSCGAnalysis);
 		thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
 		domN.clear();
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		for (Inst i : domL) {
 			jq_Method m = i.getMethod();
 			Set<Ctxt> cs = thrSenAbbrCSCG.getContexts(m);
@@ -162,23 +161,23 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		relNL.save();
 
 		if (excludeParallel)
-			Project.runTask("deadlock-parallel-exclude-dlog");
+			ClassicProject.g().runTask("deadlock-parallel-exclude-dlog");
 		else
-			Project.runTask("deadlock-parallel-include-dlog");
+			ClassicProject.g().runTask("deadlock-parallel-include-dlog");
 		if (excludeEscaping)
-			Project.runTask("deadlock-escaping-exclude-dlog");
+			ClassicProject.g().runTask("deadlock-escaping-exclude-dlog");
 		else
-			Project.runTask("deadlock-escaping-include-dlog");
+			ClassicProject.g().runTask("deadlock-escaping-include-dlog");
 		if (excludeNonreent)
-			Project.runTask("deadlock-nonreent-exclude-dlog");
+			ClassicProject.g().runTask("deadlock-nonreent-exclude-dlog");
 		else
-			Project.runTask("deadlock-nonreent-include-dlog");
+			ClassicProject.g().runTask("deadlock-nonreent-include-dlog");
 		if (excludeNongrded)
-			Project.runTask("deadlock-nongrded-exclude-dlog");
+			ClassicProject.g().runTask("deadlock-nongrded-exclude-dlog");
 		else
-			Project.runTask("deadlock-nongrded-include-dlog");
-		Project.runTask("deadlock-dlog");
-		Project.runTask("deadlock-stats-dlog");
+			ClassicProject.g().runTask("deadlock-nongrded-include-dlog");
+		ClassicProject.g().runTask("deadlock-dlog");
+		ClassicProject.g().runTask("deadlock-stats-dlog");
 
 		if (Config.publishResults) {
 			publishResults();
@@ -208,7 +207,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		relDeadlock.load();
 		relSyncCLC.load();
 
-		Program program = Program.getProgram();
+		Program program = Program.g();
 
 		out = OutDirUtils.newPrintWriter("deadlocklist.xml");
 		out.println("<deadlocklist>");

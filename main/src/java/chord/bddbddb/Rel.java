@@ -20,6 +20,8 @@ import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.StringTokenizer;
 
+import chord.project.Config;
+
 import chord.util.tuple.integer.*;
 
 import chord.util.tuple.object.*;
@@ -201,6 +203,7 @@ public class Rel {
 		// Hence, we need to use JFactory here instead, which allows
 		// multiple instances of itself be active simultaneously.
 		factory = BDDFactory.init("java", bddnodes, bddcache);
+		factory.setVerbose(Config.bddbddbVerbose);
 		factory.setIncreaseFactor(2);
 		factory.setMinFreeNodes(bddminfree);
 		domBdds = new BDDDomain[numDoms];

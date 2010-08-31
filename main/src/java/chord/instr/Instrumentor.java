@@ -9,7 +9,6 @@ package chord.instr;
 import gnu.trove.TIntObjectHashMap;
 import javassist.*;
 import javassist.expr.*;
-import java.io.FilenameFilter;
 
 import chord.runtime.CoreEventHandler;
 import chord.runtime.EventHandler;
@@ -25,16 +24,11 @@ import chord.doms.DomP;
 import chord.doms.DomB;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.Program;
-import chord.project.Project;
-import chord.project.Config;
+import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;
 import chord.util.IndexMap;
-import chord.util.IndexSet;
-import chord.util.FileUtils;
 
 import joeq.Class.jq_Class;
-import joeq.Class.jq_Array;
-import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -42,12 +36,7 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Util.Templates.ListIterator;
 
-import java.io.File;
-import java.io.IOException;
-import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
 
 /**
  * Bytecode instrumentor for instrumenting a variety of common events.
@@ -59,8 +48,6 @@ public class Instrumentor extends CoreInstrumentor {
 		"ERROR: Instrumentor: expected value for option `" + InstrScheme.INSTR_SCHEME_FILE_KEY + "`.";
 	private static final String NOT_IN_DOMAIN =
 		"WARN: Instrumentor: Domain '%s' does not contain '%s'";
-	private static final String NON_EXISTENT_PATH_ELEM =
-		"WARN: Instrumentor: Ignoring non-existent path element '%s'";
 	private static final String CANNOT_INSTRUMENT_METHOD =
 		"WARN: Instrumentor: Skipping instrumenting method '%s'; reason follows";
 	private static final String CLASS_NOT_FOUND =
@@ -226,7 +213,7 @@ public class Instrumentor extends CoreInstrumentor {
 	private Instrumentor(Map<String, String> argsMap, InstrScheme _scheme,
 			String _eventHandlerClassName) {
 		super(argsMap);
-		program = Program.getProgram();
+		program = Program.g();
 		this.scheme = _scheme;
 		this.eventHandlerClassName = _eventHandlerClassName.replace('/', '.') + ".";
 
@@ -288,48 +275,48 @@ public class Instrumentor extends CoreInstrumentor {
         finalizeEventCall = eventHandlerClassName + "finalizeEvent(";
 
 		if (scheme.needsFmap()) {
-			domF = (DomF) Project.getTrgt("F");
-			Project.runTask(domF);
+			domF = (DomF) ClassicProject.g().getTrgt("F");
+			ClassicProject.g().runTask(domF);
 			Fmap = getUniqueStringMap(domF);
 		}
 		if (scheme.needsMmap()) {
-			domM = (DomM) Project.getTrgt("M");
-			Project.runTask(domM);
+			domM = (DomM) ClassicProject.g().getTrgt("M");
+			ClassicProject.g().runTask(domM);
 			Mmap = getUniqueStringMap(domM);
 		}
 		if (scheme.needsHmap()) {
-			domH = (DomH) Project.getTrgt("H");
-			Project.runTask(domH);
+			domH = (DomH) ClassicProject.g().getTrgt("H");
+			ClassicProject.g().runTask(domH);
 			Hmap = getUniqueStringMap(domH);
 		}
 		if (scheme.needsEmap()) {
-			domE = (DomE) Project.getTrgt("E");
-			Project.runTask(domE);
+			domE = (DomE) ClassicProject.g().getTrgt("E");
+			ClassicProject.g().runTask(domE);
 			Emap = getUniqueStringMap(domE);
 		}
 		if (scheme.needsImap()) {
-			domI = (DomI) Project.getTrgt("I");
-			Project.runTask(domI);
+			domI = (DomI) ClassicProject.g().getTrgt("I");
+			ClassicProject.g().runTask(domI);
 			Imap = getUniqueStringMap(domI);
 		}
 		if (scheme.needsLmap()) {
-			domL = (DomL) Project.getTrgt("L");
-			Project.runTask(domL);
+			domL = (DomL) ClassicProject.g().getTrgt("L");
+			ClassicProject.g().runTask(domL);
 			Lmap = getUniqueStringMap(domL);
 		}
 		if (scheme.needsRmap()) {
-			domR = (DomR) Project.getTrgt("R");
-			Project.runTask(domR);
+			domR = (DomR) ClassicProject.g().getTrgt("R");
+			ClassicProject.g().runTask(domR);
 			Rmap = getUniqueStringMap(domR);
 		}
 		if (scheme.needsPmap()) {
-			domP = (DomP) Project.getTrgt("P");
-			Project.runTask(domP);
+			domP = (DomP) ClassicProject.g().getTrgt("P");
+			ClassicProject.g().runTask(domP);
 			Pmap = getUniqueStringMap(domP);
 		}
 		if (scheme.needsBmap()) {
-			domB = (DomB) Project.getTrgt("B");
-			Project.runTask(domB);
+			domB = (DomB) ClassicProject.g().getTrgt("B");
+			ClassicProject.g().runTask(domB);
 			Bmap = getUniqueStringMap(domB);
 		}
 		if (leaveMethodEvent.present() || releaseLockEvent.present()) {

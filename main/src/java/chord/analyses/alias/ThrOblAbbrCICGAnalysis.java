@@ -7,6 +7,7 @@
 package chord.analyses.alias;
 
 import chord.doms.DomM;
+import chord.project.ClassicProject;
 import chord.project.Project;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
@@ -24,11 +25,11 @@ import chord.project.analyses.ProgramRel;
 )
 public class ThrOblAbbrCICGAnalysis extends CICGAnalysis {
 	public void run() {
-		domM = (DomM) Project.getTrgt("M");
-		relIM = (ProgramRel) Project.getTrgt("thrOblAbbrIM");
-		relMM = (ProgramRel) Project.getTrgt("thrOblAbbrMM");
-		relRootM = (ProgramRel) Project.getTrgt("thrOblAbbrRootM");
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		relIM = (ProgramRel) ClassicProject.g().getTrgt("thrOblAbbrIM");
+		relMM = (ProgramRel) ClassicProject.g().getTrgt("thrOblAbbrMM");
+		relRootM = (ProgramRel) ClassicProject.g().getTrgt("thrOblAbbrRootM");
 		relReachableM = (ProgramRel)
-			Project.getTrgt("thrOblAbbrReachableM");
+			ClassicProject.g().getTrgt("thrOblAbbrReachableM");
 	}
 }

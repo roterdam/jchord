@@ -26,8 +26,7 @@ import chord.project.analyses.ProgramDom;
 @Chord(
 	name = "F"
 )
-public class DomF extends ProgramDom<jq_Field>
-		implements IFieldVisitor {
+public class DomF extends ProgramDom<jq_Field> implements IFieldVisitor {
 	public void init() {
 		// Reserve index 0 for the distinguished hypothetical field 
 		// representing all array elements

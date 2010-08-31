@@ -100,14 +100,14 @@ public abstract class Program {
     private ClassHierarchy ch;
 	private static Program program;
 	protected Program() {
-		if (Config.verbose)
+		if (Config.verbose > 2)
 			jq_Method.setVerbose();
 		if (Config.doSSA)
 			jq_Method.doSSA();
 		jq_Method.exclude(Config.scopeExcludeAry);
 		reuseScope = Config.reuseScope;
 	}
-	public final static Program getProgram() {
+	public final static Program g() {
 		if (program == null) {
 			String scopeKind = Config.scopeKind;
 			if (scopeKind.equals("rta")) {
@@ -335,7 +335,7 @@ public abstract class Program {
 	}
 
 	public static jq_Reference loadClass(String s) {
-		if (Config.verbose)
+		if (Config.verbose > 2)
 			Messages.log(LOADING_CLASS, s);
 		try {
 			jq_Reference c = (jq_Reference) jq_Type.parseType(s);

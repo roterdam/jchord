@@ -23,7 +23,7 @@ import chord.program.visitors.IPhiInstVisitor;
 import chord.program.visitors.IRelLockInstVisitor;
 import chord.program.visitors.IReturnInstVisitor;
 import chord.program.visitors.ICastInstVisitor;
-import chord.project.analyses.ITask;
+import chord.project.ITask;
 import chord.util.IndexSet;
 
 import joeq.Class.jq_Reference;
@@ -241,7 +241,7 @@ public class VisitorHandler {
 				relivs.add((IRelLockInstVisitor) task);
 			}
 		}
-		Program program = Program.getProgram();
+		Program program = Program.g();
 		reachableMethods = program.getMethods();
 		doCFGs = (ivs != null) || (hivs != null) ||
 			(iivs != null) || (nivs != null) || (mivs != null) ||

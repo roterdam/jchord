@@ -31,7 +31,7 @@ public class RelClsTH extends ProgramRel {
 		DomT domT = (DomT) doms[0];
 		DomH domH = (DomH) doms[1];
 		System.out.println("SIZE: " + domH.size());
-		for (jq_Reference r : Program.getProgram().getClasses()) {
+		for (jq_Reference r : Program.g().getClasses()) {
 			int tIdx = domT.indexOf(r);
 			assert (tIdx >= 0);
 			int hIdx = domH.indexOf(new PhantomClsVal(r));

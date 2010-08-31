@@ -15,6 +15,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.bddbddb.Rel.RelView;
 import chord.project.Chord;
+import chord.project.ClassicProject;
 import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
@@ -35,9 +36,9 @@ public class CIAliasAnalysis extends JavaAnalysis {
 	private ProgramRel relFH;
 	private ProgramRel relHFH;
 	public void run() {
-		relVH  = (ProgramRel) Project.getTrgt("VH");
-		relFH  = (ProgramRel) Project.getTrgt("FH");
-		relHFH = (ProgramRel) Project.getTrgt("HFH");
+		relVH  = (ProgramRel) ClassicProject.g().getTrgt("VH");
+		relFH  = (ProgramRel) ClassicProject.g().getTrgt("FH");
+		relHFH = (ProgramRel) ClassicProject.g().getTrgt("HFH");
 	}
 	/**
 	 * Provides the abstract object to which a given local variable

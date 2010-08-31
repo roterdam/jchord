@@ -8,7 +8,7 @@ package chord.analyses.alias;
 
 import java.util.Set;
 
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;
 
 /**
@@ -20,7 +20,7 @@ public class DomO extends ProgramDom<CSObj> {
 	private DomC domC;
 	public String toXMLAttrsString(CSObj oVal) {
 		if (domC == null)
-			domC = (DomC) Project.getTrgt("C");
+			domC = (DomC) ClassicProject.g().getTrgt("C");
 		Set<Ctxt> pts = oVal.pts;
 		if (pts.size() == 0)
 			return "";

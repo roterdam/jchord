@@ -65,13 +65,14 @@ public class Config {
 
 	// Chord task properties
 
-	public final static boolean buildScope = buildBoolProperty("chord.build.scope", false);
+	public final static boolean buildProgram = buildBoolProperty("chord.build.scope", false);
 	public final static String runAnalyses = System.getProperty("chord.run.analyses", "");
 	public final static String printMethods = System.getProperty("chord.print.methods", "").replace('#', '$');
 	public final static String printClasses = System.getProperty("chord.print.classes", "").replace('#', '$');
 	public final static boolean printAllClasses = buildBoolProperty("chord.print.all.classes", false);
 	public final static String printRels = System.getProperty("chord.print.rels", "");
-	public final static boolean publishTargets = buildBoolProperty("chord.publish.targets", false);
+	public final static boolean printProject = buildBoolProperty("chord.publish.targets", false);
+	public final static boolean classic = buildBoolProperty("chord.classic", true);
 
 	// Basic program properties
 
@@ -123,8 +124,20 @@ public class Config {
 
     // Chord debug properites
 
-	public final static boolean verbose = buildBoolProperty("chord.verbose", false);
-	public final static boolean bddbddbVerbose = buildBoolProperty("chord.bddbddb.verbose", false);
+	// Determines verbosity level of Chord (except bddbddb):
+	// 0 => silent
+	// 1 => print configuration (i.e. these properties) and start/finish time
+	// 2 => print task/process enter/leave/time messages and sizes of computed doms/rels
+	// 3 => all other messages
+	public final static int verbose = Integer.getInteger("chord.verbose", 2);
+    // Determines verbosity level of bddbddb/JavaBDD:
+    // 0 => silent
+    // 1 => print bdd node table resizing messages and sizes of relations output by solver
+    // 2 => print bdd gc messages and solver stats (e.g. how long each iteration took)
+    // 3 => noisy=yes for solver
+    // 4 => tracesolve=yes for solver
+    // 5 => fulltravesolve=yes for solver
+	public final static int bddbddbVerbose = Integer.getInteger("chord.bddbddb.verbose", 0);
 	public final static boolean saveDomMaps = buildBoolProperty("chord.save.maps", true);
 
 	// Chord instrumentation properties
@@ -192,13 +205,14 @@ public class Config {
 		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 
 		System.out.println("*** Chord task properties:");
-		System.out.println("chord.build.scope: " + buildScope);
+		System.out.println("chord.build.scope: " + buildProgram);
 		System.out.println("chord.run.analyses: " + runAnalyses);
 		System.out.println("chord.print.all.classes: " + printAllClasses);
 		System.out.println("chord.print.methods: " + printMethods);
 		System.out.println("chord.print.classes: " + printClasses);
 		System.out.println("chord.print.rels: " + printRels);
-		System.out.println("chord.publish.targets: " + publishTargets);
+		System.out.println("chord.publish.targets: " + printProject);
+		System.out.println("chord.classic: " + classic);
 
 		System.out.println("*** Basic program properties:");
 		System.out.println("chord.main.class: " + mainClassName);
