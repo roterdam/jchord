@@ -133,11 +133,11 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		init();
 
-		Messages.log("maxIters=" + maxIters);
+		if (Config.verbose > 2) Messages.log("maxIters=" + maxIters);
 		int numIters = 0; // Number of refinement iterations
 		while (true) {
 			// Run analysis
-			Messages.log("Running datarace analysis (numIters="+numIters+")");
+			if (Config.verbose > 2) Messages.log("Running datarace analysis (numIters="+numIters+")");
 			ClassicProject.g().runTask("ctxts-java");
 			ClassicProject.g().runTask(CtxtsAnalysis.getCspaKind());
 			ClassicProject.g().runTask("datarace-prologue-dlog");

@@ -237,6 +237,10 @@ public class ClassicProject extends Project {
 			} else {
 				assert (trgt != null);
 				nameToTrgtMap.put(name, trgt);
+				if (trgt instanceof ITask) {
+					ITask task = (ITask) trgt;
+					task.setName(name);
+				}
 			}
 		}
 		return hasNoErrors;
