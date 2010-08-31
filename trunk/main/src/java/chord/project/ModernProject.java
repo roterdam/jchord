@@ -55,6 +55,7 @@ public class ModernProject extends Project {
 			project = new ModernProject();
 		return project;
 	}
+	private static final String PROGRAM_TAG = "program";
 	private boolean isBuilt = false;
 	private CnCRuntime runtime;
 
@@ -124,7 +125,7 @@ public class ModernProject extends Project {
         try {
         	for (String name : taskNames) {
             	ICtrlCollection c = getCtrlCollectionOfTask(name);
-                c.Put("dummy");
+                c.Put(PROGRAM_TAG);
         	}
         } catch (Throwable ex) {
         	Messages.fatal(ex);
@@ -134,7 +135,13 @@ public class ModernProject extends Project {
 	
 	@Override
 	public void printRels(String[] relNames) {
-		throw new RuntimeException();
+		run(relNames);
+		for (String name : relNames) {
+			ItemCollection c = getDataCollectionByName(name);
+			ProgramRel rel = (ProgramRel) c.Get(PROGRAM_TAG);
+			rel.load();
+			rel.print();
+		}
 	}
 
 	@Override
