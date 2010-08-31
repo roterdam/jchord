@@ -15,7 +15,7 @@ import java.util.Set;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.doms.DomE;
 
 /**
@@ -92,7 +92,7 @@ public class ReachabilityTest extends LabelBasedAnalysis {
 	@Override
 	public void initAllPasses() {
 		super.initAllPasses();
-		domE = (DomE) Project.getTrgt("E");
+		domE = (DomE) ClassicProject.g().getTrgt("E");
 	}
 	
 	@Override

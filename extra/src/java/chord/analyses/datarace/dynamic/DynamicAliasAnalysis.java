@@ -16,7 +16,7 @@ import java.util.Set;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.integer.IntPair;
@@ -44,8 +44,8 @@ public class DynamicAliasAnalysis extends DynamicAnalysis {
 	public void initAllPasses() {
 		aliases = new HashSet<IntPair>();
 		pts = new TIntObjectHashMap<TIntHashSet>();
-		relAlias = (ProgramRel) Project.getTrgt("aliasEE");
-		relInitial = (ProgramRel) Project.getTrgt(useThresc ? "filteredStartingRaces" : "startingRaces");
+		relAlias = (ProgramRel) ClassicProject.g().getTrgt("aliasEE");
+		relInitial = (ProgramRel) ClassicProject.g().getTrgt(useThresc ? "filteredStartingRaces" : "startingRaces");
 	}
 	
 	@Override

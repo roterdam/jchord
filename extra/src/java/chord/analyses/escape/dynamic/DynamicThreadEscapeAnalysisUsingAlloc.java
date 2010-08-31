@@ -19,7 +19,7 @@ import java.util.List;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.Config;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
@@ -99,11 +99,11 @@ public class DynamicThreadEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		escObjs = new TIntHashSet();
 		objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
 		objToHidx = new TIntIntHashMap();
-		numE = ((DomE) Project.getTrgt("E")).size();
+		numE = ((DomE) ClassicProject.g().getTrgt("E")).size();
 		isEidxVisited = new boolean[numE];
 		isEidxEsc = new boolean[numE];
-		relVisitedE = (ProgramRel) Project.getTrgt("visitedE");
-		relEscE = (ProgramRel) Project.getTrgt("escE");
+		relVisitedE = (ProgramRel) ClassicProject.g().getTrgt("visitedE");
+		relEscE = (ProgramRel) ClassicProject.g().getTrgt("escE");
 	}
 
 	public void initPass() {
@@ -141,7 +141,7 @@ public class DynamicThreadEscapeAnalysisUsingAlloc extends DynamicAnalysis {
 		relVisitedE.save();
 		relEscE.save();
 
-		DomE domE = (DomE) Project.getTrgt("E");
+		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
 		String outDirName = Config.outDirName;
 		try {
 			PrintWriter writer;

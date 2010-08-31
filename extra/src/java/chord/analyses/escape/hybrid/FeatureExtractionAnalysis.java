@@ -42,7 +42,7 @@ import chord.program.Program;
 import chord.project.Chord;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.Config;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramDom;
@@ -88,7 +88,7 @@ public class FeatureExtractionAnalysis extends JavaAnalysis {
 
   public void computedExcludedClasses() {
     String[] checkExcludedPrefixes = Config.toArray(Config.checkExcludeStr);
-    Program program = Program.getProgram();
+    Program program = Program.g();
     for (jq_Reference r : program.getClasses()) {
       String rName = r.getName();
       for (String prefix : checkExcludedPrefixes) {
@@ -107,26 +107,26 @@ public class FeatureExtractionAnalysis extends JavaAnalysis {
   int maxHintSize; // Don't output a hint larger than this
 
 	private void init() {
-    //Project.runTask("cipa-0cfa-dlog");
-    Project.runTask("cspa-kcfa-dlog");
-    Project.runTask("flowins-thresc-dlog");
-    Project.runTask("hints-dlog");
+    //ClassicProject.g().runTask("cipa-0cfa-dlog");
+    ClassicProject.g().runTask("cspa-kcfa-dlog");
+    ClassicProject.g().runTask("flowins-thresc-dlog");
+    ClassicProject.g().runTask("hints-dlog");
 
     // Load domains
-		domE = (DomE) Project.getTrgt("E"); Project.runTask(domE);
-		domH = (DomH) Project.getTrgt("H"); Project.runTask(domH);
-		domT = (DomT) Project.getTrgt("T"); Project.runTask(domT);
-		domV = (DomV) Project.getTrgt("V"); Project.runTask(domV);
-		domP = (DomP) Project.getTrgt("P"); Project.runTask(domP);
+		domE = (DomE) ClassicProject.g().getTrgt("E"); ClassicProject.g().runTask(domE);
+		domH = (DomH) ClassicProject.g().getTrgt("H"); ClassicProject.g().runTask(domH);
+		domT = (DomT) ClassicProject.g().getTrgt("T"); ClassicProject.g().runTask(domT);
+		domV = (DomV) ClassicProject.g().getTrgt("V"); ClassicProject.g().runTask(domV);
+		domP = (DomP) ClassicProject.g().getTrgt("P"); ClassicProject.g().runTask(domP);
 
     // Load relations
-		relHT = (ProgramRel) Project.getTrgt("HT"); Project.runTask(relHT); relHT.load();
-		relEV = (ProgramRel) Project.getTrgt("EV"); Project.runTask(relEV); relEV.load();
-		relVT = (ProgramRel) Project.getTrgt("VT"); Project.runTask(relVT); relVT.load();
+		relHT = (ProgramRel) ClassicProject.g().getTrgt("HT"); ClassicProject.g().runTask(relHT); relHT.load();
+		relEV = (ProgramRel) ClassicProject.g().getTrgt("EV"); ClassicProject.g().runTask(relEV); relEV.load();
+		relVT = (ProgramRel) ClassicProject.g().getTrgt("VT"); ClassicProject.g().runTask(relVT); relVT.load();
 
-		relVH = (ProgramRel) Project.getTrgt("refinedVH"); relVH.load();
-		relHints = (ProgramRel) Project.getTrgt("hints"); relHints.load();
-    relEsc = (ProgramRel) Project.getTrgt("esc"); relEsc.load();
+		relVH = (ProgramRel) ClassicProject.g().getTrgt("refinedVH"); relVH.load();
+		relHints = (ProgramRel) ClassicProject.g().getTrgt("hints"); relHints.load();
+    relEsc = (ProgramRel) ClassicProject.g().getTrgt("esc"); relEsc.load();
 
     // Run flow-insensitive thread escape analysis to see if we can prove these queries local
     // Even if we can't, the hint might still be useful

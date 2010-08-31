@@ -16,7 +16,7 @@ import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
-import chord.project.Project;
+import chord.project.ClassicProject;
 
 /**
  * @author omertripp
@@ -56,8 +56,9 @@ public class VisitedCountAnalysis extends DynamicAnalysis {
 	}
 	
 	public void initAllPasses() {
-    super.initAllPasses();
-    domM = (DomM)Project.getTrgt("M"); Project.runTask(domM);
+		super.initAllPasses();
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		ClassicProject.g().runTask(domM);
 	}
 	
   @Override public void processEnterMethod(int m, int t) {

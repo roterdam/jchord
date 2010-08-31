@@ -31,7 +31,7 @@ import chord.program.Program;
 import chord.project.Config;
 import chord.project.analyses.DynamicAnalysis;
 
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.doms.DomE;
 import chord.doms.DomF;
 import chord.doms.DomH;
@@ -115,12 +115,12 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
   }
 
 	public void run() {
-    domE = (DomE)Project.getTrgt("E"); Project.runTask(domE);
-    domF = (DomF)Project.getTrgt("F"); Project.runTask(domF);
-    domH = (DomH)Project.getTrgt("H"); Project.runTask(domH);
-    domI = (DomI)Project.getTrgt("I"); Project.runTask(domI);
-    domL = (DomL)Project.getTrgt("L"); Project.runTask(domL);
-    domM = (DomM)Project.getTrgt("M"); Project.runTask(domM);
+    domE = (DomE)ClassicProject.g().getTrgt("E"); ClassicProject.g().runTask(domE);
+    domF = (DomF)ClassicProject.g().getTrgt("F"); ClassicProject.g().runTask(domF);
+    domH = (DomH)ClassicProject.g().getTrgt("H"); ClassicProject.g().runTask(domH);
+    domI = (DomI)ClassicProject.g().getTrgt("I"); ClassicProject.g().runTask(domI);
+    domL = (DomL)ClassicProject.g().getTrgt("L"); ClassicProject.g().runTask(domL);
+    domM = (DomM)ClassicProject.g().getTrgt("M"); ClassicProject.g().runTask(domM);
 
     X = new Execution("partition");
     X.addSaveFiles("queries.out", "graph", "fieldAccessed", "snapshot-abstractions");
@@ -169,7 +169,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
   public void computedExcludedClasses() {
     String[] checkExcludedPrefixes = Config.toArray(Config.checkExcludeStr);
-    Program program = Program.getProgram();
+    Program program = Program.g();
     for (jq_Reference r : program.getClasses()) {
       String rName = r.getName();
       for (String prefix : checkExcludedPrefixes) {

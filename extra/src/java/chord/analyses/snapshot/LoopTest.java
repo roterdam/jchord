@@ -8,7 +8,7 @@ package chord.analyses.snapshot;
 
 import chord.instr.InstrScheme;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
 import chord.doms.DomB;
@@ -36,7 +36,7 @@ public class LoopTest extends DynamicAnalysis {
 	@Override
 	public void initAllPasses() {
 		super.initAllPasses();
-		domB = (DomB) Project.getTrgt("B");
+		domB = (DomB) ClassicProject.g().getTrgt("B");
 	}
 	
 	@Override

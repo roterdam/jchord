@@ -25,7 +25,7 @@ import joeq.Class.jq_Field;
 import chord.bddbddb.Rel.PairIterable;
 import chord.doms.DomE;
 import chord.project.Chord;
-import chord.project.Project;
+import chord.project.ClassicProject;
 import chord.program.Program;
 import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
@@ -111,7 +111,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
     int E = domE.size();
     int[] e2f = new int[E];
     boolean[] isWrite = new boolean[E];
-	Program program = Program.getProgram();
+	Program program = Program.g();
     for(int e = 0; e < E; e++) {
       Quad q = (Quad) domE.get(e);
       Operator op = q.getOperator();
@@ -163,7 +163,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
   }
 
   /*public void donePassDatalog() {
-		final ProgramDom<Object> domS = (ProgramDom) Project.getTrgt("S");
+		final ProgramDom<Object> domS = (ProgramDom) ClassicProject.g().getTrgt("S");
 		loc2abstractions.forEachValue(new TObjectProcedure<Set<Object>>() {
 			@Override
 			public boolean execute(Set<Object> arg0) {
@@ -172,7 +172,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 			}
 		});
 		domS.save();
-		final ProgramRel absvalRel = (ProgramRel) Project.getTrgt("absval");
+		final ProgramRel absvalRel = (ProgramRel) ClassicProject.g().getTrgt("absval");
 		absvalRel.zero();
 		loc2abstractions.forEachEntry(new TIntObjectProcedure<Set<Object>>() {
 			@Override
@@ -186,7 +186,7 @@ public class MayAliasAnalysis extends SnapshotAnalysis {
 			}
 		});
 		absvalRel.save();
-		Project.runTask("aliasing-race-pair-dlog");
+		ClassicProject.g().runTask("aliasing-race-pair-dlog");
 		ProgramRel aliasingRel = (ProgramRel) Project
 				.getTrgt("aliasingRacePair");
 		aliasingRel.load();
