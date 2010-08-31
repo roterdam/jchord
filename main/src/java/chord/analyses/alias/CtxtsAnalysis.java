@@ -37,6 +37,7 @@ import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomV;
 import chord.program.Program;
+import chord.project.Config;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Messages;
@@ -817,10 +818,10 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			Map<jq_Method, Set<jq_Method>> methToPredsMap) {
 		IGraph<jq_Method> graph = new MutableGraph<jq_Method>(roots, methToPredsMap, null);
 		List<Set<jq_Method>> sccList = graph.getTopSortedSCCs();
-		System.out.println("numSCCs: " + sccList.size());
+		if (Config.verbose > 2) System.out.println("numSCCs: " + sccList.size());
 		for (int i = 0; i < sccList.size(); i++) { // For each SCC...
 			Set<jq_Method> scc = sccList.get(i);
-			System.out.println("Processing SCC #" + i + " of size: " + scc.size());
+			if (Config.verbose > 2) System.out.println("Processing SCC #" + i + " of size: " + scc.size());
 			if (scc.size() == 1) { // Singleton
 				jq_Method cle = scc.iterator().next();
 				if (roots.contains(cle))
@@ -858,11 +859,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				}
 			}
 		}
-		System.out.println("DONE:" +
-			" min: " + minCtxtSetSize +
-			" max: " + maxCtxtSetSize +
-			" num: " + numCtxtSets +
-			" avg: " + (numCtxtSets == 0 ? 0 : cumCtxtSetSizes/numCtxtSets));
 	}
 
 	private Iterable<Quad> getPointsTo(Register var) {
@@ -942,16 +938,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		default:
 			assert false;
 		}
-		int size = newCtxts.size();
-		if (size > maxCtxtSetSize)
-			maxCtxtSetSize = size;
-		if (size < minCtxtSetSize)
-			minCtxtSetSize = size;
-		cumCtxtSetSizes += size;
-		numCtxtSets++;
 		return newCtxts;
 	}
-	private int minCtxtSetSize, maxCtxtSetSize, cumCtxtSetSizes, numCtxtSets;
 
 	public static String getCspaKind() {
         String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
