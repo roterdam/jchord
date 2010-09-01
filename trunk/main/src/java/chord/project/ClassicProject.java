@@ -235,8 +235,9 @@ public class ClassicProject extends Project {
 			ProgramRel rel = (ProgramRel) nameToTrgtMap.get(name);
 			assert (rel != null);
 			String[] domNames = sign.getDomNames();
-			ProgramDom[] doms = new ProgramDom[domNames.length];
-			for (int i = 0; i < domNames.length; i++) {
+			int n = domNames.length;
+			ProgramDom[] doms = new ProgramDom[n];
+			for (int i = 0; i < n; i++) {
 				String domName = StringUtils.trimNumSuffix(domNames[i]);
 				ProgramDom dom = (ProgramDom) nameToTrgtMap.get(domName);
 				assert (dom != null);
