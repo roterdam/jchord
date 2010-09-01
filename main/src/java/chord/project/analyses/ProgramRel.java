@@ -9,6 +9,7 @@ package chord.project.analyses;
 import java.util.List;
 import java.io.File;
 
+import chord.project.ClassicProject;
 import chord.bddbddb.Rel;
 import chord.program.visitors.IClassVisitor;
 import chord.project.Config;
@@ -68,6 +69,8 @@ public class ProgramRel extends Rel implements ITask {
 		if (Config.verbose > 1)
 			System.out.println("SAVING rel " + name + " size: " + size());
 		super.save(Config.bddbddbWorkDirName);
+		if (Config.classic)
+			ClassicProject.g().setTrgtDone(this);
 	}
 	public void load() {
 		super.load(Config.bddbddbWorkDirName);
