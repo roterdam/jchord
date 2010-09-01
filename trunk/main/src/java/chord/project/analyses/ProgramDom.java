@@ -14,6 +14,7 @@ import java.util.List;
 
 import CnCHJ.api.ItemCollection;
 
+import chord.project.ClassicProject;
 import chord.bddbddb.Dom;
 import chord.program.visitors.IClassVisitor;
 import chord.project.ICtrlCollection;
@@ -73,6 +74,8 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
 		}
+		if (Config.classic)
+			ClassicProject.g().setTrgtDone(this);
 	}
 	public void fill() {
 		if (this instanceof IClassVisitor) {
