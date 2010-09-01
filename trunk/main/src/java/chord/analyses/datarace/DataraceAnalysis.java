@@ -66,7 +66,7 @@ import chord.util.tuple.object.Trio;
  * <li><tt>chord.exclude.escaping</tt> (default is false).</li>
  * <li><tt>chord.exclude.parallel</tt> (default is false).</li>
  * <li><tt>chord.exclude.nongrded</tt> (default is false).</li>
- * <li><tt>chord.publish.results</tt> (default is false).</li>
+ * <li><tt>chord.print.results</tt> (default is false).</li>
  * <li>All system properties recognized by abstract contexts analysis
  * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
  * </ul>
@@ -182,8 +182,8 @@ public class DataraceAnalysis extends JavaAnalysis {
 			numIters++;
 		}
 		
-		if (Config.publishResults)
-			publishResults();
+		if (Config.printResults)
+			printResults();
 
 		if (percy) {
 			outputRaces();		
@@ -243,7 +243,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 		return quad.toJavaLocStr()+" "+quad.toString();
 	}
 
-	private void publishResults() {
+	private void printResults() {
 		outputCtxtInsDataraces();
 		ClassicProject.g().runTask(hybridAnalysis);
 		ClassicProject.g().runTask(thrSenAbbrCSCGAnalysis);

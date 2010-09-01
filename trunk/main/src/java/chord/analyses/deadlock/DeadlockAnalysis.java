@@ -59,7 +59,7 @@ import chord.util.tuple.object.Trio;
  * <li><tt>chord.exclude.parallel</tt> (default is false).</li>
  * <li><tt>chord.exclude.nonreent</tt> (default is false).</li>
  * <li><tt>chord.exclude.nongrded</tt> (default is false).</li>
- * <li><tt>chord.publish.results</tt> (default is false).</li>
+ * <li><tt>chord.print.results</tt> (default is false).</li>
  * <li>All system properties recognized by abstract contexts analysis
  * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
  * </ul>
@@ -179,8 +179,8 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		ClassicProject.g().runTask("deadlock-dlog");
 		ClassicProject.g().runTask("deadlock-stats-dlog");
 
-		if (Config.publishResults) {
-			publishResults();
+		if (Config.printResults) {
+			printResults();
 		}
 		
 		finish();
@@ -198,7 +198,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		return new CSObj(pts);
 	}
 	
-	private void publishResults() {
+	private void printResults() {
         final DomO domO = new DomO();
         domO.setName("O");
         

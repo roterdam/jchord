@@ -71,7 +71,7 @@ public class Config {
 	public final static String printClasses = System.getProperty("chord.print.classes", "").replace('#', '$');
 	public final static boolean printAllClasses = buildBoolProperty("chord.print.all.classes", false);
 	public final static String printRels = System.getProperty("chord.print.rels", "");
-	public final static boolean printProject = buildBoolProperty("chord.publish.targets", false);
+	public final static boolean printProject = buildBoolProperty("chord.print.project", false);
 	public final static boolean classic = buildBoolProperty("chord.classic", true);
 
 	// Basic program properties
@@ -110,7 +110,7 @@ public class Config {
 		"src" + File.separator + "dlog",
 		".." + File.separator + "extra" + File.separator + "src" + File.separator + "dlog");
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
-	public final static boolean publishResults = buildBoolProperty("chord.publish.results", true);
+	public final static boolean printResults = buildBoolProperty("chord.print.results", true);
 
 	public final static String checkExcludeStdStr = System.getProperty("chord.check.exclude.std", DEFAULT_CHECK_EXCLUDES);
 	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
@@ -211,7 +211,7 @@ public class Config {
 		System.out.println("chord.print.methods: " + printMethods);
 		System.out.println("chord.print.classes: " + printClasses);
 		System.out.println("chord.print.rels: " + printRels);
-		System.out.println("chord.publish.targets: " + printProject);
+		System.out.println("chord.print.project: " + printProject);
 		System.out.println("chord.classic: " + classic);
 
 		System.out.println("*** Basic program properties:");
@@ -235,7 +235,7 @@ public class Config {
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
 		System.out.println("chord.reuse.rels: " + reuseRels);
-		System.out.println("chord.publish.results: " + publishResults);
+		System.out.println("chord.print.results: " + printResults);
 		System.out.println("chord.check.exclude.std: " + checkExcludeStdStr);
 		System.out.println("chord.check.exclude.ext: " + checkExcludeExtStr);
 		System.out.println("chord.check.exclude: " + checkExcludeStr);
