@@ -107,9 +107,9 @@ such as computing the scope of the given program or running program analyses on 
 {\bf Note:} This task must be used with caution as certain program relations, albeit represented compactly as BDDs, may contain a large number (e.g., billions) of tuples, resulting in voluminous output when printed to a file.  See Section \ref{sec:tuning-datalog-analysis} for a more efficient way to query the contents of program relations (namely, by using the {\tt debug} target provided in file {\tt build.xml} in \Chord's {\tt main/} directory).
 
 \item
-\code{chord.publish.targets} \\
+\code{chord.print.project} \\
 {\bf Type:} bool \\
-{\bf Description:} Create files \code{targets_sortby_name.html}, \code{targets_sortby_kind.html}, and \code{targets_sortby_producers.html} in directory \code{[chord.out.dir]}, publishing all targets defined by program analyses in paths \code{[chord.java.analysis.path]} and \code{[chord.dlog.analysis.path]}. \\
+{\bf Description:} Create files \code{targets_sortby_name.html}, \code{targets_sortby_kind.html}, and \code{targets_sortby_producers.html} in directory \code{[chord.out.dir]}, publishing all tasks and targets defined by program analyses in paths \code{[chord.java.analysis.path]} and \code{[chord.dlog.analysis.path]}. \\
 {\bf Default value:} {\tt false}
 \end{itemize}
 
@@ -227,9 +227,9 @@ This section describes properties regarding program analyses executed by \Chord.
 % TODO: tell when this doesn't work
 
 \item
-\code{chord.publish.results} \\
+\code{chord.print.results} \\
 {\bf Type:} bool \\
-{\bf Description:} Publish the results of program analyses in HTML.  Interpretation of this property is analysis-specific. \\
+{\bf Description:} Print the results of program analyses in HTML.  Interpretation of this property is analysis-specific. \\
 {\bf Default value:} {\tt true} 
 
 \code{chord.check.exclude.std} \\
@@ -441,7 +441,7 @@ Ordinarily, users must not alter the default values of these properties.
 \item
 \code{chord.javadoc.url} \\
 {\bf Type:} string \\
-{\bf Description:} URL of the Javadoc location of program analyses.  It is used when publishing targets (i.e., when property \code{chord.publish.targets} is set to {\tt true}). \\
+{\bf Description:} URL of the Javadoc location of program analyses.  It is used when printing the project (i.e., when property \code{chord.print.project} is set to {\tt true}). \\
 {\bf Default value:} \code{http://jchord.googlecode.com/svn/wiki/javadoc/}
 \end{itemize}
 
