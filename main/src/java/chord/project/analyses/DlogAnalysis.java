@@ -111,6 +111,11 @@ public class DlogAnalysis extends JavaAnalysis {
 				}
 				continue;
 			}
+            int k = s.indexOf('#');
+            if (k != -1) s = s.substring(0, k);
+			s = s.trim();
+            if (s.length() == 0)
+			 	continue;
 			// strip all whitespaces from line
 			StringBuffer t = new StringBuffer(s.length());
 			for (int i = 0; i < s.length(); i++) {
