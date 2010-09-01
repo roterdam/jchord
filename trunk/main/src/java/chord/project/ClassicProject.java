@@ -339,7 +339,10 @@ public class ClassicProject extends Project {
 	public ITask getTaskProducingTrgt(Object trgt) {
 		Set<ITask> tasks = trgtToProducingTasksMap.get(trgt);
 		if (tasks.size() != 1) {
-			Messages.fatal("Task producing target '" + trgt + "' not found.");
+			String msg = "Multiple tasks producing target '" + trgt + "':";
+			for (ITask task : tasks)
+				msg += " " + task.getName();
+			Messages.fatal(msg);
 		}
 		return tasks.iterator().next();
 	}
