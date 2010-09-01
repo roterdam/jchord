@@ -7,6 +7,7 @@
 package chord.project.analyses;
 
 import java.util.List;
+import java.io.File;
 
 import chord.bddbddb.Rel;
 import chord.program.visitors.IClassVisitor;
@@ -34,6 +35,11 @@ public class ProgramRel extends Rel implements ITask {
 	protected Object[] consumes;
 	@Override
 	public void run() {
+		if (Config.reuseRels) {
+			File file = new File(Config.bddbddbWorkDirName, name + ".bdd");
+			if (file.exists())
+				return;
+		}
 		zero();
 		init();
 		fill();
