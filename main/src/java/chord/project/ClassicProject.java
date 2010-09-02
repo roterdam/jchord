@@ -60,7 +60,7 @@ public class ClassicProject extends Project {
 		new HashMap<Object, Set<ITask>>();
 	private final Set<ITask> doneTasks = new HashSet<ITask>();
 	private final Set<Object> doneTrgts = new HashSet<Object>();
-	private boolean isBuilt;
+	private boolean isBuilt = false;
 
 	@Override
 	public void build() {

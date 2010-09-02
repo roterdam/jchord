@@ -2,13 +2,11 @@ package chord.project;
 
 import java.util.List;
 
-import CnCHJ.api.ItemCollection;
-
 // abstract since does not implement the run(Object ctrl) method
 public abstract class AbstractStepCollection implements IStepCollection {
 	protected String name;
-    protected List<ItemCollection> consumedDataCollections;
-    protected List<ItemCollection> producedDataCollections;
+    protected List<IDataCollection> consumedDataCollections;
+    protected List<IDataCollection> producedDataCollections;
     protected List<ICtrlCollection> producedCtrlCollections;
     protected ICtrlCollection prescribingCollection;
 	@Override
@@ -28,19 +26,19 @@ public abstract class AbstractStepCollection implements IStepCollection {
 		return prescribingCollection;
 	}
 	@Override
-	public void setConsumedDataCollections(List<ItemCollection> c) {
+	public void setConsumedDataCollections(List<IDataCollection> c) {
 		consumedDataCollections = c;
 	}
 	@Override
-	public List<ItemCollection> getConsumedDataCollections() {
+	public List<IDataCollection> getConsumedDataCollections() {
 		return consumedDataCollections;
 	}
 	@Override
-	public void setProducedDataCollections(List<ItemCollection> c) {
+	public void setProducedDataCollections(List<IDataCollection> c) {
 		producedDataCollections = c;
 	}
 	@Override
-	public List<ItemCollection> getProducedDataCollections() {
+	public List<IDataCollection> getProducedDataCollections() {
 		return producedDataCollections;
 	}
 	@Override

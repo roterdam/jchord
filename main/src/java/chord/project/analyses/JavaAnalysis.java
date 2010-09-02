@@ -6,6 +6,12 @@
  */
 package chord.project.analyses;
 
+import java.util.List;
+
+import CnCHJ.api.ItemCollection;
+
+import chord.project.ICtrlCollection;
+import chord.project.IDataCollection;
 import chord.project.IStepCollection;
 import chord.project.Messages;
 import chord.project.ITask;
@@ -17,7 +23,7 @@ import chord.project.ITask;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class JavaAnalysis implements ITask {
-	private static final String ERROR = "Analysis '%s' must override method '%s'";
+	private static final String UNDEFINED_RUN = "ERRROR: Analysis '%s' must override method 'run()'";
     protected String name;
     protected Object[] consumes;
     protected Object[] produces;
@@ -34,12 +40,36 @@ public class JavaAnalysis implements ITask {
     }
 	@Override
 	public void run() {
-		Messages.fatal(ERROR, name, "run()");
+		Messages.fatal(UNDEFINED_RUN, name);
 	}
 	@Override
 	public void run(Object ctrl, IStepCollection sc) {
-		// TODO
-		Messages.fatal(ERROR, name, "run(Object, IStepCollection)");
+        List<IDataCollection> cdcList = sc.getConsumedDataCollections();
+        int n = cdcList.size();
+        consumes = new Object[n];
+        for (int i = 0; i < n; i++) {
+            IDataCollection cdc = cdcList.get(i);
+            ItemCollection cic = cdc.getItemCollection();
+            consumes[i] = cic.Get(ctrl);
+        }
+        run();
+        List<IDataCollection> pdcList = sc.getProducedDataCollections();
+        int m = pdcList.size();
+        for (int i = 0; i < m; i++) {
+        	IDataCollection pdc = pdcList.get(i);
+        	ItemCollection pic = pdc.getItemCollection();
+        	Object o = produces[i];
+        	if (o != null)
+        		pic.Put(ctrl, o);
+        }
+        List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
+        int k = pccList.size();
+        for (int i = 0; i < k; i++) {
+        	ICtrlCollection pcc = pccList.get(i);
+        	Object o = controls[i];
+        	if (o != null)
+        		pcc.Put(o);
+        }
 	}
 	@Override
 	public String toString() {

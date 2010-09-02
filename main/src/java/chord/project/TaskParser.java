@@ -280,6 +280,8 @@ public class TaskParser {
 		task.setName(name);
 		nameToPrescriberNameMap.put(name, name);
 		List<String> consumeNames = new ArrayList<String>();
+		// NOTE: domains MUST be added BEFORE relations;
+		// ModernProject relies on this invariant.
 		consumeNames.addAll(domNames);
 		consumeNames.addAll(consumedRelsMap.keySet());
 		nameToConsumeNamesMap.put(name, consumeNames);

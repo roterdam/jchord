@@ -75,6 +75,9 @@ public class ChordAnnotParser {
 		{
 			String[] a = chord.consumes();
 			consumes = new ArrayList<String>(a.length);
+			// NOTE: domains MUST be added BEFORE any declared consumed
+			// targets to 'consumes' if this annotation is on a subclass
+			// of ProgramRel; ModernProject relies on this invariant.
 			if (relSign != null) {
 				for (String domName : relSign.getDomKinds())
 					consumes.add(domName);

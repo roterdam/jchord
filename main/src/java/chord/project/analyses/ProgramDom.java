@@ -18,6 +18,7 @@ import chord.project.ClassicProject;
 import chord.bddbddb.Dom;
 import chord.program.visitors.IClassVisitor;
 import chord.project.ICtrlCollection;
+import chord.project.IDataCollection;
 import chord.project.IStepCollection;
 import chord.project.Config;
 import chord.project.VisitorHandler;
@@ -50,20 +51,20 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 	}
 	@Override
 	public void run(Object ctrl, IStepCollection sc) {
-		List<ItemCollection> cdcList = sc.getConsumedDataCollections();
+		List<IDataCollection> cdcList = sc.getConsumedDataCollections();
 		int n = cdcList.size();
 		consumes = new Object[n];
 		for (int i = 0; i < n; i++) {
-			ItemCollection cdc = cdcList.get(i);
+			ItemCollection cdc = cdcList.get(i).getItemCollection();
 			consumes[i] = cdc.Get(ctrl);
 		}
 		run();
+		List<IDataCollection> pdcList = sc.getProducedDataCollections();
+		assert (pdcList.size() == 1);
+		ItemCollection pdc = pdcList.get(0).getItemCollection();
+		pdc.Put(ctrl, this);
 		List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
 		assert (pccList.size() == 0);
-		List<ItemCollection> pdcList = sc.getProducedDataCollections();
-		assert (pdcList.size() == 1);
-		ItemCollection pdc = pdcList.get(0);
-		pdc.Put(ctrl, this);
 	}
 	public void init() { }
 	public void save() {
