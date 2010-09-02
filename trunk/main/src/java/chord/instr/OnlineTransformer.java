@@ -139,7 +139,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
             if (c.getName().startsWith("[")) 
 				continue;
 			if (!isModifiableClass(i, c)) {
-				if (!Config.dynamicSilent)
+				if (Config.verbose > 2)
 					Messages.log(CANNOT_MODIFY_CLASS, c.getName());
 				continue;
 			}
@@ -181,7 +181,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			ex = e; 
 		}
 		if (ex != null) {
-			if (!Config.dynamicSilent) {
+			if (Config.verbose > 2) {
 				Messages.log(CANNOT_INSTRUMENT_CLASS, cName);
 				ex.printStackTrace();
 			}

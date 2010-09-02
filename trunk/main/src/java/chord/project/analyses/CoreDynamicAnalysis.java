@@ -179,10 +179,10 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		if (canReuseTraces()) {
 			initAllPasses();
 			for (String runID : runIDs) {
-				Messages.log(STARTING_RUN, runID);
+				if (Config.verbose > 1) Messages.log(STARTING_RUN, runID);
 				String s = getTraceFileName(0, runID);
 				processTrace(s);
-				Messages.log(FINISHED_RUN, runID);
+				if (Config.verbose > 1) Messages.log(FINISHED_RUN, runID);
 			}
 			doneAllPasses();
 			return;
@@ -197,11 +197,11 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 				String args = System.getProperty("chord.args." + runID, "");
 				List<String> fullcmd = new ArrayList<String>(basecmd);
 				fullcmd.addAll(StringUtils.tokenize(args));
-				Messages.log(STARTING_RUN, runID);
+				if (Config.verbose > 1) Messages.log(STARTING_RUN, runID);
 				initPass();
 				runInstrProgram(fullcmd);
 				donePass();
-				Messages.log(FINISHED_RUN, runID);
+				if (Config.verbose > 1) Messages.log(FINISHED_RUN, runID);
 			}
 			doneAllPasses();
 			return;
@@ -234,7 +234,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 					runInstrProgram(fullcmd);
 				}
 			};
-			Messages.log(STARTING_RUN, runID);
+			if (Config.verbose > 1) Messages.log(STARTING_RUN, runID);
 			executor.execute(instrProgram);
 			if (transformers != null) {
 				for (Runnable r : transformers)
@@ -252,7 +252,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 				String[] cmd = new String[] { "mv", src, dst };
 				OutDirUtils.executeWithFailOnError(cmd);
 			}
-			Messages.log(FINISHED_RUN, runID);
+			if (Config.verbose > 1) Messages.log(FINISHED_RUN, runID);
 		}
 		doneAllPasses();
 	}
@@ -365,7 +365,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 				++count;
 			}
 			donePass();
-			Messages.log(FINISHED_PROCESSING_TRACE, count);
+			if (Config.verbose > 1) Messages.log(FINISHED_PROCESSING_TRACE, count);
 		} catch (IOException ex) {
 			Messages.fatal(ex);
 		} catch (ReadException ex) {
