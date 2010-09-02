@@ -57,7 +57,7 @@ import chord.util.tuple.integer.IntTrio;
 public class TraceTransformer {
 	private final String rdFileName;
 	private final String wrFileName;
-	private final boolean silent;
+	private final int verbose;
 
 	// cached values from scheme for efficiency
 	private final boolean newAndNewArrayHasHid;
@@ -126,7 +126,7 @@ public class TraceTransformer {
 	public TraceTransformer(String rdFileName, String wrFileName, InstrScheme scheme) {
 		this.rdFileName = rdFileName;
 		this.wrFileName = wrFileName;
-		this.silent = Config.dynamicSilent;
+		this.verbose = Config.verbose;
 		newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasLoc();
 		newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasThr();
 		newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasObj();
@@ -176,7 +176,7 @@ public class TraceTransformer {
 				if (count != 0) {
 					if (count >= MAX_CONS_SIZE) {
 						warn();
-						if (!silent) System.out.println("Evicting oldest.");
+						if (verbose > 2) System.out.println("Evicting oldest.");
 						// remove 1st item in pending, it is oldest
 						pending.remove(0);
 						adjust();
@@ -377,7 +377,7 @@ public class TraceTransformer {
 		tmp[count++] = v;
 	}
 	private void warn() {
-		if (!silent) {
+		if (verbose > 2) {
 			System.out.println("WARN: Active constructors in order are as follows:");
 			for (int i = 0; i < pending.size(); i++) {
 				IntTrio trio = pending.get(i);

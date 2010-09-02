@@ -28,7 +28,7 @@ import chord.util.FileUtils;
  */
 public final class OfflineTransformer {
     private static final String INSTR_STARTING =
-		"INFO: Starting to instrument all classes; this may take a while (use -Dchord.verbose=3 for more detailed info) ...";
+		"INFO: Starting to instrument all classes; this may take a while ...";
     private static final String INSTR_FINISHED =
 		"INFO: Finished instrumenting all classes.";
     private static final String CANNOT_INSTRUMENT_CLASS =
@@ -54,7 +54,7 @@ public final class OfflineTransformer {
 	}
 
 	public void run() {
-		Messages.log(INSTR_STARTING);
+		if (Config.verbose > 1) Messages.log(INSTR_STARTING);
         FileUtils.deleteFile(bootClassesDirName);
         FileUtils.deleteFile(userClassesDirName);
 		Program program = Program.g();
@@ -86,7 +86,7 @@ public final class OfflineTransformer {
 				ex.printStackTrace();
 			}
 		}
-		Messages.log(INSTR_FINISHED);
+		if (Config.verbose > 1) Messages.log(INSTR_FINISHED);
 	}
 
 	private String getOutDir(String cName) {

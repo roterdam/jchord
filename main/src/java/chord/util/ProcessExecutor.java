@@ -12,6 +12,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.TimerTask;
 import java.util.Timer;
+import chord.project.Config;
 
 /**
  * Utility to execute a system command specified as a string in a
@@ -67,8 +68,10 @@ public final class ProcessExecutor {
                 BufferedReader r =
                 	new BufferedReader(new InputStreamReader(s));
                 String l;
-                while ((l = r.readLine()) != null)
-                    System.out.println(n + "> " + l);
+                while ((l = r.readLine()) != null) {
+                    if (Config.verbose > 1)
+						System.out.println(n + "> " + l);
+				}
             } catch (IOException e) {
             	throw new RuntimeException(e.getMessage());
             }

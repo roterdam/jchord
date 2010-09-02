@@ -130,6 +130,7 @@ public class Config {
 	// 2 => print task/process enter/leave/time messages and sizes of computed doms/rels
 	// 3 => all other messages
 	public final static int verbose = Integer.getInteger("chord.verbose", 2);
+
     // Determines verbosity level of bddbddb/JavaBDD:
     // 0 => silent
     // 1 => print bdd node table resizing messages and sizes of relations output by solver
@@ -138,6 +139,7 @@ public class Config {
     // 4 => tracesolve=yes for solver
     // 5 => fulltravesolve=yes for solver
 	public final static int bddbddbVerbose = Integer.getInteger("chord.bddbddb.verbose", 0);
+
 	public final static boolean saveDomMaps = buildBoolProperty("chord.save.maps", true);
 
 	// Chord instrumentation properties
@@ -157,7 +159,6 @@ public class Config {
 	public final static boolean dynamicHaltOnErr = buildBoolProperty("chord.dynamic.haltonerr", true);
 	public final static int dynamicTimeout = Integer.getInteger("chord.dynamic.timeout", -1);
 	public final static int maxConsSize = Integer.getInteger("chord.max.cons.size", 50000000);
-	public final static boolean dynamicSilent = buildBoolProperty("chord.dynamic.silent", false);
 
 	// Chord output properties
 
@@ -191,6 +192,13 @@ public class Config {
 	public final static String traceFileName = outRel2AbsPath("chord.trace.file", "trace");
 
 	public static void print() {
+		System.out.println("*** JVM properties:");
+		System.out.println("java.vendor: " + System.getProperty("java.vendor"));
+		System.out.println("java.version: " + System.getProperty("java.version"));
+		System.out.println("os.arch: " + System.getProperty("os.arch"));
+		System.out.println("os.name: " + System.getProperty("os.name"));
+		System.out.println("os.version: " + System.getProperty("os.version"));
+
 		System.out.println("*** Chord resource properties:");
 		System.out.println("chord.main.dir: " + mainDirName);
 		System.out.println("chord.main.class.path: " + mainClassPathName);
@@ -256,7 +264,6 @@ public class Config {
 		System.out.println("chord.dynamic.haltonerr: " + dynamicHaltOnErr);
 		System.out.println("chord.dynamic.timeout: " + dynamicTimeout);
 		System.out.println("chord.max.cons.size: " + maxConsSize);
-		System.out.println("chord.dynamic.silent: " + dynamicSilent);
 
 		System.out.println("*** Chord output properties:");
 		System.out.println("chord.out.dir: " + outDirName);

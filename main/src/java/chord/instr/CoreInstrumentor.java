@@ -39,7 +39,7 @@ public class CoreInstrumentor extends ExprEditor {
 	private final static String IMPLICITLY_EXCLUDING_CLASS =
 		"WARN: Not instrumenting class %s.";
 
-	protected boolean silent;
+	protected int verbose;
 	protected final JavassistPool pool;
 	protected String[] scopeExcludeAry;
 	protected Map<String, String> argsMap;
@@ -54,7 +54,7 @@ public class CoreInstrumentor extends ExprEditor {
 		assert (argsMap != null);
 		this.argsMap = argsMap;
 		scopeExcludeAry = Config.scopeExcludeAry;
-		silent = Config.dynamicSilent;
+		verbose = Config.verbose;
 		String mainClassPathName = Config.mainClassPathName;
 		String userClassPathName = Config.classPathName;
 		pool = new JavassistPool(mainClassPathName, userClassPathName);
@@ -80,11 +80,11 @@ public class CoreInstrumentor extends ExprEditor {
 
 	public boolean isExcluded(String cName) {
 		if (isImplicitlyExcluded(cName)) {
-			if (!silent) Messages.log(IMPLICITLY_EXCLUDING_CLASS, cName);
+			if (verbose > 2) Messages.log(IMPLICITLY_EXCLUDING_CLASS, cName);
 			return true;
 		}
 		if (isExplicitlyExcluded(cName)) {
-			if (!silent) Messages.log(EXPLICITLY_EXCLUDING_CLASS, cName);
+			if (verbose > 2) Messages.log(EXPLICITLY_EXCLUDING_CLASS, cName);
 			return true;
 		}
 		return false;
