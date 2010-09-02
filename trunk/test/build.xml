@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
   Test runner for Chord.
+  Run with "ant -quiet"
 -->
 <project name="chord-tester" default="help" basedir=".">
 	<property name="debuglevel" value="source,lines,vars"/>
@@ -55,7 +56,6 @@
 		<for param="testdir">
 			<dirset dir="bench" includes="${test.dirs}"/>
 			<sequential>
-				<echo message="===== Benchmark: @{testdir}"/>
 				<ant dir="@{testdir}" target="clean"/>
 				<ant dir="@{testdir}" target="compile"/>
 				<ant dir="${maindir}" target="run">
@@ -127,6 +127,7 @@
 	-->
 	<target name="test-main">
 		<fail unless="testdir"/>
+		<echo message="===== STARTING test-main ON: ${testdir}"/>
 		<ant dir="${maindir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
@@ -143,6 +144,7 @@
 			<param name="correctdir" value="${testdir}/correct_output/main"/>
 			<param name="relnames" value="${chord.main.rels}"/>
 		</antcall>
+		<echo message="===== FINISHED test-main ON: ${testdir}"/>
 	</target>
 
 	<!--
@@ -150,6 +152,7 @@
 	-->
 	<target name="test-cia">
 		<fail unless="testdir"/>
+		<echo message="===== STARTING test-cia ON: ${testdir}"/>
 		<ant dir="${maindir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
@@ -161,6 +164,7 @@
 			<param name="correctdir" value="${testdir}/correct_output/cia"/>
 			<param name="relnames" value="${chord.cia.rels}"/>
 		</antcall>
+		<echo message="===== FINISHED test-cia ON: ${testdir}"/>
 	</target>
 
 	<!--
@@ -168,6 +172,7 @@
 	-->
 	<target name="test-csa-0cfa">
 		<fail unless="testdir"/>
+		<echo message="===== STARTING test-csa-0cfa ON: ${testdir}"/>
 		<ant dir="${maindir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
@@ -179,12 +184,15 @@
 			<param name="correctdir" value="${testdir}/correct_output/csa_0cfa"/>
 			<param name="relnames" value="${chord.csa.rels}"/>
 		</antcall>
+		<echo message="===== FINISHED test-csa-0cfa ON: ${testdir}"/>
 	</target>
 
 	<!--
 		Test k-object-sensitive may-alias and call-graph analyses.
 	-->
 	<target name="test-csa-kobj">
+		<fail unless="testdir"/>
+		<echo message="===== STARTING test-csa-kobj ON: ${testdir}"/>
 		<ant dir="${maindir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
@@ -198,25 +206,29 @@
 			<param name="correctdir" value="${testdir}/correct_output/csa_kobj"/>
 			<param name="relnames" value="${chord.csa.rels}"/>
 		</antcall>
+		<echo message="===== FINISHED test-csa-kobj ON: ${testdir}"/>
 	</target>
 
 	<!--
 		Test k-CFA may-alias and call-graph analyses.
 	-->
 	<target name="test-csa-kcfa">
-	<ant dir="${maindir}" target="run">
-	<property name="chord.work.dir" value="${testdir}"/>
-	<property name="chord.reuse.scope" value="true"/>
-	<property name="chord.inst.ctxt.kind" value="cs"/>
-	<property name="chord.kcfa.k" value="1"/>
-	<property name="chord.run.analyses" value="cspa-kcfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
-	<property name="chord.print.rels" value="${chord.csa.rels}"/>
-	</ant>
-	<antcall target="compare-rels">
-	<param name="testdir" value="${testdir}"/>
-	<param name="correctdir" value="${testdir}/correct_output/csa_kcfa"/>
-	<param name="relnames" value="${chord.csa.rels}"/>
-	</antcall>
+		<fail unless="testdir"/>
+		<echo message="===== STARTING test-csa-kcfa ON: ${testdir}"/>
+		<ant dir="${maindir}" target="run">
+			<property name="chord.work.dir" value="${testdir}"/>
+			<property name="chord.reuse.scope" value="true"/>
+			<property name="chord.inst.ctxt.kind" value="cs"/>
+			<property name="chord.kcfa.k" value="1"/>
+			<property name="chord.run.analyses" value="cspa-kcfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+			<property name="chord.print.rels" value="${chord.csa.rels}"/>
+		</ant>
+		<antcall target="compare-rels">
+			<param name="testdir" value="${testdir}"/>
+			<param name="correctdir" value="${testdir}/correct_output/csa_kcfa"/>
+			<param name="relnames" value="${chord.csa.rels}"/>
+		</antcall>
+		<echo message="===== FINISHED test-csa-kcfa ON: ${testdir}"/>
 	</target>
 
 	<!--
@@ -224,6 +236,7 @@
 	-->
 	<target name="test-csa-hybrid">
 		<fail unless="testdir"/>
+		<echo message="===== STARTING test-csa-hybrid ON: ${testdir}"/>
 		<ant dir="${maindir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
@@ -239,6 +252,7 @@
 			<param name="correctdir" value="${testdir}/correct_output/csa_hybrid"/>
 			<param name="relnames" value="${chord.csa.rels}"/>
 		</antcall>
+		<echo message="===== FINISHED test-csa-hybrid ON: ${testdir}"/>
 	</target>
 
 	<!--
