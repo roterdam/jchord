@@ -19,8 +19,14 @@ import java.util.regex.Pattern;
 import java.util.Set;
 import java.util.HashSet;
 
+import CnCHJ.api.ItemCollection;
+
 import chord.bddbddb.RelSign;
 import chord.bddbddb.Solver;
+import chord.project.ICtrlCollection;
+import chord.project.IDataCollection;
+import chord.project.IStepCollection;
+import chord.project.ModernProject;
 import chord.util.StringUtils;
 
 import gnu.trove.TIntArrayList;
@@ -288,6 +294,42 @@ public class DlogAnalysis extends JavaAnalysis {
 	public void run() {
 		Solver.run(fileName);
     }
+	public void run(Object ctrl, IStepCollection sc) {
+		List<ProgramDom> allDoms = new ArrayList<ProgramDom>();
+        List<IDataCollection> cdcList = sc.getConsumedDataCollections();
+        for (IDataCollection cdc : cdcList) {
+            ItemCollection cic = cdc.getItemCollection();
+            Object o = cic.Get(ctrl);
+            if (o instanceof ProgramDom)
+            	allDoms.add((ProgramDom) o);
+        }
+        run();
+        List<IDataCollection> pdcList = sc.getProducedDataCollections();
+        for (IDataCollection pdc : pdcList) {
+        	ItemCollection pic = pdc.getItemCollection();
+        	String relName = pdc.getName();
+        	RelSign sign = ModernProject.g().getSign(relName);
+    		String[] domNames = sign.getDomNames();
+    		ProgramDom[] doms = new ProgramDom[domNames.length];
+    		for (int i = 0; i < domNames.length; i++) {
+                String domName = StringUtils.trimNumSuffix(domNames[i]);
+                for (ProgramDom dom : allDoms) {
+                	if (dom.getName().equals(domName)) {
+                		doms[i] = dom;
+                		break;
+                	}
+                }
+                assert (doms[i] != null);
+    		}
+        	ProgramRel rel = new ProgramRel();
+        	rel.setName(relName);
+        	rel.setSign(sign);
+        	rel.setDoms(doms);
+        	pic.Put(ctrl, rel);
+        }
+        List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
+        assert (pccList.size() == 0);
+	}
 	/**
 	 * Provides the names of all domains of relations
 	 * consumed/produced by this Datalog analysis.

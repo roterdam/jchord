@@ -8,39 +8,21 @@ package chord.project;
 
 import hj.runtime.wsh.WshRuntime_c;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.io.FileWriter;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 
 import CnCHJ.api.ItemCollection;
 import CnCHJ.runtime.CnCRuntime;
+import CnCHJ.runtime.ItemCollectionFactory;
 
-import chord.program.Program;
 import chord.project.analyses.DlogAnalysis;
-import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 import chord.project.ITask;
-import chord.util.ArraySet;
-import chord.util.ArrayUtils;
-import chord.util.ClassUtils;
-import chord.util.StringUtils;
-import chord.util.tuple.object.Pair;
-import chord.util.ChordRuntimeException;
 import chord.bddbddb.RelSign;
-import chord.bddbddb.Dom;
 
 /**
  * A Chord project comprising a set of tasks and a set of targets
@@ -56,93 +38,161 @@ public class ModernProject extends Project {
 		return project;
 	}
 	private static final String PROGRAM_TAG = "program";
-	private boolean isBuilt = false;
+	private final Map<String, IStepCollection> nameToStepCollectionMap =
+		new HashMap<String, IStepCollection>();
+	private final Map<String, ICtrlCollection> nameToCtrlCollectionMap =
+		new HashMap<String, ICtrlCollection>();
+	private final Map<String, IDataCollection> nameToDataCollectionMap =
+		new HashMap<String, IDataCollection>();
+	private Map<String, RelSign> nameToTrgtSignMap;
 	private CnCRuntime runtime;
+	private boolean isBuilt = false;
 
 	@Override
 	public void build() {
 		if (isBuilt)
 			return;
+
 		TaskParser taskParser = new TaskParser();
 		if (!taskParser.run())
 			abort();
+		
+		// create all step collections and populate nameToStepCollectionMap;
+		// also set the name and task/taskKind of each step collection
 		Map<String, Class<ITask>> nameToJavaTaskMap =
 			taskParser.getNameToJavaTaskMap();
 		Map<String, DlogAnalysis> nameToDlogTaskMap =
 			taskParser.getNameToDlogTaskMap();
-		for (Map.Entry<String, Class<ITask>> entry :
+		for (Map.Entry<String, Class<ITask>> e :
 				nameToJavaTaskMap.entrySet()) {
-			StepCollectionForStatelessTask step = new StepCollectionForStatelessTask();
+			StepCollectionForTaskWithState sc =
+				new StepCollectionForTaskWithState();
+			String name = e.getKey();
+			Class<ITask> taskKind = e.getValue();
+			sc.setName(name);
+			sc.setTaskKind(taskKind);
+			nameToStepCollectionMap.put(name, sc);
 		}
-		for (Map.Entry<String, DlogAnalysis> entry :
+		for (Map.Entry<String, DlogAnalysis> e :
 				nameToDlogTaskMap.entrySet()) {
-			StepCollectionForTaskWithState step = new StepCollectionForTaskWithState();
+			StepCollectionForStatelessTask sc =
+				new StepCollectionForStatelessTask();
+			String name = e.getKey();
+			DlogAnalysis task = e.getValue();
+			sc.setName(name);
+			sc.setTask(task);
+			nameToStepCollectionMap.put(name, sc);
 		}
-		// todo: get names of all data collections and ctrl collections
-		// in scope by going over above two maps; go over prescriber
-		// and controls fields for ctrl collections, and over consumes and
-		// produces for data collections
-		// todo: call ItemCollectionFactory.Create(<name>) for each data
-		// collection name and put (<name>, <returned coll>) into
-		// nameToDataCollection map
-		// todo: create instance of DefaultCtrlCollection for each ctrl
-		// collection name, call the setName method and setPrescribedCollections
-		// method for that instance, and put it into nameToCtrlCollection map
-		// todo: create an instance of a StepCollection for each name
-		// in domain of nameToJavaTaskMap and nameToDlogTaskMap,
-		// call the setName(), setTask()/setTaskKind(), and various
-		// setPrescribingCollection etc. methods on that instance, and put it
-		// into nameToStepCollection map
 		
+		// create each control collection that prescribes some step
+		// collection and populate nameToCtrlCollectionMap; also set the
+		// prescribingCollection of each step collection and the
+		// prescribedCollections of each control collection
+		Map<String, String> nameToPrescribingNameMap =
+			taskParser.getNameToPrescriberNameMap();
+		for (Map.Entry<String, String> e :
+				nameToPrescribingNameMap.entrySet()) {
+			String scName = e.getKey();
+			String ccName = e.getValue();
+			IStepCollection sc = nameToStepCollectionMap.get(scName);
+			assert (sc != null);
+			ICtrlCollection cc = getOrMakeCtrlCollection(ccName);
+			sc.setPrescribingCollection(cc);
+			List<IStepCollection> scList = cc.getPrescribedCollections();
+			if (scList == null) {
+				scList = new ArrayList<IStepCollection>();
+				cc.setPrescribedCollections(scList);
+			} 
+			assert (!scList.contains(sc));
+			scList.add(sc);
+		}
+		
+		// map each step collection to the control collections it produces;
+		// also create control collections encountered that were not created
+		// above because they do not prescribe any step collection
+		Map<String, List<String>> nameToControlNamesMap =
+			taskParser.getNameToControlNamesMap();
+		for (Map.Entry<String, List<String>> e :
+				nameToControlNamesMap.entrySet()) {
+			String scName = e.getKey();
+			List<String> ccNames = e.getValue();
+			IStepCollection sc = nameToStepCollectionMap.get(scName);
+			assert (sc != null);
+			int n = ccNames.size();
+			if (n == 0)
+				continue;
+			List<ICtrlCollection> ccList = sc.getProducedCtrlCollections();
+			if (ccList == null) {
+				ccList = new ArrayList<ICtrlCollection>(n);
+				sc.setProducedCtrlCollections(ccList);
+			}
+			for (String ccName : ccNames) {
+				ICtrlCollection cc = getOrMakeCtrlCollection(ccName);
+				assert (!ccList.contains(cc));
+				ccList.add(cc);
+			}
+		}
+		
+		// map each step collection to the data collections it consumes
+		Map<String, List<String>> nameToConsumeNamesMap =
+			taskParser.getNameToConsumeNamesMap();
+		for (Map.Entry<String, List<String>> e :
+				nameToConsumeNamesMap.entrySet()) {
+			String scName = e.getKey();
+			List<String> dcNames = e.getValue();
+			IStepCollection sc = nameToStepCollectionMap.get(scName);
+			assert (sc != null);
+			int n = dcNames.size();
+			if (n == 0)
+				continue;
+			List<IDataCollection> dcList = sc.getConsumedDataCollections();
+			if (dcList == null) {
+				dcList = new ArrayList<IDataCollection>(n);
+				sc.setConsumedDataCollections(dcList);
+			}
+			for (String dcName : dcNames) {
+				IDataCollection dc = getOrMakeDataCollection(dcName);
+				assert (!dcList.contains(dc));
+				dcList.add(dc);
+			}
+		}
+		
+		// map each step collection to the data collections it produces
+		Map<String, List<String>> nameToProduceNamesMap =
+			taskParser.getNameToProduceNamesMap();
+		for (Map.Entry<String, List<String>> e :
+				nameToProduceNamesMap.entrySet()) {
+			String scName = e.getKey();
+			List<String> dcNames = e.getValue();
+			IStepCollection sc = nameToStepCollectionMap.get(scName);
+			assert (sc != null);
+			int n = dcNames.size();
+			if (n == 0)
+				continue;
+			List<IDataCollection> dcList = sc.getProducedDataCollections();
+			if (dcList == null) {
+				dcList = new ArrayList<IDataCollection>(n);
+				sc.setProducedDataCollections(dcList);
+			}
+			for (String dcName : dcNames) {
+				IDataCollection dc = getOrMakeDataCollection(dcName);
+				assert (!dcList.contains(dc));
+				dcList.add(dc);
+			}
+		}
+
+		// build nameToTrgtSignMap
 		Map<String, Set<TrgtInfo>> nameToTrgtInfosMap =
 			taskParser.getNameToTrgtInfosMap();
 		TrgtParser trgtParser = new TrgtParser(nameToTrgtInfosMap);
 		if (!trgtParser.run())
 			abort();
-/*
-		for (Pair<ProgramRel, RelSign> tuple : todo) {
-			ProgramRel rel = tuple.val0;
-			RelSign sign = tuple.val1;
-			String[] domNames = sign.getDomNames();
-			ProgramDom[] doms = new ProgramDom[domNames.length];
-			for (int i = 0; i < domNames.length; i++) {
-				String domName = StringUtils.trimNumSuffix(domNames[i]);
-				Object trgt = nameToTrgtMap.get(domName);
-				assert (trgt != null);
-				assert (trgt instanceof ProgramDom);
-				doms[i] = (ProgramDom) trgt;
-			}
-			rel.setSign(sign);
-			rel.setDoms(doms);
-		}
-		if (Config.reuseRels)
-			throw new RuntimeException();
-*/
+		nameToTrgtSignMap = trgtParser.getNameToTrgtSignMap();
 
-		/*
-			// TODO
-			// no need to create each step coll as tasks have already been created
-			DomMstep domMstep = new DomMstep();
-			DomHstep domHstep = new DomHstep();
-			RelMHstep relMHstep = new RelMHstep();
-			// create each ctrl coll and link it to step colls it prescribes
-			TagCollection Mtags   = new TagCollectionImpl(g, "M" , new IStep[] { domMstep });
-			TagCollection Htags   = new TagCollectionImpl(g, "H" , new IStep[] { domHstep });
-			TagCollection MHtags = new TagCollectionImpl(g, "MH", new IStep[] { relMHstep });
-		 */
-		ArrayList cList = new ArrayList();
-		/*	
-			// add all ctrl colls to cList
-			cList.add(Mtags);
-			cList.add(Htags);
-			cList.add(MHtags);
-			// create each item coll
-			ItemCollection domMitems = ItemCollectionFactory.Create("M");
-			ItemCollection domHitems = ItemCollectionFactory.Create("H");
-			ItemCollection relMHitems = ItemCollectionFactory.Create("MH");
-			// create map from each item coll's name to item coll
-		 */
-		runtime = new CnCRuntime(cList, null);
+		Collection<ICtrlCollection> ccSet = nameToCtrlCollectionMap.values();
+		ArrayList<ICtrlCollection> ccList =
+			new ArrayList<ICtrlCollection>(ccSet);
+		runtime = new CnCRuntime(ccList, null);
 		isBuilt = true;
 	}
 
@@ -152,8 +202,8 @@ public class ModernProject extends Project {
         WshRuntime_c.getCurrentWshActivity().startFinish();
         try {
         	for (String name : taskNames) {
-            	ICtrlCollection c = getCtrlCollectionOfTask(name);
-                c.Put(PROGRAM_TAG);
+            	ICtrlCollection cc = getCtrlCollectionOfStep(name);
+                cc.Put(PROGRAM_TAG);
         	}
         } catch (Throwable ex) {
         	Messages.fatal(ex);
@@ -165,8 +215,9 @@ public class ModernProject extends Project {
 	public void printRels(String[] relNames) {
 		run(relNames);
 		for (String name : relNames) {
-			ItemCollection c = getDataCollectionByName(name);
-			ProgramRel rel = (ProgramRel) c.Get(PROGRAM_TAG);
+			IDataCollection dc = getDataCollectionByName(name);
+			ItemCollection ic = dc.getItemCollection();
+			ProgramRel rel = (ProgramRel) ic.Get(PROGRAM_TAG);
 			rel.load();
 			rel.print();
 		}
@@ -178,38 +229,50 @@ public class ModernProject extends Project {
 		throw new RuntimeException();
 	}
 
-	public ItemCollection getDataCollectionByName(String name) {
-		// TODO
-		// return item collection named name
-		return null;
+	public RelSign getSign(String name) {
+		return nameToTrgtSignMap.get(name);
+	}
+	
+	private ICtrlCollection getOrMakeCtrlCollection(String name) {
+		ICtrlCollection cc = nameToCtrlCollectionMap.get(name);
+		if (cc == null) {
+			cc = new DefaultCtrlCollection();
+			cc.setName(name);
+			nameToCtrlCollectionMap.put(name, cc);
+		}
+		return cc;
+	}
+
+	private IDataCollection getOrMakeDataCollection(String name) {
+		IDataCollection dc = nameToDataCollectionMap.get(name);
+		if (dc == null) {
+			dc = new DefaultDataCollection();
+			dc.setName(name);
+			ItemCollection ic = ItemCollectionFactory.Create(name);
+			dc.setItemCollection(ic);
+			nameToDataCollectionMap.put(name, dc);
+		}
+		return dc;
+	}
+
+	public IStepCollection getStepCollectionByName(String name) {
+		return nameToStepCollectionMap.get(name);
+	}
+
+	public IDataCollection getDataCollectionByName(String name) {
+		return nameToDataCollectionMap.get(name);
 	}
 
 	public ICtrlCollection getCtrlCollectionByName(String name) {
-		// TODO
-		// return ctrl collection named name
-		return null;
+		return nameToCtrlCollectionMap.get(name);
 	}
 
-	public ICtrlCollection getCtrlCollectionOfTask(String name) {
-		// TODO
-		// return ctrl collection prescribing task
-		return null;
+	public ICtrlCollection getCtrlCollectionOfStep(String name) {
+		IStepCollection sc = getStepCollectionByName(name);
+		return (sc != null) ? sc.getPrescribingCollection() : null;
 	}
 
 	public CnCRuntime getRuntime() {
 		return runtime;
-	}
-
-	private static String getNameAndURL(ITask task) {
-		Class clazz = task.getClass();
-		String loc;
-		if (clazz == DlogAnalysis.class) {
-			loc = ((DlogAnalysis) task).getFileName();
-			loc = (new File(loc)).getName();
-		} else
-			loc = clazz.getName().replace(".", "/") + ".html";
-		loc = Config.javadocURL + loc;
-		return "producer_name=\"" + task.getName() +
-			"\" producer_url=\"" + loc + "\"";
 	}
 }

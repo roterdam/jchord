@@ -8,8 +8,6 @@ package chord.project;
 
 import java.util.List;
 
-import CnCHJ.api.ItemCollection;
-
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -31,13 +29,13 @@ public interface IStepCollection {
 
     public void run(Object ctrl);
  
-	public void setConsumedDataCollections(List<ItemCollection> c);
+	public void setConsumedDataCollections(List<IDataCollection> c);
 
-	public List<ItemCollection> getConsumedDataCollections();
+	public List<IDataCollection> getConsumedDataCollections();
 
-	public void setProducedDataCollections(List<ItemCollection> c);
+	public void setProducedDataCollections(List<IDataCollection> c);
 
-	public List<ItemCollection> getProducedDataCollections();
+	public List<IDataCollection> getProducedDataCollections();
 
 	public void setProducedCtrlCollections(List<ICtrlCollection> c);
 

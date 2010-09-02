@@ -11,12 +11,16 @@ import java.io.File;
 
 import chord.project.ClassicProject;
 import chord.bddbddb.Rel;
+import chord.bddbddb.RelSign;
 import chord.program.visitors.IClassVisitor;
 import chord.project.Config;
 import chord.project.ICtrlCollection;
+import chord.project.IDataCollection;
 import chord.project.IStepCollection;
+import chord.project.ModernProject;
 import chord.project.VisitorHandler;
 import chord.util.ChordRuntimeException;
+import chord.util.StringUtils;
 import chord.project.Messages;
 import chord.project.ITask;
 
@@ -48,21 +52,49 @@ public class ProgramRel extends Rel implements ITask {
 	}
 	@Override
 	public void run(Object ctrl, IStepCollection sc) {
-		List<ItemCollection> cdcList = sc.getConsumedDataCollections();
-		int n = cdcList.size();
-		consumes = new Object[n];
-		for (int i = 0; i < n; i++) {
-			ItemCollection cdc = cdcList.get(i);
-			consumes[i] = cdc.Get(ctrl);
+		RelSign sign = ModernProject.g().getSign(name);
+		assert (sign != null);
+		int numUniqDoms = sign.getDomKinds().length;
+		ProgramDom[] uniqDoms = new ProgramDom[numUniqDoms];
+		List<IDataCollection> cdcList = sc.getConsumedDataCollections();
+		// get implicitly declared data collections consumed by this relation,
+		// namely, each unique domain of this relation
+		for (int i = 0; i < numUniqDoms; i++) {
+			IDataCollection cdc = cdcList.get(i);
+			ItemCollection cic = cdc.getItemCollection();
+			uniqDoms[i] = (ProgramDom) cic.Get(ctrl);
 		}
-		// TODO: initialize this rel (call setSign and setDoms)
+		int n = cdcList.size() - numUniqDoms;
+		consumes = new Object[n];
+		// get explicitly declared data collections consumed by this relation
+		for (int i = 0; i < n; i++) {
+			IDataCollection cdc = cdcList.get(numUniqDoms + i);
+			ItemCollection cic = cdc.getItemCollection();
+			consumes[i] = cic.Get(ctrl);
+		}
+		String[] domNames = sign.getDomNames();
+		int m = domNames.length;
+		ProgramDom[] doms = new ProgramDom[m];
+		for (int i = 0; i < m; i++) {
+            String domName = StringUtils.trimNumSuffix(domNames[i]);
+            for (ProgramDom dom : uniqDoms) {
+            	if (dom.getName().equals(domName)) {
+            		doms[i] = dom;
+            		break;
+            	}
+            }
+            assert (doms[i] != null);
+		}
+		setSign(sign);
+		setDoms(doms);
 		run();
+		List<IDataCollection> pdcList = sc.getProducedDataCollections();
+		assert (pdcList.size() == 1);
+		IDataCollection pdc = pdcList.get(0);
+		ItemCollection pic = pdc.getItemCollection();
+		pic.Put(ctrl, this);
 		List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
 		assert (pccList.size() == 0);
-		List<ItemCollection> pdcList = sc.getProducedDataCollections();
-		assert (pdcList.size() == 1);
-		ItemCollection pdc = pdcList.get(0);
-		pdc.Put(ctrl, this);
 	}
 	public void init() { }
 	public void save() {
