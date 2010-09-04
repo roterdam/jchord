@@ -5,7 +5,9 @@
 <project name="chord" default="help" basedir=".">
 
 	<!--
-		TARGETS DESCRIPTION
+	==========================================================================
+		DESCRIPTION OF TARGETS
+	==========================================================================
 	-->
 
 	<target name="help">
@@ -24,31 +26,35 @@
 		solve     Run bddbddb (BDD-based Datalog solver)
 		          Required properties:
 		          - work.dir   (dir containing input/output BDD files)
-		          - dlog.file  (file containing Datalog program)
+		          - dlog.file  (file specifying Datalog program)
 		          Optional properties:
-		          - max.tuples (default=1000)
 		          - max.heap   (default=2048m)
-		          - noisy      ([yes|no]; default=yes)
+		          - max.tuples (default=1000)
+		          - verbose    ([0..5]; default=2)
 		debug     Run bddbddb's interactive interpreter
 		          Required properties:
 		          - work.dir   (dir containing input/output BDD files)
-		          - dlog.file  (file containing Datalog program)
+		          - dlog.file  (file specifying Datalog program)
 		          Optional properties:
-		          - max.tuples (default=1000)
 		          - max.heap   (default=2048m)
-		javadoc   Generate javadoc for Chord source code
-		htmldoc   Generate HTML user guide (needs Hyperlatex installed)
+		          - max.tuples (default=1000)
+		          - verbose    ([0..5]; default=2)
+		javadoc   Generate javadoc for Chord's Java source code
+		htmldoc   Generate HTML user guide (needs latex2html)
+		pdfdoc    Generate PDF user guide (needs pdflatex)
 		clean     Cleanup all generated class files
-		cleandoc  Cleanup all generated javadoc files
+		cleandoc  Cleanup all generated javadoc/htmldoc/pdfdoc files
 		</echo>
 	</target>
 
 	<!--
+	==========================================================================
 		STATIC PROPERTIES
+	==========================================================================
 	-->
 
 	<!--
-		Location of program libraries.
+		Location of runtime libraries.
 	-->
 	<property name="lib.home" location="lib"/>
 
@@ -73,7 +79,9 @@
 	<property name="source" value="1.5"/>
 
 	<!--
+	==========================================================================
 		DYNAMIC PROPERTIES
+	==========================================================================
 	-->
 	
 	<!--
@@ -82,7 +90,7 @@
 		usually 'gmake' on non-GNU operation systems.
 	-->
 	<target name="select-make-implementation"
-			description="Selects proper make implementation for the platform.">
+			description="Selects proper make implementation for the platform">
 		<if>
 			<equals arg1="${os.name}" arg2="FreeBSD"/>
 			<then>
@@ -100,7 +108,7 @@
 		a proper 32 or 64 bit switch for C compiler.
 	-->
 	<target name="select-architecture"
-			description="Selects proper 32 or 64 bit switch for C compiler.">
+			description="Selects proper 32 or 64 bit switch for C compiler">
 		<if>
 			<equals arg1="${sun.arch.data.model}" arg2="32"/>
 			<then>
@@ -123,7 +131,9 @@
 		classpath="${tool.home}/ant-contrib.jar"/>
 
 	<!--
+	==========================================================================
 		PATHS
+	==========================================================================
 	-->
 	
 	<!--
@@ -154,8 +164,29 @@
 	</path>
 	<property name="chord.main.class.path" refid="main_class_path"/>
 
-	<!-- 
+	<!--
+		Java source path of Chord
+	-->
+	<property name="chord.extra.dir" location="../extra/src/java"/>
+	<if>
+		<available file="${chord.extra.dir}" type="dir"/>
+		<then>
+			<path id="main_java_src_path">
+				<pathelement location="src/java"/>
+				<pathelement location="${chord.extra.dir}"/>
+			</path>
+		</then>
+		<else>
+			<path id="main_java_src_path">
+				<pathelement location="src/java"/>
+			</path>
+		</else>
+	</if>
+
+	<!--
+	==========================================================================
 		COMPILE CHORD
+	==========================================================================
 	-->
 
 	<!--
@@ -163,29 +194,24 @@
 		compilable from scratch. Useful for refactoring.
 	-->
 	<target name="check" depends="clean, jcompile"
-		description="Fast check whether project can be compiled from scratch."/>
+		description="Fast check whether project can be compiled from scratch"/>
 
 	<!--
 		Compilation meta-target. It only calls compilation targets
-		for Java and C part.
+		for Java and C parts.
 	-->
 	<target name="compile" depends="jcompile, ccompile"
-		description="Compiles entire project."/>
+		description="Compiles entire project"/>
 
 	<!--
 		Compiles Java part of the project.
 	-->
 	<target name="jcompile" description="Compiles Java part of the project">
-		<if>
-			<available file="../extra/src/java" type="dir"/>
-			<then><property name="srcdirs" value="src/java:../extra/src/java"/></then>
-			<else><property name="srcdirs" value="src/java"/></else>
-		</if>
-		<property environment="env"/>
 		<mkdir dir="classes"/>
-		<javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
-			destdir="classes" classpathref="main_class_path">
-			<src path="${srcdirs}"/>
+		<javac debug="true" debuglevel="${debuglevel}"
+				source="${source}" target="${target}"
+				destdir="classes" classpathref="main_class_path">
+			<src refid="main_java_src_path"/>
 		</javac>
 		<jar destfile="${lib.home}/chord_instr_agent.jar">
 			<manifest>
@@ -216,7 +242,9 @@
 	</target>
 
 	<!--
+	==========================================================================
 		LOAD USER-DEFINED CHORD PROPERTIES FROM FILE
+	==========================================================================
 	-->
 
 	<!--
@@ -252,17 +280,24 @@
 		<then>
 			<property file="${chord.props.file}"/>
 			<dirname property="chord.props.dir" file="${chord.props.file}"/>
-			<propertyselector property="chord.path.prop.list" delimiter="," match="chord\..*\.path"/>
+			<propertyselector property="chord.path.prop.list" delimiter=","
+				match="chord\..*\.path"/>
 			<!--
-			Commented out due to "supported regular expression pattern matcher not found" error.
+			Commented out due to "supported regexp pattern matcher not found" error.
       		<property name="chord.path.prop.list" value="chord.class.path,chord.src.path"/>
 			-->
 			<antfetch antfile="${tool.home}/pathconvert.xml" dir="${chord.props.dir}"
-        target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
+				target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
 		</then>
 		<else/>
 	</if>
 	</target>
+
+	<!--
+	==========================================================================
+		RUN CHORD
+	==========================================================================
+	-->
 
 	<target name="run" depends="props-file">
 		<fail message="ERROR: Property chord.main.dir must not be explicitly set">
@@ -273,9 +308,26 @@
 		<property name="chord.main.dir" location="."/>
 		<property name="chord.max.heap" value="2048m"/>
 		<property name="chord.max.stack" value="32m"/>
-		<property name="chord.jvmargs" value="-ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
-		<java classname="chord.project.Main" fork="true" dir="${chord.work.dir}" resultproperty="chord.run.result">
+		<property name="chord.jvmargs"
+			value="-ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
+		<if>
+			<equals arg1="${chord.classic}" arg2="true"/>
+			<then>
+				<property name="chord.entry.class" value="chord.project.Main"/>
+				<property name="chord.entry.args" value=""/>
+			</then>
+			<else>
+				<property name="chord.entry.class" value="hj.lang.Runtime"/>
+				<property name="chord.entry.args"
+					value="-INIT_THREADS_PER_PLACE=1 -NUMBER_OF_LOCAL_PLACES=1
+					   -rt=wsh CnCHJ.runtime.CnCRuntime -policy=BlockingCoarse
+					   chord.project.Main"/>
+			</else>
+		</if>
+		<java classname="${chord.entry.class}" fork="true" dir="${chord.work.dir}"
+				resultproperty="chord.run.result">
 			<jvmarg line="${chord.jvmargs}"/>
+			<arg line="${chord.entry.args}"/>
 			<syspropertyset>
 				<propertyref builtin="all"/>
 			</syspropertyset>
@@ -287,13 +339,15 @@
 		<if>
 			<not><equals arg1="${chord.run.result}" arg2="0"/></not>
 			<then>
-				<fail message="Chord terminated abnormally; see above file(s) for details."/>
+				<fail message="Chord exited abnormally; see above file(s) for details."/>
 			</then>
 		</if>
 	</target>
 
 	<!--
+	==========================================================================
 		JAVA TO HTML UTILS
+	==========================================================================
 	-->
 
 	<target name="j2h_xref">
@@ -312,7 +366,7 @@
 				<pathelement location="${lib.home}/j2h.jar"/>
 			</classpath>
 		</java>
-  </target>
+	</target>
   
 	<target name="j2h_fast">
 		<fail unless="java.dir"/>
@@ -327,23 +381,23 @@
 	</target>
 
 	<!--
+	==========================================================================
 		BDDBDDB UTILS
+	==========================================================================
 	-->
 
 	<target name="solve">
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
-		<property name="max.tuples" value="1000"/>
 		<property name="max.heap" value="2048m"/>
-		<property name="noisy" value="yes"/>
 		<java classname="net.sf.bddbddb.Solver"
-			fork="true" failonerror="true" maxmemory="${max.heap}"
-			classpath="${chord.bddbddb.class.path}">
+				fork="true" failonerror="true" maxmemory="${max.heap}"
+				classpath="${chord.bddbddb.class.path}">
 			<sysproperty key="java.library.path" file="${lib.home}"/>
 			<sysproperty key="basedir" file="${work.dir}"/>
-			<sysproperty key="maxtuples" value="${max.tuples}"/>
-			<sysproperty key="noisy" value="${noisy}"/>
-			<sysproperty key="strict" value="yes"/>
+			<syspropertyset>
+				<propertyref builtin="commandline"/>
+			</syspropertyset>
 			<arg file="${dlog.file}"/>
 		</java>
 	</target>
@@ -351,20 +405,23 @@
 	<target name="debug">
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
-		<property name="max.tuples" value="1000"/>
 		<property name="max.heap" value="2048m"/>
 		<java classname="net.sf.bddbddb.Interactive"
-			fork="true" failonerror="true" maxmemory="${max.heap}"
-			classpath="${chord.bddbddb.class.path}">
+				fork="true" failonerror="true" maxmemory="${max.heap}"
+				classpath="${chord.bddbddb.class.path}">
 			<sysproperty key="java.library.path" file="${lib.home}"/>
 			<sysproperty key="basedir" file="${work.dir}"/>
-			<sysproperty key="maxtuples" value="${max.tuples}"/>
+			<syspropertyset>
+				<propertyref builtin="commandline"/>
+			</syspropertyset>
 			<arg file="${dlog.file}"/>
 		</java>
 	</target>
 
 	<!--
-		DOCUMENTATION
+	==========================================================================
+		BUILD DOCUMENTATION
+	==========================================================================
 	-->
 
 	<target name="javadoc">
@@ -388,12 +445,20 @@
 		</exec>
 	</target>
 
+	<target name="pdfdoc">
+		<exec executable="pdflatex" dir="doc">
+			<arg value="user_guide.tex"/>
+		</exec>
+	</target>
+
 	<!--
+	==========================================================================
 		CLEAN UP
+	==========================================================================
 	-->
 
 	<target name="clean" depends="select-make-implementation"
-			description="Cleans everything produced by the build.">
+			description="Cleans everything produced by the build">
 		<parallel>
 			<delete dir="classes"/>
 			<delete file="${lib.home}/chord_instr_agent.jar"/>
@@ -416,7 +481,7 @@
 		</parallel>
 	</target>
 
-	<target name="cleandoc" description="Cleans Javadoc and HTML user guide.">
+	<target name="cleandoc" description="Cleans Javadoc and HTML user guide">
 		<delete dir="javadoc"/>
 		<delete dir="doc/user_guide"/>
 		<delete file="doc/user_guide.pdf"/>
