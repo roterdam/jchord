@@ -295,12 +295,11 @@ public class DlogAnalysis extends JavaAnalysis {
 		Solver.run(fileName);
     }
 	public void run(Object ctrl, IStepCollection sc) {
+		ModernProject p = ModernProject.g();
+		Object[] consumes = p.runPrologue(ctrl, sc);
 		List<ProgramDom> allDoms = new ArrayList<ProgramDom>();
-        List<IDataCollection> cdcList = sc.getConsumedDataCollections();
-        for (IDataCollection cdc : cdcList) {
-            ItemCollection cic = cdc.getItemCollection();
-            Object o = cic.Get(ctrl);
-            if (o instanceof ProgramDom)
+		for (Object o : consumes) {
+			if (o instanceof ProgramDom)
             	allDoms.add((ProgramDom) o);
         }
         run();
@@ -308,7 +307,7 @@ public class DlogAnalysis extends JavaAnalysis {
         for (IDataCollection pdc : pdcList) {
         	ItemCollection pic = pdc.getItemCollection();
         	String relName = pdc.getName();
-        	RelSign sign = ModernProject.g().getSign(relName);
+        	RelSign sign = p.getSign(relName);
     		String[] domNames = sign.getDomNames();
     		ProgramDom[] doms = new ProgramDom[domNames.length];
     		for (int i = 0; i < domNames.length; i++) {
@@ -327,8 +326,6 @@ public class DlogAnalysis extends JavaAnalysis {
         	rel.setDoms(doms);
         	pic.Put(ctrl, rel);
         }
-        List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
-        assert (pccList.size() == 0);
 	}
 	/**
 	 * Provides the names of all domains of relations
