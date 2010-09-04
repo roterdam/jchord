@@ -38,7 +38,7 @@ public class ModernProject extends Project {
 			project = new ModernProject();
 		return project;
 	}
-	private static final Object PROGRAM_TAG = new Object(); // "program2";
+	private static final String PROGRAM_TAG = "program";
 	private final Map<String, IStepCollection> nameToStepCollectionMap =
 		new HashMap<String, IStepCollection>();
 	private final Map<String, ICtrlCollection> nameToCtrlCollectionMap =
