@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Collections;
 
 import CnCHJ.api.ItemCollection;
 import CnCHJ.runtime.CnCRuntime;
@@ -37,7 +38,7 @@ public class ModernProject extends Project {
 			project = new ModernProject();
 		return project;
 	}
-	private static final String PROGRAM_TAG = "program";
+	private static final Object PROGRAM_TAG = new Object(); // "program2";
 	private final Map<String, IStepCollection> nameToStepCollectionMap =
 		new HashMap<String, IStepCollection>();
 	private final Map<String, ICtrlCollection> nameToCtrlCollectionMap =
@@ -119,13 +120,9 @@ public class ModernProject extends Project {
 			IStepCollection sc = nameToStepCollectionMap.get(scName);
 			assert (sc != null);
 			int n = ccNames.size();
-			if (n == 0)
-				continue;
-			List<ICtrlCollection> ccList = sc.getProducedCtrlCollections();
-			if (ccList == null) {
-				ccList = new ArrayList<ICtrlCollection>(n);
-				sc.setProducedCtrlCollections(ccList);
-			}
+			List<ICtrlCollection> ccList = (n == 0) ? Collections.EMPTY_LIST :
+				new ArrayList<ICtrlCollection>(n);
+			sc.setProducedCtrlCollections(ccList);
 			for (String ccName : ccNames) {
 				ICtrlCollection cc = getOrMakeCtrlCollection(ccName);
 				assert (!ccList.contains(cc));
@@ -143,13 +140,9 @@ public class ModernProject extends Project {
 			IStepCollection sc = nameToStepCollectionMap.get(scName);
 			assert (sc != null);
 			int n = dcNames.size();
-			if (n == 0)
-				continue;
-			List<IDataCollection> dcList = sc.getConsumedDataCollections();
-			if (dcList == null) {
-				dcList = new ArrayList<IDataCollection>(n);
-				sc.setConsumedDataCollections(dcList);
-			}
+			List<IDataCollection> dcList = (n == 0) ? Collections.EMPTY_LIST :
+				new ArrayList<IDataCollection>(n);
+			sc.setConsumedDataCollections(dcList);
 			for (String dcName : dcNames) {
 				IDataCollection dc = getOrMakeDataCollection(dcName);
 				assert (!dcList.contains(dc));
@@ -167,18 +160,30 @@ public class ModernProject extends Project {
 			IStepCollection sc = nameToStepCollectionMap.get(scName);
 			assert (sc != null);
 			int n = dcNames.size();
-			if (n == 0)
-				continue;
-			List<IDataCollection> dcList = sc.getProducedDataCollections();
-			if (dcList == null) {
-				dcList = new ArrayList<IDataCollection>(n);
-				sc.setProducedDataCollections(dcList);
-			}
+			List<IDataCollection> dcList = (n == 0) ? Collections.EMPTY_LIST :
+				new ArrayList<IDataCollection>(n);
+			sc.setProducedDataCollections(dcList);
 			for (String dcName : dcNames) {
 				IDataCollection dc = getOrMakeDataCollection(dcName);
 				assert (!dcList.contains(dc));
 				dcList.add(dc);
+				List<IStepCollection> scList = dc.getProducingCollections();
+				if (scList == null) {
+					scList = new ArrayList<IStepCollection>();
+					dc.setProducingCollections(scList);
+				}
+				assert (!scList.contains(sc));
+				scList.add(sc);
 			}
+		}
+
+		for (ICtrlCollection cc : nameToCtrlCollectionMap.values()) {
+			if (cc.getPrescribedCollections() == null)
+				cc.setPrescribedCollections(Collections.EMPTY_LIST);
+		}
+		for (IDataCollection dc : nameToDataCollectionMap.values()) {
+			if (dc.getProducingCollections() == null)
+				dc.setProducingCollections(Collections.EMPTY_LIST);
 		}
 
 		// build nameToTrgtSignMap
@@ -253,6 +258,61 @@ public class ModernProject extends Project {
 			nameToDataCollectionMap.put(name, dc);
 		}
 		return dc;
+	}
+
+	public Object[] runPrologue(Object ctrl, IStepCollection sc) {
+        List<IDataCollection> cdcList = sc.getConsumedDataCollections();
+        int n = cdcList.size();
+        Object[] consumes = new Object[n];
+        for (int i = 0; i < n; i++) {
+            IDataCollection cdc = cdcList.get(i);
+            List<IStepCollection> scList = cdc.getProducingCollections();
+			int m = scList.size();
+            if (m == 0) {
+				String msg = "Data collection " + cdc.getName() +
+					" not produced by any step collection";
+				Messages.fatal(msg);
+			}
+			if (m > 1) {
+                String msg = "Data collection " + cdc.getName() +
+                    " produced by multiple step collections:";
+                for (IStepCollection sc2 : scList)
+                    msg += " " + sc2.getName();
+                Messages.fatal(msg);
+            }
+            IStepCollection sc2 = scList.get(0);
+            ICtrlCollection cc2 = sc2.getPrescribingCollection();
+			System.out.println(Thread.currentThread() + " Prologue of step sc=" + sc.getName() + " doing PUT of ctrl=" + ctrl + " into cc=" + cc2.getName());
+            cc2.Put(ctrl);
+            ItemCollection cic = cdc.getItemCollection();
+			System.out.println(Thread.currentThread() + " Prologue of step sc=" + sc.getName() + " doing GET of ctrl=" + ctrl + " from dc=" + cdc.getName());
+            consumes[i] = cic.Get(ctrl);
+        }
+		return consumes;
+	}
+
+	public void runEpilogue(Object ctrl, IStepCollection sc, Object[] produces, Object[] controls) {
+		List<IDataCollection> pdcList = sc.getProducedDataCollections();
+        int m = pdcList.size();
+        for (int i = 0; i < m; i++) {
+            IDataCollection pdc = pdcList.get(i);
+            ItemCollection pic = pdc.getItemCollection();
+            Object o = produces[i];
+            if (o != null) {
+				System.out.println(Thread.currentThread() + " Epilogue of step sc=" + sc.getName() + " doing PUT of ctrl=" + ctrl + " into dc=" + pdc.getName());
+                pic.Put(ctrl, o);
+			}
+        }
+        List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
+        int k = pccList.size();
+        for (int i = 0; i < k; i++) {
+            ICtrlCollection pcc = pccList.get(i);
+            Object ctrl2 = controls[i];
+            if (ctrl2 != null) {
+				System.out.println(Thread.currentThread() + " Epilogue of step sc=" + sc.getName() + " doing PUT of ctrl=" + ctrl2 + " into cc=" + pcc.getName());
+                pcc.Put(ctrl2);
+			}
+        }
 	}
 
 	public IStepCollection getStepCollectionByName(String name) {

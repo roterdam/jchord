@@ -17,6 +17,8 @@ public class StepCollectionForTaskWithState extends AbstractStepCollection {
 		} catch (IllegalAccessException e) {
 			Messages.fatal(e);
 		}
+		System.out.println(Thread.currentThread() + " ENTER: ctrl=" + ctrl + " sc(stateful)="  + getName());
 		task.run(ctrl, this);
+		System.out.println(Thread.currentThread() + " LEAVE: ctrl=" + ctrl + " sc(stateful)="  + getName());
 	}
 }

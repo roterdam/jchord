@@ -24,6 +24,7 @@ import chord.project.Config;
 import chord.project.VisitorHandler;
 import chord.project.analyses.ProgramDom;
 import chord.project.ITask;
+import chord.project.ModernProject;
 import chord.util.ChordRuntimeException;
 
 /**
@@ -51,20 +52,10 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 	}
 	@Override
 	public void run(Object ctrl, IStepCollection sc) {
-		List<IDataCollection> cdcList = sc.getConsumedDataCollections();
-		int n = cdcList.size();
-		consumes = new Object[n];
-		for (int i = 0; i < n; i++) {
-			ItemCollection cdc = cdcList.get(i).getItemCollection();
-			consumes[i] = cdc.Get(ctrl);
-		}
+		ModernProject p = ModernProject.g();
+		consumes = p.runPrologue(ctrl, sc);
 		run();
-		List<IDataCollection> pdcList = sc.getProducedDataCollections();
-		assert (pdcList.size() == 1);
-		ItemCollection pdc = pdcList.get(0).getItemCollection();
-		pdc.Put(ctrl, this);
-		List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
-		assert (pccList.size() == 0);
+		p.runEpilogue(ctrl, sc, new Object[] { this }, null);
 	}
 	public void init() { }
 	public void save() {

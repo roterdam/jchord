@@ -52,25 +52,19 @@ public class ProgramRel extends Rel implements ITask {
 	}
 	@Override
 	public void run(Object ctrl, IStepCollection sc) {
-		RelSign sign = ModernProject.g().getSign(name);
+		ModernProject p = ModernProject.g();
+		Object[] allConsumes = p.runPrologue(ctrl, sc);
+		RelSign sign = p.getSign(name);
 		assert (sign != null);
 		int numUniqDoms = sign.getDomKinds().length;
 		ProgramDom[] uniqDoms = new ProgramDom[numUniqDoms];
-		List<IDataCollection> cdcList = sc.getConsumedDataCollections();
-		// get implicitly declared data collections consumed by this relation,
-		// namely, each unique domain of this relation
 		for (int i = 0; i < numUniqDoms; i++) {
-			IDataCollection cdc = cdcList.get(i);
-			ItemCollection cic = cdc.getItemCollection();
-			uniqDoms[i] = (ProgramDom) cic.Get(ctrl);
+			uniqDoms[i] = (ProgramDom) allConsumes[i];
 		}
-		int n = cdcList.size() - numUniqDoms;
+		int n = allConsumes.length - numUniqDoms;
 		consumes = new Object[n];
-		// get explicitly declared data collections consumed by this relation
 		for (int i = 0; i < n; i++) {
-			IDataCollection cdc = cdcList.get(numUniqDoms + i);
-			ItemCollection cic = cdc.getItemCollection();
-			consumes[i] = cic.Get(ctrl);
+			consumes[i] = allConsumes[numUniqDoms + i];
 		}
 		String[] domNames = sign.getDomNames();
 		int m = domNames.length;
@@ -88,13 +82,7 @@ public class ProgramRel extends Rel implements ITask {
 		setSign(sign);
 		setDoms(doms);
 		run();
-		List<IDataCollection> pdcList = sc.getProducedDataCollections();
-		assert (pdcList.size() == 1);
-		IDataCollection pdc = pdcList.get(0);
-		ItemCollection pic = pdc.getItemCollection();
-		pic.Put(ctrl, this);
-		List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
-		assert (pccList.size() == 0);
+		p.runEpilogue(ctrl, sc, new Object[] { this }, null);
 	}
 	public void init() { }
 	public void save() {

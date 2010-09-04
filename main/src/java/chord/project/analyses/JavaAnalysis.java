@@ -15,6 +15,7 @@ import chord.project.IDataCollection;
 import chord.project.IStepCollection;
 import chord.project.Messages;
 import chord.project.ITask;
+import chord.project.ModernProject;
 
 /**
  * Generic implementation of a Java task (a program analysis
@@ -44,32 +45,10 @@ public class JavaAnalysis implements ITask {
 	}
 	@Override
 	public void run(Object ctrl, IStepCollection sc) {
-        List<IDataCollection> cdcList = sc.getConsumedDataCollections();
-        int n = cdcList.size();
-        consumes = new Object[n];
-        for (int i = 0; i < n; i++) {
-            IDataCollection cdc = cdcList.get(i);
-            ItemCollection cic = cdc.getItemCollection();
-            consumes[i] = cic.Get(ctrl);
-        }
+		ModernProject p = ModernProject.g();
+        consumes = p.runPrologue(ctrl, sc);
         run();
-        List<IDataCollection> pdcList = sc.getProducedDataCollections();
-        int m = pdcList.size();
-        for (int i = 0; i < m; i++) {
-        	IDataCollection pdc = pdcList.get(i);
-        	ItemCollection pic = pdc.getItemCollection();
-        	Object o = produces[i];
-        	if (o != null)
-        		pic.Put(ctrl, o);
-        }
-        List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
-        int k = pccList.size();
-        for (int i = 0; i < k; i++) {
-        	ICtrlCollection pcc = pccList.get(i);
-        	Object o = controls[i];
-        	if (o != null)
-        		pcc.Put(o);
-        }
+		p.runEpilogue(ctrl, sc, produces, controls);
 	}
 	@Override
 	public String toString() {

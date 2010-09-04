@@ -8,7 +8,9 @@ public class StepCollectionForStatelessTask extends AbstractStepCollection {
 	}
 	@Override
 	public void run(Object ctrl) {
+        System.out.println("ENTER: ctrl=" + ctrl + " sc(stateless)="  + getName());
 		task.run(ctrl, this);
+        System.out.println("LEAVE: ctrl=" + ctrl + " sc(stateless)="  + getName());
 	}
 }
 
