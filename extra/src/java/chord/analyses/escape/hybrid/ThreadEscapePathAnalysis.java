@@ -372,7 +372,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
 	public void donePass() {
-		System.out.println("DONE PASS");
 		domQ.save();
 		domU.save();
 
