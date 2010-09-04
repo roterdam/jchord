@@ -1,6 +1,9 @@
 package chord.project;
 
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
 
 import CnCHJ.api.Closure;
 import CnCHJ.api.CnCReturnValue;
@@ -9,6 +12,7 @@ import CnCHJ.runtime.CnCRuntime;
 public class DefaultCtrlCollection implements ICtrlCollection {
 	protected String name;
     protected List<IStepCollection> prescribedCollections;
+	protected Set tags = Collections.synchronizedSet(new HashSet());
 	@Override
 	public void setName(String name) {
 		this.name = name;
@@ -31,6 +35,8 @@ public class DefaultCtrlCollection implements ICtrlCollection {
 	}
     @Override
     public void Put(final Object ctrl) {
+		if (!tags.add(ctrl))
+			return;
         int n = prescribedCollections.size();
         Closure[] c = new Closure[n];
         for (int i = 0; i < n; i++) {
