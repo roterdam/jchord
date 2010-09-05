@@ -310,6 +310,7 @@
 		<property name="chord.max.stack" value="32m"/>
 		<property name="chord.jvmargs"
 			value="-ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
+		<property name="chord.classic" value="true"/>
 		<if>
 			<equals arg1="${chord.classic}" arg2="true"/>
 			<then>
