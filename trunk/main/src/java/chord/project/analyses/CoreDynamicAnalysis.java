@@ -32,7 +32,6 @@ import chord.instr.CoreInstrumentor;
 import chord.instr.OfflineTransformer;
 import chord.instr.TracePrinter;
 import chord.instr.TraceTransformer;
-import chord.program.CFGLoopFinder;
 import chord.project.Messages;
 import chord.project.Project;
 import chord.project.Config;
