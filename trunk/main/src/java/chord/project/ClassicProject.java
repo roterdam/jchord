@@ -43,8 +43,18 @@ public class ClassicProject extends Project {
 			project = new ClassicProject();
 		return project;
 	}
-	private static final String CANNOT_INSTANTIATE_TASK = "ERROR: Project builder: Cannot instantiate task '%s': %s";
-	private static final String CANNOT_INSTANTIATE_TRGT = "ERROR: Project builder: Cannot instantiate trgt '%s': %s";
+
+	private static final String CANNOT_INSTANTIATE_TASK =
+		"ERROR: ClassicProject builder: Cannot instantiate task '%s': %s";
+	private static final String CANNOT_INSTANTIATE_TRGT =
+		"ERROR: ClassicProject builder: Cannot instantiate trgt '%s': %s";
+    private static final String MULTIPLE_TASKS_PRODUCING_TRGT =
+        "ERROR: Multiple tasks producing target '%s' in project:%s; exclude all but one using -Dchord.analysis.exclude";
+    private static final String TASK_PRODUCING_TRGT_NOT_FOUND =
+        "ERROR: No task producing target '%s' found in project";
+	private static final String TASK_NOT_FOUND = "ERROR: Task named '%s' not found in project";
+	private static final String TRGT_NOT_FOUND =
+		"ERROR: Target named '%s' not found in produces/consumes field of any task in project";
 
 	private final Map<String, ITask> nameToTaskMap =
 		new HashMap<String, ITask>();
@@ -322,28 +332,29 @@ public class ClassicProject extends Project {
 
 	public Object getTrgt(String name) {
 		Object trgt = nameToTrgtMap.get(name);
-		if (trgt == null) {
-			Messages.fatal("Target '" + name + "' not found.");
-		}
+		if (trgt == null)
+			Messages.fatal(TRGT_NOT_FOUND, name);
 		return trgt;
 	}
 
 	public ITask getTask(String name) {
 		ITask task = nameToTaskMap.get(name);
-		if (task == null) {
-			Messages.fatal("Task '" + name + "' not found.");
-		}
+		if (task == null) 
+			Messages.fatal(TASK_NOT_FOUND, name);
 		return task;
 	}
 
 	public ITask getTaskProducingTrgt(Object trgt) {
 		Set<ITask> tasks = trgtToProducingTasksMap.get(trgt);
-		if (tasks.size() != 1) {
-			String msg = "Multiple tasks producing target '" + trgt + "':";
+		int n = tasks.size();
+		if (n > 1) {
+			String tasksStr = "";
 			for (ITask task : tasks)
-				msg += " " + task.getName();
-			Messages.fatal(msg);
+				tasksStr += " " + task.getName();
+			Messages.fatal(MULTIPLE_TASKS_PRODUCING_TRGT, trgt.toString(), tasksStr);
 		}
+		if (n == 0)
+			Messages.fatal(TASK_PRODUCING_TRGT_NOT_FOUND, trgt.toString());
 		return tasks.iterator().next();
 	}
 
