@@ -38,6 +38,12 @@ public class ModernProject extends Project {
 			project = new ModernProject();
 		return project;
 	}
+
+	private static final String MULTIPLE_STEPS_PRODUCING_DATA =
+		"ERROR: Multiple step collections producing data collection '%s' in project:%s; exclude all but one using -Dchord.analysis.exclude";
+	private static final String STEP_PRODUCING_DATA_NOT_FOUND =
+		"ERROR: No step collection producing data collection '%s' found in project";
+
 	private static final String PROGRAM_TAG = "program";
 	private final Map<String, IStepCollection> nameToStepCollectionMap =
 		new HashMap<String, IStepCollection>();
@@ -268,24 +274,24 @@ public class ModernProject extends Project {
             IDataCollection cdc = cdcList.get(i);
             List<IStepCollection> scList = cdc.getProducingCollections();
 			int m = scList.size();
-            if (m == 0) {
-				String msg = "Data collection " + cdc.getName() +
-					" not produced by any step collection";
-				Messages.fatal(msg);
-			}
 			if (m > 1) {
-                String msg = "Data collection " + cdc.getName() +
-                    " produced by multiple step collections:";
+                String stepsStr = "";
                 for (IStepCollection sc2 : scList)
-                    msg += " " + sc2.getName();
-                Messages.fatal(msg);
+                    stepsStr += " " + sc2.getName();
+                Messages.fatal(MULTIPLE_STEPS_PRODUCING_DATA, cdc.getName(), stepsStr);
             }
+            if (m == 0)
+				Messages.fatal(STEP_PRODUCING_DATA_NOT_FOUND, cdc.getName());
             IStepCollection sc2 = scList.get(0);
             ICtrlCollection cc2 = sc2.getPrescribingCollection();
-			System.out.println(Thread.currentThread() + " Prologue of step sc=" + sc.getName() + " doing PUT of ctrl=" + ctrl + " into cc=" + cc2.getName());
+			System.out.println(Thread.currentThread() + " Prologue of step sc=" +
+				sc.getName() + " doing PUT of ctrl=" + ctrl +
+				" into cc=" + cc2.getName());
             cc2.Put(ctrl);
             ItemCollection cic = cdc.getItemCollection();
-			System.out.println(Thread.currentThread() + " Prologue of step sc=" + sc.getName() + " doing GET of ctrl=" + ctrl + " from dc=" + cdc.getName());
+			System.out.println(Thread.currentThread() + " Prologue of step sc=" +
+				sc.getName() + " doing GET of ctrl=" + ctrl +
+				" from dc=" + cdc.getName());
             consumes[i] = cic.Get(ctrl);
         }
 		return consumes;
@@ -299,7 +305,8 @@ public class ModernProject extends Project {
             ItemCollection pic = pdc.getItemCollection();
             Object o = produces[i];
             if (o != null) {
-				System.out.println(Thread.currentThread() + " Epilogue of step sc=" + sc.getName() + " doing PUT of ctrl=" + ctrl + " into dc=" + pdc.getName());
+				System.out.println(Thread.currentThread() + " Epilogue of step sc=" +
+					sc.getName() + " doing PUT of ctrl=" + ctrl + " into dc=" + pdc.getName());
                 pic.Put(ctrl, o);
 			}
         }
@@ -309,7 +316,8 @@ public class ModernProject extends Project {
             ICtrlCollection pcc = pccList.get(i);
             Object ctrl2 = controls[i];
             if (ctrl2 != null) {
-				System.out.println(Thread.currentThread() + " Epilogue of step sc=" + sc.getName() + " doing PUT of ctrl=" + ctrl2 + " into cc=" + pcc.getName());
+				System.out.println(Thread.currentThread() + " Epilogue of step sc=" +
+					sc.getName() + " doing PUT of ctrl=" + ctrl2 + " into cc=" + pcc.getName());
                 pcc.Put(ctrl2);
 			}
         }

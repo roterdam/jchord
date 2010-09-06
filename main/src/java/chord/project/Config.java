@@ -109,6 +109,8 @@ public class Config {
 	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path",
 		"src" + File.separator + "dlog",
 		".." + File.separator + "extra" + File.separator + "src" + File.separator + "dlog");
+	public final static String analysisExcludeStr = System.getProperty("chord.analysis.exclude", "");
+	public final static String[] analysisExcludeAry = toArray(analysisExcludeStr);
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
 	public final static boolean printResults = buildBoolProperty("chord.print.results", true);
 
@@ -242,6 +244,7 @@ public class Config {
 		System.out.println("*** Program analysis properties:");
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
+		System.out.println("chord.analysis.exclude: " + analysisExcludeStr);
 		System.out.println("chord.reuse.rels: " + reuseRels);
 		System.out.println("chord.print.results: " + printResults);
 		System.out.println("chord.check.exclude.std: " + checkExcludeStdStr);

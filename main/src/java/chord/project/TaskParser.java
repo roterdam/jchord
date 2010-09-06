@@ -180,6 +180,10 @@ public class TaskParser {
 			if (Config.verbose > 2) Messages.log(ANON_JAVA_TASK, className);
 			name = className;
 		}
+		for (String name2 : Config.analysisExcludeAry) {
+			if (name.equals(name2))
+				return;
+		}
 		DlogAnalysis dlogTask = nameToDlogTaskMap.get(name);
 		if (dlogTask != null) {
 			redefinedJavaTask(className, name, dlogTask.getFileName());
@@ -250,6 +254,10 @@ public class TaskParser {
 		if (name == null) {
 			if (Config.verbose > 2) Messages.log(ANON_DLOG_TASK, fileName);
 			name = fileName;
+		}
+		for (String name2 : Config.analysisExcludeAry) {
+			if (name.equals(name2))
+				return;
 		}
 		DlogAnalysis dlogTask = nameToDlogTaskMap.get(name);
 		if (dlogTask != null) {

@@ -220,6 +220,12 @@ This section describes properties regarding program analyses executed by \Chord.
 {\bf Default value:} \code{[chord.main.dir]/src/dlog/:[chord.main.dir]/../extra/src/dlog/} 
 
 \item
+\code{chord.analysis.exclude} \\
+{\bf Type:} string list \\
+{\bf Descrption:} Names of program analyses written in Java or Datalog to be excluded from the project. \\
+{\bf Default value:} {\tt ""}
+
+\item
 \code{chord.reuse.rels} \\
 {\bf Type:} bool \\
 {\bf Description:} Construct program relations from BDDs stored on disk (from a previous run of \Chord) whenever possible instead of re-computing them. \\
