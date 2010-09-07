@@ -27,14 +27,15 @@
 		</echo>
 	</target>
 
-	<property name="maindir" location="../main"/>
+	<property name="chord.home.dir" location="../main"/>
     <property name="chord.main.doms" value="M,F,P,I,E,H,L,R,T"/>
     <property name="chord.main.rels" value="cha,aryElemE,statFldE,writeE,EF,HT,PI,PL,PP,specIM,statIM,virtIM,clinitM,statM,syncM"/>
 	<property name="chord.main.doms_and_rels" value="${chord.main.doms},${chord.main.rels}"/>
 	<property name="chord.cia.rels" value="FH,HFH,IM,MM,rootM,reachableM,thrOblAbbrRootM,thrOblAbbrReachableM,thrOblAbbrIM,thrOblAbbrMM,thrSenAbbrRootM,thrSenAbbrReachableM,thrSenAbbrIM,thrSenAbbrMM"/>
 	<property name="chord.csa.rels" value="FC,CFC,CICM,CMCM,rootCM,reachableCM,thrOblAbbrRootCM,thrOblAbbrReachableCM,thrOblAbbrCICM,thrOblAbbrCMCM,thrSenAbbrRootCM,thrSenAbbrReachableCM,thrSenAbbrCICM,thrSenAbbrCMCM,epsilonM,kcfaSenM,kobjSenM,ctxtCpyM,CC,CH,CI"/>
 
-	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${maindir}/tools/ant-contrib.jar"/>
+	<taskdef resource="net/sf/antcontrib/antlib.xml"
+		classpath="${chord.home.dir}/tools/ant-contrib.jar"/>
 
 	<!--
 		Test all Chord components.
@@ -58,7 +59,7 @@
 			<sequential>
 				<ant dir="@{testdir}" target="clean"/>
 				<ant dir="@{testdir}" target="compile"/>
-				<ant dir="${maindir}" target="run">
+				<ant dir="${chord.home.dir}" target="run">
 					<property name="chord.work.dir" value="@{testdir}"/>
 					<property name="chord.build.scope" value="true"/>
 				</ant>
@@ -128,7 +129,7 @@
 	<target name="test-main">
 		<fail unless="testdir"/>
 		<echo message="===== STARTING test-main ON: ${testdir}"/>
-		<ant dir="${maindir}" target="run">
+		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.run.analyses" value="${chord.main.doms_and_rels}"/>
@@ -153,7 +154,7 @@
 	<target name="test-cia">
 		<fail unless="testdir"/>
 		<echo message="===== STARTING test-cia ON: ${testdir}"/>
-		<ant dir="${maindir}" target="run">
+		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.run.analyses" value="cipa-0cfa-dlog,thrOblAbbrCICG-dlog,thrSenAbbrCICG-dlog"/>
@@ -173,7 +174,7 @@
 	<target name="test-csa-0cfa">
 		<fail unless="testdir"/>
 		<echo message="===== STARTING test-csa-0cfa ON: ${testdir}"/>
-		<ant dir="${maindir}" target="run">
+		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.run.analyses" value="cspa-0cfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
@@ -193,7 +194,7 @@
 	<target name="test-csa-kobj">
 		<fail unless="testdir"/>
 		<echo message="===== STARTING test-csa-kobj ON: ${testdir}"/>
-		<ant dir="${maindir}" target="run">
+		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.inst.ctxt.kind" value="co"/>
@@ -215,7 +216,7 @@
 	<target name="test-csa-kcfa">
 		<fail unless="testdir"/>
 		<echo message="===== STARTING test-csa-kcfa ON: ${testdir}"/>
-		<ant dir="${maindir}" target="run">
+		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.inst.ctxt.kind" value="cs"/>
@@ -237,7 +238,7 @@
 	<target name="test-csa-hybrid">
 		<fail unless="testdir"/>
 		<echo message="===== STARTING test-csa-hybrid ON: ${testdir}"/>
-		<ant dir="${maindir}" target="run">
+		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.inst.ctxt.kind" value="co"/>
