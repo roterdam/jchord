@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.dynamic;
+package chord.analyses.datarace.dynamic;
 
 import gnu.trove.TIntArrayList;
 import gnu.trove.TIntHashSet;
@@ -372,15 +372,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				HidxToPendingEidxs[h] = null;
 			}
 		}
-	}
-}
-
-class FldObj {
-    public int f;
-    public int o;
-    public FldObj(int f, int o) {
-		this.f = f;
-		this.o = o;
 	}
 }
 
