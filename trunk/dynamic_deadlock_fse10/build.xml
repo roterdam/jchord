@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="waitnotify" default="compile">
-	<property name="chord.home.dir" location="../../main"/>
+	<property name="chord.home.dir" location="../main"/>
 	<target name="compile">
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" source="1.5" target="1.5"

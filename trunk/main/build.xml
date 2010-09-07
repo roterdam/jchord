@@ -2,7 +2,7 @@
 <!--
 	Main build file for Chord
 -->
-<project name="chord" default="help" basedir=".">
+<project name="chord" default="help">
 
 	<!--
 	==========================================================================
@@ -150,6 +150,7 @@
 	-->
 
 	<property name="chord.java.analysis.path" location="classes"/>
+
 	<path id="main_class_path">
 		<pathelement path="${chord.java.analysis.path}"/>
 		<pathelement location="classes"/>
@@ -163,25 +164,6 @@
 		<pathelement location="${lib.home}/CnCHj.jar"/>
 	</path>
 	<property name="chord.main.class.path" refid="main_class_path"/>
-
-	<!--
-		Java source path of Chord
-	-->
-	<property name="chord.extra.dir" location="../extra/src/java"/>
-	<if>
-		<available file="${chord.extra.dir}" type="dir"/>
-		<then>
-			<path id="main_java_src_path">
-				<pathelement location="src/java"/>
-				<pathelement location="${chord.extra.dir}"/>
-			</path>
-		</then>
-		<else>
-			<path id="main_java_src_path">
-				<pathelement location="src/java"/>
-			</path>
-		</else>
-	</if>
 
 	<!--
 	==========================================================================
@@ -209,10 +191,8 @@
 	<target name="jcompile" description="Compiles Java part of the project">
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="${debuglevel}"
-				source="${source}" target="${target}"
-				destdir="classes" classpathref="main_class_path">
-			<src refid="main_java_src_path"/>
-		</javac>
+			source="${source}" target="${target}" destdir="classes"
+			classpathref="main_class_path" srcdir="src/java"/>
 		<jar destfile="${lib.home}/chord_instr_agent.jar">
 			<manifest>
 				<attribute name="Premain-Class" value="chord.instr.OnlineTransformer"/>
