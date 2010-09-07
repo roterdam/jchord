@@ -21,22 +21,22 @@ import chord.util.tuple.object.Pair;
  */
 public interface ICSCG extends ILabeledGraph<Pair<Ctxt, jq_Method>, Quad> {
 	/**
-	 * Provides all abstract contexts in which a given jq_Method
+	 * Provides the set of all abstract contexts in which a given method
 	 * may be reachable.
 	 * 
-	 * @param	meth	A jq_Method.
+	 * @param	meth	A method.
 	 * 
-	 * @return	All abstract contexts in which the jq_Method may
-	 * 			be reachable.
+	 * @return	The set of all abstract contexts in which method <tt>meth</tt>
+	 * may be reachable.
 	 */
 	public Set<Ctxt> getContexts(jq_Method meth);
     /**
-     * Provides each jq_Method along with each abstract context in
-     * which it may be called by a given jq_Method invocation site
-     * in a given abstract context.
+     * Provides the set containing each method along with each abstract
+     * context in which it may be called by a given call site in a given
+     * abstract context.
      * 
      * @param   ctxt    An abstract context.
-     * @param   invk    A jq_Method invocation site.
+     * @param   invk    A call site.
      * 
      * @return  All (<tt>ctxt2</tt>, <tt>meth</tt>) pairs such that
      * 			jq_Method <tt>meth</tt> may be called in abstract
