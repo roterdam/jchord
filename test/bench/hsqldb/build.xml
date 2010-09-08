@@ -12,7 +12,8 @@
   <target name="compile">
     <ant dir="dacapo/"/>
     <mkdir dir="classes"/>
-    <javac srcdir="adaptor" destdir="classes" debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}">
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+			srcdir="adaptor" destdir="classes" includeAntRuntime="false">
         <classpath>
             <pathelement location="dacapo/classes"/>
             <pathelement location="jar/hsqldb.jar"/>
