@@ -54,29 +54,14 @@
 	-->
 
 	<!--
-		Location of runtime libraries.
-	-->
-	<property name="lib.home" location="lib"/>
-
-	<!--
 		Location of tools for building infrastructure.
 	-->
 	<property name="tools.home" location="tools"/>
 
 	<!--
-		Selects debug targets. 
+		Location of runtime libraries.
 	-->
-	<property name="debuglevel" value="source,lines,vars"/>
-	
-	<!--
-		Compilation target. 
-	-->
-	<property name="target" value="1.5"/>
-
-	<!--
-		Compilation source.
-	-->
-	<property name="source" value="1.5"/>
+	<property name="lib.home" location="lib"/>
 
 	<!--
 	==========================================================================
@@ -160,7 +145,6 @@
 		<property name="chord.main.class.path" refid="main_class_path"/>
 	</target>
 
-
 	<!--
 	==========================================================================
 		COMPILE CHORD
@@ -187,8 +171,8 @@
 	<target name="jcompile" depends="paths"
 			description="Compiles Java part of the project">
 		<mkdir dir="classes"/>
-		<javac debug="true" debuglevel="${debuglevel}"
-			source="${source}" target="${target}" destdir="classes"
+		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
+			source="1.5" target="1.5" destdir="classes"
 			classpathref="main_class_path" srcdir="src/java"/>
 		<jar destfile="${lib.home}/chord_instr_agent.jar">
 			<manifest>
