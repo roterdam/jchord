@@ -13,8 +13,7 @@
 	<target name="compile" depends="paths">
         <taskdef resource="net/sf/antcontrib/antlib.xml"
             classpath="${chord.home.dir}/tools/ant-contrib.jar"/>
-        <antfetch dir="${chord.home.dir}"
-			target="paths" return="chord.main.class.path"/>
+        <antfetch dir="${chord.home.dir}" target="paths" return="chord.main.class.path"/>
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
 			source="1.5" target="1.5" srcdir="src/java" destdir="classes"
@@ -28,6 +27,6 @@
 	</target>
 
 	<target name="clean">
-		<delete dir="Classes"/>
+		<delete dir="classes"/>
 	</target>
 </project>
