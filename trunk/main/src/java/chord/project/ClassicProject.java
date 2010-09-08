@@ -113,6 +113,25 @@ public class ClassicProject extends Project {
 			taskParser.getNameToProduceNamesMap();
 		buildDerivedMaps(nameToConsumeNamesMap, nameToProduceNamesMap);
 
+        if (Config.reuseRels) {
+            File file = new File(Config.bddbddbWorkDirName);
+            File[] subFiles = file.listFiles(filter);
+            for (File subFile : subFiles) {
+                String fileName = subFile.getName();
+                if (fileName.endsWith(".bdd")) {
+                    int n = fileName.length();
+                    String relName = fileName.substring(0, n - 4);
+                    ProgramRel rel = (ProgramRel) getTrgt(relName);
+                    for (Dom dom : rel.getDoms()) {
+                        ITask task2 = getTaskProducingTrgt(dom);
+                        runTask(task2);
+                    }
+                    rel.load();
+                    setTrgtDone(relName);
+                }
+            }
+        }
+
 		isBuilt = true;
 	}
 
@@ -322,9 +341,11 @@ public class ClassicProject extends Project {
 
 	@Override
 	public void printRels(String[] relNames) {
-		run(relNames);
+		build();
 		for (String relName : relNames) {
 			ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
+            if (rel == null)
+				Messages.fatal("Failed to load relation " + relName);
 			rel.load();
 			rel.print();
 		}
