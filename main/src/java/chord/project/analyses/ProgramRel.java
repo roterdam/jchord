@@ -40,11 +40,6 @@ public class ProgramRel extends Rel implements ITask {
 	protected Object[] consumes;
 	@Override
 	public void run() {
-		if (Config.reuseRels) {
-			File file = new File(Config.bddbddbWorkDirName, name + ".bdd");
-			if (file.exists())
-				return;
-		}
 		zero();
 		init();
 		fill();

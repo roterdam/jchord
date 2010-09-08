@@ -224,7 +224,7 @@ public class ModernProject extends Project {
 	
 	@Override
 	public void printRels(String[] relNames) {
-		run(relNames);
+		build();
 		for (String name : relNames) {
 			IDataCollection dc = getDataCollectionByName(name);
 			ItemCollection ic = dc.getItemCollection();
