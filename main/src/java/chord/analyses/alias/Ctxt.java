@@ -107,6 +107,12 @@ public class Ctxt implements Serializable {
   public Quad head() { return elems[0]; }
   public Quad last() { return elems[elems.length-1]; }
   public Ctxt tail() { return suffix(elems.length-1); }
+  public Ctxt prefix(int k) {
+    if (k >= elems.length) return this;
+    Quad[] newElems = new Quad[k];
+    if (k > 0) System.arraycopy(elems, 0, newElems, 0, k);
+    return new Ctxt(newElems);
+  }
   public Ctxt suffix(int k) {
     if (k >= elems.length) return this;
     Quad[] newElems = new Quad[k];
