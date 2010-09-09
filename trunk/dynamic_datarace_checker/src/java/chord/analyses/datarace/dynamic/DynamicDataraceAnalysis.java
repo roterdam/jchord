@@ -55,49 +55,35 @@ import chord.util.tuple.object.Trio;
 	name="dynamic-datarace-java"
 )
 public class DynamicDataraceAnalysis extends DynamicAnalysis {
-    // set of IDs of currently escaping concrete/abstract objects
-    private TIntHashSet escObjs;
+    // visitedAcc[e] == true iff instance field/array deref site
+    // having index e in domain E is visited during the execution
+    private boolean[] visitedAcc;
+
+	private TIntIntHashMap threadToLocksMap;
+	private HashSet/*ObjLocks*/[] accToObjLocks;
+	private TIntHashSet[] accToObjs;
 
     // map from each object to a list of each non-null instance field
     // of reference type along with its value
     private TIntObjectHashMap<List<FldObj>> objToFldObjs;
 
-    // map from each object to the index in domain H of its alloc site
-    private TIntIntHashMap objToHidx;
+    // set of IDs of currently escaping concrete/abstract objects
+    private TIntHashSet escObjs;
 
-    // map from the index in domain H of each alloc site not yet known
-    // to be flow-ins. thread-escaping to the list of indices in
-    // domain E of instance field/array deref sites that should become
-    // flow-ins. thread-escaping if this alloc site becomes flow-ins.
-    // thread-escaping
-    // invariant: isHidxEsc[h] = true => HidxToPendingEidxs[h] == null
-    private TIntArrayList[] HidxToPendingEidxs;
-
-    // isHidxEsc[h] == true iff alloc site having index h in domain H
-    // is flow-ins. thread-escaping
-    private boolean[] isHidxEsc;
-
-    // isEidxVisited[e] == true iff instance field/array deref site
-    // having index e in domain E is visited during the execution
-    private boolean[] isEidxVisited;
-
-    // isEidxEsc[e] == true iff:
+    // escAcc[e] == true iff:
     // 1. kind is flowSen and instance field/array deref site having
     //    index e in domain E is flow-sen. thread-escaping
     // 2. kind is flowIns and instance field/array deref site having
     //    index e in domain E is flow-ins. thread-escaping
-    private boolean[] isEidxEsc;
-
-    private int numE;
-
-	private ProgramRel relVisitedE;
-	private ProgramRel relEscE;
+    private boolean[] escAcc;
 
     private InstrScheme instrScheme;
 
-	private DomE domE;
+	private AliasingCheckKind aliasingCheckKind;
+	private EscapingCheckKind escapingCheckKind;
+	private boolean checkMHP, checkLocks;
 
-	}
+	private DomE domE;
 
     @Override
     public InstrScheme getInstrScheme() {
@@ -125,50 +111,68 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 
     @Override
-    public void initAllPasses() {
-        domE = (DomE) ClassicProject.g().getTrgt("E");
-		ClassicProject.g().runTask("E");
-
-        escObjs = new TIntHashSet();
-        objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
-        DomE domE = (DomE) ClassicProject.g().getTrgt("E");
-        ClassicProject.g().runTask(domE);
-        numE = domE.size();
-        isEidxVisited = new boolean[numE];
-        isEidxEsc = new boolean[numE];
-    }
-
+    public void initAllPasses() { }
 
     @Override
     public void initPass() {
-        escObjs.clear();
-        objToFldObjs.clear();
+		aliasingCheckKind = AliasingCheckKind.CONCRETE;
+		escapingCheckKind = EscapingCheckKind.WEAK_CONCRETE;
+		checkMHP = true;
+		checkLocks = true;
+
+        domE = (DomE) ClassicProject.g().getTrgt("E");
+		ClassicProject.g().runTask("E");
+        int numE = domE.size();
+
+		visitedAcc = new boolean[numE];
+
+		if (aliasingCheckKind != AliasingCheckKind.NONE)
+			accToObjs = new TIntHashSet[numE];
+
+		if (escapingCheckKind != EscapingCheckKind.NONE) {
+        	escObjs = new TIntHashSet();
+			objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
+        	escAcc = new boolean[numE];
+		}
+
+		int numE = domE.size();
+		for (int e = 0; e < numE; e++)
+			visitedAcc[e] = false;
+
+		if (aliasingCheckKind != AliasingCheckKind.NONE) {
+			for (int e = 0; e < numE; e++) {
+				TIntHashSet objs = accToObjs[e];
+				if (objs != null)
+					objs.clear();
+			}
+		}
+		if (escapingCheckKind != EscapingCheckKind.NONE) {
+        	escObjs.clear();
+        	objToFldObjs.clear();
+			for (int e = 0; e < numE; e++)
+				escAcc[e] = false;
+		}
     }
 
     @Override
     public void donePass() {
         System.out.println("***** STATS *****");
-        int numAllocEsc = 0;
         int numVisitedE = 0;
         int numEscE = 0;
-        for (int i = 0; i < numE; i++) {
-            if (isEidxVisited[i]) {
+        for (int e = 0; e < domE.size(); e++) {
+            if (visitedAcc[e]) {
                 numVisitedE++;
-                if (isEidxEsc[i])
-                    numEscE++;
+				if (escapingCheckKind != EscapingCheckKind.NONE) {
+                	if (escAcc[e])
+                	    numEscE++;
+				}
             }
         }
-        System.out.println("numAllocEsc: " + numAllocEsc);
-        System.out.println("numVisitedE: " + numVisitedE +
-            " numEscE: " + numEscE);
+        System.out.println("numVisitedE: " + numVisitedE + " numEscE: " + numEscE);
     }
 
     @Override
-    public void doneAllPasses() {
-        DomE domE = (DomE) ClassicProject.g().getTrgt("E");
-        PrintWriter writer = OutDirUtils.newPrintWriter("races.txt");
-        writer.close();
-    }
+    public void doneAllPasses() { }
 
 	@Override
     public void processThreadStart(int p, int t, int o) {
@@ -255,13 +259,13 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
     }
 
     private void processHeapRd(int e, int b) {
-        if (isEidxEsc[e])
+        if (escAcc[e])
             return;
-        isEidxVisited[e] = true;
+        visitedAcc[e] = true;
         if (b == 0)
             return;
 		if (escObjs.contains(b))
-			isEidxEsc[e] = true;
+			escAcc[e] = true;
     }
 
     private void processHeapWr(int e, int b, int fIdx, int r) {
@@ -313,3 +317,13 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
         }
     }
 }
+
+class ObjLocks {
+	public final int o;
+	public final IntArraySet locks;
+	public ObjLocks(int o, TIntArraySet locks) {
+		this.o = o;
+		this.locks = locks;
+	}
+}
+
