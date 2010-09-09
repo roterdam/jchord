@@ -3,11 +3,11 @@
 # All rights reserved.
 # Licensed under the terms of the New BSD License.
 
-# k-CFA may-alias analysis.
+# Pointer analysis.
 # Assume call graph construction is fixed.
 
 # Author: Mayur Naik (mhn@cs.stanford.edu), Percy Liang (pliang@cs.berkeley.edu)
-# name=cspa-kcfa-sliver-dlog
+# name=cspa-sliver-dlog
 
 .include "F.dom"
 .include "H.dom"
@@ -18,7 +18,7 @@
 .include "Z.dom"
 .include "C.dom"
 
-.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0_C0xC1xC2_Z0
+.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2_Z0
 
 ###
 # Relations
@@ -28,6 +28,8 @@ HT(h:H0,t:T1) input
 sub(t1:T1,t2:T0) input
 MI(m:M,i:I) input
 MH(m:M,h:H) input
+MV(m:M,v:V) input
+statIM(i:I,m:M) input
 
 # Program statements
 MobjValAsgnInst(m:M,l:V,h:H) input
@@ -55,35 +57,40 @@ IinvkRet(i:I0,n:Z0,v:V0) input
 MmethRet(m:M0,n:Z0,v:V1) input
 argCopy(i:I0,u:V1,m:M0,v:V0) output
 retCopy(i:I0,u:V0,m:M0,v:V1) output
-VCfilter(v:V,c:C) input
 
-CC(c:C,d:C) input # d = [* c]
-CH(c:C,h:H) input # c = [h ...]
-CI(c:C,i:I) input # c = [i ...]
-#equivC(c:C,d:C) input # c and d are the same (but we didn't collapse them - just for correctness testing)
+VAfilter(v:V,a:C)
+
+VAfilter(v,a) :- VHfilter(v,h), AH(a,h).
+
+AH(a:C,h:H) input # abstract object a could have been allocated at site h
+CfromIC(d:C,i:I,c:C) input # context d = proj(i,c)
+AfromHC(a:C,h:H,c:C) input # abtract object a = proj(h,c)
+EfromVC(e:C,v:V,c:C) input # contextual variable (v,e) = proj(v,c)
 
 # Computed from 0-CFA: we don't want the call graph changing on us during refinement.
 IM(i:I,m:M) input # call site i can resolve to method m
+VH(v:V,h:H) input
 reachableM(m:M) input # method is reachable
 reachableT(t:T) # type is reachable
 
-CVCV(c:C0,u:V0,d:C1,v:V1) output # u in context c (method) ~ v in context d (call site)
+VEfromVE(v1:V0,e1:C0,v2:V1,e2:C1) output # contextual variable (v1,e1) points to everything that (v2,e2) points to
 
 reachableCI(c:C,i:I) output
 reachableCM(c:C,m:M) output
 
-CICM(c:C,i:I,d:C,m:M) output # in context c, call site i can call method m in context d
+CICM(ci:C,i:I,cm:C,m:M) output # in context ci, call site i can call method m in context cm
 
-CVC(c:C,v:V,o:C) output   # in context c, variable v can point to abstract object o
-FC(f:F,c:C) output        # static field f can point to abstract object c
-CFC(c1:C,f:F,c2:C) output # abstract object c1 can point to abstract object c2 via field f
-
-extCIC(c:C,i:I,d:C) output # extend: d = [i, c]
-extCHC(c:C,h:H,d:C) output # extend: d = [h, c]
+VEA(v:V,e:C,a:C) output   # contextual variable (v,e) can point to abstract object a
+FA(f:F,a:C) output        # static field f can point to abstract object a
+AFA(a1:C,f:F,a2:C) output # abstract object a1 can point to abstract object a2 via field f
 
 ItoH(i:I,h:H) output # i can call a method that contains h
 ItoI(i:I,j:I) output # i can call a method that contains j
 reachableH(h:H) output
+reachableV(v:V) output
+
+HtoH(g:H,h:H) output
+skipMM(m:M,n:M) output
 
 rM(m:M) output
 rI(i:I) output
@@ -93,11 +100,12 @@ rI(i:I) output
 
 ### Extension of contexts
 
-extCIC(c,i,d) :- CC(c,d), CI(d,i). # extend: d = [i, c]
-extCHC(c,h,d) :- CC(c,d), CH(d,h). # extend: d = [h, c]
+extCfromIC(d,i,c) :- CfromIC(d,i,c). # call-site-based
+extCfromIC(d,i,c) :- IinvkArg(i,0,v), EfromVC(e,v,c), VEA(v,e,d). # (object-based - instance methods: use "this")
+extCfromIC(d,i,c) :- statIM(i,_), c=d. # (object-based - static methods: copy)
 
-# Call site i in context c resolves to method m in context d
-CICM(c,i,d,m) :- reachableCI(c,i), IM(i,m), extCIC(c,i,d).
+# call site i in context c resolves to method m in context d
+CICM(ci,i,cm,m) :- reachableCI(ci,i), IM(i,m), extCfromIC(cm,i,ci).
 
 ### Reachability
 
@@ -118,48 +126,54 @@ reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 
 ### Inter-procedural (connect variables)
 
-argCopy(i,u,m,v) :- IM(i,m), IinvkArg(i,z,u), MmethArg(m,z,v). # u at call site i <=> v in method m (argument)
-retCopy(i,u,m,v) :- IM(i,m), IinvkRet(i,z,u), MmethRet(m,z,v). # u at call site i <=> v in method m (return value)
+argCopy(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm). # vi at call site i <=> vm in method m (argument)
+retCopy(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm). # vi at call site i <=> vm in method m (return value)
 
-CVCV(d,v,c,u) :- argCopy(i,u,m,v), CICM(c,i,d,m). # v in context d <== u in context c
-CVCV(c,u,d,v) :- retCopy(i,u,m,v), CICM(c,i,d,m). # u in context c <== v in context d
+VEfromVE(vm,em,vi,ei) :- argCopy(i,vi,m,vm), CICM(ci,i,cm,m). # pass in arguments
+VEfromVE(vi,ei,vm,em) :- retCopy(i,vi,m,vm), CICM(ci,i,cm,m). # return arguments
 
-CVC(c,u,o) :- CVCV(c,u,d,v), CVC(d,v,o), VCfilter(u,o). # If d:v->o, then c:u->o
+VEA(v,e,a) :- VEfromVE(v,e,vv,ee), VEA(vv,ee,a), VCfilter(e,o). # If d:v->o, then c:u->o
 
 ### Intra-procedural statements
 
 # in context c, l = new h
 RobjValAsgnInst(c,l,h) :- reachableCM(c,m), MobjValAsgnInst(m,l,h).
-CVC(c,l,o) :- RobjValAsgnInst(c,l,h), extCHC(c,h,o), VCfilter(l,o).
+VEA(l,el,a) :- RobjValAsgnInst(c,l,h), EfromVC(el,l,c), AfromHC(a,h,c), VAfilter(l,a). split
 
 # in context c, l = r
 RobjVarAsgnInst(c,l,r) :- reachableCM(c,m), MobjVarAsgnInst(m,l,r).
-CVC(c,l,c1) :- RobjVarAsgnInst(c,l,r), CVC(c,r,c1), VCfilter(l,c1).
+VEA(l,el,a) :- RobjVarAsgnInst(c,l,r), EfromVC(el,l,c), EfromVC(er,r,c), VEA(r,er,a), VCfilter(l,a). split
 
 # in context c, l = b.f
 RgetInstFldInst(c,l,b,f) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f).
-CVC(c,l,c2) :- RgetInstFldInst(c,l,b,f), CVC(c,b,c1), CFC(c1,f,c2). split
+VEA(l,el,aa) :- RgetInstFldInst(c,l,b,f), EfromVC(el,l,c), EfromVC(eb,b,c), VEA(b,eb,a), AFA(a,f,aa). split
 
 # in context c, l = STATIC.f
 RgetStatFldInst(c,l,f) :- reachableCM(c,m), MgetStatFldInst(m,l,f).
-CVC(c,l,o) :- RgetStatFldInst(c,l,f), FC(f,o), VCfilter(l,o).
+VEA(l,el,a) :- RgetStatFldInst(c,l,f), EfromVC(el,l,c), FA(f,a), VCfilter(l,a). split
 
 # in context c, b.f = r
 RputInstFldInst(c,b,f,r) :- reachableCM(c,m), MputInstFldInst(m,b,f,r).
-CFC(c1,f,c2) :- RputInstFldInst(c,b,f,r), CVC(c,b,c1), CVC(c,r,c2). split
+AFA(a,f,aa) :- RputInstFldInst(c,b,f,r), EfromVC(eb,b,c), EfromVC(er,r,c), VEA(b,eb,a), VEA(r,er,aa). split
 
 # in context c, STATIC.f = r
 RputStatFldInst(c,f,r) :- reachableCM(c,m), MputStatFldInst(m,f,r).
-FC(f,o) :- RputStatFldInst(c,f,r), CVC(c,r,o).
+FA(f,a) :- RputStatFldInst(c,f,r), EfromVC(er,r,c), VEA(r,er,a). split
 
-# Possible extensions based on fixed call graph.
-ItoH(i,h) :- IM(i,m), MH(m,h).
-ItoI(i,j) :- IM(i,m), MI(m,j).
+### Miscellaneous
+
 reachableH(h) :- reachableM(m), MH(m,h).
+reachableV(v) :- reachableM(m), MV(m,v).
 
-# TMP
-#CFC(c1,f,c2) :- CFC(d1,f,c2), equivC(c1, d1).
-#CFC(c1,f,c2) :- CFC(c1,f,d2), equivC(c2, d2).
-#CVC(c,f,o) :- CVC(c,f,p), equivC(o,p).
+# Possible extensions based on fixed call graph (for building CC)
+ItoH(i,h) :- IM(i,m), MH(m,h).
+ItoI(i,j) :- IM(i,m), MI(m,j). # Also for call-site-based refinement
+
+# For object-based refinement
+HtoH(g,h) :- IinvkArg(i,0,v), VH(v,g), IM(i,m), skipMM(m,n), MH(n,h). split # g can be the "this" argument, calling method with h
+skipMM(m,n) :- m=n.
+skipMM(m,n) :- MI(m,i), statIM(i,n). # Idea: if analyze m in some context, we end up analyzing n in that context as well
+
+# Project down
 rM(m) :- reachableCM(_, m).
 rI(i) :- reachableCI(_, i).
