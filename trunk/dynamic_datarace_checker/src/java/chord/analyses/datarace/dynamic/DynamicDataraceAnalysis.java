@@ -10,6 +10,7 @@ import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +44,7 @@ import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 import chord.util.ArraySet;
 import chord.util.SetUtils;
+import chord.util.IntArraySet;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
 
@@ -135,7 +137,6 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
         	escAcc = new boolean[numE];
 		}
 
-		int numE = domE.size();
 		for (int e = 0; e < numE; e++)
 			visitedAcc[e] = false;
 
@@ -321,7 +322,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 class ObjLocks {
 	public final int o;
 	public final IntArraySet locks;
-	public ObjLocks(int o, TIntArraySet locks) {
+	public ObjLocks(int o, IntArraySet locks) {
 		this.o = o;
 		this.locks = locks;
 	}
