@@ -89,6 +89,7 @@ public class TraceTransformer {
 	private final int implicitThrowNumBytes;
 	private final int enterMethodNumBytes;
 	private final int leaveMethodNumBytes;
+	private final int enterMainMethodNumBytes;
 
 	private ByteBufferedFile reader, writer;
 	private static final int MAX_CONS_SIZE = Config.maxConsSize;
@@ -157,6 +158,7 @@ public class TraceTransformer {
 		implicitThrowNumBytes = scheme.getEvent(InstrScheme.IMPLICIT_THROW).size();
 		enterMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_METHOD).size();
 		leaveMethodNumBytes = scheme.getEvent(InstrScheme.LEAVE_METHOD).size();
+		enterMainMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD).size();
 	}
 	/**
 	 * Runs the trace transformer which creates a new trace that
@@ -338,6 +340,8 @@ public class TraceTransformer {
 			return enterMethodNumBytes;
 		case EventKind.LEAVE_METHOD:
 			return leaveMethodNumBytes;
+		case EventKind.ENTER_MAIN_METHOD:
+			return enterMainMethodNumBytes;
 		default:
 			throw new ChordRuntimeException("Unknown opcode: " + opcode);
 		}

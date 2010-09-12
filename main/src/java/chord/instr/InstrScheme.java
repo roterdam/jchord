@@ -57,7 +57,9 @@ public class InstrScheme implements Serializable {
 	public static final int ENTER_METHOD = 24;
 	public static final int LEAVE_METHOD = 25;
 
-	public static final int MAX_NUM_EVENT_FORMATS = 26;
+	public static final int ENTER_MAIN_METHOD = 26;
+
+	public static final int MAX_NUM_EVENT_FORMATS = 27;
 
 	public class EventFormat implements Serializable {
 		private boolean present;
@@ -413,6 +415,13 @@ public class InstrScheme implements Serializable {
 
 	public void setLeaveMethodEvent(boolean hasLoc, boolean hasThr) {
 		EventFormat e = events[LEAVE_METHOD];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+	}
+
+	public void setEnterMainMethodEvent(boolean hasLoc, boolean hasThr) {
+		EventFormat e = events[ENTER_MAIN_METHOD];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();

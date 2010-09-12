@@ -67,9 +67,12 @@ public class Instrumentor extends CoreInstrumentor {
 	protected final InstrScheme scheme;
 	protected final String eventHandlerClassName;
 
+	protected final jq_Method mainMethod;
+
 	protected final boolean genBasicBlockEvent;
 	protected final boolean genQuadEvent;
 	protected final boolean genFinalizeEvent;
+	protected final EventFormat enterMainMethodEvent;
 	protected final EventFormat enterMethodEvent;
 	protected final EventFormat leaveMethodEvent;
 	protected final EventFormat newAndNewArrayEvent;
@@ -93,6 +96,7 @@ public class Instrumentor extends CoreInstrumentor {
 	protected final EventFormat notifyEvent;
 	protected final EventFormat methodCallEvent;
 
+    protected final String enterMainMethodEventCall;
     protected final String enterMethodEventCall;
     protected final String leaveMethodEventCall;
     protected final String befNewEventCall;
@@ -217,9 +221,11 @@ public class Instrumentor extends CoreInstrumentor {
 		this.scheme = _scheme;
 		this.eventHandlerClassName = _eventHandlerClassName.replace('/', '.') + ".";
 
+		mainMethod = program.getMainMethod();
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
 		genFinalizeEvent = scheme.hasFinalizeEvent();
+		enterMainMethodEvent = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
 		enterMethodEvent = scheme.getEvent(InstrScheme.ENTER_METHOD);
 		leaveMethodEvent = scheme.getEvent(InstrScheme.LEAVE_METHOD);
 		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
@@ -243,6 +249,7 @@ public class Instrumentor extends CoreInstrumentor {
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 		methodCallEvent = scheme.getEvent(InstrScheme.METHOD_CALL);
 
+        enterMainMethodEventCall = eventHandlerClassName + "enterMainMethodEvent(";
         enterMethodEventCall = eventHandlerClassName + "enterMethodEvent(";
         leaveMethodEventCall = eventHandlerClassName + "leaveMethodEvent(";
         befNewEventCall = eventHandlerClassName + "befNewEvent(";
@@ -468,6 +475,10 @@ public class Instrumentor extends CoreInstrumentor {
 				int rId = releaseLockEvent.hasLoc() ? set(Rmap, -2) : EventHandler.MISSING_FIELD_VAL;
 				leaveStr += releaseLockEventCall + rId + "," + syncExpr + ");";
 			}
+		}
+		if (currentMethod == mainMethod && enterMainMethodEvent.present()) {
+			int nId = enterMainMethodEvent.hasLoc() ? 0 : EventHandler.MISSING_FIELD_VAL;
+			enterStr = enterMainMethodEventCall + nId + ");" + enterStr;
 		}
 		if (enterMethodEvent.present()) {
 			int nId = enterMethodEvent.hasLoc() ? mId : EventHandler.MISSING_FIELD_VAL;
