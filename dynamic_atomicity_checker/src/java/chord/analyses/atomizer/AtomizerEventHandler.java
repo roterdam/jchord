@@ -5,7 +5,6 @@
  */
 package chord.analyses.atomizer;
 
-import chord.instr.InstrScheme;
 import chord.project.analyses.DynamicAnalysis;
 import chord.runtime.CoreEventHandler;
 
