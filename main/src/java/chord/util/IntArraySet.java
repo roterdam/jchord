@@ -194,4 +194,11 @@ public class IntArraySet {
         }
         return h;
     }
+	public boolean subset(IntArraySet that) {
+		for (int i = 0; i < _pos; i++) {
+			if (!that.contains(_data[i]))
+				return false;
+		}
+		return true;
+	}
 }
