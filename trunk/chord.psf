@@ -4,6 +4,8 @@
 <project reference="0.9.3,https://jchord.googlecode.com/svn/trunk/main,main"/>
 <project reference="0.9.3,https://jchord.googlecode.com/svn/trunk/extra,extra"/>
 <project reference="0.9.3,https://jchord.googlecode.com/svn/trunk/test,test"/>
-<project reference="0.9.3,https://jchord.googlecode.com/svn/trunk/dynamic_deadlock_fse10,dynamic_deadlock_fse10"/>
+<project reference="0.9.3,https://jchord.googlecode.com/svn/trunk/dynamic_atomicity_checker,dynamic_atomicity_checker"/>
+<project reference="0.9.3,https://jchord.googlecode.com/svn/trunk/dynamic_datarace_checker,dynamic_datarace_checker"/>
+<project reference="0.9.3,https://jchord.googlecode.com/svn/trunk/dynamic_deadlock_checker,dynamic_deadlock_checker"/>
 </provider>
 </psf>
