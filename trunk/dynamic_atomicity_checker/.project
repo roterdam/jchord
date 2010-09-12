@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>extra</name>
+	<name>dynamic_atomicity_checker</name>
 	<comment></comment>
 	<projects>
 		<project>main</project>
