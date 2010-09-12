@@ -180,11 +180,11 @@ public class AtomizerEventHandler extends CoreEventHandler {
 		}
 	}
 	
-	public synchronized static void enterMethodEvent(int mId) {
+	public synchronized static void enterMainMethodEvent(int mId) {
 		if (trace) {
 			trace = false;
 			int tId = getObjectId(Thread.currentThread());
-			analysis.processEnterMethod(mId, tId);
+			analysis.processEnterMainMethod(mId, tId);
 			trace = true;
 		}
 	}

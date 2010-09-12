@@ -71,7 +71,7 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 		scheme.setAcquireLockEvent(true, true, true);
 		scheme.setReleaseLockEvent(true, true, true);
 		
-		scheme.setEnterMethodEvent(true, true);
+		scheme.setEnterMainMethodEvent(true, true);
 		
 		scheme.setThreadStartEvent(true, true, true);
 		
@@ -316,22 +316,19 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	}	
 	
 	@Override
-	public void processEnterMethod(int m, int t) {
-		if (m < 0 || t < 0) { return; }
-		
+	public void processEnterMainMethod(int m, int t) {
 		if (DEBUG) {			
-			Messages.log("processEnterMethod: m = " + m + ", t = " + t);
+			Messages.log("processEnterMainMethod: m = " + m + ", t = " + t);
 		}
 				
-		if (m == 0) {
-			StackTraceElement[] elems = Thread.currentThread().getStackTrace();
-			int i = getIndexOfFirstUserMethod(elems);
-			assert (elems[i].getMethodName().equals("main"));
-			assert (!thr2CommState.containsKey(t));
-			thr2CommState.put(t, CommitState.OUT_SIDE);
-			assert (!thr2Lcks.containsKey(t));
-			thr2Lcks.put(t, new TIntHashSet());
-		}
+		assert (m == 0);
+		StackTraceElement[] elems = Thread.currentThread().getStackTrace();
+		int i = getIndexOfFirstUserMethod(elems);
+		assert (elems[i].getMethodName().equals("main"));
+		assert (!thr2CommState.containsKey(t));
+		thr2CommState.put(t, CommitState.OUT_SIDE);
+		assert (!thr2Lcks.containsKey(t));
+		thr2Lcks.put(t, new TIntHashSet());
 	}
 	
 	public void processThreadStart(int i, int t, int o) {
