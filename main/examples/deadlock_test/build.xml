@@ -9,8 +9,7 @@
   </target>
   <target name="compile">
     <mkdir dir="classes"/>
-    <javac debug="true" debuglevel="${debuglevel}"
-      source="${source}" target="${target}"
-      srcdir="src" destdir="classes"/>
+    <javac debug="true" debuglevel="${debuglevel}" source="${source}" target="${target}"
+      srcdir="src" destdir="classes" includeAntRuntime="false"/>
   </target>
 </project>
