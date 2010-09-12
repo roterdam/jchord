@@ -562,6 +562,14 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 			processFinalize(o);
 			break;
 		}
+		case EventKind.ENTER_MAIN_METHOD:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
+			int m = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			processEnterMainMethod(m, t);
+			break;
+		}
 		default:
 			throw new ChordRuntimeException("Unknown opcode: " + opcode);
 		}
@@ -569,6 +577,10 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	
 	public void processLoopIteration(int w, int t) {
 		error("void processLoopIteration(int w, int t)");
+	}
+
+	public void processEnterMainMethod(int m, int t) {
+		error("void processEnterMainMethod(int m, int t)");
 	}
 	
 	public void processEnterMethod(int m, int t) {
