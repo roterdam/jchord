@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project name="waitnotify" default="compile">
+<project name="dynamic_atomicity" default="compile">
 	<property name="chord.home.dir" location="../main"/>
 
 	<target name="paths">
