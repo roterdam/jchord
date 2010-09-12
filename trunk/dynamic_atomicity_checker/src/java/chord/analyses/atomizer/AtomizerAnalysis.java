@@ -102,13 +102,14 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 		stopProcess = false;
 	}
 
-	public void processReadAfter(int t, long m) {	
+	public void processReadAfter(int t, long m) {
+		if (t < 0) { return; }
+		if (stopProcess) { return; }
+		assert (m >= 0);
+		
 		if (DEBUG) {			
 			Messages.log("processReadAfter: t = " + t + ", m = " + m);
-		}
-		
-		assert (t > 0) && (m >= 0);
-		if (stopProcess) { return; }		
+		}		
 		
 		updateMemoryAccessState(t, m, false);
 		
@@ -135,12 +136,13 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	}	
 
 	public void processWriteAfter(int t, long m) {
+		if (t < 0) { return; }
+		if (stopProcess) { return; }
+		assert (m >= 0);
+		
 		if (DEBUG) {			
 			Messages.log("processWriteAfter: t = " + t + ", m = " + m);
 		}
-		
-		assert (t > 0) && (m >= 0);
-		if (stopProcess) { return; }
 		
 		updateMemoryAccessState(t, m, true);
 		
@@ -171,7 +173,6 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	}
 	
 	public void processAtomicBegin(int t) {
-		assert (t > 0);
 		if (stopProcess) { return; }
 		
 		Stack<StackTraceElement[]> atomBlkStack = thr2AtomBlkStack.get(t);
@@ -186,8 +187,7 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 		atomBlkStack.push(Thread.currentThread().getStackTrace());
 	}
 	
-	public void processAtomicEnd(int t) {	
-		assert (t > 0);
+	public void processAtomicEnd(int t) {
 		if (stopProcess) { return; }
 		
 		int value = thr2AtomBlkCount.get(t);
@@ -204,12 +204,12 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	
 	@Override
 	public void processAcquireLock(int l, int t, int o) {		
+		if (l < 0 || t < 0 || o < 0) { return; }
+		if (stopProcess) { return; }
+		
 		if (DEBUG) {			
 			Messages.log("processAcquireLock: t = " + t + ", o = " + o);
 		}
-		
-		assert (l >= 0) && (t > 0) && (o >= 0); 
-		if (stopProcess) { return; }
 		
 		// Synch heuristics: All synchronized blocks and synchronized methods
 		//                   are atomic.
@@ -231,12 +231,12 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	
 	@Override
 	public void processReleaseLock(int r, int t, int o) {
+		if (r < 0 || t < 0 || o < 0) { return; }
+		if (stopProcess) { return; }
+		
 		if (DEBUG) {
 			Messages.log("processReleaseLock: t = " + t + ", o = " + o);
 		}
-		
-		assert (r >= 0) && (t > 0) && (o >= 0);
-		if (stopProcess) { return; }	
 		
 		if (ignoreRentrantLock.processReleaseLock(t, o)) {
 			updateLockAccessState(t, o);
@@ -317,11 +317,12 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	
 	@Override
 	public void processEnterMethod(int m, int t) {
+		if (m < 0 || t < 0) { return; }
+		
 		if (DEBUG) {			
 			Messages.log("processEnterMethod: m = " + m + ", t = " + t);
 		}
-		
-		assert (m >= 0) && (t >= 0);
+				
 		if (m == 0) {
 			StackTraceElement[] elems = Thread.currentThread().getStackTrace();
 			int i = getIndexOfFirstUserMethod(elems);
@@ -334,11 +335,12 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	}
 	
 	public void processThreadStart(int i, int t, int o) {
+		if (i < 0 || t < 0 || o < 0) { return; }
+		
 		if (DEBUG) {			
 			Messages.log("processThreadStart: i = " + i + ", t = " + t + ", o = " + o);
 		}
-		
-		assert (i >= 0) && (t >= 0) && (o >= 0);
+				
 		if (!thr2CommState.containsKey(o)) {
 			thr2CommState.put(o, CommitState.OUT_SIDE);
 		}
@@ -499,7 +501,7 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 		int i = 0;
 		while (i < elems.length) {
 			if (elems[i].getClassName().equals(
-					"chord.analyses.atomizer.AtomizerRuntime")) {
+					"chord.analyses.atomizer.AtomizerEventHandler")) {
 				i++;
 				break;
 			}			
