@@ -54,13 +54,14 @@ import chord.util.tuple.object.Trio;
 
 /**
  * Dynamic datarace analysis.
- *
+ * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
 	name="dynamic-datarace-java",
 	consumes = { "startingRacePairs" },
-	produces = { "aliasingRacePairs", "parallelRacePairs", "escE" }
+	produces = { "aliasingRacePairs", "parallelRacePairs", "guardedRacePairs",
+		"combinedRacePairs", "escE" }
 )
 public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	private boolean verbose = true;
@@ -94,7 +95,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 	private AliasingCheckKind aliasingCheckKind;
 	private EscapingCheckKind escapingCheckKind;
-	private boolean checkMHP, checkLocks;
+	private boolean checkMHP, checkLocks, checkCombined;
 
 	private DomE domE;
 	private DomM domM;
@@ -133,10 +134,17 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void initPass() {
-		aliasingCheckKind = AliasingCheckKind.CONCRETE;
+		aliasingCheckKind = AliasingCheckKind.WEAK_CONCRETE;
 		escapingCheckKind = EscapingCheckKind.WEAK_CONCRETE;
-		checkMHP = true;
-		checkLocks = false;
+		checkMHP = System.getProperty("chord.dynrace.mhp", "true").equals("true");
+		checkLocks = System.getProperty("chord.dynrace.locks", "false").equals("true");
+		checkCombined = System.getProperty("chord.dynrace.combined", "false").equals("true");
+		
+		// if aliasingCheckKind == NONE then aliasingRacePairs = 1
+		// if escapingCheckKind == NONE then escE = 1
+		// if checkMHP == false then parallelRacePairs = 1
+		// if checkLocks == false then guardedRacePairs = 1
+		// if checkCombined == false then aliasingParallelUnguardedRacePairs = 1
 
 		domM = (DomM) ClassicProject.g().getTrgt("M");
 		domE = (DomE) ClassicProject.g().getTrgt("E");
@@ -174,34 +182,55 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void donePass() {
-		System.out.println("***** STATS *****");
-		int numVisitedE = 0;
-		int numEscE = 0;
 		ProgramRel relEscE = (ProgramRel) ClassicProject.g().getTrgt("escE");
-		relEscE.zero();
-		for (int e = 0; e < domE.size(); e++) {
-			if (visitedAcc[e]) {
-				if (escapingCheckKind == EscapingCheckKind.NONE || escAcc[e]) {
+		if (escapingCheckKind == EscapingCheckKind.NONE)
+			relEscE.one();
+		else {
+			relEscE.zero();
+			for (int e = 0; e < domE.size(); e++) {
+				if (escAcc[e])
 					relEscE.add(e);
-				} 
 			}
 		}
 		relEscE.save();
 
-		ProgramRel relStartingRacePairs = (ProgramRel) ClassicProject.g().getTrgt("startingRacePairs");
 		ProgramRel relAliasingRacePairs = (ProgramRel) ClassicProject.g().getTrgt("aliasingRacePairs");
+		if (aliasingCheckKind == AliasingCheckKind.NONE)
+			relAliasingRacePairs.one();
+		else
+			relAliasingRacePairs.zero();
+
 		ProgramRel relParallelRacePairs = (ProgramRel) ClassicProject.g().getTrgt("parallelRacePairs");
+		if (!checkMHP)
+			relParallelRacePairs.one();
+		else
+			relParallelRacePairs.zero();
+
+		// guardedRacePairs contains those pairs in startingRacePairs that are guarded by a common lock
+		// Formally: (e1,e2) is in guardedRacePairs iff for each o such that e1->o and e2->o: there
+		// exists an o' such that a lock is held on o' by each thread while it accesses o at e1 or e2
+		ProgramRel relGuardedRacePairs = (ProgramRel) ClassicProject.g().getTrgt("guardedRacePairs");
+		if (!checkLocks)
+			relGuardedRacePairs.one();
+		else
+			relGuardedRacePairs.zero();
+
+		// combinedRacePairs contains those pairs in startingRacePairs that *simultaneously* satisfy
+		// aliasing, parallel, and unguarded checks
+		ProgramRel relParallelRacePairs = (ProgramRel) ClassicProject.g().getTrgt("combinedRacePairs");
+		if (!checkCombined)
+			relCombinedRacePairs.one();
+		else
+			relCombinedRacePairs.zero();
+
+		ProgramRel relStartingRacePairs = (ProgramRel) ClassicProject.g().getTrgt("startingRacePairs");
 		relStartingRacePairs.load();
-		relAliasingRacePairs.zero();
-		relParallelRacePairs.zero();
 		IntPairIterable startingRacePairs = relStartingRacePairs.getAry2IntTuples();
 		for (IntPair p : startingRacePairs) {
 			int e1 = p.idx0;
 			int e2 = p.idx1;
 			if (visitedAcc[e1] && visitedAcc[e2]) {
-				if (aliasingCheckKind == AliasingCheckKind.NONE) {
-					relAliasingRacePairs.add(e1, e2);
-				} else {
+				if (aliasingCheckKind != AliasingCheckKind.NONE) {
 					IntArraySet objs1 = accToObjs[e1];
 					IntArraySet objs2 = accToObjs[e2];
 					if (objs1 != null && objs2 != null) {
@@ -216,7 +245,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 						}
 					}
 				}
-				if (!checkMHP || mhp(e1, e2)) {
+				if (checkMHP && mhp(e1, e2)) {
 					System.out.println("PARALLEL: " + eStr(e1) + "," + eStr(e2)); 
 					relParallelRacePairs.add(e1, e2);
 					ArraySet<IntxIntSet> mhp1 = accToMHP[e1];
@@ -228,6 +257,8 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
        	}
 		relAliasingRacePairs.save();
 		relParallelRacePairs.save();
+		relGuardedRacePairs.save();
+		relCombinedRacePairs.save();
 
 	}
 
