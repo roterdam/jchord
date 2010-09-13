@@ -84,14 +84,6 @@ class CtxtVar {
   }
 }
 
-class Query {
-  Quad e;
-  boolean proven = false;
-  //Abstraction abs = new Abstraction(); // Abstraction that works for this query
-
-  Query(Quad e) { this.e = e; }
-}
-
 /**
  * Performs a refinement-based pointer analysis.
  *
@@ -142,13 +134,14 @@ class Query {
  */
 @Chord(
   name = "sliver-ctxts-java",
-  produces = { "C", "AH", "CfromIC", "AfromHC", "EfromVC" },
+  produces = { "C", "AH", "CfromMIC", "CfromMA", "AfromHC", "EfromVC", "objI" },
   namesOfTypes = { "C" },
   types = { DomC.class }
 )
 public class SliverCtxtsAnalysis extends JavaAnalysis {
   private Execution X;
 
+  static final String initTaskName = "cspa-init-sliver-dlog";
   static final String analysisTaskName = "cspa-sliver-dlog";
 
   // Immutable inputs
@@ -159,17 +152,19 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   private DomE domE;
   private ProgramRel relEV;
 
-  // Produced by the analysis
+  // Datalog -> Java
   private ProgramRel relVEA;
   private ProgramRel relAFA;
   private ProgramRel relFA;
 
-  // Produced by us for the analysis
+  // Java -> Datalog
   private DomC domC;
   private ProgramRel relAH;
-  private ProgramRel relCfromIC;
+  private ProgramRel relCfromMIC; // call-site-based
+  private ProgramRel relCfromMA; // object-based
   private ProgramRel relAfromHC;
   private ProgramRel relEfromVC;
+  private ProgramRel relobjI;
 
   // Canonical
   Quad _H;
@@ -183,6 +178,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   int maxHintSize;
   int initRefinementRadius;
   boolean useObjectSensitivity;
+  boolean refineCtxtVars;
 
   IndexMap<Ctxt> globalC = new IndexMap<Ctxt>(); // dom C will change over time, but keep a consistent indexing for comparing across iterations
 
@@ -190,12 +186,12 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   Set<Quad> hSet = new HashSet<Quad>();
   Set<Quad> iSet = new HashSet<Quad>();
   Set<Register> vSet = new HashSet<Register>();
-  HashMap<Quad,List<Quad>> i2h = new HashMap<Quad,List<Quad>>(); // i -> list of allocation sites that can be prepended to i
-  HashMap<Quad,List<Quad>> i2i = new HashMap<Quad,List<Quad>>(); // i -> list of call sites that can be prepended to i
-  HashMap<Quad,List<Quad>> h2h = new HashMap<Quad,List<Quad>>(); // i -> list of call sites that can be prepended to i
+  Set<jq_Method> mSet = new HashSet<jq_Method>();
+  HashMap<Quad,List<Quad>> i_this_h = new HashMap<Quad,List<Quad>>(); // i -> this can point to something allocated at h
   HashMap<Quad,List<Quad>> rev_i2i = new HashMap<Quad,List<Quad>>();
   HashMap<Quad,List<Quad>> rev_h2h = new HashMap<Quad,List<Quad>>();
-  HashMap<jq_Method,List<Quad>> callees = new HashMap<jq_Method,List<Quad>>(); // m -> list of call sites (reverse of IM)
+  HashMap<Quad,List<jq_Method>> im = new HashMap<Quad,List<jq_Method>>();
+  HashMap<jq_Method,List<Quad>> rev_im = new HashMap<jq_Method,List<Quad>>();
 
   // Current abstraction
   Abstraction abs = new Abstraction();
@@ -270,7 +266,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   String qstr(Quad q) { return q.toJavaLocStr()+"("+q.toString()+")"; }
   String hstr(Quad h) { return String.format("%s[%s]", domH.indexOf(h), qstr(h)); }
   String istr(Quad i) { return String.format("%s[%s]", domI.indexOf(i), qstr(i)); }
-  String estr(Quad e) { return String.format("%s[%s]", domE.indexOf(e), qstr(e)); }
+  String estr(Quad e) { return String.format("%s[%s]", domE.indexOf(e), e.toVerboseStr()); }
   String vstr(Register v) { return String.format("%s[%s]", domV.indexOf(v), v); }
   String cstr(Ctxt c) { return cstr(c, true); }
   String cstr(Ctxt c, boolean showIndex) {
@@ -288,7 +284,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   String cstrVerbose(Ctxt c) { return cstr(c, false)+(c.length() > 0 ? "_"+c.head().toByteLocStr() : ""); }
   String cstrBrief(Ctxt c) {
     StringBuilder buf = new StringBuilder();
-    buf.append(domC.indexOf(c));
+    //buf.append(domC.indexOf(c));
     buf.append('{');
     for (int i = 0; i < c.length(); i++) {
       if (i > 0) buf.append(" | ");
@@ -299,15 +295,27 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     return buf.toString();
   }
   String vestrBrief(CtxtVar ve) {
-    return ve.v+":"+cstrBrief(ve.e);
+    return ve.v+"@"+mstrBrief(domV.getMethod(ve.v))+":"+cstrBrief(ve.e);
+  }
+  String mstrBrief(jq_Method m) {
+    return m.getDeclaringClass().shortName()+"."+m.getName();
   }
 
   boolean isAlloc(Quad q) { return domH.indexOf(q) != -1; }
 
   ////////////////////////////////////////////////////////////
 
+  class Query {
+    Quad e;
+    boolean proven = false;
+    Abstraction abs; // Abstraction that works for this query
+
+    Query(Quad e) { this.e = e; }
+  }
+
   class Abstraction {
     void clear() {
+      proven = true;
       Sa.clear();
       Sv.clear();
       distHist.clear();
@@ -316,8 +324,9 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     @Override public String toString() { return String.format("|Sa|=%s,|Sv|=%s", Sa.size(), Sv.size()); }
 
-    int size() { return Sa.size() + Sv.size(); }
+    String size() { return Sa.size()+","+Sv.size(); }
     void add(Abstraction that) {
+      proven &= that.proven;
       Sa.addAll(that.Sa);
       Sv.addAll(that.Sv);
       distHist.add(that.distHist);
@@ -351,9 +360,11 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     // Output
     domC = (DomC) ClassicProject.g().getTrgt("C");
     relAH = (ProgramRel) ClassicProject.g().getTrgt("AH");
-    relCfromIC = (ProgramRel) ClassicProject.g().getTrgt("CfromIC");
+    relCfromMIC = (ProgramRel) ClassicProject.g().getTrgt("CfromMIC");
+    relCfromMA = (ProgramRel) ClassicProject.g().getTrgt("CfromMA");
     relAfromHC = (ProgramRel) ClassicProject.g().getTrgt("AfromHC");
     relEfromVC = (ProgramRel) ClassicProject.g().getTrgt("EfromVC");
+    relobjI = (ProgramRel) ClassicProject.g().getTrgt("objI");
 
     _H = (Quad)domH.get(1);
     _V = domV.get(1);
@@ -384,6 +395,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     this.maxHintSize = X.getIntArg("maxHintSize", 10);
     this.initRefinementRadius = X.getIntArg("initRefinementRadius", 2);
     this.useObjectSensitivity = X.getBooleanArg("useObjectSensitivity", false);
+    this.refineCtxtVars = X.getBooleanArg("refineCtxtVars", false);
 
     java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
     options.put("version", 1);
@@ -398,10 +410,13 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     for (int iter = 1; ; iter++) {
       X.logs("====== Iteration %s", iter);
+      computeC(); // Step (COMPUTE_C)
+      runAnalysis(); // Step (ANALYSIS)
+
       backupRelations(iter);
       refinementRadius = initRefinementRadius + (iter-1);
 
-      Abstraction hotAbs = computeInfSlivers(); // STEP (PRUNE)
+      Abstraction hotAbs = pruneAbstraction(); // STEP (PRUNE)
       //outputHint(iter);
 
       if (hotAbs == null) {
@@ -413,19 +428,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
         break;
       }
 
-      refineSlivers(hotAbs); // Step (REFINE)
-      computeC(); // Step (COMPUTE_C)
-
-      ClassicProject.g().resetTrgtDone(domC); // Make everything that depends on domC undone
-      ClassicProject.g().setTaskDone(this); // We are generating all this stuff, so mark it as done...
-      ClassicProject.g().setTrgtDone(domC);
-      ClassicProject.g().setTrgtDone(relAH);
-      ClassicProject.g().setTrgtDone(relCfromIC);
-      ClassicProject.g().setTrgtDone(relAfromHC);
-      ClassicProject.g().setTrgtDone(relEfromVC);
-      ClassicProject.g().runTask(analysisTaskName); // Step (ANALYSIS)
+      refineAbstraction(hotAbs); // Step (REFINE)
     }
-
     finish();
   }
 
@@ -435,11 +439,17 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       String path = X.path(""+iter);
       new File(path).mkdir();
       domC.save(path, true);
-      /*for (ProgramRel rel : new ProgramRel[] { relCfromIC, relAH, relVEA, relAFA }) {
-        rel.load();
-        rel.print(path);
-        //rel.close();
-      }*/
+
+      // VERBOSE
+      if (X.getBooleanArg("saveRelations", false)) {
+        for (String name : new String[] { "CfromMIC", "CfromMA", "AfromHC", "EfromVC", "AH", "VEA", "AFA", "FA", "escA" }) {
+          X.logs("  Saving relation "+name);
+          ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt(name);
+          rel.load();
+          rel.print(path);
+          //rel.close(); // Crashes
+        }
+      }
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
@@ -452,56 +462,9 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
   // Step (INIT)
   void init0CFA() {
-    // Construct C
-    domC.clear();
-    domC.getOrAdd(emptyCtxt); // Empty context
-    for (int hi = 1; hi < domH.size(); hi++) {
-      // Create a separate context for each reachable allocation site
-      Quad h = (Quad)domH.get(hi);
-      domC.getOrAdd(emptyCtxt.append(h));
-    }
-    domC.save();
-    for (Ctxt c : domC) globalC.getOrAdd(c);
+    ClassicProject.g().runTask(initTaskName); 
 
-    // Construct AH
-    relAH.zero();
-    for (int hi = 1; hi < domH.size(); hi++) {
-      Quad h = (Quad)domH.get(hi);
-      relAH.add(emptyCtxt.append(h), h); // Create a separate context for each reachable allocation site
-    }
-    relAH.save();
-
-    // Construct CfromIC (no context)
-    if (!useObjectSensitivity) {
-      relCfromIC.zero();
-      for (int i = 0; i < domI.size(); i++)
-        relCfromIC.add(emptyCtxt, domI.get(i), emptyCtxt);
-      relCfromIC.save();
-    }
-
-    // Construct AfromHC (build up abstract object)
-    relAfromHC.zero();
-    for (int hi = 1; hi < domH.size(); hi++) {
-      Quad h = (Quad)domH.get(hi);
-      relAfromHC.add(emptyCtxt.append(h), h, emptyCtxt);
-    }
-    relAfromHC.save();
-
-    // Construct EfromVC (no context)
-    relEfromVC.zero();
-    for (int v = 0; v < domV.size(); v++)
-      relEfromVC.add(emptyCtxt, domV.get(v), emptyCtxt);
-    relEfromVC.save();
-
-    ClassicProject.g().runTask(analysisTaskName); 
-
-    // Only consider reachable stuff
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("reachableV"); rel.load();
-      Iterable<Register> result = rel.getAry1ValTuples();
-      for (Register v : result) vSet.add(v);
-      rel.close();
-    }
+    // Reachable things
     {
       ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("reachableH"); rel.load();
       Iterable<Quad> result = rel.getAry1ValTuples();
@@ -514,90 +477,111 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       for (Quad i : result) iSet.add(i);
       rel.close();
     }
+    {
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("reachableV"); rel.load();
+      Iterable<Register> result = rel.getAry1ValTuples();
+      for (Register v : result) vSet.add(v);
+      rel.close();
+    }
+    {
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("reachableM"); rel.load();
+      Iterable<jq_Method> result = rel.getAry1ValTuples();
+      for (jq_Method m : result) mSet.add(m);
+      rel.close();
+    }
 
+    // i2h, i2i, im
     for (Quad i : iSet) {
-      i2h.put(i, new ArrayList<Quad>());
-      i2i.put(i, new ArrayList<Quad>());
+      i_this_h.put(i, new ArrayList<Quad>());
       rev_i2i.put(i, new ArrayList<Quad>());
+      im.put(i, new ArrayList<jq_Method>());
     }
-
-    for (Quad h : hSet) {
-      h2h.put(h, new ArrayList<Quad>());
+    for (Quad h : hSet)
       rev_h2h.put(h, new ArrayList<Quad>());
-    }
+    for (jq_Method m : mSet)
+      rev_im.put(m, new ArrayList<Quad>());
 
-    // Build callees
     {
-      ProgramRel relIM = (ProgramRel)ClassicProject.g().getTrgt("IM"); relIM.load();
-      PairIterable<Quad,jq_Method> result = relIM.getAry2ValTuples();
-      for (Pair<Quad,jq_Method> pair : result) {
-        Quad i = pair.val0;
-        jq_Method m = pair.val1;
-        assert iSet.contains(i) : istr(i);
-        List<Quad> l = callees.get(m);
-        if (l == null) callees.put(m, l = new ArrayList<Quad>());
-        l.add(i);
-      }
-      relIM.close();
-    }
-
-    // Used fixed call graph to determine:
-    //  - set of reachable H and I.
-    //  - information for building slivers (overapproximation suffices)
-    {
-      ProgramRel relItoH = (ProgramRel)ClassicProject.g().getTrgt("ItoH"); relItoH.load();
-      PairIterable<Quad,Quad> result = relItoH.getAry2ValTuples();
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("IthisH"); rel.load();
+      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
       for (Pair<Quad,Quad> pair : result) {
         Quad i = pair.val0;
         Quad h = pair.val1;
         assert iSet.contains(i) : istr(i);
         assert hSet.contains(h) : hstr(h);
-        i2h.get(i).add(h);
+        i_this_h.get(i).add(h);
       }
-      relItoH.close();
+      rel.close();
     }
     {
-      ProgramRel relItoI = (ProgramRel)ClassicProject.g().getTrgt("ItoI"); relItoI.load();
-      PairIterable<Quad,Quad> result = relItoI.getAry2ValTuples();
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("ItoI"); rel.load();
+      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
       for (Pair<Quad,Quad> pair : result) {
         Quad i = pair.val0;
         Quad j = pair.val1;
         assert iSet.contains(i) : istr(i);
         assert iSet.contains(j) : istr(j);
-        i2i.get(i).add(j);
         rev_i2i.get(j).add(i);
       }
-      relItoI.close();
+      rel.close();
     }
     {
-      ProgramRel relHtoH = (ProgramRel)ClassicProject.g().getTrgt("HtoH"); relHtoH.load();
-      PairIterable<Quad,Quad> result = relHtoH.getAry2ValTuples();
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("HtoH"); rel.load();
+      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
       for (Pair<Quad,Quad> pair : result) {
         Quad g = pair.val0;
         Quad h = pair.val1;
         assert hSet.contains(g) : hstr(g);
         assert hSet.contains(h) : hstr(h);
-        h2h.get(g).add(h);
         rev_h2h.get(h).add(g);
       }
-      relHtoH.close();
+      rel.close();
     }
+    {
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("IM"); rel.load();
+      PairIterable<Quad,jq_Method> result = rel.getAry2ValTuples();
+      for (Pair<Quad,jq_Method> pair : result) {
+        Quad i = pair.val0;
+        jq_Method m = pair.val1;
+        assert iSet.contains(i) : istr(i);
+        im.get(i).add(m);
+        rev_im.get(m).add(i);
+      }
+      rel.close();
+    }
+    X.logs("Finished 0-CFA: |hSet| = %s, |iSet| = %s, |vSet| = %s, |mSet| = %s", hSet.size(), iSet.size(), vSet.size(), mSet.size());
 
-    X.logs("Finished 0-CFA: |hSet| = %s, |iSet| = %s", hSet.size(), iSet.size());
+    //// Now run 0-CFA (again) using the slivers framework.
+
+    // Use object sensitivity?
+    relobjI.zero();
+    if (useObjectSensitivity) {
+      for (Quad i : iSet) relobjI.add(i);
+    }
+    relobjI.save();
+
+    // Run with initial abstraction: separate all allocation sites
+    for (Quad h : hSet)
+      abs.Sa.add(emptyCtxt.append(h));
+    for (Register v : vSet)
+      abs.Sv.add(new CtxtVar(v, emptyCtxt));
   }
 
-  // Step (PRUNE): compute influential slivers
-  // Return subset to refine or null if nothing to refine.
+  // Step (PRUNE): prune the abstraction.
+  // Also return subset of abstraction to refine or null if nothing to refine.
   int numGlobEncounters;
-  Abstraction computeInfSlivers() {
-    X.logs("computeInfSlivers()");
+  Abstraction pruneAbstraction() {
+    int numProven = 0;
+    for (Query q : queries)
+      if (q.proven) numProven++;
+
+    X.logs("pruneAbstraction(): focus on %d unproven queries (out of %d total)", queries.size()-numProven, queries.size());
     relVEA.load();
     relAFA.load();
     relFA.load();
 
-    abs.clear();
+    abs.clear(); // We're going to start afresh (pruning
     Abstraction hotAbs = new Abstraction();
-    hotAbs.clear();
 
     // When tracing back from an abstract object a, cache the abstraction that we need
     Map<Ctxt,Abstraction> a2abs = new HashMap<Ctxt,Abstraction>();
@@ -606,7 +590,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     int numDone = 0;
     numGlobEncounters = 0;
     for (Query q : queries) { // For each query...
-      if (q.proven) continue;
+      if (q.proven) continue; // ...that has not been proven
 
       Register v = e2v(q.e); // ...which accesses a field of v
 
@@ -616,21 +600,21 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       view.delete(1); // in any context
       Iterable<Ctxt> result = view.getAry1ValTuples();
       List<Ctxt> pointsTo = new ArrayList<Ctxt>();
-      Ctxt minc = null;
-      for (Ctxt c : result) { // For each such sliver c...
-        if (c.length() == 0) { // Ignore things that point to glob
+      Ctxt mina = null;
+      for (Ctxt a : result) { // For each such sliver c...
+        if (a.length() == 0) { // Ignore things that point to glob
           //X.errors("Invariant broken: Query %s (variable %s) points to glob!", estr(e), vstr(v));
           numGlobEncounters++;
           continue;
         }
-        pointsTo.add(c);
-        if (minc == null || domH.indexOf(c.head()) < domH.indexOf(minc.head())) minc = c;
+        pointsTo.add(a);
+        if (mina == null || domH.indexOf(a.head()) < domH.indexOf(mina.head())) mina = a;
       }
       view.free();
       // Just look at one element of the points-to set
       if (X.getBooleanArg("takeOnePointsTo", false)) {
         pointsTo.clear();
-        pointsTo.add(minc);
+        if (mina != null) pointsTo.add(mina);
       }
 
       // Compute the abstraction for this query q
@@ -645,19 +629,19 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
         qAbs.add(aAbs);
       }
       q.proven = qAbs.proven;
-      abs.add(qAbs);
+      abs.add(qAbs); // Add to the abstraction relevant stuff
 
       if (q.proven) {
         numDone++;
         X.logs("QUERY DONE (PROVEN): %s |abs| = %s (|pts|=%s): %s",
             qAbs.distHist, qAbs.size(), pointsTo.size(), estr(q.e));
       }
-      else if (qAbs.size() <= maxHintSize) {
+      /*else if (qAbs.size() <= maxHintSize) {
         // Done - don't do any more refinement (DON'T USE THIS)
         numDone++;
         X.logs("QUERY DONE (SMALL): %s |abs| = %s <= %s (|pts|=%s): %s",
             qAbs.distHist, qAbs.size(), maxHintSize, pointsTo.size(), estr(q.e));
-      }
+      }*/
       else {
         Abstraction qHotAbs = new Abstraction();
         // Choose some influential slivers to refine
@@ -679,9 +663,9 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     }
 
     X.logs("numGlobEncounters = %s", numGlobEncounters);
-    X.logs("TOTAL: %s/%s queries are done", numDone, queries.size());
+    X.logs("TOTAL: (%s+%s)/%s queries are done", numProven, numDone, queries.size());
     X.logs("TOTAL: chose %s/%s influential slivers to refine across %s/%s queries",
-        hotAbs.size(), abs.size(), queries.size()-numDone, queries.size());
+        hotAbs.size(), abs.size(), queries.size()-numDone-numProven, queries.size());
 
     // Print histogram of slivers
     X.logs("LENGTH(hotAbs): %s", hotAbs.lengthHist);
@@ -753,10 +737,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     }
 
     String str(Object o) {
+      if (o == null) return "THREAD_START";  // This is a jq_Field
       if (o instanceof Ctxt)
         return cstrBrief((Ctxt)o);
-      else
+      else if (o instanceof CtxtVar)
         return vestrBrief((CtxtVar)o);
+      else if (o instanceof jq_Field)
+        return o.toString();
+      else
+        throw new RuntimeException("Unknown object (not abstract object, contextual variable or field: "+o);
     }
 
     void display(Object c) {
@@ -834,7 +823,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
           Register v = pair.val0;
           Ctxt e = pair.val1;
           CtxtVar ve = new CtxtVar(v, e);
-          if (buildGraph) graph.add(graph.treeEdges, a, ve);
+          if (refineCtxtVars && buildGraph) graph.add(graph.treeEdges, a, ve);
           abs.Sv.add(ve);
         }
       }
@@ -856,8 +845,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   }
 
   // Step (REFINE): Refine the hotAbs
-  void refineSlivers(Abstraction hotAbs) {
-    X.logs("refineSlivers()");
+  void refineAbstraction(Abstraction hotAbs) {
+    X.logs("refineAbstraction()");
     Abstraction newAbs = new Abstraction();
 
     // Refine abstract objects (Sa)
@@ -871,47 +860,52 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       if (a.length() == 0) // Should not be trying to refine the glob
         throw new RuntimeException("We are trying to refine the glob - something went wrong!");
 
-      if (verbose >= 1) X.logs("Refining %s:", cstr(a));
+      if (verbose >= 1) X.logs("Sa-REFINE %s", cstrBrief(a));
 
       List<Quad> extensions;
       if (useObjectSensitivity)
         extensions = rev_h2h.get(a.last()); // Allocation sites
       else {
         extensions = a.length() == 1 ?
-          callees.get(a.head().getMethod()) : // Call sites that call the containing method of this allocation site (c.head())
+          rev_im.get(a.head().getMethod()) : // Call sites that call the containing method of this allocation site (c.head())
           rev_i2i.get(a.last()); // Call sites that lead to the last call site in the current chain
       }
 
       // If didn't extend, then assume that the last call site (c.last()) exists in an initial method,
       // which is not called by anything.
       // ASSUMPTION: initial methods are never called by some intermediate method.
+      // Need to check this - might not be a valid assumption for k-object-sensitivity.
       if (extensions == null || extensions.size() == 0) {
-        if (verbose >= 2) X.logs("  Keep same sliver (no extensions): %s", cstr(a));
+        //if (verbose >= 2) X.logs("  Keep same sliver (%s extensions): %s", extensions.size(), cstrBrief(a));
         newAbs.Sa.add(a);
       }
       else {
         for (Quad q : extensions) {
           newAbs.Sa.add(a.append(q));
-          if (verbose >= 2) X.logs("  New sliver: %s", cstr(a.append(q)));
+          if (verbose >= 2) X.logs("  New sliver: %s", cstrBrief(a.append(q)));
         }
       }
     }
 
     // Refine contextual variables (Sv)
     for (CtxtVar ve : abs.Sv) {
-      if (!hotAbs.Sv.contains(ve)) {
+      if (!refineCtxtVars || !hotAbs.Sv.contains(ve)) {
         newAbs.Sv.add(ve);
         continue;
       }
       Register v = ve.v;
       Ctxt e = ve.e;
       
+      if (verbose >= 1) X.logs("Sv-REFINE %s", vestrBrief(ve));
+
       List<Quad> extensions;
-      if (useObjectSensitivity)
-        extensions = rev_h2h.get(e.last()); // Allocation sites
+      if (useObjectSensitivity) {
+        extensions = e.length() == 0 ? new ArrayList(hSet) : // Consider all extensions
+          rev_h2h.get(e.last()); // Allocation sites which can actually lead to the current allocation site
+      }
       else {
         extensions = e.length() == 0 ?
-          callees.get(domV.getMethod(v)) : // Call sites that call the containing method of this variable
+          rev_im.get(domV.getMethod(v)) : // Call sites that call the containing method of this variable
           rev_i2i.get(e.last()); // Call sites that lead to the last call site in the current chain
       }
 
@@ -948,6 +942,38 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   void computeC() {
     X.logs("computeC()");
 
+    //// Find minimal contexts for each method by iteration
+    X.logs("Computing method contexts based on Sa and Sv");
+    HashMap<jq_Method,Set<Ctxt>> contexts = new HashMap<jq_Method,Set<Ctxt>>(); // method m -> contexts I need to support
+    // Initialize: have each method support the variables and abstract objects in that method.
+    for (jq_Method m : mSet) {
+      Set<Ctxt> set = new HashSet<Ctxt>();
+      set.add(emptyCtxt);
+      contexts.put(m, set);
+    }
+    for (CtxtVar ve : abs.Sv) {
+      jq_Method m = domV.getMethod(ve.v);
+      contexts.get(m).add(ve.e);
+    }
+    for (Ctxt a : abs.Sa) {
+      jq_Method m = a.head().getMethod();
+      contexts.get(m).add(a.tail()); 
+    }
+    // If m1 calls m2, then m1 better have the context that can support m2's relevant contexts.
+    // Propagate these changes until convergence.
+    while (true) {
+      boolean changed = false;
+      List<jq_Method> methods = new ArrayList<jq_Method>(contexts.keySet());
+      for (jq_Method m : methods) { // For each method m...
+        for (Ctxt c : contexts.get(m)) { // it can be analyzed in context c...
+          if (c.length() == 0) continue;
+          jq_Method prevm = c.head().getMethod(); // Get method containing either the first allocation/call site of the context
+          changed |= contexts.get(prevm).add(c.tail()); // Add the context
+        }
+      }
+      if (!changed) break;
+    }
+
     // Put all suffixes into domC
     {
       domC.clear();
@@ -958,102 +984,103 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     }
 
     // AH
-    {
-      relAH.zero();
-      Set<Quad> inSomeContext = new HashSet<Quad>(); // set of heads of some context
-      for (Ctxt a : abs.Sa) {
-        relAH.add(a, a.head());
-        inSomeContext.add(a.head());
-      }
-      for (Quad h : hSet) {
-        if (!inSomeContext.contains(h))
-          relAH.add(emptyCtxt, h);
-      }
-      relAH.save();
+    HashMap<Quad,List<Ctxt>> h2a = new HashMap<Quad,List<Ctxt>>();
+    for (Quad h : hSet) h2a.put(h, new ArrayList<Ctxt>());
+    relAH.zero();
+    Set<Quad> inSomeContext = new HashSet<Quad>(); // set of heads of some context
+    for (Ctxt a : abs.Sa) {
+      relAH.add(a, a.head());
+      h2a.get(a.head()).add(a);
+      inSomeContext.add(a.head());
     }
+    for (Quad h : hSet) { // [] stands for allocation sites which are not in any abstraction
+      if (inSomeContext.contains(h)) continue;
+      relAH.add(emptyCtxt, h);
+      h2a.get(h).add(emptyCtxt);
+    }
+    relAH.save();
 
-    // CfromIC
+    // CfromMIC, CfromMA
+    relCfromMIC.zero();
+    relCfromMA.zero();
     if (!useObjectSensitivity) {
-      relCfromIC.zero();
-      for (Ctxt c : domC) {
-        if (c.length() == 0) {
-          for (Quad i : iSet) // Try all possible call sites
-            relCfromIC.add(extendC(i, c), i, c);
-        }
-        else if (!isAlloc(c.head())) {
-          for (Quad i : i2i.get(c.head())) // Only try call sites that can follow
-            relCfromIC.add(extendC(i, c), i, c);
+      for (Quad i : iSet) { // At call site i
+        for (Ctxt c : contexts.get(i.getMethod())) { // ...in context c
+          for (jq_Method m : im.get(i)) { // ...calling method m
+            relCfromMIC.add(extend(i, c, contexts.get(m)), m, i, c); // Get the new context
+          }
         }
       }
-      relCfromIC.save();
     }
+    else {
+      for (Quad i : iSet) { // At call site i
+        for (Quad h : i_this_h.get(i)) { // ...this argument can point to something allocated at h
+          for (Ctxt a : h2a.get(h)) { // Corresponding to some abstract object a
+            for (jq_Method m : im.get(i)) { // ...calling method m
+              relCfromMA.add(project(a, contexts.get(m)), m, a); // Get the new context
+            }
+          }
+        }
+      }
+    }
+    relCfromMIC.save();
+    relCfromMA.save();
 
     // AfromHC
-    {
-      relAfromHC.zero();
-      for (Ctxt c : domC) { // For each context...
-        if (c.length() == 0) {
-          for (Quad h : hSet) // Try all possible allocation sites next
-            relAfromHC.add(extendA(h, c), h, c);
-        }
-        else if (useObjectSensitivity) {
-          for (Quad h : h2h.get(c.head())) // Only try allocation sites that can follow
-            relAfromHC.add(extendA(h, c), h, c);
-        }
-        else if (!useObjectSensitivity && !isAlloc(c.head())) { // (consider only contexts)
-          for (Quad h : i2h.get(c.head())) // Only try allocation sites that can follow
-            relAfromHC.add(extendA(h, c), h, c);
-        }
-      }
-      relAfromHC.save();
+    relAfromHC.zero();
+    for (Quad h : hSet) { // At allocation site h
+      for (Ctxt c : contexts.get(h.getMethod())) // ...in context c
+        relAfromHC.add(extend(h, c, abs.Sa), h, c); // Get the abstract object
     }
+    relAfromHC.save();
 
     // EfromVC
-    {
-      relEfromVC.zero();
-      for (Ctxt c : domC) { // For each context...
-        if (c.length() == 0) {
-          for (Register v : vSet) // Try all variables
-            relEfromVC.add(extendV(v, c), v, c);
-        }
-        else if (useObjectSensitivity) {
-          for (Register v : vSet) // Try all variables (FUTURE: prune)
-            relEfromVC.add(extendV(v, c), v, c);
-        }
-        else if (!useObjectSensitivity && !isAlloc(c.head())) { // (consider only contexts)
-          for (Register v : vSet) // Try all variables (FUTURE: prune)
-            relEfromVC.add(extendV(v, c), v, c);
-        }
-      }
-      relEfromVC.save();
+    relEfromVC.zero();
+    for (Register v : vSet) { // For variable v
+      for (Ctxt c : contexts.get(domV.getMethod(v))) // ...in context c
+        relEfromVC.add(extend(v, c, abs.Sv), v, c); // Get the context e for that variable
     }
+    relEfromVC.save();
   }
 
-  Ctxt extendC(Quad q, Ctxt c) {
-    // Create d = [q, c] but truncate to length k, where k is the maximum such that d is a valid context
-    for (int k = c.length()+1; k >= 0; k--) { // Try to extend
-      Ctxt d = c.prepend(q, k);
-      if (domC.indexOf(d) != -1)
-        return d;
-    }
-    throw new RuntimeException("At least emptyCtxt should be in domC");
-  }
-  Ctxt extendA(Quad h, Ctxt c) {
-    for (int k = c.length()+1; k >= 0; k--) {
-      Ctxt a = c.prepend(h, k);
-      if (abs.Sa.contains(a))
-        return a;
+  Ctxt project(Ctxt c, Set<Ctxt> ref) {
+    // Return longest prefix of c in ref
+    for (int k = c.length(); k >= 0; k--) { // Try to extend
+      Ctxt d = c.prefix(k);
+      if (ref.contains(d)) return d;
     }
     return emptyCtxt;
   }
-  CtxtVar extendV(Register v, Ctxt c) {
+  Ctxt extend(Quad q, Ctxt c, Set<Ctxt> ref) {
+    // Create d = [q, c] but truncate to length k, where k is the maximum such that d is in ref
+    for (int k = c.length()+1; k >= 0; k--) { // Try to extend
+      Ctxt d = c.prepend(q, k);
+      if (ref.contains(d)) return d;
+    }
+    return emptyCtxt;
+  }
+  Ctxt extend(Register v, Ctxt c, Set<CtxtVar> ref) {
     for (int k = c.length(); k >= 0; k--) {
       Ctxt e = c.prefix(k);
       CtxtVar ve = new CtxtVar(v, e);
-      if (abs.Sv.contains(ve))
-        return ve;
+      if (ref.contains(ve))
+        return e;
     }
-    throw new RuntimeException("Variable (without context) not in Sv");
+    return emptyCtxt;
+  }
+
+  // Step (ANALYSIS)
+  void runAnalysis() {
+    ClassicProject.g().resetTrgtDone(domC); // Make everything that depends on domC undone
+    ClassicProject.g().setTaskDone(this); // We are generating all this stuff, so mark it as done...
+    ClassicProject.g().setTrgtDone(domC);
+    ClassicProject.g().setTrgtDone(relAH);
+    ClassicProject.g().setTrgtDone(relCfromMIC);
+    ClassicProject.g().setTrgtDone(relCfromMA);
+    ClassicProject.g().setTrgtDone(relAfromHC);
+    ClassicProject.g().setTrgtDone(relEfromVC);
+    ClassicProject.g().setTrgtDone(relobjI);
+    ClassicProject.g().runTask(analysisTaskName);
   }
 
   Histogram lengthHistogram(Set<Ctxt> slivers) {
