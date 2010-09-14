@@ -71,7 +71,7 @@ import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.Timer;
 
-import chord.analyses.snapshot.Execution;
+import chord.util.Execution;
 import chord.project.OutDirUtils;
 
 /**

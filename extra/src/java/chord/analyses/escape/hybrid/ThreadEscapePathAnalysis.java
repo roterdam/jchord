@@ -66,7 +66,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Util.Templates.ListIterator;
 
-import chord.analyses.snapshot.Execution;
+import chord.util.Execution;
 import chord.project.OutDirUtils;
 
 @Chord(

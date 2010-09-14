@@ -42,8 +42,7 @@ import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
-import chord.analyses.snapshot.Execution;
-import chord.analyses.snapshot.StatFig;
+import chord.util.Execution;
 import chord.bddbddb.Rel.PairIterable;
 import chord.bddbddb.Rel.TrioIterable;
 import chord.bddbddb.Rel.RelView;
@@ -75,6 +74,7 @@ class CtxtVar {
   public CtxtVar(Register v, Ctxt e) { this.v = v; this.e = e; }
   public final Register v;
   public final Ctxt e;
+  public int length() { return 1 + e.length(); }
   @Override public boolean equals(Object _that) {
     CtxtVar that = (CtxtVar)_that;
     return v.equals(that.v) && e.equals(that.e);
@@ -175,10 +175,12 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   // Options
   int verbose;
   int maxIters;
-  int maxHintSize;
-  int initRefinementRadius;
+  //int maxHintSize;
+  boolean refineA;
+  boolean refineV;
+  int initRefinementRadiusA;
+  int initRefinementRadiusV;
   boolean useObjectSensitivity;
-  boolean refineCtxtVars;
 
   IndexMap<Ctxt> globalC = new IndexMap<Ctxt>(); // dom C will change over time, but keep a consistent indexing for comparing across iterations
 
@@ -195,7 +197,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
   // Current abstraction
   Abstraction abs = new Abstraction();
-  int refinementRadius; // Maximum number of hops that any candidate is away from a pivot
+  int refinementRadiusA; // Maximum number of hops that any candidate is away from a pivot (for abstract objects)
+  int refinementRadiusV; // Maximum number of hops that any candidate is away from a pivot (for contextual variables)
+
+  class Result {
+    int numProven;
+    int absHashCode;
+    String absSummary;
+  }
+  List<Result> results = new ArrayList<Result>();
 
   // Determine the queries in client code (for thread-escape)
   public void computedExcludedClasses() {
@@ -308,7 +318,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   class Query {
     Quad e;
     boolean proven = false;
-    Abstraction abs; // Abstraction that works for this query
+    Abstraction abs = new Abstraction(); // Current abstraction for this query
 
     Query(Quad e) { this.e = e; }
   }
@@ -318,31 +328,43 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       proven = true;
       Sa.clear();
       Sv.clear();
-      distHist.clear();
-      lengthHist.clear();
     }
 
-    @Override public String toString() { return String.format("|Sa|=%s,|Sv|=%s", Sa.size(), Sv.size()); }
+    @Override public int hashCode() {
+      return Sa.hashCode() * 37 + Sv.hashCode();
+    }
+    @Override public boolean equals(Object _that) {
+      Abstraction that = (Abstraction)_that;
+      return Sa.equals(that.Sa) && Sv.equals(that.Sv);
+    }
 
+    @Override public String toString() {
+      return String.format("A_%s%s|V_%s%s", Sa.size(), lengthHistogram(Sa), Sv.size(), lengthHistogram(Sv));
+    }
     String size() { return Sa.size()+","+Sv.size(); }
+
+    // Note: we will double count if this is disjoint from that
     void add(Abstraction that) {
       proven &= that.proven;
       Sa.addAll(that.Sa);
       Sv.addAll(that.Sv);
-      distHist.add(that.distHist);
-      lengthHist.add(that.lengthHist);
+    }
+
+    // Number of contexts in which variables were analyzed
+    int sizeC() {
+      Set<Ctxt> set = new HashSet<Ctxt>();
+      for (CtxtVar ve : Sv) set.add(ve.e);
+      return set.size();
     }
 
     boolean proven = true; // True until proven not true via counterexample
     HashSet<Ctxt> Sa = new HashSet<Ctxt>(); // Abstract objects
     HashSet<CtxtVar> Sv = new HashSet<CtxtVar>(); // Contextual variables
-    Histogram distHist = new Histogram(); // Distribution over distances of abstract objects
-    Histogram lengthHist = new Histogram(); // Distribution over distances of abstract objects
   }
 
   private void init() {
-    X = Execution.v("hints");  
-    X.addSaveFiles("hints.txt", "hints-str.txt");
+    X = Execution.v("adaptive");  
+    //X.addSaveFiles("hints.txt", "hints-str.txt");
 
     // Immutable inputs
     domV = (DomV) ClassicProject.g().getTrgt("V"); ClassicProject.g().runTask(domV);
@@ -368,18 +390,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     _H = (Quad)domH.get(1);
     _V = domV.get(1);
-
-    // Compute which queries we should answer in the whole program
-    String focus = X.getStringArg("eFocus", null);
-    if (focus != null) {
-      for (String e : focus.split(","))
-        queries.add(new Query(domE.get(Integer.parseInt(e))));
-    }
-    else {
-      computedExcludedClasses();
-      for (Quad e : domE)
-        if (!computeStatementIsExcluded(e) && e2v(e) != null) queries.add(new Query(e));
-    }
   }
 
   void finish() {
@@ -392,19 +402,23 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     this.verbose = X.getIntArg("verbose", 0);
     this.maxIters = X.getIntArg("maxIters", 1);
-    this.maxHintSize = X.getIntArg("maxHintSize", 10);
-    this.initRefinementRadius = X.getIntArg("initRefinementRadius", 2);
+    //this.maxHintSize = X.getIntArg("maxHintSize", 10);
+    this.refineA = X.getBooleanArg("refineA", false);
+    this.refineV = X.getBooleanArg("refineV", false);
+    this.initRefinementRadiusA = X.getIntArg("initRefinementRadiusA", 0);
+    this.initRefinementRadiusV = X.getIntArg("initRefinementRadiusV", 0);
     this.useObjectSensitivity = X.getBooleanArg("useObjectSensitivity", false);
-    this.refineCtxtVars = X.getBooleanArg("refineCtxtVars", false);
 
-    java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
-    options.put("version", 1);
-    options.put("program", System.getProperty("chord.work.dir"));
-    options.put("maxIters", maxIters);
-    options.put("maxHintSize", maxHintSize);
-    options.put("initRefinementRadius", initRefinementRadius);
-    options.put("useObjectSensitivity", useObjectSensitivity);
-    X.writeMap("options.map", options);
+    X.putOption("version", 1);
+    X.putOption("program", System.getProperty("chord.work.dir"));
+    X.putOption("maxIters", maxIters);
+    //X.putOption("maxHintSize", maxHintSize);
+    X.putOption("refineA", refineA);
+    X.putOption("refineV", refineV);
+    X.putOption("initRefinementRadiusA", initRefinementRadiusA);
+    X.putOption("initRefinementRadiusV", initRefinementRadiusV);
+    X.putOption("useObjectSensitivity", useObjectSensitivity);
+    X.flushOptions();
 
     init0CFA(); // STEP (INIT)
 
@@ -414,17 +428,27 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       runAnalysis(); // Step (ANALYSIS)
 
       backupRelations(iter);
-      refinementRadius = initRefinementRadius + (iter-1);
+      refinementRadiusA = initRefinementRadiusA + (iter-1);
+      refinementRadiusV = initRefinementRadiusV + (iter-1);
 
       Abstraction hotAbs = pruneAbstraction(); // STEP (PRUNE)
+      outputStatus(iter);
       //outputHint(iter);
 
       if (hotAbs == null) {
-        X.logs("Analysis goal reached, exiting...");
+        X.logs("Proven all queries, exiting...");
+        X.putOutput("conclusion", "prove");
         break;
       }
       if (iter == maxIters) {
         X.logs("Reached maximum number of iterations, exiting...");
+        X.putOutput("conclusion", "max");
+        break;
+      }
+
+      if (converged()) {
+        X.logs("Refinement converged, exiting...");
+        X.putOutput("conclusion", "conv");
         break;
       }
 
@@ -436,12 +460,11 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   void backupRelations(int iter) {
     X.logs("backupRelations");
     try {
-      String path = X.path(""+iter);
-      new File(path).mkdir();
-      domC.save(path, true);
-
-      // VERBOSE
       if (X.getBooleanArg("saveRelations", false)) {
+        String path = X.path(""+iter);
+        new File(path).mkdir();
+        domC.save(path, true);
+
         for (String name : new String[] { "CfromMIC", "CfromMA", "AfromHC", "EfromVC", "AH", "VEA", "AFA", "FA", "escA" }) {
           X.logs("  Saving relation "+name);
           ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt(name);
@@ -454,10 +477,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       throw new RuntimeException(e);
     }
 
-    PrintWriter out = OutDirUtils.newPrintWriter("globalC.txt");
+    /*PrintWriter out = OutDirUtils.newPrintWriter("globalC.txt");
     for (int i = 0; i < globalC.size(); i++)
       out.println(cstrVerbose(globalC.get(i)));
-    out.close();
+    out.close();*/
   }
 
   // Step (INIT)
@@ -551,6 +574,23 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     }
     X.logs("Finished 0-CFA: |hSet| = %s, |iSet| = %s, |vSet| = %s, |mSet| = %s", hSet.size(), iSet.size(), vSet.size(), mSet.size());
 
+    // Compute which queries we should answer in the whole program
+    String focus = X.getStringArg("eFocus", null);
+    if (focus != null) {
+      for (String e : focus.split(","))
+        queries.add(new Query(domE.get(Integer.parseInt(e))));
+    }
+    else {
+      /*computedExcludedClasses();
+      for (Quad e : domE)
+        if (!computeStatementIsExcluded(e) && e2v(e) != null) queries.add(new Query(e));*/
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("queryE"); rel.load();
+      Iterable<Quad> result = rel.getAry1ValTuples();
+      for (Quad e : result) queries.add(new Query(e));
+      rel.close();
+    }
+    X.logs("%s queries", queries.size());
+
     //// Now run 0-CFA (again) using the slivers framework.
 
     // Use object sensitivity?
@@ -567,27 +607,33 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       abs.Sv.add(new CtxtVar(v, emptyCtxt));
   }
 
+  int numProven() {
+    int n = 0;
+    for (Query q : queries)
+      if (q.proven) n++;
+    return n;
+  }
+
   // Step (PRUNE): prune the abstraction.
   // Also return subset of abstraction to refine or null if nothing to refine.
   int numGlobEncounters;
   Abstraction pruneAbstraction() {
-    int numProven = 0;
-    for (Query q : queries)
-      if (q.proven) numProven++;
+    // Queries already proven
+    int numProven = numProven();
 
     X.logs("pruneAbstraction(): focus on %d unproven queries (out of %d total)", queries.size()-numProven, queries.size());
     relVEA.load();
     relAFA.load();
     relFA.load();
 
-    abs.clear(); // We're going to start afresh (pruning
+    abs.clear(); // We're going to start afresh (this will contain the pruned abstraction)
+    TObjectIntHashMap<Ctxt> dists = new TObjectIntHashMap<Ctxt>();
     Abstraction hotAbs = new Abstraction();
 
     // When tracing back from an abstract object a, cache the abstraction that we need
     Map<Ctxt,Abstraction> a2abs = new HashMap<Ctxt,Abstraction>();
     Map<Ctxt,Abstraction> a2hotAbs = new HashMap<Ctxt,Abstraction>();
 
-    int numDone = 0;
     numGlobEncounters = 0;
     for (Query q : queries) { // For each query...
       if (q.proven) continue; // ...that has not been proven
@@ -617,24 +663,22 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
         if (mina != null) pointsTo.add(mina);
       }
 
-      // Compute the abstraction for this query q
-      Abstraction qAbs = new Abstraction();
+      // Compute the (pruned) abstraction for this query q
+      q.abs.clear();
+      TObjectIntHashMap<Ctxt> qDists = new TObjectIntHashMap<Ctxt>();
       for (Ctxt a : pointsTo) {
         // Trace back from each pivot c (use cache if possible)
         Abstraction aAbs = a2abs.get(a);
-        if (aAbs == null) {
-          a2abs.put(a, aAbs = new Abstraction());
-          traceBack(aAbs, a, Integer.MAX_VALUE);
-        }
-        qAbs.add(aAbs);
+        if (aAbs == null) a2abs.put(a, aAbs = new Abstraction());
+        minMerge(qDists, traceBack(aAbs, a, false));
+        q.abs.add(aAbs);
       }
-      q.proven = qAbs.proven;
-      abs.add(qAbs); // Add to the abstraction relevant stuff
+      q.proven = q.abs.proven; // Did we prove it?
 
       if (q.proven) {
-        numDone++;
-        X.logs("QUERY DONE (PROVEN): %s |abs| = %s (|pts|=%s): %s",
-            qAbs.distHist, qAbs.size(), pointsTo.size(), estr(q.e));
+        numProven++;
+        X.logs("QUERY DONE (PROVEN): %s ; dist%s (|pts|=%s): %s",
+            q.abs, distHistogram(qDists), pointsTo.size(), estr(q.e));
       }
       /*else if (qAbs.size() <= maxHintSize) {
         // Done - don't do any more refinement (DON'T USE THIS)
@@ -643,39 +687,84 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
             qAbs.distHist, qAbs.size(), maxHintSize, pointsTo.size(), estr(q.e));
       }*/
       else {
+        abs.add(q.abs); // Add to the main abstraction
+        minMerge(dists, qDists);
+
         Abstraction qHotAbs = new Abstraction();
         // Choose some influential slivers to refine
         for (Ctxt a : pointsTo) {
           Abstraction aHotAbs = a2hotAbs.get(a);
           if (aHotAbs == null) {
             a2hotAbs.put(a, aHotAbs = new Abstraction());
-            traceBack(aHotAbs, a, refinementRadius);
+            traceBack(aHotAbs, a, true);
           }
           qHotAbs.add(aHotAbs);
         }
         hotAbs.add(qHotAbs);
 
-        X.logs("QUERY REFINE: %s chose %s/%s as hint [radius<=%s] (|pts|=%s): %s",
-            qHotAbs.distHist,
-            qHotAbs.size(), qAbs.size(), refinementRadius,
-            pointsTo.size(), estr(q.e));
+        X.logs("QUERY REFINE: %s ; dist %s ; chose %s/%s (|pts|=%s): %s",
+          q.abs, distHistogram(qDists), qHotAbs.size(), q.abs.size(), pointsTo.size(), estr(q.e));
       }
     }
 
     X.logs("numGlobEncounters = %s", numGlobEncounters);
-    X.logs("TOTAL: (%s+%s)/%s queries are done", numProven, numDone, queries.size());
-    X.logs("TOTAL: chose %s/%s influential slivers to refine across %s/%s queries",
-        hotAbs.size(), abs.size(), queries.size()-numDone-numProven, queries.size());
+    X.logs("STATUS: proved %s/%s queries", numProven, queries.size());
+    X.logs("STATUS: chose %s/%s slivers to refine across remaining %s/%s queries",
+        hotAbs.size(), abs.size(), queries.size()-numProven, queries.size());
 
     // Print histogram of slivers
-    X.logs("LENGTH(hotAbs): %s", hotAbs.lengthHist);
-    X.logs("LENGTH(abs): %s", abs.lengthHist);
+    X.logs("DIST(pruned): %s", distHistogram(dists));
+    X.logs("SUMMARY(pruned): %s", abs);
+    X.logs("SUMMARY(selected): %s", hotAbs);
 
     relVEA.close();
     relAFA.close();
     relFA.close();
 
-    return numDone < queries.size() ? hotAbs : null;
+    return numProven < queries.size() ? hotAbs : null;
+  }
+
+  boolean converged() {
+    if (results.size() < 2) return false;
+    Result a = results.get(results.size()-2);
+    Result b = results.get(results.size()-1);
+    return a.absHashCode == b.absHashCode;
+  }
+
+  void outputStatus(int iter) {
+    // abs is only for unproven queries; for others, look at q.abs
+    Abstraction totalAbs = new Abstraction();
+    totalAbs.add(abs);
+    for (Query q : queries) {
+      if (!q.proven) continue;
+      totalAbs.add(q.abs);
+    }
+
+    int numProven = numProven();
+    Result result = new Result();
+    result.numProven = numProven;
+    result.absHashCode = abs.hashCode();
+    result.absSummary = abs.toString();
+    results.add(result);
+
+    X.putOutput("currIter", iter);
+    X.putOutput("numEscaping", queries.size()-numProven);
+    X.putOutput("numLocal", numProven);
+    X.putOutput("totalSizeA", totalAbs.Sa.size());
+    X.putOutput("totalSizeC", totalAbs.sizeC());
+    X.putOutput("totalSizeV", totalAbs.Sv.size());
+    X.putOutput("numProvenHistory", numProvenHistory());
+
+    X.flushOutput();
+  }
+
+  String numProvenHistory() {
+    StringBuilder buf = new StringBuilder();
+    for (Result r : results) {
+      if (buf.length() > 0) buf.append(',');
+      buf.append(r.numProven);
+    }
+    return buf.toString();
   }
 
   /*void outputHint(int iter) {
@@ -767,24 +856,25 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   }
 
   // Traceback in the heap from a0
-  void traceBack(Abstraction abs, Ctxt a0, int maxDist) {
-    boolean buildGraph = verbose >= 3 && maxDist == Integer.MAX_VALUE;
+  TObjectIntHashMap<Ctxt> traceBack(Abstraction abs, Ctxt a0, boolean limitDist) {
+    // For debugging
+    boolean buildGraph = verbose >= 3 && !limitDist;
     BFSGraph graph = null;
     if (buildGraph) graph = new BFSGraph();
 
     TObjectIntHashMap<Ctxt> dists = new TObjectIntHashMap<Ctxt>();
-    Set<Ctxt> visited = abs.Sa;
 
     // Initialize
     LinkedList<Ctxt> queue = new LinkedList<Ctxt>();
     dists.put(a0, 0);
     queue.addLast(a0);
-    visited.add(a0);
 
     // Perform BFS
     while (queue.size() > 0) {
       Ctxt a = queue.removeFirst();
       int adist = dists.get(a);
+      if (!limitDist || (refineA && adist <= refinementRadiusA)) // Add to abstraction
+        abs.Sa.add(a);
 
       // Follow the heap backwards
       {
@@ -796,21 +886,17 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
           if (b.length() == 0) { // Ignore going to glob
             //X.errors("Invariant broken: glob can reach %s", cstr(c));
             numGlobEncounters++;
-            if (buildGraph) graph.add(graph.auxEdges, a, b);
+            if (refineA && buildGraph) graph.add(graph.auxEdges, a, b);
             continue;
           }
-          if (visited.contains(b)) {
-            if (buildGraph) graph.add(graph.auxEdges, a, b);
+          if (dists.contains(b)) {
+            if (refineA && buildGraph) graph.add(graph.auxEdges, a, b);
             continue;
           }
-          if (buildGraph) graph.add(graph.treeEdges, a, b);
-          visited.add(b);
+          if (refineA && buildGraph) graph.add(graph.treeEdges, a, b);
           int bdist = adist+1;
-          abs.distHist.add(bdist);
-          abs.lengthHist.add(b.length());
           dists.put(b, bdist);
-          if (bdist < maxDist)
-            queue.addLast(b);
+          queue.addLast(b);
         }
       }
 
@@ -823,8 +909,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
           Register v = pair.val0;
           Ctxt e = pair.val1;
           CtxtVar ve = new CtxtVar(v, e);
-          if (refineCtxtVars && buildGraph) graph.add(graph.treeEdges, a, ve);
-          abs.Sv.add(ve);
+          if (refineV && buildGraph) graph.add(graph.treeEdges, a, ve);
+          int vdist = adist+1;
+          if (!limitDist || (refineV && vdist <= refinementRadiusV))
+            abs.Sv.add(ve);
         }
       }
 
@@ -842,6 +930,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     // Record the graph
     if (buildGraph) graph.display(a0);
+    return dists;
   }
 
   // Step (REFINE): Refine the hotAbs
@@ -882,14 +971,14 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       else {
         for (Quad q : extensions) {
           newAbs.Sa.add(a.append(q));
-          if (verbose >= 2) X.logs("  New sliver: %s", cstrBrief(a.append(q)));
+          if (verbose >= 2) X.logs("  New: %s", cstrBrief(a.append(q)));
         }
       }
     }
 
     // Refine contextual variables (Sv)
     for (CtxtVar ve : abs.Sv) {
-      if (!refineCtxtVars || !hotAbs.Sv.contains(ve)) {
+      if (!hotAbs.Sv.contains(ve)) {
         newAbs.Sv.add(ve);
         continue;
       }
@@ -913,22 +1002,22 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       // which is not called by anything.
       // ASSUMPTION: initial methods are never called by some intermediate method.
       if (extensions == null || extensions.size() == 0) {
-        if (verbose >= 2) X.logs("  Keep same sliver (no extensions): %s", vestrBrief(ve));
+        if (verbose >= 2) X.logs("  Keep: %s", vestrBrief(ve));
         newAbs.Sv.add(ve);
       }
       else {
         for (Quad q : extensions) {
           CtxtVar newve = new CtxtVar(ve.v, ve.e.append(q));
           newAbs.Sv.add(newve);
-          if (verbose >= 2) X.logs("  New sliver: %s", vestrBrief(newve));
+          if (verbose >= 2) X.logs("  New: %s", vestrBrief(newve));
         }
       }
     }
 
-    X.logs("Refinement: |Sa| = %s (old: %s), |Sv| = %s (old: %s)",
-        newAbs.Sa.size(), abs.Sa.size(),
-        newAbs.Sv.size(), abs.Sv.size());
-    X.logs("LENGTH(newAbs): %s", lengthHistogram(newAbs.Sa));
+    X.logs("REFINE |Sa| : %s -> %s, |Sv| : %s -> %s",
+        abs.Sa.size(), newAbs.Sa.size(),
+        abs.Sv.size(), newAbs.Sv.size());
+    X.logs("SUMMARY(refined): %s", newAbs);
 
     abs = newAbs;
   }
@@ -963,9 +1052,9 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     // Propagate these changes until convergence.
     while (true) {
       boolean changed = false;
-      List<jq_Method> methods = new ArrayList<jq_Method>(contexts.keySet());
-      for (jq_Method m : methods) { // For each method m...
-        for (Ctxt c : contexts.get(m)) { // it can be analyzed in context c...
+      for (jq_Method m : contexts.keySet()) { // For each method m...
+        List<Ctxt> cs = new ArrayList(contexts.get(m));
+        for (Ctxt c : cs) { // it can be analyzed in context c...
           if (c.length() == 0) continue;
           jq_Method prevm = c.head().getMethod(); // Get method containing either the first allocation/call site of the context
           changed |= contexts.get(prevm).add(c.tail()); // Add the context
@@ -1083,10 +1172,16 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     ClassicProject.g().runTask(analysisTaskName);
   }
 
-  Histogram lengthHistogram(Set<Ctxt> slivers) {
+  Histogram lengthHistogram(Set slivers) {
     Histogram hist = new Histogram();
-    for (Ctxt c : slivers)
-      hist.counts[c.length()]++;
+    for (Object c : slivers) {
+      if (c instanceof Ctxt)
+        hist.counts[((Ctxt)c).length()]++;
+      else if (c instanceof CtxtVar)
+        hist.counts[((CtxtVar)c).length()]++;
+      else
+        throw new RuntimeException("Can't get length of "+c);
+    }
     return hist;
   }
 
@@ -1099,6 +1194,19 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       }
     });
     return hist;
+  }
+
+  // dest(key) <- min(dest(key), source(key)) for all keys
+  <T> void minMerge(final TObjectIntHashMap<T> dest, final TObjectIntHashMap<T> source) {
+    source.forEachEntry(new TObjectIntProcedure<T>() {
+      public boolean execute(T key, int value) {
+        if (dest.containsKey(key))
+          dest.put(key, Math.min(dest.get(key), value));
+        else
+          dest.put(key, value);
+        return true;
+      }
+    });
   }
 
   class Histogram {
