@@ -47,4 +47,20 @@ public class Utils {
       throw new RuntimeException(e);
     }
   }
+
+  public static <T> String join(List<T> objs, String delim) {
+    if(objs == null) return "";
+    return join(objs, delim, 0, objs.size());
+  }
+  public static <T> String join(List<T> objs, String delim, int start, int end) {
+    if(objs == null) return "";
+    StringBuilder sb = new StringBuilder();
+    boolean first = true;
+    for(int i = start; i < end; i++) {
+      if(!first) sb.append(delim);
+      sb.append(objs.get(i));
+      first = false;
+    }
+    return sb.toString();
+  }
 }

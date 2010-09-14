@@ -67,13 +67,19 @@ public class Execution {
     logOut.flush();
   }
 
+  public void putOption(String key, Object value) {
+    logs("OPT %s = %s", key, value);
+    options.put(key, value);
+  }
   public void putOutput(String key, Object value) {
     logs("OUT %s = %s", key, value);
     output.put(key, value);
   }
+  public void flushOutput() { writeMap("output.map", output); }
+  public void flushOptions() { writeMap("options.map", options); }
 
   public void writeMap(String name, HashMap<Object,Object> map) {
-    PrintWriter out = Utils.openOutAppend(path(name));
+    PrintWriter out = Utils.openOut(path(name));
     for (Object key : map.keySet()) {
       out.println(key+"\t"+map.get(key));
     }
@@ -119,7 +125,8 @@ public class Execution {
     watch.stop();
     output.put("exec.time", watch);
     output.put("exec.errors", numErrors);
-    writeMap("output.map", output);
+    flushOptions();
+    flushOutput();
 
     // Delete stuff
     String files = System.getProperty("chord."+name+".deleteFiles");
@@ -171,6 +178,7 @@ public class Execution {
     for (String file : files) saveFiles.add(file);
   }
 
+  public HashMap<Object,Object> options = new LinkedHashMap<Object,Object>(); // For statistics, which get dumped
   public HashMap<Object,Object> output = new LinkedHashMap<Object,Object>(); // For statistics, which get dumped
   private int numErrors = 0;
   private StopWatch watch = new StopWatch();

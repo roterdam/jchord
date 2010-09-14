@@ -30,6 +30,9 @@ import chord.instr.InstrScheme;
 import chord.program.Program;
 import chord.project.Config;
 import chord.project.analyses.DynamicAnalysis;
+import chord.util.Execution;
+import chord.util.StatFig;
+import chord.util.Utils;
 
 import chord.project.ClassicProject;
 import chord.doms.DomE;

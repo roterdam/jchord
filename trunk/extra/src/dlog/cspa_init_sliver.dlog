@@ -10,13 +10,14 @@
 
 .include "F.dom"
 .include "H.dom"
+.include "E.dom"
 .include "I.dom"
 .include "M.dom"
 .include "T.dom"
 .include "V.dom"
 .include "Z.dom"
 
-.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_Z0
+.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_Z0_E0
 
 ############################################################
 # Relations
@@ -25,11 +26,15 @@
 MI(m:M,i:I) input # Method m contains call site i
 MH(m:M,h:H) input # Method m contains allocation site h
 MV(m:M,v:V) input # Method m contains variable v
+TM(t:T,m:M) input
+ME(m:M,e:E) input
+EV(e:E,v:V) input
 statIM(i:I,m:M) input # Call site i resolves to static method m
 IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
 MmethArg(m:M0,n:Z0,v:V0) input
 MmethRet(m:M0,n:Z0,v:V1) input
+checkExcludedT(t:T) input
 
 # Computed from 0-CFA.
 IM(i:I,m:M) input # call site i can resolve to method m
@@ -37,6 +42,7 @@ VH(v:V,h:H) input # Whether variable v can point to an object allocated at h
 reachableM(m:M) input # method m is reachable
 
 # Output one-time relations.
+queryE(e:E) output # Which queries we want to answer
 IthisH(i:I,h:H) output # at call site i, this argument can point to something in h
 ItoI(i:I,j:I) output # i can call a method that contains j
 HtoH(g:H,h:H) output # # g can be the "this" argument, calling method containing h
@@ -49,18 +55,20 @@ retCopy(i:I0,u:V0,m:M0,v:V1) output # vi at call site i <=> vm in method m (retu
 ############################################################
 # Constraints
 
+queryE(e) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_). # All queries we care about
+
 reachableH(h) :- reachableM(m), MH(m,h).
 reachableV(v) :- reachableM(m), MV(m,v).
 
 argCopy(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm).
 retCopy(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
 
-IthisH(i,h) :- IinvkArg(i,0,v), VH(v, h).
+IthisH(i,h) :- IinvkArg(i,0,v), VH(v, h), reachableH(h).
 
 # For call-site-based refinement
 ItoI(i,j) :- IM(i,m), MI(m,j).
 
 # For object-based refinement
-HtoH(g,h) :- IinvkArg(i,0,v), VH(v,g), IM(i,m), skipMM(m,n), MH(n,h).
+HtoH(g,h) :- IinvkArg(i,0,v), VH(v,g), IM(i,m), skipMM(m,n), MH(n,h), reachableH(g), reachableH(h).
 skipMM(m,n) :- m=n.
 skipMM(m,n) :- MI(m,i), statIM(i,n). # Idea: if analyze m in some context, we end up analyzing n in that context as well

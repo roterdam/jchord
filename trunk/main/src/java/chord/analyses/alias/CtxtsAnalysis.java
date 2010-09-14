@@ -299,18 +299,17 @@ public class CtxtsAnalysis extends JavaAnalysis {
     if (inValuesPath != null) X.symlinkPath = inValuesPath+".results";
 
     // Save options
-    HashMap<Object,Object> options = new LinkedHashMap<Object,Object>();
-    options.put("version", 1);
-    options.put("program", System.getProperty("chord.work.dir"));
-    options.put("senProb", senProb);
-    options.put("randSeed", randSeed);
-    options.put("kobj", kobjK);
-    options.put("kcfa", kcfaK);
-    options.put("kobjRange", kobjRange);
-    options.put("kcfaRange", kcfaRange);
-    options.put("numRefineIters", System.getProperty("chord.max.iters"));
-    options.put("inValuesPath", inValuesPath);
-    X.writeMap("options.map", options);
+    X.putOption("version", 1);
+    X.putOption("program", System.getProperty("chord.work.dir"));
+    X.putOption("senProb", senProb);
+    X.putOption("randSeed", randSeed);
+    X.putOption("kobj", kobjK);
+    X.putOption("kcfa", kcfaK);
+    X.putOption("kobjRange", kobjRange);
+    X.putOption("kcfaRange", kcfaRange);
+    X.putOption("numRefineIters", System.getProperty("chord.max.iters"));
+    X.putOption("inValuesPath", inValuesPath);
+    X.flushOptions();
 
     Random random = randSeed != 0 ? new Random(randSeed) : new Random();
     kobjValue = new int[domH.size()];

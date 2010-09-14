@@ -141,6 +141,8 @@ VEA(l,el,a) :- RgetStatFldInst(c,l,f), EfromVC(el,l,c), FA(f,a), VAfilter(l,a).
 # in context c, b.f = r
 RputInstFldInst(c,b,f,r) :- reachableCM(c,m), MputInstFldInst(m,b,f,r).
 AFA(a,f,aa) :- RputInstFldInst(c,b,f,r), VCA(b,c,a), VCA(r,c,aa).
+#reasonAVA(a,b,aa) :- RputInstFldInst(c,b,f,r), VCA(b,c,a), VCA(r,c,aa).
+#reasonAVA(a,r,aa) :- RputInstFldInst(c,b,f,r), VCA(b,c,a), VCA(r,c,aa).
 
 # in context c, STATIC.f = r
 RputStatFldInst(c,f,r) :- reachableCM(c,m), MputStatFldInst(m,f,r).
