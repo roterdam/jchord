@@ -103,7 +103,6 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	}
 
 	public void processReadAfter(int t, long m) {
-		if (t < 0) { return; }
 		if (stopProcess) { return; }
 		assert (m >= 0);
 		
@@ -136,7 +135,6 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	}	
 
 	public void processWriteAfter(int t, long m) {
-		if (t < 0) { return; }
 		if (stopProcess) { return; }
 		assert (m >= 0);
 		
@@ -204,7 +202,7 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	
 	@Override
 	public void processAcquireLock(int l, int t, int o) {		
-		if (l < 0 || t < 0 || o < 0) { return; }
+		if (l < 0) { return; }
 		if (stopProcess) { return; }
 		
 		if (DEBUG) {			
@@ -231,7 +229,7 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	
 	@Override
 	public void processReleaseLock(int r, int t, int o) {
-		if (r < 0 || t < 0 || o < 0) { return; }
+		if (r < 0) { return; }
 		if (stopProcess) { return; }
 		
 		if (DEBUG) {
@@ -332,7 +330,7 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	}
 	
 	public void processThreadStart(int i, int t, int o) {
-		if (i < 0 || t < 0 || o < 0) { return; }
+		if (i < 0) { return; }
 		
 		if (DEBUG) {			
 			Messages.log("processThreadStart: i = " + i + ", t = " + t + ", o = " + o);
