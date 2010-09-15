@@ -17,8 +17,9 @@
 .include "V.dom"
 .include "Z.dom"
 .include "C.dom"
+.include "E.dom"
 
-.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2_Z0
+.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2_Z0_E0
 
 ###
 # Relations
@@ -30,6 +31,7 @@ sub(t1:T1,t2:T0) input # t1 is a subtype of t2
 MI(m:M,i:I) input # Method m contains call site i
 MH(m:M,h:H) input # Method m contains allocation site h
 MV(m:M,v:V) input # Method m contains variable v
+EV(e:E,v:V) input
 statIM(i:I,m:M) input # Call site i resolves to static method m
 
 classT(t:T) input
@@ -68,6 +70,7 @@ CfromMA(cm:C,m:M,a:C) input # cm = proj_m(a)
 AfromHC(a:C,h:H,c:C) input # abtract object a = proj(h,c)
 EfromVC(e:C,v:V,c:C) input # contextual variable (v,e) = proj(v,c)
 objI(i:I) input # whether to use object sensitivity
+relevantQueryE(e:E) input
 
 # Intermediate relations
 reachableT(t:T) output # type t is reachable
@@ -83,6 +86,9 @@ VCA(v:V,c:C,a:C) output # in context c, variable v points to abstract object a
 VEA(v:V,e:C,a:C) output   # contextual variable (v,e) can point to abstract object a
 FA(f:F,a:C) output        # static field f can point to abstract object a OR a is the this argument of a call to Thread.start()
 AFA(a1:C,f:F,a2:C) output # abstract object a1 can point to abstract object a2 via field f
+relevantA(a:C) output
+relevantVE(v:V,e:C) output
+relevantEscE(e:E) output
 
 # Just for debugging
 rM(m:M) output
@@ -110,7 +116,7 @@ reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 
 # call site i in context ci resolves to method m in context cm
 CICM(ci,i,cm,m) :- !objI(i), reachableCI(ci,i), IM(i, m), CfromMIC(cm,m,i,ci). # call-site-based
-CICM(ci,i,cm,m) :- objI(i), reachableCI(ci,i), IM(i,m), IinvkArg(i,0,v), VCA(v,ci,a), CfromMA(cm,m,a). # object-based - instance methods: use "this"
+CICM(ci,i,cm,m) :- objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,a), CfromMA(cm,m,a). # object-based - instance methods: use "this"
 CICM(ci,i,cm,m) :- objI(i), reachableCI(ci,i), statIM(i,m), ci=cm. # object-based - static methods: copy context
 
 ### Inter-procedural (connect variables)
@@ -141,18 +147,21 @@ VEA(l,el,a) :- RgetStatFldInst(c,l,f), EfromVC(el,l,c), FA(f,a), VAfilter(l,a).
 # in context c, b.f = r
 RputInstFldInst(c,b,f,r) :- reachableCM(c,m), MputInstFldInst(m,b,f,r).
 AFA(a,f,aa) :- RputInstFldInst(c,b,f,r), VCA(b,c,a), VCA(r,c,aa).
-#reasonAVA(a,b,aa) :- RputInstFldInst(c,b,f,r), VCA(b,c,a), VCA(r,c,aa).
-#reasonAVA(a,r,aa) :- RputInstFldInst(c,b,f,r), VCA(b,c,a), VCA(r,c,aa).
 
 # in context c, STATIC.f = r
 RputStatFldInst(c,f,r) :- reachableCM(c,m), MputStatFldInst(m,f,r).
 FA(f,a) :- RputStatFldInst(c,f,r), VCA(r,c,a).
-
 FA(0,a) :- MmethArg(1,0,v), VEA(v,_,a). # a is this argument of a call to Thread.start() [field 0 is null]
 
 escA(a:C) output
 escA(a) :- FA(_,a).
 escA(a) :- escA(b), AFA(b,_,a).
+
+# Prune abstraction
+relevantA(a) :- a!=0, relevantQueryE(e), EV(e,v), VEA(v,_,a). # Base case
+relevantA(a) :- a!=0, AFA(a,_,b), relevantA(b). # Backward transitive closure
+relevantVE(v,e) :- VEA(v,e,a), relevantA(a). # Anything that points to something relevant
+relevantEscE(e) :- relevantQueryE(e), EV(e,v), VEA(v,_,a), escA(a).
 
 ### Miscellaneous
 
