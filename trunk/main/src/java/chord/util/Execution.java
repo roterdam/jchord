@@ -159,18 +159,20 @@ public class Execution {
   }
 
   public String getStringArg(String key, String defaultValue) {
-    return System.getProperty("chord."+name+"."+key, defaultValue);
+    String value = System.getProperty("chord."+name+"."+key, defaultValue);
+    putOption(key, value);
+    return value;
   }
   public boolean getBooleanArg(String key, boolean defaultValue) {
-    String s = getStringArg(key, null);
+    String s = getStringArg(key, ""+defaultValue);
     return s == null ? defaultValue : s.equals("true");
   }
   public int getIntArg(String key, int defaultValue) {
-    String s = getStringArg(key, null);
+    String s = getStringArg(key, ""+defaultValue);
     return s == null ? defaultValue : Integer.parseInt(s);
   }
   public double getDoubleArg(String key, double defaultValue) {
-    String s = getStringArg(key, null);
+    String s = getStringArg(key, ""+defaultValue);
     return s == null ? defaultValue : Double.parseDouble(s);
   }
 

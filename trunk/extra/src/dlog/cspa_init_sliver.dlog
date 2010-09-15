@@ -43,32 +43,22 @@ reachableM(m:M) input # method m is reachable
 
 # Output one-time relations.
 queryE(e:E) output # Which queries we want to answer
-IthisH(i:I,h:H) output # at call site i, this argument can point to something in h
-ItoI(i:I,j:I) output # i can call a method that contains j
-HtoH(g:H,h:H) output # # g can be the "this" argument, calling method containing h
-skipMM(m:M,n:M) output # for object-based: if analyze m in some context, will analyze n in the same context
 reachableH(h:H) output # allocation site h is reachable
 reachableV(v:V) output # variable v is reachable
 argCopy(i:I0,u:V1,m:M0,v:V0) output # vi at call site i <=> vm in method m (argument)
 retCopy(i:I0,u:V0,m:M0,v:V1) output # vi at call site i <=> vm in method m (return value)
-
-############################################################
-# Constraints
+IthisH(i:I,h:H) output # at call site i, this argument can point to something in h
+skipMM(m:M,n:M) output # m can reach n via a sequence of calls where m is instance method, rest (if any) are static methods
+HtoM(h:H,m:M) output # h can be the "this" argument calling method that skips to m
 
 queryE(e) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_). # All queries we care about
-
 reachableH(h) :- reachableM(m), MH(m,h).
 reachableV(v) :- reachableM(m), MV(m,v).
-
 argCopy(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm).
 retCopy(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
 
-IthisH(i,h) :- IinvkArg(i,0,v), VH(v, h), reachableH(h).
-
-# For call-site-based refinement
-ItoI(i,j) :- IM(i,m), MI(m,j).
-
 # For object-based refinement
-HtoH(g,h) :- IinvkArg(i,0,v), VH(v,g), IM(i,m), skipMM(m,n), MH(n,h), reachableH(g), reachableH(h).
-skipMM(m,n) :- m=n.
-skipMM(m,n) :- MI(m,i), statIM(i,n). # Idea: if analyze m in some context, we end up analyzing n in that context as well
+IthisH(i,h) :- !statIM(i,_), IinvkArg(i,0,v), VH(v, h), reachableH(h).
+skipMM(m,n) :- m=n, !statIM(_,m).
+skipMM(m,n) :- skipMM(m,q), MI(q,i), statIM(i,n). # Can extend q to n using static method
+HtoM(h,n) :- IinvkArg(i,0,v), VH(v,h), IM(i,m), skipMM(m,n).
