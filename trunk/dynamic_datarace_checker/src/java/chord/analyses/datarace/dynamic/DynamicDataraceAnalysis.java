@@ -60,7 +60,7 @@ import chord.util.tuple.integer.IntPair;
 		"combinedRacePairs", "escE" }
 )
 public class DynamicDataraceAnalysis extends DynamicAnalysis {
-	private boolean verbose = true;
+	private boolean verbose = false;
 	private final IntArraySet emptySet = new IntArraySet(0);
 
 	// accessedE == true iff heap-accessing statement with index e in domain E
