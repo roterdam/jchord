@@ -402,14 +402,14 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 		ProgramRel relAliasingRacePairs =
 			(ProgramRel) ClassicProject.g().getTrgt("aliasingRacePairs");
-		if (!checkA)
+		if (checkCombined || !checkA)
 			relAliasingRacePairs.one();
 		else
 			relAliasingRacePairs.zero();
 
 		ProgramRel relParallelRacePairs =
 			(ProgramRel) ClassicProject.g().getTrgt("parallelRacePairs");
-		if (!checkT)
+		if (checkCombined || !checkT)
 			relParallelRacePairs.one();
 		else
 			relParallelRacePairs.zero();
