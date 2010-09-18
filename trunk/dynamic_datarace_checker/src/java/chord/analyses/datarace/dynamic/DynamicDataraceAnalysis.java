@@ -36,22 +36,20 @@ import chord.util.tuple.integer.IntPair;
 /**
  * Dynamic datarace analysis.
  * Options:
- * chord.dynrace.combined = [true|false] default=false
- * - do all checks for filtering false races simultaneously instead of
- *   separately (latter can introduce imprecision)
- * chord.dynrace.thr = [concrete|abstract] default=concrete
- * - treat threads concretely or abstractly when filtering false races
- * chord.dynrace.alias = [none|concrete|weak_concrete] default=weak_concrete
- * - track aliasing information for filtering false races
- * chord.dynrace.esc = [none|concrete|weak_concrete] default=weak_concrete
- * - track and use thread-escape information for filtering false races
- * chord.dynrace.mhp = [true|false] default=true
- * - track and use happens-before constraints due to thread start/join
- *   for filtering false races
- * chord.dynrace.locks = [true|false] default=true
- * - model the effect of lock acquires/releases
- * chord.dynrace.join = [true|false] default=true
- * - model or ignore the effect of thread join
+ * 1. chord.dynrace.check = [combined|(a|e|t|l)*]
+ *    - a = do aliasing check
+ *    - e = do escaping check
+ *    - t = do may-happen-in-parallel check (only thread start/join events)
+ *    - l = do common guarded lock check
+ * 2. chord.dynrace.thr = [concrete|abstract] default=concrete
+ *    - treat threads concretely or abstractly when filtering false races
+ * 3. chord.dynrace.alias = [concrete|weak_concrete|abstract]
+ *    default=weak_concrete
+ *    - kind of aliasing information to use for aliasing check
+ * 4. chord.dynrace.esc = [concrete|weak_concrete] default=weak_concrete
+ *    - kind of thread-escape information to use for escaping check
+ * 5. chord.dynrace.join
+ *    - model effect of thread join events
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -62,7 +60,7 @@ import chord.util.tuple.integer.IntPair;
 		"combinedRacePairs", "escE" }
 )
 public class DynamicDataraceAnalysis extends DynamicAnalysis {
-	private boolean verbose = false;
+	private boolean verbose = true;
 	private final IntArraySet emptySet = new IntArraySet(0);
 
 	// accessedE == true iff heap-accessing statement with index e in domain E
@@ -97,7 +95,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	// accesses heap-accessing statement with index e in domain E, each thread
 	// t2 to which t1 is mapped in this map is added to the appropriate
 	// element i in raceInfo[e][i].ts
-	private TIntObjectHashMap<IntArraySet> ThreadToLiveChildren;
+	private TIntObjectHashMap<IntArraySet> threadToLiveChildren;
 	
 	// Set of pairs of threads (t1,t2) such that t2 may happen in parallel
 	// with all actions of t1.
@@ -138,14 +136,11 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	////// analysis configuration options //////
 
 	private boolean checkCombined;
-	private boolean areThreadsAbs;
+	private boolean checkA, checkE, checkT, checkL;
+	private ThrKind thrKind;
 	private AliasingCheckKind aliasingCheckKind;
 	private EscapingCheckKind escapingCheckKind;
-	private boolean checkMHP;
-	private boolean checkLocks;
 	private boolean modelJoin;
-
-	private boolean modelThreads, modelLocks;
 	private boolean needAbsObjs;
 
 	private InstrScheme instrScheme;
@@ -185,28 +180,47 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	public void initAllPasses() { }
 
 	private void processOptions() {
-		checkCombined = System.getProperty("chord.dynrace.combined",
-			"false").equals("true");
+		String checkStr = System.getProperty("chord.dynrace.check", "aetl");
+		if (checkStr.equals("combined"))
+			checkCombined = true;
+		else {
+			checkCombined = false;
+			char[] s = checkStr.toCharArray();
+			for (char c : s) {
+				if (c == 'a')
+					checkA = true;
+				else if (c == 'e')
+					checkE = true;
+				else if (c == 't')
+					checkT = true;
+				else if (c == 'l')
+					checkL = true;
+				else {
+					Messages.fatal("Invalid value for chord.dynrace.check: " +
+						checkStr);
+				}
+			}
+		}
 
-		String threadKindStr =
+		String thrKindStr =
 			System.getProperty("chord.dynrace.thr", "concrete");
-		if (threadKindStr.equals("concrete"))
-			areThreadsAbs = false;
-		else if (threadKindStr.equals("abstract"))
-			areThreadsAbs = true;
+		if (thrKindStr.equals("concrete"))
+			thrKind = ThrKind.CONCRETE;
+		else if (thrKindStr.equals("abstract"))
+			thrKind = ThrKind.ABSTRACT;
 		else {
 			Messages.fatal("Invalid value for chord.dynrace.thr: " +
-				threadKindStr);
+				thrKindStr);
 		}
+
 		String aliasingCheckKindStr =
-			System.getProperty("chord.dynrace.alias", "weak_concrete");
-		aliasingCheckKind = AliasingCheckKind.WEAK_CONCRETE;
+			System.getProperty("chord.dynrace.alias", "concrete");
 		if (aliasingCheckKindStr.equals("weak_concrete"))
 			aliasingCheckKind = AliasingCheckKind.WEAK_CONCRETE;
 		else if (aliasingCheckKindStr.equals("concrete"))
 			aliasingCheckKind = AliasingCheckKind.CONCRETE;
-		else if (aliasingCheckKindStr.equals("none"))
-			aliasingCheckKind = AliasingCheckKind.NONE;
+		else if (aliasingCheckKindStr.equals("abstract"))
+			aliasingCheckKind = AliasingCheckKind.ABSTRACT;
 		else {
 			Messages.fatal("Invalid value for chord.dynrace.alias: " +
 				aliasingCheckKindStr);
@@ -218,16 +232,13 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			escapingCheckKind = EscapingCheckKind.WEAK_CONCRETE;
 		else if (escapingCheckKindStr.equals("concrete"))
 			escapingCheckKind = EscapingCheckKind.CONCRETE;
-		else if (escapingCheckKindStr.equals("none"))
-			escapingCheckKind = EscapingCheckKind.NONE;
 		else {
 			Messages.fatal("Invalid value for chord.dynrace.esc: " +
 				escapingCheckKindStr);
 		}
 
-		checkMHP = System.getProperty("chord.dynrace.mhp", "true").equals("true");
-		checkLocks = System.getProperty("chord.dynrace.locks", "true").equals("true");
-		modelJoin = System.getProperty("chord.dynrace.join", "true").equals("true");
+		modelJoin = System.getProperty("chord.dynrace.join",
+			"true").equals("true");
 	}
 
 	@Override
@@ -236,16 +247,14 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 		processOptions();
 
-		modelThreads = checkMHP || checkCombined;
-		modelLocks = checkLocks || checkCombined;
-		needAbsObjs = (aliasingCheckKind == AliasingCheckKind.ABSTRACT) ||
-			(modelThreads && areThreadsAbs);
+		checkA = checkA || checkCombined;
+		checkT = checkT || checkCombined;
+		checkL = checkL || checkCombined;
+		checkE = checkE && !checkCombined;
+		modelJoin = checkT && modelJoin;
 
-		// if aliasingCheckKind == NONE then aliasingRacePairs = 1
-		// if escapingCheckKind == NONE then escE = 1
-		// if checkMHP == false then parallelRacePairs = 1
-		// if checkLocks == false then guardedRacePairs = 0
-		// if checkCombined == false then aliasingParallelUnguardedRacePairs = 1
+		needAbsObjs = (aliasingCheckKind == AliasingCheckKind.ABSTRACT) ||
+			(thrKind == ThrKind.ABSTRACT);
 
 		domM = (DomM) ClassicProject.g().getTrgt("M");
 		domE = (DomE) ClassicProject.g().getTrgt("E");
@@ -269,21 +278,21 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		if (needAbsObjs)
 			objToAllocSite = new TIntIntHashMap();
 
-		if (modelThreads) {
-			threadToParent = new TIntIntHashMap();
-			threadToDescendants = new TIntObjectHashMap<IntArraySet>();
-			ThreadToLiveChildren = new TIntObjectHashMap<IntArraySet>();
-			halfParallelThreads = new HashSet<IntPair>();
-			fullParallelThreads = new HashSet<IntPair>();
-		}
-
-		if (escapingCheckKind != EscapingCheckKind.NONE) {
+		if (checkE) {
 			escObjs = new TIntHashSet();
 			objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
 			escE = new boolean[numE];
 		}
 
-		if (modelLocks)
+		if (checkT) {
+			threadToParent = new TIntIntHashMap();
+			threadToDescendants = new TIntObjectHashMap<IntArraySet>();
+			threadToLiveChildren = new TIntObjectHashMap<IntArraySet>();
+			halfParallelThreads = new HashSet<IntPair>();
+			fullParallelThreads = new HashSet<IntPair>();
+		}
+
+		if (checkL)
 			threadToLocks = new TIntObjectHashMap<IntArraySet>();
 	}
 
@@ -291,7 +300,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		public boolean check(RaceElem re1, RaceElem re2);
 	}
 	
-	private boolean check(int e1, int e2, IComparator comp) {
+	private boolean existsCheck(int e1, int e2, IComparator comp) {
 		List<RaceElem> l1 = raceInfoE[e1].raceElems;
 		if (l1 == null) return false;
 		List<RaceElem> l2 = raceInfoE[e2].raceElems;
@@ -308,15 +317,32 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		}
 		return false;
 	}
+
+	private boolean forallCheck(int e1, int e2, IComparator comp) {
+		List<RaceElem> l1 = raceInfoE[e1].raceElems;
+		if (l1 == null) return false;
+		List<RaceElem> l2 = raceInfoE[e2].raceElems;
+		if (l2 == null) return false;
+		int n1 = l1.size();
+		int n2 = l2.size();
+		for (int i = 0; i < n1; i++) {
+			RaceElem re1 = l1.get(i);
+			for (int j = 0; j < n2; j++) {
+				RaceElem re2 = l2.get(j);
+				if (!comp.check(re1, re2))
+					return false;
+			}
+		}
+		return true;
+	}
 	
 	@Override
 	public void donePass() {
-		if (modelThreads) {
+		if (checkT) {
 			// build threadToDescendants using threadToParent;
 			// also simultaneously compute halfParallelThreads
 			for (int c : threadToParent.keys()) {
 				int p = threadToParent.get(c);
-				if (verbose) System.out.println("CHILD, PARENT: " + c + ", " + p);
 				while (p != 0) {
 					IntArraySet s = threadToDescendants.get(p);
 					if (s == null) {
@@ -324,7 +350,6 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 						threadToDescendants.put(p, s);
 					}
 					s.add(c);
-					System.out.println("HALF-PARALLEL: " + c + "," + p);
 					halfParallelThreads.add(new IntPair(c, p));
 					p = threadToParent.get(p);
 				}
@@ -333,11 +358,8 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 				for (int t : threadToDescendants.keys()) {
 					System.out.print("DESCENDANTS of " + t + ": ");
 					IntArraySet d = threadToDescendants.get(t);
-					if (d != null) {
-						int n = d.size();
-						for (int i = 0; i < n; i++)
-							System.out.print(d.get(i) + ",");
-					}
+					if (d != null)
+						System.out.print(toStr(d));
 					System.out.println();
 				}
 			}
@@ -359,7 +381,6 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 						int t4 = d2.get(j);
 						IntPair tt2 = (t3 < t4) ?
 							new IntPair(t3, t4) : new IntPair(t4, t3);
-						System.out.println("ADDING2 to fullParallel: " + tt2); 
 						s.add(tt2);
 					}
 				}
@@ -368,7 +389,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		}
 
 		ProgramRel relEscE = (ProgramRel) ClassicProject.g().getTrgt("escE");
-		if (escapingCheckKind == EscapingCheckKind.NONE)
+		if (!checkE)
 			relEscE.one();
 		else {
 			relEscE.zero();
@@ -381,14 +402,14 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 		ProgramRel relAliasingRacePairs =
 			(ProgramRel) ClassicProject.g().getTrgt("aliasingRacePairs");
-		if (aliasingCheckKind == AliasingCheckKind.NONE)
+		if (!checkA)
 			relAliasingRacePairs.one();
 		else
 			relAliasingRacePairs.zero();
 
 		ProgramRel relParallelRacePairs =
 			(ProgramRel) ClassicProject.g().getTrgt("parallelRacePairs");
-		if (!checkMHP)
+		if (!checkT)
 			relParallelRacePairs.one();
 		else
 			relParallelRacePairs.zero();
@@ -402,14 +423,14 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			(ProgramRel) ClassicProject.g().getTrgt("guardedRacePairs");
 		relGuardedRacePairs.zero();
 
-		// combinedRacePairs contains those pairs in startingRacePairs that
-		// *simultaneously* satisfy aliasing, parallel, and unguarded checks
-		ProgramRel relCombinedRacePairs =
-			(ProgramRel) ClassicProject.g().getTrgt("combinedRacePairs");
-		if (!checkCombined)
-			relCombinedRacePairs.one();
-		else
-			relCombinedRacePairs.zero();
+        // combinedRacePairs contains those pairs in startingRacePairs that
+        // *simultaneously* satisfy aliasing, parallel, and unguarded checks
+        ProgramRel relCombinedRacePairs =
+            (ProgramRel) ClassicProject.g().getTrgt("combinedRacePairs");
+        if (!checkCombined)
+            relCombinedRacePairs.one();
+        else
+            relCombinedRacePairs.zero();
 
 		ProgramRel relStartingRacePairs =
 			(ProgramRel) ClassicProject.g().getTrgt("startingRacePairs");
@@ -419,25 +440,19 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			int e1 = p.idx0;
 			int e2 = p.idx1;
 			if (accessedE[e1] && accessedE[e2]) {
-				if (checkCombined) {
-					if (check(e1, e2, combinedComparator))
-						relCombinedRacePairs.add(e1, e2);
-				} else {
-					// intentionally allow the following checks to operate
-					// on different RaceElem's for the same (e1,e2) since we
-					// want to measure how much precision loss there is in
-					// not doing a combined check
-					if (aliasingCheckKind != AliasingCheckKind.NONE &&
-							check(e1, e2, aliasComparator)) {
+                if (checkCombined) {
+                    if (existsCheck(e1, e2, combinedComparator))
+                        relCombinedRacePairs.add(e1, e2);
+                } else {
+					if (checkA && existsCheck(e1, e2, aliasComparator)) {
 						relAliasingRacePairs.add(e1, e2);
 						System.out.println("ALIASING: " + eStr(e1) + "," + eStr(e2)); 
 					}
-					if (checkMHP && check(e1, e2, mhpComparator)) {
+					if (checkT && existsCheck(e1, e2, mhpComparator)) {
 						System.out.println("PARALLEL: " + eStr(e1) + "," + eStr(e2)); 
-						System.out.println("YES");
 						relParallelRacePairs.add(e1, e2);
 					}
-					if (checkLocks && check(e1, e2, locksComparator)) {
+					if (checkL && forallCheck(e1, e2, locksComparator)) {
 						System.out.println("GUARDED: " + eStr(e1) + "," + eStr(e2)); 
 						relGuardedRacePairs.add(e1, e2);
 					}
@@ -450,6 +465,13 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		relCombinedRacePairs.save();
 	}
 
+    private final IComparator combinedComparator = new IComparator() {
+        public boolean check(RaceElem re1, RaceElem re2) {
+            return re1.o == re2.o && mhpComparator.check(re1, re2) &&
+                !re1.ls.overlaps(re2.ls);
+        }
+    };
+
 	private final IComparator aliasComparator = new IComparator() {
 		public boolean check(RaceElem re1, RaceElem re2) {
 			return re1.o == re2.o;
@@ -460,10 +482,11 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		public boolean check(RaceElem re1, RaceElem re2) {
 			int t1 = re1.t;
 			int t2 = re2.t;
-			if (!areThreadsAbs && t1 == t2)
+			if (thrKind == ThrKind.CONCRETE && t1 == t2)
 				return false;
-			if (isFullParallel(t1, t2))
+			if (isFullParallel(t1, t2)) {
 				return true;
+			}
 			if (!isLiveParallel(t1, re2.ts)) {
 				// when t2 executes anything (including e2),
 				// is t1 running in parallel?
@@ -486,19 +509,12 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 	private final IComparator locksComparator = new IComparator() {
 		public boolean check(RaceElem re1, RaceElem re2) {
-			return re1.ls.overlaps(re2.ls);
-		}
-	};
-
-	private final IComparator combinedComparator = new IComparator() {
-		public boolean check(RaceElem re1, RaceElem re2) {
-			return re1.o == re2.o && mhpComparator.check(re1, re2) &&
-				!re1.ls.overlaps(re2.ls);
+			return re1.o != re2.o || re1.ls.overlaps(re2.ls);
 		}
 	};
 
 	private boolean containsThreadPair(Set<IntPair> s, IntPair p) {
-		if (!areThreadsAbs)
+		if (thrKind == ThrKind.CONCRETE)
 			return s.contains(p);
 		else {
 			int a1 = objToAllocSite.get(p.idx0);
@@ -532,7 +548,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	// statement when set of t2's "live children threads" is s?
 	private boolean isLiveParallel(int t, IntArraySet s) {
 		int n = s.size();
-		if (!areThreadsAbs) {
+		if (thrKind == ThrKind.CONCRETE) {
 			for (int i = 0; i < n; i++) {
 				int t2 = s.get(i);
 				if (t2 == t)
@@ -585,7 +601,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			else
 				objToAllocSite.remove(o);
 		}
-		if (escapingCheckKind != EscapingCheckKind.NONE) {
+		if (checkE) {
 			objToFldObjs.remove(o);
 			escObjs.remove(o);
 		}
@@ -595,15 +611,14 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	public void processThreadStart(int p, int t, int o) {
 		if (verbose) System.out.println("START: " + iStr(p) + " " + t + " " + o);
 		assert (o > 0);
-		if (modelThreads) {
+		if (checkT) {
 			int t2 = threadToParent.get(o);
 			assert (t2 == 0);
 			threadToParent.put(o, t);
-			IntArraySet s = ThreadToLiveChildren.get(t);
-			if (s == null) {
-				s = new IntArraySet();
-				ThreadToLiveChildren.put(t, s);
-			} else {
+			IntArraySet s = threadToLiveChildren.get(t);
+			if (s == null)
+				s = new IntArraySet(1);
+			else {
 				int n = s.size();
 				for (int i = 0; i < n; i++) {
 					int o2 = s.get(i);
@@ -612,11 +627,12 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 					System.out.println("ADDING1 to fullParallel: " + tt);
 					fullParallelThreads.add(tt);
 				}
+				s = new IntArraySet(s);
 			}
-			System.out.println("ADDING " + o + " to liveSet of " + t);
 			s.add(o);
+			threadToLiveChildren.put(t, s);
 		}
-		if (escapingCheckKind != EscapingCheckKind.NONE)
+		if (checkE)
 			markAndPropEsc(o);
 	}
 
@@ -624,18 +640,17 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	public void processThreadJoin(int p, int t, int o) {
 		if (verbose) System.out.println("JOIN: " + iStr(p) + " " + t + " " + o);
 		assert (o > 0);
-		if (modelThreads && modelJoin) {
-			IntArraySet s = ThreadToLiveChildren.get(t);
+		if (modelJoin) {
+			IntArraySet s = threadToLiveChildren.get(t);
 			if (s != null && s.contains(o)) {
 				int n = s.size();
 				IntArraySet s2 = new IntArraySet(n - 1);
-				System.out.println("REMOVING " + o + " from liveSet of " + t);
 				for (int i = 0; i < n; i++) {
 					int o2 = s.get(i);
 					if (o2 != o)
 						s2.add(o2);
 				}
-				ThreadToLiveChildren.put(t, s2);
+				threadToLiveChildren.put(t, s2);
 			}
 		}
 	}
@@ -643,7 +658,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	@Override
 	public void processAcquireLock(int p, int t, int l) {
 		if (verbose) System.out.println("ACQLOCK: " + lStr(p) + " t=" + t);
-		if (modelLocks) {
+		if (checkL) {
 			IntArraySet locks = threadToLocks.get(t);
 			if (locks == null)
 				locks = new IntArraySet(1);
@@ -664,7 +679,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	@Override
 	public void processReleaseLock(int p, int t, int l) {
 		if (verbose) System.out.println("RELLOCK: " + rStr(p) + " t=" + t);
-		if (modelLocks) {
+		if (checkL) {
 			IntArraySet locks = threadToLocks.get(t);
 			if (locks == null) {
 				System.out.println("WARNING: no locks on stack"); 
@@ -715,7 +730,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	public void processPutstaticReference(int e, int t, int b, int f, int o) {
 		if (verbose) System.out.println("PUTSTATIC: " + eStr(e) + " t=" + t);
 		processHeapRd(e, t, b, -1);
-		if (escapingCheckKind != EscapingCheckKind.NONE) {
+		if (checkE) {
 	  		if (o != 0)
 				markAndPropEsc(o);
 		}
@@ -776,9 +791,9 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		accessedE[e] = true;
 		if (b == 0) return;
 		RaceElem re = new RaceElem();
-		if (modelThreads) {
+		if (checkT) {
 			re.t = t;
-			IntArraySet ts = ThreadToLiveChildren.get(t);
+			IntArraySet ts = threadToLiveChildren.get(t);
 			if (ts == null)
 				ts = emptySet;
 			re.ts = ts;
@@ -786,14 +801,12 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			re.t = 0;
 			re.ts = emptySet;
 		}
-		if (modelLocks) {
+		if (checkL) {
 			IntArraySet locks = threadToLocks.get(t);
 			re.ls = (locks != null) ? locks : emptySet;
 		} else
 			re.ls = emptySet;
 		switch (aliasingCheckKind) {
-		case NONE:
-			break;
 		case WEAK_CONCRETE:
 			// ignore array element index for WEAK_CONCRETE
 			// i.e., do not distinguish between different elements of same array
@@ -802,10 +815,13 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		case CONCRETE:
 			re.o = (i == -1) ? b : CoreEventHandler.getPrimitiveId(b, i);
 			break;
+		case ABSTRACT:
+			re.o = objToAllocSite.get(b);
+			break;
 		default:
 			Messages.fatal("Unknown aliasing check kind: " + aliasingCheckKind);
 		}
-		if (escapingCheckKind != EscapingCheckKind.NONE) {
+		if (checkE) {
 			if (!escE[e] && escObjs.contains(b))
 				escE[e] = true;
 		}
@@ -813,7 +829,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	}
 
 	private void processHeapWr(int e, int t, int b, int f, int r) {
-		if (escapingCheckKind != EscapingCheckKind.NONE) {
+		if (checkE) {
 			if (e < 0 || b == 0 || f < 0)
 				return;
 			List<FldObj> l = objToFldObjs.get(b);
@@ -859,6 +875,14 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 					markAndPropEsc(fo.o);
 			}
 		}
+	}
+
+	private static String toStr(IntArraySet s) {
+		String str = "";
+		int n = s.size();
+		for (int i = 0; i < n; i++)
+			str += s.get(i) + ","; 
+		return str;
 	}
 }
 
