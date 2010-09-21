@@ -36,7 +36,9 @@ import chord.util.tuple.integer.IntPair;
 /**
  * Dynamic datarace analysis.
  * Options:
- * 1. chord.dynrace.check = [combined|(a|e|t|l)*]
+ * 1. chord.check.combined = [true|false] default=false
+ *    - do various checks denoted by chord.dynrace.check simultaneously
+ * 1. chord.dynrace.check = [(a|e|t|l)*]
  *    - a = do aliasing check
  *    - e = do escaping check
  *    - t = do may-happen-in-parallel check (only thread start/join events)
@@ -56,7 +58,7 @@ import chord.util.tuple.integer.IntPair;
 @Chord(
 	name="dynamic-datarace-java",
 	consumes = { "startingRacePairs" },
-	produces = { "aliasingRacePairs", "parallelRacePairs", "guardedRacePairs",
+	produces = { "aliasingRacePairs", "parallelRacePairs", "unguardedRacePairs",
 		"combinedRacePairs", "escE" }
 )
 public class DynamicDataraceAnalysis extends DynamicAnalysis {
@@ -124,13 +126,6 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	// Set of currently escaping concrete/abstract objects.
 	private TIntHashSet escObjs;
 
-	// escAcc[e] == true iff:
-	// 1. kind is flowSen and instance field/array deref site having
-	//	index e in domain E is flow-sen. thread-escaping
-	// 2. kind is flowIns and instance field/array deref site having
-	//	index e in domain E is flow-ins. thread-escaping
-	private boolean[] escE;
-
 	private TIntObjectHashMap<IntArraySet> threadToLocks;
 
 	////// analysis configuration options //////
@@ -180,25 +175,21 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	public void initAllPasses() { }
 
 	private void processOptions() {
+		checkCombined = System.getProperty("chord.dynrace.combined",
+			"false").equals("true");
 		String checkStr = System.getProperty("chord.dynrace.check", "aetl");
-		if (checkStr.equals("combined"))
-			checkCombined = true;
-		else {
-			checkCombined = false;
-			char[] s = checkStr.toCharArray();
-			for (char c : s) {
-				if (c == 'a')
-					checkA = true;
-				else if (c == 'e')
-					checkE = true;
-				else if (c == 't')
-					checkT = true;
-				else if (c == 'l')
-					checkL = true;
-				else {
-					Messages.fatal("Invalid value for chord.dynrace.check: " +
-						checkStr);
-				}
+		for (char c : checkStr.toCharArray()) {
+			if (c == 'a')
+				checkA = true;
+			else if (c == 'e')
+				checkE = true;
+			else if (c == 't')
+				checkT = true;
+			else if (c == 'l')
+				checkL = true;
+			else {
+				Messages.fatal("Invalid value for chord.dynrace.check: " +
+					checkStr);
 			}
 		}
 
@@ -247,10 +238,6 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 		processOptions();
 
-		checkA = checkA || checkCombined;
-		checkT = checkT || checkCombined;
-		checkL = checkL || checkCombined;
-		checkE = checkE && !checkCombined;
 		modelJoin = checkT && modelJoin;
 
 		needAbsObjs = (aliasingCheckKind == AliasingCheckKind.ABSTRACT) ||
@@ -270,10 +257,8 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 		accessedE = new boolean[numE];
 		raceInfoE = new RaceInfo[numE];
-		for (int e = 0; e < numE; e++) {
-			accessedE[e] = false;
+		for (int e = 0; e < numE; e++)
 			raceInfoE[e] = new RaceInfo();
-		}
 		
 		if (needAbsObjs)
 			objToAllocSite = new TIntIntHashMap();
@@ -281,7 +266,6 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		if (checkE) {
 			escObjs = new TIntHashSet();
 			objToFldObjs = new TIntObjectHashMap<List<FldObj>>();
-			escE = new boolean[numE];
 		}
 
 		if (checkT) {
@@ -389,39 +373,51 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		}
 
 		ProgramRel relEscE = (ProgramRel) ClassicProject.g().getTrgt("escE");
-		if (!checkE)
+		if (!checkE || checkCombined)
 			relEscE.one();
 		else {
 			relEscE.zero();
-			for (int e = 0; e < domE.size(); e++) {
-				if (escE[e])
-					relEscE.add(e);
+			int numE = domE.size();
+			for (int e = 0; e < numE; e++) {
+				List<RaceElem> l = raceInfoE[e].raceElems;
+				if (l == null) continue;
+				assert (accessedE[e] == true);
+				int n = l.size();
+				for (int i = 0; i < n; i++) {
+					RaceElem re = l.get(i);
+					if (re.isEsc) {
+						relEscE.add(e);
+						break;
+					}
+				}
 			}
 		}
-		relEscE.save();
 
 		ProgramRel relAliasingRacePairs =
 			(ProgramRel) ClassicProject.g().getTrgt("aliasingRacePairs");
-		if (checkCombined || !checkA)
+		if (!checkA || checkCombined)
 			relAliasingRacePairs.one();
 		else
 			relAliasingRacePairs.zero();
 
 		ProgramRel relParallelRacePairs =
 			(ProgramRel) ClassicProject.g().getTrgt("parallelRacePairs");
-		if (checkCombined || !checkT)
+		if (!checkT || checkCombined)
 			relParallelRacePairs.one();
 		else
 			relParallelRacePairs.zero();
 
-		// guardedRacePairs contains those pairs in startingRacePairs that are
-		// guarded by a common lock
+		// unguardedRacePairs contains those pairs in startingRacePairs that
+		// are not guarded by a common lock
 		// Formally: (e1,e2) is in guardedRacePairs iff for each o such that
 		// e1->o and e2->o: there exists an o' such that a lock is held on o'
 		// by each thread while it accesses o at e1 or e2
-		ProgramRel relGuardedRacePairs =
-			(ProgramRel) ClassicProject.g().getTrgt("guardedRacePairs");
-		relGuardedRacePairs.zero();
+		ProgramRel relUnguardedRacePairs =
+			(ProgramRel) ClassicProject.g().getTrgt("unguardedRacePairs");
+		if (!checkL || checkCombined)
+			relUnguardedRacePairs.one();
+		else
+			relUnguardedRacePairs.zero();
 
         // combinedRacePairs contains those pairs in startingRacePairs that
         // *simultaneously* satisfy aliasing, parallel, and unguarded checks
@@ -436,39 +432,52 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			(ProgramRel) ClassicProject.g().getTrgt("startingRacePairs");
 		relStartingRacePairs.load();
 		IntPairIterable startingRacePairs = relStartingRacePairs.getAry2IntTuples();
+		int numReachableRaces = 0;
 		for (IntPair p : startingRacePairs) {
 			int e1 = p.idx0;
 			int e2 = p.idx1;
 			if (accessedE[e1] && accessedE[e2]) {
+				numReachableRaces++;
                 if (checkCombined) {
                     if (existsCheck(e1, e2, combinedComparator))
                         relCombinedRacePairs.add(e1, e2);
                 } else {
+					// no need to do thresc check; it has already been done if
+					// checkE was true
 					if (checkA && existsCheck(e1, e2, aliasComparator)) {
 						relAliasingRacePairs.add(e1, e2);
-						System.out.println("ALIASING: " + eStr(e1) + "," + eStr(e2)); 
+						// System.out.println("ALIASING: " + eStr(e1) + "," + eStr(e2)); 
 					}
 					if (checkT && existsCheck(e1, e2, mhpComparator)) {
-						System.out.println("PARALLEL: " + eStr(e1) + "," + eStr(e2)); 
+						// System.out.println("PARALLEL: " + eStr(e1) + "," + eStr(e2)); 
 						relParallelRacePairs.add(e1, e2);
 					}
-					if (checkL && forallCheck(e1, e2, locksComparator)) {
-						System.out.println("GUARDED: " + eStr(e1) + "," + eStr(e2)); 
-						relGuardedRacePairs.add(e1, e2);
+					if (checkL && existsCheck(e1, e2, locksComparator)) {
+						// System.out.println("UNGUARDED: " + eStr(e1) + "," + eStr(e2)); 
+						relUnguardedRacePairs.add(e1, e2);
 					}
 				}
 			}
        	}
+		System.out.println("number of reachable races: " + numReachableRaces);
+		relEscE.save();
 		relAliasingRacePairs.save();
 		relParallelRacePairs.save();
-		relGuardedRacePairs.save();
+		relUnguardedRacePairs.save();
 		relCombinedRacePairs.save();
 	}
 
     private final IComparator combinedComparator = new IComparator() {
         public boolean check(RaceElem re1, RaceElem re2) {
-            return re1.o == re2.o && mhpComparator.check(re1, re2) &&
-                !re1.ls.overlaps(re2.ls);
+			if (checkE && (!re1.isEsc || !re2.isEsc))
+				return false;
+			if (checkA && re1.o != re2.o)
+				return false;
+			if (checkT && !mhpComparator.check(re1, re2))
+				return false;
+			if (checkL && (re1.o != re2.o || re1.ls.overlaps(re2.ls)))
+				return false;
+			return true;
         }
     };
 
@@ -509,7 +518,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 	private final IComparator locksComparator = new IComparator() {
 		public boolean check(RaceElem re1, RaceElem re2) {
-			return re1.o != re2.o || re1.ls.overlaps(re2.ls);
+			return !(re1.o != re2.o || re1.ls.overlaps(re2.ls));
 		}
 	};
 
@@ -711,25 +720,25 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	@Override
 	public void processGetstaticPrimitive(int e, int t, int b, int f) {
 		if (verbose) System.out.println("GETSTATIC: " + eStr(e) + " t=" + t);
-		processHeapRd(e, t, b, -1);
+		processHeapRd(e, t, -1, -1);
 	}
 
 	@Override
 	public void processGetstaticReference(int e, int t, int b, int f, int o) {
 		if (verbose) System.out.println("GETSTATIC: " + eStr(e) + " t=" + t);
-		processHeapRd(e, t, b, -1);
+		processHeapRd(e, t, -1, -1);
 	}
 
 	@Override
 	public void processPutstaticPrimitive(int e, int t, int b, int f) {
 		if (verbose) System.out.println("PUTSTATIC: " + eStr(e) + " t=" + t);
-		processHeapRd(e, t, b, -1);
+		processHeapRd(e, t, -1, -1);
 	}
 
 	@Override
 	public void processPutstaticReference(int e, int t, int b, int f, int o) {
 		if (verbose) System.out.println("PUTSTATIC: " + eStr(e) + " t=" + t);
-		processHeapRd(e, t, b, -1);
+		processHeapRd(e, t, -1, -1);
 		if (checkE) {
 	  		if (o != 0)
 				markAndPropEsc(o);
@@ -822,8 +831,8 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			Messages.fatal("Unknown aliasing check kind: " + aliasingCheckKind);
 		}
 		if (checkE) {
-			if (!escE[e] && escObjs.contains(b))
-				escE[e] = true;
+			if (b == -1 || escObjs.contains(b))
+				re.isEsc = true;
 		}
 		raceInfoE[e].addRaceElem(re);
 	}
@@ -891,6 +900,7 @@ class RaceElem {
 	long o;	// ID of object accessed:
 			// 0 if static field access, o if instance field access,
 			// o+i if array element access
+	boolean isEsc;		// whether or not accessed object thread-escapes
 	IntArraySet ls;		// locks held by this thread during this access
 	IntArraySet ts;		// threads that may run in parallel when this
 						// thread executes this access
@@ -903,11 +913,11 @@ class RaceElem {
 		return false;
 	}
 	public boolean equals(RaceElem that) {
-		return t == that.t && o == that.o && ts.equals(that.ts) &&
-			ls.equals(that.ls);
+		return t == that.t && o == that.o && isEsc == that.isEsc &&
+			ts.equals(that.ts) && ls.equals(that.ls);
 	}
 	public String toString() {
-		String str = "t=" + t + ", o=" + o + ", ls=";
+		String str = "t=" + t + ", o=" + o + ", isEsc=" + isEsc + ", ls=";
 		if (ls == null)
 			str += "null,";
 		else {
