@@ -19,6 +19,8 @@ ME(m:M0,e:E0) input
 relevantM(m:M0)
 relevantE(e:E0)
 startingRacePairs(e1:E0,e2:E1) output
+onlyWr(e:E)
+rdOrWr(e:E)
 
 ###
 # Constraints
@@ -28,7 +30,10 @@ relevantM(m) :- TM(t,m), !checkExcludedT(t).
 relevantE(e) :- relevantM(m), ME(m,e).
 relevantEF(e,f) :- relevantE(e), EF(e,f).
 
-startingRacePairs(e1,e2) :- e1<e2, writeE(e1), writeE(e2), relevantEF(e1,f), relevantEF(e2,f).
-startingRacePairs(e1,e2) :- e1=e2, writeE(e1), writeE(e2), relevantEF(e1,f), relevantEF(e2,f).
-startingRacePairs(e1,e2) :- !writeE(e1), writeE(e2), relevantEF(e1,f), relevantEF(e2,f).
+onlyWr(e) :- writeE(e).
+rdOrWr(_).
+
+startingRacePairs(e1,e2) :- onlyWr(e1), rdOrWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
+startingRacePairs(e1,e2) :- rdOrWr(e1), onlyWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
+startingRacePairs(e1,e2) :- onlyWr(e1), onlyWr(e2), e1=e2, relevantEF(e1,f), relevantEF(e2,f).
 
