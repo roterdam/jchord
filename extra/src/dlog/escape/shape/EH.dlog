@@ -1,0 +1,19 @@
+# name=EH-dlog
+
+.include "H.dom"
+.include "E.dom"
+.include "T.dom"
+.include "M.dom"
+
+.bddvarorder E0_M0_T0_H0
+
+checkExcludedT(t:T0) input
+TM(t:T0,m:M0) input
+ME(m:M0,e:E0) input
+statFldE(e:E0) input
+relevantM(m:M0)
+relevantE(e:E0) output
+
+relevantM(m) :- TM(t,m), !checkExcludedT(t).
+relevantE(e) :- ME(m,e), relevantM(m), !statFldE(e).
+
