@@ -35,6 +35,14 @@ IinvkRet(i:I0,n:Z0,v:V0) input
 MmethArg(m:M0,n:Z0,v:V0) input
 MmethRet(m:M0,n:Z0,v:V1) input
 checkExcludedT(t:T) input
+HT(h:H0,t:T1) input # Allocation site h has type t
+sub(t1:T1,t2:T0) input # t1 is a subtype of t2
+classT(t:T) input
+staticTM(t:T,m:M) input
+staticTF(t:T,f:F) input
+MobjValAsgnInst(m:M,l:V,h:H) input # in m, l = new h
+MgetStatFldInst(m:M,l:V,f:F) input # in m, l = STATIC.f
+MputStatFldInst(m:M,f:F,r:V) input # in m, STATIC.f = r
 
 # Computed from 0-CFA.
 IM(i:I,m:M) input # call site i can resolve to method m
@@ -45,8 +53,9 @@ reachableM(m:M) input # method m is reachable
 queryE(e:E) output # Which queries we want to answer
 reachableH(h:H) output # allocation site h is reachable
 reachableV(v:V) output # variable v is reachable
-argCopy(i:I0,u:V1,m:M0,v:V0) output # vi at call site i <=> vm in method m (argument)
-retCopy(i:I0,u:V0,m:M0,v:V1) output # vi at call site i <=> vm in method m (return value)
+reachableT(t:T) output # type t is reachable
+argIVMV(i:I0,vi:V1,m:M0,vm:V0) output # vi at call site i <=> vm in method m (argument)
+retIVMV(i:I0,vi:V0,m:M0,vm:V1) output # vi at call site i <=> vm in method m (return value)
 IthisH(i:I,h:H) output # at call site i, this argument can point to something in h
 skipMM(m:M,n:M) output # m can reach n via a sequence of calls where m is instance method, rest (if any) are static methods
 HtoM(h:H,m:M) output # h can be the "this" argument calling method that skips to m
@@ -54,11 +63,18 @@ HtoM(h:H,m:M) output # h can be the "this" argument calling method that skips to
 queryE(e) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_). # All queries we care about
 reachableH(h) :- reachableM(m), MH(m,h).
 reachableV(v) :- reachableM(m), MV(m,v).
-argCopy(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm).
-retCopy(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
+argIVMV(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm).
+retIVMV(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
+
+# Reachability of types
+reachableT(t) :- reachableM(m), MobjValAsgnInst(m,_,h), HT(h,t).
+reachableT(t) :- reachableM(m), staticTM(t,m).
+reachableT(t) :- reachableM(m), MputStatFldInst(m,f,_), staticTF(t,f).
+reachableT(t) :- reachableM(m), MgetStatFldInst(m,_,f), staticTF(t,f).
+reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 
 # For object-based refinement
 IthisH(i,h) :- !statIM(i,_), IinvkArg(i,0,v), VH(v, h), reachableH(h).
 skipMM(m,n) :- m=n, !statIM(_,m).
 skipMM(m,n) :- skipMM(m,q), MI(q,i), statIM(i,n). # Can extend q to n using static method
-HtoM(h,n) :- IinvkArg(i,0,v), VH(v,h), IM(i,m), skipMM(m,n).
+HtoM(h,n)   :- IinvkArg(i,0,v), VH(v,h), reachableH(h), IM(i,m), skipMM(m,n).

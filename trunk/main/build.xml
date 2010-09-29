@@ -126,6 +126,7 @@
 		<path id="bddbddb_class_path">
 			<fileset dir="${lib.home}/bddbddb" includes="*.jar"/>
 			<pathelement location="${lib.home}/jwutil.jar"/>
+			<pathelement location="tmp"/>
 		</path>
 		<property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
 		<!-- Classpath of Chord -->
