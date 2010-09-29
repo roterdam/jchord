@@ -20,4 +20,3 @@ datarace(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) input
 ctxtInsDatarace(e1:E0,e2:E1) output
 
 ctxtInsDatarace(e1,e2) :- datarace(_,_,e1,_,_,e2).
-

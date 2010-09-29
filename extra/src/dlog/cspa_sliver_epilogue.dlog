@@ -1,0 +1,25 @@
+# name=cspa-sliver-epilogue-dlog
+.include "F.dom"
+.include "H.dom"
+.include "I.dom"
+.include "M.dom"
+.include "T.dom"
+.include "V.dom"
+.include "Z.dom"
+.include "C.dom"
+.include "E.dom"
+.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2xC3_Z0_E0
+
+EV(e:E,v:V) input
+VEA(v:V,e:C,a:C) input
+AFA(a1:C,f:F,a2:C) input
+escA(a:C) input
+escE(e:E) input
+
+# This reachable in the backward transitive closure
+g_A(a:C) output
+g_VE(v:V,e:C) output
+
+g_A(a) :- escE(e), EV(e,v), VEA(v,_,a). # Keep track of things that escaped
+g_A(a) :- AFA(a,_,b), g_A(b). # Backward transitive closure
+g_VE(v,e) :- VEA(v,e,a), g_A(a). # Anything pointing to an abstract object.
