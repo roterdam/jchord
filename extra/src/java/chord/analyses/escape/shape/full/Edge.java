@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.shape;
+package chord.analyses.escape.shape.full;
 
 import java.util.Set;
 
@@ -139,7 +139,10 @@ public class Edge implements IEdge {
 	}
 
 	public int hashCode() {
-		return srcNode.hashCode() + dstNode.hashCode();
+        int i = 5381;
+        i = ((i << 5) + i) + srcNode.hashCode();
+        i = ((i << 5) + i) + dstNode.hashCode();
+		return i;
 	}
 	public boolean equals(Object o) {
 		if (o == this)

@@ -1,4 +1,4 @@
-package chord.analyses.escape.shape;
+package chord.analyses.escape.shape.full;
 
 public enum Obj {
 	EMTY,

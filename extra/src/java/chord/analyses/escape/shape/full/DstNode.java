@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.shape;
+package chord.analyses.escape.shape.full;
 
 import chord.util.ArraySet;
 
@@ -24,7 +24,11 @@ public class DstNode {
 		this.isRetn = isRetn;
 	}
 	public int hashCode() {
-		return heap.hashCode();
+        int i = 5381;
+        for (Obj pts : env) {
+            i = ((i << 5) + i) + pts.hashCode();
+        }
+        return i;
 	}
 	public boolean equals(Object o) {
 		if (o == this)
@@ -40,8 +44,8 @@ public class DstNode {
 		return heap.equals(that.heap) && isKill == that.isKill && isRetn == that.isRetn;
 	}
 	public String toString() {
-		return "v@d=" + ThreadEscapeAnalysis.toString(env) +
-			 "; h@d=" + ThreadEscapeAnalysis.toString(heap) +
+		return "v@d=" + ThreadEscapeFullAnalysis.toString(env) +
+			 "; h@d=" + ThreadEscapeFullAnalysis.toString(heap) +
 			 "; k@d=" + isKill + "; r@d: " + isRetn;
 	}
 }

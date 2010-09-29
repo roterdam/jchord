@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.shape;
+package chord.analyses.escape.shape.full;
 
 import gnu.trove.TObjectIntHashMap;
 
@@ -76,8 +76,8 @@ import chord.project.OutDirUtils;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(name = "thresc-shape-java")
-public class ThreadEscapeAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
+@Chord(name = "thresc-shape-full-java")
+public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
 	private DomM domM;
@@ -121,8 +121,8 @@ public class ThreadEscapeAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		ClassicProject.g().runTask(domE);
 
 		Map<Quad, Set<Quad>> e2hsMap = new HashMap<Quad, Set<Quad>>();
+/*
 		ClassicProject.g().runTask("EH-dlog");
-
 		Set<Quad> globalHs = new HashSet<Quad>();
 		for (int hIdx = 1; hIdx < domH.size(); hIdx++) {
 			globalHs.add((Quad) domH.get(hIdx));
@@ -136,11 +136,10 @@ public class ThreadEscapeAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			}
 		}
 		rel.close();
-
-/*
-		ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("EH");
-		rel.load();
-		IntPairIterable tuples = rel.getAry2IntTuples();
+*/
+		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("locEH");
+		relLocEH.load();
+		IntPairIterable tuples = relLocEH.getAry2IntTuples();
 		for (IntPair tuple : tuples) {
 			int eIdx = tuple.idx0;
 			int hIdx = tuple.idx1;
@@ -153,11 +152,9 @@ public class ThreadEscapeAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			}
 			hs.add(h);
 		}
-		rel.close();
-*/
+		relLocEH.close();
 
-		Map<Set<Quad>, Set<Quad>> hs2esMap =
-			new HashMap<Set<Quad>, Set<Quad>>();
+		Map<Set<Quad>, Set<Quad>> hs2esMap = new HashMap<Set<Quad>, Set<Quad>>();
         for (Map.Entry<Quad, Set<Quad>> entry : e2hsMap.entrySet()) {
             Quad e = entry.getKey();
             Set<Quad> hs = entry.getValue();
@@ -217,14 +214,14 @@ public class ThreadEscapeAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			String outDirName = Config.outDirName;
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "hybrid_fullEscE.txt")));
+					new File(outDirName, "shape_fullEscE.txt")));
 				for (Quad e : allEscEs)
 					writer.println(e.toLocStr());
 				writer.close();
 			}
 			{
 				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "hybrid_fullLocE.txt")));
+					new File(outDirName, "shape_fullLocE.txt")));
 				for (Quad e : allLocEs)
 					writer.println(e.toLocStr());
 				writer.close();
