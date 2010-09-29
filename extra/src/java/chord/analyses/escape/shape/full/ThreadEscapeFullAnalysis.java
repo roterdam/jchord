@@ -69,14 +69,16 @@ import chord.util.ArraySet;
 import chord.util.CompareUtils;
 import chord.util.Timer;
 
-import chord.util.Execution;
 import chord.project.OutDirUtils;
 
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(name = "thresc-shape-full-java")
+@Chord(
+	name = "thresc-shape-full-java",
+	consumes = "locEH"
+)
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
