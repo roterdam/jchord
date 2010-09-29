@@ -16,6 +16,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Operator.Getstatic;
+import joeq.Compiler.Quad.Operator.Putstatic;
 import chord.doms.DomE;
 import chord.doms.DomH;
 import chord.instr.InstrScheme;
@@ -33,6 +36,7 @@ import chord.util.IntArraySet;
 @Chord(
 	name = "thresc-shape-path-java",
 	produces = { "accE", "escE", "locEH" }, 
+	consumes = { "checkExcludedE" },
 	namesOfSigns = { "accE", "escE", "locEH" },
 	signs = { "E0", "E0", "E0,H0:E0_H0" }
 )
@@ -50,6 +54,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
     // map from each object to the index in domain H of its alloc site
     private TIntIntHashMap objToHid; 
+
+	private boolean[] chkE;
 
 	// accE[e] == true iff instance field/array deref site
 	// having index e in domain E is visited during the execution
@@ -105,9 +111,22 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		domH = (DomH) ClassicProject.g().getTrgt("H");
 		ClassicProject.g().runTask(domH);
 		numH = domH.size();
+		chkE = new boolean[numE];
 		accE = new boolean[numE];
 		escE = new boolean[numE];
 		locEH = new IntArraySet[numE];
+		ProgramRel relCheckExcludedE =
+			(ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
+		relCheckExcludedE.load();
+		for (int e = 0; e < numE; e++) {
+			Quad q = domE.get(e);
+			Operator op = q.getOperator();
+			if (op instanceof Getstatic || op instanceof Putstatic)
+				continue;
+			if (!relCheckExcludedE.contains(e))
+				chkE[e] = true;
+		}
+		relCheckExcludedE.close();
 	}
 
 	@Override
@@ -237,7 +256,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 	}
 	private void processHeapRd(int e, int b) {
-		if (escE[e])
+		if (!chkE[e] || escE[e])
 			return;
 		accE[e] = true;
 		if (b == 0)
