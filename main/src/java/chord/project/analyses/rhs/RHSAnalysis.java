@@ -40,6 +40,7 @@ import chord.util.ArraySet;
 public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		extends JavaAnalysis {
     protected static boolean DEBUG = false;
+
 	protected List<Pair<Location, PE>> workList = new ArrayList<Pair<Location, PE>>();
 	protected Map<Inst, Set<PE>> pathEdges = new HashMap<Inst, Set<PE>>();
 	protected Map<jq_Method, Set<SE>> summEdges = new HashMap<jq_Method, Set<SE>>();
@@ -154,6 +155,18 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 			addPathEdge(loc, pe);
 		}
 		propagate();
+	}
+
+	protected void printSummaries() {
+		for (jq_Method m : summEdges.keySet()) {
+			Set<SE> seSet = summEdges.get(m);
+			System.out.println("Summaries for method: " + m);
+			if (seSet != null) {
+				for (SE se : seSet) {
+					System.out.println("\t" + se);
+				}
+			}
+		}
 	}
 		
 	protected jq_Method currentMethod;
