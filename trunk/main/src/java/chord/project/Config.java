@@ -87,8 +87,13 @@ public class Config {
 	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
 	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
-	public final static boolean handleForNameReflection = buildBoolProperty("chord.reflect.forname", false);
-	public final static boolean handleNewInstReflection = buildBoolProperty("chord.reflect.newinst", false);
+	public final static String reflectKind = System.getProperty("chord.reflect.kind", "none");
+	static {
+		if (!reflectKind.equals("none") && !reflectKind.equals("static") && !reflectKind.equals("dynamic"))
+			Messages.fatal(BAD_OPTION, reflectKind, "chord.reflect.kind", "[none|static|dynamic]");
+	}
+	public final static String stubsFileName =
+		mainRel2AbsPath("chord.stubs.file", "src/java/chord/program/stubs/stubs.txt");
 
 	public final static String mainClassPathPackages = "chord.,javassist.,joeq.,net.sf.bddbddb.,net.sf.javabdd.";
 
@@ -97,26 +102,25 @@ public class Config {
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		concat(mainClassPathPackages, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
 
-	public final static String scopeExcludeStdStr = System.getProperty("chord.scope.exclude.std", DEFAULT_SCOPE_EXCLUDES);
-	public final static String scopeExcludeExtStr = System.getProperty("chord.scope.exclude.ext", "");
+	public final static String scopeStdExcludeStr = System.getProperty("chord.std.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
+	public final static String scopeExtExcludeStr = System.getProperty("chord.ext.scope.exclude", "");
 	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
-		concat(scopeExcludeStdStr, ',', scopeExcludeExtStr));
+		concat(scopeStdExcludeStr, ',', scopeExtExcludeStr));
 	public static String[] scopeExcludeAry = toArray(scopeExcludeStr);
 
 	// Program analysis properties
 
 	public final static String javaAnalysisPathName = mainRel2AbsPath("chord.java.analysis.path", "classes");
-	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path",
-		"src" + File.separator + "dlog");
+	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path", "src/dlog");
 	public final static String analysisExcludeStr = System.getProperty("chord.analysis.exclude", "");
 	public final static String[] analysisExcludeAry = toArray(analysisExcludeStr);
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
 	public final static boolean printResults = buildBoolProperty("chord.print.results", true);
 
-	public final static String checkExcludeStdStr = System.getProperty("chord.check.exclude.std", DEFAULT_CHECK_EXCLUDES);
-	public final static String checkExcludeExtStr = System.getProperty("chord.check.exclude.ext", "");
+	public final static String checkStdExcludeStr = System.getProperty("chord.std.check.exclude", DEFAULT_CHECK_EXCLUDES);
+	public final static String checkExtExcludeStr = System.getProperty("chord.ext.check.exclude", "");
 	public final static String checkExcludeStr = System.getProperty("chord.check.exclude",
-		concat(checkExcludeStdStr, ',', checkExcludeExtStr));
+		concat(checkStdExcludeStr, ',', checkExtExcludeStr));
 	public final static String[] checkExcludeAry = toArray(checkExcludeStr);
 
     // Program transformation properties
@@ -199,6 +203,7 @@ public class Config {
 		System.out.println("os.arch: " + System.getProperty("os.arch"));
 		System.out.println("os.name: " + System.getProperty("os.name"));
 		System.out.println("os.version: " + System.getProperty("os.version"));
+		System.out.println("sun.boot.class.path: " + System.getProperty("sun.boot.class.path"));
 
 		System.out.println("*** Chord resource properties:");
 		System.out.println("chord.main.dir: " + mainDirName);
@@ -234,11 +239,11 @@ public class Config {
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
 		System.out.println("chord.ch.kind: " + CHkind);
-		System.out.println("chord.reflect.forname: " + handleForNameReflection);
-		System.out.println("chord.reflect.newinst: " + handleNewInstReflection);
-		System.out.println("chord.scope.exclude.std: " + scopeExcludeStdStr);
-		System.out.println("chord.scope.exclude.ext: " + scopeExcludeExtStr);
+		System.out.println("chord.reflect.kind: " + reflectKind);
+		System.out.println("chord.std.scope.exclude: " + scopeStdExcludeStr);
+		System.out.println("chord.ext.scope.exclude: " + scopeExtExcludeStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
+		System.out.println("chord.stubs.file: " + stubsFileName);
 
 		System.out.println("*** Program analysis properties:");
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
@@ -246,8 +251,8 @@ public class Config {
 		System.out.println("chord.analysis.exclude: " + analysisExcludeStr);
 		System.out.println("chord.reuse.rels: " + reuseRels);
 		System.out.println("chord.print.results: " + printResults);
-		System.out.println("chord.check.exclude.std: " + checkExcludeStdStr);
-		System.out.println("chord.check.exclude.ext: " + checkExcludeExtStr);
+		System.out.println("chord.std.check.exclude: " + checkStdExcludeStr);
+		System.out.println("chord.ext.check.exclude: " + checkExtExcludeStr);
 		System.out.println("chord.check.exclude: " + checkExcludeStr);
 
 		System.out.println("*** Program transformation properties:");

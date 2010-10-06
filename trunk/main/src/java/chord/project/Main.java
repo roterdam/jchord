@@ -48,8 +48,7 @@ public class Main {
 		Program program = Program.g();
 		Project project = Project.g();
 		if (Config.buildProgram) {
-			program.getMethods();
-			program.getReflectInfo();
+			program.build();
 		}
 		if (Config.printAllClasses)
 			program.printAllClasses();
