@@ -264,6 +264,29 @@ public class RTA {
 		}
 	}
 
+	private void processResolvedAryNewInstSite(Quad q, jq_Reference r) {
+		reflect.addResolvedAryNewInstSite(q, r);
+		visitClass(r);
+		if (reachableAllocClasses.add(r))
+			repeat = true;
+	}
+
+	private void processResolvedConNewInstSite(Quad q, jq_Reference r) {
+		reflect.addResolvedConNewInstSite(q, r);
+		visitClass(r);
+		if (reachableAllocClasses.add(r))
+			repeat = true;
+		jq_Class c = (jq_Class) r;
+		jq_InstanceMethod[] meths = c.getDeclaredInstanceMethods();
+		// this is imprecise in that we are visiting all constrs instead of the called one
+		// this is also unsound because we are not visiting constrs in superclasses
+		for (int i = 0; i < meths.length; i++) {
+			jq_InstanceMethod m = meths[i];
+			if (m.getName().toString().equals("<init>"))
+				visitMethod(m);
+		}
+	}
+
 	private void processMethod(jq_Method m) {
 		if (staticReflectResolved != null && staticReflectResolved.add(m)) {
 			staticReflectResolver.run(m);
@@ -313,9 +336,8 @@ public class RTA {
 						if (c instanceof Class) {
 							String s = ((Class) c).getName();
 							// s is in encoded form only if it is an array type
-							if (s.startsWith("["))
-								s = Program.typesToStr(s);
-							jq_Reference d = Program.g().parseType(s);
+							// if (s.startsWith("[")) s = Program.typesToStr(s);
+							jq_Reference d = (jq_Reference) jq_Type.parseType(s);
 							if (d != null)
 								visitClass(d);
 						}
@@ -339,20 +361,37 @@ public class RTA {
 		jq_Class c = n.getDeclaringClass();
 		visitClass(c);
 		visitMethod(n);
-		if (dynamicResolvedObjNewInstSites != null && c.getName().equals("java.lang.Class") && 
-				n.getName().toString().equals("newInstance") &&
-				n.getDesc().toString().equals("()Ljava/lang/Object;")) {
-			for (Pair<String, List<String>> p : dynamicResolvedObjNewInstSites) {
-				if (matches(p.val0, m, q)) {
-					// System.out.println("FOUND: " + q + " @ " + m);
-					for (String s : p.val1) {
-						jq_Reference r = (jq_Reference) Program.g().parseType(s);
-						if (r != null)
-							processResolvedObjNewInstSite(q, r);
+		String cName = c.getName();
+		if (cName.equals("java.lang.Class")) {
+			if (dynamicResolvedObjNewInstSites != null &&
+					n.getName().toString().equals("newInstance") &&
+					n.getDesc().toString().equals("()Ljava/lang/Object;")) {
+				for (Pair<String, List<String>> p : dynamicResolvedObjNewInstSites) {
+					if (matches(p.val0, m, q)) {
+						for (String s : p.val1) {
+							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
+							if (r != null)
+								processResolvedObjNewInstSite(q, r);
+						}
+						break;
 					}
-					break;
 				}
 			}
+        } else if (cName.equals("java.lang.reflect.Constructor")) {
+            if (dynamicResolvedConNewInstSites != null &&
+					n.getName().toString().equals("newInstance") &&
+                	n.getDesc().toString().equals("([Ljava/lang/Object;)Ljava/lang/Object;")) {
+				for (Pair<String, List<String>> p : dynamicResolvedConNewInstSites) {
+					if (matches(p.val0, m, q)) {
+						for (String s : p.val1) {
+							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
+							if (r != null)
+								processResolvedConNewInstSite(q, r);
+						}
+						break;
+					}
+				}
+            }
 		}
 		jq_NameAndDesc nd = n.getNameAndDesc();
 		boolean isInterface = c.isInterface();
@@ -380,20 +419,37 @@ public class RTA {
 		jq_Class c = n.getDeclaringClass();
 		visitClass(c);
 		visitMethod(n);
-		if (dynamicResolvedClsForNameSites != null && c.getName().equals("java.lang.Class") &&
-				n.getName().toString().equals("forName") &&
-				n.getDesc().toString().equals("(Ljava/lang/String;)Ljava/lang/Class;")) {
-			for (Pair<String, List<String>> p : dynamicResolvedClsForNameSites) {
-				if (matches(p.val0, m, q)) {
-					// System.out.println("FOUND: " + q + " @ " + m);
-					for (String s : p.val1) {
-						jq_Reference r = (jq_Reference) Program.g().parseType(s);
-						if (r != null)
-							processResolvedClsForNameSite(q, r);
+		String cName = c.getName();
+		if (cName.equals("java.lang.Class")) {
+			if (dynamicResolvedClsForNameSites != null &&
+					n.getName().toString().equals("forName") &&
+					n.getDesc().toString().equals("(Ljava/lang/String;)Ljava/lang/Class;")) {
+				for (Pair<String, List<String>> p : dynamicResolvedClsForNameSites) {
+					if (matches(p.val0, m, q)) {
+						for (String s : p.val1) {
+							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
+							if (r != null)
+								processResolvedClsForNameSite(q, r);
+						}
+						break;
 					}
-					break;
 				}
 			}
+		} else if (cName.equals("java.lang.reflect.Array")) {
+			if (dynamicResolvedAryNewInstSites != null &&
+					n.getName().toString().equals("newInstance") &&
+					n.getDesc().toString().equals("(Ljava/lang/Class;I)Ljava/lang/Object;")) {
+				for (Pair<String, List<String>> p : dynamicResolvedAryNewInstSites) {
+					if (matches(p.val0, m, q)) {
+						for (String s : p.val1) {
+							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
+							if (r != null)
+								processResolvedAryNewInstSite(q, r);
+						}
+						break;
+					}
+				}
+            }
 		}
 	}
 

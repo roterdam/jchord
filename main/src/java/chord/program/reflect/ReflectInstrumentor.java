@@ -8,39 +8,60 @@ import javassist.CtConstructor;
 import chord.program.MethodElem;
 
 public class ReflectInstrumentor extends CoreInstrumentor {
-	private static final String eventStr =
-		ReflectEventHandler.class.getName() + ".reflectEvent(";
+	private static final String clsForNameEventStr =
+		ReflectEventHandler.class.getName() + ".clsForNameEvent(";
+	private static final String objNewInstEventStr =
+		ReflectEventHandler.class.getName() + ".objNewInstEvent(";
+	private static final String conNewInstEventStr =
+		ReflectEventHandler.class.getName() + ".conNewInstEvent(";
+	private static final String aryNewInstEventStr =
+		ReflectEventHandler.class.getName() + ".aryNewInstEvent(";
 	public ReflectInstrumentor(Map<String, String> argsMap) {
 		super(argsMap);
 	}
 	@Override
 	public void edit(MethodCall e) {
 		String cName = e.getClassName();
-		if (!cName.equals("java.lang.Class")) 
-			return;
-		String mName = e.getMethodName();
-		String mSign = e.getSignature();
-		String cName2;
-		byte eventKind;
-		if (mName.equals("forName") &&
-				mSign.equals("(Ljava/lang/String;)Ljava/lang/Class;")) {
-			eventKind = ReflectEventKind.CLS_FOR_NAME_CALL;
-			cName2 = "$1";
-		} else if (mName.equals("newInstance") &&
-				mSign.equals("()Ljava/lang/Object;")) {
-			eventKind = ReflectEventKind.OBJ_NEW_INST_CALL;
-			cName2 = "$0.getName()";
-/*
-		} else if (...) {
-			eventKind = ReflectEventKind.CON_NEW_INST_CALL;
-		} else if (...) {
-			eventKind = ReflectEventKind.ARY_NEW_INST_CALL;
-*/
-		} else 
+		String eventStr = null;
+		String cName2 = null;
+		if (cName.equals("java.lang.Class"))  {
+			String mName = e.getMethodName();
+			if (mName.equals("forName")) {
+				String mSign = e.getSignature();
+				if (mSign.equals("(Ljava/lang/String;)Ljava/lang/Class;")) {
+					eventStr = clsForNameEventStr;
+					cName2 = "$1";
+				}
+			} else if (mName.equals("newInstance")) {
+				String mSign = e.getSignature();
+				if (mSign.equals("()Ljava/lang/Object;")) {
+					eventStr = objNewInstEventStr;
+					cName2 = "$0.getName()";
+				}
+			}
+		} else if (cName.equals("java.lang.reflect.Constructor")) {
+			String mName = e.getMethodName();
+			if (mName.equals("newInstance")) {
+				String mSign = e.getSignature();
+				if (mSign.equals("([Ljava/lang/Object;)Ljava/lang/Object;")) {
+					eventStr = conNewInstEventStr;
+					cName2 = "$0.getName()";
+				}
+			}
+		} else if (cName.equals("java.lang.reflect.Array")) {
+			String mName = e.getMethodName();
+			if (mName.equals("newInstance")) {
+				String mSign = e.getSignature();
+				if (mSign.equals("(Ljava/lang/Class;I)Ljava/lang/Object;")) {
+					eventStr = aryNewInstEventStr;
+					cName2 = "$1.getName()";
+				}
+			}
+		}
+		if (eventStr == null)
 			return;
 		String mElem = getMethodElem(e);
-		String instr = "{ " + eventStr + eventKind + "," +
-			mElem + "," + cName2 + "); $_ = $proceed($$); }";
+		String instr = "{ " + eventStr + mElem + "," + cName2 + "); $_ = $proceed($$); }";
 		try {
 			e.replace(instr);
 		} catch (CannotCompileException ex) {
