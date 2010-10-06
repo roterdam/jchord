@@ -55,4 +55,7 @@ public class MethodElem extends MethodSign {
         String cName = s.substring(atIdx + 1);
         return new MethodElem(num, mName, mDesc, cName);
 	}
+	public String toString() {
+		return offset + "!" + mName + ":" + mDesc + "@" + cName;
+	}
 }
