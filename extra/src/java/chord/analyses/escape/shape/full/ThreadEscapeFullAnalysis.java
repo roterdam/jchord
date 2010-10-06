@@ -31,6 +31,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.Return.THROW_A;
 import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Getfield;
@@ -175,8 +176,10 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			jq_Method m = domV.getMethod(v);
 			int n = m.getLiveRefVars().size();
 			methToNumVars.put(m, n);
+			// System.out.println("Method: " + m);
 			for (int i = 0; i < n; i++) {
 				varId[vIdx + i] = i;
+			//	System.out.println("\t" + domV.get(vIdx + i));
 			}
 			vIdx += n;
 		}
@@ -203,6 +206,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			} catch (ThrEscException ex) {
 				// do nothing
 			}
+			// printSummaries();
 			for (Quad q : currLocEs)
 				System.out.println("LOC: " + q.toVerboseStr());
 			for (Quad q : currEscEs)
@@ -414,14 +418,15 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		@Override
 		public void visitReturn(Quad q) {
 			Obj[] oEnv = null;
-			Operand rx = Return.getSrc(q);
-			if (rx instanceof RegisterOperand) {
-				RegisterOperand ro = (RegisterOperand) rx;
-				if (ro.getType().isReferenceType()) {
-					int rIdx = getIdx(ro);
-					Obj rPts = iDstNode.env[rIdx];
-					oEnv = new Obj[1];
-					oEnv[0] = rPts;
+			if (!(q.getOperator() instanceof THROW_A)) {
+				Operand rx = Return.getSrc(q);
+				if (rx instanceof RegisterOperand) {
+					RegisterOperand ro = (RegisterOperand) rx;
+					if (ro.getType().isReferenceType()) {
+						int rIdx = getIdx(ro);
+						Obj rPts = iDstNode.env[rIdx];
+						oEnv = new Obj[] { rPts };
+					}
 				}
 			}
 			if (oEnv == null)
