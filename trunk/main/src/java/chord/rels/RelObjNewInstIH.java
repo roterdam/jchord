@@ -28,10 +28,10 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "objNewInstInvkInst",
+	name = "objNewInstIH",
 	sign = "I0,H0:I0_H0"
 )
-public class RelObjNewInstInvkInst extends ProgramRel {
+public class RelObjNewInstIH extends ProgramRel {
 	public void fill() {
 		DomI domI = (DomI) doms[0];
 		DomH domH = (DomH) doms[1];

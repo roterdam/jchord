@@ -28,15 +28,15 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "aryNewInstInvkInst",
+	name = "conNewInstIH",
 	sign = "I0,H0:I0_H0"
 )
-public class RelAryNewInstInvkInst extends ProgramRel {
+public class RelConNewInstIH extends ProgramRel {
 	public void fill() {
 		DomI domI = (DomI) doms[0];
 		DomH domH = (DomH) doms[1];
         List<Pair<Quad, List<jq_Reference>>> l =
-            Program.g().getReflect().getResolvedAryNewInstSites();
+            Program.g().getReflect().getResolvedConNewInstSites();
 		for (Pair<Quad, List<jq_Reference>> p : l) {
 			Quad q = p.val0;
 			int iIdx = domI.indexOf(q);
