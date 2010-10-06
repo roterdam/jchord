@@ -37,13 +37,6 @@ import chord.bddbddb.Dom;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClassicProject extends Project {
-	private static ClassicProject project = null;
-	public static ClassicProject g() {
-		if (project == null)
-			project = new ClassicProject();
-		return project;
-	}
-
 	private static final String CANNOT_INSTANTIATE_TASK =
 		"ERROR: ClassicProject builder: Cannot instantiate task '%s': %s";
 	private static final String CANNOT_INSTANTIATE_TRGT =
@@ -71,6 +64,14 @@ public class ClassicProject extends Project {
 	private final Set<ITask> doneTasks = new HashSet<ITask>();
 	private final Set<Object> doneTrgts = new HashSet<Object>();
 	private boolean isBuilt = false;
+
+	private static ClassicProject project = null;
+
+	public static ClassicProject g() {
+		if (project == null)
+			project = new ClassicProject();
+		return project;
+	}
 
 	@Override
 	public void build() {
