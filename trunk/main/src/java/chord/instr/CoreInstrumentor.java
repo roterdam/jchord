@@ -9,6 +9,8 @@ package chord.instr;
 import java.util.Map;
 import java.util.HashMap;
 
+import javassist.Modifier;
+import javassist.CtConstructor;
 import javassist.NotFoundException;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
@@ -43,6 +45,8 @@ public class CoreInstrumentor extends ExprEditor {
 	protected final JavassistPool pool;
 	protected String[] scopeExcludeAry;
 	protected Map<String, String> argsMap;
+	protected CtClass currentClass;
+	protected CtBehavior currentMethod;
 
 	/**
 	 * Constructor.
@@ -129,6 +133,7 @@ public class CoreInstrumentor extends ExprEditor {
 	 *			instrument the class. 
 	 */
 	public CtClass edit(CtClass clazz) throws CannotCompileException {
+		currentClass = clazz;
 		CtBehavior clinit = clazz.getClassInitializer();
 		if (clinit != null)
 			edit(clinit);
@@ -158,6 +163,7 @@ public class CoreInstrumentor extends ExprEditor {
 	 *			instrument the class.
 	 */
 	public void edit(CtBehavior method) throws CannotCompileException {
+		currentMethod = method;
 		method.instrument(this);
 	}
 
