@@ -43,9 +43,10 @@ MgetStatFldInst(m:M0,l:V0,f:F0) input
 MputStatFldInst(m:M0,f:F0,r:V) input
 #MclsValAsgnInst(m:M0,v:V0,t:T0) input
 #MgetClassInvkInst(m:M0,i:I0) input
-#MforNameInvkInst(m:M0,i:I0,t:T0) input
-#MeasyNewInstanceInvkInst(m:M0,i:I0) input
-#MhardNewInstanceInvkInst(m:M0,i:I0) input
+clsForNameIT(i:I0,t:T0) input
+clsForNameMT(m:M0,t:T0)
+#MeasyNewInstInvkInst(m:M0,i:I0,t:T0) input
+#MhardNewInstInvkInst(m:M0,i:I0) input
 #clsTH(t:T0,h:H0) input
 #objTH(t:T0,h:H0) input
 classT(t:T) input
@@ -105,12 +106,15 @@ VV(u,v) :- IinvkRet(i,z,u), IM(i,m), MmethRet(m,z,v).
 
 VH(u,h) :- VV(u,v), VH(v,h), VHfilter(u,h).
 
+clsForNameMT(m,t) :- clsForNameIT(i,t), MI(m,i).
+
 objValAsgnInst(l,h)   :- reachableM(m), MobjValAsgnInst(m,l,h).
 objVarAsgnInst(l,r)   :- reachableM(m), MobjVarAsgnInst(m,l,r).
 getInstFldInst(l,b,f) :- reachableM(m), MgetInstFldInst(m,l,b,f).
 putInstFldInst(b,f,r) :- reachableM(m), MputInstFldInst(m,b,f,r).
 getStatFldInst(l,f)   :- reachableM(m), MgetStatFldInst(m,l,f).
 putStatFldInst(f,r)   :- reachableM(m), MputStatFldInst(m,f,r).
+reachableT(t)         :- reachableM(m), clsForNameMT(m,t).
 
 VH(l,h) :- objValAsgnInst(l,h).
 VH(l,h) :- objVarAsgnInst(l,r), VH(r,h), VHfilter(l,h).

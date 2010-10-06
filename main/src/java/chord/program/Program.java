@@ -38,6 +38,7 @@ import chord.util.ChordRuntimeException;
  
 import chord.instr.OnlineTransformer;
 
+import joeq.Class.Classpath;
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Util.Templates.ListIterator;
@@ -76,121 +77,106 @@ import joeq.Main.Helper;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public abstract class Program {
-	private static final String INVALID_SCOPE_KIND = "ERROR: Invalid value `%s` used for property chord.scope.kind; must be one of [dynamic|rta|cha].";
-	private static final String LOADING_CLASS = "INFO: Loading class %s.";
-	private static final String EXCLUDING_CLASS = "WARN: Excluding class %s from analysis scope; reason follows.";
-	private static final String MAIN_CLASS_NOT_DEFINED = "ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
-	private static final String MAIN_METHOD_NOT_FOUND = "ERROR: Could not find main class `%s` or main method in that class.";
-	private static final String CLASS_PATH_NOT_DEFINED = "ERROR: Property chord.class.path must be set to specify location(s) of .class files of program to be analyzed.";
-	private static final String SRC_PATH_NOT_DEFINED = "ERROR: Property chord.src.path must be set to specify location(s) of .java files of program to be analyzed.";
-	private static final String METHOD_NOT_FOUND = "ERROR: Could not find method `%s`.";
-	private static final String CLASS_NOT_FOUND = "ERROR: Could not find class `%s`.";
+public class Program {
+	private static final String INVALID_SCOPE_KIND =
+		"ERROR: Invalid value `%s` used for property chord.scope.kind; must be one of [dynamic|rta|cha].";
+	private static final String LOADING_CLASS =
+		"INFO: Loading class %s.";
+	private static final String EXCLUDING_CLASS =
+		"WARN: Excluding class %s from analysis scope; reason follows.";
+	private static final String MAIN_CLASS_NOT_DEFINED =
+		"ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
+	private static final String MAIN_METHOD_NOT_FOUND =
+		"ERROR: Could not find main class `%s` or main method in that class.";
+	private static final String CLASS_PATH_NOT_DEFINED =
+		"ERROR: Property chord.class.path must be set to specify location(s) of .class files of program to be analyzed.";
+	private static final String SRC_PATH_NOT_DEFINED =
+		"ERROR: Property chord.src.path must be set to specify location(s) of .java files of program to be analyzed.";
+	private static final String METHOD_NOT_FOUND =
+		"ERROR: Could not find method `%s`.";
+	private static final String CLASS_NOT_FOUND =
+		"ERROR: Could not find class `%s`.";
+    private static final String DYNAMIC_CLASS_NOT_FOUND =
+        "WARN: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
 
-	private IndexSet<jq_Method> methods;
-	private ReflectInfo reflectInfo;
-	private IndexSet<jq_Type> types;
-	private IndexSet<jq_Reference> classes;
-	private Map<String, jq_Type> nameToTypeMap;
-	private Map<String, jq_Reference> nameToClassMap;
-	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
-	private jq_Method mainMethod;
-	private boolean HTMLizedJavaSrcFiles;
-	private final boolean reuseScope;
-    private ClassHierarchy ch;
-	private static Program program;
-	protected Program() {
+	static {
 		if (Config.verbose > 2)
 			jq_Method.setVerbose();
 		if (Config.doSSA)
 			jq_Method.doSSA();
 		jq_Method.exclude(Config.scopeExcludeAry);
-		reuseScope = Config.reuseScope;
-	}
-	public final static Program g() {
-		if (program == null) {
-			String scopeKind = Config.scopeKind;
-			if (scopeKind.equals("rta")) {
-				program = new RTAProgram(
-					Config.handleForNameReflection,
-					Config.handleNewInstReflection);
-			} else if (scopeKind.equals("dynamic")) {
-				program = new DynamicProgram();
-			} else if (scopeKind.equals("cha")) {
-				program = new CHAProgram();
-			} else {
-				Messages.fatal(INVALID_SCOPE_KIND, scopeKind);
-				program = null;
+		Map<String, String> map = new HashMap<String, String>();
+		try {
+			BufferedReader in = new BufferedReader(
+				new FileReader(Config.stubsFileName));
+			String s;
+			while ((s = in.readLine()) != null) {
+				String[] a = s.split(" ");
+				assert (a.length == 2);
+				map.put(a[0], a[1]);
 			}
+		} catch (IOException ex) {
+			Messages.fatal(ex);
 		}
+		jq_Method.setNativeCFGBuilders(map);
+	}
+
+	private IndexSet<jq_Method> methods;
+	private Reflect reflect;
+	private IndexSet<jq_Reference> classes;
+	private IndexSet<jq_Type> types;
+	private Map<String, jq_Type> nameToTypeMap;
+	private Map<String, jq_Reference> nameToClassMap;
+	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
+	private jq_Method mainMethod;
+	private boolean HTMLizedJavaSrcFiles;
+    private ClassHierarchy ch;
+	private boolean isBuilt;
+	private static Program program;
+
+	public static Program g() {
+		if (program == null)
+			program = new Program();
 		return program;
 	}
+
     /**
      * Provides the class hierarchy.
      */
-    public final ClassHierarchy getClassHierarchy() {
+    public ClassHierarchy getClassHierarchy() {
         if (ch == null)
             ch = new ClassHierarchy();
         return ch;
     }
-    /**
-     * Provides all methods deemed reachable.
-     */
-    public final IndexSet<jq_Method> getMethods() {
-		if (methods == null) {
-			String methodsFileName = Config.methodsFileName;
-			File methodsFile = new File(methodsFileName);
-			if (reuseScope && methodsFile.exists()) {
-				loadMethodsFile(methodsFile);
+
+	public void build() {
+		if (isBuilt)
+			return;
+		File methodsFile = new File(Config.methodsFileName);
+		File reflectFile = new File(Config.reflectFileName);
+		if (Config.reuseScope && methodsFile.exists() && reflectFile.exists()) {
+			loadMethodsFile(methodsFile);
+			loadReflectFile(reflectFile);
+		} else {
+			String scopeKind = Config.scopeKind;
+			if (scopeKind.equals("rta")) {
+				RTA rta = new RTA(Config.reflectKind);
+				methods = rta.getMethods();
+				reflect = rta.getReflect();
+			} else if (scopeKind.equals("dynamic")) {
+				DynamicBuilder dyn = new DynamicBuilder();
+				methods = dyn.getMethods();
+				reflect = new Reflect();
+			} else if (scopeKind.equals("cha")) {
+				CHA cha = new CHA(getClassHierarchy());
+				methods = cha.getMethods();
+				reflect = new Reflect();
 			} else {
-				methods = computeMethods();
-				saveMethodsFile(methodsFile);
+				Messages.fatal(INVALID_SCOPE_KIND, scopeKind);
 			}
+			saveMethodsFile(methodsFile);
+			saveReflectFile(reflectFile);
 		}
-		return methods;
-	}
-	/**
-	 * Provides resolved reflection information.
-	 */
-	public final ReflectInfo getReflectInfo() {
-		if (reflectInfo == null) {
-			String reflectFileName = Config.reflectFileName;
-			File reflectFile = new File(reflectFileName);
-			if (reuseScope && reflectFile.exists()) {
-				loadReflectFile(reflectFile);
-			} else {
-				reflectInfo = computeReflectInfo();
-				saveReflectFile(reflectFile);
-			}
-		}
-		return reflectInfo;
-	}
-	/**
-	 * Computes reachable methods.
-	 * Subclasses must override.
-	 */
-	protected IndexSet<jq_Method> computeMethods() {
-		throw new ChordRuntimeException();
-	}
-	/**
-	 * Resolves reflection.
-	 * Subclasses must override.
-	 */
-	protected ReflectInfo computeReflectInfo() {
-		throw new ChordRuntimeException();
-	}
-    public final IndexSet<jq_Reference> getClasses() {
-        if (classes == null)
-            computeClassesAndTypes();
-        return classes;
-    }
-    public final IndexSet<jq_Type> getTypes() {
-        if (types == null)
-            computeClassesAndTypes();
-        return types;
-    }
-    private void computeClassesAndTypes() {
-		getMethods();
         PrimordialClassLoader loader = PrimordialClassLoader.loader;
         jq_Type[] typesAry = loader.getAllTypes();
         int numTypes = loader.getNumTypes();
@@ -208,7 +194,36 @@ public abstract class Program {
                 classes.add(r);
             }
         }
+		isBuilt = true;
+	}
+
+    /**
+     * Provides all methods deemed reachable.
+     */
+    public IndexSet<jq_Method> getMethods() {
+		if (!isBuilt) build();
+		return methods;
+	}
+
+	/**
+	 * Provides resolved reflection information.
+	 */
+	public Reflect getReflect() {
+		if (!isBuilt) build();
+		return reflect;
+	}
+
+    public IndexSet<jq_Reference> getClasses() {
+        if (!isBuilt) build();
+        return classes;
     }
+
+    public IndexSet<jq_Type> getTypes() {
+        if (!isBuilt) build();
+        return types;
+    }
+
+
 	private void loadMethodsFile(File file) {
 		List<String> l = FileUtils.readFileToList(file);
 		Set<String> excludedClasses = new HashSet<String>();
@@ -217,29 +232,26 @@ public abstract class Program {
 		for (String s : l) {
 			MethodSign sign = MethodSign.parse(s);
 			String cName = sign.cName;
-			if (!excludedClasses.contains(cName)) {
-				jq_Class c = (jq_Class) loadClass(cName);
-				if (c != null) {
-					String mName = sign.mName;
-					String mDesc = sign.mDesc;
-					jq_Method m =
-						(jq_Method) c.getDeclaredMember(mName, mDesc);
-					assert (m != null);
-					if (!m.isAbstract())
-						m.getCFG();
-					methods.add(m);
-				} else
-					excludedClasses.add(cName);
-			}
+			if (excludedClasses.contains(cName))
+				continue;
+			jq_Class c = (jq_Class) loadClass(cName);
+			if (c != null) {
+				String mName = sign.mName;
+				String mDesc = sign.mDesc;
+				jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
+				assert (m != null);
+				if (!m.isAbstract())
+					m.getCFG();
+				methods.add(m);
+			} else
+				excludedClasses.add(cName);
 		}
 	}
+
 	private void saveMethodsFile(File file) {
-		saveMethodsFile(methods, file);
-	}
-	public static void saveMethodsFile(IndexSet<jq_Method> mList, File file) {
 		try {
 			PrintWriter out = new PrintWriter(file);
-			for (jq_Method m : mList)
+			for (jq_Method m : methods)
 				out.println(m);
 			out.close();
 		} catch (IOException ex) {
@@ -247,59 +259,69 @@ public abstract class Program {
 		}
 	}
 
-	private void loadReflectFile(File file) {
-		List<String> l = FileUtils.readFileToList(file);
-		int n = l.size();
-		assert (n >= 3);
-		int i = 0;
-		assert (l.get(i++).equals("# reflectClasses"));
-		Set<jq_Reference> reflectClasses = new ArraySet<jq_Reference>();
-		for (; true; i++) {
-			String s = l.get(i);
-			if (s.startsWith("#"))
-				break;
-			jq_Reference r = loadClass(s);
-			if (r != null)
-				reflectClasses.add(r);
+	private List<Pair<Quad, List<jq_Reference>>> loadResolvedSites(BufferedReader in) {
+		List<Pair<Quad, List<jq_Reference>>> l =
+			new ArrayList<Pair<Quad, List<jq_Reference>>>();
+		String s;
+		try {
+			while ((s = in.readLine()) != null) {
+				if (s.startsWith("#"))
+					break;
+				Pair<Quad, List<jq_Reference>> site = strToSite(s);
+				l.add(site);
+			}
+		} catch (IOException ex) {
+			Messages.fatal(ex);
 		}
-		assert (l.get(i++).equals("# resolvedForNameSites"));
-		Set<Pair<Quad, Set<jq_Reference>>> resolvedForNameSites =
-			new ArraySet<Pair<Quad, Set<jq_Reference>>>();
-		for (; true; i++) {
-			String s = l.get(i);
-			if (s.startsWith("#"))
-				break;
-			Pair<Quad, Set<jq_Reference>> site = strToSite(s);
-			resolvedForNameSites.add(site);
-		}
-		assert (l.get(i++).equals("# resolvedNewInstSites"));
-		Set<Pair<Quad, Set<jq_Reference>>> resolvedNewInstSites =
-			new ArraySet<Pair<Quad, Set<jq_Reference>>>();
-		for (; i < n; i++) {
-			String s = l.get(i);
-			Pair<Quad, Set<jq_Reference>> site = strToSite(s);
-			resolvedNewInstSites.add(site);
-		}
-		reflectInfo = new ReflectInfo(reflectClasses, resolvedForNameSites,
-			resolvedNewInstSites);
+		return l;
 	}
-	private Pair<Quad, Set<jq_Reference>> strToSite(String s) {
+
+	private void loadReflectFile(File file) {
+		BufferedReader in = null;
+		String s = null;
+		try {
+			in = new BufferedReader(new FileReader(file));
+			s = in.readLine();
+		} catch (IOException ex) {
+			Messages.fatal(ex);
+		}
+		List<Pair<Quad, List<jq_Reference>>> resolvedClsForNameSites;
+		List<Pair<Quad, List<jq_Reference>>> resolvedObjNewInstSites;
+		List<Pair<Quad, List<jq_Reference>>> resolvedConNewInstSites;
+		List<Pair<Quad, List<jq_Reference>>> resolvedAryNewInstSites;
+		if (s == null) {
+			resolvedClsForNameSites = Collections.EMPTY_LIST;
+			resolvedObjNewInstSites = Collections.EMPTY_LIST;
+			resolvedConNewInstSites = Collections.EMPTY_LIST;
+			resolvedAryNewInstSites = Collections.EMPTY_LIST;
+		} else {
+			resolvedClsForNameSites = loadResolvedSites(in);
+			resolvedObjNewInstSites = loadResolvedSites(in);
+			resolvedConNewInstSites = loadResolvedSites(in);
+			resolvedAryNewInstSites = loadResolvedSites(in);
+		}
+		reflect = new Reflect(resolvedClsForNameSites, resolvedObjNewInstSites,
+			resolvedConNewInstSites, resolvedAryNewInstSites);
+	}
+
+	private Pair<Quad, List<jq_Reference>> strToSite(String s) {
 		String[] a = s.split("->");
 		assert (a.length == 2);
 		MethodElem e = MethodElem.parse(a[0]);
 		Quad q = getQuad(e, Invoke.class);
 		assert (q != null);
 		String[] rNames = a[1].split(",");
-		Set<jq_Reference> rTypes = new ArraySet<jq_Reference>(rNames.length);
+		List<jq_Reference> rTypes = new ArrayList<jq_Reference>(rNames.length);
 		for (String rName : rNames) {
 			jq_Reference r = loadClass(rName);
 			if (r != null)
 				rTypes.add(r);
 		}
-		return new Pair<Quad, Set<jq_Reference>>(q, rTypes);
+		return new Pair<Quad, List<jq_Reference>>(q, rTypes);
 	}
-	private static String siteToStr(Pair<Quad, Set<jq_Reference>> p) {
-		Set<jq_Reference> l = p.val1;
+
+	private String siteToStr(Pair<Quad, List<jq_Reference>> p) {
+		List<jq_Reference> l = p.val1;
 		assert (l != null);
 		int n = l.size();
 		Iterator<jq_Reference> it = l.iterator();
@@ -309,25 +331,25 @@ public abstract class Program {
 			s += "," + it.next();
 		return s;
 	}
-	private void saveReflectFile(File file) {
-		saveReflectFile(reflectInfo, file);
+
+	private void saveResolvedSites(List<Pair<Quad, List<jq_Reference>>> l, PrintWriter out) {
+		for (Pair<Quad, List<jq_Reference>> p : l) {
+			String s = siteToStr(p);
+			out.println(s);
+		}
 	}
-	public static void saveReflectFile(ReflectInfo rInfo, File file) {
+
+	private void saveReflectFile(File file) {
 		try {
             PrintWriter out = new PrintWriter(file);
-			out.println("# reflectClasses");
-			for (jq_Reference r : rInfo.getReflectClasses())
-           	    out.println(r);
-			out.println("# resolvedForNameSites");
-			for (Pair<Quad, Set<jq_Reference>> p : rInfo.getResolvedForNameSites()) {
-				String s = siteToStr(p);
-				out.println(s);
-			}
-			out.println("# resolvedNewInstSites");
-			for (Pair<Quad, Set<jq_Reference>> p : rInfo.getResolvedNewInstSites()) {
-				String s = siteToStr(p);
-				out.println(s);
-			}
+			out.println("# resolvedClsForNameSites");
+			saveResolvedSites(reflect.getResolvedClsForNameSites(), out);
+			out.println("# resolvedObjNewInstSites");
+			saveResolvedSites(reflect.getResolvedObjNewInstSites(), out);
+			out.println("# resolvedConNewInstSites");
+			saveResolvedSites(reflect.getResolvedConNewInstSites(), out);
+			out.println("# resolvedAryNewInstSites");
+			saveResolvedSites(reflect.getResolvedAryNewInstSites(), out);
 			out.close();
 		} catch (IOException ex) {
 			throw new ChordRuntimeException(ex);
@@ -605,6 +627,7 @@ public abstract class Program {
 			Messages.fatal(METHOD_NOT_FOUND, sign);
 		printMethod(m);
 	}
+
 	public void printClass(String className) {
 		jq_Reference c = getClass(className);
 		if (c == null)
@@ -619,6 +642,7 @@ public abstract class Program {
 		for (jq_Method m : getMethods(c))
 			printMethod(m);
 	}
+
 	private void printMethod(jq_Method m) {
 		System.out.println("Method: " + m);
 		if (!m.isAbstract()) {
@@ -635,10 +659,12 @@ public abstract class Program {
 			System.out.println(cfg.fullDump());
 		}
 	}
+
 	public void printAllClasses() {
 		for (jq_Reference c : getClasses())
 			printClass(c);
 	}
+
     private static Comparator comparator = new Comparator() {
         public int compare(Object o1, Object o2) {
             jq_Type t1 = (jq_Type) o1;
@@ -648,4 +674,17 @@ public abstract class Program {
             return s1.compareTo(s2);
         }
     };
+
+	// functionality for determining the representation of a reference type, if
+	// it is present in the classpath, without giving a NoClassDefFoundError if
+	// it is absent.
+	public static jq_Reference parseType(String refName) {
+        String rscName = Classpath.classnameToResource(refName);
+		Classpath cp = PrimordialClassLoader.loader.getClasspath();
+        if (cp.getResourcePath(rscName) == null) {
+            Messages.log(DYNAMIC_CLASS_NOT_FOUND, refName);
+            return null;
+        }
+        return (jq_Reference) jq_Type.parseType(refName);
+	}
 }

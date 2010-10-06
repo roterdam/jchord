@@ -7,7 +7,6 @@
 package chord.program;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Collections;
 
 import chord.util.IndexSet;
@@ -18,24 +17,17 @@ import joeq.Class.jq_Array;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
+import chord.program.reflect.DynamicReflectResolver;
 
 /**
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DynamicProgram extends Program {
+public class DynamicBuilder {
 	private IndexSet<jq_Method> methods;
-	@Override
-	protected IndexSet<jq_Method> computeMethods() {
-		if (methods == null)
-			build();
-		return methods;
-	}
-	@Override
-	protected ReflectInfo computeReflectInfo() {
-		return new ReflectInfo();
-	}
-	private void build() {
+	public IndexSet<jq_Method> getMethods() {
+		if (methods != null)
+			return methods;
 		List<String> classNames = Program.getDynamicallyLoadedClasses();
         HostedVM.initialize();
 		methods = new IndexSet<jq_Method>();
@@ -54,5 +46,6 @@ public class DynamicProgram extends Program {
 				methods.add(m);
 			}
 		}
+		return methods;
 	}
 }

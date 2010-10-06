@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.program;
+package chord.program.reflect;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -44,6 +44,7 @@ import joeq.Main.HostedVM;
 import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 
+import chord.program.Program;
 import chord.project.Messages;
 import chord.project.Config;
 import chord.util.ArraySet;
@@ -54,11 +55,8 @@ import chord.util.tuple.object.Pair;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ForNameReflectionAnalyzer {
-	private static final String DYNAMIC_CLASS_NOT_FOUND =
-		"WARN: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
+public class StaticReflectResolver {
 	private static final boolean DEBUG = false;
-	private final Classpath classpath;
 	private ControlFlowGraph cfg;
 	private int numArgs;
 	// sets of all forname/newinst call sites
@@ -72,24 +70,21 @@ public class ForNameReflectionAnalyzer {
 	private final Set<Register> trackedVars = new HashSet<Register>();
 	private final Set<Pair<Register, jq_Reference>> resolutions =
 		new HashSet<Pair<Register, jq_Reference>>();
-	private final Set<Pair<Quad, jq_Reference>> resolvedForNameSites =
+	private final Set<Pair<Quad, jq_Reference>> resolvedClsForNameSites =
 		new ArraySet<Pair<Quad, jq_Reference>>();
-	private final Set<Pair<Quad, jq_Reference>> resolvedNewInstSites =
+	private final Set<Pair<Quad, jq_Reference>> resolvedObjNewInstSites =
 		new ArraySet<Pair<Quad, jq_Reference>>();
 	private boolean changed;
 
-	public Set<Pair<Quad, jq_Reference>> getResolvedForNameSites() {
-		return resolvedForNameSites;
+	public Set<Pair<Quad, jq_Reference>> getResolvedClsForNameSites() {
+		return resolvedClsForNameSites;
 	}
-	public Set<Pair<Quad, jq_Reference>> getResolvedNewInstSites() {
-		return resolvedNewInstSites;
-	}
-	public ForNameReflectionAnalyzer(Classpath cp) {
-		classpath = cp;
+	public Set<Pair<Quad, jq_Reference>> getResolvedObjNewInstSites() {
+		return resolvedObjNewInstSites;
 	}
 	public void run(jq_Method m) {
-		resolvedForNameSites.clear();
-		resolvedNewInstSites.clear();
+		resolvedClsForNameSites.clear();
+		resolvedObjNewInstSites.clear();
 		cfg = m.getCFG();
 		initForNameAndNewInstSites();
 		if (forNameSites.isEmpty())
@@ -103,8 +98,7 @@ public class ForNameReflectionAnalyzer {
 	private void initForNameAndNewInstSites() {
 		forNameSites.clear();
 		newInstSites.clear();
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-				it.hasNext();) {
+		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
 			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 				Quad q = it2.nextQuad();
@@ -147,8 +141,7 @@ public class ForNameReflectionAnalyzer {
 		changed = true;
 		while (changed) {
 			changed = false;
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-					it.hasNext();) {
+			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
 				BasicBlock bb = it.nextBasicBlock();
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();
@@ -163,7 +156,7 @@ public class ForNameReflectionAnalyzer {
 								trackedVars.contains(l)) {
 							Object v = ((AConstOperand) ro).getValue();
 							if (v instanceof String) {
-								jq_Reference t = resolveType((String) v);
+								jq_Reference t = Program.g().parseType((String) v);
 								if (t != null) {
 									Pair<Register, jq_Reference> p =
 										new Pair<Register, jq_Reference>(l, t);
@@ -182,31 +175,28 @@ public class ForNameReflectionAnalyzer {
 			if (!abortedVars.contains(v)) {
 				for (Pair<Register, jq_Reference> p : resolutions) {
 					if (p.val0 == v) {
-						Pair<Quad, jq_Reference> p2 =
-							new Pair<Quad, jq_Reference>(q, p.val1);
-						resolvedForNameSites.add(p2);
+						Pair<Quad, jq_Reference> p2 = new Pair<Quad, jq_Reference>(q, p.val1);
+						resolvedClsForNameSites.add(p2);
 					}
 				}
 			}
 		}
 		if (DEBUG) {
-			if (!resolvedForNameSites.isEmpty()) {
-				System.out.println("*** FORNAME RESOLUTIONS in method: " +
-					cfg.getMethod());
-				for (Pair<Quad, jq_Reference> p : resolvedForNameSites)
+			if (!resolvedClsForNameSites.isEmpty()) {
+				System.out.println("*** FORNAME RESOLUTIONS in method: " + cfg.getMethod());
+				for (Pair<Quad, jq_Reference> p : resolvedClsForNameSites)
 					System.out.println("\t" + p);
 			}
 		}
 	}
 	private void resolveNewInstSites() {
 		resolutions.clear();
-		for (Pair<Quad, jq_Reference> p : resolvedForNameSites) {
+		for (Pair<Quad, jq_Reference> p : resolvedClsForNameSites) {
 			Quad q = p.val0;
 			RegisterOperand lo = Invoke.getDest(q);
 			if (lo != null) {
 				Register l = lo.getRegister();
-				Pair<Register, jq_Reference> p2 =
-					new Pair<Register, jq_Reference>(l, p.val1);
+				Pair<Register, jq_Reference> p2 = new Pair<Register, jq_Reference>(l, p.val1);
 				resolutions.add(p2);
 			}
 		}
@@ -220,8 +210,7 @@ public class ForNameReflectionAnalyzer {
 		changed = true;
 		while (changed) {
 			changed = false;
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-					it.hasNext();) {
+			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
 				BasicBlock bb = it.nextBasicBlock();
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 					Quad q = it2.nextQuad();
@@ -243,18 +232,16 @@ public class ForNameReflectionAnalyzer {
 			if (!abortedVars.contains(v)) {
 				for (Pair<Register, jq_Reference> p : resolutions) {
 					if (p.val0 == v) {
-						Pair<Quad, jq_Reference> p2 =
-							new Pair<Quad, jq_Reference>(q, p.val1);
-						resolvedNewInstSites.add(p2);
+						Pair<Quad, jq_Reference> p2 = new Pair<Quad, jq_Reference>(q, p.val1);
+						resolvedObjNewInstSites.add(p2);
 					}
 				}
 			}
 		}
 		if (DEBUG) {
-			if (!resolvedNewInstSites.isEmpty()) {
-				System.out.println("*** NEWINST RESOLUTIONS in method: " +
-					cfg.getMethod());
-				for (Pair<Quad, jq_Reference> p : resolvedNewInstSites)
+			if (!resolvedObjNewInstSites.isEmpty()) {
+				System.out.println("*** NEWINST RESOLUTIONS in method: " + cfg.getMethod());
+				for (Pair<Quad, jq_Reference> p : resolvedObjNewInstSites)
 					System.out.println("\t" + p);
 			}
 		}
@@ -263,19 +250,16 @@ public class ForNameReflectionAnalyzer {
 		RegisterFactory rf = cfg.getRegisterFactory();
 		for (int i = 0; i < numArgs; i++)
 			abortedVars.add(rf.get(i));
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-				it.hasNext();) {
+		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
 			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 				Quad q = it2.nextQuad();
 				Operator op = q.getOperator();
-				if (op instanceof Move || op instanceof CheckCast ||
-						op instanceof Phi)
+				if (op instanceof Move || op instanceof CheckCast || op instanceof Phi)
 					continue;
-				if (isNewInst && op instanceof Invoke &&
-						forNameSites.contains(q)) {
+				if (isNewInst && op instanceof Invoke && forNameSites.contains(q)) {
 					boolean isResolved = false;
-					for (Pair<Quad, jq_Reference> p : resolvedForNameSites) {
+					for (Pair<Quad, jq_Reference> p : resolvedClsForNameSites) {
 						if (p.val0 == q) {
 							isResolved = true;
 							break;
@@ -327,15 +311,5 @@ public class ForNameReflectionAnalyzer {
 				processCopy(l, r);
 			}
 		}
-	}
-	private jq_Reference resolveType(String clsName) {
-		// check whether class is present in the classpath to avoid a
-		// NoClassDefFoundError
-		String resName = Classpath.classnameToResource(clsName);
-		if (classpath.getResourcePath(resName) == null) {
-			Messages.log(DYNAMIC_CLASS_NOT_FOUND, clsName);
-			return null;
-		}
-		return (jq_Reference) jq_Type.parseType(clsName);
 	}
 }

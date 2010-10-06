@@ -34,15 +34,24 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClassHierarchy {
-	private static final String INVALID_CH_KIND = "ERROR: Invalid value `%s` used for property chord.ch.kind; must be one of [static|dynamic]";
-	private static final String EXCLUDED_CPE = "WARN: Class hierarchy builder: Excluded the following classpath elements:";
-	private static final String INCLUDED_CPE = "INFO: Class hierarchy builder: Included the following classpath elements:";
-	private static final String IGNORED_DUPLICATE_TYPES = "INFO: Class hierarchy builder: Ignored the following duplicate classes/interfaces coming from the indicated classpath elements:";
-	private static final String EXCLUDED_TYPES_IN_CHORD = "WARN: Excluded the following classes/interfaces from scope because the classpath elements from which they originate are in chord.main.class.path:";
-	private static final String EXCLUDED_TYPES_NOT_DYN_LOADED = "WARN: Excluded the following classes/interfaces from scope because they were not loaded dynamically and chord.ch.dynamic=true:";
-	private static final String MISSING_TYPES = "WARN: Class hierarchy builder: Following classes/interfaces were not found in scope but each of them was either declared as a superclass or an implemented/extended interface of some class/interface in scope:";
-	private static final String MISSING_SUPERCLASSES = "WARN: Class hierarchy builder: Ignored the following classes as some (direct or transitive) superclass of each of them is missing in scope:";
-	private static final String MISSING_SUPERINTERFS = "WARN: Class hierarchy builder: Ignored the following classes/interfaces as some (direct or transitive) interface implemented/extended by each of them is missing in scope:";
+	private static final String INVALID_CH_KIND =
+		"ERROR: Invalid value `%s` used for property chord.ch.kind; must be one of [static|dynamic]";
+	private static final String EXCLUDED_CPE =
+		"WARN: Class hierarchy builder: Excluded the following classpath elements:";
+	private static final String INCLUDED_CPE =
+		"INFO: Class hierarchy builder: Included the following classpath elements:";
+	private static final String IGNORED_DUPLICATE_TYPES =
+		"INFO: Class hierarchy builder: Ignored the following duplicate classes/interfaces coming from the indicated classpath elements:";
+	private static final String EXCLUDED_TYPES_IN_CHORD =
+		"WARN: Excluded the following classes/interfaces from scope because the classpath elements from which they originate are in chord.main.class.path:";
+	private static final String EXCLUDED_TYPES_NOT_DYN_LOADED =
+		"WARN: Excluded the following classes/interfaces from scope because they were not loaded dynamically and chord.ch.dynamic=true:";
+	private static final String MISSING_TYPES =
+		"WARN: Class hierarchy builder: Following classes/interfaces were not found in scope but each of them was either declared as a superclass or an implemented/extended interface of some class/interface in scope:";
+	private static final String MISSING_SUPERCLASSES =
+		"WARN: Class hierarchy builder: Ignored the following classes as some (direct or transitive) superclass of each of them is missing in scope:";
+	private static final String MISSING_SUPERINTERFS =
+		"WARN: Class hierarchy builder: Ignored the following classes/interfaces as some (direct or transitive) interface implemented/extended by each of them is missing in scope:";
 
 	private final String CHkind;
 	/**

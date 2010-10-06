@@ -49,32 +49,36 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CHAProgram extends Program {
-	private static final String MAIN_CLASS_NOT_DEFINED = "ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
-	private static final String MAIN_METHOD_NOT_FOUND = "ERROR: Could not find main class `%s` or main method in that class.";
+public class CHA {
+	private static final String MAIN_CLASS_NOT_DEFINED =
+		"ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
+	private static final String MAIN_METHOD_NOT_FOUND =
+		"ERROR: Could not find main class `%s` or main method in that class.";
 
     public static final boolean DEBUG = false;
+
 	private IndexSet<jq_Reference> classes;
-	// all classes whose clinits and super class/interface clinits have been
-	// processed so far
+
+	// classes whose clinit and super class/interface clinits have been processed
 	private Set<jq_Class> classesVisitedForClinit;
-	// all methods deemed reachable so far
+
+	// methods deemed reachable so far
 	private IndexSet<jq_Method> methods;
-	// worklist for methods seen so far but whose cfg's haven't been processed yet
+
+	// worklist for methods that have been seen but whose cfg isn't processed yet
 	private List<jq_Method> methodWorklist;
+
 	private jq_Class javaLangObject;
-	private ClassHierarchy ch;
-	@Override
-	protected IndexSet<jq_Method> computeMethods() {
-		if (methods == null)
-			build();
-		return methods;
+
+	private final ClassHierarchy ch;
+
+	public CHA(ClassHierarchy _ch) {
+		ch = _ch;
 	}
-	@Override
-	protected ReflectInfo computeReflectInfo() {
-		return new ReflectInfo();
-	}
-	private void build() {
+
+	public IndexSet<jq_Method> getMethods() {
+		if (methods != null)
+			return methods;
 		System.out.println("ENTER: CHA");
 		Timer timer = new Timer();
 		timer.init();
@@ -82,7 +86,6 @@ public class CHAProgram extends Program {
  		classesVisitedForClinit = new HashSet<jq_Class>();
 		methods = new IndexSet<jq_Method>();
  		methodWorklist = new ArrayList<jq_Method>();
-       	ch = getClassHierarchy();
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Config.mainClassName;
@@ -105,8 +108,9 @@ public class CHAProgram extends Program {
 		System.out.println("LEAVE: CHA");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
+		return methods;
 	}
-	
+
 	private void visitMethod(jq_Method m) {
 		if (methods.add(m)) {
 			if (!m.isAbstract()) {
@@ -117,8 +121,7 @@ public class CHAProgram extends Program {
 	}
 
 	private void processCFG(ControlFlowGraph cfg) {
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-				it.hasNext();) {
+		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
 			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
 				Quad q = it2.nextQuad();
