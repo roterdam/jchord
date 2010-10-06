@@ -106,26 +106,6 @@ public class ByteBufferedFile {
 			write();
 		buffer[curPos++] = v;
 	}
-	public void putInt(int v) throws IOException {
-		if (curPos >= fileBlockSize)
-			write();
-		buffer[curPos++] = (byte) (v >> 24);
-		buffer[curPos++] = (byte) (v >> 16);
-		buffer[curPos++] = (byte) (v >> 8);
-		buffer[curPos++] = (byte) v;
-	}
-	public void putLong(long v) throws IOException {
-		if (curPos >= fileBlockSize)
-			write();
-		buffer[curPos++] = (byte) (v >> 56);
-		buffer[curPos++] = (byte) (v >> 48);
-		buffer[curPos++] = (byte) (v >> 40);
-		buffer[curPos++] = (byte) (v >> 32);
-		buffer[curPos++] = (byte) (v >> 24);
-		buffer[curPos++] = (byte) (v >> 16);
-		buffer[curPos++] = (byte) (v >> 8);
-		buffer[curPos++] = (byte) v;
-	}
 	public byte getByte() throws IOException, ReadException {
 		if (maxPos == curPos) {
 			refill();
@@ -135,13 +115,13 @@ public class ByteBufferedFile {
 		byte v = buffer[curPos++];
 		return v;
 	}
-	public void eatByte() throws IOException, ReadException {
-		if (maxPos == curPos) {
-			refill();
-			if (maxPos == 0)
-				throw new ReadException();
-		}
-		curPos++;
+	public void putInt(int v) throws IOException {
+		if (curPos >= fileBlockSize)
+			write();
+		buffer[curPos++] = (byte) (v >> 24);
+		buffer[curPos++] = (byte) (v >> 16);
+		buffer[curPos++] = (byte) (v >> 8);
+		buffer[curPos++] = (byte) v;
 	}
 	public int getInt() throws IOException, ReadException {
 		if (maxPos - curPos < 4) {
@@ -156,13 +136,17 @@ public class ByteBufferedFile {
 			((buffer[curPos++] & 0xFF));
 		return v;
 	}
-	public void eatInt() throws IOException, ReadException {
-		if (maxPos - curPos < 4) {
-			refill();
-			if (maxPos < 4)
-				throw new ReadException();
-		}
-		curPos += 4;
+	public void putLong(long v) throws IOException {
+		if (curPos >= fileBlockSize)
+			write();
+		buffer[curPos++] = (byte) (v >> 56);
+		buffer[curPos++] = (byte) (v >> 48);
+		buffer[curPos++] = (byte) (v >> 40);
+		buffer[curPos++] = (byte) (v >> 32);
+		buffer[curPos++] = (byte) (v >> 24);
+		buffer[curPos++] = (byte) (v >> 16);
+		buffer[curPos++] = (byte) (v >> 8);
+		buffer[curPos++] = (byte) v;
 	}
 	public long getLong() throws IOException, ReadException {
 		if (maxPos - curPos < 8) {
@@ -180,6 +164,36 @@ public class ByteBufferedFile {
 			((long) (buffer[curPos++] & 0xFF) <<  8) |
 			((long) (buffer[curPos++] & 0xFF));
 		return v;
+	}
+	public void putString(String s) throws IOException {
+		byte[] sb = s.getBytes();
+		int n = sb.length;
+		putInt(n);
+		for (int i = 0; i < n; i++)
+			putByte(sb[i]);
+	}
+	public String getString() throws IOException, ReadException {
+		int n = getInt();
+		byte[] sb = new byte[n];
+		for (int i = 0; i < n; i++)
+			sb[i] = getByte();
+		return new String(sb);
+	}
+	public void eatByte() throws IOException, ReadException {
+		if (maxPos == curPos) {
+			refill();
+			if (maxPos == 0)
+				throw new ReadException();
+		}
+		curPos++;
+	}
+	public void eatInt() throws IOException, ReadException {
+		if (maxPos - curPos < 4) {
+			refill();
+			if (maxPos < 4)
+				throw new ReadException();
+		}
+		curPos += 4;
 	}
 	public void eat(int n) throws IOException, ReadException {
 		int q = n / 8;
