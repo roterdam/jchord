@@ -41,18 +41,21 @@ MgetInstFldInst(m:M0,l:V0,b:V1,f:F0) input
 MputInstFldInst(m:M0,b:V0,f:F0,r:V1) input
 MgetStatFldInst(m:M0,l:V0,f:F0) input
 MputStatFldInst(m:M0,f:F0,r:V) input
-#MclsValAsgnInst(m:M0,v:V0,t:T0) input
-#MgetClassInvkInst(m:M0,i:I0) input
 clsForNameIT(i:I0,t:T0) input
-clsForNameMT(m:M0,t:T0)
-#MeasyNewInstInvkInst(m:M0,i:I0,t:T0) input
-#MhardNewInstInvkInst(m:M0,i:I0) input
-#clsTH(t:T0,h:H0) input
-#objTH(t:T0,h:H0) input
+objNewInstIH(i:I0,h:H0) input
+objNewInstIM(i:I0,m:M0) input
+conNewInstIH(i:I0,h:H0) input
+conNewInstIM(i:I0,m:M0) input
+aryNewInstIH(i:I0,h:H0) input
 classT(t:T) input
 staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
+
+#MclsValAsgnInst(m:M0,v:V0,t:T0) input
+#MgetClassInvkInst(m:M0,i:I0) input
+#clsTH(t:T0,h:H0) input
+#objTH(t:T0,h:H0) input
 
 IHM(i:I,h:H,m:M)
 VV(v1:V,v2:V)
@@ -106,15 +109,26 @@ VV(u,v) :- IinvkRet(i,z,u), IM(i,m), MmethRet(m,z,v).
 
 VH(u,h) :- VV(u,v), VH(v,h), VHfilter(u,h).
 
-clsForNameMT(m,t) :- clsForNameIT(i,t), MI(m,i).
-
 objValAsgnInst(l,h)   :- reachableM(m), MobjValAsgnInst(m,l,h).
 objVarAsgnInst(l,r)   :- reachableM(m), MobjVarAsgnInst(m,l,r).
 getInstFldInst(l,b,f) :- reachableM(m), MgetInstFldInst(m,l,b,f).
 putInstFldInst(b,f,r) :- reachableM(m), MputInstFldInst(m,b,f,r).
 getStatFldInst(l,f)   :- reachableM(m), MgetStatFldInst(m,l,f).
 putStatFldInst(f,r)   :- reachableM(m), MputStatFldInst(m,f,r).
-reachableT(t)         :- reachableM(m), clsForNameMT(m,t).
+
+reachableT(t) :- reachableI(i), conNewInstIH(i,h), HT(h,t).
+reachableT(t) :- reachableI(i), objNewInstIH(i,h), HT(h,t).
+reachableT(t) :- reachableI(i), clsForNameIT(i,t).
+
+reachableM(m) :- reachableI(i), objNewInstIM(i,m).
+reachableM(m) :- reachableI(i), conNewInstIM(i,m).
+
+VH(v,h)  :- reachableI(i), objNewInstIM(i,m), MmethArg(m,0,v), objNewInstIH(i,h).
+VH(v,h)  :- reachableI(i), objNewInstIH(i,h), IinvkRet(i,0,v).
+VH(v,h2) :- reachableI(i), conNewInstIM(i,m), IinvkArg(i,1,u), MmethArg(m,1,v), VH(u,h), HFH(h,0,h2).
+VH(v,h)  :- reachableI(i), conNewInstIM(i,m), MmethArg(m,0,v), conNewInstIH(i,h).
+VH(v,h)  :- reachableI(i), conNewInstIH(i,h), IinvkRet(i,0,v).
+VH(v,h)  :- reachableI(i), aryNewInstIH(i,h), IinvkRet(i,0,v).
 
 VH(l,h) :- objValAsgnInst(l,h).
 VH(l,h) :- objVarAsgnInst(l,r), VH(r,h), VHfilter(l,h).

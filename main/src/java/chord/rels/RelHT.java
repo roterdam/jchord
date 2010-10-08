@@ -87,8 +87,10 @@ public class RelHT extends ProgramRel {
         for (Pair<Quad, List<jq_Reference>> p : l) {
 			Quad q = p.val0;
 			int hIdx = domH.indexOf(q);
+			assert (hIdx >= 0);
 			for (jq_Reference t : p.val1) {
 				int tIdx = domT.indexOf(t);
+				assert (tIdx >= 0);
             	add(hIdx, tIdx);
 			}
 		}
