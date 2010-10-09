@@ -35,11 +35,13 @@ import chord.project.Messages;
  */
 public final class OnlineTransformer implements ClassFileTransformer {
 	private static final String RETRANSFORM_NOT_SUPPORTED =
-		"ERROR: JVM does not support retransforming classes.";
+		"ERROR: OnlineTransformer: JVM does not support retransforming classes.";
 	private static final String CANNOT_INSTRUMENT_CLASS =
-		"ERROR: Skipping instrumenting class %s; reason follows.";
+		"ERROR: OnlineTransformer: Skipping instrumenting class %s; reason follows.";
 	private static final String CANNOT_MODIFY_CLASS =
-		"WARN: Cannot modify class %s.";
+		"WARN: OnlineTransformer: Cannot modify class %s.";
+	private static final String TRANSFORMING_CLASS =
+		"INFO: OnlineTransformer: Transforming class %s ...";
 
 	// use reflection for Java 1.6 API (class retransformation) so that
 	// Chord is usable with Java 1.5
@@ -92,9 +94,9 @@ public final class OnlineTransformer implements ClassFileTransformer {
         }
 	}
 
-    public static void premain(String agentArgs, Instrumentation i) {
-		initReflectiveMethods(i);
-		boolean isSupported = isRetransformClassesSupported(i);
+    public static void premain(String agentArgs, Instrumentation instrumentation) {
+		initReflectiveMethods(instrumentation);
+		boolean isSupported = isRetransformClassesSupported(instrumentation);
         if (!isSupported)
            	Messages.fatal(RETRANSFORM_NOT_SUPPORTED);
 		Map<String, String> argsMap = new HashMap<String, String>();
@@ -132,21 +134,21 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		}
 		if (ex != null)
 			Messages.fatal(ex);
-        OnlineTransformer t = new OnlineTransformer(instr);
-        addTransformer(i, t, true);
+        OnlineTransformer transformer = new OnlineTransformer(instr);
+        addTransformer(instrumentation, transformer, true);
         List<Class> l = new ArrayList<Class>();
-        for (Class c : i.getAllLoadedClasses()) {
-            if (c.getName().startsWith("[")) 
-				continue;
-			if (!isModifiableClass(i, c)) {
-				if (Config.verbose > 2)
-					Messages.log(CANNOT_MODIFY_CLASS, c.getName());
-				continue;
+        for (Class c : instrumentation.getAllLoadedClasses()) {
+			String cname = c.getName();
+            if (!cname.startsWith("[")) {
+				if (!isModifiableClass(instrumentation, c)) {
+					if (Config.verbose > 2)
+						Messages.log(CANNOT_MODIFY_CLASS, cname);
+				} else
+					l.add(c);
 			}
-			l.add(c);
         }
 		Class[] a = l.toArray(new Class[l.size()]);
-		retransformClasses(i, a);
+		retransformClasses(instrumentation, a);
     }
 
     private final CoreInstrumentor instrumentor;
@@ -155,8 +157,9 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		instrumentor = instr;
 	}
 
-	// @Override
-    public byte[] transform(ClassLoader loader, String className,
+	// Note: DO NOT REMOVE THIS SYNCHRONIZATION
+	@Override
+    public synchronized byte[] transform(ClassLoader loader, String className,
 			Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
 			byte[] classfileBuffer) throws IllegalClassFormatException {
 		// Note from javadoc:
@@ -167,6 +170,8 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		//  array. The input classfileBuffer must not be modified.
 		// className is of the form "java/lang/Object"
 		String cName = className.replace('/', '.');
+		if (Config.verbose > 2)
+			Messages.log(TRANSFORMING_CLASS, cName);
 		Exception ex = null;
 		try {
 			CtClass clazz = instrumentor.edit(cName);
