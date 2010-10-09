@@ -37,9 +37,11 @@ public class CoreInstrumentor extends ExprEditor {
     public final static String INSTRUMENTOR_CLASS_KEY = "instrumentor_class_name";
 
 	private final static String EXPLICITLY_EXCLUDING_CLASS =
-		"WARN: Not instrumenting class %s as it is excluded by chord.scope.exclude.";
+		"WARN: CoreInstrumentor: Not instrumenting class %s as it was excluded by chord.scope.exclude.";
 	private final static String IMPLICITLY_EXCLUDING_CLASS =
-		"WARN: Not instrumenting class %s.";
+		"WARN: CoreInstrumentor: Not instrumenting class %s as it was excluded implicity.";
+	private final static String EXCLUDING_CLASS =
+		"WARN: CoreInstrumentor: Not instrumenting class %s as commanded by overriding instrumentor.";
 
 	protected int verbose;
 	protected final JavassistPool pool;
@@ -114,7 +116,11 @@ public class CoreInstrumentor extends ExprEditor {
 		if (isExcluded(cName))
 			return null;
 		CtClass clazz = pool.get(cName);
-		return edit(clazz);
+		assert (clazz != null);
+		CtClass clazz2 = edit(clazz);
+		if (clazz2 == null)
+			if (verbose > 2) Messages.log(EXCLUDING_CLASS, cName);
+		return clazz2;
 	}
 
 	/**

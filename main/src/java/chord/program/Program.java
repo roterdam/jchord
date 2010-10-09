@@ -79,25 +79,25 @@ import joeq.Main.Helper;
  */
 public class Program {
 	private static final String INVALID_SCOPE_KIND =
-		"ERROR: Invalid value `%s` used for property chord.scope.kind; must be one of [dynamic|rta|cha].";
+		"ERROR: Program: Invalid value `%s` used for property chord.scope.kind; must be one of [dynamic|rta|cha].";
 	private static final String LOADING_CLASS =
-		"INFO: Loading class %s.";
+		"INFO: Program: Loading class %s.";
 	private static final String EXCLUDING_CLASS =
-		"WARN: Excluding class %s from analysis scope; reason follows.";
+		"WARN: Program: Excluding class %s from analysis scope; reason follows.";
 	private static final String MAIN_CLASS_NOT_DEFINED =
-		"ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
+		"ERROR: Program: Property chord.main.class must be set to specify the main class of program to be analyzed.";
 	private static final String MAIN_METHOD_NOT_FOUND =
-		"ERROR: Could not find main class `%s` or main method in that class.";
+		"ERROR: Program: Could not find main class `%s` or main method in that class.";
 	private static final String CLASS_PATH_NOT_DEFINED =
-		"ERROR: Property chord.class.path must be set to specify location(s) of .class files of program to be analyzed.";
+		"ERROR: Program: Property chord.class.path must be set to specify location(s) of .class files of program to be analyzed.";
 	private static final String SRC_PATH_NOT_DEFINED =
-		"ERROR: Property chord.src.path must be set to specify location(s) of .java files of program to be analyzed.";
+		"ERROR: Program: Property chord.src.path must be set to specify location(s) of .java files of program to be analyzed.";
 	private static final String METHOD_NOT_FOUND =
-		"ERROR: Could not find method `%s`.";
+		"ERROR: Program: Could not find method `%s`.";
 	private static final String CLASS_NOT_FOUND =
-		"ERROR: Could not find class `%s`.";
+		"ERROR: Program: Could not find class `%s`.";
     private static final String DYNAMIC_CLASS_NOT_FOUND =
-        "WARN: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
+        "WARN: Program: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
 
 	static {
 		if (Config.verbose > 2)
