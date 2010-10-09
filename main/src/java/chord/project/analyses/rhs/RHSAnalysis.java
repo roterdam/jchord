@@ -30,6 +30,7 @@ import chord.doms.DomM;
 import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
 import chord.util.ArraySet;
+import chord.util.Alarm;
 
 /**
  * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive
@@ -125,9 +126,17 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		return targets;
 	}
 
+	private Alarm alarm;
+
+	protected void done() {
+		alarm.doneAllPasses();
+	}
+
 	protected void init() {
 		if (isInited)
 			return;
+		alarm = new Alarm(300000);
+		alarm.initAllPasses();
 		domI = (DomI) ClassicProject.g().getTrgt("I");
 		ClassicProject.g().runTask(domI);
 		domM = (DomM) ClassicProject.g().getTrgt("M");
@@ -142,8 +151,9 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	 * method.  Clients must override method {@link #getInitPathEdges()} to
 	 * return a new "seed" each time they call this method.
 	 */
-	protected void runPass() {
+	protected void runPass() throws TimeoutException {
 		init();
+		alarm.initNewPass();
 		// clear these sets since client may call this method multiple times
 		workList.clear();
 		summEdges.clear();
@@ -175,8 +185,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	/**
 	 * Propagate forward or backward until fixpoint is reached.
 	 */
-    private void propagate() {
+    private void propagate() throws TimeoutException {
         while (!workList.isEmpty()) {
+			if (alarm.passTimedOut()) {
+				System.out.println("TIMED OUT");
+				throw new TimeoutException();
+			}
 			if (DEBUG) {
 /*
 				System.out.println("WORKLIST:");
