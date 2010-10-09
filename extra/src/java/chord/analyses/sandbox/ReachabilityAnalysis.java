@@ -50,6 +50,6 @@ public class ReachabilityAnalysis extends DynamicAnalysis {
 	@Override
     public void doneAllPasses() {
 		for (jq_Method m : visitedMethods)
-			System.out.println("XXX: " + m.getName() + ":" + m.getDesc() + "@" + m.getDeclaringClass().getName());
+			System.out.println("XXX: <" + m.getName() + ":" + m.getDesc() + "@" + m.getDeclaringClass().getName() + ">");
 	}
 }
