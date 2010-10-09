@@ -183,6 +183,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		relLocEH.save();
 	}
 
+	@Override
 	public void processNewOrNewArray(int h, int t, int o) {
 		if (o == 0)
 			return;
@@ -194,54 +195,66 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			objToHid.put(o, h);
 	}
 
+	@Override
 	public void processGetfieldPrimitive(int e, int t, int b, int f) { 
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
+	@Override
 	public void processAloadPrimitive(int e, int t, int b, int i) { 
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
+	@Override
 	public void processGetfieldReference(int e, int t, int b, int f, int o) { 
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
+	@Override
 	public void processAloadReference(int e, int t, int b, int i, int o) { 
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
+	@Override
 	public void processPutfieldPrimitive(int e, int t, int b, int f) {
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
+	@Override
 	public void processAstorePrimitive(int e, int t, int b, int i) {
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
+	@Override
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
 		if (e >= 0)
 			processHeapWr(e, b, f, o);
 	}
 
+	@Override
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
 		if (e >= 0)
 			processHeapWr(e, b, smashArrayElems ? 0 : i, o);
 	}
 
+	@Override
 	public void processPutstaticReference(int e, int t, int b, int f, int o) { 
 		if (o != 0)
 			markAndPropEsc(o);
 	}
+
+	@Override
 	public void processThreadStart(int p, int t, int o) { 
 		if (o != 0)
 			markAndPropEsc(o);
 	}
+
 	private void computeInvTC(int b) {
 		int h = objToHid.get(b);
 		if (h != 0 && tmp.add(h)) {
@@ -255,6 +268,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			}
 		}
 	}
+
 	private void processHeapRd(int e, int b) {
 		if (!chkE[e] || escE[e])
 			return;
@@ -274,6 +288,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			tmp.clear();
 		}
 	}
+
 	private void removeInv(int rOld, int f, int b) {
 		List<FldObj> inv = objToFldObjsInv.get(rOld);
 		assert (inv != null);
@@ -287,6 +302,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 		assert (false);
 	}
+
 	private void processHeapWr(int e, int b, int f, int r) {
 		processHeapRd(e, b);
 		if (b == 0 || f < 0)
@@ -360,6 +376,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		if (escObjs.contains(b))
 			markAndPropEsc(r);
 	}
+
     private void markAndPropEsc(int o) {
 		if (escObjs.add(o)) {
 			List<FldObj> l = objToFldObjsFwd.get(o);
