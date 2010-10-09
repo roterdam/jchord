@@ -363,7 +363,7 @@ public class Instrumentor extends CoreInstrumentor {
 		for (int i = 0; i < dom.size(); i++) {
 			String s = dom.toUniqueString(dom.get(i));
 			if (map.contains(s))
-				Messages.fatal(DUPLICATE_IN_DOMAIN);
+				Messages.fatal(DUPLICATE_IN_DOMAIN, dom.getName(), s);
 			map.getOrAdd(s);
 		}
 		return map;
