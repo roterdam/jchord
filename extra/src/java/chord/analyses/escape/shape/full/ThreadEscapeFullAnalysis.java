@@ -54,6 +54,7 @@ import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
 import chord.program.Location;
 import chord.project.analyses.ProgramRel;
+import chord.project.analyses.rhs.TimeoutException;
 import chord.project.analyses.rhs.ForwardRHSAnalysis;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Config;
@@ -203,6 +204,10 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			timer.init();
 			try {
 				runPass();
+			} catch (TimeoutException ex) {
+				for (Quad q : currLocEs)
+					currEscEs.add(q);
+				currLocEs.clear();
 			} catch (ThrEscException ex) {
 				// do nothing
 			}
@@ -216,6 +221,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
+
+		done();
+
 		try {
 			String outDirName = Config.outDirName;
 			{
