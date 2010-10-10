@@ -127,7 +127,7 @@ public class Program {
 	private IndexSet<jq_Type> types;
 	private Map<String, jq_Type> nameToTypeMap;
 	private Map<String, jq_Reference> nameToClassMap;
-	private Map<jq_Class, List<jq_Method>> classToMethodsMap;
+	private Map<String, jq_Method> signToMethodMap;
 	private jq_Method mainMethod;
 	private boolean HTMLizedJavaSrcFiles;
     private ClassHierarchy ch;
@@ -150,12 +150,22 @@ public class Program {
     }
 
 	public void build() {
-		if (isBuilt)
-			return;
+		if (!isBuilt) {
+			buildMethods();
+			buildClasses();
+			isBuilt = true;
+		}
+	}
+
+	private void buildMethods() {
+		assert (methods == null);
+		assert (reflect == null);
+		assert (signToMethodMap == null);
 		File methodsFile = new File(Config.methodsFileName);
 		File reflectFile = new File(Config.reflectFileName);
 		if (Config.reuseScope && methodsFile.exists() && reflectFile.exists()) {
 			loadMethodsFile(methodsFile);
+			buildSignToMethodMap();
 			loadReflectFile(reflectFile);
 		} else {
 			String scopeKind = Config.scopeKind;
@@ -174,9 +184,17 @@ public class Program {
 			} else {
 				Messages.fatal(INVALID_SCOPE_KIND, scopeKind);
 			}
+			buildSignToMethodMap();
 			saveMethodsFile(methodsFile);
 			saveReflectFile(reflectFile);
 		}
+	}
+
+	private void buildClasses() {
+		assert (classes == null);
+		assert (types == null);
+		assert (nameToClassMap == null);
+		assert (nameToTypeMap == null);
         PrimordialClassLoader loader = PrimordialClassLoader.loader;
         jq_Type[] typesAry = loader.getAllTypes();
         int numTypes = loader.getNumTypes();
@@ -194,14 +212,16 @@ public class Program {
                 classes.add(r);
             }
         }
-		isBuilt = true;
+		buildNameToClassMap();
+		buildNameToTypeMap();
 	}
 
     /**
      * Provides all methods deemed reachable.
      */
     public IndexSet<jq_Method> getMethods() {
-		if (!isBuilt) build();
+		if (methods == null)
+			buildMethods();
 		return methods;
 	}
 
@@ -209,17 +229,20 @@ public class Program {
 	 * Provides resolved reflection information.
 	 */
 	public Reflect getReflect() {
-		if (!isBuilt) build();
+		if (reflect == null)
+			buildMethods();
 		return reflect;
 	}
 
     public IndexSet<jq_Reference> getClasses() {
-        if (!isBuilt) build();
+        if (classes == null)
+			buildClasses();
         return classes;
     }
 
     public IndexSet<jq_Type> getTypes() {
-        if (!isBuilt) build();
+        if (types == null)
+			buildClasses();
         return types;
     }
 
@@ -369,9 +392,10 @@ public class Program {
 			return null;
 		}
 	}
+
 	private void buildNameToTypeMap() {
 		assert (nameToTypeMap == null);
-		IndexSet<jq_Type> types = getTypes();
+		assert (types != null);
 		nameToTypeMap = new HashMap<String, jq_Type>();
 		for (jq_Type t : types) {
 			nameToTypeMap.put(t.getName(), t);
@@ -380,67 +404,44 @@ public class Program {
 
 	private void buildNameToClassMap() {
 		assert (nameToClassMap == null);
-		IndexSet<jq_Reference> cList = getClasses();
+		assert (classes != null);
 		nameToClassMap = new HashMap<String, jq_Reference>();
-		for (jq_Reference c : cList) {
+		for (jq_Reference c : classes) {
 			nameToClassMap.put(c.getName(), c);
 		}
 	}
 
-	private void buildClassToMethodsMap() {
-		assert (classToMethodsMap == null);
-		classToMethodsMap = new HashMap<jq_Class, List<jq_Method>>();
-		IndexSet<jq_Method> mList = getMethods();
-		for (jq_Method m : mList) {
-			jq_Class c = m.getDeclaringClass();
-			List<jq_Method> mList2 = classToMethodsMap.get(c);
-			if (mList2 == null) {
-				mList2 = new ArrayList<jq_Method>();
-				classToMethodsMap.put(c, mList2);
-			}
-			mList2.add(m);
+	private void buildSignToMethodMap() {
+		assert (signToMethodMap == null);
+		assert (methods != null);
+		signToMethodMap = new HashMap<String, jq_Method>();
+		for (jq_Method m : methods) {
+			String mName = m.getName().toString();
+			String mDesc = m.getDesc().toString();
+			String cName = m.getDeclaringClass().getName();
+			String sign = mName + ":" + mDesc + "@" + cName;
+			signToMethodMap.put(sign, m);
 		}
 	}
 
 	public jq_Reference getClass(String name) {
 		if (nameToClassMap == null)
-			buildNameToClassMap();
+			buildClasses();
 		return nameToClassMap.get(name);
 	}
 
-	public List<jq_Method> getMethods(jq_Class c) {
-		if (classToMethodsMap == null)
-			buildClassToMethodsMap();
-		List<jq_Method> mList = classToMethodsMap.get(c);
-		if (mList == null)
-			return Collections.emptyList();
-		return mList;
-	}
-
-	public jq_Method getMethod(String mName, String mDesc, jq_Class c) {
-		List<jq_Method> mList = getMethods(c);
-		for (jq_Method m : mList) {
-			if (m.getName().toString().equals(mName) &&
-				m.getDesc().toString().equals(mDesc))
-				return m;
-		}
-		return null;
-	}
-
 	public jq_Method getMethod(String mName, String mDesc, String cName) {
-		jq_Reference r = getClass(cName);
-		if (r == null || r instanceof jq_Array)
-			return null;
-		jq_Class c = (jq_Class) r;
-		return getMethod(mName, mDesc, c);
+		return getMethod(mName + ":" + mDesc + "@" + cName);
 	}
-	
+
 	public jq_Method getMethod(MethodSign sign) {
 		return getMethod(sign.mName, sign.mDesc, sign.cName);
 	}
 
 	public jq_Method getMethod(String sign) {
-		return getMethod(MethodSign.parse(sign));
+		if (signToMethodMap == null)
+			buildMethods();
+		return signToMethodMap.get(sign);
 	}
 
 	public jq_Method getMainMethod() {
@@ -461,13 +462,15 @@ public class Program {
 
 	public jq_Type getType(String name) {
 		if (nameToTypeMap == null)
-			buildNameToTypeMap();
+			buildClasses();
 		return nameToTypeMap.get(name);
 	}
 
 	public Quad getQuad(MethodElem e, Class quadOpClass) {
 		int offset = e.offset;
 		jq_Method m = getMethod(e.mName, e.mDesc, e.cName);
+		if (m == null)
+			System.out.println("XXX: " + e.mName + " " + e.mDesc + " " + e.cName);
 		assert (m != null);
 		return m.getQuad(offset, quadOpClass);
 	}
@@ -639,8 +642,9 @@ public class Program {
 		if (r instanceof jq_Array)
 			return;
 		jq_Class c = (jq_Class) r;
-		for (jq_Method m : getMethods(c))
-			printMethod(m);
+		// TODO
+		// for (jq_Method m : getMethods(c))
+		//	printMethod(m);
 	}
 
 	private void printMethod(jq_Method m) {
