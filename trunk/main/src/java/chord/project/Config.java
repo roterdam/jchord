@@ -34,6 +34,9 @@ public class Config {
 	static {
 		if (mainDirName == null)
 			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
+		File file = new File(mainDirName);
+		if (!file.isDirectory() || !file.isAbsolute())
+			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 	}
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
@@ -56,6 +59,9 @@ public class Config {
 				Messages.fatal(CHORD_WORK_DIR_UNDEFINED);
 			Messages.log(USER_DIR_AS_CHORD_WORK_DIR, workDirName);
 		}
+		File file = new File(workDirName);
+		if (!file.isDirectory() || !file.isAbsolute())
+			Messages.fatal(CHORD_WORK_DIR_UNDEFINED);
 	}
 	public final static String propsFileName = System.getProperty("chord.props.file");
 	public final static String maxHeap = System.getProperty("chord.max.heap");
