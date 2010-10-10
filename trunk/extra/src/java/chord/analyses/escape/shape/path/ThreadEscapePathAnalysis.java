@@ -41,8 +41,9 @@ import chord.util.IntArraySet;
 	signs = { "E0", "E0", "E0,H0:E0_H0" }
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
-	private static boolean doStrongUpdates = true;
-	private static boolean smashArrayElems = false;
+	private static final boolean verbose = false;
+	private static final boolean doStrongUpdates = true;
+	private static final boolean smashArrayElems = false;
 
 	// set of IDs of currently escaping concrete/abstract objects
 	private TIntHashSet escObjs;
@@ -183,74 +184,94 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		relLocEH.save();
 	}
 
+	private String eStr(int e) {
+		return ("[" + e + "] ") + (e >= 0 ? domE.get(e).toLocStr() : "-1");
+	}
+
+	private String hStr(int h) {
+		return ("[" + h + "] ") + (h >= 0 ? ((Quad) domH.get(h)).toLocStr() : "-1");
+	}
+
 	@Override
 	public void processNewOrNewArray(int h, int t, int o) {
+		if (verbose) System.out.println(t + " NEW " + hStr(h) + " o=" + o);
 		if (o == 0)
 			return;
 		assert (!escObjs.contains(o));
 		assert (!objToFldObjsFwd.containsKey(o));
 		assert (!objToFldObjsInv.containsKey(o));
 		assert (!objToHid.containsKey(o));
-		if (h >= 0)
+		if (h >= 0) {
 			objToHid.put(o, h);
+		}
 	}
 
 	@Override
 	public void processGetfieldPrimitive(int e, int t, int b, int f) { 
+		if (verbose) System.out.println(t + " GETFLD_PRI " + eStr(e) + " b=" + b);
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
 	@Override
 	public void processAloadPrimitive(int e, int t, int b, int i) { 
+		if (verbose) System.out.println(t + " ALOAD_PRI " + eStr(e));
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
 	@Override
 	public void processGetfieldReference(int e, int t, int b, int f, int o) { 
+		if (verbose) System.out.println(t + " GETFLD_REF " + eStr(e) + " b=" + b);
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
 	@Override
 	public void processAloadReference(int e, int t, int b, int i, int o) { 
+		if (verbose) System.out.println(t + " ALOAD_REF " + eStr(e));
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
 	@Override
 	public void processPutfieldPrimitive(int e, int t, int b, int f) {
+		if (verbose) System.out.println(t + " PUTFLD_PRI " + eStr(e) + " b=" + b);
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
 	@Override
 	public void processAstorePrimitive(int e, int t, int b, int i) {
+		if (verbose) System.out.println(t + " ASTORE_PRI " + eStr(e) + " b=" + b);
 		if (e >= 0)
 			processHeapRd(e, b);
 	}
 
 	@Override
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
+		if (verbose) System.out.println(t + " PUTFLD_REF " + eStr(e) + " b=" + b);
 		if (e >= 0)
 			processHeapWr(e, b, f, o);
 	}
 
 	@Override
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
+		if (verbose) System.out.println(t + " ASTORE_REF " + eStr(e) + " b=" + b);
 		if (e >= 0)
 			processHeapWr(e, b, smashArrayElems ? 0 : i, o);
 	}
 
 	@Override
 	public void processPutstaticReference(int e, int t, int b, int f, int o) { 
+		if (verbose) System.out.println(t + " PUTSTATIC_REF " + eStr(e));
 		if (o != 0)
 			markAndPropEsc(o);
 	}
 
 	@Override
 	public void processThreadStart(int p, int t, int o) { 
+		if (verbose) System.out.println(t + " START " + p);
 		if (o != 0)
 			markAndPropEsc(o);
 	}
