@@ -27,6 +27,7 @@ import chord.instr.EventKind;
 import chord.instr.InstrScheme;
 import chord.instr.Instrumentor;
 import chord.instr.TraceTransformer;
+import chord.instr.TracePrinter;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.CFGLoopFinder;
 import chord.project.ClassicProject;
@@ -124,7 +125,11 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 			public void run() {
 				String src = getTraceFileName(1);
 				String dst = getTraceFileName(0);
+				// System.out.println("TRACE 1");
+				// (new TracePrinter(src, scheme)).run();
 				(new TraceTransformer(src, dst, scheme)).run();
+				// System.out.println("TRACE 2");
+				// (new TracePrinter(dst, scheme)).run();
 			}
 		};
 		List<Runnable> l = new ArrayList<Runnable>(1);
