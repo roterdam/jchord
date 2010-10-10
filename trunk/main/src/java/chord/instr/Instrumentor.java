@@ -393,7 +393,7 @@ public class Instrumentor extends CoreInstrumentor {
 		String mDesc = method.getSignature();
 		String cName = currentClass.getName();
 		mStr = mName + ":" + mDesc + "@" + cName;
-		currentMethod = program.getMethod(mName, mDesc, currentClass);
+		currentMethod = program.getMethod(mStr);
 		if (currentMethod == null) {
 			if (verbose > 2) Messages.log(METHOD_NOT_FOUND, mStr);
 			return;
