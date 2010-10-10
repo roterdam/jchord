@@ -227,7 +227,9 @@ public class TraceTransformer {
 					byte oIdx3 = reader.getByte();
 					byte oIdx4 = reader.getByte();
 					int n = pending.size();
-					for (int i = 0; i < n; i++) {
+					// search from end of pending list because a constructor may be
+					// called recursively by same thread
+					for (int i = n - 1; i >= 0; i--) {
 						IntTrio trio = pending.get(i);
 						if (trio.idx0 == hIdx && trio.idx1 == tIdx) {
 							int j = trio.idx2; 
