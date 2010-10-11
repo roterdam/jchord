@@ -60,7 +60,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		{
 			String q = buffer.getString();
 			String c = buffer.getString();
-			System.out.println("CLS_FOR_NAME: " + q + " " + c);
+			// System.out.println("CLS_FOR_NAME: " + q + " " + c);
 			add(resolvedClsForNameSites, q, c);
 			break;
 		}
@@ -68,7 +68,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		{
 			String q = buffer.getString();
 			String c = buffer.getString();
-			System.out.println("OBJ_NEW_INST: " + q + " " + c);
+			// System.out.println("OBJ_NEW_INST: " + q + " " + c);
 			add(resolvedObjNewInstSites, q, c);
 			break;
 		}
@@ -76,7 +76,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		{
 			String q = buffer.getString();
 			String c = buffer.getString();
-			System.out.println("CON_NEW_INST: " + q + " " + c);
+			// System.out.println("CON_NEW_INST: " + q + " " + c);
 			add(resolvedConNewInstSites, q, c);
 			break;
 		}
@@ -84,7 +84,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		{
 			String q = buffer.getString();
 			String c = buffer.getString();
-			System.out.println("ARY_NEW_INST: " + q + " " + c);
+			// System.out.println("ARY_NEW_INST: " + q + " " + c);
 			add(resolvedAryNewInstSites, q, c);
 			break;
 		}
