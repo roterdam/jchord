@@ -1,0 +1,46 @@
+#
+#
+#    Ari Rabkin
+# name=confdep-dlog
+
+
+.include "V.dom"
+.include "StrConst.dom"
+.include "I.dom"
+.include "Z.dom"
+.include "H.dom"
+.include "M.dom"
+.include "UV.dom"
+.include "U.dom"
+
+.bddvarorder I0_Z0_StrConst0_M0_V0_H0_V1_V2_UV0_U0
+
+###
+# Relations
+###
+
+
+IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkPrimArg(i:I0,n:Z0,u:U0) input
+cdep(v:V,h:H,cst:StrConst) input
+primcdep(u:U,h:H,cst:StrConst) input
+cOnLine(i:I, h:H,cst:StrConst) output
+confControlDep(i:I, h:H,cst:StrConst) output
+primConfDep(u:UV,h:H,cst:StrConst)
+primRefDep(u:UV,v:V) input
+primControlDep(i:I,u:UV) input 
+APIMethod(i:I) input
+IM(i:I,m:M) input
+UVU(uv:UV,u:U) input
+
+
+#Needed to handle, e.g., dependence on pointers being non-null
+primConfDep(u,h,cst) :- primRefDep(u,v),cdep(v,h,cst).
+confControlDep(i,h,cst) :- primConfDep(u,h,cst),primControlDep(i,u).
+
+confControlDep(i,h,cst) :- primcdep(u,h,cst),UVU(uv,u),primControlDep(i,uv).
+
+cOnLine(i,h,cst) :- IinvkArg(i,_,v),cdep(v,h,cst).
+cOnLine(i,h,cst) :- IinvkPrimArg(i,_,u),primcdep(u,h,cst).
+cOnLine(i,h,cst) :- confControlDep(i,h,cst).
+

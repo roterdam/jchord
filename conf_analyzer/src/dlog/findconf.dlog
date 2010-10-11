@@ -1,0 +1,39 @@
+#
+#
+#    Ari Rabkin
+# name=findconf-dlog
+
+.include "I.dom"
+.include "V.dom"
+.include "Z.dom"
+.include "M.dom"
+.include "UV.dom"
+
+.bddvarorder I0xZ0_Z1_V0_V1_M0_UV0
+
+
+rawConfUVV(i:I, o:UV, in:V) input
+IM(i:I,m:M) input
+IinvkArg(i:I0,n:Z0,v:V1) input
+MmethArg(m:M0,n:Z0,u:V0) input
+objVarAsgnInst(l:V,r:V) input
+IinvkRetUV(i:I0,n:Z0,uv:UV0) input
+
+
+argCopies(m:M0,n:Z0,u:V0)
+confCallArg(i:I,v:V)
+confUVV(i:I,uv:UV,v:V) output
+mConfArgs(m:M,z:Z) output
+
+argCopies(m,z,v)  :- MmethArg(m,z,v).
+argCopies(m,z,v2) :- argCopies(m,z,v),objVarAsgnInst(v2,v).
+
+
+mConfArgs(m,z) :- argCopies(m,z,v),confCallArg(_,v).
+
+confUVV(i,uv,v) :- confCallArg(i,v),IinvkRetUV(i,0,uv).
+
+confCallArg(i,v) :- IM(i,m),mConfArgs(m,z),IinvkArg(i,z,v). split
+confCallArg(i,v) :- rawConfUVV(i,_,v).
+
+
