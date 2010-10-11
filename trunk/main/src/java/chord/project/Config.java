@@ -135,21 +135,18 @@ public class Config {
 
     // Chord debug properites
 
-	// Determines verbosity level of Chord (except bddbddb):
+	// Determines verbosity level of Chord:
 	// 0 => silent
 	// 1 => print configuration (i.e. these properties) and start/finish time
+	//      bddbddb: unused
 	// 2 => print task/process enter/leave/time messages and sizes of computed doms/rels
-	// 3 => all other messages
+	//      bddbddb: print bdd node table resizing messages and sizes of relations output by solver
+	// 3 => all other messages in Chord
+	// 		bddbddb: print bdd gc messages and solver stats (e.g. how long each iteration took)
+    // 4 => bddbddb: noisy=yes for solver
+    // 5 => bddbddb: tracesolve=yes for solver
+    // 6 => bddbddb: fulltravesolve=yes for solver
 	public final static int verbose = Integer.getInteger("chord.verbose", 2);
-
-    // Determines verbosity level of bddbddb/JavaBDD:
-    // 0 => silent
-    // 1 => print bdd node table resizing messages and sizes of relations output by solver
-    // 2 => print bdd gc messages and solver stats (e.g. how long each iteration took)
-    // 3 => noisy=yes for solver
-    // 4 => tracesolve=yes for solver
-    // 5 => fulltravesolve=yes for solver
-	public final static int bddbddbVerbose = Integer.getInteger("chord.bddbddb.verbose", 0);
 
 	public final static boolean saveDomMaps = buildBoolProperty("chord.save.maps", true);
 
@@ -266,7 +263,6 @@ public class Config {
 
 		System.out.println("*** Chord debug properties:");
 		System.out.println("chord.verbose: " + verbose);
-		System.out.println("chord.bddbddb.verbose: " + bddbddbVerbose);
 		System.out.println("chord.save.maps: " + saveDomMaps);
 
 		System.out.println("*** Chord instrumentation properties:");
