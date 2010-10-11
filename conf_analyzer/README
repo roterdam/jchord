@@ -1,0 +1,3 @@
+This directory holds a configuration analyzer tool, being developed by Ari Rabkin at UC Bekeley. (Contact asrabkin@gmail.com for details)
+
+The primary purpose of this tool is to extract spellcheck dictionaries, suitable for use with the associated configuration spellcheck tool.
