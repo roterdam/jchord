@@ -1,0 +1,43 @@
+#
+#
+#    Ari Rabkin
+# name=scs-confdep-dlog
+
+.include "V.dom"
+.include "StrConst.dom"
+.include "I.dom"
+.include "Z.dom"
+.include "H.dom"
+.include "M.dom"
+.include "UV.dom"
+.include "U.dom"
+
+.bddvarorder I0_Z0_StrConst0_M0_V0_H0_V1_V2_UV0_U0
+
+###
+# Relations
+###
+
+
+IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkPrimArg(i:I0,n:Z0,u:U0) input
+cdepSCS(v:V,h:H,cst:StrConst) input
+primcdepSCS(u:U,h:H,cst:StrConst) input
+primControlDep(i:I,u:UV) input 
+UVU(uv:UV,u:U) input
+primRefDep(u:UV,v:V) input
+
+primConfDep(u:UV,h:H,cst:StrConst)
+
+cOnLine(i:I, h:H,cst:StrConst) output
+confControlDep(i:I, h:H,cst:StrConst) output
+
+
+primConfDep(u,h,cst) :- primRefDep(u,v),cdepSCS(v,h,cst).
+confControlDep(i,h,cst) :- primConfDep(u,h,cst),primControlDep(i,u).
+confControlDep(i,h,cst) :- primcdepSCS(u,h,cst),UVU(uv,u),primControlDep(i,uv).
+
+cOnLine(i,h,cst) :- IinvkArg(i,_,v),cdepSCS(v,h,cst).
+cOnLine(i,h,cst) :- IinvkPrimArg(i,_,u),primcdepSCS(u,h,cst).
+cOnLine(i,h,cst) :- confControlDep(i,h,cst).
+

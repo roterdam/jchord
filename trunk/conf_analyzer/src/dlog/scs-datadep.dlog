@@ -1,0 +1,110 @@
+#
+#
+#    Ari Rabkin
+# name=scs-datadep-dlog
+
+
+.include "V.dom"
+.include "StrConst.dom"
+.include "I.dom"
+.include "Z.dom"
+.include "H.dom"
+.include "M.dom"
+.include "UV.dom"
+.include "U.dom"
+.include "M.dom"
+.include "F.dom"
+
+.bddvarorder I0_Z0_StrConst0_M0_F0_V0_H0_H1_V1_V2_UV0_U0_U1
+
+###
+# Relations
+###
+
+MmethArg(m:M0,n:Z0,v:V0) input
+MmethRet(m:M0,n:Z0,v:V1) input
+IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkRet(i:I0,n:Z0,v:V0) input
+IM(i:I,m:M) input
+MI(m:M,i:I) input
+MgetInstFldInst(m:M,l:V,b:V,f:F) input
+MputInstFldInst(m:M,b:V,f:F,r:V) input
+MgetStatFldInst(m:M,l:V,f:F) input
+MputStatFldInst(m:M,f:F,r:V) input
+VH(v:V,h:H) input
+objVarAsgnInst(l:V,r:V) input
+
+MprimDataDep(m:M,l:U0,r:U1) input
+IinvkPrimArg(i:I0,n:Z0,u:U0) input
+IinvkPrimRet(i:I0,n:Z0,u:U0) input
+MgetStatFldPrimInst(m:M,l:U0,f:F) input
+MputStatFldPrimInst(m:M,f:F,r:U0) input
+MgetInstFldPrimInst(m:M,l:U,b:V,f:F) input
+MputInstFldPrimInst(m:M,b:V,f:F,r:U) input
+
+
+primRefDep(u:UV,v:V) input
+primControlDep(i:I,u:UV) input 
+
+
+rconf(h:H,v:V,cst:StrConst) input
+cdepf(f:F,h:H,cst:StrConst) input
+APIMethod(i:I) input
+cdep(v:V,h:H,cst:StrConst) input
+primcdep(u:U,h:H,cst:StrConst) input
+returnsConf(i:I,v:V0,h:H,cst:StrConst) input
+HFC(h1:H,f:F,h2:H,cst:StrConst) input
+
+getInstFldInst(l:V,b:V,f:F)
+getStatFldInst(l:V,f:F)
+
+
+FailurePath(i:I0) input
+
+primConfDep(u:UV,h:H,cst:StrConst)
+getInstFldPrimInst(l:U0,b:V,f:F) 
+getStatFldPrimInst(l:U,f:F) 
+
+VVSCS(v:V0,u:V1) output
+cdepSCS(v:V,h:H,cst:StrConst) output
+FailurePathM(m:M) output
+primcdepSCS(u:U,h:H,cst:StrConst) output
+failPathUFU(u:U,f:F,v:U) output
+maybeUGet(u:U,h:H,cst:StrConst)
+
+cOnLine(i:I, h:H,cst:StrConst) output
+confControlDep(i:I, h:H,cst:StrConst) output
+
+FailurePathM(m) :- MI(m,i),FailurePath(i).
+
+getInstFldInst(l,b,f) :- FailurePathM(m), MgetInstFldInst(m,l,b,f).
+getStatFldInst(l,f)   :- FailurePathM(m), MgetStatFldInst(m,l,f).
+
+getStatFldPrimInst(l,f)   :- FailurePathM(m), MgetStatFldPrimInst(m,l,f).
+getInstFldPrimInst(l,b,f) :- FailurePathM(m), MgetInstFldPrimInst(m,l,b,f).
+
+VVSCS(v,u) :- IinvkArg(i,z,u), FailurePath(i),IM(i,m), MmethArg(m,z,v).
+
+failPathUFU(u,f,v) :- FailurePathM(m),MgetInstFldPrimInst(m,u,_,f),MputInstFldPrimInst(m,_,f,v).
+
+maybeUGet(u,h2,cst) :- getInstFldPrimInst(u,b,f), VH(b,h1), HFC(h1,f,h2,cst).
+maybeUGet(u,h,cst) :- getStatFldPrimInst(u,f), cdepf(f,h,cst).
+
+##FIXME: bunch more prim-handling cases needed
+primDataDep(l,r) :- FailurePathM(m), MprimDataDep(m,l,r).
+primcdepSCS(l,h,cst) :- primDataDep(l,r),primcdepSCS(r,h,cst).
+primcdepSCS(u,h,cst) :- cdepSCS(v,h,cst),IinvkPrimRet(i,_,u),IinvkArg(i,0,v),APIMethod(i).
+
+primcdepSCS(v,h,cst) :- failPathUFU(v,_,u),primcdepSCS(u,h,cst).
+primcdepSCS(v,h,cst) :- !failPathUFU(v,_,_),maybeUGet(v,h,cst).
+
+cdepSCS(l,h2,cst) :- getInstFldInst(l,b,f), VH(b,h1), HFC(h1,f,h2,cst). split
+cdepSCS(v,h,cst) :- getStatFldInst(v,f), cdepf(f,h,cst).
+cdepSCS(v,h,cst) :- rconf(h,v,cst).
+cdepSCS(v,h,cst) :- objVarAsgnInst(v,u),cdepSCS(u,h,cst).
+cdepSCS(v,h,cst) :- cdepSCS(u,h,cst),IinvkArg(i,_,u),IinvkRet(i,_,v),APIMethod(i).
+cdepSCS(v,h,cst) :- cdepSCS(u,h,cst),IinvkArg(i,_,u),IinvkArg(i,0,v),APIMethod(i).
+cdepSCS(v,h,cst) :- VVSCS(v,u),cdepSCS(u,h,cst).
+
+cdepSCS(v,h,cst) :- returnsConf(_,v,h,cst).
+#,!FailurePath(i). 

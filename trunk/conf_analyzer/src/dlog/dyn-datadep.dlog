@@ -1,0 +1,119 @@
+# name=dyn-datadep
+
+.include "T.dom"
+.include "F.dom"
+.include "M.dom"
+.include "I.dom"
+.include "H.dom"
+.include "V.dom"
+.include "Z.dom"
+.include "StrConst.dom"
+.include "UV.dom"
+.include "U.dom"
+
+.bddvarorder I0xM0xM1_T0_V0xV1_StrConst0_T1_H0_F0_H1_Z0xU0xU1xUV0
+
+
+### Inputs from alias analysis or core analyses
+dynCUse(i:I0, z:Z0, c:StrConst,h:H0) input
+reachableM(m:M) input
+VH(v:V,h:H) input
+FH(f:F,h:H) input
+IinvkArg0(i:I0,v:V1) input
+IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkRet(i:I0,n:Z0,v:V0) input
+IM(i:I,m:M) input
+nullI(i:I) input
+nullCV( v:V0, c:StrConst,h:H) output
+VV(v1:V,v2:V) input
+
+
+objValAsgnInst(l:V,h:H) input
+objVarAsgnInst(l:V,r:V) input
+getInstFldInst(l:V,b:V,f:F) input
+putInstFldInst(b:V,f:F,r:V) input
+getStatFldInst(l:V,f:F) input
+putStatFldInst(f:F,r:V) input
+checkCastInst(l:V,t:T,r:V) input
+
+
+#####Conf related
+APIMethod(i:I) input
+ImarkConf(h:H,v:UV,cst:StrConst) input
+#rconf(h:H,v:V,cst:StrConst) output
+UVV(u:UV,v:V) input
+UVU(uv:UV,u:U) input
+cdep(v:V,h:H,cst:StrConst) output
+cdepf(f:F,h:H,cst:StrConst) output
+primcdep(u:U,h:H,cst:StrConst) output
+HFC(h1:H,f:F,h2:H,cst:StrConst) output
+HFCU(h1:H,f:F,h2:H,cst:StrConst) output
+
+
+#####Primitive tracking
+
+MmethPrimArg(m:M0,n:Z0,u:U0) input
+MmethPrimRet(m:M0,n:Z0,u:U0) input
+IinvkPrimArg(i:I0,n:Z0,u:U0) input
+IinvkPrimRet(i:I0,n:Z0,u:U0) input
+
+MobjVarAsgnPrimInst(m:M,l:U0,r:U1) input
+MprimDataDep(m:M,l:U0,r:U1) input
+
+
+MgetStatFldPrimInst(m:M,l:U0,f:F) input
+MputStatFldPrimInst(m:M,f:F,r:U0) input
+MgetInstFldPrimInst(m:M,l:U,b:V,f:F) input
+MputInstFldPrimInst(m:M,b:V,f:F,r:U) input
+
+objVarAsgnPrimInst(l:U0,r:U1)
+primDataDep(l:U0,r:U1)
+getInstFldPrimInst(l:U0,b:V,f:F) 
+putInstFldPrimInst(b:V,f:F,r:U) 
+getStatFldPrimInst(l:U,f:F) 
+putStatFldPrimInst(f:F,r:U) 
+UcU(l:U,r:U)
+
+####Prim tracking
+objVarAsgnPrimInst(l,r) :- reachableM(m), MobjVarAsgnPrimInst(m,l,r).
+primDataDep(l,r) :- reachableM(m), MprimDataDep(m,l,r).
+
+getStatFldPrimInst(l,f)   :- reachableM(m), MgetStatFldPrimInst(m,l,f).
+putStatFldPrimInst(f,r)   :- reachableM(m), MputStatFldPrimInst(m,f,r).
+
+getInstFldPrimInst(l,b,f) :- reachableM(m), MgetInstFldPrimInst(m,l,b,f).
+putInstFldPrimInst(b,f,r) :- reachableM(m), MputInstFldPrimInst(m,b,f,r).
+
+
+UcU(v,u) :- IinvkPrimArg(i,z,u), IM(i,m), MmethPrimArg(m,z,v).
+UcU(u,v) :- IinvkPrimRet(i,z,u), IM(i,m), MmethPrimRet(m,z,v).
+
+primcdep(u,h,cst) :- ImarkConf(h,uv,cst),UVU(uv,u).
+primcdep(l,h,cst) :- primcdep(r,h,cst),objVarAsgnPrimInst(l,r).
+primcdep(l,h,cst) :- primDataDep(l,r),primcdep(r,h,cst).
+#primcdep(u,h,cst) :- cdep(v,h,cst),IinvkPrimRet(i,_,u),IinvkArg(i,0,v),APIMethod(i).
+primcdep(u,h,cst) :- IinvkPrimRet(i,_,u),dynCUse(i,_,cst,h),APIMethod(i).
+primcdep(l,h2,cst) :- getInstFldPrimInst(l,b,f), VH(b,h1), HFCU(h1,f,h2,cst). split
+HFCU(h1,f,h2,cst) :- putInstFldPrimInst(b,f,r), VH(b,h1), primcdep(r,h2,cst). split
+cdepf(f,h,cst) :- putStatFldPrimInst(f,r), primcdep(r,h,cst).
+primcdep(u,h,cst) :- getStatFldPrimInst(u,f), cdepf(f,h,cst).
+
+
+#cdepf(f,h,cst) :- putStatFldPrimInst(f,r), primcdep(r,h,cst).
+#primcdep(u,h,cst) :- getStatFldPrimInst(u,f), cdepf(f,h,cst).
+
+nullCV(v,c,h) :- nullI(i),dynCUse(i,_,c,h),IinvkRet(i,0,v).
+nullCV(v,c,h) :- VV(v,v2),nullCV(v2,c,h).
+nullCV(v,c,h) :- objVarAsgnInst(v,u),nullCV(u,c,h).
+nullCV(v,c,h) :- objVarAsgnInst(u,v),nullCV(u,c,h).
+nullCV(v,c,h) :- objVarAsgnInst(u,v),nullCV(u,c,h).
+nullCV(v,c,h) :- checkCastInst(u,_,v),nullCV(u,c,h).
+
+
+# Need to handle cases where we pass a nullCV as an arg, and then taint the return value
+#
+cdep(v,h,cst) :-  nullCV(v,cst,h).
+cdep(v,h,cst)  :- ImarkConf(h,uv,cst),UVV(uv,v).
+cdep(v,h,cst)  :- dynCUse(i,z,cst,h),IinvkArg(i,z,v).
+cdep(v,h,cst)  :- dynCUse(i,_,cst,h),IinvkRet(i,0,v).
+cdepf(f,h,cst) :- putStatFldInst(f,r), cdep(r,h,cst).

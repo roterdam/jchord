@@ -1,0 +1,59 @@
+# Author: Ari Rabkin (asrabkin@gmail.com)
+# name=logconfdep-dlog
+
+.include "I.dom"
+.include "H.dom"
+.include "V.dom"
+.include "U.dom"
+.include "UV.dom"
+.include "Z.dom"
+.include "StrConst.dom"
+
+.bddvarorder I0xStrConst0_I1_H0_Z0_Z1_V0_V1_U0_UV0
+
+#  WE'RE ONLY HANDLING LOCAL CONTROL DEPENDENCE
+#    There's also load-dependence, where a log statement depends on its container
+# class being loaded.  Can find container class easily. Find options that potentially
+# affect variables of that type. Use that to find load dependence.
+#
+#  Also standard interprocedural control-flow dependence. Maybe use RHS solver to 
+#  catch these cases?
+#
+
+
+logStmt(i:I) input
+logVHolds(i:I, cmpt:V, z:Z) input
+logVHoldsU(i:I, cmpt:U, z:Z) input
+
+
+#cOnLine(i:I, h:H, cst:StrConst) input
+refFlow(v:V,site:I) input
+primFlow(u:U,site:I) input
+primRefDep(u:UV,v:V) input
+primControlDep(i:I,u:UV) input 
+UVU(uv:UV,u:U) input
+UVV(uv:UV,v:V) input
+
+IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkPrimArg(i:I0,n:Z0,u:U0) input
+
+dependentLogStmt(i:I,u:UV) 
+uvConf(uv:UV,src:I)
+logArg(i:I, cmpt:V, z:Z)
+
+
+logFieldDataDep(logStmt:I0, fld:Z, src:I1) output
+logConfDep(logStmt:I0, src:I1) output
+
+
+logArg(i,v,z) :- logVHolds(i,v,z),logStmt(i).
+logPrimArg(i,z,u) :- logVHoldsU(i,u,z),logStmt(i).
+
+dependentLogStmt(logStmt,uv) :- logStmt(logStmt),primControlDep(logStmt,uv).
+uvConf(uv,src) :- UVU(uv,u),primFlow(u,src).
+uvConf(uv,src) :- primRefDep(uv,v),refFlow(v,src).
+
+logConfDep(logStmt, src) :-  dependentLogStmt(logStmt,uv),uvConf(uv, src).
+
+logFieldDataDep(i,z,src) :- logArg(i,v,z),refFlow(v,src).
+logFieldDataDep(i,z,src) :- logPrimArg(i,z,u),primFlow(u,src).
