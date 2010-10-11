@@ -1,3 +1,7 @@
+/*
+ * Copyright Ari Rabkin (asrabkin@gmail.com)
+ * See the COPYING file for copyright license information. 
+ */
 package edu.berkeley.confspell;
 
 import java.io.FileInputStream;
