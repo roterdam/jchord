@@ -21,6 +21,10 @@
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
 			source="1.5" target="1.5" srcdir="src/java" destdir="classes"
 			classpath="${chord.main.class.path}"/>
+		<jar destfile="confspellcheck.jar">
+			<fileset dir="classes"/>
+			<fileset dir="src/java"/>
+   </jar>
 	</target>
 
 <!--
