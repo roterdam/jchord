@@ -203,7 +203,7 @@ public class Rel {
 		// Hence, we need to use JFactory here instead, which allows
 		// multiple instances of itself be active simultaneously.
 		factory = BDDFactory.init("java", bddnodes, bddcache);
-		factory.setVerbose(Config.bddbddbVerbose);
+		factory.setVerbose(Config.verbose);
 		factory.setIncreaseFactor(2);
 		factory.setMinFreeNodes(bddminfree);
 		domBdds = new BDDDomain[numDoms];

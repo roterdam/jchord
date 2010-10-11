@@ -26,14 +26,13 @@ public class Solver {
 	 * @param	fileName	A file containing a Datalog program.
 	 */
 	public static void run(String fileName) {
-		int verbose = Config.bddbddbVerbose;
 		String[] cmdArray = new String[] {
 			"java",
 			"-ea",
 			"-Xmx" + Config.bddbddbMaxHeap,
 			"-cp",
 			Config.bddbddbClassPathName,
-			"-Dverbose=" + verbose,
+			"-Dverbose=" + Config.verbose,
 			"-Djava.library.path=" + Config.libDirName,
 			"-Dbasedir=" + Config.bddbddbWorkDirName,
 			"net.sf.bddbddb.Solver",
