@@ -151,7 +151,6 @@ public class Program {
 
 	public void build() {
 		if (!isBuilt) {
-			buildMethods();
 			buildClasses();
 			isBuilt = true;
 		}
@@ -191,6 +190,8 @@ public class Program {
 	}
 
 	private void buildClasses() {
+		if (methods == null)
+			buildMethods();
 		assert (classes == null);
 		assert (types == null);
 		assert (nameToClassMap == null);
@@ -469,8 +470,6 @@ public class Program {
 	public Quad getQuad(MethodElem e, Class quadOpClass) {
 		int offset = e.offset;
 		jq_Method m = getMethod(e.mName, e.mDesc, e.cName);
-		if (m == null)
-			System.out.println("XXX: " + e.mName + " " + e.mDesc + " " + e.cName);
 		assert (m != null);
 		return m.getQuad(offset, quadOpClass);
 	}
@@ -679,16 +678,36 @@ public class Program {
         }
     };
 
-	// functionality for determining the representation of a reference type, if
+	// Functionality for determining the representation of a reference type, if
 	// it is present in the classpath, without giving a NoClassDefFoundError if
-	// it is absent.
+	// it is absent.  It must accept the name of the reference type in a variety
+	// of formats, e.g.: "[B", "int[]", "java.lang.String[]", and
+	// "[Ljava.lang.Character;".
 	public static jq_Reference parseType(String refName) {
-        String rscName = Classpath.classnameToResource(refName);
-		Classpath cp = PrimordialClassLoader.loader.getClasspath();
-        if (cp.getResourcePath(rscName) == null) {
-            Messages.log(DYNAMIC_CLASS_NOT_FOUND, refName);
-            return null;
-        }
-        return (jq_Reference) jq_Type.parseType(refName);
+		String s = refName;
+		while (s.endsWith("[]"))
+			s = s.substring(0, s.length() - 2);
+		while (s.startsWith("["))
+			s = s.substring(1);
+		if (s.startsWith("L") && s.endsWith(";"))
+			s = s.substring(1, s.length() - 1);
+		boolean isPrim = (s.length() == 1 &&
+			(s.equals("B") || s.equals("C") || s.equals("D") ||
+			 s.equals("F") || s.equals("I") || s.equals("J") ||
+			 s.equals("S") || s.equals("V") || s.equals("Z")
+            )) || s.equals("byte") || s.equals("char") || s.equals("double") ||
+			s.equals("float") || s.equals("int") || s.equals("long") ||
+			s.equals("short") || s.equals("void") || s.equals("boolean");
+		if (!isPrim) {
+			s = s.replace('/', '.');
+			String rscName = Classpath.classnameToResource(s);
+			Classpath cp = PrimordialClassLoader.loader.getClasspath();
+			if (cp.getResourcePath(rscName) == null) {
+				Messages.log(DYNAMIC_CLASS_NOT_FOUND, refName);
+				return null;
+			}
+		}
+		return (jq_Reference) jq_Type.parseType(refName);
 	}
 }
+
