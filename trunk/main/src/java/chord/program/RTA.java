@@ -76,7 +76,7 @@ public class RTA {
 
     public static final boolean DEBUG = false;
 
-	private final String reflectKind; // [none|static|dynamic\
+	private final String reflectKind; // [none|static|dynamic]
 
 	/////////////////////////
 
@@ -185,20 +185,20 @@ public class RTA {
 			dynamicReflectResolver.run();
 			dynamicResolvedClsForNameSites =
 				dynamicReflectResolver.getResolvedClsForNameSites();
-			System.out.println("Dynamic resolved clsForName sites:");
-			print(dynamicResolvedClsForNameSites);
+			// System.out.println("Dynamic resolved clsForName sites:");
+			// print(dynamicResolvedClsForNameSites);
 			dynamicResolvedObjNewInstSites =
 				dynamicReflectResolver.getResolvedObjNewInstSites();
-			System.out.println("Dynamic resolved objNewInst sites:");
-			print(dynamicResolvedObjNewInstSites);
+			// System.out.println("Dynamic resolved objNewInst sites:");
+			// print(dynamicResolvedObjNewInstSites);
 			dynamicResolvedConNewInstSites =
 				dynamicReflectResolver.getResolvedConNewInstSites();
-			System.out.println("Dynamic resolved conNewInst sites:");
-			print(dynamicResolvedConNewInstSites);
+			// System.out.println("Dynamic resolved conNewInst sites:");
+			// print(dynamicResolvedConNewInstSites);
 			dynamicResolvedAryNewInstSites =
 				dynamicReflectResolver.getResolvedAryNewInstSites();
-			System.out.println("Dynamic resolved aryNewInst sites:");
-			print(dynamicResolvedAryNewInstSites);
+			// System.out.println("Dynamic resolved aryNewInst sites:");
+			// print(dynamicResolvedAryNewInstSites);
 		}
  		classes = new IndexSet<jq_Reference>();
  		classesVisitedForClinit = new HashSet<jq_Class>();
@@ -337,7 +337,7 @@ public class RTA {
 							String s = ((Class) c).getName();
 							// s is in encoded form only if it is an array type
 							// if (s.startsWith("[")) s = Program.typesToStr(s);
-							jq_Reference d = (jq_Reference) jq_Type.parseType(s);
+							jq_Reference d = (jq_Reference) Program.parseType(s);
 							if (d != null)
 								visitClass(d);
 						}
@@ -369,7 +369,7 @@ public class RTA {
 				for (Pair<String, List<String>> p : dynamicResolvedObjNewInstSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
-							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
+							jq_Reference r = (jq_Reference) Program.parseType(s);
 							if (r != null)
 								processResolvedObjNewInstSite(q, r);
 						}
@@ -384,7 +384,7 @@ public class RTA {
 				for (Pair<String, List<String>> p : dynamicResolvedConNewInstSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
-							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
+							jq_Reference r = (jq_Reference) Program.parseType(s);
 							if (r != null)
 								processResolvedConNewInstSite(q, r);
 						}
@@ -427,7 +427,7 @@ public class RTA {
 				for (Pair<String, List<String>> p : dynamicResolvedClsForNameSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
-							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
+							jq_Reference r = (jq_Reference) Program.parseType(s);
 							if (r != null)
 								processResolvedClsForNameSite(q, r);
 						}
@@ -442,7 +442,7 @@ public class RTA {
 				for (Pair<String, List<String>> p : dynamicResolvedAryNewInstSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
-							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
+							jq_Reference r = (jq_Reference) Program.parseType(s);
 							if (r != null)
 								processResolvedAryNewInstSite(q, r);
 						}
