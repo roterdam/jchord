@@ -53,9 +53,9 @@ public class ConNewInstAnalysis extends JavaAnalysis {
 		for (Pair<Quad, List<jq_Reference>> p : l) {
 			Quad q = p.val0;
 			int iIdx = domI.indexOf(q);
-			assert (iIdx >= 0);
+			assert (iIdx >= 0) : ("Quad " + q.toLocStr() + " not found in domain I.");
 			int hIdx = domH.indexOf(q);
-			assert (hIdx >= 0);
+			assert (hIdx >= 0) : ("Quad " + q.toLocStr() + " not found in domain H.");
 			relConNewInstIH.add(iIdx, hIdx);
 			for (jq_Reference r : p.val1) {
                 if (r instanceof jq_Class) {
