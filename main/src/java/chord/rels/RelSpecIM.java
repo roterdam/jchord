@@ -13,7 +13,9 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import chord.doms.DomI;
 import chord.doms.DomM;
+import chord.project.Messages;
 import chord.project.Chord;
+import chord.project.Config;
 import chord.project.analyses.ProgramRel;
 
 /**
@@ -27,6 +29,8 @@ import chord.project.analyses.ProgramRel;
 	sign = "I0,M0:I0xM0"
 )
 public class RelSpecIM extends ProgramRel {
+	private static final String NOT_FOUND =
+		"WARN: RelSpecIM: Target method %s of call site %s not found in domain M.";
 	public void fill() {
 		DomI domI = (DomI) doms[0];
 		DomM domM = (DomM) doms[1];
@@ -38,8 +42,10 @@ public class RelSpecIM extends ProgramRel {
 				jq_Method m = InvokeStatic.getMethod(i).getMethod();
 				if (!m.isStatic()) {
 					int mIdx = domM.indexOf(m);
-					assert (mIdx >= 0);
-					add(iIdx, mIdx);
+					if (mIdx >= 0)
+						add(iIdx, mIdx);
+					else if (Config.verbose > 2)
+						Messages.log(NOT_FOUND, m, i.toLocStr());
 				}
 			}
 		}
