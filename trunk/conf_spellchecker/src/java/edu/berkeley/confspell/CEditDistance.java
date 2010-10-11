@@ -1,3 +1,8 @@
+/*
+ * Mostly copied from the Apache Commons lang project.
+ * Other portions are copyright Ari Rabkin.
+ * See the COPYING file for copyright license information. 
+ */
 package edu.berkeley.confspell;
 
 public class CEditDistance {
