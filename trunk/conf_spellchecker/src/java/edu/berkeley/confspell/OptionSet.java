@@ -10,7 +10,7 @@ import java.util.*;
 
 /**
  * Model for a set of options with associated auxiliary data.
- * In particular, stores a set of key value pairs as well
+ * Stores a set of key value pairs as well
  * as a list of options that are used indirectly by substitution.
  *
  */
@@ -22,15 +22,24 @@ public class OptionSet { //extends TreeMap<String,String>
   
   public OptionSet() {}
   
+  /**
+   * Constructs using values from a given Properties object
+   */
   public OptionSet(Properties p) {
     addAll(p, "");
   }
-  
+
+  /**
+   * Constructs using values from a given Properties object, provided the option names
+   * start with specified prefix
+   */
   public OptionSet(Properties p, String prefix) {
     addAll(p, prefix);
   }
 
-
+  /**
+   * Add all values from a given Properties object.
+   */
   public void addAll(Properties p) {  
     addAll(p, "");
   }
@@ -49,8 +58,6 @@ public class OptionSet { //extends TreeMap<String,String>
 
   /**
    * True if k is a value used indirectly, by substitution, in this properties bundle
-   * @param k
-   * @return
    */
   public boolean usedBySubst(String k) {
     return usedBySubst.contains(k);
@@ -73,10 +80,16 @@ public class OptionSet { //extends TreeMap<String,String>
     return conf.containsKey(s);
   }
 
+  /**
+   * Construct an OptionSet from a given properties file.
+   */
   public static OptionSet fromPropsFile(String propsfilename) throws java.io.IOException {
      return fromPropsFile(new File(propsfilename));
   }
   
+  /**
+   * Construct an OptionSet from a given properties file.
+   */
   public static OptionSet fromPropsFile(File propsfilename) throws java.io.IOException {
 
     OptionSet result = new OptionSet();

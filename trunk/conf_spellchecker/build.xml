@@ -24,8 +24,26 @@
 		<jar destfile="confspellcheck.jar">
 			<fileset dir="classes"/>
 			<fileset dir="src/java"/>
+			<file file="COPYING"/>
+				<manifest>
+				<attribute name="Main-Class" value="edu.berkeley.confspell.SpellcheckConf"/>
+			</manifest>
    </jar>
 	</target>
+	
+		<target name="javadoc">
+		<javadoc destdir="javadoc">
+			<fileset dir="src/java">
+				<include name="**/*.java"/>
+			</fileset>
+		</javadoc>
+		<copy todir="javadoc" flatten="true">
+			<fileset dir="src">
+				<include name="**/*.dlog"/>
+				<include name="**/*.datalog"/>
+			</fileset>
+		</copy>
+		</target>
 
 <!--
 	<target name="run" depends="paths">
@@ -35,5 +53,6 @@
 
 	<target name="clean">
 		<delete dir="classes"/>
-	</target>
+		<delete dir="javadoc"/>
+		</target>
 </project>

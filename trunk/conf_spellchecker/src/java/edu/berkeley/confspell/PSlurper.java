@@ -8,6 +8,9 @@ import java.io.*;
 import java.util.*;
 import edu.berkeley.confspell.SpellcheckConf.Slurper;
 
+/** 
+ * Reads a Java Properties file into an OptionSet
+ */
 class PSlurper implements Slurper {
   public void slurp(File f, OptionSet res) throws IOException {
     Properties p = new Properties();

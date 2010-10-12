@@ -5,6 +5,12 @@
  */
 package edu.berkeley.confspell;
 
+/**
+ * Wraps the edit distance calculation used for making spellcheck guesses.
+ * For now, uses the Levenshtein distance calculation from StringUtils in the
+ * Apache Commons lang project.
+ *
+ */
 public class CEditDistance {
   
   /*
