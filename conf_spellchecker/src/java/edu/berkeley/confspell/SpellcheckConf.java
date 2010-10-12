@@ -5,11 +5,26 @@
 package edu.berkeley.confspell;
 
 import java.io.*;
-import java.util.*;
 
+/**
+ * This is the user-invoked main class for using the configuration spellchecker
+ * in standalone mode.Its main job is to read files and parse command line options.
+ *
+ */
 public class SpellcheckConf {
   
+  /**
+   * A Slurper is responsible for reading configuration options out of a file.
+   * Subclasses have parsers for various file formats.
+   * 
+   */
   interface Slurper {
+    /**
+     * Read a file, load contents into an existing option set
+     * @param f the file to read
+     * @param res the set to hold the read values
+     * @throws IOException
+     */
     void slurp(File f, OptionSet res) throws IOException ;
   }
   

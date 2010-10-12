@@ -12,6 +12,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import edu.berkeley.confspell.SpellcheckConf.Slurper;
 
+/**
+ * Slurper for Hadoop configuration files. Has a run-time and compile-time
+ * dependency on Hadoop common components.
+ *
+ */
 public class HSlurper implements Slurper {
 
   //stolen from hadoop source

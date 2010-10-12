@@ -8,16 +8,29 @@ package edu.berkeley.confspell;
 import java.io.File;
 import java.net.*;
 import java.util.*;
-
+/**
+ * Responsible for comparing a dictionary with a set of options.
+ * 
+ *
+ */
 public class Checker {
   
   public Checker(OptDictionary dictionary) {
     dict = dictionary;
   }
   
-
+/**
+ * The result of comparing a single option to the dictionary.
+ * There are two special values: OK and NoCheckerFor.
+ * These represent either that the check succeeded, or that no checker was available
+ * for the specified type.
+ * Other return values represent failed checks, which are potential configuration problems.
+ */
   public static class Res {
     String msg;
+    /**
+     * A description of the result of this check
+     */
     public String msg() {
       return msg;
     }
@@ -29,7 +42,8 @@ public class Checker {
   
   /**
    * A TCheck is a rule for checking values of a particular type.
-   *
+   *  Checker comes with a set of TChecks for common types. Clients may add
+   *  additional TCheck rules.
    */
   interface TCheck {
     /**
@@ -46,19 +60,45 @@ public class Checker {
 
  //determines if a file is writeable
   public static final long MIN_FREE_SPACE = 1000 * 1000 * 1000;
+  
+  /**
+   * Socket timeout for trying to verify that an address is valid.
+   */
   public static final int SOCK_TIMEOUT = 1000; //ms
+  
+  /**
+   * One of the ways that the Checker verifies that an address is valid is to try to open
+   * a TCP connection to this port
+   */
   public static final int TRIAL_PORT = 80;
   
+  /**
+   * Return result for a valid option value
+   */
   static Res OK = new Res("OK");
 //  static Res NoTypeKnown = new Res("No type known for");
+  /**
+   * Return result for an option of a type for which no checker exists
+   */
   static Res NoCheckerFor = new Res("No checker for type");
   
+  /**
+   * If set to true, this Checker will print the quality score for each guessed possibility
+   * when an un-recorded option is set.
+   */
   public boolean PRINT_DIST = false;
+  /**
+   * If true, the Checker will print the names and values of verified options.
+   */
   public boolean PRINT_OKS = true;
 
-  OptDictionary dict;
+  private OptDictionary dict;
   
-  class Guess implements Comparable<Guess>{
+  /**
+   * A guess as to the option name the user mistyped.
+   *
+   */
+  private class Guess implements Comparable<Guess>{
     double simMetric;
     String val;
     public Guess(double d, String s) {
@@ -83,7 +123,7 @@ public class Checker {
    * @param count the number of matches to return
    * @return A sorted list of candidates
    */
-  List<String> nearestMatches(String optName, OptionSet conf, int count) {
+  protected List<String> nearestMatches(String optName, OptionSet conf, int count) {
     ArrayList<String> l = new ArrayList<String>();
     
     if(dict.contains(optName)) {
@@ -145,6 +185,12 @@ public class Checker {
     checkers.put(category, checker);
   }
 
+  /**
+   * Check a particular option (key value) pair against the dictionary.
+   * @param k
+   * @param v
+   * @return the result of the check.
+   */
   public Res check(String k, String v) {
     String ty = dict.get(k);
     
@@ -293,11 +339,23 @@ public class Checker {
   }
   
 
+  /**
+   * Constructs a Checker using the specified dictionary, and checks the specified Option Set using that Checker. 
+   * 
+   * A convenience method for embedding the configuration spellchecker.
+   * 
+   * @param dictionary
+   * @param conf
+   */
   public static void checkConf(OptDictionary dictionary, OptionSet conf) {
     Checker checker = new Checker(dictionary);
     checker.checkConf(conf);
   }
 
+  /**
+   * Checks a given option set, reporting results via standard out. 
+   * @param conf
+   */
   public void checkConf(OptionSet conf) {
     
     ArrayList<String> noCheckerNames = new ArrayList<String>();
@@ -350,7 +408,6 @@ public class Checker {
     for(String s: guesses) {
       System.out.println("\t" + s + " " + checker.dict.getFullname(s));
     }
-    
   }
 
 

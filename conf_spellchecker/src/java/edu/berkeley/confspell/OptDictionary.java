@@ -8,6 +8,16 @@ import java.util.*;
 import java.util.regex.Pattern;
 import java.io.*;
 
+/**
+ * The dictionary for the configuration spellchecker.
+ * Each dictionary entry is a regular expression matching some set of options,
+ * followed by an optional type for the associated options and an optional annotation to
+ * further constrain the valid values.
+ * 
+ * This class has methods for both reading and writing dictionary files.
+ * 
+ *
+ */
 public class OptDictionary {
   
   public OptDictionary() {}
@@ -33,12 +43,21 @@ public class OptDictionary {
     }
   }
   
+  /**
+   * Add an annotation for the given option
+   * @param optName
+   * @param annotation
+   */
   public void annotate(String optName, String annotation) {
     if(!annotation.contains("\n")) //line breaks here can break file format
       annotations.put(optName, annotation);
     
   }
 
+  /**
+   * Write this dictionary to the specified PrintWriter
+   * @param writer
+   */
   public void dump(PrintWriter writer) {
     for(Map.Entry<String, String> e: dict.entrySet()) {
       String k = e.getKey();
@@ -53,7 +72,12 @@ public class OptDictionary {
     }
   }
   
-
+/**
+ * Read content from the specified file. Can be called on an existing dictionary.
+ * New values will override older values.
+ * @param dictionary
+ * @throws IOException
+ */
   public void read(File dictionary) throws IOException {
     
     BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dictionary)));
@@ -89,6 +113,10 @@ public class OptDictionary {
     else return s;
   }
 
+  /**
+   * Dumps the dictionary to standard out in a readable format. Intended primarily
+   * for debugging
+   */
   public void show() {
     for(Map.Entry<String, String> ent: dict.entrySet()) {
       String type = ent.getValue();
@@ -100,6 +128,12 @@ public class OptDictionary {
     }
   }
   
+  /**
+   * Returns true if either s is in the dictionary exactly, or if a regular expression
+   * in the dictionary matches s.
+   * @param s the option name to look up
+   * @return true if a dictionary entry matches s, either exactly or as a regular expression.
+   */
   public boolean contains(String s) {
     if(dict.containsKey(s))
       return true;
@@ -124,6 +158,12 @@ public class OptDictionary {
     return null;
   }
 
+  /**
+   * Return the type associated with a given option name.
+   * Will first try an exact match, and then will try to find a regex that maches.
+   * @param k the name of the option to look up
+   * @return the type associated with this option name, or null, if no match.
+   */
   public String get(String k) {
     String s = dict.get(k);
     if(s == null) {
@@ -137,6 +177,9 @@ public class OptDictionary {
     return s;
   }
 
+  /**
+   * Concatenates an option's type with annotation, if any.
+   */
   public String getFullname(String k) {
     String pat = lookupPat(k);
     if(pat == null)
