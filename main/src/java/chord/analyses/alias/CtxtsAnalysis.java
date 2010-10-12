@@ -820,7 +820,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		if (Config.verbose > 2) System.out.println("numSCCs: " + sccList.size());
 		for (int i = 0; i < sccList.size(); i++) { // For each SCC...
 			Set<jq_Method> scc = sccList.get(i);
-			if (Config.verbose > 2) System.out.println("Processing SCC #" + i + " of size: " + scc.size());
+			if (Config.verbose > 2)
+				System.out.println("Processing SCC #" + i + " of size: " + scc.size());
 			if (scc.size() == 1) { // Singleton
 				jq_Method cle = scc.iterator().next();
 				if (roots.contains(cle))
@@ -836,7 +837,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			}
 			boolean changed = true;
 			for (int count = 0; changed; count++) { // Iterate...
-				System.out.println("\tIteration  #" + count);
+				if (Config.verbose > 2)
+					System.out.println("\tIteration  #" + count);
 				changed = false;
 				for (jq_Method cle : scc) { // For each node (method) in SCC
 					int mIdx = domM.indexOf(cle);
