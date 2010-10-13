@@ -27,6 +27,7 @@
 			<file file="COPYING"/>
 				<manifest>
 				<attribute name="Main-Class" value="edu.berkeley.confspell.SpellcheckConf"/>
+				<attribute name="Class-Path" value="lib/hadoop-0.20.2-core.jar lib/log4j-1.2.15.jar lib/commons-logging-api-1.0.4.jar"/>
 			</manifest>
    </jar>
 	</target>
