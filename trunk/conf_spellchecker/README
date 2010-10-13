@@ -13,7 +13,13 @@ The command line syntax is as follows:
 files list should be a list of files, interspersed with optional type tags, specifying the type of the following file.
 Valid tags include -hadoop and -prop, for Hadoop and Java Properties files, respectively.
 
+Example:
+	java -jar confspellcheck.jar example/hadoop20.dict -hadoop  example/hdfs-default.xml
 
+This will read the dictionary, read the config file, report options, and flag mismatches.
+
+
+If the command line tool is invoked without any configuration files specified, it will dump the contents of the dictionary file.
 
 
 DICTIONARY FORMAT
