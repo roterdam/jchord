@@ -56,4 +56,3 @@ queryE(e) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_). # All queries we car
 flowinsVisitedE(e) :- queryE(e), ME(m,e), reachableCM(_,m). # Things which are local
 flowinsEscE(e) :- queryE(e), escCE(_,e). # Escaping
 flowinsLocE(e) :- queryE(e), !flowinsEscE(e). # Local = not escaping
-#flowinsLocE(e) :- queryE(e), EV(e,v), CVC(_,v,_), !flowinsEscE(e).
