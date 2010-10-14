@@ -12,6 +12,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -388,7 +389,7 @@ public class ClassicProject extends Project {
 		}
 		Timer timer = new Timer(task.getName());
 		if (Config.verbose > 1)
-			System.out.println("ENTER: " + task);
+			System.out.println("ENTER: " + task + " at " + (new Date()));
 		timer.init();
 		timer.pause();
 		List<Object> consumedTrgts = taskToConsumedTrgtsMap.get(task);
