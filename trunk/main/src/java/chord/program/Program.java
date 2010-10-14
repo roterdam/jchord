@@ -641,9 +641,14 @@ public class Program {
 		if (r instanceof jq_Array)
 			return;
 		jq_Class c = (jq_Class) r;
-		// TODO
-		// for (jq_Method m : getMethods(c))
-		//	printMethod(m);
+		for (jq_Method m : c.getDeclaredInstanceMethods()) {
+			if (methods.contains(m))
+				printMethod(m);
+		}
+		for (jq_Method m : c.getDeclaredStaticMethods()) {
+			if (methods.contains(m))
+				printMethod(m);
+		}
 	}
 
 	private void printMethod(jq_Method m) {
