@@ -1,8 +1,19 @@
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ * Licensed under the terms of the New BSD License.
+ */
 package chord.program.reflect;
 
 import java.io.IOException;
 import chord.runtime.CoreEventHandler;
 
+/*
+ * Event handler for dynamic analysis for resolving reflection.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class ReflectEventHandler extends CoreEventHandler {
 	public static void clsForNameEvent(String q, String c) {
 		synchronized (CoreEventHandler.class) {

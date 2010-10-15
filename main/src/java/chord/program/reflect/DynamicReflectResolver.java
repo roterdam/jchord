@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ * Licensed under the terms of the New BSD License.
+ */
 package chord.program.reflect;
 
 import java.io.IOException;
@@ -11,6 +17,11 @@ import chord.util.ReadException;
 import chord.project.analyses.CoreDynamicAnalysis;
 import chord.project.Chord;
 
+/**
+ * Dynamic analysis for resolving reflection.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class DynamicReflectResolver extends CoreDynamicAnalysis {
 	private final List<Pair<String, List<String>>> resolvedClsForNameSites =
 		new ArrayList<Pair<String, List<String>>>();
