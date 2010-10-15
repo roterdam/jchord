@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ * Licensed under the terms of the New BSD License.
+ */
 package chord.program.stubs;
 
 import joeq.Compiler.Quad.ICFGBuilder;
@@ -32,6 +38,12 @@ import joeq.Compiler.Quad.SSA.EnterSSA;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.Operand;
 
+/**
+ * Stub for static method "void set(Object array, int index, Object value)"
+ * in class java.lang.reflect.Array.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class ArraySetCFGBuilder implements ICFGBuilder {
 	@Override
 	public ControlFlowGraph run(jq_Method m) {
