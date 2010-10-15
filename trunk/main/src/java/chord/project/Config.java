@@ -84,6 +84,7 @@ public class Config {
 
 	public final static String mainClassName = System.getProperty("chord.main.class");
 	public final static String classPathName = System.getProperty("chord.class.path");
+  public final static String extraClasses = System.getProperty("chord.class.extrapaths", "");
 	public final static String srcPathName = System.getProperty("chord.src.path");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
 	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
@@ -95,8 +96,9 @@ public class Config {
 	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
 	public final static String reflectKind = System.getProperty("chord.reflect.kind", "none");
 	static {
-		if (!reflectKind.equals("none") && !reflectKind.equals("static") && !reflectKind.equals("dynamic"))
-			Messages.fatal(BAD_OPTION, reflectKind, "chord.reflect.kind", "[none|static|dynamic]");
+		if (!reflectKind.equals("none") && !reflectKind.equals("static") && !reflectKind.equals("dynamic")
+		    && !reflectKind.equals("static_cast"))
+			Messages.fatal(BAD_OPTION, reflectKind, "chord.reflect.kind", "[none|static|dynamic|static_cast]");
 	}
 	public final static String stubsFileName =
 		mainRel2AbsPath("chord.stubs.file", "src/java/chord/program/stubs/stubs.txt");

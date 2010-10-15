@@ -9,6 +9,7 @@ package chord.program;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,8 +53,10 @@ import joeq.Util.Templates.ListIterator;
 
 import chord.project.Messages;
 import chord.project.Config;
+import chord.program.reflect.CastBasedStaticReflect;
 import chord.program.reflect.DynamicReflectResolver;
 import chord.program.reflect.StaticReflectResolver;
+import chord.rels.RelExtraEntryPoints;
 import chord.util.IndexSet;
 import chord.util.Timer;
 import chord.util.ArraySet;
@@ -173,12 +176,21 @@ public class RTA {
 	}
 
 	private void build() {
+	  classes = new IndexSet<jq_Reference>();
+    classesVisitedForClinit = new HashSet<jq_Class>();
+    reachableAllocClasses = new IndexSet<jq_Reference>();
+    methods = new IndexSet<jq_Method>();
+    methodWorklist = new ArrayList<jq_Method>();
+    
 		if (Config.verbose > 1) System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
 		if (reflectKind.equals("static")) {
 			staticReflectResolver = new StaticReflectResolver();
 			staticReflectResolved = new HashSet<jq_Method>();
+		} else if(reflectKind.equals("static_cast")) {
+      staticReflectResolver = new CastBasedStaticReflect(reachableAllocClasses);
+      staticReflectResolved = new HashSet<jq_Method>();
 		} else if (reflectKind.equals("dynamic")) {
 			DynamicReflectResolver dynamicReflectResolver =
 				new DynamicReflectResolver();
@@ -200,11 +212,7 @@ public class RTA {
 			// System.out.println("Dynamic resolved aryNewInst sites:");
 			// print(dynamicResolvedAryNewInstSites);
 		}
- 		classes = new IndexSet<jq_Reference>();
- 		classesVisitedForClinit = new HashSet<jq_Class>();
- 		reachableAllocClasses = new IndexSet<jq_Reference>();
- 		methods = new IndexSet<jq_Method>();
-		methodWorklist = new ArrayList<jq_Method>();
+ 		
 		reflect = new Reflect();
         HostedVM.initialize();
         javaLangObject = PrimordialClassLoader.getJavaLangObject();
@@ -217,25 +225,56 @@ public class RTA {
 			new jq_NameAndDesc("main", "([Ljava/lang/String;)V"));
 		if (mainMethod == null)
 			Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
+		
+		prepAdditionalEntrypoints();
+		
 		for (int i = 0; repeat; i++) {
 			if (Config.verbose > 1) System.out.println("Iteration: " + i);
 			repeat = false;
-         	classesVisitedForClinit.clear();
-        	methods.clear();
+			classesVisitedForClinit.clear();
+			methods.clear();
 			visitClinits(mainClass);
-        	visitMethod(mainMethod);
-	        while (!methodWorklist.isEmpty()) {
+			visitMethod(mainMethod);
+
+			visitAdditionalEntrypoints();
+			while (!methodWorklist.isEmpty()) {
 				int n = methodWorklist.size();
-	        	jq_Method m = methodWorklist.remove(n - 1);
+				jq_Method m = methodWorklist.remove(n - 1);
 				if (DEBUG) System.out.println("Processing CFG of " + m);
-	        	processMethod(m);
-	        }
-        }
+				processMethod(m);
+			}
+			if(staticReflectResolver != null)
+			  staticReflectResolver.startedNewIter();
+		}
 		if (Config.verbose > 1) System.out.println("LEAVE: RTA");
 		timer.done();
 		if (Config.verbose > 1)
 			System.out.println("Time: " + timer.getInclusiveTimeStr());
+		staticReflectResolver = null; //no longer in use;stop referencing it
 	}
+	
+  
+  Iterable<jq_Method> publicMethods = new ArrayList<jq_Method>();
+
+  private void prepAdditionalEntrypoints() {
+    publicMethods = RelExtraEntryPoints.slurpMList(Program.g().getClassHierarchy());
+  }
+
+  private void visitAdditionalEntrypoints() {
+    LinkedHashSet<jq_Class> extraClasses = new LinkedHashSet<jq_Class>();
+    for(jq_Method m: publicMethods) {
+      extraClasses.add(m.getDeclaringClass());
+    }
+    
+    for(jq_Class cl: extraClasses) {
+      visitClass(cl);
+    }
+
+    for(jq_Method m: publicMethods) {
+      visitMethod(m);
+    }
+  }
+
 
 	private void visitMethod(jq_Method m) {
 		if (methods.add(m)) {
@@ -254,7 +293,7 @@ public class RTA {
 	private void processResolvedObjNewInstSite(Quad q, jq_Reference r) {
 		reflect.addResolvedObjNewInstSite(q, r);
 		visitClass(r);
-		if (reachableAllocClasses.add(r))
+		if (reachableAllocClasses.add(r) || staticReflectResolver.needNewIter())
 			repeat = true;
 		if (r instanceof jq_Class) {
 			jq_Class c = (jq_Class) r;

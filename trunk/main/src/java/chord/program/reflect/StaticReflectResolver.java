@@ -7,19 +7,12 @@
 package chord.program.reflect;
 
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
-import joeq.Class.PrimordialClassLoader;
-import joeq.Class.jq_Array;
-import joeq.Class.jq_Class;
-import joeq.Class.jq_ClassInitializer;
-import joeq.Class.jq_Field;
-import joeq.Class.jq_InstanceMethod;
+
 import joeq.Class.jq_Method;
-import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Reference;
-import joeq.Class.jq_Type;
-import joeq.Class.Classpath;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand;
@@ -29,26 +22,16 @@ import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.AConstOperand;
-import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Phi;
-import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
-import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
-import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
-import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Main.HostedVM;
-import joeq.Util.Templates.List;
 import joeq.Util.Templates.ListIterator;
 
 import chord.program.Program;
-import chord.project.Messages;
-import chord.project.Config;
 import chord.util.ArraySet;
-import chord.util.Timer;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -58,24 +41,24 @@ import chord.util.tuple.object.Pair;
  */
 public class StaticReflectResolver {
 	private static final boolean DEBUG = false;
-	private ControlFlowGraph cfg;
-	private int numArgs;
+	protected ControlFlowGraph cfg;
+	protected int numArgs;
 	// sets of all forname/newinst call sites
 	// initialized in first iteration
-	private final Set<Quad> forNameSites = new HashSet<Quad>();
-	private final Set<Quad> newInstSites = new HashSet<Quad>();
+	protected final Set<Quad> forNameSites = new HashSet<Quad>();
+	protected final Set<Quad> newInstSites = new HashSet<Quad>();
 	// local vars not tracked because they were assigned something
 	// that is unanalyzable (e.g., a formal argument, return result of
 	// a function call, a static/instance field, etc.)
-	private final Set<Register> abortedVars = new HashSet<Register>();
-	private final Set<Register> trackedVars = new HashSet<Register>();
-	private final Set<Pair<Register, jq_Reference>> resolutions =
+	protected final Set<Register> abortedVars = new HashSet<Register>();
+	protected final Set<Register> trackedVars = new HashSet<Register>();
+	protected final Set<Pair<Register, jq_Reference>> resolutions =
 		new HashSet<Pair<Register, jq_Reference>>();
-	private final Set<Pair<Quad, jq_Reference>> resolvedClsForNameSites =
+	protected final Set<Pair<Quad, jq_Reference>> resolvedClsForNameSites =
 		new ArraySet<Pair<Quad, jq_Reference>>();
-	private final Set<Pair<Quad, jq_Reference>> resolvedObjNewInstSites =
-		new ArraySet<Pair<Quad, jq_Reference>>();
-	private boolean changed;
+	protected final Set<Pair<Quad, jq_Reference>> resolvedObjNewInstSites =
+		new LinkedHashSet<Pair<Quad, jq_Reference>>();
+	protected boolean changed;
 
 	public Set<Pair<Quad, jq_Reference>> getResolvedClsForNameSites() {
 		return resolvedClsForNameSites;
@@ -88,6 +71,7 @@ public class StaticReflectResolver {
 		resolvedObjNewInstSites.clear();
 		cfg = m.getCFG();
 		initForNameAndNewInstSites();
+//		System.out.println("processing " + m.getName() + " found " + )
 		if (forNameSites.isEmpty())
 			return;
 		numArgs = m.getParamTypes().length;
@@ -96,7 +80,7 @@ public class StaticReflectResolver {
 			return;
 		resolveNewInstSites();
 	}
-	private void initForNameAndNewInstSites() {
+	protected void initForNameAndNewInstSites() {
 		forNameSites.clear();
 		newInstSites.clear();
 		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
@@ -113,6 +97,14 @@ public class StaticReflectResolver {
 							forNameSites.add(q);
 						else if (mName.equals("newInstance"))
 							newInstSites.add(q);
+					} else if(cName.equals("java.lang.reflect.Constructor")) {
+	           String mName = n.getName().toString();
+	           if (mName.equals("newInstance"))
+	              newInstSites.add(q);
+					} else if(cName.equals("java.lang.ClassLoader")) {
+            String mName = n.getName().toString();
+            if (mName.equals("loadClass"))
+              forNameSites.add(q);
 					}
 				}
 			}
@@ -130,7 +122,7 @@ public class StaticReflectResolver {
 			}
 		}
 	}
-	private void resolveForNameSites() {
+	protected void resolveForNameSites() {
 		abortedVars.clear();
 		initAbortedVars(false);
 		trackedVars.clear();
@@ -190,7 +182,9 @@ public class StaticReflectResolver {
 			}
 		}
 	}
-	private void resolveNewInstSites() {
+	protected void resolveNewInstSites() {
+	  if(DEBUG)
+	    System.out.println("resolveNewInstSites on " + cfg.getMethod());
 		resolutions.clear();
 		for (Pair<Quad, jq_Reference> p : resolvedClsForNameSites) {
 			Quad q = p.val0;
@@ -222,9 +216,17 @@ public class StaticReflectResolver {
 							Register l = Move.getDest(q).getRegister();
 							Register r = ((RegisterOperand) ro).getRegister();
 							processCopy(l, r);
+
+	            if(op instanceof CheckCast)
+	              processCheckCast(l, r, q);
 						}
 					} else if (op instanceof Phi)
 						processPhi(q);
+					else if(op instanceof Invoke) {
+					  processInvoke(q);
+					} else if(op instanceof Return) {
+					  processReturn(q);
+					}
 				}
 			}
 		}
@@ -247,7 +249,19 @@ public class StaticReflectResolver {
 			}
 		}
 	}
-	private void initAbortedVars(boolean isNewInst) {
+	
+	protected void processInvoke(Quad q) {
+  }
+	
+	protected void processReturn(Quad q) {
+	}
+
+  
+	protected void processCheckCast(Register l, Register r, Quad q) {
+	  //for benefit of subclasses
+	}
+  
+  protected void initAbortedVars(boolean isNewInst) {
 		RegisterFactory rf = cfg.getRegisterFactory();
 		for (int i = 0; i < numArgs; i++)
 			abortedVars.add(rf.get(i));
@@ -278,7 +292,7 @@ public class StaticReflectResolver {
 			}
 		}
 	}
-	private void processCopy(Register l, Register r) {
+	protected void processCopy(Register l, Register r) {
 		if (abortedVars.contains(r)) {
 			if (abortedVars.add(l))
 				changed = true;
@@ -301,7 +315,7 @@ public class StaticReflectResolver {
 		}
 	}
 
-	private void processPhi(Quad q) {
+	protected void processPhi(Quad q) {
 		Register l = Phi.getDest(q).getRegister();
 		ParamListOperand roList = Phi.getSrcs(q);
 		int n = roList.length();
@@ -313,4 +327,13 @@ public class StaticReflectResolver {
 			}
 		}
 	}
+/**
+ * Used to cue RTA to do a new iteration
+ * @return
+ */
+	public boolean needNewIter() {
+    return false;
+  }
+	
+	public void startedNewIter() {}
 }
