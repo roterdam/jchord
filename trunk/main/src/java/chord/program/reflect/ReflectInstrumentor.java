@@ -1,3 +1,9 @@
+/*
+ * Copyright (c) 2008-2010, Intel Corporation.
+ * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * All rights reserved.
+ * Licensed under the terms of the New BSD License.
+ */
 package chord.program.reflect;
 
 import java.util.Map;
@@ -7,6 +13,11 @@ import javassist.CannotCompileException;
 import javassist.CtConstructor;
 import chord.program.MethodElem;
 
+/**
+ * Load-time bytecode instrumentor for dynamic analysis for resolving reflection.
+ *
+ * @author Mayur Naik (mhn@cs.stanford.edu)
+ */
 public class ReflectInstrumentor extends CoreInstrumentor {
 	private static final String clsForNameEventStr =
 		ReflectEventHandler.class.getName() + ".clsForNameEvent(";

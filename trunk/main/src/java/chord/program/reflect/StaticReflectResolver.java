@@ -52,7 +52,8 @@ import chord.util.Timer;
 import chord.util.tuple.object.Pair;
 
 /**
- * 
+ * Static analysis for resolving reflection.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class StaticReflectResolver {
