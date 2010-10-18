@@ -174,6 +174,12 @@ public class Checker {
     checkers.put("Time", new CheckLong());
     checkers.put("URI", new CheckURI());
     checkers.put("URL", new CheckURI());
+    
+      //these work around a bug in the analyzer
+    checkers.put("Integral or Time", new CheckLong());
+    checkers.put("Time or Integral", new CheckLong());
+
+
   }
 
   /**
