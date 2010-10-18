@@ -57,9 +57,10 @@ public class CastBasedStaticReflect extends StaticReflectResolver {
   
   @Override
   protected void processCheckCast(Register l, Register r, Quad q) {
-    if (newInstReflSites.containsKey(r)) {  
+    jq_Reference t = (jq_Reference) CheckCast.getType(q).getType();
+
+    if (newInstReflSites.containsKey(r) && ! RelScopeExcludedM.isOutOfScope(t.getName())) {  
   //      System.out.println("processCast found a newInstVar");
-      jq_Reference t = (jq_Reference) CheckCast.getType(q).getType();
       Set<String> subs = ch.getConcreteSubclasses(t.getName());
       if (subs != null) {
         for (String s : subs) {
