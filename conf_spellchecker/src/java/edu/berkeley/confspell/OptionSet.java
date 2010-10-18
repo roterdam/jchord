@@ -7,6 +7,8 @@ package edu.berkeley.confspell;
 import java.io.FileInputStream;
 import java.io.File;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Model for a set of options with associated auxiliary data.
@@ -15,10 +17,13 @@ import java.util.*;
  *
  */
 public class OptionSet { //extends TreeMap<String,String>
+  
+  private static Pattern varPat = Pattern.compile("\\$\\{[^\\}\\$\u0020]+\\}");
 
   private static final long serialVersionUID = 1L;
   HashSet<String> usedBySubst = new HashSet<String>();
   Map<String,String> conf = new TreeMap<String,String>();
+  private boolean substitute = false;
   
   public OptionSet() {}
   
@@ -65,7 +70,26 @@ public class OptionSet { //extends TreeMap<String,String>
   
 
   public Set<Map.Entry<String, String>> entrySet() {
-    return conf.entrySet();
+    if(substitute) {
+      Map<String,String> res = new LinkedHashMap<String, String>(); //make copy to substitute
+      for(Map.Entry<String, String> ent: conf.entrySet()) {
+        String val = ent.getValue();
+        
+        Matcher m = varPat.matcher(val);
+
+        if (m.find()) {
+          String repl = m.group();
+          String innerOpt = repl.substring(2, repl.length()-1);
+          if(conf.containsKey(innerOpt)) {
+            val = val.replace(repl, conf.get(innerOpt));
+            m = varPat.matcher(val);
+          } 
+        }
+        res.put(ent.getKey(), val);
+      }
+      return res.entrySet();
+    } else 
+      return conf.entrySet();
   }
 
   public void put(String key, String string) {
@@ -93,18 +117,23 @@ public class OptionSet { //extends TreeMap<String,String>
   public static OptionSet fromPropsFile(File propsfilename) throws java.io.IOException {
 
     OptionSet result = new OptionSet();
-    Properties p = new Properties();
-    FileInputStream fis = new FileInputStream(propsfilename);
-    p.load(fis);
-    fis.close();
-    
-    for(Map.Entry e:  p.entrySet()) {
-      String v = e.getValue().toString();
-//      if(v.contains("#"))
-      // v = v.substring(0, v.indexOf("#"))
-      result.put(e.getKey().toString(), v);
-    }
+    result.enableSubstitution();
+    PSlurper ps = new PSlurper();
+    ps.slurp(propsfilename, result);
     return result;
+  }
+
+  private void enableSubstitution() {
+    substitute = true;
+  }
+
+  public void checkForSubst(String rawV) {
+    Matcher m = varPat.matcher(rawV);
+    if(m.find()) {
+      String var = m.group();
+      var = var.substring(2, var.length()-1); // remove ${ .. }
+      addSubstUse(var);
+    }    
   }
   
   

@@ -20,9 +20,11 @@ class PSlurper implements Slurper {
     
     for(Map.Entry e:  p.entrySet()) {
       String v = e.getValue().toString();
+      //no need to remove comments, Java does it for us.
 //      if(v.contains("#"))
       // v = v.substring(0, v.indexOf("#"))
       res.put(e.getKey().toString(), v);
+      res.checkForSubst(v);
     }
     //"PROP-" + 
   }
