@@ -161,7 +161,7 @@ public class ShowConfOptions extends JavaAnalysis {
     ProgramRel confArgRel =  (ProgramRel) ClassicProject.g().getTrgt("castTypes");//t, i
     confArgRel.load();  
     
-    HashMap<String, String> castClasses = new HashMap<String, String>();
+    HashMap<String, String> castClasses = new HashMap<String, String>(); //foreach cast, list of classes cast to
     for(Trio<jq_Type, Quad, Register> castT:  confArgRel.<jq_Type, Quad, Register>getAry3ValTuples()) {
       Quad q = castT.val1;
       if(!returnedMap.containsKey(q))
@@ -190,6 +190,7 @@ public class ShowConfOptions extends JavaAnalysis {
     
     for(Map.Entry<String, String> e: castClasses.entrySet()) {
       String v = e.getValue();
+      
       dict.annotate(e.getKey(), v);
     }
     
@@ -197,6 +198,34 @@ public class ShowConfOptions extends JavaAnalysis {
     writer.close();
   }
 
+  private static String condense(String v) {
+    if(!v.contains(" "))
+      return v;
+    String[] classNames = v.split(" ");
+    Class<?>[] classes = new Class<?>[classNames.length];
+    for(int i=0; i < classNames.length; ++i) {
+       try{ 
+         classes[i] = Class.forName(classNames[i]);
+       } catch (ClassNotFoundException ex) {
+         ex.printStackTrace();
+       }
+    }
+    
+    for(int i= 0; i < classNames.length -1; ++i) {
+      for(int j = 1; j < classNames.length; ++j) {
+
+        // TODO Auto-generated method stub    
+      }
+    }
+    
+    
+    
+    StringBuilder sb = new StringBuilder();
+
+    // TODO Auto-generated method stub
+    sb.deleteCharAt(sb.length() - 1);
+    return sb.toString();
+  }
   private void dumpReturnTypeGuesses(Map<Quad, String> returnedMap) {
     PrintWriter writer =
       OutDirUtils.newPrintWriter("returned_conf_values.txt");
