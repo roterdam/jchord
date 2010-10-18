@@ -468,7 +468,6 @@ public class ShowConfOptions extends JavaAnalysis {
   private void updateDict(Quad q, String optName, String string) {
     String srcOfRead = q.getMethod().getDeclaringClass().getName();
     for(String prefix: inScopePrefixes) {
-//      System.out.println("comparing " + srcOfRead + " with " + prefix);
       if(srcOfRead.startsWith(prefix)) {
         dict.update(optName, string);
         return;
@@ -530,17 +529,9 @@ public class ShowConfOptions extends JavaAnalysis {
       for(Object f: cl.getEnumConstants()) {
         vals.append(f.toString());
         vals.append(",");
-      } /*
-      for(jq_Field f: eType.getInstanceFields()) {
-        String s = f.getName().toString();
-        if(!s.equals("VALUES")) {
-          vals.append(s);
-          vals.append(",");
-        }
-      } */
+      } 
       vals.deleteCharAt(vals.length() -1);
       
-//      vals.append("}");
       optEnums.put(t.val0, vals.toString());
     }
     enumOpt.close();

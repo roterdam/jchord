@@ -21,12 +21,12 @@ import java.util.*;
 @Chord(
     name = "SBAppend",
     
-    consumes = { "I","V", "U", "Z"},
+    consumes = { "I","V", "U", "ZZ"},
     produces = { "SBAppendU", "SBAppendV"},
-     signs = {"I0,V0,U0,Z0:I0_V0_U0_Z0","I0,V0,V1,Z0:I0_V0_V1_Z0"},
+     signs = {"I0,V0,U0,ZZ0:I0_V0_U0_ZZ0","I0,V0,V1,ZZ0:I0_V0_V1_ZZ0"},
   namesOfSigns = { "SBAppendU", "SBAppendV"},
-  namesOfTypes = { "I" ,"V", "U", "Z"},
-  types = { DomI.class, DomV.class, DomU.class, DomZ.class }
+  namesOfTypes = { "I" ,"V", "U", "ZZ"},
+  types = { DomI.class, DomV.class, DomU.class, DomZZ.class }
 
 //    sign = "I0,V0,UV0,Z0:I0_V0_UV0_Z0"
   )
@@ -34,7 +34,7 @@ public class RelSBAppend extends JavaAnalysis {
   DomI domI;
   DomV domV;
   DomU domU;
-  DomZ domZ;
+  DomZZ domZ;
   jq_Method method;
   ProgramRel relRef, relPrim;
   public void init() {
@@ -42,7 +42,7 @@ public class RelSBAppend extends JavaAnalysis {
     domI = (DomI) project.getTrgt("I");
     domV = (DomV) project.getTrgt("V");
     domU = (DomU) project.getTrgt("U");
-    domZ = (DomZ) project.getTrgt("Z");
+    domZ = (DomZZ) project.getTrgt("ZZ");
     relRef = (ProgramRel) project.getTrgt("SBAppendV");
     relPrim = (ProgramRel) project.getTrgt("SBAppendU");
     relRef.zero();

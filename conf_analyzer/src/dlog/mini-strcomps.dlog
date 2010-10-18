@@ -5,10 +5,11 @@
 .include "H.dom"
 .include "V.dom"
 .include "Z.dom"
+.include "ZZ.dom"
 .include "StrConst.dom"
 .include "UV.dom"
 
-.bddvarorder I0xStrConst0_H0_Z0_Z1_V0_V1_UV0_V2
+.bddvarorder I0xStrConst0_H0_Z0_Z1_V0_V1_UV0_V2_ZZ0
 
 confUVV(i:I, o:UV, in:V) input
 confWrites(i:I, o:UV, in:V) input
@@ -22,12 +23,12 @@ VConst(v:V0, cst:StrConst) input
 
 VConstFlow(v:V0, cst:StrConst) output
 
-confOptName(i:I, str:StrConst, z:Z) output
-confOptLen(i:I,z:Z) output
+confOptName(i:I, str:StrConst, z:ZZ) output
+confOptLen(i:I,z:ZZ) output
 confOpts(i:I) output
 
-confWritesByName(i:I, str:StrConst, z:Z) output
-confOptWriteLen(i:I,z:Z) output
+confWritesByName(i:I, str:StrConst, z:ZZ) output
+confOptWriteLen(i:I,z:ZZ) output
 confOptWrites(i:I) output
 
 #################################
