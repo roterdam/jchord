@@ -63,8 +63,9 @@ public class SpellcheckConf {
             s.slurp(optsFile, conf);
           }
         }
-
-        Checker.checkConf(dictionary, conf);
+        Checker c = new Checker(dictionary);
+        c.PRINT_OKS = false;
+        c.checkConf(conf);
       }
     } catch (IOException e) {
       e.printStackTrace();
