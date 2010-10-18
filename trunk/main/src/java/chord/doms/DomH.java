@@ -48,17 +48,19 @@ import chord.program.Program;
 public class DomH extends ProgramDom<Object> {
 	protected DomM domM;
 	protected int lastRealIdx;
+	private static boolean PHANTOM_CLASSES = true;
 	public int getLastRealIdx() {
 		return lastRealIdx;
 	}
-/*
+
 	protected int lastPhantomObjIdx;
 	public int getLastPhantomObjIdx() {
 		return lastPhantomObjIdx;
 	}
-*/
+
 	public void init() {
 		domM = (DomM) (Config.classic ? ClassicProject.g().getTrgt("M") : consumes[0]);
+		PHANTOM_CLASSES = Config.buildBoolProperty("chord.add.phantom.classes", false);
 	}
 	public void fill() {
 		int numM = domM.size();
@@ -88,12 +90,13 @@ public class DomH extends ProgramDom<Object> {
 /*
 		for (jq_Reference r : program.getReflectInfo().getReflectClasses()) {
 			add(new PhantomObjVal(r));
-		}
+		}*/
 		lastPhantomObjIdx = size() - 1;
-		for (jq_Reference r : program.getClasses()) {
-			add(new PhantomClsVal(r));
+		if(PHANTOM_CLASSES) {
+  		for (jq_Reference r : Program.g().getClasses()) {
+  			add(new PhantomClsVal(r));
+  		}
 		}
-*/
 	}
 	private void processResolvedNewInstSites(List<Pair<Quad, List<jq_Reference>>> l) {
 		for (Pair<Quad, List<jq_Reference>> p : l)
@@ -108,12 +111,12 @@ public class DomH extends ProgramDom<Object> {
 		if (o instanceof PhantomObjVal) {
 			jq_Reference r = ((PhantomObjVal) o).r;
 			return r.getName() + "@phantom_obj";
-		}
+		} */
 		if (o instanceof PhantomClsVal) {
 			jq_Reference r = ((PhantomClsVal) o).r;
 			return r.getName() + "@phantom_cls";
 		}
-*/
+
 		assert (o == null);
 		return "null";
 	}
