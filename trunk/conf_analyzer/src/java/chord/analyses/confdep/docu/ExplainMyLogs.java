@@ -9,8 +9,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.confdep.ConfDefines;
 import chord.analyses.confdep.ConfDeps;
 import chord.bddbddb.Rel.RelView;
-import chord.doms.DomI;
-import chord.doms.DomZ;
+import chord.doms.*;
 import chord.project.*;
 import chord.project.analyses.*;
 import chord.util.tuple.object.Pair;
@@ -106,7 +105,7 @@ public class ExplainMyLogs extends JavaAnalysis{
   public static String renderLogMsg(Quad quad, ProgramRel logStrings, ProgramRel dataDep, Map<Quad, String> optNames) {
     RelView constStrs = logStrings.getView();
     constStrs.selectAndDelete(0, quad);
-    String[] wordsByPos = new String[DomZ.MAXZ];
+    String[] wordsByPos = new String[DomZZ.MAXZ];
 
     int maxFilled = -1;
     if(constStrs.size() == 0)

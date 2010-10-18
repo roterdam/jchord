@@ -290,7 +290,7 @@ public class ConfDeps extends JavaAnalysis {
   public static String reconcatenate(Quad quad, ProgramRel logStrings, boolean makeRegex, int maxFilled) {
     RelView v = logStrings.getView();
     v.selectAndDelete(0, quad);
-    String[] wordsByPos = new String[DomZ.MAXZ];
+    String[] wordsByPos = new String[DomZZ.MAXZ];
 
     if(v.size() == 0)
       return "X";
