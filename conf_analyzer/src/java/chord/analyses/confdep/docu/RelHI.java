@@ -7,7 +7,11 @@ import chord.doms.DomI;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
-
+/**
+ * Maps elements of h to i, where a given call is treated as an allocation site
+ * @author asrabkin
+ *
+ */
 @Chord(
     name = "HI",
     sign = "H0,I0:H0_I0"
