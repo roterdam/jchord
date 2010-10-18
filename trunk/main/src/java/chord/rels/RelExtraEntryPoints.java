@@ -8,9 +8,7 @@
 package chord.rels;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Set;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -31,9 +29,9 @@ import chord.project.analyses.ProgramRel;
  * 
  * File should be a list whose entries are class names, interface names, or fully qualified method names.
  *  (A fully qualified method name is of the form <name>:<desc>@<classname>.)
- *  If a class is listed, all public methods of that class will be added as entry points.
- *  If an interface is listed, all public methods of all concrete instances of that interface will
- *  be added as entry points.
+ *  If a concrete class is listed, all non-private methods of that class will be added as entry points.
+ *  If an interface or abstract is listed, all public declared methods of that interaface/class in
+ *  all concrete subclasses will be added as entry points.
  */
 public class RelExtraEntryPoints extends ProgramRel {
   
@@ -97,10 +95,8 @@ public class RelExtraEntryPoints extends ProgramRel {
           pubI.prepare();  
         
         //two cases: pubI is an interface/abstract class or pubI is a concrete class.
-        if(pubI.isInterface() || pubI.isAbstract()) {  
-          Set<String> impls =  
-//              pubI.isInterface() ? ch.getConcreteImplementors(pubI.getName()) : ch.getConcreteSubclasses(pubI.getName());
-            ch.getConcreteSubclasses(pubI.getName());
+        if(pubI.isInterface() || pubI.isAbstract()) {
+          Set<String> impls =  ch.getConcreteSubclasses(pubI.getName());
           if(impls == null) {
             System.err.println("ExtraEntryPoints: found no concrete impls or subclasses of " + pubI.getName());
             continue;
@@ -122,26 +118,8 @@ public class RelExtraEntryPoints extends ProgramRel {
                   implementingClass.prepare();
                 }
               }
-
             }
           }
-          /* } else if(pubI.isAbstract()) {
-          
-          for(jq_Method m: pubI.getDeclaredStaticMethods()) {
-            if(!m.isPrivate()) {
-              methods.add(m);
-            }
-          }
-
-          System.out.println(pubI.getName() + " has " + subclasses.length + " subclasses in scope");
-          for(jq_Class implClass: subclasses) {
-            System.out.println("adding methods of " + implClass.getName() + " since it's a subclass of " + pubI.getName());
-            for(jq_Method implM:   implClass.getDeclaredInstanceMethods()) {
-              System.out.println("\t" + implM.getNameAndDesc());
-//              jq_Method implM = implClass.getDeclaredInstanceMethod(ifaceM.getNameAndDesc());
-              methods.add(implM);
-            }
-          }*/
         } else { //class is concrete
           for(jq_Method m: pubI.getDeclaredInstanceMethods()) {
             if(!m.isPrivate()) {
@@ -150,7 +128,7 @@ public class RelExtraEntryPoints extends ProgramRel {
           }
           
           for(jq_Method m: pubI.getDeclaredStaticMethods()) {
-            if(m.isPublic()) {
+            if(!m.isPrivate()) {
               methods.add(m);
             }
           }
@@ -165,7 +143,6 @@ public class RelExtraEntryPoints extends ProgramRel {
     } catch(IOException e) {
       e.printStackTrace();
     } catch(NoClassDefFoundError e) {
-//      System.err.println("no such class " + s);
       e.printStackTrace();
     }
     return methods;
