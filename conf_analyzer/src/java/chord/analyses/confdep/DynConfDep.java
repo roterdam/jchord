@@ -39,25 +39,11 @@ public class DynConfDep extends DynamicAnalysis {
     instrScheme = new InstrScheme();
     
     
-/*    instrScheme.setGetfieldPrimitiveEvent(true, true, true, true);
-    instrScheme.setPutfieldPrimitiveEvent(true, true, true, true);
-    instrScheme.setAloadPrimitiveEvent(true, true, true, true);
-    instrScheme.setAstorePrimitiveEvent(true, true, true, true);
-    instrScheme.setGetfieldReferenceEvent(true, true, true, true, true);
-    instrScheme.setPutfieldReferenceEvent(true, true, true, true, true);
-    instrScheme.setAloadReferenceEvent(true, true, true, true, true);
-    instrScheme.setAstoreReferenceEvent(true, true, true, true, true);
-
-    instrScheme.setPutstaticReferenceEvent(true, true, true, true, true);
-    instrScheme.setNewAndNewArrayEvent(true, true, true);
-    instrScheme.setAcquireLockEvent(true, true, true);
-    instrScheme.setThreadStartEvent(true, true, true);
-    instrScheme.setMethodCallEvent(true, true, true, true, true);
-    instrScheme.setReturnReferenceEvent(true, false, true);
-        */
     instrScheme.setAloadReferenceEvent(false, false, true, false, true);
     instrScheme.setAstoreReferenceEvent(false, false, true, false, true);
-    instrScheme.setMethodCallEvent(true, false, false, false, false, true); //Super
+//    instrScheme.setMethodCallEvent(true, false, false, false, false, true); //Super
+    //commented out pending re-merging of my dyn instr tree with trunk
+    
 //    instrScheme.setMethodCallEvent(true, false, false, false, true, false); ///vanilla
 
     return instrScheme;
