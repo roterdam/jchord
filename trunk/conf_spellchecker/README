@@ -21,6 +21,10 @@ This will read the dictionary, read the config file, report options, and flag mi
 
 If the command line tool is invoked without any configuration files specified, it will dump the contents of the dictionary file.
 
+NOTE
+
+If you want to process Hadoop options, you need to have several Hadoop jars in your classpath. (In particular, you need Hadoop core, log4j, and commons-logging-api.) By default, the confspell jar will look in a directory with relative path "lib" for these jars. so you're 
+
 
 DICTIONARY FORMAT
 
