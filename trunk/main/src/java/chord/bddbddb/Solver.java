@@ -27,6 +27,8 @@ public class Solver {
 	 */
 	public static void run(String fileName) {
 		String[] cmdArray = new String[] {
+		    "nice",
+		    "-n10",
 			"java",
 			"-ea",
 			"-Xmx" + Config.bddbddbMaxHeap,
