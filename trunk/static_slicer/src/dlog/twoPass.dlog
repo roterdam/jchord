@@ -1,0 +1,85 @@
+# name=twoPass-dlog
+#
+# Running two-pass reachability algorithm from seed 
+#
+.include "P.dom"
+.include "X.dom"
+.include "I.dom"
+.include "M.dom"
+
+.bddvarorder X0xX1_M0_P0xP1_I0
+
+###
+# Relations
+###
+Seeds(p:P0) input
+
+PPReachingDef(p1:P0,p2:P1) input
+XPReachingDef(x:X0,p2:P0) input
+PXReachingDef(p1:P0,x:X0) input
+XXReachingDef(x1:X0,x2:X1) input
+
+linkageEntry(x0:X0,x1:X1) input
+linkageExit(x0:X0,x1:X1) input
+
+PI(p0:P0,i0:I0) input
+MPhead(m:M0,p:P0) input
+MP(m:M0,p:P0) input
+IM(i:I0,m:M0) input
+PPCtrlDep(p1:P0,p2:P1) input
+PXCtrlDep(p:P0,x:X0) input
+
+SummaryEdge(x1:X0,x2:X1) input
+
+#MAYUR PConc(p:P0) input
+actualIn(i:I0,x:X0) input
+
+FirstArgOfInstInvk(p:P0,x:X0) input
+
+## vertices marked by the first pass
+Pmarked(p:P0) output
+Xmarked(x:X0) output
+
+## slices (marked by the second pass)
+PSlice(p:P0) output
+XSlice(x:X0) output
+
+MSlice(m:M0) output
+
+
+###
+# Constraints
+###
+
+## First pass
+#MAYUR Pmarked(p) :- PConc(p).
+Pmarked(p) :- Seeds(p).
+Xmarked(x) :- Seeds(p), PI(p,i), actualIn(i,x).
+
+Pmarked(p) :- Pmarked(p1), PPReachingDef(p,p1).
+Pmarked(p) :- Xmarked(x1), PXReachingDef(p,x1).
+Pmarked(p) :- Pmarked(p1), PPCtrlDep(p,p1).
+Pmarked(p) :- Xmarked(x1), PXCtrlDep(p,x1).
+Pmarked(p) :- Pmarked(p1), MPhead(m,p1), IM(i,m), PI(p,i).
+
+Xmarked(x) :- Pmarked(p1), XPReachingDef(x,p1).
+Xmarked(x) :- Xmarked(x1), XXReachingDef(x,x1).
+Xmarked(x) :- Xmarked(x1), SummaryEdge(x,x1).
+Xmarked(x) :- Xmarked(x1), linkageEntry(x,x1).
+Xmarked(x) :- Pmarked(p), FirstArgOfInstInvk(p,x). 
+
+## Second pass
+PSlice(p) :- Pmarked(p).
+PSlice(p) :- PSlice(p1), PPReachingDef(p,p1).
+PSlice(p) :- XSlice(x1), PXReachingDef(p,x1).
+PSlice(p) :- PSlice(p1), PPCtrlDep(p,p1).
+PSlice(p) :- XSlice(x1), PXCtrlDep(p,x1).
+
+XSlice(x) :- Xmarked(x).
+XSlice(x) :- PSlice(p1), XPReachingDef(x,p1).
+XSlice(x) :- XSlice(x1), XXReachingDef(x,x1).
+XSlice(x) :- XSlice(x1), SummaryEdge(x,x1).
+XSlice(x) :- XSlice(x1), linkageExit(x,x1).
+XSlice(x) :- PSlice(p), FirstArgOfInstInvk(p,x).
+
+MSlice(m) :- MP(m,p), PSlice(p).
