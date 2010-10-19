@@ -289,21 +289,21 @@ public class Config {
 		System.out.println("chord.instr.scheme.file: " + instrSchemeFileName);
 		System.out.println("chord.trace.file: " + traceFileName);
 	}
-	private static String rel2absPath(String dirName, String...fileNames) {
+	public static String rel2absPath(String dirName, String...fileNames) {
 		String path = FileUtils.getAbsolutePath(dirName, fileNames[0]);
 		for (int i = 1; i < fileNames.length; i++)
 			path += File.pathSeparator + FileUtils.getAbsolutePath(dirName, fileNames[i]);
 		return path;
 	}
-	private static String outRel2AbsPath(String propName, String... fileNames) {
+	public static String outRel2AbsPath(String propName, String... fileNames) {
 		String val = System.getProperty(propName);
 		return (val != null) ? val : rel2absPath(outDirName, fileNames);
 	}
-	private static String mainRel2AbsPath(String propName, String... fileNames) {
+	public static String mainRel2AbsPath(String propName, String... fileNames) {
 		String val = System.getProperty(propName);
 		return (val != null) ? val : rel2absPath(mainDirName, fileNames);
 	}
-	private static String workRel2AbsPath(String propName, String... fileNames) {
+	public static String workRel2AbsPath(String propName, String... fileNames) {
 		String val = System.getProperty(propName);
 		return (val != null) ? val : rel2absPath(workDirName, fileNames);
 	}
