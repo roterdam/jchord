@@ -106,4 +106,9 @@ public class JavassistPool {
     public boolean isUserResource(String rName) {
         return userClassPathResourceNames.contains(rName);
     }
+
+	public ClassPool getPool() {
+		return pool;
+	}
+
 }
