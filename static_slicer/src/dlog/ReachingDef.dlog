@@ -1,0 +1,111 @@
+# name=reachingdef-dlog
+
+# Relation that represents data dependency among vertices in a SDG
+# X : vertices that represent actual-in/out, formal-in/out in a SDG
+# P : vertices for other program points
+
+.include "X.dom"
+.include "E.dom"
+.include "F.dom"
+.include "P.dom"
+.include "U.dom"
+
+# most significant: P,X,E,U
+#1m23s X < E < P < U
+#.bddvarorder E0xE1_X0xX1_P0xP1xP2_U0_F0
+
+#.bddvarorder E0xE1_X0xX1_P0xP1xP2_U0_F0_M0
+#.bddvarorder E0xE1_X0xX1_M0_P0xP1xP2_U0_F0
+
+#.bddvarorder X0xX1_P0xP1xP2_E0xE1_U0_F0
+#.bddvarorder E0xE1_X0xX1_P0xP1xP2_U0_F0
+.bddvarorder P0xP1xP2_E0xE1_X0xX1_U0_F0
+
+
+###
+# Relations
+###
+
+PP(p0:P0,p1:P1) input
+
+## x is formal-in or actual-out at program point p and is associated with register u
+formalInOrActualOutXPU(x:X0,p:P0,u:U0) input
+## x is formal-in or actual-out at program point p and is associated with static field f
+formalInOrActualOutXPG(x:X0,p:P0,f:F0) input
+## x is formal-in or actual-out at program point p and is associated with instance field access e
+formalInOrActualOutXPE(x:X0,p:P0,e:E0) input
+actualInOrFormalOutXPU(x:X0,p:P0,u:U0) input
+actualInOrFormalOutXPG(x:X0,p:P0,f:F0) input
+actualInOrFormalOutXPE(x:X0,p:P0,e:E0) input
+
+# heap location represented by e and e2 may alias each other
+mayAlias(e:E0,e2:E1) input
+
+# u/f/e is referred at program point p which is not a call site
+nonCallRefPU(p:P0,u:U0) input
+nonCallRefPG(p:P0,f:F0) input
+nonCallRefPE(p:P0,e:E0) input
+
+# u is defined at p
+defPU(p:P0,u:U0) input
+defPG(p:P0,f:F0) input
+defPE(p:P0,e:E0) input
+
+# u defined at p2 flows out from p
+outPU(p:P0,p2:P1,u:U0) output
+outPG(p:P0,p2:P1,f:F0) output
+outPE(p:P0,p2:P1,e:E0) output
+
+# u defined at p2 flows into p
+inPU(p:P0,p2:P1,u:U0) output
+inPG(p:P0,p2:P1,f:F0) output
+inPE(p:P0,p2:P1,e:E0) output
+
+# PPReachingDef(p1:P0,p2:P1) means there is data dependency from p1 to p2
+# This is the case where something defined by a program point p1 is used by another program point p2
+# XPReachingDef(x:X0,p:P0) means there is data dependency from x to p2
+# This is the case where something defined by actual-out or formal-in (x) is used by a program point p
+# PXReachingDef(p:P0,x:X0) means there is data dependency from p1 to x
+# This is the case where something defined by program point P (p) is used by actual-in or formal-out (x)
+# XXReachingDef(x1:X0,x2:X1) means there is data dependency from x1 to x2
+# This is the case where something defined by actual-out or formal-in (x1) is used by actual-in or formal-out (x2)
+PPReachingDef(p1:P0,p2:P1) output
+XPReachingDef(x:X0,p:P0) output
+PXReachingDef(p:P0,x:X0) output
+XXReachingDef(x1:X0,x2:X1) output
+
+XMayAlias(x:X,p:P,e:E) output
+
+###
+# Constraints
+###
+
+outPU(p,p2,u) :- p=p2, defPU(p,u).
+outPU(p,p2,u) :- inPU(p,p2,u), !defPU(p,u).
+outPG(p,p2,f) :- p=p2, defPG(p,f).
+outPG(p,p2,f) :- inPG(p,p2,f), !defPG(p,f).
+outPE(p,p2,e) :- p=p2, defPE(p,e).
+outPE(p,p2,e) :- inPE(p,p2,e).
+
+inPU(p,p2,u) :- outPU(p3,p2,u), PP(p3,p).
+inPG(p,p2,f) :- outPG(p3,p2,f), PP(p3,p).
+inPE(p,p2,e) :- outPE(p3,p2,e), PP(p3,p).
+
+PPReachingDef(p1,p2) :- inPU(p2,p1,u), nonCallRefPU(p2,u).
+PPReachingDef(p1,p2) :- inPG(p2,p1,f), nonCallRefPG(p2,f).
+PPReachingDef(p1,p2) :- inPE(p2,p1,e), nonCallRefPE(p2,e).
+
+XPReachingDef(x,p) :- inPU(p,p2,u), nonCallRefPU(p,u), formalInOrActualOutXPU(x,p2,u).
+XPReachingDef(x,p) :- inPG(p,p2,f), nonCallRefPG(p,f), formalInOrActualOutXPG(x,p2,f).
+XPReachingDef(x,p) :- inPE(p,p2,e), nonCallRefPE(p,e), formalInOrActualOutXPE(x,p2,e).
+
+PXReachingDef(p,x) :- inPU(p2,p,u), actualInOrFormalOutXPU(x,p2,u).
+PXReachingDef(p,x) :- inPG(p2,p,f), actualInOrFormalOutXPG(x,p2,f).
+#PXReachingDef(p,x) :- inPE(p2,p,e), actualInOrFormalOutXPE(x,p2,e2), mayAlias(e,e2).
+PXReachingDef(p,x) :- inPE(p2,p,e), XMayAlias(x,p2,e).
+
+XXReachingDef(x1,x2) :- inPU(p2,p,u), formalInOrActualOutXPU(x1,p,u), actualInOrFormalOutXPU(x2,p2,u).
+XXReachingDef(x1,x2) :- inPG(p2,p,f), formalInOrActualOutXPG(x1,p,f), actualInOrFormalOutXPG(x2,p2,f).
+XXReachingDef(x1,x2) :- inPE(p2,p,e), formalInOrActualOutXPE(x1,p,e), XMayAlias(x2,p2,e).
+
+XMayAlias(x2,p2,e) :- actualInOrFormalOutXPE(x2,p2,e2), mayAlias(e,e2).
