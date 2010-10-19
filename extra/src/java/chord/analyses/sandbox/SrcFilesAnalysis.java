@@ -60,7 +60,8 @@ public class SrcFilesAnalysis extends JavaAnalysis {
 			if (bc != null) {
 				numBytecodes += bc.length;
 				System.out.println("METHOD: " + m + " " + bc.length);
-			}
+			} else	
+				System.out.println("METHOD: " + m + " 0");
 			jq_Class c = m.getDeclaringClass();
 			if (seenClasses.add(c)) {
 				if (c.getName().contains("$"))
