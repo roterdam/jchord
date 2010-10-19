@@ -62,6 +62,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	// having index e in domain E is visited during the execution
 	private boolean[] accE;
 
+	private boolean[] accH;
+
     // escE[e] == true iff instance field/array deref site having
 	// index e in domain E is thread-escaping
 	private boolean[] escE;
@@ -116,6 +118,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		accE = new boolean[numE];
 		escE = new boolean[numE];
 		locEH = new IntArraySet[numE];
+		accH = new boolean[numH];
 		ProgramRel relCheckExcludedE =
 			(ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
 		relCheckExcludedE.load();
@@ -140,6 +143,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void doneAllPasses() {
+        int numAccH = 0;
+        for (int h = 0; h < numH; h++) {
+            if (accH[h]) numAccH++;
+        }
+        System.out.println("numAccH: " + numAccH);
+
 		ProgramRel relAccE  = (ProgramRel) ClassicProject.g().getTrgt("accE");
 		ProgramRel relEscE  = (ProgramRel) ClassicProject.g().getTrgt("escE");
 		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("locEH");
@@ -202,6 +211,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		assert (!objToFldObjsInv.containsKey(o));
 		assert (!objToHid.containsKey(o));
 		if (h >= 0) {
+			accH[h] = true;
 			objToHid.put(o, h);
 		}
 	}

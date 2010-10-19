@@ -48,7 +48,7 @@ import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.analyses.alias.ICICG;
-import chord.analyses.alias.ThrOblAbbrCICGAnalysis;
+import chord.analyses.alias.CICGAnalysis;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
@@ -254,8 +254,8 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	@Override
 	public ICICG getCallGraph() {
 		if (cicg == null) {
-        	ThrOblAbbrCICGAnalysis cicgAnalysis =
-				(ThrOblAbbrCICGAnalysis) ClassicProject.g().getTrgt("throbl-abbr-cicg-java");
+        	CICGAnalysis cicgAnalysis =
+				(CICGAnalysis) ClassicProject.g().getTrgt("cicg-java");
 			ClassicProject.g().runTask(cicgAnalysis);
 			cicg = cicgAnalysis.getCallGraph();
 		}
@@ -264,7 +264,8 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 	// m is either the main method or the thread root method
 	private Edge getRootPathEdge(jq_Method m) {
-		assert (m == mainMethod || m == threadStartMethod);
+		assert (m == mainMethod || m == threadStartMethod ||
+			m.getName().toString().equals("<clinit>"));
 		int n = methToNumVars.get(m);
 		Obj[] env = new Obj[n];
 		for (int i = 0; i < n; i++)
@@ -281,13 +282,16 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Set<Pair<Location, Edge>> getInitPathEdges() {
+		Set<jq_Method> roots = cicg.getRoots();
 		Set<Pair<Location, Edge>> initPEs =
-			new ArraySet<Pair<Location, Edge>>(1);
-		Edge pe = getRootPathEdge(mainMethod);
-       	BasicBlock bb = mainMethod.getCFG().entry();
-		Location loc = new Location(mainMethod, bb, -1, null);
-		Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
-		initPEs.add(pair);
+			new ArraySet<Pair<Location, Edge>>(roots.size());
+		for (jq_Method m : roots) {
+			Edge pe = getRootPathEdge(m);
+			BasicBlock bb = m.getCFG().entry();
+			Location loc = new Location(m, bb, -1, null);
+			Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
+			initPEs.add(pair);
+		}
 		return initPEs;
 	}
 
