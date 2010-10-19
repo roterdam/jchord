@@ -57,7 +57,6 @@ public class CoreInstrumentor extends ExprEditor {
 	 *			map of (key, value) pairs.
 	 */
 	public CoreInstrumentor(Map<String, String> argsMap) {
-		assert (argsMap != null);
 		this.argsMap = argsMap;
 		scopeExcludeAry = Config.scopeExcludeAry;
 		verbose = Config.verbose;

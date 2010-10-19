@@ -43,7 +43,6 @@ public final class OfflineTransformer {
     private final String bootClassesDirName;
     private final String userClassesDirName;
 	private final JavassistPool pool;
-
     private final CoreInstrumentor instrumentor;
 
 	public OfflineTransformer(CoreInstrumentor instr) {
@@ -89,7 +88,7 @@ public final class OfflineTransformer {
 		if (Config.verbose > 1) Messages.log(INSTR_FINISHED);
 	}
 
-	private String getOutDir(String cName) {
+	public String getOutDir(String cName) {
         String rName = pool.getResource(cName);
         if (rName == null) {
             Messages.log(CLASS_NOT_FOUND, cName);
@@ -101,6 +100,22 @@ public final class OfflineTransformer {
             return userClassesDirName;
 		Messages.log(CLASS_NOT_BOOT_NOR_USER, cName, rName);
 		return null;
+	}
+
+	public String getBootClassesDirName() {
+		return bootClassesDirName;
+	}
+
+	public String getUserClassesDirName() {
+		return userClassesDirName;
+	}
+
+	public JavassistPool getPool() {
+		return pool;
+	}
+
+	public CoreInstrumentor getInstrumentor() {
+		return instrumentor;
 	}
 }
 
