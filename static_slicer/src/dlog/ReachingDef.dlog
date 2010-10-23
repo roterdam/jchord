@@ -101,7 +101,6 @@ XPReachingDef(x,p) :- inPE(p,p2,e), nonCallRefPE(p,e), formalInOrActualOutXPE(x,
 
 PXReachingDef(p,x) :- inPU(p2,p,u), actualInOrFormalOutXPU(x,p2,u).
 PXReachingDef(p,x) :- inPG(p2,p,f), actualInOrFormalOutXPG(x,p2,f).
-#PXReachingDef(p,x) :- inPE(p2,p,e), actualInOrFormalOutXPE(x,p2,e2), mayAlias(e,e2).
 PXReachingDef(p,x) :- inPE(p2,p,e), XMayAlias(x,p2,e).
 
 XXReachingDef(x1,x2) :- inPU(p2,p,u), formalInOrActualOutXPU(x1,p,u), actualInOrFormalOutXPU(x2,p2,u).
