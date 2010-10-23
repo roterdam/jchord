@@ -30,7 +30,7 @@
 		          Optional properties:
 		          - max.heap   (default=2048m)
 		          - max.tuples (default=1000)
-		          - verbose    ([0..5]; default=2)
+		          - verbose    ([0..6]; default=4)
 		debug     Run bddbddb's interactive interpreter
 		          Required properties:
 		          - work.dir   (dir containing input/output BDD files)
@@ -38,7 +38,7 @@
 		          Optional properties:
 		          - max.heap   (default=2048m)
 		          - max.tuples (default=1000)
-		          - verbose    ([0..5]; default=2)
+		          - verbose    ([0..6]; default=4)
 		javadoc   Generate javadoc for Chord's Java source code
 		htmldoc   Generate HTML user guide (needs latex2html)
 		pdfdoc    Generate PDF user guide (needs pdflatex)
@@ -353,6 +353,7 @@
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
+		<property name="verbose" value="4"/>
 		<java classname="net.sf.bddbddb.Solver"
 				fork="true" failonerror="true" maxmemory="${max.heap}"
 				classpath="${chord.bddbddb.class.path}">
@@ -369,6 +370,7 @@
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
+		<property name="verbose" value="4"/>
 		<java classname="net.sf.bddbddb.Interactive"
 				fork="true" failonerror="true" maxmemory="${max.heap}"
 				classpath="${chord.bddbddb.class.path}">
