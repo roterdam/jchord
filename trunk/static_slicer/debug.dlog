@@ -83,7 +83,7 @@ inPG(p:P0,p2:P1,f:F0) input
 inPE(p:P0,p2:P1,e:E0) input
 
 PPReachingDef(p1:P0,p2:P1) input
-XPReachingDef(x:X0,p2:P1) input
+XPReachingDef(x:X0,p2:P0) input
 PXReachingDef(p1:P0,x:X0) input
 XXReachingDef(x1:X0,x2:X1) input
 
