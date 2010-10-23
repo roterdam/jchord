@@ -96,16 +96,8 @@ public class MantisInstrumentor extends CoreInstrumentor {
 			for (int i = 0; i < n; i++) {
 				Quad q = bb.getQuad(i);
 				Operator op = q.getOperator();
-				if (op instanceof IntIfCmp) {
-/*
-					BasicBlock target = IntIfCmp.getTarget(q).getTarget();
-					List.BasicBlock succs = bb.getSuccessors();
-					int n = succs.size();
-					assert (n == 2) : " Basic block " + bb + " in method " + meth +
-						" has " + n + " successors; expected 2";
-*/
+				if (op instanceof IntIfCmp)
 					generateIntIfCmpInstr(q);
-				}
            }
 		}
 		super.edit(method);
@@ -118,8 +110,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		String befFldName = fldBaseName + "_bef";
 		String aftFldName = fldBaseName + "_aft";
 		String javaPos = "(" + q.toJavaLocStr() + ")";
-		fldInfos.add(new FldInfo(befFldName, javaPos));
-		fldInfos.add(new FldInfo(aftFldName, javaPos));
+		fldInfos.add(new FldInfo(FldKind.CTRL, fldBaseName, javaPos));
 		CtField befFld = CtField.make("public static int " + befFldName + ";", currentClass);
 		CtField aftFld = CtField.make("public static int " + aftFldName + ";", currentClass);
 		currentClass.addField(befFld);
@@ -153,8 +144,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		String truFldName = fldBaseName + "_true";
 		String flsFldName = fldBaseName + "_false";
 		String javaPos = getJavaPos(e);
-		fldInfos.add(new FldInfo(truFldName, javaPos));
-		fldInfos.add(new FldInfo(flsFldName, javaPos));
+		fldInfos.add(new FldInfo(FldKind.DATA_BOOL, fldBaseName, javaPos));
 		CtField truFld = CtField.make("public static int " + truFldName + ";", currentClass);
 		CtField flsFld = CtField.make("public static int " + flsFldName + ";", currentClass);
 		currentClass.addField(truFld);
@@ -164,12 +154,11 @@ public class MantisInstrumentor extends CoreInstrumentor {
 	}
 
 	private String getLongInvkInstr(MethodCall e) throws CannotCompileException {
-		String fldBaseName = getBaseName(e);
-		String sumFldName = fldBaseName + "_long_sum";
-		String frqFldName = fldBaseName + "_long_freq";
+		String fldBaseName = getBaseName(e) + "_long";
+		String sumFldName = fldBaseName + "_sum";
+		String frqFldName = fldBaseName + "_freq";
 		String javaPos = getJavaPos(e);
-		fldInfos.add(new FldInfo(sumFldName, javaPos));
-		fldInfos.add(new FldInfo(frqFldName, javaPos));
+		fldInfos.add(new FldInfo(FldKind.DATA_LONG, fldBaseName, javaPos));
 		CtField sumFld = CtField.make("public static long " + sumFldName + ";", currentClass);
 		CtField frqFld = CtField.make("public static int  " + frqFldName + ";", currentClass);
 		currentClass.addField(sumFld);
@@ -179,12 +168,11 @@ public class MantisInstrumentor extends CoreInstrumentor {
 	}
 
 	private String getDoubleInvkInstr(MethodCall e) throws CannotCompileException {
-		String fldBaseName = getBaseName(e);
-		String sumFldName = fldBaseName + "_double_sum";
-		String frqFldName = fldBaseName + "_double_freq";
+		String fldBaseName = getBaseName(e) + "_double";
+		String sumFldName = fldBaseName + "_sum";
+		String frqFldName = fldBaseName + "_freq";
 		String javaPos = getJavaPos(e);
-		fldInfos.add(new FldInfo(sumFldName, javaPos));
-		fldInfos.add(new FldInfo(frqFldName, javaPos));
+		fldInfos.add(new FldInfo(FldKind.DATA_DOUBLE, fldBaseName, javaPos));
 		CtField sumFld = CtField.make("public static double " + sumFldName + ";", currentClass);
 		CtField frqFld = CtField.make("public static int " + frqFldName + ";", currentClass);
 		currentClass.addField(sumFld);
