@@ -41,159 +41,100 @@ public class DomX extends ProgramDom<Trio<Object,Inst,Integer>> {
 	private static Integer ZERO = new Integer(0);
 	private static Integer ONE = new Integer(1);
 
-	public void fill() {
-		DomI domI = (DomI) ClassicProject.g().getTrgt("I");
-		DomM domM = (DomM) ClassicProject.g().getTrgt("M");
-		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
-		DomU domU = (DomU) ClassicProject.g().getTrgt("U");
+	private DomI domI;
+	private DomM domM;
+	private DomE domE;
+	private DomU domU;
 
+	private HashMap<Integer, HashSet<Integer>> modsMap;
+	private HashMap<Integer, HashSet<Integer>> refsMap;
+	private int numFormalIn, numFormalOut, numActualIn, numActualOut;
+
+	public void fill() {
+		domI = (DomI) ClassicProject.g().getTrgt("I");
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		domE = (DomE) ClassicProject.g().getTrgt("E");
+		domU = (DomU) ClassicProject.g().getTrgt("U");
+
+		//////////
+
+		buildModsMap();
+		buildRefsMap();
+		System.out.println("Number of formal-in:  " + numFormalIn );
+		System.out.println("Number of formal-out: " + numFormalOut);
+
+		//////////
+
+		System.out.println("Start searching Actual-in/out for static field and instance fields");
+		long starttime = System.currentTimeMillis();
 		ProgramRel relIM = (ProgramRel) ClassicProject.g().getTrgt("IM");
 		relIM.load();		
+		int sizeIM = relIM.size(), done = 0, fivePercents = sizeIM/20 + 1;		
+		System.out.println("rel IM size: " + sizeIM);
 		IntPairIterable tuplesIM = relIM.getAry2IntTuples();
-		
-		ProgramRel relMods = (ProgramRel) ClassicProject.g().getTrgt("mods");			
-		relMods.load();
-		
-		ProgramRel relRefs = (ProgramRel) ClassicProject.g().getTrgt("refs");
-		relRefs.load();
-		
-		int sizeIM = relIM.size();
-		int done = 0;
-		int fivePercents = sizeIM/20 + 1;		
-		System.out.println("rel IM size : " + sizeIM + ", rel mods size : " + relMods.size() + ", rel refs size : " + relRefs.size());
-				
-		HashMap<Integer,HashSet<Integer>> mapMods = new HashMap<Integer,HashSet<Integer>>();
-		HashMap<Integer,HashSet<Integer>> mapRefs = new HashMap<Integer,HashSet<Integer>>();
-		int numFormalIn = 0;
-		int numFormalOut = 0;
-		HashSet<Integer> set = null;
-		IntPairIterable tuplesMods = relMods.getAry2IntTuples();
-		System.out.println("Start searching relation mods for Formal-in/out");
-		
-		for(IntPair tupleMods : tuplesMods){
-			int mIdxMods = tupleMods.idx0;
-			int eIdxMods = tupleMods.idx1;	
-			if(mapMods.containsKey(mIdxMods)){
-				set = mapMods.get(mIdxMods);
-			} else {
-				set = new HashSet<Integer>();
-				mapMods.put(mIdxMods, set);
-			}			
-			set.add(eIdxMods);
-			
-			Quad q = domE.get(eIdxMods);
-			Operator operator = q.getOperator();
-			if(operator instanceof Operator.Putstatic){
-				// formal-out for static field f modified in this method
-				jq_Field f = Operator.Putstatic.getField(q).getField();			
-				getOrAdd(new Trio<Object,Inst,Integer>(f, domM.get(mIdxMods).getCFG().exit(),ONE));
-				numFormalOut++;
-				// for static fields, we also create formal-in to handle the case where
-				// the static field may or may not be modified by the called method
-				getOrAdd(new Trio<Object,Inst,Integer>(f, domM.get(mIdxMods).getCFG().entry(),ZERO));
-				numFormalIn++;
-			} else if (operator instanceof Operator.Putfield || operator instanceof Operator.AStore){
-				// formal-out for instance field or array written in this method				
-				getOrAdd(new Trio<Object,Inst,Integer>(q, domM.get(mIdxMods).getCFG().exit(), ONE));
-				numFormalOut++;
-			}
-		}
-				
-		System.out.println("Start searching relation refs for Formal-in");
-		IntPairIterable tuplesRefs = relRefs.getAry2IntTuples();
-		
-		for(IntPair tupleRefs : tuplesRefs){
-			int mIdxRefs = tupleRefs.idx0;
-			int eIdxRefs = tupleRefs.idx1;			
-			if(mapRefs.containsKey(mIdxRefs)){
-				set = mapRefs.get(mIdxRefs);
-			} else {
-				set = new HashSet<Integer>();
-				mapRefs.put(mIdxRefs, set);
-			}			
-			set.add(eIdxRefs);
-			
-			Quad q = domE.get(eIdxRefs);
-			Operator operator = q.getOperator();
-			if(operator instanceof Operator.Getstatic){
-				// formal-in for static field f modified in this method
-				jq_Field f = Operator.Putstatic.getField(q).getField();
-				getOrAdd(new Trio<Object,Inst,Integer>(f, domM.get(mIdxRefs).getCFG().entry(), ZERO));
-				numFormalIn++;
-			} else if (operator instanceof Operator.Getfield || operator instanceof Operator.ALoad){
-				// formal-in for instance field or array read in this method
-				getOrAdd(new Trio<Object,Inst,Integer>(q, domM.get(mIdxRefs).getCFG().entry(), ZERO));
-				numFormalIn++;
-			}
-		}
-		System.out.println("Number of formal-in : " + numFormalIn);
-		System.out.println("Number of formal-out : " + numFormalOut);
-				
-		System.out.println("Start searching Actual-in/out for static field and instance fields");
-		int numActualIn = 0, numActualOut = 0;
-		long starttime = System.currentTimeMillis();
-		for(IntPair tupleIM : tuplesIM){
-			int iIdxIM = tupleIM.idx0;
-			int mIdxIM = tupleIM.idx1;
-			
-			HashSet<Integer> setE = mapMods.get(mIdxIM);
-			if(setE != null){
-				for(Integer eIdxMods : setE){
-					Quad q = domE.get(eIdxMods);
-					Operator operator = q.getOperator();
-					if(operator instanceof Operator.Putstatic){
-						// actual-out for static field f modified in this method
+		for (IntPair tuple : tuplesIM) {
+			int iIdx = tuple.idx0;
+			int mIdx = tuple.idx1;
+			HashSet<Integer> modE = modsMap.get(mIdx);
+			if (modE != null) {
+				for (Integer eIdx : modE) {
+					Quad q = domE.get(eIdx);
+					Operator op = q.getOperator();
+					if (op instanceof Operator.Putstatic) {
+						// actual-out for static field f written in this method
 						jq_Field f = Operator.Putstatic.getField(q).getField();
-						getOrAdd(new Trio<Object,Inst,Integer>(f, domI.get(iIdxIM), ONE));
+						getOrAdd(new Trio<Object,Inst,Integer>(f, domI.get(iIdx), ONE));
 						numActualOut++;
-						// actual-in for static field f modified in this method
-						getOrAdd(new Trio<Object,Inst,Integer>(f, domI.get(iIdxIM), ZERO));
+						// actual-in for static field f written in this method
+						getOrAdd(new Trio<Object,Inst,Integer>(f, domI.get(iIdx), ZERO));
 						numActualIn++;
-					} else if (operator instanceof Operator.Putfield || operator instanceof Operator.AStore){
+					} else {
+						assert (op instanceof Operator.Putfield || op instanceof Operator.AStore);
 						// actual-out for instance field or array written in this method
-						getOrAdd(new Trio<Object,Inst,Integer>(q, domI.get(iIdxIM), ONE));
+						getOrAdd(new Trio<Object,Inst,Integer>(q, domI.get(iIdx), ONE));
 						numActualOut++;
 					}					
 				}
 			}
-			
-			setE = mapRefs.get(mIdxIM);
-			if(setE != null){
-				for(Integer eIdxRefs : setE){
-					Quad q = domE.get(eIdxRefs);
-					Operator operator = q.getOperator();
-					if(operator instanceof Operator.Getstatic){
-						// actual-in for static field f modified in this method
-						jq_Field f = Operator.Putstatic.getField(q).getField();
-						getOrAdd(new Trio<Object,Inst,Integer>(f, domI.get(iIdxIM), ZERO));
+			HashSet<Integer> refE = refsMap.get(mIdx);
+			if (refE != null) {
+				for (Integer eIdx : refE) {
+					Quad q = domE.get(eIdx);
+					Operator op = q.getOperator();
+					if (op instanceof Operator.Getstatic) {
+						// actual-in for static field f read in this method
+						jq_Field f = Operator.Getstatic.getField(q).getField();
+						getOrAdd(new Trio<Object,Inst,Integer>(f, domI.get(iIdx), ZERO));
 						numActualIn++;
-					} else if (operator instanceof Operator.Getfield || operator instanceof Operator.ALoad){
+					} else {
+						assert (op instanceof Operator.Getfield || op instanceof Operator.ALoad);
 						// actual-in for instance field or array read in this method
-						getOrAdd(new Trio<Object,Inst,Integer>(q, domI.get(iIdxIM), ZERO));
+						getOrAdd(new Trio<Object,Inst,Integer>(q, domI.get(iIdx), ZERO));
 						numActualIn++;
 					}	
 				}
 			}
-			
 			done++;
-			if(done%fivePercents == 0){
+			if (done%fivePercents == 0) {
 				long time = System.currentTimeMillis() - starttime;
 				System.out.println(((double)done/(double)sizeIM)*100 + " % done taking " + time + " ms.");
-				//starttime = System.currentTimeMillis();
 			}
 		}
+
+		modsMap.clear();
+		refsMap.clear();
+
 		System.out.println("End searching Actual-in/out for static field and instance fields");
-		System.out.println("Number of actual-in : " + numActualIn);
-		System.out.println("Number of actual-out : " + numActualOut);
-		mapMods.clear();
-		mapRefs.clear();
-		if(set != null) set.clear();
-				
+		System.out.println("Number of actual-in : " + numActualIn );
+		System.out.println("Number of actual-out: " + numActualOut);
+
+		//////////
+
 		// actual-in for registers used as parameters
 		ProgramRel relInvkArg = (ProgramRel) ClassicProject.g().getTrgt("invkArg");
 		relInvkArg.load();
 		IntTrioIterable tuplesInvkArg = relInvkArg.getAry3IntTuples();
-		for(IntTrio tuple : tuplesInvkArg){
+		for (IntTrio tuple : tuplesInvkArg) {
 			int iIdx = tuple.idx0;
 			int uIdx = tuple.idx1;
 			Register r = domU.get(uIdx);
@@ -204,7 +145,7 @@ public class DomX extends ProgramDom<Trio<Object,Inst,Integer>> {
 		ProgramRel relMArg = (ProgramRel) ClassicProject.g().getTrgt("MArg");
 		relMArg.load();
 		IntTrioIterable tuplesMArg = relMArg.getAry3IntTuples();
-		for(IntTrio tuple : tuplesMArg){
+		for (IntTrio tuple : tuplesMArg) {
 			int mIdx = tuple.idx0;
 			int uIdx = tuple.idx1;
 			Register r = domU.get(uIdx);
@@ -215,7 +156,7 @@ public class DomX extends ProgramDom<Trio<Object,Inst,Integer>> {
 		ProgramRel relInvkRet = (ProgramRel) ClassicProject.g().getTrgt("invkRet");
 		relInvkRet.load();
 		IntPairIterable tuplesInvkRet = relInvkRet.getAry2IntTuples();
-		for(IntPair tuple : tuplesInvkRet){
+		for (IntPair tuple : tuplesInvkRet) {
 			int iIdx = tuple.idx0;
 			int uIdx = tuple.idx1;
 			Register r = domU.get(uIdx);
@@ -226,7 +167,7 @@ public class DomX extends ProgramDom<Trio<Object,Inst,Integer>> {
 		ProgramRel relMRet = (ProgramRel) ClassicProject.g().getTrgt("MRet");
 		relMRet.load();
 		IntPairIterable tuplesMRet = relMRet.getAry2IntTuples();
-		for(IntPair tuple : tuplesMRet){
+		for (IntPair tuple : tuplesMRet) {
 			int mIdx = tuple.idx0;
 			int uIdx = tuple.idx1;
 			Register r = domU.get(uIdx);
@@ -235,10 +176,84 @@ public class DomX extends ProgramDom<Trio<Object,Inst,Integer>> {
 
 	}
 
-	public String toUniqueString(Trio<Object,Inst,Integer> x){
+	// populates modsMap using relation mods, populates domain X with formal-in and formal-out,
+	// and modifies counters numFormalIn and numFormalOut
+	private void buildModsMap() {
+	 	modsMap = new HashMap<Integer, HashSet<Integer>>();
+		System.out.println("Start searching relation mods for Formal-in/out");
+		ProgramRel relMods = (ProgramRel) ClassicProject.g().getTrgt("mods");
+		relMods.load();
+		System.out.println("mods rel size: " + relMods.size());
+		IntPairIterable modsTuples = relMods.getAry2IntTuples();
+		for (IntPair tuple : modsTuples) {
+			int mIdx = tuple.idx0;
+			int eIdx = tuple.idx1;	
+			HashSet<Integer> mods = modsMap.get(mIdx);
+			if (mods == null) {
+				mods = new HashSet<Integer>();
+				modsMap.put(mIdx, mods);
+			}			
+			mods.add(eIdx);
+			Quad q = domE.get(eIdx);
+			Operator op = q.getOperator();
+			if (op instanceof Operator.Putstatic) {
+				// formal-out for static field f modified in this method
+				jq_Field f = Operator.Putstatic.getField(q).getField();			
+				getOrAdd(new Trio<Object,Inst,Integer>(f, domM.get(mIdx).getCFG().exit(), ONE));
+				numFormalOut++;
+				// for static fields, we also create formal-in to handle the case where
+				// the static field may or may not be modified by the called method
+				getOrAdd(new Trio<Object,Inst,Integer>(f, domM.get(mIdx).getCFG().entry(), ZERO));
+				numFormalIn++;
+			} else {
+				assert (op instanceof Operator.Putfield || op instanceof Operator.AStore);
+				// formal-out for instance field or array written in this method				
+				getOrAdd(new Trio<Object,Inst,Integer>(q, domM.get(mIdx).getCFG().exit(), ONE));
+				numFormalOut++;
+			}
+		}
+		relMods.close();
+	}
+
+	// populates refsMap using relation refs, populates domain X with formal-in,
+	// and modifies counter numFormalIn
+	private void buildRefsMap() {	
+		refsMap = new HashMap<Integer, HashSet<Integer>>();
+		System.out.println("Start searching relation refs for Formal-in");
+		ProgramRel relRefs = (ProgramRel) ClassicProject.g().getTrgt("refs");
+		relRefs.load();
+		System.out.println("refs rel size: " + relRefs.size());
+		IntPairIterable refsTuples = relRefs.getAry2IntTuples();
+		for (IntPair tuple : refsTuples) {
+			int mIdx = tuple.idx0;
+			int eIdx = tuple.idx1;			
+			HashSet<Integer> refs = refsMap.get(mIdx);
+			if (refs == null) {
+				refs = new HashSet<Integer>();
+				refsMap.put(mIdx, refs);
+			}			
+			refs.add(eIdx);
+			Quad q = domE.get(eIdx);
+			Operator op = q.getOperator();
+			if (op instanceof Operator.Getstatic) {
+				// formal-in for static field f read in this method
+				jq_Field f = Operator.Getstatic.getField(q).getField();
+				getOrAdd(new Trio<Object,Inst,Integer>(f, domM.get(mIdx).getCFG().entry(), ZERO));
+				numFormalIn++;
+			} else {
+				assert (op instanceof Operator.Getfield || op instanceof Operator.ALoad);
+				// formal-in for instance field or array read in this method
+				getOrAdd(new Trio<Object,Inst,Integer>(q, domM.get(mIdx).getCFG().entry(), ZERO));
+				numFormalIn++;
+			}
+		}
+		relRefs.close();
+	}
+
+	public String toUniqueString(Trio<Object,Inst,Integer> x) {
 		
 		String ret = super.toUniqueString(x);
-		if(x.val1 instanceof BasicBlock){
+		if (x.val1 instanceof BasicBlock) {
 			ret = "<" + x.val0 + ", " + x.val1 + ":" + ((BasicBlock)x.val1).getMethod() + ", " + x.val2 +">";
 		}
 		
