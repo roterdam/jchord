@@ -359,6 +359,7 @@
 				classpath="${chord.bddbddb.class.path}">
 			<sysproperty key="java.library.path" file="${lib.home}"/>
 			<sysproperty key="basedir" file="${work.dir}"/>
+			<sysproperty key="verbose" value="${verbose}"/>
 			<syspropertyset>
 				<propertyref builtin="commandline"/>
 			</syspropertyset>
@@ -376,6 +377,7 @@
 				classpath="${chord.bddbddb.class.path}">
 			<sysproperty key="java.library.path" file="${lib.home}"/>
 			<sysproperty key="basedir" file="${work.dir}"/>
+			<sysproperty key="verbose" value="${verbose}"/>
 			<syspropertyset>
 				<propertyref builtin="commandline"/>
 			</syspropertyset>
