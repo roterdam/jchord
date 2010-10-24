@@ -23,6 +23,7 @@ IM(i:I0,m:M0) input
 MI(m:M0,i:I0) input
 MP(m:M0,p:P0) input
 
+postDomBB(b0:B0,b1:B1) input
 cdepBB(b0:B0,b1:B1) input
 PPCDep(p0:P0,p1:P1) input
 refs(m:M0,e:E0) input
