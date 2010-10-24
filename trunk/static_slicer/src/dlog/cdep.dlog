@@ -14,9 +14,9 @@
 # Relations
 ###
 
-fullPdomBB(b1:B0,b2:B1) input
+postDomBB(b1:B0,b2:B1) input
 succBB(b1:B0,b2:B1) input
-notFullPdomBBorEq(b1:B0,b2:B1)
+notPostDomBBorEq(b1:B0,b2:B1)
 cdepBB(b1:B0,b2:B1) output
 
 ###
@@ -28,8 +28,8 @@ cdepBB(b1:B0,b2:B1) output
 # 2. w postdominates u => w == u
 # Note: currently 2 is: w !postdominates u
 
-notFullPdomBBorEq(w,u) :- !fullPdomBB(w,u).
-#notFullPdomBBorEq(w,u) :- w=u.
+notPostDomBBorEq(w,u) :- !postDomBB(w,u).
+notPostDomBBorEq(w,u) :- w=u.
 
-cdepBB(w,u) :- succBB(u,v), fullPdomBB(w,v), notFullPdomBBorEq(w,u).
+cdepBB(w,u) :- succBB(u,v), postDomBB(w,v), notPostDomBBorEq(w,u).
 
