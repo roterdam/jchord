@@ -13,17 +13,17 @@ import chord.project.analyses.ProgramRel;
  *
  */
 @Chord(
-	name = "MArg",
+	name = "methArg",
 	sign = "M0,U0,Z0:M0_U0_Z0"
 )
-public class RelMArg extends ProgramRel {
+public class RelMethArg extends ProgramRel {
 	public void fill() {
 		DomM domM = (DomM) doms[0];
 		DomU domU = (DomU) doms[1];
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
 			jq_Method m = domM.get(mIdx);
-			if(m.isAbstract()) continue;
+			if (m.isAbstract()) continue;
 			int nArgs = m.getParamTypes().length;
 			RegisterFactory rf = m.getCFG().getRegisterFactory();
 			for (int zIdx=0; zIdx < nArgs; zIdx++) {

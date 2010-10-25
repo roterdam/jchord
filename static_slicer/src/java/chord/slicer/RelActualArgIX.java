@@ -15,15 +15,13 @@ import chord.util.tuple.object.Trio;
  *
  */
 @Chord(
-	name = "actualIn",
+	name = "actualArgIX",
 	sign = "I0,X0:I0_X0"
 )
-public class RelActualIn extends ProgramRel {
+public class RelActualArgIX extends ProgramRel {
 	public void fill() {
 		DomX domX = (DomX)doms[1];
-		Iterator<Trio<Object, Inst, Integer>> iter = domX.iterator();
-		while (iter.hasNext()) {
-			Trio<Object,Inst,Integer> x = iter.next();
+		for (Trio<Object, Inst, Integer> x : domX) {
 			if (x.val2 == 0 && x.val1 instanceof Quad)
 				add(x.val1, x);				
 		}				

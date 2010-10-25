@@ -17,10 +17,10 @@ import chord.project.analyses.ProgramRel;
  *
  */
 @Chord(
-	name = "MRet",
+	name = "methRet",
 	sign = "M0,U0:M0_U0"
 )
-public class RelMRet extends ProgramRel implements IReturnInstVisitor {
+public class RelMethRet extends ProgramRel implements IReturnInstVisitor {
 	private jq_Method ctnrMethod;
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {

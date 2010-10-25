@@ -33,10 +33,10 @@ import joeq.Util.Templates.ListIterator;
  *
  */
 @Chord(
-	name = "SuperInitPP",
+	name = "supInitPP",
 	sign = "P0,P1:P0_P1"
 )
-public class RelSuperInit extends ProgramRel {
+public class RelSupInit extends ProgramRel {
 	private final Set<Quad> superInit = new HashSet<Quad>();
 	private final Set<BasicBlock> visitedBB = new HashSet<BasicBlock>();
 	private jq_Class superClass;

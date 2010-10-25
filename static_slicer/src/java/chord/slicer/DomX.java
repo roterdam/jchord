@@ -35,7 +35,7 @@ import chord.util.tuple.object.Trio;
 
 @Chord(
 		name = "X",
-		consumes = { "I", "M", "E", "U", "mods", "refs", "invkArg", "MArg", "invkRet", "MRet" }
+		consumes = { "I", "M", "E", "U", "mods", "refs", "invkArg", "methArg", "invkRet", "methRet" }
 )
 public class DomX extends ProgramDom<Trio<Object,Inst,Integer>> {
 	private static Integer ZERO = new Integer(0);
@@ -140,17 +140,19 @@ public class DomX extends ProgramDom<Trio<Object,Inst,Integer>> {
 			Register r = domU.get(uIdx);
 			getOrAdd(new Trio<Object,Inst,Integer>(r, domI.get(iIdx), ZERO));        	
 		}
+		relInvkArg.close();
 
 		// formal-in for registers used as arguments
-		ProgramRel relMArg = (ProgramRel) ClassicProject.g().getTrgt("MArg");
-		relMArg.load();
-		IntTrioIterable tuplesMArg = relMArg.getAry3IntTuples();
+		ProgramRel relMethArg = (ProgramRel) ClassicProject.g().getTrgt("methArg");
+		relMethArg.load();
+		IntTrioIterable tuplesMArg = relMethArg.getAry3IntTuples();
 		for (IntTrio tuple : tuplesMArg) {
 			int mIdx = tuple.idx0;
 			int uIdx = tuple.idx1;
 			Register r = domU.get(uIdx);
 			getOrAdd(new Trio<Object,Inst,Integer>(r, domM.get(mIdx).getCFG().entry(), ZERO));      	
 		}
+		relMethArg.close();
 		
 		// actual-out for registers used as return values
 		ProgramRel relInvkRet = (ProgramRel) ClassicProject.g().getTrgt("invkRet");
@@ -162,18 +164,19 @@ public class DomX extends ProgramDom<Trio<Object,Inst,Integer>> {
 			Register r = domU.get(uIdx);
 			getOrAdd(new Trio<Object,Inst,Integer>(r, domI.get(iIdx), ONE));
 		}
+		relInvkRet.close();
 		
 		// formal-out for registers used as return values
-		ProgramRel relMRet = (ProgramRel) ClassicProject.g().getTrgt("MRet");
-		relMRet.load();
-		IntPairIterable tuplesMRet = relMRet.getAry2IntTuples();
-		for (IntPair tuple : tuplesMRet) {
+		ProgramRel relMethRet = (ProgramRel) ClassicProject.g().getTrgt("methRet");
+		relMethRet.load();
+		IntPairIterable tuplesMethRet = relMethRet.getAry2IntTuples();
+		for (IntPair tuple : tuplesMethRet) {
 			int mIdx = tuple.idx0;
 			int uIdx = tuple.idx1;
 			Register r = domU.get(uIdx);
 			getOrAdd(new Trio<Object,Inst,Integer>(r, domM.get(mIdx).getCFG().exit(), ONE));
 		}
-
+		relMethRet.close();
 	}
 
 	// populates modsMap using relation mods, populates domain X with formal-in and formal-out,

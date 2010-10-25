@@ -18,23 +18,20 @@ import chord.project.analyses.ProgramRel;
 		name = "PRefReg",
 		sign = "P0,U0:P0_U0"
 )
-public class RelPRefReg extends ProgramRel{
-
-	public void fill(){
-
+public class RelPRefReg extends ProgramRel {
+	public void fill() {
 		DomP domP = (DomP) doms[0];
-		int sizeDomP = domP.size();
-		for(int j=0; j < sizeDomP; j++){
+		int numP = domP.size();
+		for (int j=0; j < numP; j++) {
 			Inst inst = domP.get(j);
-			if(inst instanceof Quad){
-				Quad q = (Quad)inst;			
-				List.RegisterOperand list = q.getUsedRegisters();
-				int numRegs = list.size();
-				for(int i=0; i < numRegs; i++){
-					RegisterOperand regOper = list.getRegisterOperand(i);
-					if(regOper != null){
-						add(inst, regOper.getRegister());
-					}
+			if (inst instanceof Quad) {
+				Quad q = (Quad) inst;
+				List.RegisterOperand l = q.getUsedRegisters();
+				int numRegs = l.size();
+				for (int i=0; i < numRegs; i++) {
+					RegisterOperand ro = l.getRegisterOperand(i);
+					if (ro != null)
+						add(inst, ro.getRegister());
 				}
 			}
 		}
