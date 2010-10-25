@@ -29,10 +29,10 @@ import joeq.Util.Templates.ListIterator;
  *
  */
 @Chord(
-		name = "NewInitPP",
+		name = "newInitPP",
 		sign = "P0,P1:P0_P1"
 )
-public class RelNewConstructorPP extends ProgramRel implements INewInstVisitor {
+public class RelNewInitPP extends ProgramRel implements INewInstVisitor {
 	private String currentClassName;
 	private jq_Method currentMethod;
 	private boolean processed = false;

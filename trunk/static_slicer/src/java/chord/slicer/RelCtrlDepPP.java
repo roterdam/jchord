@@ -18,21 +18,19 @@ import chord.util.tuple.object.Pair;
  *
  */
 @Chord(
-		name = "PPCDep",
+		name = "ctrlDepPP",
 		sign = "P0,P1:P0_P1",
-		consumes = { "B", "cdepBB", "MPtail" }
+		consumes = { "B", "ctrlDepBB", "MPtail" }
 )
-public class RelPPCDep extends ProgramRel{
+public class RelCtrlDepPP extends ProgramRel {
 	private DomB domB;
-
 	public void fill() {
 		domB = (DomB) ClassicProject.g().getTrgt("B");
 		fill1();
 		fill2();
 	}
-
 	private void fill1() {
-		ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("cdepBB");
+		ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("ctrlDepBB");
 		rel.load();
 		IntPairIterable tuples = rel.getAry2IntTuples();
 		for (IntPair tuple : tuples) {
@@ -51,7 +49,6 @@ public class RelPPCDep extends ProgramRel{
 		}
 		rel.close();
 	}
-
 	private void fill2() {
 		ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("MPtail");
 		rel.load();

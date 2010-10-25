@@ -35,22 +35,22 @@ MPhead(m:M0,p:P0) input
 MPtail(m:M0,p:P0) input
 MP(m:M0,p:P0) input
 PI(p0:P0,i0:I0) input
-MArg(m:M0,u:U0,z:Z0) input 
+methArg(m:M0,u:U0,z:Z0) input 
+methRet(m:M0,u:U0) input
 IM(i:I0,m:M0) input
 invkArg(i:I0,u:U0,z:Z0) input
 invkRet(i:I0,u:U0) input
-MRet(m:M0,u:U0) input
-PPCDep(p0:P0,p1:P1) input
-formalIn(m:M0,x:X0) input
-formalOut(m:M0,x:X0) input
-actualIn(i:I0,x:X0) input
-actualOut(i:I0,x:X0) input
-PPReachingDef(p1:P0,p2:P1) input
-XPReachingDef(x:X0,p2:P0) input
-PXReachingDef(p1:P0,x:X0) input
-XXReachingDef(x1:X0,x2:X1) input
-NewInitPP(p0:P0,p1:P1) input
-SuperInitPP(p0:P0,p1:P1) input
+ctrlDepPP(p0:P0,p1:P1) input
+formalArgMX(m:M0,x:X0) input
+formalRetMX(m:M0,x:X0) input
+actualArgIX(i:I0,x:X0) input
+actualRetIX(i:I0,x:X0) input
+PPDataDep(p1:P0,p2:P1) input
+XPDataDep(x:X0,p2:P0) input
+PXDataDep(p1:P0,x:X0) input
+XXDataDep(x1:X0,x2:X1) input
+newInitPP(p0:P0,p1:P1) input
+supInitPP(p0:P0,p1:P1) input
 
 # control dependency edge from p1 to p2 and from p to x
 PPCtrlDep(p1:P0,p2:P1) output
@@ -71,47 +71,45 @@ actualInOutPair(x1:X0,x2:X1) output
 # summary edge from x1(actual-in) to x2(actual-out) at some call site i
 SummaryEdge(x1:X0,x2:X1) output
 
-actualInE(i:I0,x:X0,e:E0)
-formalInE(m:M0,x:X0,e:E0)
+actualArgE(i:I0,x:X0,e:E0)
+formalArgE(m:M0,x:X0,e:E0)
 formalInToActualOut(x1:X0,x2:X1)
 ###
 # Constraints
 ###
 
-actualInE(i,x,e) :- actualIn(i,x), XE(x,e).
-formalInE(m,x,e) :- formalIn(m,x), XE(x,e).
+actualArgE(i,x,e) :- actualArgIX(i,x), XE(x,e).
+formalArgE(m,x,e) :- formalArgMX(m,x), XE(x,e).
 
-linkageEntry(x1,x2) :- IM(i,m), actualIn(i,x1), formalIn(m,x2), XG(x1,f), XG(x2,f).
-#linkageEntry(x1,x2) :- IM(i,m), actualIn(i,x1), formalIn(m,x2), XE(x1,e), XE(x2,e).
-linkageEntry(x1,x2) :- IM(i,m), actualInE(i,x1,e), formalInE(m,x2,e). 
-linkageEntry(x1,x2) :- IM(i,m), actualIn(i,x1), formalIn(m,x2), XU(x1,u1), invkArg(i,u1,z), XU(x2, u2), MArg(m,u2,z).
+linkageEntry(x1,x2) :- IM(i,m), actualArgIX(i,x1), formalArgMX(m,x2), XG(x1,f), XG(x2,f).
+linkageEntry(x1,x2) :- IM(i,m), actualArgE(i,x1,e), formalArgE(m,x2,e). 
+linkageEntry(x1,x2) :- IM(i,m), actualArgIX(i,x1), formalArgMX(m,x2), XU(x1,u1), invkArg(i,u1,z), XU(x2, u2), methArg(m,u2,z).
  
-linkageExit(x1,x2) :- IM(i,m), formalOut(m,x1), actualOut(i,x2), XG(x1,f), XG(x2,f).
-linkageExit(x1,x2) :- IM(i,m), formalOut(m,x1), actualOut(i,x2), XE(x1,e), XE(x2,e).
-linkageExit(x1,x2) :- IM(i,m), formalOut(m,x1), actualOut(i,x2), XU(x1,u1), invkRet(i,u2), XU(x2,u2), MRet(m,u1).
+linkageExit(x1,x2) :- IM(i,m), formalRetMX(m,x1), actualRetIX(i,x2), XG(x1,f), XG(x2,f).
+linkageExit(x1,x2) :- IM(i,m), formalRetMX(m,x1), actualRetIX(i,x2), XE(x1,e), XE(x2,e).
+linkageExit(x1,x2) :- IM(i,m), formalRetMX(m,x1), actualRetIX(i,x2), XU(x1,u1), invkRet(i,u2), XU(x2,u2), methRet(m,u1).
 
 PPCtrlDep(p1,p2) :- MP(m,p2), MPhead(m,p1).
-PPCtrlDep(p1,p2) :- PPCDep(p2,p1).
-PPCtrlDep(p1,p2) :- NewInitPP(p2,p1).
-PPCtrlDep(p1,p2) :- SuperInitPP(p2,p1).
+PPCtrlDep(p1,p2) :- ctrlDepPP(p2,p1).
+PPCtrlDep(p1,p2) :- newInitPP(p2,p1).
+PPCtrlDep(p1,p2) :- supInitPP(p2,p1).
 
-PXCtrlDep(p,x) :- MPhead(m,p), formalIn(m,x).
-PXCtrlDep(p,x) :- MPhead(m,p), formalOut(m,x).
-PXCtrlDep(p,x) :- MPtail(m,p), formalOut(m,x), XU(x,_).
-PXCtrlDep(p,x) :- PI(p,i), actualIn(i,x).
-PXCtrlDep(p,x) :- PI(p,i), actualOut(i,x).
+PXCtrlDep(p,x) :- MPhead(m,p), formalArgMX(m,x).
+PXCtrlDep(p,x) :- MPhead(m,p), formalRetMX(m,x).
+PXCtrlDep(p,x) :- MPtail(m,p), formalRetMX(m,x), XU(x,_).
+PXCtrlDep(p,x) :- PI(p,i), actualArgIX(i,x).
+PXCtrlDep(p,x) :- PI(p,i), actualRetIX(i,x).
  
-XXPathEdge(x1,x2) :- formalOut(_,x2), x1=x2.
+XXPathEdge(x1,x2) :- formalRetMX(_,x2), x1=x2.
 XXPathEdge(x1,x2) :- XXPathEdge(x,x2), SummaryEdge(x1,x).
-XXPathEdge(x1,x2) :- XXPathEdge(x,x2), XXReachingDef(x1,x).
-XXPathEdge(x1,x2) :- PXPathEdge(p,x2), XPReachingDef(x1,p).
+XXPathEdge(x1,x2) :- XXPathEdge(x,x2), XXDataDep(x1,x).
+XXPathEdge(x1,x2) :- PXPathEdge(p,x2), XPDataDep(x1,p).
 
-PXPathEdge(p,x) :- PXReachingDef(p,x1), XXPathEdge(x1,x).
+PXPathEdge(p,x) :- PXDataDep(p,x1), XXPathEdge(x1,x).
 PXPathEdge(p,x) :- PXCtrlDep(p,x1), XXPathEdge(x1,x).
-PXPathEdge(p,x) :- PPReachingDef(p,p2), PXPathEdge(p2,x).
+PXPathEdge(p,x) :- PPDataDep(p,p2), PXPathEdge(p2,x).
 PXPathEdge(p,x) :- PPCtrlDep(p,p2), PXPathEdge(p2,x).
 
-actualInOutPair(x1,x2) :- actualIn(i,x1), actualOut(i,x2).
-formalInToActualOut(x1,x2) :- formalIn(_,x1), XXPathEdge(x1,x3), linkageExit(x3,x2).
+actualInOutPair(x1,x2) :- actualArgIX(i,x1), actualRetIX(i,x2).
+formalInToActualOut(x1,x2) :- formalArgMX(_,x1), XXPathEdge(x1,x3), linkageExit(x3,x2).
 SummaryEdge(x1,x2) :- actualInOutPair(x1,x2), linkageEntry(x1,x3), formalInToActualOut(x3,x2).
-#SummaryEdge(x1,x2) :- actualInOutPair(x1,x2), linkageEntry(x1,x3), linkageExit(x4,x2), XXPathEdge(x3,x4).

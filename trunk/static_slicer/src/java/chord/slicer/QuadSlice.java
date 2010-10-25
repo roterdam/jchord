@@ -42,20 +42,20 @@ import chord.util.IndexSet;
  */
 @Chord(
 		name="qslice-java",
-		consumes = { "M", "PSlice","MSlice", "SuperInitPP" }
+		consumes = { "M", "PSlice","MSlice", "supInitPP" }
 )
 public class QuadSlice extends JavaAnalysis {
 	ProgramRel relPSlice;
 	ProgramRel relMSlice;
-	ProgramRel relSuperInitPP;
+	ProgramRel relSupInitPP;
 	
 	public void run() {
 		relPSlice = (ProgramRel) ClassicProject.g().getTrgt("PSlice");
 		relPSlice.load();
 		relMSlice = (ProgramRel) ClassicProject.g().getTrgt("MSlice");
 		relMSlice.load();
-		relSuperInitPP = (ProgramRel) ClassicProject.g().getTrgt("SuperInitPP");
-		relSuperInitPP.load();
+		relSupInitPP = (ProgramRel) ClassicProject.g().getTrgt("supInitPP");
+		relSupInitPP.load();
 		DomM domM = (DomM) ClassicProject.g().getTrgt("M");
 		
 		Program program = Program.g();
@@ -132,7 +132,7 @@ public class QuadSlice extends JavaAnalysis {
 			ListIterator.Quad quadIter = bb.iterator();
 			while (quadIter.hasNext()) {
 				Quad q = quadIter.nextQuad();				
-				if (relSuperInitPP.contains(entry,q))
+				if (relSupInitPP.contains(entry,q))
 					return q;				
 			}
 		}

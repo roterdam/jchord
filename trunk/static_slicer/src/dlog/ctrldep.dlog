@@ -4,7 +4,7 @@
 # Licensed under the terms of the New BSD License.
 
 # Author: Mayur Naik (mhn@cs.stanford.edu)
-# name=cdep-dlog
+# name=ctrldep-dlog
 
 .include "B.dom"
 
@@ -17,7 +17,7 @@
 postDomBB(b1:B0,b2:B1) input
 succBB(b1:B0,b2:B1) input
 notPostDomBBorEq(b1:B0,b2:B1)
-cdepBB(b1:B0,b2:B1) output
+ctrlDepBB(b1:B0,b2:B1) output
 
 ###
 # Constraints
@@ -31,5 +31,5 @@ cdepBB(b1:B0,b2:B1) output
 notPostDomBBorEq(w,u) :- !postDomBB(w,u).
 notPostDomBBorEq(w,u) :- w=u.
 
-cdepBB(w,u) :- succBB(u,v), postDomBB(w,v), notPostDomBBorEq(w,u).
+ctrlDepBB(w,u) :- succBB(u,v), postDomBB(w,v), notPostDomBBorEq(w,u).
 
