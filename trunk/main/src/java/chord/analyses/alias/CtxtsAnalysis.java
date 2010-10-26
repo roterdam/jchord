@@ -410,9 +410,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	}
 
 	public void run() {
-		if (percy) {
-			X = Execution.v("adaptive");	
-		}
+		if (percy) X = Execution.v();	
 		init();
 
 		int numV = domV.size();

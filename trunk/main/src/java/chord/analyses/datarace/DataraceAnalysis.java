@@ -118,7 +118,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 	public void run() {
 		if (percy) {
-			X = Execution.v("adaptive");		
+			X = Execution.v();		
 			X.addSaveFiles("inputs.dat", "outputs.dat");		
 			if (X.getBooleanArg("saveStrings", false))		
 				X.addSaveFiles("inputs.strings", "outputs.strings");

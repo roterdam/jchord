@@ -141,7 +141,7 @@ public class Execution {
     String finalPoolPath = System.getProperty("chord."+name+".finalPoolPath");
     if (finalPoolPath != null) {
       String path;
-      for (int i = random.nextInt(10000); new File(path = finalPoolPath+"/"+i+".exec").exists(); i++);
+      for (int i = random.nextInt(1000); new File(path = finalPoolPath+"/"+i+".exec").exists(); i++);
       logs("Copying %s to %s", saveFiles, path);
       if (!new File(path).mkdir()) throw new RuntimeException("Tried to created directory "+path+" but it already exists");
       for (String file : saveFiles)
@@ -189,6 +189,9 @@ public class Execution {
   private String basePath;
 	private PrintWriter logOut;
 
-  public static Execution v(String name) { return singleton != null ? singleton : (singleton = new Execution(name)); }
+  public static Execution v() {
+    if (singleton == null) return singleton = new Execution(System.getProperty("execName"));
+    return singleton;
+  }
   private static Execution singleton;
 }

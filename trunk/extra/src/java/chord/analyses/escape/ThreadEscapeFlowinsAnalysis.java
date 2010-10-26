@@ -16,7 +16,7 @@ import chord.util.Execution;
 // Need to do this in Java to specify which alias analysis task to run.
 @Chord(name="thresc-flowins-java")
 public class ThreadEscapeFlowinsAnalysis extends JavaAnalysis {
-  Execution X = Execution.v("adaptive"); // What CtxtsAnalysis uses
+  Execution X = Execution.v();
 
   int relSize(String name) {
     ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt(name);
@@ -56,11 +56,12 @@ public class ThreadEscapeFlowinsAnalysis extends JavaAnalysis {
 
     X.putOption("useObjectSensitivity", useObjectSensitivity);
 
-    X.putOutput("numEscaping", numEscaping);
-    X.putOutput("numLocal", numLocal);
-    X.putOutput("totalSizeA", sizeA);
-    X.putOutput("totalSizeC", sizeC);
-    X.putOutput("totalSizeV", numVars*sizeC);
+    X.putOutput("numQueries", numEscaping+numLocal);
+    X.putOutput("numProven", numLocal);
+    X.putOutput("absSize", domC.size());
+    //X.putOutput("totalSizeA", sizeA);
+    //X.putOutput("totalSizeC", sizeC);
+    //X.putOutput("totalSizeV", numVars*sizeC);
 
     X.finish(null);
   }
