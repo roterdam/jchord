@@ -40,7 +40,7 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class StaticReflectResolver {
-	private static final boolean DEBUG = false;
+	protected static final boolean DEBUG = false;
 	protected ControlFlowGraph cfg;
 	protected int numArgs;
 	// sets of all forname/newinst call sites
