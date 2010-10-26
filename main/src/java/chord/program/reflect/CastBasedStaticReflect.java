@@ -164,7 +164,8 @@ public class CastBasedStaticReflect extends StaticReflectResolver {
 
       if(allocSites != null && (oldAllocSites == null || !oldAllocSites.contains(allocSites)))  {
         propagatedAReturn = true;
-        System.out.println("method " + returningM + " has reflective return value");
+        if(DEBUG)
+          System.out.println("method " + returningM + " has reflective return value");
         reflectRetMeths.put(returningM, allocSites);
       }
     }
