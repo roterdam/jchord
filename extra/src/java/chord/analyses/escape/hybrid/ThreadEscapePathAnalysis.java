@@ -166,7 +166,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
   public void initAllPasses() {
 		if (percy) {
-      X = Execution.v("hints");	
+      X = Execution.v();	
 	    X.addSaveFiles("hybrid_pathEscE.txt", "hybrid_pathLocE.txt", "hints.txt");
       java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
       options.put("version", 1);

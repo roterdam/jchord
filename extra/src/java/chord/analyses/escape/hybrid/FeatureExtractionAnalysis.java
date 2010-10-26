@@ -258,7 +258,7 @@ public class FeatureExtractionAnalysis extends JavaAnalysis {
   }
 
 	public void run() {
-    X = Execution.v("hints");		
+    X = Execution.v();		
     X.addSaveFiles("hints.txt");
     java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
     options.put("version", 2);

@@ -19,7 +19,7 @@
 .include "C.dom"
 .include "E.dom"
 
-.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2xC3_Z0_E0
+.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2xC3_Z0_E0xE1
 
 ############################################################
 # Relations
@@ -38,6 +38,7 @@ staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 IinvkArg(i:I0,n:Z0,v:V1) input
 MmethArg(m:M0,n:Z0,v:V0) input
+VHfilter(v:V,h:H) input
 
 # Program statements
 MobjValAsgnInst(m:M,l:V,h:H)     input # in m, l = new h
@@ -54,29 +55,30 @@ retIVMV(i:I0,u:V0,m:M0,v:V1) input
 reachableT(t:T) input
 
 ### Java -> Datalog
-CfromMIC(cm:C,m:M,i:I,c:C) input # cm = proj_m(i,c)
-CfromMA(cm:C,m:M,a:C) input # cm = proj_m(a)
-AfromHC(a:C,h:H,c:C) input # abtract object a = proj(h,c)
-EfromVC(e:C,v:V,c:C) input # contextual variable (v,e) = proj(v,c)
+CfromHC(cm:C,h:H,c:C) input
+CfromIC(cm:C,i:I,c:C) input
+HfromC(h:H,c:C) input
 objI(i:I) input # whether to use object sensitivity
-relevantQueryE(e:E) input
+inQuery(e1:E,e2:E) input
 
 # Intermediate relations
 reachableCI(c:C,i:I) output
 reachableCM(c:C,m:M) output
-VEfromVE(v1:V0,e1:C0,v2:V1,e2:C1) output # contextual variable (v1,e1) points to everything that (v2,e2) points to
+VCfromVC(v1:V0,e1:C0,v2:V1,e2:C1) output # contextual variable (v1,e1) points to everything that (v2,e2) points to
 CICM(ci:C,i:I,cm:C,m:M) output # in context ci, call site i can call method m in context cm
-VCA(v:V,c:C,a:C) output # in context c, variable v points to abstract object a
+VAfilter(v:V,a:C) output
 
 ### Datalog -> Java
-VEA(v:V,e:C,a:C) output   # contextual variable (v,e) can point to abstract object a
-FA(f:F,a:C) output        # static field f can point to abstract object a OR a is the this argument of a call to Thread.start()
-AFA(a1:C,f:F,a2:C) output # abstract object a1 can point to abstract object a2 via field f
-escA(a:C) output          # abstract object is escaping
-escE(e:E) output          # query variable points to escaping object
+VCA(v:V,e:C,a:C) output     # contextual variable (v,e) can point to abstract object a
+FA(f:F,a:C) output          # static field f can point to abstract object a OR a is the this argument of a call to Thread.start()
+AFA(a1:C,f:F,a2:C) output   # abstract object a1 can point to abstract object a2 via field f
+escA(a:C) output            # abstract object is escaping
+outQuery(e1:E,e2:E) output  # whether e1=e2 is thread escaping?
 
 ############################################################
 # Constraints
+
+VAfilter(v,a) :- VHfilter(v,h), HfromC(h,a).
 
 # Reachability
 reachableCM(0,0). # main method
@@ -84,28 +86,26 @@ reachableCM(0,m)  :- clinitTM(t,m), reachableT(t). # class initializers
 reachableCM(cm,m) :- CICM(_,_,cm,m).               # target method reachable
 reachableCI(c,i)  :- reachableCM(c,m), MI(m,i).    # call site
 
-# call site i in context ci resolves to method m in context cm
-CICM(ci,i,cm,m) :- !objI(i), reachableCI(ci,i), IM(i,m), CfromMIC(cm,m,i,ci).                                         # call-site-based [NAME=call]
-#CICM(ci,i,cm,m) :- objI(i),  reachableCI(ci,i), IM(i,m), !statIM(i,m), ci=cm.                                         # object-based - instance methods: use "this" [NAME=callI] WORKS
-CICM(ci,i,cm,m) :- objI(i),  reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,a), CfromMA(cm,m,a). # object-based - instance methods: use "this" [NAME=callI]
-CICM(ci,i,cm,m) :- objI(i),  reachableCI(ci,i),           statIM(i,m), ci=cm.                                         # object-based - static methods: copy context [NAME=callS]
+# Inter-procedural (call site i in context ci resolves to method m in context cm)
+CICM(ci,i,cm,m) :- !objI(i), reachableCI(ci,i), IM(i,m), CfromIC(cm,i,ci).                            # call-site-based [NAME=call]
+CICM(ci,i,cm,m) :-  objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,cm). # object-based - instance methods: use "this" [NAME=callI]
+CICM(ci,i,cm,m) :-  objI(i), reachableCI(ci,i),           statIM(i,m), ci=cm.                         # object-based - static methods: copy context [NAME=callS]
 
 # Inter-procedural (connect variables)
-VEfromVE(vm,em,vi,ei) :- argIVMV(i,vi,m,vm), CICM(ci,i,cm,m), EfromVC(em,vm,cm), EfromVC(ei,vi,ci).  # pass in arguments [NAME=arg]
-VEfromVE(vi,ei,vm,em) :- retIVMV(i,vi,m,vm), CICM(ci,i,cm,m), EfromVC(em,vm,cm), EfromVC(ei,vi,ci).  # return arguments [NAME=ret]
-VEA(v,e,a) :- VEfromVE(v,e,vv,ee), VEA(vv,ee,a).  # If vv->a, then v->a
+VCfromVC(vm,cm,vi,ci) :- argIVMV(i,vi,m,vm), CICM(ci,i,cm,m). # pass in arguments [NAME=arg]
+VCfromVC(vi,ci,vm,cm) :- retIVMV(i,vi,m,vm), CICM(ci,i,cm,m). # return arguments [NAME=ret]
+VCA(v,c,a) :- VCfromVC(v,c,vv,cc), VCA(vv,cc,a), VAfilter(v,a). # If vv->a, then v->a
 
 # Intra-procedural statements
-VEA(l,el,a)  :- reachableCM(c,m), MobjValAsgnInst(m,l,h),   EfromVC(el,l,c), AfromHC(a,h,c).           # in context c, l = new h [NAME=new]
-VEA(l,el,a)  :- reachableCM(c,m), MobjVarAsgnInst(m,l,r),   EfromVC(el,l,c), VCA(r,c,a).               # in context c, l = r [NAME=var]
-VEA(l,el,aa) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f), EfromVC(el,l,c), VCA(b,c,a), AFA(a,f,aa).  # in context c, l = b.f [NAME=hr]
-VEA(l,el,a)  :- reachableCM(c,m), MgetStatFldInst(m,l,f),   EfromVC(el,l,c), FA(f,a).                  # in context c, l = STATIC.f [NAME=gr]
-AFA(a,f,aa)  :- reachableCM(c,m), MputInstFldInst(m,b,f,r), VCA(b,c,a), VCA(r,c,aa).                   # in context c, b.f = r [NAME=hw]
-FA(f,a)      :- reachableCM(c,m), MputStatFldInst(m,f,r),   VCA(r,c,a).                                # in context c, STATIC.f = r [NAME=gw]
-FA(0,a)      :- reachableCM(c,1), MmethArg(1,0,v),          VCA(v,c,a).                                # in context c, v.start() (field 0 is null) [NAME=ts]
-VCA(v,c,a)   :- EfromVC(e,v,c), VEA(v,e,a). # Helper: in context c, v points to a
+VCA(l,c,a)  :- reachableCM(c,m), MobjValAsgnInst(m,l,h),   CfromHC(a,h,c).            # in context c, l = new h    [NAME=new]
+VCA(l,c,a)  :- reachableCM(c,m), MobjVarAsgnInst(m,l,r),   VCA(r,c,a), VAfilter(l,a). # in context c, l = r        [NAME=var]
+VCA(l,c,aa) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,aa).   # in context c, l = b.f      [NAME=hr]
+VCA(l,c,a)  :- reachableCM(c,m), MgetStatFldInst(m,l,f),   FA(f,a).                   # in context c, l = STATIC.f [NAME=gr]
+AFA(a,f,aa) :- reachableCM(c,m), MputInstFldInst(m,b,f,r), VCA(b,c,a), VCA(r,c,aa).   # in context c, b.f = r      [NAME=hw]
+FA(f,a)     :- reachableCM(c,m), MputStatFldInst(m,f,r),   VCA(r,c,a).                # in context c, STATIC.f = r [NAME=gw]
 
 ### Queries
 escA(a) :- FA(_,a). # objects (base case)
+escA(a) :- reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a). # in context c, Thread.start() this points to a [NAME=ts]
 escA(a) :- escA(b), AFA(b,_,a). # objects (transitive)
-escE(e) :- relevantQueryE(e), EV(e,v), VCA(v,_,a), escA(a). # queries
+outQuery(e,ee) :- inQuery(e,ee), e=ee, EV(e,v), VCA(v,_,a), escA(a). # queries

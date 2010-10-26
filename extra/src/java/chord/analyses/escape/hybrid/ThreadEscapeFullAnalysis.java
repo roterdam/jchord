@@ -122,7 +122,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	@Override
 	public void run() {
 		if (percy) {
-      X = Execution.v("hints");	
+      X = Execution.v();	
 	    X.addSaveFiles("hybrid_fullEscE.txt", "hybrid_fullLocE.txt");
       java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
       options.put("version", 1);

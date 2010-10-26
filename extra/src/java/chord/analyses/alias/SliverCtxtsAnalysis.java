@@ -11,17 +11,21 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
+import java.net.Socket;
+import java.net.ServerSocket;
 
 import gnu.trove.TIntArrayList;
 import gnu.trove.TIntProcedure;
@@ -73,195 +77,27 @@ import chord.util.tuple.object.Trio;
 
 import gnu.trove.TObjectIntHashMap;
 import gnu.trove.TObjectIntProcedure;
+import static chord.analyses.alias.GlobalInfo.G;
 
-class CtxtVar {
-  public CtxtVar(Register v, Ctxt e) { this.v = v; this.e = e; }
-  public final Register v;
-  public final Ctxt e;
-  public int length() { return 1 + e.length(); }
-  @Override public boolean equals(Object _that) {
-    CtxtVar that = (CtxtVar)_that;
-    return v.equals(that.v) && e.equals(that.e);
-  }
-  @Override public int hashCode() {
-    return v.hashCode() * 37 + e.hashCode();
-  }
-}
+class GlobalInfo {
+  static GlobalInfo G;
 
-class CtxtMeth {
-  public CtxtMeth(jq_Method m, Ctxt e) { this.m = m; this.e = e; }
-  public final jq_Method m;
-  public final Ctxt e;
-  public int length() { return 1 + e.length(); }
-  @Override public boolean equals(Object _that) {
-    CtxtMeth that = (CtxtMeth)_that;
-    return m.equals(that.m) && e.equals(that.e);
-  }
-  @Override public int hashCode() {
-    return m.hashCode() * 37 + e.hashCode();
-  }
-}
+  DomV domV;
+  DomM domM;
+  DomI domI;
+  DomH domH;
+  DomE domE;
 
-/**
- * Performs a refinement-based pointer analysis.
- *
- * A context c [Ctxt] is a chain of allocation/call sites.
- *
- * An abstraction is specified by:
- *  - Sa: set of abstract objects [Ctxt] (allocation site + context)
- *  - Sv: set of contextual variables (variable + context)
- *
- * A sliver is a contextual variable or abstract object.
- *
- * Example:
- *
- * CI1 --[IM]--+--> CM1 --+
- *             |          |
- * CI2 --[IM]--+          +--[MH]--> CH1 --[AFA]--> CH2 <--[VEA]-- V1
- *
- * (INIT) Initialize abstraction to 0-CFA.
- * Iterate:
- *   (COMPUTE_C) Compute C and related relations from current abstraction.
- *   (ANALYSIS) Call Datalog analysis to obtain VEA,AFA.
- *   (PRUNE) Follow VEA pointers forward once and AFA pointers backwards to find relevant abstract objects (abs).
- *   Choose a subset of these slivers which are within a fixed number of hops from something that a query variable points to;
- *   these are the ones we want to refine (hotAbs).
- *   (REFINE) Given the chosen influential slivers, follow IM or HtoM backwards, splitting slivers.
- * (FULL) Set the heap abstraction to be the influential slivers and run the
- * flow-sensitive, context-sensitive full program analysis.
- *
- * For thread-escape, input variables are those whose field is accessed in
- * client code (get these by looking at EV).
- *
- * Example: suppose the input is V1.
- *   1) Abstract object that V1 can reach is CH2; influential slivers: {CH1, CH2}.
- *   2) split CH1 into CH1,I1 and CH1,I2.
- *
- * @author Percy Liang (pliang@cs.berkeley.edu)
- */
-@Chord(
-  name = "sliver-ctxts-java",
-  //produces = { "C", "AH", "CfromMIC", "CfromMA", "AfromHC", "EfromVC", "objI", "relevantQueryE" },
-  produces = { "C", "CfromMIC", "CfromMA", "AfromHC", "EfromVC", "objI", "relevantQueryE" },
-  namesOfTypes = { "C" },
-  types = { DomC.class }
-)
-public class SliverCtxtsAnalysis extends JavaAnalysis {
-  private Execution X;
-
-  static final String initTaskName = "cspa-init-sliver-dlog";
-  static final String analysisTaskName = "cspa-sliver-dlog";
-  static final String relevantAnalysisTaskName = "cspa-sliver-relevant-dlog";
-  static final String transAnalysisTaskName = "cspa-sliver-trans-dlog";
-  static final String epilogueAnalysisTaskName = "cspa-sliver-epilogue-dlog";
-
-  // Immutable inputs
-  private DomV domV;
-  private DomM domM;
-  private DomI domI;
-  private DomH domH;
-  private DomE domE;
-  private ProgramRel relEV;
-
-  // Datalog -> Java
-  private ProgramRel relVEA;
-  private ProgramRel relAFA;
-  private ProgramRel relFA;
-
-  // Java -> Datalog
-  private DomC domC;
-  //private ProgramRel relAH;
-  private ProgramRel relCfromMIC; // call-site-based
-  private ProgramRel relCfromMA; // object-based
-  private ProgramRel relAfromHC;
-  private ProgramRel relEfromVC;
-  private ProgramRel relobjI;
-  private ProgramRel relRelevantQueryE;
-
-  // Canonical
-  Quad _H;
-  Register _V;
-
-  final Ctxt emptyCtxt = new Ctxt(new Quad[0]);
-
-  // Options
-  int verbose;
-  int maxIters;
-  //int maxHintSize;
-  boolean refineA;
-  boolean refineV;
-  boolean useDatalogG;
-  boolean useDatalogR;
-  int initRefinementRadiusA;
-  int initRefinementRadiusV;
-  boolean useObjectSensitivity;
-  boolean departWhenRefine;
-  boolean inspectTransRels;
-
-  IndexMap<Ctxt> globalC = new IndexMap<Ctxt>(); // dom C will change over time, but keep a consistent indexing for comparing across iterations
-
-  // Compute once using 0-CFA
-  Set<Quad> hSet = new HashSet<Quad>();
-  Set<Quad> iSet = new HashSet<Quad>();
-  Set<Register> vSet = new HashSet<Register>();
-  Set<jq_Method> mSet = new HashSet<jq_Method>();
-  HashMap<Quad,List<Quad>> i_this_h = new HashMap<Quad,List<Quad>>(); // i -> this can point to something allocated at h
-  HashMap<Quad,List<jq_Method>> im = new HashMap<Quad,List<jq_Method>>();
-  HashMap<jq_Method,List<Quad>> rev_h2m = new HashMap<jq_Method,List<Quad>>();
-  HashMap<jq_Method,List<Quad>> rev_im = new HashMap<jq_Method,List<Quad>>();
-
-  // Current abstraction
-  Abstraction abs = new Abstraction();
-  int refinementRadiusA; // Maximum number of hops that any candidate is away from a pivot (for abstract objects)
-  int refinementRadiusV; // Maximum number of hops that any candidate is away from a pivot (for contextual variables)
-
-  class Result {
-    int numProven;
-    int absHashCode;
-    String absSummary;
-  }
-  List<Result> results = new ArrayList<Result>();
-
-  // Determine the queries in client code (for thread-escape)
-  public void computedExcludedClasses() {
-    String[] checkExcludedPrefixes = Config.toArray(Config.checkExcludeStr);
-    Program program = Program.g();
-    for (jq_Reference r : program.getClasses()) {
-      String rName = r.getName();
-      for (String prefix : checkExcludedPrefixes) {
-        if (rName.startsWith(prefix))
-          excludedClasses.add(r);
-      }
-    }
-  }
-  private boolean computeStatementIsExcluded(Quad e) {
-    jq_Class c = e.getMethod().getDeclaringClass();
-    return excludedClasses.contains(c);
-  }
-  Set<jq_Reference> excludedClasses = new HashSet<jq_Reference>();
-  List<Query> queries = new ArrayList<Query>();;
-
-  // Helper methods
-  private <T> ArrayList<T> sel0(T x, ProgramRel rel, Object o0) {
-    RelView view = rel.getView();
-    view.selectAndDelete(0, o0);
-    ArrayList<T> list = new ArrayList();
-    for(Object o1 : view.getAry1ValTuples())
-      list.add((T)o1);
-    view.free();
-    return list;
-  }
-  private <T> ArrayList<T> sel1(T x, ProgramRel rel, Object o1) {
-    RelView view = rel.getView();
-    view.selectAndDelete(1, o1);
-    ArrayList<T> list = new ArrayList();
-    for(Object o0 : view.getAry1ValTuples())
-      list.add((T)o0);
-    view.free();
-    return list;
+  public GlobalInfo() {
+    domV = (DomV) ClassicProject.g().getTrgt("V"); ClassicProject.g().runTask(domV);
+    domM = (DomM) ClassicProject.g().getTrgt("M"); ClassicProject.g().runTask(domM);
+    domI = (DomI) ClassicProject.g().getTrgt("I"); ClassicProject.g().runTask(domI);
+    domH = (DomH) ClassicProject.g().getTrgt("H"); ClassicProject.g().runTask(domH);
+    domE = (DomE) ClassicProject.g().getTrgt("E"); ClassicProject.g().runTask(domE);
   }
 
-  private jq_Type h2t(Quad h) {
+  // Helpers for displaying stuff
+  jq_Type h2t(Quad h) {
     Operator op = h.getOperator();
     if (op instanceof New) 
       return New.getType(h).getType();
@@ -272,11 +108,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       return MultiNewArray.getType(h).getType();
     }
   }
-
-  Register e2v(Quad e) {
-    for (Register v : sel0(_V, relEV, e)) return v;
-    return null;
-  }
   String hstrBrief(Quad h) {
     String path = new File(h.toJavaLocStr()).getName();
     return path+"("+h2t(h).shortName()+")";
@@ -286,31 +117,12 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     jq_Method m = InvokeStatic.getMethod(i).getMethod();
     return path+"("+m.getName()+")";
   }
+  String jstrBrief(Quad j) { return isAlloc(j) ? hstrBrief(j) : istrBrief(j); }
   String estrBrief(Quad e) {
     String path = new File(e.toJavaLocStr()).getName();
     Operator op = e.getOperator();
     return path+"("+op+")";
   }
-
-  String qstr(Quad q) { return q.toJavaLocStr()+"("+q.toString()+")"; }
-  String hstr(Quad h) { return String.format("%s[%s]", domH.indexOf(h), qstr(h)); }
-  String istr(Quad i) { return String.format("%s[%s]", domI.indexOf(i), qstr(i)); }
-  String estr(Quad e) { return String.format("%s[%s]", domE.indexOf(e), e.toVerboseStr()); }
-  String vstr(Register v) { return String.format("%s[%s]", domV.indexOf(v), v); }
-  String cstr(Ctxt c) { return cstr(c, true); }
-  String cstr(Ctxt c, boolean showIndex) {
-    StringBuilder buf = new StringBuilder();
-    if (showIndex) buf.append(domC.indexOf(c));
-    buf.append('{');
-    for (int i = 0; i < c.length(); i++) {
-      if (i > 0) buf.append(" | ");
-      Quad q = c.get(i);
-      buf.append(isAlloc(q) ? hstr(q) : istr(q));
-    }
-    buf.append('}');
-    return buf.toString();
-  }
-  String cstrVerbose(Ctxt c) { return cstr(c, false)+(c.length() > 0 ? "_"+c.head().toByteLocStr() : ""); }
   String cstrBrief(Ctxt c) {
     StringBuilder buf = new StringBuilder();
     //buf.append(domC.indexOf(c));
@@ -323,197 +135,261 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     buf.append('}');
     return buf.toString();
   }
-  String fstrBrief(jq_Field f) {
-    return f.getDeclaringClass()+"."+f.getName();
-  }
-  String mestrBrief(CtxtMeth me) {
-    return mstrBrief(me.m)+":"+cstrBrief(me.e);
-  }
-  String vestrBrief(CtxtVar ve) {
-    return vstrBrief(ve.v)+":"+cstrBrief(ve.e);
-  }
-  String vstrBrief(Register v) {
-    return v+"@"+mstrBrief(domV.getMethod(v));
-  }
-  String mstrBrief(jq_Method m) {
-    return m.getDeclaringClass().shortName()+"."+m.getName();
-  }
+  String fstrBrief(jq_Field f) { return f.getDeclaringClass()+"."+f.getName(); }
+  String vstrBrief(Register v) { return v+"@"+mstrBrief(domV.getMethod(v)); }
+  String mstrBrief(jq_Method m) { return m.getDeclaringClass().shortName()+"."+m.getName(); }
 
   boolean isAlloc(Quad q) { return domH.indexOf(q) != -1; }
 
+  String render(Object o) {
+    if (o == null) return "NULL";
+    if (o instanceof String) return (String)o;
+    if (o instanceof Ctxt) return cstrBrief((Ctxt)o);
+    if (o instanceof jq_Field) return fstrBrief((jq_Field)o);
+    if (o instanceof jq_Method) return mstrBrief((jq_Method)o);
+    if (o instanceof Register) return vstrBrief((Register)o);
+    if (o instanceof Quad) {
+      Quad q = (Quad)o;
+      if (domH.indexOf(q) != -1) return hstrBrief(q);
+      if (domI.indexOf(q) != -1) return istrBrief(q);
+      if (domE.indexOf(q) != -1) return estrBrief(q);
+      throw new RuntimeException("Quad not H, I, or E: " + q);
+    }
+    throw new RuntimeException("Unknown object (not abstract object, contextual variable or field: "+o);
+  }
+}
+
+class Query {
+  Quad e1, e2;
+  Query(Quad e1, Quad e2) { this.e1 = e1; this.e2 = e2; }
+  @Override public int hashCode() { return e1.hashCode() * 37 + e2.hashCode(); }
+  @Override public boolean equals(Object _that) {
+    Query that = (Query)_that;
+    return e1.equals(that.e1) && e2.equals(that.e2);
+  }
+}
+
+class Message {
+  boolean returnAbs;
+  Abstraction abs = new Abstraction();
+  Set<Query> queries = new LinkedHashSet<Query>();
+
+  // Format: returnAbs H3,I5,,I8 H3, E4,2 E6,2
+  // CfromJC contains [H3]+[I5,I8] => [H3,I5]
+  @Override public String toString() {
+    StringBuilder buf = new StringBuilder();
+    if (returnAbs) buf.append("returnAbs");
+    for (Pair<Quad,Ctxt> pair : abs.CfromJC.keySet()) {
+      Quad j = pair.val0;
+      Ctxt c = pair.val1;
+      Ctxt d = abs.CfromJC.get(pair);
+      int k = d.length();
+      if (buf.length() > 0) buf.append(' ');
+      buf.append(j2str(j));
+      if (k == 1) buf.append(',');
+      for (int i = 0; i < c.length(); i++) {
+        buf.append(',');
+        buf.append(j2str(c.get(i)));
+        if (k == i+2) buf.append(',');
+      }
+    }
+    for (Query q : queries) {
+      buf.append(' ');
+      buf.append('E');
+      buf.append(G.domE.indexOf(q.e1));
+      buf.append(',');
+      buf.append(G.domE.indexOf(q.e2));
+    }
+    return buf.toString();
+  }
+
+  String j2str(Quad j) { return G.isAlloc(j) ? "H"+G.domH.indexOf(j) : "I"+G.domI.indexOf(j); }
+
+  static Message parse(String line) {
+    Message msg = new Message();
+    for (String t : line.split(" ")) {
+      if (t.equals("returnAbs")) msg.returnAbs = true;
+      else if (t.startsWith("E")) {
+        String[] u = t.substring(1).split(",");
+        Quad e1 = G.domE.get(Integer.parseInt(u[0]));
+        Quad e2 = G.domE.get(Integer.parseInt(u[1]));
+        msg.queries.add(new Query(e1, e2));
+      }
+      else {
+        String[] u = t.split(",");
+        Quad[] js = new Quad[u.length-1];
+        int i = 0;
+        int k = -1;
+        for (String a : u) {
+          if (a.length() == 0) k = i; // cut here
+          else if (a.charAt(0) == 'H')
+            js[i++] = (Quad)G.domH.get(Integer.parseInt(a.substring(1)));
+          else if (a.charAt(0) == 'I')
+            js[i++] = G.domI.get(Integer.parseInt(a.substring(1)));
+          else
+            throw new RuntimeException("Bad: "+a);
+        }
+        assert i == js.length;
+        assert k != -1;
+        Ctxt fullc = new Ctxt(js);
+        msg.abs.CfromJC.put(new Pair(fullc.head(), fullc.tail()), fullc.prefix(k));
+      }
+    }
+    msg.abs.computeS();
+    return msg;
+  }
+}
+
+// A run is an interaction with the static analysis.
+class Run {
+  Message in, out;
+}
+
+// A minimal abstraction for a query that we can learn from.
+// Each scenario corresponds to a query and the set of sites that need to be refined to prove the query.
+// Produced by a sequence of runs.
+class Scenario {
+  Quad e1, e2; // For this query
+  // These sites need to be refined
+  HashSet<Quad> relevantH;
+  HashSet<Quad> relevantI;
+}
+
+class Status {
+  int numProven;
+  int absHashCode;
+  String absSummary;
+}
+
+class Abstraction {
+  @Override public int hashCode() { return S.hashCode(); }
+  @Override public boolean equals(Object _that) {
+    Abstraction that = (Abstraction)_that;
+    return S.equals(that.S);
+  }
+
+  void add(Abstraction that, boolean assertDisjoint) {
+    for (Pair<Quad,Ctxt> pair : that.CfromJC.keySet()) {
+      if (assertDisjoint)
+        assert !CfromJC.containsKey(pair) : pair + " " + CfromJC.get(pair) + " " + that.CfromJC.get(pair);
+      CfromJC.put(pair, that.CfromJC.get(pair));
+    }
+    S.addAll(that.S);
+  }
+
+  void computeS() {
+    S.clear();
+    for (Pair<Quad,Ctxt> pair : CfromJC.keySet()) {
+      Quad j = pair.val0;
+      Ctxt c = pair.val1;
+      Ctxt d = CfromJC.get(pair);
+      S.add(c);
+      S.add(d);
+    }
+  }
+
+  Histogram lengthHistogram(Set<Ctxt> slivers) {
+    Histogram hist = new Histogram();
+    for (Ctxt c : slivers) hist.counts[c.length()]++;
+    return hist;
+  }
+
+  // Extract the sites which are not pruned
+  Set<Quad> inducedSites() {
+    Set<Quad> set = new HashSet<Quad>();
+    for (Pair<Quad,Ctxt> pair : CfromJC.keySet())
+      set.add(pair.val0);
+    return set;
+  }
+
+  @Override public String toString() { return String.format("%s%s", S.size(), lengthHistogram(S)); }
+  int size() { return S.size(); }
+
+  HashMap<Pair<Quad,Ctxt>,Ctxt> CfromJC = new HashMap(); // j, c -> project([j]+c)
+  HashSet<Ctxt> S = new HashSet<Ctxt>(); // Slivers: union of everything in CfromJC
+}
+
+
+/**
+ * Pointer analysis which performs refinement and pruning using slivers.
+ *
+ * A context c [Ctxt] is a chain of allocation/call sites.
+ *
+ * @author Percy Liang (pliang@cs.berkeley.edu)
+ */
+@Chord(
+  name = "sliver-ctxts-java",
+  produces = { "C", "HfromC", "CfromHC", "CfromIC", "objI", "inQuery" },
+  namesOfTypes = { "C" },
+  types = { DomC.class }
+)
+public class SliverCtxtsAnalysis extends JavaAnalysis {
+  private Execution X;
+
+  final Ctxt emptyCtxt = new Ctxt(new Quad[0]);
+
+  // Options
+  int verbose;
+  int maxIters;
+  int initK;
+  boolean useObjectSensitivity;
+  boolean runAlwaysIncludePruned;
+  boolean inspectTransRels;
+  boolean verifyAfterPrune;
+  String masterHost;
+  int masterPort;
+  boolean isWorker() { return masterHost != null; }
+  boolean useWorker;
+  String classifierPath; // Path to classifier
+  boolean useClassifier() { return classifierPath != null; }
+  boolean learnClassifier; // Path to data to collected data
+
+  String analysisTaskName;
+  String initAnalysisTaskName;
+  String relevantAnalysisTaskName;
+  String transAnalysisTaskName;
+
+  // Compute once using 0-CFA
+  Set<Quad> hSet = new HashSet<Quad>();
+  Set<Quad> iSet = new HashSet<Quad>();
+  Set<Quad> jSet = new HashSet<Quad>(); // hSet union iSet
+  HashMap<Quad,List<jq_Method>> jm = new HashMap<Quad,List<jq_Method>>(); // site to methods
+  HashMap<jq_Method,List<Quad>> mj = new HashMap<jq_Method,List<Quad>>(); // method to sites
+  List<Query> allQueries = new ArrayList<Query>();
+
+  List<Status> statuses = new ArrayList<Status>(); // Status of the analysis over iterations of refinement
+  QueryGroup unprovenGroup = new QueryGroup();
+  List<QueryGroup> provenGroups = new ArrayList<QueryGroup>();
+
   ////////////////////////////////////////////////////////////
 
-  class Query {
-    Quad e;
-    boolean proven = false;
-    Abstraction abs = new Abstraction(); // Current abstraction for this query
-
-    Query(Quad e) { this.e = e; }
-  }
-
-  class Abstraction {
-    void clear() {
-      proven = true;
-      Sa.clear();
-      Sv.clear();
-      Sm.clear();
-    }
-
-    @Override public int hashCode() {
-      return (Sa.hashCode() * 37 + Sv.hashCode()) * 3317 + Sm.hashCode();
-    }
-    @Override public boolean equals(Object _that) {
-      Abstraction that = (Abstraction)_that;
-      return Sa.equals(that.Sa) && Sv.equals(that.Sv) && Sm.equals(that.Sm);
-    }
-
-    @Override public String toString() {
-      return String.format("A_%s%s|V_%s%s|M_%s%s",
-          Sa.size(), lengthHistogram(Sa), Sv.size(), lengthHistogram(Sv), Sm.size(), lengthHistogram(Sm));
-    }
-    String size() { return Sa.size()+","+Sv.size()+","+Sm.size(); }
-
-    // Note: we will double count if this is disjoint from that
-    void add(Abstraction that) {
-      proven &= that.proven;
-      Sa.addAll(that.Sa);
-      Sv.addAll(that.Sv);
-      Sm.addAll(that.Sm);
-    }
-
-    // Number of contexts in which variables were analyzed
-    int sizeC() {
-      Set<Ctxt> set = new HashSet<Ctxt>();
-      for (CtxtVar ve : Sv) set.add(ve.e);
-      return set.size();
-    }
-
-    boolean proven = true; // True until proven not true via counterexample
-    HashSet<Ctxt> Sa = new HashSet<Ctxt>(); // Object slivers
-    HashSet<CtxtVar> Sv = new HashSet<CtxtVar>(); // Variable slivers
-    HashSet<CtxtMeth> Sm = new HashSet<CtxtMeth>(); // Method slivers
-  }
-
+  // Initialization to do anything.
   private void init() {
-    X = Execution.v("adaptive");  
+    X = Execution.v();
 
-    // Immutable inputs
-    domV = (DomV) ClassicProject.g().getTrgt("V"); ClassicProject.g().runTask(domV);
-    domM = (DomM) ClassicProject.g().getTrgt("M"); ClassicProject.g().runTask(domM);
-    domI = (DomI) ClassicProject.g().getTrgt("I"); ClassicProject.g().runTask(domI);
-    domH = (DomH) ClassicProject.g().getTrgt("H"); ClassicProject.g().runTask(domH);
-    domE = (DomE) ClassicProject.g().getTrgt("E"); ClassicProject.g().runTask(domE);
-    relEV = (ProgramRel) ClassicProject.g().getTrgt("EV"); ClassicProject.g().runTask(relEV); relEV.load();
+    G = new GlobalInfo();
 
-    // Mutable inputs
-    relVEA = (ProgramRel) ClassicProject.g().getTrgt("VEA");
-    relAFA = (ProgramRel) ClassicProject.g().getTrgt("AFA");
-    relFA = (ProgramRel) ClassicProject.g().getTrgt("FA");
-
-    // Output
-    domC = (DomC) ClassicProject.g().getTrgt("C");
-    //relAH = (ProgramRel) ClassicProject.g().getTrgt("AH");
-    relCfromMIC = (ProgramRel) ClassicProject.g().getTrgt("CfromMIC");
-    relCfromMA = (ProgramRel) ClassicProject.g().getTrgt("CfromMA");
-    relAfromHC = (ProgramRel) ClassicProject.g().getTrgt("AfromHC");
-    relEfromVC = (ProgramRel) ClassicProject.g().getTrgt("EfromVC");
-    relobjI = (ProgramRel) ClassicProject.g().getTrgt("objI");
-    relRelevantQueryE = (ProgramRel) ClassicProject.g().getTrgt("relevantQueryE");
-
-    _H = (Quad)domH.get(1);
-    _V = domV.get(1);
-  }
-
-  void finish() {
-    relEV.close();
-    X.finish(null);
-  }
-
-  public void run() {
-    init();
-
-    this.verbose = X.getIntArg("verbose", 0);
-    this.maxIters = X.getIntArg("maxIters", 1);
-    //this.maxHintSize = X.getIntArg("maxHintSize", 10);
-    this.refineA = X.getBooleanArg("refineA", false);
-    this.refineV = X.getBooleanArg("refineV", false);
-    this.useDatalogG = X.getBooleanArg("useDatalogG", false);
-    this.useDatalogR = X.getBooleanArg("useDatalogR", false);
-    this.initRefinementRadiusA = X.getIntArg("initRefinementRadiusA", 0);
-    this.initRefinementRadiusV = X.getIntArg("initRefinementRadiusV", 0);
-    this.useObjectSensitivity = X.getBooleanArg("useObjectSensitivity", false);
-    this.departWhenRefine = X.getBooleanArg("departWhenRefine", false);
-    this.inspectTransRels = X.getBooleanArg("inspectTransRels", false);
-    boolean verifyAfterCoarsen = X.getBooleanArg("verifyAfterCoarsen", false);
-
+    this.verbose                   = X.getIntArg("verbose", 0);
+    this.maxIters                  = X.getIntArg("maxIters", 1);
+    this.initK                     = X.getIntArg("initK", 0);
+    this.useObjectSensitivity      = X.getBooleanArg("useObjectSensitivity", false);
+    this.runAlwaysIncludePruned    = X.getBooleanArg("runAlwaysIncludePruned", false);
+    this.inspectTransRels          = X.getBooleanArg("inspectTransRels", false);
+    this.verifyAfterPrune          = X.getBooleanArg("verifyAfterPrune", false);
+    this.masterHost                = X.getStringArg("masterHost", null);
+    this.masterPort                = X.getIntArg("masterPort", 8888);
+    this.useWorker                 = X.getBooleanArg("useWorker", false);
+    this.classifierPath            = X.getStringArg("classifierPath", null);
+    this.learnClassifier           = X.getBooleanArg("learnClassifier", false);
+    this.analysisTaskName          = X.getStringArg("analysisTaskName", "cspa-sliver-dlog");
+    this.initAnalysisTaskName      = analysisTaskName.replace("dlog", "init-dlog");
+    this.relevantAnalysisTaskName  = analysisTaskName.replace("dlog", "relevant-dlog");
+    this.transAnalysisTaskName     = analysisTaskName.replace("dlog", "trans-dlog");
     X.putOption("version", 1);
     X.putOption("program", System.getProperty("chord.work.dir"));
     X.flushOptions();
 
-    init0CFA(); // STEP (INIT)
-
-    for (int iter = 1; ; iter++) {
-      X.logs("====== Iteration %s", iter);
-      computeC(); // Step (COMPUTE_C)
-      runAnalysis(); // Step (ANALYSIS)
-
-      backupRelations(iter);
-      refinementRadiusA = initRefinementRadiusA + (iter-1);
-      refinementRadiusV = initRefinementRadiusV + (iter-1);
-
-      Abstraction hotAbs = pruneAbstraction(); // STEP (PRUNE)
-      if (verifyAfterCoarsen) { X.logs("BEGIN_VERIFY"); computeC(); runAnalysis(); pruneAbstraction(); X.logs("END_VERIFY"); }
-      outputStatus(iter);
-      //outputHint(iter);
-
-      if (numProven() == queries.size()) {
-        X.logs("Proven all queries, exiting...");
-        X.putOutput("conclusion", "prove");
-        break;
-      }
-      if (iter == maxIters) {
-        X.logs("Reached maximum number of iterations, exiting...");
-        X.putOutput("conclusion", "max");
-        break;
-      }
-
-      if (converged()) {
-        X.logs("Refinement converged, exiting...");
-        X.putOutput("conclusion", "conv");
-        break;
-      }
-
-      refineAbstraction(hotAbs); // Step (REFINE)
-    }
-    finish();
-  }
-
-  void backupRelations(int iter) {
-    X.logs("backupRelations");
-    try {
-      if (X.getBooleanArg("saveRelations", false)) {
-        String path = X.path(""+iter);
-        new File(path).mkdir();
-        domC.save(path, true);
-
-        //String[] names = new String[] { "CfromMIC", "CfromMA", "AfromHC", "EfromVC", "AH", "VEA", "AFA", "FA", "escA" };
-        String[] names = new String[] { "CfromMIC", "CfromMA", "AfromHC", "EfromVC", "VEA", "AFA", "FA", "escA" };
-        for (String name : names) {
-          X.logs("  Saving relation "+name);
-          ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt(name);
-          rel.load();
-          rel.print(path);
-          //rel.close(); // Crashes
-        }
-      }
-    } catch (IOException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  // Step (INIT)
-  void init0CFA() {
-    ClassicProject.g().runTask(initTaskName); 
+    ClassicProject.g().runTask(initAnalysisTaskName); 
 
     // Reachable things
     {
@@ -528,37 +404,26 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       for (Quad i : result) iSet.add(i);
       rel.close();
     }
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("reachableV"); rel.load();
-      Iterable<Register> result = rel.getAry1ValTuples();
-      for (Register v : result) vSet.add(v);
-      rel.close();
-    }
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("reachableM"); rel.load();
-      Iterable<jq_Method> result = rel.getAry1ValTuples();
-      for (jq_Method m : result) mSet.add(m);
-      rel.close();
-    }
+    X.logs("Finished 0-CFA: |hSet| = %s, |iSet| = %s", hSet.size(), iSet.size());
+    jSet.addAll(hSet);
+    if (!useObjectSensitivity)
+      jSet.addAll(iSet);
 
-    // h2m, im
-    for (Quad i : iSet) {
-      i_this_h.put(i, new ArrayList<Quad>());
-      im.put(i, new ArrayList<jq_Method>());
+    // jm: site to methods 
+    for (Quad h : hSet) jm.put(h, new ArrayList<jq_Method>());
+    if (!useObjectSensitivity) {
+      for (Quad i : iSet) jm.put(i, new ArrayList<jq_Method>());
     }
-    for (jq_Method m : mSet) {
-      rev_im.put(m, new ArrayList<Quad>());
-      rev_h2m.put(m, new ArrayList<Quad>());
-    }
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("IthisH"); rel.load();
-      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
-      for (Pair<Quad,Quad> pair : result) {
+    for (jq_Method m : G.domM) mj.put(m, new ArrayList<Quad>());
+
+    if (!useObjectSensitivity) {
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("IM"); rel.load();
+      PairIterable<Quad,jq_Method> result = rel.getAry2ValTuples();
+      for (Pair<Quad,jq_Method> pair : result) {
         Quad i = pair.val0;
-        Quad h = pair.val1;
-        assert iSet.contains(i) : istr(i);
-        assert hSet.contains(h) : hstr(h);
-        i_this_h.get(i).add(h);
+        jq_Method m = pair.val1;
+        assert iSet.contains(i) : G.istrBrief(i);
+        jm.get(i).add(m);
       }
       rel.close();
     }
@@ -568,71 +433,244 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       for (Pair<Quad,jq_Method> pair : result) {
         Quad h = pair.val0;
         jq_Method m = pair.val1;
-        assert hSet.contains(h) : hstr(h);
-        assert mSet.contains(m) : m;
-        rev_h2m.get(m).add(h);
+        assert hSet.contains(h) : G.hstrBrief(h);
+        jm.get(h).add(m);
+      }
+      rel.close();
+    }
+
+    // Sites contained in a method
+    if (!useObjectSensitivity) {
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("MI"); rel.load();
+      PairIterable<jq_Method,Quad> result = rel.getAry2ValTuples();
+      for (Pair<jq_Method,Quad> pair : result) {
+        jq_Method m = pair.val0;
+        Quad i = pair.val1;
+        mj.get(m).add(i);
       }
       rel.close();
     }
     {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("IM"); rel.load();
-      PairIterable<Quad,jq_Method> result = rel.getAry2ValTuples();
-      for (Pair<Quad,jq_Method> pair : result) {
-        Quad i = pair.val0;
-        jq_Method m = pair.val1;
-        assert iSet.contains(i) : istr(i);
-        im.get(i).add(m);
-        rev_im.get(m).add(i);
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("MH"); rel.load();
+      PairIterable<jq_Method,Quad> result = rel.getAry2ValTuples();
+      for (Pair<jq_Method,Quad> pair : result) {
+        jq_Method m = pair.val0;
+        Quad h = pair.val1;
+        mj.get(m).add(h);
       }
       rel.close();
     }
-    X.logs("Finished 0-CFA: |hSet| = %s, |iSet| = %s, |vSet| = %s, |mSet| = %s", hSet.size(), iSet.size(), vSet.size(), mSet.size());
 
     // Compute which queries we should answer in the whole program
     String focus = X.getStringArg("eFocus", null);
     if (focus != null) {
-      for (String e : focus.split(","))
-        queries.add(new Query(domE.get(Integer.parseInt(e))));
+      String[] tokens = focus.split(",");
+      Quad e1 = G.domE.get(Integer.parseInt(tokens[0]));
+      Quad e2 = G.domE.get(Integer.parseInt(tokens[1]));
+      allQueries.add(new Query(e1, e2));
     }
     else {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("queryE"); rel.load();
-      Iterable<Quad> result = rel.getAry1ValTuples();
-      for (Quad e : result) queries.add(new Query(e));
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("query"); rel.load();
+      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
+      for (Pair<Quad,Quad> pair : result) allQueries.add(new Query(pair.val0, pair.val1));
       rel.close();
     }
-    X.logs("%s queries", queries.size());
+    X.logs("Starting with %s total queries", allQueries.size());
+  }
 
-    //// Now run 0-CFA (again) using the slivers framework.
+  void finish() { X.finish(null); }
 
-    // Use object sensitivity?
-    relobjI.zero();
-    if (useObjectSensitivity) {
-      for (Quad i : iSet) relobjI.add(i);
+  public void run() {
+    init();
+    if (isWorker()) runWorker();
+    else {
+      Master master;
+      if (useWorker) { master = new Master(); master.start(); }
+      refinePruneLoop();
+      if (learnClassifier) {
+        findMinimalAbstractions();
+      }
     }
-    relobjI.save();
+    finish();
+  }
 
-    // Run with initial abstraction: separate all allocation sites and variables (no context)
-    for (Quad h : hSet)
-      abs.Sa.add(emptyCtxt.append(h));
-    for (Register v : vSet)
-      abs.Sv.add(new CtxtVar(v, emptyCtxt));
-    for (jq_Method m : mSet)
-      abs.Sm.add(new CtxtMeth(m, emptyCtxt));
+  String callMaster(String line) {
+    try {
+      Socket master = new Socket(masterHost, masterPort);
+      writeLine(master, line);
+      return readLine(master);
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+  void writeLine(Socket s, String line) {
+    try {
+      PrintWriter out = new PrintWriter(new OutputStreamWriter(s.getOutputStream()));
+      out.println(line);
+      out.close();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  String readLine(Socket s) {
+    try {
+      BufferedReader in = new BufferedReader(new InputStreamReader(s.getInputStream()));
+      String line = in.readLine();
+      in.close();
+      return line;
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  void runWorker() {
+    X.logs("Starting worker...");
+    while (true) {
+      // Get a job
+      String line = callMaster("GET");
+      if (line.equals("EXIT")) break;
+      else if (line.equals("WAIT")) { }
+      else {
+        Message msg = Message.parse(line);
+
+        QueryGroup group = new QueryGroup();
+        group.abs = msg.abs;
+        group.queries = msg.queries;
+        group.runAnalysis(msg.returnAbs);
+        group.removeProvenQueries();
+        if (msg.returnAbs)
+          group.pruneAbstraction();
+
+        msg.abs = group.abs;
+        msg.queries = group.queries;
+
+        line = callMaster("PUT "+msg.toString());
+        X.logs("Sent result to master, got reply: %s", line);
+      }
+
+      sleep();
+    }
+  }
+
+  void sleep() {
+    try { Thread.sleep(5000); } catch(InterruptedException e) { }
+  }
+
+  LinkedList<Message> msgQueue = new LinkedList<Message>(); // Inputs to send to worker
+  HashMap<Integer,Message> msgIds = new HashMap<Integer,Message>(); // When send worker, move from queue to this
+  int newId = 0;
+  List<Run> runs = new ArrayList<Run>();
+
+  class Master extends Thread {
+    @Override public void run() {
+      X.logs("Starting master (listening at port %s)", masterPort);
+      try {
+        ServerSocket master = new ServerSocket(masterPort);
+        while (true) {
+          Socket worker = master.accept();
+          X.logs("Got connection from worker %s", worker);
+          String cmd = readLine(worker);
+          if (cmd.equals("GET")) {
+            X.logs("  GET (we have %s msgs)", msgQueue.size());
+            if (msgQueue.size() == 0) writeLine(worker, "WAIT");
+            else {
+              Message msg;
+              synchronized(msgQueue) {
+                msg = msgQueue.removeFirst();
+                msgIds.put(newId++, msg);
+              }
+              writeLine(worker, msg.toString());
+            }
+          }
+          else if (cmd.startsWith("PUT")) {
+            String[] tokens = cmd.split(" ", 3); // PUT <ID> <...>
+            if (msgQueue.size() == 0) writeLine(worker, "WAIT");
+            int id = Integer.parseInt(tokens[1]);
+            X.logs("  PUT id=%s", id);
+            Run run = new Run();
+            synchronized(msgQueue) {
+              run.in = msgIds.remove(id);
+              run.out = Message.parse(tokens[2]);
+              runs.add(run);
+            }
+            writeLine(worker, "OK");
+          }
+        }
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  void refinePruneLoop() {
+    // Initialize with k-CFA
+    // Slivers are length k for call sites and k+1 for allocation sites
+    for (Quad j : jSet) {
+      Ctxt c = G.isAlloc(j) ? emptyCtxt.append(j) : emptyCtxt; // c = [j] (allocation sites) or [] (call sites)
+      unprovenGroup.abs.CfromJC.put(new Pair(j, emptyCtxt), c); // j, [] => c=[j]
+      for (jq_Method m : jm.get(j)) {
+        for (Quad k : mj.get(m)) {
+          Ctxt d = G.isAlloc(k) ? emptyCtxt.append(k) : emptyCtxt; // d = [k] (allocation sites) or [] (call sites)
+          unprovenGroup.abs.CfromJC.put(new Pair(k, c), d); // k, c => d
+        }
+      }
+    }
+    unprovenGroup.abs.computeS();
+    for (int i = 0; i < initK; i++)
+      unprovenGroup.refineAbstraction();
+
+    unprovenGroup.queries.addAll(allQueries);
+
+    for (int iter = 1; ; iter++) {
+      X.logs("====== Iteration %s", iter);
+      boolean runRelevantAnalysis = iter < maxIters;
+      unprovenGroup.runAnalysis(runRelevantAnalysis);
+      backupRelations(iter);
+      if (inspectTransRels) unprovenGroup.inspectAnalysisOutput();
+      QueryGroup provenGroup = unprovenGroup.removeProvenQueries();
+      if (provenGroup != null) provenGroups.add(provenGroup);
+      if (runRelevantAnalysis) {
+        unprovenGroup.pruneAbstraction();
+        if (verifyAfterPrune && provenGroup != null) {
+          X.logs("verifyAfterPrune");
+          // Make sure this is a complete abstraction
+          assert provenGroup.abs.S.contains(emptyCtxt);
+          assert provenGroup.abs.inducedSites().equals(jSet);
+          provenGroup.runAnalysis(runRelevantAnalysis);
+        }
+      }
+
+      outputStatus(iter);
+
+      if (statuses.get(statuses.size()-1).numProven == allQueries.size()) {
+        X.logs("Proven all queries, exiting...");
+        X.putOutput("conclusion", "prove");
+        break;
+      }
+      if (iter == maxIters) {
+        X.logs("Reached maximum number of iterations, exiting...");
+        X.putOutput("conclusion", "max");
+        break;
+      }
+      if (converged()) {
+        X.logs("Refinement converged, exiting...");
+        X.putOutput("conclusion", "conv");
+        break;
+      }
+
+      unprovenGroup.refineAbstraction();
+    }
   }
 
   int numProven() {
     int n = 0;
-    for (Query q : queries)
-      if (q.proven) n++;
+    for (QueryGroup g : provenGroups)
+      n += g.queries.size();
     return n;
   }
 
-  List<Object> R(Object... args) {
-    List<Object> l = new ArrayList<Object>();
-    for (Object o : args) l.add(o);
-    return l;
-  }
-
+  // For visualization
   class RelNode {
     List<Object> rel;
     List<RelNode> edges = new ArrayList<RelNode>();
@@ -653,14 +691,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     String nameContrib(String name) { return name == null ? "" : "("+name+") "; }
 
     String extra() { return ""; }
-    /*String extra() { // TMP
-      if (tmpGraph == null) return "";
-      if (tmpGraph.nodes.containsKey(rel)) return "";
-      // New if rel doesn't exist but children's rel's all exist
-      for (RelNode node : edges)
-        if (!tmpGraph.nodes.containsKey(node.rel)) return "";
-      return "[NEW] ";
-    }*/
 
     void display(String prefix, String parentName) {
       X.logs(prefix + extra() + nameContrib(parentName) + this + (edges.size() > 0 ? " {" : ""));
@@ -678,36 +708,14 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     @Override public String toString() {
       StringBuilder b = new StringBuilder();
       for (int i = 0; i < rel.size(); i++) {
-        b.append(render(rel.get(i)));
+        b.append(G.render(rel.get(i)));
         if (i == 0) b.append('[');
         else if (i == rel.size()-1) b.append(']');
         else b.append(' ');
       }
       return b.toString();
     }
-
-    String render(Object o) {
-      if (o == null) return "NULL";
-      if (o instanceof String) return (String)o;
-      if (o instanceof Ctxt) return cstrBrief((Ctxt)o);
-      if (o instanceof CtxtVar) return vestrBrief((CtxtVar)o);
-      if (o instanceof jq_Field) return fstrBrief((jq_Field)o);
-      if (o instanceof jq_Method) return mstrBrief((jq_Method)o);
-      if (o instanceof Register) return vstrBrief((Register)o);
-      if (o instanceof Quad) {
-        Quad q = (Quad)o;
-        if (domH.indexOf(q) != -1) return hstrBrief(q);
-        if (domI.indexOf(q) != -1) return istrBrief(q);
-        if (domE.indexOf(q) != -1) return estrBrief(q);
-        throw new RuntimeException("Quad not H, I, or E: " + q);
-      }
-      throw new RuntimeException("Unknown object (not abstract object, contextual variable or field: "+o);
-    }
   }
-
-  // TMP
-  //RelGraph origGraph = null;
-  //RelGraph tmpGraph = null;
 
   // Graph where nodes are relations r_X and edges are transitions t_X_Y
   class RelGraph {
@@ -730,8 +738,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     }
 
     void display() {
-      //for (RelNode node : nodes.values()) X.logs("NODE " + node);
-
       X.logs("===== GRAPH =====");
       for (RelNode node : nodes.values()) {
         if (node.root) {
@@ -768,60 +774,193 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     return l;
   }
 
-  // Based on relevance - full cause-effect analysis
-  Abstraction pruneAbstractionDatalogR() {
-    abs.clear();
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("r_EfromVC"); rel.load();
-      TrioIterable<Ctxt,Register,Ctxt> result = rel.getAry3ValTuples();
-      for (Trio<Ctxt,Register,Ctxt> trio : result) {
-        CtxtVar ve = new CtxtVar(trio.val1, trio.val0);
-        //X.logs("RELEVANT %s", vestrBrief(ve));
-        abs.Sv.add(ve);
-      }
-      rel.close();
-    }
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("r_AfromHC"); rel.load();
-      TrioIterable<Ctxt,Quad,Ctxt> result = rel.getAry3ValTuples();
-      for (Trio<Ctxt,Quad,Ctxt> trio : result) {
-        Ctxt a = trio.val0;
-        //X.logs("RELEVANT %s", cstrBrief(a));
-        abs.Sa.add(a);
-      }
-      rel.close();
-    }
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("r_CfromMIC"); rel.load();
-      QuadIterable<Ctxt,jq_Method,Quad,Ctxt> result = rel.getAry4ValTuples();
-      for (chord.util.tuple.object.Quad<Ctxt,jq_Method,Quad,Ctxt> quad : result) {
-        CtxtMeth me = new CtxtMeth(quad.val1, quad.val0);
-        //X.logs("RELEVANT %s", mestrBrief(me));
-        abs.Sm.add(me);
-      }
-      rel.close();
-    }
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("r_CfromMA"); rel.load();
-      TrioIterable<Ctxt,jq_Method,Ctxt> result = rel.getAry3ValTuples();
-      for (Trio<Ctxt,jq_Method,Ctxt> trio : result) {
-        CtxtMeth me = new CtxtMeth(trio.val1, trio.val0);
-        //X.logs("RELEVANT %s", mestrBrief(me));
-        abs.Sm.add(me);
-      }
-      rel.close();
-    }
-    Set<Quad> esc = new HashSet();
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("escE"); rel.load();
-      Iterable<Quad> result = rel.getAry1ValTuples();
-      for (Quad e : result) esc.add(e);
-      rel.close();
-    }
-    X.logs("%s of relevant queries unproven", esc.size());
+  int relSize(String name) {
+    ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt(name); rel.load();
+    int n = rel.size();
+    rel.close();
+    return n;
+  }
 
-    // Display the transition graph over relations
-    if (inspectTransRels) {
+  boolean converged() {
+    if (statuses.size() < 2) return false;
+    Status a = statuses.get(statuses.size()-2);
+    Status b = statuses.get(statuses.size()-1);
+    return a.absHashCode == b.absHashCode;
+  }
+
+  void outputStatus(int iter) {
+    // Get the total size of the abstraction across all queries
+    HashSet<Ctxt> S = new HashSet<Ctxt>();
+    for (QueryGroup g : provenGroups) {
+      S.addAll(g.abs.S);
+      assert g.prunedAbs.S.size() == 0;
+    }
+    S.addAll(unprovenGroup.prunedAbs.S);
+    S.addAll(unprovenGroup.abs.S);
+   
+    X.addSaveFiles("abstraction.S."+iter);
+    {
+      PrintWriter out = OutDirUtils.newPrintWriter("abstraction.S."+iter);
+      for (Ctxt a : S)
+        out.println(G.cstrBrief(a));
+      out.close();
+    }
+
+    int numProven = numProven();
+    Status status = new Status();
+    status.numProven = numProven;
+    status.absHashCode = unprovenGroup.abs.hashCode();
+    status.absSummary = unprovenGroup.abs.toString();
+    statuses.add(status);
+
+    X.putOutput("currIter", iter);
+    X.putOutput("absSize", S.size());
+    X.putOutput("numQueries", allQueries.size());
+    X.putOutput("numProven", numProven);
+    X.putOutput("numProvenHistory", numProvenHistory());
+    X.flushOutput();
+  }
+
+  String numProvenHistory() {
+    StringBuilder buf = new StringBuilder();
+    for (Status s : statuses) {
+      if (buf.length() > 0) buf.append(',');
+      buf.append(s.numProven);
+    }
+    return buf.toString();
+  }
+
+
+  // Group of queries which have the same abstraction and be have the same as far as we can tell.
+  class QueryGroup {
+    Set<Query> queries = new LinkedHashSet<Query>();
+    // Invariant: abs + prunedAbs is a full abstraction and gets same results as abs
+    Abstraction abs = new Abstraction(); // Current abstraction for this query
+    Abstraction prunedAbs = new Abstraction(); // This abstraction keeps all the slivers that have been pruned
+
+    void runAnalysis(boolean runRelevantAnalysis) {
+      X.logs("runAnalysis: %s", abs);
+
+      // Include pruned abstractions (ensures soundness)
+      // These should get pruned out again
+      if (runAlwaysIncludePruned)
+        abs.add(prunedAbs, true);
+
+      // Domain (these are the slivers)
+      DomC domC = (DomC) ClassicProject.g().getTrgt("C");
+      assert abs.S.contains(emptyCtxt);
+      domC.clear();
+      domC.getOrAdd(emptyCtxt); // This must go first!
+      for (Ctxt c : abs.S) domC.add(c);
+      domC.save();
+
+      // Relations
+      ProgramRel relInQuery = (ProgramRel) ClassicProject.g().getTrgt("inQuery");
+      relInQuery.zero();
+      for (Query q : queries)
+        relInQuery.add(q.e1, q.e2);
+      relInQuery.save();
+
+      ProgramRel relHfromC = (ProgramRel) ClassicProject.g().getTrgt("HfromC");
+      relHfromC.zero();
+      for (Ctxt c : abs.S) {
+        if (c.length() > 0 && G.isAlloc(c.head()))
+          relHfromC.add(c.head(), c);
+      }
+      relHfromC.save();
+
+      ProgramRel relCfromHC = (ProgramRel) ClassicProject.g().getTrgt("CfromHC");
+      ProgramRel relCfromIC = (ProgramRel) ClassicProject.g().getTrgt("CfromIC");
+      relCfromHC.zero();
+      relCfromIC.zero();
+      for (Pair<Quad,Ctxt> pair : abs.CfromJC.keySet()) {
+        Quad j = pair.val0;
+        Ctxt c = pair.val1;
+        Ctxt d = abs.CfromJC.get(pair);
+        //X.logs("REL %s %s %s", j, c, d);
+        (G.isAlloc(j) ? relCfromHC : relCfromIC).add(d, j, c);
+      }
+      relCfromHC.save();
+      relCfromIC.save();
+
+      ProgramRel relobjI = (ProgramRel) ClassicProject.g().getTrgt("objI");
+      relobjI.zero();
+      if (useObjectSensitivity) {
+        for (Quad i : iSet) relobjI.add(i);
+      }
+      relobjI.save();
+
+      ClassicProject.g().resetTrgtDone(domC); // Make everything that depends on domC undone
+      ClassicProject.g().setTaskDone(SliverCtxtsAnalysis.this); // We are generating all this stuff, so mark it as done...
+      ClassicProject.g().setTrgtDone(domC);
+      ClassicProject.g().setTrgtDone(relInQuery);
+      ClassicProject.g().setTrgtDone(relCfromHC);
+      ClassicProject.g().setTrgtDone(relCfromIC);
+      ClassicProject.g().setTrgtDone(relobjI);
+      ClassicProject.g().runTask(analysisTaskName);
+      if (runRelevantAnalysis) ClassicProject.g().runTask(relevantAnalysisTaskName);
+      if (inspectTransRels) ClassicProject.g().runTask(transAnalysisTaskName);
+    }
+
+    void pruneAbstraction() {
+      // From Datalog, read out the pruned abstraction
+      Abstraction newAbs = new Abstraction();
+      {
+        ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("r_CfromHC"); rel.load();
+        TrioIterable<Ctxt,Quad,Ctxt> result = rel.getAry3ValTuples();
+        for (Trio<Ctxt,Quad,Ctxt> trio : result)
+          newAbs.CfromJC.put(new Pair<Quad,Ctxt>(trio.val1, trio.val2), trio.val0);
+        rel.close();
+      }
+      {
+        ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("r_CfromIC"); rel.load();
+        TrioIterable<Ctxt,Quad,Ctxt> result = rel.getAry3ValTuples();
+        for (Trio<Ctxt,Quad,Ctxt> trio : result)
+          newAbs.CfromJC.put(new Pair<Quad,Ctxt>(trio.val1, trio.val2), trio.val0);
+        rel.close();
+      }
+      newAbs.computeS();
+      X.logs("STATUS pruneAbstraction: %s -> %s", abs, newAbs);
+
+      // Record the pruned slivers (abs - newAbs)
+      for (Pair<Quad,Ctxt> pair : abs.CfromJC.keySet()) {
+        if (newAbs.CfromJC.containsKey(pair)) continue; // Not pruned
+        if (!runAlwaysIncludePruned)
+          assert !prunedAbs.CfromJC.containsKey(pair);
+        prunedAbs.CfromJC.put(pair, abs.CfromJC.get(pair)); // Add to pruned
+      }
+      prunedAbs.computeS();
+
+      abs = newAbs;
+    }
+
+    // Remove queries that have been proven
+    QueryGroup removeProvenQueries() {
+      // From Datalog, read out all unproven queries
+      Set<Query> unproven = new HashSet<Query>();
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("outQuery"); rel.load();
+      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
+      for (Pair<Quad,Quad> pair : result)
+        unproven.add(new Query(pair.val0, pair.val1));
+      rel.close();
+
+      // Put all proven queries in a new group
+      QueryGroup provenGroup = new QueryGroup();
+      provenGroup.abs.add(prunedAbs, true); // Build up complete abstraction
+      provenGroup.abs.add(abs, !runAlwaysIncludePruned); // if runAlwaysIncludePruned = true, will be duplicates, so don't assert
+      for (Query q : queries)
+        if (!unproven.contains(q))
+          provenGroup.queries.add(q);
+      for (Query q : provenGroup.queries)
+        queries.remove(q);
+
+      X.logs("STATUS %s/%s queries unproven", queries.size(), allQueries.size());
+
+      return provenGroup;
+    }
+
+    void inspectAnalysisOutput() {
+      // Display the transition graph over relations
       try {
         RelGraph graph = new RelGraph();
         String dlogPath = ((DlogAnalysis)ClassicProject.g().getTask(transAnalysisTaskName)).getFileName();
@@ -830,960 +969,112 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
         String line;
         while ((line = in.readLine()) != null) {
           if (!line.startsWith("# TRANS")) continue;
-          //X.logs("  "+line);
           String[] tokens = line.split(" ");
           graph.loadTransition(tokens[2], tokens[3], tokens[4], tokens[5], parseIntArray(tokens[6]), parseIntArray(tokens[7]));
-          //graph.loadTransition(tokens[2], origGraph == null ? tokens[3] : "all"+tokens[3], tokens[4], tokens[5], parseIntArray(tokens[6]), parseIntArray(tokens[7])); // TMP
         }
         in.close();
         graph.display();
 
-        // TMP
-        /*if (origGraph == null) origGraph = graph;
-        else {
-          X.logs("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX");
-          tmpGraph = graph;
-          origGraph.display();
-        }*/
       } catch (IOException e) {
         throw new RuntimeException(e);
       }
     }
 
-    for (Query q : queries) {
-      if (q.proven) continue;
-      if (!esc.contains(q.e)) {
-        q.proven = true;
-        X.logs("QUERY DONE (PROVEN): %s", estr(q.e));
+    void refineAbstraction() {
+      // TODO: use learning to refine selectively
+      String oldAbsStr = abs.toString();
+
+      List<Ctxt> newCtxts = new ArrayList<Ctxt>();
+      for (Pair<Quad,Ctxt> pair : abs.CfromJC.keySet()) {
+        Quad j = pair.val0;
+        Ctxt c = pair.val1;
+        Ctxt d = abs.CfromJC.get(pair);
+        if (d.length() == 1+c.length()) continue; // Already exact, no refinements
+
+        // d is a prefix of [j]+c
+        Ctxt newd = c.prepend(j, d.length()+1);
+        assert !abs.S.contains(newd) : G.jstrBrief(j) + " | " + G.cstrBrief(c) + " | " + G.cstrBrief(d) + " | " + G.cstrBrief(newd);
+        abs.CfromJC.put(pair, newd); // newd is one longer than d
+        newCtxts.add(newd);
       }
-      else {
-        X.logs("QUERY REFINE: %s", estr(q.e));
-      }
-    }
-    X.logs("SUMMARY(pruned): %s", abs);
-    X.logs("STATUS: proved %s/%s queries", numProven(), queries.size());
-    return abs; // Refine everything
-  }
+      abs.computeS(); 
 
-  // Based on graph reachability in the heap
-  Abstraction pruneAbstractionDatalogG() {
-    abs.clear();
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("g_A"); rel.load();
-      Iterable<Ctxt> result = rel.getAry1ValTuples();
-      for (Ctxt a : result) abs.Sa.add(a);
-      rel.close();
-    }
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("g_VE"); rel.load();
-      PairIterable<Register,Ctxt> result = rel.getAry2ValTuples();
-      for (Pair<Register,Ctxt> pair : result) {
-        Register v = pair.val0;
-        Ctxt e = pair.val1;
-        abs.Sv.add(new CtxtVar(v, e));
-      }
-      rel.close();
-    }
-    Set<Quad> esc = new HashSet();
-    {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("escE"); rel.load();
-      Iterable<Quad> result = rel.getAry1ValTuples();
-      for (Quad e : result) esc.add(e);
-      rel.close();
-    }
-    X.logs("%s of relevant queries unproven", esc.size());
-
-    for (Query q : queries) {
-      if (q.proven) continue;
-      if (!esc.contains(q.e)) {
-        q.proven = true;
-        X.logs("QUERY DONE (PROVEN): %s", estr(q.e));
-      }
-      else {
-        X.logs("QUERY REFINE: %s", estr(q.e));
-      }
-    }
-    X.logs("SUMMARY(pruned): %s", abs);
-    X.logs("STATUS: proved %s/%s queries", numProven(), queries.size());
-    return abs; // Refine everything
-  }
-
-  Abstraction pruneAbstraction() {
-    if (useDatalogG) return pruneAbstractionDatalogG();
-    if (useDatalogR) return pruneAbstractionDatalogR();
-    return pruneAbstractionJava();
-  }
-
-  // Step (PRUNE): prune the abstraction.
-  // Also return subset of abstraction to refine or null if nothing to refine.
-  int numGlobEncounters;
-  Abstraction pruneAbstractionJava() {
-    // Queries already proven
-    int numProven = numProven();
-
-    X.logs("pruneAbstractionJava(): focus on %d unproven queries (out of %d total)", queries.size()-numProven, queries.size());
-    relVEA.load();
-    relAFA.load();
-    relFA.load();
-
-    abs.clear(); // We're going to start afresh (this will contain the pruned abstraction)
-    TObjectIntHashMap<Ctxt> dists = new TObjectIntHashMap<Ctxt>();
-    Abstraction hotAbs = new Abstraction();
-
-    // When tracing back from an abstract object a, cache the abstraction that we need
-    Map<Ctxt,Abstraction> a2abs = new HashMap<Ctxt,Abstraction>();
-    Map<Ctxt,Abstraction> a2hotAbs = new HashMap<Ctxt,Abstraction>();
-
-    numGlobEncounters = 0;
-    for (Query q : queries) { // For each query...
-      if (q.proven) continue; // ...that has not been proven
-
-      Register v = e2v(q.e); // ...which accesses a field of v
-
-      // Find all slivers that v could point to... [pointsTo]
-      RelView view = relVEA.getView();
-      view.selectAndDelete(0, v); // Variable
-      view.delete(1); // in any context
-      Iterable<Ctxt> result = view.getAry1ValTuples();
-      List<Ctxt> pointsTo = new ArrayList<Ctxt>();
-      Ctxt mina = null;
-      for (Ctxt a : result) { // For each such sliver c...
-        if (a.length() == 0) { // Ignore things that point to glob
-          //X.errors("Invariant broken: Query %s (variable %s) points to glob!", estr(e), vstr(v));
-          numGlobEncounters++;
-          continue;
-        }
-        pointsTo.add(a);
-        if (mina == null || domH.indexOf(a.head()) < domH.indexOf(mina.head())) mina = a;
-      }
-      view.free();
-      // Just look at one element of the points-to set
-      if (X.getBooleanArg("takeOnePointsTo", false)) {
-        pointsTo.clear();
-        if (mina != null) pointsTo.add(mina);
-      }
-
-      // Compute the (pruned) abstraction for this query q
-      q.abs.clear();
-      TObjectIntHashMap<Ctxt> qDists = new TObjectIntHashMap<Ctxt>();
-      for (Ctxt a : pointsTo) {
-        // Trace back from each pivot c (use cache if possible)
-        Abstraction aAbs = a2abs.get(a);
-        if (aAbs == null) a2abs.put(a, aAbs = new Abstraction());
-        minMerge(qDists, traceBack(aAbs, a, false));
-        q.abs.add(aAbs);
-      }
-      q.proven = q.abs.proven; // Did we prove it?
-
-      if (q.proven) {
-        numProven++;
-        X.logs("QUERY DONE (PROVEN): %s ; dist%s (|pts|=%s): %s",
-            q.abs, distHistogram(qDists), pointsTo.size(), estr(q.e));
-      }
-      /*else if (qAbs.size() <= maxHintSize) {
-        // Done - don't do any more refinement (DON'T USE THIS)
-        numDone++;
-        X.logs("QUERY DONE (SMALL): %s |abs| = %s <= %s (|pts|=%s): %s",
-            qAbs.distHist, qAbs.size(), maxHintSize, pointsTo.size(), estr(q.e));
-      }*/
-      else {
-        abs.add(q.abs); // Add to the main abstraction
-        minMerge(dists, qDists);
-
-        Abstraction qHotAbs = new Abstraction();
-        // Choose some influential slivers to refine
-        for (Ctxt a : pointsTo) {
-          Abstraction aHotAbs = a2hotAbs.get(a);
-          if (aHotAbs == null) {
-            a2hotAbs.put(a, aHotAbs = new Abstraction());
-            traceBack(aHotAbs, a, true);
+      // Need to specify how to grow the new contexts
+      for (Ctxt c : newCtxts) { // [j]+c -> projection onto current S
+        for (jq_Method m : jm.get(c.head())) {
+          for (Quad j : mj.get(m)) {
+            Ctxt d = extend(j, c, abs.S);
+            if (d != null && d.length() > 0) abs.CfromJC.put(new Pair(j, c), d);
           }
-          qHotAbs.add(aHotAbs);
         }
-        hotAbs.add(qHotAbs);
-
-        X.logs("QUERY REFINE: %s ; dist %s ; chose %s/%s (|pts|=%s): %s",
-          q.abs, distHistogram(qDists), qHotAbs.size(), q.abs.size(), pointsTo.size(), estr(q.e));
       }
+      String newAbsStr = abs.toString();
+
+      X.logs("STATUS refineAbstraction: %s -> %s", oldAbsStr, newAbsStr);
     }
-
-    X.logs("numGlobEncounters = %s", numGlobEncounters);
-    X.logs("STATUS: proved %s/%s queries", numProven, queries.size());
-    X.logs("STATUS: chose %s/%s slivers to refine across remaining %s/%s queries",
-        hotAbs.size(), abs.size(), queries.size()-numProven, queries.size());
-
-    // Print histogram of slivers
-    X.logs("DIST(pruned): %s", distHistogram(dists));
-    X.logs("SUMMARY(pruned): %s", abs);
-    X.logs("SUMMARY(selected): %s", hotAbs);
-
-    relVEA.close();
-    relAFA.close();
-    relFA.close();
-    return hotAbs;
   }
 
-  boolean converged() {
-    if (results.size() < 2) return false;
-    Result a = results.get(results.size()-2);
-    Result b = results.get(results.size()-1);
-    return a.absHashCode == b.absHashCode;
+  Ctxt extend(Quad j, Ctxt c, Set<Ctxt> ref) {
+    // Create d = [j, c] but truncate to length k, where k is the maximum such that d is in ref
+    for (int k = c.length()+1; k >= 0; k--) { // Try to extend
+      Ctxt d = c.prepend(j, k);
+      if (ref.contains(d)) return d;
+    }
+    return null;
   }
 
-  void outputStatus(int iter) {
-    // abs is only for unproven queries; for others, look at q.abs
-    Abstraction totalAbs = new Abstraction();
-    totalAbs.add(abs);
-    for (Query q : queries) totalAbs.add(q.abs);
-   
-    X.addSaveFiles("abstraction.Sa."+iter, "abstraction.Sv."+iter, "abstraction.Sm."+iter);
-    {
-      PrintWriter out = OutDirUtils.newPrintWriter("abstraction.Sa."+iter);
-      for (Ctxt a : totalAbs.Sa)
-        out.println(cstrBrief(a));
-      out.close();
-    }
-    {
-      PrintWriter out = OutDirUtils.newPrintWriter("abstraction.Sv."+iter);
-      for (CtxtVar ve : totalAbs.Sv)
-        out.println(vestrBrief(ve));
-      out.close();
-    }
-    {
-      PrintWriter out = OutDirUtils.newPrintWriter("abstraction.Sm."+iter);
-      for (CtxtMeth me : totalAbs.Sm)
-        out.println(mestrBrief(me));
-      out.close();
-    }
+  // For the proven queries, find a minimal abstraction.
+  void findMinimalAbstractions() {
+    X.logs("findMinimalAbstractions: %s groups", provenGroups.size());
+    assert useWorker;
 
-    int numProven = numProven();
-    Result result = new Result();
-    result.numProven = numProven;
-    result.absHashCode = abs.hashCode();
-    result.absSummary = abs.toString();
-    results.add(result);
-
-    X.putOutput("currIter", iter);
-    X.putOutput("numEscaping", queries.size()-numProven);
-    X.putOutput("numLocal", numProven);
-    X.putOutput("totalSizeA", totalAbs.Sa.size());
-    X.putOutput("totalSizeC", totalAbs.sizeC());
-    X.putOutput("totalSizeV", totalAbs.Sv.size());
-    X.putOutput("numProvenHistory", numProvenHistory());
-    X.flushOutput();
+    synchronized(msgQueue) {
+    }
   }
 
-  String numProvenHistory() {
+  void backupRelations(int iter) {
+    X.logs("backupRelations");
+    try {
+      if (X.getBooleanArg("saveRelations", false)) {
+        String path = X.path(""+iter);
+        new File(path).mkdir();
+
+        DomC domC = (DomC) ClassicProject.g().getTrgt("C");
+        domC.save(path, true);
+
+        String[] names = new String[] { "CfromHC", "CfromIC", "inQuery", "outQuery" };
+        for (String name : names) {
+          X.logs("  Saving relation "+name);
+          ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt(name);
+          rel.load();
+          rel.print(path);
+          //rel.close(); // Crashes
+        }
+      }
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
+  }
+}
+
+class Histogram {
+  int[] counts = new int[1000];
+  void clear() {
+    for (int i = 0; i < counts.length; i++)
+      counts[i] = 0;
+  }
+  public void add(int i) { counts[i]++; }
+  public void add(Histogram h) {
+    for (int i = 0; i < counts.length; i++)
+      counts[i] += h.counts[i];
+  }
+  @Override public String toString() {
     StringBuilder buf = new StringBuilder();
-    for (Result r : results) {
-      if (buf.length() > 0) buf.append(',');
-      buf.append(r.numProven);
+    for (int n = 0; n < counts.length; n++) {
+      if (counts[n] == 0) continue;
+      if (buf.length() > 0) buf.append(" ");
+      buf.append(n+":"+counts[n]);
     }
-    return buf.toString();
-  }
-
-  /*void outputHint(int iter) {
-    // Output hints
-    PrintWriter out = OutDirUtils.newPrintWriter("hints.txt");
-    PrintWriter sout = OutDirUtils.newPrintWriter("hints-str.txt");
-    for (Quad e : e2hints.keySet()) {
-      sout.println(estr(e));
-      Set<Ctxt> hint = e2hints.get(e);
-      int ei = domE.indexOf(e);
-      if (hint.size() == 0) { // Null hint
-        sout.println("  NULL (query points to nothing)");
-        out.println(ei + " -2"); // Query trivially true
-      }
-      else if (hint.size() <= maxHintSize) {
-        for (Ctxt c : hint) {
-          sout.println("  "+cstr(c));
-          StringBuilder sb = new StringBuilder();
-          for (int i = 0; i < c.length(); i++) {
-            Quad q = c.get(i);
-            sb.append(isAlloc(q) ? "H"+domH.indexOf(q) : "I"+domI.indexOf(q));
-          }
-          out.println(ei + " " + sb);
-        }
-      }
-      else {
-        sout.println("  GIVE_UP");
-        out.println(ei + " -1"); // Just give up
-      }
-    }
-    out.close();
-    sout.close();
-
-    // Print hint statistics
-    int sumHintSize = 0;
-    int maxHintSize = 0;
-    for (Set<Ctxt> hint : e2hints.values()) {
-      int size = hint.size();
-      sumHintSize += size;
-      maxHintSize = Math.max(maxHintSize, size);
-    }
-    X.putOutput("currIter", iter);
-    X.putOutput("avgHintSize", 1.0*sumHintSize/e2hints.size());
-    X.putOutput("maxHintSize", maxHintSize);
-    X.putOutput("numQueries", e2hints.size());
-    X.putOutput("numChosenInfSlivers", chosenInfSlivers.size());
-    X.putOutput("numInfSlivers", infSlivers.size());
-  }*/
-
-  // For displaying
-  class BFSGraph {
-    HashMap<Object,List<Object>> treeEdges = new HashMap<Object,List<Object>>();
-    HashMap<Object,List<Object>> auxEdges = new HashMap<Object,List<Object>>();
-
-    void add(HashMap<Object,List<Object>> edges, Object c, Object b) {
-      assert edges == treeEdges || edges == auxEdges;
-      List<Object> bs = edges.get(c);
-      if (bs == null) edges.put(c, bs = new ArrayList<Object>());
-      bs.add(b);
-    }
-
-    String str(Object o) {
-      if (o == null) return "ESC:THREAD_START";  // This is a jq_Field
-      if (o instanceof Ctxt)
-        return cstrBrief((Ctxt)o);
-      else if (o instanceof CtxtVar)
-        return vestrBrief((CtxtVar)o);
-      else if (o instanceof jq_Field)
-        return "ESC:"+fstrBrief((jq_Field)o);
-      else
-        throw new RuntimeException("Unknown object (not abstract object, contextual variable or field: "+o);
-    }
-
-    void display(Object c) {
-      X.logs("===== GRAPH =====");
-      display(c, "");
-    }
-    void display(Object c, String prefix) {
-      X.logs(prefix+str(c));
-      String newPrefix = prefix+"  ";
-      if (auxEdges.get(c) != null) {
-        for (Object b : auxEdges.get(c))
-          X.logs(newPrefix+str(b) + " ...");
-      }
-      if (treeEdges.get(c) != null) {
-        for (Object b : treeEdges.get(c))
-          display(b, newPrefix);
-      }
-    }
-  }
-
-  // Traceback in the heap from a0
-  TObjectIntHashMap<Ctxt> traceBack(Abstraction abs, Ctxt a0, boolean limitDist) {
-    // For debugging
-    boolean buildGraph = verbose >= 3 && !limitDist;
-    BFSGraph graph = null;
-    if (buildGraph) graph = new BFSGraph();
-
-    TObjectIntHashMap<Ctxt> dists = new TObjectIntHashMap<Ctxt>();
-
-    // Initialize
-    LinkedList<Ctxt> queue = new LinkedList<Ctxt>();
-    dists.put(a0, 0);
-    queue.addLast(a0);
-
-    // Perform BFS
-    while (queue.size() > 0) {
-      Ctxt a = queue.removeFirst();
-      int adist = dists.get(a);
-      if (!limitDist || (refineA && adist <= refinementRadiusA)) // Add to abstraction
-        abs.Sa.add(a);
-
-      // Follow the heap backwards
-      {
-        RelView view = relAFA.getView();
-        view.delete(1); // Any field
-        view.selectAndDelete(2, a); // Going to a
-        Iterable<Ctxt> result = view.getAry1ValTuples();
-        for (Ctxt b : result) {
-          if (b.length() == 0) { // Ignore going to glob
-            //X.errors("Invariant broken: glob can reach %s", cstr(c));
-            numGlobEncounters++;
-            if (refineA && buildGraph) graph.add(graph.auxEdges, a, b);
-            continue;
-          }
-          if (dists.contains(b)) {
-            if (refineA && buildGraph) graph.add(graph.auxEdges, a, b);
-            continue;
-          }
-          if (refineA && buildGraph) graph.add(graph.treeEdges, a, b);
-          int bdist = adist+1;
-          dists.put(b, bdist);
-          queue.addLast(b);
-        }
-      }
-
-      // Look at what variables point to a
-      {
-        RelView view = relVEA.getView();
-        view.selectAndDelete(2, a);
-        PairIterable<Register,Ctxt> result = view.getAry2ValTuples();
-        for (Pair<Register,Ctxt> pair : result) {
-          Register v = pair.val0;
-          Ctxt e = pair.val1;
-          CtxtVar ve = new CtxtVar(v, e);
-          if (refineV && buildGraph && verbose >= 4) graph.add(graph.treeEdges, a, ve);
-          int vdist = adist+1;
-          if (!limitDist || (refineV && vdist <= refinementRadiusV))
-            abs.Sv.add(ve);
-        }
-      }
-
-      // Look at if global fields points to a
-      {
-        RelView view = relFA.getView();
-        view.selectAndDelete(1, a);
-        Iterable<jq_Field> result = view.getAry1ValTuples();
-        for (jq_Field f : result) {
-          if (buildGraph) graph.add(graph.treeEdges, a, f);
-          abs.proven = false; // Thread-escaping!
-        }
-      }
-    }
-
-    // Record the graph
-    if (buildGraph) graph.display(a0);
-    return dists;
-  }
-
-  // Step (REFINE): Refine the hotAbs
-  void refineAbstraction(Abstraction hotAbs) {
-    X.logs("refineAbstraction()");
-    Abstraction newAbs = new Abstraction();
-
-    // Refine abstract objects (Sa)
-    for (Ctxt a : abs.Sa) {
-      // Keep as is
-      if (!hotAbs.Sa.contains(a)) {
-        newAbs.Sa.add(a);
-        continue;
-      }
-
-      if (a.length() == 0) // Should not be trying to refine the glob
-        throw new RuntimeException("We are trying to refine the glob - something went wrong!");
-
-      List<Quad> extensions;
-      if (useObjectSensitivity)
-        extensions = rev_h2m.get(a.last().getMethod()); // Allocation sites
-      else {
-        extensions = rev_im.get(a.last().getMethod()); // Call sites
-      }
-
-      if (verbose >= 1) X.logs("Sa-REFINE %s (%s extensions)", cstrBrief(a), extensions.size());
-
-      // If didn't extend, then assume that the last call site (c.last()) exists in an initial method,
-      // which is not called by anything.
-      // ASSUMPTION: initial methods are never called by some intermediate method.
-      // Need to check this - might not be a valid assumption for k-object-sensitivity.
-      if (extensions == null || extensions.size() == 0) {
-        //if (verbose >= 2) X.logs("  Keep same sliver (%s extensions): %s", extensions.size(), cstrBrief(a));
-        newAbs.Sa.add(a);
-      }
-      else {
-        for (Quad q : extensions) {
-          newAbs.Sa.add(a.append(q));
-          if (verbose >= 2) X.logs("  New: %s", cstrBrief(a.append(q)));
-        }
-      }
-    }
-
-    // Refine contextual variables (Sv)
-    for (CtxtVar ve : abs.Sv) {
-      if (!hotAbs.Sv.contains(ve)) {
-        newAbs.Sv.add(ve);
-        continue;
-      }
-      Register v = ve.v;
-      Ctxt e = ve.e;
-      
-      List<Quad> extensions;
-      if (useObjectSensitivity) {
-        extensions = e.length() == 0 ?
-          rev_h2m.get(domV.getMethod(v)) : // Allocation sites which can lead to method containing that variable
-          rev_h2m.get(e.last().getMethod()); // Allocation sites which can actually lead to the current allocation site
-      }
-      else {
-        extensions = e.length() == 0 ?
-          rev_im.get(domV.getMethod(v)) : // Call sites that call the containing method of this variable
-          rev_im.get(e.last().getMethod()); // Call sites that lead to the last call site in the current chain
-      }
-
-      if (verbose >= 1) X.logs("Sv-REFINE %s (%s extensions)", vestrBrief(ve), extensions.size());
-
-      // If didn't extend, then assume that the last call site (c.last()) exists in an initial method,
-      // which is not called by anything.
-      // ASSUMPTION: initial methods are never called by some intermediate method.
-      if (extensions == null || extensions.size() == 0) {
-        if (verbose >= 2) X.logs("  Keep: %s", vestrBrief(ve));
-        newAbs.Sv.add(ve);
-      }
-      else {
-        if (!departWhenRefine) {
-          if (verbose >= 2) X.logs("  Keep: %s", vestrBrief(ve));
-          newAbs.Sv.add(ve);
-        }
-        for (Quad q : extensions) {
-          CtxtVar newve = new CtxtVar(ve.v, ve.e.append(q));
-          newAbs.Sv.add(newve);
-          if (verbose >= 2) X.logs("  New: %s", vestrBrief(newve));
-        }
-      }
-    }
-
-    // Refine method slivers (Sm)
-    for (CtxtMeth me : abs.Sm) {
-      if (!hotAbs.Sm.contains(me)) {
-        newAbs.Sm.add(me);
-        continue;
-      }
-      jq_Method m = me.m;
-      Ctxt e = me.e;
-      
-      List<Quad> extensions;
-      if (useObjectSensitivity) {
-        extensions = e.length() == 0 ?
-          rev_h2m.get(m) : // Allocation sites which can lead to method containing that variable
-          rev_h2m.get(e.last().getMethod()); // Allocation sites which can actually lead to the current allocation site
-      }
-      else {
-        extensions = e.length() == 0 ?
-          rev_im.get(m) : // Call sites that call the containing method of this variable
-          rev_im.get(e.last().getMethod()); // Call sites that lead to the last call site in the current chain
-      }
-
-      if (verbose >= 1) X.logs("Sm-REFINE %s (%s extensions)", mestrBrief(me), extensions.size());
-
-      // If didn't extend, then assume that the last call site (c.last()) exists in an initial method,
-      // which is not called by anything.
-      // ASSUMPTION: initial methods are never called by some intermediate method.
-      if (extensions == null || extensions.size() == 0) {
-        if (verbose >= 2) X.logs("  Keep: %s", mestrBrief(me));
-        newAbs.Sm.add(me);
-      }
-      else {
-        if (!departWhenRefine) {
-          if (verbose >= 2) X.logs("  Keep: %s", mestrBrief(me));
-          newAbs.Sm.add(me);
-        }
-        for (Quad q : extensions) {
-          CtxtMeth newme = new CtxtMeth(me.m, me.e.append(q));
-          newAbs.Sm.add(newme);
-          if (verbose >= 2) X.logs("  New: %s", mestrBrief(newme));
-        }
-      }
-    }
-
-    X.logs("REFINE |Sa| : %s -> %s, |Sv| : %s -> %s, |Sm| : %s -> %s",
-        abs.Sa.size(), newAbs.Sa.size(),
-        abs.Sv.size(), newAbs.Sv.size(),
-        abs.Sm.size(), newAbs.Sm.size());
-    X.logs("SUMMARY(refined): %s", newAbs);
-
-    abs = newAbs;
-  }
-
-  void addSuffixesToDomC(Ctxt c) {
-    for (int i = 0; i <= c.length(); i++)
-      domC.getOrAdd(c.suffix(i));
-  }
-
-  // Step (COMPUTE_C): Use current abstraction (Sa,Sv) to populate domains and relations
-  void computeC() {
-    if (useDatalogR)
-      computeC_spartan();
-    else
-      computeC_old();
-  }
-
-  // Used by DatalogRefine
-  void computeC_spartan() {
-    X.logs("computeC_spartan()");
-
-    if (useObjectSensitivity) {
-      // Make sure Sa has all of Sv's environments
-      // Can mutate Sa because we're pruneAbstraction will nuke abs anyway
-      int nv = 0;
-      for (CtxtVar ve : abs.Sv) {
-        if (ve.e.length() > 0 && abs.Sa.add(ve.e)) nv++;
-      }
-      int nm = 0;
-      for (CtxtMeth me : abs.Sm) {
-        if (me.e.length() > 0 && abs.Sa.add(me.e)) nm++;
-      }
-      X.logs("For object-sensitivity, added %s,%s new contexts (abstract objects) of Sv,Sm into Sa", nv, nm);
-    }
-
-    // The queries that we haven't proven yet.
-    relRelevantQueryE.zero();
-    for (Query q : queries)
-      if (!q.proven) relRelevantQueryE.add(q.e);
-    relRelevantQueryE.save();
-
-    //// Find minimal contexts for each method by iteration
-    X.logs("Computing method contexts based on Sa and Sv");
-    HashMap<jq_Method,Set<Ctxt>> contexts = new HashMap<jq_Method,Set<Ctxt>>(); // method m -> contexts I need to support (Sm)
-    // Initialize: have each method support the variables and abstract objects in that method.
-    for (jq_Method m : mSet) {
-      Set<Ctxt> set = new HashSet<Ctxt>();
-      contexts.put(m, set);
-    }
-    for (CtxtVar ve : abs.Sv) {
-      jq_Method m = domV.getMethod(ve.v);
-      contexts.get(m).add(ve.e);
-    }
-    for (Ctxt a : abs.Sa) {
-      jq_Method m = a.head().getMethod();
-      contexts.get(m).add(a.tail()); 
-    }
-    for (CtxtMeth me : abs.Sm) {
-      contexts.get(me.m).add(me.e);
-    }
-    // If m1 calls m2, then m1 better have the context that can support m2's relevant contexts.
-    // Propagate these changes until convergence.
-    while (true) {
-      boolean changed = false;
-      for (jq_Method m : contexts.keySet()) { // For each method m...
-        List<Ctxt> cs = new ArrayList(contexts.get(m));
-        for (Ctxt c : cs) { // it can be analyzed in context c...
-          if (c.length() == 0) continue;
-          jq_Method prevm = c.head().getMethod(); // Get method containing either the first allocation/call site of the context
-          Ctxt prevc = useObjectSensitivity && m.isStatic() ? c : c.tail();
-          changed |= contexts.get(prevm).add(prevc); // Add the context
-        }
-      }
-      if (!changed) break;
-    }
-
-    {
-      domC.clear();
-      domC.getOrAdd(emptyCtxt); // This must go first!
-      for (Ctxt a : abs.Sa) domC.getOrAdd(a); // Object slivers
-      for (CtxtVar ve : abs.Sv) domC.getOrAdd(ve.e); // Variable slivers
-      for (jq_Method m : contexts.keySet()) // Method slivers
-        for (Ctxt c : contexts.get(m))
-          domC.getOrAdd(c);
-      domC.save();
-      X.logs("Converted %s into %s domain C elements", abs, domC.size());
-    }
-
-    // AH
-    HashMap<Quad,List<Ctxt>> h2a = new HashMap<Quad,List<Ctxt>>();
-    for (Quad h : hSet) h2a.put(h, new ArrayList<Ctxt>());
-    //relAH.zero();
-    for (Ctxt a : abs.Sa) {
-      //relAH.add(a, a.head());
-      h2a.get(a.head()).add(a);
-    }
-    //relAH.save();
-
-    // CfromMIC, CfromMA
-    relCfromMIC.zero();
-    relCfromMA.zero();
-    if (!useObjectSensitivity) {
-      for (Quad i : iSet) { // At call site i
-        for (Ctxt c : contexts.get(i.getMethod())) { // ...in context c
-          for (jq_Method m : im.get(i)) { // ...calling method m
-            Ctxt newc = extend_spartan(i, c, contexts.get(m));
-            if (newc != null) {
-              //X.logs("SET_CfromMIC %s %s %s %s", cstrBrief(newc), mstrBrief(m), istrBrief(i), cstrBrief(c));
-              relCfromMIC.add(newc, m, i, c); // Get the new context
-            }
-          }
-        }
-      }
-    }
-    else {
-      for (Quad i : iSet) { // At call site i
-        for (Quad h : i_this_h.get(i)) { // ...this argument can point to something allocated at h
-          for (Ctxt a : h2a.get(h)) { // Corresponding to some abstract object a
-            for (jq_Method m : im.get(i)) { // ...calling method m
-              Ctxt newc = project_spartan(a, contexts.get(m));
-              if (newc != null)
-                relCfromMA.add(newc, m, a); // Get the new context
-            }
-          }
-        }
-      }
-    }
-    relCfromMIC.save();
-    relCfromMA.save();
-
-    // AfromHC
-    relAfromHC.zero();
-    for (Quad h : hSet) { // At allocation site h
-      for (Ctxt c : contexts.get(h.getMethod())) { // ...in context c
-        Ctxt a = extend_spartan(h, c, abs.Sa);
-        if (a != null)
-          relAfromHC.add(a, h, c); // Get the abstract object
-      }
-    }
-    relAfromHC.save();
-
-    // EfromVC
-    relEfromVC.zero();
-    for (Register v : vSet) { // For variable v
-      for (Ctxt c : contexts.get(domV.getMethod(v))) { // ...in context c
-        Ctxt e = extend_spartan(v, c, abs.Sv);
-        if (e != null)
-          relEfromVC.add(e, v, c); // Get the context e for that variable
-      }
-    }
-    relEfromVC.save();
-  }
-
-  void computeC_old() {
-    X.logs("computeC_old()");
-
-    // The queries that we haven't proven yet.
-    relRelevantQueryE.zero();
-    for (Query q : queries)
-      if (!q.proven) relRelevantQueryE.add(q.e);
-    relRelevantQueryE.save();
-
-    if (useObjectSensitivity) {
-      // Make sure Sa has all of Sv's environments
-      // Can mutate Sa because we're pruneAbstraction will nuke abs anyway
-      int n = 0;
-      for (CtxtVar ve : abs.Sv) {
-        if (ve.e.length() > 0 && abs.Sa.add(ve.e)) n++;
-      }
-      X.logs("For object-sensitivity, added %s new contexts (abstract objects) of Sv into Sa", n);
-    }
-
-    //// Find minimal contexts for each method by iteration
-    X.logs("Computing method contexts based on Sa and Sv");
-    HashMap<jq_Method,Set<Ctxt>> contexts = new HashMap<jq_Method,Set<Ctxt>>(); // method m -> contexts I need to support (Sm)
-    // Initialize: have each method support the variables and abstract objects in that method.
-    for (jq_Method m : mSet) {
-      Set<Ctxt> set = new HashSet<Ctxt>();
-      set.add(emptyCtxt);
-      contexts.put(m, set);
-    }
-    for (CtxtVar ve : abs.Sv) {
-      jq_Method m = domV.getMethod(ve.v);
-      contexts.get(m).add(ve.e);
-    }
-    for (Ctxt a : abs.Sa) {
-      jq_Method m = a.head().getMethod();
-      contexts.get(m).add(a.tail()); 
-    }
-    // If m1 calls m2, then m1 better have the context that can support m2's relevant contexts.
-    // Propagate these changes until convergence.
-    while (true) {
-      boolean changed = false;
-      for (jq_Method m : contexts.keySet()) { // For each method m...
-        List<Ctxt> cs = new ArrayList(contexts.get(m));
-        for (Ctxt c : cs) { // it can be analyzed in context c...
-          if (c.length() == 0) continue;
-          jq_Method prevm = c.head().getMethod(); // Get method containing either the first allocation/call site of the context
-          Ctxt prevc = useObjectSensitivity && m.isStatic() ? c : c.tail();
-          changed |= contexts.get(prevm).add(prevc); // Add the context
-        }
-      }
-      if (!changed) break;
-    }
-
-    // Put all suffixes into domC
-    {
-      domC.clear();
-      for (Ctxt a : abs.Sa) addSuffixesToDomC(a);
-      for (CtxtVar ve : abs.Sv) addSuffixesToDomC(ve.e);
-      domC.save();
-      X.logs("Converted %s into %s domain C elements", abs, domC.size());
-    }
-
-    // AH
-    HashMap<Quad,List<Ctxt>> h2a = new HashMap<Quad,List<Ctxt>>();
-    for (Quad h : hSet) h2a.put(h, new ArrayList<Ctxt>());
-    //relAH.zero();
-    Set<Quad> inSomeContext = new HashSet<Quad>(); // set of heads of some context
-    for (Ctxt a : abs.Sa) {
-      //relAH.add(a, a.head());
-      h2a.get(a.head()).add(a);
-      inSomeContext.add(a.head());
-    }
-    for (Quad h : hSet) { // [] stands for allocation sites which are not in any abstraction
-      if (inSomeContext.contains(h)) continue;
-      //relAH.add(emptyCtxt, h);
-      h2a.get(h).add(emptyCtxt);
-    }
-    //relAH.save();
-
-    // CfromMIC, CfromMA
-    relCfromMIC.zero();
-    relCfromMA.zero();
-    if (!useObjectSensitivity) {
-      for (Quad i : iSet) { // At call site i
-        for (Ctxt c : contexts.get(i.getMethod())) { // ...in context c
-          for (jq_Method m : im.get(i)) { // ...calling method m
-            relCfromMIC.add(extend(i, c, contexts.get(m)), m, i, c); // Get the new context
-          }
-        }
-      }
-    }
-    else {
-      for (Quad i : iSet) { // At call site i
-        for (Quad h : i_this_h.get(i)) { // ...this argument can point to something allocated at h
-          for (Ctxt a : h2a.get(h)) { // Corresponding to some abstract object a
-            for (jq_Method m : im.get(i)) { // ...calling method m
-              relCfromMA.add(project(a, contexts.get(m)), m, a); // Get the new context
-            }
-          }
-        }
-      }
-    }
-    relCfromMIC.save();
-    relCfromMA.save();
-
-    // AfromHC
-    relAfromHC.zero();
-    for (Quad h : hSet) { // At allocation site h
-      for (Ctxt c : contexts.get(h.getMethod())) // ...in context c
-        relAfromHC.add(extend(h, c, abs.Sa), h, c); // Get the abstract object
-    }
-    relAfromHC.save();
-
-    // EfromVC
-    relEfromVC.zero();
-    for (Register v : vSet) { // For variable v
-      for (Ctxt c : contexts.get(domV.getMethod(v))) // ...in context c
-        relEfromVC.add(extend(v, c, abs.Sv), v, c); // Get the context e for that variable
-    }
-    relEfromVC.save();
-  }
-
-  Ctxt project_spartan(Ctxt c, Set<Ctxt> ref) {
-    // Return longest prefix of c in ref
-    for (int k = c.length(); k >= 0; k--) { // Try to extend
-      Ctxt d = c.prefix(k);
-      if (ref.contains(d)) return d;
-    }
-    return null;
-  }
-  Ctxt extend_spartan(Quad q, Ctxt c, Set<Ctxt> ref) {
-    // Create d = [q, c] but truncate to length k, where k is the maximum such that d is in ref
-    for (int k = c.length()+1; k >= 0; k--) { // Try to extend
-      Ctxt d = c.prepend(q, k);
-      if (ref.contains(d)) return d;
-    }
-    return null;
-  }
-  Ctxt extend_spartan(Register v, Ctxt c, Set<CtxtVar> ref) {
-    for (int k = c.length(); k >= 0; k--) {
-      Ctxt e = c.prefix(k);
-      CtxtVar ve = new CtxtVar(v, e);
-      if (ref.contains(ve))
-        return e;
-    }
-    return null;
-  }
-
-  Ctxt project(Ctxt c, Set<Ctxt> ref) {
-    // Return longest prefix of c in ref
-    for (int k = c.length(); k >= 0; k--) { // Try to extend
-      Ctxt d = c.prefix(k);
-      if (ref.contains(d)) return d;
-    }
-    return emptyCtxt;
-  }
-  Ctxt extend(Quad q, Ctxt c, Set<Ctxt> ref) {
-    // Create d = [q, c] but truncate to length k, where k is the maximum such that d is in ref
-    for (int k = c.length()+1; k >= 0; k--) { // Try to extend
-      Ctxt d = c.prepend(q, k);
-      if (ref.contains(d)) return d;
-    }
-    return emptyCtxt;
-  }
-  Ctxt extend(Register v, Ctxt c, Set<CtxtVar> ref) {
-    for (int k = c.length(); k >= 0; k--) {
-      Ctxt e = c.prefix(k);
-      CtxtVar ve = new CtxtVar(v, e);
-      if (ref.contains(ve))
-        return e;
-    }
-    return emptyCtxt;
-  }
-
-  // Step (ANALYSIS)
-  void runAnalysis() {
-    ClassicProject.g().resetTrgtDone(domC); // Make everything that depends on domC undone
-    ClassicProject.g().setTaskDone(this); // We are generating all this stuff, so mark it as done...
-    ClassicProject.g().setTrgtDone(domC);
-    //ClassicProject.g().setTrgtDone(relAH);
-    ClassicProject.g().setTrgtDone(relCfromMIC);
-    ClassicProject.g().setTrgtDone(relCfromMA);
-    ClassicProject.g().setTrgtDone(relAfromHC);
-    ClassicProject.g().setTrgtDone(relEfromVC);
-    ClassicProject.g().setTrgtDone(relobjI);
-    ClassicProject.g().setTrgtDone(relRelevantQueryE);
-    ClassicProject.g().runTask(analysisTaskName);
-    ClassicProject.g().runTask(relevantAnalysisTaskName);
-    if (inspectTransRels)
-      ClassicProject.g().runTask(transAnalysisTaskName);
-    ClassicProject.g().runTask(epilogueAnalysisTaskName);
-  }
-
-  Histogram lengthHistogram(Set slivers) {
-    Histogram hist = new Histogram();
-    for (Object c : slivers) {
-      if (c instanceof Ctxt)
-        hist.counts[((Ctxt)c).length()]++;
-      else if (c instanceof CtxtVar)
-        hist.counts[((CtxtVar)c).length()]++;
-      else if (c instanceof CtxtMeth)
-        hist.counts[((CtxtMeth)c).length()]++;
-      else
-        throw new RuntimeException("Can't get length of "+c);
-    }
-    return hist;
-  }
-
-  Histogram distHistogram(TObjectIntHashMap<Ctxt> dists) {
-    final Histogram hist = new Histogram();
-    dists.forEachEntry(new TObjectIntProcedure<Ctxt>() {
-      public boolean execute(Ctxt c, int dist) {
-        hist.counts[dist]++;
-        return true;
-      }
-    });
-    return hist;
-  }
-
-  // dest(key) <- min(dest(key), source(key)) for all keys
-  <T> void minMerge(final TObjectIntHashMap<T> dest, final TObjectIntHashMap<T> source) {
-    source.forEachEntry(new TObjectIntProcedure<T>() {
-      public boolean execute(T key, int value) {
-        if (dest.containsKey(key))
-          dest.put(key, Math.min(dest.get(key), value));
-        else
-          dest.put(key, value);
-        return true;
-      }
-    });
-  }
-
-  class Histogram {
-    int[] counts = new int[1000];
-    void clear() {
-      for (int i = 0; i < counts.length; i++)
-        counts[i] = 0;
-    }
-    public void add(int i) { counts[i]++; }
-    public void add(Histogram h) {
-      for (int i = 0; i < counts.length; i++)
-        counts[i] += h.counts[i];
-    }
-    @Override public String toString() {
-      StringBuilder buf = new StringBuilder();
-      for (int n = 0; n < counts.length; n++) {
-        if (counts[n] == 0) continue;
-        if (buf.length() > 0) buf.append(" ");
-        buf.append(n+":"+counts[n]);
-      }
-      return '['+buf.toString()+']';
-    }
+    return '['+buf.toString()+']';
   }
 }

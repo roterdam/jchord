@@ -6,7 +6,7 @@
 # Runs 0-CFA and initializes everything.
 
 # Author: Percy Liang (pliang@cs.berkeley.edu)
-# name=cspa-init-sliver-dlog
+# name=cspa-sliver-init-dlog
 
 .include "F.dom"
 .include "H.dom"
@@ -17,7 +17,7 @@
 .include "V.dom"
 .include "Z.dom"
 
-.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_Z0_E0
+.bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_Z0_E0xE1
 
 ############################################################
 # Relations
@@ -50,17 +50,16 @@ VH(v:V,h:H) input # Whether variable v can point to an object allocated at h
 reachableM(m:M) input # method m is reachable
 
 # Output one-time relations.
-queryE(e:E) output # Which queries we want to answer
+query(e1:E,e2:E) output
 reachableH(h:H) output # allocation site h is reachable
 reachableV(v:V) output # variable v is reachable
 reachableT(t:T) output # type t is reachable
 argIVMV(i:I0,vi:V1,m:M0,vm:V0) output # vi at call site i <=> vm in method m (argument)
 retIVMV(i:I0,vi:V0,m:M0,vm:V1) output # vi at call site i <=> vm in method m (return value)
-IthisH(i:I,h:H) output # at call site i, this argument can point to something in h
 skipMM(m:M,n:M) output # m can reach n via a sequence of calls where m is instance method, rest (if any) are static methods
 HtoM(h:H,m:M) output # h can be the "this" argument calling method that skips to m
 
-queryE(e) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_). # All queries we care about
+query(e,ee) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_), e=ee. # All queries we care about
 reachableH(h) :- reachableM(m), MH(m,h).
 reachableV(v) :- reachableM(m), MV(m,v).
 argIVMV(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm).
@@ -74,7 +73,6 @@ reachableT(t) :- reachableM(m), MgetStatFldInst(m,_,f), staticTF(t,f).
 reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 
 # For object-based refinement
-IthisH(i,h) :- !statIM(i,_), IinvkArg(i,0,v), VH(v, h), reachableH(h).
 skipMM(m,n) :- m=n, !statIM(_,m).
 skipMM(m,n) :- skipMM(m,q), MI(q,i), statIM(i,n). # Can extend q to n using static method
 HtoM(h,n)   :- IinvkArg(i,0,v), VH(v,h), reachableH(h), IM(i,m), skipMM(m,n).
