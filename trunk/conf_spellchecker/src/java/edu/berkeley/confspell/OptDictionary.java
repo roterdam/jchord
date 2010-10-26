@@ -185,11 +185,14 @@ public class OptDictionary {
     if(pat == null)
       return null;
     else {
+      String ty = dict.get(pat);
+      if (ty == null)
+        ty = "unknown";
       String annot = annotations.get(pat);
       if(annot == null)
-        return dict.get(pat);
+        return ty;
       else 
-        return dict.get(pat) + " " + annot;
+        return ty + " " + annot;
     }
   }
 
