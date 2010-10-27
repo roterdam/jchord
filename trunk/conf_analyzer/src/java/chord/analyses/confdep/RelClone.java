@@ -10,6 +10,10 @@ import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
+/**
+ * Holds tuples (m, v, i, u) where i is a call to clone, in method m, that
+ * causes v to be a clone of u.
+ */
 @Chord(
     name = "Mclones",
     sign = "M0,V0,I0,V1:M0_V0xI0xV1"

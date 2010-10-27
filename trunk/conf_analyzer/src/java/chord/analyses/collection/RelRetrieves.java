@@ -13,6 +13,10 @@ import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
+/**
+ * (i,u,v) if u is retrieved from v
+ *
+ */
 @Chord(
     name = "IRetrieve",
     sign = "I0,V0,V1:I0_V0_V1"
@@ -45,9 +49,9 @@ public class RelRetrieves extends ProgramRel implements IInvokeInstVisitor {
 
         jq_Method meth = Invoke.getMethod(q).getMethod();
         jq_Class cl = meth.getDeclaringClass();
-//        String mname = meth.getName().toString();
+        String mname = meth.getName().toString();
         if( RelINewColl.isCollectionType(cl) && !meth.isStatic() ) {
-          if(v.getType().equals(OBJ_T)) {
+          if(meth.getReturnType().equals(OBJ_T)) {
             Register thisObj = Invoke.getParam(q, 0).getRegister();
             int iID = domI.indexOf(q);
             int vID = domV.indexOf(v);
