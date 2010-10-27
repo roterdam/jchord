@@ -1,23 +1,109 @@
-# name=race-sliver-dlog
+# Copyright (c) 2008-2010, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+# Licensed under the terms of the New BSD License.
 
+# Call-graph, pointer analysis.  This part is common to all slivers-based analyses.
+# This is the part that depends on the slivers-based heap abstraction (domain C).
+# Author: Percy Liang (pliang@cs.berkeley.edu)
+
+.include "C.dom"
 .include "E.dom"
 .include "F.dom"
-.include "M.dom"
-.include "V.dom"
-.include "A.dom"
-.include "C.dom"
-.include "P.dom"
+.include "H.dom"
 .include "I.dom"
+.include "M.dom"
+.include "T.dom"
+.include "V.dom"
+.include "Z.dom"
+.include "A.dom"
 
-.bddvarorder F0_A0xA1xA2_I0xI1xM0xM1xP0xP1_V0xV1_C0xC1xC2xC3_E0xE1
+.bddvarorder F0_A0xA1xA2xA3xA4_P0xP1_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2xC3_Z0_E0xE1
 
-###
-# Relations
-###
+### Relations
+
+# Program
+HT(h:H0,t:T1) input # Allocation site h has type t
+sub(t1:T1,t2:T0) input # t1 is a subtype of t2
+MI(m:M,i:I) input # Method m contains call site i
+MH(m:M,h:H) input # Method m contains allocation site h
+MV(m:M,v:V) input # Method m contains variable v
+statIM(i:I,m:M) input # Call site i resolves to static method m
+classT(t:T) input
+staticTM(t:T,m:M) input
+staticTF(t:T,f:F) input
+clinitTM(t:T,m:M) input
+IinvkArg(i:I0,n:Z0,v:V1) input
+MmethArg(m:M0,n:Z0,v:V0) input
+VHfilter(v:V,h:H) input
+
+# Program statements
+MobjValAsgnInst(m:M,l:V,h:H)     input # in m, l = new h
+MobjVarAsgnInst(m:M,l:V,r:V)     input # in m, l = r
+MgetInstFldInst(m:M,l:V,b:V,f:F) input # in m, l = b.f
+MputInstFldInst(m:M,b:V,f:F,r:V) input # in m, b.f = r
+MgetStatFldInst(m:M,l:V,f:F)     input # in m, l = STATIC.f
+MputStatFldInst(m:M,f:F,r:V)     input # in m, STATIC.f = r
+
+# Computed from initialization.
+IM(i:I,m:M) input # call site i can resolve to method m
+argIVMV(i:I0,u:V1,m:M0,v:V0) input
+retIVMV(i:I0,u:V0,m:M0,v:V1) input
+reachableT(t:T) input
+
+### Java -> Datalog
+CfromHC(cm:C,h:H,c:C) input
+CfromIC(cm:C,i:I,c:C) input
+HfromC(h:H,c:C) input
+objI(i:I) input # whether to use object sensitivity
+inQuery(e1:E,e2:E) input
+
+# Intermediate relations
+reachableCI(c:C,i:I) output
+reachableCM(c:C,m:M) output
+VCfromVC(v1:V0,e1:C0,v2:V1,e2:C1) output # contextual variable (v1,e1) points to everything that (v2,e2) points to
+CICM(ci:C,i:I,cm:C,m:M) output # in context ci, call site i can call method m in context cm
+VAfilter(v:V,a:C) output    # variable v is allowed to point to abstract object a based on type information
+VCA(v:V,e:C,a:C) output     # contextual variable (v,e) can point to abstract object a
+FA(f:F,a:C) output          # static field f can point to abstract object a OR a is the this argument of a call to Thread.start()
+AFA(a1:C,f:F,a2:C) output   # abstract object a1 can point to abstract object a2 via field f
+
+### Constraints
+
+VAfilter(v,a) :- VHfilter(v,h), HfromC(h,a).
+
+# Reachability
+reachableCM(0,0). # main method
+reachableCM(0,m)  :- clinitTM(t,m), reachableT(t). # class initializers
+reachableCM(cm,m) :- CICM(_,_,cm,m).               # target method reachable
+reachableCI(c,i)  :- reachableCM(c,m), MI(m,i).    # call site
+
+# Inter-procedural (call site i in context ci resolves to method m in context cm)
+CICM(ci,i,cm,m) :- !objI(i), reachableCI(ci,i), IM(i,m), CfromIC(cm,i,ci).                            # call-site-based [NAME=call]
+CICM(ci,i,cm,m) :-  objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,cm). # object-based - instance methods: use "this" [NAME=callI]
+CICM(ci,i,cm,m) :-  objI(i), reachableCI(ci,i),           statIM(i,m), ci=cm.                         # object-based - static methods: copy context [NAME=callS]
+
+# Inter-procedural (connect variables)
+VCfromVC(vm,cm,vi,ci) :- argIVMV(i,vi,m,vm), CICM(ci,i,cm,m). # pass in arguments [NAME=arg]
+VCfromVC(vi,ci,vm,cm) :- retIVMV(i,vi,m,vm), CICM(ci,i,cm,m). # return arguments [NAME=ret]
+VCA(v,c,a) :- VCfromVC(v,c,vv,cc), VCA(vv,cc,a), VAfilter(v,a). # If vv->a, then v->a
+
+# Intra-procedural statements
+VCA(l,c,a)  :- reachableCM(c,m), MobjValAsgnInst(m,l,h),   CfromHC(a,h,c).            # in context c, l = new h    [NAME=new]
+VCA(l,c,a)  :- reachableCM(c,m), MobjVarAsgnInst(m,l,r),   VCA(r,c,a), VAfilter(l,a). # in context c, l = r        [NAME=var]
+VCA(l,c,aa) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,aa).   # in context c, l = b.f      [NAME=hr]
+VCA(l,c,a)  :- reachableCM(c,m), MgetStatFldInst(m,l,f),   FA(f,a).                   # in context c, l = STATIC.f [NAME=gr]
+AFA(a,f,aa) :- reachableCM(c,m), MputInstFldInst(m,b,f,r), VCA(b,c,a), VCA(r,c,aa).   # in context c, b.f = r      [NAME=hw]
+FA(f,a)     :- reachableCM(c,m), MputStatFldInst(m,f,r),   VCA(r,c,a).                # in context c, STATIC.f = r [NAME=gw]
+
+############################################################
+# Race detector.
+# name=race-sliver-dlog
+
+### Relations
 
 # relations capturing basic program facts
 ME(m:M0,e:E0) input
-MI(m:M0,i:I0) input
 statF(f:F0) input
 EF(e:E0,f:F0) input
 EV(e:E0,v:V0) input
@@ -27,47 +113,57 @@ MPhead(m:M0,p:P0) input
 MPtail(m:M0,p:P0) input
 PI(p:P0,i:I0) input
 
-# all race queries (from race_sliver-init.dlog)
-query(e1:E0,e2:E1) input
-
-# relations computed by may-alias/thread-escape/call-graph analyses
-CVC(c:C0,v:V0,o:C1) input
-CICM(c:C,i:I,d:C,m:M) input
-escO(o:C0) input
-threadAOCM(t:A,o:C,c:C,m:M) input
+threadAOCM(t:A,o:C,c:C,m:M) input # Computed by Java
+escA(a:C) output
 
 # relations needed to compute startingRaceHext
-thrSenAbbrRootCM(c:C0,m:M0)
-thrSenAbbrReachableCM(c:C0,m:M0) 
-thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0) 
-reachableTCM(t:A0,c:C0,m:M0)
-reachableTCE(t:A0,c:C0,e:E0)
-startingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+thrSenAbbrRootCM(c:C0,m:M0) output
+thrSenAbbrReachableCM(c:C0,m:M0)  output
+thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0)  output
+reachableTCM(t:A0,c:C0,m:M0) output
+reachableTCE(t:A0,c:C0,e:E0) output
+startingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) output
 
 # relations needed to compute escapingRaceHext
-statE(e:E0)
-CEC(c:C0,e:E0,o:C1) 
-escapingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+statE(e:E0) output
+CEC(c:C0,e:E0,o:C1) output
+escapingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) output
 
 # relations needed to compute parallelRaceHext
-threadAC(t:A,c:C)
-ForkPMcs(caller:C,p1:P,callee:C) 
-ForkPHcs(caller:C,p1:P,callee:C,p2:P) 
-NonForkPMcs(caller:C,p1:P,callee:C,m2:M)
-NonForkPHcs(caller:C,p1:P,callee:C,p2:P)
-NonForkPTcs(caller:C,p1:P,callee:C,p2:P)
-PathEdge(c:C,p:P,this:A,sThat:A,tThat:A) 
-SummEdge(c:C,p:P,this:A,sThat:A,tThat:A)
-mhp(c:C0,p:P0,t1:A0,t2:A1)
-mhe(c:C0,e:E0,t1:A0,t2:A1)
-parallelRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+threadAC(t:A,c:C) output
+ForkPMcs(caller:C,p1:P,callee:C)  output
+ForkPHcs(caller:C,p1:P,callee:C,p2:P)  output
+NonForkPMcs(caller:C,p1:P,callee:C,m2:M) output
+NonForkPHcs(caller:C,p1:P,callee:C,p2:P) output
+NonForkPTcs(caller:C,p1:P,callee:C,p2:P) output
+PathEdge(c:C,p:P,this:A,sThat:A,tThat:A)  output
+SummEdge(c:C,p:P,this:A,sThat:A,tThat:A) output
+mhp(c:C0,p:P0,t1:A0,t2:A1) output
+mhe(c:C0,e:E0,t1:A0,t2:A1) output
+parallelRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) output
 
 # final race queries 
 outQuery(e1:E0,e2:E1) output
+ 
+#thrOblAbbrRootCM(c:C,m:M) output
+#thrOblAbbrReachableCM(c:C,m:M) output
+#thrOblAbbrCICM(c:C,i:I,d:C,m:M) output
+#thrOblAbbrCMCM(c:C,m:M,d:C,n:M) output
+#thrOblAbbrRootCM(0,0).
+#thrOblAbbrReachableCM(c,m) :- thrOblAbbrRootCM(c,m).
+#thrOblAbbrReachableCM(d,n) :- thrOblAbbrCICM(_,_,d,n).
+#thrOblAbbrCICM(c,i,d,n) :- thrOblAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n).
+#thrOblAbbrCMCM(c,m,d,n) :- thrOblAbbrCICM(c,i,d,n), MI(m,i).
+#threadOC(o:C0,c:C1) output
+#threadOC(o,c) :- MmethArg(1,0,v), thrOblAbbrCICM(_,_,c,1), VCA(v,c,o).
 
-###
-# Constraints
-###
+threadOC(o:C0,c:C1) input # from threads-sliver-dlog
+
+### Constraints
+
+escA(a) :- FA(_,a). # objects (base case)
+escA(a) :- reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a). # in context c, Thread.start() this points to a [NAME=ts]
+escA(a) :- escA(b), AFA(b,_,a). # objects (transitive)
 
 thrSenAbbrRootCM(0,0).
 thrSenAbbrRootCM(d,1) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,1).
@@ -79,14 +175,14 @@ reachableTCM(t,c,m) :- threadAOCM(t,_,c,m).
 reachableTCM(t,d,n) :- reachableTCM(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
 reachableTCE(t,c,e) :- reachableTCM(t,c,m), ME(m,e).
 
-startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
-startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1 < c2.
-startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1 = c2, t1 <= t2.
+startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
+startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 
 ###
 
 statE(e) :- EF(e,f), statF(f).
-CEC(c,e,o) :- EV(e,v), CVC(c,v,o), escO(o).
+CEC(c,e,o) :- EV(e,v), VCA(v,c,o), escO(o).
 
 escapingRaceHext(t1,c1,e1,t2,c2,e2) :- startingRaceHext(t1,c1,e1,t2,c2,e2), CEC(c1,e1,o), CEC(c2,e2,o).
 escapingRaceHext(t1,c1,e1,t2,c2,e2) :- startingRaceHext(t1,c1,e1,t2,c2,e2), statE(e1), statE(e2).
@@ -102,8 +198,8 @@ threadAC(t,c) :- threadAOCM(t,_,c,1).
 
 PathEdge(0,0,1,0,0).
 PathEdge(c,q,t,t1,t2) :- PathEdge(c,p,t,t1,t2), PP(p,q).
-PathEdge(d,q,t,t1,t2) :- NonForkPHcs(c,p,d,q) , PathEdge(c,p,t,_ ,t2), t1=t2.
-SummEdge(c,p,t,t1,t2) :- NonForkPTcs(c,p,d,q) , PathEdge(d,q,t,t1,t2).
+PathEdge(d,q,t,t1,t2) :- NonForkPHcs(c,p,d,q), PathEdge(c,p,t,_,t2), t1=t2.
+SummEdge(c,p,t,t1,t2) :- NonForkPTcs(c,p,d,q), PathEdge(d,q,t,t1,t2).
 PathEdge(c,r,t,t1,t3) :- SummEdge(c,p,t,t2,t3), PathEdge(c,p,t,t1,t2), PP(p,r).
 PathEdge(c,r,t,t1,t2) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadAC(t2,d).
 PathEdge(c,r,t,t1,t3) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadAC(t2,d), PathEdge(d,q,t2,0,t3), MPtail(1,q).
