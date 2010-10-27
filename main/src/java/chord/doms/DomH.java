@@ -47,15 +47,14 @@ import chord.program.Program;
 )
 public class DomH extends ProgramDom<Object> {
 	protected DomM domM;
-	protected int lastRealIdx;
+	protected int lastA;
+	protected int lastI;
 	private static boolean PHANTOM_CLASSES = true;
-	public int getLastRealIdx() {
-		return lastRealIdx;
+	public int getLastA() {
+		return lastA;
 	}
-
-	protected int lastPhantomObjIdx;
-	public int getLastPhantomObjIdx() {
-		return lastPhantomObjIdx;
+	public int getLastI() {
+		return lastI;
 	}
 
 	public void init() {
@@ -82,20 +81,16 @@ public class DomH extends ProgramDom<Object> {
 				}
 			}
 		}
-		lastRealIdx = size() - 1;
+		lastA = size() - 1;
 		Reflect reflect = Program.g().getReflect();
 		processResolvedNewInstSites(reflect.getResolvedObjNewInstSites());
 		processResolvedNewInstSites(reflect.getResolvedConNewInstSites());
 		processResolvedNewInstSites(reflect.getResolvedAryNewInstSites());
-/*
-		for (jq_Reference r : program.getReflectInfo().getReflectClasses()) {
-			add(new PhantomObjVal(r));
-		}*/
-		lastPhantomObjIdx = size() - 1;
-		if(PHANTOM_CLASSES) {
-  		for (jq_Reference r : Program.g().getClasses()) {
-  			add(new PhantomClsVal(r));
-  		}
+		lastI = size() - 1;
+		if (PHANTOM_CLASSES) {
+			for (jq_Reference r : Program.g().getClasses()) {
+				add(new PhantomClsVal(r));
+			}
 		}
 	}
 	private void processResolvedNewInstSites(List<Pair<Quad, List<jq_Reference>>> l) {
@@ -107,16 +102,10 @@ public class DomH extends ProgramDom<Object> {
 			Quad q = (Quad) o;
 			return q.toByteLocStr();
 		}
-/*
-		if (o instanceof PhantomObjVal) {
-			jq_Reference r = ((PhantomObjVal) o).r;
-			return r.getName() + "@phantom_obj";
-		} */
 		if (o instanceof PhantomClsVal) {
 			jq_Reference r = ((PhantomClsVal) o).r;
 			return r.getName() + "@phantom_cls";
 		}
-
 		assert (o == null);
 		return "null";
 	}
