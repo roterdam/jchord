@@ -14,8 +14,9 @@
 .include "F.dom"
 .include "UV.dom"
 .include "U.dom"
+.include "Opt.dom"
 
-.bddvarorder I0_Z0_StrConst0_I1_M0_V0_F0_H0_V1_V2_UV0_U0_U1_T0
+.bddvarorder I0_Z0_StrConst0_Opt0_M0_V0_F0_H0_V1_V2_UV0_U0_U1_T0
 
 
 
@@ -41,6 +42,7 @@ IinvkRet(i:I0,n:Z0,v:V0) input
 
 
 confUVV(i:I, o:UV, in:V) input
+OptNames(o:Opt,site:I) input
 confCall(i:I)
 UVV(u:UV,v:V) input
 UVU(uv:UV,u:U) input
@@ -61,7 +63,7 @@ UcU(l:U,r:U)
 restVV(v1:V,v2:V)  output
 restIM(i:I,m:M)
 enumCast(t:T,v:V)
-enumOpts(site:I,t:T) output
+enumOpts(site:Opt,t:T) output
 
 objVarAsgnInst(l:V,r:V) input
 #objValAsgnInst(l:V,h:H) input
@@ -79,8 +81,8 @@ checkCastInst(l:V,t:T,r:V) input
 
 excludedCall(i:I)
 
-statFieldHolds(f:F,site:I) output
-instFieldHolds(b:H,f:F,site:I) output
+statFieldHolds(f:F,site:Opt) output
+instFieldHolds(b:H,f:F,site:Opt) output
 
 summarized(m:M)
 summarizedFlowThru(m:M,z:Z) input
@@ -88,30 +90,32 @@ summarizedCallArg(i:I,z:Z)
 
 refAPIOpt(i:I0,n:Z0,v:V) output
 primAPIOpt(i:I0,n:Z0,u:U) output
-refFlow(v:V,site:I) output
-primFlow(u:U,site:I) output
+refFlow(v:V,site:Opt) output
+primFlow(u:U,site:Opt) output
 timeVar(u:U) output
-timeConf(site:I) output
-primCVar(u:U,site:I)
+timeConf(site:Opt) output
+primCVar(u:U,site:Opt)
 
 stringCompare(i:I, v1:V, v2:V) input
 StrSplit(i:I, v1:V, v2:V) input
 VConstFlow(v:V0, cst:StrConst) input
 passThru(v:V0,i:I,u:V1) input
-allowableOpts(site:I, str:StrConst) output
+allowableOpts(site:Opt, str:StrConst) output
 
 IRetrieve(i:I,o:V,c:V) input
 IInsert(i:I,c:V,o:V) input
 INewColl(i:I,c:V,o:V) input
 
-collHolds(collectionSrc:H,site:I)
-vColHolds(collection:V,site:I) output
+collHolds(collectionSrc:H,site:Opt)
+vColHolds(collection:V,site:Opt) output
 
-confMethCall(i:I,z:Z,site:I) output
-confReturn(m:M, site:I) output
-confArg(m:M,z:Z, site:I) output
+confMethCall(i:I,z:Z,site:Opt) output
+confReturn(m:M, site:Opt) output
+confArg(m:M,z:Z, site:Opt) output
 
-collHolds(hST,site) :- HI(hST,site),confUVV(site,_,_).
+##
+#Below rule is problematic
+#collHolds(hST,opt) :- HI(hST,site),confUVV(site,_,_),OptNames(opt,site).
 vColHolds(col,site) :- VH(col, hST),collHolds(hST,site).
 collHolds(newH,site) :- VH(v,newH),vColHolds(v,site).
 
@@ -136,7 +140,7 @@ confCall(i) :- confUVV(i,_,_).
 
 #restIM(i,m) :- IM(i,m).
 
-##THese lines are non-summary flowthrough
+##These lines are non-summary flowthrough
 restIM(i,m) :- IM(i,m),!confCall(i).
 refFlow(v,site) :- passThru(v,_,u),refFlow(u,site).
 refFlow(v,site) :- primFlow(u,site),primToRefConversion(v,_,u).
@@ -150,9 +154,9 @@ restVV(v,u) :- IinvkArg(i,z,u), IM(i,m), MmethArg(m,z,v).
 UcU(u,v) :- IinvkPrimRet(i,z,u), restIM(i,m), MmethPrimRet(m,z,v).  
 restVV(u,v) :- IinvkRet(i,z,u), restIM(i,m), MmethRet(m,z,v).
 
-primFlow(u,site) :- getTime(u,site).
-refFlow(v,site) :- confUVV(site,u,_),UVV(u,v).
-primFlow(u,site) :- confUVV(site,uv,_),UVU(uv,u).
+primFlow(u,0) :- getTime(u,_).
+refFlow(v,opt) :- confUVV(site,u,_),UVV(u,v),OptNames(opt,site).
+primFlow(u,opt) :- confUVV(site,uv,_),UVU(uv,u),OptNames(opt,site).
 
 statFieldHolds(f,i) :- putStatFldInst(f,r),refFlow(r,i).
 statFieldHolds(f,i) :- putStatFldPrimInst(f,r),primFlow(r,i).
@@ -167,11 +171,13 @@ refFlow(v,site) :- StrSplit(_,v,u),refFlow(u,site).
 
 refFlow(v,site) :- statFieldHolds(f,site),getStatFldInst(v,f).
 refFlow(v,site) :- instFieldHolds(bh,f,site),getInstFldInst(v,b,f), VH(b,bh). split
-refFlow(v,site) :- getInstFldInst(v,b,_),refFlow(b,site).
+
+##This is saying that subfields of tainted objects get tainted
+#refFlow(v,site) :- getInstFldInst(v,b,_),refFlow(b,site).
 
 # We already have collection-aware points-to.
 #This is here to handle cases where the conf method itself returns a collection
-#refFlow(v,site) :- vColHolds(colV,site),IRetrieve(_,v,colV).
+refFlow(v,site) :- vColHolds(colV,site),IRetrieve(_,v,colV).
 vColHolds(colV,site) :- IInsert(_,colV,v),refFlow(v,site).
 refFlow(v,site) :- IRetrieve(_,v,colV),refFlow(colV,site).
 
@@ -203,8 +209,9 @@ confReturn(m,site) :- MmethRet(m,0,v),refFlow(v,site).
 confArg(m,z,site) :- MmethArg(m,z,v),refFlow(v,site).
 confArg(m,z,site) :- MmethPrimArg(m,z,v),primFlow(v,site).
 
-timeVar(v) :- primFlow(v,tSite),getTime(_,tSite).
-primCVar(v,confSite) :- primFlow(v,confSite),confUVV(confSite,_,_).
+timeVar(v) :- primFlow(v,0).
+#primFlow(v,tSite),getTime(_,tSite).
+primCVar(v,confSite) :- primFlow(v,confSite),OptNames(confSite,_).
 
 timeConf(confSite) :- primCVar(v,confSite),timeVar(v),primDataDep(v,_). 
 timeConf(confSite) :- primCVar(v,confSite),timeVar(v2),MPrimCmp(_,v,v2 ). split

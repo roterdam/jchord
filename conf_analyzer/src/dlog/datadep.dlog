@@ -7,68 +7,34 @@
 .include "H.dom"
 .include "V.dom"
 .include "Z.dom"
-.include "StrConst.dom"
 .include "E.dom"
 .include "UV.dom"
 .include "U.dom"
+.include "Opt.dom"
 
-.bddvarorder I0xM0xM1_T0_V0xV1_E0_StrConst0_T1_H0_F0_H1_Z0xU0xU1xUV0
-
-
-### Inputs from alias analysis or standard Java analyses
-reachableM(m:M) input
-VH(v:V,h:H) input
-FH(f:F,h:H) input
-IinvkArg0(i:I0,v:V1) input
-IinvkArg(i:I0,n:Z0,v:V1) input
-IinvkRet(i:I0,n:Z0,v:V0) input
-IM(i:I,m:M) input
-VV(v1:V,v2:V) input
+.bddvarorder I0xI1xM0xM1_T0_V0xV1_E0_Opt0_T1_H0_F0_H1_Z0xU0xU1xUV0
 
 
-objValAsgnInst(l:V,h:H) input
-objVarAsgnInst(l:V,r:V) input
-getInstFldInst(l:V,b:V,f:F) input
-putInstFldInst(b:V,f:F,r:V) input
-getStatFldInst(l:V,f:F) input
-putStatFldInst(f:F,r:V) input
-checkCastInst(l:V,t:T,r:V) input
 
-
-#####Conf related
-TaintArray(i:I,v:V,v2:V) input
-Constructs(i:I,v:V) input
-FromArray(e:E,v:V,v2:V) input
-localMustAlias(v:V,u:V)
 APIMethod(i:I) input
-ImarkConf(h:H,v:UV,cst:StrConst) input
-rconf(h:H,v:V,cst:StrConst) output
-UVV(u:UV,v:V) input
-UVU(uv:UV,u:U) input
-cdep(v:V,h:H,cst:StrConst) output
-cdepf(f:F,h:H,cst:StrConst) output
-primcdep(u:U,h:H,cst:StrConst) output
-HFC(h1:H,f:F,h2:H,cst:StrConst) output
-#HFCU(h1:H,f:F,h2:H,cst:StrConst) output
-returnsConf(i:I,v:V0,h:H,cst:StrConst) output
-Mclones(m:M,l:V,i:I,r:V) input
-clones(l:V,r:V)
+primConversion(u:U,i:I,v:V) input
+primToRefConversion(v:V,i:I,u:U) input
 
-#####Primitive tracking
+IM(i:I,m:M) input
+reachableI(i:I) input
+reachableM(m:M) input
+instI(i:I) input
+VH(v:V,h:H) input
+HI(h:H,i:I) input
+scopeExcludedM(m:M) input
+MPrimCmp(m:M, u1:U, u2:U) input
+badCalls(i:I) input
 
-MmethPrimArg(m:M0,n:Z0,u:U0) input
-MmethPrimRet(m:M0,n:Z0,u:U0) input
-IinvkPrimArg(i:I0,n:Z0,u:U0) input
-IinvkPrimRet(i:I0,n:Z0,u:U0) input
-
-MobjVarAsgnPrimInst(m:M,l:U0,r:U1) input
-MprimDataDep(m:M,l:U0,r:U1) input
-
-
-MgetStatFldPrimInst(m:M,l:U0,f:F) input
-MputStatFldPrimInst(m:M,f:F,r:U0) input
-MgetInstFldPrimInst(m:M,l:U,b:V,f:F) input
-MputInstFldPrimInst(m:M,b:V,f:F,r:U) input
+MmethRet(m:M0,n:Z0,v:V1) input
+MmethArg(m:M0,n:Z0,u:V0) input
+IinvkArg(i:I0,n:Z0,v:V1) input
+virtIM(i:I,m:M) input
+IinvkRet(i:I0,n:Z0,v:V0) input
 
 objVarAsgnPrimInst(l:U0,r:U1)
 primDataDep(l:U0,r:U1)
@@ -76,61 +42,196 @@ getInstFldPrimInst(l:U0,b:V,f:F)
 putInstFldPrimInst(b:V,f:F,r:U) 
 getStatFldPrimInst(l:U,f:F) 
 putStatFldPrimInst(f:F,r:U) 
-UcU(l:U,r:U)
 
-####Prim tracking
+MmethPrimArg(m:M0,n:Z0,u:U0) input
+MmethPrimRet(m:M0,n:Z0,u:U0) input
+IinvkPrimArg(i:I0,n:Z0,u:U0) input
+IinvkPrimRet(i:I0,n:Z0,u:U0) input
+
+confUVV(i:I, o:UV, in:V) input
+OptNames(o:Opt,site:I) input
+confCall(i:I)
+UVV(u:UV,v:V) input
+UVU(uv:UV,u:U) input
+
+
+UcU(l:U,r:U)
+restVV(v1:V,v2:V)  output
+restIM(i:I,m:M)
+excludedCall(i:I)
+passThru(v:V0,i:I,u:V1) input
+
+
+###  Flow relations
+objVarAsgnInst(l:V,r:V) input
+getInstFldInst(l:V,b:V,f:F) input
+putInstFldInst(b:V,f:F,r:V) input
+putStatFldInst(f:F,r:V) input
+getStatFldInst(l:V,f:F) input
+MgetStatFldPrimInst(m:M,l:U0,f:F) input
+MputStatFldPrimInst(m:M,f:F,r:U0) input
+MgetInstFldPrimInst(m:M,l:U,b:V,f:F) input
+MputInstFldPrimInst(m:M,b:V,f:F,r:U) input
+MobjVarAsgnPrimInst(m:M,l:U0,r:U1) input
+MprimDataDep(m:M,l:U0,r:U1) input
+checkCastInst(l:V,t:T,r:V) input
+
+
+localMustAlias(v:V,u:V) output
+
+
+#### Collection model
+IRetrieve(i:I,o:V,c:V) input
+IInsert(i:I,c:V,o:V) input
+INewColl(i:I,c:V,o:V) input
+
+collHolds(collectionSrc:H,site:Opt)
+vColHolds(collection:V,site:Opt) output
+taintingCall(call:I,site:Opt) output
+
+Mclones(m:M,l:V,i:I,r:V) input
+clones(l:V,r:V)
+
+###Core outputs
+statHF(f:F,site:Opt) output
+instHF(b:H,f:F,site:Opt) output
+
+refCdep(v:V,site:Opt) output
+primCdep(u:U,site:Opt) output
+
+confMethCall(i:I,z:Z,site:Opt) output
+confReturn(m:M, site:Opt) output
+confArg(m:M,z:Z, site:Opt) output
+returnsConf(i:I,v:V,site:Opt) output
+
+summarized(m:M)
+classnameFlowEdge(m:M,z:Z) input
+summarizedFlowThru(m:M,z:Z) input
+summarizedCallArg(i:I,z:Z)
+
+##Just for debugging
+insertM(m:M) output
+retrieveM(m:M) output
+argCdep(m:M, z:Z, opt:Opt) output
+IargCdep(i:I, z:Z, opt:Opt) output
+IretDep(i:I,opt:Opt) output
+
+#collHolds(hST,site) :- HI(hST,site),confUVV(site,_,_).
+vColHolds(col,site) :- VH(col, hST),collHolds(hST,site).
+collHolds(newH,site) :- VH(v,newH),vColHolds(v,site).
+vColHolds(newCol,site) :- INewColl(_,newCol, oldCol),vColHolds(oldCol,site).
+
+
+##Prim tracking
 objVarAsgnPrimInst(l,r) :- reachableM(m), MobjVarAsgnPrimInst(m,l,r).
 primDataDep(l,r) :- reachableM(m), MprimDataDep(m,l,r).
-
 getStatFldPrimInst(l,f)   :- reachableM(m), MgetStatFldPrimInst(m,l,f).
 putStatFldPrimInst(f,r)   :- reachableM(m), MputStatFldPrimInst(m,f,r).
-
 getInstFldPrimInst(l,b,f) :- reachableM(m), MgetInstFldPrimInst(m,l,b,f).
 putInstFldPrimInst(b,f,r) :- reachableM(m), MputInstFldPrimInst(m,b,f,r).
+
 clones(l,r) :- reachableM(m),Mclones(m,l,_,r).
 
-UcU(v,u) :- IinvkPrimArg(i,z,u), IM(i,m), MmethPrimArg(m,z,v).
-UcU(u,v) :- IinvkPrimRet(i,z,u), IM(i,m), MmethPrimRet(m,z,v).
 
-
-#####Conf tracking
+confCall(i) :- confUVV(i,_,_).
 
 localMustAlias(v,u) :- objVarAsgnInst(u,v).
 localMustAlias(v,u) :- objVarAsgnInst(v,u).
 
-rconf(h,v,cst) :- ImarkConf(h,u,cst),UVV(u,v).
+summarized(m) :- summarizedFlowThru(m,_).
+summarized(m) :- classnameFlowEdge(m,_).
+summarizedCallArg(i,z) :- IM(i,m),summarizedFlowThru(m,z).
+#summarizedCallArg(i,z) :- IM(i,m),classnameFlowEdge(m,z).
 
-primcdep(u,h,cst) :- ImarkConf(h,uv,cst),UVU(uv,u).
-primcdep(l,h,cst) :- primcdep(r,h,cst),objVarAsgnPrimInst(l,r).
-primcdep(l,h,cst) :- UcU(l,r),primcdep(r,h,cst).
-primcdep(l,h,cst) :- primDataDep(l,r),primcdep(r,h,cst).
-primcdep(u,h,cst) :- cdep(v,h,cst),IinvkPrimRet(i,_,u),IinvkArg(i,0,v),APIMethod(i).
-cdep(v,h,cst) :- primcdep(u,h,cst),IinvkPrimArg(i,_,u),IinvkRet(i,_,v),APIMethod(i).
-cdep(v,h,cst) :- primcdep(u,h,cst),IinvkPrimArg(i,_,u),IinvkArg(i,0,v),APIMethod(i).
+restIM(i,m) :- IM(i,m),!confCall(i),!summarized(m).
+restVV(u,v) :- IinvkArg(i,z,v), summarizedCallArg(i,z),IinvkRet(i,0,u).
+UcU(u,v) :- IinvkPrimArg(i,z,v), summarizedCallArg(i,z),IinvkPrimRet(i,0,u).
 
-cdepf(f,h,cst) :- putStatFldPrimInst(f,r), primcdep(r,h,cst).
-primcdep(u,h,cst) :- getStatFldPrimInst(u,f), cdepf(f,h,cst).
-primcdep(l,h2,cst) :- getInstFldPrimInst(l,b,f), VH(b,h1), HFC(h1,f,h2,cst). split
-HFC(h1,f,h2,cst) :- putInstFldPrimInst(b,f,r), VH(b,h1), primcdep(r,h2,cst). split
 
-cdep(l,h2,cst) :- getInstFldInst(l,b,f), VH(b,h1), HFC(h1,f,h2,cst). split
-HFC(h1,f,h2,cst) :- putInstFldInst(b,f,r), VH(b,h1), cdep(r,h2,cst). split
-cdepf(f,h,cst) :- putStatFldInst(f,r), cdep(r,h,cst).
-cdep(v,h,cst) :- getStatFldInst(v,f), cdepf(f,h,cst).
-cdep(v,h,cst) :- rconf(h,v,cst).
-cdep(v,h,cst) :- VH(v,h),rconf(h,_,cst).
-cdep(v,h,cst) :- cdep(u,h,cst),IinvkArg(i,_,u),IinvkRet(i,_,v),APIMethod(i).
-cdep(v,h,cst) :- cdep(u,h,cst),IinvkArg(i,_,u),IinvkArg(i,0,v),APIMethod(i).
-cdep(v,h,cst) :- VV(v,u),cdep(u,h,cst).
-cdep(v,h,cst) :- localMustAlias(v,u),cdep(u,h,cst).
-cdep(v,h,cst) :- checkCastInst(v,_,u),cdep(u,h,cst).
+##These lines are non-summary flowthrough
+#restIM(i,m) :- IM(i,m),!confCall(i)
+
+
+## Args flow in
+UcU(v,u) :- IinvkPrimArg(i,z,u), IM(i,m), MmethPrimArg(m,z,v).
+restVV(v,u) :- IinvkArg(i,z,u), IM(i,m), MmethArg(m,z,v).
+
+#But return values don't flow out through restricted summarized calls
+UcU(u,v) :- IinvkPrimRet(i,z,u), restIM(i,m), MmethPrimRet(m,z,v).  
+restVV(u,v) :- IinvkRet(i,z,u), restIM(i,m), MmethRet(m,z,v).
+
+refCdep(v,name) :- confUVV(site,u,_),UVV(u,v),OptNames(name,site).
+primCdep(u,name) :- confUVV(site,uv,_),UVU(uv,u),OptNames(name,site).
+
+statHF(f,i) :- putStatFldInst(f,r),refCdep(r,i).
+statHF(f,i) :- putStatFldPrimInst(f,r),primCdep(r,i).
+
+instHF(bh,f,i) :- putInstFldInst(b,f,r),refCdep(r,i),VH(b,bh). split
+instHF(bh,f,i) :- putInstFldPrimInst(b,f,r),primCdep(r,i),VH(b,bh).  split
+
+
+refCdep(v,site) :- objVarAsgnInst(v,u),refCdep(u,site).
+refCdep(v,site) :- checkCastInst(v,_,u),refCdep(u,site).
+refCdep(v,site) :- restVV(v,u),refCdep(u,site).
+
+refCdep(v,site) :- statHF(f,site),getStatFldInst(v,f).
+refCdep(v,site) :- instHF(bh,f,site),getInstFldInst(v,b,f), VH(b,bh). split
+refCdep(v,site) :- refCdep(u,site),localMustAlias(v,u).
+
+
+# We already have collection-aware points-to.
+refCdep(v,site) :- vColHolds(colV,site),IRetrieve(_,v,colV).
+vColHolds(colV,site) :- IInsert(_,colV,v),refCdep(v,site).
+
+#This is here to handle cases where the conf method itself returns a collection
+#May be unneeded because of API-call tainting?
+#refCdep(v,site) :- IRetrieve(_,v,colV),refCdep(colV,site).
+
+
+primCdep(v,site) :- objVarAsgnPrimInst(v,u),primCdep(u,site).
+primCdep(v,site) :- primDataDep(v,u),primCdep(u,site).
+primCdep(v,site) :- UcU(v,u),primCdep(u,site).
+primCdep(v,site) :- statHF(f,site),getStatFldPrimInst(v,f).
+primCdep(v,site) :- instHF(bh, f,site),getInstFldPrimInst(v,b,f), VH(b,bh). split
+primCdep(v,site) :- getInstFldPrimInst(v,b,_),refCdep(b,site).
 
 #treat arrays and elements interchangeably
-cdep(b,h,cst)  :- putInstFldInst(b,0,r), cdep(r,h,cst).
-cdep(l,h,cst) :- getInstFldInst(l,b,0), cdep(b,h,cst).
-cdep(v,h,cst) :- FromArray(_,v,u),cdep(u,h,cst).
-cdep(v,h,cst) :- TaintArray(_,v,u),cdep(u,h,cst).
-cdep(v,h,cst) :- clones(v,r),cdep(r,h,cst).
-#cdep(v,h,cst) :- clones(v,r),HFC(h1,f,h2,cst).
+refCdep(b,site)  :- putInstFldInst(b,0,r), refCdep(r,site).
+refCdep(l,site) :- getInstFldInst(l,b,0), refCdep(b,site).
+refCdep(v,site) :- clones(v,r),refCdep(r,site).
 
-returnsConf(i,v,h,cst) :- IinvkRet(i,_,v),cdep(v,h,cst),!APIMethod(i).
+##Below is dangerous; a tainted ref with a conf field can infect everything.
+#  Acceptable in some more restricted sense, perhaps. Which types are field-insensitive?
+refCdep(v,site) :- getInstFldInst(v,b,_),refCdep(b,site).
+
+   
+#refCdep(v,site) :- clones(v,r),instHF(h1,f,site).
+
+## Conf flows through API calls
+
+
+taintingCall(i, opt) :- refCdep(u,opt),IinvkArg(i,_,u),APIMethod(i).
+taintingCall(i, opt) :- primCdep(u,opt),IinvkPrimArg(i,_,u),APIMethod(i).
+
+
+#taint this and return value from args
+refCdep(v,opt) :- taintingCall(i, opt),IinvkRet(i,_,v).
+primCdep(v,opt) :- taintingCall(i, opt),IinvkPrimRet(i,_,v).
+refCdep(v,opt) :- taintingCall(i, opt),IinvkArg(i,0,v),instI(i).
+
+####Debugging
+
+argCdep(m, z, opt) :- MmethArg(m,z,v),refCdep(v,opt).
+argCdep(m, z, opt) :- MmethPrimArg(m,z,v),primCdep(v,opt).
+
+IargCdep(i, z, opt) :- IinvkArg(i,z,v),refCdep(v,opt).
+IargCdep(i, z, opt) :- IinvkPrimArg(i,z,v),primCdep(v,opt).
+IretDep(i,opt) :- IinvkRet(i,_,v),refCdep(v,opt).
+
+insertM(m) :- IInsert(i,_,_),IM(i,m).
+retrieveM(m) :- IRetrieve(i,_,_),IM(i,m).
+
+
+returnsConf(i,v,site) :- IinvkRet(i,_,v),refCdep(v,site),!APIMethod(i).
+
+

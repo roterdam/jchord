@@ -52,8 +52,6 @@ staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 
-#MclsValAsgnInst(m:M0,v:V0,t:T0) input
-#MgetClassInvkInst(m:M0,i:I0) input
 clsTH(t:T0,h:H0) input
 #objTH(t:T0,h:H0) input
 
@@ -90,7 +88,6 @@ resolveRPC(interfacem:M,concretem:M,t:T) input
 MentryPoints(m:M) input
 externalArg(v:V) output
 newThread(ctor:I, tRun:M,v:V)  input
-#reflectHT(h:H,t:T) input
 TFT(t:T0,f:F,t2:T1) input
 startedRunnable(h:H,tRun:M)  
 

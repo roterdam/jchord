@@ -5,7 +5,7 @@
 
 
 .include "V.dom"
-.include "StrConst.dom"
+.include "Opt.dom"
 .include "I.dom"
 .include "Z.dom"
 .include "H.dom"
@@ -15,7 +15,7 @@
 .include "M.dom"
 .include "F.dom"
 
-.bddvarorder I0_Z0_StrConst0_M0_F0_V0_H0_H1_V1_V2_UV0_U0_U1
+.bddvarorder I0_Z0_Opt0_M0_F0_V0_H0_H1_V1_V2_UV0_U0_U1
 
 ###
 # Relations
@@ -42,38 +42,46 @@ MputStatFldPrimInst(m:M,f:F,r:U0) input
 MgetInstFldPrimInst(m:M,l:U,b:V,f:F) input
 MputInstFldPrimInst(m:M,b:V,f:F,r:U) input
 
+getInstFldInst(l:V,b:V,f:F)
+getStatFldInst(l:V,f:F)
 
 primRefDep(u:UV,v:V) input
 primControlDep(i:I,u:UV) input 
 
 
-rconf(h:H,v:V,cst:StrConst) input
-cdepf(f:F,h:H,cst:StrConst) input
+statHF(f:F,site:Opt) input
+instHF(b:H,f:F,site:Opt) input
+refCdep(v:V,site:Opt) input
+primCdep(u:U,site:Opt) input
+
+
 APIMethod(i:I) input
-cdep(v:V,h:H,cst:StrConst) input
-primcdep(u:U,h:H,cst:StrConst) input
-returnsConf(i:I,v:V0,h:H,cst:StrConst) input
-HFC(h1:H,f:F,h2:H,cst:StrConst) input
+returnsConf(i:I,v:V0,cst:Opt) input
 
-getInstFldInst(l:V,b:V,f:F)
-getStatFldInst(l:V,f:F)
-
+confUVV(i:I, o:UV, in:V) input
+OptNames(o:Opt,site:I) input
+UVV(u:UV,v:V) input
+UVU(uv:UV,u:U) input
 
 FailurePath(i:I0) input
 
-primConfDep(u:UV,h:H,cst:StrConst)
+primConfDep(u:UV,cst:Opt)
 getInstFldPrimInst(l:U0,b:V,f:F) 
 getStatFldPrimInst(l:U,f:F) 
 
 VVSCS(v:V0,u:V1) output
-cdepSCS(v:V,h:H,cst:StrConst) output
 FailurePathM(m:M) output
-primcdepSCS(u:U,h:H,cst:StrConst) output
-failPathUFU(u:U,f:F,v:U) output
-maybeUGet(u:U,h:H,cst:StrConst)
 
-cOnLine(i:I, h:H,cst:StrConst) output
-confControlDep(i:I, h:H,cst:StrConst) output
+refCdepSCS(v:V,cst:Opt) output
+primCdepSCS(u:U,cst:Opt) output
+failPathUFU(u:U,f:F,v:U) output
+maybeUGet(u:U,cst:Opt)
+
+cOnLine(i:I, cst:Opt) output
+confControlDep(i:I, cst:Opt) output
+
+refCdepSCS(v,name) :- confUVV(site,u,_),UVV(u,v),OptNames(name,site).
+primCdepSCS(u,name) :- confUVV(site,uv,_),UVU(uv,u),OptNames(name,site).
 
 FailurePathM(m) :- MI(m,i),FailurePath(i).
 
@@ -87,24 +95,23 @@ VVSCS(v,u) :- IinvkArg(i,z,u), FailurePath(i),IM(i,m), MmethArg(m,z,v).
 
 failPathUFU(u,f,v) :- FailurePathM(m),MgetInstFldPrimInst(m,u,_,f),MputInstFldPrimInst(m,_,f,v).
 
-maybeUGet(u,h2,cst) :- getInstFldPrimInst(u,b,f), VH(b,h1), HFC(h1,f,h2,cst).
-maybeUGet(u,h,cst) :- getStatFldPrimInst(u,f), cdepf(f,h,cst).
+maybeUGet(u,cst) :- getInstFldPrimInst(u,b,f), VH(b,h1), instHF(h1,f,cst).
+maybeUGet(u,cst) :- getStatFldPrimInst(u,f), statHF(f,cst).
 
 ##FIXME: bunch more prim-handling cases needed
 primDataDep(l,r) :- FailurePathM(m), MprimDataDep(m,l,r).
-primcdepSCS(l,h,cst) :- primDataDep(l,r),primcdepSCS(r,h,cst).
-primcdepSCS(u,h,cst) :- cdepSCS(v,h,cst),IinvkPrimRet(i,_,u),IinvkArg(i,0,v),APIMethod(i).
+primCdepSCS(l,cst) :- primDataDep(l,r),primCdepSCS(r,cst).
+primCdepSCS(u,cst) :- refCdepSCS(v,cst),IinvkPrimRet(i,_,u),IinvkArg(i,0,v),APIMethod(i).
 
-primcdepSCS(v,h,cst) :- failPathUFU(v,_,u),primcdepSCS(u,h,cst).
-primcdepSCS(v,h,cst) :- !failPathUFU(v,_,_),maybeUGet(v,h,cst).
+primCdepSCS(v,cst) :- failPathUFU(v,_,u),primCdepSCS(u,cst).
+primCdepSCS(v,cst) :- !failPathUFU(v,_,_),maybeUGet(v,cst).
 
-cdepSCS(l,h2,cst) :- getInstFldInst(l,b,f), VH(b,h1), HFC(h1,f,h2,cst). split
-cdepSCS(v,h,cst) :- getStatFldInst(v,f), cdepf(f,h,cst).
-cdepSCS(v,h,cst) :- rconf(h,v,cst).
-cdepSCS(v,h,cst) :- objVarAsgnInst(v,u),cdepSCS(u,h,cst).
-cdepSCS(v,h,cst) :- cdepSCS(u,h,cst),IinvkArg(i,_,u),IinvkRet(i,_,v),APIMethod(i).
-cdepSCS(v,h,cst) :- cdepSCS(u,h,cst),IinvkArg(i,_,u),IinvkArg(i,0,v),APIMethod(i).
-cdepSCS(v,h,cst) :- VVSCS(v,u),cdepSCS(u,h,cst).
+refCdepSCS(l,cst) :- getInstFldInst(l,b,f), VH(b,h1), instHF(h1,f,cst). split
+refCdepSCS(v,cst) :- getStatFldInst(v,f), statHF(f,cst).
+refCdepSCS(v,cst) :- objVarAsgnInst(v,u),refCdepSCS(u,cst).
+refCdepSCS(v,cst) :- refCdepSCS(u,cst),IinvkArg(i,_,u),IinvkRet(i,_,v),APIMethod(i).
+refCdepSCS(v,cst) :- refCdepSCS(u,cst),IinvkArg(i,_,u),IinvkArg(i,0,v),APIMethod(i).
+refCdepSCS(v,cst) :- VVSCS(v,u),refCdepSCS(u,cst).
 
-cdepSCS(v,h,cst) :- returnsConf(_,v,h,cst).
+refCdepSCS(v,cst) :- returnsConf(_,v,cst).
 #,!FailurePath(i). 
