@@ -6,7 +6,7 @@
 # Runs 0-CFA and initializes everything.
 
 # Author: Percy Liang (pliang@cs.berkeley.edu)
-# name=cspa-sliver-init-dlog
+# name=thresc-sliver-init-dlog
 
 .include "F.dom"
 .include "H.dom"
@@ -50,7 +50,6 @@ VH(v:V,h:H) input # Whether variable v can point to an object allocated at h
 reachableM(m:M) input # method m is reachable
 
 # Output one-time relations.
-query(e1:E,e2:E) output
 reachableH(h:H) output # allocation site h is reachable
 reachableV(v:V) output # variable v is reachable
 reachableT(t:T) output # type t is reachable
@@ -59,7 +58,6 @@ retIVMV(i:I0,vi:V0,m:M0,vm:V1) output # vi at call site i <=> vm in method m (re
 skipMM(m:M,n:M) output # m can reach n via a sequence of calls where m is instance method, rest (if any) are static methods
 HtoM(h:H,m:M) output # h can be the "this" argument calling method that skips to m
 
-query(e,ee) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_), e=ee. # All queries we care about
 reachableH(h) :- reachableM(m), MH(m,h).
 reachableV(v) :- reachableM(m), MV(m,v).
 argIVMV(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm).
@@ -76,3 +74,7 @@ reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 skipMM(m,n) :- m=n, !statIM(_,m).
 skipMM(m,n) :- skipMM(m,q), MI(q,i), statIM(i,n). # Can extend q to n using static method
 HtoM(h,n)   :- IinvkArg(i,0,v), VH(v,h), reachableH(h), IM(i,m), skipMM(m,n).
+
+# Queries
+query(e1:E,e2:E) output
+query(e,ee) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_), e=ee. # All queries we care about

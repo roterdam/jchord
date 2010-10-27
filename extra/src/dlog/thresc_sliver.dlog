@@ -7,7 +7,7 @@
 # Assume call graph construction is fixed.
 
 # Author: Percy Liang (pliang@cs.berkeley.edu)
-# name=cspa-sliver-dlog
+# name=thresc-sliver-dlog
 
 .include "F.dom"
 .include "H.dom"
@@ -66,12 +66,12 @@ reachableCI(c:C,i:I) output
 reachableCM(c:C,m:M) output
 VCfromVC(v1:V0,e1:C0,v2:V1,e2:C1) output # contextual variable (v1,e1) points to everything that (v2,e2) points to
 CICM(ci:C,i:I,cm:C,m:M) output # in context ci, call site i can call method m in context cm
-VAfilter(v:V,a:C) output
-
-### Datalog -> Java
+VAfilter(v:V,a:C) output    # variable v is allowed to point to abstract object a based on type information
 VCA(v:V,e:C,a:C) output     # contextual variable (v,e) can point to abstract object a
 FA(f:F,a:C) output          # static field f can point to abstract object a OR a is the this argument of a call to Thread.start()
 AFA(a1:C,f:F,a2:C) output   # abstract object a1 can point to abstract object a2 via field f
+
+### Datalog -> Java
 escA(a:C) output            # abstract object is escaping
 outQuery(e1:E,e2:E) output  # whether e1=e2 is thread escaping?
 
