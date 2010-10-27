@@ -1,9 +1,19 @@
 \section{Running a Program Analysis}
 \label{sec:running-analysis}
 
-TODO
+\subsection{Running an analysis}
+Running a Chord analysis is straightforward.
+The property  \texttt{chord.run.analyses} is a list of analyses to be run. Chord will compute the listed dependencies for each of these relations and run these prerequisites before running the analysis you specify.
 
-%chord.run.analyses
+\subsection{The dependence graph in classic projects}
+
+Chord has two kinds of projects: ``Classic'' and ``Modern''.  Despite the names, classic is effectively the standard at this point.
+In the classic model, there is an implicit dependency graph between analyses. For a datalog analysis (program), the ``input'' and ``output'' keywords in defining a relation specify the requirements and outputs of an analysis.  For a Java analysis, the \texttt{@Chord} annotation does so. See the section ``writing a Java analysis'' for details.
+
+\subsection{Printing the results}
+
+\texttt{chord.print.rels} is a list of relations to dump to disk. Note that these relations are printed in a somewhat unfriendly format; this is more useful for debugging than for interpreting programs. Note also that listing a relation here does not cause it to be computed; you will get an error at the end of your Chord execution if you ask it to print a relation that has not been computed.
+
 %List of names of program analyses to be run in order.
 %chord.java.analysis.path	 path	 Classpath containing program analyses in Java (i.e. @Chord-annotated classes).	${chord.main.dir}/classes/
 %chord.dlog.analysis.path	 path	 Path of directories containing program analyses in Datalog (i.e. *.datalog and *.dlog files).	${chord.main.dir}/src/main/dlog/
