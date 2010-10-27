@@ -415,7 +415,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 		int numV = domV.size();
 		int numM = domM.size();
-		int numA = domH.getLastRealIdx() + 1;
+		int numA = domH.getLastI() + 1;
 		int numH = domH.size();
 		int numI = domI.size();
 		if (currIter == 0) {

@@ -34,8 +34,8 @@ public class RelMobjValAsgnInst extends ProgramRel {
 		DomM domM = (DomM) doms[0];
 		DomV domV = (DomV) doms[1];
 		DomH domH = (DomH) doms[2];
-		int n = domH.getLastRealIdx();
-		for (int hIdx = 1; hIdx <= n; hIdx++) {
+		int numA = domH.getLastA() + 1;
+		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad q = (Quad) domH.get(hIdx);
 			jq_Method m = q.getMethod();
 			int mIdx = domM.indexOf(m);

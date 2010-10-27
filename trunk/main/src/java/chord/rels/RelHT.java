@@ -43,9 +43,8 @@ public class RelHT extends ProgramRel {
 		domH = (DomH) doms[0];
 		domT = (DomT) doms[1];
 		int numH = domH.size();
-		int mark1 = domH.getLastRealIdx() + 1;
-		// int mark2 = domH.getLastPhantomObjIdx() + 1;
-		for (int hIdx = 1; hIdx < mark1; hIdx++) {
+		int numA = domH.getLastA() + 1;
+		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad h = (Quad) domH.get(hIdx);
 			Operator op = h.getOperator();
 			jq_Type t;
@@ -67,18 +66,11 @@ public class RelHT extends ProgramRel {
 		processResolvedNewInstSites(reflect.getResolvedConNewInstSites());
 		processResolvedNewInstSites(reflect.getResolvedAryNewInstSites());
 /*
-		for (int hIdx = mark1; hIdx < mark2; hIdx++) {
-			PhantomObjVal h = (PhantomObjVal) domH.get(hIdx);
-			jq_Reference r = h.r;
-			int tIdx = domT.indexOf(r);
-			assert (tIdx >= 0);
-			add(hIdx, tIdx);
-		}
 		jq_Reference cls = Program.g().getClass("java.lang.Class");
 		if (cls != null) {
 			int tIdx = domT.indexOf(cls);
 			assert (tIdx >= 0);
-			for (int hIdx = mark2; hIdx < numH; hIdx++)
+			for (int hIdx = numA; hIdx < numH; hIdx++)
 				add(hIdx, tIdx);
 		}
 */
