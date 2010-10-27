@@ -150,10 +150,10 @@ public class ConfDefines {
     else return s;
   }
   
-  public static String optionPrefix(Object o) {
+  public static String optionPrefix(Quad inst) {
     
-    if(o instanceof Quad) {
-      Quad inst = (Quad) o;
+//    if(o instanceof Quad) {
+ //     Quad inst = (Quad) o;
       if(inst.getOperator() instanceof Invoke) {
         jq_Method m = Invoke.getMethod(inst).getMethod();
         String classname = m.getDeclaringClass().getName();
@@ -161,8 +161,8 @@ public class ConfDefines {
         return optionPrefix(classname, methname);
       }
       return "";
-    } //else if(o instanceof jq_Class) { } 
-    else return "";
+//    } //else if(o instanceof jq_Class) { } 
+ //   else return "";
   }
 
 
