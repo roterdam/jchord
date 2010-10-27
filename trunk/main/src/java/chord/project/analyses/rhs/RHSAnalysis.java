@@ -126,17 +126,21 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		return targets;
 	}
 
+	private int timeout = Integer.getInteger("chord.rhs.timeout", 0);
 	private Alarm alarm;
 
 	protected void done() {
-		alarm.doneAllPasses();
+		if (timeout > 0)
+			alarm.doneAllPasses();
 	}
 
 	protected void init() {
 		if (isInited)
 			return;
-		alarm = new Alarm(300000);
-		alarm.initAllPasses();
+		if (timeout > 0) {
+			alarm = new Alarm(timeout);
+			alarm.initAllPasses();
+		}
 		domI = (DomI) ClassicProject.g().getTrgt("I");
 		ClassicProject.g().runTask(domI);
 		domM = (DomM) ClassicProject.g().getTrgt("M");
@@ -153,7 +157,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	 */
 	protected void runPass() throws TimeoutException {
 		init();
-		alarm.initNewPass();
+		if (timeout > 0)
+			alarm.initNewPass();
 		// clear these sets since client may call this method multiple times
 		workList.clear();
 		summEdges.clear();
@@ -186,16 +191,14 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	 */
     private void propagate() throws TimeoutException {
         while (!workList.isEmpty()) {
-			if (alarm.passTimedOut()) {
+			if (timeout > 0 && alarm.passTimedOut()) {
 				System.out.println("TIMED OUT");
 				throw new TimeoutException();
 			}
 			if (DEBUG) {
-/*
 				System.out.println("WORKLIST:");
 				for (Pair<Location, PE> pair : workList)
 					System.out.println("\t" + pair);
-*/
 			}
             int last = workList.size() - 1;
             Pair<Location, PE> pair = workList.remove(last);
