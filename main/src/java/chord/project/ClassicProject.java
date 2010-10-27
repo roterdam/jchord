@@ -43,7 +43,7 @@ public class ClassicProject extends Project {
 	private static final String CANNOT_INSTANTIATE_TRGT =
 		"ERROR: ClassicProject builder: Cannot instantiate trgt '%s': %s";
     private static final String MULTIPLE_TASKS_PRODUCING_TRGT =
-        "ERROR: Multiple tasks producing target '%s' in project:%s; exclude all but one using -Dchord.analysis.exclude";
+        "ERROR: Multiple tasks producing target '%s' in project:%s; either include exactly one of them via -Dchord.run.analyses or exclude all but one of them via -Dchord.analysis.exclude";
     private static final String TASK_PRODUCING_TRGT_NOT_FOUND =
         "ERROR: No task producing target '%s' found in project";
 	private static final String TASK_NOT_FOUND = "ERROR: Task named '%s' not found in project";
