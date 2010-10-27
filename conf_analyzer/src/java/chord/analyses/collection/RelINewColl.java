@@ -39,18 +39,6 @@ public class RelINewColl extends ProgramRel implements IInvokeInstVisitor {
     domV = (DomV) doms[1];
     tInit();
 
-    /*
-    COLLECTION = jq_Type.parseType();
-    MAP = jq_Type.parseType("java.util.Map");
-    ITERATOR = jq_Type.parseType("java.util.Iterator");
-    MAP.prepare();
-    COLLECTION.prepare();
-    ITERATOR.prepare();
-    if(COLLECTION == null || OBJ_T == null || MAP == null) {
-      System.err.println("ERR: couldn't correctly load the collection classes I need");
-    } else {
-    }*/
-
   }
   
   static void tInit() {
@@ -65,9 +53,13 @@ public class RelINewColl extends ProgramRel implements IInvokeInstVisitor {
   }
   
   static boolean isCollectionType(jq_Type cl) {
+
+    if(cl.getName().contains("Propert") || cl.getName().contains("Config"))
+      return false;
     for(jq_Type t: collTypes)
-      if(cl.isSubtypeOf(t))
+      if(cl.isSubtypeOf(t)) {
         return true;
+      }
     return false;
   }
 
