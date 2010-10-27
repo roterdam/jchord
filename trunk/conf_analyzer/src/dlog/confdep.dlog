@@ -12,8 +12,10 @@
 .include "M.dom"
 .include "UV.dom"
 .include "U.dom"
+.include "Opt.dom"
 
-.bddvarorder I0_Z0_StrConst0_M0_V0_H0_V1_V2_UV0_U0
+
+.bddvarorder I0_I1_Z0_Opt0_M0_V0_H0_V1_V2_UV0_U0
 
 ###
 # Relations
@@ -22,11 +24,11 @@
 
 IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkPrimArg(i:I0,n:Z0,u:U0) input
-cdep(v:V,h:H,cst:StrConst) input
-primcdep(u:U,h:H,cst:StrConst) input
-cOnLine(i:I, h:H,cst:StrConst) output
-confControlDep(i:I, h:H,cst:StrConst) output
-primConfDep(u:UV,h:H,cst:StrConst)
+refCdep(v:V,src:Opt) input
+primCdep(u:U,src:Opt) input
+cOnLine(i:I0, src:Opt) output
+confControlDep(i:I0, src:Opt) output
+primConfDep(u:UV,src:Opt)
 primRefDep(u:UV,v:V) input
 primControlDep(i:I,u:UV) input 
 APIMethod(i:I) input
@@ -35,12 +37,12 @@ UVU(uv:UV,u:U) input
 
 
 #Needed to handle, e.g., dependence on pointers being non-null
-primConfDep(u,h,cst) :- primRefDep(u,v),cdep(v,h,cst).
-confControlDep(i,h,cst) :- primConfDep(u,h,cst),primControlDep(i,u).
+primConfDep(u,opt) :- primRefDep(u,v),refCdep(v,opt).
+confControlDep(i,opt) :- primConfDep(u,opt),primControlDep(i,u).
 
-confControlDep(i,h,cst) :- primcdep(u,h,cst),UVU(uv,u),primControlDep(i,uv).
+confControlDep(i,opt) :- primCdep(u,opt),UVU(uv,u),primControlDep(i,uv).
 
-cOnLine(i,h,cst) :- IinvkArg(i,_,v),cdep(v,h,cst).
-cOnLine(i,h,cst) :- IinvkPrimArg(i,_,u),primcdep(u,h,cst).
-cOnLine(i,h,cst) :- confControlDep(i,h,cst).
+cOnLine(i,opt) :- IinvkArg(i,_,v),refCdep(v,opt).
+cOnLine(i,opt) :- IinvkPrimArg(i,_,u),primCdep(u,opt).
+cOnLine(i,opt) :- confControlDep(i,opt).
 

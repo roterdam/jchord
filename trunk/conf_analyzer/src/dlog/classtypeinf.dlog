@@ -12,8 +12,9 @@
 .include "T.dom"
 .include "M.dom"
 .include "F.dom"
+.include "Opt.dom"
 
-.bddvarorder I0_Z0_StrConst0_I1_M0_V0_F0_H0_V1_V2_T0
+.bddvarorder I0_Z0_StrConst0_Opt0_M0_V0_F0_H0_V1_V2_T0
 
 
 IM(i:I,m:M) input
@@ -26,14 +27,13 @@ IinvkRet(i:I0,n:Z0,v:V0) input
 reachableI(i:I) input
 reachableM(m:M) input
 
-refFlow(v:V,site:I) input
+refFlow(v:V,site:Opt) input
 checkCastInst(l:V,t:T,r:V) input
-#classOpts(site:I) input
 
 classnameFlowEdge(m:M,z:Z) input
 
-augFlow(v:V,site:I) output
-castTypes(t:T,site:I, v:V) output
+augFlow(v:V,site:Opt) output
+castTypes(t:T,site:Opt, v:V) output
 
 unsummarizedCall(i:I,m:M)
 

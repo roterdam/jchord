@@ -38,9 +38,9 @@ confCallArg(i,v) :- IM(i,m),mConfArgs(m,z),IinvkArg(i,z,v). split
 confCallArg(i,v) :- rawConfUVV(i,_,v).
 
 #m wraps m2 if m2 is a conf method and m calls it. This is slightly approximate.
-confWrapper(m, m2) :- MM(m,m2), mConfArgs(m2,_).
+confWrapper(m, m2) :- MM(m,m2), mConfArgs(m,_),mConfArgs(m2,_).
 
 #If a method has a conf call argument, its return value is a conf return val
 confUVV(i,uv,v) :- confCallArg(i,v),IinvkRetUV(i,0,uv).
-
-
+#confUVV(0,0,0).   
+#main's arg is a special conf value
