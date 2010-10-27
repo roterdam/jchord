@@ -11,6 +11,11 @@ import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
+/**
+ * Holds (i,m,v) if i is a call to a constructor for some runnable variable v,
+ * m is the associated run method
+ *
+ */
 @Chord(
     name = "newThread",
     sign = "I0,M0,V0:I0xM0xV0"
@@ -52,6 +57,8 @@ public void visitInvokeInst(Quad q) {
     if(runMeth != null && thisObj != null) {
       if(domM.contains(runMeth))
         add(q, runMeth, thisObj);
+      else
+        System.out.println("WARN: run method of " + cl.getName() +  "  not found in DomM");
     } else
       System.out.println("NOTE: no run method for type " + cl.getName());
   }
