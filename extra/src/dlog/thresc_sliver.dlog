@@ -3,12 +3,12 @@
 # All rights reserved.
 # Licensed under the terms of the New BSD License.
 
-# Pointer analysis.
-# Assume call graph construction is fixed.
-
+# Call-graph, pointer analysis.  This part is common to all slivers-based analyses.
+# This is the part that depends on the slivers-based heap abstraction (domain C).
 # Author: Percy Liang (pliang@cs.berkeley.edu)
-# name=thresc-sliver-dlog
 
+.include "C.dom"
+.include "E.dom"
 .include "F.dom"
 .include "H.dom"
 .include "I.dom"
@@ -16,13 +16,10 @@
 .include "T.dom"
 .include "V.dom"
 .include "Z.dom"
-.include "C.dom"
-.include "E.dom"
 
 .bddvarorder F0_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2xC3_Z0_E0xE1
 
-############################################################
-# Relations
+### Relations
 
 # Program
 HT(h:H0,t:T1) input # Allocation site h has type t
@@ -30,14 +27,12 @@ sub(t1:T1,t2:T0) input # t1 is a subtype of t2
 MI(m:M,i:I) input # Method m contains call site i
 MH(m:M,h:H) input # Method m contains allocation site h
 MV(m:M,v:V) input # Method m contains variable v
-EV(e:E,v:V) input # Statement e accesses variable v
 statIM(i:I,m:M) input # Call site i resolves to static method m
 classT(t:T) input
 staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 IinvkArg(i:I0,n:Z0,v:V1) input
-MmethArg(m:M0,n:Z0,v:V0) input
 VHfilter(v:V,h:H) input
 
 # Program statements
@@ -71,12 +66,7 @@ VCA(v:V,e:C,a:C) output     # contextual variable (v,e) can point to abstract ob
 FA(f:F,a:C) output          # static field f can point to abstract object a OR a is the this argument of a call to Thread.start()
 AFA(a1:C,f:F,a2:C) output   # abstract object a1 can point to abstract object a2 via field f
 
-### Datalog -> Java
-escA(a:C) output            # abstract object is escaping
-outQuery(e1:E,e2:E) output  # whether e1=e2 is thread escaping?
-
-############################################################
-# Constraints
+### Constraints
 
 VAfilter(v,a) :- VHfilter(v,h), HfromC(h,a).
 
@@ -104,7 +94,16 @@ VCA(l,c,a)  :- reachableCM(c,m), MgetStatFldInst(m,l,f),   FA(f,a).             
 AFA(a,f,aa) :- reachableCM(c,m), MputInstFldInst(m,b,f,r), VCA(b,c,a), VCA(r,c,aa).   # in context c, b.f = r      [NAME=hw]
 FA(f,a)     :- reachableCM(c,m), MputStatFldInst(m,f,r),   VCA(r,c,a).                # in context c, STATIC.f = r [NAME=gw]
 
-### Queries
+############################################################
+# Thread-escape analysis.
+# name=thresc-sliver-dlog
+
+EV(e:E,v:V) input # Statement e accesses variable v
+MmethArg(m:M0,n:Z0,v:V0) input
+
+escA(a:C) output            # abstract object is escaping
+outQuery(e1:E,e2:E) output  # whether e1=e2 is thread escaping?
+
 escA(a) :- FA(_,a). # objects (base case)
 escA(a) :- reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a). # in context c, Thread.start() this points to a [NAME=ts]
 escA(a) :- escA(b), AFA(b,_,a). # objects (transitive)
