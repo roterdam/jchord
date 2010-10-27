@@ -3,7 +3,7 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  */
-package chord.analyses.confdep;
+package chord.analyses.confdep.optnames;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -23,6 +23,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
+import chord.analyses.confdep.ConfDefines;
 import chord.analyses.primtrack.DomUV;
 import chord.analyses.string.DomStrConst;
 import chord.doms.*;

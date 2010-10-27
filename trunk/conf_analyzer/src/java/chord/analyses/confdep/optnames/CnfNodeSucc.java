@@ -1,4 +1,4 @@
-package chord.analyses.confdep.docu;
+package chord.analyses.confdep.optnames;
 
 import java.util.HashSet;
 import joeq.Class.jq_Class;
