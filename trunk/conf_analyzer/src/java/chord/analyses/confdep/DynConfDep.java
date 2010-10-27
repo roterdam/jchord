@@ -41,7 +41,7 @@ public class DynConfDep extends DynamicAnalysis {
     
     instrScheme.setAloadReferenceEvent(false, false, true, false, true);
     instrScheme.setAstoreReferenceEvent(false, false, true, false, true);
-//    instrScheme.setMethodCallEvent(true, false, false, false, false, true); //Super
+    instrScheme.setMethodCallEvent(true, false, false, false, false, true); //Super
     //commented out pending re-merging of my dyn instr tree with trunk
     
 //    instrScheme.setMethodCallEvent(true, false, false, false, true, false); ///vanilla

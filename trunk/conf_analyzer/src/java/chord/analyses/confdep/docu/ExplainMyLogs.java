@@ -59,7 +59,7 @@ public class ExplainMyLogs extends JavaAnalysis{
     PrintWriter writer =
       OutDirUtils.newPrintWriter("log_dependency.txt");
     ProgramRel logConfDeps =
-      (ProgramRel) project.getTrgt("logConfDep");//ouputs I0,I1 (stmt, src)
+      (ProgramRel) project.getTrgt("logConfDep");//ouputs I0,Opt (stmt, src)
     logConfDeps.load();
     ProgramRel allLogs = (ProgramRel) project.getTrgt("logStmt"); //just quads
     allLogs.load();
@@ -67,7 +67,7 @@ public class ExplainMyLogs extends JavaAnalysis{
     ProgramRel logStrings = (ProgramRel) project.getTrgt("logString"); //i,cst,z
     logStrings.load();
     
-    ProgramRel dataDep = (ProgramRel) project.getTrgt("logFieldDataDep");// i, z, src
+    ProgramRel dataDep = (ProgramRel) project.getTrgt("logFieldDataDep");// i, z, Opt
     dataDep.load();
     
     for(Object q: allLogs.getAry1ValTuples()) {
@@ -76,7 +76,7 @@ public class ExplainMyLogs extends JavaAnalysis{
       jq_Class cl = m.getDeclaringClass();
       int lineno = logCall.getLineNumber();
       
-      String msg = renderLogMsg(logCall, logStrings, dataDep, optNames);
+      String msg = renderLogMsg(logCall, logStrings, dataDep);
       for(String thisLine: msg.split("\n")) {
         writer.println(cl.toString()+":" +lineno  + " (" + m.getName() +") " +
             Invoke.getMethod(logCall).getMethod().getName()+ "("  + thisLine+")");
@@ -102,7 +102,7 @@ public class ExplainMyLogs extends JavaAnalysis{
   }
   
 //reconstruct the string at program point quad, using relation logStrings, of form I,Cst,Z
-  public static String renderLogMsg(Quad quad, ProgramRel logStrings, ProgramRel dataDep, Map<Quad, String> optNames) {
+  public static String renderLogMsg(Quad quad, ProgramRel logStrings, ProgramRel dataDep) {
     RelView constStrs = logStrings.getView();
     constStrs.selectAndDelete(0, quad);
     String[] wordsByPos = new String[DomZZ.MAXZ];
@@ -122,13 +122,9 @@ public class ExplainMyLogs extends JavaAnalysis{
     RelView dataDepV = dataDep.getView();
     dataDepV.selectAndDelete(0, quad);
     
-    for(Pair<Integer,Quad> t: dataDepV.<Integer,Quad>getAry2ValTuples()) {
+    for(Pair<Integer,String> t: dataDepV.<Integer,String>getAry2ValTuples()) {
       int i = t.val0;
-      String optStr = optNames.get(t.val1);
-      if(optStr == null)
-        continue;
-//        optStr = "[UNKNOWNOPT]";
-      else optStr = "[" + ConfDefines.optionPrefix(t.val1) + optStr + "]";
+      String optStr =  "[" + t.val1 + "]";
       
       if(wordsByPos[i] == null)
         wordsByPos[i] = optStr;

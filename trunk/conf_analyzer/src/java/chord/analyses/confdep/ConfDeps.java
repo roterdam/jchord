@@ -5,14 +5,13 @@
  */
 package chord.analyses.confdep;
 
-import java.io.Console;
 import java.io.PrintWriter;
 import java.util.*;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.project.Chord;
@@ -23,6 +22,7 @@ import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.integer.*;
 import chord.util.tuple.object.*;
+import chord.analyses.confdep.optnames.DomOpts;
 import chord.analyses.primtrack.DomUV;
 import chord.analyses.string.DomStrConst;
 import chord.bddbddb.Rel.*;
@@ -66,10 +66,25 @@ public class ConfDeps extends JavaAnalysis {
 	    System.err.println("ERR: " + CONFDEP_DYNAMIC_OPT + " must be 'static', 'dynamic-track', or dynamic-load");
 	    System.exit(-1);
 	  }
+	  boolean miniStrings = Config.buildBoolProperty("useMiniStrings", false);
+	  boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", true);
 	  
-    Project.runTask("cipa-0cfa-arr-dlog");
+	  Project.runTask("cipa-0cfa-arr-dlog");
+    
+//	  Project.runTask("findconf-dlog");
+	  Project.runTask("mini-findconf-dlog");
 	  
-	  Project.runTask("strcomponents-dlog");
+    if(miniStrings)
+      Project.runTask("mini-str-dlog");
+    else
+      Project.runTask("strcomponents-dlog");
+    
+    Project.runTask("CnfNodeSucc");
+
+    slurpDoms();
+    Map<Quad, String> names = dumpOptRegexes();
+
+	  /*
 	  if(STATIC)
 	    Project.runTask("ImarkConf");
 	  else
@@ -77,29 +92,85 @@ public class ConfDeps extends JavaAnalysis {
 	  
 	  if(DYNTRACK) {
 	    Project.runTask("dyn-datadep");
-	  } else
+	  } else*/
 	    Project.runTask("datadep-dlog");
+	  
 	  
 	  if(SUPERCONTEXT) {
       Project.runTask("scs-datadep-dlog");
       Project.runTask("scs-confdep-dlog");
-	  } else
+	  } else 
 	    Project.runTask("confdep-dlog");
-    if(lookAtLogs)
-      Project.runTask("logconfdep-dlog");
-		
-    Project.runTask("CnfNodeSucc");
+	
+//    dumpOptsRead(domH, domConst, domUV);
+	  DomOpts domOpt  = (DomOpts) Project.getTrgt("Opt");
 
-    slurpDoms();
-    dumpOptsRead(domH, domConst, domUV);
-    dumpOptUses(domI, domH, domConst);
-    dumpFieldTaints(domF, domH, domConst);
-    dumpOptRegexes();
-
-    
+    dumpOptUses(domOpt);
+    dumpFieldTaints(domOpt);
+    if(dumpIntermediates) 
+      dumpArgDTaints();
 	}
 	
-  private void dumpFieldTaints(DomF domF, DomH domH, DomStrConst domConst) {
+  private void dumpArgDTaints() {
+    PrintWriter writer =
+      OutDirUtils.newPrintWriter("meth_arg_conf_taints.txt");
+    
+    ProgramRel confArgRel =  (ProgramRel) ClassicProject.g().getTrgt("argCdep");//outputs m, z, String
+    confArgRel.load();  
+    for(Trio<jq_Method, Integer, String> methArg:  confArgRel.<jq_Method, Integer, String>getAry3ValTuples()) {
+      String optName = methArg.val2;
+      int z = methArg.val1;
+      jq_Method meth = methArg.val0;
+//      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
+      jq_Type ty = meth.getParamTypes()[z];
+      writer.println(meth.getDeclaringClass() + " " + meth.getNameAndDesc().toString() +
+          " arg " + z +  " of type " + ty + " " +  optName);
+    }
+    
+    confArgRel.close();
+    writer.close();
+    
+    writer =
+      OutDirUtils.newPrintWriter("inv_arg_conf_taints.txt");
+    
+    confArgRel =  (ProgramRel) ClassicProject.g().getTrgt("IargCdep");//outputs i, z, String
+    confArgRel.load();  
+    for(Trio<Quad, Integer, String> methArg:  confArgRel.<Quad, Integer, String>getAry3ValTuples()) {
+      String optName = methArg.val2;
+      int z = methArg.val1;
+      jq_Method calledMeth = Invoke.getMethod(methArg.val0).getMethod();
+      jq_Method callerM = methArg.val0.getMethod();
+//      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
+      jq_Type ty = calledMeth.getParamTypes()[z];
+      String caller = callerM.getDeclaringClass() + " " + callerM.getName() + ":" + methArg.val0.getLineNumber();
+      writer.println(caller + " calling  " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +
+          " arg " + z +  " of type " + ty + " " +  optName);
+    }
+    
+    confArgRel.close();
+    writer.close();
+    
+    writer =
+      OutDirUtils.newPrintWriter("inv_ret_conf_taints.txt");
+    
+    confArgRel =  (ProgramRel) ClassicProject.g().getTrgt("IretDep");//outputs i, i
+    confArgRel.load();  
+    for(Pair<Quad, String> invkRet:  confArgRel.<Quad, String>getAry2ValTuples()) {
+      String optName = invkRet.val1;
+      jq_Method calledMeth = Invoke.getMethod(invkRet.val0).getMethod();
+      jq_Method callerM = invkRet.val0.getMethod();
+//      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
+      jq_Type ty = calledMeth.getReturnType();
+      String caller = callerM.getDeclaringClass() + " " + callerM.getName() + ":" + invkRet.val0.getLineNumber();
+      writer.println(caller + " calling  " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +
+          " returns type " + ty + " taint: " +  optName);
+    }
+    
+    confArgRel.close();
+    writer.close();
+  }
+
+  private void dumpFieldTaints(DomOpts opts) {
 
     HashSet<String> printedLines = new HashSet<String>();
     
@@ -108,16 +179,13 @@ public class ConfDeps extends JavaAnalysis {
     
     { //a new block to mask 'tuples'
       ProgramRel relConfFields =
-        (ProgramRel) ClassicProject.g().getTrgt("HFC");//ouputs H0,F0,H1,StrConst0
+        (ProgramRel) ClassicProject.g().getTrgt("instHF");//ouputs H0,F0,Opt
       relConfFields.load();
-      IntQuadIterable tuples = relConfFields.getAry4IntTuples();
-      for (IntQuad p : tuples) {
-  //      Quad q1 = (Quad) domI.get(p.idx0);
-  
-  //      jq_Method m = Program.v().getMethod((Inst) q1);
-  //      int lineno = Program.getLineNumber(q1, m);
+      IntTrioIterable tuples = relConfFields.getAry3IntTuples();
+      for (IntTrio p : tuples) {
+
         jq_Field f = domF.get(p.idx1);
-        String optName = getOptName(p.idx0, p.idx3, domH, domConst);
+        String optName = opts.get(p.idx2);
   
         if(f == null ) {
           if(p.idx1 != 0) //null f when p.idx1 == 0 is uninteresting
@@ -140,12 +208,12 @@ public class ConfDeps extends JavaAnalysis {
       relConfFields.close();
     }
     ProgramRel relStatFields =
-      (ProgramRel) ClassicProject.g().getTrgt("cdepf");//ouputs F0,H0,StrConst0
+      (ProgramRel) ClassicProject.g().getTrgt("statHF");//ouputs F0,I
     relStatFields.load();
-    IntTrioIterable statTuples = relStatFields.getAry3IntTuples();
-    for (IntTrio p : statTuples) {
+    IntPairIterable statTuples = relStatFields.getAry2IntTuples();
+    for (IntPair p : statTuples) {
       jq_Field f = domF.get(p.idx0);
-      String optName = getOptName(p.idx1, p.idx2, domH, domConst);
+      String optName = opts.get(p.idx1);
 
       if(f == null&& p.idx1 != 0) {
         System.out.println("ERR: no F entry for " + p.idx0+ " (Option was " + optName+")");
@@ -166,22 +234,10 @@ public class ConfDeps extends JavaAnalysis {
     }
     
     writer.close();
-   
-
   }
 
-  public static String getOptName(int hIdx, int cIdx, DomH domH, DomStrConst domConst) {
-    if(hIdx == 0)
-      return "Main arg";
-    else {
-      if(cIdx == 0)
-        return ConfDefines.optionPrefix(domH.get(hIdx)) + domConst.get(cIdx) + "-"+hIdx;
-      else
-        return ConfDefines.optionPrefix(domH.get(hIdx)) + domConst.get(cIdx);
-    }
-  }
 
-  private void dumpOptUses(DomI domI,DomH domH, DomStrConst domConst) {
+  private void dumpOptUses(DomOpts opts) {
 
     HashSet<String> printedLines = new HashSet<String>();
     HashSet<Integer> quadsPrinted = new HashSet<Integer>();
@@ -194,10 +250,10 @@ public class ConfDeps extends JavaAnalysis {
       OutDirUtils.newPrintWriter("conf_uses.txt");
     
     ProgramRel relConfUses =
-      (ProgramRel) ClassicProject.g().getTrgt("cOnLine");//ouputs V0,H0,StrConst0
+      (ProgramRel) ClassicProject.g().getTrgt("cOnLine");//ouputs I0,Opt
     relConfUses.load();
-    IntTrioIterable tuples = relConfUses.getAry3IntTuples();
-    for (IntTrio p : tuples) {
+    IntPairIterable tuples = relConfUses.getAry2IntTuples();
+    for (IntPair p : tuples) {
       Quad q1 = (Quad) domI.get(p.idx0);
       
       quadsSeen.add(p.idx0);
@@ -206,17 +262,20 @@ public class ConfDeps extends JavaAnalysis {
       jq_Method m = q1.getMethod();
       int lineno = q1.getLineNumber();
 
-      String optName = getOptName(p.idx1, p.idx2, domH, domConst);
+      String optName = opts.get(p.idx1);
       
       String filename = m.getDeclaringClass().getSourceFileName();
       String optAndLine = optName+lineno + filename;
       if(!printedLines.contains(optAndLine)) {
         printedLines.add(optAndLine);
         quadsPrinted.add(p.idx0);
+        jq_Method calledMethod = Invoke.getMethod(q1).getMethod();
+        String calltarg = calledMethod.getDeclaringClass().getName() + " "+ calledMethod.getName();
 //        if(p.idx2 == 0)
 //          writer.println(filename+ " "+ lineno + ": " + optName +"-"+ p.idx1 + " in use  (" + m.getName() + ").");
 //        else
-          writer.println(filename+ " "+ lineno + ": " + optName + " in use  (" + m.getName() + ").");
+          writer.println(filename+ " "+ lineno + ": " + optName + " in use  (" + m.getName() + "). Called method was " + calltarg);
+//          writer.println("\tCall to " + calltarg + " tainted by " +  optName);
       }
     }
     writer.close();
@@ -231,60 +290,6 @@ public class ConfDeps extends JavaAnalysis {
     System.out.println("saw " + domI.size() + " invokes, and " + confUses + " uses over those. IRatio =" + confUses *1.0 / domI.size());
   }
 
-  private void dumpOptsRead(DomH domH, DomStrConst domConst, DomUV domUV) {
-    
-    ClassicProject Project = ClassicProject.g();
-
-    
-    PrintWriter writer =
-      OutDirUtils.newPrintWriter("confoptions.txt");
-    ProgramRel relConfOpts =
-      (ProgramRel) Project.getTrgt("ImarkConf");//ouputs H0,V0,StrConst0
-    relConfOpts.load();
-    
-    List<String> inconsistent_uses = new ArrayList<String>();
-    Map<String, String> option_types = new HashMap<String, String>();
-    
-    IntTrioIterable tuples = relConfOpts.getAry3IntTuples();
-    for (IntTrio p : tuples) {
-      if(p.idx0 == 0) { //special H value for main's arg
-        //writer.println("main argument");
-        continue;
-      }
-      Quad q1 = (Quad) domH.get(p.idx0);
-      jq_Method m = q1.getMethod();
-      int lineno = q1.getLineNumber();
-
-      String optName = getOptName(p.idx0, p.idx2, domH, domConst);
-      if(p.idx2 != 0) {
-        String optType = ConfDefines.optionPrefix((Quad) domH.get(p.idx0));
-        String optN = domConst.get(p.idx2);
-        String oldOT = option_types.get(optN);
-        if(oldOT == null) {
-          option_types.put(optN, optType);
-        } else {
-          if(!optType.equals(oldOT)) {
-            inconsistent_uses.add(optN + " is sometimes " + oldOT + " and sometimes " + optType);
-          }
-        }
-      }
-      String filename = m.getDeclaringClass().getSourceFileName();
-      RegisterFactory.Register v = domUV.get(p.idx1);
-      
-      writer.println(optName+ " ("+ v.getType() +") read on line " + lineno + " of " + filename + " (" + m.getName() + "). "
-          + "Internal var name was " + v + " and alloc site was " + q1.toString_short());
-    }
-    writer.close();
-    relConfOpts.close();
-    if(inconsistent_uses.size() > 0) {
-      writer = OutDirUtils.newPrintWriter("inconsistent_uses.txt");
-      for(String s: inconsistent_uses) {
-        writer.println(s);
-      }
-      writer.close();
-    }
-  }
-  
 
   //reconstruct the string at program point quad, using relation logStrings, of form I,Cst,Z
   public static String reconcatenate(Quad quad, ProgramRel logStrings, boolean makeRegex, int maxFilled) {
@@ -319,19 +324,19 @@ public class ConfDeps extends JavaAnalysis {
   }
   
   public Map<Quad,String> dumpOptRegexes() {
-    return dumpRegexes("conf_regexes.txt", "confOpts", "confOptLen", "confOptName");
+    return dumpRegexes("conf_regexes.txt", "confOpts", "confOptLen", "confOptName", domH);
   }
   
-  public Map<Quad,String> dumpRegexes(String filename, String ptRel, String lenRel, String nameRel) {
+  public static Map<Quad,String> dumpRegexes(String filename, String ptRel, String lenRel, String nameRel, DomH domH) {
     
     ClassicProject Project = ClassicProject.g();
 
-    HashMap<Quad, String> returnedMap = new HashMap<Quad, String>();
+    Map<Quad, String> returnedMap = new LinkedHashMap<Quad, String>();
     
     PrintWriter writer =
       OutDirUtils.newPrintWriter(filename);
     ProgramRel relConfOptStrs =
-      (ProgramRel) Project.getTrgt(nameRel);//outputs I, Str, Z
+      (ProgramRel) Project.getTrgt(nameRel);//outputs I, Str, ZZ
     relConfOptStrs.load();
     ProgramRel relConfOptLens =  (ProgramRel) Project.getTrgt(lenRel);
     relConfOptLens.load();
@@ -344,11 +349,6 @@ public class ConfDeps extends JavaAnalysis {
     strs.load();
     ProgramRel cnfNodeSucc = (ProgramRel) Project.getTrgt("CnfNodeSucc");
     cnfNodeSucc.load();
-
-//    Rel.RelView opts = relConfOptStrs.getView();
-//    opts.delete(2);
-//    opts.delete(1);
-    
     
     for(Object q: opts.getAry1ValTuples()) {
       Quad quad = (Quad) q;
@@ -367,7 +367,7 @@ public class ConfDeps extends JavaAnalysis {
       String readingMeth = Invoke.getMethod(quad).getMethod().getName().toString();
       String regexStr = reconcatenate(quad, relConfOptStrs, true, lenMax);
       
-      String s  = supplementName(quad, vh, strs, cnfNodeSucc);
+      String s  = supplementName(quad, vh, strs, cnfNodeSucc, domH);
       if(s.length() > 1 ) {
         if(s.length() > regexStr.length()) {
           System.out.println("RENAME: changing '"+regexStr + "' to " + s);
@@ -393,7 +393,7 @@ public class ConfDeps extends JavaAnalysis {
     return returnedMap;
   }
   
-  String supplementName(Quad q, ProgramRel vh, ProgramRel strs, ProgramRel cnfNodeSucc) {
+  static String supplementName(Quad q, ProgramRel vh, ProgramRel strs, ProgramRel cnfNodeSucc, DomH domH) {
     
     Quad prevHop = q;
     ArrayList<String> pathParts = new ArrayList<String>();

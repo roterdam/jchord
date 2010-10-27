@@ -11,7 +11,9 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.analyses.confdep.ConfDefines;
 import chord.analyses.confdep.ConfDeps;
+import chord.analyses.confdep.optnames.DomOpts;
 import chord.bddbddb.Rel.RelView;
+import chord.doms.DomH;
 import chord.doms.DomV;
 import chord.project.Chord;
 import chord.project.ClassicProject;
@@ -117,18 +119,20 @@ public class ShowConfOptions extends JavaAnalysis {
     project.runTask("CnfNodeSucc");
     
     domV = (DomV) project.getTrgt("V");
+    DomH domH = (DomH) project.getTrgt("H");
+
 
     ConfDeps c = new ConfDeps();
     c.slurpDoms();
     Map<Quad, String> returnedMap = c.dumpOptRegexes();
-    c.dumpRegexes("conf_writes.txt", "confOptWrites", "confOptWriteLen", "confWritesByName");
+    c.dumpRegexes("conf_writes.txt", "confOptWrites", "confOptWriteLen", "confWritesByName", domH);
     project.runTask("conf-flow-dlog");
 
-    dumpFieldContents(returnedMap);
-    dumpOptTypeGuesses(returnedMap);
-    dumpReturnTypeGuesses(returnedMap);
+    dumpFieldContents();
+    dumpOptTypeGuesses();
+    dumpReturnTypeGuesses();
     if(argGuesses)
-      dumpArgTypeGuesses(returnedMap);
+      dumpArgTypeGuesses();
     
 //    recordClassOpts(returnedMap);
     project.runTask("classname-type-inf-dlog");
@@ -158,19 +162,20 @@ public class ShowConfOptions extends JavaAnalysis {
     PrintWriter writer =
       OutDirUtils.newPrintWriter("opt_casts.txt");
     
-    ProgramRel confArgRel =  (ProgramRel) ClassicProject.g().getTrgt("castTypes");//t, i
+    ProgramRel confArgRel =  (ProgramRel) ClassicProject.g().getTrgt("castTypes");//t, opt, v
     confArgRel.load();  
     
     HashMap<String, String> castClasses = new HashMap<String, String>(); //foreach cast, list of classes cast to
-    for(Trio<jq_Type, Quad, Register> castT:  confArgRel.<jq_Type, Quad, Register>getAry3ValTuples()) {
-      Quad q = castT.val1;
-      if(!returnedMap.containsKey(q))
-        continue;
+    for(Trio<jq_Type, String, Register> castT:  confArgRel.<jq_Type, String, Register>getAry3ValTuples()) {
+//      Quad q = castT.val1;
+//      if(!returnedMap.containsKey(q))
+ //       continue;
       
-      String optName = ConfDefines.optionPrefix(q) + returnedMap.get(q);
+ //     String optName = ConfDefines.optionPrefix(q) + returnedMap.get(q);
+      String optName = castT.val1;
       Register r = castT.val2;
       
-      if(optName == null) {
+      if(optName == null || optName.equals(DomOpts.NONE)) {
         continue;
       }
       if(!"ClassName".equals(dict.get(optName)))
@@ -226,16 +231,16 @@ public class ShowConfOptions extends JavaAnalysis {
     sb.deleteCharAt(sb.length() - 1);
     return sb.toString();
   }
-  private void dumpReturnTypeGuesses(Map<Quad, String> returnedMap) {
+  
+  private void dumpReturnTypeGuesses() {
     PrintWriter writer =
       OutDirUtils.newPrintWriter("returned_conf_values.txt");
     
-    ProgramRel confReturns =  (ProgramRel) ClassicProject.g().getTrgt("confReturn");//outputs m,i
+    ProgramRel confReturns =  (ProgramRel) ClassicProject.g().getTrgt("confReturn");//outputs m,Opt
     confReturns.load();  
-    for(Pair<jq_Method, Quad> methReturn:  confReturns.<jq_Method, Quad>getAry2ValTuples()) {
-      String optName = returnedMap.get(methReturn.val1);
-      if(optName == null)
-        optName = "Unknown Conf";
+    for(Pair<jq_Method, String> methReturn:  confReturns.<jq_Method, String>getAry2ValTuples()) {
+      String optName = methReturn.val1;
+
       if(highContention(optName))
         continue;
       
@@ -246,18 +251,16 @@ public class ShowConfOptions extends JavaAnalysis {
     writer.close();
   }
   
-  private void dumpArgTypeGuesses(Map<Quad, String> returnedMap) {
+  private void dumpArgTypeGuesses() {
     PrintWriter writer =
       OutDirUtils.newPrintWriter("arg_conf_values.txt");
     
-    ProgramRel confArgRel =  (ProgramRel) ClassicProject.g().getTrgt("confArg");//outputs m,z,i
+    ProgramRel confArgRel =  (ProgramRel) ClassicProject.g().getTrgt("confArg");//outputs m,z,opt
     confArgRel.load();  
-    for(Trio<jq_Method, Integer, Quad> methArg:  confArgRel.<jq_Method, Integer, Quad>getAry3ValTuples()) {
-      String optName = returnedMap.get(methArg.val2);
+    for(Trio<jq_Method, Integer, String> methArg:  confArgRel.<jq_Method, Integer, String>getAry3ValTuples()) {
+      String optName = methArg.val2;
       int z = methArg.val1;
       
-      if(optName == null)
-        optName = "Unknown Conf";
       if(highContention(optName))
         continue;
       
@@ -268,7 +271,7 @@ public class ShowConfOptions extends JavaAnalysis {
     writer.close();
   }
   
-  private void dumpFieldContents(Map<Quad, String> returnedMap) {
+  private void dumpFieldContents() {
     PrintWriter writer =
       OutDirUtils.newPrintWriter("field_conf_contents.txt");
     ProgramRel dynFldContents =  (ProgramRel) ClassicProject.g().getTrgt("instFieldHolds");//outputs h,f,i
@@ -276,27 +279,26 @@ public class ShowConfOptions extends JavaAnalysis {
     
     RelView fldView = dynFldContents.getView();
     fldView.delete(0);
-    dumpFldVals("dynamic", returnedMap, writer, fldView);
+    dumpFldVals("dynamic", writer, fldView);
     fldView.free();
     dynFldContents.close();
     
     ProgramRel statFldContents =  (ProgramRel) ClassicProject.g().getTrgt("statFieldHolds");//outputs f,i
     statFldContents.load();  
     fldView = statFldContents.getView();
-    dumpFldVals("static ",returnedMap, writer, fldView);
+    dumpFldVals("static ",writer, fldView);
     fldView.free();
     statFldContents.close();
     
     writer.close();
   }
 
-  private void dumpFldVals(String nm, Map<Quad, String> returnedMap, PrintWriter writer,
+  private void dumpFldVals(String nm, PrintWriter writer,
       RelView fldView) {
 
-    for(Pair<jq_Field, Quad> fldHolds:  fldView.<jq_Field, Quad>getAry2ValTuples()) {
-      String optName = returnedMap.get(fldHolds.val1);
-      if(optName == null)
-        optName = "Unknown Conf";
+    for(Pair<jq_Field, String> fldHolds:  fldView.<jq_Field, String>getAry2ValTuples()) {
+      String optName =  fldHolds.val1;
+
       if(fldHolds.val0 != null) {
         String fldName = fldHolds.val0.getDeclaringClass() + "."+ fldHolds.val0.getName() ;
         writer.println(nm + " field " + fldName+ " can hold " + optName);
@@ -316,23 +318,30 @@ public class ShowConfOptions extends JavaAnalysis {
     return parts > 4;
   }
 
-  private void dumpOptTypeGuesses(Map<Quad, String> returnedMap) {
+  private void dumpOptTypeGuesses() {
     
-    Map<Quad,String> enumStrs = getOptEnums();
+    Map<String,String> enumStrs = getOptEnums();
     
     PrintWriter writer =
       OutDirUtils.newPrintWriter("conf_dependency.txt");
     ProgramRel optSinks =
-//      (ProgramRel) Project.getTrgt("constrainedMethI");//outputs m,i,z,site
-    (ProgramRel) ClassicProject.g().getTrgt("confMethCall");//outputs i,z,site
+//      (ProgramRel) Project.getTrgt("constrainedMethI");//outputs m,i,z,opt
+    (ProgramRel) ClassicProject.g().getTrgt("confMethCall");//outputs i,z,opt
     optSinks.load();
     
     ProgramRel timeOpts = (ProgramRel) ClassicProject.g().getTrgt("timeConf"); //outputs i
     timeOpts.load();
-    
-    for(Map.Entry<Quad,String> opt : returnedMap.entrySet()) {
-      Quad q = opt.getKey();
-      String optName = ConfDefines.optionPrefix(q) + opt.getValue();
+
+    ProgramRel opts = (ProgramRel) ClassicProject.g().getTrgt("OptNames");
+    opts.load();
+
+    for( Pair<String,Quad> opt: opts.<String,Quad>getAry2ValTuples() ) {
+
+      Quad q = opt.val1;
+      String optName = opt.val0;
+      if(optName.equals(DomOpts.NONE))
+        continue;
+ //     String optName = ConfDefines.optionPrefix(q) + opt.getValue();
       
       String readBy = Invoke.getMethod(q).getMethod().getName().toString();
       Register r = Invoke.getDest(q).getRegister();
@@ -347,7 +356,7 @@ public class ShowConfOptions extends JavaAnalysis {
       }
       
       RelView v = optSinks.getView();
-      v.selectAndDelete(2, q);
+      v.selectAndDelete(2, optName);
 
       HashSet<String> sinksSeen = new HashSet<String>();
       String optionTypeByCall = null;
@@ -421,7 +430,7 @@ public class ShowConfOptions extends JavaAnalysis {
         String compareSet = null;
         
 
-        if((optionTypeByCall == null || optionTypeByCall.equals("Integral")) && timeOpts.contains(q)) {
+        if((optionTypeByCall == null || optionTypeByCall.equals("Integral")) && timeOpts.contains(optName)) {
           guess = "Time";
           reason = "mingled with curtime";
         } else if(orCount < 3) {
@@ -430,10 +439,10 @@ public class ShowConfOptions extends JavaAnalysis {
             guess =  optionTypeByCall;
             reason = "based on called methods";
             if(optionTypeByCall.equals("Special")) {
-              reason = "enum set {" + enumStrs.get(q)+"}";
-              dict.annotate(optName , "{" + enumStrs.get(q) + "}");
+              reason = "enum set {" + enumStrs.get(optName)+"}";
+              dict.annotate(optName , "{" + enumStrs.get(optName) + "}");
             }
-          } else if( (compareSet = getCompareSet(q)) != null && compareSet.indexOf(',') > 0){
+          } else if( (compareSet = getCompareSet(optName)) != null && compareSet.indexOf(',') > 0){
             guess = "Special";
             reason = "compared against set {" + compareSet+"}";
           }
@@ -475,8 +484,8 @@ public class ShowConfOptions extends JavaAnalysis {
     }
   }
 
-  private String getCompareSet(Quad src) {
-    ProgramRel allowableOpts = (ProgramRel) ClassicProject.g().getTrgt("allowableOpts");//outputs i,const
+  private String getCompareSet(String src) {
+    ProgramRel allowableOpts = (ProgramRel) ClassicProject.g().getTrgt("allowableOpts");//outputs opt,const
     allowableOpts.load();
     
     RelView allowedFor = allowableOpts.getView();
@@ -513,12 +522,12 @@ public class ShowConfOptions extends JavaAnalysis {
       return null;
   }
   
-  private Map<Quad,String> getOptEnums() {
-    HashMap<Quad,String> optEnums = new HashMap<Quad,String>();
+  private Map<String,String> getOptEnums() {
+    HashMap<String,String> optEnums = new HashMap<String,String>();
     ProgramRel enumOpt = (ProgramRel) ClassicProject.g().getTrgt("enumOpts");//outputs i,const
     enumOpt.load();
     
-    for(Pair<Quad, jq_Type> t: enumOpt.<Quad, jq_Type>getAry2ValTuples()) {
+    for(Pair<String, jq_Type> t: enumOpt.<String, jq_Type>getAry2ValTuples()) {
       System.out.println("adding enum value, using fields from type " + t.val1.getName());
       jq_Class eType =  (jq_Class) t.val1;
       StringBuilder vals = new StringBuilder("");
