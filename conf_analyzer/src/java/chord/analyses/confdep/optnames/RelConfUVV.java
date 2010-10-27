@@ -1,4 +1,4 @@
-package chord.analyses.confdep;
+package chord.analyses.confdep.optnames;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -6,6 +6,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
+import chord.analyses.confdep.ConfDefines;
 import chord.analyses.primtrack.DomUV;
 import chord.doms.DomI;
 import chord.doms.DomV;
