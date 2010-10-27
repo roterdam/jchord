@@ -7,6 +7,7 @@
 			<pathelement location="${chord.home.dir}/classes"/>
 			<pathelement location="classes"/>
 			<fileset dir="lib" includes="*.jar"/>
+			<fileset dir="../conf_spellchecker/lib" includes="*.jar"/>
       <pathelement location="../conf_spellchecker/classes"/>
 		</path>
 	<path id="chord_dlog_analysis_path">
@@ -32,9 +33,27 @@
 			source="1.5" target="1.5" srcdir="src/java" destdir="classes"
 			classpath="${chord.main.class.path}"/>
 	</target>
+	
+		<target name="compile-test" depends="paths">
+        <taskdef resource="net/sf/antcontrib/antlib.xml"
+            classpath="${chord.home.dir}/tools/ant-contrib.jar"/>
+        <antfetch dir="${chord.home.dir}" target="paths" return="chord.main.class.path"/>
+		<mkdir dir="classes"/>
+		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
+			source="1.5" target="1.5" srcdir="test/src" destdir="classes"
+			classpath="${chord.main.class.path}"/>
+	</target>
 
-	<target name="run" depends="paths">
+	<target name="analyze" depends="paths">
 		<property name="chord.run.analyses" value="ShowConfOptions"/> 
+		<ant dir="${chord.home.dir}" target="run"/>
+	</target> 
+	
+	<target name="run" depends="paths">
+		<ant dir="${chord.home.dir}" target="run"/>
+	</target> 
+	
+	<target name="exec" depends="paths">
 		<ant dir="${chord.home.dir}" target="run"/>
 	</target> 
 
