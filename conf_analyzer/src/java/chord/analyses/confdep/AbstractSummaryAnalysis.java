@@ -140,7 +140,7 @@ public abstract class AbstractSummaryAnalysis extends JavaAnalysis {
   
   protected abstract void fillInit(Map<jq_Method, Summary> summaries);
 
-  private Summary analyze(jq_Method meth) {
+  protected Summary analyze(jq_Method meth) {
     
     HashMap<Register,Summary> regVals = new HashMap<Register,Summary>();
     Summary ret = null;
