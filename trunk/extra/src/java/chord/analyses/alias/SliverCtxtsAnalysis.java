@@ -3,6 +3,12 @@
  * Copyright (c) 2006-2007, The Trustees of Stanford University.
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
+ *
+ * Pointer analysis which performs refinement and pruning using slivers.
+ *
+ * A context c [Ctxt] is a chain of allocation/call sites.
+ *
+ * @author Percy Liang (pliang@cs.berkeley.edu)
  */
 package chord.analyses.alias;
 
@@ -159,6 +165,8 @@ class GlobalInfo {
   }
 }
 
+////////////////////////////////////////////////////////////
+
 class Query {
   Quad e1, e2;
   Query(Quad e1, Quad e2) { this.e1 = e1; this.e2 = e2; }
@@ -240,6 +248,8 @@ class Message {
   }
 }
 
+////////////////////////////////////////////////////////////
+
 // A run is an interaction with the static analysis.
 class Run {
   Message in, out;
@@ -309,14 +319,19 @@ class Abstraction {
   HashSet<Ctxt> S = new HashSet<Ctxt>(); // Slivers: union of everything in CfromJC
 }
 
+class FeedbackTask {
+  public FeedbackTask(String name) {
+    this.name = name;
+    assert name.endsWith("dlog") : name;
+  }
+  String name;
+  String initName()     { return name.replace("dlog", "init-dlog"); }
+  String relevantName() { return name.replace("dlog", "relevant-dlog"); }
+  String transName()    { return name.replace("dlog", "trans-dlog"); }
+}
 
-/**
- * Pointer analysis which performs refinement and pruning using slivers.
- *
- * A context c [Ctxt] is a chain of allocation/call sites.
- *
- * @author Percy Liang (pliang@cs.berkeley.edu)
- */
+////////////////////////////////////////////////////////////
+
 @Chord(
   name = "sliver-ctxts-java",
   produces = { "C", "HfromC", "CfromHC", "CfromIC", "objI", "inQuery" },
@@ -343,11 +358,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   String classifierPath; // Path to classifier
   boolean useClassifier() { return classifierPath != null; }
   boolean learnClassifier; // Path to data to collected data
-
-  String analysisTaskName;
-  String initAnalysisTaskName;
-  String relevantAnalysisTaskName;
-  String transAnalysisTaskName;
+  FeedbackTask task;
 
   // Compute once using 0-CFA
   Set<Quad> hSet = new HashSet<Quad>();
@@ -369,27 +380,25 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
     G = new GlobalInfo();
 
-    this.verbose                   = X.getIntArg("verbose", 0);
-    this.maxIters                  = X.getIntArg("maxIters", 1);
-    this.initK                     = X.getIntArg("initK", 0);
-    this.useObjectSensitivity      = X.getBooleanArg("useObjectSensitivity", false);
-    this.runAlwaysIncludePruned    = X.getBooleanArg("runAlwaysIncludePruned", false);
-    this.inspectTransRels          = X.getBooleanArg("inspectTransRels", false);
-    this.verifyAfterPrune          = X.getBooleanArg("verifyAfterPrune", false);
-    this.masterHost                = X.getStringArg("masterHost", null);
-    this.masterPort                = X.getIntArg("masterPort", 8888);
-    this.useWorker                 = X.getBooleanArg("useWorker", false);
-    this.classifierPath            = X.getStringArg("classifierPath", null);
-    this.learnClassifier           = X.getBooleanArg("learnClassifier", false);
-    this.analysisTaskName          = X.getStringArg("analysisTaskName", "cspa-sliver-dlog");
-    this.initAnalysisTaskName      = analysisTaskName.replace("dlog", "init-dlog");
-    this.relevantAnalysisTaskName  = analysisTaskName.replace("dlog", "relevant-dlog");
-    this.transAnalysisTaskName     = analysisTaskName.replace("dlog", "trans-dlog");
+    this.verbose                 = X.getIntArg("verbose", 0);
+    this.maxIters                = X.getIntArg("maxIters", 1);
+    this.initK                   = X.getIntArg("initK", 0);
+    this.useObjectSensitivity    = X.getBooleanArg("useObjectSensitivity", false);
+    this.runAlwaysIncludePruned  = X.getBooleanArg("runAlwaysIncludePruned", false);
+    this.inspectTransRels        = X.getBooleanArg("inspectTransRels", false);
+    this.verifyAfterPrune        = X.getBooleanArg("verifyAfterPrune", false);
+    this.masterHost              = X.getStringArg("masterHost", null);
+    this.masterPort              = X.getIntArg("masterPort", 8888);
+    this.useWorker               = X.getBooleanArg("useWorker", false);
+    this.classifierPath          = X.getStringArg("classifierPath", null);
+    this.learnClassifier         = X.getBooleanArg("learnClassifier", false);
+    this.task                    = new FeedbackTask(X.getStringArg("taskName", null));
+
     X.putOption("version", 1);
     X.putOption("program", System.getProperty("chord.work.dir"));
     X.flushOptions();
 
-    ClassicProject.g().runTask(initAnalysisTaskName); 
+    ClassicProject.g().runTask(task.initName());
 
     // Reachable things
     {
@@ -897,9 +906,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       ClassicProject.g().setTrgtDone(relCfromHC);
       ClassicProject.g().setTrgtDone(relCfromIC);
       ClassicProject.g().setTrgtDone(relobjI);
-      ClassicProject.g().runTask(analysisTaskName);
-      if (runRelevantAnalysis) ClassicProject.g().runTask(relevantAnalysisTaskName);
-      if (inspectTransRels) ClassicProject.g().runTask(transAnalysisTaskName);
+
+      ClassicProject.g().runTask(task.name);
+      if (runRelevantAnalysis) ClassicProject.g().runTask(task.relevantName());
+      if (inspectTransRels) ClassicProject.g().runTask(task.transName());
     }
 
     void pruneAbstraction() {
@@ -963,7 +973,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       // Display the transition graph over relations
       try {
         RelGraph graph = new RelGraph();
-        String dlogPath = ((DlogAnalysis)ClassicProject.g().getTask(transAnalysisTaskName)).getFileName();
+        String dlogPath = ((DlogAnalysis)ClassicProject.g().getTask(task.transName())).getFileName();
         X.logs("Reading transitions from "+dlogPath);
         BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(dlogPath)));
         String line;
