@@ -176,11 +176,11 @@ public class RTA {
 	}
 
 	private void build() {
-	  classes = new IndexSet<jq_Reference>();
-    classesVisitedForClinit = new HashSet<jq_Class>();
-    reachableAllocClasses = new IndexSet<jq_Reference>();
-    methods = new IndexSet<jq_Method>();
-    methodWorklist = new ArrayList<jq_Method>();
+		classes = new IndexSet<jq_Reference>();
+		classesVisitedForClinit = new HashSet<jq_Class>();
+		reachableAllocClasses = new IndexSet<jq_Reference>();
+		methods = new IndexSet<jq_Method>();
+		methodWorklist = new ArrayList<jq_Method>();
     
 		if (Config.verbose > 1) System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
@@ -189,8 +189,8 @@ public class RTA {
 			staticReflectResolver = new StaticReflectResolver();
 			staticReflectResolved = new HashSet<jq_Method>();
 		} else if(reflectKind.equals("static_cast")) {
-      staticReflectResolver = new CastBasedStaticReflect(reachableAllocClasses);
-      staticReflectResolved = new HashSet<jq_Method>();
+			staticReflectResolver = new CastBasedStaticReflect(reachableAllocClasses);
+			staticReflectResolved = new HashSet<jq_Method>();
 		} else if (reflectKind.equals("dynamic")) {
 			DynamicReflectResolver dynamicReflectResolver =
 				new DynamicReflectResolver();
@@ -243,8 +243,8 @@ public class RTA {
 				if (DEBUG) System.out.println("Processing CFG of " + m);
 				processMethod(m);
 			}
-			if(staticReflectResolver != null)
-			  staticReflectResolver.startedNewIter();
+			if (staticReflectResolver != null)
+				staticReflectResolver.startedNewIter();
 		}
 		if (Config.verbose > 1) System.out.println("LEAVE: RTA");
 		timer.done();
@@ -257,7 +257,7 @@ public class RTA {
   Iterable<jq_Method> publicMethods = new ArrayList<jq_Method>();
 
   private void prepAdditionalEntrypoints() {
-    publicMethods = RelExtraEntryPoints.slurpMList(Program.g().getClassHierarchy());
+		 publicMethods = RelExtraEntryPoints.slurpMList(Program.g().getClassHierarchy());
   }
 
   private void visitAdditionalEntrypoints() {
@@ -293,7 +293,8 @@ public class RTA {
 	private void processResolvedObjNewInstSite(Quad q, jq_Reference r) {
 		reflect.addResolvedObjNewInstSite(q, r);
 		visitClass(r);
-		if (reachableAllocClasses.add(r) || staticReflectResolver.needNewIter())
+		if (reachableAllocClasses.add(r) ||
+				(staticReflectResolver != null && staticReflectResolver.needNewIter()))
 			repeat = true;
 		if (r instanceof jq_Class) {
 			jq_Class c = (jq_Class) r;
