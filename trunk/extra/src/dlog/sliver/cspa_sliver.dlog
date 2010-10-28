@@ -3,6 +3,7 @@
 # All rights reserved.
 # Licensed under the terms of the New BSD License.
 
+# name=cspa-sliver-dlog
 # Call-graph, pointer analysis.  This part is common to all slivers-based analyses.
 # This is the part that depends on the slivers-based heap abstraction (domain C).
 # Author: Percy Liang (pliang@cs.berkeley.edu)
@@ -54,7 +55,6 @@ CfromHC(cm:C,h:H,c:C) input
 CfromIC(cm:C,i:I,c:C) input
 HfromC(h:H,c:C) input
 objI(i:I) input # whether to use object sensitivity
-inQuery(e1:E,e2:E) input
 
 # Intermediate relations
 reachableCI(c:C,i:I) output
@@ -93,18 +93,3 @@ VCA(l,c,aa) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,a
 VCA(l,c,a)  :- reachableCM(c,m), MgetStatFldInst(m,l,f),   FA(f,a).                   # in context c, l = STATIC.f [NAME=gr]
 AFA(a,f,aa) :- reachableCM(c,m), MputInstFldInst(m,b,f,r), VCA(b,c,a), VCA(r,c,aa).   # in context c, b.f = r      [NAME=hw]
 FA(f,a)     :- reachableCM(c,m), MputStatFldInst(m,f,r),   VCA(r,c,a).                # in context c, STATIC.f = r [NAME=gw]
-
-############################################################
-# Thread-escape analysis.
-# name=thresc-sliver-dlog
-
-EV(e:E,v:V) input # Statement e accesses variable v
-MmethArg(m:M0,n:Z0,v:V0) input
-
-escA(a:C) output            # abstract object is escaping
-outQuery(e1:E,e2:E) output  # whether e1=e2 is thread escaping?
-
-escA(a) :- FA(_,a). # objects (base case)
-escA(a) :- reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a). # in context c, Thread.start() this points to a [NAME=ts]
-escA(a) :- escA(b), AFA(b,_,a). # objects (transitive)
-outQuery(e,ee) :- inQuery(e,ee), e=ee, EV(e,v), VCA(v,_,a), escA(a). # queries

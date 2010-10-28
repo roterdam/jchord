@@ -358,7 +358,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   String classifierPath; // Path to classifier
   boolean useClassifier() { return classifierPath != null; }
   boolean learnClassifier; // Path to data to collected data
-  FeedbackTask task;
+  List<FeedbackTask> tasks = new ArrayList<FeedbackTask>();
+  FeedbackTask mainTask;
 
   // Compute once using 0-CFA
   Set<Quad> hSet = new HashSet<Quad>();
@@ -392,13 +393,17 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     this.useWorker               = X.getBooleanArg("useWorker", false);
     this.classifierPath          = X.getStringArg("classifierPath", null);
     this.learnClassifier         = X.getBooleanArg("learnClassifier", false);
-    this.task                    = new FeedbackTask(X.getStringArg("taskName", null));
+
+    for (String name : X.getStringArg("taskName", "").split(","))
+      this.tasks.add(new FeedbackTask(name));
+    this.mainTask = tasks.get(tasks.size()-1);
 
     X.putOption("version", 1);
     X.putOption("program", System.getProperty("chord.work.dir"));
     X.flushOptions();
 
-    ClassicProject.g().runTask(task.initName());
+    for (FeedbackTask task : tasks)
+      ClassicProject.g().runTask(task.initName());
 
     // Reachable things
     {
@@ -908,9 +913,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       ClassicProject.g().setTrgtDone(relCfromIC);
       ClassicProject.g().setTrgtDone(relobjI);
 
-      ClassicProject.g().runTask(task.name);
-      if (runRelevantAnalysis) ClassicProject.g().runTask(task.relevantName());
-      if (inspectTransRels) ClassicProject.g().runTask(task.transName());
+      for (FeedbackTask task : tasks)
+        ClassicProject.g().runTask(task.name);
+      if (runRelevantAnalysis) ClassicProject.g().runTask(mainTask.relevantName());
+      if (inspectTransRels) ClassicProject.g().runTask(mainTask.transName());
     }
 
     void pruneAbstraction() {
@@ -974,7 +980,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       // Display the transition graph over relations
       try {
         RelGraph graph = new RelGraph();
-        String dlogPath = ((DlogAnalysis)ClassicProject.g().getTask(task.transName())).getFileName();
+        String dlogPath = ((DlogAnalysis)ClassicProject.g().getTask(mainTask.transName())).getFileName();
         X.logs("Reading transitions from "+dlogPath);
         BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(dlogPath)));
         String line;

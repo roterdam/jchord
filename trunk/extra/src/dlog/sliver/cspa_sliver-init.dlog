@@ -3,8 +3,9 @@
 # All rights reserved.
 # Licensed under the terms of the New BSD License.
 
+# name=cspa-sliver-init-dlog
 # Call-graph, pointer analysis.  This part is common to all slivers-based analyses.
-# This is the part independent of the slivers-based heap abstraction (domain C).
+# This is the part *independent* of the slivers-based heap abstraction (domain C).
 # Author: Percy Liang (pliang@cs.berkeley.edu)
 
 .include "E.dom"
@@ -68,15 +69,3 @@ reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 skipMM(m,n) :- m=n, !statIM(_,m).
 skipMM(m,n) :- skipMM(m,q), MI(q,i), statIM(i,n). # Can extend q to n using static method
 HtoM(h,n)   :- IinvkArg(i,0,v), VH(v,h), reachableH(h), IM(i,m), skipMM(m,n).
-
-############################################################
-# Thread-escape analysis.
-# name=thresc-sliver-init-dlog
-
-checkExcludedT(t:T) input
-TM(t:T,m:M) input
-ME(m:M,e:E) input
-EV(e:E,v:V) input
-
-query(e1:E,e2:E) output
-query(e,ee) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_), e=ee. # All queries we care about
