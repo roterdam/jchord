@@ -27,11 +27,15 @@ public class ThreadEscapeFlowinsAnalysis extends JavaAnalysis {
   }
 
   public void run() {
+    String taskName = "flowins-thresc-dlog";
+    X.putOption("taskName", taskName);
+    X.flushOptions();
+
     ClassicProject.g().runTask("argCopy-dlog");
     ClassicProject.g().runTask("retCopy-dlog");
     ClassicProject.g().runTask("ctxts-java");
     ClassicProject.g().runTask(CtxtsAnalysis.getCspaKind());
-    ClassicProject.g().runTask("flowins-thresc-dlog");
+    ClassicProject.g().runTask(taskName);
 
     int numEscaping = relSize("flowinsEscE");
     int numLocal = relSize("flowinsLocE");
