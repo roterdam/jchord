@@ -20,7 +20,7 @@ public class RelHI extends ProgramRel {
   public void fill() {
     DomH domH = (DomH) doms[0];
     DomI domI = (DomI) doms[1];
-    int numA = domH.getLastRealIdx() + 1;
+    int numA = domH.getLastA() + 1;
 //    int numH = domH.size();
     for (int hIdx = 1; hIdx < numA; hIdx++) {
       Object h = domH.get(hIdx);

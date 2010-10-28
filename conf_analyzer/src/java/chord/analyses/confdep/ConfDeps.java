@@ -69,30 +69,30 @@ public class ConfDeps extends JavaAnalysis {
 	  boolean miniStrings = Config.buildBoolProperty("useMiniStrings", false);
 	  boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", true);
 	  
-	  Project.runTask("cipa-0cfa-arr-dlog");
-    
-//	  Project.runTask("findconf-dlog");
-	  Project.runTask("mini-findconf-dlog");
-	  
-    if(miniStrings)
-      Project.runTask("mini-str-dlog");
+	   
+    if(STATIC) {
+      Project.runTask("cipa-0cfa-arr-dlog");
+      Project.runTask("mini-findconf-dlog");
+//    Project.runTask("findconf-dlog");
+
+
+      if(miniStrings)
+        Project.runTask("mini-str-dlog");
+      else
+        Project.runTask("strcomponents-dlog");
+      
+      Project.runTask("CnfNodeSucc");
+
+      slurpDoms();
+      Project.runTask("Opt");
+    }
     else
-      Project.runTask("strcomponents-dlog");
+      Project.runTask("dynamic-cdep-java");	  
     
-    Project.runTask("CnfNodeSucc");
-
-    slurpDoms();
-    Map<Quad, String> names = dumpOptRegexes();
-
-	  /*
-	  if(STATIC)
-	    Project.runTask("ImarkConf");
-	  else
-	    Project.runTask("dynamic-cdep-java");
 	  
 	  if(DYNTRACK) {
 	    Project.runTask("dyn-datadep");
-	  } else*/
+	  } else
 	    Project.runTask("datadep-dlog");
 	  
 	  
@@ -290,201 +290,24 @@ public class ConfDeps extends JavaAnalysis {
     System.out.println("saw " + domI.size() + " invokes, and " + confUses + " uses over those. IRatio =" + confUses *1.0 / domI.size());
   }
 
-
-  //reconstruct the string at program point quad, using relation logStrings, of form I,Cst,Z
-  public static String reconcatenate(Quad quad, ProgramRel logStrings, boolean makeRegex, int maxFilled) {
-    RelView v = logStrings.getView();
-    v.selectAndDelete(0, quad);
-    String[] wordsByPos = new String[DomZZ.MAXZ];
-
-    if(v.size() == 0)
-      return "X";
-    
-    for(Pair<String,Integer> t: v.<String,Integer>getAry2ValTuples()) {
-      int i = t.val1;
-      if(wordsByPos[i] == null)
-        wordsByPos[i] = t.val0;
-      else 
-        wordsByPos[i] = wordsByPos[i]+"|"+t.val0;
-      maxFilled = Math.max(maxFilled, i);
-    }
-     
-    StringBuilder sb = new StringBuilder();
-    for(int i =0; i < maxFilled+1 ; ++ i) {
-      if(wordsByPos[i] != null)
-        sb.append(wordsByPos[i]);
-      else
-        if(makeRegex)
-          sb.append(".*");
-        else
-        sb.append(" X ");
-    }
-    v.free();
-    return sb.toString();
-  }
   
-  public Map<Quad,String> dumpOptRegexes() {
-    return dumpRegexes("conf_regexes.txt", "confOpts", "confOptLen", "confOptName", domH);
-  }
-  
-  public static Map<Quad,String> dumpRegexes(String filename, String ptRel, String lenRel, String nameRel, DomH domH) {
-    
-    ClassicProject Project = ClassicProject.g();
-
-    Map<Quad, String> returnedMap = new LinkedHashMap<Quad, String>();
-    
+  public static void dumpOptRegexes(String filename, Map<Quad,String> names) {
     PrintWriter writer =
       OutDirUtils.newPrintWriter(filename);
-    ProgramRel relConfOptStrs =
-      (ProgramRel) Project.getTrgt(nameRel);//outputs I, Str, ZZ
-    relConfOptStrs.load();
-    ProgramRel relConfOptLens =  (ProgramRel) Project.getTrgt(lenRel);
-    relConfOptLens.load();
-    ProgramRel opts = (ProgramRel) Project.getTrgt(ptRel);
-    opts.load();
-    
-    ProgramRel vh = (ProgramRel) Project.getTrgt("VH");
-    vh.load();
-    ProgramRel strs = (ProgramRel) Project.getTrgt("VConstFlow"); //v:V0, cst:StrConst
-    strs.load();
-    ProgramRel cnfNodeSucc = (ProgramRel) Project.getTrgt("CnfNodeSucc");
-    cnfNodeSucc.load();
-    
-    for(Object q: opts.getAry1ValTuples()) {
-      Quad quad = (Quad) q;
+
+    for(Map.Entry<Quad, String> s: names.entrySet()) {
+      Quad quad = s.getKey();
+      String regexStr = s.getValue();
       jq_Method m = quad.getMethod();
       jq_Class cl = m.getDeclaringClass();
       int lineno = quad.getLineNumber();
-      
-      RelView lenV = relConfOptLens.getView();
-      lenV.selectAndDelete(0, quad);
-      int lenMax = -1;
-      for(Integer aLen: lenV.<Integer>getAry1ValTuples()) {
-        if(aLen > lenMax)
-          lenMax = aLen;
-      }
       String optType = ConfDefines.optionPrefix(quad);
       String readingMeth = Invoke.getMethod(quad).getMethod().getName().toString();
-      String regexStr = reconcatenate(quad, relConfOptStrs, true, lenMax);
-      
-      String s  = supplementName(quad, vh, strs, cnfNodeSucc, domH);
-      if(s.length() > 1 ) {
-        if(s.length() > regexStr.length()) {
-          System.out.println("RENAME: changing '"+regexStr + "' to " + s);
-          regexStr = s;
-        } else if(!s.equals(regexStr)) {
-          System.err.println("WARN: rename wants to turn " + regexStr + " into " + s);
-        }
-      }
-      
-      returnedMap.put(quad, regexStr);
+
       writer.println(optType + " " + regexStr + " read by " +
           m.getDeclaringClass().getName()+ " " + m.getName() + ":" + lineno + " " + readingMeth);
     }
-    opts.close();
-    relConfOptStrs.close();
-    relConfOptLens.close();
     writer.close();
-    
-    vh.close();
-    strs.close();
-    cnfNodeSucc.close();
-    
-    return returnedMap;
-  }
-  
-  static String supplementName(Quad q, ProgramRel vh, ProgramRel strs, ProgramRel cnfNodeSucc, DomH domH) {
-    
-    Quad prevHop = q;
-    ArrayList<String> pathParts = new ArrayList<String>();
-    int hIdx = domH.indexOf(prevHop);
-    while(prevHop != null && hIdx > 0 && cnfNodeSucc.contains(prevHop)) {
-//      System.err.println("Renamer: supplementing quad " + q + " in " +
-//          q.getMethod().getDeclaringClass().getName() + " " + q.getMethod().getName() + ":" + q.getLineNumber());
-      Pair<Register,String> prevAndComponent = getCompAt(prevHop, strs,cnfNodeSucc);
-//      System.err.println("Renamer: backtracking on " + prevAndComponent.val0 + " and appending " + prevAndComponent.val1);
-      pathParts.add(prevAndComponent.val1);
-      prevHop = getPrevHop(vh, prevAndComponent.val0);
-      hIdx = domH.indexOf(q);
-    }
-    
-    StringBuilder res = new StringBuilder();
-    int i = pathParts.size() -1;
-//    if( i >= 0)
-//      System.err.println("Renamer: found  " + i + " supplemental path parts");
-    for(; i >= 0; --i) {
-      res.append(pathParts.get(i));
-    }
-    
-    return res.toString();
-  }
-
-  static private Quad getPrevHop(ProgramRel vh, Register val0) {
-    if(val0 == null)
-      return null;
-    
-    RelView view = vh.getView();
-    view.selectAndDelete(0, val0);
-    Quad res = null;
-//    System.err.println("Renamer: in getPrevHop, have " + view.size() + " candidate prevs for "
-//        + val0.toString() + " of type " + val0.getType());
-    for(Object q: view.<Object>getAry1ValTuples()) {
-      if(q instanceof Quad &&  ((Quad) q).getOperator() instanceof Invoke) {
-        res = (Quad) q;
-        break;
-      }
-    }
-//    if(res == null)
-//      System.err.println("prev didn't pan out");
-//    else
-//      System.err.println("found prev; it was " + res);
-    view.free();
-    return res;
-  }
-
-  private static Pair<Register, String> getCompAt(Quad prevHop, ProgramRel strs,
-      ProgramRel cnfNodeSucc) {
-    RelView view = cnfNodeSucc.getView();
-    view.selectAndDelete(0, prevHop);
-    jq_Method methForComponent = Invoke.getMethod(prevHop).getMethod();
-
-    
-    Register pathPartV = null;
-    Register basePart = null;
-
-    if(view.size() < 1 || view.size() > 1) {
-      System.err.println("Renamer:  didn't expect cnfNodeSucc to have " + view.size() + " elems at point");
-    }
-    for(Pair<Register,Register> parms: view.<Register,Register>getAry2ValTuples()) {
-      basePart = parms.val0;
-      pathPartV = parms.val1;
-      break;
-    }
-    view.free();
-
-    String str="/.*";
-    if(pathPartV != null) {
-      RelView strsAt = strs.getView();
-      strsAt.selectAndDelete(0, pathPartV);
-//      System.err.println("Renamer: in getCompAt, have " + strsAt.size() + " candidate strings");
-      StringBuffer sb;
-      if(methForComponent.getName().toString().contains("Attribute"))
-        sb = new StringBuffer("@");
-      else sb= new StringBuffer("/");
-      
-      for(String s: strsAt.<String>getAry1ValTuples()) {
-        sb.append(s);
-        sb.append("|");
-      }
-      if(sb.length() > 1) {
-        sb.deleteCharAt(sb.length() -1);
-        str = sb.toString();
-      }
-      
-      strsAt.free();
-    }
-    
-    return new Pair<Register,String>(basePart, str);
   }
 
   public void slurpDoms() {

@@ -3,6 +3,7 @@ package chord.analyses.logging;
 import java.io.PrintWriter;
 import joeq.Compiler.Quad.Quad;
 import chord.analyses.confdep.ConfDeps;
+import chord.analyses.confdep.optnames.DomOpts;
 import chord.bddbddb.Rel.RelView;
 import chord.doms.DomI;
 import chord.project.Chord;
@@ -41,7 +42,7 @@ public class ShowLogQuadPtRegex extends JavaAnalysis {
     
     for(Object q: logQuads.getAry1ValTuples()) {
       Quad logCall = (Quad) q;
-      String logRegex = ConfDeps.reconcatenate(logCall, logStrings, true, logStmtLen(logCall, logVHV, logVHU));
+      String logRegex = DomOpts.reconcatenate(logCall, logStrings, true, logStmtLen(logCall, logVHV, logVHU));
       int quadID = domI.indexOf(logCall);
 //      if(quadID > 0) {
         out.println(quadID + " " +  logRegex);
