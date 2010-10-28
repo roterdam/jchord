@@ -228,9 +228,11 @@ public class DataraceAnalysis extends JavaAnalysis {
 		}		
 		relDatarace.close();		
 		
-    datOut.close();		
-    X.output.put("numRaces", numRaces);		
-			
+    datOut.close();
+    X.putOutput("numRaces", numRaces);		
+    X.putOutput("numUnproven", numRaces);		
+    X.putOutput("absSize", domC.size());
+
 		PrintWriter strOut = OutDirUtils.newPrintWriter("outputs.strings");		
 		for (int e = 0; e < domE.size(); e++)		
 			strOut.println("E"+e + " " + estr(e));		

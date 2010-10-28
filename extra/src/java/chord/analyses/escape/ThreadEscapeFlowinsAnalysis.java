@@ -40,10 +40,8 @@ public class ThreadEscapeFlowinsAnalysis extends JavaAnalysis {
     DomV domV = (DomV)ClassicProject.g().getTrgt("V");
     DomC domC = (DomC)ClassicProject.g().getTrgt("C");
 
-    int numVars = domV.size();
-    boolean useObjectSensitivity = "co".equals(System.getProperty("chord.inst.ctxt.kind", null));
-    
-    int sizeA = 0;
+    //int numVars = domV.size();
+    /*int sizeA = 0;
     int sizeC = 0;
     for (Ctxt c : domC) {
       if (c.length() > 0 && domH.indexOf(c.head()) != -1) { // Allocation site
@@ -52,12 +50,11 @@ public class ThreadEscapeFlowinsAnalysis extends JavaAnalysis {
       }
       else
         sizeC++;
-    }
-
-    X.putOption("useObjectSensitivity", useObjectSensitivity);
+    }*/
 
     X.putOutput("numQueries", numEscaping+numLocal);
     X.putOutput("numProven", numLocal);
+    X.putOutput("numUnproven", numEscaping);
     X.putOutput("absSize", domC.size());
     //X.putOutput("totalSizeA", sizeA);
     //X.putOutput("totalSizeC", sizeC);
