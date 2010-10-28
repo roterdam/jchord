@@ -193,9 +193,9 @@ r_thrSenAbbrRootCM(c,m) :- r_thrSenAbbrReachableCM(c,m), thrSenAbbrRootCM(c,m).
 ### thrSenAbbrReachableCM(d,n) :- thrSenAbbrCICM(_,_,d,n).
 r_thrSenAbbrCICM(x10,x11,d,n) :- r_thrSenAbbrReachableCM(d,n), thrSenAbbrCICM(x10,x11,d,n).
 
-### thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), !=(n,1).
-r_thrSenAbbrReachableCM(c,m) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), !=(n,1).
-r_CICM(c,i,d,n) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), !=(n,1).
+### thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
+r_thrSenAbbrReachableCM(c,m) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
+r_CICM(c,i,d,n) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 
 ### reachableTCM(t,c,m) :- threadAOCM(t,_,c,m).
 
@@ -210,13 +210,13 @@ r_reachableTCM(t,c,m) :- r_reachableTCE(t,c,e), reachableTCM(t,c,m), ME(m,e).
 r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, <(c1,c2).
-r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, <(c1,c2).
-r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, <(c1,c2).
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, <=(t1,t2).
-r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, <=(t1,t2).
-r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, <=(t1,t2).
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
+r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
+r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 
 ### statE(e) :- EF(e,f), statF(f).
 
@@ -233,8 +233,8 @@ r_startingRaceHext(t1,c1,e1,t2,c2,e2) :- r_escapingRaceHext(t1,c1,e1,t2,c2,e2), 
 r_statE(e1) :- r_escapingRaceHext(t1,c1,e1,t2,c2,e2), startingRaceHext(t1,c1,e1,t2,c2,e2), statE(e1), statE(e2).
 r_statE(e2) :- r_escapingRaceHext(t1,c1,e1,t2,c2,e2), startingRaceHext(t1,c1,e1,t2,c2,e2), statE(e1), statE(e2).
 
-### NonForkPMcs(c,p,d,m) :- CICM(c,i,d,m), !=(m,1), PI(p,i).
-r_CICM(c,i,d,m) :- r_NonForkPMcs(c,p,d,m), CICM(c,i,d,m), !=(m,1), PI(p,i).
+### NonForkPMcs(c,p,d,m) :- CICM(c,i,d,m), m!=1, PI(p,i).
+r_CICM(c,i,d,m) :- r_NonForkPMcs(c,p,d,m), CICM(c,i,d,m), m!=1, PI(p,i).
 
 ### NonForkPHcs(c,p,d,h) :- NonForkPMcs(c,p,d,m), MPhead(m,h).
 r_NonForkPMcs(c,p,d,m) :- r_NonForkPHcs(c,p,d,h), NonForkPMcs(c,p,d,m), MPhead(m,h).
@@ -292,8 +292,8 @@ r_PathEdge(c,p,x21,x22,x) :- r_PathEdge(e,h,x,y,z), ForkPHcs(c,p,d,h), PathEdge(
 r_threadAC(x,e) :- r_PathEdge(e,h,x,y,z), ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), threadAC(x,e), threadAC(y,d), z=y.
 r_threadAC(y,d) :- r_PathEdge(e,h,x,y,z), ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), threadAC(x,e), threadAC(y,d), z=y.
 
-### mhp(c,p,t1,t2) :- PathEdge(c,p,t1,_,t2), !=(t1,0), !=(t2,0).
-r_PathEdge(c,p,t1,x23,t2) :- r_mhp(c,p,t1,t2), PathEdge(c,p,t1,x23,t2), !=(t1,0), !=(t2,0).
+### mhp(c,p,t1,t2) :- PathEdge(c,p,t1,_,t2), t1!=0, t2!=0.
+r_PathEdge(c,p,t1,x23,t2) :- r_mhp(c,p,t1,t2), PathEdge(c,p,t1,x23,t2), t1!=0, t2!=0.
 
 ### mhe(c,e,t1,t2) :- mhp(c,p,t1,t2), PE(p,e).
 r_mhp(c,p,t1,t2) :- r_mhe(c,e,t1,t2), mhp(c,p,t1,t2), PE(p,e).

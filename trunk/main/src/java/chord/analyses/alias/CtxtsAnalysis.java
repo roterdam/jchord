@@ -309,6 +309,10 @@ public class CtxtsAnalysis extends JavaAnalysis {
     X.putOption("kcfaRange", kcfaRange);
     X.putOption("numRefineIters", System.getProperty("chord.max.iters"));
     X.putOption("inValuesPath", inValuesPath);
+
+    boolean useObjectSensitivity = "co".equals(System.getProperty("chord.inst.ctxt.kind", null));
+    X.putOption("useObjectSensitivity", useObjectSensitivity);
+			
     X.flushOptions();
 
     Random random = randSeed != 0 ? new Random(randSeed) : new Random();

@@ -826,6 +826,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     X.putOutput("absSize", S.size());
     X.putOutput("numQueries", allQueries.size());
     X.putOutput("numProven", numProven);
+    X.putOutput("numUnproven", allQueries.size()-numProven);
     X.putOutput("numProvenHistory", numProvenHistory());
     X.flushOutput();
   }

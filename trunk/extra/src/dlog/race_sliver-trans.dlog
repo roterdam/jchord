@@ -265,13 +265,13 @@ t_thrSenAbbrRootCM_thrSenAbbrReachableCM(c,m) :- r_thrSenAbbrReachableCM(c,m), t
 t_thrSenAbbrCICM_thrSenAbbrReachableCM(x10:C,x11:I,d:C,n:M) output
 t_thrSenAbbrCICM_thrSenAbbrReachableCM(x10,x11,d,n) :- r_thrSenAbbrReachableCM(d,n), thrSenAbbrCICM(x10,x11,d,n).
 
-### thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), !=(n,1).
+### thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 # TRANS - t_thrSenAbbrReachableCM_thrSenAbbrCICM thrSenAbbrReachableCM thrSenAbbrCICM 0,1 0,2,3,4
 t_thrSenAbbrReachableCM_thrSenAbbrCICM(c:C,m:M,i:I,d:C,n:M) output
-t_thrSenAbbrReachableCM_thrSenAbbrCICM(c,m,i,d,n) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), !=(n,1).
+t_thrSenAbbrReachableCM_thrSenAbbrCICM(c,m,i,d,n) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 # TRANS - t_CICM_thrSenAbbrCICM CICM thrSenAbbrCICM 0,1,2,3 0,1,2,3
 t_CICM_thrSenAbbrCICM(c:C,i:I,d:C,n:M) output
-t_CICM_thrSenAbbrCICM(c,i,d,n) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), !=(n,1).
+t_CICM_thrSenAbbrCICM(c,i,d,n) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 
 ### reachableTCM(t,c,m) :- threadAOCM(t,_,c,m).
 
@@ -296,21 +296,21 @@ t_reachableTCE_startingRaceHext(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e
 t_reachableTCE_startingRaceHext1(t2:A,c2:C,e2:E,t1:A,c1:C,e1:E) output
 t_reachableTCE_startingRaceHext1(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, <(c1,c2).
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
 # TRANS - t_reachableTCE_startingRaceHext2 reachableTCE startingRaceHext 0,1,2 0,1,2,3,4,5
 t_reachableTCE_startingRaceHext2(t1:A,c1:C,e1:E,t2:A,c2:C,e2:E) output
-t_reachableTCE_startingRaceHext2(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, <(c1,c2).
+t_reachableTCE_startingRaceHext2(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
 # TRANS - t_reachableTCE_startingRaceHext3 reachableTCE startingRaceHext 0,1,2 3,4,5,0,1,2
 t_reachableTCE_startingRaceHext3(t2:A,c2:C,e2:E,t1:A,c1:C,e1:E) output
-t_reachableTCE_startingRaceHext3(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, <(c1,c2).
+t_reachableTCE_startingRaceHext3(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, <=(t1,t2).
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 # TRANS - t_reachableTCE_startingRaceHext4 reachableTCE startingRaceHext 0,1,2 0,1,2,3,4,5
 t_reachableTCE_startingRaceHext4(t1:A,c1:C,e1:E,t2:A,c2:C,e2:E) output
-t_reachableTCE_startingRaceHext4(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, <=(t1,t2).
+t_reachableTCE_startingRaceHext4(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 # TRANS - t_reachableTCE_startingRaceHext5 reachableTCE startingRaceHext 0,1,2 3,4,5,0,1,2
 t_reachableTCE_startingRaceHext5(t2:A,c2:C,e2:E,t1:A,c1:C,e1:E) output
-t_reachableTCE_startingRaceHext5(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, <=(t1,t2).
+t_reachableTCE_startingRaceHext5(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 
 ### statE(e) :- EF(e,f), statF(f).
 
@@ -341,10 +341,10 @@ t_statE_escapingRaceHext(e1,t1,c1,t2,c2,e2) :- r_escapingRaceHext(t1,c1,e1,t2,c2
 t_statE_escapingRaceHext1(e2:E,t1:A,c1:C,e1:E,t2:A,c2:C) output
 t_statE_escapingRaceHext1(e2,t1,c1,e1,t2,c2) :- r_escapingRaceHext(t1,c1,e1,t2,c2,e2), startingRaceHext(t1,c1,e1,t2,c2,e2), statE(e1), statE(e2).
 
-### NonForkPMcs(c,p,d,m) :- CICM(c,i,d,m), !=(m,1), PI(p,i).
+### NonForkPMcs(c,p,d,m) :- CICM(c,i,d,m), m!=1, PI(p,i).
 # TRANS - t_CICM_NonForkPMcs CICM NonForkPMcs 0,1,2,3 0,4,2,3
 t_CICM_NonForkPMcs(c:C,i:I,d:C,m:M,p:P) output
-t_CICM_NonForkPMcs(c,i,d,m,p) :- r_NonForkPMcs(c,p,d,m), CICM(c,i,d,m), !=(m,1), PI(p,i).
+t_CICM_NonForkPMcs(c,i,d,m,p) :- r_NonForkPMcs(c,p,d,m), CICM(c,i,d,m), m!=1, PI(p,i).
 
 ### NonForkPHcs(c,p,d,h) :- NonForkPMcs(c,p,d,m), MPhead(m,h).
 # TRANS - t_NonForkPMcs_NonForkPHcs NonForkPMcs NonForkPHcs 0,1,2,3 0,1,2,4
@@ -458,10 +458,10 @@ t_threadAC_PathEdge4(x,e,h,y,z) :- r_PathEdge(e,h,x,y,z), ForkPHcs(c,p,d,h), Pat
 t_threadAC_PathEdge5(y:A,d:C,e:C,h:P,x:A,z:A) output
 t_threadAC_PathEdge5(y,d,e,h,x,z) :- r_PathEdge(e,h,x,y,z), ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), threadAC(x,e), threadAC(y,d), z=y.
 
-### mhp(c,p,t1,t2) :- PathEdge(c,p,t1,_,t2), !=(t1,0), !=(t2,0).
+### mhp(c,p,t1,t2) :- PathEdge(c,p,t1,_,t2), t1!=0, t2!=0.
 # TRANS - t_PathEdge_mhp PathEdge mhp 0,1,2,3,4 0,1,2,4
 t_PathEdge_mhp(c:C,p:P,t1:A,x23:A,t2:A) output
-t_PathEdge_mhp(c,p,t1,x23,t2) :- r_mhp(c,p,t1,t2), PathEdge(c,p,t1,x23,t2), !=(t1,0), !=(t2,0).
+t_PathEdge_mhp(c,p,t1,x23,t2) :- r_mhp(c,p,t1,t2), PathEdge(c,p,t1,x23,t2), t1!=0, t2!=0.
 
 ### mhe(c,e,t1,t2) :- mhp(c,p,t1,t2), PE(p,e).
 # TRANS - t_mhp_mhe mhp mhe 0,1,2,3 0,4,2,3
