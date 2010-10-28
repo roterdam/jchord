@@ -117,16 +117,20 @@ public class ShowConfOptions extends JavaAnalysis {
       project.runTask("strcomponents-dlog");
     
     project.runTask("CnfNodeSucc");
-    
+
+    project.runTask("Opt");
     domV = (DomV) project.getTrgt("V");
     DomH domH = (DomH) project.getTrgt("H");
 
-
     ConfDeps c = new ConfDeps();
     c.slurpDoms();
-    Map<Quad, String> returnedMap = c.dumpOptRegexes();
-    c.dumpRegexes("conf_writes.txt", "confOptWrites", "confOptWriteLen", "confWritesByName", domH);
+      //this dumps reads
+    ConfDeps.dumpOptRegexes("conf_regex.txt", DomOpts.optSites());
+      //now dump writes
+    ConfDeps.dumpOptRegexes("conf_writes.txt", DomOpts.computeOptNames("confOptWrites", "confOptWriteLen", "confWritesByName", domH));
     project.runTask("conf-flow-dlog");
+
+    Map<Quad, String> returnedMap = DomOpts.optSites();
 
     dumpFieldContents();
     dumpOptTypeGuesses();

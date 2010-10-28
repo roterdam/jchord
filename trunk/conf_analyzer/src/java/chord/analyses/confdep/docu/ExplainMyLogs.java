@@ -8,6 +8,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.confdep.ConfDefines;
 import chord.analyses.confdep.ConfDeps;
+import chord.analyses.confdep.optnames.DomOpts;
 import chord.bddbddb.Rel.RelView;
 import chord.doms.*;
 import chord.project.*;
@@ -44,7 +45,7 @@ public class ExplainMyLogs extends JavaAnalysis{
     
     ConfDeps c = new ConfDeps();
     c.slurpDoms();
-    Map<Quad, String> returnedMap = c.dumpOptRegexes();
+    Map<Quad, String> returnedMap = DomOpts.optSites();
     dumpLogDependencies(returnedMap);
     
 //    dumpLogToProgPtMap();
