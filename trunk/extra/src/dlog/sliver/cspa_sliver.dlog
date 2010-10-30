@@ -34,7 +34,15 @@ staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkRet(i:I0,n:Z0,v:V0) input
+MmethArg(m:M0,n:Z0,v:V0) input
 VHfilter(v:V,h:H) input
+
+objNewInstIH(i:I0,h:H0) input
+objNewInstIM(i:I0,m:M0) input
+conNewInstIH(i:I0,h:H0) input
+conNewInstIM(i:I0,m:M0) input
+aryNewInstIH(i:I0,h:H0) input
 
 # Program statements
 MobjValAsgnInst(m:M,l:V,h:H)     input # in m, l = new h
@@ -93,3 +101,13 @@ VCA(l,c,aa) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,a
 VCA(l,c,a)  :- reachableCM(c,m), MgetStatFldInst(m,l,f),   FA(f,a).                   # in context c, l = STATIC.f [NAME=gr]
 AFA(a,f,aa) :- reachableCM(c,m), MputInstFldInst(m,b,f,r), VCA(b,c,a), VCA(r,c,aa).   # in context c, b.f = r      [NAME=hw]
 FA(f,a)     :- reachableCM(c,m), MputStatFldInst(m,f,r),   VCA(r,c,a).                # in context c, STATIC.f = r [NAME=gw]
+
+# Reflection
+reachableCM(c,m) :- reachableCI(c,i), objNewInstIM(i,m).
+reachableCM(c,m) :- reachableCI(c,i), conNewInstIM(i,m).
+VCA(v,c,o)  :- reachableCI(c,i), objNewInstIM(i,m), MmethArg(m,0,v), objNewInstIH(i,h), CfromHC(o,h,c).
+VCA(v,c,o)  :- reachableCI(c,i), objNewInstIH(i,h), IinvkRet(i,0,v), CfromHC(o,h,c).
+VCA(v,c,o2) :- reachableCI(c,i), conNewInstIM(i,m), IinvkArg(i,1,u), MmethArg(m,1,v), VCA(u,c,o), AFA(o,0,o2).
+VCA(v,c,o)  :- reachableCI(c,i), conNewInstIM(i,m), MmethArg(m,0,v), conNewInstIH(i,h), CfromHC(o,h,c).
+VCA(v,c,o)  :- reachableCI(c,i), conNewInstIH(i,h), IinvkRet(i,0,v), CfromHC(o,h,c).
+VCA(v,c,o)  :- reachableCI(c,i), aryNewInstIH(i,h), IinvkRet(i,0,v), CfromHC(o,h,c).

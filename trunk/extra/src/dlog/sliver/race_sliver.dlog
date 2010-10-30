@@ -45,7 +45,7 @@ threadDCM(t:D,c:C,m:M) output
 thrSenAbbrRootCM(c:C0,m:M0) output
 thrSenAbbrReachableCM(c:C0,m:M0)  output
 thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0)  output
-reachableTCM(t:D0,c:C0,m:M0) output
+reachableTCMZ(t:D0,c:C0,m:M0) output
 reachableTCE(t:D0,c:C0,e:E0) output
 startingRaceHext(t1:D0,c1:C0,e1:E0,t2:D1,c2:C1,e2:E1) output
 
@@ -62,10 +62,10 @@ ForkPHcs(caller:C,p1:P,callee:C,p2:P)  output
 NonForkPMcs(caller:C,p1:P,callee:C,m2:M) output
 NonForkPHcs(caller:C,p1:P,callee:C,p2:P) output
 NonForkPTcs(caller:C,p1:P,callee:C,p2:P) output
-PathEdge(c:C,p:P,this:D,sThat:D,tThat:D)  output
-SummEdge(c:C,p:P,this:D,sThat:D,tThat:D) output
-mhp(c:C0,p:P0,t1:D0,t2:D1) output
-mhe(c:C0,e:E0,t1:D0,t2:D1) output
+PathEdgeZ(c:C,p:P,this:D,sThat:D,tThat:D) output
+SummEdgeZ(c:C,p:P,this:D,sThat:D,tThat:D) output
+mhpZ(c:C0,p:P0,t1:D0,t2:D1) output
+mheZ(c:C0,e:E0,t1:D0,t2:D1) output
 parallelRaceHext(t1:D0,c1:C0,e1:E0,t2:D1,c2:C1,e2:E1) output
 
 # final race queries 
@@ -84,9 +84,9 @@ thrSenAbbrReachableCM(d,n) :- thrSenAbbrCICM(_,_,d,n).
 thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 
 threadDCM(b,c,m) :- threadDHM(b,h,m), HfromC(h,c).
-reachableTCM(t,c,m) :- threadDCM(t,c,m).
-reachableTCM(t,d,n) :- reachableTCM(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
-reachableTCE(t,c,e) :- reachableTCM(t,c,m), ME(m,e).
+reachableTCMZ(t,c,m) :- threadDCM(t,c,m).
+reachableTCMZ(t,d,n) :- reachableTCMZ(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
+reachableTCE(t,c,e) :- reachableTCMZ(t,c,m), ME(m,e).
 
 startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
@@ -109,21 +109,21 @@ ForkPMcs(c,p,d) :- CICM(c,i,d,1), PI(p,i).
 ForkPHcs(c,p,d,h) :- ForkPMcs(c,p,d), MPhead(1,h).
 threadDC(t,c) :- threadDCM(t,c,1).
 
-PathEdge(0,0,1,0,0).
-PathEdge(c,q,t,t1,t2) :- PathEdge(c,p,t,t1,t2), PP(p,q).
-PathEdge(d,q,t,t1,t2) :- NonForkPHcs(c,p,d,q), PathEdge(c,p,t,_,t2), t1=t2.
-SummEdge(c,p,t,t1,t2) :- NonForkPTcs(c,p,d,q), PathEdge(d,q,t,t1,t2).
-PathEdge(c,r,t,t1,t3) :- SummEdge(c,p,t,t2,t3), PathEdge(c,p,t,t1,t2), PP(p,r).
-PathEdge(c,r,t,t1,t2) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadDC(t2,d).
-PathEdge(c,r,t,t1,t3) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadDC(t2,d), PathEdge(d,q,t2,0,t3), MPtail(1,q).
-PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,_,_), threadDC(x,d), z=y. split
-PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,y), threadDC(x,d), z=y. split
-PathEdge(e,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), threadDC(x,e), threadDC(y,d), z=y. split
+PathEdgeZ(0,0,1,0,0).
+PathEdgeZ(c,q,t,t1,t2) :- PathEdgeZ(c,p,t,t1,t2), PP(p,q).
+PathEdgeZ(d,q,t,t1,t2) :- NonForkPHcs(c,p,d,q), PathEdgeZ(c,p,t,_,t2), t1=t2.
+SummEdgeZ(c,p,t,t1,t2) :- NonForkPTcs(c,p,d,q), PathEdgeZ(d,q,t,t1,t2).
+PathEdgeZ(c,r,t,t1,t3) :- SummEdgeZ(c,p,t,t2,t3), PathEdgeZ(c,p,t,t1,t2), PP(p,r).
+PathEdgeZ(c,r,t,t1,t2) :- ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,_), PP(p,r), threadDC(t2,d).
+PathEdgeZ(c,r,t,t1,t3) :- ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,_), PP(p,r), threadDC(t2,d), PathEdgeZ(d,q,t2,0,t3), MPtail(1,q).
+PathEdgeZ(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdgeZ(c,p,y,_,_), threadDC(x,d), z=y. split
+PathEdgeZ(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdgeZ(c,p,_,_,y), threadDC(x,d), z=y. split
+PathEdgeZ(e,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdgeZ(c,p,_,_,x), threadDC(x,e), threadDC(y,d), z=y. split
 
-mhp(c,p,t1,t2) :- PathEdge(c,p,t1,_,t2), t1!=0, t2!=0.
-mhe(c,e,t1,t2) :- mhp(c,p,t1,t2), PE(p,e).
+mhpZ(c,p,t1,t2) :- PathEdgeZ(c,p,t1,_,t2), t1!=0, t2!=0.
+mheZ(c,e,t1,t2) :- mhpZ(c,p,t1,t2), PE(p,e).
 
-parallelRaceHext(t1,c1,e1,t2,c2,e2) :- escapingRaceHext(t1,c1,e1,t2,c2,e2), mhe(c1,e1,t1,t2), mhe(c2,e2,t2,t1).
+parallelRaceHext(t1,c1,e1,t2,c2,e2) :- escapingRaceHext(t1,c1,e1,t2,c2,e2), mheZ(c1,e1,t1,t2), mheZ(c2,e2,t2,t1).
 
 ###
 
