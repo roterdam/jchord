@@ -183,6 +183,7 @@ public class Config {
 					break;
 			}
 		}
+    System.setProperty("chord.out.dir", outDirName); // This could be read by someone else
 		FileUtils.mkdirs(outDirName);
 	}
 	public final static String outFileName = outRel2AbsPath("chord.out.file", "log.txt");

@@ -213,6 +213,13 @@ public class DataraceAnalysis extends JavaAnalysis {
 		writer.close();
 	}
 
+  int relSize(String name) {
+    ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt(name); rel.load();
+    int n = rel.size();
+    rel.close();
+    return n;
+  }
+
 	private void outputRaces() {
 		PrintWriter datOut = OutDirUtils.newPrintWriter("outputs.dat");		
 			
@@ -231,6 +238,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 		relDatarace.close();		
 		
     datOut.close();
+    X.putOutput("numQueries", relSize("ctxtInsStartingRace"));
     X.putOutput("numRaces", numRaces);		
     X.putOutput("numUnproven", numRaces);		
     X.putOutput("absSize", domC.size());

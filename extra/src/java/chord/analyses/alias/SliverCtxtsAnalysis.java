@@ -109,14 +109,15 @@ class GlobalInfo {
       return New.getType(h).getType();
     else if (op instanceof NewArray)
       return NewArray.getType(h).getType();
-    else {
-      assert (op instanceof MultiNewArray);
+    else if (op instanceof MultiNewArray)
       return MultiNewArray.getType(h).getType();
-    }
+    else
+      return null;
   }
   String hstrBrief(Quad h) {
     String path = new File(h.toJavaLocStr()).getName();
-    return path+"("+h2t(h).shortName()+")";
+    jq_Type t = h2t(h);
+    return path+"("+(t == null ? "?" : t.shortName())+")";
   }
   String istrBrief(Quad i) {
     String path = new File(i.toJavaLocStr()).getName();
@@ -280,8 +281,7 @@ class Abstraction {
 
   void add(Abstraction that, boolean assertDisjoint) {
     for (Pair<Quad,Ctxt> pair : that.CfromJC.keySet()) {
-      if (assertDisjoint)
-        assert !CfromJC.containsKey(pair) : pair + " " + CfromJC.get(pair) + " " + that.CfromJC.get(pair);
+      //if (assertDisjoint) assert !CfromJC.containsKey(pair) : pair + " " + CfromJC.get(pair) + " " + that.CfromJC.get(pair); // too slow
       CfromJC.put(pair, that.CfromJC.get(pair));
     }
     S.addAll(that.S);
@@ -618,6 +618,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   }
 
   void refinePruneLoop() {
+    X.logs("Initializing abstraction with length %s slivers", initK);
     // Initialize with k-CFA
     // Slivers are length k for call sites and k+1 for allocation sites
     for (Quad j : jSet) {
@@ -803,6 +804,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   }
 
   void outputStatus(int iter) {
+    X.logs("outputStatus(iter=%s)", iter);
     // Get the total size of the abstraction across all queries
     HashSet<Ctxt> S = new HashSet<Ctxt>();
     for (QueryGroup g : provenGroups) {
@@ -1050,9 +1052,9 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   }
 
   void backupRelations(int iter) {
-    X.logs("backupRelations");
     try {
       if (X.getBooleanArg("saveRelations", false)) {
+        X.logs("backupRelations");
         String path = X.path(""+iter);
         new File(path).mkdir();
 

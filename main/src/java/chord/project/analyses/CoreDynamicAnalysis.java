@@ -305,7 +305,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			Properties props = System.getProperties();
 			for (Map.Entry e : props.entrySet()) {
 				String key = (String) e.getKey();
-				if (key.startsWith("chord."))
+				if (key.startsWith("chord.") && !key.equals("chord.out.pooldir"))
 					basecmd.add("-D" + key + "=" + e.getValue());
 			}
 			basecmd.add("-cp");

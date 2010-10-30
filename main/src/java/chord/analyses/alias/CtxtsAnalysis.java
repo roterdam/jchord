@@ -309,6 +309,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
     X.putOption("kcfaRange", kcfaRange);
     X.putOption("numRefineIters", System.getProperty("chord.max.iters"));
     X.putOption("inValuesPath", inValuesPath);
+    if (kobjK == kcfaK+1) // Canonical value
+      X.putOption("initK", kcfaK);
 
     boolean useObjectSensitivity = "co".equals(System.getProperty("chord.inst.ctxt.kind", null));
     X.putOption("useObjectSensitivity", useObjectSensitivity);

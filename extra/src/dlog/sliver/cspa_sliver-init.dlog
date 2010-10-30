@@ -39,10 +39,15 @@ MobjValAsgnInst(m:M,l:V,h:H) input # in m, l = new h
 MgetStatFldInst(m:M,l:V,f:F) input # in m, l = STATIC.f
 MputStatFldInst(m:M,f:F,r:V) input # in m, STATIC.f = r
 
+clsForNameIT(i:I0,t:T0) input
+objNewInstIH(i:I0,h:H0) input
+conNewInstIH(i:I0,h:H0) input
+
 # Computed from 0-CFA.
 IM(i:I,m:M) input # call site i can resolve to method m
 VH(v:V,h:H) input # Whether variable v can point to an object allocated at h
 reachableM(m:M) input # method m is reachable
+reachableI(i:I) input # method i is reachable
 
 # Output one-time relations.
 reachableH(h:H) output # allocation site h is reachable
@@ -55,6 +60,7 @@ HtoM(h:H,m:M) output # h can be the "this" argument calling method that skips to
 ### Constraints
 
 reachableH(h) :- reachableM(m), MH(m,h).
+reachableI(i) :- reachableM(m), MI(m,i).
 argIVMV(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm).
 retIVMV(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
 
@@ -64,6 +70,11 @@ reachableT(t) :- reachableM(m), staticTM(t,m).
 reachableT(t) :- reachableM(m), MputStatFldInst(m,f,_), staticTF(t,f).
 reachableT(t) :- reachableM(m), MgetStatFldInst(m,_,f), staticTF(t,f).
 reachableT(t) :- classT(t), reachableT(s), sub(s,t).
+
+# Reflection
+reachableT(t) :- reachableI(i), conNewInstIH(i,h), HT(h,t).
+reachableT(t) :- reachableI(i), objNewInstIH(i,h), HT(h,t).
+reachableT(t) :- reachableI(i), clsForNameIT(i,t).
 
 # For object-based refinement
 skipMM(m,n) :- m=n, !statIM(_,m).
