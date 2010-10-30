@@ -14,6 +14,7 @@
 
 ### Relations
 
+thrOblAbbrReachableM(m:M0) input
 TM(t:T,m:M) input
 EF(e:E0,f:F0) input
 writeE(e:E0) input
@@ -28,13 +29,18 @@ query(e1:E0,e2:E1) output
 
 ### Constraints
 
-relevantM(m) :- TM(t,m), !checkExcludedT(t).
+relevantM(m) :- thrOblAbbrReachableM(m), TM(t,m), !checkExcludedT(t).
 relevantE(e) :- relevantM(m), ME(m,e).
 relevantEF(e,f) :- relevantE(e), EF(e,f).
 
 onlyWr(e) :- writeE(e).
 rdOrWr(_).
 
+###
+# Constraints
+###
+
 query(e1,e2) :- onlyWr(e1), rdOrWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
 query(e1,e2) :- rdOrWr(e1), onlyWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
 query(e1,e2) :- onlyWr(e1), onlyWr(e2), e1=e2, relevantEF(e1,f), relevantEF(e2,f).
+
