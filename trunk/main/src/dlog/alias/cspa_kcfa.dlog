@@ -17,7 +17,7 @@
 .include "Z.dom"
 .include "C.dom"
 
-.bddvarorder F0_I0xM0xM1_T0_V0xV1_T1_H0_C0xC1xC2
+.bddvarorder F0_I0xM0xM1_T0_V0xV1_T1_H0_C0xC1xC2_Z0
 
 ###
 # Relations
@@ -30,12 +30,20 @@ MI(m:M,i:I) input
 statIM(i:I,m:M) input
 specIM(i:I,m:M) input
 virtIM(i:I,m:M) input
+
 MobjValAsgnInst(m:M,l:V,h:H) input
 MobjVarAsgnInst(m:M,l:V,r:V) input
 MgetInstFldInst(m:M,l:V,b:V,f:F) input
 MputInstFldInst(m:M,b:V,f:F,r:V) input
 MgetStatFldInst(m:M,l:V,f:F) input
 MputStatFldInst(m:M,f:F,r:V) input
+
+clsForNameIT(i:I0,t:T0) input
+objNewInstIH(i:I0,h:H0) input
+objNewInstIM(i:I0,m:M0) input
+conNewInstIH(i:I0,h:H0) input
+conNewInstIM(i:I0,m:M0) input
+aryNewInstIH(i:I0,h:H0) input
 
 RobjValAsgnInst(c:C,l:V,h:H) output
 RobjVarAsgnInst(c:C,l:V,r:V) output
@@ -48,7 +56,11 @@ classT(t:T) input
 staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
+MmethArg(m:M0,n:Z0,v:V0) input
+MspcMethArg(m:M0,v:V0) input
+IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkArg0(i:I0,v:V1) input
+IinvkRet(i:I0,n:Z0,v:V0) input
 argCopy(i:I0,u:V1,m:M0,v:V0) input
 retCopy(i:I0,u:V0,m:M0,v:V1) input
 VCfilter(v:V,c:C) input
@@ -62,8 +74,6 @@ epsilonV(v:V) input # treat variable v context insensitively
 
 IHM(i:I,h:H,m:M) # at call site i, if h is the allocation site of "this" argument, can get to method m
 reachableT(t:T)
-
-MspcMethArg(m:M,v:V) input
 
 kcfaDIC(c:C,i:I,c:C) output
 DIC(c:C,i:I,c:C) output # in context c, at call site i, c can be the "this" argument
@@ -185,11 +195,27 @@ CFC(c1,f,c2) :- RputInstFldInst(c,b,f,r), DVC(c,b,c1), DVC(c,r,c2). split
 RputStatFldInst(c,f,r) :- reachableCM(c,m), MputStatFldInst(m,f,r).
 FC(f,o) :- RputStatFldInst(c,f,r), DVC(c,r,o).
 
+### reflection handling rules
+
+reachableCM(c,m) :- reachableCI(c,i), objNewInstIM(i,m).
+reachableCM(c,m) :- reachableCI(c,i), conNewInstIM(i,m).
+
+DVC(c,v,o)  :- reachableCI(c,i), objNewInstIM(i,m), MmethArg(m,0,v), objNewInstIH(i,h), CHC(c,h,o).
+DVC(c,v,o)  :- reachableCI(c,i), objNewInstIH(i,h), IinvkRet(i,0,v), CHC(c,h,o).
+DVC(c,v,o2) :- reachableCI(c,i), conNewInstIM(i,m), IinvkArg(i,1,u), MmethArg(m,1,v), DVC(c,u,o), CFC(o,0,o2).
+DVC(c,v,o)  :- reachableCI(c,i), conNewInstIM(i,m), MmethArg(m,0,v), conNewInstIH(i,h), CHC(c,h,o).
+DVC(c,v,o)  :- reachableCI(c,i), conNewInstIH(i,h), IinvkRet(i,0,v), CHC(c,h,o).
+DVC(c,v,o)  :- reachableCI(c,i), aryNewInstIH(i,h), IinvkRet(i,0,v), CHC(c,h,o).
+
 ### epsilonV(v): treat v context-insensitively
 
 DVC(_,v,o) :- DVC(_,v,o), epsilonV(v).
 
-###
+### rules propagating reachableT
+
+reachableT(t) :- reachableCI(_,i), conNewInstIH(i,h), HT(h,t).
+reachableT(t) :- reachableCI(_,i), objNewInstIH(i,h), HT(h,t).
+reachableT(t) :- reachableCI(_,i), clsForNameIT(i,t).
 
 reachableT(t) :- reachableCM(_,m), MobjValAsgnInst(m,_,h), HT(h,t).
 reachableT(t) :- reachableCM(_,m), staticTM(t,m).
