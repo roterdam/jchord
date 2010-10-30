@@ -22,7 +22,7 @@ import chord.doms.DomH;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DomB extends ProgramDom<Pair<Quad, jq_Method>> {
+public class DomD extends ProgramDom<Pair<Quad, jq_Method>> {
 	private DomH domH;
 	private DomM domM;
     public String toXMLAttrsString(Pair<Quad, jq_Method> bVal) {
