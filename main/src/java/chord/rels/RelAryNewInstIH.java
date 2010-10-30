@@ -21,9 +21,10 @@ import chord.project.analyses.ProgramRel;
 import chord.util.tuple.object.Pair;
 
 /**
- * Relation containing each tuple (m,i,t) such that method m contains
- * call site i calling instance method java.lang.Class.newInstance()
- * with its this argument possibly evaluating to type t.
+ * Relation containing each tuple (i,h) such that call site i
+ * calling method "static Object newInstance(Class componentType, int length)"
+ * defined in class "java.lang.reflect.Array" is treated as
+ * object allocation site h.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
