@@ -36,10 +36,12 @@ MPhead(m:M0,p:P0) input
 MPtail(m:M0,p:P0) input
 PI(p:P0,i:I0) input
 
-threadAOCM(t:A,o:C,c:C,m:M) input # Computed by Java
-escA(a:C) output
+# relation defining reachable abstract threads
+threadBHM(t:B,h:H,m:M) input
 
 # relations needed to compute startingRaceHext
+HfromC(h:H,c:C) input
+threadBCM(t:B,c:C,m:M) output
 thrSenAbbrRootCM(c:C0,m:M0) output
 thrSenAbbrReachableCM(c:C0,m:M0)  output
 thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0)  output
@@ -50,10 +52,11 @@ startingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) output
 # relations needed to compute escapingRaceHext
 statE(e:E0) output
 CEC(c:C0,e:E0,o:C1) output
+escA(a:C) output
 escapingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) output
 
 # relations needed to compute parallelRaceHext
-threadAC(t:A,c:C) output
+threadBC(t:B,c:C) output
 ForkPMcs(caller:C,p1:P,callee:C)  output
 ForkPHcs(caller:C,p1:P,callee:C,p2:P)  output
 NonForkPMcs(caller:C,p1:P,callee:C,m2:M) output
@@ -68,20 +71,6 @@ parallelRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) output
 # final race queries 
 outQuery(e1:E0,e2:E1) output
  
-#thrOblAbbrRootCM(c:C,m:M) output
-#thrOblAbbrReachableCM(c:C,m:M) output
-#thrOblAbbrCICM(c:C,i:I,d:C,m:M) output
-#thrOblAbbrCMCM(c:C,m:M,d:C,n:M) output
-#thrOblAbbrRootCM(0,0).
-#thrOblAbbrReachableCM(c,m) :- thrOblAbbrRootCM(c,m).
-#thrOblAbbrReachableCM(d,n) :- thrOblAbbrCICM(_,_,d,n).
-#thrOblAbbrCICM(c,i,d,n) :- thrOblAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n).
-#thrOblAbbrCMCM(c,m,d,n) :- thrOblAbbrCICM(c,i,d,n), MI(m,i).
-#threadOC(o:C0,c:C1) output
-#threadOC(o,c) :- MmethArg(1,0,v), thrOblAbbrCICM(_,_,c,1), VCA(v,c,o).
-
-threadOC(o:C0,c:C1) input # from threads-sliver-dlog
-
 ### Constraints
 
 escA(a) :- FA(_,a). # objects (base case)
@@ -94,7 +83,8 @@ thrSenAbbrReachableCM(c,m) :- thrSenAbbrRootCM(c,m).
 thrSenAbbrReachableCM(d,n) :- thrSenAbbrCICM(_,_,d,n).
 thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 
-reachableTCM(t,c,m) :- threadAOCM(t,_,c,m).
+threadBCM(b,c,m) :- threadBHM(b,h,m), HfromC(h,c).
+reachableTCM(t,c,m) :- threadBCM(t,c,m).
 reachableTCM(t,d,n) :- reachableTCM(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
 reachableTCE(t,c,e) :- reachableTCM(t,c,m), ME(m,e).
 
@@ -117,18 +107,18 @@ NonForkPHcs(c,p,d,h) :- NonForkPMcs(c,p,d,m), MPhead(m,h).
 NonForkPTcs(c,p,d,t) :- NonForkPMcs(c,p,d,m), MPtail(m,t).
 ForkPMcs(c,p,d) :- CICM(c,i,d,1), PI(p,i).
 ForkPHcs(c,p,d,h) :- ForkPMcs(c,p,d), MPhead(1,h).
-threadAC(t,c) :- threadAOCM(t,_,c,1).
+threadBC(t,c) :- threadBCM(t,c,1).
 
 PathEdge(0,0,1,0,0).
 PathEdge(c,q,t,t1,t2) :- PathEdge(c,p,t,t1,t2), PP(p,q).
 PathEdge(d,q,t,t1,t2) :- NonForkPHcs(c,p,d,q), PathEdge(c,p,t,_,t2), t1=t2.
 SummEdge(c,p,t,t1,t2) :- NonForkPTcs(c,p,d,q), PathEdge(d,q,t,t1,t2).
 PathEdge(c,r,t,t1,t3) :- SummEdge(c,p,t,t2,t3), PathEdge(c,p,t,t1,t2), PP(p,r).
-PathEdge(c,r,t,t1,t2) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadAC(t2,d).
-PathEdge(c,r,t,t1,t3) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadAC(t2,d), PathEdge(d,q,t2,0,t3), MPtail(1,q).
-PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,_,_), threadAC(x,d), z=y. split
-PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,y), threadAC(x,d), z=y. split
-PathEdge(e,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), threadAC(x,e), threadAC(y,d), z=y. split
+PathEdge(c,r,t,t1,t2) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadBC(t2,d).
+PathEdge(c,r,t,t1,t3) :- ForkPMcs(c,p,d), PathEdge(c,p,t,t1,_), PP(p,r), threadBC(t2,d), PathEdge(d,q,t2,0,t3), MPtail(1,q).
+PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,y,_,_), threadBC(x,d), z=y. split
+PathEdge(d,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,y), threadBC(x,d), z=y. split
+PathEdge(e,h,x,y,z) :- ForkPHcs(c,p,d,h), PathEdge(c,p,_,_,x), threadBC(x,e), threadBC(y,d), z=y. split
 
 mhp(c,p,t1,t2) :- PathEdge(c,p,t1,_,t2), t1!=0, t2!=0.
 mhe(c,e,t1,t2) :- mhp(c,p,t1,t2), PE(p,e).
