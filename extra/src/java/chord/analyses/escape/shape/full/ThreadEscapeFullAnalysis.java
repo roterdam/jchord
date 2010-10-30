@@ -125,22 +125,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		ClassicProject.g().runTask(domE);
 
 		Map<Quad, Set<Quad>> e2hsMap = new HashMap<Quad, Set<Quad>>();
-/*
-		ClassicProject.g().runTask("EH-dlog");
-		Set<Quad> globalHs = new HashSet<Quad>();
-		for (int hIdx = 1; hIdx < domH.size(); hIdx++) {
-			globalHs.add((Quad) domH.get(hIdx));
-		}
-		ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("relevantE");
-		rel.load();
-		for (int eIdx = 0; eIdx < domE.size(); eIdx++) {
-			if (rel.contains(eIdx)) {
-				Quad e = (Quad) domE.get(eIdx);
-				e2hsMap.put(e, globalHs);
-			}
-		}
-		rel.close();
-*/
 		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("locEH");
 		relLocEH.load();
 		IntPairIterable tuples = relLocEH.getAry2IntTuples();
