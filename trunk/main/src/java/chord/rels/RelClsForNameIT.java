@@ -21,9 +21,10 @@ import chord.project.analyses.ProgramRel;
 import chord.util.tuple.object.Pair;
 
 /**
- * Relation containing each tuple (m,t) such that method m contains a
- * call site calling static method java.lang.Class.forName(s), with s
- * possibly evaluating to type t.
+ * Relation containing each tuple (i,t) such that call site i
+ * calling method "static Class forName(String className)" defined in
+ * class "java.lang.Class" was determined by reflection analysis as
+ * potentially loading class t.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
