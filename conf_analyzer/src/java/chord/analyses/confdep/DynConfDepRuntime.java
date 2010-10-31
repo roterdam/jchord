@@ -12,6 +12,7 @@ public class DynConfDepRuntime extends DynamicAnalysis {
   protected static WeakIdentityHashMap labels;
   static {
     try {
+
       out = new PrintStream(new FileOutputStream(DynConfDep.results));
       labels = new WeakIdentityHashMap();
     } catch(IOException e) {
@@ -76,7 +77,7 @@ public class DynConfDepRuntime extends DynamicAnalysis {
       }
       
       if(!taintedCall) {
-        out.println("call to "+ cname + " " + mname  + " without taint");
+        out.println("call to "+ cname + " " + mname  + " without taint at " + iIdx);
       }
       
       ArrayList<String> newTList = new ArrayList<String>();

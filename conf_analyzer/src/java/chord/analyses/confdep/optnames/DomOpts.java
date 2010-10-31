@@ -51,7 +51,6 @@ public class DomOpts extends ProgramDom<String> {
   }
   
 
-
   //reconstruct the string at program point quad, using relation logStrings, of form I,Cst,Z
   public static String reconcatenate(Quad quad, ProgramRel logStrings, boolean makeRegex, int maxFilled) {
     RelView v = logStrings.getView();
