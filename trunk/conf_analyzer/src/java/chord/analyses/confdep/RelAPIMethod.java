@@ -27,8 +27,49 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
     method = m;
   }
   
+  /*
+   * Some notes:
+   *   With subtype rule, but not collection-sensitivity
+   *    URI is bad. But the rest of the API is fine, including java.lang.reflect
+   *
+   */
   public static final boolean isAPI(String classname, String methname) {
-    return classname.startsWith("java") && (!classname.startsWith("java.io.") || classname.equals("java.io.File"));
+    if(ConfDefines.isConf(classname, methname))
+      return false;
+    
+    //compareTo and equals should taint return value, only
+    //that's handled in primRefDep for control dependencies
+    if(methname.equals("compareTo") || methname.equals("equals") || methname.equals("hashCode"))
+      return false;
+
+/*    if(classname.equals("java.net.URI"))
+        return (methname.equals("<init>") || methname.startsWith("get")
+            || methname.startsWith("to")
+            || methname.equals("resolve")
+            || methname.equals("normalize")
+            || methname.equals("create"));*/
+      //apparently resolve is the dangerous method?
+    
+    if(classname.equals("org.apache.hadoop.fs.Path"))
+      return true;
+    
+    return classname.startsWith("java") 
+//    && !classname.startsWith("java.lang.reflect") 
+//    && !classname.equals("java.net.URI")
+    && (!classname.startsWith("java.io") || classname.equals("java.io.File"));//io is mostly bad, File is ok
+
+  /*  
+    return (classname.startsWith("java.lang") && !classname.startsWith("java.lang.reflect"))
+       || classname.equals("java.io.File")
+       || classname.startsWith("javax")
+       || classname.startsWith("java.util") //safe, even with subfield rule
+       || (classname.startsWith("java.net") && !classname.equals("java.net.URI"))
+ //      || classname.startsWith("java.net")   //OK with field sensitivity
+       || classname.startsWith("java.text"); //ditto
+*/    
+//  || 
+
+
   }
 
   @Override
@@ -37,8 +78,6 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
     String classname = meth.getDeclaringClass().getName();
     String methname = meth.getName().toString();
     if(isAPI(classname, methname)) {
-//    if(classname.startsWith("java.lang.") || classname.startsWith("java.net.") //|| classname.startsWith("java.util.") 
-//         || classname.equals("java.io.File")) { //any string op 
       int iIdx = domI.indexOf(q);
       super.add(iIdx);
     }

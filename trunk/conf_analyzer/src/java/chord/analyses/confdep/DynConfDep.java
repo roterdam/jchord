@@ -1,17 +1,21 @@
 package chord.analyses.confdep;
 
+import chord.analyses.confdep.optnames.DomOpts;
 import chord.analyses.primtrack.DomUV;
 import chord.analyses.string.DomStrConst;
 import chord.doms.DomH;
 import chord.doms.DomI;
-import chord.doms.DomZ;
+import chord.doms.DomV;
+import chord.instr.CoreInstrumentor;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.project.Project;
-import chord.project.analyses.DynamicAnalysis;
-import chord.project.analyses.ProgramRel;
+import chord.project.analyses.*;
+import chord.util.tuple.object.Pair;
 import java.io.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import joeq.Compiler.Quad.Quad;
@@ -20,33 +24,37 @@ import joeq.Compiler.Quad.Operator.Invoke;
 
 @Chord(
   name = "dynamic-cdep-java",
-  consumes = { "H","UV", "StrConst", "Z", "I"},
-  produces = { "ImarkConf", "dynCUse", "nullConf", "nullI" },
-    signs = {"H0,UV0,StrConst0:H0_UV0_StrConst0", "I0,Z0,StrConst0,H0:I0_Z0_StrConst0_H0",
-      "H0,UV0,StrConst0:H0_UV0_StrConst0", "I0:I0"},
-    namesOfSigns = { "ImarkConf","dynCUse", "nullConf" , "nullI"},
-    namesOfTypes = { "H" ,"UV","StrConst", "Z","I"},
-    types = { DomH.class, DomUV.class, DomStrConst.class, DomZ.class, DomI.class }
+  consumes = { "H","V", "Z", "I"},
+  produces = {"dynCUse","nullI", "Opt", "nullConf" },
+    signs = {"I0,Z0,Opt0",  "I0", "V0,Opt0:V0_Opt0"},
+    namesOfSigns = {"dynCUse" , "nullI", "nullConf"}
+  //nullconf = "H0,UV0,Opt0",
+  
+  
+//    namesOfTypes = { "H" ,"UV","StrConst", "Z","I"},
+//    types = { DomH.class, DomUV.class, DomStrConst.class, DomZ.class, DomI.class }
 )
-public class DynConfDep extends DynamicAnalysis {
+public class DynConfDep extends CoreDynamicAnalysis {
   
-  InstrScheme instrScheme;
   static File results = new File("dyn_cdep.temp");
+  String SCHEME_FILE= "dynconfdep.instr";
   
+  Pattern readPat = Pattern.compile("([0-9]*) calling .* returns option (.*)-([0-9]+) value=(.+)");
+  Pattern usePat = Pattern.compile("([0-9]*) invoking .* ([0-9]+)=(.*)");
+  Pattern nullVPat = Pattern.compile("([0-9]*) returns null");
   
-  public InstrScheme getInstrScheme() {
-    if (instrScheme != null) return instrScheme;
-    instrScheme = new InstrScheme();
-    
+  @Override
+  public Pair<Class, Map<String, String>> getInstrumentor() {
+    InstrScheme instrScheme = new InstrScheme();
     
     instrScheme.setAloadReferenceEvent(false, false, true, false, true);
     instrScheme.setAstoreReferenceEvent(false, false, true, false, true);
-    instrScheme.setMethodCallEvent(true, false, false, false, false, true); //Super
-    //commented out pending re-merging of my dyn instr tree with trunk
+    instrScheme.setMethodCallEvent(true, false, true, false, true);
+    instrScheme.save(SCHEME_FILE);
     
-//    instrScheme.setMethodCallEvent(true, false, false, false, true, false); ///vanilla
-
-    return instrScheme;
+    Map<String,String> args = new HashMap<String,String>();
+    args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, SCHEME_FILE);
+    return new Pair<Class, Map<String, String>>(ArgMonInstr.class, args);
   }
   
   @Override
@@ -59,34 +67,38 @@ public class DynConfDep extends DynamicAnalysis {
   @Override
   public void doneAllPasses() {
     ClassicProject project = ClassicProject.g();
-    Pattern readPat = Pattern.compile("([0-9]*) calling .* returns option (.*)-([0-9]+) value=(.+)");
-    Pattern usePat = Pattern.compile("([0-9]*) invoking .* ([0-9]+)=(.*)");
-    Pattern nullVPat = Pattern.compile("([0-9]*) returns null");
     System.out.println("done all passes; slurping results");
 
-    DomH domH = (DomH) project.getTrgt("H");
-    project.runTask(domH);
+//    DomH domH = (DomH) project.getTrgt("H");
+//    project.runTask(domH);
 
     DomI domI = (DomI) project.getTrgt("I");
     project.runTask(domI);
     
 
-    DomUV domUV = (DomUV) project.getTrgt("UV");
-    project.runTask(domUV);
+//    DomUV domUV = (DomUV) project.getTrgt("UV");
+//    project.runTask(domUV);
+    DomV domV = (DomV) project.getTrgt("V");
+    project.runTask(domV);
 
-    DomStrConst domConst = (DomStrConst) project.getTrgt("StrConst");
-    project.runTask(domConst);
-    
-    ProgramRel relConf = (ProgramRel) project.getTrgt("ImarkConf");
-    ProgramRel relUse = (ProgramRel) project.getTrgt("dynCUse");
-    ProgramRel relNullC = (ProgramRel) project.getTrgt("nullConf");
-    ProgramRel relNullI = (ProgramRel) project.getTrgt("nullI");
-    relConf.zero();
-    relUse.zero();
-    relNullC.zero();
-    relNullI.zero();
-    
+
     try {
+      
+      DomOpts domOpts = buildDomOpts();
+      //need to save so adding tuples will work
+//      DomOpts domOpts =  (DomOpts)  project.getTrgt("Opt");
+ //     domOpts.clear(); //necessary?
+ //     domOpts.getOrAdd(DomOpts.NONE);
+      
+      ProgramRel relConf = (ProgramRel) project.getTrgt("OptNames"); //opt, i
+      ProgramRel relUse = (ProgramRel) project.getTrgt("dynCUse");
+      ProgramRel relNullC = (ProgramRel) project.getTrgt("nullConf");
+      ProgramRel relNullI = (ProgramRel) project.getTrgt("nullI");
+      relConf.zero();
+      relUse.zero();
+      relNullC.zero();
+      relNullI.zero();
+    
       BufferedReader br = new BufferedReader(new FileReader(results));
       
       String s = null;
@@ -95,24 +107,24 @@ public class DynConfDep extends DynamicAnalysis {
         if(m.matches()) {
           int iId = Integer.parseInt(m.group(1));
           Quad q = (Quad) domI.get(iId);
-          int hId = domH.indexOf(q);
           
           String cst = m.group(2);
-          int cstID = domConst.indexOf(cst);
+          int cstID = domOpts.getOrAdd(cst);
           if(cstID == -1) {
             cstID = 0;
             System.err.println("UNKNOWN OPTION " + cst);
-          }
+          } else
+            System.out.println("Found option " + cst + " at idx " + cstID);
           
           RegisterFactory.Register targ = Invoke.getDest(q).getRegister();
-          int uvID = domUV.indexOf(targ);
+          int vID = domV.indexOf(targ);
           
           String value = m.group(4);
-          if(uvID >-1 && hId > -1 ) {
+          if(vID >-1 && iId > -1 ) {
             if("null".equals(value))
-              relNullC.add(hId, uvID,cstID);
-            //always add it to IMarkConf, so that prim propagation works
-            relConf.add(hId, uvID, cstID);
+              relNullC.add(vID,cstID);
+
+            relConf.add(cstID, iId);
           }
         } else {
           m = usePat.matcher(s);
@@ -126,12 +138,11 @@ public class DynConfDep extends DynamicAnalysis {
               String optName = ConfDefines.pruneName(dep.substring(0, i));
               int iConfID = Integer.parseInt( dep.substring(i+1) );
               Quad q = (Quad) domI.get(iConfID);
-              int hId = domH.indexOf(q);
-              int cstID = domConst.indexOf(optName);
+              int cstID = domOpts.indexOf(optName);
               if(cstID == -1)
                 cstID = 0;
 
-              relUse.add(iId, zId, cstID,hId);
+              relUse.add(iId, zId, cstID);
             }
           } else {
             m = nullVPat.matcher(s);
@@ -149,13 +160,42 @@ public class DynConfDep extends DynamicAnalysis {
       }
       
       br.close();
+//      domOpts.save();
+      relConf.save();
+      relUse.save();
+      relNullC.save();
+      relNullI.save();
     } catch(IOException e) {
       e.printStackTrace();
     }
-    relConf.save();
-    relUse.save();
-    relNullC.save();
-    relNullI.save();
+    
+  }
+
+  private DomOpts buildDomOpts() throws IOException {
+    ClassicProject project = ClassicProject.g();
+    
+    DomOpts domOpts =  (DomOpts)  project.getTrgt("Opt");
+    domOpts.getOrAdd(DomOpts.NONE);
+    
+    BufferedReader br = new BufferedReader(new FileReader(results));
+    String s;
+    while( (s = br.readLine()) != null) {
+      Matcher m = readPat.matcher(s);
+      if(m.matches()) {
+        int iId = Integer.parseInt(m.group(1));
+        
+        String cst = m.group(2);
+        int cstID = domOpts.getOrAdd(cst);
+        if(cstID == -1) {
+          cstID = 0;
+          System.err.println("UNKNOWN OPTION " + cst);
+        } else
+          System.out.println("Found and added option " + cst + " at idx " + cstID);
+       }
+    }
+    br.close();
+    domOpts.save();
+    return domOpts;
   }
 
 

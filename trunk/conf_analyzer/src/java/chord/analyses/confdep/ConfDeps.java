@@ -13,7 +13,6 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
-import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.project.Chord;
 import chord.project.Config;
 import chord.project.OutDirUtils;
@@ -69,12 +68,12 @@ public class ConfDeps extends JavaAnalysis {
 	  boolean miniStrings = Config.buildBoolProperty("useMiniStrings", false);
 	  boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", true);
 	  
-	   
+    slurpDoms();
+
     if(STATIC) {
       Project.runTask("cipa-0cfa-arr-dlog");
       Project.runTask("mini-findconf-dlog");
 //    Project.runTask("findconf-dlog");
-
 
       if(miniStrings)
         Project.runTask("mini-str-dlog");
@@ -83,11 +82,11 @@ public class ConfDeps extends JavaAnalysis {
       
       Project.runTask("CnfNodeSucc");
 
-      slurpDoms();
       Project.runTask("Opt");
-    }
-    else
+    } else {
       Project.runTask("dynamic-cdep-java");	  
+      Project.runTask("cipa-0cfa-arr-dlog");
+    }
     
 	  
 	  if(DYNTRACK) {
@@ -243,7 +242,6 @@ public class ConfDeps extends JavaAnalysis {
     HashSet<Integer> quadsPrinted = new HashSet<Integer>();
 
     HashSet<Integer> quadsSeen = new HashSet<Integer>();
- //   HashSet<String> quadConfPair = new HashSet<String>();
     int confUseCount = 0;
     
     PrintWriter writer =

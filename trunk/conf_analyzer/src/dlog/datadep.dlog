@@ -48,11 +48,8 @@ MmethPrimRet(m:M0,n:Z0,u:U0) input
 IinvkPrimArg(i:I0,n:Z0,u:U0) input
 IinvkPrimRet(i:I0,n:Z0,u:U0) input
 
-confUVV(i:I, o:UV, in:V) input
 OptNames(o:Opt,site:I) input
 confCall(i:I)
-UVV(u:UV,v:V) input
-UVU(uv:UV,u:U) input
 
 
 UcU(l:U,r:U)
@@ -133,7 +130,7 @@ putInstFldPrimInst(b,f,r) :- reachableM(m), MputInstFldPrimInst(m,b,f,r).
 clones(l,r) :- reachableM(m),Mclones(m,l,_,r).
 
 
-confCall(i) :- confUVV(i,_,_).
+confCall(i) :- OptNames(_,i).
 
 localMustAlias(v,u) :- objVarAsgnInst(u,v).
 localMustAlias(v,u) :- objVarAsgnInst(v,u).
@@ -160,8 +157,9 @@ restVV(v,u) :- IinvkArg(i,z,u), IM(i,m), MmethArg(m,z,v).
 UcU(u,v) :- IinvkPrimRet(i,z,u), restIM(i,m), MmethPrimRet(m,z,v).  
 restVV(u,v) :- IinvkRet(i,z,u), restIM(i,m), MmethRet(m,z,v).
 
-refCdep(v,name) :- confUVV(site,u,_),UVV(u,v),OptNames(name,site).
-primCdep(u,name) :- confUVV(site,uv,_),UVU(uv,u),OptNames(name,site).
+refCdep(v,name) :- IinvkRet(site,0,v),OptNames(name,site).
+primCdep(u,name) :- IinvkPrimRet(site,0,u),OptNames(name,site).
+
 
 statHF(f,i) :- putStatFldInst(f,r),refCdep(r,i).
 statHF(f,i) :- putStatFldPrimInst(f,r),primCdep(r,i).

@@ -28,7 +28,7 @@ public class RelHArraySize extends ProgramRel {
   public void fill() {
     DomH domH = (DomH) doms[0];
     DomU domU = (DomU) doms[1];
-    int numA = domH.getLastRealIdx() + 1;
+    int numA = domH.getLastA() + 1;
     for (int hIdx = 1; hIdx < numA; hIdx++) {
       Quad h = (Quad) domH.get(hIdx);
       Operator op = h.getOperator();
