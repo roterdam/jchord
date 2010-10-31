@@ -12,10 +12,10 @@ public class PostProcessor {
 	public static void main(String[] args) throws IOException {
 		String dataDirName = System.getProperty("datadir", "results/");
 		int numData = Integer.getInteger("numdata", 1000);
-		List<String> ctrlFeatureNames = readStrings(new File("ctrl_feature_name.txt"));
-		List<String> boolFeatureNames = readStrings(new File("bool_feature_name.txt"));
-		List<String> longFeatureNames = readStrings(new File("long_feature_name.txt"));
-		List<String> realFeatureNames = readStrings(new File("real_feature_name.txt"));
+		List<String> ctrlFeatureNames = readStrings(new File("final/ctrl_feature_name.txt"));
+		List<String> boolFeatureNames = readStrings(new File("final/bool_feature_name.txt"));
+		List<String> longFeatureNames = readStrings(new File("final/long_feature_name.txt"));
+		List<String> realFeatureNames = readStrings(new File("final/real_feature_name.txt"));
 		int numCtrlFeatures = ctrlFeatureNames.size();
 		int numBoolFeatures = boolFeatureNames.size();
 		int numLongFeatures = longFeatureNames.size();
@@ -40,22 +40,29 @@ public class PostProcessor {
 			readRealData(new File(dir, "real_feature_data.txt"), realSumData[i], realFrqData[i]);
 		}
 
-		PrintWriter featureNameOut = new PrintWriter(new File("feature_name.txt"));
-		PrintWriter featureDataOut = new PrintWriter(new File("feature_data.txt"));
-		PrintWriter featureCostOut = new PrintWriter(new File("feature_cost.txt"));
+        boolean needCost = false;
+
+		PrintWriter featureNameOut = new PrintWriter(new File("final/feature_name.txt"));
+		PrintWriter featureDataOut = new PrintWriter(new File("final/feature_data.txt"));
+		PrintWriter featureCostOut = new PrintWriter(new File("final/feature_cost.txt"));
 
 		for (int i = 0; i < numCtrlFeatures; i += 2) {
 			int befIdx = i, aftIdx = i + 1;
-			boolean isLoop = true;
-			for (int j = 0; j < numData; j++) {
-				if (ignoreData[j]) continue;
-				int bef = ctrlData[j][befIdx];
-				int aft = ctrlData[j][aftIdx];
-				if (bef - aft != 1) {
-					isLoop = false;
-					break;
-				}
-			}
+			boolean isLoop;
+            if (!needCost) {
+                isLoop = false;
+            } else {
+                isLoop = true;
+                for (int j = 0; j < numData; j++) {
+                   if (ignoreData[j]) continue;
+                   int bef = ctrlData[j][befIdx];
+                   int aft = ctrlData[j][aftIdx];
+                   if (bef - aft != 1) {
+                      isLoop = false;
+                      break;
+                   }
+                }
+            }
 			if (isLoop) {
 				featureNameOut.println(ctrlFeatureNames.get(aftIdx));
 				for (int j = 0; j < numData; j++) {
@@ -86,15 +93,20 @@ public class PostProcessor {
 
 		for (int i = 0; i < numBoolFeatures; i += 2) {
 			int truIdx = i, flsIdx = i + 1;
-			boolean isSingle = true;
-			for (int j = 0; j < numData; j++) {
-				if (ignoreData[j]) continue;
-				int sum = boolData[j][truIdx] + boolData[j][flsIdx];
-				if (sum != 1) {
-					isSingle = false;
-					break;
-				}
-			}
+			boolean isSingle;
+            if (!needCost) {
+                isSingle = false;
+            } else {
+                isSingle = true;
+                for (int j = 0; j < numData; j++) {
+                    if (ignoreData[j]) continue;
+                    int sum = boolData[j][truIdx] + boolData[j][flsIdx];
+                    if (sum != 1) {
+                        isSingle = false;
+                        break;
+                    }
+                }
+            }
 			featureNameOut.println(boolFeatureNames.get(truIdx));
 			featureNameOut.println(boolFeatureNames.get(flsIdx));
 			for (int j = 0; j < numData; j++) {
@@ -117,15 +129,20 @@ public class PostProcessor {
 		}
 
 		for (int i = 0; i < numLongFeatures / 2; i++) {
-			boolean isSingle = true;
-			for (int j = 0; j < numData; j++) {
-				if (ignoreData[j]) continue;
-				int frq = longFrqData[j][i];
-				if (frq != 1) {
-					isSingle = false;
-					break;
-				}
-			}
+			boolean isSingle;
+            if (!needCost) {
+                isSingle = false;
+            } else {
+                isSingle = true;
+                for (int j = 0; j < numData; j++) {
+                    if (ignoreData[j]) continue;
+                    int frq = longFrqData[j][i];
+                    if (frq != 1) {
+                        isSingle = false;
+                        break;
+                    }
+                }
+            }
 			if (isSingle) {
 				featureNameOut.println(longFeatureNames.get(i*2));
 				for (int j = 0; j < numData; j++) {
@@ -156,15 +173,20 @@ public class PostProcessor {
 		}
 
 		for (int i = 0; i < numRealFeatures / 2; i++) {
-			boolean isSingle = true;
-			for (int j = 0; j < numData; j++) {
-				if (ignoreData[j]) continue;
-				int frq = realFrqData[j][i];
-				if (frq != 1) {
-					isSingle = false;
-					break;
-				}
-			}
+			boolean isSingle;
+            if (!needCost) {
+                isSingle = false;
+            } else {
+                isSingle = true;
+                for (int j = 0; j < numData; j++) {
+                    if (ignoreData[j]) continue;
+                    int frq = realFrqData[j][i];
+                    if (frq != 1) {
+                        isSingle = false;
+                        break;
+                    }
+                }
+            }
 			if (isSingle) {
 				featureNameOut.println(realFeatureNames.get(i*2));
 				for (int j = 0; j < numData; j++) {
