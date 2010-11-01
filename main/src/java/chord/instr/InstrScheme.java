@@ -19,6 +19,9 @@ import chord.util.ChordRuntimeException;
  * Scheme specifying the kind and format of events to be generated
  * during an instrumented program's execution.
  * 
+ * This class is exclusively used by Instrumentor, and determines which program points
+ * the Instrumentor class will modify and which events it will generate.
+ * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class InstrScheme implements Serializable {
