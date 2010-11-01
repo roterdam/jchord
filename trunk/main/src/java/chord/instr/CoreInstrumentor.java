@@ -7,10 +7,6 @@
 package chord.instr;
 
 import java.util.Map;
-import java.util.HashMap;
-
-import javassist.Modifier;
-import javassist.CtConstructor;
 import javassist.NotFoundException;
 import javassist.CannotCompileException;
 import javassist.CtBehavior;
@@ -30,6 +26,9 @@ import chord.project.Config;
 /**
  * Bytecode instrumentor providing hooks for transforming classes,
  * methods, and instructions.
+ * 
+ * If you want to write a custom instrumentor, you should subclass either this
+ * or Instrumentor.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

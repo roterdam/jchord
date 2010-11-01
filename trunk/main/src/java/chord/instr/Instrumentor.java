@@ -41,6 +41,18 @@ import java.util.Map;
 /**
  * Bytecode instrumentor for instrumenting a variety of common events.
  * 
+ * Instrumentor will modify a class to insert calls to an EventHandler;
+ * your analysis-specific logic can live in EventHandler and you need not 
+ * fold app-specific logic into this class.
+ * 
+ * Note that if you tell Instrumentor to trigger events of a particular kind,
+ * you must define appropriately-named handle methods in your EventHandler.
+ * If not, you will get MethodNotFound errors (or the like) at runtime.
+ * 
+ * Note for authors of subclasses: domains (such as I, H, etc) are constructed
+ * only as-needed. Make sure that the instrumentation scheme you use correctly
+ * describes the domains you'll need.
+ * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Instrumentor extends CoreInstrumentor {
