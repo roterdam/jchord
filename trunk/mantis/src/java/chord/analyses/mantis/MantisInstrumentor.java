@@ -37,22 +37,45 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Util.Templates.ListIterator;
 
 public class MantisInstrumentor extends CoreInstrumentor {
+    private static final int maxFldsPerMantisClass = 8000;
+    private static final int maxFldsPerMantisPrintMethod = 1000;
 	private final DomM domM;
 	// index in domain M of currently instrumented method
 	private int mIdx;
-	private final List<Set<FldInfo>> fldInfosList = new ArrayList<Set<FldInfo>>();
+	private final List<FldInfo> fldInfosList = new ArrayList<FldInfo>();
 	private final TIntObjectHashMap<String> bciToInstrMap = new TIntObjectHashMap<String>();
-	// static fields created for currently instrumented class
-	private Set<FldInfo> currFldInfos;
 	private String currClsNameStr;
-	private final CtClass mantisClass;
+	private CtClass[] mantisClasses;
+    private int currMantisClassId;
+    private int numFldsInCurrMantisClass;
+
+    private CtClass createClass(String name) {
+        return getPool().getPool().makeClass(name);
+    }
 
 	public MantisInstrumentor() {
 		super(null);
-		mantisClass = getPool().getPool().makeClass("Mantis");
 		domM = (DomM) ClassicProject.g().getTrgt("M");
 		ClassicProject.g().runTask(domM);
 	}
+
+    private void ensure(int nf) {
+        if (mantisClasses == null)
+            mantisClasses = new CtClass[2];
+        else if (numFldsInCurrMantisClass + nf > maxFldsPerMantisClass) {
+            int nc = mantisClasses.length;
+            if (currMantisClassId == nc - 1) {
+                CtClass[] newMantisClasses = new CtClass[nc * 2];
+                System.arraycopy(mantisClasses, 0, newMantisClasses, 0, nc);
+                mantisClasses = newMantisClasses;
+            }
+            ++currMantisClassId;
+            numFldsInCurrMantisClass = 0;
+        } else
+            return;
+        CtClass mantisClass = createClass("Mantis" + currMantisClassId);
+        mantisClasses[currMantisClassId] = mantisClass;
+    }
 
 	@Override
 	public boolean isExplicitlyExcluded(String cName) {
@@ -63,15 +86,13 @@ public class MantisInstrumentor extends CoreInstrumentor {
 				cName.startsWith("sun.") ||
 				cName.startsWith("org.apache.harmony."))
 			return true;
-		if (cName.equals("Mantis"))
+		if (cName.startsWith("Mantis"))
 			Messages.fatal("Instrumenting Mantis class itself.");
 		return super.isExplicitlyExcluded(cName);
 	}
 
 	@Override
 	public CtClass edit(CtClass clazz) throws CannotCompileException {
-		currFldInfos = new HashSet<FldInfo>();
-		fldInfosList.add(currFldInfos);
 		currClsNameStr = clazz.getName().replace('.', '_').replace('$', '_');
 		return super.edit(clazz);
 	}
@@ -116,13 +137,16 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		String befFldName = fldBaseName + "_bef";
 		String aftFldName = fldBaseName + "_aft";
 		String javaPos = "(" + q.toJavaLocStr() + ")";
-		currFldInfos.add(new FldInfo(FldKind.CTRL, fldBaseName, javaPos));
+        ensure(2);
+        CtClass mantisClass = mantisClasses[currMantisClassId];
+        String mantisClassName = "Mantis" + currMantisClassId + ".";
+		fldInfosList.add(new FldInfo(FldKind.CTRL, mantisClassName + fldBaseName, javaPos));
 		CtField befFld = CtField.make("public static int " + befFldName + ";", mantisClass);
 		CtField aftFld = CtField.make("public static int " + aftFldName + ";", mantisClass);
 		mantisClass.addField(befFld);
 		mantisClass.addField(aftFld);
-		String befInstr = "Mantis." + befFldName + "++;";
-		String aftInstr = "Mantis." + aftFldName + "++;";
+		String befInstr = mantisClassName + befFldName + "++;";
+		String aftInstr = mantisClassName + aftFldName + "++;";
 		putInstrBefBCI(bci, befInstr);
 		putInstrBefBCI(bci + 3, aftInstr);
 	}
@@ -150,12 +174,16 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		String truFldName = fldBaseName + "_true";
 		String flsFldName = fldBaseName + "_false";
 		String javaPos = getJavaPos(e);
-		currFldInfos.add(new FldInfo(FldKind.DATA_BOOL, fldBaseName, javaPos));
+        ensure(2);
+        CtClass mantisClass = mantisClasses[currMantisClassId];
+        String mantisClassName = "Mantis" + currMantisClassId + ".";
+		fldInfosList.add(new FldInfo(FldKind.DATA_BOOL, mantisClassName + fldBaseName, javaPos));
 		CtField truFld = CtField.make("public static int " + truFldName + ";", mantisClass);
 		CtField flsFld = CtField.make("public static int " + flsFldName + ";", mantisClass);
 		mantisClass.addField(truFld);
 		mantisClass.addField(flsFld);
-		String instr = "if ($_) Mantis." + truFldName + "++; else Mantis." + flsFldName + "++;";
+		String instr = "if ($_) " + mantisClassName + truFldName + "++; else " +
+            mantisClassName + flsFldName + "++;";
 		return instr;
 	}
 
@@ -164,12 +192,16 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		String sumFldName = fldBaseName + "_sum";
 		String frqFldName = fldBaseName + "_freq";
 		String javaPos = getJavaPos(e);
-		currFldInfos.add(new FldInfo(FldKind.DATA_LONG, fldBaseName, javaPos));
+        ensure(2);
+        CtClass mantisClass = mantisClasses[currMantisClassId];
+        String mantisClassName = "Mantis" + currMantisClassId + ".";
+		fldInfosList.add(new FldInfo(FldKind.DATA_LONG, mantisClassName + fldBaseName, javaPos));
 		CtField sumFld = CtField.make("public static long " + sumFldName + ";", mantisClass);
 		CtField frqFld = CtField.make("public static int  " + frqFldName + ";", mantisClass);
 		mantisClass.addField(sumFld);
 		mantisClass.addField(frqFld);
-		String instr = "Mantis." + sumFldName + " += $_; Mantis." + frqFldName + "++;";
+		String instr = mantisClassName + sumFldName + " += $_; " +
+            mantisClassName + frqFldName + "++;";
 		return instr;
 	}
 
@@ -178,12 +210,16 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		String sumFldName = fldBaseName + "_sum";
 		String frqFldName = fldBaseName + "_freq";
 		String javaPos = getJavaPos(e);
-		currFldInfos.add(new FldInfo(FldKind.DATA_DOUBLE, fldBaseName, javaPos));
+        ensure(2);
+        CtClass mantisClass = mantisClasses[currMantisClassId];
+        String mantisClassName = "Mantis" + currMantisClassId + ".";
+		fldInfosList.add(new FldInfo(FldKind.DATA_DOUBLE, mantisClassName + fldBaseName, javaPos));
 		CtField sumFld = CtField.make("public static double " + sumFldName + ";", mantisClass);
 		CtField frqFld = CtField.make("public static int " + frqFldName + ";", mantisClass);
 		mantisClass.addField(sumFld);
 		mantisClass.addField(frqFld);
-		String instr = "Mantis." + sumFldName + " += $_; Mantis." + frqFldName + "++;";
+		String instr = mantisClassName + sumFldName + " += $_; " +
+            mantisClassName + frqFldName + "++;";
 		return instr;
 	}
 
@@ -214,15 +250,16 @@ public class MantisInstrumentor extends CoreInstrumentor {
 	}
 
 	public void done() {
+        CtClass mantisPrinterClass = createClass("MantisPrinter");
         try {
-            CtField ctrlOutFld = CtField.make("public static java.io.PrintWriter ctrlOut;", mantisClass);
-            CtField boolOutFld = CtField.make("public static java.io.PrintWriter boolOut;", mantisClass);
-            CtField longOutFld = CtField.make("public static java.io.PrintWriter longOut;", mantisClass);
-            CtField realOutFld = CtField.make("public static java.io.PrintWriter realOut;", mantisClass);
-            mantisClass.addField(ctrlOutFld);
-            mantisClass.addField(boolOutFld);
-            mantisClass.addField(longOutFld);
-            mantisClass.addField(realOutFld);
+            CtField ctrlOutFld = CtField.make("public static java.io.PrintWriter ctrlOut;", mantisPrinterClass);
+            CtField boolOutFld = CtField.make("public static java.io.PrintWriter boolOut;", mantisPrinterClass);
+            CtField longOutFld = CtField.make("public static java.io.PrintWriter longOut;", mantisPrinterClass);
+            CtField realOutFld = CtField.make("public static java.io.PrintWriter realOut;", mantisPrinterClass);
+            mantisPrinterClass.addField(ctrlOutFld);
+            mantisPrinterClass.addField(boolOutFld);
+            mantisPrinterClass.addField(longOutFld);
+            mantisPrinterClass.addField(realOutFld);
         } catch (CannotCompileException ex) {
             Messages.fatal(ex);
         }
@@ -244,15 +281,13 @@ public class MantisInstrumentor extends CoreInstrumentor {
             Messages.fatal(ex);
         }
 
-		String globalInstr = "";
-
-		for (int i = 0; i < fldInfosList.size(); i++) {
-			Set<FldInfo> fldInfos = fldInfosList.get(i);
-            String localInstr = "";
-            for (FldInfo fldInfo : fldInfos) {
-                String fldBaseName = fldInfo.fldBaseName;
-                String javaPos = fldInfo.javaPos;
-                switch (fldInfo.kind) {
+		String globalInstr = "", localInstr = "";
+        int numFldInfos = fldInfosList.size();
+		for (int i = 0, currMantisPrintMethodId = 0; i < numFldInfos; i++) {
+            FldInfo fldInfo = fldInfosList.get(i);
+            String fldBaseName = fldInfo.fldBaseName;
+            String javaPos = fldInfo.javaPos;
+            switch (fldInfo.kind) {
                 case CTRL:
                 {
                     String fldName1 = fldBaseName + "_bef";
@@ -293,15 +328,19 @@ public class MantisInstrumentor extends CoreInstrumentor {
                     realWriter.println(fldName2 + " " + javaPos);
                     break;
                 }
-                }
             }
-            String mName = "print" + i;
-            try {
-                CtMethod m = CtNewMethod.make("private static void " + mName + "() { " + localInstr + " }", mantisClass);
-                mantisClass.addMethod(m);
+            if (i % maxFldsPerMantisPrintMethod == 0 || i == numFldInfos - 1) {
+                String mName = "print" + currMantisPrintMethodId;
+                try {
+                    CtMethod m = CtNewMethod.make("private static void " + mName +
+                           "() { " + localInstr + " }", mantisPrinterClass);
+                    mantisPrinterClass.addMethod(m);
+                } catch (CannotCompileException ex) {
+                    Messages.fatal(ex);
+                }
+                localInstr = "";
                 globalInstr += mName + "();";
-            } catch (CannotCompileException ex) {
-                Messages.fatal(ex);
+                currMantisPrintMethodId++;
             }
         }
         ctrlWriter.close();
@@ -315,6 +354,12 @@ public class MantisInstrumentor extends CoreInstrumentor {
         String realFeatureDataFileName = "real_feature_data.txt";
         String outDir = Config.userClassesDirName;
         try {
+            for (int i = 0; i < mantisClasses.length; i++) {
+                CtClass c = mantisClasses[i];
+                if (c == null)
+                    break;
+                c.writeFile(outDir);
+            }
 			CtMethod doneMethod = CtNewMethod.make("public static void done() { " +
                 "try { " +
                     "ctrlOut = new java.io.PrintWriter(" +
@@ -334,15 +379,15 @@ public class MantisInstrumentor extends CoreInstrumentor {
                     "ex.printStackTrace(); " +
                     "System.exit(1); " +
                 "}" +
-			"}", mantisClass);
-			mantisClass.addMethod(doneMethod);
+			"}", mantisPrinterClass);
+			mantisPrinterClass.addMethod(doneMethod);
 			CtClass mainClass = getPool().get(Config.mainClassName);
 			if (mainClass.isFrozen())
 				mainClass.defrost();
             CtMethod mainMethod = mainClass.getMethod("main", "([Ljava/lang/String;)V");
-            mainMethod.insertAfter("Mantis.done();");
+            mainMethod.insertAfter("MantisPrinter.done();");
             mainClass.writeFile(outDir); 
-			mantisClass.writeFile(outDir);
+			mantisPrinterClass.writeFile(outDir);
 		} catch (NotFoundException ex) {
             Messages.fatal(ex);
         } catch (CannotCompileException ex) {
