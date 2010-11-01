@@ -145,6 +145,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		CtField aftFld = CtField.make("public static int " + aftFldName + ";", mantisClass);
 		mantisClass.addField(befFld);
 		mantisClass.addField(aftFld);
+        numFldsInCurrMantisClass += 2;
 		String befInstr = mantisClassName + befFldName + "++;";
 		String aftInstr = mantisClassName + aftFldName + "++;";
 		putInstrBefBCI(bci, befInstr);
@@ -182,6 +183,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		CtField flsFld = CtField.make("public static int " + flsFldName + ";", mantisClass);
 		mantisClass.addField(truFld);
 		mantisClass.addField(flsFld);
+        numFldsInCurrMantisClass += 2;
 		String instr = "if ($_) " + mantisClassName + truFldName + "++; else " +
             mantisClassName + flsFldName + "++;";
 		return instr;
@@ -200,6 +202,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		CtField frqFld = CtField.make("public static int  " + frqFldName + ";", mantisClass);
 		mantisClass.addField(sumFld);
 		mantisClass.addField(frqFld);
+        numFldsInCurrMantisClass += 2;
 		String instr = mantisClassName + sumFldName + " += $_; " +
             mantisClassName + frqFldName + "++;";
 		return instr;
@@ -218,6 +221,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
 		CtField frqFld = CtField.make("public static int " + frqFldName + ";", mantisClass);
 		mantisClass.addField(sumFld);
 		mantisClass.addField(frqFld);
+        numFldsInCurrMantisClass += 2;
 		String instr = mantisClassName + sumFldName + " += $_; " +
             mantisClassName + frqFldName + "++;";
 		return instr;
