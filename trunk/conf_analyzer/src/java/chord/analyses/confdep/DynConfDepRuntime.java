@@ -6,7 +6,8 @@ import chord.util.WeakIdentityHashMap;
 import java.io.*;
 import java.util.*;
 
-public class DynConfDepRuntime extends DynamicAnalysis {
+public class DynConfDepRuntime {
+  //extends DynamicAnalysis
 
   static PrintStream out;
   protected static WeakIdentityHashMap labels;
@@ -18,7 +19,7 @@ public class DynConfDepRuntime extends DynamicAnalysis {
     } catch(IOException e) {
       e.printStackTrace();
     }
-    out.println("instrumentor alive "  + new Date());
+    out.println("runtime event handler alive "  + new Date());
     out.flush();
   }
   
@@ -40,13 +41,13 @@ public class DynConfDepRuntime extends DynamicAnalysis {
         out.println("ERR: expected at least " + (cOpt+1) +  " options for call to " + cname + " " + mname);
         return;
       } */
-      String confOpt = (String) args[cOpt] +"-" +iIdx;
+      String confOpt = ConfDefines.optionPrefix(cname, mname) + (String) args[cOpt] +"-" +iIdx;
       if(ret != null)
         out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=" + ret);
       else
         out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=null");
       
-      addLabel(ret, ConfDefines.optionPrefix(cname, mname) + confOpt);
+      addLabel(ret,  confOpt);
     } else {
       boolean taintedCall = false;
       HashSet<String> rtaints = new HashSet<String>();
@@ -98,11 +99,13 @@ public class DynConfDepRuntime extends DynamicAnalysis {
         }
       }*/
     }
+    out.flush();
   }
   
 
   public synchronized static void astoreReferenceEvent(int eId,Object array, int iId, Object parm) {
-//    out.println("load from array with taints: " + taintStr(array));
+    //this message is just for debugging
+//    out.println("store to array with taints: " + taintStr(parm));
     List<String> taintlist = taintlist(parm);
     for(String t: taintlist) {
       addLabel(array, t);
@@ -110,6 +113,7 @@ public class DynConfDepRuntime extends DynamicAnalysis {
   }
   
   public synchronized static void aloadReferenceEvent(int eId,Object array, int iId, Object result) {
+    //message is just for debugging
 //    out.println("load from array with taints: " + taintStr(array));
     List<String> taintlist = taintlist(array);
     for(String t: taintlist) {

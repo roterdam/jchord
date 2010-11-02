@@ -66,7 +66,7 @@ public class ConfDeps extends JavaAnalysis {
 	    System.exit(-1);
 	  }
 	  boolean miniStrings = Config.buildBoolProperty("useMiniStrings", false);
-	  boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", true);
+	  boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", false);
 	  
     slurpDoms();
 
@@ -106,8 +106,10 @@ public class ConfDeps extends JavaAnalysis {
 
     dumpOptUses(domOpt);
     dumpFieldTaints(domOpt);
-    if(dumpIntermediates) 
+    if(dumpIntermediates)  {
+      Project.runTask("datadep-debug-dlog");
       dumpArgDTaints();
+    }
 	}
 	
   private void dumpArgDTaints() {
