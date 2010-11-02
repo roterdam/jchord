@@ -1,0 +1,34 @@
+# name=datadep-debug-dlog
+
+.include "T.dom"
+.include "F.dom"
+.include "M.dom"
+.include "I.dom"
+.include "V.dom"
+.include "Z.dom"
+.include "U.dom"
+.include "Opt.dom"
+
+.bddvarorder I0xI1xM0xM1_T0_V0xV1_Opt0_T1_F0_Z0xU0xU1
+
+
+### Inputs
+
+refCdep(v:V,site:Opt) input
+primCdep(u:U,site:Opt) input
+
+
+MmethPrimArg(m:M0,n:Z0,u:U0) input
+MmethPrimRet(m:M0,n:Z0,u:U0) input
+IinvkPrimArg(i:I0,n:Z0,u:U0) input
+IinvkPrimRet(i:I0,n:Z0,u:U0) input
+
+####Debugging
+
+argCdep(m, z, opt) :- MmethArg(m,z,v),refCdep(v,opt).
+argCdep(m, z, opt) :- MmethPrimArg(m,z,v),primCdep(v,opt).
+
+IargCdep(i, z, opt) :- IinvkArg(i,z,v),refCdep(v,opt).
+IargCdep(i, z, opt) :- IinvkPrimArg(i,z,v),primCdep(v,opt).
+IretDep(i,opt) :- IinvkRet(i,_,v),refCdep(v,opt).
+

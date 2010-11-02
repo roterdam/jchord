@@ -10,7 +10,9 @@ import chord.instr.CoreInstrumentor;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.ClassicProject;
+import chord.project.Config;
 import chord.project.analyses.*;
+import chord.runtime.CoreEventHandler;
 import chord.util.tuple.object.Pair;
 import java.io.*;
 import java.util.Collections;
@@ -35,13 +37,13 @@ import joeq.Compiler.Quad.Operator.Invoke;
 //    types = { DomH.class, DomUV.class, DomStrConst.class, DomZ.class, DomI.class }
 )
 public class DynConfDep extends CoreDynamicAnalysis {
-  
+  //Config.workDirName, 
   static File results = new File("dyn_cdep.temp");
-  String SCHEME_FILE= "dynconfdep.instr";
+  static final String SCHEME_FILE= "dynconfdep.instr";
   
-  Pattern readPat = Pattern.compile("([0-9]*) calling .* returns option (.*)-([0-9]+) value=(.+)");
-  Pattern usePat = Pattern.compile("([0-9]*) invoking .* ([0-9]+)=(.*)");
-  Pattern nullVPat = Pattern.compile("([0-9]*) returns null");
+  static final Pattern readPat = Pattern.compile("([0-9]*) calling .* returns option (.*)-([0-9]+) value=(.+)");
+  static final Pattern usePat = Pattern.compile("([0-9]*) invoking .* ([0-9]+)=(.*)");
+  static final Pattern nullVPat = Pattern.compile("([0-9]*) returns null");
   
   @Override
   public Pair<Class, Map<String, String>> getInstrumentor() {
@@ -54,6 +56,7 @@ public class DynConfDep extends CoreDynamicAnalysis {
     
     Map<String,String> args = new HashMap<String,String>();
     args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, SCHEME_FILE);
+    args.put(CoreEventHandler.EVENT_HANDLER_CLASS_KEY, DynConfDepRuntime.class.getCanonicalName());
     return new Pair<Class, Map<String, String>>(ArgMonInstr.class, args);
   }
   
@@ -135,12 +138,13 @@ public class DynConfDep extends CoreDynamicAnalysis {
             String[] confDeps = cstList.split("\\|");
             for(String dep: confDeps) {
               int i = dep.lastIndexOf('-');
-              String optName = ConfDefines.pruneName(dep.substring(0, i));
-              int iConfID = Integer.parseInt( dep.substring(i+1) );
-              Quad q = (Quad) domI.get(iConfID);
+              String optName = dep.substring(0, i); //ConfDefines.pruneName(dep.substring(0, i));
+              
               int cstID = domOpts.indexOf(optName);
-              if(cstID == -1)
+              if(cstID == -1) {
+                System.out.println("WARN: found use of option " + optName + " without ever having seen a read");
                 cstID = 0;
+              }
 
               relUse.add(iId, zId, cstID);
             }
@@ -167,6 +171,7 @@ public class DynConfDep extends CoreDynamicAnalysis {
       relNullI.save();
     } catch(IOException e) {
       e.printStackTrace();
+      System.exit(-1);
     }
     
   }
@@ -176,7 +181,7 @@ public class DynConfDep extends CoreDynamicAnalysis {
     
     DomOpts domOpts =  (DomOpts)  project.getTrgt("Opt");
     domOpts.getOrAdd(DomOpts.NONE);
-    
+//    System.out.println("in buildDomOpts, filename is " + results);
     BufferedReader br = new BufferedReader(new FileReader(results));
     String s;
     while( (s = br.readLine()) != null) {
@@ -185,6 +190,7 @@ public class DynConfDep extends CoreDynamicAnalysis {
         int iId = Integer.parseInt(m.group(1));
         
         String cst = m.group(2);
+//        String prefix = ConfDefines.optionPrefix(domI.get(iId))
         int cstID = domOpts.getOrAdd(cst);
         if(cstID == -1) {
           cstID = 0;

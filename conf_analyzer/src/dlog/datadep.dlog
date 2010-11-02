@@ -7,12 +7,11 @@
 .include "H.dom"
 .include "V.dom"
 .include "Z.dom"
-.include "E.dom"
 .include "UV.dom"
 .include "U.dom"
 .include "Opt.dom"
 
-.bddvarorder I0xI1xM0xM1_T0_V0xV1_E0_Opt0_T1_H0_F0_H1_Z0xU0xU1xUV0
+.bddvarorder I0xI1xM0xM1_T0_V0xV1_Opt0_T1_H0_F0_H1_Z0xU0xU1xUV0
 
 
 
@@ -217,14 +216,8 @@ refCdep(v,opt) :- taintingCall(i, opt),IinvkRet(i,_,v).
 primCdep(v,opt) :- taintingCall(i, opt),IinvkPrimRet(i,_,v).
 refCdep(v,opt) :- taintingCall(i, opt),IinvkArg(i,0,v),instI(i).
 
+
 ####Debugging
-
-argCdep(m, z, opt) :- MmethArg(m,z,v),refCdep(v,opt).
-argCdep(m, z, opt) :- MmethPrimArg(m,z,v),primCdep(v,opt).
-
-IargCdep(i, z, opt) :- IinvkArg(i,z,v),refCdep(v,opt).
-IargCdep(i, z, opt) :- IinvkPrimArg(i,z,v),primCdep(v,opt).
-IretDep(i,opt) :- IinvkRet(i,_,v),refCdep(v,opt).
 
 insertM(m) :- IInsert(i,_,_),IM(i,m).
 retrieveM(m) :- IRetrieve(i,_,_),IM(i,m).
