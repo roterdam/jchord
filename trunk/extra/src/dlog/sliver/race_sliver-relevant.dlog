@@ -238,7 +238,9 @@ r_thrSenAbbrCICM(x5,x6,d,n) :- r_thrSenAbbrReachableCM(d,n), thrSenAbbrCICM(x5,x
 r_thrSenAbbrReachableCM(c,m) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 r_CICM(c,i,d,n) :- r_thrSenAbbrCICM(c,i,d,n), thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 
-### threadDCM(b,c,m) :- threadDHM(b,h,m), HfromC(h,c).
+### threadDCM(b,c,1) :- threadDHM(b,h,1), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,o), HfromC(h,o).
+r_reachableCM(c,1) :- r_threadDCM(b,c,1), threadDHM(b,h,1), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,o), HfromC(h,o).
+r_VCA(v,c,o) :- r_threadDCM(b,c,1), threadDHM(b,h,1), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,o), HfromC(h,o).
 
 ### reachableTCMZ(t,c,m) :- threadDCM(t,c,m).
 r_threadDCM(t,c,m) :- r_reachableTCMZ(t,c,m), threadDCM(t,c,m).
@@ -254,18 +256,19 @@ r_reachableTCMZ(t,c,m) :- r_reachableTCE(t,c,e), reachableTCMZ(t,c,m), ME(m,e).
 r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
-r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
-r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
-r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
-r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), query(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
+r_reachableTCE(t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
+r_reachableTCE(t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 
 ### statE(e) :- EF(e,f), statF(f).
 
-### CEC(c,e,o) :- EV(e,v), VCA(v,c,o), escO(o).
-r_VCA(v,c,o) :- r_CEC(c,e,o), EV(e,v), VCA(v,c,o), escO(o).
+### CEC(c,e,o) :- EV(e,v), VCA(v,c,o), escA(o).
+r_VCA(v,c,o) :- r_CEC(c,e,o), EV(e,v), VCA(v,c,o), escA(o).
+r_escA(o) :- r_CEC(c,e,o), EV(e,v), VCA(v,c,o), escA(o).
 
 ### escapingRaceHext(t1,c1,e1,t2,c2,e2) :- startingRaceHext(t1,c1,e1,t2,c2,e2), CEC(c1,e1,o), CEC(c2,e2,o).
 r_startingRaceHext(t1,c1,e1,t2,c2,e2) :- r_escapingRaceHext(t1,c1,e1,t2,c2,e2), startingRaceHext(t1,c1,e1,t2,c2,e2), CEC(c1,e1,o), CEC(c2,e2,o).
