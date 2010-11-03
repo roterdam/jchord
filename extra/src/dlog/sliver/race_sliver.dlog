@@ -85,7 +85,8 @@ thrSenAbbrReachableCM(c,m) :- thrSenAbbrRootCM(c,m).
 thrSenAbbrReachableCM(d,n) :- thrSenAbbrCICM(_,_,d,n).
 thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 
-threadDCM(b,c,m) :- threadDHM(b,h,m), HfromC(h,c).
+threadDCM(1,0,0).
+threadDCM(b,c,1) :- threadDHM(b,h,1), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,o), HfromC(h,o).
 reachableTCMZ(t,c,m) :- threadDCM(t,c,m).
 reachableTCMZ(t,d,n) :- reachableTCMZ(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
 reachableTCE(t,c,e) :- reachableTCMZ(t,c,m), ME(m,e).
