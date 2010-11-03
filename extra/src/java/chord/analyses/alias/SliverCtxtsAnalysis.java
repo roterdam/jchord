@@ -114,52 +114,52 @@ class GlobalInfo {
     else
       return null;
   }
-  String hstrBrief(Quad h) {
+  String hstr(Quad h) {
     String path = new File(h.toJavaLocStr()).getName();
     jq_Type t = h2t(h);
     return path+"("+(t == null ? "?" : t.shortName())+")";
   }
-  String istrBrief(Quad i) {
+  String istr(Quad i) {
     String path = new File(i.toJavaLocStr()).getName();
     jq_Method m = InvokeStatic.getMethod(i).getMethod();
     return path+"("+m.getName()+")";
   }
-  String jstrBrief(Quad j) { return isAlloc(j) ? hstrBrief(j) : istrBrief(j); }
-  String estrBrief(Quad e) {
+  String jstr(Quad j) { return isAlloc(j) ? hstr(j) : istr(j); }
+  String estr(Quad e) {
     String path = new File(e.toJavaLocStr()).getName();
     Operator op = e.getOperator();
     return path+"("+op+")";
   }
-  String cstrBrief(Ctxt c) {
+  String cstr(Ctxt c) {
     StringBuilder buf = new StringBuilder();
     //buf.append(domC.indexOf(c));
     buf.append('{');
     for (int i = 0; i < c.length(); i++) {
       if (i > 0) buf.append(" | ");
       Quad q = c.get(i);
-      buf.append(isAlloc(q) ? hstrBrief(q) : istrBrief(q));
+      buf.append(isAlloc(q) ? hstr(q) : istr(q));
     }
     buf.append('}');
     return buf.toString();
   }
-  String fstrBrief(jq_Field f) { return f.getDeclaringClass()+"."+f.getName(); }
-  String vstrBrief(Register v) { return v+"@"+mstrBrief(domV.getMethod(v)); }
-  String mstrBrief(jq_Method m) { return m.getDeclaringClass().shortName()+"."+m.getName(); }
+  String fstr(jq_Field f) { return f.getDeclaringClass()+"."+f.getName(); }
+  String vstr(Register v) { return v+"@"+mstr(domV.getMethod(v)); }
+  String mstr(jq_Method m) { return m.getDeclaringClass().shortName()+"."+m.getName(); }
 
   boolean isAlloc(Quad q) { return domH.indexOf(q) != -1; }
 
   String render(Object o) {
     if (o == null) return "NULL";
     if (o instanceof String) return (String)o;
-    if (o instanceof Ctxt) return cstrBrief((Ctxt)o);
-    if (o instanceof jq_Field) return fstrBrief((jq_Field)o);
-    if (o instanceof jq_Method) return mstrBrief((jq_Method)o);
-    if (o instanceof Register) return vstrBrief((Register)o);
+    if (o instanceof Ctxt) return cstr((Ctxt)o);
+    if (o instanceof jq_Field) return fstr((jq_Field)o);
+    if (o instanceof jq_Method) return mstr((jq_Method)o);
+    if (o instanceof Register) return vstr((Register)o);
     if (o instanceof Quad) {
       Quad q = (Quad)o;
-      if (domH.indexOf(q) != -1) return hstrBrief(q);
-      if (domI.indexOf(q) != -1) return istrBrief(q);
-      if (domE.indexOf(q) != -1) return estrBrief(q);
+      if (domH.indexOf(q) != -1) return hstr(q);
+      if (domI.indexOf(q) != -1) return istr(q);
+      if (domE.indexOf(q) != -1) return estr(q);
       throw new RuntimeException("Quad not H, I, or E: " + q);
     }
     throw new RuntimeException("Unknown object (not abstract object, contextual variable or field: "+o);
@@ -430,24 +430,25 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     }
     for (jq_Method m : G.domM) mj.put(m, new ArrayList<Quad>());
 
+    // Extensions of sites depends on the target method
     if (!useObjectSensitivity) {
       ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("IM"); rel.load();
       PairIterable<Quad,jq_Method> result = rel.getAry2ValTuples();
       for (Pair<Quad,jq_Method> pair : result) {
         Quad i = pair.val0;
         jq_Method m = pair.val1;
-        assert iSet.contains(i) : G.istrBrief(i);
+        assert iSet.contains(i) : G.istr(i);
         jm.get(i).add(m);
       }
       rel.close();
     }
-    {
+    else {
       ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("HtoM"); rel.load();
       PairIterable<Quad,jq_Method> result = rel.getAry2ValTuples();
       for (Pair<Quad,jq_Method> pair : result) {
         Quad h = pair.val0;
         jq_Method m = pair.val1;
-        assert hSet.contains(h) : G.hstrBrief(h);
+        assert hSet.contains(h) : G.hstr(h);
         jm.get(h).add(m);
       }
       rel.close();
@@ -464,7 +465,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
       }
       rel.close();
     }
-    {
+    { // Note: both allocation and call sites need this
       ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("MH"); rel.load();
       PairIterable<jq_Method,Quad> result = rel.getAry2ValTuples();
       for (Pair<jq_Method,Quad> pair : result) {
@@ -618,23 +619,28 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
   }
 
   void refinePruneLoop() {
-    X.logs("Initializing abstraction with length %s slivers", initK);
+    X.logs("Initializing abstraction with length %s slivers (|jSet|=%s)", initK, jSet.size());
     // Initialize with k-CFA
     // Slivers are length k for call sites and k+1 for allocation sites
     for (Quad j : jSet) {
       Ctxt c = G.isAlloc(j) ? emptyCtxt.append(j) : emptyCtxt; // c = [j] (allocation sites) or [] (call sites)
       unprovenGroup.abs.CfromJC.put(new Pair(j, emptyCtxt), c); // j, [] => c=[j]
+      //X.logs("CfromJC %s %s => %s", G.jstr(j), G.cstr(emptyCtxt), G.cstr(c));
+      if (c.length() == 0) continue;
       for (jq_Method m : jm.get(j)) {
         for (Quad k : mj.get(m)) {
           Ctxt d = G.isAlloc(k) ? emptyCtxt.append(k) : emptyCtxt; // d = [k] (allocation sites) or [] (call sites)
+          //X.logs("CfromJC %s %s => %s", G.jstr(k), G.cstr(c), G.cstr(d));
           unprovenGroup.abs.CfromJC.put(new Pair(k, c), d); // k, c => d
         }
       }
     }
     unprovenGroup.abs.computeS();
-    for (int i = 0; i < initK; i++)
+    for (int i = 0; i < initK; i++) {
+      X.logs("  at length %s", i);
       unprovenGroup.refineAbstraction();
-
+    }
+    X.logs("Unproven group with %s queries", allQueries.size());
     unprovenGroup.queries.addAll(allQueries);
 
     for (int iter = 1; ; iter++) {
@@ -818,7 +824,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
     {
       PrintWriter out = OutDirUtils.newPrintWriter("abstraction.S."+iter);
       for (Ctxt a : S)
-        out.println(G.cstrBrief(a));
+        out.println(G.cstr(a));
       out.close();
     }
 
@@ -1012,7 +1018,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis {
 
         // d is a prefix of [j]+c
         Ctxt newd = c.prepend(j, d.length()+1);
-        assert !abs.S.contains(newd) : G.jstrBrief(j) + " | " + G.cstrBrief(c) + " | " + G.cstrBrief(d) + " | " + G.cstrBrief(newd);
+        assert !abs.S.contains(newd) : G.jstr(j) + " | " + G.cstr(c) + " | " + G.cstr(d) + " | " + G.cstr(newd);
         abs.CfromJC.put(pair, newd); // newd is one longer than d
         newCtxts.add(newd);
       }

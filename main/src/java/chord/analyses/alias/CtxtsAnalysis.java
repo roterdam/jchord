@@ -6,6 +6,7 @@
  */
 package chord.analyses.alias;
 
+import java.io.File;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -23,10 +24,17 @@ import java.util.Set;
 import gnu.trove.TIntArrayList;
 
 import joeq.Class.jq_ClassInitializer;
+import joeq.Class.jq_Type;
+import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
+import joeq.Compiler.Quad.Operator.MultiNewArray;
+import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.util.Execution;
@@ -576,6 +584,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Quad[] newElems = combine(k, invk, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
+        //System.out.println("CfromJC " + jstr(invk) + " " + cstr(oldCtxt) + " => " + cstr(newCtxt));
 				if (!isLastIter && newElems.length < oldElems.length + 1) {
 					relRefinableCI.add(oldCtxt, invk);
 				}
@@ -602,6 +611,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Quad[] newElems = combine(k, inst, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
+        //System.out.println("CfromJC " + jstr(inst) + " " + cstr(oldCtxt) + " => " + cstr(newCtxt));
 				if (!isLastIter && newElems.length < oldElems.length + 1) {
 					relRefinableCH.add(oldCtxt, inst);
 				}
@@ -981,4 +991,49 @@ public class CtxtsAnalysis extends JavaAnalysis {
             cspaKind = "cspa-hybrid-dlog";
 		return cspaKind;
 	}
+
+  jq_Type h2t(Quad h) {
+    Operator op = h.getOperator();
+    if (op instanceof New) 
+      return New.getType(h).getType();
+    else if (op instanceof NewArray)
+      return NewArray.getType(h).getType();
+    else if (op instanceof MultiNewArray)
+      return MultiNewArray.getType(h).getType();
+    else
+      return null;
+  }
+  String hstr(Quad h) {
+    String path = new File(h.toJavaLocStr()).getName();
+    jq_Type t = h2t(h);
+    return path+"("+(t == null ? "?" : t.shortName())+")";
+  }
+  String istr(Quad i) {
+    String path = new File(i.toJavaLocStr()).getName();
+    jq_Method m = InvokeStatic.getMethod(i).getMethod();
+    return path+"("+m.getName()+")";
+  }
+  String jstr(Quad j) { return isAlloc(j) ? hstr(j) : istr(j); }
+  String estr(Quad e) {
+    String path = new File(e.toJavaLocStr()).getName();
+    Operator op = e.getOperator();
+    return path+"("+op+")";
+  }
+  String cstr(Ctxt c) {
+    StringBuilder buf = new StringBuilder();
+    //buf.append(domC.indexOf(c));
+    buf.append('{');
+    for (int i = 0; i < c.length(); i++) {
+      if (i > 0) buf.append(" | ");
+      Quad q = c.get(i);
+      buf.append(isAlloc(q) ? hstr(q) : istr(q));
+    }
+    buf.append('}');
+    return buf.toString();
+  }
+  String fstr(jq_Field f) { return f.getDeclaringClass()+"."+f.getName(); }
+  String vstr(Register v) { return v+"@"+mstr(domV.getMethod(v)); }
+  String mstr(jq_Method m) { return m.getDeclaringClass().shortName()+"."+m.getName(); }
+
+  boolean isAlloc(Quad q) { return domH.indexOf(q) != -1; }
 }
