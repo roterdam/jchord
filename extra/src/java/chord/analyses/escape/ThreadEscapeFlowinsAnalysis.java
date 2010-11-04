@@ -28,7 +28,7 @@ public class ThreadEscapeFlowinsAnalysis extends JavaAnalysis {
 
   public void run() {
     String taskName = "flowins-thresc-dlog";
-    X.putOption("taskName", taskName);
+    X.putOption("taskNames", taskName);
     X.flushOptions();
 
     ClassicProject.g().runTask("argCopy-dlog");

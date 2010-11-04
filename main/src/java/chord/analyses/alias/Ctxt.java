@@ -121,6 +121,7 @@ public class Ctxt implements Serializable {
   }
 
   // Maximize length of returned context is max
+  public Ctxt prepend(Quad q) { return prepend(q, Integer.MAX_VALUE); }
   public Ctxt prepend(Quad q, int max) {
     int oldLen = elems.length;
     int newLen = Math.min(max, oldLen+1);

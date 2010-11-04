@@ -119,7 +119,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 	public void run() {
 		if (percy) {
 			X = Execution.v();		
-      X.putOption("taskName", "datarace-dlog");
+      X.putOption("taskNames", "datarace-dlog");
       X.flushOptions();
 			X.addSaveFiles("inputs.dat", "outputs.dat");		
 			if (X.getBooleanArg("saveStrings", false))		
