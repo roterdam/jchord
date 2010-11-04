@@ -23,6 +23,7 @@ FH(f:F,h:H) input
 IinvkArg0(i:I0,v:V1) input
 IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
+
 IM(i:I,m:M) input
 VV(v1:V,v2:V) input
 
@@ -40,6 +41,9 @@ checkCastInst(l:V,t:T,r:V) input
 APIMethod(i:I) input
 
 OptNames(o:Opt,site:I) input
+
+#Don't know if we need this; those entries should still be in OptNames
+nullConf(v:V,o:Opt) input
 
 statHF(f:F,site:Opt) output
 instHF(b:H,f:F,site:Opt) output
@@ -88,13 +92,17 @@ putInstFldPrimInst(b,f,r) :- reachableM(m), MputInstFldPrimInst(m,b,f,r).
 UcU(v,u) :- IinvkPrimArg(i,z,u), IM(i,m), MmethPrimArg(m,z,v).
 UcU(u,v) :- IinvkPrimRet(i,z,u), IM(i,m), MmethPrimRet(m,z,v).
 
-#primCdep(u,name) :- confUVV(site,uv,_),UVU(uv,u),OptNames(name,site).
+primCdep(v,name) :- IinvkPrimRet(site, 0, v),OptNames(name,site).
 primCdep(l,opt) :- primCdep(r,opt),objVarAsgnPrimInst(l,r).
 primCdep(l,opt) :- primDataDep(l,r),primCdep(r,opt).
-#primCdep(u,h,cst) :- refCdep(v,opt),IinvkPrimRet(i,_,u),IinvkArg(i,0,v),APIMethod(i).
 primCdep(u,opt) :- IinvkPrimRet(i,_,u),dynCUse(i,_,opt),APIMethod(i).
 primCdep(l,opt) :- getInstFldPrimInst(l,b,f), VH(b,h1), instHF(h1,f,opt). split
 primCdep(u,opt) :- getStatFldPrimInst(u,f), statHF(f,opt).
+
+#  If this is tainted, then API call on this should return tainted param
+# Duplicate with APIMethod rule above?
+##primCdep(u,h,cst) :- refCdep(v,opt),IinvkPrimRet(i,_,u),IinvkArg(i,0,v),APIMethod(i).
+
 
 instHF(h1,f,opt) :- putInstFldPrimInst(b,f,r), VH(b,h1), primCdep(r,opt). split
 statHF(f,opt) :- putStatFldPrimInst(f,r), primCdep(r,opt).
@@ -102,6 +110,7 @@ statHF(f,opt) :- putStatFldPrimInst(f,r), primCdep(r,opt).
 
 # Propagate null values.
 #
+nullCV(v,opt) :- nullConf(v,opt).
 nullCV(v,opt) :- nullI(i),dynCUse(i,_,opt),IinvkRet(i,0,v).
 nullCV(v,opt) :- VV(v,v2),nullCV(v2,opt).
 nullCV(v,opt) :- objVarAsgnInst(v,u),nullCV(u,opt).
@@ -110,10 +119,8 @@ nullCV(v,opt) :- objVarAsgnInst(u,v),nullCV(u,opt).
 nullCV(v,opt) :- checkCastInst(u,_,v),nullCV(u,opt).
 
 
-# Need to handle cases where we pass a nullCV as an arg, and then taint the return value
-#
+refCdep(v,name) :- IinvkRet(site, 0, v),OptNames(name,site).
 refCdep(v,opt) :-  nullCV(v,opt).
-#refCdep(v,name) :- IinvkRet(site, 0, v),OptNames(name,site).
 refCdep(v,opt)  :- dynCUse(i,z,opt),IinvkArg(i,z,v).
 refCdep(v,opt)  :- dynCUse(i,_,opt),IinvkRet(i,0,v).
 statHF(f,opt) :- putStatFldInst(f,r), refCdep(r,opt).
