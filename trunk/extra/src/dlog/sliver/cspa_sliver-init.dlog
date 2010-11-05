@@ -24,57 +24,22 @@
 # Static program inputs.
 MI(m:M,i:I) input # Method m contains call site i
 MH(m:M,h:H) input # Method m contains allocation site h
-MV(m:M,v:V) input # Method m contains variable v
 statIM(i:I,m:M) input # Call site i resolves to static method m
 IinvkArg(i:I0,n:Z0,v:V1) input
-IinvkRet(i:I0,n:Z0,v:V0) input
-MmethArg(m:M0,n:Z0,v:V0) input
-MmethRet(m:M0,n:Z0,v:V1) input
-HT(h:H0,t:T1) input # Allocation site h has type t
-sub(t1:T1,t2:T0) input # t1 is a subtype of t2
-classT(t:T) input
-staticTM(t:T,m:M) input
-staticTF(t:T,f:F) input
-MobjValAsgnInst(m:M,l:V,h:H) input # in m, l = new h
-MgetStatFldInst(m:M,l:V,f:F) input # in m, l = STATIC.f
-MputStatFldInst(m:M,f:F,r:V) input # in m, STATIC.f = r
-
-clsForNameIT(i:I0,t:T0) input
-objNewInstIH(i:I0,h:H0) input
-conNewInstIH(i:I0,h:H0) input
 
 # Computed from 0-CFA.
 IM(i:I,m:M) input # call site i can resolve to method m
 VH(v:V,h:H) input # Whether variable v can point to an object allocated at h
 reachableM(m:M) input # method m is reachable
-reachableI(i:I) input # method i is reachable
 
 # Output one-time relations.
 reachableH(h:H) output # allocation site h is reachable
-reachableT(t:T) output # type t is reachable
-argIVMV(i:I0,vi:V1,m:M0,vm:V0) output # vi at call site i <=> vm in method m (argument)
-retIVMV(i:I0,vi:V0,m:M0,vm:V1) output # vi at call site i <=> vm in method m (return value)
 skipMM(m:M,n:M) output # m can reach n via a sequence of calls where m is instance method, rest (if any) are static methods
 HtoM(h:H,m:M) output # h can be the "this" argument calling method that skips to m
 
 ### Constraints
 
 reachableH(h) :- reachableM(m), MH(m,h).
-reachableI(i) :- reachableM(m), MI(m,i).
-argIVMV(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MmethArg(m,z,vm).
-retIVMV(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
-
-# Reachability of types
-reachableT(t) :- reachableM(m), MobjValAsgnInst(m,_,h), HT(h,t).
-reachableT(t) :- reachableM(m), staticTM(t,m).
-reachableT(t) :- reachableM(m), MputStatFldInst(m,f,_), staticTF(t,f).
-reachableT(t) :- reachableM(m), MgetStatFldInst(m,_,f), staticTF(t,f).
-reachableT(t) :- classT(t), reachableT(s), sub(s,t).
-
-# Reflection
-reachableT(t) :- reachableI(i), conNewInstIH(i,h), HT(h,t).
-reachableT(t) :- reachableI(i), objNewInstIH(i,h), HT(h,t).
-reachableT(t) :- reachableI(i), clsForNameIT(i,t).
 
 # For object-based refinement
 skipMM(m,n) :- m=n, !statIM(_,m).
