@@ -313,11 +313,13 @@ public class CtxtsAnalysis extends JavaAnalysis {
     X.putOption("randSeed", randSeed);
     X.putOption("kobj", kobjK);
     X.putOption("kcfa", kcfaK);
+    X.putOption("minH", kobjK);
+    X.putOption("minI", kcfaK);
     X.putOption("kobjRange", kobjRange);
     X.putOption("kcfaRange", kcfaRange);
     X.putOption("numRefineIters", System.getProperty("chord.max.iters"));
     X.putOption("inValuesPath", inValuesPath);
-    X.putOption("initK", (kcfaK == kobjK ? kcfaK : kobjK+","+kcfaK));
+    X.putOption("initK", kobjK+","+kcfaK);
 
     boolean useObjectSensitivity = "co".equals(System.getProperty("chord.inst.ctxt.kind", null));
     X.putOption("useObjectSensitivity", useObjectSensitivity);

@@ -18,14 +18,21 @@ MI(m:M,i:I) input
 MH(m:M,h:H) input
 MV(m:M,v:V) input
 statIM(i:I,m:M) input
+specIM(i:I,m:M) input
+IM(i:I,m:M) input
+IHM(i:I,h:H,m:M) input
 classT(t:T) input
 staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkArg0(i:I0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
 MmethArg(m:M0,n:Z0,v:V0) input
+MmethRet(m:M0,n:Z0,v:V1) input
 VHfilter(v:V,h:H) input
+statM(m:M) input
+clsForNameIT(i:I0,t:T0) input
 objNewInstIH(i:I0,h:H0) input
 objNewInstIM(i:I0,m:M0) input
 conNewInstIH(i:I0,h:H0) input
@@ -37,16 +44,30 @@ MgetInstFldInst(m:M,l:V,b:V,f:F) input
 MputInstFldInst(m:M,b:V,f:F,r:V) input
 MgetStatFldInst(m:M,l:V,f:F)     input
 MputStatFldInst(m:M,f:F,r:V)     input
-IM(i:I,m:M) input
-argIVMV(i:I0,u:V1,m:M0,v:V0) input
-retIVMV(i:I0,u:V0,m:M0,v:V1) input
-reachableT(t:T) input
 CfromHC(cm:C,h:H,c:C) input
 r_CfromHC(cm:C,h:H,c:C) output # track
 CfromIC(cm:C,i:I,c:C) input
 r_CfromIC(cm:C,i:I,c:C) output # track
 HfromC(h:H,c:C) input
 objI(i:I) input
+objM(m:M) input
+r_objM(m:M) output # track
+MspcMethArg(m:M,v:V) input
+r_MspcMethArg(m:M,v:V) output # track
+MordMethArg(m:M,z:Z,v:V) input
+r_MordMethArg(m:M,z:Z,v:V) output # track
+argIVMV(i:I0,u:V1,m:M0,v:V0) input
+r_argIVMV(i:I,u:V,m:M,v:V) output # track
+retIVMV(i:I0,u:V0,m:M0,v:V1) input
+r_retIVMV(i:I,u:V,m:M,v:V) output # track
+CIA(c:C,i:I,a:C) input
+r_CIA(c:C,i:I,a:C) output # track
+CIH(c:C,i:I,h:H) input
+r_CIH(c:C,i:I,h:H) output # track
+ICM(i:I,c:C,m:M) input
+r_ICM(i:I,c:C,m:M) output # track
+CI(c:C,i:I) input
+r_CI(c:C,i:I) output # track
 reachableCI(c:C,i:I) input
 r_reachableCI(c:C,i:I) output # track
 reachableCM(c:C,m:M) input
@@ -63,10 +84,13 @@ FA(f:F,a:C) input
 r_FA(f:F,a:C) output # track
 AFA(a1:C,f:F,a2:C) input
 r_AFA(a1:C,f:F,a2:C) output # track
+reachableT(t:T) input
+r_reachableT(t:T) output # track
 
 ### VAfilter(v,a) :- VHfilter(v,h), HfromC(h,a).
 
 ### reachableCM(0,m) :- clinitTM(t,m), reachableT(t).
+r_reachableT(t) :- r_reachableCM(0,m), clinitTM(t,m), reachableT(t).
 
 ### reachableCM(cm,m) :- CICM(_,_,cm,m).
 r_CICM(x1,x2,cm,m) :- r_reachableCM(cm,m), CICM(x1,x2,cm,m).
@@ -74,21 +98,68 @@ r_CICM(x1,x2,cm,m) :- r_reachableCM(cm,m), CICM(x1,x2,cm,m).
 ### reachableCI(c,i) :- reachableCM(c,m), MI(m,i).
 r_reachableCM(c,m) :- r_reachableCI(c,i), reachableCM(c,m), MI(m,i).
 
-### CICM(ci,i,cm,m) :- !objI(i), reachableCI(ci,i), IM(i,m), CfromIC(cm,i,ci).
-r_reachableCI(ci,i) :- r_CICM(ci,i,cm,m), !objI(i), reachableCI(ci,i), IM(i,m), CfromIC(cm,i,ci).
-r_CfromIC(cm,i,ci) :- r_CICM(ci,i,cm,m), !objI(i), reachableCI(ci,i), IM(i,m), CfromIC(cm,i,ci).
+### CIA(c,i,a) :- IinvkArg0(i,v), VCA(v,c,a).
+r_VCA(v,c,a) :- r_CIA(c,i,a), IinvkArg0(i,v), VCA(v,c,a).
 
-### CICM(ci,i,cm,m) :- objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,cm).
-r_reachableCI(ci,i) :- r_CICM(ci,i,cm,m), objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,cm).
-r_VCA(v,ci,cm) :- r_CICM(ci,i,cm,m), objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,cm).
+### CIH(c,i,h) :- CIA(c,i,a), HfromC(h,a).
+r_CIA(c,i,a) :- r_CIH(c,i,h), CIA(c,i,a), HfromC(h,a).
 
-### CICM(ci,i,cm,m) :- objI(i), reachableCI(ci,i), statIM(i,m), ci=cm.
-r_reachableCI(ci,i) :- r_CICM(ci,i,cm,m), objI(i), reachableCI(ci,i), statIM(i,m), ci=cm.
+### CI(c,i) :- CIH(c,i,_).
+r_CIH(c,i,x3) :- r_CI(c,i), CIH(c,i,x3).
+
+### ICM(i,c,m) :- IHM(i,h,m), HfromC(h,c).
+
+### CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), IHM(i,h,m), CfromIC(d,i,c), CIH(c,i,h).
+r_reachableCI(c,i) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), IHM(i,h,m), CfromIC(d,i,c), CIH(c,i,h).
+r_CfromIC(d,i,c) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), IHM(i,h,m), CfromIC(d,i,c), CIH(c,i,h).
+r_CIH(c,i,h) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), IHM(i,h,m), CfromIC(d,i,c), CIH(c,i,h).
+
+### CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).
+r_reachableCI(c,i) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).
+r_CfromIC(d,i,c) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).
+r_CI(c,i) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).
+
+### CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), statIM(i,m), CfromIC(d,i,c).
+r_reachableCI(c,i) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), statIM(i,m), CfromIC(d,i,c).
+r_CfromIC(d,i,c) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), statIM(i,m), CfromIC(d,i,c).
+
+### CICM(c,i,d,m) :- objI(i), reachableCI(c,i), ICM(i,d,m), CIA(c,i,d).
+r_reachableCI(c,i) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), ICM(i,d,m), CIA(c,i,d).
+r_ICM(i,d,m) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), ICM(i,d,m), CIA(c,i,d).
+r_CIA(c,i,d) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), ICM(i,d,m), CIA(c,i,d).
+
+### CICM(c,i,d,m) :- objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i,d).
+r_reachableCI(c,i) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i,d).
+r_CIA(c,i,d) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i,d).
+
+### CICM(c,i,d,m) :- objI(i), reachableCI(c,i), statIM(i,m), c=d.
+r_reachableCI(c,i) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), statIM(i,m), c=d.
+
+### objM(m) :- objI(i), IM(i,m), !statM(m).
+
+### MspcMethArg(m,v) :- MmethArg(m,0,v), objM(m).
+r_objM(m) :- r_MspcMethArg(m,v), MmethArg(m,0,v), objM(m).
+
+### MordMethArg(m,0,v) :- MmethArg(m,0,v), !MspcMethArg(m,v).
+!r_MspcMethArg(m,v) :- r_MordMethArg(m,0,v), MmethArg(m,0,v), !MspcMethArg(m,v).
+
+### MordMethArg(m,z,v) :- MmethArg(m,z,v), z!=0.
+
+### argIVMV(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MordMethArg(m,z,vm).
+r_MordMethArg(m,z,vm) :- r_argIVMV(i,vi,m,vm), IM(i,m), IinvkArg(i,z,vi), MordMethArg(m,z,vm).
+
+### retIVMV(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
+
+### VCA(v,c,a) :- reachableCM(c,m), MspcMethArg(m,v), a=c.
+r_reachableCM(c,m) :- r_VCA(v,c,a), reachableCM(c,m), MspcMethArg(m,v), a=c.
+r_MspcMethArg(m,v) :- r_VCA(v,c,a), reachableCM(c,m), MspcMethArg(m,v), a=c.
 
 ### VCfromVC(vm,cm,vi,ci) :- argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
+r_argIVMV(i,vi,m,vm) :- r_VCfromVC(vm,cm,vi,ci), argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 r_CICM(ci,i,cm,m) :- r_VCfromVC(vm,cm,vi,ci), argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 
 ### VCfromVC(vi,ci,vm,cm) :- retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
+r_retIVMV(i,vi,m,vm) :- r_VCfromVC(vi,ci,vm,cm), retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 r_CICM(ci,i,cm,m) :- r_VCfromVC(vi,ci,vm,cm), retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 
 ### VCA(v,c,a) :- VCfromVC(v,c,vv,cc), VCA(vv,cc,a), VAfilter(v,a).
@@ -153,6 +224,30 @@ r_CfromHC(o,h,c) :- r_VCA(v,c,o), reachableCI(c,i), conNewInstIH(i,h), IinvkRet(
 ### VCA(v,c,o) :- reachableCI(c,i), aryNewInstIH(i,h), IinvkRet(i,0,v), CfromHC(o,h,c).
 r_reachableCI(c,i) :- r_VCA(v,c,o), reachableCI(c,i), aryNewInstIH(i,h), IinvkRet(i,0,v), CfromHC(o,h,c).
 r_CfromHC(o,h,c) :- r_VCA(v,c,o), reachableCI(c,i), aryNewInstIH(i,h), IinvkRet(i,0,v), CfromHC(o,h,c).
+
+### reachableT(t) :- reachableCI(_,i), conNewInstIH(i,h), HT(h,t).
+r_reachableCI(x4,i) :- r_reachableT(t), reachableCI(x4,i), conNewInstIH(i,h), HT(h,t).
+
+### reachableT(t) :- reachableCI(_,i), objNewInstIH(i,h), HT(h,t).
+r_reachableCI(x5,i) :- r_reachableT(t), reachableCI(x5,i), objNewInstIH(i,h), HT(h,t).
+
+### reachableT(t) :- reachableCI(_,i), clsForNameIT(i,t).
+r_reachableCI(x6,i) :- r_reachableT(t), reachableCI(x6,i), clsForNameIT(i,t).
+
+### reachableT(t) :- reachableCM(_,m), MobjValAsgnInst(m,_,h), HT(h,t).
+r_reachableCM(x7,m) :- r_reachableT(t), reachableCM(x7,m), MobjValAsgnInst(m,_,h), HT(h,t).
+
+### reachableT(t) :- reachableCM(_,m), staticTM(t,m).
+r_reachableCM(x9,m) :- r_reachableT(t), reachableCM(x9,m), staticTM(t,m).
+
+### reachableT(t) :- reachableCM(_,m), MputStatFldInst(m,f,_), staticTF(t,f).
+r_reachableCM(x10,m) :- r_reachableT(t), reachableCM(x10,m), MputStatFldInst(m,f,_), staticTF(t,f).
+
+### reachableT(t) :- reachableCM(_,m), MgetStatFldInst(m,_,f), staticTF(t,f).
+r_reachableCM(x12,m) :- r_reachableT(t), reachableCM(x12,m), MgetStatFldInst(m,_,f), staticTF(t,f).
+
+### reachableT(t) :- classT(t), reachableT(s), sub(s,t).
+r_reachableT(s) :- r_reachableT(t), classT(t), reachableT(s), sub(s,t).
 inQuery(e1:E,e2:E) input
 EV(e:E,v:V) input
 escA(a:C) input
@@ -161,7 +256,7 @@ outQuery(e1:E,e2:E) input
 r_outQuery(e1:E,e2:E) output # track
 
 ### escA(a) :- FA(_,a).
-r_FA(x3,a) :- r_escA(a), FA(x3,a).
+r_FA(x14,a) :- r_escA(a), FA(x14,a).
 
 ### escA(a) :- reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a).
 r_reachableCM(c,1) :- r_escA(a), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a).
@@ -169,10 +264,10 @@ r_VCA(v,c,a) :- r_escA(a), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a).
 
 ### escA(a) :- escA(b), AFA(b,_,a).
 r_escA(b) :- r_escA(a), escA(b), AFA(b,_,a).
-r_AFA(b,x4,a) :- r_escA(a), escA(b), AFA(b,x4,a).
+r_AFA(b,x15,a) :- r_escA(a), escA(b), AFA(b,x15,a).
 
 ### outQuery(e,ee) :- inQuery(e,ee), e=ee, EV(e,v), VCA(v,_,a), escA(a).
-r_VCA(v,x5,a) :- r_outQuery(e,ee), inQuery(e,ee), e=ee, EV(e,v), VCA(v,x5,a), escA(a).
+r_VCA(v,x16,a) :- r_outQuery(e,ee), inQuery(e,ee), e=ee, EV(e,v), VCA(v,x16,a), escA(a).
 r_escA(a) :- r_outQuery(e,ee), inQuery(e,ee), e=ee, EV(e,v), VCA(v,_,a), escA(a).
 
 ### Base case

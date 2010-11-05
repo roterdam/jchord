@@ -60,7 +60,7 @@ clinitTM(t:T,m:M) input
 #clsTH(t:T0,h:H0) input
 #objTH(t:T0,h:H0) input
 
-IHM(i:I,h:H,m:M)
+IHM(i:I,h:H,m:M) output
 VV(v1:V,v2:V)
 specIMV(i:I,m:M,v:V)
 

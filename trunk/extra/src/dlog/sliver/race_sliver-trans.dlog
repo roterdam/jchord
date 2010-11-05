@@ -20,14 +20,21 @@ MI(m:M,i:I) input
 MH(m:M,h:H) input
 MV(m:M,v:V) input
 statIM(i:I,m:M) input
+specIM(i:I,m:M) input
+IM(i:I,m:M) input
+IHM(i:I,h:H,m:M) input
 classT(t:T) input
 staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkArg0(i:I0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
 MmethArg(m:M0,n:Z0,v:V0) input
+MmethRet(m:M0,n:Z0,v:V1) input
 VHfilter(v:V,h:H) input
+statM(m:M) input
+clsForNameIT(i:I0,t:T0) input
 objNewInstIH(i:I0,h:H0) input
 objNewInstIM(i:I0,m:M0) input
 conNewInstIH(i:I0,h:H0) input
@@ -39,16 +46,30 @@ MgetInstFldInst(m:M,l:V,b:V,f:F) input
 MputInstFldInst(m:M,b:V,f:F,r:V) input
 MgetStatFldInst(m:M,l:V,f:F)     input
 MputStatFldInst(m:M,f:F,r:V)     input
-IM(i:I,m:M) input
-argIVMV(i:I0,u:V1,m:M0,v:V0) input
-retIVMV(i:I0,u:V0,m:M0,v:V1) input
-reachableT(t:T) input
 CfromHC(cm:C,h:H,c:C) input
 r_CfromHC(cm:C,h:H,c:C) input # track
 CfromIC(cm:C,i:I,c:C) input
 r_CfromIC(cm:C,i:I,c:C) input # track
 HfromC(h:H,c:C) input
 objI(i:I) input
+objM(m:M) input
+r_objM(m:M) input # track
+MspcMethArg(m:M,v:V) input
+r_MspcMethArg(m:M,v:V) input # track
+MordMethArg(m:M,z:Z,v:V) input
+r_MordMethArg(m:M,z:Z,v:V) input # track
+argIVMV(i:I0,u:V1,m:M0,v:V0) input
+r_argIVMV(i:I,u:V,m:M,v:V) input # track
+retIVMV(i:I0,u:V0,m:M0,v:V1) input
+r_retIVMV(i:I,u:V,m:M,v:V) input # track
+CIA(c:C,i:I,a:C) input
+r_CIA(c:C,i:I,a:C) input # track
+CIH(c:C,i:I,h:H) input
+r_CIH(c:C,i:I,h:H) input # track
+ICM(i:I,c:C,m:M) input
+r_ICM(i:I,c:C,m:M) input # track
+CI(c:C,i:I) input
+r_CI(c:C,i:I) input # track
 reachableCI(c:C,i:I) input
 r_reachableCI(c:C,i:I) input # track
 reachableCM(c:C,m:M) input
@@ -65,10 +86,15 @@ FA(f:F,a:C) input
 r_FA(f:F,a:C) input # track
 AFA(a1:C,f:F,a2:C) input
 r_AFA(a1:C,f:F,a2:C) input # track
+reachableT(t:T) input
+r_reachableT(t:T) input # track
 
 ### VAfilter(v,a) :- VHfilter(v,h), HfromC(h,a).
 
 ### reachableCM(0,m) :- clinitTM(t,m), reachableT(t).
+# TRANS - t_reachableT_reachableCM reachableT reachableCM 0 1,2
+t_reachableT_reachableCM(t:T,0:C,m:M) output
+t_reachableT_reachableCM(t,0,m) :- r_reachableCM(0,m), clinitTM(t,m), reachableT(t).
 
 ### reachableCM(cm,m) :- CICM(_,_,cm,m).
 # TRANS - t_CICM_reachableCM CICM reachableCM 0,1,2,3 2,3
@@ -80,33 +106,118 @@ t_CICM_reachableCM(x1,x2,cm,m) :- r_reachableCM(cm,m), CICM(x1,x2,cm,m).
 t_reachableCM_reachableCI(c:C,m:M,i:I) output
 t_reachableCM_reachableCI(c,m,i) :- r_reachableCI(c,i), reachableCM(c,m), MI(m,i).
 
-### CICM(ci,i,cm,m) :- !objI(i), reachableCI(ci,i), IM(i,m), CfromIC(cm,i,ci).
+### CIA(c,i,a) :- IinvkArg0(i,v), VCA(v,c,a).
+# TRANS - t_VCA_CIA VCA CIA 0,1,2 1,3,2
+t_VCA_CIA(v:V,c:C,a:C,i:I) output
+t_VCA_CIA(v,c,a,i) :- r_CIA(c,i,a), IinvkArg0(i,v), VCA(v,c,a).
+
+### CIH(c,i,h) :- CIA(c,i,a), HfromC(h,a).
+# TRANS - t_CIA_CIH CIA CIH 0,1,2 0,1,3
+t_CIA_CIH(c:C,i:I,a:C,h:H) output
+t_CIA_CIH(c,i,a,h) :- r_CIH(c,i,h), CIA(c,i,a), HfromC(h,a).
+
+### CI(c,i) :- CIH(c,i,_).
+# TRANS - t_CIH_CI CIH CI 0,1,2 0,1
+t_CIH_CI(c:C,i:I,x3:H) output
+t_CIH_CI(c,i,x3) :- r_CI(c,i), CIH(c,i,x3).
+
+### ICM(i,c,m) :- IHM(i,h,m), HfromC(h,c).
+
+### CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), IHM(i,h,m), CfromIC(d,i,c), CIH(c,i,h).
 # TRANS call t_reachableCI_CICM reachableCI CICM 0,1 0,1,2,3
-t_reachableCI_CICM(ci:C,i:I,cm:C,m:M) output
-t_reachableCI_CICM(ci,i,cm,m) :- r_CICM(ci,i,cm,m), !objI(i), reachableCI(ci,i), IM(i,m), CfromIC(cm,i,ci).
+t_reachableCI_CICM(c:C,i:I,d:C,m:M) output
+t_reachableCI_CICM(c,i,d,m) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), IHM(i,h,m), CfromIC(d,i,c), CIH(c,i,h).
 # TRANS call t_CfromIC_CICM CfromIC CICM 0,1,2 2,1,0,3
-t_CfromIC_CICM(cm:C,i:I,ci:C,m:M) output
-t_CfromIC_CICM(cm,i,ci,m) :- r_CICM(ci,i,cm,m), !objI(i), reachableCI(ci,i), IM(i,m), CfromIC(cm,i,ci).
+t_CfromIC_CICM(d:C,i:I,c:C,m:M) output
+t_CfromIC_CICM(d,i,c,m) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), IHM(i,h,m), CfromIC(d,i,c), CIH(c,i,h).
+# TRANS call t_CIH_CICM CIH CICM 0,1,2 0,1,3,4
+t_CIH_CICM(c:C,i:I,h:H,d:C,m:M) output
+t_CIH_CICM(c,i,h,d,m) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), IHM(i,h,m), CfromIC(d,i,c), CIH(c,i,h).
 
-### CICM(ci,i,cm,m) :- objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,cm).
-# TRANS callI t_reachableCI_CICM1 reachableCI CICM 0,1 0,1,2,3
-t_reachableCI_CICM1(ci:C,i:I,cm:C,m:M) output
-t_reachableCI_CICM1(ci,i,cm,m) :- r_CICM(ci,i,cm,m), objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,cm).
-# TRANS callI t_VCA_CICM VCA CICM 0,1,2 1,3,2,4
-t_VCA_CICM(v:V,ci:C,cm:C,i:I,m:M) output
-t_VCA_CICM(v,ci,cm,i,m) :- r_CICM(ci,i,cm,m), objI(i), reachableCI(ci,i), IM(i,m), !statIM(i,m), IinvkArg(i,0,v), VCA(v,ci,cm).
+### CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).
+# TRANS call t_reachableCI_CICM1 reachableCI CICM 0,1 0,1,2,3
+t_reachableCI_CICM1(c:C,i:I,d:C,m:M) output
+t_reachableCI_CICM1(c,i,d,m) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).
+# TRANS call t_CfromIC_CICM1 CfromIC CICM 0,1,2 2,1,0,3
+t_CfromIC_CICM1(d:C,i:I,c:C,m:M) output
+t_CfromIC_CICM1(d,i,c,m) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).
+# TRANS call t_CI_CICM CI CICM 0,1 0,1,2,3
+t_CI_CICM(c:C,i:I,d:C,m:M) output
+t_CI_CICM(c,i,d,m) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).
 
-### CICM(ci,i,cm,m) :- objI(i), reachableCI(ci,i), statIM(i,m), ci=cm.
-# TRANS callS t_reachableCI_CICM2 reachableCI CICM 0,1 0,1,2,3
-t_reachableCI_CICM2(ci:C,i:I,cm:C,m:M) output
-t_reachableCI_CICM2(ci,i,cm,m) :- r_CICM(ci,i,cm,m), objI(i), reachableCI(ci,i), statIM(i,m), ci=cm.
+### CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), statIM(i,m), CfromIC(d,i,c).
+# TRANS call t_reachableCI_CICM2 reachableCI CICM 0,1 0,1,2,3
+t_reachableCI_CICM2(c:C,i:I,d:C,m:M) output
+t_reachableCI_CICM2(c,i,d,m) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), statIM(i,m), CfromIC(d,i,c).
+# TRANS call t_CfromIC_CICM2 CfromIC CICM 0,1,2 2,1,0,3
+t_CfromIC_CICM2(d:C,i:I,c:C,m:M) output
+t_CfromIC_CICM2(d,i,c,m) :- r_CICM(c,i,d,m), !objI(i), reachableCI(c,i), statIM(i,m), CfromIC(d,i,c).
+
+### CICM(c,i,d,m) :- objI(i), reachableCI(c,i), ICM(i,d,m), CIA(c,i,d).
+# TRANS callI t_reachableCI_CICM3 reachableCI CICM 0,1 0,1,2,3
+t_reachableCI_CICM3(c:C,i:I,d:C,m:M) output
+t_reachableCI_CICM3(c,i,d,m) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), ICM(i,d,m), CIA(c,i,d).
+# TRANS callI t_ICM_CICM ICM CICM 0,1,2 3,0,1,2
+t_ICM_CICM(i:I,d:C,m:M,c:C) output
+t_ICM_CICM(i,d,m,c) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), ICM(i,d,m), CIA(c,i,d).
+# TRANS callI t_CIA_CICM CIA CICM 0,1,2 0,1,2,3
+t_CIA_CICM(c:C,i:I,d:C,m:M) output
+t_CIA_CICM(c,i,d,m) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), ICM(i,d,m), CIA(c,i,d).
+
+### CICM(c,i,d,m) :- objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i,d).
+# TRANS callS t_reachableCI_CICM4 reachableCI CICM 0,1 0,1,2,3
+t_reachableCI_CICM4(c:C,i:I,d:C,m:M) output
+t_reachableCI_CICM4(c,i,d,m) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i,d).
+# TRANS callS t_CIA_CICM1 CIA CICM 0,1,2 0,1,2,3
+t_CIA_CICM1(c:C,i:I,d:C,m:M) output
+t_CIA_CICM1(c,i,d,m) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i,d).
+
+### CICM(c,i,d,m) :- objI(i), reachableCI(c,i), statIM(i,m), c=d.
+# TRANS callS t_reachableCI_CICM5 reachableCI CICM 0,1 0,1,2,3
+t_reachableCI_CICM5(c:C,i:I,d:C,m:M) output
+t_reachableCI_CICM5(c,i,d,m) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), statIM(i,m), c=d.
+
+### objM(m) :- objI(i), IM(i,m), !statM(m).
+
+### MspcMethArg(m,v) :- MmethArg(m,0,v), objM(m).
+# TRANS - t_objM_MspcMethArg objM MspcMethArg 0 0,1
+t_objM_MspcMethArg(m:M,v:V) output
+t_objM_MspcMethArg(m,v) :- r_MspcMethArg(m,v), MmethArg(m,0,v), objM(m).
+
+### MordMethArg(m,0,v) :- MmethArg(m,0,v), !MspcMethArg(m,v).
+# TRANS - t_MspcMethArg_MordMethArg MspcMethArg MordMethArg 0,1 0,2,1
+t_MspcMethArg_MordMethArg(m:M,v:V,0:Z) output
+t_MspcMethArg_MordMethArg(m,v,0) :- r_MordMethArg(m,0,v), MmethArg(m,0,v), !MspcMethArg(m,v).
+
+### MordMethArg(m,z,v) :- MmethArg(m,z,v), z!=0.
+
+### argIVMV(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MordMethArg(m,z,vm).
+# TRANS - t_MordMethArg_argIVMV MordMethArg argIVMV 0,1,2 3,4,0,2
+t_MordMethArg_argIVMV(m:M,z:Z,vm:V,i:I,vi:V) output
+t_MordMethArg_argIVMV(m,z,vm,i,vi) :- r_argIVMV(i,vi,m,vm), IM(i,m), IinvkArg(i,z,vi), MordMethArg(m,z,vm).
+
+### retIVMV(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
+
+### VCA(v,c,a) :- reachableCM(c,m), MspcMethArg(m,v), a=c.
+# TRANS - t_reachableCM_VCA reachableCM VCA 0,1 2,0,3
+t_reachableCM_VCA(c:C,m:M,v:V,a:C) output
+t_reachableCM_VCA(c,m,v,a) :- r_VCA(v,c,a), reachableCM(c,m), MspcMethArg(m,v), a=c.
+# TRANS - t_MspcMethArg_VCA MspcMethArg VCA 0,1 1,2,3
+t_MspcMethArg_VCA(m:M,v:V,c:C,a:C) output
+t_MspcMethArg_VCA(m,v,c,a) :- r_VCA(v,c,a), reachableCM(c,m), MspcMethArg(m,v), a=c.
 
 ### VCfromVC(vm,cm,vi,ci) :- argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
+# TRANS arg t_argIVMV_VCfromVC argIVMV VCfromVC 0,1,2,3 3,4,1,5
+t_argIVMV_VCfromVC(i:I,vi:V,m:M,vm:V,cm:C,ci:C) output
+t_argIVMV_VCfromVC(i,vi,m,vm,cm,ci) :- r_VCfromVC(vm,cm,vi,ci), argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 # TRANS arg t_CICM_VCfromVC CICM VCfromVC 0,1,2,3 4,2,5,0
 t_CICM_VCfromVC(ci:C,i:I,cm:C,m:M,vm:V,vi:V) output
 t_CICM_VCfromVC(ci,i,cm,m,vm,vi) :- r_VCfromVC(vm,cm,vi,ci), argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 
 ### VCfromVC(vi,ci,vm,cm) :- retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
+# TRANS ret t_retIVMV_VCfromVC retIVMV VCfromVC 0,1,2,3 1,4,3,5
+t_retIVMV_VCfromVC(i:I,vi:V,m:M,vm:V,ci:C,cm:C) output
+t_retIVMV_VCfromVC(i,vi,m,vm,ci,cm) :- r_VCfromVC(vi,ci,vm,cm), retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 # TRANS ret t_CICM_VCfromVC1 CICM VCfromVC 0,1,2,3 4,0,5,2
 t_CICM_VCfromVC1(ci:C,i:I,cm:C,m:M,vi:V,vm:V) output
 t_CICM_VCfromVC1(ci,i,cm,m,vi,vm) :- r_VCfromVC(vi,ci,vm,cm), retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
@@ -123,17 +234,17 @@ t_VAfilter_VCA(v:V,a:C,c:C) output
 t_VAfilter_VCA(v,a,c) :- r_VCA(v,c,a), VCfromVC(v,c,vv,cc), VCA(vv,cc,a), VAfilter(v,a).
 
 ### VCA(l,c,a) :- reachableCM(c,m), MobjValAsgnInst(m,l,h), CfromHC(a,h,c).
-# TRANS new t_reachableCM_VCA reachableCM VCA 0,1 2,0,3
-t_reachableCM_VCA(c:C,m:M,l:V,a:C) output
-t_reachableCM_VCA(c,m,l,a) :- r_VCA(l,c,a), reachableCM(c,m), MobjValAsgnInst(m,l,h), CfromHC(a,h,c).
+# TRANS new t_reachableCM_VCA1 reachableCM VCA 0,1 2,0,3
+t_reachableCM_VCA1(c:C,m:M,l:V,a:C) output
+t_reachableCM_VCA1(c,m,l,a) :- r_VCA(l,c,a), reachableCM(c,m), MobjValAsgnInst(m,l,h), CfromHC(a,h,c).
 # TRANS new t_CfromHC_VCA CfromHC VCA 0,1,2 3,2,0
 t_CfromHC_VCA(a:C,h:H,c:C,l:V) output
 t_CfromHC_VCA(a,h,c,l) :- r_VCA(l,c,a), reachableCM(c,m), MobjValAsgnInst(m,l,h), CfromHC(a,h,c).
 
 ### VCA(l,c,a) :- reachableCM(c,m), MobjVarAsgnInst(m,l,r), VCA(r,c,a), VAfilter(l,a).
-# TRANS var t_reachableCM_VCA1 reachableCM VCA 0,1 2,0,3
-t_reachableCM_VCA1(c:C,m:M,l:V,a:C) output
-t_reachableCM_VCA1(c,m,l,a) :- r_VCA(l,c,a), reachableCM(c,m), MobjVarAsgnInst(m,l,r), VCA(r,c,a), VAfilter(l,a).
+# TRANS var t_reachableCM_VCA2 reachableCM VCA 0,1 2,0,3
+t_reachableCM_VCA2(c:C,m:M,l:V,a:C) output
+t_reachableCM_VCA2(c,m,l,a) :- r_VCA(l,c,a), reachableCM(c,m), MobjVarAsgnInst(m,l,r), VCA(r,c,a), VAfilter(l,a).
 # TRANS var t_VCA_VCA1 VCA VCA 0,1,2 3,1,2
 t_VCA_VCA1(r:V,c:C,a:C,l:V) output
 t_VCA_VCA1(r,c,a,l) :- r_VCA(l,c,a), reachableCM(c,m), MobjVarAsgnInst(m,l,r), VCA(r,c,a), VAfilter(l,a).
@@ -142,9 +253,9 @@ t_VAfilter_VCA1(l:V,a:C,c:C) output
 t_VAfilter_VCA1(l,a,c) :- r_VCA(l,c,a), reachableCM(c,m), MobjVarAsgnInst(m,l,r), VCA(r,c,a), VAfilter(l,a).
 
 ### VCA(l,c,aa) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,aa).
-# TRANS hr t_reachableCM_VCA2 reachableCM VCA 0,1 2,0,3
-t_reachableCM_VCA2(c:C,m:M,l:V,aa:C) output
-t_reachableCM_VCA2(c,m,l,aa) :- r_VCA(l,c,aa), reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,aa).
+# TRANS hr t_reachableCM_VCA3 reachableCM VCA 0,1 2,0,3
+t_reachableCM_VCA3(c:C,m:M,l:V,aa:C) output
+t_reachableCM_VCA3(c,m,l,aa) :- r_VCA(l,c,aa), reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,aa).
 # TRANS hr t_VCA_VCA2 VCA VCA 0,1,2 3,1,4
 t_VCA_VCA2(b:V,c:C,a:C,l:V,aa:C) output
 t_VCA_VCA2(b,c,a,l,aa) :- r_VCA(l,c,aa), reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,aa).
@@ -153,9 +264,9 @@ t_AFA_VCA(a:C,f:F,aa:C,l:V,c:C) output
 t_AFA_VCA(a,f,aa,l,c) :- r_VCA(l,c,aa), reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,aa).
 
 ### VCA(l,c,a) :- reachableCM(c,m), MgetStatFldInst(m,l,f), FA(f,a).
-# TRANS gr t_reachableCM_VCA3 reachableCM VCA 0,1 2,0,3
-t_reachableCM_VCA3(c:C,m:M,l:V,a:C) output
-t_reachableCM_VCA3(c,m,l,a) :- r_VCA(l,c,a), reachableCM(c,m), MgetStatFldInst(m,l,f), FA(f,a).
+# TRANS gr t_reachableCM_VCA4 reachableCM VCA 0,1 2,0,3
+t_reachableCM_VCA4(c:C,m:M,l:V,a:C) output
+t_reachableCM_VCA4(c,m,l,a) :- r_VCA(l,c,a), reachableCM(c,m), MgetStatFldInst(m,l,f), FA(f,a).
 # TRANS gr t_FA_VCA FA VCA 0,1 2,3,1
 t_FA_VCA(f:F,a:C,l:V,c:C) output
 t_FA_VCA(f,a,l,c) :- r_VCA(l,c,a), reachableCM(c,m), MgetStatFldInst(m,l,f), FA(f,a).
@@ -239,6 +350,46 @@ t_reachableCI_VCA5(c,i,v,o) :- r_VCA(v,c,o), reachableCI(c,i), aryNewInstIH(i,h)
 # TRANS - t_CfromHC_VCA5 CfromHC VCA 0,1,2 3,2,0
 t_CfromHC_VCA5(o:C,h:H,c:C,v:V) output
 t_CfromHC_VCA5(o,h,c,v) :- r_VCA(v,c,o), reachableCI(c,i), aryNewInstIH(i,h), IinvkRet(i,0,v), CfromHC(o,h,c).
+
+### reachableT(t) :- reachableCI(_,i), conNewInstIH(i,h), HT(h,t).
+# TRANS - t_reachableCI_reachableT reachableCI reachableT 0,1 2
+t_reachableCI_reachableT(x4:C,i:I,t:T) output
+t_reachableCI_reachableT(x4,i,t) :- r_reachableT(t), reachableCI(x4,i), conNewInstIH(i,h), HT(h,t).
+
+### reachableT(t) :- reachableCI(_,i), objNewInstIH(i,h), HT(h,t).
+# TRANS - t_reachableCI_reachableT1 reachableCI reachableT 0,1 2
+t_reachableCI_reachableT1(x5:C,i:I,t:T) output
+t_reachableCI_reachableT1(x5,i,t) :- r_reachableT(t), reachableCI(x5,i), objNewInstIH(i,h), HT(h,t).
+
+### reachableT(t) :- reachableCI(_,i), clsForNameIT(i,t).
+# TRANS - t_reachableCI_reachableT2 reachableCI reachableT 0,1 2
+t_reachableCI_reachableT2(x6:C,i:I,t:T) output
+t_reachableCI_reachableT2(x6,i,t) :- r_reachableT(t), reachableCI(x6,i), clsForNameIT(i,t).
+
+### reachableT(t) :- reachableCM(_,m), MobjValAsgnInst(m,_,h), HT(h,t).
+# TRANS - t_reachableCM_reachableT reachableCM reachableT 0,1 2
+t_reachableCM_reachableT(x7:C,m:M,t:T) output
+t_reachableCM_reachableT(x7,m,t) :- r_reachableT(t), reachableCM(x7,m), MobjValAsgnInst(m,_,h), HT(h,t).
+
+### reachableT(t) :- reachableCM(_,m), staticTM(t,m).
+# TRANS - t_reachableCM_reachableT1 reachableCM reachableT 0,1 2
+t_reachableCM_reachableT1(x9:C,m:M,t:T) output
+t_reachableCM_reachableT1(x9,m,t) :- r_reachableT(t), reachableCM(x9,m), staticTM(t,m).
+
+### reachableT(t) :- reachableCM(_,m), MputStatFldInst(m,f,_), staticTF(t,f).
+# TRANS - t_reachableCM_reachableT2 reachableCM reachableT 0,1 2
+t_reachableCM_reachableT2(x10:C,m:M,t:T) output
+t_reachableCM_reachableT2(x10,m,t) :- r_reachableT(t), reachableCM(x10,m), MputStatFldInst(m,f,_), staticTF(t,f).
+
+### reachableT(t) :- reachableCM(_,m), MgetStatFldInst(m,_,f), staticTF(t,f).
+# TRANS - t_reachableCM_reachableT3 reachableCM reachableT 0,1 2
+t_reachableCM_reachableT3(x12:C,m:M,t:T) output
+t_reachableCM_reachableT3(x12,m,t) :- r_reachableT(t), reachableCM(x12,m), MgetStatFldInst(m,_,f), staticTF(t,f).
+
+### reachableT(t) :- classT(t), reachableT(s), sub(s,t).
+# TRANS - t_reachableT_reachableT reachableT reachableT 0 1
+t_reachableT_reachableT(s:T,t:T) output
+t_reachableT_reachableT(s,t) :- r_reachableT(t), classT(t), reachableT(s), sub(s,t).
 inQuery(e1:E,e2:E) input
 ME(m:M0,e:E0) input
 statF(f:F0) input
@@ -299,8 +450,8 @@ r_outQuery(e1:E,e2:E) input # track
 
 ### escA(a) :- FA(_,a).
 # TRANS - t_FA_escA FA escA 0,1 1
-t_FA_escA(x3:F,a:C) output
-t_FA_escA(x3,a) :- r_escA(a), FA(x3,a).
+t_FA_escA(x14:F,a:C) output
+t_FA_escA(x14,a) :- r_escA(a), FA(x14,a).
 
 ### escA(a) :- reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a).
 # TRANS ts t_reachableCM_escA reachableCM escA 0,1 2
@@ -315,8 +466,8 @@ t_VCA_escA(v,c,a) :- r_escA(a), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a).
 t_escA_escA(b:C,a:C) output
 t_escA_escA(b,a) :- r_escA(a), escA(b), AFA(b,_,a).
 # TRANS - t_AFA_escA AFA escA 0,1,2 2
-t_AFA_escA(b:C,x4:F,a:C) output
-t_AFA_escA(b,x4,a) :- r_escA(a), escA(b), AFA(b,x4,a).
+t_AFA_escA(b:C,x15:F,a:C) output
+t_AFA_escA(b,x15,a) :- r_escA(a), escA(b), AFA(b,x15,a).
 
 ### thrSenAbbrRootCM(d,1) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,1).
 # TRANS - t_thrSenAbbrReachableCM_thrSenAbbrRootCM thrSenAbbrReachableCM thrSenAbbrRootCM 0,1 2,3
@@ -333,8 +484,8 @@ t_thrSenAbbrRootCM_thrSenAbbrReachableCM(c,m) :- r_thrSenAbbrReachableCM(c,m), t
 
 ### thrSenAbbrReachableCM(d,n) :- thrSenAbbrCICM(_,_,d,n).
 # TRANS - t_thrSenAbbrCICM_thrSenAbbrReachableCM thrSenAbbrCICM thrSenAbbrReachableCM 0,1,2,3 2,3
-t_thrSenAbbrCICM_thrSenAbbrReachableCM(x5:C,x6:I,d:C,n:M) output
-t_thrSenAbbrCICM_thrSenAbbrReachableCM(x5,x6,d,n) :- r_thrSenAbbrReachableCM(d,n), thrSenAbbrCICM(x5,x6,d,n).
+t_thrSenAbbrCICM_thrSenAbbrReachableCM(x16:C,x17:I,d:C,n:M) output
+t_thrSenAbbrCICM_thrSenAbbrReachableCM(x16,x17,d,n) :- r_thrSenAbbrReachableCM(d,n), thrSenAbbrCICM(x16,x17,d,n).
 
 ### thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 # TRANS - t_thrSenAbbrReachableCM_thrSenAbbrCICM thrSenAbbrReachableCM thrSenAbbrCICM 0,1 0,2,3,4
@@ -466,8 +617,8 @@ t_PathEdgeZ_PathEdgeZ(c,p,t,t1,t2,q) :- r_PathEdgeZ(c,q,t,t1,t2), PathEdgeZ(c,p,
 t_NonForkPHcs_PathEdgeZ(c:C,p:P,d:C,q:P,t:D,t1:D,t2:D) output
 t_NonForkPHcs_PathEdgeZ(c,p,d,q,t,t1,t2) :- r_PathEdgeZ(d,q,t,t1,t2), NonForkPHcs(c,p,d,q), PathEdgeZ(c,p,t,_,t2), t1=t2.
 # TRANS - t_PathEdgeZ_PathEdgeZ1 PathEdgeZ PathEdgeZ 0,1,2,3,4 5,6,2,7,4
-t_PathEdgeZ_PathEdgeZ1(c:C,p:P,t:D,x7:D,t2:D,d:C,q:P,t1:D) output
-t_PathEdgeZ_PathEdgeZ1(c,p,t,x7,t2,d,q,t1) :- r_PathEdgeZ(d,q,t,t1,t2), NonForkPHcs(c,p,d,q), PathEdgeZ(c,p,t,x7,t2), t1=t2.
+t_PathEdgeZ_PathEdgeZ1(c:C,p:P,t:D,x18:D,t2:D,d:C,q:P,t1:D) output
+t_PathEdgeZ_PathEdgeZ1(c,p,t,x18,t2,d,q,t1) :- r_PathEdgeZ(d,q,t,t1,t2), NonForkPHcs(c,p,d,q), PathEdgeZ(c,p,t,x18,t2), t1=t2.
 
 ### SummEdgeZ(c,p,t,t1,t2) :- NonForkPTcs(c,p,d,q), PathEdgeZ(d,q,t,t1,t2).
 # TRANS - t_NonForkPTcs_SummEdgeZ NonForkPTcs SummEdgeZ 0,1,2,3 0,1,4,5,6
@@ -490,8 +641,8 @@ t_PathEdgeZ_PathEdgeZ2(c,p,t,t1,t2,r,t3) :- r_PathEdgeZ(c,r,t,t1,t3), SummEdgeZ(
 t_ForkPMcs_PathEdgeZ(c:C,p:P,d:C,r:P,t:D,t1:D,t2:D) output
 t_ForkPMcs_PathEdgeZ(c,p,d,r,t,t1,t2) :- r_PathEdgeZ(c,r,t,t1,t2), ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,_), PP(p,r), threadDC(t2,d).
 # TRANS - t_PathEdgeZ_PathEdgeZ3 PathEdgeZ PathEdgeZ 0,1,2,3,4 0,5,2,3,6
-t_PathEdgeZ_PathEdgeZ3(c:C,p:P,t:D,t1:D,x8:D,r:P,t2:D) output
-t_PathEdgeZ_PathEdgeZ3(c,p,t,t1,x8,r,t2) :- r_PathEdgeZ(c,r,t,t1,t2), ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,x8), PP(p,r), threadDC(t2,d).
+t_PathEdgeZ_PathEdgeZ3(c:C,p:P,t:D,t1:D,x19:D,r:P,t2:D) output
+t_PathEdgeZ_PathEdgeZ3(c,p,t,t1,x19,r,t2) :- r_PathEdgeZ(c,r,t,t1,t2), ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,x19), PP(p,r), threadDC(t2,d).
 # TRANS - t_threadDC_PathEdgeZ threadDC PathEdgeZ 0,1 2,3,4,5,0
 t_threadDC_PathEdgeZ(t2:D,d:C,c:C,r:P,t:D,t1:D) output
 t_threadDC_PathEdgeZ(t2,d,c,r,t,t1) :- r_PathEdgeZ(c,r,t,t1,t2), ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,_), PP(p,r), threadDC(t2,d).
@@ -501,8 +652,8 @@ t_threadDC_PathEdgeZ(t2,d,c,r,t,t1) :- r_PathEdgeZ(c,r,t,t1,t2), ForkPMcs(c,p,d)
 t_ForkPMcs_PathEdgeZ1(c:C,p:P,d:C,r:P,t:D,t1:D,t3:D) output
 t_ForkPMcs_PathEdgeZ1(c,p,d,r,t,t1,t3) :- r_PathEdgeZ(c,r,t,t1,t3), ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,_), PP(p,r), threadDC(t2,d), PathEdgeZ(d,q,t2,0,t3), MPtail(1,q).
 # TRANS - t_PathEdgeZ_PathEdgeZ4 PathEdgeZ PathEdgeZ 0,1,2,3,4 0,5,2,3,6
-t_PathEdgeZ_PathEdgeZ4(c:C,p:P,t:D,t1:D,x9:D,r:P,t3:D) output
-t_PathEdgeZ_PathEdgeZ4(c,p,t,t1,x9,r,t3) :- r_PathEdgeZ(c,r,t,t1,t3), ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,x9), PP(p,r), threadDC(t2,d), PathEdgeZ(d,q,t2,0,t3), MPtail(1,q).
+t_PathEdgeZ_PathEdgeZ4(c:C,p:P,t:D,t1:D,x20:D,r:P,t3:D) output
+t_PathEdgeZ_PathEdgeZ4(c,p,t,t1,x20,r,t3) :- r_PathEdgeZ(c,r,t,t1,t3), ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,x20), PP(p,r), threadDC(t2,d), PathEdgeZ(d,q,t2,0,t3), MPtail(1,q).
 # TRANS - t_threadDC_PathEdgeZ1 threadDC PathEdgeZ 0,1 2,3,4,5,6
 t_threadDC_PathEdgeZ1(t2:D,d:C,c:C,r:P,t:D,t1:D,t3:D) output
 t_threadDC_PathEdgeZ1(t2,d,c,r,t,t1,t3) :- r_PathEdgeZ(c,r,t,t1,t3), ForkPMcs(c,p,d), PathEdgeZ(c,p,t,t1,_), PP(p,r), threadDC(t2,d), PathEdgeZ(d,q,t2,0,t3), MPtail(1,q).
@@ -515,8 +666,8 @@ t_PathEdgeZ_PathEdgeZ5(d,q,t2,0,t3,c,r,t,t1) :- r_PathEdgeZ(c,r,t,t1,t3), ForkPM
 t_ForkPHcs_PathEdgeZ(c:C,p:P,d:C,h:P,x:D,y:D,z:D) output
 t_ForkPHcs_PathEdgeZ(c,p,d,h,x,y,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,y,_,_), threadDC(x,d), z=y.
 # TRANS - t_PathEdgeZ_PathEdgeZ6 PathEdgeZ PathEdgeZ 0,1,2,3,4 5,6,7,2,8
-t_PathEdgeZ_PathEdgeZ6(c:C,p:P,y:D,x10:D,x11:D,d:C,h:P,x:D,z:D) output
-t_PathEdgeZ_PathEdgeZ6(c,p,y,x10,x11,d,h,x,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,y,x10,x11), threadDC(x,d), z=y.
+t_PathEdgeZ_PathEdgeZ6(c:C,p:P,y:D,x21:D,x22:D,d:C,h:P,x:D,z:D) output
+t_PathEdgeZ_PathEdgeZ6(c,p,y,x21,x22,d,h,x,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,y,x21,x22), threadDC(x,d), z=y.
 # TRANS - t_threadDC_PathEdgeZ2 threadDC PathEdgeZ 0,1 1,2,0,3,4
 t_threadDC_PathEdgeZ2(x:D,d:C,h:P,y:D,z:D) output
 t_threadDC_PathEdgeZ2(x,d,h,y,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,y,_,_), threadDC(x,d), z=y.
@@ -526,8 +677,8 @@ t_threadDC_PathEdgeZ2(x,d,h,y,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), P
 t_ForkPHcs_PathEdgeZ1(c:C,p:P,d:C,h:P,x:D,y:D,z:D) output
 t_ForkPHcs_PathEdgeZ1(c,p,d,h,x,y,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,_,_,y), threadDC(x,d), z=y.
 # TRANS - t_PathEdgeZ_PathEdgeZ7 PathEdgeZ PathEdgeZ 0,1,2,3,4 5,6,7,4,8
-t_PathEdgeZ_PathEdgeZ7(c:C,p:P,x12:D,x13:D,y:D,d:C,h:P,x:D,z:D) output
-t_PathEdgeZ_PathEdgeZ7(c,p,x12,x13,y,d,h,x,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,x12,x13,y), threadDC(x,d), z=y.
+t_PathEdgeZ_PathEdgeZ7(c:C,p:P,x23:D,x24:D,y:D,d:C,h:P,x:D,z:D) output
+t_PathEdgeZ_PathEdgeZ7(c,p,x23,x24,y,d,h,x,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,x23,x24,y), threadDC(x,d), z=y.
 # TRANS - t_threadDC_PathEdgeZ3 threadDC PathEdgeZ 0,1 1,2,0,3,4
 t_threadDC_PathEdgeZ3(x:D,d:C,h:P,y:D,z:D) output
 t_threadDC_PathEdgeZ3(x,d,h,y,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,_,_,y), threadDC(x,d), z=y.
@@ -537,8 +688,8 @@ t_threadDC_PathEdgeZ3(x,d,h,y,z) :- r_PathEdgeZ(d,h,x,y,z), ForkPHcs(c,p,d,h), P
 t_ForkPHcs_PathEdgeZ2(c:C,p:P,d:C,h:P,e:C,x:D,y:D,z:D) output
 t_ForkPHcs_PathEdgeZ2(c,p,d,h,e,x,y,z) :- r_PathEdgeZ(e,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,_,_,x), threadDC(x,e), threadDC(y,d), z=y.
 # TRANS - t_PathEdgeZ_PathEdgeZ8 PathEdgeZ PathEdgeZ 0,1,2,3,4 5,6,4,7,8
-t_PathEdgeZ_PathEdgeZ8(c:C,p:P,x14:D,x15:D,x:D,e:C,h:P,y:D,z:D) output
-t_PathEdgeZ_PathEdgeZ8(c,p,x14,x15,x,e,h,y,z) :- r_PathEdgeZ(e,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,x14,x15,x), threadDC(x,e), threadDC(y,d), z=y.
+t_PathEdgeZ_PathEdgeZ8(c:C,p:P,x25:D,x26:D,x:D,e:C,h:P,y:D,z:D) output
+t_PathEdgeZ_PathEdgeZ8(c,p,x25,x26,x,e,h,y,z) :- r_PathEdgeZ(e,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,x25,x26,x), threadDC(x,e), threadDC(y,d), z=y.
 # TRANS - t_threadDC_PathEdgeZ4 threadDC PathEdgeZ 0,1 1,2,0,3,4
 t_threadDC_PathEdgeZ4(x:D,e:C,h:P,y:D,z:D) output
 t_threadDC_PathEdgeZ4(x,e,h,y,z) :- r_PathEdgeZ(e,h,x,y,z), ForkPHcs(c,p,d,h), PathEdgeZ(c,p,_,_,x), threadDC(x,e), threadDC(y,d), z=y.
@@ -548,8 +699,8 @@ t_threadDC_PathEdgeZ5(y,d,e,h,x,z) :- r_PathEdgeZ(e,h,x,y,z), ForkPHcs(c,p,d,h),
 
 ### mhpZ(c,p,t1,t2) :- PathEdgeZ(c,p,t1,_,t2), t1!=0, t2!=0.
 # TRANS - t_PathEdgeZ_mhpZ PathEdgeZ mhpZ 0,1,2,3,4 0,1,2,4
-t_PathEdgeZ_mhpZ(c:C,p:P,t1:D,x16:D,t2:D) output
-t_PathEdgeZ_mhpZ(c,p,t1,x16,t2) :- r_mhpZ(c,p,t1,t2), PathEdgeZ(c,p,t1,x16,t2), t1!=0, t2!=0.
+t_PathEdgeZ_mhpZ(c:C,p:P,t1:D,x27:D,t2:D) output
+t_PathEdgeZ_mhpZ(c,p,t1,x27,t2) :- r_mhpZ(c,p,t1,t2), PathEdgeZ(c,p,t1,x27,t2), t1!=0, t2!=0.
 
 ### mheZ(c,e,t1,t2) :- mhpZ(c,p,t1,t2), PE(p,e).
 # TRANS - t_mhpZ_mheZ mhpZ mheZ 0,1,2,3 0,4,2,3
@@ -569,5 +720,5 @@ t_mheZ_parallelRaceHext1(c2,e2,t2,t1,c1,e1) :- r_parallelRaceHext(t1,c1,e1,t2,c2
 
 ### outQuery(e1,e2) :- parallelRaceHext(_,_,e1,_,_,e2).
 # TRANS - t_parallelRaceHext_outQuery parallelRaceHext outQuery 0,1,2,3,4,5 2,5
-t_parallelRaceHext_outQuery(x17:D,x18:C,e1:E,x19:D,x20:C,e2:E) output
-t_parallelRaceHext_outQuery(x17,x18,e1,x19,x20,e2) :- r_outQuery(e1,e2), parallelRaceHext(x17,x18,e1,x19,x20,e2).
+t_parallelRaceHext_outQuery(x28:D,x29:C,e1:E,x30:D,x31:C,e2:E) output
+t_parallelRaceHext_outQuery(x28,x29,e1,x30,x31,e2) :- r_outQuery(e1,e2), parallelRaceHext(x28,x29,e1,x30,x31,e2).
