@@ -130,12 +130,19 @@ VCA(v,c,a) :- VCfromVC(v,c,vv,cc), VCA(vv,cc,a), VAfilter(v,a). # If vv->a, then
 
 ### Intra-procedural statements
 
-VCA(l,c,a)  :- reachableCM(c,m), MobjValAsgnInst(m,l,h),   CfromHC(a,h,c).            # in context c, l = new h    [NAME=new]
-VCA(l,c,a)  :- reachableCM(c,m), MobjVarAsgnInst(m,l,r),   VCA(r,c,a), VAfilter(l,a). # in context c, l = r        [NAME=var]
-VCA(l,c,aa) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f), VCA(b,c,a), AFA(a,f,aa).   # in context c, l = b.f      [NAME=hr]
-VCA(l,c,a)  :- reachableCM(c,m), MgetStatFldInst(m,l,f),   FA(f,a).                   # in context c, l = STATIC.f [NAME=gr]
-AFA(a,f,aa) :- reachableCM(c,m), MputInstFldInst(m,b,f,r), VCA(b,c,a), VCA(r,c,aa).   # in context c, b.f = r      [NAME=hw]
-FA(f,a)     :- reachableCM(c,m), MputStatFldInst(m,f,r),   VCA(r,c,a).                # in context c, STATIC.f = r [NAME=gw]
+RobjValAsgnInst(c,l,h) :- reachableCM(c,m), MobjValAsgnInst(m,l,h).
+RobjVarAsgnInst(c,l,r) :- reachableCM(c,m), MobjVarAsgnInst(m,l,r).
+RgetInstFldInst(c,l,b,f) :- reachableCM(c,m), MgetInstFldInst(m,l,b,f).
+RgetStatFldInst(c,l,f) :- reachableCM(c,m), MgetStatFldInst(m,l,f).
+RputInstFldInst(c,b,f,r) :- reachableCM(c,m), MputInstFldInst(m,b,f,r).
+RputStatFldInst(c,f,r) :- reachableCM(c,m), MputStatFldInst(m,f,r).
+
+VCA(l,c,a)  :- RobjValAsgnInst(c,l,h),   CfromHC(a,h,c).            # in context c, l = new h    [NAME=new]
+VCA(l,c,a)  :- RobjVarAsgnInst(c,l,r),   VCA(r,c,a), VAfilter(l,a). # in context c, l = r        [NAME=var]
+VCA(l,c,aa) :- RgetInstFldInst(c,l,b,f), VCA(b,c,a), AFA(a,f,aa). split  # in context c, l = b.f      [NAME=hr]
+VCA(l,c,a)  :- RgetStatFldInst(c,l,f),   FA(f,a).                   # in context c, l = STATIC.f [NAME=gr]
+AFA(a,f,aa) :- RputInstFldInst(c,b,f,r), VCA(b,c,a), VCA(r,c,aa). split  # in context c, b.f = r      [NAME=hw]
+FA(f,a)     :- RputStatFldInst(c,f,r),   VCA(r,c,a).                # in context c, STATIC.f = r [NAME=gw]
 
 ### Reflection handling rules
 
