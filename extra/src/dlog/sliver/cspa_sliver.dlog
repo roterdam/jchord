@@ -59,11 +59,23 @@ MputInstFldInst(m:M,b:V,f:F,r:V) input # in m, b.f = r
 MgetStatFldInst(m:M,l:V,f:F)     input # in m, l = STATIC.f
 MputStatFldInst(m:M,f:F,r:V)     input # in m, STATIC.f = r
 
+RobjValAsgnInst(c:C,l:V,h:H) output
+RobjVarAsgnInst(c:C,l:V,r:V) output
+RgetInstFldInst(c:C,l:V,b:V,f:F) output
+RputInstFldInst(c:C,b:V,f:F,r:V) output
+RgetStatFldInst(c:C,l:V,f:F) output
+RputStatFldInst(c:C,f:F,r:V) output
+
 ### Java -> Datalog
-CfromHC(cm:C,h:H,c:C) input
-CfromIC(cm:C,i:I,c:C) input
-HfromC(h:H,c:C) input
+CH(c:C,h:H) input
+CI(c:C,i:I) input
+CC(c:C,c:C) input
 objI(i:I) input # whether to use object sensitivity
+
+CfromHC(cm:C,h:H,c:C) output
+CfromIC(cm:C,i:I,c:C) output
+CfromHC(cm,h,c) :- CC(c,cm), CH(cm,h).
+CfromIC(ci,i,c) :- CC(c,ci), CI(ci,i).
 
 # Intermediate relations
 objM(m:M) output
@@ -74,7 +86,7 @@ retIVMV(i:I0,u:V0,m:M0,v:V1) output
 CIA(c:C,i:I,a:C) output
 CIH(c:C,i:I,h:H) output
 ICM(i:I,c:C,m:M) output
-CI(c:C,i:I) output
+CIany(c:C,i:I) output
 reachableCI(c:C,i:I) output
 reachableCM(c:C,m:M) output
 VCfromVC(v1:V0,e1:C0,v2:V1,e2:C1) output # contextual variable (v1,e1) points to everything that (v2,e2) points to
@@ -87,7 +99,7 @@ reachableT(t:T) output
 
 ### Constraints
 
-VAfilter(v,a) :- VHfilter(v,h), HfromC(h,a).
+VAfilter(v,a) :- VHfilter(v,h), CH(a,h).
 
 ### Reachability
 
@@ -99,17 +111,17 @@ reachableCI(c,i)  :- reachableCM(c,m), MI(m,i).    # call site
 ### Inter-procedural (call site i in context ci resolves to method m in context cm)
 
 CIA(c,i,a) :- IinvkArg0(i,v), VCA(v,c,a).
-CIH(c,i,h) :- CIA(c,i,a), HfromC(h,a).
-CI(c,i) :- CIH(c,i,_).
+CIH(c,i,h) :- CIA(c,i,a), CH(a,h).
+CIany(c,i) :- CIH(c,i,_).
 
-ICM(i,c,m) :- IHM(i,h,m), HfromC(h,c).
+ICM(i,c,m) :- IHM(i,h,m), CH(c,h).
 
 CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), IHM(i,h,m) , CfromIC(d,i,c), CIH(c,i,h).           # call-site-based [NAME=call]
-CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CI(c,i).              # call-site-based [NAME=call]
+CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), specIM(i,m), CfromIC(d,i,c), CIany(c,i).           # call-site-based [NAME=call]
 CICM(c,i,d,m) :- !objI(i), reachableCI(c,i), statIM(i,m), CfromIC(d,i,c).                       # call-site-based [NAME=call]
 
 CICM(c,i,d,m) :-  objI(i), reachableCI(c,i), ICM(i,d,m) , CIA(c,i,d).  # object-based - instance methods: use "this" [NAME=callI]
-CICM(c,i,d,m) :-  objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i,d).  # object-based - static methods: copy context [NAME=callS]
+CICM(c,i,d,m) :-  objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i,d).  # object-based
 CICM(c,i,d,m) :-  objI(i), reachableCI(c,i), statIM(i,m), c=d.         # object-based - static methods: copy context [NAME=callS]
 
 ### Inter-procedural (connect variables)
@@ -167,4 +179,3 @@ reachableT(t) :- reachableCM(_,m), staticTM(t,m).
 reachableT(t) :- reachableCM(_,m), MputStatFldInst(m,f,_), staticTF(t,f).
 reachableT(t) :- reachableCM(_,m), MgetStatFldInst(m,_,f), staticTF(t,f).
 reachableT(t) :- classT(t), reachableT(s), sub(s,t).
-

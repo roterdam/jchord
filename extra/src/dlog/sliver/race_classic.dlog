@@ -1,5 +1,5 @@
-# Race detector.
-# name=race-sliver-dlog
+# Race detector using the classic alias analysis.
+# name=race-classic-dlog
 
 .include "E.dom"
 .include "F.dom"
@@ -19,9 +19,9 @@
 inQuery(e1:E,e2:E) input
 reachableCM(c:C,m:M) input
 CICM(ci:C,i:I,cm:C,m:M) input
-VCA(v:V,e:C,a:C) input
-FA(f:F,a:C) input
-AFA(a1:C,f:F,a2:C) input
+CVC(c:C,v:V,a:C) input
+FC(f:F,a:C) input
+CFC(a1:C,f:F,a2:C) input
 MmethArg(m:M0,n:Z0,v:V0) input
 
 ### Relations
@@ -75,9 +75,9 @@ outQuery(e1:E0,e2:E1) output
  
 ### Constraints
 
-escA(a) :- FA(_,a). # objects (base case)
-escA(a) :- reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a). # in context c, Thread.start() this points to a [NAME=ts]
-escA(a) :- escA(b), AFA(b,_,a). # objects (transitive)
+escA(a) :- FC(_,a). # objects (base case)
+escA(a) :- reachableCM(c,1), MmethArg(1,0,v), CVC(c,v,a). # in context c, Thread.start() this points to a [NAME=ts]
+escA(a) :- escA(b), CFC(b,_,a). # objects (transitive)
 
 thrSenAbbrRootCM(0,0).
 thrSenAbbrRootCM(d,1) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,1).
@@ -86,7 +86,7 @@ thrSenAbbrReachableCM(d,n) :- thrSenAbbrCICM(_,_,d,n).
 thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 
 threadDCM(1,0,0).
-threadDCM(b,c,1) :- threadDHM(b,h,1), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,o), CH(o,h).
+threadDCM(b,c,1) :- threadDHM(b,h,1), reachableCM(c,1), MmethArg(1,0,v), CVC(c,v,o), CH(o,h).
 reachableTCMZ(t,c,m) :- threadDCM(t,c,m).
 reachableTCMZ(t,d,n) :- reachableTCMZ(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
 reachableTCE(t,c,e) :- reachableTCMZ(t,c,m), ME(m,e).
@@ -98,7 +98,7 @@ startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQuery(e1,e2), reachableTCE(t1,c1,e1), r
 ###
 
 statE(e) :- EF(e,f), statF(f).
-CEC(c,e,o) :- EV(e,v), VCA(v,c,o), escA(o).
+CEC(c,e,o) :- EV(e,v), CVC(c,v,o), escA(o).
 
 escapingRaceHext(t1,c1,e1,t2,c2,e2) :- startingRaceHext(t1,c1,e1,t2,c2,e2), CEC(c1,e1,o), CEC(c2,e2,o).
 escapingRaceHext(t1,c1,e1,t2,c2,e2) :- startingRaceHext(t1,c1,e1,t2,c2,e2), statE(e1), statE(e2).
