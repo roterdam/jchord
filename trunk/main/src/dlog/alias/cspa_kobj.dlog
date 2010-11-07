@@ -73,23 +73,25 @@ kobjSenM(m:M) input
 ctxtCpyM(m:M) input
 epsilonV(v:V) input
 
-IHM(i:I,h:H,m:M)
-reachableT(t:T)
+IHM(i:I,h:H,m:M) output
+reachableT(t:T) output
 
 DIC(c:C,i:I,c:C) output
 DIH(c:C,i:I,h:H) output
+DI(c:C,i:I) output
 
 DVDV(c:C0,u:V0,d:C1,v:V1) output
 
-kobjSenIHM(i:I,h:H,m:M)
+ctxtInsIHM(i:I,h:H,m:M) output
+kobjSenIHM(i:I,h:H,m:M) output
 
 kobjSenICM(i:I,c:C,m:M) output
 
 ctxtInsSpecIM(i:I,m:M) output
 kobjSenSpecIM(i:I,m:M) output
 
-ctxtInsStatIM(i:I,m:M)
-ctxtCpyStatIM(i:I,m:M) 
+ctxtInsStatIM(i:I,m:M) output
+ctxtCpyStatIM(i:I,m:M) output
 
 reachableCI(c:C,i:I) output
 reachableCM(c:C,m:M) output
@@ -231,4 +233,3 @@ CVC(c,v,o) :- DVC(c,v,o), !epsilonV(v).
 rootCM(0,0).
 rootCM(0,m) :- reachableT(t), clinitTM(t,m).
 CMCM(c,m,d,n) :- CICM(c,i,d,n), MI(m,i).
-

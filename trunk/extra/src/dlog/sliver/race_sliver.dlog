@@ -42,7 +42,7 @@ PI(p:P0,i:I0) input
 threadDHM(t:D,h:H,m:M) input
 
 # relations needed to compute startingRaceHext
-HfromC(h:H,c:C) input
+CH(c:C,h:H) input
 threadDCM(t:D,c:C,m:M) output
 thrSenAbbrRootCM(c:C0,m:M0) output
 thrSenAbbrReachableCM(c:C0,m:M0)  output
@@ -86,7 +86,7 @@ thrSenAbbrReachableCM(d,n) :- thrSenAbbrCICM(_,_,d,n).
 thrSenAbbrCICM(c,i,d,n) :- thrSenAbbrReachableCM(c,m), MI(m,i), CICM(c,i,d,n), n!=1.
 
 threadDCM(1,0,0).
-threadDCM(b,c,1) :- threadDHM(b,h,1), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,o), HfromC(h,o).
+threadDCM(b,c,1) :- threadDHM(b,h,1), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,o), CH(o,h).
 reachableTCMZ(t,c,m) :- threadDCM(t,c,m).
 reachableTCMZ(t,d,n) :- reachableTCMZ(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
 reachableTCE(t,c,e) :- reachableTCMZ(t,c,m), ME(m,e).

@@ -1,5 +1,5 @@
 # Thread-escape analysis.
-# name=thresc-sliver-init-dlog
+# name=thresc-init-dlog
 
 .include "E.dom"
 .include "F.dom"

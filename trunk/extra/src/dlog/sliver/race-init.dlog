@@ -1,5 +1,5 @@
-# Race detector.
-# name=race-sliver-init-dlog
+# Race detector.  Just output the set of queries.
+# name=race-init-dlog
 
 .include "E.dom"
 .include "F.dom"
@@ -43,4 +43,3 @@ rdOrWr(_).
 query(e1,e2) :- onlyWr(e1), rdOrWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
 query(e1,e2) :- rdOrWr(e1), onlyWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
 query(e1,e2) :- onlyWr(e1), onlyWr(e2), e1=e2, relevantEF(e1,f), relevantEF(e2,f).
-

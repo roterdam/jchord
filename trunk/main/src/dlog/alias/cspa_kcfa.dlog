@@ -72,23 +72,24 @@ epsilonM(m:M) input # treat method m context insensitively
 kcfaSenM(m:M) input # treat method m context sensitively
 epsilonV(v:V) input # treat variable v context insensitively
 
-IHM(i:I,h:H,m:M) # at call site i, if h is the allocation site of "this" argument, can get to method m
-reachableT(t:T)
+IHM(i:I,h:H,m:M) output # at call site i, if h is the allocation site of "this" argument, can get to method m
+reachableT(t:T) output
 
 kcfaDIC(c:C,i:I,c:C) output
 DIC(c:C,i:I,c:C) output # in context c, at call site i, c can be the "this" argument
 DIH(c:C,i:I,h:H) output
+DI(c:C,i:I) output
 
 DVDV(c:C0,u:V0,d:C1,v:V1) output # u in context c can point to same stuff as v in context d
 
-ctxtInsIHM(i:I,h:H,m:M)
-kcfaSenIHM(i:I,h:H,m:M)
+ctxtInsIHM(i:I,h:H,m:M) output
+kcfaSenIHM(i:I,h:H,m:M) output
 
 ctxtInsSpecIM(i:I,m:M) output
 kcfaSenSpecIM(i:I,m:M) output
 
-ctxtInsStatIM(i:I,m:M)
-kcfaSenStatIM(i:I,m:M)
+ctxtInsStatIM(i:I,m:M) output
+kcfaSenStatIM(i:I,m:M) output
 
 reachableCI(c:C,i:I) output
 reachableCM(c:C,m:M) output

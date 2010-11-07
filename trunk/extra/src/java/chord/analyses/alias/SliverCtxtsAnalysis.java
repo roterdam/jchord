@@ -274,11 +274,12 @@ class Abstraction {
       // If we project ab* (by prepending a to b*) onto S={ab,abc*,abd*,...}, we should return all 3 values.
       // Generally, take every sliver that starts with ab, summary or not.
       // TODO: we don't handle this case, which is okay if all the longest summary slivers differ by length at most one.
-      for (int k = G.summaryLen(c); k >= 0; k--) { // Take length k prefix (consider {ab*, a*, *}, exactly one should match)
-        // Can't be both in general
-        Ctxt d = c.prefix(k);
+      { // Match ab?
+        Ctxt d = G.atomize(c);
         if (S.contains(d)) return d;
-        d = G.summarize(d);
+      }
+      for (int k = G.summaryLen(c); k >= 0; k--) { // Take length k prefix (consider {ab*, a*, *}, exactly one should match)
+        Ctxt d = G.summarize(c.prefix(k));
         if (S.contains(d)) return d;
       }
       return null;
@@ -307,17 +308,6 @@ class Abstraction {
   private HashSet<Ctxt> S = new HashSet<Ctxt>(); // The set of slivers
 }
 
-class FeedbackTask {
-  public FeedbackTask(String name) {
-    this.name = name;
-    assert name.endsWith("dlog") : name;
-  }
-  String name;
-  String initName()     { return name.replace("dlog", "init-dlog"); }
-  String relevantName() { return name.replace("dlog", "relevant-dlog"); }
-  String transName()    { return name.replace("dlog", "trans-dlog"); }
-}
-
 ////////////////////////////////////////////////////////////
 
 interface BlackBox {
@@ -326,7 +316,7 @@ interface BlackBox {
 
 @Chord(
   name = "sliver-ctxts-java",
-  produces = { "C", "HfromC", "CfromHC", "CfromIC", "objI", "inQuery" },
+  produces = { "C", "CC", "CH", "CI", "objI", "kcfaSenM", "kobjSenM", "ctxtCpyM", "inQuery" },
   namesOfTypes = { "C" },
   types = { DomC.class }
 )
@@ -347,8 +337,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   boolean minimizeAbstraction; // Find the minimal abstraction via repeated calls
   int minH, maxH, minI, maxI;
   String classifierPath; // Path to classifier (for determining which sites are relevant)
-  List<FeedbackTask> tasks = new ArrayList<FeedbackTask>();
-  FeedbackTask mainTask;
+  List<String> initTasks = new ArrayList<String>();
+  List<String> tasks = new ArrayList<String>();
+  String relevantTask;
+  String transTask;
 
   // Compute once using 0-CFA
   Set<Quad> hSet = new HashSet<Quad>();
@@ -398,16 +390,21 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     this.minI = X.getIntArg("minI", 1);
     this.maxI = X.getIntArg("maxI", 2);
 
+    this.initTasks.add("sliver-init-dlog");
+    for (String name : X.getStringArg("initTaskNames", "").split(","))
+      this.initTasks.add(name);
     for (String name : X.getStringArg("taskNames", "").split(","))
-      this.tasks.add(new FeedbackTask(name));
-    this.mainTask = tasks.get(tasks.size()-1);
+      this.tasks.add(name);
+    this.relevantTask = X.getStringArg("relevantTaskName", null);
+    this.transTask = X.getStringArg("transTaskName", null);
 
     X.putOption("version", 1);
     X.putOption("program", System.getProperty("chord.work.dir"));
     X.flushOptions();
 
-    for (FeedbackTask task : tasks)
-      ClassicProject.g().runTask(task.initName());
+    // Initialization Datalog programs
+    for (String task : initTasks)
+      ClassicProject.g().runTask(task);
 
     // Reachable things
     {
@@ -491,7 +488,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
           n += mj.get(m).size();
         hist.add(n);
       }
-      X.logs("For analysis (building CfromJC): # prependings of sites: %s", hist);
+      X.logs("For analysis (building CH,CI,CC): # prependings of sites: %s", hist);
     }
     { // extensions
       Histogram hist = new Histogram();
@@ -816,27 +813,29 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       for (Ctxt c : abs.getSlivers()) domC.add(c);
       domC.save();
 
-      // Relations
-      ProgramRel relHfromC = (ProgramRel) ClassicProject.g().getTrgt("HfromC");
-      relHfromC.zero();
-      for (Ctxt c : abs.getSlivers()) {
+      /*for (Ctxt c : abs.getSlivers()) {
         if (G.hasHeadSite(c) && G.isAlloc(c.head()))
-          relHfromC.add(c.head(), c);
-      }
-      relHfromC.save();
+          X.logs("OLD %s %s", G.jstr(c.head()), G.cstr(c));
+      }*/
 
-      ProgramRel relCfromHC = (ProgramRel) ClassicProject.g().getTrgt("CfromHC");
-      ProgramRel relCfromIC = (ProgramRel) ClassicProject.g().getTrgt("CfromIC");
-      relCfromHC.zero();
-      relCfromIC.zero();
+      // Relations
+      ProgramRel CH = (ProgramRel) ClassicProject.g().getTrgt("CH");
+      ProgramRel CI = (ProgramRel) ClassicProject.g().getTrgt("CI");
+      ProgramRel CC = (ProgramRel) ClassicProject.g().getTrgt("CC");
+      CH.zero();
+      CI.zero();
+      CC.zero();
       for (Ctxt c : abs.getSlivers()) { // From sliver c...
         if (G.hasHeadSite(c)) {
           for (jq_Method m : jm.get(c.head())) {
-            for (Quad j : mj.get(m)) { // Extend with site j that could be prepended
+            for (Quad j : mj.get(m)) { // Extend with some site j that could be prepended
               Ctxt d = abs.project(c.prepend(j));
               if (!pruneSlivers) assert d != null;
-              if (d != null)
-                (G.isAlloc(j) ? relCfromHC : relCfromIC).add(d, j, c);
+              if (d != null) {
+                (G.isAlloc(j) ? CH : CI).add(d, j);
+                //if (G.isAlloc(j)) X.logs("NEW %s %s %s", G.cstr(c), G.jstr(j), G.cstr(d));
+                CC.add(c, d);
+              }
             }
           }
         }
@@ -844,20 +843,43 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
           for (Quad j : jSet) { // Extend with any site j
             Ctxt d = abs.project(c.prepend(j));
             if (!pruneSlivers) assert d != null;
-            if (d != null)
-              (G.isAlloc(j) ? relCfromHC : relCfromIC).add(d, j, c);
+            if (d != null) {
+              (G.isAlloc(j) ? CH : CI).add(d, j);
+              //if (G.isAlloc(j)) X.logs("NEW2 %s %s", G.jstr(j), G.cstr(d));
+              CC.add(c, d);
+            }
           }
         }
       }
-      relCfromHC.save();
-      relCfromIC.save();
+      CH.save();
+      CI.save();
+      CC.save();
 
+      // Determine CFA or object-sensitivity
       ProgramRel relobjI = (ProgramRel) ClassicProject.g().getTrgt("objI");
       relobjI.zero();
       if (useObjectSensitivity) {
         for (Quad i : iSet) relobjI.add(i);
       }
       relobjI.save();
+      ProgramRel relKcfaSenM = (ProgramRel) ClassicProject.g().getTrgt("kcfaSenM");
+      ProgramRel relKobjSenM = (ProgramRel) ClassicProject.g().getTrgt("kobjSenM");
+      ProgramRel relCtxtCpyM = (ProgramRel) ClassicProject.g().getTrgt("ctxtCpyM");
+      relKcfaSenM.zero();
+      relKobjSenM.zero();
+      relCtxtCpyM.zero();
+      if (useObjectSensitivity) {
+        for (jq_Method m : G.domM) {
+          if (m.isStatic()) relCtxtCpyM.add(m);
+          else              relKobjSenM.add(m);
+        }
+      }
+      else {
+        for (jq_Method m : G.domM) relKcfaSenM.add(m);
+      }
+      relKcfaSenM.save();
+      relKobjSenM.save();
+      relCtxtCpyM.save();
 
       ProgramRel relInQuery = (ProgramRel) ClassicProject.g().getTrgt("inQuery");
       relInQuery.zero();
@@ -868,28 +890,30 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       ClassicProject.g().resetTrgtDone(domC); // Make everything that depends on domC undone
       ClassicProject.g().setTaskDone(SliverCtxtsAnalysis.this); // We are generating all this stuff, so mark it as done...
       ClassicProject.g().setTrgtDone(domC);
-      ClassicProject.g().setTrgtDone(relHfromC);
-      ClassicProject.g().setTrgtDone(relCfromHC);
-      ClassicProject.g().setTrgtDone(relCfromIC);
+      ClassicProject.g().setTrgtDone(CH);
+      ClassicProject.g().setTrgtDone(CI);
+      ClassicProject.g().setTrgtDone(CC);
       ClassicProject.g().setTrgtDone(relobjI);
+      ClassicProject.g().setTrgtDone(relKcfaSenM);
+      ClassicProject.g().setTrgtDone(relKobjSenM);
+      ClassicProject.g().setTrgtDone(relCtxtCpyM);
       ClassicProject.g().setTrgtDone(relInQuery);
 
-      for (FeedbackTask task : tasks)
-        ClassicProject.g().runTask(task.name);
-      if (runRelevantAnalysis) ClassicProject.g().runTask(mainTask.relevantName());
-      if (inspectTransRels) ClassicProject.g().runTask(mainTask.transName());
+      for (String task : tasks)
+        ClassicProject.g().runTask(task);
+      if (runRelevantAnalysis) ClassicProject.g().runTask(relevantTask);
+      if (inspectTransRels) ClassicProject.g().runTask(transTask);
     }
 
     Abstraction relevantAbs() {
       // From Datalog, read out the pruned abstraction
       Abstraction relevantAbs = new Abstraction(); // These are the slivers we keep
-      for (String relName : new String[] {"r_CfromHC", "r_CfromIC"}) {
+      relevantAbs.add(abs.project(G.emptyCtxt)); // Always keep this, because it probably won't show up in CH or CI
+      for (String relName : new String[] {"r_CH", "r_CI"}) {
         ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt(relName); rel.load();
-        TrioIterable<Ctxt,Quad,Ctxt> result = rel.getAry3ValTuples();
-        for (Trio<Ctxt,Quad,Ctxt> trio : result) {
-          relevantAbs.add(trio.val0);
-          relevantAbs.add(trio.val2);
-        }
+        PairIterable<Ctxt,Quad> result = rel.getAry2ValTuples();
+        for (Pair<Ctxt,Quad> pair : result)
+          relevantAbs.add(pair.val0);
         rel.close();
       }
       return relevantAbs;
@@ -940,7 +964,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       // Display the transition graph over relations
       try {
         RelGraph graph = new RelGraph();
-        String dlogPath = ((DlogAnalysis)ClassicProject.g().getTask(mainTask.transName())).getFileName();
+        String dlogPath = ((DlogAnalysis)ClassicProject.g().getTask(transTask)).getFileName();
         X.logs("Reading transitions from "+dlogPath);
         BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(dlogPath)));
         String line;
@@ -1005,7 +1029,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
         DomC domC = (DomC) ClassicProject.g().getTrgt("C");
         domC.save(path, true);
 
-        String[] names = new String[] { "CfromHC", "CfromIC", "inQuery", "outQuery" };
+        String[] names = new String[] { "CH", "CI", "CH", "inQuery", "outQuery" };
         for (String name : names) {
           X.logs("  Saving relation "+name);
           ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt(name);
