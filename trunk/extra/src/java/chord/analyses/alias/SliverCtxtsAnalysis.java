@@ -362,6 +362,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   List<Status> statuses = new ArrayList<Status>(); // Status of the analysis over iterations of refinement
   QueryGroup unprovenGroup = new QueryGroup();
   List<QueryGroup> provenGroups = new ArrayList<QueryGroup>();
+  int maxRunAbsSize = -1;
+  int lastRunAbsSize = -1;
 
   boolean useClassifier() { return classifierPath != null; }
   boolean isMaster() { return mode != null && mode.equals("master"); }
@@ -680,7 +682,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
     for (int iter = 1; ; iter++) {
       X.logs("====== Iteration %s", iter);
-      boolean runRelevantAnalysis = iter < maxIters;
+      boolean runRelevantAnalysis = iter < maxIters && (pruneSlivers || refineSites);
       unprovenGroup.runAnalysis(runRelevantAnalysis);
       backupRelations(iter);
       if (inspectTransRels) unprovenGroup.inspectAnalysisOutput();
@@ -776,6 +778,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
     X.putOutput("currIter", iter);
     X.putOutput("absSize", totalAbs.size());
+    X.putOutput("maxRunAbsSize", maxRunAbsSize);
+    X.putOutput("lastRunAbsSize", lastRunAbsSize);
     X.putOutput("numQueries", allQueries.size());
     X.putOutput("numProven", allQueries.size()-numUnproven);
     X.putOutput("numUnproven", numUnproven);
@@ -801,6 +805,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
     void runAnalysis(boolean runRelevantAnalysis) {
       X.logs("runAnalysis: %s", abs);
+      maxRunAbsSize = Math.max(maxRunAbsSize, abs.size());
+      lastRunAbsSize = abs.size();
 
       // Domain (these are the slivers)
       DomC domC = (DomC) ClassicProject.g().getTrgt("C");
@@ -1181,13 +1187,15 @@ class Master {
   public Master(int port, Client client) {
     this.port = port;
     this.client = client;
-    boolean exitFlag = true;
+    boolean exitFlag = false;
 
     X.logs("MASTER: listening at port %s", port);
     try {
       ServerSocket master = new ServerSocket(port);
       while (true) {
         if (exitFlag && (!waitForWorkersToExit || lastContact.size() == 0)) break;
+        X.putOutput("numWorkers", numWorkers());
+        X.flushOutput();
         X.logs("============================================================");
         boolean clientIsDone = client.isDone();
         if (clientIsDone) {
@@ -1196,13 +1204,13 @@ class Master {
         }
         Socket worker = master.accept();
         String hostname = worker.getInetAddress().getHostAddress();
-        lastContact.put(hostname, System.currentTimeMillis());
         BufferedReader in = G.getIn(worker);
         PrintWriter out = G.getOut(worker);
 
         X.logs("MASTER: Got connection from worker %s", worker);
         String cmd = in.readLine();
         if (cmd.equals("GET")) {
+          lastContact.put(hostname, System.currentTimeMillis()); // Only add if it's getting stuff
           if (clientIsDone || lastContact.size() > client.maxWorkersNeeded() + 1) { // 1 for extra buffer
             // If client is done or we have more workers than we need, then quit
             out.println("EXIT");
@@ -1268,7 +1276,7 @@ class Master {
 
 class AbstractionMinimizer implements Client {
   Execution EX = Execution.v();
-  Random random = new Random(1);
+  Random random = new Random();
   String defaults;
   
   boolean[] isAlloc;
@@ -1283,6 +1291,8 @@ class AbstractionMinimizer implements Client {
 
   int numScenarios = 0; // Total number of calls to the analysis oracle
   List<Group> groups = new ArrayList();
+
+  Set<String> allY() { return y2queries.keySet(); }
 
   public AbstractionMinimizer(List<Query> allQueries, Set<Quad> jSet,
       int minH, int maxH, int minI, int maxI, BlackBox box) {
@@ -1491,6 +1501,7 @@ class AbstractionMinimizer implements Client {
       if (scanning) {
         if (jobCounts.size() == 0) { // This is sequential - don't waste energy parallelizing
           int diff = complexity(upperX) - complexity(lowerX);
+          assert diff > 0 : diff;
           int target_j = random.nextInt(diff);
           EX.logs("Scanning: dipping target_j=%s of diff=%s", target_j, diff);
           // Sample a minimal dip from upperX
@@ -1524,7 +1535,8 @@ class AbstractionMinimizer implements Client {
     }
 
     Scenario createScenario(int[] X) {
-      Scenario scenario = new Scenario(encodeX(X), encodeY(Y));
+      //Scenario scenario = new Scenario(encodeX(X), encodeY(Y));
+      Scenario scenario = new Scenario(encodeX(X), encodeY(allY())); // Always include all the queries, otherwise, it's unclear what the reference set is
       jobCounts.put(scenario.id, 1+jobCounts.size());
       return scenario;
     }
@@ -1657,17 +1669,25 @@ class AbstractionMinimizer implements Client {
       changed |= incorporateScenario(scenario.id, X, Y, g, newGroups);
     groups = newGroups;
     if (!changed) // Didn't do anything - probably an outdated scenario
-      EX.logs("Useless: |X|=%s,|Y|=%s", complexity(X), Y.size());
+      EX.logs("  Useless: |X|=%s,|Y|=%s", complexity(X), Y.size());
   }
 
   // Incorporate into group g
   boolean incorporateScenario(int id, int[] X, Set<String> Y, Group g, List<Group> newGroups) {
-    if (!g.inRange(X)) {
-      g.jobCounts.remove(id); // It is outdated, but need to check off if we were waiting on this job
+    // Don't need this since Y is with respect to allY
+    // Don't update on jobs we didn't ask for! (Important because we are passing around subset of queries which make sense only with respect to the group that launched the job)
+    /*if (!g.jobCounts.containsKey(id)) {
+      newGroups.add(g);
+      return false;
+    }*/
+
+    if (!g.inRange(X)) { // We asked for this job, but now it's useless
+      g.jobCounts.remove(id);
       newGroups.add(g);
       return false;
     }
 
+    // Now we can make an impact
     EX.logs("  into %s", g);
 
     HashSet<String> Y0 = new HashSet();
@@ -1706,12 +1726,16 @@ class AbstractionMinimizer implements Client {
 
     // Print groups
     EX.logs("%s groups", groups.size());
-    int complexity = 0;
+    int sumComplexity = 0;
+    int[] X = new int[C];
     for (Group g : groups) {
       EX.logs("  %s", g);
-      complexity += complexity(g.upperX);
+      sumComplexity += complexity(g.upperX);
+      for (int c = 0; c < C; c++)
+        X[c] = Math.max(X[c], g.upperX[c]);
     }
-    EX.putOutput("complexity", complexity);
+    EX.putOutput("sumComplexity", sumComplexity);
+    EX.putOutput("complexity", complexity(X));
 
     EX.flushOutput();
   }
