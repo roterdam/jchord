@@ -5,6 +5,7 @@
 package edu.berkeley.confspell;
 
 import org.apache.hadoop.conf.*;
+import org.apache.hadoop.fs.Path;
 
 import java.io.File;
 import java.util.Map;
@@ -21,8 +22,9 @@ public class HSlurper implements Slurper {
 
   
   public void slurp(File f, OptionSet res) {
-    Configuration c = new Configuration();
-    c.addResource(f.getAbsolutePath());
+    Configuration c = new Configuration(false);
+    c.addResource(new Path(f.getAbsolutePath())); //to search filesystem, not classpath
+    c.reloadConfiguration();
     fromHConf(res, c);
   }
 

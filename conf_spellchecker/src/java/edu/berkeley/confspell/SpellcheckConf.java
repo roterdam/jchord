@@ -50,22 +50,31 @@ public class SpellcheckConf {
       if(args.length == 1)
         dictionary.show();
       else {
-        OptionSet conf = new OptionSet();
-        
         Slurper s =  ReadProp;
+        Checker c = new Checker(dictionary);
+        c.PRINT_OKS = true;
+        OptionSet conf = new OptionSet();
+
         for(int i = 1; i < args.length; ++i) {
           if(args[i].equals("-prop"))
             s =  ReadProp;
           else if(args[i].equals("-hadoop"))
             s =  ReadHadoop;
           else {
+//          	System.out.println("--- reading " + args[i]);
             File optsFile = new File(args[i]);
-            s.slurp(optsFile, conf);
+          	if(!optsFile.exists())  {
+          		System.out.println("WARN: no such file " + optsFile);
+          	} else {
+	          	s.slurp(optsFile, conf);
+	          	if(conf.size() == 0) {
+	          		System.err.println("WARN: no options found in file");
+	          	}
+          	}
           }
-        }
-        Checker c = new Checker(dictionary);
-        c.PRINT_OKS = false;
-        c.checkConf(conf);
+        } //end loop
+
+      	c.checkConf(conf);
       }
     } catch (IOException e) {
       e.printStackTrace();
