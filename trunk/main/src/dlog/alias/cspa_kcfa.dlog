@@ -57,7 +57,6 @@ staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 MmethArg(m:M0,n:Z0,v:V0) input
-MspcMethArg(m:M0,v:V0) input
 IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkArg0(i:I0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
@@ -130,9 +129,7 @@ ctxtInsStatIM(i,m) :- statIM(i,m), epsilonM(m).
 
 reachableCM(0,0).
 reachableCM(0,m) :- clinitTM(t,m), reachableT(t).
-
 reachableCM(c,m) :- CICM(_,_,c,m).
-
 reachableCI(c,i) :- MI(m,i), reachableCM(c,m).
 
 ###
@@ -154,10 +151,6 @@ CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenSpecIM(i,m), DI(c,i), kcfaDIC(c,i,d).
 
 CICM(c,i,0,m) :- reachableCI(c,i), ctxtInsStatIM(i,m).
 CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenStatIM(i,m), kcfaDIC(c,i,d).
-
-###
-
-DVC(c,v,o) :- reachableCM(c,m), MspcMethArg(m,v), o=c.
 
 ### inter-procedural
 
