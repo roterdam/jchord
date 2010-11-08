@@ -225,7 +225,7 @@ public class Checker {
         }
         return OK;
       } catch(Exception e) {
-        return new Res(e.getMessage());
+        return new Res(e.toString());
       }
   }
 
@@ -307,7 +307,6 @@ public class Checker {
         testS.connect(new InetSocketAddress(address, TRIAL_PORT), SOCK_TIMEOUT);
         testS.close();
         return OK;
-//        return new Res("not a reachable host");
       }
     }
   }
@@ -364,9 +363,8 @@ public class Checker {
    */
   public void checkConf(OptionSet conf) {
     
-    ArrayList<String> noCheckerNames = new ArrayList<String>();
-    TreeSet<String> noCheckerTypes = new TreeSet<String>();
-    //= new TreeMap<String,String>();
+    ArrayList<String> noCheckerNames = new ArrayList<String>(); //this is a list of option names
+    TreeSet<String> noCheckerTypes = new TreeSet<String>(); //this is a set of type names
 
     for(Map.Entry<String, String> opt: conf.entrySet()) {
       String k = opt.getKey();
@@ -391,12 +389,14 @@ public class Checker {
             noCheckerTypes.add(t);
         }
         else 
-          System.out.println("WARN " + k + " = " + v + " -- " + res.msg());
+          System.out.println("WARN " + k + " ["+ dict.getFullname(k) +"] = " + v + " -- " + res.msg());
       }
     }    
-    System.out.print("No checker rules for:\t");
-    for(String opt: noCheckerNames) {
-      System.out.print(opt + " ");
+    if(noCheckerNames.size() > 0) {
+	    System.out.print("No checker rules for:\t");
+	    for(String opt: noCheckerNames) {
+	      System.out.print(opt + " ");
+	    }
     }
     if(noCheckerTypes.size() > 0) {
       System.out.println("\nUn-checkable types:\t");

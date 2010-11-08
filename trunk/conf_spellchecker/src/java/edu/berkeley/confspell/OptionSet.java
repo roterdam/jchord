@@ -135,6 +135,10 @@ public class OptionSet { //extends TreeMap<String,String>
       addSubstUse(var);
     }    
   }
+
+	public int size() {
+		return conf.size();
+	}
   
   
 
