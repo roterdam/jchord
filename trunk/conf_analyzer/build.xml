@@ -7,8 +7,9 @@
 			<pathelement location="${chord.home.dir}/classes"/>
 			<pathelement location="classes"/>
 			<fileset dir="lib" includes="*.jar"/>
-			<fileset dir="../conf_spellchecker/lib" includes="*.jar"/>
+<!--			<fileset dir="../conf_spellchecker/lib" includes="*.jar"/>
       <pathelement location="../conf_spellchecker/classes"/>
+      -->
 		</path>
 	<path id="chord_dlog_analysis_path">
 	     <pathelement location="../main/src/dlog"/>

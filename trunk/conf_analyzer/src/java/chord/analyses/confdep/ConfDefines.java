@@ -128,7 +128,7 @@ public class ConfDefines {
     if(classname.equals("rice.environment.params.Parameters") || classname.equals("rice.environment.params.simple.SimpleParameters")) {
       return "PROP-";
     }
-    if(classname.equals("org.apache.hadoop.conf.Configuration"))
+    if(classname.equals("org.apache.hadoop.conf.Configuration") || classname.equals("org.apache.hadoop.mapred.JobConf"))
       return "CONF-";
     if(classname.equals("org.apache.cassandra.utils.XMLUtils"))
       return "CXCONF-";
