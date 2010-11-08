@@ -1,7 +1,6 @@
 package chord.analyses.confdep;
 
 import chord.analyses.logging.RelLogStmts;
-import chord.project.analyses.DynamicAnalysis;
 import chord.util.WeakIdentityHashMap;
 import java.io.*;
 import java.util.*;
