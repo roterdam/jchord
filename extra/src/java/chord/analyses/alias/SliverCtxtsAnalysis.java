@@ -32,6 +32,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -56,6 +57,7 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
+import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import chord.util.Execution;
 import chord.bddbddb.Rel.PairIterable;
@@ -809,8 +811,56 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       DomC domC = (DomC) ClassicProject.g().getTrgt("C");
       domC.clear();
       assert abs.project(G.emptyCtxt) != null;
-      domC.getOrAdd(abs.project(G.emptyCtxt)); // This must go first!
-      for (Ctxt c : abs.getSlivers()) domC.add(c);
+	  List<Ctxt> sortedC = new ArrayList<Ctxt>();
+      for (Ctxt c : abs.getSlivers())
+		sortedC.add(c);
+	  Collections.sort(sortedC, new Comparator() {
+		  @Override
+          public int compare(Object o1, Object o2) {
+			  Ctxt c1 = (Ctxt) o1;
+			  Ctxt c2 = (Ctxt) o2;
+			  Quad[] elems1 = c1.getElems();
+			  Quad[] elems2 = c2.getElems();
+			  if (elems1.length == 0)
+				  return elems2.length == 0 ? 0 : -1;
+			  if (elems2.length == 0)
+				  return 1;
+			  return compare(elems1, elems2, 0);
+		  }
+          private int compare(Quad[] elems1, Quad[] elems2, int i) {
+			 if (i == elems1.length) return (i == elems2.length) ? 0 : -1;
+			 if (i == elems2.length) return 1;
+			 Quad q1 = elems1[i];
+			 Quad q2 = elems2[i];
+			 if (q1 == q2)
+				  return compare(elems1, elems2, i + 1);
+			 if (q1 == null) return -1;
+			 if (q2 == null) return 1;
+			 Operator op1 = q1.getOperator();
+			 Operator op2 = q2.getOperator();
+			 if (op1 instanceof Invoke) {
+				if (op2 instanceof Invoke) {
+					int i1 = G.domI.indexOf(q1);
+					int i2 = G.domI.indexOf(q2);
+					assert (i1 >= 0 && i2 >= 0);
+					return i1 < i2 ? -1 : 1;
+				} else
+					 return -1;
+			 } else {
+				 if (op2 instanceof Invoke)
+					return 1;
+				 else {
+					int h1 = G.domH.indexOf(q1);
+					int h2 = G.domH.indexOf(q2);
+					assert (h1 >= 0 && h2 >= 0);
+					return h1 < h2 ? -1 : 1;
+				 }
+			 }
+          }
+	  });
+	  domC.add(abs.project(G.emptyCtxt));
+	  for (Ctxt c : sortedC)
+          domC.add(c);
       domC.save();
 
       /*for (Ctxt c : abs.getSlivers()) {
