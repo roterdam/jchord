@@ -22,6 +22,23 @@ public class DynConfDepRuntime {
     out.flush();
   }
   
+  public static String reformatArray(Object s) {
+  	Class aType = s.getClass().getComponentType();
+  	if(!aType.isPrimitive()) {
+  		Object[] arr = (Object[]) s;
+  		StringBuilder sb = new StringBuilder();
+  		for(Object a : arr) {
+  			sb.append(a.toString());
+  			sb.append(",");
+  		}
+  		if(sb.length() > 0)
+  			sb.deleteCharAt(sb.length() -1);
+  		return sb.toString();
+  	} else {
+  		return "PRIM-array";
+  	}
+  }
+  
   public synchronized static void methodCallAftEventSuper(int iIdx, String cname, String mname, Object ret,
       Object tref, Object[] args) {
 
@@ -41,8 +58,11 @@ public class DynConfDepRuntime {
         return;
       } */
       String confOpt = ConfDefines.optionPrefix(cname, mname) + (String) args[cOpt] +"-" +iIdx;
-      if(ret != null)
+      if(ret != null) {
+      	if(ret.getClass().isArray())
+      		ret = reformatArray(ret);
         out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=" + ret);
+      }
       else
         out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=null");
       

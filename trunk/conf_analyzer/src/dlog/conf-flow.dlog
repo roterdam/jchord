@@ -175,11 +175,14 @@ refFlow(v,site) :- instFieldHolds(bh,f,site),getInstFldInst(v,b,f), VH(b,bh). sp
 ##This is saying that subfields of tainted objects get tainted
 #refFlow(v,site) :- getInstFldInst(v,b,_),refFlow(b,site).
 
+
 # We already have collection-aware points-to.
 #This is here to handle cases where the conf method itself returns a collection
 refFlow(v,site) :- vColHolds(colV,site),IRetrieve(_,v,colV).
 vColHolds(colV,site) :- IInsert(_,colV,v),refFlow(v,site).
 refFlow(v,site) :- IRetrieve(_,v,colV),refFlow(colV,site).
+# Handle case where we iterate over a returned conf
+refFlow(v,site) :- refFlow(prevV,site),INewColl(_,v,prevV).
 
 
 primFlow(v,site) :- objVarAsgnPrimInst(v,u),primFlow(u,site).

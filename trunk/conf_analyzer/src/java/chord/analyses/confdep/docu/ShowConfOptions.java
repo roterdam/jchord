@@ -88,6 +88,7 @@ public class ShowConfOptions extends JavaAnalysis {
     methTypeTable.put("java.util.Timer schedule (Ljava/util/TimerTask;JJ)V 3", "Time");
         
     methTypeTable.put("java.net.URI create (Ljava/lang/String;)Ljava/net/URI; 0", "URI");
+    methTypeTable.put("java.net.URI <init> (Ljava/lang/String;)V 1", "URI");
     methTypeTable.put("java.net.URL <init> (Ljava/lang/String;)V 1", "URL");
   }
   
@@ -144,7 +145,7 @@ public class ShowConfOptions extends JavaAnalysis {
     
     System.out.println("used " + methTypeTable.size() + " inference rules for conf typing");
     PrintWriter writer = OutDirUtils.newPrintWriter( System.getProperty("dictionary.name", "options.dict"));
-    dict.dump(writer);
+    dict.dump(writer, true);
     writer.close();
   }
   /*
@@ -538,6 +539,10 @@ public class ShowConfOptions extends JavaAnalysis {
       Class<?> cl = eType.getJavaLangClassObject();
       if(cl == null)
         continue;
+      if(cl.getEnumConstants() == null) {
+      	System.err.println("WARN: no enum constants for " + t.val1.getName());
+      	continue;
+      }
       
       for(Object f: cl.getEnumConstants()) {
         vals.append(f.toString());

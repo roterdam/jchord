@@ -12,8 +12,13 @@ import chord.doms.DomI;
 import chord.doms.DomV;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
+import chord.project.Config;
 import chord.project.analyses.ProgramRel;
 
+/**
+ * (i,u,v) if instruction i inserts v into u
+ *
+ */
 @Chord(
     name = "IInsert",
     sign = "I0,V0,V1:I0_V0_V1"
@@ -24,9 +29,11 @@ public class RelInserts extends ProgramRel implements IInvokeInstVisitor {
   DomV domV;
   jq_Method method;
   jq_Type OBJ_T;
+  boolean MAP_PUT = true;
   public void init() {
     domI = (DomI) doms[0];
     domV = (DomV) doms[1];
+//    MAP_PUT = Config.buildBoolProperty("modelPuts", false);
     OBJ_T = jq_Type.parseType("java.lang.Object");
     RelINewColl.tInit();
   }
@@ -46,10 +53,14 @@ public class RelInserts extends ProgramRel implements IInvokeInstVisitor {
       int thisObjID = domV.indexOf(thisObj);
       jq_Method meth = Invoke.getMethod(q).getMethod();
       jq_Class cl = meth.getDeclaringClass();
+      String classname = cl.getName();
       String mname = meth.getName().toString();
       
       if(!meth.isStatic() && RelINewColl.isCollectionType(cl)) {
-        if(mname.equals("add") || mname.equals("offer") || mname.equals("put") || mname.equals("set") ) {
+        //I'm nervous about "put" because of worries about tainting conf objects
+        if(mname.equals("offer") || mname.equals("add") || mname.toLowerCase().contains("set")
+  || (MAP_PUT && classname.contains("Map") && mname.equals("put"))
+            ) {
           for(int i =1; i< args; ++i) {
             RegisterOperand op = argList.get(i);
             if(op.getType().isReferenceType()) {
