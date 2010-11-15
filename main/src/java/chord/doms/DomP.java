@@ -52,8 +52,8 @@ public class DomP extends ProgramDom<Inst> {
 				BasicBlock bb = it.nextBasicBlock();
 				int n = bb.size();
 				if (n == 0) {
-					assert (bb.isEntry() || bb.isExit());
-					add((EntryOrExitBasicBlock) bb);
+					// assert (bb.isEntry() || bb.isExit());
+					add(bb);
 					continue;
 				}
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
@@ -68,12 +68,13 @@ public class DomP extends ProgramDom<Inst> {
 		if (i instanceof Quad) {
 			x = ((Quad) i).getID();
 		} else {
-			EntryOrExitBasicBlock bb = (EntryOrExitBasicBlock) i;
+			BasicBlock bb = (BasicBlock) i;
 			if (bb.isEntry())
 				x = -1;
-			else {
-				assert (bb.isExit());
+			else if (bb.isExit())
 				x = -2;
+			else {
+				return "null:" + i;
 			}
 		}
 		return x + "!" + i.getMethod();
