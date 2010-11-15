@@ -219,6 +219,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	private Execution X;
 
+	static int[] global_kobjValue; // indexed by domH
+	static int[] global_kcfaValue; // indexed by domI
+
 	private void init() {
 		if (isInitialized) return;
 		domV = (DomV) ClassicProject.g().getTrgt("V");
@@ -433,7 +436,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		int numA = domH.getLastI() + 1;
 		int numH = domH.size();
 		int numI = domI.size();
-		if (currIter == 0) {
+
+		if (currIter == 0 || (global_kcfaValue != null || global_kobjValue != null)) {
 			isCtxtSenV = new boolean[numV];
       // Set the context-sensitivity of various methods
 			methKind = new int[numM];
@@ -473,7 +477,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			ItoQ = new Quad[numI];
 			for (int i = 0; i < numI; i++) {
 				kcfaValue[i] = kcfaK;
-				Quad invk =domI.get(i);
+				Quad invk = domI.get(i);
 				jq_Method m = invk.getMethod();
 				ItoM[i] = domM.indexOf(m);
 				ItoQ[i] = invk;
@@ -481,6 +485,15 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 			if (percy) {
 				setAdaptiveValues();
+
+        if (global_kcfaValue != null) {
+          System.out.println("Using global_kcfaValue");
+          System.arraycopy(global_kcfaValue, 0, kcfaValue, 0, kcfaValue.length);
+        }
+        if (global_kobjValue != null) {
+          System.out.println("Using global_kobjValue");
+          System.arraycopy(global_kobjValue, 0, kobjValue, 0, kobjValue.length);
+        }
 			}
 		} else {
 			refine();

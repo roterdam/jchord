@@ -216,6 +216,8 @@ class Status {
 }
 
 class Abstraction {
+  Execution X = Execution.v();
+
   @Override public int hashCode() { return S.hashCode(); }
   @Override public boolean equals(Object _that) {
     Abstraction that = (Abstraction)_that;
@@ -241,6 +243,42 @@ class Abstraction {
       if (G.hasHeadSite(c))
         set.add(c.head());
     return set;
+  }
+
+  void printKValues() {
+    int[] h_maxLen = new int[G.domH.size()];
+    int[] i_maxLen = new int[G.domI.size()];
+    for (Ctxt c : S) {
+      if (!G.hasHeadSite(c)) continue;
+      int len = G.isAtom(c) ? G.atomLen(c) : G.summaryLen(c);
+      if (G.isAlloc(c.head())) {
+        int h = G.domH.indexOf(c.head());
+        h_maxLen[h] = Math.max(h_maxLen[h], len);
+      }
+      else {
+        int i = G.domI.indexOf(c.head());
+        i_maxLen[i] = Math.max(i_maxLen[i], len);
+      }
+    }
+
+    int size = 0;
+    for (int k = 0; k < 4; k++) {
+      int n = 0;
+      for (int h = 0; h < G.domH.size(); h++) {
+        if (!G.jSet.contains(G.domH.get(h))) continue;
+        if (h_maxLen[h] == k) n++; 
+      }
+      X.logs("KVALUE H %s %s", k, n);
+      size += k*n;
+      n = 0;
+      for (int i = 0; i < G.domI.size(); i++) {
+        if (!G.jSet.contains(G.domI.get(i))) continue;
+        if (i_maxLen[i] == k) n++; 
+      }
+      X.logs("KVALUE I %s %s", k, n);
+      size += k*n;
+    }
+    X.logs("KVALUE SIZE %s", size);
   }
 
   // assertDisjoint: this is when we are pruning slivers (make sure never step on each other's toes)
@@ -332,6 +370,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   boolean inspectTransRels;
   boolean verifyAfterPrune;
   boolean pruneSlivers, refineSites;
+  boolean useCtxtsAnalysis;
 
   String masterHost;
   int masterPort;
@@ -380,6 +419,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     this.verifyAfterPrune        = X.getBooleanArg("verifyAfterPrune", false);
     this.pruneSlivers            = X.getBooleanArg("pruneSlivers", false);
     this.refineSites             = X.getBooleanArg("refineSites", false);
+    this.useCtxtsAnalysis        = X.getBooleanArg("useCtxtsAnalysis", false);
 
     this.masterHost              = X.getStringArg("masterHost", null);
     this.masterPort              = X.getIntArg("masterPort", 8888);
@@ -512,6 +552,16 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
       for (Pair<Quad,Quad> pair : result) allQueries.add(new Query(pair.val0, pair.val1));
       rel.close();
+      
+      int seed = X.getIntArg("randQuery", -1);
+      if (seed != -1) {
+        Random rand = new Random(seed);
+        int i = rand.nextInt(allQueries.size());
+        Query q = allQueries.get(i);
+        allQueries.clear();
+        allQueries.add(q);
+        X.logs("Using random query (seed %s) -> chose query %s of %s", seed, i, allQueries.size());
+      }
     }
     X.logs("Starting with %s total queries", allQueries.size());
   }
@@ -547,6 +597,40 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   }
 
   public String apply(String line) {
+    // Hijack and call CtxtsAnalysis
+    if (useCtxtsAnalysis) {
+      X.logs("Setting global_kobjValue and global_kcfaValue");
+      Set<Query> queries = new HashSet();
+      HashMap<Quad,Integer> lengths = decodeAbstractionQueries(line, null, queries);
+      int[] kobjValue = CtxtsAnalysis.global_kobjValue = new int[G.domH.size()];
+      int[] kcfaValue = CtxtsAnalysis.global_kcfaValue = new int[G.domI.size()];
+      for (Quad q : lengths.keySet()) {
+        if (G.isAlloc(q))
+          kobjValue[G.domH.indexOf(q)] = lengths.get(q);
+        else
+          kcfaValue[G.domI.indexOf(q)] = lengths.get(q);
+      }
+            ClassicProject.g().resetTaskDone("ctxts-java");
+      ClassicProject.g().runTask("ctxts-java");
+
+      ProgramRel relInQuery = (ProgramRel) ClassicProject.g().getTrgt("inQuery");
+      relInQuery.zero();
+      for (Query q : queries)
+        relInQuery.add(q.e1, q.e2);
+      relInQuery.save();
+
+      for (String task : tasks)
+        ClassicProject.g().runTask(task);
+
+      Set<Query> unproven = new HashSet<Query>();
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("outQuery"); rel.load();
+      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
+      for (Pair<Quad,Quad> pair : result)
+        unproven.add(new Query(pair.val0, pair.val1));
+      rel.close();
+      return encodeQueries(unproven);
+    }
+
     QueryGroup group = new QueryGroup();
     decodeAbstractionQueries(line, group.abs, group.queries);
     boolean fastWrongHack = false;
@@ -579,7 +663,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       // Get a job
       String line = callMaster("GET");
       if (line == null) { X.logs("Got null, something bad happened to master..."); G.sleep(5); }
-      else if (line.equals("WAIT")) { X.logs("Waiting..."); G.sleep(5); X.putOutput("exec.status", "waiting"); }
+      else if (line.equals("WAIT")) { X.logs("Waiting..."); G.sleep(5); X.putOutput("exec.status", "waiting"); X.flushOutput(); }
       else if (line.equals("EXIT")) { X.logs("Exiting..."); break; }
       else {
         X.putOutput("exec.status", "running"); X.flushOutput();
@@ -598,7 +682,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   }
 
   // Format: H*:1 I*:0 H3:5 I6:1 ## E2,4 (things not shown are 0)
-  void decodeAbstractionQueries(String line, Abstraction abs, Set<Query> queries) {
+  HashMap<Quad,Integer> decodeAbstractionQueries(String line, Abstraction abs, Set<Query> queries) {
     HashMap<Quad,Integer> lengths = new HashMap();
     int minH = 0;
     int minI = 0;
@@ -643,12 +727,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
     // No pruning allowed!
     assert !pruneSlivers;
-    abs.add(G.summarize(G.emptyCtxt));
-    for (Quad q : lengths.keySet()) {
-      int len = lengths.get(q);
-      if (len > 0)
-        abs.addRefinements(G.summarize(G.emptyCtxt.append(q)), len-1, pruneSlivers);
+    if (abs != null) {
+      abs.add(G.summarize(G.emptyCtxt));
+      for (Quad q : lengths.keySet()) {
+        int len = lengths.get(q);
+        if (len > 0)
+          abs.addRefinements(G.summarize(G.emptyCtxt.append(q)), len-1, pruneSlivers);
+      }
     }
+    return lengths;
   }
 
   String encodeQueries(Set<Query> queries) {
@@ -752,18 +839,18 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   void outputStatus(int iter) {
     X.logs("outputStatus(iter=%s)", iter);
     // Get the total size of the abstraction across all queries
-    Abstraction totalAbs = new Abstraction();
+    /*Abstraction totalAbs = new Abstraction();
     for (QueryGroup g : provenGroups) {
       totalAbs.add(g.abs);
       assert g.prunedAbs.size() == 0;
     }
     totalAbs.add(unprovenGroup.prunedAbs);
-    totalAbs.add(unprovenGroup.abs);
+    totalAbs.add(unprovenGroup.abs);*/
    
     X.addSaveFiles("abstraction.S."+iter);
     {
       PrintWriter out = OutDirUtils.newPrintWriter("abstraction.S."+iter);
-      for (Ctxt a : totalAbs.getSlivers())
+      for (Ctxt a : sortSlivers(new ArrayList(unprovenGroup.abs.getSlivers())))
         out.println(G.cstr(a));
       out.close();
     }
@@ -775,8 +862,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     status.absSummary = unprovenGroup.abs.toString();
     statuses.add(status);
 
+    if (refineSites) unprovenGroup.abs.printKValues();
+
     X.putOutput("currIter", iter);
-    X.putOutput("absSize", totalAbs.size());
+    //X.putOutput("absSize", totalAbs.size());
     X.putOutput("maxRunAbsSize", maxRunAbsSize);
     X.putOutput("lastRunAbsSize", lastRunAbsSize);
     X.putOutput("numQueries", allQueries.size());
@@ -795,6 +884,54 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     return buf.toString();
   }
 
+  List<Ctxt> sortSlivers(List<Ctxt> slivers) {
+    Collections.sort(slivers, new Comparator() {
+        @Override
+        public int compare(Object o1, Object o2) {
+            Ctxt c1 = (Ctxt) o1;
+            Ctxt c2 = (Ctxt) o2;
+            Quad[] elems1 = c1.getElems();
+            Quad[] elems2 = c2.getElems();
+            if (elems1.length == 0)
+                return elems2.length == 0 ? 0 : -1;
+            if (elems2.length == 0)
+                return 1;
+            return compare(elems1, elems2, 0);
+        }
+        private int compare(Quad[] elems1, Quad[] elems2, int i) {
+           if (i == elems1.length) return (i == elems2.length) ? 0 : -1;
+           if (i == elems2.length) return 1;
+           Quad q1 = elems1[i];
+           Quad q2 = elems2[i];
+           if (q1 == q2)
+                return compare(elems1, elems2, i + 1);
+           if (q1 == null) return -1;
+           if (q2 == null) return 1;
+           Operator op1 = q1.getOperator();
+           Operator op2 = q2.getOperator();
+           if (op1 instanceof Invoke) {
+              if (op2 instanceof Invoke) {
+                  int i1 = G.domI.indexOf(q1);
+                  int i2 = G.domI.indexOf(q2);
+                  assert (i1 >= 0 && i2 >= 0);
+                  return i1 < i2 ? -1 : 1;
+              } else
+                   return -1;
+           } else {
+               if (op2 instanceof Invoke)
+                  return 1;
+               else {
+                  int h1 = G.domH.indexOf(q1);
+                  int h2 = G.domH.indexOf(q2);
+                  assert (h1 >= 0 && h2 >= 0);
+                  return h1 < h2 ? -1 : 1;
+               }
+           }
+        }
+    });
+    return slivers;
+  }
+
   // Group of queries which have the same abstraction and be have the same as far as we can tell.
   class QueryGroup {
     Set<Query> queries = new LinkedHashSet<Query>();
@@ -811,62 +948,12 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       DomC domC = (DomC) ClassicProject.g().getTrgt("C");
       domC.clear();
       assert abs.project(G.emptyCtxt) != null;
-	  List<Ctxt> sortedC = new ArrayList<Ctxt>();
-      for (Ctxt c : abs.getSlivers())
-		sortedC.add(c);
-	  Collections.sort(sortedC, new Comparator() {
-		  @Override
-          public int compare(Object o1, Object o2) {
-			  Ctxt c1 = (Ctxt) o1;
-			  Ctxt c2 = (Ctxt) o2;
-			  Quad[] elems1 = c1.getElems();
-			  Quad[] elems2 = c2.getElems();
-			  if (elems1.length == 0)
-				  return elems2.length == 0 ? 0 : -1;
-			  if (elems2.length == 0)
-				  return 1;
-			  return compare(elems1, elems2, 0);
-		  }
-          private int compare(Quad[] elems1, Quad[] elems2, int i) {
-			 if (i == elems1.length) return (i == elems2.length) ? 0 : -1;
-			 if (i == elems2.length) return 1;
-			 Quad q1 = elems1[i];
-			 Quad q2 = elems2[i];
-			 if (q1 == q2)
-				  return compare(elems1, elems2, i + 1);
-			 if (q1 == null) return -1;
-			 if (q2 == null) return 1;
-			 Operator op1 = q1.getOperator();
-			 Operator op2 = q2.getOperator();
-			 if (op1 instanceof Invoke) {
-				if (op2 instanceof Invoke) {
-					int i1 = G.domI.indexOf(q1);
-					int i2 = G.domI.indexOf(q2);
-					assert (i1 >= 0 && i2 >= 0);
-					return i1 < i2 ? -1 : 1;
-				} else
-					 return -1;
-			 } else {
-				 if (op2 instanceof Invoke)
-					return 1;
-				 else {
-					int h1 = G.domH.indexOf(q1);
-					int h2 = G.domH.indexOf(q2);
-					assert (h1 >= 0 && h2 >= 0);
-					return h1 < h2 ? -1 : 1;
-				 }
-			 }
-          }
-	  });
-	  domC.add(abs.project(G.emptyCtxt));
-	  for (Ctxt c : sortedC)
-          domC.add(c);
+      List<Ctxt> sortedC = new ArrayList<Ctxt>();
+      for (Ctxt c : abs.getSlivers()) sortedC.add(c);
+      sortSlivers(sortedC);
+      domC.add(abs.project(G.emptyCtxt));
+      for (Ctxt c : sortedC) domC.add(c);
       domC.save();
-
-      /*for (Ctxt c : abs.getSlivers()) {
-        if (G.hasHeadSite(c) && G.isAlloc(c.head()))
-          X.logs("OLD %s %s", G.jstr(c.head()), G.cstr(c));
-      }*/
 
       // Relations
       ProgramRel CH = (ProgramRel) ClassicProject.g().getTrgt("CH");
@@ -883,7 +970,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
               if (!pruneSlivers) assert d != null;
               if (d != null) {
                 (G.isAlloc(j) ? CH : CI).add(d, j);
-                //if (G.isAlloc(j)) X.logs("NEW %s %s %s", G.cstr(c), G.jstr(j), G.cstr(d));
                 CC.add(c, d);
               }
             }
@@ -895,7 +981,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
             if (!pruneSlivers) assert d != null;
             if (d != null) {
               (G.isAlloc(j) ? CH : CI).add(d, j);
-              //if (G.isAlloc(j)) X.logs("NEW2 %s %s", G.jstr(j), G.cstr(d));
               CC.add(c, d);
             }
           }
@@ -1065,6 +1150,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       abs = newAbs;
       String newAbsStr = abs.toString();
 
+      assert !abs.getSlivers().contains(G.summarize(G.emptyCtxt));
+
       X.logs("STATUS refineAbstraction: %s -> %s", oldAbsStr, newAbsStr);
     }
   }
@@ -1224,9 +1311,12 @@ class RelGraph {
 ////////////////////////////////////////////////////////////
 
 class Scenario {
-  private static int newId = 0;
+  //private static int newId = 0;
+  //int id = newId++;
 
-  int id = newId++;
+  private static Random random = new Random();
+  int id = random.nextInt();
+
   String in, out;
   public Scenario(String line) {
     String[] tokens = line.split(" ## ");
@@ -1281,25 +1371,31 @@ class Master {
         BufferedReader in = G.getIn(worker);
         PrintWriter out = G.getOut(worker);
 
-        X.logs("MASTER: Got connection from worker %s", worker);
+        X.logs("MASTER: Got connection from worker %s [hostname=%s]", worker, hostname);
         String cmd = in.readLine();
         if (cmd.equals("GET")) {
           lastContact.put(hostname, System.currentTimeMillis()); // Only add if it's getting stuff
-          if (clientIsDone || lastContact.size() > client.maxWorkersNeeded() + 1) { // 1 for extra buffer
+          if (clientIsDone || numWorkers() > client.maxWorkersNeeded() + 1) { // 1 for extra buffer
             // If client is done or we have more workers than we need, then quit
             out.println("EXIT");
             lastContact.remove(hostname);
           }
           else {
             Scenario scenario = client.createJob();
-            if (scenario == null)
+            if (scenario == null) {
+              X.logs("  No job, waiting (%s workers, %s workers needed)", numWorkers(), client.maxWorkersNeeded());
               out.println("WAIT");
+            }
             else {
               inprogress.put(scenario.id, scenario);
               out.println(scenario.id + " " + scenario); // Response: <ID> <task spec>
               X.logs("  GET => id=%s", scenario.id);
             }
           }
+        }
+        else if (cmd.equals("CLEAR")) {
+          lastContact.clear();
+          out.println("Cleared workers");
         }
         else if (cmd.equals("SAVE")) {
           client.saveState();
@@ -1422,7 +1518,32 @@ class AbstractionMinimizer implements Client {
     groups.add(new Group(Y));
 
     outputStatus();
+    loadGroups();
     loadScenarios();
+  }
+
+  void loadGroups() {
+    String path = EX.path("groups");
+    if (!new File(path).exists()) return;
+    try {
+      BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
+      String line;
+      groups.clear();
+      while ((line = in.readLine()) != null) {
+        // Format: <step size> ## <lower> ## <upper> ## queries
+        String[] tokens = line.split(" ## ");
+        Group g = new Group(decodeY(tokens[3]));
+        g.incrTheta = invLogistic(Double.parseDouble(tokens[0]));
+        g.lowerX = decodeX(tokens[1]);
+        g.upperX = decodeX(tokens[2]);
+        g.updateStatus();
+        g.updateStatus();
+        groups.add(g);
+      }
+      outputStatus();
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   void loadScenarios() {
@@ -1627,10 +1748,12 @@ class AbstractionMinimizer implements Client {
 
         // Exploit parallelism: idea is that probability that two of the number of processors getting y=1 should be approximately p(y=1)
         double numProcessors = jobCounts.size(); // Approximate number of processors (for this group) with the number of things in the queue.
-        double targetProb = 1 - Math.pow(1-singleTargetProb, 1.0/numProcessors);
+        //double targetProb = 1 - Math.pow(1-singleTargetProb, 1.0/numProcessors);
+        double targetProb = 1 - Math.pow(1-singleTargetProb, 1.0/Math.sqrt(numProcessors+1)); // HACK
 
         // Due to parallelism, we want to temper the amount of probability increment
-        double stepSize = incrThetaStepSize / Math.sqrt(jobCounts.get(id)); // Size of jobCounts at the time the job was created
+        double stepSize = incrThetaStepSize; // Simplify
+        //double stepSize = incrThetaStepSize / Math.sqrt(jobCounts.get(id)); // Size of jobCounts at the time the job was created
         if (!unproven) incrTheta -= (1-targetProb) * stepSize; // Proven -> cheaper abstractions
         else incrTheta += targetProb * stepSize; // Unproven -> more expensive abstractions
 
@@ -1655,6 +1778,10 @@ class AbstractionMinimizer implements Client {
         set(upperX, X);
       }
 
+      updateStatus();
+    }
+
+    void updateStatus() {
       if (scanning) {
         if (eq(lowerX, upperX)) {
           EX.logs("    DONE with group %s!", this);
@@ -1845,8 +1972,9 @@ class AbstractionMinimizer implements Client {
     // Otherwise, need as many workers as we can get.
     int n = 0;
     for (Group g : groups) {
+      if (g.done) continue;
       if (g.scanning) n++;
-      else if (!g.done) return 10000;
+      else return 10000; // Need a lot
     }
     return n;
   }
