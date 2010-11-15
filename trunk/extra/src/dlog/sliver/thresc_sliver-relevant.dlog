@@ -291,12 +291,12 @@ r_reachableCM(x12,m) :- r_reachableT(t), reachableCM(x12,m), MgetStatFldInst(m,_
 
 ### reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 r_reachableT(s) :- r_reachableT(t), classT(t), reachableT(s), sub(s,t).
-inQuery(e1:E,e2:E) input
+inQueryE(e:E) input
 EV(e:E,v:V) input
 escA(a:C) input
 r_escA(a:C) output # track
-outQuery(e1:E,e2:E) input
-r_outQuery(e1:E,e2:E) output # track
+outQueryE(e:E) input
+r_outQueryE(e:E) output # track
 
 ### escA(a) :- FA(_,a).
 r_FA(x14,a) :- r_escA(a), FA(x14,a).
@@ -309,9 +309,9 @@ r_VCA(v,c,a) :- r_escA(a), reachableCM(c,1), MmethArg(1,0,v), VCA(v,c,a).
 r_escA(b) :- r_escA(a), escA(b), AFA(b,_,a).
 r_AFA(b,x15,a) :- r_escA(a), escA(b), AFA(b,x15,a).
 
-### outQuery(e,ee) :- inQuery(e,ee), e=ee, EV(e,v), VCA(v,_,a), escA(a).
-r_VCA(v,x16,a) :- r_outQuery(e,ee), inQuery(e,ee), e=ee, EV(e,v), VCA(v,x16,a), escA(a).
-r_escA(a) :- r_outQuery(e,ee), inQuery(e,ee), e=ee, EV(e,v), VCA(v,_,a), escA(a).
+### outQueryE(e) :- inQueryE(e), EV(e,v), VCA(v,_,a), escA(a).
+r_VCA(v,x16,a) :- r_outQueryE(e), inQueryE(e), EV(e,v), VCA(v,x16,a), escA(a).
+r_escA(a) :- r_outQueryE(e), inQueryE(e), EV(e,v), VCA(v,_,a), escA(a).
 
 ### Base case
-r_outQuery(e1:E,e2:E) :- outQuery(e1:E,e2:E).
+r_outQueryE(e:E) :- outQueryE(e:E).

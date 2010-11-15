@@ -160,7 +160,8 @@ public class Execution {
 
   public String getStringArg(String key, String defaultValue) {
     String value = System.getProperty("chord."+name+"."+key, defaultValue);
-    putOption(key, value);
+    if (value != null)
+      putOption(key, value);
     return value;
   }
   public boolean getBooleanArg(String key, boolean defaultValue) {

@@ -70,6 +70,7 @@ import chord.doms.DomH;
 import chord.doms.DomI;
 import chord.doms.DomM;
 import chord.doms.DomE;
+import chord.doms.DomP;
 import chord.doms.DomV;
 import chord.program.Program;
 import chord.project.Chord;
@@ -112,6 +113,7 @@ class GlobalInfo {
   DomI domI;
   DomH domH;
   DomE domE;
+  DomP domP;
   HashMap<jq_Method,List<Quad>> rev_jm;
   Set<Quad> jSet;
 
@@ -125,6 +127,7 @@ class GlobalInfo {
     domI = (DomI) ClassicProject.g().getTrgt("I"); ClassicProject.g().runTask(domI);
     domH = (DomH) ClassicProject.g().getTrgt("H"); ClassicProject.g().runTask(domH);
     domE = (DomE) ClassicProject.g().getTrgt("E"); ClassicProject.g().runTask(domE);
+    domP = (DomP) ClassicProject.g().getTrgt("P"); ClassicProject.g().runTask(domP);
   }
 
   // Helpers for displaying stuff
@@ -139,21 +142,19 @@ class GlobalInfo {
     else
       return null;
   }
+  String pstr(Quad p) { return new File(p.toJavaLocStr()).getName(); }
   String hstr(Quad h) {
-    String path = new File(h.toJavaLocStr()).getName();
     jq_Type t = h2t(h);
-    return path+"("+(t == null ? "?" : t.shortName())+")";
+    return pstr(h)+"("+(t == null ? "?" : t.shortName())+")";
   }
   String istr(Quad i) {
-    String path = new File(i.toJavaLocStr()).getName();
     jq_Method m = InvokeStatic.getMethod(i).getMethod();
-    return path+"("+m.getName()+")";
+    return pstr(i)+"("+m.getName()+")";
   }
   String jstr(Quad j) { return isAlloc(j) ? hstr(j) : istr(j); }
   String estr(Quad e) {
-    String path = new File(e.toJavaLocStr()).getName();
     Operator op = e.getOperator();
-    return path+"("+op+")";
+    return pstr(e)+"("+op+")";
   }
   String cstr(Ctxt c) {
     StringBuilder buf = new StringBuilder();
@@ -171,11 +172,10 @@ class GlobalInfo {
   String vstr(Register v) { return v+"@"+mstr(domV.getMethod(v)); }
   String mstr(jq_Method m) { return m.getDeclaringClass().shortName()+"."+m.getName(); }
 
-  String qcode(Query q) { return "E"+G.domE.indexOf(q.e1)+","+G.domE.indexOf(q.e2); }
-
   String render(Object o) {
     if (o == null) return "NULL";
     if (o instanceof String) return (String)o;
+    if (o instanceof Integer) return o.toString();
     if (o instanceof Ctxt) return cstr((Ctxt)o);
     if (o instanceof jq_Field) return fstr((jq_Field)o);
     if (o instanceof jq_Method) return mstr((jq_Method)o);
@@ -185,9 +185,15 @@ class GlobalInfo {
       if (domH.indexOf(q) != -1) return hstr(q);
       if (domI.indexOf(q) != -1) return istr(q);
       if (domE.indexOf(q) != -1) return estr(q);
-      throw new RuntimeException("Quad not H, I, or E: " + q);
+      return q.toString();
+      //throw new RuntimeException("Quad not H, I, or E: " + q);
     }
-    throw new RuntimeException("Unknown object (not abstract object, contextual variable or field: "+o);
+    if (o instanceof Pair) {
+      Pair p = (Pair)o;
+      return "<"+render(p.val0)+","+render(p.val1)+">";
+    }
+    return o.toString();
+    //throw new RuntimeException("Unknown object (not abstract object, contextual variable or field: "+o+" has type "+o.getClass());
   }
 
   PrintWriter getOut(Socket s) throws IOException { return new PrintWriter(s.getOutputStream(), true); }
@@ -196,13 +202,86 @@ class GlobalInfo {
 
 ////////////////////////////////////////////////////////////
 
-class Query {
+interface Query extends Comparable {
+  void addToRel(ProgramRel rel);
+  String encode();
+}
+
+class QueryEE implements Query {
   Quad e1, e2;
-  Query(Quad e1, Quad e2) { this.e1 = e1; this.e2 = e2; }
+  QueryEE(Quad e1, Quad e2) { this.e1 = e1; this.e2 = e2; }
   @Override public int hashCode() { return e1.hashCode() * 37 + e2.hashCode(); }
   @Override public boolean equals(Object _that) {
-    Query that = (Query)_that;
+    QueryEE that = (QueryEE)_that;
     return e1.equals(that.e1) && e2.equals(that.e2);
+  }
+  public void addToRel(ProgramRel rel) { rel.add(e1, e2); }
+  @Override public String toString() { return G.estr(e1)+"|"+G.estr(e2); }
+  public String encode() { return "E"+G.domE.indexOf(e1)+","+G.domE.indexOf(e2); }
+  @Override public int compareTo(Object _that) {
+    QueryEE that = (QueryEE)_that;
+    int a, b;
+    a = G.domE.indexOf(this.e1);
+    b = G.domE.indexOf(that.e1);
+    if (a != b) return a < b ? -1 : +1;
+    a = G.domE.indexOf(this.e2);
+    b = G.domE.indexOf(that.e2);
+    if (a != b) return a < b ? -1 : +1;
+    return 0;
+  }
+}
+
+class QueryE implements Query {
+  Quad e;
+  QueryE(Quad e) { this.e = e; }
+  @Override public int hashCode() { return e.hashCode(); }
+  @Override public boolean equals(Object _that) { return e.equals(((QueryE)_that).e); }
+  public void addToRel(ProgramRel rel) { rel.add(e); }
+  @Override public String toString() { return G.estr(e); }
+  public String encode() { return "E"+G.domE.indexOf(e); }
+  @Override public int compareTo(Object _that) {
+    QueryE that = (QueryE)_that;
+    int a, b;
+    a = G.domE.indexOf(this.e);
+    b = G.domE.indexOf(that.e);
+    if (a != b) return a < b ? -1 : +1;
+    return 0;
+  }
+}
+
+class QueryI implements Query {
+  Quad i;
+  QueryI(Quad i) { this.i = i; }
+  @Override public int hashCode() { return i.hashCode(); }
+  @Override public boolean equals(Object _that) { return i.equals(((QueryI)_that).i); }
+  public void addToRel(ProgramRel rel) { rel.add(i); }
+  @Override public String toString() { return G.istr(i); }
+  public String encode() { return "I"+G.domI.indexOf(i); }
+  @Override public int compareTo(Object _that) {
+    QueryI that = (QueryI)_that;
+    int a, b;
+    a = G.domI.indexOf(this.i);
+    b = G.domI.indexOf(that.i);
+    if (a != b) return a < b ? -1 : +1;
+    return 0;
+  }
+}
+
+class QueryP implements Query {
+  Quad p;
+  QueryP(Quad p) { this.p = p; }
+  @Override public int hashCode() { return p.hashCode(); }
+  @Override public boolean equals(Object _that) { return p.equals(((QueryP)_that).p); }
+  public void addToRel(ProgramRel rel) { rel.add(p); }
+  @Override public String toString() { return G.pstr(p); }
+  public String encode() { return "P"+G.domP.indexOf(p); }
+  @Override public int compareTo(Object _that) {
+    QueryP that = (QueryP)_that;
+    int a, b;
+    a = G.domE.indexOf(this.p);
+    b = G.domE.indexOf(that.p);
+    if (a != b) return a < b ? -1 : +1;
+    return 0;
   }
 }
 
@@ -211,6 +290,8 @@ class Query {
 // Current status
 class Status {
   int numUnproven;
+  int absSize;
+  int runAbsSize;
   int absHashCode;
   String absSummary;
 }
@@ -356,7 +437,8 @@ interface BlackBox {
 
 @Chord(
   name = "sliver-ctxts-java",
-  produces = { "C", "CC", "CH", "CI", "objI", "kcfaSenM", "kobjSenM", "ctxtCpyM", "inQuery" },
+  //produces = { "C", "CC", "CH", "CI", "objI", "kcfaSenM", "kobjSenM", "ctxtCpyM", "inQuery" },
+  produces = { "C", "CC", "CH", "CI", "objI", "kcfaSenM", "kobjSenM", "ctxtCpyM" },
   namesOfTypes = { "C" },
   types = { DomC.class }
 )
@@ -371,6 +453,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   boolean verifyAfterPrune;
   boolean pruneSlivers, refineSites;
   boolean useCtxtsAnalysis;
+  String queryType; // EE or E or P or I
 
   String masterHost;
   int masterPort;
@@ -420,6 +503,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     this.pruneSlivers            = X.getBooleanArg("pruneSlivers", false);
     this.refineSites             = X.getBooleanArg("refineSites", false);
     this.useCtxtsAnalysis        = X.getBooleanArg("useCtxtsAnalysis", false);
+    this.queryType               = X.getStringArg("queryType", null);
 
     this.masterHost              = X.getStringArg("masterHost", null);
     this.masterPort              = X.getIntArg("masterPort", 8888);
@@ -542,28 +626,41 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     // Compute which queries we should answer in the whole program
     String focus = X.getStringArg("focusQuery", null);
     if (focus != null) {
-      String[] tokens = focus.split(",");
+      throw new RuntimeException("Not supported");
+      /*String[] tokens = focus.split(",");
       Quad e1 = G.domE.get(Integer.parseInt(tokens[0]));
       Quad e2 = G.domE.get(Integer.parseInt(tokens[1]));
-      allQueries.add(new Query(e1, e2));
+      allQueries.add(new Query(e1, e2));*/
     }
     else {
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("query"); rel.load();
-      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
-      for (Pair<Quad,Quad> pair : result) allQueries.add(new Query(pair.val0, pair.val1));
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("query"+queryType); rel.load();
+      readQueries(rel, allQueries);
       rel.close();
+
+      int maxQueries = X.getIntArg("maxQueries", allQueries.size());
       
       int seed = X.getIntArg("randQuery", -1);
       if (seed != -1) {
+        X.logs("Using %s/%s random queries (seed %s)", maxQueries, allQueries.size(), seed);
         Random rand = new Random(seed);
-        int i = rand.nextInt(allQueries.size());
-        Query q = allQueries.get(i);
-        allQueries.clear();
-        allQueries.add(q);
-        X.logs("Using random query (seed %s) -> chose query %s of %s", seed, i, allQueries.size());
+        List<Query> queries = new ArrayList();
+        int[] perm = Utils.samplePermutation(rand, allQueries.size()); 
+        for (int i = 0; i < maxQueries; i++)
+          queries.add(allQueries.get(perm[i]));
+        allQueries = queries;
+      }
+      else {
+        List<Query> queries = new ArrayList();
+        for (int i = 0; i < maxQueries; i++)
+          queries.add(allQueries.get(i));
+        allQueries = queries;
       }
     }
+    sortQueries(allQueries);
     X.logs("Starting with %s total queries", allQueries.size());
+    outputQueries(allQueries, "initial.queries");
+
+    X.flushOptions();
   }
 
   void finish() { X.finish(null); }
@@ -596,6 +693,27 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     }
   }
 
+  void readQueries(ProgramRel rel, Collection<Query> queries) {
+    if (queryType.equals("P")) {
+      Iterable<Quad> result = rel.getAry1ValTuples();
+      for (Quad p : result) queries.add(new QueryP(p));
+    }
+    else if (queryType.equals("I")) {
+      Iterable<Quad> result = rel.getAry1ValTuples();
+      for (Quad i : result) queries.add(new QueryI(i));
+    }
+    else if (queryType.equals("E")) {
+      Iterable<Quad> result = rel.getAry1ValTuples();
+      for (Quad e : result) queries.add(new QueryE(e));
+    }
+    else if (queryType.equals("EE")) {
+      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
+      for (Pair<Quad,Quad> pair : result) queries.add(new QueryEE(pair.val0, pair.val1));
+    }
+    else
+      throw new RuntimeException("Unknown queryType: "+queryType);
+  }
+
   public String apply(String line) {
     // Hijack and call CtxtsAnalysis
     if (useCtxtsAnalysis) {
@@ -610,30 +728,27 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
         else
           kcfaValue[G.domI.indexOf(q)] = lengths.get(q);
       }
-            ClassicProject.g().resetTaskDone("ctxts-java");
+      ClassicProject.g().resetTaskDone("ctxts-java");
       ClassicProject.g().runTask("ctxts-java");
 
-      ProgramRel relInQuery = (ProgramRel) ClassicProject.g().getTrgt("inQuery");
+      ProgramRel relInQuery = (ProgramRel) ClassicProject.g().getTrgt("inQuery"+queryType);
       relInQuery.zero();
-      for (Query q : queries)
-        relInQuery.add(q.e1, q.e2);
+      for (Query q : queries) q.addToRel(relInQuery);
       relInQuery.save();
 
       for (String task : tasks)
         ClassicProject.g().runTask(task);
 
       Set<Query> unproven = new HashSet<Query>();
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("outQuery"); rel.load();
-      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
-      for (Pair<Quad,Quad> pair : result)
-        unproven.add(new Query(pair.val0, pair.val1));
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("outQuery"+queryType); rel.load();
+      readQueries(rel, unproven);
       rel.close();
       return encodeQueries(unproven);
     }
 
     QueryGroup group = new QueryGroup();
     decodeAbstractionQueries(line, group.abs, group.queries);
-    boolean fastWrongHack = false;
+    /*boolean fastWrongHack = false;
     if (fastWrongHack) {
       // Fast and wrong hack (for testing master/worker connection):
       // Prove a query if we've given context sensitivity to an allocation site in the containing method.
@@ -647,12 +762,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
         if (!methods.contains(q.e1.getMethod()) && !methods.contains(q.e2.getMethod()))
           outQueries.add(q);
       return encodeQueries(outQueries);
-    }
-    else {
-      group.runAnalysis(false);
-      group.removeProvenQueries();
-      return encodeQueries(group.queries);
-    }
+    }*/
+    group.runAnalysis(false);
+    group.removeProvenQueries();
+    return encodeQueries(group.queries);
   }
 
   void runWorker() {
@@ -687,13 +800,14 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     int minH = 0;
     int minI = 0;
     boolean includeAllQueries = true;
+    assert queryType.equals("EE");
     //X.logs("DECODE %s", line);
     for (String s : line.split(" ")) {
       if (s.charAt(0) == 'E') {
         String[] tokens = s.substring(1).split(",");
         Quad e1 = G.domE.get(Integer.parseInt(tokens[0]));
         Quad e2 = G.domE.get(Integer.parseInt(tokens[1]));
-        queries.add(new Query(e1, e2));
+        queries.add(new QueryEE(e1, e2));
       }
       else if (s.charAt(0) == 'H' || s.charAt(0) == 'I') {
         String[] tokens = s.substring(1).split(":");
@@ -743,7 +857,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     StringBuilder buf = new StringBuilder();
     for (Query q : queries) {
       if (buf.length() > 0) buf.append(' ');
-      buf.append(G.qcode(q));
+      buf.append(q.encode());
     }
     return buf.toString();
   }
@@ -854,10 +968,14 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
         out.println(G.cstr(a));
       out.close();
     }
+    X.addSaveFiles("unproven.queries."+iter);
+    outputQueries(sortQueries(new ArrayList(unprovenGroup.queries)), "unproven.queries."+iter);
 
     int numUnproven = numUnproven();
     Status status = new Status();
     status.numUnproven = numUnproven;
+    status.runAbsSize = lastRunAbsSize; // Before pruning (real measure of complexity)
+    status.absSize = unprovenGroup.abs.size(); // After pruning
     status.absHashCode = unprovenGroup.abs.hashCode();
     status.absSummary = unprovenGroup.abs.toString();
     statuses.add(status);
@@ -872,6 +990,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     X.putOutput("numProven", allQueries.size()-numUnproven);
     X.putOutput("numUnproven", numUnproven);
     X.putOutput("numUnprovenHistory", numUnprovenHistory());
+    X.putOutput("runAbsSizeHistory", runAbsSizeHistory());
     X.flushOutput();
   }
 
@@ -882,6 +1001,27 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       buf.append(s.numUnproven);
     }
     return buf.toString();
+  }
+
+  String runAbsSizeHistory() {
+    StringBuilder buf = new StringBuilder();
+    for (Status s : statuses) {
+      if (buf.length() > 0) buf.append(',');
+      buf.append(s.runAbsSize);
+    }
+    return buf.toString();
+  }
+
+  void outputQueries(List<Query> queries, String path) {
+    PrintWriter out = OutDirUtils.newPrintWriter(path);
+    for (Query q : queries)
+      out.println(q.encode()+" "+q);
+    out.close();
+  }
+
+  List<Query> sortQueries(List<Query> queries) {
+    Collections.sort(queries);
+    return queries;
   }
 
   List<Ctxt> sortSlivers(List<Ctxt> slivers) {
@@ -1016,10 +1156,9 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       relKobjSenM.save();
       relCtxtCpyM.save();
 
-      ProgramRel relInQuery = (ProgramRel) ClassicProject.g().getTrgt("inQuery");
+      ProgramRel relInQuery = (ProgramRel) ClassicProject.g().getTrgt("inQuery"+queryType);
       relInQuery.zero();
-      for (Query q : queries)
-        relInQuery.add(q.e1, q.e2);
+      for (Query q : queries) q.addToRel(relInQuery);
       relInQuery.save();
 
       ClassicProject.g().resetTrgtDone(domC); // Make everything that depends on domC undone
@@ -1073,10 +1212,8 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     QueryGroup removeProvenQueries() {
       // From Datalog, read out all unproven queries
       Set<Query> unproven = new HashSet<Query>();
-      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("outQuery"); rel.load();
-      PairIterable<Quad,Quad> result = rel.getAry2ValTuples();
-      for (Pair<Quad,Quad> pair : result)
-        unproven.add(new Query(pair.val0, pair.val1));
+      ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt("outQuery"+queryType); rel.load();
+      readQueries(rel, unproven);
       rel.close();
 
       // Put all proven queries in a new group
@@ -1499,12 +1636,12 @@ class AbstractionMinimizer implements Client {
 
     this.y2queries = new HashMap();
     for (Query q : allQueries)
-      y2queries.put(G.qcode(q), q);
+      y2queries.put(q.encode(), q);
 
     // Keep only queries that bottom was unable to prove but top was able to prove
     HashSet<String> Y = new HashSet();
     for (Query q : allQueries) {
-      String y = G.qcode(q);
+      String y = q.encode();
       if (bottomY.contains(y) && !topY.contains(y)) // Unproven by bottom, proven by top
         Y.add(y);
       else
@@ -1960,7 +2097,7 @@ class AbstractionMinimizer implements Client {
         out.println("Queries:");
         for (String y : g.Y) {
           Query q = y2queries.get(y);
-          out.println("  "+G.estr(q.e1)+" | "+G.estr(q.e2));
+          out.println("  "+q);
         }
       }
       out.close();

@@ -26,6 +26,16 @@ import chord.project.Config;
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
 public class Utils {
+  public static int[] samplePermutation(Random random, int n) {
+    int[] perm = new int[n];
+    for(int i = 0; i < n; i++) perm[i] = i;
+    for(int i = 0; i < n-1; i++) {
+      int j = i+random.nextInt(n-i);
+      int tmp = perm[i]; perm[i] = perm[j]; perm[j] = tmp; // Swap
+    }
+    return perm;
+  }
+
   public static <S, T> void add(Map<S, List<T>> map, S key1, T key2) {
     List<T> s = map.get(key1);
     if(s == null) map.put(key1, s = new ArrayList<T>());

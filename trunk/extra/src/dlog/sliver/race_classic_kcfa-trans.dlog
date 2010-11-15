@@ -50,7 +50,6 @@ staticTM(t:T,m:M) input
 staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 MmethArg(m:M0,n:Z0,v:V0) input
-MspcMethArg(m:M0,v:V0) input
 IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkArg0(i:I0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
@@ -255,11 +254,6 @@ t_kcfaSenStatIM_CICM(i,m,c,d) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenStatI
 # TRANS - t_kcfaDIC_CICM2 kcfaDIC CICM 0,1,2 0,1,2,3
 t_kcfaDIC_CICM2(c:C,i:I,d:C,m:M) output
 t_kcfaDIC_CICM2(c,i,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenStatIM(i,m), kcfaDIC(c,i,d).
-
-### DVC(c,v,o) :- reachableCM(c,m), MspcMethArg(m,v), o=c.
-# TRANS - t_reachableCM_DVC reachableCM DVC 0,1 0,2,3
-t_reachableCM_DVC(c:C,m:M,v:V,o:C) output
-t_reachableCM_DVC(c,m,v,o) :- r_DVC(c,v,o), reachableCM(c,m), MspcMethArg(m,v), o=c.
 
 ### DVDV(d,v,c,u) :- argCopy(i,u,m,v), CICM(c,i,d,m).
 # TRANS - t_CICM_DVDV CICM DVDV 0,1,2,3 2,4,0,5
@@ -488,7 +482,7 @@ t_reachableT_rootCM(t,0,m) :- r_rootCM(0,m), reachableT(t), clinitTM(t,m).
 # TRANS - t_CICM_CMCM CICM CMCM 0,1,2,3 0,4,2,3
 t_CICM_CMCM(c:C,i:I,d:C,n:M,m:M) output
 t_CICM_CMCM(c,i,d,n,m) :- r_CMCM(c,m,d,n), CICM(c,i,d,n), MI(m,i).
-inQuery(e1:E,e2:E) input
+inQueryEE(e1:E,e2:E) input
 ME(m:M0,e:E0) input
 statF(f:F0) input
 EF(e:E0,f:F0) input
@@ -543,8 +537,8 @@ mheZ(c:C0,e:E0,t1:D0,t2:D1) input
 r_mheZ(c:C,e:E,t1:D,t2:D) input # track
 parallelRaceHext(t1:D0,c1:C0,e1:E0,t2:D1,c2:C1,e2:E1) input
 r_parallelRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
-outQuery(e1:E0,e2:E1) input
-r_outQuery(e1:E,e2:E) input # track
+outQueryEE(e1:E0,e2:E1) input
+r_outQueryEE(e1:E,e2:E) input # track
 
 ### escA(a) :- FC(_,a).
 # TRANS - t_FC_escA FC escA 0,1 1
@@ -622,29 +616,29 @@ t_thrSenAbbrCICM_reachableTCMZ(c,i,d,n,t) :- r_reachableTCMZ(t,d,n), reachableTC
 t_reachableTCMZ_reachableTCE(t:D,c:C,m:M,e:E) output
 t_reachableTCMZ_reachableTCE(t,c,m,e) :- r_reachableTCE(t,c,e), reachableTCMZ(t,c,m), ME(m,e).
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 # TRANS - t_reachableTCE_startingRaceHext reachableTCE startingRaceHext 0,1,2 0,1,2,3,4,5
 t_reachableTCE_startingRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) output
-t_reachableTCE_startingRaceHext(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
+t_reachableTCE_startingRaceHext(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 # TRANS - t_reachableTCE_startingRaceHext1 reachableTCE startingRaceHext 0,1,2 3,4,5,0,1,2
 t_reachableTCE_startingRaceHext1(t2:D,c2:C,e2:E,t1:D,c1:C,e1:E) output
-t_reachableTCE_startingRaceHext1(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
+t_reachableTCE_startingRaceHext1(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2).
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
 # TRANS - t_reachableTCE_startingRaceHext2 reachableTCE startingRaceHext 0,1,2 0,1,2,3,4,5
 t_reachableTCE_startingRaceHext2(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) output
-t_reachableTCE_startingRaceHext2(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+t_reachableTCE_startingRaceHext2(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
 # TRANS - t_reachableTCE_startingRaceHext3 reachableTCE startingRaceHext 0,1,2 3,4,5,0,1,2
 t_reachableTCE_startingRaceHext3(t2:D,c2:C,e2:E,t1:D,c1:C,e1:E) output
-t_reachableTCE_startingRaceHext3(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
+t_reachableTCE_startingRaceHext3(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1<c2.
 
-### startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
+### startingRaceHext(t1,c1,e1,t2,c2,e2) :- inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 # TRANS - t_reachableTCE_startingRaceHext4 reachableTCE startingRaceHext 0,1,2 0,1,2,3,4,5
 t_reachableTCE_startingRaceHext4(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) output
-t_reachableTCE_startingRaceHext4(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
+t_reachableTCE_startingRaceHext4(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 # TRANS - t_reachableTCE_startingRaceHext5 reachableTCE startingRaceHext 0,1,2 3,4,5,0,1,2
 t_reachableTCE_startingRaceHext5(t2:D,c2:C,e2:E,t1:D,c1:C,e1:E) output
-t_reachableTCE_startingRaceHext5(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQuery(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
+t_reachableTCE_startingRaceHext5(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 
 ### statE(e) :- EF(e,f), statF(f).
 
@@ -819,7 +813,7 @@ t_mheZ_parallelRaceHext(c1,e1,t1,t2,c2,e2) :- r_parallelRaceHext(t1,c1,e1,t2,c2,
 t_mheZ_parallelRaceHext1(c2:C,e2:E,t2:D,t1:D,c1:C,e1:E) output
 t_mheZ_parallelRaceHext1(c2,e2,t2,t1,c1,e1) :- r_parallelRaceHext(t1,c1,e1,t2,c2,e2), escapingRaceHext(t1,c1,e1,t2,c2,e2), mheZ(c1,e1,t1,t2), mheZ(c2,e2,t2,t1).
 
-### outQuery(e1,e2) :- parallelRaceHext(_,_,e1,_,_,e2).
-# TRANS - t_parallelRaceHext_outQuery parallelRaceHext outQuery 0,1,2,3,4,5 2,5
-t_parallelRaceHext_outQuery(x31:D,x32:C,e1:E,x33:D,x34:C,e2:E) output
-t_parallelRaceHext_outQuery(x31,x32,e1,x33,x34,e2) :- r_outQuery(e1,e2), parallelRaceHext(x31,x32,e1,x33,x34,e2).
+### outQueryEE(e1,e2) :- parallelRaceHext(_,_,e1,_,_,e2).
+# TRANS - t_parallelRaceHext_outQueryEE parallelRaceHext outQueryEE 0,1,2,3,4,5 2,5
+t_parallelRaceHext_outQueryEE(x31:D,x32:C,e1:E,x33:D,x34:C,e2:E) output
+t_parallelRaceHext_outQueryEE(x31,x32,e1,x33,x34,e2) :- r_outQueryEE(e1,e2), parallelRaceHext(x31,x32,e1,x33,x34,e2).
