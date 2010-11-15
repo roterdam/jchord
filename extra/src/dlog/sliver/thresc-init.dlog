@@ -17,5 +17,5 @@ TM(t:T,m:M) input
 ME(m:M,e:E) input
 EV(e:E,v:V) input
 
-query(e1:E,e2:E) output
-query(e,ee) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_), e=ee. # All queries we care about
+queryE(e:E) output
+queryE(e) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_).

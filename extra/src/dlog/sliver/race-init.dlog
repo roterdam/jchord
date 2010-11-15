@@ -25,7 +25,7 @@ relevantM(m:M0) output
 relevantE(e:E0) output
 onlyWr(e:E) output
 rdOrWr(e:E) output
-query(e1:E0,e2:E1) output
+queryEE(e1:E0,e2:E1) output
 
 ### Constraints
 
@@ -40,6 +40,6 @@ rdOrWr(_).
 # Constraints
 ###
 
-query(e1,e2) :- onlyWr(e1), rdOrWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
-query(e1,e2) :- rdOrWr(e1), onlyWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
-query(e1,e2) :- onlyWr(e1), onlyWr(e2), e1=e2, relevantEF(e1,f), relevantEF(e2,f).
+queryEE(e1,e2) :- onlyWr(e1), rdOrWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
+queryEE(e1,e2) :- rdOrWr(e1), onlyWr(e2), e1<e2, relevantEF(e1,f), relevantEF(e2,f).
+queryEE(e1,e2) :- onlyWr(e1), onlyWr(e2), e1=e2, relevantEF(e1,f), relevantEF(e2,f).

@@ -453,12 +453,12 @@ t_reachableCM_reachableT3(x12,m,t) :- r_reachableT(t), reachableCM(x12,m), MgetS
 # TRANS - t_reachableT_reachableT reachableT reachableT 0 1
 t_reachableT_reachableT(s:T,t:T) output
 t_reachableT_reachableT(s,t) :- r_reachableT(t), classT(t), reachableT(s), sub(s,t).
-inQuery(e1:E,e2:E) input
+inQueryE(e:E) input
 EV(e:E,v:V) input
 escA(a:C) input
 r_escA(a:C) input # track
-outQuery(e1:E,e2:E) input
-r_outQuery(e1:E,e2:E) input # track
+outQueryE(e:E) input
+r_outQueryE(e:E) input # track
 
 ### escA(a) :- FA(_,a).
 # TRANS - t_FA_escA FA escA 0,1 1
@@ -481,10 +481,10 @@ t_escA_escA(b,a) :- r_escA(a), escA(b), AFA(b,_,a).
 t_AFA_escA(b:C,x15:F,a:C) output
 t_AFA_escA(b,x15,a) :- r_escA(a), escA(b), AFA(b,x15,a).
 
-### outQuery(e,ee) :- inQuery(e,ee), e=ee, EV(e,v), VCA(v,_,a), escA(a).
-# TRANS - t_VCA_outQuery VCA outQuery 0,1,2 3,4
-t_VCA_outQuery(v:V,x16:C,a:C,e:E,ee:E) output
-t_VCA_outQuery(v,x16,a,e,ee) :- r_outQuery(e,ee), inQuery(e,ee), e=ee, EV(e,v), VCA(v,x16,a), escA(a).
-# TRANS - t_escA_outQuery escA outQuery 0 1,2
-t_escA_outQuery(a:C,e:E,ee:E) output
-t_escA_outQuery(a,e,ee) :- r_outQuery(e,ee), inQuery(e,ee), e=ee, EV(e,v), VCA(v,_,a), escA(a).
+### outQueryE(e) :- inQueryE(e), EV(e,v), VCA(v,_,a), escA(a).
+# TRANS - t_VCA_outQueryE VCA outQueryE 0,1,2 3
+t_VCA_outQueryE(v:V,x16:C,a:C,e:E) output
+t_VCA_outQueryE(v,x16,a,e) :- r_outQueryE(e), inQueryE(e), EV(e,v), VCA(v,x16,a), escA(a).
+# TRANS - t_escA_outQueryE escA outQueryE 0 1
+t_escA_outQueryE(a:C,e:E) output
+t_escA_outQueryE(a,e) :- r_outQueryE(e), inQueryE(e), EV(e,v), VCA(v,_,a), escA(a).
