@@ -67,16 +67,6 @@ CfromHC(cm:C,h:H,c:C) input
 r_CfromHC(cm:C,h:H,c:C) input # track
 CfromIC(cm:C,i:I,c:C) input
 r_CfromIC(cm:C,i:I,c:C) input # track
-
-### CfromHC(cm,h,c) :- CC(c,cm), CH(cm,h).
-# TRANS - t_CH_CfromHC CH CfromHC 0,1 0,1,2
-t_CH_CfromHC(cm:C,h:H,c:C) output
-t_CH_CfromHC(cm,h,c) :- r_CfromHC(cm,h,c), CC(c,cm), CH(cm,h).
-
-### CfromIC(ci,i,c) :- CC(c,ci), CI(ci,i).
-# TRANS - t_CI_CfromIC CI CfromIC 0,1 0,1,2
-t_CI_CfromIC(ci:C,i:I,c:C) output
-t_CI_CfromIC(ci,i,c) :- r_CfromIC(ci,i,c), CC(c,ci), CI(ci,i).
 objM(m:M) input
 r_objM(m:M) input # track
 MspcMethArg(m:M,v:V) input
@@ -113,6 +103,25 @@ AFA(a1:C,f:F,a2:C) input
 r_AFA(a1:C,f:F,a2:C) input # track
 reachableT(t:T) input
 r_reachableT(t:T) input # track
+inQueryP(p:P) input
+PobjVarAsgnInst(p:P,l:V,r:V) input
+VT(v:V0,t:T0) input
+ptsVH(v:V,h:H) input
+r_ptsVH(v:V,h:H) input # track
+ptsVT(v:V,t:T) input
+r_ptsVT(v:V,t:T) input # track
+outQueryP(p:P) input
+r_outQueryP(p:P) input # track
+
+### CfromHC(cm,h,c) :- CC(c,cm), CH(cm,h).
+# TRANS - t_CH_CfromHC CH CfromHC 0,1 0,1,2
+t_CH_CfromHC(cm:C,h:H,c:C) output
+t_CH_CfromHC(cm,h,c) :- r_CfromHC(cm,h,c), CC(c,cm), CH(cm,h).
+
+### CfromIC(ci,i,c) :- CC(c,ci), CI(ci,i).
+# TRANS - t_CI_CfromIC CI CfromIC 0,1 0,1,2
+t_CI_CfromIC(ci:C,i:I,c:C) output
+t_CI_CfromIC(ci,i,c) :- r_CfromIC(ci,i,c), CC(c,ci), CI(ci,i).
 
 ### VAfilter(v,a) :- VHfilter(v,h), CH(a,h).
 # TRANS - t_CH_VAfilter CH VAfilter 0,1 2,0
@@ -454,15 +463,6 @@ t_reachableCM_reachableT3(x12,m,t) :- r_reachableT(t), reachableCM(x12,m), MgetS
 # TRANS - t_reachableT_reachableT reachableT reachableT 0 1
 t_reachableT_reachableT(s:T,t:T) output
 t_reachableT_reachableT(s,t) :- r_reachableT(t), classT(t), reachableT(s), sub(s,t).
-inQueryP(p:P) input
-PobjVarAsgnInst(p:P,l:V,r:V) input
-VT(v:V0,t:T0) input
-ptsVH(v:V,h:H) input
-r_ptsVH(v:V,h:H) input # track
-ptsVT(v:V,t:T) input
-r_ptsVT(v:V,t:T) input # track
-outQueryP(p:P) input
-r_outQueryP(p:P) input # track
 
 ### ptsVH(v,h) :- VCA(v,_,o), CH(o,h).
 # TRANS - t_VCA_ptsVH VCA ptsVH 0,1,2 0,3

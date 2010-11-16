@@ -363,7 +363,7 @@ class Abstraction {
   }
 
   // assertDisjoint: this is when we are pruning slivers (make sure never step on each other's toes)
-  void addRefinements(Ctxt c, int addk, boolean assertDisjoint) {
+  void addRefinements(Ctxt c, int addk, boolean assertDisjoint, boolean disallowRepeats) {
     assert addk >= 0;
     if (assertDisjoint) assert !S.contains(c);
     if (addk == 0)
@@ -371,13 +371,23 @@ class Abstraction {
     else {
       assert G.isSummary(c);
       Ctxt d = G.atomize(c);
-      addRefinements(d, 0, assertDisjoint);
       Collection<Quad> extensions = G.atomLen(d) == 0 ?
         G.jSet : // All sites
         G.rev_jm.get(d.last().getMethod()); // sites that match
-      for (Quad j : extensions) // Append possible j's
-        addRefinements(G.summarize(d.append(j)), addk-1, assertDisjoint);
+      if (disallowRepeats && !allowNonRepeatingExtensions(d, extensions)) // Can't extend
+        S.add(c);
+      else {
+        addRefinements(d, 0, assertDisjoint, disallowRepeats);
+        for (Quad j : extensions) // Append possible j's
+          addRefinements(G.summarize(d.append(j)), addk-1, assertDisjoint, disallowRepeats);
+      }
     }
+  }
+
+  boolean allowNonRepeatingExtensions(Ctxt c, Collection<Quad> extensions) {
+    for (Quad q : extensions)
+      if (c.contains(q)) return false;
+    return true;
   }
 
   // Return the minimum set of slivers in S that covers sliver c (covering defined with respect to set of chains)
@@ -437,7 +447,6 @@ interface BlackBox {
 
 @Chord(
   name = "sliver-ctxts-java",
-  //produces = { "C", "CC", "CH", "CI", "objI", "kcfaSenM", "kobjSenM", "ctxtCpyM", "inQuery" },
   produces = { "C", "CC", "CH", "CI", "objI", "kcfaSenM", "kobjSenM", "ctxtCpyM" },
   namesOfTypes = { "C" },
   types = { DomC.class }
@@ -454,6 +463,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   boolean pruneSlivers, refineSites;
   boolean useCtxtsAnalysis;
   String queryType; // EE or E or P or I
+  boolean disallowRepeats;
 
   String masterHost;
   int masterPort;
@@ -504,6 +514,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     this.refineSites             = X.getBooleanArg("refineSites", false);
     this.useCtxtsAnalysis        = X.getBooleanArg("useCtxtsAnalysis", false);
     this.queryType               = X.getStringArg("queryType", null);
+    this.disallowRepeats         = X.getBooleanArg("disallowRepeats", false);
 
     this.masterHost              = X.getStringArg("masterHost", null);
     this.masterPort              = X.getIntArg("masterPort", 8888);
@@ -846,7 +857,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       for (Quad q : lengths.keySet()) {
         int len = lengths.get(q);
         if (len > 0)
-          abs.addRefinements(G.summarize(G.emptyCtxt.append(q)), len-1, pruneSlivers);
+          abs.addRefinements(G.summarize(G.emptyCtxt.append(q)), len-1, pruneSlivers, disallowRepeats);
       }
     }
     return lengths;
@@ -874,7 +885,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       int len = G.isAlloc(j) ? minH : minI;
       if (pruneSlivers && !is0CFA()) assert len > 0;
       if (len > 0)
-        unprovenGroup.abs.addRefinements(G.summarize(G.emptyCtxt.append(j)), len-1, pruneSlivers);
+        unprovenGroup.abs.addRefinements(G.summarize(G.emptyCtxt.append(j)), len-1, pruneSlivers, disallowRepeats);
     }
 
     X.logs("Unproven group with %s queries", allQueries.size());
@@ -1262,7 +1273,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
         X.logs("%s/%s sites relevant", relevantSites.size(), jSet.size());
         for (Ctxt c : abs.getSlivers()) { // For each sliver...
           if (G.isSummary(c) && (!G.hasHeadSite(c) || relevantSites.contains(c.head()))) // If have a relevant head site (or empty)
-            newAbs.addRefinements(c, 1, pruneSlivers);
+            newAbs.addRefinements(c, 1, pruneSlivers, disallowRepeats);
           else
             newAbs.add(c);
         }
@@ -1271,12 +1282,13 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
         for (Ctxt c : abs.getSlivers()) { // For each sliver
           if (G.isSummary(c)) {
             if (G.summaryLen(c) == 0 && is0CFA()) { // Special case 0-CFA to avoid overlapping (relevant if pruning)
-              newAbs.addRefinements(G.emptyCtxt, 0, pruneSlivers);
+              newAbs.addRefinements(G.emptyCtxt, 0, pruneSlivers, disallowRepeats);
               for (Quad i : iSet) // Only extend [*] to [i,*] for call sites i, because [h,*] already exist (really [*] represented [*]-[h,*])
-                newAbs.addRefinements(G.summarize(G.emptyCtxt.prepend(i)), 0, pruneSlivers);
+                newAbs.addRefinements(G.summarize(G.emptyCtxt.prepend(i)), 0, pruneSlivers, disallowRepeats);
             }
-            else
-              newAbs.addRefinements(c, 1, pruneSlivers);
+            else {
+              newAbs.addRefinements(c, 1, pruneSlivers, disallowRepeats);
+            }
           }
           else newAbs.add(c); // Leave atomic ones alone (already precise as possible)
         }
