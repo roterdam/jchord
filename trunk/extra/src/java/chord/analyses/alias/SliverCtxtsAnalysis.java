@@ -115,6 +115,7 @@ class GlobalInfo {
   DomE domE;
   DomP domP;
   HashMap<jq_Method,List<Quad>> rev_jm;
+  Set<Quad> iSet;
   Set<Quad> jSet;
 
   void sleep(int seconds) {
@@ -374,7 +375,13 @@ class Abstraction {
       Collection<Quad> extensions = G.atomLen(d) == 0 ?
         G.jSet : // All sites
         G.rev_jm.get(d.last().getMethod()); // sites that match
-      if (disallowRepeats && !allowNonRepeatingExtensions(d, extensions)) // Can't extend
+
+      if (G.summaryLen(c) == 0) { // [*] really means matching call sites
+        addRefinements(G.emptyCtxt, 0, assertDisjoint, disallowRepeats);
+        for (Quad i : G.iSet) // Only extend [*] to [i,*] for call sites i, because [h,*] already exist (really, [*] represents [*]-[h,*])
+          addRefinements(G.summarize(G.emptyCtxt.prepend(i)), 0, assertDisjoint, disallowRepeats);
+      }
+      else if (disallowRepeats && !allowNonRepeatingExtensions(d, extensions)) // Can't extend
         S.add(c);
       else {
         addRefinements(d, 0, assertDisjoint, disallowRepeats);
@@ -503,6 +510,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
     G = new GlobalInfo();
     G.rev_jm = rev_jm;
+    G.iSet = iSet;
     G.jSet = jSet;
 
     this.verbose                 = X.getIntArg("verbose", 0);
@@ -880,10 +888,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   void refinePruneLoop() {
     X.logs("Initializing abstraction with length minH=%s,minI=%s slivers (|jSet|=%s)", minH, minI, jSet.size());
     // Initialize abstraction
-    unprovenGroup.abs.add(pruneSlivers && !is0CFA() ? G.emptyCtxt : G.summarize(G.emptyCtxt));
+    unprovenGroup.abs.add(!is0CFA() ? G.emptyCtxt : G.summarize(G.emptyCtxt));
     for (Quad j : jSet) {
       int len = G.isAlloc(j) ? minH : minI;
-      if (pruneSlivers && !is0CFA()) assert len > 0;
+      if (!is0CFA()) assert len > 0;
       if (len > 0)
         unprovenGroup.abs.addRefinements(G.summarize(G.emptyCtxt.append(j)), len-1, pruneSlivers, disallowRepeats);
     }
@@ -1195,6 +1203,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       Abstraction relevantAbs = new Abstraction(); // These are the slivers we keep
       relevantAbs.add(abs.project(G.emptyCtxt)); // Always keep this, because it probably won't show up in CH or CI
       for (String relName : new String[] {"r_CH", "r_CI"}) {
+        if (useObjectSensitivity && relName.equals("r_CI")) continue;
         ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt(relName); rel.load();
         PairIterable<Ctxt,Quad> result = rel.getAry2ValTuples();
         for (Pair<Ctxt,Quad> pair : result)
@@ -1275,22 +1284,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
           if (G.isSummary(c) && (!G.hasHeadSite(c) || relevantSites.contains(c.head()))) // If have a relevant head site (or empty)
             newAbs.addRefinements(c, 1, pruneSlivers, disallowRepeats);
           else
-            newAbs.add(c);
+            newAbs.add(c); // Leave atomic ones alone (already precise as possible)
         }
       }
       else {
         for (Ctxt c : abs.getSlivers()) { // For each sliver
-          if (G.isSummary(c)) {
-            if (G.summaryLen(c) == 0 && is0CFA()) { // Special case 0-CFA to avoid overlapping (relevant if pruning)
-              newAbs.addRefinements(G.emptyCtxt, 0, pruneSlivers, disallowRepeats);
-              for (Quad i : iSet) // Only extend [*] to [i,*] for call sites i, because [h,*] already exist (really [*] represented [*]-[h,*])
-                newAbs.addRefinements(G.summarize(G.emptyCtxt.prepend(i)), 0, pruneSlivers, disallowRepeats);
-            }
-            else {
-              newAbs.addRefinements(c, 1, pruneSlivers, disallowRepeats);
-            }
-          }
-          else newAbs.add(c); // Leave atomic ones alone (already precise as possible)
+          if (G.isSummary(c))
+            newAbs.addRefinements(c, 1, pruneSlivers, disallowRepeats);
+          else
+            newAbs.add(c); // Leave atomic ones alone (already precise as possible)
         }
         if (pruneSlivers)
           newAbs.assertDisjoint();

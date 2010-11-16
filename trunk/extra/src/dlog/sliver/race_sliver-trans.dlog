@@ -17,8 +17,6 @@
 HT(h:H0,t:T1) input
 sub(t1:T1,t2:T0) input
 MI(m:M,i:I) input
-MH(m:M,h:H) input
-MV(m:M,v:V) input
 statIM(i:I,m:M) input
 specIM(i:I,m:M) input
 IM(i:I,m:M) input
@@ -47,63 +45,35 @@ MputInstFldInst(m:M,b:V,f:F,r:V) input
 MgetStatFldInst(m:M,l:V,f:F)     input
 MputStatFldInst(m:M,f:F,r:V)     input
 RobjValAsgnInst(c:C,l:V,h:H) input
-r_RobjValAsgnInst(c:C,l:V,h:H) input # track
 RobjVarAsgnInst(c:C,l:V,r:V) input
-r_RobjVarAsgnInst(c:C,l:V,r:V) input # track
 RgetInstFldInst(c:C,l:V,b:V,f:F) input
-r_RgetInstFldInst(c:C,l:V,b:V,f:F) input # track
 RputInstFldInst(c:C,b:V,f:F,r:V) input
-r_RputInstFldInst(c:C,b:V,f:F,r:V) input # track
 RgetStatFldInst(c:C,l:V,f:F) input
-r_RgetStatFldInst(c:C,l:V,f:F) input # track
 RputStatFldInst(c:C,f:F,r:V) input
-r_RputStatFldInst(c:C,f:F,r:V) input # track
 CH(c:C,h:H) input
-r_CH(c:C,h:H) input # track
 CI(c:C,i:I) input
-r_CI(c:C,i:I) input # track
 CC(c:C,c:C) input
 objI(i:I) input
 CfromHC(cm:C,h:H,c:C) input
-r_CfromHC(cm:C,h:H,c:C) input # track
 CfromIC(cm:C,i:I,c:C) input
-r_CfromIC(cm:C,i:I,c:C) input # track
 objM(m:M) input
-r_objM(m:M) input # track
 MspcMethArg(m:M,v:V) input
-r_MspcMethArg(m:M,v:V) input # track
 MordMethArg(m:M,z:Z,v:V) input
-r_MordMethArg(m:M,z:Z,v:V) input # track
 argIVMV(i:I0,u:V1,m:M0,v:V0) input
-r_argIVMV(i:I,u:V,m:M,v:V) input # track
 retIVMV(i:I0,u:V0,m:M0,v:V1) input
-r_retIVMV(i:I,u:V,m:M,v:V) input # track
 CIA(c:C,i:I,a:C) input
-r_CIA(c:C,i:I,a:C) input # track
 CIH(c:C,i:I,h:H) input
-r_CIH(c:C,i:I,h:H) input # track
 ICM(i:I,c:C,m:M) input
-r_ICM(i:I,c:C,m:M) input # track
 CIany(c:C,i:I) input
-r_CIany(c:C,i:I) input # track
 reachableCI(c:C,i:I) input
-r_reachableCI(c:C,i:I) input # track
 reachableCM(c:C,m:M) input
-r_reachableCM(c:C,m:M) input # track
 VCfromVC(v1:V0,e1:C0,v2:V1,e2:C1) input
-r_VCfromVC(v1:V,e1:C,v2:V,e2:C) input # track
 CICM(ci:C,i:I,cm:C,m:M) input
-r_CICM(ci:C,i:I,cm:C,m:M) input # track
 VAfilter(v:V,a:C) input
-r_VAfilter(v:V,a:C) input # track
 VCA(v:V,e:C,a:C) input
-r_VCA(v:V,e:C,a:C) input # track
 FA(f:F,a:C) input
-r_FA(f:F,a:C) input # track
 AFA(a1:C,f:F,a2:C) input
-r_AFA(a1:C,f:F,a2:C) input # track
 reachableT(t:T) input
-r_reachableT(t:T) input # track
 inQueryEE(e1:E,e2:E) input
 ME(m:M0,e:E0) input
 statF(f:F0) input
@@ -116,50 +86,78 @@ MPtail(m:M0,p:P0) input
 PI(p:P0,i:I0) input
 threadDHM(t:D,h:H,m:M) input
 threadDCM(t:D,c:C,m:M) input
-r_threadDCM(t:D,c:C,m:M) input # track
 thrSenAbbrRootCM(c:C0,m:M0) input
-r_thrSenAbbrRootCM(c:C,m:M) input # track
 thrSenAbbrReachableCM(c:C0,m:M0)  input
-r_thrSenAbbrReachableCM(c:C,m:M) input # track
 thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0)  input
-r_thrSenAbbrCICM(c:C,i:I,d:C,m:M) input # track
 reachableTCMZ(t:D0,c:C0,m:M0) input
-r_reachableTCMZ(t:D,c:C,m:M) input # track
 reachableTCE(t:D0,c:C0,e:E0) input
-r_reachableTCE(t:D,c:C,e:E) input # track
 startingRaceHext(t1:D0,c1:C0,e1:E0,t2:D1,c2:C1,e2:E1) input
-r_startingRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
 statE(e:E0) input
-r_statE(e:E) input # track
 CEC(c:C0,e:E0,o:C1) input
-r_CEC(c:C,e:E,o:C) input # track
 escA(a:C) input
-r_escA(a:C) input # track
 escapingRaceHext(t1:D0,c1:C0,e1:E0,t2:D1,c2:C1,e2:E1) input
-r_escapingRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
 threadDC(t:D,c:C) input
-r_threadDC(t:D,c:C) input # track
 ForkPMcs(caller:C,p1:P,callee:C)  input
-r_ForkPMcs(caller:C,p1:P,callee:C) input # track
 ForkPHcs(caller:C,p1:P,callee:C,p2:P)  input
-r_ForkPHcs(caller:C,p1:P,callee:C,p2:P) input # track
 NonForkPMcs(caller:C,p1:P,callee:C,m2:M) input
-r_NonForkPMcs(caller:C,p1:P,callee:C,m2:M) input # track
 NonForkPHcs(caller:C,p1:P,callee:C,p2:P) input
-r_NonForkPHcs(caller:C,p1:P,callee:C,p2:P) input # track
 NonForkPTcs(caller:C,p1:P,callee:C,p2:P) input
-r_NonForkPTcs(caller:C,p1:P,callee:C,p2:P) input # track
 PathEdgeZ(c:C,p:P,this:D,sThat:D,tThat:D) input
-r_PathEdgeZ(c:C,p:P,this:D,sThat:D,tThat:D) input # track
 SummEdgeZ(c:C,p:P,this:D,sThat:D,tThat:D) input
-r_SummEdgeZ(c:C,p:P,this:D,sThat:D,tThat:D) input # track
 mhpZ(c:C0,p:P0,t1:D0,t2:D1) input
-r_mhpZ(c:C,p:P,t1:D,t2:D) input # track
 mheZ(c:C0,e:E0,t1:D0,t2:D1) input
-r_mheZ(c:C,e:E,t1:D,t2:D) input # track
 parallelRaceHext(t1:D0,c1:C0,e1:E0,t2:D1,c2:C1,e2:E1) input
-r_parallelRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
 outQueryEE(e1:E0,e2:E1) input
+r_RobjValAsgnInst(c:C,l:V,h:H) input # track
+r_RobjVarAsgnInst(c:C,l:V,r:V) input # track
+r_RgetInstFldInst(c:C,l:V,b:V,f:F) input # track
+r_RputInstFldInst(c:C,b:V,f:F,r:V) input # track
+r_RgetStatFldInst(c:C,l:V,f:F) input # track
+r_RputStatFldInst(c:C,f:F,r:V) input # track
+r_CH(c:C,h:H) input # track
+r_CI(c:C,i:I) input # track
+r_CfromHC(cm:C,h:H,c:C) input # track
+r_CfromIC(cm:C,i:I,c:C) input # track
+r_objM(m:M) input # track
+r_MspcMethArg(m:M,v:V) input # track
+r_MordMethArg(m:M,z:Z,v:V) input # track
+r_argIVMV(i:I,u:V,m:M,v:V) input # track
+r_retIVMV(i:I,u:V,m:M,v:V) input # track
+r_CIA(c:C,i:I,a:C) input # track
+r_CIH(c:C,i:I,h:H) input # track
+r_ICM(i:I,c:C,m:M) input # track
+r_CIany(c:C,i:I) input # track
+r_reachableCI(c:C,i:I) input # track
+r_reachableCM(c:C,m:M) input # track
+r_VCfromVC(v1:V,e1:C,v2:V,e2:C) input # track
+r_CICM(ci:C,i:I,cm:C,m:M) input # track
+r_VAfilter(v:V,a:C) input # track
+r_VCA(v:V,e:C,a:C) input # track
+r_FA(f:F,a:C) input # track
+r_AFA(a1:C,f:F,a2:C) input # track
+r_reachableT(t:T) input # track
+r_threadDCM(t:D,c:C,m:M) input # track
+r_thrSenAbbrRootCM(c:C,m:M) input # track
+r_thrSenAbbrReachableCM(c:C,m:M) input # track
+r_thrSenAbbrCICM(c:C,i:I,d:C,m:M) input # track
+r_reachableTCMZ(t:D,c:C,m:M) input # track
+r_reachableTCE(t:D,c:C,e:E) input # track
+r_startingRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
+r_statE(e:E) input # track
+r_CEC(c:C,e:E,o:C) input # track
+r_escA(a:C) input # track
+r_escapingRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
+r_threadDC(t:D,c:C) input # track
+r_ForkPMcs(caller:C,p1:P,callee:C) input # track
+r_ForkPHcs(caller:C,p1:P,callee:C,p2:P) input # track
+r_NonForkPMcs(caller:C,p1:P,callee:C,m2:M) input # track
+r_NonForkPHcs(caller:C,p1:P,callee:C,p2:P) input # track
+r_NonForkPTcs(caller:C,p1:P,callee:C,p2:P) input # track
+r_PathEdgeZ(c:C,p:P,this:D,sThat:D,tThat:D) input # track
+r_SummEdgeZ(c:C,p:P,this:D,sThat:D,tThat:D) input # track
+r_mhpZ(c:C,p:P,t1:D,t2:D) input # track
+r_mheZ(c:C,e:E,t1:D,t2:D) input # track
+r_parallelRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
 r_outQueryEE(e1:E,e2:E) input # track
 
 ### CfromHC(cm,h,c) :- CC(c,cm), CH(cm,h).

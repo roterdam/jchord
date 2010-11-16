@@ -225,4 +225,3 @@ CVC(c,v,o) :- DVC(c,v,o), !epsilonV(v).
 rootCM(0,0).
 rootCM(0,m) :- reachableT(t), clinitTM(t,m).
 CMCM(c,m,d,n) :- CICM(c,i,d,n), MI(m,i).
-
