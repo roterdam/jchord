@@ -29,13 +29,14 @@ public class RelInserts extends ProgramRel implements IInvokeInstVisitor {
   DomV domV;
   jq_Method method;
   jq_Type OBJ_T;
-  boolean MAP_PUT = true;
+  boolean MAP_PUT = false;
   public void init() {
     domI = (DomI) doms[0];
     domV = (DomV) doms[1];
 //    MAP_PUT = Config.buildBoolProperty("modelPuts", false);
     OBJ_T = jq_Type.parseType("java.lang.Object");
     RelINewColl.tInit();
+    MAP_PUT = Config.buildBoolProperty("putIsInsert", false);
   }
 
   public void visit(jq_Class c) { }

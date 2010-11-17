@@ -16,7 +16,7 @@
 .include "U.dom"
 .include "Opt.dom"
 
-.bddvarorder I0_Z0_StrConst0_Opt0_M0_V0_F0_H0_V1_V2_UV0_U0_U1_T0
+.bddvarorder I0_Z0_StrConst0_Opt0_M0_V0_F0_H0_V1_V2_UV0_U0_U1_T0_Opt1
 
 
 
@@ -112,6 +112,8 @@ vColHolds(collection:V,site:Opt) output
 confMethCall(i:I,z:Z,site:Opt) output
 confReturn(m:M, site:Opt) output
 confArg(m:M,z:Z, site:Opt) output
+confConf(o:Opt0,site:I,pos:Z,s:Opt1) output
+
 
 ##
 #Below rule is problematic
@@ -206,11 +208,6 @@ primAPIOpt(i,z,v) :- excludedCall(i),IinvkPrimArg(i,z,v).
 confMethCall(i,z,site) :- refAPIOpt(i,z,v),refFlow(v,site).
 confMethCall(i,z,site) :- primAPIOpt(i,z,v),primFlow(v,site).
 
-confReturn(m,site) :- MmethPrimRet(m,0,v),primFlow(v,site).
-confReturn(m,site) :- MmethRet(m,0,v),refFlow(v,site).
-
-confArg(m,z,site) :- MmethArg(m,z,v),refFlow(v,site).
-confArg(m,z,site) :- MmethPrimArg(m,z,v),primFlow(v,site).
 
 timeVar(v) :- primFlow(v,0).
 #primFlow(v,tSite),getTime(_,tSite).
@@ -221,3 +218,17 @@ timeConf(confSite) :- primCVar(v,confSite),timeVar(v2),MPrimCmp(_,v,v2 ). split
 
 allowableOpts(site,str) :- stringCompare(_,v1,v2), refFlow(v1,site), VConstFlow(v2,str).
 allowableOpts(site,str) :- stringCompare(_,v1,v2), refFlow(v2,site), VConstFlow(v1,str).
+
+
+#  Purely debug
+
+
+confConf(o,i,z,s) :-  OptNames(o,i),IinvkArg(i,z,v),refFlow(v,s).
+confConf(o,i,z,s) :-  OptNames(o,i),IinvkPrimArg(i,z,v),primFlow(v,s).
+
+
+confReturn(m,site) :- MmethPrimRet(m,0,v),primFlow(v,site).
+confReturn(m,site) :- MmethRet(m,0,v),refFlow(v,site).
+
+confArg(m,z,site) :- MmethArg(m,z,v),refFlow(v,site).
+confArg(m,z,site) :- MmethPrimArg(m,z,v),primFlow(v,site).

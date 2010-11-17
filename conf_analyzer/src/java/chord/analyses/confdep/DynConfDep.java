@@ -1,12 +1,8 @@
 package chord.analyses.confdep;
 
 import chord.analyses.confdep.optnames.DomOpts;
-import chord.analyses.primtrack.DomUV;
-import chord.analyses.string.DomStrConst;
-import chord.doms.DomH;
 import chord.doms.DomI;
 import chord.doms.DomV;
-import chord.instr.CoreInstrumentor;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.ClassicProject;
@@ -15,7 +11,6 @@ import chord.project.analyses.*;
 import chord.runtime.CoreEventHandler;
 import chord.util.tuple.object.Pair;
 import java.io.*;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Matcher;
@@ -59,13 +54,24 @@ public class DynConfDep extends CoreDynamicAnalysis {
     args.put(CoreEventHandler.EVENT_HANDLER_CLASS_KEY, DynConfDepRuntime.class.getCanonicalName());
     return new Pair<Class, Map<String, String>>(ArgMonInstr.class, args);
   }
-  
+ 
+  boolean retrace = false;
   @Override
   public void initAllPasses() {
-    results.delete();
+  	retrace = Config.buildBoolProperty("retrace_conf", false);
+
+  	if(!retrace)
+  		results.delete();
     System.out.println("starting execution; clearing buffer file.");
   }
 
+  @Override
+	public void run() {
+  	if(retrace && results.exists())
+  		return;
+  	else
+  		super.run();
+  }
 
   @Override
   public void doneAllPasses() {
