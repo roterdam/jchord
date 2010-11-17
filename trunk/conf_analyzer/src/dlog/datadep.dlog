@@ -11,7 +11,7 @@
 .include "U.dom"
 .include "Opt.dom"
 
-.bddvarorder I0xI1xM0xM1_T0_V0xV1_Opt0_T1_H0_F0_H1_Z0xU0xU1xUV0
+.bddvarorder I0xI1xM0xM1_T0_V0xV1_Opt0_T1_H0_F0_H1_Z0xU0xU1xUV0_Opt1
 
 
 
@@ -49,6 +49,7 @@ IinvkPrimRet(i:I0,n:Z0,u:U0) input
 
 OptNames(o:Opt,site:I) input
 confCall(i:I)
+confConf(o:Opt0,site:I,pos:Z,s:Opt1) output
 
 
 UcU(l:U,r:U)
@@ -108,15 +109,14 @@ summarizedCallArg(i:I,z:Z)
 ##Just for debugging
 insertM(m:M) output
 retrieveM(m:M) output
-argCdep(m:M, z:Z, opt:Opt) output
-IargCdep(i:I, z:Z, opt:Opt) output
-IretDep(i:I,opt:Opt) output
+taintMeth(m:M,opt:Opt) output
+taintedSubfield(v:V,b:V,f:F,opt:Opt) output
+
 
 #collHolds(hST,site) :- HI(hST,site),confUVV(site,_,_).
 vColHolds(col,site) :- VH(col, hST),collHolds(hST,site).
 collHolds(newH,site) :- VH(v,newH),vColHolds(v,site).
 vColHolds(newCol,site) :- INewColl(_,newCol, oldCol),vColHolds(oldCol,site).
-
 
 ##Prim tracking
 objVarAsgnPrimInst(l,r) :- reachableM(m), MobjVarAsgnPrimInst(m,l,r).
@@ -143,10 +143,8 @@ restIM(i,m) :- IM(i,m),!confCall(i),!summarized(m).
 restVV(u,v) :- IinvkArg(i,z,v), summarizedCallArg(i,z),IinvkRet(i,0,u).
 UcU(u,v) :- IinvkPrimArg(i,z,v), summarizedCallArg(i,z),IinvkPrimRet(i,0,u).
 
-
 ##These lines are non-summary flowthrough
 #restIM(i,m) :- IM(i,m),!confCall(i)
-
 
 ## Args flow in
 UcU(v,u) :- IinvkPrimArg(i,z,u), IM(i,m), MmethPrimArg(m,z,v).
@@ -182,7 +180,7 @@ vColHolds(colV,site) :- IInsert(_,colV,v),refCdep(v,site).
 
 #This is here to handle cases where the conf method itself returns a collection
 #May be unneeded because of API-call tainting?
-#refCdep(v,site) :- IRetrieve(_,v,colV),refCdep(colV,site).
+refCdep(v,site) :- IRetrieve(_,v,colV),refCdep(colV,site).
 
 
 primCdep(v,site) :- objVarAsgnPrimInst(v,u),primCdep(u,site).
@@ -199,8 +197,11 @@ refCdep(v,site) :- clones(v,r),refCdep(r,site).
 
 ##Below is dangerous; a tainted ref with a conf field can infect everything.
 #  Acceptable in some more restricted sense, perhaps. Which types are field-insensitive?
-refCdep(v,site) :- getInstFldInst(v,b,_),refCdep(b,site).
-
+# 
+# Not clear why we need this, if we model Paths as a unitary API type
+# Note that we already have a specialized version this rule for collections and arrays
+#refCdep(v,site) :- getInstFldInst(v,b,_),refCdep(b,site).
+taintedSubfield(v,b,f,opt) :- getInstFldInst(v,b,f),refCdep(b,opt),f!=0.
    
 #refCdep(v,site) :- clones(v,r),instHF(h1,f,site).
 
@@ -222,7 +223,10 @@ refCdep(v,opt) :- taintingCall(i, opt),IinvkArg(i,0,v),instI(i).
 insertM(m) :- IInsert(i,_,_),IM(i,m).
 retrieveM(m) :- IRetrieve(i,_,_),IM(i,m).
 
-
 returnsConf(i,v,site) :- IinvkRet(i,_,v),refCdep(v,site),!APIMethod(i).
 
+confConf(o,i,z,s) :-  OptNames(o,i),IinvkArg(i,z,v),refCdep(v,s).
+confConf(o,i,z,s) :-  OptNames(o,i),IinvkPrimArg(i,z,v),primCdep(v,s).
 
+
+taintMeth(m,opt) :- taintingCall(i, opt),IM(i,m).

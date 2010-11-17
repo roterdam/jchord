@@ -1,6 +1,4 @@
-#
-#
-#    Ari Rabkin
+#  Author:  Ari Rabkin
 # name=confdep-dlog
 
 
@@ -33,7 +31,6 @@ primControlDep(i:I,u:UV) input
 APIMethod(i:I) input
 IM(i:I,m:M) input
 UVU(uv:UV,u:U) input
-
 
 #Needed to handle, e.g., dependence on pointers being non-null
 primConfDep(u,opt) :- primRefDep(u,v),refCdep(v,opt).

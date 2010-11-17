@@ -23,6 +23,15 @@ MmethPrimRet(m:M0,n:Z0,u:U0) input
 IinvkPrimArg(i:I0,n:Z0,u:U0) input
 IinvkPrimRet(i:I0,n:Z0,u:U0) input
 
+MmethRet(m:M0,n:Z0,v:V1) input
+MmethArg(m:M0,n:Z0,u:V0) input
+IinvkArg(i:I0,n:Z0,v:V1) input
+IinvkRet(i:I0,n:Z0,v:V0) input
+
+argCdep(m:M, z:Z, opt:Opt)  output
+IargCdep(i:I, z:Z, opt:Opt)  output
+IretDep(i:I, opt:Opt)  output
+
 ####Debugging
 
 argCdep(m, z, opt) :- MmethArg(m,z,v),refCdep(v,opt).

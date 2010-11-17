@@ -42,7 +42,12 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
     if(methname.equals("compareTo") || methname.equals("equals") || methname.equals("hashCode"))
       return false;
 
-/*    if(classname.equals("java.net.URI"))
+    if(classname.equals("java.lang.Thread"))
+    	return false;
+    if(classname.startsWith("java.lang") && methname.equals("newInstance"))
+    	return false;
+    
+    	/*    if(classname.equals("java.net.URI"))
         return (methname.equals("<init>") || methname.startsWith("get")
             || methname.startsWith("to")
             || methname.equals("resolve")
@@ -66,10 +71,7 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
        || (classname.startsWith("java.net") && !classname.equals("java.net.URI"))
  //      || classname.startsWith("java.net")   //OK with field sensitivity
        || classname.startsWith("java.text"); //ditto
-*/    
-//  || 
-
-
+*/  
   }
 
   @Override
