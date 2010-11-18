@@ -15,12 +15,8 @@
 .bddvarorder F0_D0xD1xD2xD3xD4_P0xP1xP2_I0xI1xM0xM1_T0_V0xV1_T1_H0xH1_C0xC1xC2xC3_Z0_E0xE1
 
 HT(h:H0,t:T1) input
-cha(n:M1,t:T1,m:M0) input
 sub(t1:T1,t2:T0) input
 MI(m:M,i:I) input
-statIM(i:I,m:M) input
-specIM(i:I,m:M) input
-virtIM(i:I,m:M) input
 MobjValAsgnInst(m:M,l:V,h:H) input
 MobjVarAsgnInst(m:M,l:V,r:V) input
 MgetInstFldInst(m:M,l:V,b:V,f:F) input
@@ -56,7 +52,6 @@ CI(c:C,i:I) input
 epsilonM(m:M) input
 kcfaSenM(m:M) input
 epsilonV(v:V) input
-IHM(i:I,h:H,m:M) input
 reachableT(t:T) input
 kcfaDIC(c:C,i:I,c:C) input
 DIC(c:C,i:I,c:C) input
@@ -80,8 +75,6 @@ CIC(c:C,i:I,d:C) input
 CHC(c:C,h:H,d:C) input
 inQueryEE(e1:E,e2:E) input
 ME(m:M0,e:E0) input
-statF(f:F0) input
-EF(e:E0,f:F0) input
 EV(e:E0,v:V0) input
 PE(p:P0,e:E0) input
 PP(p:P0,q:P1) input
@@ -120,19 +113,12 @@ r_RgetStatFldInst(c:C,l:V,f:F) input # track
 r_RputStatFldInst(c:C,f:F,r:V) input # track
 r_CH(c:C,h:H) input # track
 r_CI(c:C,i:I) input # track
-r_IHM(i:I,h:H,m:M) input # track
 r_reachableT(t:T) input # track
 r_kcfaDIC(c:C,i:I,c:C) input # track
 r_DIC(c:C,i:I,c:C) input # track
 r_DIH(c:C,i:I,h:H) input # track
 r_DI(c:C,i:I) input # track
 r_DVDV(c:C,u:V,d:C,v:V) input # track
-r_ctxtInsIHM(i:I,h:H,m:M) input # track
-r_kcfaSenIHM(i:I,h:H,m:M) input # track
-r_ctxtInsSpecIM(i:I,m:M) input # track
-r_kcfaSenSpecIM(i:I,m:M) input # track
-r_ctxtInsStatIM(i:I,m:M) input # track
-r_kcfaSenStatIM(i:I,m:M) input # track
 r_reachableCI(c:C,i:I) input # track
 r_reachableCM(c:C,m:M) input # track
 r_CICM(c:C,i:I,d:C,m:M) input # track
@@ -149,7 +135,6 @@ r_thrSenAbbrCICM(c:C,i:I,d:C,m:M) input # track
 r_reachableTCMZ(t:D,c:C,m:M) input # track
 r_reachableTCE(t:D,c:C,e:E) input # track
 r_startingRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
-r_statE(e:E) input # track
 r_CEC(c:C,e:E,o:C) input # track
 r_escA(a:C) input # track
 r_escapingRaceHext(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) input # track
@@ -175,26 +160,6 @@ t_CI_CIC(d,i,c) :- r_CIC(c,i,d), CC(c,d), CI(d,i).
 # TRANS - t_CH_CHC CH CHC 0,1 2,1,0
 t_CH_CHC(d:C,h:H,c:C) output
 t_CH_CHC(d,h,c) :- r_CHC(c,h,d), CC(c,d), CH(d,h).
-
-### IHM(i,h,m2) :- virtIM(i,m1), HT(h,t), cha(m1,t,m2).
-
-### ctxtInsIHM(i,h,m) :- IHM(i,h,m), epsilonM(m).
-# TRANS - t_IHM_ctxtInsIHM IHM ctxtInsIHM 0,1,2 0,1,2
-t_IHM_ctxtInsIHM(i:I,h:H,m:M) output
-t_IHM_ctxtInsIHM(i,h,m) :- r_ctxtInsIHM(i,h,m), IHM(i,h,m), epsilonM(m).
-
-### kcfaSenIHM(i,h,m) :- IHM(i,h,m), kcfaSenM(m).
-# TRANS - t_IHM_kcfaSenIHM IHM kcfaSenIHM 0,1,2 0,1,2
-t_IHM_kcfaSenIHM(i:I,h:H,m:M) output
-t_IHM_kcfaSenIHM(i,h,m) :- r_kcfaSenIHM(i,h,m), IHM(i,h,m), kcfaSenM(m).
-
-### kcfaSenSpecIM(i,m) :- specIM(i,m), kcfaSenM(m).
-
-### ctxtInsSpecIM(i,m) :- specIM(i,m), epsilonM(m).
-
-### kcfaSenStatIM(i,m) :- statIM(i,m), kcfaSenM(m).
-
-### ctxtInsStatIM(i,m) :- statIM(i,m), epsilonM(m).
 
 ### reachableCM(0,m) :- clinitTM(t,m), reachableT(t).
 # TRANS - t_reachableT_reachableCM reachableT reachableCM 0 1,2
@@ -243,9 +208,6 @@ t_CIC_kcfaDIC1(c,i,d) :- r_kcfaDIC(c,i,d), CIC(c,i,d), MI(m,i), kcfaSenM(m).
 # TRANS - t_reachableCI_CICM reachableCI CICM 0,1 0,1,2,3
 t_reachableCI_CICM(c:C,i:I,0:C,m:M) output
 t_reachableCI_CICM(c,i,0,m) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsIHM(i,h,m), DIH(c,i,h).
-# TRANS - t_ctxtInsIHM_CICM ctxtInsIHM CICM 0,1,2 3,0,4,2
-t_ctxtInsIHM_CICM(i:I,h:H,m:M,c:C,0:C) output
-t_ctxtInsIHM_CICM(i,h,m,c,0) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsIHM(i,h,m), DIH(c,i,h).
 # TRANS - t_DIH_CICM DIH CICM 0,1,2 0,1,3,4
 t_DIH_CICM(c:C,i:I,h:H,0:C,m:M) output
 t_DIH_CICM(c,i,h,0,m) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsIHM(i,h,m), DIH(c,i,h).
@@ -254,9 +216,6 @@ t_DIH_CICM(c,i,h,0,m) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsIHM(i,h,m), D
 # TRANS - t_reachableCI_CICM1 reachableCI CICM 0,1 0,1,2,3
 t_reachableCI_CICM1(c:C,i:I,d:C,m:M) output
 t_reachableCI_CICM1(c,i,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenIHM(i,h,m), DIH(c,i,h), kcfaDIC(c,i,d).
-# TRANS - t_kcfaSenIHM_CICM kcfaSenIHM CICM 0,1,2 3,0,4,2
-t_kcfaSenIHM_CICM(i:I,h:H,m:M,c:C,d:C) output
-t_kcfaSenIHM_CICM(i,h,m,c,d) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenIHM(i,h,m), DIH(c,i,h), kcfaDIC(c,i,d).
 # TRANS - t_DIH_CICM1 DIH CICM 0,1,2 0,1,3,4
 t_DIH_CICM1(c:C,i:I,h:H,d:C,m:M) output
 t_DIH_CICM1(c,i,h,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenIHM(i,h,m), DIH(c,i,h), kcfaDIC(c,i,d).
@@ -268,9 +227,6 @@ t_kcfaDIC_CICM(c,i,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenIHM(i,h,m),
 # TRANS - t_reachableCI_CICM2 reachableCI CICM 0,1 0,1,2,3
 t_reachableCI_CICM2(c:C,i:I,0:C,m:M) output
 t_reachableCI_CICM2(c,i,0,m) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsSpecIM(i,m), DI(c,i).
-# TRANS - t_ctxtInsSpecIM_CICM ctxtInsSpecIM CICM 0,1 2,0,3,1
-t_ctxtInsSpecIM_CICM(i:I,m:M,c:C,0:C) output
-t_ctxtInsSpecIM_CICM(i,m,c,0) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsSpecIM(i,m), DI(c,i).
 # TRANS - t_DI_CICM DI CICM 0,1 0,1,2,3
 t_DI_CICM(c:C,i:I,0:C,m:M) output
 t_DI_CICM(c,i,0,m) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsSpecIM(i,m), DI(c,i).
@@ -279,9 +235,6 @@ t_DI_CICM(c,i,0,m) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsSpecIM(i,m), DI(
 # TRANS - t_reachableCI_CICM3 reachableCI CICM 0,1 0,1,2,3
 t_reachableCI_CICM3(c:C,i:I,d:C,m:M) output
 t_reachableCI_CICM3(c,i,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenSpecIM(i,m), DI(c,i), kcfaDIC(c,i,d).
-# TRANS - t_kcfaSenSpecIM_CICM kcfaSenSpecIM CICM 0,1 2,0,3,1
-t_kcfaSenSpecIM_CICM(i:I,m:M,c:C,d:C) output
-t_kcfaSenSpecIM_CICM(i,m,c,d) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenSpecIM(i,m), DI(c,i), kcfaDIC(c,i,d).
 # TRANS - t_DI_CICM1 DI CICM 0,1 0,1,2,3
 t_DI_CICM1(c:C,i:I,d:C,m:M) output
 t_DI_CICM1(c,i,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenSpecIM(i,m), DI(c,i), kcfaDIC(c,i,d).
@@ -293,17 +246,11 @@ t_kcfaDIC_CICM1(c,i,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenSpecIM(i,m
 # TRANS - t_reachableCI_CICM4 reachableCI CICM 0,1 0,1,2,3
 t_reachableCI_CICM4(c:C,i:I,0:C,m:M) output
 t_reachableCI_CICM4(c,i,0,m) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsStatIM(i,m).
-# TRANS - t_ctxtInsStatIM_CICM ctxtInsStatIM CICM 0,1 2,0,3,1
-t_ctxtInsStatIM_CICM(i:I,m:M,c:C,0:C) output
-t_ctxtInsStatIM_CICM(i,m,c,0) :- r_CICM(c,i,0,m), reachableCI(c,i), ctxtInsStatIM(i,m).
 
 ### CICM(c,i,d,m) :- reachableCI(c,i), kcfaSenStatIM(i,m), kcfaDIC(c,i,d).
 # TRANS - t_reachableCI_CICM5 reachableCI CICM 0,1 0,1,2,3
 t_reachableCI_CICM5(c:C,i:I,d:C,m:M) output
 t_reachableCI_CICM5(c,i,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenStatIM(i,m), kcfaDIC(c,i,d).
-# TRANS - t_kcfaSenStatIM_CICM kcfaSenStatIM CICM 0,1 2,0,3,1
-t_kcfaSenStatIM_CICM(i:I,m:M,c:C,d:C) output
-t_kcfaSenStatIM_CICM(i,m,c,d) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenStatIM(i,m), kcfaDIC(c,i,d).
 # TRANS - t_kcfaDIC_CICM2 kcfaDIC CICM 0,1,2 0,1,2,3
 t_kcfaDIC_CICM2(c:C,i:I,d:C,m:M) output
 t_kcfaDIC_CICM2(c,i,d,m) :- r_CICM(c,i,d,m), reachableCI(c,i), kcfaSenStatIM(i,m), kcfaDIC(c,i,d).
@@ -626,8 +573,6 @@ t_reachableTCE_startingRaceHext4(t1,c1,e1,t2,c2,e2) :- r_startingRaceHext(t1,c1,
 t_reachableTCE_startingRaceHext5(t2:D,c2:C,e2:E,t1:D,c1:C,e1:E) output
 t_reachableTCE_startingRaceHext5(t2,c2,e2,t1,c1,e1) :- r_startingRaceHext(t1,c1,e1,t2,c2,e2), inQueryEE(e1,e2), reachableTCE(t1,c1,e1), reachableTCE(t2,c2,e2), e1=e2, c1=c2, t1<=t2.
 
-### statE(e) :- EF(e,f), statF(f).
-
 ### CEC(c,e,o) :- EV(e,v), CVC(c,v,o), escA(o).
 # TRANS - t_CVC_CEC CVC CEC 0,1,2 0,3,2
 t_CVC_CEC(c:C,v:V,o:C,e:E) output
@@ -651,12 +596,6 @@ t_CEC_escapingRaceHext1(c2,e2,o,t1,c1,e1,t2) :- r_escapingRaceHext(t1,c1,e1,t2,c
 # TRANS - t_startingRaceHext_escapingRaceHext1 startingRaceHext escapingRaceHext 0,1,2,3,4,5 0,1,2,3,4,5
 t_startingRaceHext_escapingRaceHext1(t1:D,c1:C,e1:E,t2:D,c2:C,e2:E) output
 t_startingRaceHext_escapingRaceHext1(t1,c1,e1,t2,c2,e2) :- r_escapingRaceHext(t1,c1,e1,t2,c2,e2), startingRaceHext(t1,c1,e1,t2,c2,e2), statE(e1), statE(e2).
-# TRANS - t_statE_escapingRaceHext statE escapingRaceHext 0 1,2,0,3,4,5
-t_statE_escapingRaceHext(e1:E,t1:D,c1:C,t2:D,c2:C,e2:E) output
-t_statE_escapingRaceHext(e1,t1,c1,t2,c2,e2) :- r_escapingRaceHext(t1,c1,e1,t2,c2,e2), startingRaceHext(t1,c1,e1,t2,c2,e2), statE(e1), statE(e2).
-# TRANS - t_statE_escapingRaceHext1 statE escapingRaceHext 0 1,2,3,4,5,0
-t_statE_escapingRaceHext1(e2:E,t1:D,c1:C,e1:E,t2:D,c2:C) output
-t_statE_escapingRaceHext1(e2,t1,c1,e1,t2,c2) :- r_escapingRaceHext(t1,c1,e1,t2,c2,e2), startingRaceHext(t1,c1,e1,t2,c2,e2), statE(e1), statE(e2).
 
 ### NonForkPMcs(c,p,d,m) :- CICM(c,i,d,m), m!=1, PI(p,i).
 # TRANS - t_CICM_NonForkPMcs CICM NonForkPMcs 0,1,2,3 0,4,2,3
