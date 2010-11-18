@@ -66,6 +66,14 @@ public class Ctxt implements Serializable {
 		}
 		return false;
 	}
+  public int count(Quad inst) {
+    int n = 0;
+		for (int i = 0; i < elems.length; i++) {
+			if (elems[i] == inst)
+        n++;
+		}
+    return n;
+  }
 	public int hashCode() {
 		int i = 5381;
 		for (Quad inst : elems) {

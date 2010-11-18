@@ -12,6 +12,11 @@
  *  - [h1, h2, h3, null] represents all sequences with the given prefix.
  * Assume that the abstraction is specified by a consistent set of slivers.
  *
+ * Three operations:
+ *   - EXTEND: building CH,CI,CC from a set of active slivers (prepending)
+ *   - REFINE: growing slivers (appending)
+ *   - COARSEN: use a type strategy
+ *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
 package chord.analyses.alias;
@@ -89,10 +94,142 @@ import chord.util.ChordRuntimeException;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
 import chord.util.Utils;
+import chord.util.StopWatch;
 
 import gnu.trove.TObjectIntHashMap;
 import gnu.trove.TObjectIntProcedure;
 import static chord.analyses.alias.GlobalInfo.G;
+
+// Specifies the abstraction
+class TypeStrategy {
+  private Execution X = Execution.v();
+
+  private HashMap<Quad,Quad> prototypes = new HashMap<Quad,Quad>(); // Map each site to the prototype of its equivalence class
+  private HashMap<Quad,List<Quad>> clusters = new HashMap<Quad,List<Quad>>(); // Map each prototype to all others in equivalence class
+  private boolean use_c; // Use class
+  private boolean use_t; // Type of allocation sites
+  private boolean isIdentity, isSingle;
+
+  public boolean isIdentity() { return isIdentity; }
+
+  String description;
+  boolean disallowRepeats; // Whether to truncate early
+  @Override public String toString() { return description; }
+
+  public TypeStrategy(String description, boolean disallowRepeats) {
+    this.description = description;
+    this.disallowRepeats = disallowRepeats;
+    if ("has".equals(description)) use_c = true;
+    else if ("is".equals(description)) use_t = true;
+    else if ("is,has".equals(description)) use_c = use_t = true;
+    else if ("identity".equals(description)) isIdentity = true;
+    else if ("single".equals(description)) isSingle = true;
+    else throw new RuntimeException("Unknown typeStrategy: "+description);
+  }
+
+  // COARSEN
+  public Ctxt project(Ctxt c) {
+    // Apply the coarsening elementwise
+    Quad[] elems = new Quad[c.length()];
+    for (int i = 0; i < elems.length; i++)
+      elems[i] = project(c.get(i));
+
+    // Might need to truncate more to remove repeats
+    Ctxt cc = new Ctxt(elems);
+    // Take the longest barely-repeating prefix (quadratic warning!)
+    if (disallowRepeats) {
+      int len = G.len(cc);
+      if (len <= 1) return cc;
+      int m;
+      for (m = 2; m <= len; m++) { // See if the first m is not non-repeating (c[m-1] exists before)
+        boolean found = false;
+        for (int k = 0; k < m-1; k++)
+          if (elems[k] == elems[m-1]) { found = true; break; }
+        if (found) return G.summarize(cc.prefix(m)); // Longest is length m
+      }
+    }
+    return cc; // Take everything
+  }
+
+  public Quad project(Quad j) {
+    if (j == null) return null;
+    Quad proto_j = prototypes.get(j);
+    assert proto_j != null : G.jstr(j);
+    return proto_j;
+  }
+  public List<Quad> lift(Quad j) {
+    j = project(j);
+    List<Quad> cluster = clusters.get(j);
+    assert cluster != null : G.jstr(j);
+    return cluster;
+  }
+
+  public Collection<Quad> usePrototypes(Collection<Quad> sites) {
+    if (isIdentity()) return sites;
+
+    Set<Quad> prototypeSites = new HashSet();
+    for (Quad j : sites)
+      prototypeSites.add(prototypes.get(j));
+    return prototypeSites;
+  }
+
+  private void addIdentity(Quad j) {
+    prototypes.put(j, j);
+    List<Quad> l = new ArrayList();
+    l.add(j);
+    clusters.put(j, l);
+  }
+
+  public void init() {
+    if (isIdentity) {
+      X.logs("TypeStrategy: using identity");
+      for (Quad j : G.jSet) addIdentity(j);
+    }
+    else if (isSingle) { // Put every site into one cluster (just for testing/sanity checking)
+      X.logs("TypeStrategy: using single");
+      Quad proto_j = null;
+      List<Quad> cluster = new ArrayList();
+      for (Quad j : G.jSet) {
+        if (proto_j == null) {
+          proto_j = j;
+          clusters.put(proto_j, cluster);
+        }
+        prototypes.put(j, proto_j);
+        cluster.add(j);
+      }
+    }
+    else {
+      HashMap<Object,Quad> summary2prototypes = new HashMap<Object,Quad>();
+      X.logs("TypeStrategy: containing class (%s), type of site (%s)", use_c, use_t);
+      for (Quad h : G.hSet) {
+        Object summary = null;
+        if (use_c && use_t) summary = new Pair(G.h2c(h), G.h2t(h));
+        else if (use_c) summary = G.h2c(h);
+        else if (use_t) summary = G.h2t(h);
+        else assert false;
+
+        Quad proto_h = summary2prototypes.get(summary);
+        if (proto_h == null) summary2prototypes.put(summary, proto_h = h);
+        prototypes.put(h, proto_h);
+
+        List<Quad> cluster = clusters.get(proto_h);
+        if (cluster == null) clusters.put(proto_h, cluster = new ArrayList());
+        cluster.add(h);
+      }
+      for (Quad i : G.iSet) addIdentity(i);
+    }
+    X.logs("  %s sites -> %s clusters", G.jSet.size(), clusters.size());
+
+    // Output
+    PrintWriter out = Utils.openOut(X.path("typeStrategy"));
+    for (Quad proto_j : clusters.keySet()) {
+      out.println(G.jstr(proto_j));
+      for (Quad j : clusters.get(proto_j))
+        out.println("  "+G.jstr(j));
+    }
+    out.close();
+  }
+}
 
 class GlobalInfo {
   static GlobalInfo G;
@@ -107,6 +244,13 @@ class GlobalInfo {
   Ctxt atomize(Ctxt c) { assert isSummary(c); return c.prefix(c.length()-1); } // remove null
   int summaryLen(Ctxt c) { assert isSummary(c); return c.length()-1; } // don't count null
   int atomLen(Ctxt c) { assert isAtom(c); return c.length(); }
+  int len(Ctxt c) { return isAtom(c) ? c.length() : c.length()-1; }
+
+  // Technical special case designed to handle 0-CFA.
+  // Because we always have allocation sites (minH > 0),
+  // [*] means any chain starting with a call site.
+  // Use [*] if we need to capture those contexts and [] otherwise.
+  Ctxt initEmptyCtxt(int minI) { return minI == 0 ? G.summarize(G.emptyCtxt) : G.emptyCtxt; }
 
   DomV domV;
   DomM domM;
@@ -115,6 +259,7 @@ class GlobalInfo {
   DomE domE;
   DomP domP;
   HashMap<jq_Method,List<Quad>> rev_jm;
+  Set<Quad> hSet;
   Set<Quad> iSet;
   Set<Quad> jSet;
 
@@ -131,7 +276,9 @@ class GlobalInfo {
     domP = (DomP) ClassicProject.g().getTrgt("P"); ClassicProject.g().runTask(domP);
   }
 
-  // Helpers for displaying stuff
+  // Map allocation site to its containing class
+  jq_Type h2c(Quad h) { return h.getMethod().getDeclaringClass(); }
+
   jq_Type h2t(Quad h) {
     Operator op = h.getOperator();
     if (op instanceof New) 
@@ -143,6 +290,8 @@ class GlobalInfo {
     else
       return null;
   }
+
+  // Helpers for displaying stuff
   String pstr(Quad p) { return new File(p.toJavaLocStr()).getName(); }
   String hstr(Quad h) {
     jq_Type t = h2t(h);
@@ -294,9 +443,13 @@ class Status {
   int absSize;
   int runAbsSize;
   int absHashCode;
+  long clientTime;
+  long relevantTime;
   String absSummary;
 }
 
+// An abstraction actually stores the set of slivers (abstract values), and through this the k value.
+// TypeStrategy specifies the abstraction function (minus the k value).
 class Abstraction {
   Execution X = Execution.v();
 
@@ -314,7 +467,7 @@ class Abstraction {
 
   Histogram lengthHistogram(Set<Ctxt> slivers) {
     Histogram hist = new Histogram();
-    for (Ctxt c : slivers) hist.counts[G.isAtom(c) ? G.atomLen(c) : G.summaryLen(c)]++;
+    for (Ctxt c : slivers) hist.counts[G.len(c)]++;
     return hist;
   }
 
@@ -332,7 +485,7 @@ class Abstraction {
     int[] i_maxLen = new int[G.domI.size()];
     for (Ctxt c : S) {
       if (!G.hasHeadSite(c)) continue;
-      int len = G.isAtom(c) ? G.atomLen(c) : G.summaryLen(c);
+      int len = G.len(c);
       if (G.isAlloc(c.head())) {
         int h = G.domH.indexOf(c.head());
         h_maxLen[h] = Math.max(h_maxLen[h], len);
@@ -363,42 +516,65 @@ class Abstraction {
     X.logs("KVALUE SIZE %s", size);
   }
 
+  boolean lastElementRepeated(Ctxt c) {
+    assert G.isSummary(c);
+    int len = G.summaryLen(c);
+    if (len <= 1) return false;
+    Quad j = c.get(len-1); // Last element
+    for (int k = len-2; k >= 0; k--)
+      if (c.get(k) == j) return true; // Found another copy
+    return false;
+  }
+
   // assertDisjoint: this is when we are pruning slivers (make sure never step on each other's toes)
-  void addRefinements(Ctxt c, int addk, boolean assertDisjoint, boolean disallowRepeats) {
-    assert addk >= 0;
-    if (assertDisjoint) assert !S.contains(c);
-    if (addk == 0)
+  // This should really not have typeStrategy in here (more general than useful)
+  // REFINE
+  void addRefinements(Ctxt c, int depth, TypeStrategy typeStrategy) {
+    assert depth >= 0;
+    if (S.contains(c)) return;
+    if (depth == 0) // No refinement
+      S.add(c);
+    else if (typeStrategy.disallowRepeats && lastElementRepeated(c))
       S.add(c);
     else {
-      assert G.isSummary(c);
+      assert G.isSummary(c); // Can only refine summarizes
       Ctxt d = G.atomize(c);
-      Collection<Quad> extensions = G.atomLen(d) == 0 ?
-        G.jSet : // All sites
-        G.rev_jm.get(d.last().getMethod()); // sites that match
+      Collection<Quad> extensions;
+      if (G.summaryLen(c) == 0) // [*] = {[i,*] : i in I} by definition
+        extensions = G.iSet;
+      else { // c = [... k *]; consider all possible ways k can be extended
+        List<Quad> ks = typeStrategy.lift(d.last()); // Actually with types, might be several values of k (need to consider them all)
+        assert ks.size() > 0;
+        if (ks.size() == 1) // Just for efficiency, don't create a new array
+          extensions = G.rev_jm.get(ks.get(0).getMethod());
+        else {
+          extensions = new ArrayList();
+          for (Quad k : ks) extensions.addAll(G.rev_jm.get(k.getMethod()));
+        }
+      }
 
-      if (G.summaryLen(c) == 0) { // [*] really means matching call sites
-        addRefinements(G.emptyCtxt, 0, assertDisjoint, disallowRepeats);
-        for (Quad i : G.iSet) // Only extend [*] to [i,*] for call sites i, because [h,*] already exist (really, [*] represents [*]-[h,*])
-          addRefinements(G.summarize(G.emptyCtxt.prepend(i)), 0, assertDisjoint, disallowRepeats);
-      }
-      else if (disallowRepeats && !allowNonRepeatingExtensions(d, extensions)) // Can't extend
-        S.add(c);
-      else {
-        addRefinements(d, 0, assertDisjoint, disallowRepeats);
-        for (Quad j : extensions) // Append possible j's
-          addRefinements(G.summarize(d.append(j)), addk-1, assertDisjoint, disallowRepeats);
-      }
+      extensions = typeStrategy.usePrototypes(extensions); // Apply coarsening
+
+      addRefinements(d, 0, typeStrategy);
+      for (Quad j : extensions)
+        addRefinements(G.summarize(d.append(j)), depth-1, typeStrategy);
     }
   }
 
-  boolean allowNonRepeatingExtensions(Ctxt c, Collection<Quad> extensions) {
-    for (Quad q : extensions)
-      if (c.contains(q)) return false;
-    return true;
-  }
+  // c could either be a summary or atom, which means the output could technically be a set, but make sure this doesn't happen.
+  Ctxt project(Ctxt c, TypeStrategy typeStrategy) {
+    if (typeStrategy.disallowRepeats) {
+      // EXTEND
+      // ASSUMPTION: without the first element, c is barely-repeating, so we just need to check the first element
+      // First truncate to eliminate repeats if any
+      int k = 0;
+      int len = G.len(c);
+      for (k = 1; k < len; k++) // Find k, second occurrence of first element (if any)
+        if (c.get(0) == c.get(k)) break;
+      if (k < len) // Truncate (include position k)
+        c = G.summarize(c.prefix(k+1));
+    }
 
-  // Return the minimum set of slivers in S that covers sliver c (covering defined with respect to set of chains)
-  Ctxt project(Ctxt c) {
     if (G.isAtom(c)) { // atom
       if (S.contains(c)) return c; // Exact match
       // Assume there's at most one that matches
@@ -425,14 +601,21 @@ class Abstraction {
   }
 
   // Need this assumption if we're going to prune!
+  private void assertNotExists(Ctxt c, Ctxt cc) {
+    assert !S.contains(cc) : G.cstr(c) + " exists, but subsumed by coarser " + G.cstr(cc);
+  }
   void assertDisjoint() {
     // Make sure each summary sliver doesn't contain proper summary prefixes
-    assert !S.contains(G.summarize(G.emptyCtxt));
     for (Ctxt c : S) {
-      if (G.isAtom(c)) continue;
-      assert !S.contains(G.atomize(c)) : G.cstr(c); // if x* exists, x can't exist
-      for (int k = G.summaryLen(c)-1; k >= 0; k--) // if xy* exists, x* can't exist
-        assert !S.contains(G.summarize(c.prefix(k))) : G.cstr(c);
+      if (G.hasHeadSite(c) && !G.isAlloc(c.head())) // if [i...] exists, [*] cannot exist
+        assertNotExists(c, G.summarize(G.emptyCtxt));
+
+      if (G.isAtom(c))
+        assertNotExists(c, G.summarize(c));
+      else {
+        for (int k = G.summaryLen(c)-1; k >= 1; k--) // if xy* exists, x* can't exist
+          assertNotExists(c, G.summarize(c.prefix(k)));
+      }
     }
   }
 
@@ -471,13 +654,14 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   boolean useCtxtsAnalysis;
   String queryType; // EE or E or P or I
   boolean disallowRepeats;
+  TypeStrategy typeStrategy; // Types instead of allocation sites
+  TypeStrategy pruningTypeStrategy; // Use this to prune
 
   String masterHost;
   int masterPort;
   String mode; // worker or master or null
   boolean minimizeAbstraction; // Find the minimal abstraction via repeated calls
   int minH, maxH, minI, maxI;
-  String classifierPath; // Path to classifier (for determining which sites are relevant)
   List<String> initTasks = new ArrayList<String>();
   List<String> tasks = new ArrayList<String>();
   String relevantTask;
@@ -495,10 +679,12 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
   List<Status> statuses = new ArrayList<Status>(); // Status of the analysis over iterations of refinement
   QueryGroup unprovenGroup = new QueryGroup();
   List<QueryGroup> provenGroups = new ArrayList<QueryGroup>();
+
   int maxRunAbsSize = -1;
   int lastRunAbsSize = -1;
+  long lastClientTime;
+  long lastRelevantTime;
 
-  boolean useClassifier() { return classifierPath != null; }
   boolean isMaster() { return mode != null && mode.equals("master"); }
   boolean isWorker() { return mode != null && mode.equals("worker"); }
 
@@ -510,6 +696,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
     G = new GlobalInfo();
     G.rev_jm = rev_jm;
+    G.hSet = hSet;
     G.iSet = iSet;
     G.jSet = jSet;
 
@@ -523,12 +710,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     this.useCtxtsAnalysis        = X.getBooleanArg("useCtxtsAnalysis", false);
     this.queryType               = X.getStringArg("queryType", null);
     this.disallowRepeats         = X.getBooleanArg("disallowRepeats", false);
+    this.typeStrategy            = new TypeStrategy(X.getStringArg("typeStrategy", "identity"), disallowRepeats);
+
+    if (X.getStringArg("pruningTypeStrategy", null) != null)
+      this.pruningTypeStrategy   = new TypeStrategy(X.getStringArg("pruningTypeStrategy", null), disallowRepeats);
 
     this.masterHost              = X.getStringArg("masterHost", null);
     this.masterPort              = X.getIntArg("masterPort", 8888);
     this.mode                    = X.getStringArg("mode", null);
     this.minimizeAbstraction     = X.getBooleanArg("minimizeAbstraction", false);
-    this.classifierPath          = X.getStringArg("classifierPath", null);
 
     this.minH = X.getIntArg("minH", 1);
     this.maxH = X.getIntArg("maxH", 2);
@@ -565,14 +755,13 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       rel.close();
     }
     X.logs("Finished 0-CFA: |hSet| = %s, |iSet| = %s", hSet.size(), iSet.size());
+    if (useObjectSensitivity) iSet.clear(); // Don't need call sites
     jSet.addAll(hSet);
-    if (!useObjectSensitivity) jSet.addAll(iSet); // need call sites
+    jSet.addAll(iSet);
 
     // Allocate memory
     for (Quad h : hSet) jm.put(h, new ArrayList<jq_Method>());
-    if (!useObjectSensitivity) {
-      for (Quad i : iSet) jm.put(i, new ArrayList<jq_Method>());
-    }
+    for (Quad i : iSet) jm.put(i, new ArrayList<jq_Method>());
     for (jq_Method m : G.domM) mj.put(m, new ArrayList<Quad>());
     for (jq_Method m : G.domM) rev_jm.put(m, new ArrayList<Quad>());
 
@@ -623,6 +812,11 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       }
       rel.close();
     }
+
+    // Init type strategies
+    typeStrategy.init();
+    if (pruningTypeStrategy != null)
+      pruningTypeStrategy.init();
 
     // Compute statistics on prependings (for analysis) and extensions (for refinement)
     { // prepends
@@ -858,14 +1052,13 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     if (includeAllQueries) queries.addAll(allQueries);
     X.logs("decodeAbstractionQueries: got minH=%s, minI=%s, %s queries", minH, minI, queries.size());
 
-    // No pruning allowed!
-    assert !pruneSlivers;
     if (abs != null) {
-      abs.add(G.summarize(G.emptyCtxt));
+      // Initialize abstraction (CREATE)
+      abs.add(G.initEmptyCtxt(minI));
       for (Quad q : lengths.keySet()) {
         int len = lengths.get(q);
         if (len > 0)
-          abs.addRefinements(G.summarize(G.emptyCtxt.append(q)), len-1, pruneSlivers, disallowRepeats);
+          abs.addRefinements(G.summarize(G.emptyCtxt.append(typeStrategy.project(q))), len-1, typeStrategy);
       }
     }
     return lengths;
@@ -881,19 +1074,14 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     return buf.toString();
   }
 
-  // Special case this: include [*]
-  // Only do this when pruning slivers.
-  boolean is0CFA() { return minH == 1 && minI == 0 && !useObjectSensitivity; }
-
   void refinePruneLoop() {
     X.logs("Initializing abstraction with length minH=%s,minI=%s slivers (|jSet|=%s)", minH, minI, jSet.size());
-    // Initialize abstraction
-    unprovenGroup.abs.add(!is0CFA() ? G.emptyCtxt : G.summarize(G.emptyCtxt));
+    // Initialize abstraction (CREATE)
+    unprovenGroup.abs.add(G.initEmptyCtxt(minI));
     for (Quad j : jSet) {
       int len = G.isAlloc(j) ? minH : minI;
-      if (!is0CFA()) assert len > 0;
       if (len > 0)
-        unprovenGroup.abs.addRefinements(G.summarize(G.emptyCtxt.append(j)), len-1, pruneSlivers, disallowRepeats);
+        unprovenGroup.abs.addRefinements(G.summarize(G.emptyCtxt.append(typeStrategy.project(j))), len-1, typeStrategy);
     }
 
     X.logs("Unproven group with %s queries", allQueries.size());
@@ -936,8 +1124,44 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
         break;
       }
 
-      unprovenGroup.refineAbstraction();
+      refineAbstraction();
     }
+  }
+
+  void refineAbstraction() {
+    unprovenGroup.refineAbstraction();
+
+    if (pruningTypeStrategy == null) return;
+
+    X.logs("==== Using type strategy %s to prune", pruningTypeStrategy);
+    // Use pruningTypeStrategy to project unprovenGroup.abs onto a helper abstraction
+    QueryGroup helperGroup = new QueryGroup();
+    helperGroup.prefix = "  helper: ";
+    helperGroup.queries.addAll(unprovenGroup.queries);
+    assert typeStrategy.isIdentity();
+    for (Ctxt c : unprovenGroup.abs.getSlivers()) {
+      Ctxt cc = pruningTypeStrategy.project(c);
+      //X.logs("HELPER %s -> %s", G.cstr(c), G.cstr(cc));
+      helperGroup.abs.add(cc);
+    }
+    helperGroup.abs.assertDisjoint();
+    X.logs("  projected original %s to helper %s", unprovenGroup.abs, helperGroup.abs);
+
+    // Run the analysis using the helper abstraction
+    TypeStrategy saveTypeStrategy = typeStrategy;
+    typeStrategy = pruningTypeStrategy;
+    helperGroup.runAnalysis(true);
+    helperGroup.removeProvenQueries(); // See how many we can prove
+    helperGroup.pruneAbstraction();
+    typeStrategy = saveTypeStrategy;
+  
+    // Refine original and use helper abstraction to prune
+    Abstraction prunedAbs = new Abstraction();
+    for (Ctxt c : unprovenGroup.abs.getSlivers())
+      if (helperGroup.abs.contains(pruningTypeStrategy.project(c)))
+        prunedAbs.add(c);
+    X.logs("  helper pruned original from %s to %s", unprovenGroup.abs, prunedAbs);
+    unprovenGroup.abs = prunedAbs;
   }
 
   int numUnproven() {
@@ -971,14 +1195,6 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
   void outputStatus(int iter) {
     X.logs("outputStatus(iter=%s)", iter);
-    // Get the total size of the abstraction across all queries
-    /*Abstraction totalAbs = new Abstraction();
-    for (QueryGroup g : provenGroups) {
-      totalAbs.add(g.abs);
-      assert g.prunedAbs.size() == 0;
-    }
-    totalAbs.add(unprovenGroup.prunedAbs);
-    totalAbs.add(unprovenGroup.abs);*/
    
     X.addSaveFiles("abstraction.S."+iter);
     {
@@ -997,36 +1213,36 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
     status.absSize = unprovenGroup.abs.size(); // After pruning
     status.absHashCode = unprovenGroup.abs.hashCode();
     status.absSummary = unprovenGroup.abs.toString();
+    status.clientTime = lastClientTime;
+    status.relevantTime = lastRelevantTime;
     statuses.add(status);
 
     if (refineSites) unprovenGroup.abs.printKValues();
 
     X.putOutput("currIter", iter);
-    //X.putOutput("absSize", totalAbs.size());
     X.putOutput("maxRunAbsSize", maxRunAbsSize);
     X.putOutput("lastRunAbsSize", lastRunAbsSize);
     X.putOutput("numQueries", allQueries.size());
     X.putOutput("numProven", allQueries.size()-numUnproven);
     X.putOutput("numUnproven", numUnproven);
-    X.putOutput("numUnprovenHistory", numUnprovenHistory());
-    X.putOutput("runAbsSizeHistory", runAbsSizeHistory());
+    X.putOutput("numUnprovenHistory", getHistory("numUnproven"));
+    X.putOutput("runAbsSizeHistory", getHistory("runAbsSize"));
+    X.putOutput("clientTimeHistory", getHistory("clientTime"));
+    X.putOutput("relevantTimeHistory", getHistory("relevantTime"));
     X.flushOutput();
   }
 
-  String numUnprovenHistory() {
+  String getHistory(String field) {
     StringBuilder buf = new StringBuilder();
     for (Status s : statuses) {
       if (buf.length() > 0) buf.append(',');
-      buf.append(s.numUnproven);
-    }
-    return buf.toString();
-  }
-
-  String runAbsSizeHistory() {
-    StringBuilder buf = new StringBuilder();
-    for (Status s : statuses) {
-      if (buf.length() > 0) buf.append(',');
-      buf.append(s.runAbsSize);
+      Object value;
+      if (field.equals("numUnproven")) value = s.numUnproven;
+      else if (field.equals("runAbsSize")) value = s.runAbsSize;
+      else if (field.equals("clientTime")) value = new StopWatch(s.clientTime);
+      else if (field.equals("relevantTime")) value = new StopWatch(s.relevantTime);
+      else throw new RuntimeException("Unknown field: " + field);
+      buf.append(value);
     }
     return buf.toString();
   }
@@ -1093,24 +1309,25 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
   // Group of queries which have the same abstraction and be have the same as far as we can tell.
   class QueryGroup {
+    String prefix = ""; // Just for printing out
     Set<Query> queries = new LinkedHashSet<Query>();
     // Invariant: abs + prunedAbs is a full abstraction and gets same results as abs
     Abstraction abs = new Abstraction(); // Current abstraction for this query
     Abstraction prunedAbs = new Abstraction(); // This abstraction keeps all the slivers that have been pruned
 
     void runAnalysis(boolean runRelevantAnalysis) {
-      X.logs("runAnalysis: %s", abs);
+      X.logs("%srunAnalysis: %s", prefix, abs);
       maxRunAbsSize = Math.max(maxRunAbsSize, abs.size());
       lastRunAbsSize = abs.size();
 
       // Domain (these are the slivers)
       DomC domC = (DomC) ClassicProject.g().getTrgt("C");
       domC.clear();
-      assert abs.project(G.emptyCtxt) != null;
+      assert abs.project(G.emptyCtxt, typeStrategy) != null;
       List<Ctxt> sortedC = new ArrayList<Ctxt>();
       for (Ctxt c : abs.getSlivers()) sortedC.add(c);
       sortSlivers(sortedC);
-      domC.add(abs.project(G.emptyCtxt));
+      domC.add(abs.project(G.emptyCtxt, typeStrategy));
       for (Ctxt c : sortedC) domC.add(c);
       domC.save();
 
@@ -1123,26 +1340,15 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       CC.zero();
       for (Ctxt c : abs.getSlivers()) { // From sliver c...
         if (G.hasHeadSite(c)) {
-          for (jq_Method m : jm.get(c.head())) {
-            for (Quad j : mj.get(m)) { // Extend with some site j that could be prepended
-              Ctxt d = abs.project(c.prepend(j));
-              if (!pruneSlivers) assert d != null;
-              if (d != null) {
-                (G.isAlloc(j) ? CH : CI).add(d, j);
-                CC.add(c, d);
-              }
-            }
-          }
+          //X.logs("%s %s", G.jstr(c.head()), typeStrategy.clusters.size());
+          for (Quad k : typeStrategy.lift(c.head())) // k is the actual starting site of a chain that c represents
+            for (jq_Method m : jm.get(k))
+              for (Quad j : mj.get(m)) // Extend with some site j that could be prepended
+                addPrepending(j, c, CH, CI, CC);
         }
         else {
-          for (Quad j : jSet) { // Extend with any site j
-            Ctxt d = abs.project(c.prepend(j));
-            if (!pruneSlivers) assert d != null;
-            if (d != null) {
-              (G.isAlloc(j) ? CH : CI).add(d, j);
-              CC.add(c, d);
-            }
-          }
+          for (Quad j : jSet) // Extend with any site j
+            addPrepending(j, c, CH, CI, CC);
         }
       }
       CH.save();
@@ -1153,7 +1359,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       ProgramRel relobjI = (ProgramRel) ClassicProject.g().getTrgt("objI");
       relobjI.zero();
       if (useObjectSensitivity) {
-        for (Quad i : iSet) relobjI.add(i);
+        for (Quad i : G.domI) relobjI.add(i);
       }
       relobjI.save();
       ProgramRel relKcfaSenM = (ProgramRel) ClassicProject.g().getTrgt("kcfaSenM");
@@ -1192,16 +1398,38 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       ClassicProject.g().setTrgtDone(relCtxtCpyM);
       ClassicProject.g().setTrgtDone(relInQuery);
 
+      StopWatch watch = new StopWatch();
+      watch.start();
       for (String task : tasks)
         ClassicProject.g().runTask(task);
-      if (runRelevantAnalysis) ClassicProject.g().runTask(relevantTask);
+      watch.stop();
+      lastClientTime = watch.ms;
+
+      if (runRelevantAnalysis) {
+        watch.start();
+        ClassicProject.g().runTask(relevantTask);
+        watch.stop();
+        lastRelevantTime = watch.ms;
+      }
+
       if (inspectTransRels) ClassicProject.g().runTask(transTask);
+    }
+
+    void addPrepending(Quad j, Ctxt c, ProgramRel CH, ProgramRel CI, ProgramRel CC) {
+      Quad jj = typeStrategy.project(j);
+      Ctxt d = abs.project(c.prepend(jj), typeStrategy);
+      if (!pruneSlivers) assert d != null;
+      if (d != null) {
+        //X.logs("PREPEND %s <- %s %s", G.cstr(d), G.jstr(j), G.cstr(c));
+        (G.isAlloc(j) ? CH : CI).add(d, j);
+        CC.add(c, d);
+      }
     }
 
     Abstraction relevantAbs() {
       // From Datalog, read out the pruned abstraction
       Abstraction relevantAbs = new Abstraction(); // These are the slivers we keep
-      relevantAbs.add(abs.project(G.emptyCtxt)); // Always keep this, because it probably won't show up in CH or CI
+      relevantAbs.add(abs.project(G.emptyCtxt, typeStrategy)); // Always keep this, because it probably won't show up in CH or CI
       for (String relName : new String[] {"r_CH", "r_CI"}) {
         if (useObjectSensitivity && relName.equals("r_CI")) continue;
         ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt(relName); rel.load();
@@ -1222,10 +1450,9 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
         if (!newAbs.contains(c))
           prunedAbs.add(c);
 
-      X.logs("STATUS pruneAbstraction: %s -> %s", abs, newAbs);
+      X.logs("%sSTATUS pruneAbstraction: %s -> %s", prefix, abs, newAbs);
       abs = newAbs;
-      if (!is0CFA())
-        abs.assertDisjoint();
+      abs.assertDisjoint();
     }
 
     // Remove queries that have been proven
@@ -1247,7 +1474,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       for (Query q : provenGroup.queries)
         queries.remove(q);
 
-      X.logs("STATUS %s/%s queries unproven", queries.size(), allQueries.size());
+      X.logs("%sSTATUS %s/%s queries unproven", prefix, queries.size(), allQueries.size());
 
       return provenGroup;
     }
@@ -1279,10 +1506,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
       if (refineSites) {
         Set<Quad> relevantSites = relevantAbs().inducedHeadSites();
-        X.logs("%s/%s sites relevant", relevantSites.size(), jSet.size());
+        X.logs("%s%s/%s sites relevant", prefix, relevantSites.size(), jSet.size());
         for (Ctxt c : abs.getSlivers()) { // For each sliver...
           if (G.isSummary(c) && (!G.hasHeadSite(c) || relevantSites.contains(c.head()))) // If have a relevant head site (or empty)
-            newAbs.addRefinements(c, 1, pruneSlivers, disallowRepeats);
+            newAbs.addRefinements(c, 1, typeStrategy);
           else
             newAbs.add(c); // Leave atomic ones alone (already precise as possible)
         }
@@ -1290,12 +1517,11 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       else {
         for (Ctxt c : abs.getSlivers()) { // For each sliver
           if (G.isSummary(c))
-            newAbs.addRefinements(c, 1, pruneSlivers, disallowRepeats);
+            newAbs.addRefinements(c, 1, typeStrategy);
           else
             newAbs.add(c); // Leave atomic ones alone (already precise as possible)
         }
-        if (pruneSlivers)
-          newAbs.assertDisjoint();
+        newAbs.assertDisjoint();
       }
 
       abs = newAbs;
@@ -1303,7 +1529,7 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
 
       assert !abs.getSlivers().contains(G.summarize(G.emptyCtxt));
 
-      X.logs("STATUS refineAbstraction: %s -> %s", oldAbsStr, newAbsStr);
+      X.logs("%sSTATUS refineAbstraction: %s -> %s", prefix, oldAbsStr, newAbsStr);
     }
   }
 

@@ -17,7 +17,6 @@ sub(t1:T1,t2:T0) input
 MI(m:M,i:I) input
 statIM(i:I,m:M) input
 specIM(i:I,m:M) input
-IM(i:I,m:M) input
 IHM(i:I,h:H,m:M) input
 classT(t:T) input
 staticTM(t:T,m:M) input
@@ -27,9 +26,7 @@ IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkArg0(i:I0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
 MmethArg(m:M0,n:Z0,v:V0) input
-MmethRet(m:M0,n:Z0,v:V1) input
 VHfilter(v:V,h:H) input
-statM(m:M) input
 clsForNameIT(i:I0,t:T0) input
 objNewInstIH(i:I0,h:H0) input
 objNewInstIM(i:I0,m:M0) input
@@ -54,9 +51,7 @@ CC(c:C,c:C) input
 objI(i:I) input
 CfromHC(cm:C,h:H,c:C) input
 CfromIC(cm:C,i:I,c:C) input
-objM(m:M) input
 MspcMethArg(m:M,v:V) input
-MordMethArg(m:M,z:Z,v:V) input
 argIVMV(i:I0,u:V1,m:M0,v:V0) input
 retIVMV(i:I0,u:V0,m:M0,v:V1) input
 CIA(c:C,i:I,a:C) input
@@ -85,11 +80,6 @@ r_CH(c:C,h:H) output # track
 r_CI(c:C,i:I) output # track
 r_CfromHC(cm:C,h:H,c:C) output # track
 r_CfromIC(cm:C,i:I,c:C) output # track
-r_objM(m:M) output # track
-r_MspcMethArg(m:M,v:V) output # track
-r_MordMethArg(m:M,z:Z,v:V) output # track
-r_argIVMV(i:I,u:V,m:M,v:V) output # track
-r_retIVMV(i:I,u:V,m:M,v:V) output # track
 r_CIA(c:C,i:I,a:C) output # track
 r_CIH(c:C,i:I,h:H) output # track
 r_ICM(i:I,c:C,m:M) output # track
@@ -163,31 +153,13 @@ r_CIA(c,i,d) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), specIM(i,m), CIA(c,i
 ### CICM(c,i,d,m) :- objI(i), reachableCI(c,i), statIM(i,m), c=d.
 r_reachableCI(c,i) :- r_CICM(c,i,d,m), objI(i), reachableCI(c,i), statIM(i,m), c=d. split
 
-### objM(m) :- objI(i), IM(i,m), !statM(m).
-
-### MspcMethArg(m,v) :- MmethArg(m,0,v), objM(m).
-r_objM(m) :- r_MspcMethArg(m,v), MmethArg(m,0,v), objM(m).
-
-### MordMethArg(m,0,v) :- MmethArg(m,0,v), !MspcMethArg(m,v).
-!r_MspcMethArg(m,v) :- r_MordMethArg(m,0,v), MmethArg(m,0,v), !MspcMethArg(m,v).
-
-### MordMethArg(m,z,v) :- MmethArg(m,z,v), z!=0.
-
-### argIVMV(i,vi,m,vm) :- IM(i,m), IinvkArg(i,z,vi), MordMethArg(m,z,vm).
-r_MordMethArg(m,z,vm) :- r_argIVMV(i,vi,m,vm), IM(i,m), IinvkArg(i,z,vi), MordMethArg(m,z,vm). split
-
-### retIVMV(i,vi,m,vm) :- IM(i,m), IinvkRet(i,z,vi), MmethRet(m,z,vm).
-
 ### VCA(v,c,a) :- reachableCM(c,m), MspcMethArg(m,v), a=c.
 r_reachableCM(c,m) :- r_VCA(v,c,a), reachableCM(c,m), MspcMethArg(m,v), a=c. split
-r_MspcMethArg(m,v) :- r_VCA(v,c,a), reachableCM(c,m), MspcMethArg(m,v), a=c. split
 
 ### VCfromVC(vm,cm,vi,ci) :- argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
-r_argIVMV(i,vi,m,vm) :- r_VCfromVC(vm,cm,vi,ci), argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 r_CICM(ci,i,cm,m) :- r_VCfromVC(vm,cm,vi,ci), argIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 
 ### VCfromVC(vi,ci,vm,cm) :- retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
-r_retIVMV(i,vi,m,vm) :- r_VCfromVC(vi,ci,vm,cm), retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 r_CICM(ci,i,cm,m) :- r_VCfromVC(vi,ci,vm,cm), retIVMV(i,vi,m,vm), CICM(ci,i,cm,m).
 
 ### VCA(v,c,a) :- VCfromVC(v,c,vv,cc), VCA(vv,cc,a), VAfilter(v,a).

@@ -24,7 +24,7 @@ import chord.project.Config;
  *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
-class StopWatch
+public class StopWatch
 {
 	public StopWatch()
 	{
