@@ -4,7 +4,6 @@
  */
 package edu.berkeley.confspell;
 
-import java.io.FileInputStream;
 import java.io.File;
 import java.util.*;
 import java.util.regex.Matcher;

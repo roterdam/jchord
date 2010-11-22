@@ -19,6 +19,11 @@ import java.io.*;
  *
  */
 public class OptDictionary {
+	
+	static final String RAW_BANNER = "# This is a RAW dictionary file, not checked by hand for accuracy.\n" + 
+	 "# It was produced automatically by the configuration analyzer.\n" + 
+	 "# Contact Ari Rabkin <asrabkin@gmail.com> with comments or questions.\n" + 
+	 "# This file may be freely redistributed; no copyright is asserted.";
   
   public OptDictionary() {}
   
@@ -58,7 +63,12 @@ public class OptDictionary {
    * Write this dictionary to the specified PrintWriter
    * @param writer
    */
-  public void dump(PrintWriter writer) {
+  public void dump(PrintWriter writer, boolean RawHeader) {
+  	
+  	if(RawHeader) {
+  		writer.println(RAW_BANNER);
+  	}
+  	
     for(Map.Entry<String, String> e: dict.entrySet()) {
       String k = e.getKey();
       String v = e.getValue();
@@ -83,6 +93,11 @@ public class OptDictionary {
     BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(dictionary)));
     String s = null;
     while( (s = br.readLine()) != null ) {
+    	if(s.contains("#"))
+    		s = s.substring(0, s.indexOf("#")); //prune at #
+    	if(s.length() < 4) //skip blank lines
+    		continue;
+    	
       String[] parts = s.split("\t");
       String opt = pruneName(parts[0]);
 

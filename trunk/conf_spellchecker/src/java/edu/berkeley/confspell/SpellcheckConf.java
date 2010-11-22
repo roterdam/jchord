@@ -66,10 +66,15 @@ public class SpellcheckConf {
           	if(!optsFile.exists())  {
           		System.out.println("WARN: no such file " + optsFile);
           	} else {
+              OptionSet myConf = new OptionSet();
+
+	          	s.slurp(optsFile, myConf);
 	          	s.slurp(optsFile, conf);
-	          	if(conf.size() == 0) {
-	          		System.err.println("WARN: no options found in file");
-	          	}
+	          	
+	          	if(myConf.size() == 0) {
+	          		System.err.println("WARN: no options found in " + optsFile);
+	          	} else 
+	          		System.err.println("Read " + optsFile);
           	}
           }
         } //end loop
