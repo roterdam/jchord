@@ -273,7 +273,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				Quad h = hs.get(i);
 				hIds += "H" + domH.indexOf(h);
 				if (i == n - 1) break;
-				hIds += ",";
+				hIds += " ";
 			}
 		}
 		return hIds;
