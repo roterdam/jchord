@@ -124,7 +124,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		domE = (DomE) ClassicProject.g().getTrgt("E");
 		ClassicProject.g().runTask(domE);
 
-		Map<Quad, Set<Quad>> e2hsMap = new HashMap<Quad, Set<Quad>>();
+		Map<Quad, ArraySet<Quad>> e2hsMap = new HashMap<Quad, ArraySet<Quad>>();
 		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("locEH");
 		relLocEH.load();
 		IntPairIterable tuples = relLocEH.getAry2IntTuples();
@@ -133,7 +133,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			int hIdx = tuple.idx1;
 			Quad e = (Quad) domE.get(eIdx);
 			Quad h = (Quad) domH.get(hIdx);
-			Set<Quad> hs = e2hsMap.get(e);
+			ArraySet<Quad> hs = e2hsMap.get(e);
 			if (hs == null) {
 				hs = new ArraySet<Quad>();
 				e2hsMap.put(e, hs);
@@ -143,7 +143,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		relLocEH.close();
 
 		Map<Set<Quad>, Set<Quad>> hs2esMap = new HashMap<Set<Quad>, Set<Quad>>();
-        for (Map.Entry<Quad, Set<Quad>> entry : e2hsMap.entrySet()) {
+        for (Map.Entry<Quad, ArraySet<Quad>> entry : e2hsMap.entrySet()) {
             Quad e = entry.getKey();
             Set<Quad> hs = entry.getValue();
             Set<Quad> es = hs2esMap.get(hs);
@@ -208,26 +208,75 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 		done();
 
-		try {
-			String outDirName = Config.outDirName;
-			{
-				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "shape_fullEscE.txt")));
-				for (Quad e : allEscEs)
-					writer.println(e.toLocStr());
-				writer.close();
-			}
-			{
-				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "shape_fullLocE.txt")));
-				for (Quad e : allLocEs)
-					writer.println(e.toLocStr());
-				writer.close();
-			}
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+		PrintWriter out;
+		out = OutDirUtils.newPrintWriter("shape_fullEscE.txt");
+		for (Quad e : allEscEs)
+			out.println(e.toLocStr());
+		out.close();
+		out = OutDirUtils.newPrintWriter("shape_fullLocE.txt");
+		for (Quad e : allLocEs)
+			out.println(e.toLocStr());
+		out.close();
+
+        domE.saveToXMLFile();
+        domH.saveToXMLFile();
+        domM.saveToXMLFile();
+
+		Map<Quad, String> map = new HashMap<Quad, String>();
+		ProgramRel relEscE = (ProgramRel) ClassicProject.g().getTrgt("escE");
+		relEscE.load();
+		Iterable<Quad> escEtuples = relEscE.getAry1ValTuples();
+		for (Quad e : escEtuples)
+			map.put(e, "<pathEsc Eid=\"E" + domE.indexOf(e) + "\"/>");
+		relEscE.close();
+
+		for (Quad e : allEscEs) {
+			int eId = domE.indexOf(e);
+			ArraySet<Quad> hs = e2hsMap.get(e);
+			map.put(e, "<fullEsc Eid=\"E" + domE.indexOf(e) + "\" Hids=\"" + getXML(hs) + "\"/>");
+		}
+		for (Quad e : allLocEs) {
+			int eId = domE.indexOf(e);
+			ArraySet<Quad> hs = e2hsMap.get(e);
+			map.put(e, "<fullLoc Eid=\"E" + domE.indexOf(e) + "\" Hids=\"" + getXML(hs) + "\"/>");
 		}
 
+        out  = OutDirUtils.newPrintWriter("escapelist.xml");
+        out.println("<escapelist>");
+		for (int e = 0; e < domE.size(); e++) {
+			String s = map.get(domE.get(e));
+			if (s != null)
+				out.println(s);
+		}
+		out.println("</escapelist>");
+		out.close();
+
+        OutDirUtils.copyFileFromMainDir("src/web/style.css");
+        OutDirUtils.copyFileFromMainDir("src/web/misc.xsl");
+        OutDirUtils.copyFileFromMainDir("src/web/Mlist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/Elist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/web/Hlist.dtd");
+        OutDirUtils.copyFileFromMainDir("../extra/src/web/escape/results.xml");
+        OutDirUtils.copyFileFromMainDir("../extra/src/web/escape/results.dtd");
+        OutDirUtils.copyFileFromMainDir("../extra/src/web/escape/results.xsl");
+
+        OutDirUtils.runSaxon("results.xml", "results.xsl");
+
+        Program.g().HTMLizeJavaSrcFiles();
+	}
+
+	private String getXML(ArraySet<Quad> hs) {
+		String hIds = "";
+		if (hs != null) {
+			int n = hs.size();
+			for (int i = 0; true; i++) {
+				Quad h = hs.get(i);
+				hIds += "H" + domH.indexOf(h);
+				if (i == n - 1) break;
+				hIds += ",";
+			}
+		}
+		return hIds;
 	}
 
 	@Override
