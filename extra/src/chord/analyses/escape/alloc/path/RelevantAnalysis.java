@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.hybrid;
+package chord.analyses.escape.alloc.path;
 
 import chord.project.ClassicProject;
 import chord.project.analyses.ProgramRel;

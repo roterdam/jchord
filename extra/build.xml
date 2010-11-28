@@ -22,7 +22,7 @@
 		<antfetch dir="${chord.home.dir}" target="paths" return="chord.main.class.path"/>
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
-			source="1.5" target="1.5" srcdir="src/java" destdir="classes"
+			source="1.5" target="1.5" srcdir="src" destdir="classes"
 			classpath="${chord.main.class.path}"/>
 	</target>
 

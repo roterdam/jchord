@@ -41,62 +41,39 @@ import chord.util.IntArraySet;
 	signs = { "E0", "E0", "E0,H0:E0_H0" }
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
-	private static final boolean verbose = false;
-	private static final boolean doStrongUpdates = true;
-	private static final boolean smashArrayElems = false;
-
-	// set of IDs of currently escaping concrete/abstract objects
-	private TIntHashSet escObjs;
-
-	// map from each object to a list of each non-null instance field
-	// of reference type along with its value
-	private TIntObjectHashMap<List<FldObj>> objToFldObjsFwd;
-	private TIntObjectHashMap<List<FldObj>> objToFldObjsInv;
-
-    // map from each object to the index in domain H of its alloc site
-    private TIntIntHashMap objToHid; 
-
-	private boolean[] chkE;
-
-	// accE[e] == true iff instance field/array deref site
-	// having index e in domain E is visited during the execution
-	private boolean[] accE;
-
-	private boolean[] accH;
-
-    // escE[e] == true iff instance field/array deref site having
-	// index e in domain E is thread-escaping
-	private boolean[] escE;
-
-	private IntArraySet[] locEH;
-
+	private final boolean verbose = false;
+	private final boolean doStrongUpdates = true;
+	private final boolean smashArrayElems = false;
+	private final IntArraySet tmp = new IntArraySet();
+	private boolean[] chkE;	// true iff heap access stmt with index e in domE must be checked
+	private boolean[] accE;	// true iff heap access stmt with index e in domE is visited
+	private boolean[] escE;	// true iff heap access stmt with index e in domE thread-escapes
+	private boolean[] accH;	// true iff alloc site with index h in domH is visited
+	private IntArraySet[] locEH;	// map from each heap access stmt deemed thread-local to set of alloc sites deemed relevant to it
+	private TIntHashSet escObjs;	// set of currently escaping concrete/abstract objects
+	private TIntObjectHashMap<List<FldObj>> objToFldObjsFwd;	// map from each object to a list of each non-null instance field of ref type along with its value
+	private TIntObjectHashMap<List<FldObj>> objToFldObjsInv;	// inverse of above map
+    private TIntIntHashMap objToHid;	// map from each object to the index in domH of its alloc site
+    private InstrScheme instrScheme;
 	private DomH domH;
 	private DomE domE;
 	private int numH, numE;
 
-    private InstrScheme instrScheme;
-
-	private final IntArraySet tmp = new IntArraySet();
-
 	@Override
     public InstrScheme getInstrScheme() {
-    	if (instrScheme != null)
-    		return instrScheme;
+    	if (instrScheme != null) return instrScheme;
     	instrScheme = new InstrScheme();
     	instrScheme.setNewAndNewArrayEvent(true, false, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);
-
     	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setPutfieldPrimitiveEvent(true, false, true, false);
     	instrScheme.setAloadPrimitiveEvent(true, false, true, false);
     	instrScheme.setAstorePrimitiveEvent(true, false, true, false);
-
     	instrScheme.setGetfieldReferenceEvent(true, false, true, false, false);
     	instrScheme.setPutfieldReferenceEvent(true, false, true, true, true);
     	instrScheme.setAloadReferenceEvent(true, false, true, false, false);
     	instrScheme.setAstoreReferenceEvent(true, false, true, true, true);
-
     	return instrScheme;
     }
 
@@ -115,12 +92,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		ClassicProject.g().runTask(domH);
 		numH = domH.size();
 		chkE = new boolean[numE];
-		accE = new boolean[numE];
-		escE = new boolean[numE];
-		locEH = new IntArraySet[numE];
-		accH = new boolean[numH];
-		ProgramRel relCheckExcludedE =
-			(ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
+		ProgramRel relCheckExcludedE = (ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
 		relCheckExcludedE.load();
 		for (int e = 0; e < numE; e++) {
 			Quad q = domE.get(e);
@@ -131,6 +103,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				chkE[e] = true;
 		}
 		relCheckExcludedE.close();
+		accE = new boolean[numE];
+		escE = new boolean[numE];
+		locEH = new IntArraySet[numE];
+		accH = new boolean[numH];
 	}
 
 	@Override
@@ -149,24 +125,22 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         }
         System.out.println("numAccH: " + numAccH);
 
-		ProgramRel relAccE  = (ProgramRel) ClassicProject.g().getTrgt("pathAccE");
-		ProgramRel relEscE  = (ProgramRel) ClassicProject.g().getTrgt("pathEscE");
-		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("pathLocEH");
-
-		relAccE.zero();
-		relEscE.zero();
-		relLocEH.zero();
-
+		ProgramRel  accErel  = (ProgramRel) ClassicProject.g().getTrgt("pathAccE");
+		ProgramRel  escErel  = (ProgramRel) ClassicProject.g().getTrgt("pathEscE");
+		ProgramRel  locEHrel = (ProgramRel) ClassicProject.g().getTrgt("pathLocEH");
 		PrintWriter accEout  = OutDirUtils.newPrintWriter("shape_pathAccE.txt");
 		PrintWriter escEout  = OutDirUtils.newPrintWriter("shape_pathEscE.txt");
 		PrintWriter locEHout = OutDirUtils.newPrintWriter("shape_pathLocEH.txt");
+		accErel.zero();
+		escErel.zero();
+		locEHrel.zero();
 		for (int e = 0; e < numE; e++) {
 			if (accE[e]) {
-				relAccE.add(e);
-				String estr = domE.get(e).toLocStr();
+				accErel.add(e);
+				String estr = domE.get(e).toVerboseStr();
 				accEout.println(estr);
 				if (escE[e]) {
-					relEscE.add(e);
+					escErel.add(e);
 					escEout.println(estr);
 				} else {
 					IntArraySet hs = locEH[e];
@@ -175,22 +149,20 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 						int n = hs.size();
 						for (int i = 0; i < n; i++) {
 							int h = hs.get(i);
-							relLocEH.add(e, h);
-							String hstr = ((Quad) domH.get(h)).toLocStr();
+							locEHrel.add(e, h);
+							String hstr = ((Quad) domH.get(h)).toVerboseStr();
 							locEHout.println("#" + hstr);
 						}
 					}
 				}
 			}
 		}
-
 		accEout.close();
 		escEout.close();
 		locEHout.close();
-
-		relAccE.save();
-		relEscE.save();
-		relLocEH.save();
+		accErel.save();
+		escErel.save();
+		locEHrel.save();
 	}
 
 	private String eStr(int e) {

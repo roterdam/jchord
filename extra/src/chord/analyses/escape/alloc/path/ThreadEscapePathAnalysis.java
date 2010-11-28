@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.alloc;
+package chord.analyses.escape.alloc.path;
 
 import java.util.HashMap;
 import java.util.List;
@@ -65,8 +65,6 @@ import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Util.Templates.ListIterator;
-
-import chord.util.Execution;
 import chord.project.OutDirUtils;
 
 @Chord(
