@@ -126,7 +126,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		return targets;
 	}
 
-	private int timeout = Integer.getInteger("chord.rhs.timeout", 0);
+	private int timeout = Integer.getInteger("chord.rhs.timeout", 300000);
 	private Alarm alarm;
 
 	protected void done() {
