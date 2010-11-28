@@ -468,10 +468,14 @@ public class Program {
 	}
 
 	public Quad getQuad(MethodElem e, Class quadOpClass) {
+		return getQuad(e, new Class[] { quadOpClass });
+	}
+
+	public Quad getQuad(MethodElem e, Class[] quadOpClasses) {
 		int offset = e.offset;
 		jq_Method m = getMethod(e.mName, e.mDesc, e.cName);
-		assert (m != null);
-		return m.getQuad(offset, quadOpClass);
+		assert (m != null) : ("Method elem: " + e);
+		return m.getQuad(offset, quadOpClasses);
 	}
 
 	public static String getSign(jq_Method m) {
