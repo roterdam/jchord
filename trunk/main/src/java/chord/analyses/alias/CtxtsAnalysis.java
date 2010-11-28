@@ -219,8 +219,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	private Execution X;
 
-	static int[] global_kobjValue; // indexed by domH
-	static int[] global_kcfaValue; // indexed by domI
+	public static int[] global_kobjValue; // indexed by domH
+	public static int[] global_kcfaValue; // indexed by domI
 
 	private void init() {
 		if (isInitialized) return;
