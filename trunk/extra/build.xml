@@ -10,7 +10,7 @@
 		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/> 
 		<path id="chord_dlog_analysis_path">
 			<pathelement location="${chord.home.dir}/src/dlog"/>
-			<pathelement location="src/dlog"/>
+			<pathelement location="src/"/>
 		</path>
 		<property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/> 
 	</target>
