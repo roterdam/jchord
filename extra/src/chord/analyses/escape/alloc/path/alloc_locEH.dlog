@@ -1,4 +1,4 @@
-# name=hybrid-thresc-dlog
+# name=alloc-locEH-dlog
 
 .include "Q.dom"
 .include "H.dom"
@@ -6,14 +6,6 @@
 .include "E.dom"
 .include "P.dom"
 .include "U.dom"
-
-# H0xF0_H1
-# H0xF0xH1
-# H1_H0xF0
-# bad
-# F0_H0xH1
-# H1_H0_F0
-# H1_Q0_H0xF0
 
 .bddvarorder E0_Q0xQ1xQ2_P0_U0xU1_H0xF0xH1
 
@@ -52,21 +44,21 @@ PQ(p:P0,q:Q0) input
 PE(p:P0,e:E0) input
 relevantP(p:P0) input
 EU(e:E0,w:U0)
+succTrans(p:Q,q:Q)
 
 QHFH_i(q:Q0,h1:H0,f:F0,h2:H1) output
 QUH_i(q:Q0,v:U0,h:H0) output
 escQH_i(q:Q0,h:H0) output
 escQHtc_i(q:Q0,h:H0) output
 escQU(q:Q0,v:U0) output
-hybridVisitedE(e:E0) output
-hybridEscE(e:E0) output
-queryE(e:E0) output
 queryPU(p:P0,v:U0) output
 queryQU(q:Q0,v:U0) output
-relevantQUH(q:Q0,v:U0,h:H0) output
-relevantPUH(p:P0,v:U0,h:H0) output
-relevantEH(e:E0,h:H0) output
-succTrans(p:Q,q:Q)
+locQUH(q:Q0,v:U0,h:H0) output
+locPUH(p:P0,v:U0,h:H0) output
+accE(e:E0) output
+escE(e:E0) output
+queryE(e:E0) output
+locEH(e:E0,h:H0) output
 
 ###
 
@@ -115,12 +107,12 @@ escQU(q,v) :- QUH_i(q,v,h), escQHtc_i(q,h).
 
 EU(e,w) :- basePU(p,w), PE(p,e), relevantP(p).
 
-hybridVisitedE(e) :- PQ(p,_), PE(p,e), EU(e,_).
-hybridEscE(e) :- escQU(q,v), PQ(p,q), PE(p,e), EU(e,v).
+accE(e) :- PQ(p,_), PE(p,e), EU(e,_).
+escE(e) :- escQU(q,v), PQ(p,q), PE(p,e), EU(e,v).
 
 ###
 
-queryE(e) :- !hybridEscE(e), hybridVisitedE(e).
+queryE(e) :- !escE(e), accE(e).
 
 queryPU(p,v) :- PE(p,e), EU(e,v), queryE(e).
 queryQU(q,v) :- queryPU(p,v), PQ(p,q).
@@ -128,9 +120,9 @@ queryQU(q,v) :- queryPU(p,v), PQ(p,q).
 QHH_iTrans(q,h,h2) :- QHFH_i(q,h,_,h2).
 QHH_iTrans(q2,h,h2) :- QHH_iTrans(q,h,h2), succTrans(q,q2).
 
-relevantQUH(q,v,h) :- queryQU(q,v), relevantQUH(q,v,h1), QHH_iTrans(q,h,h1).
-relevantQUH(q,v,h) :- queryQU(q,v), QUH_i(q,v,h).
-relevantPUH(p,v,h) :- relevantQUH(q,v,h), PQ(p,q).
+locQUH(q,v,h) :- queryQU(q,v), locQUH(q,v,h1), QHH_iTrans(q,h,h1).
+locQUH(q,v,h) :- queryQU(q,v), QUH_i(q,v,h).
+locPUH(p,v,h) :- locQUH(q,v,h), PQ(p,q).
 
-relevantEH(e,h) :- PE(p,e), EU(e,v), relevantPUH(p,v,h).
+locEH(e,h) :- PE(p,e), EU(e,v), locPUH(p,v,h).
 

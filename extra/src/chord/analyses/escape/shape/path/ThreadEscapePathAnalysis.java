@@ -149,9 +149,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         }
         System.out.println("numAccH: " + numAccH);
 
-		ProgramRel relAccE  = (ProgramRel) ClassicProject.g().getTrgt("accE");
-		ProgramRel relEscE  = (ProgramRel) ClassicProject.g().getTrgt("escE");
-		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("locEH");
+		ProgramRel relAccE  = (ProgramRel) ClassicProject.g().getTrgt("pathAccE");
+		ProgramRel relEscE  = (ProgramRel) ClassicProject.g().getTrgt("pathEscE");
+		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("pathLocEH");
 
 		relAccE.zero();
 		relEscE.zero();

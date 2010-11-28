@@ -79,7 +79,7 @@ import chord.project.OutDirUtils;
  */
 @Chord(
 	name = "thresc-shape-full-java",
-	consumes = "locEH"
+	consumes = "ficiLocEH", "pathLocEH"
 )
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet(0);
@@ -125,7 +125,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		ClassicProject.g().runTask(domE);
 
 		Map<Quad, ArraySet<Quad>> e2hsMap = new HashMap<Quad, ArraySet<Quad>>();
-		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("locEH");
+		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("ficiLocEH");
 		relLocEH.load();
 		IntPairIterable tuples = relLocEH.getAry2IntTuples();
 		for (IntPair tuple : tuples) {

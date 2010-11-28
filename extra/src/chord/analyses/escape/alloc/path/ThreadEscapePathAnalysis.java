@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.hybrid;
+package chord.analyses.escape.alloc;
 
 import java.util.HashMap;
 import java.util.List;
@@ -70,14 +70,12 @@ import chord.util.Execution;
 import chord.project.OutDirUtils;
 
 @Chord(
-    name = "thresc-path-java",
-    namesOfSigns = { "EH" },
+    name = "thresc-alloc-path-java",
+	produces = { "locEH" },
+    namesOfSigns = { "locEH" },
     signs = { "E0,H0:E0_H0" }
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
-	private static final boolean percy = System.getProperty("percy", "false").equals("true");
-	private Execution X;
-
 	public final static int REDIRECTED = -1;
 	public final static int NULL_Q_VAL = 0;
 	public final static int NULL_U_VAL = -2;
@@ -165,15 +163,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
   public void initAllPasses() {
-		if (percy) {
-      X = Execution.v();	
-	    X.addSaveFiles("hybrid_pathEscE.txt", "hybrid_pathLocE.txt", "hints.txt");
-      java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
-      options.put("version", 1);
-      options.put("program", System.getProperty("chord.work.dir"));
-      X.writeMap("options.map", options);
-    }
-
 		domF = (DomF) ClassicProject.g().getTrgt("F");
 		ClassicProject.g().runTask(domF);
 		domM = (DomM) ClassicProject.g().getTrgt("M");
@@ -288,29 +277,15 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
 	public void doneAllPasses() {
-		System.out.println("STATS:" +
-		 	"\nnew: " + numNew + 
-			"\ngetfield: " + numGetfield + 
-			"\nputfield: " + numPutfield + 
-			"\naload: " + numAload + 
-			"\nastore: " + numAstore +
-			"\nphi: " + numPhi + 
-			"\nmove: " + numMove + 
-			"\ncheckcast: " + numCheckCast + 
-			"\ninvk: " + numInvk +
-			"\nret: " + numRet + 
-			"\ngetstatic: " + numGetstatic +
-			"\nputstatic: " + numPutstatic);
-
-		ProgramRel relEH = (ProgramRel) ClassicProject.g().getTrgt("EH");
-		relEH.zero();
+		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("locEH");
+		relLocEH.zero();
 		allocInstsToHeapInsts = new HashMap<Set<Quad>, Set<Quad>>();
         for (Map.Entry<Quad, Set<Quad>> e :
 				heapInstToAllocInsts.entrySet()) {
             Quad heapInst = e.getKey();
             Set<Quad> allocInsts = e.getValue();
 			for (Quad allocInst : allocInsts)
-				relEH.add(heapInst, allocInst);
+				relLocEH.add(heapInst, allocInst);
 			Set<Quad> heapInsts = allocInstsToHeapInsts.get(allocInsts);
 			if (heapInsts == null) {
 				heapInsts = new ArraySet<Quad>();
@@ -318,57 +293,22 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			}
 			heapInsts.add(heapInst);
 		}
-		relEH.save();
+		relLocEH.save();
 
-		try {
-			Program program = Program.g();
-			String outDirName = Config.outDirName;
-			{
-				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "hybrid_pathEscE.txt")));
-				for (Quad e : escHeapInsts)
-					writer.println(e.toLocStr());
-				writer.close();
-			}
+		PrintWriter writer;
+		writer = OutDirUtils.newPrintWriter("alloc_pathEscE.txt");
+		for (Quad e : escHeapInsts)
+			writer.println(e.toLocStr());
+		writer.close();
 
-			{
-				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "hybrid_pathLocE.txt")));
-   		     	for (Quad e : heapInstToAllocInsts.keySet()) {
-					writer.println(e.toLocStr());
-					for (Quad h : heapInstToAllocInsts.get(e)) {
-						writer.println("\t" + h.toLocStr());
-					}
-				}
-				writer.close();
+		writer = OutDirUtils.newPrintWriter("alloc_pathLocE.txt");
+		for (Quad e : heapInstToAllocInsts.keySet()) {
+			writer.println(e.toLocStr());
+			for (Quad h : heapInstToAllocInsts.get(e)) {
+				writer.println("\t" + h.toLocStr());
 			}
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
 		}
-
-        if (percy) {
-          X.output.put("numEscaping", escHeapInsts.size());
-          X.output.put("numLocal", heapInstToAllocInsts.size());
-          int sumHintSize = 0;
-          int maxHintSize = 0;
-          for (Quad e : heapInstToAllocInsts.keySet()) {
-            int size = heapInstToAllocInsts.get(e).size();
-            sumHintSize += size;
-            maxHintSize = Math.max(maxHintSize, size);
-          }
-          X.output.put("avgHintSize", 1.0*sumHintSize/heapInstToAllocInsts.size());
-          X.output.put("maxHintSize", maxHintSize);
-
-          PrintWriter writer = OutDirUtils.newPrintWriter("hints.txt");
-          for (Quad e : heapInstToAllocInsts.keySet()) {
-              for (Quad h : heapInstToAllocInsts.get(e)) {
-                  writer.println(domE.indexOf(e) + "\t" + domH.indexOf(h));
-              }
-          }
-          writer.close();
-
-          X.finish(null);
-        }
+		writer.close();
 	}
 
 	public void donePass() {
@@ -840,14 +780,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		// reachable from method with id ignoredMethId
 		private int ignoredMethId;
 		private int ignoredMethNumFrames;
-		// private boolean[] alreadyCalled;
 		private int prevQid;
 		private int currPid;
 		private int tId;
 		public ThreadHandler(int tId) {
 			this.tId = tId;
 			prevQid = -1;
-			// alreadyCalled = new boolean[domM.size()];
 		}
 		private int getCid(int pId) {
 			String s = Integer.toString(pId);
@@ -860,7 +798,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				s += "_" + pendingInvk.pId;
 			}
 			int cId = cIdMap.getOrAdd(s);
-			// System.out.println("cId: " + cId + " s: " + s);
 			return cId;
 		}
 		private void addSucc(int q, int r) {
@@ -928,13 +865,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				ignoredMethNumFrames = 1;
 				return;
 			}
-/*
-			if (alreadyCalled[mId]) {
-				ignoredMethId = mId;
-				ignoredMethNumFrames = 1;
-				return;
-			}
-*/
 			InvkInfo pendingInvk = (top != null) ? top.pendingInvk : null;
 			List<IntPair> methArgs = methToArgs[mId];
 			if (methArgs == null)

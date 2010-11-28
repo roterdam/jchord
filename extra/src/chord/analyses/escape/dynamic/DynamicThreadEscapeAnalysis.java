@@ -30,24 +30,21 @@ import chord.project.analyses.ProgramRel;
  * Dynamic thread-escape analysis.
  * 
  * Outputs the following relations:
- * <ul>
- * <li><tt>visitedE</tt> containing each heap-accessing statement 
- * that was visited at least once.</li>
- * <li><tt>escE</tt> containing those visited heap-accessing
- * statements that were deemed to access thread-escaping data by
- * the chosen thread-escape analysis.</li>
- * </ul>
+ *
+ * 1. accE containing each heap-accessing statement that was visited at least once.
+ * 2. escE containing those visited heap-accessing statements that were deemed to
+ *    access thread-escaping data by the chosen thread-escape analysis.
+ *
  * Recognized system properties:
- * <ul>
- * <li><tt>chord.dynamic.escape.flowins</tt> ([true|false]; default=false)</li>
- * </ul>
+ *
+ * chord.dynamic.escape.flowins ([true|false]; default=false)
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
 	name = "thresc-dynamic-java",
 	produces = { "escE" }, 
-	namesOfSigns = { "visitedE", "escE" },
+	namesOfSigns = { "accE", "escE" },
 	signs = { "E0", "E0" }
 )
 public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
@@ -66,23 +63,23 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	// domain E of instance field/array deref sites that should become
     // flow-ins. thread-escaping if this alloc site becomes flow-ins.
 	// thread-escaping
-    // invariant: isHidxEsc[h] = true => HidxToPendingEidxs[h] == null
+    // invariant: escH[h] = true => HidxToPendingEidxs[h] == null
     private TIntArrayList[] HidxToPendingEidxs;
 
-    // isHidxEsc[h] == true iff alloc site having index h in domain H
+    // escH[h] == true iff alloc site having index h in domain H
 	// is flow-ins. thread-escaping
-	private boolean[] isHidxEsc;
+	private boolean[] escH;
 
-	// isEidxVisited[e] == true iff instance field/array deref site
+	// accE[e] == true iff instance field/array deref site
 	// having index e in domain E is visited during the execution
-	private boolean[] isEidxVisited;
+	private boolean[] accE;
 
-    // isEidxEsc[e] == true iff:
+    // escE[e] == true iff:
 	// 1. kind is flowSen and instance field/array deref site having
 	//    index e in domain E is flow-sen. thread-escaping
     // 2. kind is flowIns and instance field/array deref site having
     //    index e in domain E is flow-ins. thread-escaping
-	private boolean[] isEidxEsc;
+	private boolean[] escE;
 
 	private int numE;
 	private int numH;
@@ -90,7 +87,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 
     private InstrScheme instrScheme;
 
-	private ProgramRel relVisitedE;
+	private ProgramRel relAccE;
 	private ProgramRel relEscE;
 
 	@Override
@@ -129,16 +126,30 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
 		ClassicProject.g().runTask(domE);
 		numE = domE.size();
-		isEidxVisited = new boolean[numE];
-		isEidxEsc = new boolean[numE];
-		relVisitedE = (ProgramRel) ClassicProject.g().getTrgt("visitedE");
+		accE = new boolean[numE];
+		chkE = new boolean[numE];
+        ProgramRel relCheckExcludedE =
+            (ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
+        relCheckExcludedE.load();
+        for (int e = 0; e < numE; e++) {
+            Quad q = domE.get(e);
+            Operator op = q.getOperator();
+            if (op instanceof Getstatic || op instanceof Putstatic)
+                continue;
+            if (!relCheckExcludedE.contains(e))
+                chkE[e] = true;
+        }
+        relCheckExcludedE.close();
+
+		escE = new boolean[numE];
+		relAccE = (ProgramRel) ClassicProject.g().getTrgt("accE");
 		relEscE = (ProgramRel) ClassicProject.g().getTrgt("escE");
 		if (isFlowIns) {
 			DomH domH = (DomH) ClassicProject.g().getTrgt("H");
 			ClassicProject.g().runTask(domH);
 			numH = domH.size();
 			HidxToPendingEidxs = new TIntArrayList[numH];
-			isHidxEsc = new boolean[numH];
+			escH = new boolean[numH];
 			objToHidx = new TIntIntHashMap();
 		}
 	}
@@ -152,7 +163,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				HidxToPendingEidxs[i] = null;
 			}
 			for (int i = 0; i < numH; i++)
-				isHidxEsc[i] = false;
+				escH[i] = false;
 			objToHidx.clear();
 		}
 	}
@@ -160,39 +171,39 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	@Override
 	public void donePass() {
 		System.out.println("***** STATS *****");
-		int numAllocEsc = 0;
-		int numVisitedE = 0;
+		int numEscH = 0;
+		int numAccE = 0;
 		int numEscE = 0;
 		for (int i = 0; i < numE; i++) {
-			if (isEidxVisited[i]) {
-				numVisitedE++;
-				if (isEidxEsc[i])
+			if (accE[i]) {
+				numAccE++;
+				if (escE[i])
 					numEscE++;
 			}
 		}
 		if (isFlowIns) {
 			for (int i = 0; i < numH; i++) {
-				if (isHidxEsc[i])
-					numAllocEsc++;
+				if (escH[i])
+					numEscH++;
 			}
 		}
-		System.out.println("numAllocEsc: " + numAllocEsc);
-		System.out.println("numVisitedE: " + numVisitedE +
-			" numEscE: " + numEscE);
+		System.out.println("numEscH: " + numEscH);
+		System.out.println("numAccE: " + numAccE);
+		System.out.println("numEscE: " + numEscE);
 	}
 
 	@Override
 	public void doneAllPasses() {
-		relVisitedE.zero();
+		relAccE.zero();
 		relEscE.zero();
 		for (int i = 0; i < numE; i++) {
-			if (isEidxVisited[i]) {
-				relVisitedE.add(i);
-				if (isEidxEsc[i])
+			if (accE[i]) {
+				relAccE.add(i);
+				if (escE[i])
 					relEscE.add(i);
 			}
 		}
-		relVisitedE.save();
+		relAccE.save();
 		relEscE.save();
 
 		DomE domE = (DomE) ClassicProject.g().getTrgt("E");
@@ -202,11 +213,11 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		PrintWriter writer2 =
 			OutDirUtils.newPrintWriter("dynamic_escE.txt");
 		for (int i = 0; i < numE; i++) {
-			if (isEidxVisited[i]) {
+			if (accE[i]) {
 				Quad q = domE.get(i);
 				String s = q.toVerboseStr();
 				writer1.println(s);
-				if (isEidxEsc[i])
+				if (escE[i])
 					writer2.println(s);
 			}
 		}
@@ -277,16 +288,16 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	}
 
 	private void processHeapRd(int e, int b) {
-		if (isEidxEsc[e])
+		if (!chkE[e] || escE[e])
 			return;
-		isEidxVisited[e] = true;
+		accE[e] = true;
 		if (b == 0)
 			return;
 		if (isFlowIns) {
 			if (objToHidx.containsKey(b)) {
 				int h = objToHidx.get(b);
-				if (isHidxEsc[h]) {
-					isEidxEsc[e] = true;
+				if (escH[h]) {
+					escE[e] = true;
 				} else {
 					TIntArrayList list = HidxToPendingEidxs[h];
 					if (list == null) {
@@ -300,7 +311,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 			}
 		} else {
 			if (escObjs.contains(b))
-				isEidxEsc[e] = true;
+				escE[e] = true;
 		}
 	}
 
@@ -360,14 +371,14 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	}
 
 	private void markHesc(int h) {
-		if (!isHidxEsc[h]) {
-			isHidxEsc[h] = true;
+		if (!escH[h]) {
+			escH[h] = true;
 			TIntArrayList l = HidxToPendingEidxs[h];
 			if (l != null) {
 				int n = l.size();
 				for (int i = 0; i < n; i++) {
 					int e = l.get(i);
-					isEidxEsc[e] = true;
+					escE[e] = true;
 				}
 				HidxToPendingEidxs[h] = null;
 			}
@@ -375,11 +386,3 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	}
 }
 
-class FldObj {
-	int f;
-	int o;
-	public FldObj(int f, int o) {
-		this.f = f;
-		this.o = o;
-	}
-}
