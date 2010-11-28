@@ -74,12 +74,14 @@ import chord.util.Timer;
 import chord.project.OutDirUtils;
 
 /**
- * 
+ * Consumes relation locEH
+ * Produces files shape_fullEscE.txt, shape_fullLocE.txt, and results.html
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
 	name = "thresc-shape-full-java",
-	consumes = "ficiLocEH", "pathLocEH"
+	consumes = { "locEH" }
 )
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet(0);
@@ -91,13 +93,10 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private DomH domH;
 	private DomE domE;
 	private int varId[];
-	private TObjectIntHashMap<jq_Method> methToNumVars =
-		new TObjectIntHashMap<jq_Method>();
+	private TObjectIntHashMap<jq_Method> methToNumVars = new TObjectIntHashMap<jq_Method>();
 	private ICICG cicg;
 
-	// set of heap access insts deemed esc. by whole-program analysis
 	private Set<Quad> allEscEs = new HashSet<Quad>();
-	// set of heap access insts proven loc. by whole-program analysis
 	private Set<Quad> allLocEs = new HashSet<Quad>();
 	private Set<Quad> currHs;
 	private Set<Quad> currLocEs = new HashSet<Quad>();
@@ -125,7 +124,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		ClassicProject.g().runTask(domE);
 
 		Map<Quad, ArraySet<Quad>> e2hsMap = new HashMap<Quad, ArraySet<Quad>>();
-		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("ficiLocEH");
+		ProgramRel relLocEH = (ProgramRel) ClassicProject.g().getTrgt("locEH");
 		relLocEH.load();
 		IntPairIterable tuples = relLocEH.getAry2IntTuples();
 		for (IntPair tuple : tuples) {
@@ -256,12 +255,10 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
         OutDirUtils.copyFileFromMainDir("src/web/Mlist.dtd");
         OutDirUtils.copyFileFromMainDir("src/web/Elist.dtd");
         OutDirUtils.copyFileFromMainDir("src/web/Hlist.dtd");
-        OutDirUtils.copyFileFromMainDir("../extra/src/web/escape/results.xml");
-        OutDirUtils.copyFileFromMainDir("../extra/src/web/escape/results.dtd");
-        OutDirUtils.copyFileFromMainDir("../extra/src/web/escape/results.xsl");
-
+        OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.xml");
+        OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.dtd");
+        OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.xsl");
         OutDirUtils.runSaxon("results.xml", "results.xsl");
-
         Program.g().HTMLizeJavaSrcFiles();
 	}
 

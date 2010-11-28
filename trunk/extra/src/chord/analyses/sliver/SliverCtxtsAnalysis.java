@@ -19,7 +19,7 @@
  *
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
-package chord.analyses.alias;
+package chord.analyses.sliver;
 
 import java.io.File;
 import java.io.BufferedReader;
@@ -65,6 +65,9 @@ import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import chord.util.Execution;
+import chord.analyses.alias.Ctxt;
+import chord.analyses.alias.DomC;
+import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.Rel.PairIterable;
 import chord.bddbddb.Rel.TrioIterable;
 import chord.bddbddb.Rel.QuadIterable;
@@ -98,7 +101,7 @@ import chord.util.StopWatch;
 
 import gnu.trove.TObjectIntHashMap;
 import gnu.trove.TObjectIntProcedure;
-import static chord.analyses.alias.GlobalInfo.G;
+import static chord.analyses.sliver.GlobalInfo.G;
 
 // Specifies the abstraction
 class TypeStrategy {

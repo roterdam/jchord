@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.hybrid;
+package chord.analyses.escape.alloc.full;
 
 import gnu.trove.TObjectIntHashMap;
 
@@ -70,19 +70,19 @@ import chord.util.CompareUtils;
 import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.Timer;
-
-import chord.util.Execution;
 import chord.project.OutDirUtils;
 
 /**
- * 
+ * Consumes relation locEH
+ * Produces files alloc_fullEscE.txt and alloc_fullLocE.txt
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(name = "thresc-full-java")
+@Chord(
+	name = "thresc-full-java",
+	consumes = { "locEH" }
+)
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
-	private static final boolean percy = System.getProperty("percy", "false").equals("true");
-	private Execution X;
-
 	public static final IntArraySet nilPts = new IntArraySet(0);
 	private final Set<IntTrio> emptyHeap = Collections.emptySet();
 	private final int ESC_VAL = 0;
@@ -121,18 +121,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 	@Override
 	public void run() {
-		if (percy) {
-      X = Execution.v();	
-	    X.addSaveFiles("hybrid_fullEscE.txt", "hybrid_fullLocE.txt");
-      java.util.HashMap<Object,Object> options = new java.util.LinkedHashMap<Object,Object>();
-      options.put("version", 1);
-      options.put("program", System.getProperty("chord.work.dir"));
-      options.put("useSingletons", useSingletons);
-      options.put("hintsPath", X.getStringArg("hintsPath", null));
-      options.put("hintsType", X.getStringArg("hintsType", null));
-      X.writeMap("options.map", options);
-    }
-
 		Program program = Program.g();
 		mainMethod = program.getMainMethod();
 		threadStartMethod = program.getThreadStartMethod();
@@ -152,49 +140,22 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		escPts.add(ESC_VAL);
 		escPts.setReadOnly();
 
-    Map<Quad, Set<Quad>> heapInstToAllocInsts = new HashMap<Quad, Set<Quad>>();
-    if (percy) {
-      // Read the hints from a file
-      try {
-        String hintsPath = X.getStringArg("hintsPath", null);
-        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(hintsPath)));
-        String line;
-        while ((line = in.readLine()) != null) {
-          String[] tokens = line.split("\\s+");
-          Quad e = domE.get(Integer.parseInt(tokens[0]));
-          Set<Quad> hs = heapInstToAllocInsts.get(e);
-          if (hs == null) heapInstToAllocInsts.put(e, hs = new ArraySet<Quad>());
-          int hidx = Integer.parseInt(tokens[1]);
-          if (hidx >= domH.size()) throw new RuntimeException("Bad index: "+hidx+ " >= "+domH.size());
-          if (hidx > 0) {
-            Quad h = (Quad)domH.get(hidx);
-            hs.add(h);
-          }
-          // TODO: handle the call sites
-        }
-        in.close();
-        X.logs("Read hints for %s queries from %s", heapInstToAllocInsts.size(), hintsPath);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    else {
-      ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("EH");
-      rel.load();
-      IntPairIterable tuples = rel.getAry2IntTuples();
-      for (IntPair tuple : tuples) {
-        int eIdx = tuple.idx0;
-        int hIdx = tuple.idx1;
-        Quad e = (Quad) domE.get(eIdx);
-        Quad h = (Quad) domH.get(hIdx);
-              Set<Quad> allocs = heapInstToAllocInsts.get(e);
-              if (allocs == null) {
-                  allocs = new ArraySet<Quad>();
-                  heapInstToAllocInsts.put(e, allocs);
-              }
-              allocs.add(h);
-      }
-    }
+		Map<Quad, Set<Quad>> heapInstToAllocInsts = new HashMap<Quad, Set<Quad>>();
+		ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("locEH");
+		rel.load();
+		IntPairIterable tuples = rel.getAry2IntTuples();
+		for (IntPair tuple : tuples) {
+			int eIdx = tuple.idx0;
+			int hIdx = tuple.idx1;
+			Quad e = (Quad) domE.get(eIdx);
+			Quad h = (Quad) domH.get(hIdx);
+			Set<Quad> allocs = heapInstToAllocInsts.get(e);
+			if (allocs == null) {
+				allocs = new ArraySet<Quad>();
+				heapInstToAllocInsts.put(e, allocs);
+			}
+			allocs.add(h);
+		}
 
 		Map<Set<Quad>, Set<Quad>> allocInstsToHeapInsts =
         	new HashMap<Set<Quad>, Set<Quad>>();
@@ -254,38 +215,15 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 		}
-		try {
-			String outDirName = Config.outDirName;
-			{
-				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "hybrid_fullEscE.txt")));
-				for (Quad e : escHeapInsts)
-					writer.println(e.toLocStr());
-				writer.close();
-			}
-			{
-				PrintWriter writer = new PrintWriter(new FileWriter(
-					new File(outDirName, "hybrid_fullLocE.txt")));
-				for (Quad e : locHeapInsts)
-					writer.println(e.toLocStr());
-				writer.close();
-			}
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
-		}
-
-    if (percy) {
-      int numEscaping = escHeapInsts.size();
-      int numLocal = locHeapInsts.size();
-      int numQueries = heapInstToAllocInsts.size();
-
-      X.output.put("numQueries", numQueries);
-      X.output.put("numEscaping", numEscaping);
-      X.output.put("numLocal", numLocal);
-      X.output.put("fracProven", 1.0*numLocal/numQueries);
-      X.finish(null);
-    }
-    System.out.println("DONE with run()");
+		PrintWriter writer;
+		writer = OutDirUtils.newPrintWriter("alloc_fullEscE.txt");
+		for (Quad e : escHeapInsts)
+			writer.println(e.toLocStr());
+		writer.close();
+		writer = OutDirUtils.newPrintWriter("alloc_fullLocE.txt");
+		for (Quad e : locHeapInsts)
+			writer.println(e.toLocStr());
+		writer.close();
 	}
 
 	@Override
