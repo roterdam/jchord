@@ -32,11 +32,8 @@ import chord.project.analyses.ProgramRel;
 /**
  * Dynamic thread-escape analysis.
  * 
- * Outputs the following relations:
- *
- * 1. accE containing each heap-accessing statement that was visited at least once.
- * 2. escE containing those visited heap-accessing statements that were deemed to
- *    access thread-escaping data by the chosen thread-escape analysis.
+ * Outputs relations accE, escE, likelyLocE, and
+ * files dynamic_accE.txt, dynamic_escE.txt, dynamic_locE.txt
  *
  * Recognized system properties:
  *
@@ -46,9 +43,9 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(
 	name = "thresc-dynamic-java",
-	produces = { "escE" }, 
-	namesOfSigns = { "accE", "escE" },
-	signs = { "E0", "E0" }
+	produces = { "accE", "escE", "likelyLocE" }, 
+	namesOfSigns = { "accE", "escE", "likelyLocE" },
+	signs = { "E0", "E0", "E0" }
 )
 public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	private final boolean isFlowIns = System.getProperty("chord.escape.flowins", "false").equals("true");
@@ -157,10 +154,13 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	public void doneAllPasses() {
 		ProgramRel  accErel = (ProgramRel) ClassicProject.g().getTrgt("accE");
 		ProgramRel  escErel = (ProgramRel) ClassicProject.g().getTrgt("escE");
+		ProgramRel  locErel = (ProgramRel) ClassicProject.g().getTrgt("likelyLocE");
 		PrintWriter accEout = OutDirUtils.newPrintWriter("dynamic_accE.txt");
 		PrintWriter escEout = OutDirUtils.newPrintWriter("dynamic_escE.txt");
+		PrintWriter locEout = OutDirUtils.newPrintWriter("dynamic_locE.txt");
 		accErel.zero();
 		escErel.zero();
+		locErel.zero();
 		for (int i = 0; i < numE; i++) {
 			if (accE[i]) {
 				String s = domE.get(i).toVerboseStr();
@@ -169,13 +169,17 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				if (escE[i]) {
 					escEout.println(s);
 					escErel.add(i);
-				}
+				} else
+					locEout.println(s);
+					locErel.add(i);
 			}
 		}
 		accErel.save();
 		escErel.save();
+		locErel.save();
 		accEout.close();
 		escEout.close();
+		locEout.close();
 	}
 
 	public void processNewOrNewArray(int h, int t, int o) {
