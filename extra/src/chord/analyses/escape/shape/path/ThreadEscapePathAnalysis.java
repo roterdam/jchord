@@ -35,10 +35,10 @@ import chord.util.IntArraySet;
  */
 @Chord(
 	name = "thresc-shape-path-java",
-	produces = { "accE", "escE", "locEH" }, 
+	produces = { "accE", "escE", "likelyLocE", "locEH" }, 
 	consumes = { "checkExcludedE" },
-	namesOfSigns = { "accE", "escE", "locEH" },
-	signs = { "E0", "E0", "E0,H0:E0_H0" }
+	namesOfSigns = { "accE", "escE", "likelyLocE", "locEH" },
+	signs = { "E0", "E0", "E0", "E0,H0:E0_H0" }
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private final boolean verbose = false;
@@ -125,14 +125,16 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
         }
         System.out.println("numAccH: " + numAccH);
 
-		ProgramRel  accErel  = (ProgramRel) ClassicProject.g().getTrgt("pathAccE");
-		ProgramRel  escErel  = (ProgramRel) ClassicProject.g().getTrgt("pathEscE");
-		ProgramRel  locEHrel = (ProgramRel) ClassicProject.g().getTrgt("pathLocEH");
+		ProgramRel  accErel  = (ProgramRel) ClassicProject.g().getTrgt("accE");
+		ProgramRel  escErel  = (ProgramRel) ClassicProject.g().getTrgt("escE");
+		ProgramRel  locErel  = (ProgramRel) ClassicProject.g().getTrgt("likelyLocE");
+		ProgramRel  locEHrel = (ProgramRel) ClassicProject.g().getTrgt("locEH");
 		PrintWriter accEout  = OutDirUtils.newPrintWriter("shape_pathAccE.txt");
 		PrintWriter escEout  = OutDirUtils.newPrintWriter("shape_pathEscE.txt");
 		PrintWriter locEHout = OutDirUtils.newPrintWriter("shape_pathLocEH.txt");
 		accErel.zero();
 		escErel.zero();
+		locErel.zero();
 		locEHrel.zero();
 		for (int e = 0; e < numE; e++) {
 			if (accE[e]) {
@@ -143,8 +145,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					escErel.add(e);
 					escEout.println(estr);
 				} else {
-					IntArraySet hs = locEH[e];
+					locErel.add(e);
 					locEHout.println(estr);
+					IntArraySet hs = locEH[e];
 					if (hs != null) {
 						int n = hs.size();
 						for (int i = 0; i < n; i++) {
@@ -162,6 +165,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		locEHout.close();
 		accErel.save();
 		escErel.save();
+		locErel.save();
 		locEHrel.save();
 	}
 
