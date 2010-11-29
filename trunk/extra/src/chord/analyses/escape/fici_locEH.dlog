@@ -1,0 +1,33 @@
+# Copyright (c) 2008-2010, Intel Corporation.
+# Copyright (c) 2006-2007, The Trustees of Stanford University.
+# All rights reserved.
+# Licensed under the terms of the New BSD License.
+
+# Author: Mayur Naik (mhn@cs.stanford.edu)
+# name=fici-locEH-dlog
+
+.include "V.dom"
+.include "H.dom"
+.include "F.dom"
+.include "E.dom"
+
+.bddvarorder E0_V0_H0xH1_F0
+
+###
+# Relations
+###
+
+VH(v:V0,h:H0) input
+HFH(h1:H,f:F,h2:H) input
+EV(e:E,v:V) input
+likelyLocE(e:E) input
+locEH(e:E,h:H) output
+locE(e:E) output
+
+###
+# Constraints
+###
+
+locEH(e,h) :- likelyLocE(e), EV(e,v), VH(v,h).
+locEH(e,h) :- locEH(e,h2), HFH(h,_,h2).
+locE(e) :- locEH(e,_).
