@@ -125,8 +125,7 @@ with the following exceptions:
 Duplicate classes, i.e., classes with the same name occurring in more than one classpath element;
 in this case, all occurrences except the first are excluded. 
 \item
-All classes in \Chord's classpath are excluded, i.e., all classes in the classpath specified by property \code{chord.main.class.path},
-such as those in packages and sub-packages of \code{chord}, \code{joeq}, \code{net.sf.bddbddb}, \code{net.sf.javabdd}, \code{javassist}, \code{gnu.trove}, etc.
+Any class whose name's prefix is specified in the value of property \code{chord.scope.exclude}.
 \item
 If property \code{chord.ch.kind} has value {\tt dynamic}, then \Chord\ runs the given program and
 observes the set of all classes the JVM loads; any class not in this set is excluded.

@@ -184,13 +184,13 @@ See Section \ref{sec:building-scope} for more details.
 % TODO: mention that below two properties are also used by instrumentor to decide which classes to exclude from instrumentation
 
 \item
-\code{chord.scope.exclude.std} \\
+\code{chord.std.scope.exclude} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes inside the standard library whose method bodies must be treated as no-ops by static scope building algorithms. \\
 {\bf Default value:} \code{[chord.main.class.path]}
 
 \item
-\code{chord.scope.exclude.ext} \\
+\code{chord.ext.scope.exclude} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes outside the standard library whose method bodies must be treated as no-ops by static scope building algorithms. \\
 {\bf Default value:} {\tt ""}
@@ -199,7 +199,7 @@ See Section \ref{sec:building-scope} for more details.
 \code{chord.scope.exclude} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes whose method bodies must be treated as no-ops by static scope building algorithms. \\
-{\bf Default value:} \code{"[chord.main.class.path],[chord.scope.exclude.ext]"}
+{\bf Default value:} \code{"[chord.std.scope.exclude],[chord.ext.scope.exclude]"}
 \end{itemize}
 
 \subsection{Program Analysis Properties}
@@ -217,7 +217,7 @@ This section describes properties regarding program analyses executed by \Chord.
 \code{chord.dlog.analysis.path} \\
 {\bf Type:} path \\
 {\bf Description:} Path of directories containing program analyses written in Datalog (i.e., files with suffix {\tt .dlog} or {\tt .datalog}). \\
-{\bf Default value:} \code{[chord.main.dir]/src/dlog/:[chord.main.dir]/../extra/src/dlog/} 
+{\bf Default value:} \code{[chord.main.dir]/src/dlog/} 
 
 \item
 \code{chord.analysis.exclude} \\
@@ -238,13 +238,13 @@ This section describes properties regarding program analyses executed by \Chord.
 {\bf Description:} Print the results of program analyses in HTML.  Interpretation of this property is analysis-specific. \\
 {\bf Default value:} {\tt true} 
 
-\code{chord.check.exclude.std} \\
+\code{chord.std.check.exclude} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes and packages inside the standard library to be excluded by program analyses.  Interpretation of this property is analysis-specific. \\
 {\bf Default value:} \code{"sun.,com.sun.,com.ibm.jvm.,com.ibm.oti.,com.ibm.misc.,org.apache.harmony.,joeq.,jwutil.,java.,javax."} 
 
 \item
-\code{chord.check.exclude.ext} \\
+\code{chord.ext.check.exclude} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes and packages outside the standard library to be excluded by program analyses.  Interpretation of this property is analysis-specific. \\
 {\bf Default value:} {\tt ""}
@@ -253,7 +253,7 @@ This section describes properties regarding program analyses executed by \Chord.
 \code{chord.check.exclude} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes and packages to be excluded by program analyses.  Interpretation of this property is analysis-specific. \\
-{\bf Default value:} \code{"[chord.check.exclude.std],[chord.check.exclude.ext]"}
+{\bf Default value:} \code{"[chord.std.check.exclude],[chord.ext.check.exclude]"}
 \end{itemize}
 
 \subsection{Program Transformation Properties}
