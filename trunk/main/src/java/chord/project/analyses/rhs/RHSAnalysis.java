@@ -173,11 +173,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	}
 
 	protected void printSummaries() {
-		System.out.print("Summaries: ");
 		for (jq_Method m : summEdges.keySet()) {
+			System.out.print("Summaries of method " + m);
 			Set<SE> seSet = summEdges.get(m);
 			if (seSet != null) {
-				System.out.print(seSet.size() + " ");
+				for (SE se : seSet)
+					System.out.println("\t" + se);
 			}
 		}
 		System.out.println();
