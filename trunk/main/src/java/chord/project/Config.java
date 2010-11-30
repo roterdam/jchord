@@ -105,7 +105,7 @@ public class Config {
 
 	public final static String mainClassPathPackages = "chord.,javassist.,joeq.,net.sf.bddbddb.,net.sf.javabdd.";
 
-	public final static String DEFAULT_SCOPE_EXCLUDES = 
+	public final static String DEFAULT_SCOPE_EXCLUDES =
 		concat(mainClassPathPackages, ',', "sun.,com.sun.,com.ibm.,org.apache.harmony.");
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		concat(mainClassPathPackages, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
@@ -115,6 +115,13 @@ public class Config {
 	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
 		concat(scopeStdExcludeStr, ',', scopeExtExcludeStr));
 	public static String[] scopeExcludeAry = toArray(scopeExcludeStr);
+
+	public static boolean isExcludedFromScope(String typeName) {
+		for (String c : scopeExcludeAry)
+			if (typeName.startsWith(c))
+				return true;
+		return false;
+	}
 
 	// Program analysis properties
 
