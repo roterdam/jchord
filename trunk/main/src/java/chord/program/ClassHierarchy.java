@@ -36,10 +36,6 @@ import chord.util.tuple.object.Pair;
 public class ClassHierarchy {
 	private static final String INVALID_CH_KIND =
 		"ERROR: Invalid value `%s` used for property chord.ch.kind; must be one of [static|dynamic]";
-	private static final String EXCLUDED_CPE =
-		"WARN: Class hierarchy builder: Excluded the following classpath elements:";
-	private static final String INCLUDED_CPE =
-		"INFO: Class hierarchy builder: Included the following classpath elements:";
 	private static final String IGNORED_DUPLICATE_TYPES =
 		"INFO: Class hierarchy builder: Ignored the following duplicate classes/interfaces coming from the indicated classpath elements:";
 	private static final String EXCLUDED_TYPES_IN_CHORD =
@@ -54,11 +50,6 @@ public class ClassHierarchy {
 		"WARN: Class hierarchy builder: Ignored the following classes/interfaces as some (direct or transitive) interface implemented/extended by each of them is missing in scope:";
 
 	private final String CHkind;
-	/**
-	 * List of elements in Chord's classpath to be excluded from the
-	 * class hierarchy.
-	 */
-	private final String[] chordCPEary;
     /**
      * Map from each class or interface in scope to the kind of its type
      * (interface, abstract class, or concrete class).
@@ -207,12 +198,6 @@ public class ClassHierarchy {
 		CHkind = Config.CHkind;
 		if (!CHkind.equals("static") && !CHkind.equals("dynamic"))
 			Messages.fatal(INVALID_CH_KIND);
-		// exclude chord's classpath in part because joeq has weird
-		// code that breaks cha, but also because it is not part of
-		// the program being analyzed
-		String mainClassPathName = Config.mainClassPathName;
-		chordCPEary = mainClassPathName.equals("") ? new String[0] :
-			mainClassPathName.split(File.pathSeparator);
 	}
 
 	// builds maps clintToKind, classToDeclaredSuperclass, and clintToDeclaredInterfaces
@@ -229,10 +214,8 @@ public class ClassHierarchy {
 		final List<ClasspathElement> cpeList = cp.getClasspathElements();
 
 		// logging info
-		List<String> excludedCPEs = new ArrayList<String>();
-		List<String> includedCPEs = new ArrayList<String>();
 		List<Pair<String, String>> duplicateTypes = new ArrayList<Pair<String, String>>();
-		List<String> typesInChord = new ArrayList<String>();
+		List<String> excludedTypes = new ArrayList<String>();
 		List<String> typesNotDynLoaded = new ArrayList<String>();
 
 		clintToKind = new HashMap<String, TypeKind>();
@@ -240,11 +223,6 @@ public class ClassHierarchy {
 		clintToDeclaredInterfaces = new HashMap<String, Set<String>>();
 
 		for (ClasspathElement cpe : cpeList) {
-			boolean isInChord = isInChord(cpe);
-			if (isInChord)
-				excludedCPEs.add(cpe.toString());
-			else
-				includedCPEs.add(cpe.toString());
 			for (String fileName : cpe.getEntries()) {
 				if (!fileName.endsWith(".class"))
 					continue;
@@ -255,9 +233,9 @@ public class ClassHierarchy {
 					duplicateTypes.add(new Pair<String, String>(typeName, cpe.toString()));
 					continue;
 				}
-				// ignore types from Chord classpath elements
-				if (isInChord) {
-					typesInChord.add(typeName);
+				// ignore types excluded from scope
+				if (Config.isExcludedFromScope(typeName)) {
+					excludedTypes.add(typeName);
 					continue;
 				}
 				if (dynLoadedTypes != null && !dynLoadedTypes.contains(typeName)) {
@@ -274,24 +252,14 @@ public class ClassHierarchy {
 		}
 
 		if (Config.verbose > 2) {
-			if (!excludedCPEs.isEmpty()) {
-				Messages.log(EXCLUDED_CPE);
-				for (String cpe : excludedCPEs)
-					Messages.log("\t" + cpe);
-			}
-			if (!includedCPEs.isEmpty()) {
-				Messages.log(INCLUDED_CPE);
-				for (String cpe : includedCPEs)
-					Messages.log("\t" + cpe);
-			}
 			if (!duplicateTypes.isEmpty()) {
 				Messages.log(IGNORED_DUPLICATE_TYPES);
 				for (Pair<String, String> p : duplicateTypes)
 					Messages.log("\t%s, %s", p.val0, p.val1);
 			}
-			if (!typesInChord.isEmpty()) {
+			if (!excludedTypes.isEmpty()) {
 				Messages.log(EXCLUDED_TYPES_IN_CHORD);
-				for (String s : typesInChord)
+				for (String s : excludedTypes)
 					Messages.log("\t" + s);
 			}
 			if (!typesNotDynLoaded.isEmpty()) {
@@ -301,15 +269,6 @@ public class ClassHierarchy {
 			}
 		}
         System.out.println("Finished building class hierarchy.");
-	}
-
-	private boolean isInChord(ClasspathElement cpe) {
-		String cpe1 = cpe.toString();
-		for (String cpe2 : chordCPEary) {
-			if (cpe1.equals(cpe2))
-				return true;
-		}
-		return false;
 	}
 
 	// Description of superclass and interfaces sections in class file of class c:
