@@ -27,6 +27,8 @@ taintconf(v:V,o:Opt) output
 
 confT(t:T)
 confT("org.apache.hadoop.conf.Configuration").
+confT("java.lang.Properties").
+
 confT(t) :- sub(t,t2),confT(t2).
 
 confM(m) :- TM(t,m),confT(t).

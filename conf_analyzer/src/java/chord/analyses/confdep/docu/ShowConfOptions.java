@@ -21,6 +21,7 @@ import chord.project.Config;
 import chord.project.OutDirUtils;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
+import chord.util.Utils;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
 import edu.berkeley.confspell.OptDictionary;
@@ -37,13 +38,13 @@ public class ShowConfOptions extends JavaAnalysis {
 
     methTypeTable.put("java.net.InetSocketAddress <init> (Ljava/lang/String;I)V 1", "Address");
     methTypeTable.put("java.net.Socket <init> (Ljava/lang/String;I)V 1", "Address");
-
     methTypeTable.put("java.net.InetAddress getByName (Ljava/lang/String;)Ljava/net/InetAddress; 0", "Address");
     
     methTypeTable.put("java.lang.Boolean parseBoolean (Ljava/lang/String;)Z 0", "Boolean");
     methTypeTable.put("java.lang.Boolean valueOf (Ljava/lang/String;)Ljava/lang/Boolean; 0", "Boolean");
     
     methTypeTable.put("java.lang.Class forName (Ljava/lang/String;)Ljava/lang/Class; 0", "ClassName");
+    methTypeTable.put("java.lang.Class forName (Ljava/lang/String;ZLjava/lang/ClassLoader;)Ljava/lang/Class; 0", "ClassName");
     methTypeTable.put("java.lang.ClassLoader loadClass (Ljava/lang/String;)Ljava/lang/Class; 1", "ClassName");
     methTypeTable.put("org.apache.hadoop.conf.Configuration getClassByName (Ljava/lang/String;)Ljava/lang/Class; 1", "ClassName");
 
@@ -76,7 +77,6 @@ public class ShowConfOptions extends JavaAnalysis {
     methTypeTable.put("java.util.regex.Pattern matches (Ljava/lang/String;Ljava/lang/CharSequence;)Z 0", "Regex");
     methTypeTable.put("java.util.regex.Pattern compile (Ljava/lang/String;)Ljava.util.regex.Pattern; 0", "Regex");
     methTypeTable.put("java.util.regex.Pattern compile (Ljava/lang/String;I)Ljava.util.regex.Pattern; 0", "Regex");
-
     
     methTypeTable.put("java.util.Random <init> (J)V 1", "RandomSeed");
     methTypeTable.put("java.lang.Enum valueOf (Ljava/lang/Class;Ljava/lang/String;)Ljava/lang/Enum; 1", "Special");
@@ -481,11 +481,9 @@ public class ShowConfOptions extends JavaAnalysis {
 
   private void updateDict(Quad q, String optName, String string) {
     String srcOfRead = q.getMethod().getDeclaringClass().getName();
-    for(String prefix: inScopePrefixes) {
-      if(srcOfRead.startsWith(prefix)) {
-        dict.update(optName, string);
-        return;
-      }    
+    if(Utils.prefixMatch(srcOfRead, inScopePrefixes)) {
+      dict.update(optName, string);
+      return;
     }
   }
 

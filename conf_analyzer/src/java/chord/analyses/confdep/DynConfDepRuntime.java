@@ -57,7 +57,7 @@ public class DynConfDepRuntime {
         out.println("ERR: expected at least " + (cOpt+1) +  " options for call to " + cname + " " + mname);
         return;
       } */
-      String confOpt = ConfDefines.optionPrefix(cname, mname) + (String) args[cOpt] +"-" +iIdx;
+      String confOpt = ConfDefines.optionPrefixByName(cname, mname) + (String) args[cOpt] +"-" +iIdx;
       if(ret != null) {
       	if(ret.getClass().isArray())
       		ret = reformatArray(ret);

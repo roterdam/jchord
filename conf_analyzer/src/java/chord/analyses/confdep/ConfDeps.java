@@ -72,8 +72,9 @@ public class ConfDeps extends JavaAnalysis {
 
     if(STATIC) {
       Project.runTask("cipa-0cfa-arr-dlog");
-      Project.runTask("mini-findconf-dlog");
-//    Project.runTask("findconf-dlog");
+      
+//      Project.runTask("mini-findconf-dlog");
+      Project.runTask("findconf-dlog");
 
       if(miniStrings)
         Project.runTask("mini-str-dlog");
@@ -144,7 +145,7 @@ public class ConfDeps extends JavaAnalysis {
 //      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
       jq_Type ty = calledMeth.getParamTypes()[z];
       String caller = callerM.getDeclaringClass() + " " + callerM.getName() + ":" + methArg.val0.getLineNumber();
-      writer.println(caller + " calling  " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +
+      writer.println(caller + " calling " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +
           " arg " + z +  " of type " + ty + " " +  optName);
     }
     
@@ -163,7 +164,7 @@ public class ConfDeps extends JavaAnalysis {
 //      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
       jq_Type ty = calledMeth.getReturnType();
       String caller = callerM.getDeclaringClass() + " " + callerM.getName() + ":" + invkRet.val0.getLineNumber();
-      writer.println(caller + " calling  " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +
+      writer.println(caller + " calling " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +
           " returns type " + ty + " taint: " +  optName);
     }
     
