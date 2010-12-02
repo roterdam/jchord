@@ -13,6 +13,7 @@ import chord.bddbddb.Rel.RelView;
 import chord.doms.*;
 import chord.project.*;
 import chord.project.analyses.*;
+import chord.util.Utils;
 import chord.util.tuple.object.Pair;
 
 @Chord(
@@ -23,11 +24,15 @@ public class ExplainMyLogs extends JavaAnalysis{
   
   boolean miniStrings;
   
+  String[] inScopePrefixes;
   @Override
   public void run() {
     
+    inScopePrefixes = Config.toArray(System.getProperty("dictionary.scope", ""));
+    if(inScopePrefixes.length == 0)
+      inScopePrefixes = new String[] {""};
+  	
     ClassicProject project = ClassicProject.g();
-
     
     miniStrings = Config.buildBoolProperty("useMiniStrings", false);
     
@@ -40,7 +45,7 @@ public class ExplainMyLogs extends JavaAnalysis{
     else
       project.runTask("strcomponents-dlog");
     
-    project.runTask("CnfNodeSucc"); //used for name-finding
+    project.runTask("Opt"); //used for name-finding
     project.runTask("logconfdep-dlog");
     
     ConfDeps c = new ConfDeps();
@@ -54,7 +59,7 @@ public class ExplainMyLogs extends JavaAnalysis{
 
 
 
-  static public void dumpLogDependencies(Map<Quad, String> optNames) {
+  public void dumpLogDependencies(Map<Quad, String> optNames) {
     ClassicProject project = ClassicProject.g();
 
     PrintWriter writer =
@@ -75,6 +80,10 @@ public class ExplainMyLogs extends JavaAnalysis{
       Quad logCall = (Quad) q;
       jq_Method m = logCall.getMethod();
       jq_Class cl = m.getDeclaringClass();
+      
+      boolean isInScope = Utils.prefixMatch(cl.getName(), inScopePrefixes);
+      if(!isInScope)
+      	continue;
       int lineno = logCall.getLineNumber();
       
       String msg = renderLogMsg(logCall, logStrings, dataDep);
@@ -85,12 +94,11 @@ public class ExplainMyLogs extends JavaAnalysis{
       
       RelView ctrlDepView = logConfDeps.getView();
       ctrlDepView.selectAndDelete(0, logCall);
-      for(Quad ctrlDep: ctrlDepView.<Quad>getAry1ValTuples()) {
-        String optName =  optNames.get(ctrlDep);
-        if(optName == null)
+      for(String ctrlDep: ctrlDepView.<String>getAry1ValTuples()) {
+        if(ctrlDep == null)
           continue;
 //          optName = "Unknown Conf";
-        writer.println("\tcontrol-depends on "+optName);
+        writer.println("\tcontrol-depends on "+ctrlDep);
       }
       
     }

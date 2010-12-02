@@ -1,6 +1,11 @@
 package chord.analyses.confdep;
 
 import java.util.HashSet;
+
+import chord.bddbddb.Rel;
+import chord.bddbddb.Rel.RelView;
+import chord.project.ClassicProject;
+import chord.project.analyses.ProgramRel;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
@@ -98,6 +103,11 @@ public class ConfDefines {
       return 0;
     else if(classname.equals("org.apache.derby.impl.store.access.PropertyConglomerate") && methname.equals("getProperty"))
       return 2;
+//    else if(classname.equals("org.hsqldb.persist.HsqlProperties")) {
+//    	if(methname.startsWith("get") && methname.endsWith("Property"))
+//    		return 1;
+ //   	else return -1;
+ //   }
 //    else if(classname.equals("org.apache.derby.iapi.tools.i18n") && methname.equals())
 //    return -1;
    return -1;
@@ -112,7 +122,10 @@ public class ConfDefines {
   }
   
 
-  public static String optionPrefix(String classname, String methname) {
+  /**
+   * Should be only used in dynamic analysis
+   */
+  public static String optionPrefixByName(String classname, String methname) {
     if(classname.equals("java.lang.System")) {
       if(methname.equals("getProperty"))
         return "PROP-";
@@ -136,6 +149,8 @@ public class ConfDefines {
       return "JIVECONF-"; 
     if(classname.startsWith("nachos.machine.Config"))
         return "PROP-";
+    if(classname.startsWith("org.apache.tools.ant"))
+    	return "PROP-";
     else 
       return "";
   }
@@ -149,16 +164,32 @@ public class ConfDefines {
       return s.substring(7);
     else return s;
   }
+  public static final boolean EXPAND_RECURSIVE_CONF = true;
   
+  static ProgramRel baseConfCall = null;
   public static String optionPrefix(Quad inst) {
-    
+    	if(baseConfCall == null && EXPAND_RECURSIVE_CONF) {
+    		ClassicProject project = ClassicProject.g();
+    		baseConfCall = (ProgramRel) project.getTrgt("confWrapper");
+    		baseConfCall.load();
+    	}
+    	if(baseConfCall != null) {
+    		RelView baseV = baseConfCall.getView();
+    		baseV.selectAndDelete(0, inst);
+    		for(Quad q: baseV.<Quad>getAry1ValTuples()) {
+    			inst = q;
+    			break;
+    		}
+    		baseV.free();
+    	}
+    	
 //    if(o instanceof Quad) {
  //     Quad inst = (Quad) o;
       if(inst.getOperator() instanceof Invoke) {
         jq_Method m = Invoke.getMethod(inst).getMethod();
         String classname = m.getDeclaringClass().getName();
         String methname = m.getName().toString();
-        return optionPrefix(classname, methname);
+        return optionPrefixByName(classname, methname);
       }
       return "";
 //    } //else if(o instanceof jq_Class) { } 
@@ -185,19 +216,22 @@ public class ConfDefines {
       jq_Method m = Invoke.getMethod(inst).getMethod();
       String classname = m.getDeclaringClass().getName();
       String methname = m.getName().toString();
-      
+      int args = m.getParamTypes().length;
       //special-case derby since need full quad, not just name, for resolution
       if(classname.equals("org.apache.derby.iapi.services.property.PropertyUtil")) {
         if(methname.startsWith("getSystem"))
           return 0;
         else if(methname.startsWith("getService") || methname.startsWith("getPropertyFromSet")) {
-          jq_Type[] parms = m.getParamTypes(); //methods are static, so question of how to count this is moot
+          jq_Type[] parms = m.getParamTypes(); //methods are static, so question of how to count 'this' is moot
           for(int i= 0; i< parms.length; ++i)
             if(parms[i].getName().equals("java.lang.String"))
               return i;
           System.out.println("WARN: didn't expect lack of string args to " + methname);
         } 
         return -1;//shouldn't get here
+      }  else if(classname.equals("org.apache.tools.ant.PropertyHelper") && methname.equals("getProperty")) {
+      	//ant has a getProperty with a namespace param.
+      	return args -1;
       } else
         return confOptionPos(classname, methname);
     } else
