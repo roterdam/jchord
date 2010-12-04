@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.escape.alloc.full;
+package chord.analyses.escape;
 
 /**
  * 
