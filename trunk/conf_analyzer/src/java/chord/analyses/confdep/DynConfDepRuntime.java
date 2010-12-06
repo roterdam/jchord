@@ -59,14 +59,17 @@ public class DynConfDepRuntime {
       } */
       String confOpt = ConfDefines.optionPrefixByName(cname, mname) + (String) args[cOpt] +"-" +iIdx;
       if(ret != null) {
+      	String prettyRet;
       	if(ret.getClass().isArray())
-      		ret = reformatArray(ret);
-        out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=" + ret);
+      		prettyRet = reformatArray(ret);
+      	else 
+      		prettyRet = ret.toString();
+        out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=" + prettyRet);
+        addLabel(ret,  confOpt);
       }
       else
         out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=null");
       
-      addLabel(ret,  confOpt);
     } else {
       boolean taintedCall = false;
       HashSet<String> rtaints = new HashSet<String>();
@@ -134,6 +137,7 @@ public class DynConfDepRuntime {
   public synchronized static void aloadReferenceEvent(int eId,Object array, int iId, Object result) {
     //message is just for debugging
 //    out.println("load from array with taints: " + taintStr(array));
+ //   out.println("(array contents were " + reformatArray(array) +")");
     List<String> taintlist = taintlist(array);
     for(String t: taintlist) {
       addLabel(result, t);
