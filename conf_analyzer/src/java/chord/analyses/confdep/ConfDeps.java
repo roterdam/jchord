@@ -108,6 +108,7 @@ public class ConfDeps extends JavaAnalysis {
     dumpOptUses(domOpt);
     dumpFieldTaints(domOpt);
     if(dumpIntermediates)  {
+      dumpOptRegexes("conf_regex.txt", DomOpts.optSites());
       Project.runTask("datadep-debug-dlog");
       dumpArgDTaints();
     }

@@ -133,17 +133,18 @@ public class ShowConfOptions extends JavaAnalysis {
 
     Map<Quad, String> returnedMap = DomOpts.optSites();
 
+    System.out.println(new Date() + ": Done classifying.  Used " + methTypeTable.size() + " inference rules for conf typing");
+
     dumpFieldContents();
     dumpOptTypeGuesses();
     dumpReturnTypeGuesses();
     if(argGuesses)
       dumpArgTypeGuesses();
-    
+//    System.out.println(new Date() + ": Inferring opt types")
 //    recordClassOpts(returnedMap);
     project.runTask("classname-type-inf-dlog");
     readOptClassCasts(returnedMap);
     
-    System.out.println("used " + methTypeTable.size() + " inference rules for conf typing");
     PrintWriter writer = OutDirUtils.newPrintWriter( System.getProperty("dictionary.name", "options.dict"));
     dict.dump(writer, true);
     writer.close();
@@ -180,7 +181,7 @@ public class ShowConfOptions extends JavaAnalysis {
       String optName = castT.val1;
       Register r = castT.val2;
       
-      if(optName == null || optName.equals(DomOpts.NONE)) {
+      if(optName == null || optName.equals(DomOpts.NONE) || !dict.contains(optName)) {
         continue;
       }
       if(!"ClassName".equals(dict.get(optName)))
@@ -527,18 +528,21 @@ public class ShowConfOptions extends JavaAnalysis {
   
   private Map<String,String> getOptEnums() {
     HashMap<String,String> optEnums = new HashMap<String,String>();
-    ProgramRel enumOpt = (ProgramRel) ClassicProject.g().getTrgt("enumOpts");//outputs i,const
+    ProgramRel enumOpt = (ProgramRel) ClassicProject.g().getTrgt("enumOpts");//outputs Opt,const
     enumOpt.load();
     
     for(Pair<String, jq_Type> t: enumOpt.<String, jq_Type>getAry2ValTuples()) {
-      System.out.println("adding enum value, using fields from type " + t.val1.getName());
+    	
+    	if(!optEnums.containsKey(t.val0))
+    		System.out.println("adding enum values for " + t.val0 + " , using fields from type " + t.val1.getName());
+    	
       jq_Class eType =  (jq_Class) t.val1;
       StringBuilder vals = new StringBuilder("");
       Class<?> cl = eType.getJavaLangClassObject();
       if(cl == null)
         continue;
       if(cl.getEnumConstants() == null) {
-      	System.err.println("WARN: no enum constants for " + t.val1.getName());
+      	System.err.println("WARN: no enum constants for " + t.val0 + " of type " + t.val1.getName());
       	continue;
       }
       
