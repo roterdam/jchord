@@ -36,17 +36,12 @@ public final class ProcessExecutor {
 	 * @return	The exit value of the invoked process.
 	 * 			By convention, 0 indicates normal termination.
 	 */
-    public static final int execute(String[] cmdarray, int timeout) throws Throwable {
-	   	Process proc = Runtime.getRuntime().exec(cmdarray);
-		StreamGobbler err = new StreamGobbler(proc.getErrorStream(), "ERR");
-		StreamGobbler out = new StreamGobbler(proc.getInputStream(), "OUT");
-		err.start();
-		out.start();
-
+	public static final int execute(String[] cmdarray, int timeout) throws Throwable {
+		Process proc = executeAsynch(cmdarray);
 		TimerTask killOnDelay = null;
 
 		if(timeout > 0) {
- 			Timer t = new Timer();
+			Timer t = new Timer();
 			killOnDelay = new KillOnTimeout(proc);
 			t.schedule(killOnDelay, timeout);
 		}
@@ -56,6 +51,16 @@ public final class ProcessExecutor {
 
 		return exitValue;
 	}
+
+	public static final Process executeAsynch(String[] cmdarray) throws Throwable {
+		Process proc = Runtime.getRuntime().exec(cmdarray);
+		StreamGobbler err = new StreamGobbler(proc.getErrorStream(), "ERR");
+		StreamGobbler out = new StreamGobbler(proc.getInputStream(), "OUT");
+		err.start();
+		out.start();
+		return proc;
+	}  
+  
     private static class StreamGobbler extends Thread {
         private final InputStream s;
         private final String n;
