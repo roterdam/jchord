@@ -403,6 +403,9 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		int h = OtoH.get(b);
 		if (h == 0)
 			throw new ThrEscException();
+		// int t = OtoT.get(b);
+		// if (t == 0)
+		//	throw new ThrEscException();
 		tmpO.add(b);
 		tmpH.add(h);
 		// Note: tmpO.size() can change in body of below loop!
@@ -419,6 +422,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 						if (h2 == 0)
 							throw new ThrEscException();
 						tmpH.add(h2);
+						// int t2 = OtoT.get(o2);
+						// if (t2 == 0)
+						//	throw new ThrEscException();
+						// assert (t2 == t);
 					}
 				}
 			}
@@ -438,7 +445,6 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			if (s < min)
 				min = s;
 		}
-		System.out.println("MIN: " + min);
 		// Note: tmpO.size() can change in body of below loop!
 		for (int i = 0; i < tmpO.size(); i++) {
 			int o = tmpO.get(i);
@@ -457,7 +463,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					continue;
 				if (escO.contains(o2)) {
 					if (checkKind == TC_ALLOC_PRUNE) {
-						tmpO.add(o2);  // XXX
+						// tmpO.add(o2);
 						return true;
 					}
 					continue;
@@ -482,7 +488,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 						continue;
 					if (escO.contains(o3)) {
 						if (checkKind == TC_ALLOC_PRUNE) {
-							tmpO.add(o3);  // XXX
+							// tmpO.add(o3);
 							return true;
 						}
 						continue;
