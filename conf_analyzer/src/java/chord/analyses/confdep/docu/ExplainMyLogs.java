@@ -2,10 +2,14 @@ package chord.analyses.confdep.docu;
 
 import java.io.PrintWriter;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
+import chord.analyses.confdep.ConfDefines;
 import chord.analyses.confdep.ConfDeps;
 import chord.analyses.confdep.optnames.DomOpts;
 import chord.bddbddb.Rel.RelView;
@@ -24,6 +28,7 @@ public class ExplainMyLogs extends JavaAnalysis{
   boolean miniStrings;
   
   int MAX_CTRLDEPS_TO_DUMP = 30;
+  static final String PURE_DYNAMIC = "<dynamic>";
   
   String[] inScopePrefixes;
   @Override
@@ -36,6 +41,8 @@ public class ExplainMyLogs extends JavaAnalysis{
     ClassicProject project = ClassicProject.g();
     
     miniStrings = Config.buildBoolProperty("useMiniStrings", false);
+    boolean miniDatadep = Config.buildBoolProperty("explainlogs.minidatadep", false);
+
     
     project.runTask("cipa-0cfa-arr-dlog");
     
@@ -47,18 +54,78 @@ public class ExplainMyLogs extends JavaAnalysis{
       project.runTask("strcomponents-dlog");
     
     project.runTask("Opt"); //used for name-finding
+    if(miniDatadep)
+    	project.runTask("minidatadep-dlog"); //just rename primFlow to primCdep, etc
+    else
+    	project.runTask("datadep-dlog"); //Use the broad-scope datadep, not narrow flow
+
     project.runTask("logconfdep-dlog");
     
     ConfDeps c = new ConfDeps();
     c.slurpDoms();
     
+    DomOpts opts = (DomOpts) project.getTrgt("Opt");
+    
     Map<Quad, Pair<String,Integer>> renderedMessages = renderAllLogMessages();
-    Map<Quad,Integer> depsPerLine = dumpLogDependencies(renderedMessages);
+    Map<Quad,Integer> depsPerLine = dumpLogDependencies(renderedMessages, opts);
     dumpIndexedDependencies(renderedMessages, depsPerLine);
+    checkForExplicitDeps(renderedMessages, opts);
 //    dumpLogToProgPtMap();
   }
   
+  private Map<String, Pattern> depMap(DomOpts opts) {
+	  Map<String, Pattern> optPats = new LinkedHashMap<String, Pattern>();
+		for(String opt: opts) {
+			if(opt.equals("UNKNOWN"))
+				continue;
+			String prunedName = ConfDefines.pruneName(opt);
+			
+			optPats.put(opt, Pattern.compile("[^$|-]"+prunedName));
+		}
+		return optPats;
+	}
+  private void checkForExplicitDeps(
+			Map<Quad, Pair<String, Integer>> renderedMessages, DomOpts opts) {
+    PrintWriter writer =  OutDirUtils.newPrintWriter("explicit_dependencies.txt");
+
+    writer.println("list of recognized options:");
+  	Map<String, Pattern> optPats = depMap(opts);
+  	for(String opt: optPats.keySet()) {
+  		
+  		writer.println("\t"+opt);
+  	}
+  	writer.println("-----------------\n");
+
+  	for(Map.Entry<Quad, Pair<String, Integer>> e: renderedMessages.entrySet()) {
+  		Quad q = e.getKey();
+  		String message = e.getValue().val0;
+  		Set<String> depSet = optionMentions(message, optPats);
+  		if(depSet.size() > 0) {
+  			writer.print(q.getMethod());
+  			writer.print(":\t");
+	  		writer.println(message);
+	  		for(String dep : depSet) {
+	  			writer.print('\t');
+	  			writer.println(dep);
+	  		}
+  		}
+  	}
+  	writer.close();
+	}
   
+  //expect message to have options substituted in already
+  private static Set<String> optionMentions(String formattedMsg, Map<String, Pattern> opts) {
+  	TreeSet<String> deps = new TreeSet<String>();
+  	for(Map.Entry<String, Pattern> p: opts.entrySet()) {
+  		Matcher m = p.getValue().matcher(formattedMsg);
+  		
+  		if(m.find())
+  			deps.add(p.getKey());
+  	}
+  	return deps;
+  }
+
+	//Maps from quad to the associated message and its data dependence count
   private Map<Quad, Pair<String,Integer>> renderAllLogMessages() {
     ClassicProject project = ClassicProject.g();
 
@@ -86,7 +153,6 @@ public class ExplainMyLogs extends JavaAnalysis{
     	depCount.selectAndDelete(0, logCall);
     	int depsForLine = depCount.size();
     	rendered.put(logCall, new Pair<String,Integer>(msg, depsForLine));      
-
     }
 
     dataDep.close();
@@ -99,17 +165,19 @@ public class ExplainMyLogs extends JavaAnalysis{
  * Dumps a listing of log messages, annotated with the source option.
  * Returns map of the number of dependences per log message
  */
-  private Map<Quad, Integer> dumpLogDependencies(Map<Quad, Pair<String,Integer>> renderedMessages) {
+  private Map<Quad, Integer> dumpLogDependencies(Map<Quad, Pair<String,Integer>> renderedMessages,
+  		DomOpts opts) {
     ClassicProject project = ClassicProject.g();
-   
+    
     HashMap<Quad, Integer> depsPerLine = new HashMap<Quad, Integer>();
     
-    PrintWriter writer =
-      OutDirUtils.newPrintWriter("log_dependency.txt");
+  	Map<String, Pattern> optPats = depMap(opts);
+    
+    PrintWriter writer =  OutDirUtils.newPrintWriter("log_dependency.txt");
     ProgramRel logConfDeps =
       (ProgramRel) project.getTrgt("logConfDep");//ouputs I0,Opt (stmt, src)
     logConfDeps.load();
-
+    int depCount = 0;
     
     for(Map.Entry<Quad, Pair<String,Integer>> msgPair: renderedMessages.entrySet()) {
     	Quad logCall = msgPair.getKey();
@@ -119,26 +187,44 @@ public class ExplainMyLogs extends JavaAnalysis{
       
     	String msg = msgPair.getValue().val0;
 
+    	Set<String> optionMentions = optionMentions(msg, optPats);
+    	
+      RelView ctrlDepView = logConfDeps.getView();
+      ctrlDepView.selectAndDelete(0, logCall);
+
+    	if(msg.equals(PURE_DYNAMIC) && ctrlDepView.size() == 0)
+    		continue; //ignore messages we don't know anything about
+    	
       for(String thisLine: msg.split("\n")) {
         String formatted =  cl.toString()+":" +lineno  + " (" + m.getName() +") " +
             Invoke.getMethod(logCall).getMethod().getName()+ "("  + thisLine+")";
         writer.println(formatted);
       }
       int dataDeps = msgPair.getValue().val1;
-    	
-      RelView ctrlDepView = logConfDeps.getView();
-      ctrlDepView.selectAndDelete(0, logCall);
+      depCount += dataDeps + ctrlDepView.size();
+      
       for(String ctrlDep: ctrlDepView.<String>getAry1ValTuples()) {
         if(ctrlDep == null)
           continue;
 //          optName = "Unknown Conf";
-        writer.println("\tcontrol-depends on "+ctrlDep);
+        boolean foundOpt = optionMentions.remove(ctrlDep);
+        if(foundOpt)
+        	writer.println("\texplicitly control-depends on "+ctrlDep);
+        else
+        	writer.println("\tcontrol-depends on "+ctrlDep);
       }
       depsPerLine.put(logCall, ctrlDepView.size() + dataDeps);
+      for(String s: optionMentions) {
+      	if(!msg.contains(s)) { //we already filtered out the control deps. There's
+      					//copy of the option name embedded if there's a datadep
+      		writer.println("\texplicit-but-undetected dep:" + s);
+      	} else
+      		writer.println("\texplicit data dependence:" + s);
+      }
       
     }
     
-    writer.println("total of " + renderedMessages.size() + " log statements; " + logConfDeps.size() + " dependencies");
+    writer.println("total of " + renderedMessages.size() + " log statements; " + depCount + " dependencies");
     writer.close();
 
     logConfDeps.close();
@@ -197,8 +283,6 @@ public class ExplainMyLogs extends JavaAnalysis{
 	    	}
       }
     	
-
-
     	//should add datadeps here
     	if(messagesForThisOpt.size() <= MAX_CTRLDEPS_TO_DUMP) {
 	    	for(String s: messagesForThisOpt)
@@ -240,7 +324,7 @@ public class ExplainMyLogs extends JavaAnalysis{
 
     int maxFilled = -1;
     if(constStrs.size() == 0)
-      return "X";
+      return PURE_DYNAMIC;
     
     for(Pair<String,Integer> t: constStrs.<String,Integer>getAry2ValTuples()) {
       int i = t.val1;

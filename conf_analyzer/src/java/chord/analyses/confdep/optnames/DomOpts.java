@@ -62,10 +62,11 @@ public class DomOpts extends ProgramDom<String> {
     
     for(Pair<String,Integer> t: v.<String,Integer>getAry2ValTuples()) {
       int i = t.val1;
+      String optPart = t.val0; //.replace(".", "\\.");//escape periods in regexes?
       if(wordsByPos[i] == null)
-        wordsByPos[i] = t.val0;
+        wordsByPos[i] = optPart;
       else 
-        wordsByPos[i] = wordsByPos[i]+"|"+t.val0;
+        wordsByPos[i] = wordsByPos[i]+"|"+optPart;
       maxFilled = Math.max(maxFilled, i);
     }
      
@@ -80,7 +81,11 @@ public class DomOpts extends ProgramDom<String> {
         sb.append(" X ");
     }
     v.free();
-    return sb.toString();
+    	//prune options starting with .*
+    if(sb.substring(0, 2).equals(".*"))
+    	return sb.substring(2);
+    else
+    	return sb.toString();
   }
   
   
