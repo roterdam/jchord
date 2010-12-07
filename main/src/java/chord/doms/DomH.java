@@ -109,22 +109,27 @@ public class DomH extends ProgramDom<Object> {
 		assert (o == null);
 		return "null";
 	}
+
+	public static String getType(Quad q) {
+		Operator op = q.getOperator();
+		TypeOperand to;
+		if (op instanceof New) 
+			to = New.getType(q);
+		else if (op instanceof NewArray) 
+			to = NewArray.getType(q);
+		else if (op instanceof MultiNewArray)
+			to = MultiNewArray.getType(q);
+		else {
+			assert (op instanceof Invoke);
+			to = null;
+		}
+		return (to != null) ? to.getType().getName() : "null";
+	}
+
 	public String toXMLAttrsString(Object o) {
 		if (o instanceof Quad) {
 			Quad q = (Quad) o;
-			Operator op = q.getOperator();
-			TypeOperand to;
-			if (op instanceof New) 
-				to = New.getType(q);
-			else if (op instanceof NewArray) 
-				to = NewArray.getType(q);
-			else if (op instanceof MultiNewArray)
-				to = MultiNewArray.getType(q);
-			else {
-				assert (op instanceof Invoke);
-				to = null;
-			}
-			String type = (to != null) ? to.getType().getName() : "null";
+			String type = getType(q);
 			jq_Method m = q.getMethod();
 			String file = m.getDeclaringClass().getSourceFileName();
 			int line = q.getLineNumber();
