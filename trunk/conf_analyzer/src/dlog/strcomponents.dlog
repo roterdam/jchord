@@ -41,6 +41,8 @@ StrPass(i:I,v:V0,v2:V1) input
 RConstructs(i:I,v:V)
 RIinvkRet(i:I0,n:Z0,v:V0)
 VConstFlow(v:V0, cst:StrConst) output
+RlogStmt(i:I)
+
 
 strCtorParm(v:V0,cst:V1)
 
@@ -65,6 +67,7 @@ confOptWrites(i:I) output
 
 RConstructs(i,v) :- Constructs(i,v),reachableI(i).
 RIinvkRet(i, z, v) :- reachableI(i),IinvkRet(i, z, v).
+RlogStmt(i) :- reachableI(i),logStmt(i). 
 
 VConstFlow(v,cst) :-  objVarAsgnInst(v,v2),VConstFlow(v2,cst).
 VConstFlow(v,cst) :-  VV(v,v2),VConstFlow(v2,cst).
@@ -98,12 +101,12 @@ vLen(v,z) :- RIinvkRet(i, _, v), SBAppendU(i, _, _,z).
 vLen(v,z) :- RIinvkRet(i, _, v), SBAppendV(i, _, _,z). 
 vLen(v,z) :- toString(_,v,vold),vLen(vold,z).
 
-logVHolds(i,vstr,z) :- vHoldsV(v,vstr,z),IinvkArg(i,_,v),logStmt(i).
-logVHoldsU(i,u,z) :- vHoldsU(v,u,z),IinvkArg(i,_,v),logStmt(i).
+logVHolds(i,vstr,z) :- vHoldsV(v,vstr,z),IinvkArg(i,_,v),RlogStmt(i).
+logVHoldsU(i,u,z) :- vHoldsU(v,u,z),IinvkArg(i,_,v),RlogStmt(i).
 
 
 logString(i,str,z) :- logVHolds(i,vstr,z),VConstFlow(vstr,str).
-logString(i,str,0) :- VConstFlow(v,str),IinvkArg(i,_,v),logStmt(i).
+logString(i,str,0) :- VConstFlow(v,str),IinvkArg(i,_,v),RlogStmt(i).
 
 
 confOptName(i,str,z) :- vHoldsV(v,vstr,z),confUVV(i,_,v),VConstFlow(vstr,str).
