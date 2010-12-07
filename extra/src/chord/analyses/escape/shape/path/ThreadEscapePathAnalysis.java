@@ -12,6 +12,7 @@ import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntObjectHashMap;
 
 import java.io.PrintWriter;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,19 +20,27 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Putstatic;
+import joeq.Compiler.Quad.Operator.Putfield;
+import joeq.Compiler.Quad.Operator.Getfield;
+import joeq.Compiler.Quad.Operator.ALoad;
+import joeq.Compiler.Quad.Operator.AStore;
 
 import chord.analyses.escape.ThrEscException;
 import chord.doms.DomE;
 import chord.doms.DomH;
+import chord.doms.DomF;
 import chord.instr.InstrScheme;
 import chord.program.Program;
+import chord.program.MethodElem;
 import chord.project.Chord;
+import chord.project.Config;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
 import chord.project.ClassicProject;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.IntArraySet;
+import chord.util.FileUtils;
 
 /**
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -45,6 +54,8 @@ import chord.util.IntArraySet;
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private static final boolean verbose = false;
+
+	private static final String printAccFileName = System.getProperty("chord.escape.check.file");
 
 	private static final int TC = 0, TC_ALLOC = 1, TC_ALLOC_PRUNE = 2;
 	private static final int checkKind;
@@ -66,6 +77,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
  	// use field 0 in domF instead of array indices in OtoFOlistFwd
 	private static final boolean smashArrayElems = false;
+
+	private int numPrintedHeaps = 0;
 
  	// contains only non-null objects
 	private final IntArraySet tmpO = new IntArraySet();
@@ -98,7 +111,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	// set of escaping objects; once an object is put into this set,
 	// it remains in it for the rest of the execution
-	private TIntHashSet escOset;
+	private TIntHashSet escO;
 
 	// map from each object to a list of each instance field of ref type
 	// along with the pointed object; fields with null value are not stored
@@ -107,6 +120,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	// inverse of above map
 	private TIntObjectHashMap<List<FldObj>> OtoFOlistInv;
+
 	// map from each object to the index in domH of its alloc site
     private TIntIntHashMap OtoH;
 
@@ -116,6 +130,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	// records the order in which objects are created; note that the
 	// object IDs are not in order of creation since an object can be
 	// assigned an ID only after its constructor has executed
+	private TIntIntHashMap OtoS;
+
 	private TIntIntHashMap OtoT;
 
 	// map from each allocation site to list of all objects allocated
@@ -126,13 +142,14 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	private DomH domH;
 	private DomE domE;
-	private int numH, numE;
+	private DomF domF;
+	private int numH, numE, numF;
 
 	@Override
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null) return instrScheme;
     	instrScheme = new InstrScheme();
-    	instrScheme.setNewAndNewArrayEvent(true, false, true);
+    	instrScheme.setNewAndNewArrayEvent(true, true, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);
     	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
@@ -150,35 +167,61 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	public void initAllPasses() {
 		if (smashArrayElems)
 			assert (!doStrongUpdates);
-		escOset = new TIntHashSet();
+		escO = new TIntHashSet();
 		OtoFOlistFwd = new TIntObjectHashMap<List<FldObj>>();
 		OtoFOlistInv = new TIntObjectHashMap<List<FldObj>>();
 		OtoH = new TIntIntHashMap();
+
 		domE = (DomE) ClassicProject.g().getTrgt("E");
 		ClassicProject.g().runTask(domE);
 		numE = domE.size();
 		domH = (DomH) ClassicProject.g().getTrgt("H");
 		ClassicProject.g().runTask(domH);
 		numH = domH.size();
+		domF = (DomF) ClassicProject.g().getTrgt("F");
+		ClassicProject.g().runTask(domF);
+		numF = domF.size();
+
 		chkE = new boolean[numE];
-		ProgramRel relCheckExcludedE = (ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
-		relCheckExcludedE.load();
-		for (int e = 0; e < numE; e++) {
-			Quad q = domE.get(e);
-			Operator op = q.getOperator();
-			if (op instanceof Getstatic || op instanceof Putstatic)
-				continue;
-			if (!relCheckExcludedE.contains(e))
+		if (printAccFileName != null) {
+			String outDirName = Config.outDirName;
+			Program program = Program.g();
+			Class[] classes = new Class[] { ALoad.class, AStore.class, Getfield.class, Putfield.class };
+			File file = new File(outDirName, printAccFileName);
+			List<String> list = new ArrayList<String>();
+			FileUtils.readFileToList(file, list);
+			for (String s : list) {
+				String[] a = s.split(" ");
+				MethodElem me = MethodElem.parse(a[0]);
+				Quad q = program.getQuad(me, classes);
+				int e = domE.indexOf(q);
+				assert (e != -1) : ("Quad not found in domain E: " + q);
+				System.out.println("e: " + e);
 				chkE[e] = true;
+			}
+		} else {
+			ProgramRel relCheckExcludedE = (ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
+			relCheckExcludedE.load();
+			for (int e = 0; e < numE; e++) {
+				Quad q = domE.get(e);
+				Operator op = q.getOperator();
+				if (op instanceof Getstatic || op instanceof Putstatic)
+					continue;
+				if (!relCheckExcludedE.contains(e))
+					chkE[e] = true;
+			}
+			relCheckExcludedE.close();
 		}
-		relCheckExcludedE.close();
+
 		accE = new boolean[numE];
 		badE = new boolean[numE];
 		escE = new boolean[numE];
 		impE = new boolean[numE];
 		EtoLocHset = new IntArraySet[numE];
 		accH = new boolean[numH];
+
 		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
+			OtoS = new TIntIntHashMap();
 			OtoT = new TIntIntHashMap();
 			HtoOlist = new TIntArrayList[numH];
 		}
@@ -246,18 +289,27 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
 	private String eStr(int e) {
-		return ("[" + e + "] ") + (e >= 0 ? domE.get(e).toLocStr() : "-1");
+		return e < 0 ? Integer.toString(e) : domE.get(e).toJavaLocStr();
 	}
 
 	private String hStr(int h) {
-		return ("[" + h + "] ") + (h >= 0 ? ((Quad) domH.get(h)).toLocStr() : "-1");
+		if (h <= 0)
+			return Integer.toString(h);
+		Quad q = (Quad) domH.get(h);
+		return DomH.getType(q) + " " + q.toJavaLocStr(); 
+	}
+
+	private String fStr(int f) {
+		if (f <= 0) return Integer.toString(f);
+		if (f < numF) return domF.get(f).getName().toString();
+		return Integer.toString(f - numF);
 	}
 
 	@Override
 	public void processNewOrNewArray(int h, int t, int o) {
 		if (verbose) System.out.println(t + " NEW " + hStr(h) + " o=" + o);
 		if (o == 0) return;
-		assert (!escOset.contains(o));
+		assert (!escO.contains(o));
 		assert (!OtoFOlistFwd.containsKey(o));
 		assert (!OtoFOlistInv.containsKey(o));
 		if (h >= 0) {
@@ -266,7 +318,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			assert (result == 0);
 		}
 		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
-			int result = OtoT.put(o, timestamp++);
+			int result;
+			result = OtoS.put(o, timestamp++);
+			assert (result == 0);
+			result = OtoT.put(o, t);
 			assert (result == 0);
 			if (h >= 0) {
 				TIntArrayList ol = HtoOlist[h];
@@ -325,7 +380,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	@Override
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
 		if (verbose) System.out.println(t + " ASTORE_REF " + eStr(e) + " b=" + b);
-		if (e >= 0) processHeapWr(e, b, smashArrayElems ? 0 : i, o);
+		if (e >= 0) processHeapWr(e, b, smashArrayElems ? 0 : i + numF, o);
 	}
 
 	@Override
@@ -377,12 +432,13 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		int n = tmpO.size();
 		for (int i = 1; i < n; i++) {
 			int o = tmpO.get(i);
-			int t = OtoT.get(o);
-			if (t == 0)
+			int s = OtoS.get(o);
+			if (s == 0)
 				throw new ThrEscException();
-			if (t < min)
-				min = t;
+			if (s < min)
+				min = s;
 		}
+		System.out.println("MIN: " + min);
 		// Note: tmpO.size() can change in body of below loop!
 		for (int i = 0; i < tmpO.size(); i++) {
 			int o = tmpO.get(i);
@@ -394,14 +450,16 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				int o2 = l.get(j);
 				if (o2 == o)
 					continue;
-				int t2 = OtoT.get(o2);
-				if (t2 == 0)
+				int s2 = OtoS.get(o2);
+				if (s2 == 0)
 					throw new ThrEscException();
-				if (t2 < min)
+				if (s2 < min)
 					continue;
-				if (escOset.contains(o2)) {
-					if (checkKind == TC_ALLOC_PRUNE)
+				if (escO.contains(o2)) {
+					if (checkKind == TC_ALLOC_PRUNE) {
+						tmpO.add(o2);  // XXX
 						return true;
+					}
 					continue;
 				}
 				if (tmpO.add(o2)) {
@@ -417,14 +475,16 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				for (int k = 0; k < p; k++) {
 					FldObj fo = foList.get(k);
 					int o3 = fo.o;
-					int t3 = OtoT.get(o3);
-					if (t3 == 0)
+					int s3 = OtoS.get(o3);
+					if (s3 == 0)
 						throw new ThrEscException();
-					if (t3 < min)
+					if (s3 < min)
 						continue;
-					if (escOset.contains(o3)) {
-						if (checkKind == TC_ALLOC_PRUNE)
+					if (escO.contains(o3)) {
+						if (checkKind == TC_ALLOC_PRUNE) {
+							tmpO.add(o3);  // XXX
 							return true;
+						}
 						continue;
 					}
 					if (tmpO.add(o3)) {
@@ -444,7 +504,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			return;
 		accE[e] = true;
 		if (b == 0) return;
-		if (escOset.contains(b)) {
+		if (escO.contains(b)) {
 			escE[e] = true;
 			return;
 		}
@@ -458,13 +518,15 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				if (checkKind == TC_ALLOC)
 					computeExtendedTC();
 			}
+			if (printAccFileName != null)
+				printHeap2(e, b);
 		} catch (ThrEscException ex) {
 			badE[e] = true;
 			return;
 		}
-		if (esc)
+		if (esc) {
 			impE[e] = true;
-		else {
+		} else {
 			IntArraySet hs = EtoLocHset[e];
 			if (hs == null) {
 				hs = new IntArraySet();
@@ -561,18 +623,113 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 		if (!found)
 			inv.add(new FldObj(f, b));
-		if (escOset.contains(b))
+		if (escO.contains(b))
 			markAndPropEsc(r);
 	}
 
     private void markAndPropEsc(int o) {
-		if (escOset.add(o)) {
+		if (escO.add(o)) {
 			List<FldObj> l = OtoFOlistFwd.get(o);
 			if (l != null) {
 				for (FldObj fo : l)
 					markAndPropEsc(fo.o);
 			}
 		}
+	}
+
+	private void printHeap(int e, int b) {
+		PrintWriter out = OutDirUtils.newPrintWriter("heap_" + e + "_" + numPrintedHeaps + ".dot");
+		numPrintedHeaps++;
+        out.println("digraph G {");
+		tmpO.clear();
+		tmpH.clear();
+		tmpO.add(b);
+		for (int i = 0; i < tmpO.size(); i++) {
+			int o = tmpO.get(i);
+			int h = OtoH.get(o);
+			tmpH.add(h);
+			int t = OtoS.get(o);
+			if (i == 0)
+				out.println(o + "[label=\"" + t + "\",style=filled,color=blue];");
+			else if (escO.contains(o))
+				out.println(o + "[label=\"" + t + "\",style=filled,color=red];");
+			else
+				out.println(o + "[label=\"" + t + "\",style=filled,color=green];");
+			if (h != 0) {
+				TIntArrayList l = HtoOlist[h];
+				int m = l.size();
+				for (int j = 0; j < m; j++) {
+					int o2 = l.get(j);
+					if (o2 != o)
+						tmpO.add(o2);
+				}
+			}
+			List<FldObj> foList = OtoFOlistInv.get(o);
+			if (foList != null) {
+				int m = foList.size();
+				for (int j = 0; j < m; j++) {
+					FldObj fo = foList.get(j);
+					int o2 = fo.o;
+                	out.println(o2 + "->" + o + "[label= \"" + fStr(fo.f) + "\"];");
+					tmpO.add(o2);
+				}
+            }
+        }
+		int nh = tmpH.size();
+		int no = tmpO.size();
+		for (int i = 0; i < nh; i++) {
+			int h = tmpH.get(i);
+			out.print("subgraph cluster_" + h + " { rank=same;style=filled;color=lightgrey;label=\"" + hStr(h) + "\"; ");
+			for (int j = 0; j < no; j++) {
+				int o = tmpO.get(j);
+				if (OtoH.get(o) == h)
+					out.print(o + "; ");
+			}
+			out.println("}");
+		}
+        out.println("}");
+		out.close();
+	}
+
+	private void printHeap2(int e, int b) {
+		PrintWriter out = OutDirUtils.newPrintWriter("heap_" + e + "_" + numPrintedHeaps + ".dot");
+		numPrintedHeaps++;
+        out.println("digraph G {");
+		int nh = tmpH.size();
+		int no = tmpO.size();
+		for (int i = 0; i < no; i++) {
+			int o = tmpO.get(i);
+			int s = OtoS.get(o);
+			int t = OtoT.get(o);
+			if (i == 0)
+				out.println(o + "[label=\"" + s + "," + t + "\",style=filled,color=blue];");
+			else if (escO.contains(o))
+				out.println(o + "[label=\"" + s + "," + t + "\",style=filled,color=red];");
+			else
+				out.println(o + "[label=\"" + s + "," + t + "\",style=filled,color=green];");
+			List<FldObj> foList = OtoFOlistInv.get(o);
+			if (foList != null) {
+				int m = foList.size();
+				for (int j = 0; j < m; j++) {
+					FldObj fo = foList.get(j);
+					int o2 = fo.o;
+					if (tmpO.contains(o2))
+                		out.println(o2 + "->" + o + "[label= \"" + fStr(fo.f) + "\"];");
+				}
+            }
+        }
+		for (int i = 0; i < nh; i++) {
+			int h = tmpH.get(i);
+			out.print("subgraph cluster_" + h + " { rank=same;style=filled;color=lightgrey;label=\"" + hStr(h) + "\"; ");
+			for (int j = 0; j < no; j++) {
+				int o = tmpO.get(j);
+				if (OtoH.get(o) == h)
+					out.print(o + "; ");
+			}
+			out.println("}");
+		}
+        out.println("}");
+		out.close();
 	}
 }
 
