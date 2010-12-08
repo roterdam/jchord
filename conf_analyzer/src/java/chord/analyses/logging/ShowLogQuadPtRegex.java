@@ -42,9 +42,9 @@ public class ShowLogQuadPtRegex extends JavaAnalysis {
     
     for(Object q: logQuads.getAry1ValTuples()) {
       Quad logCall = (Quad) q;
-      String logRegex = DomOpts.reconcatenate(logCall, logStrings, true, logStmtLen(logCall, logVHV, logVHU));
       int quadID = domI.indexOf(logCall);
 //      if(quadID > 0) {
+      String logRegex = logMsgText(logCall, logStrings, logVHV, logVHU);
         out.println(quadID + " " +  logRegex);
         out.println( logCall.getMethod().getNameAndDesc() +":" + logCall.getLineNumber());
 //      }
@@ -57,12 +57,16 @@ public class ShowLogQuadPtRegex extends JavaAnalysis {
     out.close();
   }
   
-  int logStmtLen(Quad q, ProgramRel logVHoldU, ProgramRel logVHoldV) {
+  public static String logMsgText(Quad logCall, ProgramRel logStrings, ProgramRel logVHV, ProgramRel logVHU) {
+    return DomOpts.reconcatenate(logCall, logStrings, true, logStmtLen(logCall, logVHV, logVHU));
+  }
+  
+  private static int logStmtLen(Quad q, ProgramRel logVHoldU, ProgramRel logVHoldV) {
     
     return Math.max(stmtLen(q, logVHoldU), stmtLen(q, logVHoldV));
   }
 
-  private int stmtLen(Quad q, ProgramRel logVHold) {
+  private static int stmtLen(Quad q, ProgramRel logVHold) {
     int maxL = -1;
     RelView componentsAtPt = logVHold.getView();
     componentsAtPt.selectAndDelete(0, q);

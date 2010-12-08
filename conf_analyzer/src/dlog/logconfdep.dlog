@@ -29,8 +29,14 @@ logVHoldsU(i:I, cmpt:U, z:ZZ) input
 
 
 #cOnLine(i:I, h:H, cst:StrConst) input
-refFlow(v:V,site:Opt) input
-primFlow(u:U,site:Opt) input
+
+#refFlow(v:V,site:Opt) input
+#primFlow(u:U,site:Opt) input
+
+refCdep(v:V,site:Opt) input
+primCdep(u:U,site:Opt) input
+
+
 primRefDep(u:UV,v:V) input
 primControlDep(i:I,u:UV) input 
 UVU(uv:UV,u:U) input
@@ -51,10 +57,10 @@ logArg(i,v,z) :- logVHolds(i,v,z),logStmt(i).
 logPrimArg(i,z,u) :- logVHoldsU(i,u,z),logStmt(i).
 
 dependentLogStmt(logStmt,uv) :- logStmt(logStmt),primControlDep(logStmt,uv).
-uvConf(uv,src) :- UVU(uv,u),primFlow(u,src).
-uvConf(uv,src) :- primRefDep(uv,v),refFlow(v,src).
+uvConf(uv,src) :- UVU(uv,u),primCdep(u,src).
+uvConf(uv,src) :- primRefDep(uv,v),refCdep(v,src).
 
 logConfDep(logStmt, src) :-  dependentLogStmt(logStmt,uv),uvConf(uv, src).
 
-logFieldDataDep(i,z,src) :- logArg(i,v,z),refFlow(v,src).
-logFieldDataDep(i,z,src) :- logPrimArg(i,z,u),primFlow(u,src).
+logFieldDataDep(i,z,src) :- logArg(i,v,z),refCdep(v,src).
+logFieldDataDep(i,z,src) :- logPrimArg(i,z,u),primCdep(u,src).
