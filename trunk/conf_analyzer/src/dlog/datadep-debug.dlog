@@ -40,4 +40,4 @@ argCdep(m, z, opt) :- MmethPrimArg(m,z,v),primCdep(v,opt).
 IargCdep(i, z, opt) :- IinvkArg(i,z,v),refCdep(v,opt).
 IargCdep(i, z, opt) :- IinvkPrimArg(i,z,v),primCdep(v,opt).
 IretDep(i,opt) :- IinvkRet(i,_,v),refCdep(v,opt).
-
+IretDep(i,opt) :- IinvkPrimRet(i,_,v),primCdep(v,opt).
