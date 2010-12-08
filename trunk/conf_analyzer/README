@@ -11,11 +11,13 @@ EXAMPLE:
 To use the configuration analyzer on Hadoop, there are three steps.
 First, in the directory conf_analyzer, type "ant compile".
 
-Next, update examples/hadoop20/chord.properties to specify 
+Next, update examples/hadoop20/chord.properties to specify where to find the Hadoop jars to analyze.
 
-Last, in the directory conf_analyzer type "ant run -Dchord.work.dir=`pwd`/examples/hadoop20/"
+Last, in the directory conf_analyzer type "ant run -Dchord.work.dir=`pwd`/examples/hadoop20/" 
 
 You need the `pwd` because Chord expects an absolute path to its work dir.
+
+The result will be stored [by default] in "chord_output/options.dict".
 
 WHEN THINGS GO WRONG:
 
@@ -31,7 +33,7 @@ chord.class.path specifies where the analyzer will look for code. It should be a
 
 chord.ext.scope.exclude specifies what code to ignore. Generally, you should try to ignore as much library and JVM code as you can, since it will result in the analysis going substantially faster.
 
-chord.main.method specifies where to start analyzing. It should be the full name of a class containing a main method.
+chord.main.class specifies where to start analyzing. It should be the full name of a class containing a main method.
 
 chord.entrypoints.file, if set, is the name of a file containing additional start locations. See below for a discussion of format.
 
@@ -39,7 +41,7 @@ OTHER OPTIONS
 
 There are other relevant options, too.
 
-dictionary.name is the name of the output file. (It'll be generated in chord_output inside chord.work.dir
+dictionary.name is the name of the output file. (It'll be generated in chord_output inside chord.work.dir) The default is "options.dict".
 
 If set, only options that are read by classes starting with prefix dictionary.scope will be in the dictionary.
 
@@ -51,4 +53,3 @@ The entrypoints file can hold three kinds of entries: methods, concrete classes,
  *  (A fully qualified method name is of the form <name>:<desc>@<classname>.)
  *  If a concrete (non-abstract) class is listed, all public methods of that class will be added as entry points.
  *  If an interface or abstract class is listed, all public methods of all concrete instances of that interface/class will be added as entry points.
-
