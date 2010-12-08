@@ -10,6 +10,8 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.RegisterFactory.Register;
@@ -44,12 +46,23 @@ public class RelMobjValAsgnInst extends ProgramRel {
 			RegisterOperand vo;
 			if (op instanceof New)
 				vo = New.getDest(q);
-			else
+			else if(op instanceof NewArray)
 				vo = NewArray.getDest(q);
+			else if(op instanceof Invoke)
+			  vo = Invoke.getDest(q);
+	     else if(op instanceof MultiNewArray)
+	        vo = NewArray.getDest(q);
+			else {
+			  System.err.println("WARN: in RelMobjValAsgnInst saw H element with op type " + op.toString());
+			  vo = null;
+			}
 			Register v = vo.getRegister();
+
 			int vIdx = domV.indexOf(v);
-			assert (vIdx >= 0);
-			add(mIdx, vIdx, hIdx);
-		}
+//    assert (vIdx >= 0);
+
+			if(vIdx >= 0)
+        add(mIdx, vIdx, hIdx);
+    }
 	}
 }
