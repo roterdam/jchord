@@ -12,6 +12,7 @@ import chord.project.Chord;
 import chord.project.Config;
 import chord.project.analyses.ProgramRel;
 import chord.util.IndexSet;
+import chord.util.Utils;
 
 /**
  * @author Ariel Rabkin (asrabkin@gmail.com)
@@ -23,13 +24,7 @@ import chord.util.IndexSet;
 public class RelScopeExcludedM extends ProgramRel {
 
   public static boolean isOutOfScope(String cName) {
-    String[] scopeExcludeAry = Config.scopeExcludeAry;
-    for (String prefix : scopeExcludeAry) {
-      if (cName.startsWith(prefix)) {
-        return true;
-      }
-    }
-    return false;
+    return Utils.prefixMatch(cName, Config.scopeExcludeAry);
   }
   
   public static boolean isOutOfScope(jq_Method m) {
