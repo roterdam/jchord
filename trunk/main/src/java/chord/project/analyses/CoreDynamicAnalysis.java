@@ -41,6 +41,7 @@ import chord.util.ByteBufferedFile;
 import chord.util.ChordRuntimeException;
 import chord.util.Executor;
 import chord.util.FileUtils;
+import chord.util.ProcessExecutor;
 import chord.util.ReadException;
 import chord.util.tuple.object.Pair;
 
@@ -284,10 +285,24 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 	private void runInstrProgram(List<String> cmdList) {
 		int timeout = getTimeout();
 		boolean haltOnErr = haltOnErr();
-		if (haltOnErr)
-			OutDirUtils.executeWithFailOnError(cmdList);
-		else
-			OutDirUtils.executeWithWarnOnError(cmdList, timeout);
+		
+		String runBefore = System.getProperty("chord.dynamic.runBeforeCmd");
+		
+		try {
+			Process beforeProc = null;
+			if(runBefore != null)
+				beforeProc = ProcessExecutor.executeAsynch( new String[] {runBefore});
+			
+			if (haltOnErr)
+				OutDirUtils.executeWithFailOnError(cmdList);
+			else
+				OutDirUtils.executeWithWarnOnError(cmdList, timeout);
+			
+			if(beforeProc != null)
+				beforeProc.destroy();
+		} catch(Throwable t) { //just log exceptions
+			t.printStackTrace();
+		}
 	}
 
 	private List<String> getBaseCmd(boolean isOnline, boolean isWithTrace,
@@ -313,10 +328,10 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		} else {
 			String bootClassesDirName = Config.bootClassesDirName;
 			String userClassesDirName = Config.userClassesDirName;
-	    String extraClasses = Config.extraClasses;
-	    if(extraClasses.length() > 0) {
-	      extraClasses = extraClasses + File.pathSeparator;
-	    }
+			String extraClasses = Config.extraClasses;
+			if(extraClasses.length() > 0) {
+			  extraClasses = extraClasses + File.pathSeparator;
+			}
 			basecmd.add("-Xbootclasspath/p:" + Config.mainClassPathName +
 				File.pathSeparator + bootClassesDirName);
 			basecmd.add("-cp");

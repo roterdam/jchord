@@ -77,7 +77,8 @@ public class Utils {
    * Checks a string against a set of prefixes. Returns true if and only if the
    * string starts with one of the prefixes.
    * 
-   * Return false if prefixes is empty.
+   * Return false if prefixes is empty. Returns true if prefixes contains the 
+   * empty string.
    * 
    * @param str a string
    * @param prefixes an array of prefixes
