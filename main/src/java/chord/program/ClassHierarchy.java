@@ -135,7 +135,7 @@ public class ClassHierarchy {
 				if (clintToKind.get(c) != TypeKind.CONCRETE_CLASS)
 					continue;
 				Set<String> clints = new ArraySet<String>(2);
-				clints.add(c);
+				clints.add(c);  // every concrete class is a concrete successor to itself
 				boolean success1 = true;
 				boolean success2 = true;
 				String d = c;
@@ -400,4 +400,14 @@ public class ClassHierarchy {
 		}
 		return constant_pool;
 	}
+	
+	/**
+	* Returns the set of every class name examined by ClassHierarchy
+	*/
+	public Set<String> allClassNamesInPath() {
+		if(clintToKind == null)
+			build();
+		return clintToKind.keySet();
+	}
+
 }

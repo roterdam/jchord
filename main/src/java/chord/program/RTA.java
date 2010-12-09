@@ -60,6 +60,7 @@ import chord.rels.RelExtraEntryPoints;
 import chord.util.IndexSet;
 import chord.util.Timer;
 import chord.util.ArraySet;
+import chord.util.Utils;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -150,9 +151,16 @@ public class RTA {
 	// flag indicating that another iteration is needed; it is set if
 	// set reachableAllocClasses grows in the current iteration
 	private boolean repeat = true;
+	
+	private String[] appCodePrefixes;
 
 	public RTA(String reflectKind) {
 		this.reflectKind = reflectKind;
+		String fullscan = System.getProperty("chord.scope.fullscan");
+		if(fullscan == null)
+		  appCodePrefixes = new String[0];
+		else
+		  appCodePrefixes = Config.toArray(fullscan);
 	}
 
 	public IndexSet<jq_Method> getMethods() {
@@ -189,8 +197,8 @@ public class RTA {
 			staticReflectResolver = new StaticReflectResolver();
 			staticReflectResolved = new HashSet<jq_Method>();
 		} else if(reflectKind.equals("static_cast")) {
-			staticReflectResolver = new CastBasedStaticReflect(reachableAllocClasses);
 			staticReflectResolved = new HashSet<jq_Method>();
+			staticReflectResolver = new CastBasedStaticReflect(reachableAllocClasses, staticReflectResolved);
 		} else if (reflectKind.equals("dynamic")) {
 			DynamicReflectResolver dynamicReflectResolver =
 				new DynamicReflectResolver();
@@ -243,8 +251,9 @@ public class RTA {
 				if (DEBUG) System.out.println("Processing CFG of " + m);
 				processMethod(m);
 			}
-			if (staticReflectResolver != null)
+			if (staticReflectResolver != null) {
 				staticReflectResolver.startedNewIter();
+			}
 		}
 		if (Config.verbose > 1) System.out.println("LEAVE: RTA");
 		timer.done();
@@ -261,6 +270,7 @@ public class RTA {
   }
 
   private void visitAdditionalEntrypoints() {
+  	//visit classes just once each
     LinkedHashSet<jq_Class> extraClasses = new LinkedHashSet<jq_Class>();
     for(jq_Method m: publicMethods) {
       extraClasses.add(m.getDeclaringClass());
@@ -268,6 +278,9 @@ public class RTA {
     
     for(jq_Class cl: extraClasses) {
       visitClass(cl);
+			jq_Method ctor = cl.getInitializer(new jq_NameAndDesc("<init>", "()V"));
+			if (ctor != null)
+				visitMethod(ctor);
     }
 
     for(jq_Method m: publicMethods) {
@@ -297,10 +310,14 @@ public class RTA {
 				(staticReflectResolver != null && staticReflectResolver.needNewIter()))
 			repeat = true;
 		if (r instanceof jq_Class) {
+			System.err.println("In RTA, processing resolution of newInstance site inside method " +
+					q.getMethod() +  "." + q.getMethod().getDeclaringClass() + " resolved to " + r);
 			jq_Class c = (jq_Class) r;
 			jq_Method n = c.getInitializer(new jq_NameAndDesc("<init>", "()V"));
 			if (n != null)
 				visitMethod(n);
+			else
+				System.err.println("Note: couldn't find ctor for " + r);
 		}
 	}
 
@@ -509,6 +526,10 @@ public class RTA {
 				prepareClass(i);
 		}
 	}
+	
+	private boolean shouldExpandAggressively(jq_Class c) {
+	  return Utils.prefixMatch(c.getName(), appCodePrefixes);
+	}
 
 	private void visitClass(jq_Reference r) {
 		prepareClass(r);
@@ -516,6 +537,14 @@ public class RTA {
 			return;
 		jq_Class c = (jq_Class) r;
 		visitClinits(c);
+		
+		if(shouldExpandAggressively(c)) {
+  		for(jq_Method m: c.getDeclaredInstanceMethods()) 
+  		  visitMethod(m);
+  		
+  		for(jq_Method m: c.getDeclaredStaticMethods())
+  		  visitMethod(m); 
+		}
 	}
 
 	private void visitClinits(jq_Class c) {

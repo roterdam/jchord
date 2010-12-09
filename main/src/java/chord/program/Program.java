@@ -567,23 +567,28 @@ public class Program {
 		String classPathName = Config.classPathName;
 		if (classPathName == null)
 			Messages.fatal(CLASS_PATH_NOT_DEFINED);
-        String[] runIDs = Config.runIDs.split(Config.LIST_SEPARATOR);
+		String[] runIDs = Config.runIDs.split(Config.LIST_SEPARATOR);
+		String extraClasses = Config.extraClasses;
+		if(extraClasses.length() > 0) {
+			classPathName = extraClasses + File.pathSeparator + classPathName;
+		}
 		assert(runIDs.length > 0);
 		List<String> classNames = new ArrayList<String>();
 		String fileName = Config.classesFileName;
+
 		List<String> basecmd = new ArrayList<String>();
 		basecmd.add("java");
 		basecmd.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
 		String agentArgs = "=classes_file_name=" + Config.classesFileName;
-        basecmd.add("-agentpath:" + Config.cInstrAgentFileName + agentArgs);
+		basecmd.add("-agentpath:" + Config.cInstrAgentFileName + agentArgs);
 		basecmd.add("-cp");
 		basecmd.add(classPathName);
 		basecmd.add(mainClassName);
-        for (String runID : runIDs) {
-            String args = System.getProperty("chord.args." + runID, "");
+		for (String runID : runIDs) {
+			String args = System.getProperty("chord.args." + runID, "");
 			List<String> fullcmd = new ArrayList<String>(basecmd);
 			fullcmd.addAll(StringUtils.tokenize(args));
-			OutDirUtils.executeWithFailOnError(fullcmd);
+			OutDirUtils.executeWithWarnOnError(fullcmd, Config.dynamicTimeout);
 			try {
 				BufferedReader in = new BufferedReader(new FileReader(fileName));
 				String s;
