@@ -58,6 +58,8 @@ public class ObjNewInstAnalysis extends JavaAnalysis {
 		for (Pair<Quad, List<jq_Reference>> p : l) {
 			Quad q = p.val0;
 			int iIdx = domI.indexOf(q);
+			if(iIdx < 0)
+				System.err.println("ObjNewInstAnalysis can't resolve quad " + q + " in " + q.getMethod() + " " + q.getMethod().getDeclaringClass());
 			assert (iIdx >= 0);
 			int hIdx = domH.indexOf(q);
 			assert (hIdx >= 0);
