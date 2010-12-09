@@ -12,9 +12,10 @@ import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
-import joeq.Compiler.Quad.Operator.MultiNewArray;
 import chord.program.Reflect;
 import chord.doms.DomH;
 import chord.doms.DomT;
@@ -23,7 +24,6 @@ import chord.program.PhantomObjVal;
 import chord.program.PhantomClsVal;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
-import chord.project.Messages;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -53,12 +53,21 @@ public class RelHT extends ProgramRel {
 				t = New.getType(h).getType();
 			else if (op instanceof NewArray) {
 				t = NewArray.getType(h).getType();
-			} else {
-				assert (op instanceof MultiNewArray);
-				t = MultiNewArray.getType(h).getType();
-			}
+			} else if(op instanceof Invoke) {     
+        t = Invoke.getDest(h).getType();
+			} else if(op instanceof MultiNewArray) {
+        t = MultiNewArray.getType(h).getType();
+      } else {
+			  System.err.println("unexpected operator " + op + " in RelHT");
+			  t = null;
+			} 
+
 			int tIdx = domT.indexOf(t);
-			assert (tIdx >= 0);
+
+      if (tIdx == -1) {
+        System.out.println("WARNING: HT: can't find type " + t  + " of allocation site " + h);
+        continue;
+      }
 			add(hIdx, tIdx);
 		}
 		Reflect reflect = Program.g().getReflect();
