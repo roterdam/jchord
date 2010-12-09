@@ -164,7 +164,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			// System.out.println("Method: " + m);
 			for (int i = 0; i < n; i++) {
 				varId[vIdx + i] = i;
-			//	System.out.println("\t" + domV.get(vIdx + i));
+				// System.out.println("\t" + domV.get(vIdx + i));
 			}
 			vIdx += n;
 		}
@@ -439,19 +439,21 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		if (isKill) {
 			for (int i = 0; i < n; i++) {
 				if (i != rIdx) {
-        			clrDstEnv2[i] = Obj.ONLY_ESC;
+					if (clrDstEnv[i] == Obj.EMTY)
+						clrDstEnv2[i] = Obj.EMTY;
+					else
+        				clrDstEnv2[i] = Obj.ONLY_ESC;
 				}
 			}
 		} else {
 			for (int i = 0; i < n; i++) {
 				if (i != rIdx) {
-					Obj pts = clrDstEnv[i];
-        			clrDstEnv2[i] = pts;
+					clrDstEnv2[i] = clrDstEnv[i];
 				}
 			}
         }
         DstNode clrDstNode2 = new DstNode(clrDstEnv2,
-			tgtRetNode.heap, isKill, false);
+			tgtRetNode.heap, isKill || clrDstNode.isKill, false);
 		return new Edge(clrPE.srcNode, clrDstNode2);
 	}
 	
