@@ -219,10 +219,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		impE = new boolean[numE];
 		EtoLocHset = new IntArraySet[numE];
 		accH = new boolean[numH];
+		OtoT = new TIntIntHashMap();
 
 		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
 			OtoS = new TIntIntHashMap();
-			OtoT = new TIntIntHashMap();
 			HtoOlist = new TIntArrayList[numH];
 		}
 	}
@@ -308,20 +308,19 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	@Override
 	public void processNewOrNewArray(int h, int t, int o) {
 		if (verbose) System.out.println(t + " NEW " + hStr(h) + " o=" + o);
-		if (o == 0) return;
+		if (o == 0 || t == 0) return;
 		assert (!escO.contains(o));
 		assert (!OtoFOlistFwd.containsKey(o));
 		assert (!OtoFOlistInv.containsKey(o));
+		int result = OtoT.put(o, t);
+		assert (result == 0);
 		if (h >= 0) {
 			accH[h] = true;
-			int result = OtoH.put(o, h);
+			result = OtoH.put(o, h);
 			assert (result == 0);
 		}
 		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
-			int result;
 			result = OtoS.put(o, timestamp++);
-			assert (result == 0);
-			result = OtoT.put(o, t);
 			assert (result == 0);
 			if (h >= 0) {
 				TIntArrayList ol = HtoOlist[h];
@@ -397,15 +396,15 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
 	// assumes 'b' != 0 and 'tmpO' and 'tmpH' are not needed
-	private void computeTC(int b) throws ThrEscException {
+	private boolean computeTC(int b) throws ThrEscException {
 		tmpO.clear();
 		tmpH.clear();
 		int h = OtoH.get(b);
 		if (h == 0)
 			throw new ThrEscException();
-		// int t = OtoT.get(b);
-		// if (t == 0)
-		//	throw new ThrEscException();
+		int t = OtoT.get(b);
+		if (t == 0)
+			throw new ThrEscException();
 		tmpO.add(b);
 		tmpH.add(h);
 		// Note: tmpO.size() can change in body of below loop!
@@ -422,19 +421,28 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 						if (h2 == 0)
 							throw new ThrEscException();
 						tmpH.add(h2);
-						// int t2 = OtoT.get(o2);
-						// if (t2 == 0)
-						//	throw new ThrEscException();
-						// assert (t2 == t);
+						int t2 = OtoT.get(o2);
+						if (t2 == 0)
+							throw new ThrEscException();
+						assert (t2 == t);
 					}
 				}
 			}
 		}
+		boolean imp;
+		if (checkKind == TC_ALLOC_PRUNE)
+			imp = computeExtendedTC(t);
+		else {
+			imp = false;
+			if (checkKind == TC_ALLOC)
+				computeExtendedTC(t);
+		}
+		return imp;
 	}
 
 	// assumes tmpO and tmpH is non-null and contains at least one object
 	// potentially adds more to each of them
-	private boolean computeExtendedTC() throws ThrEscException {
+	private boolean computeExtendedTC(int t) throws ThrEscException {
 		int min = tmpO.get(0);
 		int n = tmpO.size();
 		for (int i = 1; i < n; i++) {
@@ -456,6 +464,11 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				int o2 = l.get(j);
 				if (o2 == o)
 					continue;
+				int t2 = OtoT.get(o2);
+				if (t2 == 0)
+					throw new ThrEscException();
+				if (t2 != t)
+					continue;
 				int s2 = OtoS.get(o2);
 				if (s2 == 0)
 					throw new ThrEscException();
@@ -463,7 +476,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					continue;
 				if (escO.contains(o2)) {
 					if (checkKind == TC_ALLOC_PRUNE) {
-						// tmpO.add(o2);
+						tmpO.add(o2); // XXX
 						return true;
 					}
 					continue;
@@ -481,6 +494,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				for (int k = 0; k < p; k++) {
 					FldObj fo = foList.get(k);
 					int o3 = fo.o;
+					int t3 = OtoT.get(o3);
+					if (t3 == 0)
+						throw new ThrEscException();
+					assert (t3 == t);
 					int s3 = OtoS.get(o3);
 					if (s3 == 0)
 						throw new ThrEscException();
@@ -488,7 +505,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 						continue;
 					if (escO.contains(o3)) {
 						if (checkKind == TC_ALLOC_PRUNE) {
-							// tmpO.add(o3);
+							tmpO.add(o3);  // XXX
 							return true;
 						}
 						continue;
@@ -514,23 +531,16 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			escE[e] = true;
 			return;
 		}
-		boolean esc;
+		boolean imp;
 		try {
-			computeTC(b);
-			if (checkKind == TC_ALLOC_PRUNE)
-				esc = computeExtendedTC();
-			else {
-				esc = false;
-				if (checkKind == TC_ALLOC)
-					computeExtendedTC();
-			}
+			imp = computeTC(b);
 			if (printAccFileName != null)
-				printHeap2(e, b);
+				printHeap(e);
 		} catch (ThrEscException ex) {
 			badE[e] = true;
 			return;
 		}
-		if (esc) {
+		if (imp) {
 			impE[e] = true;
 		} else {
 			IntArraySet hs = EtoLocHset[e];
@@ -643,6 +653,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		}
 	}
 
+	// prints sub-heap from which object b is reachable
+	// destroys tmpO and tmpH
 	private void printHeap(int e, int b) {
 		PrintWriter out = OutDirUtils.newPrintWriter("heap_" + e + "_" + numPrintedHeaps + ".dot");
 		numPrintedHeaps++;
@@ -697,7 +709,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		out.close();
 	}
 
-	private void printHeap2(int e, int b) {
+	// prints sub-heap stored in tmpO
+	private void printHeap(int e) {
 		PrintWriter out = OutDirUtils.newPrintWriter("heap_" + e + "_" + numPrintedHeaps + ".dot");
 		numPrintedHeaps++;
         out.println("digraph G {");
