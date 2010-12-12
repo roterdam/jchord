@@ -50,17 +50,17 @@ public class ClassHierarchy {
 		"WARN: Class hierarchy builder: Ignored the following classes/interfaces as some (direct or transitive) interface implemented/extended by each of them is missing in scope:";
 
 	private final String CHkind;
-    /**
-     * Map from each class or interface in scope to the kind of its type
-     * (interface, abstract class, or concrete class).
-     */
-    private Map<String, TypeKind> clintToKind;
+	/**
+	 * Map from each class or interface in scope to the kind of its type
+	 * (interface, abstract class, or concrete class).
+	 */
+	private Map<String, TypeKind> clintToKind;
 	/**
 	 * Map from each (concrete or abstract) class c in scope to the
 	 * class d (not necessarily in scope) such that:
 	 * 1. if c == java.lang.Object then d == null, and
 	 * 2. if c is a class other than java.lang.Object then d is the
-	 *    declared superclass of c.
+	 *	declared superclass of c.
 	 * Note that c cannot be an interface.
 	 */
 	private Map<String, String> classToDeclaredSuperclass;
@@ -68,28 +68,28 @@ public class ClassHierarchy {
 	 * Map from each class/interface c in scope to the set of interfaces
 	 * S (not necessarily in scope) such that:
 	 * 1. if c is an interface then S is the set of interfaces that c
-	 *    declares it extends, and
+	 *	declares it extends, and
 	 * 2. if c is a class then S is the set of interfaces that c
-	 *    declares it implements.
+	 *	declares it implements.
 	 */
 	private Map<String, Set<String>> clintToDeclaredInterfaces;
 	/**
 	 * Map from:
 	 * 1. each (concrete or abstract) class in scope to the set of all
-	 *    its concrete subclasses in scope (including itself if it is
-	 *    concrete).
+	 *	its concrete subclasses in scope (including itself if it is
+	 *	concrete).
 	 * 2. each interface in scope to the set of all concrete classes in
-	 *    scope that implement it.
+	 *	scope that implement it.
 	 */
 	private Map<String, Set<String>> clintToAllConcreteSubs;
 
 	/**
 	 * Set consisting of:
 	 * 1. each class not in scope but declared as the superclass
-	 *    of some class in scope, and
+	 *	of some class in scope, and
 	 * 2. each interface not in scope but declared as an
-	 *    implemented/extended interface of some class/interface
-	 *    respectively in scope.
+	 *	implemented/extended interface of some class/interface
+	 *	respectively in scope.
 	 */
 	private Set<String> missingClints;
 
@@ -202,7 +202,7 @@ public class ClassHierarchy {
 
 	// builds maps clintToKind, classToDeclaredSuperclass, and clintToDeclaredInterfaces
 	private void build() {
-        System.out.println("Starting to build class hierarchy; this may take a while ...");
+		System.out.println("Starting to build class hierarchy; this may take a while ...");
 		Set<String> dynLoadedTypes = null;
 		if (CHkind.equals("dynamic")) {
 			List<String> list = Program.getDynamicallyLoadedClasses();
@@ -268,7 +268,7 @@ public class ClassHierarchy {
 					Messages.log("\t" + s);
 			}
 		}
-        System.out.println("Finished building class hierarchy.");
+		System.out.println("Finished building class hierarchy.");
 	}
 
 	// Description of superclass and interfaces sections in class file of class c:
@@ -276,7 +276,7 @@ public class ClassHierarchy {
 	//   if c is an interface then d is java.lang.Object
 	//   if c == java.lang.Object then d is null (has index 0 in constant pool)
 	//   if c is a class other than java.lang.Object then d is the
-	//      declared superclass of c
+	//	  declared superclass of c
 	// 2. interfaces S:
 	//   if c is an interface then S is the set of interfaces c declares it extends
 	//   if c is a class then S is the set of interfaces c declares it implements

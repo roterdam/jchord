@@ -55,7 +55,7 @@ public class CHA {
 	private static final String MAIN_METHOD_NOT_FOUND =
 		"ERROR: Could not find main class `%s` or main method in that class.";
 
-    public static final boolean DEBUG = false;
+	public static final boolean DEBUG = false;
 
 	private IndexSet<jq_Reference> classes;
 
@@ -82,29 +82,29 @@ public class CHA {
 		System.out.println("ENTER: CHA");
 		Timer timer = new Timer();
 		timer.init();
- 		classes = new IndexSet<jq_Reference>();
- 		classesVisitedForClinit = new HashSet<jq_Class>();
+		 classes = new IndexSet<jq_Reference>();
+		 classesVisitedForClinit = new HashSet<jq_Class>();
 		methods = new IndexSet<jq_Method>();
- 		methodWorklist = new ArrayList<jq_Method>();
-        HostedVM.initialize();
-        javaLangObject = PrimordialClassLoader.getJavaLangObject();
+		 methodWorklist = new ArrayList<jq_Method>();
+		HostedVM.initialize();
+		javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Config.mainClassName;
 		if (mainClassName == null)
 			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
-       	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
+		   jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
 		prepareClass(mainClass);
 		jq_NameAndDesc nd = new jq_NameAndDesc("main", "([Ljava/lang/String;)V");
-        jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(nd);
+		jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(nd);
 		if (mainMethod == null)
-            Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
+			Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
 		visitClinits(mainClass);
-       	visitMethod(mainMethod);
-        while (!methodWorklist.isEmpty()) {
-        	jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
+		   visitMethod(mainMethod);
+		while (!methodWorklist.isEmpty()) {
+			jq_Method m = methodWorklist.remove(methodWorklist.size() - 1);
 			ControlFlowGraph cfg = m.getCFG();
 			if (DEBUG) System.out.println("Processing CFG of method: " + m);
 			processCFG(cfg);
-        }
+		}
 		System.out.println("LEAVE: CHA");
 		timer.done();
 		System.out.println("Time: " + timer.getInclusiveTimeStr());
@@ -177,7 +177,7 @@ public class CHA {
 
 	private void prepareClass(jq_Reference r) {
 		if (classes.add(r)) {
-        	r.prepare();
+			r.prepare();
 			if (DEBUG) System.out.println("\tAdding class: " + r);
 			if (r instanceof jq_Array)
 				return;

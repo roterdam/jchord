@@ -19,11 +19,11 @@ import java.util.Set;
  * Classes implementing this interface are:
  * <ul>
  * <li>{@link MutableLabeledGraph}, a complete implementation that
- *     provides both, the useful operations and a representation of
- *     the graph.</li>
+ *	 provides both, the useful operations and a representation of
+ *	 the graph.</li>
  * <li>{@link AbstractGraph}, a partial implementation that provides
- *     the useful operations but leaves the representation of the
- *     graph unspecified.</li>
+ *	 the useful operations but leaves the representation of the
+ *	 graph unspecified.</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -40,10 +40,10 @@ public interface ILabeledGraph<Node, Label> extends IGraph<Node> {
 	 * @param	dstNode	The target node of the edge.
 	 * 
 	 * @return	The set of all labels on the edge from <tt>srcNode</tt>
-	 * 			to <tt>dstNode</tt> in the graph.
-	 * 			It is the empty set if either node does not exist,
-	 * 			the edge does not exist, or no labels exist on the
-	 * 			edge in the graph.
+	 *			 to <tt>dstNode</tt> in the graph.
+	 *			 It is the empty set if either node does not exist,
+	 *			 the edge does not exist, or no labels exist on the
+	 *			 edge in the graph.
 	 */
 	public Set<Label> getLabels(Node srcNode, Node dstNode);
 }

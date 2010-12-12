@@ -47,7 +47,7 @@ public class CIAliasAnalysis extends JavaAnalysis {
 	 * @param	var	A local variable.
 	 * 
 	 * @return	The abstract object to which the given local variable
-	 * 			may point.
+	 *			 may point.
 	 */
 	public CIObj pointsTo(Register var) {
 		if (!relVH.isOpen())
@@ -68,7 +68,7 @@ public class CIAliasAnalysis extends JavaAnalysis {
 	 * @param	field	A static field.
 	 * 
 	 * @return	The abstract object to which the given static field
-	 * 			may point.
+	 *			 may point.
 	 */
 	public CIObj pointsTo(jq_Field field) {
 		if (!relFH.isOpen())
@@ -90,7 +90,7 @@ public class CIAliasAnalysis extends JavaAnalysis {
 	 * @param	field	An instance field.
 	 * 
 	 * @return	The abstract object to which the given instance field
-	 * 			of the given abstract object may point.
+	 *			 of the given abstract object may point.
 	 */
 	public CIObj pointsTo(CIObj obj, jq_Field field) {
 		if (!relHFH.isOpen())

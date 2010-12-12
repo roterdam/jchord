@@ -86,7 +86,7 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 	 * Constructs a mutable, unlabeled, directed graph with the
 	 * provided roots, nodes, and edges.
 	 * <p>
- 	 * If both maps <tt>nodeToPreds</tt> and <tt>nodeToSuccs</tt>
+	  * If both maps <tt>nodeToPreds</tt> and <tt>nodeToSuccs</tt>
 	 * are null, then an empty graph is constructed.
 	 * <p>
 	 * If both maps <tt>nodeToPreds</tt> and <tt>nodeToSuccs</tt>
@@ -131,7 +131,7 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 	 *			It may be null, in which case every node in the
 	 *			graph is treated as a root node.
 	 * @param	nodeToPreds	A map from each node in the graph to
-	 * 			the set of all its immediate predecessor nodes.
+	 *			 the set of all its immediate predecessor nodes.
 	 *			It may be null.
 	 * @param	nodeToSuccs	A map from each node in the graph to
 	 *			the set of all its immediate successor nodes.
@@ -426,59 +426,59 @@ public class MutableGraph<Node> extends AbstractGraph<Node>
 			evictCache();
 		return true;
 	}
-    /** 
-     * Computes the transitive closure of the graph.
-     * Considers each pair of edges (u,v) and (v,w) in the graph
-     * such that u != v != w, and adds edge (u,w) if it is not
-     * in the graph.  The process terminates after no more edges
-     * can be added.
-     */
+	/** 
+	 * Computes the transitive closure of the graph.
+	 * Considers each pair of edges (u,v) and (v,w) in the graph
+	 * such that u != v != w, and adds edge (u,w) if it is not
+	 * in the graph.  The process terminates after no more edges
+	 * can be added.
+	 */
 	public void computeTransitiveClosure() {
-        Set<Node> nodes = nodeToPreds.keySet();
-        boolean changed = true;
-        while (changed) {
-            changed = false;
-            for (Node v : nodes) {
-                Set<Node> Pv = nodeToPreds.get(v);
-                Set<Node> Sv = nodeToSuccs.get(v);
-                for (Node u : Pv) {
-                    if (u != v) { 
-                        Set<Node> Su = nodeToSuccs.get(u);
-                        for (Node w : Sv) {
-                            if (v != w && u != w && Su.add(w)) {
-                                Set<Node> Pw = nodeToPreds.get(w);
-                                Pw.add(u);
-                                changed = true;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        // validate();
+		Set<Node> nodes = nodeToPreds.keySet();
+		boolean changed = true;
+		while (changed) {
+			changed = false;
+			for (Node v : nodes) {
+				Set<Node> Pv = nodeToPreds.get(v);
+				Set<Node> Sv = nodeToSuccs.get(v);
+				for (Node u : Pv) {
+					if (u != v) { 
+						Set<Node> Su = nodeToSuccs.get(u);
+						for (Node w : Sv) {
+							if (v != w && u != w && Su.add(w)) {
+								Set<Node> Pw = nodeToPreds.get(w);
+								Pw.add(u);
+								changed = true;
+							}
+						}
+					}
+				}
+			}
+		}
+		// validate();
 		if (cached)
 			evictCache();
 	}
 	public void union(IGraph<Node> that) {
-        for (Node v : that.getNodes()) {
-            Set<Node> thatPreds = that.getPreds(v);
-            Set<Node> thatSuccs = that.getSuccs(v);
-            Set<Node> thisPreds;
-            Set<Node> thisSuccs;
-            if (nodeToPreds.containsKey(v)) {
-                thisPreds = nodeToPreds.get(v);
-                thisSuccs = nodeToSuccs.get(v);
-                thisPreds.addAll(thatPreds);
-                thisSuccs.addAll(thatSuccs);
-            } else {
-                thisPreds = new ArraySet<Node>(thatPreds);
-                thisSuccs = new ArraySet<Node>(thatSuccs);
-                nodeToPreds.put(v, thisPreds);
-                nodeToSuccs.put(v, thisSuccs);
-            }
-        }   
-        roots.addAll(that.getRoots());
-        // validate();
+		for (Node v : that.getNodes()) {
+			Set<Node> thatPreds = that.getPreds(v);
+			Set<Node> thatSuccs = that.getSuccs(v);
+			Set<Node> thisPreds;
+			Set<Node> thisSuccs;
+			if (nodeToPreds.containsKey(v)) {
+				thisPreds = nodeToPreds.get(v);
+				thisSuccs = nodeToSuccs.get(v);
+				thisPreds.addAll(thatPreds);
+				thisSuccs.addAll(thatSuccs);
+			} else {
+				thisPreds = new ArraySet<Node>(thatPreds);
+				thisSuccs = new ArraySet<Node>(thatSuccs);
+				nodeToPreds.put(v, thisPreds);
+				nodeToSuccs.put(v, thisSuccs);
+			}
+		}   
+		roots.addAll(that.getRoots());
+		// validate();
 		if (cached)
 			evictCache();
 	}

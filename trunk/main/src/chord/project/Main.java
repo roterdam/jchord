@@ -19,9 +19,9 @@ import chord.util.Timer;
  */
 public class Main {
 	public static void main(String[] args) throws Exception {
-        PrintStream outStream = null;
-        PrintStream errStream = null;
-        final String outFileName = Config.outFileName;
+		PrintStream outStream = null;
+		PrintStream errStream = null;
+		final String outFileName = Config.outFileName;
 		final String errFileName = Config.errFileName;
 		System.out.println("Redirecting stdout to file: " + outFileName);
 		System.out.println("Redirecting stderr to file: " + errFileName);
@@ -66,10 +66,10 @@ public class Main {
 		if (analysisNames.length > 0) {
 			project.run(analysisNames);
 		}
-        String[] relNames = Config.toArray(Config.printRels);
-        if (relNames.length > 0) {
-        	project.printRels(relNames);
-        }
+		String[] relNames = Config.toArray(Config.printRels);
+		if (relNames.length > 0) {
+			project.printRels(relNames);
+		}
 		if (Config.printProject) {
 			project.print();
 		}

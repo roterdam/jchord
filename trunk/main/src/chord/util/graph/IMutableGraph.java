@@ -13,11 +13,11 @@ package chord.util.graph;
  * Classes implementing this interface are:
  * <ul>
  * <li>{@link MutableGraph}, a complete implementation that provides
- *     both, the useful operations and a representation of the
- *     graph.</li>
+ *	 both, the useful operations and a representation of the
+ *	 graph.</li>
  * <li>{@link AbstractGraph}, a partial implementation that provides
- *     the useful operations but leaves the representation of the
- *     graph unspecified.</li>
+ *	 the useful operations but leaves the representation of the
+ *	 graph unspecified.</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -25,14 +25,14 @@ package chord.util.graph;
  * @param	<Node>	The type of the graph's nodes.
  */
 public interface IMutableGraph<Node> extends IGraph<Node> {
-    /**
-     * Inserts a given node as a non-root node into the graph.
+	/**
+	 * Inserts a given node as a non-root node into the graph.
 	 *
-     * @param   node    The node to be inserted.
+	 * @param   node	The node to be inserted.
 	 *
-     * @return  true if the graph is modified, i.e., if <tt>node</tt>
-     * 			does not exist in the graph.
-     */
+	 * @return  true if the graph is modified, i.e., if <tt>node</tt>
+	 *			 does not exist in the graph.
+	 */
 	public boolean insertNode(Node node);
 	/**
 	 * Inserts a given node as a root node into the graph.
@@ -40,8 +40,8 @@ public interface IMutableGraph<Node> extends IGraph<Node> {
 	 * @param	node	The node to be inserted.
 	 * 
 	 * @return	true if the graph is modified, i.e., if <tt>node</tt>
-	 * 			does not exist in the graph or is a non-root node in
-	 * 			the graph.
+	 *			 does not exist in the graph or is a non-root node in
+	 *			 the graph.
 	 */
 	public boolean insertRoot(Node node);
 	/**
@@ -50,37 +50,37 @@ public interface IMutableGraph<Node> extends IGraph<Node> {
 	 * @param	node	A node in the graph.
 	 * 
 	 * @return	true if the graph is modified, i.e., if <tt>node</tt>
-	 * 			is a non-root node in the graph.
+	 *			 is a non-root node in the graph.
 	 * 
 	 * @throws	RuntimeException	if <tt>node</tt> does not exist
-	 * 			in the graph.
+	 *			 in the graph.
 	 */
 	public boolean insertRootStrict(Node node);
-    /**
-     * Removes a given node from the graph while preserving edges
-     * incident upon it.
+	/**
+	 * Removes a given node from the graph while preserving edges
+	 * incident upon it.
 	 *
- 	 * This operation removes the following edges from the graph:
-     * <pre>
-     * 1. for each immed. pred. node1 of node: edge (node1,node)
-     * 2. for each immed. succ. node2 of node: edge (node,node2)
-     * </pre>
-     * This operation inserts the following edges into the graph:
-     * <pre>
-     * for each immed. pred. node1 of node such that node1 != node:
-     *     for each immed. succ. node2 of node such that node2 != node:
-     *         edge (node1,node2)
-     * </pre>
-     * Moreover, if <tt>node</tt> is a root node, then each of its
+	  * This operation removes the following edges from the graph:
+	 * <pre>
+	 * 1. for each immed. pred. node1 of node: edge (node1,node)
+	 * 2. for each immed. succ. node2 of node: edge (node,node2)
+	 * </pre>
+	 * This operation inserts the following edges into the graph:
+	 * <pre>
+	 * for each immed. pred. node1 of node such that node1 != node:
+	 *	 for each immed. succ. node2 of node such that node2 != node:
+	 *		 edge (node1,node2)
+	 * </pre>
+	 * Moreover, if <tt>node</tt> is a root node, then each of its
 	 * immediate successors is designated a root node.
 	 *
 	 * @param	node	The node to be removed.
 	 *
 	 * @return	true if the graph is modified, i.e., if <tt>node</tt>
-	 * 			exists in the graph.
+	 *			 exists in the graph.
 	 *
-     * @see #removeNode
-     */
+	 * @see #removeNode
+	 */
 	public boolean bypassNode(Node node);
 	/**
 	 * Designates a given node in the graph as a non-root node.
@@ -88,10 +88,10 @@ public interface IMutableGraph<Node> extends IGraph<Node> {
 	 * @param	node	A node in the graph.
 	 * 
 	 * @return	true if the graph is modified, i.e., if <tt>node</tt>
-	 * 			is a root node in the graph.
+	 *			 is a root node in the graph.
 	 * 
 	 * @throws	RuntimeException	if <tt>node</tt> does not exist
-	 * 			in the graph.
+	 *			 in the graph.
 	 */
 	public boolean removeRootStrict(Node node);
 	/**
@@ -101,7 +101,7 @@ public interface IMutableGraph<Node> extends IGraph<Node> {
 	 * @param	node	A node.
 	 * 
 	 * @return	true if the graph is modified, i.e., if <tt>node</tt>
-	 * 			exists in the graph.
+	 *			 exists in the graph.
 	 *
 	 * @see #bypassNode
 	 */
@@ -113,8 +113,8 @@ public interface IMutableGraph<Node> extends IGraph<Node> {
 	 * @param	newNode	The new node.
 	 * 
 	 * @return	true if the graph is modified, i.e., if <tt>oldNode</tt>
-	 * 			exists in the graph and <tt>newNode</tt> is different
-	 * 			from it.
+	 *			 exists in the graph and <tt>newNode</tt> is different
+	 *			 from it.
 	 */
 	public boolean replaceNode(Node oldNode, Node newNode);
 	/**
@@ -137,11 +137,11 @@ public interface IMutableGraph<Node> extends IGraph<Node> {
 	 * @param	dstNode	The target node of the edge to be inserted.
 	 * 
 	 * @return	true if the graph is modified, i.e., if an edge from
-	 * 			<tt>srcNode</tt> to <tt>dstNode</tt> does not exist
-	 * 			in the graph.
+	 *			 <tt>srcNode</tt> to <tt>dstNode</tt> does not exist
+	 *			 in the graph.
 	 * 
 	 * @throws	RuntimeException	if <tt>srcNode</tt> or
-	 * 			<tt>dstNode</tt> does not exist in the graph.
+	 *			 <tt>dstNode</tt> does not exist in the graph.
 	 */
 	public boolean insertEdgeStrict(Node srcNode, Node dstNode);
 	/**
@@ -151,8 +151,8 @@ public interface IMutableGraph<Node> extends IGraph<Node> {
 	 * @param	dstNode	The target node of the edge to be removed.
 	 * 
 	 * @return	true if the graph is modified, i.e., if an edge from
-	 * 			<tt>srcNode</tt> to <tt>dstNode</tt> exists in the
-	 *  		graph.
+	 *			 <tt>srcNode</tt> to <tt>dstNode</tt> exists in the
+	 *		  graph.
 	 */
 	public boolean removeEdge(Node srcNode, Node dstNode);
 	/**
@@ -165,7 +165,7 @@ public interface IMutableGraph<Node> extends IGraph<Node> {
 	 * and updates this graph with the result.
 	 * 
 	 * @param	graph	A directed graph.
-     * 			It must be non-null.
+	 *			 It must be non-null.
 	 */
 	public void union(IGraph<Node> graph);
 }

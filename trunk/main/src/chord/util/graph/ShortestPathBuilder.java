@@ -42,7 +42,7 @@ public class ShortestPathBuilder<Node> {
 		origNodeIdx = map.indexOf(origNode);
 		dist[origNodeIdx] = 0;
 		prev[origNodeIdx] = origNodeIdx;
- 		workSet = new HashSet<Node>(numNodes);
+		 workSet = new HashSet<Node>(numNodes);
 		for (Node node : map) {
 			workSet.add(node);
 		}

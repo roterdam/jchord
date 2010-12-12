@@ -46,7 +46,7 @@ public class DomB extends ProgramDom<BasicBlock> implements IMethodVisitor {
 	public jq_Method getMethod(BasicBlock b) {
 		return basicBlockToMethodMap.get(b);
 	}
-    public String toUniqueString(BasicBlock b) {
-        return b.getID() + "!" + getMethod(b);
-    }
+	public String toUniqueString(BasicBlock b) {
+		return b.getID() + "!" + getMethod(b);
+	}
 }

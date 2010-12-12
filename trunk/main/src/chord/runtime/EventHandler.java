@@ -37,9 +37,9 @@ import chord.instr.InstrScheme.EventFormat;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class EventHandler extends CoreEventHandler {
-    public static final int MISSING_FIELD_VAL = -1;
-    public static final int UNKNOWN_FIELD_VAL = -2;
-    protected static InstrScheme scheme;
+	public static final int MISSING_FIELD_VAL = -1;
+	public static final int UNKNOWN_FIELD_VAL = -2;
+	protected static InstrScheme scheme;
 
 	// befNew event is present => h,t,o present
 	public synchronized static void befNewEvent(int hId) {
@@ -735,17 +735,17 @@ public class EventHandler extends CoreEventHandler {
 			trace = true;
 		}
 	}
-    public synchronized static void init(String args) {
-        String[] a = args.split("=");
-        String instrSchemeFileName = null;
-        for (int i = 0; i < a.length; i += 2) {
-            if (a[i].equals(InstrScheme.INSTR_SCHEME_FILE_KEY)) {
-                instrSchemeFileName = a[i+1];
-                break;
-            }
-        }
-        assert (instrSchemeFileName != null);
-        scheme = InstrScheme.load(instrSchemeFileName);
+	public synchronized static void init(String args) {
+		String[] a = args.split("=");
+		String instrSchemeFileName = null;
+		for (int i = 0; i < a.length; i += 2) {
+			if (a[i].equals(InstrScheme.INSTR_SCHEME_FILE_KEY)) {
+				instrSchemeFileName = a[i+1];
+				break;
+			}
+		}
+		assert (instrSchemeFileName != null);
+		scheme = InstrScheme.load(instrSchemeFileName);
 		CoreEventHandler.init(args);
 	}
 }

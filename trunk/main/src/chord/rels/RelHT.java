@@ -53,21 +53,21 @@ public class RelHT extends ProgramRel {
 				t = New.getType(h).getType();
 			else if (op instanceof NewArray) {
 				t = NewArray.getType(h).getType();
-			} else if(op instanceof Invoke) {     
-        t = Invoke.getDest(h).getType();
+			} else if(op instanceof Invoke) {	 
+		t = Invoke.getDest(h).getType();
 			} else if(op instanceof MultiNewArray) {
-        t = MultiNewArray.getType(h).getType();
-      } else {
+		t = MultiNewArray.getType(h).getType();
+	  } else {
 			  System.err.println("unexpected operator " + op + " in RelHT");
 			  t = null;
 			} 
 
 			int tIdx = domT.indexOf(t);
 
-      if (tIdx == -1) {
-        System.out.println("WARNING: HT: can't find type " + t  + " of allocation site " + h);
-        continue;
-      }
+	  if (tIdx == -1) {
+		System.out.println("WARNING: HT: can't find type " + t  + " of allocation site " + h);
+		continue;
+	  }
 			add(hIdx, tIdx);
 		}
 		Reflect reflect = Program.g().getReflect();
@@ -85,14 +85,14 @@ public class RelHT extends ProgramRel {
 */
 	}
 	private void processResolvedNewInstSites(List<Pair<Quad, List<jq_Reference>>> l) {
-        for (Pair<Quad, List<jq_Reference>> p : l) {
+		for (Pair<Quad, List<jq_Reference>> p : l) {
 			Quad q = p.val0;
 			int hIdx = domH.indexOf(q);
 			assert (hIdx >= 0);
 			for (jq_Reference t : p.val1) {
 				int tIdx = domT.indexOf(t);
 				assert (tIdx >= 0);
-            	add(hIdx, tIdx);
+				add(hIdx, tIdx);
 			}
 		}
 	}

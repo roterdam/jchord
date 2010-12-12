@@ -30,6 +30,6 @@ public class DomO extends ProgramDom<CSObj> {
 			s += "C" + cIdx + " ";
 		}
 		s = s.substring(0, s.length() - 1);
-        return s + "\"";
+		return s + "\"";
 	}
 }

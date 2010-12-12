@@ -28,8 +28,8 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-    name = "MgetClassInvkInst",
-    sign = "M0,I0:M0xI0"
+	name = "MgetClassInvkInst",
+	sign = "M0,I0:M0xI0"
 )
 public class RelMgetClassInvkInst extends ProgramRel
 		implements IInvokeInstVisitor {

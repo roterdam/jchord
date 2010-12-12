@@ -42,10 +42,10 @@ public class ClassicProject extends Project {
 		"ERROR: ClassicProject builder: Cannot instantiate task '%s': %s";
 	private static final String CANNOT_INSTANTIATE_TRGT =
 		"ERROR: ClassicProject builder: Cannot instantiate trgt '%s': %s";
-    private static final String MULTIPLE_TASKS_PRODUCING_TRGT =
-        "ERROR: Multiple tasks producing target '%s' in project:%s; either include exactly one of them via -Dchord.run.analyses or exclude all but one of them via -Dchord.analysis.exclude";
-    private static final String TASK_PRODUCING_TRGT_NOT_FOUND =
-        "ERROR: No task producing target '%s' found in project";
+	private static final String MULTIPLE_TASKS_PRODUCING_TRGT =
+		"ERROR: Multiple tasks producing target '%s' in project:%s; either include exactly one of them via -Dchord.run.analyses or exclude all but one of them via -Dchord.analysis.exclude";
+	private static final String TASK_PRODUCING_TRGT_NOT_FOUND =
+		"ERROR: No task producing target '%s' found in project";
 	private static final String TASK_NOT_FOUND = "ERROR: Task named '%s' not found in project";
 	private static final String TRGT_NOT_FOUND =
 		"ERROR: Target named '%s' not found in produces/consumes field of any task in project";
@@ -115,24 +115,24 @@ public class ClassicProject extends Project {
 			taskParser.getNameToProduceNamesMap();
 		buildDerivedMaps(nameToConsumeNamesMap, nameToProduceNamesMap);
 
-        if (Config.reuseRels) {
-            File file = new File(Config.bddbddbWorkDirName);
-            File[] subFiles = file.listFiles(filter);
-            for (File subFile : subFiles) {
-                String fileName = subFile.getName();
-                if (fileName.endsWith(".bdd")) {
-                    int n = fileName.length();
-                    String relName = fileName.substring(0, n - 4);
-                    ProgramRel rel = (ProgramRel) getTrgt(relName);
-                    for (Dom dom : rel.getDoms()) {
-                        ITask task2 = getTaskProducingTrgt(dom);
-                        runTask(task2);
-                    }
-                    rel.load();
-                    setTrgtDone(relName);
-                }
-            }
-        }
+		if (Config.reuseRels) {
+			File file = new File(Config.bddbddbWorkDirName);
+			File[] subFiles = file.listFiles(filter);
+			for (File subFile : subFiles) {
+				String fileName = subFile.getName();
+				if (fileName.endsWith(".bdd")) {
+					int n = fileName.length();
+					String relName = fileName.substring(0, n - 4);
+					ProgramRel rel = (ProgramRel) getTrgt(relName);
+					for (Dom dom : rel.getDoms()) {
+						ITask task2 = getTaskProducingTrgt(dom);
+						runTask(task2);
+					}
+					rel.load();
+					setTrgtDone(relName);
+				}
+			}
+		}
 
 		isBuilt = true;
 	}
@@ -209,8 +209,8 @@ public class ClassicProject extends Project {
 				ex = e;
 			}
 			if (ex != null) {
-		        Messages.log(CANNOT_INSTANTIATE_TASK, name, ex.getMessage());
-		        hasNoErrors = false;
+				Messages.log(CANNOT_INSTANTIATE_TASK, name, ex.getMessage());
+				hasNoErrors = false;
 			} else {
 				assert (task != null);
 				task.setName(name);
@@ -280,10 +280,10 @@ public class ClassicProject extends Project {
 	}
 
 	// builds the following maps:
-	// 	trgtToConsumerTasksMap, trgtToProducerTasksMap
-	// 	taskToConsumedTrgtsMap, ucedTrgtsMap
+	//	 trgtToConsumerTasksMap, trgtToProducerTasksMap
+	//	 taskToConsumedTrgtsMap, ucedTrgtsMap
 	// uses the following maps:
-	// 	nameToTrgtMap, nameToTaskMap
+	//	 nameToTrgtMap, nameToTaskMap
 	//	taskNameToProduceNamesMap, taskNameToConsumeNamesMap
 	private void buildDerivedMaps(
 			Map<String, List<String>> taskNameToConsumeNamesMap,
@@ -346,7 +346,7 @@ public class ClassicProject extends Project {
 		build();
 		for (String relName : relNames) {
 			ProgramRel rel = (ProgramRel) nameToTrgtMap.get(relName);
-            if (rel == null)
+			if (rel == null)
 				Messages.fatal("Failed to load relation " + relName);
 			rel.load();
 			rel.print();
@@ -403,7 +403,7 @@ public class ClassicProject extends Project {
 		task.run();
 		timer.done();
 		if (Config.verbose > 1) {
-        	System.out.println("LEAVE: " + task);
+			System.out.println("LEAVE: " + task);
 			printTimer(timer);
 		}
 		setTaskDone(task);
@@ -487,13 +487,13 @@ public class ClassicProject extends Project {
 	}
 
 	private static final FilenameFilter filter = new FilenameFilter() {
-        public boolean accept(File dir, String name) {
-            if (name.startsWith("."))
-                return false;
-            return true;
-        }
-    };
-    
+		public boolean accept(File dir, String name) {
+			if (name.startsWith("."))
+				return false;
+			return true;
+		}
+	};
+	
 	private static String getNameAndURL(ITask task) {
 		Class clazz = task.getClass();
 		String loc;

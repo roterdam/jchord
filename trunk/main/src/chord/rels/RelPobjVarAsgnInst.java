@@ -50,32 +50,32 @@ public class RelPobjVarAsgnInst extends ProgramRel
 			}
 		}
 	}
-    public void visitPhiInst(Quad q) {
-        RegisterOperand lo = Phi.getDest(q);
-        jq_Type t = lo.getType();
-        if (t == null || t.isReferenceType()) {
-            Register l = lo.getRegister();
-            ParamListOperand ros = Phi.getSrcs(q);
-            int n = ros.length();
-            for (int i = 0; i < n; i++) {
-                RegisterOperand ro = ros.get(i);
-                if (ro != null) {
-                    Register r = ro.getRegister();
-                    add(q, l, r);
-                }
-            }
-        }
+	public void visitPhiInst(Quad q) {
+		RegisterOperand lo = Phi.getDest(q);
+		jq_Type t = lo.getType();
+		if (t == null || t.isReferenceType()) {
+			Register l = lo.getRegister();
+			ParamListOperand ros = Phi.getSrcs(q);
+			int n = ros.length();
+			for (int i = 0; i < n; i++) {
+				RegisterOperand ro = ros.get(i);
+				if (ro != null) {
+					Register r = ro.getRegister();
+					add(q, l, r);
+				}
+			}
+		}
 	}
-    public void visitCastInst(Quad q) {
-        Operand rx = CheckCast.getSrc(q);
-        if (rx instanceof RegisterOperand) {
-            RegisterOperand ro = (RegisterOperand) rx;
-            if (ro.getType().isReferenceType()) {
-                Register r = ro.getRegister();
-                RegisterOperand lo = CheckCast.getDest(q);
-                Register l = lo.getRegister();
-                add(q, l, r);
-            }
-        }
-    }
+	public void visitCastInst(Quad q) {
+		Operand rx = CheckCast.getSrc(q);
+		if (rx instanceof RegisterOperand) {
+			RegisterOperand ro = (RegisterOperand) rx;
+			if (ro.getType().isReferenceType()) {
+				Register r = ro.getRegister();
+				RegisterOperand lo = CheckCast.getDest(q);
+				Register l = lo.getRegister();
+				add(q, l, r);
+			}
+		}
+	}
 }

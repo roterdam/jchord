@@ -19,15 +19,15 @@ public interface IStepCollection {
 	 * @param	name	A name unique across all program analyses
 	 *			included in a Chord project.
 	 */
-    public void setName(String name);
-    /**
-     * Provides the name of this program analysis.
-     * 
-     * @return	The name of this program analysis.
-     */
-    public String getName();
+	public void setName(String name);
+	/**
+	 * Provides the name of this program analysis.
+	 * 
+	 * @return	The name of this program analysis.
+	 */
+	public String getName();
 
-    public void run(Object ctrl);
+	public void run(Object ctrl);
  
 	public void setConsumedDataCollections(List<IDataCollection> c);
 

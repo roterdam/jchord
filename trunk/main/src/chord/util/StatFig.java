@@ -30,13 +30,13 @@ public class StatFig {
   public double mean() { return sum/n; }
 
   public void add(double x) {
-    sum += x;
-    n += 1;
-    min = Math.min(min, x);
-    max = Math.max(max, x);
+	sum += x;
+	n += 1;
+	min = Math.min(min, x);
+	max = Math.max(max, x);
   }
 
   @Override public String toString() {
-    return String.format("%.2f / %.2f / %.2f (%d)", min, sum/n, max, n);
+	return String.format("%.2f / %.2f / %.2f (%d)", min, sum/n, max, n);
   }
 }

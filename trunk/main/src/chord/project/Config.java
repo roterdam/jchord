@@ -97,7 +97,7 @@ public class Config {
 	public final static String reflectKind = System.getProperty("chord.reflect.kind", "none");
 	static {
 		if (!reflectKind.equals("none") && !reflectKind.equals("static") && !reflectKind.equals("dynamic")
-		    && !reflectKind.equals("static_cast"))
+			&& !reflectKind.equals("static_cast"))
 			Messages.fatal(BAD_OPTION, reflectKind, "chord.reflect.kind", "[none|static|dynamic|static_cast]");
 	}
 	public final static String stubsFileName =
@@ -138,23 +138,23 @@ public class Config {
 		concat(checkStdExcludeStr, ',', checkExtExcludeStr));
 	public final static String[] checkExcludeAry = toArray(checkExcludeStr);
 
-    // Program transformation properties
+	// Program transformation properties
  
 	public final static boolean doSSA = buildBoolProperty("chord.ssa", true);
 
-    // Chord debug properites
+	// Chord debug properites
 
 	// Determines verbosity level of Chord:
 	// 0 => silent
 	// 1 => print configuration (i.e. these properties) and start/finish time
-	//      bddbddb: unused
+	//	  bddbddb: unused
 	// 2 => print task/process enter/leave/time messages and sizes of computed doms/rels
-	//      bddbddb: print bdd node table resizing messages and sizes of relations output by solver
+	//	  bddbddb: print bdd node table resizing messages and sizes of relations output by solver
 	// 3 => all other messages in Chord
-	// 		bddbddb: print bdd gc messages and solver stats (e.g. how long each iteration took)
-    // 4 => bddbddb: noisy=yes for solver
-    // 5 => bddbddb: tracesolve=yes for solver
-    // 6 => bddbddb: fulltravesolve=yes for solver
+	//		 bddbddb: print bdd gc messages and solver stats (e.g. how long each iteration took)
+	// 4 => bddbddb: noisy=yes for solver
+	// 5 => bddbddb: tracesolve=yes for solver
+	// 6 => bddbddb: fulltravesolve=yes for solver
 	public final static int verbose = Integer.getInteger("chord.verbose", 2);
 
 	public final static boolean saveDomMaps = buildBoolProperty("chord.save.maps", true);
@@ -190,7 +190,7 @@ public class Config {
 					break;
 			}
 		}
-    System.setProperty("chord.out.dir", outDirName); // This could be read by someone else
+	System.setProperty("chord.out.dir", outDirName); // This could be read by someone else
 		FileUtils.mkdirs(outDirName);
 	}
 	public final static String outFileName = outRel2AbsPath("chord.out.file", "log.txt");
@@ -319,7 +319,7 @@ public class Config {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
 	}
 	public static String[] toArray(String str) {
-        return str.equals("") ? new String[0] : str.split(LIST_SEPARATOR);
+		return str.equals("") ? new String[0] : str.split(LIST_SEPARATOR);
 	}
 	public static String concat(String s1, char sep, String s2) {
 		if (s1.equals("")) return s2;

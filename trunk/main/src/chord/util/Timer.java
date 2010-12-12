@@ -70,7 +70,7 @@ public class Timer {
 	public String getInitTimeStr() {
 		checkInitDate();
 		return DateFormat.getDateTimeInstance().format(initDate);
-    }
+	}
 	public String getDoneTimeStr() {
 		checkDoneDate();
 		return DateFormat.getDateTimeInstance().format(doneDate);
@@ -87,7 +87,7 @@ public class Timer {
 		return getTimeStr(elapsedExclusiveTime);
 	}
 	public static String getTimeStr(long time) {
-        String ms = String.valueOf(time % 1000);
+		String ms = String.valueOf(time % 1000);
 		switch (ms.length()) {
 		case 2:
 			ms = "0" + ms;
@@ -98,24 +98,24 @@ public class Timer {
 		default:
 			break;
 		}
-        time /= 1000;
-        String ss = String.valueOf(time % 60);
-        if (ss.length() == 1)
-        	ss = "0" + ss;
-        time /= 60;
-        String mm = String.valueOf(time % 60);
-        if (mm.length() == 1)
-        	mm = "0" + mm;
-        time /= 60;
-        String hh = String.valueOf(time % 24);
-        if (hh.length() == 1)
-        	hh = "0" + hh;
-        time /= 24;
-        String timeStr;
-        if (time > 0)
-        	timeStr = "&gt; 1 day";
-        else
-        	timeStr = hh + ":" + mm + ":" + ss + ":" + ms + " hh:mm:ss:ms";
-        return timeStr;
+		time /= 1000;
+		String ss = String.valueOf(time % 60);
+		if (ss.length() == 1)
+			ss = "0" + ss;
+		time /= 60;
+		String mm = String.valueOf(time % 60);
+		if (mm.length() == 1)
+			mm = "0" + mm;
+		time /= 60;
+		String hh = String.valueOf(time % 24);
+		if (hh.length() == 1)
+			hh = "0" + hh;
+		time /= 24;
+		String timeStr;
+		if (time > 0)
+			timeStr = "&gt; 1 day";
+		else
+			timeStr = hh + ":" + mm + ":" + ss + ":" + ms + " hh:mm:ss:ms";
+		return timeStr;
 	}
 }

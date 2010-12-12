@@ -40,31 +40,31 @@ public class Reflect {
 		resolvedConNewInstSites = new ArrayList<Pair<Quad, List<jq_Reference>>>();
 		resolvedAryNewInstSites = new ArrayList<Pair<Quad, List<jq_Reference>>>();
 	}
-    /**
-     * Provides a map from each java.lang.Class.forName(s) call site,
+	/**
+	 * Provides a map from each java.lang.Class.forName(s) call site,
 	 * whose argument s could be resolved, to the names of all classes
-     * to which it was resolved.
-     */
-    public List<Pair<Quad, List<jq_Reference>>> getResolvedClsForNameSites() {
+	 * to which it was resolved.
+	 */
+	public List<Pair<Quad, List<jq_Reference>>> getResolvedClsForNameSites() {
 		return resolvedClsForNameSites;
-    }
-    /**
-     * Provides each java.lang.Object.newInstance() call site whose
+	}
+	/**
+	 * Provides each java.lang.Object.newInstance() call site whose
 	 * receiver's class could be resolved.
-     */
-    public List<Pair<Quad, List<jq_Reference>>> getResolvedObjNewInstSites() {
-        return resolvedObjNewInstSites;
-    }
+	 */
+	public List<Pair<Quad, List<jq_Reference>>> getResolvedObjNewInstSites() {
+		return resolvedObjNewInstSites;
+	}
 	/**
 	 */
-    public List<Pair<Quad, List<jq_Reference>>> getResolvedConNewInstSites() {
-        return resolvedConNewInstSites;
-    }
+	public List<Pair<Quad, List<jq_Reference>>> getResolvedConNewInstSites() {
+		return resolvedConNewInstSites;
+	}
 	/**
 	 */
-    public List<Pair<Quad, List<jq_Reference>>> getResolvedAryNewInstSites() {
-        return resolvedAryNewInstSites;
-    }
+	public List<Pair<Quad, List<jq_Reference>>> getResolvedAryNewInstSites() {
+		return resolvedAryNewInstSites;
+	}
 	public boolean addResolvedClsForNameSite(Quad q, jq_Reference c) {
 		return add(resolvedClsForNameSites, q, c);
 	}

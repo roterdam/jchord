@@ -24,6 +24,6 @@ import chord.project.analyses.ProgramRel;
 public class RelClassT extends ProgramRel implements IClassVisitor {
 	public void visit(jq_Class c) {
 		if (!c.isInterface())
-        	add(c);
+			add(c);
 	}
 }

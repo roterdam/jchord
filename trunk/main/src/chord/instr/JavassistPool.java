@@ -23,8 +23,8 @@ import javassist.CtClass;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class JavassistPool {
-    private static final String IGNORE_PATH_ELEMENT =
-        "WARN: Instrumentor: Ignoring path element %s from %s";
+	private static final String IGNORE_PATH_ELEMENT =
+		"WARN: Instrumentor: Ignoring path element %s from %s";
 	private final Set<String> bootClassPathResourceNames;
 	private final Set<String> userClassPathResourceNames;
 	private final ClassPool pool;
@@ -33,61 +33,61 @@ public class JavassistPool {
 		assert (userClassPathName != null);
 		pool = new ClassPool();
 
-        bootClassPathResourceNames = new HashSet<String>();
-        String bootClassPathName = System.getProperty("sun.boot.class.path");
-        String[] bootClassPathElems = bootClassPathName.split(File.pathSeparator);
-        for (String pathElem : bootClassPathElems) {
+		bootClassPathResourceNames = new HashSet<String>();
+		String bootClassPathName = System.getProperty("sun.boot.class.path");
+		String[] bootClassPathElems = bootClassPathName.split(File.pathSeparator);
+		for (String pathElem : bootClassPathElems) {
 			bootClassPathResourceNames.add(pathElem);
 			try {
 				pool.appendClassPath(pathElem);
 			} catch (NotFoundException ex) {
 				Messages.log(IGNORE_PATH_ELEMENT, pathElem, "boot classpath");
 			}
-        }
+		}
 
-        userClassPathResourceNames = new HashSet<String>();
-        String javaHomeDir = System.getProperty("java.home");
-        assert (javaHomeDir != null);
-        File libExtDir = new File(javaHomeDir,
-            File.separator + "lib" + File.separator + "ext");
-        if (libExtDir.exists()) {
-            final FilenameFilter filter = new FilenameFilter() {
-                public boolean accept(File dir, String name) {
-                    if (name.endsWith(".jar"))
-                        return true;
-                    return false;
-                }
-            };
-            File[] subFiles = libExtDir.listFiles(filter);
-            for (File file : subFiles) {
-                String fileName = file.getAbsolutePath();
-                userClassPathResourceNames.add(fileName);
+		userClassPathResourceNames = new HashSet<String>();
+		String javaHomeDir = System.getProperty("java.home");
+		assert (javaHomeDir != null);
+		File libExtDir = new File(javaHomeDir,
+			File.separator + "lib" + File.separator + "ext");
+		if (libExtDir.exists()) {
+			final FilenameFilter filter = new FilenameFilter() {
+				public boolean accept(File dir, String name) {
+					if (name.endsWith(".jar"))
+						return true;
+					return false;
+				}
+			};
+			File[] subFiles = libExtDir.listFiles(filter);
+			for (File file : subFiles) {
+				String fileName = file.getAbsolutePath();
+				userClassPathResourceNames.add(fileName);
 				try {
 					pool.appendClassPath(fileName);
 				} catch (NotFoundException ex) {
 					Messages.log(IGNORE_PATH_ELEMENT, fileName,
 						libExtDir.getAbsolutePath());
 				}
-            }
-        }
-        String[] userClassPathElems = userClassPathName.split(File.pathSeparator);
-        for (String pathElem : userClassPathElems) {
+			}
+		}
+		String[] userClassPathElems = userClassPathName.split(File.pathSeparator);
+		for (String pathElem : userClassPathElems) {
 			userClassPathResourceNames.add(pathElem);
 			try {
 				pool.appendClassPath(pathElem);
 			} catch (NotFoundException ex) {
 				Messages.log(IGNORE_PATH_ELEMENT, pathElem, "user classpath");
 			}
-        }
+		}
 
-        String[] mainClassPathElems = mainClassPathName.split(File.pathSeparator);
-        for (String pathElem : mainClassPathElems) {
+		String[] mainClassPathElems = mainClassPathName.split(File.pathSeparator);
+		for (String pathElem : mainClassPathElems) {
 			try {
-               	pool.appendClassPath(pathElem);
+				   pool.appendClassPath(pathElem);
 			} catch (NotFoundException ex) {
 				Messages.log(IGNORE_PATH_ELEMENT, pathElem, "main classpath");
 			}
-        }
+		}
 	}
 
 	// never returns null
@@ -95,17 +95,17 @@ public class JavassistPool {
 		return pool.get(cName);
 	}
 
-    public String getResource(String cName) {
-        return pool.getResource(cName);
-    }
+	public String getResource(String cName) {
+		return pool.getResource(cName);
+	}
 
-    public boolean isBootResource(String rName) {
-        return bootClassPathResourceNames.contains(rName);
-    }
+	public boolean isBootResource(String rName) {
+		return bootClassPathResourceNames.contains(rName);
+	}
 
-    public boolean isUserResource(String rName) {
-        return userClassPathResourceNames.contains(rName);
-    }
+	public boolean isUserResource(String rName) {
+		return userClassPathResourceNames.contains(rName);
+	}
 
 	public ClassPool getPool() {
 		return pool;

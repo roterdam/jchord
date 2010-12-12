@@ -69,17 +69,17 @@ import chord.util.tuple.object.Trio;
  */
 @Chord(
 	name="deadlock-java",
-    namesOfTypes = { "N" },
-    types = { DomN.class }
+	namesOfTypes = { "N" },
+	types = { DomN.class }
 )
 public class DeadlockAnalysis extends JavaAnalysis {
 	private DomA domA;
 	private DomC domC;	
 	private DomH domH;
 	private DomI domI;
-    private DomL domL;
-    private DomM domM;
-    private DomN domN;
+	private DomL domL;
+	private DomM domM;
+	private DomN domN;
 	
 	private ProgramRel relNC;
 	private ProgramRel relNL;
@@ -199,10 +199,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	}
 	
 	private void printResults() {
-        final DomO domO = new DomO();
-        domO.setName("O");
-        
-        PrintWriter out;
+		final DomO domO = new DomO();
+		domO.setName("O");
+		
+		PrintWriter out;
 
 		relDeadlock.load();
 		relSyncCLC.load();
@@ -297,7 +297,7 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		out.println("</deadlocklist>");
 		out.close();		
 		
-        IPathVisitor<Pair<Ctxt, jq_Method>> visitor =
+		IPathVisitor<Pair<Ctxt, jq_Method>> visitor =
 			new IPathVisitor<Pair<Ctxt, jq_Method>>() {
 				public String visit(Pair<Ctxt, jq_Method> origNode,
 						Pair<Ctxt, jq_Method> destNode) {
@@ -311,14 +311,14 @@ public class DeadlockAnalysis extends JavaAnalysis {
 				}
 			};
 
-        out = OutDirUtils.newPrintWriter("CMCMlist.xml");
-        out.println("<CMCMlist>");
-        
-        for (CM cm1 : CMCMMap.keySet()) {
-        	Ctxt ctxt1 = cm1.val0;
-        	jq_Method meth1 = cm1.val1;
-            int c1 = domC.indexOf(ctxt1);
-            int m1 = domM.indexOf(meth1);
+		out = OutDirUtils.newPrintWriter("CMCMlist.xml");
+		out.println("<CMCMlist>");
+		
+		for (CM cm1 : CMCMMap.keySet()) {
+			Ctxt ctxt1 = cm1.val0;
+			jq_Method meth1 = cm1.val1;
+			int c1 = domC.indexOf(ctxt1);
+			int m1 = domM.indexOf(meth1);
 			Set<CM> cmSet = CMCMMap.get(cm1);
 			ShortestPathBuilder<Pair<Ctxt, jq_Method>> builder =
 				new ShortestPathBuilder(thrSenAbbrCSCG, cm1, visitor);
@@ -329,42 +329,42 @@ public class DeadlockAnalysis extends JavaAnalysis {
 				int m2 = domM.indexOf(meth2);
 				out.println("<CMCM C1id=\"C" + c1 + "\" M1id=\"M" + m1 +
 					"\" C2id=\"C" + c2 + "\" M2id=\"M" + m2 + "\">");
-           		String path = builder.getShortestPathTo(cm2);
+				   String path = builder.getShortestPathTo(cm2);
 				out.println("<path>");
 				out.println(path);
 				out.println("</path>");
 				out.println("</CMCM>");
 			}
-        }
-        out.println("</CMCMlist>");
-        out.close();
+		}
+		out.println("</CMCMlist>");
+		out.close();
 		
 		domO.saveToXMLFile();
-        domC.saveToXMLFile();
-        domA.saveToXMLFile();
-        domH.saveToXMLFile();
-        domI.saveToXMLFile();
-        domM.saveToXMLFile();
-        domL.saveToXMLFile();
+		domC.saveToXMLFile();
+		domA.saveToXMLFile();
+		domH.saveToXMLFile();
+		domI.saveToXMLFile();
+		domM.saveToXMLFile();
+		domL.saveToXMLFile();
 
-        OutDirUtils.copyFileFromMainDir("web/style.css");
-        OutDirUtils.copyFileFromMainDir("web/misc.xsl");
-        OutDirUtils.copyFileFromMainDir("src/chord/doms/Hlist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/doms/Ilist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/doms/Mlist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/doms/Llist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/thread/Alist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Olist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Clist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/results.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/results.xml");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/group.xsl");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/paths.xsl");
+		OutDirUtils.copyFileFromMainDir("web/style.css");
+		OutDirUtils.copyFileFromMainDir("web/misc.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Hlist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Ilist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Mlist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Llist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/thread/Alist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Olist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Clist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/results.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/results.xml");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/group.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/paths.xsl");
 
-        OutDirUtils.runSaxon("results.xml", "group.xsl");
-        OutDirUtils.runSaxon("results.xml", "paths.xsl");
+		OutDirUtils.runSaxon("results.xml", "group.xsl");
+		OutDirUtils.runSaxon("results.xml", "paths.xsl");
 
-        program.HTMLizeJavaSrcFiles();
+		program.HTMLizeJavaSrcFiles();
 	}
 
 	private class CM extends Pair<Ctxt, jq_Method> {

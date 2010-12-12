@@ -6,7 +6,7 @@ import CnCHJ.api.ItemCollection;
 
 public class DefaultDataCollection implements IDataCollection {
 	protected String name;
-    protected ItemCollection ic;
+	protected ItemCollection ic;
 	protected List<IStepCollection> producingCollections;
 	@Override
 	public void setName(String name) {
@@ -19,17 +19,17 @@ public class DefaultDataCollection implements IDataCollection {
 	@Override
 	public void setItemCollection(ItemCollection ic) {
 		this.ic = ic;
-    }
+	}
 	@Override
 	public ItemCollection getItemCollection() {
-        return ic;
-    }
-    @Override
-    public void setProducingCollections(List<IStepCollection> c) {
-        producingCollections = c;
-    }
-    @Override
-    public List<IStepCollection> getProducingCollections() {
-        return producingCollections;
-    }
+		return ic;
+	}
+	@Override
+	public void setProducingCollections(List<IStepCollection> c) {
+		producingCollections = c;
+	}
+	@Override
+	public List<IStepCollection> getProducingCollections() {
+		return producingCollections;
+	}
 }

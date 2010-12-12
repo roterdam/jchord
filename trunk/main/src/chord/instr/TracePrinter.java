@@ -386,10 +386,10 @@ public class TracePrinter {
 				}
 			}
 		} catch (IOException ex) {
-            throw new ChordRuntimeException(ex);
-        } catch (ReadException ex) {
-            throw new ChordRuntimeException(ex);
-        }
+			throw new ChordRuntimeException(ex);
+		} catch (ReadException ex) {
+			throw new ChordRuntimeException(ex);
+		}
 	}
 }
 

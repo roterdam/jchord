@@ -56,9 +56,9 @@ public class DomV extends ProgramDom<Register> implements IMethodVisitor {
 		return varToMethodMap.get(v);
 	}
 	public void visit(jq_Class c) { }
-    public void visit(jq_Method m) {
-        if (m.isAbstract())
-            return;
+	public void visit(jq_Method m) {
+		if (m.isAbstract())
+			return;
 		List<Register> vars = m.getLiveRefVars();
 		for (Register v : vars) {
 			varToMethodMap.put(v, m);

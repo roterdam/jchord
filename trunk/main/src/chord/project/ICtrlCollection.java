@@ -18,7 +18,7 @@ public interface ICtrlCollection extends TagCollection {
 	public void setName(String name);
 
 	public String getName();
-    
+	
 	public void setPrescribedCollections(List<IStepCollection> c);
 	
 	public List<IStepCollection> getPrescribedCollections();

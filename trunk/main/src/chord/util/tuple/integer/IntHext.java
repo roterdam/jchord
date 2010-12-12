@@ -62,7 +62,7 @@ public class IntHext implements java.io.Serializable {
 		return idx0 + idx1 + idx2 + idx3 + idx4 + idx5;
 	}
 	public String toString() {
-        return "<" + idx0 + ", " + idx1 + ", " + idx2 + ", " +
+		return "<" + idx0 + ", " + idx1 + ", " + idx2 + ", " +
 					 idx3 + ", " + idx4 + ", " + idx5 + ">";
 	}
 }

@@ -28,17 +28,17 @@ public class DomT extends ProgramDom<jq_Type> {
 		for (jq_Type t : types)
 			add(t);
 	}
-    public String toXMLAttrsString(jq_Type t) {
-        String name = t.getName();
+	public String toXMLAttrsString(jq_Type t) {
+		String name = t.getName();
 		String file;
 		if (t instanceof jq_Class) {
 			jq_Class c = (jq_Class) t;
-        	file = c.getSourceFileName();
+			file = c.getSourceFileName();
 		} else
 			file = "";
-        int line = 0;  // TODO
-        return "name=\"" + name +
-            "\" file=\"" + file +
-            "\" line=\"" + line + "\"";
-    }
+		int line = 0;  // TODO
+		return "name=\"" + name +
+			"\" file=\"" + file +
+			"\" line=\"" + line + "\"";
+	}
 }

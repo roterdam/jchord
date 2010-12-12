@@ -69,7 +69,7 @@ public class Instrumentor extends CoreInstrumentor {
 	private static final String METHOD_BYTECODE_NOT_FOUND =
 		"WARN: Instrumentor: Skipping instrumenting method '%s'; its bytecode does not exist";
 	private static final String DUPLICATE_IN_DOMAIN =
- 		"ERROR: Instrumentor: Map for domain '%s' already contains '%s'";
+		 "ERROR: Instrumentor: Map for domain '%s' already contains '%s'";
 	private static final String NO_BCI_IN_BASIC_BLOCK =
 		"ERROR: Instrumentor: Could not find bytecode index of first instruction in basic block '%s' of method '%s'";
 	private static final String THROWABLE_CLASS_NOT_FOUND =
@@ -108,37 +108,37 @@ public class Instrumentor extends CoreInstrumentor {
 	protected final EventFormat notifyEvent;
 	protected final EventFormat methodCallEvent;
 
-    protected final String enterMainMethodEventCall;
-    protected final String enterMethodEventCall;
-    protected final String leaveMethodEventCall;
-    protected final String befNewEventCall;
-    protected final String aftNewEventCall;
-    protected final String newEventCall;
-    protected final String newArrayEventCall;
-    protected final String getstaticPriEventCall;
-    protected final String putstaticPriEventCall;
-    protected final String getstaticRefEcentCall;
-    protected final String putstaticRefEventCall;
-    protected final String getfieldPriEventCall;
-    protected final String putfieldPriEventCall;
-    protected final String getfieldReference;
-    protected final String putfieldRefEventCall;
-    protected final String aloadPriEventCall;
-    protected final String aloadRefEventCall;
-    protected final String astorePriEventCall;
-    protected final String astoreRefEventCall;
-    protected final String methodCallBefEventCall;
-    protected final String methodCallAftEventCall;
-    protected final String quadEventCall;
-    protected final String basicBlockEventCall;
-    protected final String threadStartEventCall;
-    protected final String threadJoinEventCall;
-    protected final String waitEventCall;
-    protected final String notifyEventCall;
-    protected final String notifyAllEventCall;
-    protected final String acquireLockEventCall;
-    protected final String releaseLockEventCall;
-    protected final String finalizeEventCall;
+	protected final String enterMainMethodEventCall;
+	protected final String enterMethodEventCall;
+	protected final String leaveMethodEventCall;
+	protected final String befNewEventCall;
+	protected final String aftNewEventCall;
+	protected final String newEventCall;
+	protected final String newArrayEventCall;
+	protected final String getstaticPriEventCall;
+	protected final String putstaticPriEventCall;
+	protected final String getstaticRefEcentCall;
+	protected final String putstaticRefEventCall;
+	protected final String getfieldPriEventCall;
+	protected final String putfieldPriEventCall;
+	protected final String getfieldReference;
+	protected final String putfieldRefEventCall;
+	protected final String aloadPriEventCall;
+	protected final String aloadRefEventCall;
+	protected final String astorePriEventCall;
+	protected final String astoreRefEventCall;
+	protected final String methodCallBefEventCall;
+	protected final String methodCallAftEventCall;
+	protected final String quadEventCall;
+	protected final String basicBlockEventCall;
+	protected final String threadStartEventCall;
+	protected final String threadJoinEventCall;
+	protected final String waitEventCall;
+	protected final String notifyEventCall;
+	protected final String notifyAllEventCall;
+	protected final String acquireLockEventCall;
+	protected final String releaseLockEventCall;
+	protected final String finalizeEventCall;
 
 	protected DomF domF;
 	protected DomM domM;
@@ -260,37 +260,37 @@ public class Instrumentor extends CoreInstrumentor {
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 		methodCallEvent = scheme.getEvent(InstrScheme.METHOD_CALL);
 
-        enterMainMethodEventCall = eventHandlerClassName + "enterMainMethodEvent(";
-        enterMethodEventCall = eventHandlerClassName + "enterMethodEvent(";
-        leaveMethodEventCall = eventHandlerClassName + "leaveMethodEvent(";
-        befNewEventCall = eventHandlerClassName + "befNewEvent(";
-        aftNewEventCall = eventHandlerClassName + "aftNewEvent(";
-        newEventCall = eventHandlerClassName + "newEvent(";
-        newArrayEventCall = eventHandlerClassName + "newArrayEvent(";
-        getstaticPriEventCall = eventHandlerClassName + "getstaticPrimitiveEvent(";
-        putstaticPriEventCall = eventHandlerClassName + "putstaticPrimitiveEvent(";
-        getstaticRefEcentCall = eventHandlerClassName + "getstaticReferenceEvent(";
-        putstaticRefEventCall = eventHandlerClassName + "putstaticReferenceEvent(";
-        getfieldPriEventCall = eventHandlerClassName + "getfieldPrimitiveEvent(";
-        putfieldPriEventCall = eventHandlerClassName + "putfieldPrimitiveEvent(";
-        getfieldReference = eventHandlerClassName + "getfieldReferenceEvent(";
-        putfieldRefEventCall = eventHandlerClassName + "putfieldReferenceEvent(";
-        aloadPriEventCall = eventHandlerClassName + "aloadPrimitiveEvent(";
-        aloadRefEventCall = eventHandlerClassName + "aloadReferenceEvent(";
-        astorePriEventCall = eventHandlerClassName + "astorePrimitiveEvent(";
-        astoreRefEventCall = eventHandlerClassName + "astoreReferenceEvent(";
-        methodCallBefEventCall = eventHandlerClassName + "methodCallBefEvent(";
-        methodCallAftEventCall = eventHandlerClassName + "methodCallAftEvent(";
-        quadEventCall = eventHandlerClassName + "quadEvent(";
-        basicBlockEventCall = eventHandlerClassName + "basicBlockEvent(";
-        threadStartEventCall = eventHandlerClassName + "threadStartEvent(";
-        threadJoinEventCall = eventHandlerClassName + "threadJoinEvent(";
-        waitEventCall = eventHandlerClassName + "waitEvent(";
-        notifyEventCall = eventHandlerClassName + "notifyEvent(";
-        notifyAllEventCall = eventHandlerClassName + "notifyAllEvent(";
-        acquireLockEventCall = eventHandlerClassName + "acquireLockEvent(";
-        releaseLockEventCall = eventHandlerClassName + "releaseLockEvent(";
-        finalizeEventCall = eventHandlerClassName + "finalizeEvent(";
+		enterMainMethodEventCall = eventHandlerClassName + "enterMainMethodEvent(";
+		enterMethodEventCall = eventHandlerClassName + "enterMethodEvent(";
+		leaveMethodEventCall = eventHandlerClassName + "leaveMethodEvent(";
+		befNewEventCall = eventHandlerClassName + "befNewEvent(";
+		aftNewEventCall = eventHandlerClassName + "aftNewEvent(";
+		newEventCall = eventHandlerClassName + "newEvent(";
+		newArrayEventCall = eventHandlerClassName + "newArrayEvent(";
+		getstaticPriEventCall = eventHandlerClassName + "getstaticPrimitiveEvent(";
+		putstaticPriEventCall = eventHandlerClassName + "putstaticPrimitiveEvent(";
+		getstaticRefEcentCall = eventHandlerClassName + "getstaticReferenceEvent(";
+		putstaticRefEventCall = eventHandlerClassName + "putstaticReferenceEvent(";
+		getfieldPriEventCall = eventHandlerClassName + "getfieldPrimitiveEvent(";
+		putfieldPriEventCall = eventHandlerClassName + "putfieldPrimitiveEvent(";
+		getfieldReference = eventHandlerClassName + "getfieldReferenceEvent(";
+		putfieldRefEventCall = eventHandlerClassName + "putfieldReferenceEvent(";
+		aloadPriEventCall = eventHandlerClassName + "aloadPrimitiveEvent(";
+		aloadRefEventCall = eventHandlerClassName + "aloadReferenceEvent(";
+		astorePriEventCall = eventHandlerClassName + "astorePrimitiveEvent(";
+		astoreRefEventCall = eventHandlerClassName + "astoreReferenceEvent(";
+		methodCallBefEventCall = eventHandlerClassName + "methodCallBefEvent(";
+		methodCallAftEventCall = eventHandlerClassName + "methodCallAftEvent(";
+		quadEventCall = eventHandlerClassName + "quadEvent(";
+		basicBlockEventCall = eventHandlerClassName + "basicBlockEvent(";
+		threadStartEventCall = eventHandlerClassName + "threadStartEvent(";
+		threadJoinEventCall = eventHandlerClassName + "threadJoinEvent(";
+		waitEventCall = eventHandlerClassName + "waitEvent(";
+		notifyEventCall = eventHandlerClassName + "notifyEvent(";
+		notifyAllEventCall = eventHandlerClassName + "notifyAllEvent(";
+		acquireLockEventCall = eventHandlerClassName + "acquireLockEvent(";
+		releaseLockEventCall = eventHandlerClassName + "releaseLockEvent(";
+		finalizeEventCall = eventHandlerClassName + "finalizeEvent(";
 
 		if (scheme.needsFmap()) {
 			domF = (DomF) ClassicProject.g().getTrgt("F");
@@ -588,7 +588,7 @@ public class Instrumentor extends CoreInstrumentor {
 				instr1 = befNewEventCall + hId + ");";
 				instr2 = aftNewEventCall + hId + ",$_);";
 			} else {
- 				int hId = newAndNewArrayEvent.hasLoc() ?
+				 int hId = newAndNewArrayEvent.hasLoc() ?
 					set(Hmap, e) : EventHandler.MISSING_FIELD_VAL;
 				instr1 = newEventCall + hId + ");";
 				instr2 = "";

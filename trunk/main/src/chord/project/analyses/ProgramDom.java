@@ -85,7 +85,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 	 * @param	val	A value.
 	 * 
 	 * @return	The XML attributes string of the specified value.
-	 * 			It is the empty string by default.
+	 *			 It is the empty string by default.
 	 * 
 	 * @see	#saveToXMLFile()
 	 */
@@ -99,7 +99,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 	 * @param	val	A value.
 	 * 
 	 * @return	The XML elements string of the specified value.
-	 * 			It is the empty string by default.
+	 *			 It is the empty string by default.
 	 * 
 	 * @see	#saveToXMLFile()
 	 */

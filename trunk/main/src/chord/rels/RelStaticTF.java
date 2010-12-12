@@ -31,6 +31,6 @@ public class RelStaticTF extends ProgramRel
 	public void visit(jq_Field f) {
 		if (f.isStatic()) {
 			add(ctnrClass, f);
-        }
+		}
 	}
 }

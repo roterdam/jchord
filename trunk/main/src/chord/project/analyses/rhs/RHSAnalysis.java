@@ -40,7 +40,7 @@ import chord.util.Alarm;
  */
 public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		extends JavaAnalysis {
-    protected static boolean DEBUG = false;
+	protected static boolean DEBUG = false;
 
 	protected List<Pair<Location, PE>> workList = new ArrayList<Pair<Location, PE>>();
 	protected Map<Inst, Set<PE>> pathEdges = new HashMap<Inst, Set<PE>>();
@@ -77,10 +77,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 
 	public abstract PE getCopy(PE pe);
 
-    // m is a method and pe is a path edge from entry to exit of m
+	// m is a method and pe is a path edge from entry to exit of m
 	// (in case of forward analysis) or vice versa (in case of backward analysis)
-    // that must be lifted to a summary edge
-    public abstract SE getSummaryEdge(jq_Method m, PE pe);
+	// that must be lifted to a summary edge
+	public abstract SE getSummaryEdge(jq_Method m, PE pe);
 
 	/**
 	 * Determines whether this analysis should merge path edges at each
@@ -190,8 +190,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	/**
 	 * Propagate forward or backward until fixpoint is reached.
 	 */
-    private void propagate() throws TimeoutException {
-        while (!workList.isEmpty()) {
+	private void propagate() throws TimeoutException {
+		while (!workList.isEmpty()) {
 			if (timeout > 0 && alarm.passTimedOut()) {
 				System.out.println("TIMED OUT");
 				throw new TimeoutException();
@@ -201,19 +201,19 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				for (Pair<Location, PE> pair : workList)
 					System.out.println("\t" + pair);
 			}
-            int last = workList.size() - 1;
-            Pair<Location, PE> pair = workList.remove(last);
-            Location loc = pair.val0;
-            PE pe = pair.val1;
-            Quad q = loc.q;
+			int last = workList.size() - 1;
+			Pair<Location, PE> pair = workList.remove(last);
+			Location loc = pair.val0;
+			PE pe = pair.val1;
+			Quad q = loc.q;
 			jq_Method m = loc.m;
 			BasicBlock bb = loc.bb;
 			currentMethod = m;
 			currentBB = bb;
-            if (DEBUG) System.out.println("Processing loc: " + loc + " PE: " + pe);
-            if (q == null) {
+			if (DEBUG) System.out.println("Processing loc: " + loc + " PE: " + pe);
+			if (q == null) {
 				// method entry or method exit
-                if (bb.isEntry()) {
+				if (bb.isEntry()) {
 					if (isForward) {
 						for (Object o : bb.getSuccessorsList()) {
 							BasicBlock bb2 = (BasicBlock) o;
@@ -233,10 +233,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 					} else {
 						processEntry(m, pe);
 					}
-                } else {
-                    assert (bb.isExit());
+				} else {
+					assert (bb.isExit());
 					if (isForward) {
-                    	processExit(m, pe);
+						processExit(m, pe);
 					} else {
 						for (Object o : bb.getPredecessorsList()) {
 							BasicBlock bb2 = (BasicBlock) o;
@@ -255,11 +255,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 							addPathEdge(loc2, pe2);
 						}
 					}
-                }
-            } else {
+				}
+			} else {
 				// invoke or misc quad
-                Operator op = q.getOperator();
-                if (op instanceof Invoke) {
+				Operator op = q.getOperator();
+				if (op instanceof Invoke) {
 					Set<jq_Method> targets = getTargets(q);
 					if (targets.isEmpty()) {
 						PE pe2 = doMerge ? getCopy(pe) : pe;
@@ -292,129 +292,129 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				} else {
 					PE pe2 = getMiscPathEdge(q, pe);
 					propagatePEtoPE(m, bb, loc.qIdx, pe2);
-                }
-            }
-        }
-    }
+				}
+			}
+		}
+	}
 
 	// called by backward analysis
-    private void processEntry(jq_Method m, PE pe) {
-        SE se = getSummaryEdge(m, pe);
-        Set<SE> seSet = summEdges.get(m);
-        if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
-        SE seToAdd = se;
-        if (seSet == null) {
-            seSet = new HashSet<SE>();
-            summEdges.put(m, seSet);
-            seSet.add(se);
-            if (DEBUG) System.out.println("\tNo, adding it as first SE");
-        } else if (doMerge) {
-            boolean matched = false;
-            for (SE se2 : seSet) {
-                if (se2.matchesSrcNodeOf(se)) {
-                    if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
-                    boolean changed = se2.mergeWith(se);
-                    if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
-                    if (!changed) {
-                        if (DEBUG) System.out.println("\tExisting SE did not change");
-                        return;
-                    }
-                    if (DEBUG) System.out.println("\tExisting SE changed");
-                    // se2 is already in summEdges(m), so no need to add it
-                    seToAdd = se2;
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
-                if (DEBUG) System.out.println("\tNo, adding");
-                seSet.add(se);
-            }
-        } else if (!seSet.add(se)) {
-            if (DEBUG) System.out.println("\tYes, not adding");
-            return;
-        }
-        for (Quad q2 : getCallers(m)) {
-            jq_Method m2 = q2.getMethod();
-            if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
-            Set<PE> peSet = pathEdges.get(q2);
-            if (peSet == null)
-                continue;
-            // make a copy because propagateSEtoPE might add a
-            // path edge to this set itself
-            // TODO: fix this eventually
-            peSet = new ArraySet<PE>(peSet);
-            Location loc2 = invkQuadToLoc.get(q2);
-            for (PE pe2 : peSet) {
-                if (DEBUG) System.out.println("\tTesting PE: " + pe2);
-                boolean match = propagateSEtoPE(pe2, loc2, m, seToAdd);
-                if (match) {
-                    if (DEBUG) System.out.println("\tMatched");
-                } else {
-                    if (DEBUG) System.out.println("\tDid not match");
-                }
-            }
+	private void processEntry(jq_Method m, PE pe) {
+		SE se = getSummaryEdge(m, pe);
+		Set<SE> seSet = summEdges.get(m);
+		if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
+		SE seToAdd = se;
+		if (seSet == null) {
+			seSet = new HashSet<SE>();
+			summEdges.put(m, seSet);
+			seSet.add(se);
+			if (DEBUG) System.out.println("\tNo, adding it as first SE");
+		} else if (doMerge) {
+			boolean matched = false;
+			for (SE se2 : seSet) {
+				if (se2.matchesSrcNodeOf(se)) {
+					if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
+					boolean changed = se2.mergeWith(se);
+					if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
+					if (!changed) {
+						if (DEBUG) System.out.println("\tExisting SE did not change");
+						return;
+					}
+					if (DEBUG) System.out.println("\tExisting SE changed");
+					// se2 is already in summEdges(m), so no need to add it
+					seToAdd = se2;
+					matched = true;
+					break;
+				}
+			}
+			if (!matched) {
+				if (DEBUG) System.out.println("\tNo, adding");
+				seSet.add(se);
+			}
+		} else if (!seSet.add(se)) {
+			if (DEBUG) System.out.println("\tYes, not adding");
+			return;
+		}
+		for (Quad q2 : getCallers(m)) {
+			jq_Method m2 = q2.getMethod();
+			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
+			Set<PE> peSet = pathEdges.get(q2);
+			if (peSet == null)
+				continue;
+			// make a copy because propagateSEtoPE might add a
+			// path edge to this set itself
+			// TODO: fix this eventually
+			peSet = new ArraySet<PE>(peSet);
+			Location loc2 = invkQuadToLoc.get(q2);
+			for (PE pe2 : peSet) {
+				if (DEBUG) System.out.println("\tTesting PE: " + pe2);
+				boolean match = propagateSEtoPE(pe2, loc2, m, seToAdd);
+				if (match) {
+					if (DEBUG) System.out.println("\tMatched");
+				} else {
+					if (DEBUG) System.out.println("\tDid not match");
+				}
+			}
 		}
 	}
 	
 	// called by forward analysis
-    private void processExit(jq_Method m, PE pe) {
-        SE se = getSummaryEdge(m, pe);
-        Set<SE> seSet = summEdges.get(m);
-        if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
-        SE seToAdd = se;
-        if (seSet == null) {
-            seSet = new HashSet<SE>();
-            summEdges.put(m, seSet);
-            seSet.add(se);
-            if (DEBUG) System.out.println("\tNo, adding it as first SE");
-        } else if (doMerge) {
-            boolean matched = false;
-            for (SE se2 : seSet) {
-                if (se2.matchesSrcNodeOf(se)) {
-                    if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
-                    boolean changed = se2.mergeWith(se);
-                    if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
-                    if (!changed) {
-                        if (DEBUG) System.out.println("\tExisting SE did not change");
-                        return;
-                    }
-                    if (DEBUG) System.out.println("\tExisting SE changed");
-                    // se2 is already in summEdges(m), so no need to add it
-                    seToAdd = se2;
-                    matched = true;
-                    break;
-                }
-            }
-            if (!matched) {
-                if (DEBUG) System.out.println("\tNo, adding");
-                seSet.add(se);
-            }
-        } else if (!seSet.add(se)) {
-            if (DEBUG) System.out.println("\tYes, not adding");
-            return;
-        }
+	private void processExit(jq_Method m, PE pe) {
+		SE se = getSummaryEdge(m, pe);
+		Set<SE> seSet = summEdges.get(m);
+		if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
+		SE seToAdd = se;
+		if (seSet == null) {
+			seSet = new HashSet<SE>();
+			summEdges.put(m, seSet);
+			seSet.add(se);
+			if (DEBUG) System.out.println("\tNo, adding it as first SE");
+		} else if (doMerge) {
+			boolean matched = false;
+			for (SE se2 : seSet) {
+				if (se2.matchesSrcNodeOf(se)) {
+					if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
+					boolean changed = se2.mergeWith(se);
+					if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
+					if (!changed) {
+						if (DEBUG) System.out.println("\tExisting SE did not change");
+						return;
+					}
+					if (DEBUG) System.out.println("\tExisting SE changed");
+					// se2 is already in summEdges(m), so no need to add it
+					seToAdd = se2;
+					matched = true;
+					break;
+				}
+			}
+			if (!matched) {
+				if (DEBUG) System.out.println("\tNo, adding");
+				seSet.add(se);
+			}
+		} else if (!seSet.add(se)) {
+			if (DEBUG) System.out.println("\tYes, not adding");
+			return;
+		}
 		Program program = Program.g();
-        for (Quad q2 : getCallers(m)) {
-            jq_Method m2 = q2.getMethod();
-            if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
-            Set<PE> peSet = pathEdges.get(q2);
-            if (peSet == null)
-                continue;
-            // make a copy because propagateSEtoPE might add a
-            // path edge to this set itself
-            // TODO: fix this eventually
-            List<PE> peList = new ArrayList<PE>(peSet);
-            Location loc2 = invkQuadToLoc.get(q2);
-            for (PE pe2 : peList) {
-                if (DEBUG) System.out.println("\tTesting PE: " + pe2);
-                boolean match = propagateSEtoPE(pe2, loc2, m, seToAdd);
-                if (match) {
-                    if (DEBUG) System.out.println("\tMatched");
-                } else {
-                    if (DEBUG) System.out.println("\tDid not match");
-                }
-            }
+		for (Quad q2 : getCallers(m)) {
+			jq_Method m2 = q2.getMethod();
+			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
+			Set<PE> peSet = pathEdges.get(q2);
+			if (peSet == null)
+				continue;
+			// make a copy because propagateSEtoPE might add a
+			// path edge to this set itself
+			// TODO: fix this eventually
+			List<PE> peList = new ArrayList<PE>(peSet);
+			Location loc2 = invkQuadToLoc.get(q2);
+			for (PE pe2 : peList) {
+				if (DEBUG) System.out.println("\tTesting PE: " + pe2);
+				boolean match = propagateSEtoPE(pe2, loc2, m, seToAdd);
+				if (match) {
+					if (DEBUG) System.out.println("\tMatched");
+				} else {
+					if (DEBUG) System.out.println("\tDid not match");
+				}
+			}
 		}
 	}
 
@@ -422,16 +422,16 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		if (DEBUG) System.out.println("\tChecking if " + loc + " has PE: " + pe);
 		Quad q = loc.q;
 		Inst i = (q != null) ? q : loc.bb;
-        Set<PE> peSet = pathEdges.get(i);
+		Set<PE> peSet = pathEdges.get(i);
 		PE peToAdd = pe;
-        if (peSet == null) {
-            peSet = new HashSet<PE>();
-            pathEdges.put(i, peSet);
-            if (q != null && (q.getOperator() instanceof Invoke))
-                invkQuadToLoc.put(q, loc);
+		if (peSet == null) {
+			peSet = new HashSet<PE>();
+			pathEdges.put(i, peSet);
+			if (q != null && (q.getOperator() instanceof Invoke))
+				invkQuadToLoc.put(q, loc);
 			peSet.add(pe);
 			if (DEBUG) System.out.println("\tNo, adding it as first PE");
-        } else if (doMerge) {
+		} else if (doMerge) {
 			boolean matched = false;
 			for (PE pe2 : peSet) {
 				if (pe2.matchesSrcNodeOf(pe)) {
@@ -545,11 +545,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 
 	private boolean propagateSEtoPE(PE clrPE, Location loc, jq_Method tgtM, SE tgtSE) {
 		Quad q = loc.q;
-        PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
+		PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
 		if (pe2 == null)
 			return false;
-       	propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2);
-        return true;
+		   propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2);
+		return true;
 	}
 }
 

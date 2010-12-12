@@ -83,11 +83,11 @@ public class ReflectInstrumentor extends CoreInstrumentor {
 	private String getMethodElem(MethodCall e) {
 		int bci = e.indexOfOriginalBytecode();
 		String mName;
-        if (currentMethod instanceof CtConstructor) {
-            mName = ((CtConstructor) currentMethod).isClassInitializer() ?
+		if (currentMethod instanceof CtConstructor) {
+			mName = ((CtConstructor) currentMethod).isClassInitializer() ?
 				"<clinit>" : "<init>";
-        } else {
-            mName = currentMethod.getName();
+		} else {
+			mName = currentMethod.getName();
 		}
 		String mSign = currentMethod.getSignature();
 		String cName = currentClass.getName();

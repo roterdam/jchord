@@ -78,7 +78,7 @@ public class RTA {
 	private static final String METHOD_NOT_FOUND_IN_SUBTYPE =
 		"WARN: Expected instance method %s in class %s implementing/extending interface/class %s.";
 
-    public static final boolean DEBUG = false;
+	public static final boolean DEBUG = false;
 
 	private final String reflectKind; // [none|static|dynamic]
 
@@ -102,7 +102,7 @@ public class RTA {
 	// enable intra-procedural analysis for inferring the class
 	// loaded by calls to <code>Class.forName(s)</code> and the class of
 	// objects allocated by calls to <code>v.newInstance()</code>.
-    // The analysis achieves this by intra-procedurally tracking flow of
+	// The analysis achieves this by intra-procedurally tracking flow of
 	// string constants to "s" and flow of class constants to "v".
 
 	private StaticReflectResolver staticReflectResolver;
@@ -120,7 +120,7 @@ public class RTA {
 	// have been processed so far in current interation; this set is kept
 	// to avoid repeatedly visiting super classes/interfaces within an
 	// iteration (which incurs a huge runtime penalty) only to find that
- 	// all their clinits have already been processed in that iteration.
+	 // all their clinits have already been processed in that iteration.
 	private Set<jq_Class> classesVisitedForClinit;
 
 	// Set of all methods deemed reachable so far in current iteration.
@@ -139,7 +139,7 @@ public class RTA {
 
 	// set of all (concrete) classes deemed instantiated so far either
 	// by a reachable new/newarray statement or due to reflection
-    private IndexSet<jq_Reference> reachableAllocClasses;
+	private IndexSet<jq_Reference> reachableAllocClasses;
 
 	// worklist for methods seen so far in current iteration but whose
 	// CFGs haven't been processed yet
@@ -189,7 +189,7 @@ public class RTA {
 		reachableAllocClasses = new IndexSet<jq_Reference>();
 		methods = new IndexSet<jq_Method>();
 		methodWorklist = new ArrayList<jq_Method>();
-    
+	
 		if (Config.verbose > 1) System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
@@ -220,16 +220,16 @@ public class RTA {
 			// System.out.println("Dynamic resolved aryNewInst sites:");
 			// print(dynamicResolvedAryNewInstSites);
 		}
- 		
+		 
 		reflect = new Reflect();
-        HostedVM.initialize();
-        javaLangObject = PrimordialClassLoader.getJavaLangObject();
+		HostedVM.initialize();
+		javaLangObject = PrimordialClassLoader.getJavaLangObject();
 		String mainClassName = Config.mainClassName;
 		if (mainClassName == null)
-            Messages.fatal(MAIN_CLASS_NOT_DEFINED);
-       	jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
+			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
+		   jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
 		prepareClass(mainClass);
-        jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(
+		jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(
 			new jq_NameAndDesc("main", "([Ljava/lang/String;)V"));
 		if (mainMethod == null)
 			Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
@@ -270,22 +270,22 @@ public class RTA {
   }
 
   private void visitAdditionalEntrypoints() {
-  	//visit classes just once each
-    LinkedHashSet<jq_Class> extraClasses = new LinkedHashSet<jq_Class>();
-    for(jq_Method m: publicMethods) {
-      extraClasses.add(m.getDeclaringClass());
-    }
-    
-    for(jq_Class cl: extraClasses) {
-      visitClass(cl);
+	  //visit classes just once each
+	LinkedHashSet<jq_Class> extraClasses = new LinkedHashSet<jq_Class>();
+	for(jq_Method m: publicMethods) {
+	  extraClasses.add(m.getDeclaringClass());
+	}
+	
+	for(jq_Class cl: extraClasses) {
+	  visitClass(cl);
 			jq_Method ctor = cl.getInitializer(new jq_NameAndDesc("<init>", "()V"));
 			if (ctor != null)
 				visitMethod(ctor);
-    }
+	}
 
-    for(jq_Method m: publicMethods) {
-      visitMethod(m);
-    }
+	for(jq_Method m: publicMethods) {
+	  visitMethod(m);
+	}
   }
 
 
@@ -434,10 +434,10 @@ public class RTA {
 					}
 				}
 			}
-        } else if (cName.equals("java.lang.reflect.Constructor")) {
-            if (dynamicResolvedConNewInstSites != null &&
+		} else if (cName.equals("java.lang.reflect.Constructor")) {
+			if (dynamicResolvedConNewInstSites != null &&
 					n.getName().toString().equals("newInstance") &&
-                	n.getDesc().toString().equals("([Ljava/lang/Object;)Ljava/lang/Object;")) {
+					n.getDesc().toString().equals("([Ljava/lang/Object;)Ljava/lang/Object;")) {
 				for (Pair<String, List<String>> p : dynamicResolvedConNewInstSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
@@ -448,7 +448,7 @@ public class RTA {
 						break;
 					}
 				}
-            }
+			}
 		}
 		jq_NameAndDesc nd = n.getNameAndDesc();
 		boolean isInterface = c.isInterface();
@@ -506,13 +506,13 @@ public class RTA {
 						break;
 					}
 				}
-            }
+			}
 		}
 	}
 
 	private void prepareClass(jq_Reference r) {
 		if (classes.add(r)) {
-	        r.prepare();
+			r.prepare();
 			if (DEBUG) System.out.println("\tAdding class: " + r);
 			if (r instanceof jq_Array)
 				return;
@@ -539,11 +539,11 @@ public class RTA {
 		visitClinits(c);
 		
 		if(shouldExpandAggressively(c)) {
-  		for(jq_Method m: c.getDeclaredInstanceMethods()) 
-  		  visitMethod(m);
-  		
-  		for(jq_Method m: c.getDeclaredStaticMethods())
-  		  visitMethod(m); 
+		  for(jq_Method m: c.getDeclaredInstanceMethods()) 
+			visitMethod(m);
+		  
+		  for(jq_Method m: c.getDeclaredStaticMethods())
+			visitMethod(m); 
 		}
 	}
 

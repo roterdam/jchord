@@ -25,11 +25,11 @@ import chord.project.Chord;
 public class DynamicReflectResolver extends CoreDynamicAnalysis {
 	private final List<Pair<String, List<String>>> resolvedClsForNameSites =
 		new ArrayList<Pair<String, List<String>>>();
-    private final List<Pair<String, List<String>>> resolvedObjNewInstSites =
+	private final List<Pair<String, List<String>>> resolvedObjNewInstSites =
 		new ArrayList<Pair<String, List<String>>>();
-    private final List<Pair<String, List<String>>> resolvedConNewInstSites =
+	private final List<Pair<String, List<String>>> resolvedConNewInstSites =
 		new ArrayList<Pair<String, List<String>>>();
-    private final List<Pair<String, List<String>>> resolvedAryNewInstSites =
+	private final List<Pair<String, List<String>>> resolvedAryNewInstSites =
 		new ArrayList<Pair<String, List<String>>>();
 
 	public List<Pair<String, List<String>>> getResolvedClsForNameSites() {
@@ -54,14 +54,14 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 	}
 
 	@Override
-    public Pair<Class, Map<String, String>> getInstrumentor() {
-        return new Pair<Class, Map<String, String>>(ReflectInstrumentor.class, Collections.EMPTY_MAP);
-    }
+	public Pair<Class, Map<String, String>> getInstrumentor() {
+		return new Pair<Class, Map<String, String>>(ReflectInstrumentor.class, Collections.EMPTY_MAP);
+	}
 
 	@Override
-    public Pair<Class, Map<String, String>> getEventHandler() {
-        return new Pair<Class, Map<String, String>>(ReflectEventHandler.class, Collections.EMPTY_MAP);
-    }
+	public Pair<Class, Map<String, String>> getEventHandler() {
+		return new Pair<Class, Map<String, String>>(ReflectEventHandler.class, Collections.EMPTY_MAP);
+	}
 
 	@Override
 	public void handleEvent(ByteBufferedFile buffer) throws IOException, ReadException {
@@ -102,7 +102,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		default:
 			throw new RuntimeException("Unknown opcode: " + opcode);
 		}
-    }
+	}
 	private static void add(List<Pair<String, List<String>>> l, String q, String c) {
 		for (Pair<String, List<String>> p : l) {
 			if (p.val0.equals(q)) {

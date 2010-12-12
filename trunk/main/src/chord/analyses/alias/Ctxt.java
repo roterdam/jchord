@@ -35,7 +35,7 @@ public class Ctxt implements Serializable {
 	 * Constructor.
 	 * 
 	 * @param	elems	The sequence of statements comprising this
-	 * 			abstract context.
+	 *			 abstract context.
 	 */
 	public Ctxt(Quad[] elems) {
 		this.elems = elems;
@@ -45,7 +45,7 @@ public class Ctxt implements Serializable {
 	 * context.
 	 * 
 	 * @return	The sequence of statements comprising this abstract
-	 * 			context.
+	 *			 context.
 	 */
 	public Quad[] getElems() {
 		return elems;
@@ -57,7 +57,7 @@ public class Ctxt implements Serializable {
 	 * @param	inst	A statement.
 	 * 
 	 * @return	true iff this abstract context contains the given
-	 * 			statement.
+	 *			 statement.
 	 */
 	public boolean contains(Quad inst) {
 		for (int i = 0; i < elems.length; i++) {
@@ -67,12 +67,12 @@ public class Ctxt implements Serializable {
 		return false;
 	}
   public int count(Quad inst) {
-    int n = 0;
+	int n = 0;
 		for (int i = 0; i < elems.length; i++) {
 			if (elems[i] == inst)
-        n++;
+		n++;
 		}
-    return n;
+	return n;
   }
 	public int hashCode() {
 		int i = 5381;
@@ -83,21 +83,21 @@ public class Ctxt implements Serializable {
 		return i;
 	}
 	public boolean equals(Object o) {
-        if (!(o instanceof Ctxt))
-            return false;
-        Ctxt that = (Ctxt) o;
-        Quad[] thisElems = this.elems;
-        Quad[] thatElems = that.elems;
-        int n = thisElems.length;
-        if (thatElems.length != n)
-            return false;
-        for (int i = 0; i < n; i++) {
-            Quad inst = thisElems[i];
-            if (inst != thatElems[i])
-                return false;
-        }
-        return true;
-    }
+		if (!(o instanceof Ctxt))
+			return false;
+		Ctxt that = (Ctxt) o;
+		Quad[] thisElems = this.elems;
+		Quad[] thatElems = that.elems;
+		int n = thisElems.length;
+		if (thatElems.length != n)
+			return false;
+		for (int i = 0; i < n; i++) {
+			Quad inst = thisElems[i];
+			if (inst != thatElems[i])
+				return false;
+		}
+		return true;
+	}
 	public String toString() {
 		String s = "[";
 		int n = elems.length;
@@ -116,33 +116,33 @@ public class Ctxt implements Serializable {
   public Quad last() { return elems[elems.length-1]; }
   public Ctxt tail() { return suffix(elems.length-1); }
   public Ctxt prefix(int k) {
-    if (k >= elems.length) return this;
-    Quad[] newElems = new Quad[k];
-    if (k > 0) System.arraycopy(elems, 0, newElems, 0, k);
-    return new Ctxt(newElems);
+	if (k >= elems.length) return this;
+	Quad[] newElems = new Quad[k];
+	if (k > 0) System.arraycopy(elems, 0, newElems, 0, k);
+	return new Ctxt(newElems);
   }
   public Ctxt suffix(int k) {
-    if (k >= elems.length) return this;
-    Quad[] newElems = new Quad[k];
-    if (k > 0) System.arraycopy(elems, elems.length-k, newElems, 0, k);
-    return new Ctxt(newElems);
+	if (k >= elems.length) return this;
+	Quad[] newElems = new Quad[k];
+	if (k > 0) System.arraycopy(elems, elems.length-k, newElems, 0, k);
+	return new Ctxt(newElems);
   }
 
   // Maximize length of returned context is max
   public Ctxt prepend(Quad q) { return prepend(q, Integer.MAX_VALUE); }
   public Ctxt prepend(Quad q, int max) {
-    int oldLen = elems.length;
-    int newLen = Math.min(max, oldLen+1);
-    Quad[] newElems = new Quad[newLen];
-    if (newLen > 0) newElems[0] = q;
-    if (newLen > 1) System.arraycopy(elems, 0, newElems, 1, newLen-1);
-    return new Ctxt(newElems);
+	int oldLen = elems.length;
+	int newLen = Math.min(max, oldLen+1);
+	Quad[] newElems = new Quad[newLen];
+	if (newLen > 0) newElems[0] = q;
+	if (newLen > 1) System.arraycopy(elems, 0, newElems, 1, newLen-1);
+	return new Ctxt(newElems);
   }
 
   public Ctxt append(Quad q) {
-    Quad[] newElems = new Quad[elems.length+1];
-    System.arraycopy(elems, 0, newElems, 0, elems.length);
-    newElems[newElems.length-1] = q;
-    return new Ctxt(newElems);
+	Quad[] newElems = new Quad[elems.length+1];
+	System.arraycopy(elems, 0, newElems, 0, elems.length);
+	newElems[newElems.length-1] = q;
+	return new Ctxt(newElems);
   }
 }

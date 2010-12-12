@@ -34,8 +34,8 @@ import joeq.Util.Templates.List;
 public class RelPostDomBB extends ProgramRel implements IMethodVisitor {
 	private final Map<BasicBlock, Set<BasicBlock>> pdomMap =
 		new HashMap<BasicBlock, Set<BasicBlock>>();
-    public void visit(jq_Class c) { }
-    public void visit(jq_Method m) {
+	public void visit(jq_Class c) { }
+	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
 		// System.out.println("VISITING: " + m);

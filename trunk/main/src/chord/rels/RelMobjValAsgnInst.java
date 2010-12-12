@@ -50,8 +50,8 @@ public class RelMobjValAsgnInst extends ProgramRel {
 				vo = NewArray.getDest(q);
 			else if(op instanceof Invoke)
 			  vo = Invoke.getDest(q);
-	     else if(op instanceof MultiNewArray)
-	        vo = NewArray.getDest(q);
+		 else if(op instanceof MultiNewArray)
+			vo = NewArray.getDest(q);
 			else {
 			  System.err.println("WARN: in RelMobjValAsgnInst saw H element with op type " + op.toString());
 			  vo = null;
@@ -59,10 +59,10 @@ public class RelMobjValAsgnInst extends ProgramRel {
 			Register v = vo.getRegister();
 
 			int vIdx = domV.indexOf(v);
-//    assert (vIdx >= 0);
+//	assert (vIdx >= 0);
 
 			if(vIdx >= 0)
-        add(mIdx, vIdx, hIdx);
-    }
+		add(mIdx, vIdx, hIdx);
+	}
 	}
 }

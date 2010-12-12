@@ -18,27 +18,27 @@ import chord.util.Utils;
  * @author Ariel Rabkin (asrabkin@gmail.com)
  */
 @Chord(
-    name = "scopeExcludedM",
-    sign = "M0:M0"
+	name = "scopeExcludedM",
+	sign = "M0:M0"
   )
 public class RelScopeExcludedM extends ProgramRel {
 
   public static boolean isOutOfScope(String cName) {
-    return Utils.prefixMatch(cName, Config.scopeExcludeAry);
+	return Utils.prefixMatch(cName, Config.scopeExcludeAry);
   }
   
   public static boolean isOutOfScope(jq_Method m) {
-    String cName = m.getDeclaringClass().getName();
-    return isOutOfScope(cName);
+	String cName = m.getDeclaringClass().getName();
+	return isOutOfScope(cName);
   }
   
   public void fill() {
-    Program program = Program.g();
-    IndexSet<jq_Method> methods = program.getMethods();
-    for(jq_Method m: methods) {
-      if(isOutOfScope(m))
-        add(m);
-    }
+	Program program = Program.g();
+	IndexSet<jq_Method> methods = program.getMethods();
+	for(jq_Method m: methods) {
+	  if(isOutOfScope(m))
+		add(m);
+	}
   }
 }
 

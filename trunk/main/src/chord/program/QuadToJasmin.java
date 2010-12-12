@@ -342,9 +342,9 @@ public class QuadToJasmin {
 			Quad q = Operator.Move.create(-1, m, dst.getRegister(), src.getRegister(), type);
 			s.add(q);
 		} else {
-            // in this case, the register is never defined along
-            // this particular control flow path into the basic
-            // block.
+			// in this case, the register is never defined along
+			// this particular control flow path into the basic
+			// block.
 		}						
 	}
 	
@@ -509,7 +509,7 @@ public class QuadToJasmin {
 		it.hasNext();) {
 			BasicBlock bb = it.nextBasicBlock();
 			
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {        		
+			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {				
 				Quad q = it2.nextQuad();
 				if (q.getOperator() instanceof Phi) {
 					RegisterOperand dst = Phi.getDest(q);
@@ -546,31 +546,31 @@ public class QuadToJasmin {
 			putInst(bb.toString().split("\\s+")[0]+":"); // start of basic block
 			
 			if (PrintBBInOut) {
-		        StringBuffer sb = new StringBuffer();
-		        
-		        sb.append("\t(in: ");
-		        ListIterator.BasicBlock bbi = bb.getPredecessors().basicBlockIterator();
-		        if (!bbi.hasNext()) sb.append("<none>");
-		        else {
-		            sb.append(bbi.nextBasicBlock().toString());
-		            while (bbi.hasNext()) {
-		                sb.append(", ");
-		                sb.append(bbi.nextBasicBlock().toString());
-		            }
-		        }
-		        sb.append(", out: ");
-		        bbi = bb.getSuccessors().basicBlockIterator();
-		        if (!bbi.hasNext()) sb.append("<none>");
-		        else {
-		            sb.append(bbi.nextBasicBlock().toString());
-		            while (bbi.hasNext()) {
-		                sb.append(", ");
-		                sb.append(bbi.nextBasicBlock().toString());
-		            }
-		        }
-		        sb.append(')');
-		        putInst("; " + sb.toString());
-		        System.out.println(sb.toString());
+				StringBuffer sb = new StringBuffer();
+				
+				sb.append("\t(in: ");
+				ListIterator.BasicBlock bbi = bb.getPredecessors().basicBlockIterator();
+				if (!bbi.hasNext()) sb.append("<none>");
+				else {
+					sb.append(bbi.nextBasicBlock().toString());
+					while (bbi.hasNext()) {
+						sb.append(", ");
+						sb.append(bbi.nextBasicBlock().toString());
+					}
+				}
+				sb.append(", out: ");
+				bbi = bb.getSuccessors().basicBlockIterator();
+				if (!bbi.hasNext()) sb.append("<none>");
+				else {
+					sb.append(bbi.nextBasicBlock().toString());
+					while (bbi.hasNext()) {
+						sb.append(", ");
+						sb.append(bbi.nextBasicBlock().toString());
+					}
+				}
+				sb.append(')');
+				putInst("; " + sb.toString());
+				System.out.println(sb.toString());
 			}
 			
 			// If this basic block is a predecessor of a basic block containing Phi operation,
@@ -590,7 +590,7 @@ public class QuadToJasmin {
 			}
 			
 			// Process each quad in this basic block
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {  	
+			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {	  
 				Quad q = it2.nextQuad();
 				System.out.println(q);
 				q.accept(visitor);
@@ -962,7 +962,7 @@ public class QuadToJasmin {
 				suffix = " "+paramlist.length();
 			} else {				
 				instName = "invokevirtual";
-			}			 			
+			}						 
 			
 			if (paramlist.length() + 1 > this.maxStackSize) {
 				this.maxStackSize = paramlist.length() + 1;
@@ -1157,7 +1157,7 @@ public class QuadToJasmin {
 				assert !(unaryOperator instanceof Unary.DOUBLE_2LONGBITS) : d;
 				jasminInstOperator = "d2" + strUnary.charAt((strUnary.indexOf('2')+1));
 				jasminInstOperator = jasminInstOperator.toLowerCase();					
-			} else if (strUnary.startsWith("LONG_2")) { 				
+			} else if (strUnary.startsWith("LONG_2")) {				 
 				jasminInstOperator = "l2" + strUnary.charAt((strUnary.indexOf('2')+1));
 				jasminInstOperator = jasminInstOperator.toLowerCase();
 			} else assert false : d;

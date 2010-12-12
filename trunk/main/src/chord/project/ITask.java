@@ -18,13 +18,13 @@ public interface ITask {
 	 * @param	name	A name unique across all analyses included
 	 * in a Chord project.
 	 */
-    public void setName(String name);
-    /**
-     * Provides the name of this analysis.
-     * 
-     * @return	The name of this analysis.
-     */
-    public String getName();
+	public void setName(String name);
+	/**
+	 * Provides the name of this analysis.
+	 * 
+	 * @return	The name of this analysis.
+	 */
+	public String getName();
 	/**
 	 * Executes this analysis in a "classic" project.
 	 * 

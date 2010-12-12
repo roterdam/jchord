@@ -13,11 +13,11 @@ package chord.util.graph;
  * Classes implementing this interface are:
  * <ul>
  * <li>{@link MutableLabeledGraph}, a complete implementation that
- *     provides both, the useful operations and a representation
- *     of the graph.</li>
+ *	 provides both, the useful operations and a representation
+ *	 of the graph.</li>
  * <li>{@link AbstractGraph}, a partial implementation that provides
- *     the useful operations but leaves the representation of the
- *     graph unspecified.</li>
+ *	 the useful operations but leaves the representation of the
+ *	 graph unspecified.</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -37,8 +37,8 @@ public interface IMutableLabeledGraph<Node, Label>
 	 * @param	label	The label to be inserted.
 	 *
 	 * @return	true if the graph is modified, i.e., if an edge from
-	 * 			<tt>srcNode</tt> to <tt>dstNode</tt> with label
-	 * 			<tt>label</tt> does not exist in the graph.
+	 *			 <tt>srcNode</tt> to <tt>dstNode</tt> with label
+	 *			 <tt>label</tt> does not exist in the graph.
 	 */
 	public boolean insertLabel(Node srcNode, Node dstNode, Label label);
 	/**
@@ -49,8 +49,8 @@ public interface IMutableLabeledGraph<Node, Label>
 	 * @param	label	The label to be removed.
 	 *
 	 * @return	true if the graph is modified, i.e., if a edge from
-	 * 			<tt>srcNode</tt> to <tt>dstNode</tt> with label
-	 * 			<tt>label</tt> exists in the graph.
+	 *			 <tt>srcNode</tt> to <tt>dstNode</tt> with label
+	 *			 <tt>label</tt> exists in the graph.
 	 */
 	public boolean removeLabel(Node srcNode, Node dstNode, Label label);
 }

@@ -155,17 +155,17 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	
 	// ctxt kind is KCFASEN
 	private TIntArrayList[] methToClrSites;
-    // ctxt kind is KOBJSEN
-    private TIntArrayList[] methToRcvSites;
+	// ctxt kind is KOBJSEN
+	private TIntArrayList[] methToRcvSites;
 	// ctxt kind is CTXTCPY
 	private Set<jq_Method>[] methToClrMeths;
 	
 	private Set<Ctxt> epsilonCtxtSet;
 
-    public static final int CTXTINS = 0;  // abbr ci; must be 0
-    public static final int KOBJSEN = 1;  // abbr co
-    public static final int KCFASEN = 2;  // abbr cs
-    public static final int CTXTCPY = 3;  // abbr cc
+	public static final int CTXTINS = 0;  // abbr ci; must be 0
+	public static final int KOBJSEN = 1;  // abbr co
+	public static final int KCFASEN = 2;  // abbr cs
+	public static final int CTXTCPY = 3;  // abbr cc
 
 	private int[] ItoM;
 	private int[] HtoM;
@@ -174,18 +174,18 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	private jq_Method mainMeth;
 	private boolean[] isCtxtSenV;	// indexed by domV
-	private int[] methKind;         // indexed by domM
-	private int[] kobjValue;        // indexed by domH
-	private int[] kcfaValue;        // indexed by domI
+	private int[] methKind;		 // indexed by domM
+	private int[] kobjValue;		// indexed by domH
+	private int[] kcfaValue;		// indexed by domI
 
 	private int kobjK;
 	private int kcfaK;
-    private int instCtxtKind;
-    private int statCtxtKind;
+	private int instCtxtKind;
+	private int statCtxtKind;
 
-    private int maxIters;
+	private int maxIters;
 	private int currIter;
-    
+	
 	private boolean isInitialized = false;
 
 	private DomV domV;
@@ -202,11 +202,11 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	private ProgramRel relCI;
 
 	private ProgramRel relRefineH;
-    private ProgramRel relRefineM;
-    private ProgramRel relRefineI;
-    private ProgramRel relRefineV;
-    
-    private ProgramRel relRefinableM;
+	private ProgramRel relRefineM;
+	private ProgramRel relRefineI;
+	private ProgramRel relRefineV;
+	
+	private ProgramRel relRefinableM;
 	private ProgramRel relRefinableV;
 	private ProgramRel relRefinableCI;
 	private ProgramRel relRefinableCH;
@@ -234,11 +234,11 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		relVH = (ProgramRel) ClassicProject.g().getTrgt("VH");
 		
 		relRefineH = (ProgramRel) ClassicProject.g().getTrgt("refineH");
-        relRefineI = (ProgramRel) ClassicProject.g().getTrgt("refineI");
-        relRefineM = (ProgramRel) ClassicProject.g().getTrgt("refineM");
-        relRefineV = (ProgramRel) ClassicProject.g().getTrgt("refineV");
-        relRefinableM = (ProgramRel) ClassicProject.g().getTrgt("refinableM");
-        relRefinableV = (ProgramRel) ClassicProject.g().getTrgt("refinableV");
+		relRefineI = (ProgramRel) ClassicProject.g().getTrgt("refineI");
+		relRefineM = (ProgramRel) ClassicProject.g().getTrgt("refineM");
+		relRefineV = (ProgramRel) ClassicProject.g().getTrgt("refineV");
+		relRefinableM = (ProgramRel) ClassicProject.g().getTrgt("refinableM");
+		relRefinableV = (ProgramRel) ClassicProject.g().getTrgt("refinableV");
 		relRefinableCH = (ProgramRel) ClassicProject.g().getTrgt("refinableCH");
 		relRefinableCI = (ProgramRel) ClassicProject.g().getTrgt("refinableCI");
 		
@@ -253,29 +253,29 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 		mainMeth = Program.g().getMainMethod();
 		
-        maxIters = Integer.getInteger("chord.max.iters", 0);
+		maxIters = Integer.getInteger("chord.max.iters", 0);
 		
-        String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
-        String instCtxtKindStr = System.getProperty(
-        	"chord.inst.ctxt.kind", ctxtKindStr);
-        String statCtxtKindStr = System.getProperty(
-        	"chord.stat.ctxt.kind", ctxtKindStr);
-        if (instCtxtKindStr.equals("ci")) {
-        	instCtxtKind = CTXTINS;
-        } else if (instCtxtKindStr.equals("cs")) {
-        	instCtxtKind = KCFASEN;
-        } else if (instCtxtKindStr.equals("co")) {
-        	instCtxtKind = KOBJSEN;
-        } else
-        	assert false;
-        if (statCtxtKindStr.equals("ci")) {
-        	statCtxtKind = CTXTINS;
-        } else if (statCtxtKindStr.equals("cs")) {
-        	statCtxtKind = KCFASEN;
-        } else if (statCtxtKindStr.equals("cc")) {
-        	statCtxtKind = CTXTCPY;
-        } else
-        	assert false;
+		String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
+		String instCtxtKindStr = System.getProperty(
+			"chord.inst.ctxt.kind", ctxtKindStr);
+		String statCtxtKindStr = System.getProperty(
+			"chord.stat.ctxt.kind", ctxtKindStr);
+		if (instCtxtKindStr.equals("ci")) {
+			instCtxtKind = CTXTINS;
+		} else if (instCtxtKindStr.equals("cs")) {
+			instCtxtKind = KCFASEN;
+		} else if (instCtxtKindStr.equals("co")) {
+			instCtxtKind = KOBJSEN;
+		} else
+			assert false;
+		if (statCtxtKindStr.equals("ci")) {
+			statCtxtKind = CTXTINS;
+		} else if (statCtxtKindStr.equals("cs")) {
+			statCtxtKind = KCFASEN;
+		} else if (statCtxtKindStr.equals("cc")) {
+			statCtxtKind = CTXTCPY;
+		} else
+			assert false;
 
 		kobjK = Integer.getInteger("chord.kobj.k", 1);
 		assert (kobjK > 0);
@@ -294,7 +294,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		if (m == mainMeth || m instanceof jq_ClassInitializer ||
 				m.isAbstract())
 			return CTXTINS;
-        return m.isStatic() ? statCtxtKind : instCtxtKind;
+		return m.isStatic() ? statCtxtKind : instCtxtKind;
 	}
 
 	// {04/19/10} Percy: experiment with different values of k
@@ -306,118 +306,118 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		String inValuesPath = X.getStringArg("inValuesPath", null); // Specifies which values to use
 		boolean keepOnlyReachable = X.getBooleanArg("keepOnlyReachable", false);
 
-    // Link back results to where the in values came from
-    if (inValuesPath != null) X.symlinkPath = inValuesPath+".results";
+	// Link back results to where the in values came from
+	if (inValuesPath != null) X.symlinkPath = inValuesPath+".results";
 
-    // Save options
-    X.putOption("version", 1);
-    X.putOption("program", System.getProperty("chord.work.dir"));
-    X.putOption("senProb", senProb);
-    X.putOption("randSeed", randSeed);
-    X.putOption("kobj", kobjK);
-    X.putOption("kcfa", kcfaK);
-    X.putOption("minH", kobjK);
-    X.putOption("minI", kcfaK);
-    X.putOption("kobjRange", kobjRange);
-    X.putOption("kcfaRange", kcfaRange);
-    X.putOption("numRefineIters", System.getProperty("chord.max.iters"));
-    X.putOption("inValuesPath", inValuesPath);
-    X.putOption("initK", kobjK+","+kcfaK);
+	// Save options
+	X.putOption("version", 1);
+	X.putOption("program", System.getProperty("chord.work.dir"));
+	X.putOption("senProb", senProb);
+	X.putOption("randSeed", randSeed);
+	X.putOption("kobj", kobjK);
+	X.putOption("kcfa", kcfaK);
+	X.putOption("minH", kobjK);
+	X.putOption("minI", kcfaK);
+	X.putOption("kobjRange", kobjRange);
+	X.putOption("kcfaRange", kcfaRange);
+	X.putOption("numRefineIters", System.getProperty("chord.max.iters"));
+	X.putOption("inValuesPath", inValuesPath);
+	X.putOption("initK", kobjK+","+kcfaK);
 
-    boolean useObjectSensitivity = "co".equals(System.getProperty("chord.inst.ctxt.kind", null));
-    X.putOption("useObjectSensitivity", useObjectSensitivity);
+	boolean useObjectSensitivity = "co".equals(System.getProperty("chord.inst.ctxt.kind", null));
+	X.putOption("useObjectSensitivity", useObjectSensitivity);
 			
-    X.flushOptions();
+	X.flushOptions();
 
-    Random random = randSeed != 0 ? new Random(randSeed) : new Random();
-    kobjValue = new int[domH.size()];
-    kcfaValue = new int[domI.size()];
+	Random random = randSeed != 0 ? new Random(randSeed) : new Random();
+	kobjValue = new int[domH.size()];
+	kcfaValue = new int[domI.size()];
 
-    // Only modify k values of sites in reachable methods
-    ProgramRel relReachableM = (ProgramRel) ClassicProject.g().getTrgt("reachableM");
-    Set<jq_Method> reachableMethods = new HashSet<jq_Method>();
-    relReachableM.load();
-    final Iterable<jq_Method> tuples = relReachableM.getAry1ValTuples();
-    for (jq_Method m : tuples)
-      reachableMethods.add(m);
-    relReachableM.close();
+	// Only modify k values of sites in reachable methods
+	ProgramRel relReachableM = (ProgramRel) ClassicProject.g().getTrgt("reachableM");
+	Set<jq_Method> reachableMethods = new HashSet<jq_Method>();
+	relReachableM.load();
+	final Iterable<jq_Method> tuples = relReachableM.getAry1ValTuples();
+	for (jq_Method m : tuples)
+	  reachableMethods.add(m);
+	relReachableM.close();
 
-    // The sites we actually care about
-    Set<Inst> hSet = new HashSet<Inst>();
-    Set<Inst> iSet = new HashSet<Inst>();
-    for (Object inst : domH) {
-      if (inst == null) continue; // Skip null
-      if (keepOnlyReachable && !reachableMethods.contains(((Inst)inst).getMethod())) continue;
-      hSet.add((Inst)inst);
-    }
-    for (Inst inst : domI) {
-      if (keepOnlyReachable && !reachableMethods.contains(inst.getMethod())) continue;
-      iSet.add(inst);
-    }
+	// The sites we actually care about
+	Set<Inst> hSet = new HashSet<Inst>();
+	Set<Inst> iSet = new HashSet<Inst>();
+	for (Object inst : domH) {
+	  if (inst == null) continue; // Skip null
+	  if (keepOnlyReachable && !reachableMethods.contains(((Inst)inst).getMethod())) continue;
+	  hSet.add((Inst)inst);
+	}
+	for (Inst inst : domI) {
+	  if (keepOnlyReachable && !reachableMethods.contains(inst.getMethod())) continue;
+	  iSet.add(inst);
+	}
 
-    if (inValuesPath != null) {
-      System.out.println("Reading k values from "+inValuesPath);
-      try {
-        BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(inValuesPath)));
-        String line;
-        while ((line = in.readLine()) != null) {
-          // Format: H32 2 or I3 5
-          String[] tokens = line.split(" ");         
-          assert tokens.length == 2;
-          int idx = Integer.parseInt(tokens[0].substring(1));
-          int value = Integer.parseInt(tokens[1]);
-          switch (tokens[0].charAt(0)) {
-            case 'H': kobjValue[idx] = value; break;
-            case 'I': kcfaValue[idx] = value; break;
-            default: assert false;
-          }
-        }
-        in.close();
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      }
-    }
-    else {
-      System.out.println("Generating k values with senProb="+senProb);
-      for (Inst inst : hSet) {
-        int h = domH.indexOf(inst);
-        kobjValue[h] = kobjK + sampleBinomial(random, kobjRange, senProb);
-      }
-      for (Inst inst : iSet) {
-        int i = domI.indexOf(inst);
-        kcfaValue[i] = kcfaK + sampleBinomial(random, kcfaRange, senProb);
-      }
-    }
+	if (inValuesPath != null) {
+	  System.out.println("Reading k values from "+inValuesPath);
+	  try {
+		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(inValuesPath)));
+		String line;
+		while ((line = in.readLine()) != null) {
+		  // Format: H32 2 or I3 5
+		  String[] tokens = line.split(" ");		 
+		  assert tokens.length == 2;
+		  int idx = Integer.parseInt(tokens[0].substring(1));
+		  int value = Integer.parseInt(tokens[1]);
+		  switch (tokens[0].charAt(0)) {
+			case 'H': kobjValue[idx] = value; break;
+			case 'I': kcfaValue[idx] = value; break;
+			default: assert false;
+		  }
+		}
+		in.close();
+	  } catch (IOException e) {
+		throw new RuntimeException(e);
+	  }
+	}
+	else {
+	  System.out.println("Generating k values with senProb="+senProb);
+	  for (Inst inst : hSet) {
+		int h = domH.indexOf(inst);
+		kobjValue[h] = kobjK + sampleBinomial(random, kobjRange, senProb);
+	  }
+	  for (Inst inst : iSet) {
+		int i = domI.indexOf(inst);
+		kcfaValue[i] = kcfaK + sampleBinomial(random, kcfaRange, senProb);
+	  }
+	}
 
-    // Output k-values and strings
-    PrintWriter datOut = OutDirUtils.newPrintWriter("inputs.dat");
-    PrintWriter strOut = OutDirUtils.newPrintWriter("inputs.strings");
-    for (Inst inst : hSet) {
-      int h = domH.indexOf(inst);
-      datOut.println("H"+h+" " + kobjValue[h]);
-      strOut.println("H"+h+" " + inst.toVerboseStr());
-    }
-    for (Inst inst : iSet) {
-      int i = domI.indexOf(inst);
-      datOut.println("I"+i+" " + kcfaValue[i]);
-      strOut.println("I"+i+" " + inst.toVerboseStr());
-    }
-    datOut.close();
-    strOut.close();
+	// Output k-values and strings
+	PrintWriter datOut = OutDirUtils.newPrintWriter("inputs.dat");
+	PrintWriter strOut = OutDirUtils.newPrintWriter("inputs.strings");
+	for (Inst inst : hSet) {
+	  int h = domH.indexOf(inst);
+	  datOut.println("H"+h+" " + kobjValue[h]);
+	  strOut.println("H"+h+" " + inst.toVerboseStr());
+	}
+	for (Inst inst : iSet) {
+	  int i = domI.indexOf(inst);
+	  datOut.println("I"+i+" " + kcfaValue[i]);
+	  strOut.println("I"+i+" " + inst.toVerboseStr());
+	}
+	datOut.close();
+	strOut.close();
 
-    // Compute statistics on the k values actually used
-    StatFig kobjFig = new StatFig();
-    StatFig kcfaFig = new StatFig();
-    for (Inst inst : hSet) {
-      int h = domH.indexOf(inst);
-      kobjFig.add(kobjValue[h]);
-    }
-    for (Inst inst : iSet) {
-      int i = domI.indexOf(inst);
-      kcfaFig.add(kcfaValue[i]);
-    }
-    X.output.put("avg.kobj", kobjFig.mean());
-    X.output.put("avg.kcfa", kcfaFig.mean());
+	// Compute statistics on the k values actually used
+	StatFig kobjFig = new StatFig();
+	StatFig kcfaFig = new StatFig();
+	for (Inst inst : hSet) {
+	  int h = domH.indexOf(inst);
+	  kobjFig.add(kobjValue[h]);
+	}
+	for (Inst inst : iSet) {
+	  int i = domI.indexOf(inst);
+	  kcfaFig.add(kcfaValue[i]);
+	}
+	X.output.put("avg.kobj", kobjFig.mean());
+	X.output.put("avg.kcfa", kcfaFig.mean());
 	}
 
 	private int sampleBinomial(Random random, int n, double p) {
@@ -439,13 +439,13 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 		if (currIter == 0 || (global_kcfaValue != null || global_kobjValue != null)) {
 			isCtxtSenV = new boolean[numV];
-      // Set the context-sensitivity of various methods
+	  // Set the context-sensitivity of various methods
 			methKind = new int[numM];
 			for (int mIdx = 0; mIdx < numM; mIdx++) {
 				jq_Method mVal = domM.get(mIdx);
 				methKind[mIdx] = (maxIters > 0) ? CTXTINS : getCtxtKind(mVal);
 			}
-      // Based on context-sensitivity of methods, set the context-sensitivity of variables inside the method
+	  // Based on context-sensitivity of methods, set the context-sensitivity of variables inside the method
 			for (int mIdx = 0; mIdx < numM; mIdx++) {
 				if (methKind[mIdx] != CTXTINS) {
 					jq_Method m = domM.get(mIdx);
@@ -486,14 +486,14 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			if (percy) {
 				setAdaptiveValues();
 
-        if (global_kcfaValue != null) {
-          System.out.println("Using global_kcfaValue");
-          System.arraycopy(global_kcfaValue, 0, kcfaValue, 0, kcfaValue.length);
-        }
-        if (global_kobjValue != null) {
-          System.out.println("Using global_kobjValue");
-          System.arraycopy(global_kobjValue, 0, kobjValue, 0, kobjValue.length);
-        }
+		if (global_kcfaValue != null) {
+		  System.out.println("Using global_kcfaValue");
+		  System.arraycopy(global_kcfaValue, 0, kcfaValue, 0, kcfaValue.length);
+		}
+		if (global_kobjValue != null) {
+		  System.out.println("Using global_kobjValue");
+		  System.arraycopy(global_kobjValue, 0, kobjValue, 0, kobjValue.length);
+		}
 			}
 		} else {
 			refine();
@@ -511,7 +511,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		methToCtxts = new Set[numM];
 
 		methToClrSites = new TIntArrayList[numM];
-        methToRcvSites = new TIntArrayList[numM];
+		methToRcvSites = new TIntArrayList[numM];
 		methToClrMeths = new Set[numM];
 
 		if (maxIters > 0) {
@@ -531,29 +531,29 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Messages.log("H " + i + " " + histogramH[i]);
 			}
 
-      /*String path = null;
-      for (int i = 0; ; i++) {
-        path = X.path("iter"+i+".cause.values");
-        if (!new java.io.File(path).exists()) break;
-      }
-      PrintWriter out = chord.analyses.snapshot.Utils.openOut(path);*/
+	  /*String path = null;
+	  for (int i = 0; ; i++) {
+		path = X.path("iter"+i+".cause.values");
+		if (!new java.io.File(path).exists()) break;
+	  }
+	  PrintWriter out = chord.analyses.snapshot.Utils.openOut(path);*/
 
-      // Output values
-      PrintWriter out = OutDirUtils.newPrintWriter("inputs.dat");
-      for (int h = 0; h < numH; h++)
-        if (kobjValue[h] > 0) out.println("H"+h+" " + kobjValue[h]);
-      for (int i = 0; i < numI; i++)
-        if (kcfaValue[i] > 0) out.println("I"+i+" " + kcfaValue[i]);
-      out.close();
+	  // Output values
+	  PrintWriter out = OutDirUtils.newPrintWriter("inputs.dat");
+	  for (int h = 0; h < numH; h++)
+		if (kobjValue[h] > 0) out.println("H"+h+" " + kobjValue[h]);
+	  for (int i = 0; i < numI; i++)
+		if (kcfaValue[i] > 0) out.println("I"+i+" " + kcfaValue[i]);
+	  out.close();
 		}
 		
-    // Do the heavy crunching
+	// Do the heavy crunching
 		doAnalysis();
 
 		relIM.close();
 		relVH.close();
 
-    // Populate domC
+	// Populate domC
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			Quad invk = (Quad) domI.get(iIdx);
 			jq_Method meth = invk.getMethod();
@@ -598,7 +598,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Quad[] newElems = combine(k, invk, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
-        //System.out.println("CfromJC " + jstr(invk) + " " + cstr(oldCtxt) + " => " + cstr(newCtxt));
+		//System.out.println("CfromJC " + jstr(invk) + " " + cstr(oldCtxt) + " => " + cstr(newCtxt));
 				if (!isLastIter && newElems.length < oldElems.length + 1) {
 					relRefinableCI.add(oldCtxt, invk);
 				}
@@ -625,7 +625,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Quad[] newElems = combine(k, inst, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
-        //System.out.println("CfromJC " + jstr(inst) + " " + cstr(oldCtxt) + " => " + cstr(newCtxt));
+		//System.out.println("CfromJC " + jstr(inst) + " " + cstr(oldCtxt) + " => " + cstr(newCtxt));
 				if (!isLastIter && newElems.length < oldElems.length + 1) {
 					relRefinableCH.add(oldCtxt, inst);
 				}
@@ -640,33 +640,33 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 		relCC.save();
 
-        relEpsilonM.zero();
-        relKcfaSenM.zero();
-        relKobjSenM.zero();
-        relCtxtCpyM.zero();
-        for (int mIdx = 0; mIdx < numM; mIdx++) {
-            int kind = methKind[mIdx];
-            switch (kind) {
-            case CTXTINS:
-                relEpsilonM.add(mIdx);
-                break;
-            case KOBJSEN:
-                relKobjSenM.add(mIdx);
-                break;
-            case KCFASEN:
-                relKcfaSenM.add(mIdx);
-                break;
-            case CTXTCPY:
-                relCtxtCpyM.add(mIdx);
-                break;
-            default:
-                assert false;
-            }
-        }
-        relEpsilonM.save();
-        relKcfaSenM.save();
-        relKobjSenM.save();
-        relCtxtCpyM.save();
+		relEpsilonM.zero();
+		relKcfaSenM.zero();
+		relKobjSenM.zero();
+		relCtxtCpyM.zero();
+		for (int mIdx = 0; mIdx < numM; mIdx++) {
+			int kind = methKind[mIdx];
+			switch (kind) {
+			case CTXTINS:
+				relEpsilonM.add(mIdx);
+				break;
+			case KOBJSEN:
+				relKobjSenM.add(mIdx);
+				break;
+			case KCFASEN:
+				relKcfaSenM.add(mIdx);
+				break;
+			case CTXTCPY:
+				relCtxtCpyM.add(mIdx);
+				break;
+			default:
+				assert false;
+			}
+		}
+		relEpsilonM.save();
+		relKcfaSenM.save();
+		relKobjSenM.save();
+		relCtxtCpyM.save();
 
 		relEpsilonV.zero();
 		for (int v = 0; v < numV; v++) {
@@ -704,35 +704,35 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	private void refine() {
 		relRefineH.load();
 		Iterable<Quad> heapInsts =
-		    relRefineH.getAry1ValTuples();
+			relRefineH.getAry1ValTuples();
 		for (Quad inst : heapInsts) {
-		    int hIdx = domH.indexOf(inst);
-		    kobjValue[hIdx]++;
+			int hIdx = domH.indexOf(inst);
+			kobjValue[hIdx]++;
 		}
 		relRefineH.close();
 		relRefineI.load();
 		Iterable<Quad> invkInsts =
-		    relRefineI.getAry1ValTuples();
+			relRefineI.getAry1ValTuples();
 		for (Quad inst : invkInsts) {
-		    int iIdx = domI.indexOf(inst);
-		    kcfaValue[iIdx]++;
+			int iIdx = domI.indexOf(inst);
+			kcfaValue[iIdx]++;
 		}
 		relRefineI.close();
 		relRefineV.load();
 		Iterable<Register> vars = relRefineV.getAry1ValTuples();
 		for (Register var : vars) {
-		    int v = domV.indexOf(var);
-		    assert (!isCtxtSenV[v]);
-		    isCtxtSenV[v] = true;
+			int v = domV.indexOf(var);
+			assert (!isCtxtSenV[v]);
+			isCtxtSenV[v] = true;
 		}
 		relRefineV.close();
 		relRefineM.load();
 		Iterable<jq_Method> meths = relRefineM.getAry1ValTuples();
 		for (jq_Method meth : meths) {
-		    int m = domM.indexOf(meth);
-		    assert (methKind[m] == CTXTINS);
-		    methKind[m] = getCtxtKind(meth);
-		    assert (methKind[m] != CTXTINS);
+			int m = domM.indexOf(meth);
+			assert (methKind[m] == CTXTINS);
+			methKind[m] = getCtxtKind(meth);
+			assert (methKind[m] != CTXTINS);
 		}
 		relRefineM.close();
 	}
@@ -791,36 +791,36 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				methToCtxts[mIdx] = epsilonCtxtSet;
 				break;
 			}
-            case KCFASEN:
-            {
-                Set<jq_Method> predMeths = new HashSet<jq_Method>();
-                TIntArrayList clrSites = new TIntArrayList();
-                for (Quad invk : getCallers(meth)) {
-                    predMeths.add(invk.getMethod()); // Which method can point to this method...?
-                    int iIdx = domI.indexOf(invk);
-                    clrSites.add(iIdx); // sites that can call me
-                }
-                methToClrSites[mIdx] = clrSites;
-                methToPredsMap.put(meth, predMeths);
-                methToCtxts[mIdx] = emptyCtxtSet;
-                break;
-            }
+			case KCFASEN:
+			{
+				Set<jq_Method> predMeths = new HashSet<jq_Method>();
+				TIntArrayList clrSites = new TIntArrayList();
+				for (Quad invk : getCallers(meth)) {
+					predMeths.add(invk.getMethod()); // Which method can point to this method...?
+					int iIdx = domI.indexOf(invk);
+					clrSites.add(iIdx); // sites that can call me
+				}
+				methToClrSites[mIdx] = clrSites;
+				methToPredsMap.put(meth, predMeths);
+				methToCtxts[mIdx] = emptyCtxtSet;
+				break;
+			}
 			case KOBJSEN:
-            {
-            	Set<jq_Method> predMeths = new HashSet<jq_Method>();
-                TIntArrayList rcvSites = new TIntArrayList();
+			{
+				Set<jq_Method> predMeths = new HashSet<jq_Method>();
+				TIntArrayList rcvSites = new TIntArrayList();
 				ControlFlowGraph cfg = meth.getCFG();
-                Register thisVar = cfg.getRegisterFactory().get(0);
-                Iterable<Quad> pts = getPointsTo(thisVar);
-                for (Quad inst : pts) {
-                    predMeths.add(inst.getMethod());
+				Register thisVar = cfg.getRegisterFactory().get(0);
+				Iterable<Quad> pts = getPointsTo(thisVar);
+				for (Quad inst : pts) {
+					predMeths.add(inst.getMethod());
 					int hIdx = domH.indexOf(inst);
-                    rcvSites.add(hIdx);
-                }
-                methToRcvSites[mIdx] = rcvSites;
-                methToPredsMap.put(meth, predMeths);
-                methToCtxts[mIdx] = emptyCtxtSet;
-                break;
+					rcvSites.add(hIdx);
+				}
+				methToRcvSites[mIdx] = rcvSites;
+				methToPredsMap.put(meth, predMeths);
+				methToCtxts[mIdx] = emptyCtxtSet;
+				break;
 			}
 			case CTXTCPY:
 			{
@@ -903,12 +903,12 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	}
 
 	private Quad[] combine(int k, Quad inst, Quad[] elems) {
-        int oldLen = elems.length;
-        int newLen = Math.min(k - 1, oldLen) + 1;
-        Quad[] newElems = new Quad[newLen];
-        if (newLen > 0) newElems[0] = inst;
+		int oldLen = elems.length;
+		int newLen = Math.min(k - 1, oldLen) + 1;
+		Quad[] newElems = new Quad[newLen];
+		if (newLen > 0) newElems[0] = inst;
 		if (newLen > 1)
-        	System.arraycopy(elems, 0, newElems, 1, newLen - 1);
+			System.arraycopy(elems, 0, newElems, 1, newLen - 1);
 		return newElems;
 	}
 
@@ -916,7 +916,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		final Set<Ctxt> newCtxts = new HashSet<Ctxt>();
 		int kind = methKind[cleIdx];
 		switch (kind) {
-        case KCFASEN:
+		case KCFASEN:
 		{
 			TIntArrayList invks = methToClrSites[cleIdx]; // which call sites point to me
 			int n = invks.size();
@@ -933,9 +933,9 @@ public class CtxtsAnalysis extends JavaAnalysis {
 					newCtxts.add(newCtxt);
 				}
 			}
-            break;
+			break;
 		}
-        case KOBJSEN:
+		case KOBJSEN:
 		{
 			TIntArrayList rcvs = methToRcvSites[cleIdx];
 			int n = rcvs.size();
@@ -971,79 +971,79 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	}
 
 	public static String getCspaKind() {
-        String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
-        String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
-        String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
-        int instCtxtKind, statCtxtKind;
-        if (instCtxtKindStr.equals("ci")) {
-            instCtxtKind = CtxtsAnalysis.CTXTINS;
-        } else if (instCtxtKindStr.equals("cs")) {
-            instCtxtKind = CtxtsAnalysis.KCFASEN;
-        } else if (instCtxtKindStr.equals("co")) {
-            instCtxtKind = CtxtsAnalysis.KOBJSEN;
-        } else
-            throw new ChordRuntimeException();
-        if (statCtxtKindStr.equals("ci")) {
-            statCtxtKind = CtxtsAnalysis.CTXTINS;
-        } else if (statCtxtKindStr.equals("cs")) {
-            statCtxtKind = CtxtsAnalysis.KCFASEN;
-        } else if (statCtxtKindStr.equals("cc")) {
-            statCtxtKind = CtxtsAnalysis.CTXTCPY;
-        } else
-            throw new ChordRuntimeException();
-        String cspaKind;
-        if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
-            statCtxtKind == CtxtsAnalysis.CTXTINS)
-            cspaKind = "cspa-0cfa-dlog";
-        else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
-            statCtxtKind == CtxtsAnalysis.CTXTCPY)
-            cspaKind = "cspa-kobj-dlog";
-        else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
-            statCtxtKind == CtxtsAnalysis.KCFASEN)
-            cspaKind = "cspa-kcfa-dlog";
-        else
-            cspaKind = "cspa-hybrid-dlog";
+		String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
+		String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
+		String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
+		int instCtxtKind, statCtxtKind;
+		if (instCtxtKindStr.equals("ci")) {
+			instCtxtKind = CtxtsAnalysis.CTXTINS;
+		} else if (instCtxtKindStr.equals("cs")) {
+			instCtxtKind = CtxtsAnalysis.KCFASEN;
+		} else if (instCtxtKindStr.equals("co")) {
+			instCtxtKind = CtxtsAnalysis.KOBJSEN;
+		} else
+			throw new ChordRuntimeException();
+		if (statCtxtKindStr.equals("ci")) {
+			statCtxtKind = CtxtsAnalysis.CTXTINS;
+		} else if (statCtxtKindStr.equals("cs")) {
+			statCtxtKind = CtxtsAnalysis.KCFASEN;
+		} else if (statCtxtKindStr.equals("cc")) {
+			statCtxtKind = CtxtsAnalysis.CTXTCPY;
+		} else
+			throw new ChordRuntimeException();
+		String cspaKind;
+		if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
+			statCtxtKind == CtxtsAnalysis.CTXTINS)
+			cspaKind = "cspa-0cfa-dlog";
+		else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
+			statCtxtKind == CtxtsAnalysis.CTXTCPY)
+			cspaKind = "cspa-kobj-dlog";
+		else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
+			statCtxtKind == CtxtsAnalysis.KCFASEN)
+			cspaKind = "cspa-kcfa-dlog";
+		else
+			cspaKind = "cspa-hybrid-dlog";
 		return cspaKind;
 	}
 
   jq_Type h2t(Quad h) {
-    Operator op = h.getOperator();
-    if (op instanceof New) 
-      return New.getType(h).getType();
-    else if (op instanceof NewArray)
-      return NewArray.getType(h).getType();
-    else if (op instanceof MultiNewArray)
-      return MultiNewArray.getType(h).getType();
-    else
-      return null;
+	Operator op = h.getOperator();
+	if (op instanceof New) 
+	  return New.getType(h).getType();
+	else if (op instanceof NewArray)
+	  return NewArray.getType(h).getType();
+	else if (op instanceof MultiNewArray)
+	  return MultiNewArray.getType(h).getType();
+	else
+	  return null;
   }
   String hstr(Quad h) {
-    String path = new File(h.toJavaLocStr()).getName();
-    jq_Type t = h2t(h);
-    return path+"("+(t == null ? "?" : t.shortName())+")";
+	String path = new File(h.toJavaLocStr()).getName();
+	jq_Type t = h2t(h);
+	return path+"("+(t == null ? "?" : t.shortName())+")";
   }
   String istr(Quad i) {
-    String path = new File(i.toJavaLocStr()).getName();
-    jq_Method m = InvokeStatic.getMethod(i).getMethod();
-    return path+"("+m.getName()+")";
+	String path = new File(i.toJavaLocStr()).getName();
+	jq_Method m = InvokeStatic.getMethod(i).getMethod();
+	return path+"("+m.getName()+")";
   }
   String jstr(Quad j) { return isAlloc(j) ? hstr(j) : istr(j); }
   String estr(Quad e) {
-    String path = new File(e.toJavaLocStr()).getName();
-    Operator op = e.getOperator();
-    return path+"("+op+")";
+	String path = new File(e.toJavaLocStr()).getName();
+	Operator op = e.getOperator();
+	return path+"("+op+")";
   }
   String cstr(Ctxt c) {
-    StringBuilder buf = new StringBuilder();
-    //buf.append(domC.indexOf(c));
-    buf.append('{');
-    for (int i = 0; i < c.length(); i++) {
-      if (i > 0) buf.append(" | ");
-      Quad q = c.get(i);
-      buf.append(isAlloc(q) ? hstr(q) : istr(q));
-    }
-    buf.append('}');
-    return buf.toString();
+	StringBuilder buf = new StringBuilder();
+	//buf.append(domC.indexOf(c));
+	buf.append('{');
+	for (int i = 0; i < c.length(); i++) {
+	  if (i > 0) buf.append(" | ");
+	  Quad q = c.get(i);
+	  buf.append(isAlloc(q) ? hstr(q) : istr(q));
+	}
+	buf.append('}');
+	return buf.toString();
   }
   String fstr(jq_Field f) { return f.getDeclaringClass()+"."+f.getName(); }
   String vstr(Register v) { return v+"@"+mstr(domV.getMethod(v)); }

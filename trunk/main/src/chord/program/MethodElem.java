@@ -46,14 +46,14 @@ public class MethodElem extends MethodSign {
 	 * @return	The representation of the specified bytecode location.
 	 */
 	public static MethodElem parse(String s) {
-        int exclIdx = s.indexOf('!');
-        int colonIdx  = s.indexOf(':');
-        int atIdx = s.indexOf('@');
-        int num = Integer.parseInt(s.substring(0, exclIdx));
-        String mName = s.substring(exclIdx + 1, colonIdx);
-        String mDesc = s.substring(colonIdx + 1, atIdx);
-        String cName = s.substring(atIdx + 1);
-        return new MethodElem(num, mName, mDesc, cName);
+		int exclIdx = s.indexOf('!');
+		int colonIdx  = s.indexOf(':');
+		int atIdx = s.indexOf('@');
+		int num = Integer.parseInt(s.substring(0, exclIdx));
+		String mName = s.substring(exclIdx + 1, colonIdx);
+		String mDesc = s.substring(colonIdx + 1, atIdx);
+		String cName = s.substring(atIdx + 1);
+		return new MethodElem(num, mName, mDesc, cName);
 	}
 	public String toString() {
 		return offset + "!" + mName + ":" + mDesc + "@" + cName;

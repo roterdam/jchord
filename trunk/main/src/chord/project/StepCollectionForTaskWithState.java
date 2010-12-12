@@ -1,15 +1,15 @@
 package chord.project;
 
 public class StepCollectionForTaskWithState extends AbstractStepCollection {
-    protected Class<ITask> taskKind;
+	protected Class<ITask> taskKind;
 	// must be called in step collection initialization stage
 	public void setTaskKind(Class<ITask> taskKind) {
 		this.taskKind = taskKind;
 	}
 	@Override
 	public void run(Object ctrl) {
-        ITask task = null;
-        try {
+		ITask task = null;
+		try {
 			task = taskKind.newInstance();
 			task.setName(name);
 		} catch (InstantiationException e) {

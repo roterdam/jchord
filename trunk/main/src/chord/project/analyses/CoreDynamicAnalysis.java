@@ -263,21 +263,21 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		Map<String, String> instrArgs = instrKind.val1;
 		CoreInstrumentor instr = null;
 		Exception ex = null;
-        try {
-            Constructor c = instrClass.getConstructor(new Class[] { Map.class });
-            Object o = c.newInstance(new Object[] { instrArgs });
-            instr = (CoreInstrumentor) o;
-        } catch (InstantiationException e) {
-            ex = e;
-        } catch (NoSuchMethodException e) {
-            ex = e;
-        } catch (InvocationTargetException e) {
-            ex = e;
-        } catch (IllegalAccessException e) {
-            ex = e;
-        }
-        if (ex != null)
-            Messages.fatal(ex);
+		try {
+			Constructor c = instrClass.getConstructor(new Class[] { Map.class });
+			Object o = c.newInstance(new Object[] { instrArgs });
+			instr = (CoreInstrumentor) o;
+		} catch (InstantiationException e) {
+			ex = e;
+		} catch (NoSuchMethodException e) {
+			ex = e;
+		} catch (InvocationTargetException e) {
+			ex = e;
+		} catch (IllegalAccessException e) {
+			ex = e;
+		}
+		if (ex != null)
+			Messages.fatal(ex);
 		OfflineTransformer transformer = new OfflineTransformer(instr);
 		transformer.run();
 	}

@@ -34,7 +34,7 @@ public final class ProcessExecutor {
 	 * @param	cmdarray	A system command to be executed.
 	 * 
 	 * @return	The exit value of the invoked process.
-	 * 			By convention, 0 indicates normal termination.
+	 *			 By convention, 0 indicates normal termination.
 	 */
 	public static final int execute(String[] cmdarray, int timeout) throws Throwable {
 		Process proc = executeAsynch(cmdarray);
@@ -61,27 +61,27 @@ public final class ProcessExecutor {
 		return proc;
 	}  
   
-    private static class StreamGobbler extends Thread {
-        private final InputStream s;
-        private final String n;
-        private StreamGobbler(InputStream s, String n) {
-            this.s = s;
-            this.n = n;
-        }
-        public void run() {
-            try {
-                BufferedReader r =
-                	new BufferedReader(new InputStreamReader(s));
-                String l;
-                while ((l = r.readLine()) != null) {
-                    if (Config.verbose > 1)
+	private static class StreamGobbler extends Thread {
+		private final InputStream s;
+		private final String n;
+		private StreamGobbler(InputStream s, String n) {
+			this.s = s;
+			this.n = n;
+		}
+		public void run() {
+			try {
+				BufferedReader r =
+					new BufferedReader(new InputStreamReader(s));
+				String l;
+				while ((l = r.readLine()) != null) {
+					if (Config.verbose > 1)
 						System.out.println(n + "> " + l);
 				}
-            } catch (IOException e) {
-            	throw new RuntimeException(e.getMessage());
-            }
-        }
-    }
+			} catch (IOException e) {
+				throw new RuntimeException(e.getMessage());
+			}
+		}
+	}
 	private static class KillOnTimeout extends TimerTask {
 		Process p;
 		public KillOnTimeout(Process p) {

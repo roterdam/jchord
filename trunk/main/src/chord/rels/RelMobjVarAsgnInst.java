@@ -69,16 +69,16 @@ public class RelMobjVarAsgnInst extends ProgramRel
 			}
 		}
 	}
-    public void visitCastInst(Quad q) {
-        Operand rx = CheckCast.getSrc(q);
-        if (rx instanceof RegisterOperand) {
+	public void visitCastInst(Quad q) {
+		Operand rx = CheckCast.getSrc(q);
+		if (rx instanceof RegisterOperand) {
 			RegisterOperand ro = (RegisterOperand) rx;
-            if (ro.getType().isReferenceType()) {
-                Register r = ro.getRegister();
-                RegisterOperand lo = CheckCast.getDest(q);
-                Register l = lo.getRegister();
+			if (ro.getType().isReferenceType()) {
+				Register r = ro.getRegister();
+				RegisterOperand lo = CheckCast.getDest(q);
+				Register l = lo.getRegister();
 				add(ctnrMethod, l, r);
-            }
-        }
-    }
+			}
+		}
+	}
 }

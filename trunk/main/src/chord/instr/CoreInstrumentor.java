@@ -33,7 +33,7 @@ import chord.project.Config;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class CoreInstrumentor extends ExprEditor {
-    public final static String INSTRUMENTOR_CLASS_KEY = "instrumentor_class_name";
+	public final static String INSTRUMENTOR_CLASS_KEY = "instrumentor_class_name";
 
 	private final static String EXPLICITLY_EXCLUDING_CLASS =
 		"WARN: CoreInstrumentor: Not instrumenting class %s as it was excluded by chord.scope.exclude.";
@@ -64,9 +64,9 @@ public class CoreInstrumentor extends ExprEditor {
 		pool = new JavassistPool(mainClassPathName, userClassPathName);
 	}
 
-    public JavassistPool getPool() {
-        return pool;
-    }
+	public JavassistPool getPool() {
+		return pool;
+	}
 
 	public boolean isExplicitlyExcluded(String cName) {
 		for (String s : scopeExcludeAry) {
@@ -141,10 +141,10 @@ public class CoreInstrumentor extends ExprEditor {
 		CtBehavior clinit = clazz.getClassInitializer();
 		if (clinit != null)
 			edit(clinit);
-        CtBehavior[] inits = clazz.getDeclaredConstructors();
-        for (CtBehavior m : inits)
+		CtBehavior[] inits = clazz.getDeclaredConstructors();
+		for (CtBehavior m : inits)
 			edit(m);
-        CtBehavior[] meths = clazz.getDeclaredMethods();
+		CtBehavior[] meths = clazz.getDeclaredMethods();
 		for (CtBehavior m : meths)
 			edit(m);
 		return clazz;
@@ -179,7 +179,7 @@ public class CoreInstrumentor extends ExprEditor {
 	 *			instrumented method.
 	 * @return	Code string to be inserted just before the index.
 	 */
-    public String insertBefore(int pos) {
+	public String insertBefore(int pos) {
 		return null;
 	}
 

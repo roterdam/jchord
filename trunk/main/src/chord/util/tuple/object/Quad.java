@@ -40,7 +40,7 @@ public class Quad<T0, T1, T2, T3> implements java.io.Serializable {
 	 */
 	public T3 val3;
 	public Quad(T0 val0, T1 val1, T2 val2, T3 val3) {
-    	this.val0 = val0;
+		this.val0 = val0;
 		this.val1 = val1;
 		this.val2 = val2;
 		this.val3 = val3;

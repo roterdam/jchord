@@ -32,14 +32,14 @@ public class RelSign extends Pair<String[], String> {
 	 * Constructor.
 	 * 
 	 * @param	domNames	An ordered list of domain names of the
-	 * 			relation (e.g., [M1, H0]).
-	 * 			It must be non-null and not contain any duplicate
-	 * 			domain names.
-	 * 			Each domain name must consist of a major component 
-	 * 			(a sequence of one or more alphabets) followed by a
-	 * 			minor component (a sequence of one or more digits).
+	 *			 relation (e.g., [M1, H0]).
+	 *			 It must be non-null and not contain any duplicate
+	 *			 domain names.
+	 *			 Each domain name must consist of a major component 
+	 *			 (a sequence of one or more alphabets) followed by a
+	 *			 minor component (a sequence of one or more digits).
 	 * @param	domOrder	The BDD ordering of the domain names
-     *          (e.g., M1_H0 or M1xH0).  It may be null.
+	 *		  (e.g., M1_H0 or M1xH0).  It may be null.
 	 */
 	public RelSign(String[] domNames, String domOrder) {
 		super(domNames, domOrder);
@@ -75,10 +75,10 @@ public class RelSign extends Pair<String[], String> {
 	}
 	/**
 	 * Provides an ordered list of domain names specified by this
-     * signature.
+	 * signature.
 	 *
 	 * @return	An ordered list of domain names specified by this
-	 * 			signature.
+	 *			 signature.
 	 */
 	public String[] getDomNames() {
 		return val0;
@@ -88,7 +88,7 @@ public class RelSign extends Pair<String[], String> {
 	 * signature.
 	 *
 	 * @return	The BDD ordering of domain names specified by this
-	 * 			signature.
+	 *			 signature.
 	 */
 	public String getDomOrder() {
 		return val1;

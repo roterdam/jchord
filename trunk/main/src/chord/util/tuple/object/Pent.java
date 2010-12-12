@@ -45,7 +45,7 @@ public class Pent<T0, T1, T2, T3, T4> implements java.io.Serializable {
 	 */
 	public T4 val4;
 	public Pent(T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
-    	this.val0 = val0;
+		this.val0 = val0;
 		this.val1 = val1;
 		this.val2 = val2;
 		this.val3 = val3;

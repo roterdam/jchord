@@ -77,12 +77,12 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 		return nodesInRPO;
 	}
 	public List<Set<Node>> getTopSortedSCCs() {
-        SCCFindingVisitor<Node> visitor = new SCCFindingVisitor<Node>();
-        SCCBuilder<Node> builder = new SCCBuilder<Node>(this, visitor);
-	    builder.build();
-        List<Set<Node>> sccList = visitor.getSCCs();
-        Collections.reverse(sccList);
-        return sccList;
+		SCCFindingVisitor<Node> visitor = new SCCFindingVisitor<Node>();
+		SCCBuilder<Node> builder = new SCCBuilder<Node>(this, visitor);
+		builder.build();
+		List<Set<Node>> sccList = visitor.getSCCs();
+		Collections.reverse(sccList);
+		return sccList;
 	}
 	public Set<Pair<Node, Node>> getBackEdges() {
 		return BackEdgesFinder.build(this);
@@ -92,7 +92,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 		// 1. It has a SCC of size > 1
 		// 2. It has a SCC of size = 1 that has a self loop.
 		CycleTestingSCCVisitor<Node> visitor =
-            new CycleTestingSCCVisitor<Node>(this);
+			new CycleTestingSCCVisitor<Node>(this);
 		SCCBuilder<Node> builder = new SCCBuilder<Node>(this, visitor);
 		try {
 			builder.build();
@@ -103,7 +103,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 	}
 	public Set<Node> getNodesInCycles() {
 		CycleFindingSCCVisitor<Node> visitor =
-            new CycleFindingSCCVisitor<Node>(this);
+			new CycleFindingSCCVisitor<Node>(this);
 		SCCBuilder<Node> builder = new SCCBuilder<Node>(this, visitor);
 		builder.build();
 		return visitor.getNodesInCycles();
@@ -111,12 +111,12 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 	public void getSimpleCycles(IGraphEntityVisitor<Node> visitor) {
 		SimpleCyclesFinder.run(this, visitor);
 	}
-    public ShortestPathBuilder<Node> getShortestPathsBuilder(Node srcNode,
-     	   IPathVisitor<Node> visitor) {
+	public ShortestPathBuilder<Node> getShortestPathsBuilder(Node srcNode,
+			IPathVisitor<Node> visitor) {
 		return new ShortestPathBuilder(this, srcNode, visitor);
 	}
 
-    public AllPathsBuilder<Node> getAllPathsBuilder(Node srcNode,
+	public AllPathsBuilder<Node> getAllPathsBuilder(Node srcNode,
 			IPathVisitor<Node> visitor, int maxPathWidth, int maxPathDepth) {
 		return new AllPathsBuilder(this, srcNode, visitor,
 			maxPathWidth, maxPathDepth);
@@ -131,39 +131,39 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 		return nodeMap;
 	}
 	public boolean equals(Object o) {
-        if (!(o instanceof IGraph)) {
-            return false;
+		if (!(o instanceof IGraph)) {
+			return false;
 		}
-        IGraph<Node> that = (IGraph) o;
-        // Note: Order of checks is important for speed.
-        // check if they have the same sets of nodes.
-        Set<Node> thisNodes = this.getNodes();
+		IGraph<Node> that = (IGraph) o;
+		// Note: Order of checks is important for speed.
+		// check if they have the same sets of nodes.
+		Set<Node> thisNodes = this.getNodes();
 		Set<Node> thatNodes = that.getNodes();
-        if (!thisNodes.equals(thatNodes)) {
-            return false;
+		if (!thisNodes.equals(thatNodes)) {
+			return false;
 		}
-        // check if they have the same sets of edges.
-        for (Node v : thisNodes) {
-            Set<Node> thisPreds = this.getPreds(v);
-            Set<Node> thatPreds = that.getPreds(v);
-            if (!thisPreds.equals(thatPreds)) {
-                return false;
+		// check if they have the same sets of edges.
+		for (Node v : thisNodes) {
+			Set<Node> thisPreds = this.getPreds(v);
+			Set<Node> thatPreds = that.getPreds(v);
+			if (!thisPreds.equals(thatPreds)) {
+				return false;
 			}
-        }
-        // check if they have the same sets of roots.
-        Set<Node> thisRoots = this.getRoots();
-        Set<Node> thatRoots = that.getRoots();
-        if (!thisRoots.equals(thatRoots)) {
-            return false;
 		}
-        return true;
-    }
-    // TODO: This might be a weak hash code since it depends
-    // only on the set of nodes in the graph, not on the set
-    // of edges or on the set of roots.
-    public int hashCode() {
-        return getNodes().hashCode();
-    }
+		// check if they have the same sets of roots.
+		Set<Node> thisRoots = this.getRoots();
+		Set<Node> thatRoots = that.getRoots();
+		if (!thisRoots.equals(thatRoots)) {
+			return false;
+		}
+		return true;
+	}
+	// TODO: This might be a weak hash code since it depends
+	// only on the set of nodes in the graph, not on the set
+	// of edges or on the set of roots.
+	public int hashCode() {
+		return getNodes().hashCode();
+	}
 	public String toString() {
 		IndexMap<Node> map = new IndexMap<Node>(numNodes());
 		String s = "";
@@ -175,7 +175,7 @@ public abstract class AbstractGraph<Node> implements IGraph<Node> {
 		s += "\nEdges:\n";
 		for (Node node : getNodes()) {
 			int i = map.indexOf(node);
- 			for (Node node2 : getSuccs(node))
+			 for (Node node2 : getSuccs(node))
 				 s += i + " -> " + map.indexOf(node2) + "\n";
 		}
 		return s;

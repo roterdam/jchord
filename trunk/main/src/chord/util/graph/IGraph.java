@@ -24,11 +24,11 @@ import chord.util.tuple.object.Pair;
  * Classes implementing this interface are:
  * <ul>
  * <li>{@link MutableGraph}, a complete implementation that provides
- *     both, the useful operations and a representation of the
- *     graph.</li>
+ *	 both, the useful operations and a representation of the
+ *	 graph.</li>
  * <li>{@link AbstractGraph}, a partial implementation that provides
- *     the useful operations but leaves the representation of the
- *     graph unspecified.</li>
+ *	 the useful operations but leaves the representation of the
+ *	 graph unspecified.</li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -43,7 +43,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * @param	node	A node.
 	 * 
 	 * @return	true if this graph contains the given node as a
-	 * 			root node.
+	 *			 root node.
 	 */
 	public boolean hasRoot(Node node);
 	/**
@@ -61,7 +61,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * @param	node2	A node.
 	 * 
 	 * @return	true if this graph contains a directed edge from
-	 * 			<tt>node1</tt> to <tt>node2</tt>.
+	 *			 <tt>node1</tt> to <tt>node2</tt>.
 	 */
 	public boolean hasEdge(Node node1, Node node2);
 	/**
@@ -83,7 +83,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * @param	node	A node.
 	 * 
 	 * @return	The number of immediate predecessors of the given node,
-	 * 			if it exists in this graph, and 0 otherwise.
+	 *			 if it exists in this graph, and 0 otherwise.
 	 */
 	public int numPreds(Node node);
 	/**
@@ -139,7 +139,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * ordered in Reverse Post Order (RPO).
 	 * 
 	 * @return	All nodes in the graph reachable from the root nodes,
-	 * 			ordered in RPO.
+	 *			 ordered in RPO.
 	 */
 	public List<Node> getNodesInRPO();
 	/**
@@ -148,7 +148,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * topological order.
 	 *
 	 * @return	The list of SCCs of the graph reachable from its
-     *          root nodes, sorted in topological order.
+	 *		  root nodes, sorted in topological order.
 	 */
 	public List<Set<Node>> getTopSortedSCCs();
 	/**
@@ -156,7 +156,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * graph reachable from the root nodes.
 	 * 
 	 * @return	All back edges in a depth-first traversal of the
-	 * 			graph reachable from its root nodes.
+	 *			 graph reachable from its root nodes.
 	 */
 	public Set<Pair<Node, Node>> getBackEdges();
 	/**
@@ -164,7 +164,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * contains any cycles.
 	 *
 	 * @return	true if the graph reachable from the root nodes
-	 * 			contains any cycles.
+	 *			 contains any cycles.
 	 */
 	public boolean hasCycles();
 	/**
@@ -172,7 +172,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * that are contained in cycles.
 	 * 
 	 * @return	All nodes of the graph reachable from the root nodes
-	 * 			that are contained in cycles.
+	 *			 that are contained in cycles.
 	 */
 	public Set<Node> getNodesInCycles();
 	/**
@@ -187,7 +187,7 @@ public interface IGraph<Node> extends java.io.Serializable {
 	 * number of nodes in the graph.
 	 * 
 	 * @return	A map from each node in the graph to a unique
-	 * 			arbitrary integer.
+	 *			 arbitrary integer.
 	 */
 	public IndexMap<Node> getNodeMap();
 

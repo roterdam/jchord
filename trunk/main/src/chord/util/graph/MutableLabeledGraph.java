@@ -86,7 +86,7 @@ public class MutableLabeledGraph<Node, Label>
 		s += "\nEdges:\n";
 		for (Node node : getNodes()) {
 			int i = map.indexOf(node);
- 			for (Node node2 : getSuccs(node)) {
+			 for (Node node2 : getSuccs(node)) {
 				s += i + " -> " + map.indexOf(node2) + " ";
 				Pair<Node, Node> edge = new Pair<Node, Node>(node, node2);
 				Set<Label> labels = nodesToLabels.get(edge);
@@ -97,7 +97,7 @@ public class MutableLabeledGraph<Node, Label>
 						s += "[" + label + "] ";
 				}
 				s += "\n";
- 			}
+			 }
 		}
 		return s;
 	}

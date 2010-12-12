@@ -112,15 +112,15 @@ public class DataraceAnalysis extends JavaAnalysis {
 		domC = (DomC) ClassicProject.g().getTrgt("C");
 		domL = (DomL) ClassicProject.g().getTrgt("L");
 		hybridAnalysis = (CSAliasAnalysis) ClassicProject.g().getTrgt("cs-alias-java");
-	    thrSenAbbrCSCGAnalysis = (ThrSenAbbrCSCGAnalysis)
+		thrSenAbbrCSCGAnalysis = (ThrSenAbbrCSCGAnalysis)
 			ClassicProject.g().getTrgt("thrsen-abbr-cscg-java");
 	}
 
 	public void run() {
 		if (percy) {
 			X = Execution.v();		
-      X.putOption("taskNames", "datarace-dlog");
-      X.flushOptions();
+	  X.putOption("taskNames", "datarace-dlog");
+	  X.flushOptions();
 			X.addSaveFiles("inputs.dat", "outputs.dat");		
 			if (X.getBooleanArg("saveStrings", false))		
 				X.addSaveFiles("inputs.strings", "outputs.strings");
@@ -214,10 +214,10 @@ public class DataraceAnalysis extends JavaAnalysis {
 	}
 
   int relSize(String name) {
-    ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt(name); rel.load();
-    int n = rel.size();
-    rel.close();
-    return n;
+	ProgramRel rel = (ProgramRel)ClassicProject.g().getTrgt(name); rel.load();
+	int n = rel.size();
+	rel.close();
+	return n;
   }
 
 	private void outputRaces() {
@@ -237,11 +237,11 @@ public class DataraceAnalysis extends JavaAnalysis {
 		}		
 		relDatarace.close();		
 		
-    datOut.close();
-    X.putOutput("numQueries", relSize("ctxtInsStartingRace"));
-    X.putOutput("numRaces", numRaces);		
-    X.putOutput("numUnproven", numRaces);		
-    X.putOutput("absSize", domC.size());
+	datOut.close();
+	X.putOutput("numQueries", relSize("ctxtInsStartingRace"));
+	X.putOutput("numRaces", numRaces);		
+	X.putOutput("numUnproven", numRaces);		
+	X.putOutput("absSize", domC.size());
 
 		PrintWriter strOut = OutDirUtils.newPrintWriter("outputs.strings");		
 		for (int e = 0; e < domE.size(); e++)		
@@ -259,7 +259,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 		outputCtxtInsDataraces();
 		ClassicProject.g().runTask(hybridAnalysis);
 		ClassicProject.g().runTask(thrSenAbbrCSCGAnalysis);
-	    final ICSCG thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
+		final ICSCG thrSenAbbrCSCG = thrSenAbbrCSCGAnalysis.getCallGraph();
 		ClassicProject.g().runTask("datarace-epilogue-dlog");
 		final ProgramDom<Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>> domTCE =
 			new ProgramDom<Trio<Trio<Ctxt, Ctxt, jq_Method>, Ctxt, Quad>>();
@@ -364,7 +364,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 			int cIdx = domC.indexOf(methCtxt);
 			int eIdx = domE.indexOf(heapInst);
 			out.println("<TCE id=\"TCE" + domTCE.indexOf(tce) + "\" " +
-				"Tid=\"A" + domA.indexOf(srcOCM)    + "\" " +
+				"Tid=\"A" + domA.indexOf(srcOCM)	+ "\" " +
 				"Cid=\"C" + cIdx + "\" " +
 				"Eid=\"E" + eIdx + "\">");
 			jq_Method dstM = heapInst.getMethod();

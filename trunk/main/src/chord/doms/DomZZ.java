@@ -14,14 +14,14 @@ import chord.project.analyses.ProgramDom;
  *
  */
 @Chord(
-    name = "ZZ"
+	name = "ZZ"
   )
 public class DomZZ extends ProgramDom<Integer> {
   public static final int MAXZ = 32;
   
   @Override
   public void fill() {
-    for (int i = 0; i < MAXZ; i++)
-      getOrAdd(new Integer(i));  
+	for (int i = 0; i < MAXZ; i++)
+	  getOrAdd(new Integer(i));  
   }
 }
