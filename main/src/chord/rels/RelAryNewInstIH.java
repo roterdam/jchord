@@ -36,8 +36,8 @@ public class RelAryNewInstIH extends ProgramRel {
 	public void fill() {
 		DomI domI = (DomI) doms[0];
 		DomH domH = (DomH) doms[1];
-        List<Pair<Quad, List<jq_Reference>>> l =
-            Program.g().getReflect().getResolvedAryNewInstSites();
+		List<Pair<Quad, List<jq_Reference>>> l =
+			Program.g().getReflect().getResolvedAryNewInstSites();
 		for (Pair<Quad, List<jq_Reference>> p : l) {
 			Quad q = p.val0;
 			int iIdx = domI.indexOf(q);

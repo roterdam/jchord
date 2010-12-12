@@ -117,11 +117,11 @@ public class DlogAnalysis extends JavaAnalysis {
 				}
 				continue;
 			}
-            int k = s.indexOf('#');
-            if (k != -1) s = s.substring(0, k);
+			int k = s.indexOf('#');
+			if (k != -1) s = s.substring(0, k);
 			s = s.trim();
-            if (s.length() == 0)
-			 	continue;
+			if (s.length() == 0)
+				 continue;
 			// strip all whitespaces from line
 			StringBuffer t = new StringBuffer(s.length());
 			for (int i = 0; i < s.length(); i++) {
@@ -136,7 +136,7 @@ public class DlogAnalysis extends JavaAnalysis {
 					continue;
 				}
 				order = s.substring(12);
-        		String[] a = order.split("_|x");
+				String[] a = order.split("_|x");
 				for (String minorDomName : a) {
 					if (minorDomNames.contains(minorDomName)) {
 						error("Domain name '" + minorDomName +
@@ -262,26 +262,26 @@ public class DlogAnalysis extends JavaAnalysis {
 		return hasNoErrors;
 	}
 	private String getSubOrder(List<String> relMinorDomNames) {
-        int orderLen = order.length();
-        String subOrder = null;
-        char lastSep = ' ';
-        int i = 0;
-        for (String domName : minorDomNames) {
-            i += domName.length();
-            if (relMinorDomNames.contains(domName)) {
-                if (subOrder == null)
-                    subOrder = domName;
-                else
-                    subOrder = subOrder + lastSep + domName;
-                if (i != orderLen)
-                    lastSep = order.charAt(i);
-            } else {
+		int orderLen = order.length();
+		String subOrder = null;
+		char lastSep = ' ';
+		int i = 0;
+		for (String domName : minorDomNames) {
+			i += domName.length();
+			if (relMinorDomNames.contains(domName)) {
+				if (subOrder == null)
+					subOrder = domName;
+				else
+					subOrder = subOrder + lastSep + domName;
+				if (i != orderLen)
+					lastSep = order.charAt(i);
+			} else {
 				if (i != orderLen && order.charAt(i) == '_')
 					lastSep = '_';
 			}
-            i++;
-        }
-        return subOrder;
+			i++;
+		}
+		return subOrder;
 	}
 	private void error(String errMsg) {
 		System.err.println("ERROR: " + fileName + ": line " +
@@ -293,39 +293,39 @@ public class DlogAnalysis extends JavaAnalysis {
 	 */
 	public void run() {
 		Solver.run(fileName);
-    }
+	}
 	public void run(Object ctrl, IStepCollection sc) {
 		ModernProject p = ModernProject.g();
 		Object[] consumes = p.runPrologue(ctrl, sc);
 		List<ProgramDom> allDoms = new ArrayList<ProgramDom>();
 		for (Object o : consumes) {
 			if (o instanceof ProgramDom)
-            	allDoms.add((ProgramDom) o);
-        }
-        run();
-        List<IDataCollection> pdcList = sc.getProducedDataCollections();
-        for (IDataCollection pdc : pdcList) {
-        	ItemCollection pic = pdc.getItemCollection();
-        	String relName = pdc.getName();
-        	RelSign sign = p.getSign(relName);
-    		String[] domNames = sign.getDomNames();
-    		ProgramDom[] doms = new ProgramDom[domNames.length];
-    		for (int i = 0; i < domNames.length; i++) {
-                String domName = StringUtils.trimNumSuffix(domNames[i]);
-                for (ProgramDom dom : allDoms) {
-                	if (dom.getName().equals(domName)) {
-                		doms[i] = dom;
-                		break;
-                	}
-                }
-                assert (doms[i] != null);
-    		}
-        	ProgramRel rel = new ProgramRel();
-        	rel.setName(relName);
-        	rel.setSign(sign);
-        	rel.setDoms(doms);
-        	pic.Put(ctrl, rel);
-        }
+				allDoms.add((ProgramDom) o);
+		}
+		run();
+		List<IDataCollection> pdcList = sc.getProducedDataCollections();
+		for (IDataCollection pdc : pdcList) {
+			ItemCollection pic = pdc.getItemCollection();
+			String relName = pdc.getName();
+			RelSign sign = p.getSign(relName);
+			String[] domNames = sign.getDomNames();
+			ProgramDom[] doms = new ProgramDom[domNames.length];
+			for (int i = 0; i < domNames.length; i++) {
+				String domName = StringUtils.trimNumSuffix(domNames[i]);
+				for (ProgramDom dom : allDoms) {
+					if (dom.getName().equals(domName)) {
+						doms[i] = dom;
+						break;
+					}
+				}
+				assert (doms[i] != null);
+			}
+			ProgramRel rel = new ProgramRel();
+			rel.setName(relName);
+			rel.setSign(sign);
+			rel.setDoms(doms);
+			pic.Put(ctrl, rel);
+		}
 	}
 	/**
 	 * Provides the names of all domains of relations
@@ -352,7 +352,7 @@ public class DlogAnalysis extends JavaAnalysis {
 	 * by this Datalog analysis.
 	 * 
 	 * @return	The names and signatures of all relations produced
-	 * 			by this Datalog analysis.
+	 *			 by this Datalog analysis.
 	 */
 	public Map<String, RelSign> getProducedRels() {
 		return producedRels;

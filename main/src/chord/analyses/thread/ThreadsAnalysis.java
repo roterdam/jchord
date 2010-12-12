@@ -52,25 +52,25 @@ import chord.bddbddb.Rel.PairIterable;
 	name = "threads-java",
 	consumes = { "threadOC" },
 	produces = { "A", "threadAOCM" },
-    namesOfSigns = { "threadAOCM" },
-    signs = { "A0,C0,C1,M0:A0_M0_C0xC1" },
+	namesOfSigns = { "threadAOCM" },
+	signs = { "A0,C0,C1,M0:A0_M0_C0xC1" },
 	namesOfTypes = { "A" },
 	types = { DomA.class }
 )
 public class ThreadsAnalysis extends JavaAnalysis {
 	public void run() {
 		Program program = Program.g();
-        DomC domC = (DomC) ClassicProject.g().getTrgt("C");
-        DomM domM = (DomM) ClassicProject.g().getTrgt("M");
-        DomA domA = (DomA) ClassicProject.g().getTrgt("A");
-        domA.clear();
+		DomC domC = (DomC) ClassicProject.g().getTrgt("C");
+		DomM domM = (DomM) ClassicProject.g().getTrgt("M");
+		DomA domA = (DomA) ClassicProject.g().getTrgt("A");
+		domA.clear();
 		domA.add(null);
-        jq_Method mainMeth = program.getMainMethod();
+		jq_Method mainMeth = program.getMainMethod();
 		Ctxt epsilon = domC.get(0);
-        domA.add(new Trio<Ctxt, Ctxt, jq_Method>(epsilon, epsilon, mainMeth));
-        jq_Method threadStartMeth = program.getThreadStartMethod();
+		domA.add(new Trio<Ctxt, Ctxt, jq_Method>(epsilon, epsilon, mainMeth));
+		jq_Method threadStartMeth = program.getThreadStartMethod();
 		if (threadStartMeth != null) {
-        	ProgramRel relThreadOC = (ProgramRel) ClassicProject.g().getTrgt("threadOC");
+			ProgramRel relThreadOC = (ProgramRel) ClassicProject.g().getTrgt("threadOC");
 			relThreadOC.load();
 			PairIterable<Ctxt, Ctxt> tuples = relThreadOC.getAry2ValTuples();
 			for (Pair<Ctxt, Ctxt> p : tuples) {
@@ -78,18 +78,18 @@ public class ThreadsAnalysis extends JavaAnalysis {
 				Ctxt c = p.val1;
 				domA.add(new Trio<Ctxt, Ctxt, jq_Method>(o, c, threadStartMeth));
 			}
-        	relThreadOC.close();
+			relThreadOC.close();
 		}
 		domA.save();
-        ProgramRel relThreadAOCM = (ProgramRel) ClassicProject.g().getTrgt("threadAOCM");
-        relThreadAOCM.zero();
-        for (int a = 1; a < domA.size(); a++) {
+		ProgramRel relThreadAOCM = (ProgramRel) ClassicProject.g().getTrgt("threadAOCM");
+		relThreadAOCM.zero();
+		for (int a = 1; a < domA.size(); a++) {
 			Trio<Ctxt, Ctxt, jq_Method> ocm = domA.get(a);
 			int o = domC.indexOf(ocm.val0);
-            int c = domC.indexOf(ocm.val1);
-            int m = domM.indexOf(ocm.val2);
-            relThreadAOCM.add(a, o, c, m);
-        }
-        relThreadAOCM.save();
+			int c = domC.indexOf(ocm.val1);
+			int m = domM.indexOf(ocm.val2);
+			relThreadAOCM.add(a, o, c, m);
+		}
+		relThreadAOCM.save();
 	}
 }

@@ -74,21 +74,21 @@ public class Alarm {
 		}
 		doneAllPasses = true;
 	}
-    public static void main(String[] args) {
-        Alarm alarm = new Alarm(100);
-        alarm.initAllPasses();
-        for (int i = 0; i < 100; i++) {
-            alarm.initNewPass();
-            assert(!alarm.passTimedOut());
-            assert(!alarm.donePass);
-            System.out.print("PASS: " + i);
-            for (int j = 0; j < 3000000; j++) Math.random();
-            if (alarm.passTimedOut())
-                System.out.println(" TIMED OUT!");
-            else
-                System.out.println();
-            assert(!alarm.donePass);
-        }
-        alarm.doneAllPasses();
-    }
+	public static void main(String[] args) {
+		Alarm alarm = new Alarm(100);
+		alarm.initAllPasses();
+		for (int i = 0; i < 100; i++) {
+			alarm.initNewPass();
+			assert(!alarm.passTimedOut());
+			assert(!alarm.donePass);
+			System.out.print("PASS: " + i);
+			for (int j = 0; j < 3000000; j++) Math.random();
+			if (alarm.passTimedOut())
+				System.out.println(" TIMED OUT!");
+			else
+				System.out.println();
+			assert(!alarm.donePass);
+		}
+		alarm.doneAllPasses();
+	}
 }

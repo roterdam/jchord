@@ -5,10 +5,10 @@ import java.util.List;
 // abstract since does not implement the run(Object ctrl) method
 public abstract class AbstractStepCollection implements IStepCollection {
 	protected String name;
-    protected List<IDataCollection> consumedDataCollections;
-    protected List<IDataCollection> producedDataCollections;
-    protected List<ICtrlCollection> producedCtrlCollections;
-    protected ICtrlCollection prescribingCollection;
+	protected List<IDataCollection> consumedDataCollections;
+	protected List<IDataCollection> producedDataCollections;
+	protected List<ICtrlCollection> producedCtrlCollections;
+	protected ICtrlCollection prescribingCollection;
 	@Override
 	public void setName(String name) {
 		this.name = name;

@@ -25,7 +25,7 @@ import chord.doms.DomB;
 	sign = "B0,B1:B0xB1"
 )
 public class RelSuccBB extends ProgramRel {
-    public void fill() {
+	public void fill() {
 		DomB domB = (DomB) doms[0];
 		int numB = domB.size();
 		for (int bIdx = 0; bIdx < numB; bIdx++) {

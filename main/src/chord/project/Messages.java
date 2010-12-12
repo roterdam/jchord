@@ -15,8 +15,8 @@ public class Messages {
 	private Messages() { }
 	public static void log(String format, Object... args) {
 		String msg = String.format(format, args);
-        System.out.println(msg);
-    }
+		System.out.println(msg);
+	}
 	public static void fatal(String format, Object... args) {
 		log(format, args);
 		System.exit(1);

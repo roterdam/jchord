@@ -30,7 +30,7 @@ public class CSObj implements Serializable {
 	 * @param	that	An abstract object.
 	 * 
 	 * @return	true iff this abstract object may alias with
-	 * 			the given abstract object.
+	 *			 the given abstract object.
 	 */
 	public boolean mayAlias(CSObj that) {
 		for (Ctxt e : pts) {

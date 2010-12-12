@@ -47,14 +47,14 @@ import joeq.Compiler.Quad.Operand;
 public class ArraySetCFGBuilder implements ICFGBuilder {
 	@Override
 	public ControlFlowGraph run(jq_Method m) {
-    	RegisterFactory rf = new RegisterFactory(3, 1);
+		RegisterFactory rf = new RegisterFactory(3, 1);
 		jq_Type ot = PrimordialClassLoader.JavaLangObject;
 		jq_Type at = jq_Array.OBJECT_ARRAY;
-    	Register r0 = rf.getOrCreateLocal(0, ot);
-    	Register r1 = rf.getOrCreateLocal(1, jq_Primitive.INT);
-    	Register r2 = rf.getOrCreateLocal(2, ot);
+		Register r0 = rf.getOrCreateLocal(0, ot);
+		Register r1 = rf.getOrCreateLocal(1, jq_Primitive.INT);
+		Register r2 = rf.getOrCreateLocal(2, ot);
 		Register t0 = rf.getOrCreateStack(0, at);
-    	ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
+		ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
 		RegisterOperand ro0 = new RegisterOperand(r0, ot);
 		RegisterOperand ro2 = new RegisterOperand(r2, ot);
 		Quad q1 = CheckCast.create(0, m, CheckCast.CHECKCAST.INSTANCE,
@@ -62,16 +62,16 @@ public class ArraySetCFGBuilder implements ICFGBuilder {
 		Quad q2 = AStore.create(1, m, ASTORE_A.INSTANCE, ro2,
 			new RegisterOperand(t0, at), new IConstOperand(0), null);
 		Quad q3 = Return.create(2, m, RETURN_V.INSTANCE);
-    	BasicBlock bb = cfg.createBasicBlock(1, 1, 3, null);
-    	bb.appendQuad(q1);
-    	bb.appendQuad(q2);
-    	bb.appendQuad(q3);
-    	BasicBlock entry = cfg.entry();
-    	BasicBlock exit = cfg.exit();
-    	bb.addPredecessor(entry);
-    	bb.addSuccessor(exit);
-    	entry.addSuccessor(bb);
-    	exit.addPredecessor(bb);
+		BasicBlock bb = cfg.createBasicBlock(1, 1, 3, null);
+		bb.appendQuad(q1);
+		bb.appendQuad(q2);
+		bb.appendQuad(q3);
+		BasicBlock entry = cfg.entry();
+		BasicBlock exit = cfg.exit();
+		bb.addPredecessor(entry);
+		bb.addSuccessor(exit);
+		entry.addSuccessor(bb);
+		exit.addPredecessor(bb);
 		return cfg;
 	}
 }

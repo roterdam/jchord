@@ -172,7 +172,7 @@ public class TraceTransformer {
 			reader = new ByteBufferedFile(traceBlockSize, rdFileName, true);
 			writer = new ByteBufferedFile(traceBlockSize, wrFileName, false);
 			pending = new ArrayList<IntTrio>();
- 			tmp = new byte[100000];
+			 tmp = new byte[100000];
 			count = 0; // size of tmp
 			while (!reader.isDone()) {
 				if (count != 0) {

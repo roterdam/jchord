@@ -74,10 +74,10 @@ public class SetUtils {
 	 * @param	size	The estimated size of the iterable.
 	 * @return	The created set containing the elements in the iterable.
 	 */
-    public static <T> Set<T> iterableToSet(Iterable<T> c, int size) {
+	public static <T> Set<T> iterableToSet(Iterable<T> c, int size) {
 		Set<T> set = newSet(size);
-        for (T e : c)
-            set.add(e);
-        return set;
-    }
+		for (T e : c)
+			set.add(e);
+		return set;
+	}
 }

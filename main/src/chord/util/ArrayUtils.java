@@ -79,7 +79,7 @@ public final class ArrayUtils {
 	 * @param prefix	String to be used as prefix.
 	 * @param sep		String to be used to separate array elements.
 	 * @param suffix	String to be used as suffix.
-	 * @param <T>       The type of array elements.
+	 * @param <T>	   The type of array elements.
 	 * @return			String representation of the elements in the array.
 	 */
 	public static <T> String toString(T[] array, String prefix, String sep, String suffix) {

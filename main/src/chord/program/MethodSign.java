@@ -47,10 +47,10 @@ public class MethodSign {
 	 */
 	public static MethodSign parse(String s) {
 		int colonIdx = s.indexOf(':');
-        int atIdx = s.indexOf('@');
-        String mName = s.substring(0, colonIdx);
-        String mDesc = s.substring(colonIdx + 1, atIdx);
-        String cName = s.substring(atIdx + 1);
-        return new MethodSign(mName, mDesc, cName);
-    }
+		int atIdx = s.indexOf('@');
+		String mName = s.substring(0, colonIdx);
+		String mDesc = s.substring(colonIdx + 1, atIdx);
+		String cName = s.substring(atIdx + 1);
+		return new MethodSign(mName, mDesc, cName);
+	}
 }

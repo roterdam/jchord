@@ -90,15 +90,15 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			isModifiableClassMethod = instrumentationClass.getMethod("isModifiableClass", new Class[] { Class.class });
 			retransformClassesMethod = instrumentationClass.getMethod("retransformClasses", new Class[] { Class[].class });
 		} catch (NoSuchMethodException e) {
-            Messages.fatal(e);
-        }
+			Messages.fatal(e);
+		}
 	}
 
-    public static void premain(String agentArgs, Instrumentation instrumentation) {
+	public static void premain(String agentArgs, Instrumentation instrumentation) {
 		initReflectiveMethods(instrumentation);
 		boolean isSupported = isRetransformClassesSupported(instrumentation);
-        if (!isSupported)
-           	Messages.fatal(RETRANSFORM_NOT_SUPPORTED);
+		if (!isSupported)
+			   Messages.fatal(RETRANSFORM_NOT_SUPPORTED);
 		Map<String, String> argsMap = new HashMap<String, String>();
 		if (agentArgs != null) {
 			String[] args = agentArgs.split("=");
@@ -134,24 +134,24 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		}
 		if (ex != null)
 			Messages.fatal(ex);
-        OnlineTransformer transformer = new OnlineTransformer(instr);
-        addTransformer(instrumentation, transformer, true);
-        List<Class> l = new ArrayList<Class>();
-        for (Class c : instrumentation.getAllLoadedClasses()) {
+		OnlineTransformer transformer = new OnlineTransformer(instr);
+		addTransformer(instrumentation, transformer, true);
+		List<Class> l = new ArrayList<Class>();
+		for (Class c : instrumentation.getAllLoadedClasses()) {
 			String cname = c.getName();
-            if (!cname.startsWith("[")) {
+			if (!cname.startsWith("[")) {
 				if (!isModifiableClass(instrumentation, c)) {
 					if (Config.verbose > 2)
 						Messages.log(CANNOT_MODIFY_CLASS, cname);
 				} else
 					l.add(c);
 			}
-        }
+		}
 		Class[] a = l.toArray(new Class[l.size()]);
 		retransformClasses(instrumentation, a);
-    }
+	}
 
-    private final CoreInstrumentor instrumentor;
+	private final CoreInstrumentor instrumentor;
 
 	public OnlineTransformer(CoreInstrumentor instr) {
 		instrumentor = instr;
@@ -159,7 +159,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 
 	// Note: DO NOT REMOVE THIS SYNCHRONIZATION
 	@Override
-    public synchronized byte[] transform(ClassLoader loader, String className,
+	public synchronized byte[] transform(ClassLoader loader, String className,
 			Class<?> classBeingRedefined, ProtectionDomain protectionDomain,
 			byte[] classfileBuffer) throws IllegalClassFormatException {
 		// Note from javadoc:
@@ -192,6 +192,6 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			}
 		}
 		return null;
-    }
+	}
 }
 

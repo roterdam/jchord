@@ -35,15 +35,15 @@ import chord.project.analyses.ProgramRel;
 )
 public class RelMputStatFldInst extends ProgramRel
 		implements IHeapInstVisitor {
-    private DomM domM;
-    private DomF domF;
-    private DomV domV;
+	private DomM domM;
+	private DomF domF;
+	private DomV domV;
 	private jq_Method ctnrMethod;
-    public void init() {
-        domM = (DomM) doms[0];
-        domF = (DomF) doms[1];
-        domV = (DomV) doms[2];
-    }
+	public void init() {
+		domM = (DomM) doms[0];
+		domF = (DomF) doms[1];
+		domV = (DomV) doms[2];
+	}
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
 		ctnrMethod = m;

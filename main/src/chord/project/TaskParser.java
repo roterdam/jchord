@@ -109,17 +109,17 @@ public class TaskParser {
 		for (String fileName : fileNames) {
 			File file = new File(fileName);
 			if (!file.exists()) {
-                nonexistentPathElem(fileName, "chord.java.analysis.path");
+				nonexistentPathElem(fileName, "chord.java.analysis.path");
 				continue;
 			}
 			try {
-               list.add(file.toURL());
-            } catch (MalformedURLException ex) {
-                malformedPathElem(fileName, "chord.java.analysis.path",
+			   list.add(file.toURL());
+			} catch (MalformedURLException ex) {
+				malformedPathElem(fileName, "chord.java.analysis.path",
 					ex.getMessage());
 				continue;
-           }
-        }
+		   }
+		}
 		URL[] urls = new URL[list.size()];
 		list.toArray(urls);
 		AnnotationDB db = new AnnotationDB();
@@ -139,7 +139,7 @@ public class TaskParser {
 		}
 	}
 
-    private static final FilenameFilter filter = new FilenameFilter() {
+	private static final FilenameFilter filter = new FilenameFilter() {
 		public boolean accept(File dir, String name) {
 			if (name.startsWith("."))
 				return false;
@@ -155,7 +155,7 @@ public class TaskParser {
 		for (String fileName : fileNames) {
 			File file = new File(fileName);
 			if (!file.exists()) {
-                nonexistentPathElem(fileName, "chord.dlog.analysis.path");
+				nonexistentPathElem(fileName, "chord.dlog.analysis.path");
 				continue;
 			}
 			processDlogAnalysis(file);
@@ -261,12 +261,12 @@ public class TaskParser {
 		}
 		DlogAnalysis dlogTask = nameToDlogTaskMap.get(name);
 		if (dlogTask != null) {
-            redefinedDlogTask(fileName, name, dlogTask.getFileName());
-            return;
+			redefinedDlogTask(fileName, name, dlogTask.getFileName());
+			return;
 		}
 		Class<ITask> javaTask = nameToJavaTaskMap.get(name);
 		if (javaTask != null) {
-            redefinedDlogTask(fileName, name, javaTask.getName());
+			redefinedDlogTask(fileName, name, javaTask.getName());
 			return;
 		}
 		Set<String> domNames = task.getDomNames();
@@ -323,31 +323,31 @@ public class TaskParser {
 		infos.add(info);
 	}
 
-    private void ignoreDlogTask(String name) {
-        Messages.log(IGNORE_DLOG_TASK, name);
-        hasNoErrors = false;
-    }
+	private void ignoreDlogTask(String name) {
+		Messages.log(IGNORE_DLOG_TASK, name);
+		hasNoErrors = false;
+	}
 
-    private void ignoreJavaTask(String name) {
-        Messages.log(IGNORE_JAVA_TASK, name);
-        hasNoErrors = false;
-    }
-    
-    private void redefinedJavaTask(String newTaskName, String name, String oldTaskName) {
-        Messages.log(JAVA_TASK_REDEFINED, name, oldTaskName, newTaskName);
-        hasNoErrors = false;
-    }
+	private void ignoreJavaTask(String name) {
+		Messages.log(IGNORE_JAVA_TASK, name);
+		hasNoErrors = false;
+	}
+	
+	private void redefinedJavaTask(String newTaskName, String name, String oldTaskName) {
+		Messages.log(JAVA_TASK_REDEFINED, name, oldTaskName, newTaskName);
+		hasNoErrors = false;
+	}
 
-    private void redefinedDlogTask(String newTaskName, String name, String oldTaskName) {
-        Messages.log(DLOG_TASK_REDEFINED, newTaskName, name, oldTaskName);
-        hasNoErrors = false;
-    }
+	private void redefinedDlogTask(String newTaskName, String name, String oldTaskName) {
+		Messages.log(DLOG_TASK_REDEFINED, newTaskName, name, oldTaskName);
+		hasNoErrors = false;
+	}
 
-    private void malformedPathElem(String elem, String path, String msg) {
-        if (Config.verbose > 2) Messages.log(MALFORMED_PATH_ELEM, elem, path, msg);
-    }
+	private void malformedPathElem(String elem, String path, String msg) {
+		if (Config.verbose > 2) Messages.log(MALFORMED_PATH_ELEM, elem, path, msg);
+	}
 
-    private void nonexistentPathElem(String elem, String path) {
-        if (Config.verbose > 2) Messages.log(NON_EXISTENT_PATH_ELEM, elem, path);
-    }
+	private void nonexistentPathElem(String elem, String path) {
+		if (Config.verbose > 2) Messages.log(NON_EXISTENT_PATH_ELEM, elem, path);
+	}
 }

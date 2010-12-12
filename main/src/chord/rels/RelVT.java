@@ -54,7 +54,7 @@ public class RelVT extends ProgramRel implements IMethodVisitor {
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-        ControlFlowGraph cfg = m.getCFG();
+		ControlFlowGraph cfg = m.getCFG();
 		RegisterFactory rf = cfg.getRegisterFactory();
 		jq_Type[] paramTypes = m.getParamTypes();
 		int numArgs = paramTypes.length;
@@ -65,43 +65,43 @@ public class RelVT extends ProgramRel implements IMethodVisitor {
 				add(v, t);
 			}
 		}
-        for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-            BasicBlock bb = it.nextBasicBlock();
-            for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-                Quad q = it2.nextQuad();
-                process(q.getOp1());
-                process(q.getOp2());
-                process(q.getOp3());
-                process(q.getOp4());
-            }
-        }
+		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
+			BasicBlock bb = it.nextBasicBlock();
+			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
+				Quad q = it2.nextQuad();
+				process(q.getOp1());
+				process(q.getOp2());
+				process(q.getOp3());
+				process(q.getOp4());
+			}
+		}
 	}
-    private void process(Operand op) {
-        if (op instanceof RegisterOperand) {
-            RegisterOperand ro = (RegisterOperand) op;
-            jq_Type t = ro.getType();
-            if (t == null)
+	private void process(Operand op) {
+		if (op instanceof RegisterOperand) {
+			RegisterOperand ro = (RegisterOperand) op;
+			jq_Type t = ro.getType();
+			if (t == null)
 				t = javaLangObject;
 			if (t.isReferenceType()) {
-                Register v = ro.getRegister();
+				Register v = ro.getRegister();
 				add(v, t);
 			}
-        } else if (op instanceof ParamListOperand) {
-            ParamListOperand ros = (ParamListOperand) op;
-            int n = ros.length();
-            for (int i = 0; i < n; i++) {
-                RegisterOperand ro = ros.get(i);
+		} else if (op instanceof ParamListOperand) {
+			ParamListOperand ros = (ParamListOperand) op;
+			int n = ros.length();
+			for (int i = 0; i < n; i++) {
+				RegisterOperand ro = ros.get(i);
 				if (ro == null)
 					continue;
-                jq_Type t = ro.getType();
-                if (t == null)
+				jq_Type t = ro.getType();
+				if (t == null)
 					t = javaLangObject;
-                if (t.isReferenceType()) {
+				if (t.isReferenceType()) {
 					Register v = ro.getRegister();
-                    add(v, t);
-                }
-            }			
+					add(v, t);
+				}
+			}			
 		}
-    }
+	}
 }
 

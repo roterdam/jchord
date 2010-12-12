@@ -45,7 +45,7 @@ public class StopWatch
 
 	public StopWatch start()
 	{
-    assert !isRunning;
+	assert !isRunning;
 		isRunning = true;
 		startTime = System.currentTimeMillis();
 
@@ -64,7 +64,7 @@ public class StopWatch
 
 	public StopWatch accumStop()
 	{
-    // Stop and accumulate time
+	// Stop and accumulate time
 		assert isRunning;
 		endTime = System.currentTimeMillis();
 		isRunning = false;
@@ -74,9 +74,9 @@ public class StopWatch
 	}
 
   public void add(StopWatch w) {
-    assert !isRunning && !w.isRunning;
-    ms += w.ms;
-    n += w.n;
+	assert !isRunning && !w.isRunning;
+	ms += w.ms;
+	n += w.n;
   }
 
 	public long getCurrTimeLong()

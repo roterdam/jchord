@@ -30,8 +30,8 @@ import chord.project.analyses.ProgramRel;
 	sign = "I0,M0:I0xM0"
 )
 public class RelStatIM extends ProgramRel {
-    private static final String NOT_FOUND =
-        "WARN: RelStatIM: Target method %s of call site %s not found in domain M.";
+	private static final String NOT_FOUND =
+		"WARN: RelStatIM: Target method %s of call site %s not found in domain M.";
 	public void fill() {
 		DomI domI = (DomI) doms[0];
 		DomM domM = (DomM) doms[1];

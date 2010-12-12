@@ -38,14 +38,14 @@ import chord.project.analyses.ProgramRel;
 )
 public class RelMgetInstFldInst extends ProgramRel
 		implements IHeapInstVisitor {
-    private DomM domM;
-    private DomV domV;
-    private DomF domF;
-    public void init() {
-        domM = (DomM) doms[0];
-        domV = (DomV) doms[1];
-        domF = (DomF) doms[3];
-    }
+	private DomM domM;
+	private DomV domV;
+	private DomF domF;
+	public void init() {
+		domM = (DomM) doms[0];
+		domV = (DomV) doms[1];
+		domF = (DomF) doms[3];
+	}
 	private jq_Method ctnrMethod;
 	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {

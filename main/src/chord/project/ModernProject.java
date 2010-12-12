@@ -210,16 +210,16 @@ public class ModernProject extends Project {
 	@Override
 	public void run(String[] taskNames) {
 		build();
-        WshRuntime_c.getCurrentWshActivity().startFinish();
-        try {
-        	for (String name : taskNames) {
-            	ICtrlCollection cc = getCtrlCollectionOfStep(name);
-                cc.Put(PROGRAM_TAG);
-        	}
-        } catch (Throwable ex) {
-        	Messages.fatal(ex);
-        }
-        WshRuntime_c.getCurrentWshActivity().stopFinish();
+		WshRuntime_c.getCurrentWshActivity().startFinish();
+		try {
+			for (String name : taskNames) {
+				ICtrlCollection cc = getCtrlCollectionOfStep(name);
+				cc.Put(PROGRAM_TAG);
+			}
+		} catch (Throwable ex) {
+			Messages.fatal(ex);
+		}
+		WshRuntime_c.getCurrentWshActivity().stopFinish();
 	}
 	
 	@Override
@@ -267,60 +267,60 @@ public class ModernProject extends Project {
 	}
 
 	public Object[] runPrologue(Object ctrl, IStepCollection sc) {
-        List<IDataCollection> cdcList = sc.getConsumedDataCollections();
-        int n = cdcList.size();
-        Object[] consumes = new Object[n];
-        for (int i = 0; i < n; i++) {
-            IDataCollection cdc = cdcList.get(i);
-            List<IStepCollection> scList = cdc.getProducingCollections();
+		List<IDataCollection> cdcList = sc.getConsumedDataCollections();
+		int n = cdcList.size();
+		Object[] consumes = new Object[n];
+		for (int i = 0; i < n; i++) {
+			IDataCollection cdc = cdcList.get(i);
+			List<IStepCollection> scList = cdc.getProducingCollections();
 			int m = scList.size();
 			if (m > 1) {
-                String stepsStr = "";
-                for (IStepCollection sc2 : scList)
-                    stepsStr += " " + sc2.getName();
-                Messages.fatal(MULTIPLE_STEPS_PRODUCING_DATA, cdc.getName(), stepsStr);
-            }
-            if (m == 0)
+				String stepsStr = "";
+				for (IStepCollection sc2 : scList)
+					stepsStr += " " + sc2.getName();
+				Messages.fatal(MULTIPLE_STEPS_PRODUCING_DATA, cdc.getName(), stepsStr);
+			}
+			if (m == 0)
 				Messages.fatal(STEP_PRODUCING_DATA_NOT_FOUND, cdc.getName());
-            IStepCollection sc2 = scList.get(0);
-            ICtrlCollection cc2 = sc2.getPrescribingCollection();
+			IStepCollection sc2 = scList.get(0);
+			ICtrlCollection cc2 = sc2.getPrescribingCollection();
 			System.out.println(Thread.currentThread() + " Prologue of step sc=" +
 				sc.getName() + " doing PUT of ctrl=" + ctrl +
 				" into cc=" + cc2.getName());
-            cc2.Put(ctrl);
-            ItemCollection cic = cdc.getItemCollection();
+			cc2.Put(ctrl);
+			ItemCollection cic = cdc.getItemCollection();
 			System.out.println(Thread.currentThread() + " Prologue of step sc=" +
 				sc.getName() + " doing GET of ctrl=" + ctrl +
 				" from dc=" + cdc.getName());
-            consumes[i] = cic.Get(ctrl);
-        }
+			consumes[i] = cic.Get(ctrl);
+		}
 		return consumes;
 	}
 
 	public void runEpilogue(Object ctrl, IStepCollection sc, Object[] produces, Object[] controls) {
 		List<IDataCollection> pdcList = sc.getProducedDataCollections();
-        int m = pdcList.size();
-        for (int i = 0; i < m; i++) {
-            IDataCollection pdc = pdcList.get(i);
-            ItemCollection pic = pdc.getItemCollection();
-            Object o = produces[i];
-            if (o != null) {
+		int m = pdcList.size();
+		for (int i = 0; i < m; i++) {
+			IDataCollection pdc = pdcList.get(i);
+			ItemCollection pic = pdc.getItemCollection();
+			Object o = produces[i];
+			if (o != null) {
 				System.out.println(Thread.currentThread() + " Epilogue of step sc=" +
 					sc.getName() + " doing PUT of ctrl=" + ctrl + " into dc=" + pdc.getName());
-                pic.Put(ctrl, o);
+				pic.Put(ctrl, o);
 			}
-        }
-        List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
-        int k = pccList.size();
-        for (int i = 0; i < k; i++) {
-            ICtrlCollection pcc = pccList.get(i);
-            Object ctrl2 = controls[i];
-            if (ctrl2 != null) {
+		}
+		List<ICtrlCollection> pccList = sc.getProducedCtrlCollections();
+		int k = pccList.size();
+		for (int i = 0; i < k; i++) {
+			ICtrlCollection pcc = pccList.get(i);
+			Object ctrl2 = controls[i];
+			if (ctrl2 != null) {
 				System.out.println(Thread.currentThread() + " Epilogue of step sc=" +
 					sc.getName() + " doing PUT of ctrl=" + ctrl2 + " into cc=" + pcc.getName());
-                pcc.Put(ctrl2);
+				pcc.Put(ctrl2);
 			}
-        }
+		}
 	}
 
 	public IStepCollection getStepCollectionByName(String name) {

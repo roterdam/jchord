@@ -20,9 +20,9 @@ import java.util.Set;
  * Notes:
  * <ul>
  *   <li>Any parts of the directed graph unreachable from its root
- *       nodes are silently ignored.</li>
+ *	   nodes are silently ignored.</li>
  *   <li>If the graph is acyclic (i.e. it is a DAG) then the RPO is
- *       a Topological Order.</li>
+ *	   a Topological Order.</li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)

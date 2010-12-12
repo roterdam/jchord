@@ -18,7 +18,7 @@ public interface IDataCollection {
 	public void setName(String name);
 
 	public String getName();
-    
+	
 	public void setItemCollection(ItemCollection ic);
 	
 	public ItemCollection getItemCollection();

@@ -27,51 +27,51 @@ import chord.project.Config;
  */
 public class Utils {
   public static int[] samplePermutation(Random random, int n) {
-    int[] perm = new int[n];
-    for(int i = 0; i < n; i++) perm[i] = i;
-    for(int i = 0; i < n-1; i++) {
-      int j = i+random.nextInt(n-i);
-      int tmp = perm[i]; perm[i] = perm[j]; perm[j] = tmp; // Swap
-    }
-    return perm;
+	int[] perm = new int[n];
+	for(int i = 0; i < n; i++) perm[i] = i;
+	for(int i = 0; i < n-1; i++) {
+	  int j = i+random.nextInt(n-i);
+	  int tmp = perm[i]; perm[i] = perm[j]; perm[j] = tmp; // Swap
+	}
+	return perm;
   }
 
   public static <S, T> void add(Map<S, List<T>> map, S key1, T key2) {
-    List<T> s = map.get(key1);
-    if(s == null) map.put(key1, s = new ArrayList<T>());
-    s.add(key2);
+	List<T> s = map.get(key1);
+	if(s == null) map.put(key1, s = new ArrayList<T>());
+	s.add(key2);
   }
 
   public static PrintWriter openOut(String path) {
-    try {
-      return new PrintWriter(path);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+	try {
+	  return new PrintWriter(path);
+	} catch (Exception e) {
+	  throw new RuntimeException(e);
+	}
   }
 
   public static PrintWriter openOutAppend(String path) {
-    try {
-      return new PrintWriter(new FileOutputStream(path, true));
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
+	try {
+	  return new PrintWriter(new FileOutputStream(path, true));
+	} catch (Exception e) {
+	  throw new RuntimeException(e);
+	}
   }
 
   public static <T> String join(List<T> objs, String delim) {
-    if(objs == null) return "";
-    return join(objs, delim, 0, objs.size());
+	if(objs == null) return "";
+	return join(objs, delim, 0, objs.size());
   }
   public static <T> String join(List<T> objs, String delim, int start, int end) {
-    if(objs == null) return "";
-    StringBuilder sb = new StringBuilder();
-    boolean first = true;
-    for(int i = start; i < end; i++) {
-      if(!first) sb.append(delim);
-      sb.append(objs.get(i));
-      first = false;
-    }
-    return sb.toString();
+	if(objs == null) return "";
+	StringBuilder sb = new StringBuilder();
+	boolean first = true;
+	for(int i = start; i < end; i++) {
+	  if(!first) sb.append(delim);
+	  sb.append(objs.get(i));
+	  first = false;
+	}
+	return sb.toString();
   }
   /**
    * Checks a string against a set of prefixes. Returns true if and only if the
@@ -85,11 +85,11 @@ public class Utils {
    * @return
    */
   public static boolean prefixMatch(String str, String[] prefixes) {
-    for(String prefix: prefixes) {
-    	if(str.startsWith(prefix))
-    		return true;
-    }
-    return false;
+	for(String prefix: prefixes) {
+		if(str.startsWith(prefix))
+			return true;
+	}
+	return false;
   }
   
 }

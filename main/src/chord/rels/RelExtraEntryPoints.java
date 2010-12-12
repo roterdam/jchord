@@ -19,8 +19,8 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 @Chord(
-    name = "MentryPoints",
-    sign = "M0:M0"
+	name = "MentryPoints",
+	sign = "M0:M0"
   )
 /**
  * A relation over domain M containing additional entry points for the program.
@@ -40,112 +40,112 @@ public class RelExtraEntryPoints extends ProgramRel {
    
   @Override
   public void fill() {
-    Iterable<jq_Method> publicMethods =  slurpMList(Program.g().getClassHierarchy());
+	Iterable<jq_Method> publicMethods =  slurpMList(Program.g().getClassHierarchy());
 
-    for(jq_Method m: publicMethods) {
-      super.add(m);
-    }
+	for(jq_Method m: publicMethods) {
+	  super.add(m);
+	}
   }
   
   
   
   public static Iterable<jq_Method> slurpMList(ClassHierarchy ch) {
-    
-    if(methods == null)
-       methods = new LinkedHashSet<jq_Method>();
-    else
-      return methods;
-    
-    if(extraMethodsFile == null)
-      return methods;
+	
+	if(methods == null)
+	   methods = new LinkedHashSet<jq_Method>();
+	else
+	  return methods;
+	
+	if(extraMethodsFile == null)
+	  return methods;
 
-    String s = null;
-    try {
-    
-    BufferedReader br = new BufferedReader(new FileReader(extraMethodsFile));
-    while( (s = br.readLine()) != null) {
-      if(s.startsWith("#"))
-        continue;
-      
-      try { 
-      if(s.contains("@")) {
-        //s is a method.
-        
-        int strudelPos = s.indexOf('@');
-        int colonPos = s.indexOf(':');
-        if(strudelPos > colonPos && colonPos > 0) {
-          String cName = s.substring(strudelPos+1);
-          String mName = s.substring(0, colonPos);
-          String mDesc = s.substring(colonPos+1, strudelPos);
+	String s = null;
+	try {
+	
+	BufferedReader br = new BufferedReader(new FileReader(extraMethodsFile));
+	while( (s = br.readLine()) != null) {
+	  if(s.startsWith("#"))
+		continue;
+	  
+	  try { 
+	  if(s.contains("@")) {
+		//s is a method.
+		
+		int strudelPos = s.indexOf('@');
+		int colonPos = s.indexOf(':');
+		if(strudelPos > colonPos && colonPos > 0) {
+		  String cName = s.substring(strudelPos+1);
+		  String mName = s.substring(0, colonPos);
+		  String mDesc = s.substring(colonPos+1, strudelPos);
 
-          jq_Class parentClass  =  (jq_Class) jq_Type.parseType(cName);
-          
-          parentClass.prepare();  
-          jq_Method m = (jq_Method) parentClass.getDeclaredMember(mName, mDesc);
-          methods.add(m);
-        }
-      } else { //s is a class name
-        
-        jq_Class pubI  =  (jq_Class) jq_Type.parseType(s);
-        
-        if(pubI == null) {
-          System.err.println("ERR: no such class " + s );
-          continue;
-        } else
-          pubI.prepare();  
-        
-        //two cases: pubI is an interface/abstract class or pubI is a concrete class.
-        if(pubI.isInterface() || pubI.isAbstract()) {
-          Set<String> impls =  ch.getConcreteSubclasses(pubI.getName());
-          if(impls == null) {
-            System.err.println("ExtraEntryPoints: found no concrete impls or subclasses of " + pubI.getName());
-            continue;
-          }
-          
-          for(String impl:impls) {
-            jq_Class implClass = (jq_Class) jq_Type.parseType(impl);
-            implClass.prepare();
-            for(jq_Method ifaceM:   pubI.getDeclaredInstanceMethods()) {
-              
-              jq_Class implementingClass = implClass;
-              while(implementingClass != null) {
-                jq_Method implM = implementingClass.getDeclaredInstanceMethod(ifaceM.getNameAndDesc());
-                if(implM != null) {
-                  methods.add(implM);
-                  break;
-                } else {
-                  implementingClass = implementingClass.getSuperclass();
-                  implementingClass.prepare();
-                }
-              }
-            }
-          }
-        } else { //class is concrete
-          for(jq_Method m: pubI.getDeclaredInstanceMethods()) {
-            if(!m.isPrivate()) {
-              methods.add(m);
-            }
-          }
-          
-          for(jq_Method m: pubI.getDeclaredStaticMethods()) {
-            if(!m.isPrivate()) {
-              methods.add(m);
-            }
-          }
-        }
-      }
-      } catch (Throwable e) {
-        e.printStackTrace();
-      }
-    }
-    
-    br.close();
-    } catch(IOException e) {
-      e.printStackTrace();
-    } catch(NoClassDefFoundError e) {
-      e.printStackTrace();
-    }
-    return methods;
+		  jq_Class parentClass  =  (jq_Class) jq_Type.parseType(cName);
+		  
+		  parentClass.prepare();  
+		  jq_Method m = (jq_Method) parentClass.getDeclaredMember(mName, mDesc);
+		  methods.add(m);
+		}
+	  } else { //s is a class name
+		
+		jq_Class pubI  =  (jq_Class) jq_Type.parseType(s);
+		
+		if(pubI == null) {
+		  System.err.println("ERR: no such class " + s );
+		  continue;
+		} else
+		  pubI.prepare();  
+		
+		//two cases: pubI is an interface/abstract class or pubI is a concrete class.
+		if(pubI.isInterface() || pubI.isAbstract()) {
+		  Set<String> impls =  ch.getConcreteSubclasses(pubI.getName());
+		  if(impls == null) {
+			System.err.println("ExtraEntryPoints: found no concrete impls or subclasses of " + pubI.getName());
+			continue;
+		  }
+		  
+		  for(String impl:impls) {
+			jq_Class implClass = (jq_Class) jq_Type.parseType(impl);
+			implClass.prepare();
+			for(jq_Method ifaceM:   pubI.getDeclaredInstanceMethods()) {
+			  
+			  jq_Class implementingClass = implClass;
+			  while(implementingClass != null) {
+				jq_Method implM = implementingClass.getDeclaredInstanceMethod(ifaceM.getNameAndDesc());
+				if(implM != null) {
+				  methods.add(implM);
+				  break;
+				} else {
+				  implementingClass = implementingClass.getSuperclass();
+				  implementingClass.prepare();
+				}
+			  }
+			}
+		  }
+		} else { //class is concrete
+		  for(jq_Method m: pubI.getDeclaredInstanceMethods()) {
+			if(!m.isPrivate()) {
+			  methods.add(m);
+			}
+		  }
+		  
+		  for(jq_Method m: pubI.getDeclaredStaticMethods()) {
+			if(!m.isPrivate()) {
+			  methods.add(m);
+			}
+		  }
+		}
+	  }
+	  } catch (Throwable e) {
+		e.printStackTrace();
+	  }
+	}
+	
+	br.close();
+	} catch(IOException e) {
+	  e.printStackTrace();
+	} catch(NoClassDefFoundError e) {
+	  e.printStackTrace();
+	}
+	return methods;
   }
 
 }

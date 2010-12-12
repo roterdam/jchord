@@ -9,11 +9,11 @@ package chord.program;
 import joeq.Class.jq_Reference;
 
 public class PhantomObjVal {
-    public final jq_Reference r;
-    public PhantomObjVal(jq_Reference r) {
-        assert (r != null);
-        this.r = r;
-    }
+	public final jq_Reference r;
+	public PhantomObjVal(jq_Reference r) {
+		assert (r != null);
+		this.r = r;
+	}
 	@Override
 	public int hashCode() {
 		return r.hashCode();

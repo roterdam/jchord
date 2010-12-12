@@ -44,38 +44,38 @@ public class ByteBufferedFile {
 		this.bufferSize = fileBlockSize + MAX_BYTES;
 		buffer = new byte[bufferSize];
 		if (isRead) {
-      //iStream = new FileInputStream(fileName);
-      /*if (fileName.endsWith(".gz"))
-        iStream = new GZIPInputStream(new FileInputStream(fileName));
-      else
-        iStream = new BufferedInputStream(new FileInputStream(fileName));*/
-      if (fileName.endsWith(".gz")) {
-        // HACK: unzip the file manually
-        String newFileName = fileName.replaceAll("\\.gz$", "");
-        String cmd = String.format("gunzip < %s > %s", fileName, newFileName);
-        System.out.println("UNZIP: "+cmd);
-        Process p = Runtime.getRuntime().exec(new String[] { "sh", "-c", cmd });
-        try {
-          if (p.waitFor() != 0)
-            throw new RuntimeException("Unable to gunzip "+fileName);
-        } catch (InterruptedException e) {
-          throw new RuntimeException(e);
-        }
-        iStream = new FileInputStream(newFileName);
-      }
-      else
-        iStream = new FileInputStream(fileName);
+	  //iStream = new FileInputStream(fileName);
+	  /*if (fileName.endsWith(".gz"))
+		iStream = new GZIPInputStream(new FileInputStream(fileName));
+	  else
+		iStream = new BufferedInputStream(new FileInputStream(fileName));*/
+	  if (fileName.endsWith(".gz")) {
+		// HACK: unzip the file manually
+		String newFileName = fileName.replaceAll("\\.gz$", "");
+		String cmd = String.format("gunzip < %s > %s", fileName, newFileName);
+		System.out.println("UNZIP: "+cmd);
+		Process p = Runtime.getRuntime().exec(new String[] { "sh", "-c", cmd });
+		try {
+		  if (p.waitFor() != 0)
+			throw new RuntimeException("Unable to gunzip "+fileName);
+		} catch (InterruptedException e) {
+		  throw new RuntimeException(e);
+		}
+		iStream = new FileInputStream(newFileName);
+	  }
+	  else
+		iStream = new FileInputStream(fileName);
 			refill();
 		} else {
 			//oStream = new FileOutputStream(fileName);
-      /*if (fileName.endsWith(".gz"))
-        oStream = new GZIPOutputStream(new FileOutputStream(fileName));
-      else
-        oStream = new BufferedOutputStream(new FileOutputStream(fileName));*/
-      if (fileName.endsWith(".gz"))
-        throw new RuntimeException("Not supported");
-      else
-        oStream = new FileOutputStream(fileName);
+	  /*if (fileName.endsWith(".gz"))
+		oStream = new GZIPOutputStream(new FileOutputStream(fileName));
+	  else
+		oStream = new BufferedOutputStream(new FileOutputStream(fileName));*/
+	  if (fileName.endsWith(".gz"))
+		throw new RuntimeException("Not supported");
+	  else
+		oStream = new FileOutputStream(fileName);
 		}
 	}
 	// Must be called only when put[Byte|Int|Long] is called
@@ -83,7 +83,7 @@ public class ByteBufferedFile {
 	// This operation performs the following steps in order:
 	// 1. Copies buffer from [0..fileBlockSize) to file
 	// 2. Copies buffer from [fileBlockSize..curPos) to
-	//    [0..N) where N = curPos - fileBlockSize
+	//	[0..N) where N = curPos - fileBlockSize
 	// 3. Sets curPos to N
 	private void write() throws IOException {
 		oStream.write(buffer, 0, fileBlockSize);

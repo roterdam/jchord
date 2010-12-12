@@ -24,7 +24,7 @@ public class BackEdgesFinder<Node> {
 	 * @param	graph	A directed graph.
 	 * 
 	 * @return	All back edges in a depth-first traversal of the given
-	 * 			directed graph reachable from its root nodes.
+	 *			 directed graph reachable from its root nodes.
 	 */
 	public static <Node> Set<Pair<Node, Node>>
 			build(IGraph<Node> graph) {
@@ -40,10 +40,10 @@ public class BackEdgesFinder<Node> {
 		visitedBef = new HashSet<Node>(numNodes);
 		visitedAft = new HashSet<Node>(numNodes);
 		backEdges = new HashSet<Pair<Node, Node>>();
-        for (Node root : graph.getRoots()) {
-            if (!visitedBef.contains(root))
-		        visit(root);
-        }
+		for (Node root : graph.getRoots()) {
+			if (!visitedBef.contains(root))
+				visit(root);
+		}
 	}
 	private void visit(Node v) {
 		visitedBef.add(v);

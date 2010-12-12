@@ -40,14 +40,14 @@ public class ChordAnnotParser {
 	 * 
 	 * @param	type	A class annotated with a Chord annotation.
 	 */
-    public ChordAnnotParser(Class type) {
+	public ChordAnnotParser(Class type) {
 		this.type = type;
 	}
-    /**
-     * Parses this Chord annotation.
-     * 
-     * @return	true iff the Chord annotation parses successfully.
-     */
+	/**
+	 * Parses this Chord annotation.
+	 * 
+	 * @return	true iff the Chord annotation parses successfully.
+	 */
 	public boolean parse() {
 		Chord chord = (Chord) type.getAnnotation(Chord.class);
 		assert (chord != null);
@@ -69,7 +69,7 @@ public class ChordAnnotParser {
 			}
 		} else if (!sign.equals("")) {
 			error("Method sign() cannot return non-empty string " +
-		 		"for Java analysis '" + type + "'");
+				 "for Java analysis '" + type + "'");
 		}
 
 		{
@@ -118,12 +118,12 @@ public class ChordAnnotParser {
 
 		nameToTypeMap = new HashMap<String, Class>();
 		nameToTypeMap.put(name, type);
-        String[] namesOfTypes = chord.namesOfTypes();
-        Class [] types = chord.types();
-        if (namesOfTypes.length != types.length) {
-            error("Methods namesOfTypes() and types() " +
-                "return arrays of different lengths.");
-        } else {
+		String[] namesOfTypes = chord.namesOfTypes();
+		Class [] types = chord.types();
+		if (namesOfTypes.length != types.length) {
+			error("Methods namesOfTypes() and types() " +
+				"return arrays of different lengths.");
+		} else {
 			for (int i = 0; i < namesOfTypes.length; i++) {
 				String name2 = namesOfTypes[i];
 				if (name2.equals(name) || name2.equals(".")) {
@@ -143,12 +143,12 @@ public class ChordAnnotParser {
 		nameToSignMap = new HashMap<String, RelSign>();
 		if (relSign != null)
 			nameToSignMap.put(this.name, relSign);
-        String[] namesOfSigns = chord.namesOfSigns();
-        String[] signs = chord.signs();
-        if (namesOfSigns.length != signs.length) {
-        	error("Methods namesOfSigns() and signs() " +
-                "return arrays of different lengths.");
-        } else {
+		String[] namesOfSigns = chord.namesOfSigns();
+		String[] signs = chord.signs();
+		if (namesOfSigns.length != signs.length) {
+			error("Methods namesOfSigns() and signs() " +
+				"return arrays of different lengths.");
+		} else {
 			for (int i = 0; i < namesOfSigns.length; i++) {
 				String name2 = namesOfSigns[i];
 				if (name2.equals(name) || name2.equals(".")) {
@@ -188,7 +188,7 @@ public class ChordAnnotParser {
 			sign = sign.substring(0, i);
 		} else
 			domOrder = null;
- 		String[] domNamesAry = sign.split(",");
+		 String[] domNamesAry = sign.split(",");
 		if (domNamesAry.length == 1)
 			domOrder = domNamesAry[0];
 		try {

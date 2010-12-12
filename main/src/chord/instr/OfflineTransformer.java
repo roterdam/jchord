@@ -27,23 +27,23 @@ import chord.util.FileUtils;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public final class OfflineTransformer {
-    private static final String INSTR_STARTING =
+	private static final String INSTR_STARTING =
 		"INFO: Starting to instrument all classes; this may take a while ...";
-    private static final String INSTR_FINISHED =
+	private static final String INSTR_FINISHED =
 		"INFO: Finished instrumenting all classes.";
-    private static final String CANNOT_INSTRUMENT_CLASS =
-        "ERROR: Skipping instrumenting class %s; reason follows.";
-    private static final String CLASS_NOT_BOOT_NOR_USER =
+	private static final String CANNOT_INSTRUMENT_CLASS =
+		"ERROR: Skipping instrumenting class %s; reason follows.";
+	private static final String CLASS_NOT_BOOT_NOR_USER =
 		"ERROR: Skipping instrumenting class %s; its defining resource %s is neither in the boot nor user classpath.";
-    private static final String WROTE_INSTRUMENTED_CLASS =
+	private static final String WROTE_INSTRUMENTED_CLASS =
 		"INFO: Wrote instrumented class %s.";
-    private static final String CLASS_NOT_FOUND =
+	private static final String CLASS_NOT_FOUND =
 		"WARN: Could not find class %s in Javassist class pool.";
 
-    private final String bootClassesDirName;
-    private final String userClassesDirName;
+	private final String bootClassesDirName;
+	private final String userClassesDirName;
 	private final JavassistPool pool;
-    private final CoreInstrumentor instrumentor;
+	private final CoreInstrumentor instrumentor;
 
 	public OfflineTransformer(CoreInstrumentor instr) {
 		instrumentor = instr;
@@ -54,8 +54,8 @@ public final class OfflineTransformer {
 
 	public void run() {
 		if (Config.verbose > 1) Messages.log(INSTR_STARTING);
-        FileUtils.deleteFile(bootClassesDirName);
-        FileUtils.deleteFile(userClassesDirName);
+		FileUtils.deleteFile(bootClassesDirName);
+		FileUtils.deleteFile(userClassesDirName);
 		Program program = Program.g();
 		for (jq_Reference r : program.getClasses()) {
 			if (r instanceof jq_Array)
@@ -89,15 +89,15 @@ public final class OfflineTransformer {
 	}
 
 	public String getOutDir(String cName) {
-        String rName = pool.getResource(cName);
-        if (rName == null) {
-            Messages.log(CLASS_NOT_FOUND, cName);
-            return null;
-        }
+		String rName = pool.getResource(cName);
+		if (rName == null) {
+			Messages.log(CLASS_NOT_FOUND, cName);
+			return null;
+		}
 		if (pool.isBootResource(rName))
 			return bootClassesDirName;
-        if (pool.isUserResource(rName))
-            return userClassesDirName;
+		if (pool.isUserResource(rName))
+			return userClassesDirName;
 		Messages.log(CLASS_NOT_BOOT_NOR_USER, cName, rName);
 		return null;
 	}

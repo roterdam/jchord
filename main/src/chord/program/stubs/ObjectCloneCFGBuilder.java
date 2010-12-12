@@ -41,22 +41,22 @@ import joeq.Compiler.Quad.Operand;
  */
 public class ObjectCloneCFGBuilder implements ICFGBuilder {
 	@Override
-    public ControlFlowGraph run(jq_Method m) {
-    	jq_Class c = m.getDeclaringClass();
-    	RegisterFactory rf = new RegisterFactory(0, 1);
-    	Register r = rf.getOrCreateLocal(0, c);
-    	ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
+	public ControlFlowGraph run(jq_Method m) {
+		jq_Class c = m.getDeclaringClass();
+		RegisterFactory rf = new RegisterFactory(0, 1);
+		Register r = rf.getOrCreateLocal(0, c);
+		ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
 		RegisterOperand ro = new RegisterOperand(r, c);
-    	Quad q = Return.create(0, m, RETURN_A.INSTANCE);
+		Quad q = Return.create(0, m, RETURN_A.INSTANCE);
 		Return.setSrc(q, ro);
-    	BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
-    	bb.appendQuad(q);
-    	BasicBlock entry = cfg.entry();
-    	BasicBlock exit = cfg.exit();
-    	bb.addPredecessor(entry);
-    	bb.addSuccessor(exit);
-    	entry.addSuccessor(bb);
-    	exit.addPredecessor(bb);
+		BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
+		bb.appendQuad(q);
+		BasicBlock entry = cfg.entry();
+		BasicBlock exit = cfg.exit();
+		bb.addPredecessor(entry);
+		bb.addSuccessor(exit);
+		entry.addSuccessor(bb);
+		exit.addPredecessor(bb);
 		return cfg;
 	}
 }

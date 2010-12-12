@@ -61,15 +61,15 @@ public class ArraySet<T> extends ArrayList<T> implements Set<T> {
 		}
 		return modified;
 	}
-    public boolean equals(Object o) {
-   		if (o == this)
-        	return true;
-    	if (!(o instanceof Set)) {
-        	return false;
+	public boolean equals(Object o) {
+		   if (o == this)
+			return true;
+		if (!(o instanceof Set)) {
+			return false;
 		}
-    	Collection c = (Collection) o;
-    	if (c.size() != size()) {
-        	return false;
+		Collection c = (Collection) o;
+		if (c.size() != size()) {
+			return false;
 		}
 		for (Iterator it = c.iterator(); it.hasNext();) {
 			Object e = it.next();
@@ -78,7 +78,7 @@ public class ArraySet<T> extends ArrayList<T> implements Set<T> {
 			}
 		}
 		return true;
-    }
+	}
 	public int hashCode() {
 		int h = 0;
 		for (T e : this) {

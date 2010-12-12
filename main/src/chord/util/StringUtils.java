@@ -73,8 +73,8 @@ public final class StringUtils {
 	public static List<String> tokenize(String s) {
 		StringTokenizer st = new StringTokenizer(s);
 		List<String> l = new ArrayList<String>(st.countTokens());
-        for (int i = 0; st.hasMoreTokens(); i++)
-            l.add(st.nextToken());
+		for (int i = 0; st.hasMoreTokens(); i++)
+			l.add(st.nextToken());
 		return l;
 	}
 }

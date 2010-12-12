@@ -25,20 +25,20 @@ import chord.project.ModernProject;
  */
 public class JavaAnalysis implements ITask {
 	private static final String UNDEFINED_RUN = "ERRROR: Analysis '%s' must override method 'run()'";
-    protected String name;
-    protected Object[] consumes;
-    protected Object[] produces;
-    protected Object[] controls;
+	protected String name;
+	protected Object[] consumes;
+	protected Object[] produces;
+	protected Object[] controls;
 	@Override
-    public void setName(String name) {
-        assert (name != null);
-        assert (this.name == null);
-        this.name = name;
-    }
+	public void setName(String name) {
+		assert (name != null);
+		assert (this.name == null);
+		this.name = name;
+	}
 	@Override
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 	@Override
 	public void run() {
 		Messages.fatal(UNDEFINED_RUN, name);
@@ -46,8 +46,8 @@ public class JavaAnalysis implements ITask {
 	@Override
 	public void run(Object ctrl, IStepCollection sc) {
 		ModernProject p = ModernProject.g();
-        consumes = p.runPrologue(ctrl, sc);
-        run();
+		consumes = p.runPrologue(ctrl, sc);
+		run();
 		p.runEpilogue(ctrl, sc, produces, controls);
 	}
 	@Override

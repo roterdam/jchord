@@ -45,7 +45,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 	 * @param	var		A local variable declared in the method.
 	 * 
 	 * @return	The abstract object to which the given local variable
-	 *  		may point in the given abstract context.
+	 *		  may point in the given abstract context.
 	 */
 	public CSObj pointsTo(Ctxt ctxt, Register var) {
 		if (!relCVC.isOpen())
@@ -66,7 +66,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 	 * @param	field	A static field.
 
 	 * @return	The abstract object to which the given static field
-	 * 			may point.
+	 *			 may point.
 	 */
 	public CSObj pointsTo(jq_Field field) {
 		if (!relFC.isOpen())
@@ -87,7 +87,7 @@ public class CSAliasAnalysis extends JavaAnalysis {
 	 * @param	field	An instance field.
 	 * 
 	 * @return	The abstract object to which the given instance field
-	 * 			of the given abstract object may point.
+	 *			 of the given abstract object may point.
 	 */
 	public CSObj pointsTo(CSObj obj, jq_Field field) {
 		if (!relCFC.isOpen())

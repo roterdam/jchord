@@ -98,13 +98,13 @@ public class StaticReflectResolver {
 						else if (mName.equals("newInstance"))
 							newInstSites.add(q);
 					} else if(cName.equals("java.lang.reflect.Constructor")) {
-	           String mName = n.getName().toString();
-	           if (mName.equals("newInstance"))
-	              newInstSites.add(q);
+			   String mName = n.getName().toString();
+			   if (mName.equals("newInstance"))
+				  newInstSites.add(q);
 					} else if(cName.equals("java.lang.ClassLoader")) {
-            String mName = n.getName().toString();
-            if (mName.equals("loadClass"))
-              forNameSites.add(q);
+			String mName = n.getName().toString();
+			if (mName.equals("loadClass"))
+			  forNameSites.add(q);
 					}
 				}
 			}
@@ -184,7 +184,7 @@ public class StaticReflectResolver {
 	}
 	protected void resolveNewInstSites() {
 	  if(DEBUG)
-	    System.out.println("resolveNewInstSites on " + cfg.getMethod());
+		System.out.println("resolveNewInstSites on " + cfg.getMethod());
 		resolutions.clear();
 		for (Pair<Quad, jq_Reference> p : resolvedClsForNameSites) {
 			Quad q = p.val0;
@@ -217,8 +217,8 @@ public class StaticReflectResolver {
 							Register r = ((RegisterOperand) ro).getRegister();
 							processCopy(l, r);
 
-	            if(op instanceof CheckCast)
-	              processCheckCast(l, r, q);
+				if(op instanceof CheckCast)
+				  processCheckCast(l, r, q);
 						}
 					} else if (op instanceof Phi)
 						processPhi(q);
@@ -332,7 +332,7 @@ public class StaticReflectResolver {
  * @return
  */
 	public boolean needNewIter() {
-    return false;
+	return false;
   }
 	
 	public void startedNewIter() {}

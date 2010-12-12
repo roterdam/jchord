@@ -29,9 +29,9 @@ public class DynamicBuilder {
 		if (methods != null)
 			return methods;
 		List<String> classNames = Program.getDynamicallyLoadedClasses();
-        HostedVM.initialize();
+		HostedVM.initialize();
 		methods = new IndexSet<jq_Method>();
-        for (String s : classNames) {
+		for (String s : classNames) {
 			jq_Class c = (jq_Class) Program.loadClass(s);
 			if (c == null)
 				continue;

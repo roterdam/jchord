@@ -115,8 +115,8 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 		Class eventHandlerClass = EventHandler.class;
 		Map<String, String> eventHandlerArgs = new HashMap(1);
 		eventHandlerArgs.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
-        return new Pair<Class, Map<String, String>>(eventHandlerClass, eventHandlerArgs);
-    }
+		return new Pair<Class, Map<String, String>>(eventHandlerClass, eventHandlerArgs);
+	}
 
 	public List<Runnable> getTraceTransformers() {
 		if (!scheme.needsTraceTransform())

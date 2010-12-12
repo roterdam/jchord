@@ -54,9 +54,9 @@ public class Dom<T> extends IndexMap<T> {
 		assert (this.name == null);
 		this.name = name;
 	}
-    public String getName() {
-        return name;
-    }
+	public String getName() {
+		return name;
+	}
 	/**
 	 * Reflects the domain in memory onto disk.
 	 */
@@ -81,12 +81,12 @@ public class Dom<T> extends IndexMap<T> {
 		out.close();
 	}
 	// subclasses may override
-    public String toUniqueString(T val) {
-    	return val == null ? "null" : val.toString();
-    }
+	public String toUniqueString(T val) {
+		return val == null ? "null" : val.toString();
+	}
 	public String toUniqueString(int idx) {
 		T val = get(idx);
-    	return toUniqueString(val);
+		return toUniqueString(val);
 	}
 	/**
 	 * Prints the values in the domain in memory to the standard
@@ -100,7 +100,7 @@ public class Dom<T> extends IndexMap<T> {
 	 * output stream.
 	 * 
 	 * @param	out	The output stream to which the values in the
-	 * 			domain in memory must be printed.
+	 *			 domain in memory must be printed.
 	 */
 	public void print(PrintStream out) {
 		for (int i = 0; i < size(); i++)

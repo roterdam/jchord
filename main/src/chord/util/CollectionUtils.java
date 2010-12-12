@@ -32,7 +32,7 @@ public final class CollectionUtils {
 	 * values.
 	 *
 	 * @return true iff the given collection contains duplicate
-	 *         values.
+	 *		 values.
 	 * @param	<T>	The type of the collection elements.
 	 * @param	elements	A collection.
 	 */

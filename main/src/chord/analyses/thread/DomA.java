@@ -29,7 +29,7 @@ import chord.doms.DomM;
 public class DomA extends ProgramDom<Trio<Ctxt, Ctxt, jq_Method>> {
 	private DomC domC;
 	private DomM domM;
-    public String toXMLAttrsString(Trio<Ctxt, Ctxt, jq_Method> aVal) {
+	public String toXMLAttrsString(Trio<Ctxt, Ctxt, jq_Method> aVal) {
 		if (domC == null)
 			domC = (DomC) ClassicProject.g().getTrgt("C");
 		if (domM == null)
@@ -40,5 +40,5 @@ public class DomA extends ProgramDom<Trio<Ctxt, Ctxt, jq_Method>> {
 		int c = domC.indexOf(aVal.val1);
 		int m = domM.indexOf(aVal.val2);
 		return "Oid=\"C" + o + "\" Cid=\"C" + c + "\" Mid=\"M" + m + "\"";
-    }
+	}
 }

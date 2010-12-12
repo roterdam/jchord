@@ -96,8 +96,8 @@ public class Program {
 		"ERROR: Program: Could not find method `%s`.";
 	private static final String CLASS_NOT_FOUND =
 		"ERROR: Program: Could not find class `%s`.";
-    private static final String DYNAMIC_CLASS_NOT_FOUND =
-        "WARN: Program: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
+	private static final String DYNAMIC_CLASS_NOT_FOUND =
+		"WARN: Program: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
 
 	static {
 		if (Config.verbose > 2)
@@ -130,7 +130,7 @@ public class Program {
 	private Map<String, jq_Method> signToMethodMap;
 	private jq_Method mainMethod;
 	private boolean HTMLizedJavaSrcFiles;
-    private ClassHierarchy ch;
+	private ClassHierarchy ch;
 	private boolean isBuilt;
 	private static Program program;
 
@@ -140,14 +140,14 @@ public class Program {
 		return program;
 	}
 
-    /**
-     * Provides the class hierarchy.
-     */
-    public ClassHierarchy getClassHierarchy() {
-        if (ch == null)
-            ch = new ClassHierarchy();
-        return ch;
-    }
+	/**
+	 * Provides the class hierarchy.
+	 */
+	public ClassHierarchy getClassHierarchy() {
+		if (ch == null)
+			ch = new ClassHierarchy();
+		return ch;
+	}
 
 	public void build() {
 		if (!isBuilt) {
@@ -196,31 +196,31 @@ public class Program {
 		assert (types == null);
 		assert (nameToClassMap == null);
 		assert (nameToTypeMap == null);
-        PrimordialClassLoader loader = PrimordialClassLoader.loader;
-        jq_Type[] typesAry = loader.getAllTypes();
-        int numTypes = loader.getNumTypes();
-        Arrays.sort(typesAry, 0, numTypes, comparator);
-        types = new IndexSet<jq_Type>(numTypes + 2);
-        classes = new IndexSet<jq_Reference>();
-        types.add(jq_NullType.NULL_TYPE);
-        types.add(jq_ReturnAddressType.INSTANCE);
-        for (int i = 0; i < numTypes; i++) {
-            jq_Type t = typesAry[i];
-            assert (t != null);
-            types.add(t);
-            if (t instanceof jq_Reference && t.isPrepared()) {
-                jq_Reference r = (jq_Reference) t;
-                classes.add(r);
-            }
-        }
+		PrimordialClassLoader loader = PrimordialClassLoader.loader;
+		jq_Type[] typesAry = loader.getAllTypes();
+		int numTypes = loader.getNumTypes();
+		Arrays.sort(typesAry, 0, numTypes, comparator);
+		types = new IndexSet<jq_Type>(numTypes + 2);
+		classes = new IndexSet<jq_Reference>();
+		types.add(jq_NullType.NULL_TYPE);
+		types.add(jq_ReturnAddressType.INSTANCE);
+		for (int i = 0; i < numTypes; i++) {
+			jq_Type t = typesAry[i];
+			assert (t != null);
+			types.add(t);
+			if (t instanceof jq_Reference && t.isPrepared()) {
+				jq_Reference r = (jq_Reference) t;
+				classes.add(r);
+			}
+		}
 		buildNameToClassMap();
 		buildNameToTypeMap();
 	}
 
-    /**
-     * Provides all methods deemed reachable.
-     */
-    public IndexSet<jq_Method> getMethods() {
+	/**
+	 * Provides all methods deemed reachable.
+	 */
+	public IndexSet<jq_Method> getMethods() {
 		if (methods == null)
 			buildMethods();
 		return methods;
@@ -235,17 +235,17 @@ public class Program {
 		return reflect;
 	}
 
-    public IndexSet<jq_Reference> getClasses() {
-        if (classes == null)
+	public IndexSet<jq_Reference> getClasses() {
+		if (classes == null)
 			buildClasses();
-        return classes;
-    }
+		return classes;
+	}
 
-    public IndexSet<jq_Type> getTypes() {
-        if (types == null)
+	public IndexSet<jq_Type> getTypes() {
+		if (types == null)
 			buildClasses();
-        return types;
-    }
+		return types;
+	}
 
 
 	private void loadMethodsFile(File file) {
@@ -349,7 +349,7 @@ public class Program {
 		assert (l != null);
 		int n = l.size();
 		Iterator<jq_Reference> it = l.iterator();
- 		assert (n > 0);
+		 assert (n > 0);
 		String s = p.val0.toByteLocStr() + "->" + it.next();
 		for (int i = 1; i < n; i++)
 			s += "," + it.next();
@@ -365,7 +365,7 @@ public class Program {
 
 	private void saveReflectFile(File file) {
 		try {
-            PrintWriter out = new PrintWriter(file);
+			PrintWriter out = new PrintWriter(file);
 			out.println("# resolvedClsForNameSites");
 			saveResolvedSites(reflect.getResolvedClsForNameSites(), out);
 			out.println("# resolvedObjNewInstSites");
@@ -499,65 +499,65 @@ public class Program {
 	// e.g. convert <tt>[Ljava/lang/String;I</tt> to
 	// <tt>java.lang.String[],int</tt>
 	public static String typesToStr(String typesStr) {
-    	String result = "";
-    	boolean needsSep = false;
-        while (typesStr.length() != 0) {
-            boolean isArray = false;
-            int numDim = 0;
-            String baseType;
-            // Handle array case
-            while(typesStr.startsWith("[")) {
-            	isArray = true;
-            	numDim++;
-            	typesStr = typesStr.substring(1);
-            }
-            // Determine base type
-            if (typesStr.startsWith("B")) {
-            	baseType = "byte";
-            	typesStr = typesStr.substring(1);
-            } else if (typesStr.startsWith("C")) {
-            	baseType = "char";
-            	typesStr = typesStr.substring(1);
-            } else if (typesStr.startsWith("D")) {
-            	baseType = "double";
-            	typesStr = typesStr.substring(1);
-            } else if (typesStr.startsWith("F")) {
-            	baseType = "float";
-            	typesStr = typesStr.substring(1);
-            } else if (typesStr.startsWith("I")) {
-            	baseType = "int";
-            	typesStr = typesStr.substring(1);
-            } else if (typesStr.startsWith("J")) {
-            	baseType = "long";
-            	typesStr = typesStr.substring(1);
-            } else if (typesStr.startsWith("L")) {
-            	int index = typesStr.indexOf(';');
-            	if(index == -1)
-            		throw new RuntimeException("Class reference has no ending ;");
-            	String className = typesStr.substring(1, index);
-            	baseType = className.replace('/', '.');
-            	typesStr = typesStr.substring(index + 1);
-            } else if (typesStr.startsWith("S")) {
-            	baseType = "short";
-            	typesStr = typesStr.substring(1);
-            } else if (typesStr.startsWith("Z")) {
-            	baseType = "boolean";
-            	typesStr = typesStr.substring(1);
-            } else if (typesStr.startsWith("V")) {
-            	baseType = "void";
-            	typesStr = typesStr.substring(1);
-            } else
-            	throw new RuntimeException("Unknown field type!");
-            if (needsSep)
-            	result += ",";
-            result += baseType;
-            if (isArray) {
-            	for (int i = 0; i < numDim; i++)
-            		result += "[]";
-            }
-            needsSep = true;
-        }
-        return result;
+		String result = "";
+		boolean needsSep = false;
+		while (typesStr.length() != 0) {
+			boolean isArray = false;
+			int numDim = 0;
+			String baseType;
+			// Handle array case
+			while(typesStr.startsWith("[")) {
+				isArray = true;
+				numDim++;
+				typesStr = typesStr.substring(1);
+			}
+			// Determine base type
+			if (typesStr.startsWith("B")) {
+				baseType = "byte";
+				typesStr = typesStr.substring(1);
+			} else if (typesStr.startsWith("C")) {
+				baseType = "char";
+				typesStr = typesStr.substring(1);
+			} else if (typesStr.startsWith("D")) {
+				baseType = "double";
+				typesStr = typesStr.substring(1);
+			} else if (typesStr.startsWith("F")) {
+				baseType = "float";
+				typesStr = typesStr.substring(1);
+			} else if (typesStr.startsWith("I")) {
+				baseType = "int";
+				typesStr = typesStr.substring(1);
+			} else if (typesStr.startsWith("J")) {
+				baseType = "long";
+				typesStr = typesStr.substring(1);
+			} else if (typesStr.startsWith("L")) {
+				int index = typesStr.indexOf(';');
+				if(index == -1)
+					throw new RuntimeException("Class reference has no ending ;");
+				String className = typesStr.substring(1, index);
+				baseType = className.replace('/', '.');
+				typesStr = typesStr.substring(index + 1);
+			} else if (typesStr.startsWith("S")) {
+				baseType = "short";
+				typesStr = typesStr.substring(1);
+			} else if (typesStr.startsWith("Z")) {
+				baseType = "boolean";
+				typesStr = typesStr.substring(1);
+			} else if (typesStr.startsWith("V")) {
+				baseType = "void";
+				typesStr = typesStr.substring(1);
+			} else
+				throw new RuntimeException("Unknown field type!");
+			if (needsSep)
+				result += ",";
+			result += baseType;
+			if (isArray) {
+				for (int i = 0; i < numDim; i++)
+					result += "[]";
+			}
+			needsSep = true;
+		}
+		return result;
 	}
 
 	public static List<String> getDynamicallyLoadedClasses() {
@@ -668,7 +668,7 @@ public class Program {
 					it.hasNext();) {
 				BasicBlock bb = it.nextBasicBlock();
 				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();                        
+					Quad q = it2.nextQuad();						
 					int bci = q.getBCI();
 					System.out.println("\t" + bci + "#" + q.getID());
 				}
@@ -682,15 +682,15 @@ public class Program {
 			printClass(c);
 	}
 
-    private static Comparator comparator = new Comparator() {
-        public int compare(Object o1, Object o2) {
-            jq_Type t1 = (jq_Type) o1;
-            jq_Type t2 = (jq_Type) o2;
-            String s1 = t1.getName();
-            String s2 = t2.getName();
-            return s1.compareTo(s2);
-        }
-    };
+	private static Comparator comparator = new Comparator() {
+		public int compare(Object o1, Object o2) {
+			jq_Type t1 = (jq_Type) o1;
+			jq_Type t2 = (jq_Type) o2;
+			String s1 = t1.getName();
+			String s2 = t2.getName();
+			return s1.compareTo(s2);
+		}
+	};
 
 	// Functionality for determining the representation of a reference type, if
 	// it is present in the classpath, without giving a NoClassDefFoundError if
@@ -709,7 +709,7 @@ public class Program {
 			(s.equals("B") || s.equals("C") || s.equals("D") ||
 			 s.equals("F") || s.equals("I") || s.equals("J") ||
 			 s.equals("S") || s.equals("V") || s.equals("Z")
-            )) || s.equals("byte") || s.equals("char") || s.equals("double") ||
+			)) || s.equals("byte") || s.equals("char") || s.equals("double") ||
 			s.equals("float") || s.equals("int") || s.equals("long") ||
 			s.equals("short") || s.equals("void") || s.equals("boolean");
 		if (!isPrim) {

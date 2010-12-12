@@ -65,14 +65,14 @@ public class ProgramRel extends Rel implements ITask {
 		int m = domNames.length;
 		ProgramDom[] doms = new ProgramDom[m];
 		for (int i = 0; i < m; i++) {
-            String domName = StringUtils.trimNumSuffix(domNames[i]);
-            for (ProgramDom dom : uniqDoms) {
-            	if (dom.getName().equals(domName)) {
-            		doms[i] = dom;
-            		break;
-            	}
-            }
-            assert (doms[i] != null);
+			String domName = StringUtils.trimNumSuffix(domNames[i]);
+			for (ProgramDom dom : uniqDoms) {
+				if (dom.getName().equals(domName)) {
+					doms[i] = dom;
+					break;
+				}
+			}
+			assert (doms[i] != null);
 		}
 		setSign(sign);
 		setDoms(doms);

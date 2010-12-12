@@ -25,7 +25,7 @@ import chord.util.ChordRuntimeException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class InstrScheme implements Serializable {
-    public final static String INSTR_SCHEME_FILE_KEY = "instr_scheme_file_name";
+	public final static String INSTR_SCHEME_FILE_KEY = "instr_scheme_file_name";
 
 	public static final int NEW_AND_NEWARRAY = 0;
 
@@ -44,19 +44,19 @@ public class InstrScheme implements Serializable {
 	public static final int ASTORE_PRIMITIVE = 11;
 	public static final int ASTORE_REFERENCE = 12;
 
-    public static final int METHOD_CALL = 13;
-    public static final int RETURN_PRIMITIVE = 14;
-    public static final int RETURN_REFERENCE = 15;
-    public static final int EXPLICIT_THROW = 16;
-    public static final int IMPLICIT_THROW = 17;
+	public static final int METHOD_CALL = 13;
+	public static final int RETURN_PRIMITIVE = 14;
+	public static final int RETURN_REFERENCE = 15;
+	public static final int EXPLICIT_THROW = 16;
+	public static final int IMPLICIT_THROW = 17;
 
-    public static final int THREAD_START = 18;
-    public static final int THREAD_JOIN = 19;
-    public static final int ACQUIRE_LOCK = 20;
-    public static final int RELEASE_LOCK = 21;
-    public static final int WAIT = 22;
-    public static final int NOTIFY = 23;
-    
+	public static final int THREAD_START = 18;
+	public static final int THREAD_JOIN = 19;
+	public static final int ACQUIRE_LOCK = 20;
+	public static final int RELEASE_LOCK = 21;
+	public static final int WAIT = 22;
+	public static final int NOTIFY = 23;
+	
 	public static final int ENTER_METHOD = 24;
 	public static final int LEAVE_METHOD = 25;
 
@@ -523,7 +523,7 @@ public class InstrScheme implements Serializable {
 	}
 
 	public boolean needsPmap() {
- 		return hasQuadEvent;
+		 return hasQuadEvent;
 	}
 
 	public boolean needsLmap() {

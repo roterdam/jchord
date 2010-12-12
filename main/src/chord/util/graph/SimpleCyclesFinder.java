@@ -33,7 +33,7 @@ public class SimpleCyclesFinder<Node> {
 	private boolean[] mark;
 	/**
 	 * Finds all simple cycles in a given directed graph by
-     * invoking a given visitor on each simple cycle.
+	 * invoking a given visitor on each simple cycle.
 	 * 
 	 * @param	<Node>	The type of the graph's nodes.
 	 * 

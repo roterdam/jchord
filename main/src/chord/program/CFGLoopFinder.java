@@ -25,9 +25,9 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 public class CFGLoopFinder {
 	public static final boolean DEBUG = false;
 	private Set<BasicBlock> visitedBef;
-    private Set<BasicBlock> visitedAft;
-    private Set<Pair<BasicBlock, BasicBlock>> backEdges;
-    	private Map<BasicBlock, Set<BasicBlock>> headToBody;
+	private Set<BasicBlock> visitedAft;
+	private Set<Pair<BasicBlock, BasicBlock>> backEdges;
+		private Map<BasicBlock, Set<BasicBlock>> headToBody;
 	private Map<BasicBlock, Set<BasicBlock>> headToExits;
 	/**
 	 * Computes all loops in a given control-flow graph.
@@ -163,19 +163,19 @@ public class CFGLoopFinder {
 	public Map<BasicBlock, Set<BasicBlock>> getHeadToBodyMap() {
 		return headToBody;
 	}
-    private void visit(BasicBlock curr) {
-        visitedBef.add(curr);
-        for (Object o : curr.getSuccessors()) {
-        	BasicBlock succ = (BasicBlock) o;
-            if (visitedBef.contains(succ)) {
-                if (!visitedAft.contains(succ)) {
+	private void visit(BasicBlock curr) {
+		visitedBef.add(curr);
+		for (Object o : curr.getSuccessors()) {
+			BasicBlock succ = (BasicBlock) o;
+			if (visitedBef.contains(succ)) {
+				if (!visitedAft.contains(succ)) {
 					Pair<BasicBlock, BasicBlock> edge =
 						new Pair<BasicBlock, BasicBlock>(curr, succ);
-                    backEdges.add(edge);
+					backEdges.add(edge);
 				}
-            } else
-                visit(succ);
-        }
-        visitedAft.add(curr);
-    }
+			} else
+				visit(succ);
+		}
+		visitedAft.add(curr);
+	}
 }

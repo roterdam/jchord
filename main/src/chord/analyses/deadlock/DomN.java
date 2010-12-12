@@ -34,7 +34,7 @@ public class DomN extends ProgramDom<Pair<Ctxt, Inst>> {
 		return "<" + v.val0 + ", " + v.val1.toByteLocStr() + ">";
 	}
 	@Override
-    public String toXMLAttrsString(Pair<Ctxt, Inst> v) {
+	public String toXMLAttrsString(Pair<Ctxt, Inst> v) {
 		if (domC == null)
 			domC = (DomC) ClassicProject.g().getTrgt("C");
 		if (domL == null)
@@ -44,5 +44,5 @@ public class DomN extends ProgramDom<Pair<Ctxt, Inst>> {
 		int c = domC.indexOf(v.val0);
 		int l = domL.indexOf(v.val1);
 		return "Cid=\"C" + c + "\" Lid=\"L" + l + "\"";
-    }
+	}
 }

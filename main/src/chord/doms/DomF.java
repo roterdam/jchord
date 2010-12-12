@@ -50,8 +50,8 @@ public class DomF extends ProgramDom<jq_Field> implements IFieldVisitor {
 			file = c.getSourceFileName();
 			line = 0; // TODO
 		}
-        return "sign=\"" + sign +
-            "\" file=\"" + file +
-            "\" line=\"" + line + "\"";
+		return "sign=\"" + sign +
+			"\" file=\"" + file +
+			"\" line=\"" + line + "\"";
 	}
 }
