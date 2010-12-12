@@ -126,7 +126,7 @@ public class Config {
 	// Program analysis properties
 
 	public final static String javaAnalysisPathName = mainRel2AbsPath("chord.java.analysis.path", "classes");
-	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path", "src/dlog");
+	public final static String dlogAnalysisPathName = mainRel2AbsPath("chord.dlog.analysis.path", "src");
 	public final static String analysisExcludeStr = System.getProperty("chord.analysis.exclude", "");
 	public final static String[] analysisExcludeAry = toArray(analysisExcludeStr);
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);

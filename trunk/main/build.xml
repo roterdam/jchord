@@ -174,7 +174,7 @@
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
 			source="1.5" target="1.5" destdir="classes"
-			classpathref="main_class_path" srcdir="src/java"/>
+			classpathref="main_class_path" srcdir="src"/>
 		<jar destfile="${lib.home}/chord_instr_agent.jar">
 			<manifest>
 				<attribute name="Premain-Class" value="chord.instr.OnlineTransformer"/>
