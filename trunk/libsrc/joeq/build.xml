@@ -1,11 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project name="joeq" default="compile">
     <target name="compile">
+		<ant dir="../jwutil" target="jar"/>
         <mkdir dir="classes"/>
         <javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
                 source="1.5" target="1.5" srcdir="src" destdir="classes">
             <classpath>
-                <pathelement location="lib/jwutil-1.0.jar"/>
+                <pathelement location="../jwutil/jwutil.jar"/>
             </classpath>
         </javac>
     </target>
@@ -17,6 +18,7 @@
         </jar>
     </target>
     <target name="clean">
+		<ant dir="../jwutil" target="clean"/>
         <delete dir="classes"/>
         <delete file="joeq.jar"/>
     </target>
