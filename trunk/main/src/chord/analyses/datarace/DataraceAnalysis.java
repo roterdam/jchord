@@ -419,22 +419,22 @@ public class DataraceAnalysis extends JavaAnalysis {
 		domF.saveToXMLFile();
 		domL.saveToXMLFile();
 
-		OutDirUtils.copyFileFromMainDir("src/web/Olist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/Clist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/Alist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/Hlist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/Ilist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/Mlist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/Elist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/Flist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/Llist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/style.css");
-		OutDirUtils.copyFileFromMainDir("src/web/misc.xsl");
-		OutDirUtils.copyFileFromMainDir("src/web/datarace/results.dtd");
-		OutDirUtils.copyFileFromMainDir("src/web/datarace/results.xml");
-		OutDirUtils.copyFileFromMainDir("src/web/datarace/group.xsl");
-		OutDirUtils.copyFileFromMainDir("src/web/datarace/paths.xsl");
-		OutDirUtils.copyFileFromMainDir("src/web/datarace/races.xsl");
+		OutDirUtils.copyFileFromMainDir("web/misc.xsl");
+		OutDirUtils.copyFileFromMainDir("web/style.css");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Hlist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Ilist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Mlist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Elist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Flist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/doms/Llist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/thread/Alist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Olist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Clist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/results.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/results.xml");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/group.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/paths.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/races.xsl");
 
 		OutDirUtils.runSaxon("results.xml", "group.xsl");
 		OutDirUtils.runSaxon("results.xml", "paths.xsl");
