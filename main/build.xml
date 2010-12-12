@@ -393,7 +393,7 @@
 
 	<target name="javadoc">
 		<javadoc destdir="javadoc" classpathref="main_class_path">
-			<fileset dir="src/java">
+			<fileset dir="src">
 				<include name="**/*.java"/>
 			</fileset>
 		</javadoc>
