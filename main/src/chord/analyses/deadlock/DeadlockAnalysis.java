@@ -347,19 +347,19 @@ public class DeadlockAnalysis extends JavaAnalysis {
         domM.saveToXMLFile();
         domL.saveToXMLFile();
 
-        OutDirUtils.copyFileFromMainDir("src/web/Olist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/Clist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/Alist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/Hlist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/Ilist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/Mlist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/Llist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/style.css");
-        OutDirUtils.copyFileFromMainDir("src/web/misc.xsl");
-        OutDirUtils.copyFileFromMainDir("src/web/deadlock/results.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/deadlock/results.xml");
-        OutDirUtils.copyFileFromMainDir("src/web/deadlock/group.xsl");
-        OutDirUtils.copyFileFromMainDir("src/web/deadlock/paths.xsl");
+        OutDirUtils.copyFileFromMainDir("web/style.css");
+        OutDirUtils.copyFileFromMainDir("web/misc.xsl");
+        OutDirUtils.copyFileFromMainDir("src/chord/doms/Hlist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/doms/Ilist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/doms/Mlist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/doms/Llist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/thread/Alist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Olist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Clist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/results.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/results.xml");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/group.xsl");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/paths.xsl");
 
         OutDirUtils.runSaxon("results.xml", "group.xsl");
         OutDirUtils.runSaxon("results.xml", "paths.xsl");

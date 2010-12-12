@@ -435,11 +435,11 @@
 				</path>
 				<pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
 				<parallel>
-					<exec executable="${make}" dir="src/bdd">
+					<exec executable="${make}" dir="bdd">
 						<arg value="JDK_ROOT=${jdk_root}"/>
 						<arg value="clean"/>
 					</exec>
-					<exec executable="${make}" dir="src/agent">
+					<exec executable="${make}" dir="agent">
 						<arg value="JDK_ROOT=${jdk_root}"/>
 						<arg value="clean"/>
 					</exec>

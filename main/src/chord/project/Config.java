@@ -41,10 +41,10 @@ public class Config {
 	public final static String mainClassPathName = System.getProperty("chord.main.class.path");
 	public final static String bddbddbClassPathName = System.getProperty("chord.bddbddb.class.path");
 	public static String libDirName = FileUtils.getAbsolutePath(mainDirName, "lib");
-	// This source of this agent is defined in main/src/agent/chord_instr_agent.cpp.
-	// See the ccompile target in main/build.xml and main/src/agent/Makefile for how it is built.
+	// This source of this agent is defined in main/agent/chord_instr_agent.cpp.
+	// See the ccompile target in main/build.xml and main/agent/Makefile for how it is built.
 	public final static String cInstrAgentFileName = libDirName + File.separator + "libchord_instr_agent.so";
-	// This source of this agent is defined in main/src/java/chord/instr/OnlineTransformer.java.
+	// This source of this agent is defined in main/src/chord/instr/OnlineTransformer.java.
 	// See the jcompile target in main/build.xml for how it is built.
 	public final static String jInstrAgentFileName = libDirName + File.separator + "chord_instr_agent.jar";
 	public final static String javadocURL = "http://jchord.googlecode.com/svn/wiki/javadoc/";
@@ -101,7 +101,7 @@ public class Config {
 			Messages.fatal(BAD_OPTION, reflectKind, "chord.reflect.kind", "[none|static|dynamic|static_cast]");
 	}
 	public final static String stubsFileName =
-		mainRel2AbsPath("chord.stubs.file", "src/java/chord/program/stubs/stubs.txt");
+		mainRel2AbsPath("chord.stubs.file", "src/chord/program/stubs/stubs.txt");
 
 	public final static String mainClassPathPackages = "chord.,javassist.,joeq.,net.sf.bddbddb.,net.sf.javabdd.";
 
