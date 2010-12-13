@@ -1,90 +1,21 @@
 \documentclass{article}
-\usepackage{html}
-\usepackage{hyperref}
+%\usepackage{html}
+%\usepackage{hyperref}
 
-\oddsidemargin=0in
-\evensidemargin=0in
-\textwidth=6.0in
-\textheight=8.0in
+\texonly{\oddsidemargin=0in}
+\texonly{\evensidemargin=0in}
+\texonly{\textwidth=6.0in}
+\texonly{\textheight=8.0in}
 
-\html{\def\code#1{{\tt {#1}}}}
-\latex{\def\code#1{\path{#1}}}
-\def\url#1{\htmladdnormallink{#1}{#1}}
-\def\Mdom{{\bf M}}
-\def\Idom{{\bf I}}
-\def\Vdom{{\bf V}}
-\def\Zdom{{\bf Z}}
-\def\Hdom{{\bf H}}
-\def\Edom{{\bf E}}
-\def\Fdom{{\bf F}}
-\def\Cdom{{\bf C}}
-\def\Tdom{{\bf T}}
-\def\Pdom{{\bf P}}
+%\html{\def\code#1{{\tt {#1}}}}
+%\def\code#1{{\tt #1}}
 
-\def\instM{{\bf instM}}
-\def\statM{{\bf statM}}
-\def\MH{{\bf MH}}
-\def\MI{{\bf MI}}
-\def\ME{{\bf ME}}
+\newcommand\url[1]{\xlink{#1}{#1}}
+\htmlonly{\newcommand\code[1]{{\tt #1}}}
+\texonly{\newcommand\code[1]{\path{#1}}}
 
-\def\cha{{\bf cha}}
-\def\sub{{\bf sub}}
-\def\HT{{\bf HT}}
-\def\VT{{\bf VT}}
-\def\EF{{\bf EF}}
-\def\writeE{{\bf writeE}}
-
-\def\virtIM{{\bf virtIM}}
-\def\statIM{{\bf statIM}}
-\def\specIM{{\bf specIM}}
-
-\def\MmethArg{{\bf MmethArg}}
-\def\MmethRet{{\bf MmethRet}}
-\def\IinvkArg{{\bf IinvkArg}}
-\def\IinvkRet{{\bf IinvkRet}}
-\def\MordMethArg{{\bf MordMethArg}}
-\def\MspcMethArg{{\bf MspcMethArg}}
-
-\def\MobjVarAsgnInst{{\bf MobjVarAsgnInst}}
-\def\MclsVarAsgnInst{{\bf MclsVarAsgnInst}}
-\def\MobjValAsgnInst{{\bf MobjValAsgnInst}}
-\def\MgetInstFldInst{{\bf MgetInstFldInst}}
-\def\MputInstFldInst{{\bf MputInstFldInst}}
-\def\MgetStatFldInst{{\bf MgetStatFldInst}}
-\def\MputStatFldInst{{\bf MputStatFldInst}}
-
-\def\syncMV{{\bf syncMV}}
-\def\nestedLocks{{\bf nestedLocks}}
-
-\def\VH{{\bf VH}}
-\def\FH{{\bf FH}}
-\def\HFH{{\bf HFH}}
-\def\IM{{\bf IM}}
-
-\def\forkC{{\bf forkC}}
-
-\def\CVC{{\bf CVC}}
-\def\FC{{\bf FC}}
-\def\CFC{{\bf CFC}}
-\def\CICM{{\bf CICM}}
-\def\CHC{{\bf CHC}}
-
-\def\clinitM{{\bf clinitM}}
-
-\def\bddbddb{{\tt bddbddb}}
-\def\Chord{Chord}
-
-\def\NameToTrgtMap{{\tt NameToTrgtMap}}
-\def\NameToTaskMap{{\tt NameToTaskMap}}
-\def\ConsumedNameToTasksMap{{\tt ConsumedNameToTasksMap}}
-\def\TaskGraph{{\tt TaskGraph}}
-\def\TaskMapEntries{{\tt TaskMapEntries}}
-\def\TrgtMapEntries{{\tt TrgtMapEntries}}
-\def\DlogMapEntries{{\tt DlogMapEntries}}
-\def\Tasks{{\tt Tasks}}
-\def\Trgts{{\tt Trgts}}
-\def\ValidTasks{{\tt ValidTasks}}
-\def\TrgtNames{{\tt TrgtNames}}
+\htmltitle{Chord}
+\htmladdress{mhn@cs.stanford.edu}
 
 \title{Chord: A Static and Dynamic Program Analysis Framework for Java}
 \author{Mayur Naik}
@@ -93,37 +24,37 @@
 \maketitle
 
 \input{whatis_chord}
-\newpage
+\texonly{\newpage}
 \input{download_and_installation}
-\newpage
+\texonly{\newpage}
 \input{program_setup}
-\newpage
+\texonly{\newpage}
 \input{building_scope}
-\newpage
+\texonly{\newpage}
 \input{running_analysis}
-\newpage
+\texonly{\newpage}
 \input{writing_analysis}
-\newpage
+\texonly{\newpage}
 \input{writing_dynamic_analysis}
-\newpage
+\texonly{\newpage}
 \input{instr_events}
-\newpage
+\texonly{\newpage}
 \input{writing_datalog_analysis}
-\newpage
+\texonly{\newpage}
 \input{tuning_datalog_analysis}
-\newpage
+\texonly{\newpage}
 \input{bdd_representation}
-\newpage
+\texonly{\newpage}
 \input{program_representation}
-\newpage
+\texonly{\newpage}
 \input{pointsto}
-\newpage
+\texonly{\newpage}
 \input{datarace}
-\newpage
+\texonly{\newpage}
 \input{deadlock}
-\newpage
+\texonly{\newpage}
 \input{chord_sysprops}
-\newpage
+\texonly{\newpage}
 \input{acknowledgments}
 
 \end{document}

@@ -6,16 +6,16 @@ Ensure that the following software is installed on your machine:
 \begin{itemize}
 \item
 JDK 5 or higher, e.g. from
-\htmladdnormallink{IBM}{http://www.ibm.com/developerworks/java/jdk/} or
-\htmladdnormallink{Sun}{http://java.sun.com/javase/downloads/index.jsp}
+\xlink{IBM}{http://www.ibm.com/developerworks/java/jdk/} or
+\xlink{Sun}{http://java.sun.com/javase/downloads/index.jsp}
 \item
-\htmladdnormallink{Apache Ant}{http://ant.apache.org/}, a Java-based build tool
+\xlink{Apache Ant}{http://ant.apache.org/}, a Java-based build tool
 \item
-a C++ compiler, e.g. \htmladdnormallink{GCC}{http://gcc.gnu.org/}
+a C++ compiler, e.g. \xlink{GCC}{http://gcc.gnu.org/}
 \item
-a Make utility, e.g. \htmladdnormallink{GNU Make}{http://www.gnu.org/software/make/}
+a Make utility, e.g. \xlink{GNU Make}{http://www.gnu.org/software/make/}
 \item
-\htmladdnormallink{Cygwin}{http://www.cygwin.com/}, if it is a Windows machine
+\xlink{Cygwin}{http://www.cygwin.com/}, if it is a Windows machine
 \end{itemize}
 
 Download the latest Chord source code from the SVN repository:
@@ -39,7 +39,7 @@ the following command in that directory:
     prompt> ant
 \end{verbatim}
 
-\noindent To compile \Chord, run the following command in the same
+\noindent To compile Chord, run the following command in the same
 directory:
 
 \begin{verbatim}
@@ -49,16 +49,16 @@ directory:
 \noindent This will compile the following:
 \begin{itemize}
 \item
-the Java source code of \Chord\ from \code{main/src/} to Java bytecode
+the Java source code of Chord from \code{main/src/} to Java bytecode
 in \code{main/classes/}.
 \item
 the C source code of BDD library
-\htmladdnormallink{BuDDy}{http://buddy.sourceforge.net/} from
+\xlink{BuDDy}{http://buddy.sourceforge.net/} from
 \code{main/bdd/} to a shared library in \code{main/lib/}
 (\code{libbuddy.so} on Linux, \code{buddy.dll} on Windows, and
 \code{libbuddy.dylib} on MacOS); this library is needed for executing
 program analyses written in Datalog using
-\htmladdnormallink{bddbddb}{http://bddbddb.sourceforge.net/} (a
+\xlink{bddbddb}{http://bddbddb.sourceforge.net/} (a
 BDD-based Datalog solver).
 \item
 the C++ source code of the Chord instrumentation agent from

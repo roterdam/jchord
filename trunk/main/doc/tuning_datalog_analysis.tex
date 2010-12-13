@@ -2,7 +2,7 @@
 \label{sec:tuning-datalog-analysis}
 
 There are several tricks analysis writers can try to improve the
-performance of \bddbddb, the Datalog solver used by \Chord, often
+performance of bddbddb, the Datalog solver used by Chord, often
 by several orders of magnitude.
 Try these tricks by running the following command:
 
@@ -14,7 +14,7 @@ to be tuned, and {\tt <dir>} is the directory containing the
 program domains ({\tt *.dom} files) and program relations ({\tt *.bdd} files)
 consumed by the analysis (this is by default the
 \code{chord_output/bddbddb/} directory generated
-by a previous run of \Chord.
+by a previous run of Chord.
 
 \begin{enumerate}
 \item
@@ -41,7 +41,7 @@ Once you have ensured that none of the rules is getting ``stuck",
 you will notice that some rules are applied too many times, and so
 although each application of the rule itself isn't taking too much
 time, the cumulative time for the rule is too much.  After finishing
-solving a Datalog analysis, \bddbddb\ prints how long each rule took to
+solving a Datalog analysis, bddbddb prints how long each rule took to
 solve (both in terms of the number of times it was applied and the
 cumulative time it took).  It sorts the rules in the order of the
 cumulative time.  You need to focus on the rules that took the most
@@ -76,7 +76,7 @@ analysis.
 
 \item
 You can add the \verb+.split+ keyword at the end of certain rules as a
-hint to \bddbddb\ to decompose those rules into simpler ones that can be
+hint to bddbddb to decompose those rules into simpler ones that can be
 solved faster.  You can also set property \verb+split_all_rules=yes+ as shorthand
 for splitting all rules without adding the \verb+.split+ keyword to any of
 them, though I seldom find splitting all rules helpful.
@@ -86,13 +86,13 @@ You can try to decompose a single Datalog analysis file into two separate Datalo
 files.  Of course, you cannot separate mutually-recursive rules into two
 different analyses, but if you unnecessarily club
 together rules that could have gone into different analyses, then they
-can put conflicting demands on \bddbddb\ (e.g., on the BDD variable order).
+can put conflicting demands on bddbddb (e.g., on the BDD variable order).
 So if rule 2 uses the result of rule 1 and rule 1 does not use the result of
 rule 2, then put rule 1 and rule 2 in separate Datalog analyses.
 
 \item
 Observe the sizes of the BDDs representing the relations that are
-input and output.  \bddbddb\ prints both the number of tuples in each
+input and output.  bddbddb prints both the number of tuples in each
 relation and the number of nodes in the BDD.  Try changing the
 BDD variable order for the domains of the relation, and observe how the
 number of nodes in the BDD for that relation change.  You will
@@ -103,7 +103,7 @@ you tweak other things.
 \item
 The relative order of values *within* domains (e.g.,
 in domains named \verb+M+, \verb+H+, \verb+C+, etc. in Chord) affects the
-performance of \bddbddb, but
+performance of bddbddb, but
 I've never tried changing this and studying its effect.  It might be
 worth trying.  For instance, John Whaley's PLDI'04 paper describes a
 specific way in which he numbers contexts (in domain \verb+C+) and that it was
