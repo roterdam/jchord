@@ -315,7 +315,6 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		basecmd.add("java");
 		String jvmArgs = Config.runtimeJvmargs;
 		basecmd.addAll(StringUtils.tokenize(jvmArgs));
-		basecmd.add("-verbose");
 		basecmd.add("-Xverify:none");
 		if (isOnline) {
 			Properties props = System.getProperties();
