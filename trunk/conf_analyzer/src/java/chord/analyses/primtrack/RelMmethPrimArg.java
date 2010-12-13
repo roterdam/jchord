@@ -10,7 +10,7 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 

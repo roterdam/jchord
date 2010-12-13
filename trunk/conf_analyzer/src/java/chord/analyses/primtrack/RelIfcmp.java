@@ -1,6 +1,6 @@
 package chord.analyses.primtrack;
 
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.program.visitors.IInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;

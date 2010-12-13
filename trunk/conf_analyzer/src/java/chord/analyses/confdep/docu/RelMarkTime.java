@@ -5,7 +5,7 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import chord.doms.*;
+import chord.analyses.invk.*;
 import chord.analyses.primtrack.*;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;

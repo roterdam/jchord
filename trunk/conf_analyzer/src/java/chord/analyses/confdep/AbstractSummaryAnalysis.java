@@ -1,7 +1,7 @@
 package chord.analyses.confdep;
 
 import chord.bddbddb.Rel.RelView;
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.project.ClassicProject;
 import chord.project.analyses.*;
 import joeq.Class.*;

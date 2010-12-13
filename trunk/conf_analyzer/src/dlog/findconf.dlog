@@ -18,6 +18,7 @@ IinvkArg(i:I0,n:Z0,v:V1) input
 MmethArg(m:M0,n:Z0,u:V0) input
 objVarAsgnInst(l:V,r:V) input
 IinvkRetUV(i:I0,n:Z0,uv:UV0) input
+reachableI(i:I) input
 
 argCopies(m:M0,n:Z0,u:V0)
 confCallArg(i:I,v:V,base:I)
@@ -34,7 +35,10 @@ mConfArgs(m,z,base) :- argCopies(m,z,v),confCallArg(_,v,base).
 
 #(i,v) is a conf call arg where v is passed to a conf method at call site i
 confCallArg(i,v,base) :- IM(i,m),mConfArgs(m,z,base),IinvkArg(i,z,v). split
-confCallArg(i,v,base) :- rawConfUVV(i,_,v),rawConfUVV(base,_,v).
+
+# ...or if it's a reachable call to the base conf. (note we're joining rawConfUVV
+# with itself to ensure i == base
+confCallArg(i,v,base) :- rawConfUVV(i,_,v),rawConfUVV(base,_,v),reachableI(i).
 
 #m wraps m2 if m2 is a conf method and m calls it. This is slightly approximate.
 confWrapper(i, base) :- confCallArg(i,_,base).

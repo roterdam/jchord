@@ -3,7 +3,7 @@ package chord.analyses.confdep;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
-import chord.doms.DomI;
+import chord.analyses.invk.DomI;
 import chord.program.visitors.*;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;

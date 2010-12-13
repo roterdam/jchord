@@ -7,12 +7,17 @@ import chord.project.*;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.object.Pair;
+import chord.analyses.invk.DomI;
 import chord.bddbddb.Rel.RelView;
-import chord.doms.*;
-
 import java.io.PrintWriter;
 import java.util.*;
 
+/**
+ * Tracks which invoke statements return outputs with more taints than the args had.
+ * Outputs in addedTaints.txt
+ * @author asrabkin
+ *
+ */
 @Chord(name="OverTaintFinder", //consumes={"primCdep,refCdep"})
 		consumes ={"IargCdep","IretDep"})
 public class OverTaintFinder extends JavaAnalysis {

@@ -25,8 +25,10 @@ import chord.analyses.confdep.optnames.DomOpts;
 import chord.analyses.primtrack.DomUV;
 import chord.analyses.string.DomStrConst;
 import chord.bddbddb.Rel.*;
-import chord.doms.*;
-
+import chord.analyses.invk.DomI;
+import chord.analyses.var.DomV;
+import chord.analyses.field.DomF;
+import chord.analyses.alloc.DomH;
 
 @Chord(
 	name = "ConfDeps"
@@ -93,7 +95,7 @@ public class ConfDeps extends JavaAnalysis {
 	  if(DYNTRACK) {
 	    Project.runTask("dyn-datadep");
 	  } else
-	    Project.runTask("datadep-dlog");
+	    Project.runTask("datadep-func-dlog");
 	  
 	  
 	  if(SUPERCONTEXT) {
@@ -246,7 +248,7 @@ public class ConfDeps extends JavaAnalysis {
     HashSet<Integer> quadsPrinted = new HashSet<Integer>();
 
     HashSet<Integer> quadsSeen = new HashSet<Integer>();
-    int confUseCount = 0;
+    int confUseQuad = 0;
     
     PrintWriter writer =
       OutDirUtils.newPrintWriter("conf_uses.txt");
@@ -259,7 +261,7 @@ public class ConfDeps extends JavaAnalysis {
       Quad q1 = (Quad) domI.get(p.idx0);
       
       quadsSeen.add(p.idx0);
-      confUseCount++;
+      confUseQuad++;
 
       jq_Method m = q1.getMethod();
       int lineno = q1.getLineNumber();
@@ -284,12 +286,21 @@ public class ConfDeps extends JavaAnalysis {
     relConfUses.close();
     int quadCount = quadsPrinted.size();
     int confUses = printedLines.size();
-    System.out.println("saw " + quadCount + " lines with a conf option and " + confUses + " conf uses. (LRatio = " + confUses *1.0 / quadCount+ ")");
     
+    
+    ProgramRel reachableI =  (ProgramRel) ClassicProject.g().getTrgt("reachableI");
+    reachableI.load();
+    int reachableIsize = reachableI.size();
+    reachableI.close();
+
+    
+    PrintWriter stats = OutDirUtils.newPrintWriter("confdep_stats.txt");
+    stats.println("saw " + quadCount + " lines with a conf option and " + confUses + " conf uses. (LRatio = " + confUses *1.0 / quadCount+ ")");
     quadCount = quadsSeen.size();
-    confUses = confUseCount;
-    System.out.println("saw " + quadCount + " quads with a conf option and " + confUses + " conf uses. (QRatio = " + confUses *1.0 / quadCount+ ")");
-    System.out.println("saw " + domI.size() + " invokes, and " + confUses + " uses over those. IRatio =" + confUses *1.0 / domI.size());
+    stats.println("saw " + quadCount + " quads with a conf option and " + confUseQuad + " conf uses. (QRatio = " + confUseQuad *1.0 / quadCount+ ")");
+    stats.println("saw " + reachableIsize + " invokes, and " + confUses + " uses over those. IRatio =" + confUseQuad *1.0 / reachableIsize);
+    stats.println(opts.size() + " total options");
+    stats.close();
   }
 
   

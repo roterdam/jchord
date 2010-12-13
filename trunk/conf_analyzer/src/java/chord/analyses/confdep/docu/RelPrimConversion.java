@@ -1,6 +1,5 @@
 package chord.analyses.confdep.docu;
 
-import java.util.HashSet;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
@@ -8,7 +7,8 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.analyses.confdep.ConfDefines;
 import chord.analyses.primtrack.DomU;
-import chord.doms.*;
+import chord.analyses.invk.DomI;
+import chord.analyses.var.DomV;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;

@@ -2,10 +2,9 @@ package chord.analyses.logging;
 
 import java.io.PrintWriter;
 import joeq.Compiler.Quad.Quad;
-import chord.analyses.confdep.ConfDeps;
 import chord.analyses.confdep.optnames.DomOpts;
 import chord.bddbddb.Rel.RelView;
-import chord.doms.DomI;
+import chord.analyses.invk.DomI;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.OutDirUtils;
@@ -58,7 +57,14 @@ public class ShowLogQuadPtRegex extends JavaAnalysis {
   }
   
   public static String logMsgText(Quad logCall, ProgramRel logStrings, ProgramRel logVHV, ProgramRel logVHU) {
-    return DomOpts.reconcatenate(logCall, logStrings, true, logStmtLen(logCall, logVHV, logVHU));
+    String [] strs = DomOpts.reconcatenate(logCall, logStrings, true, logStmtLen(logCall, logVHV, logVHU));
+    StringBuilder sb = new StringBuilder();
+    for(String s: strs) {
+    	sb.append(s);
+    	sb.append('|');
+    }
+    sb.deleteCharAt(sb.length() -1);
+    return sb.toString();
   }
   
   private static int logStmtLen(Quad q, ProgramRel logVHoldU, ProgramRel logVHoldV) {

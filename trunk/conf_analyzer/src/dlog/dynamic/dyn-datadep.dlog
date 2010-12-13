@@ -61,33 +61,16 @@ MmethPrimRet(m:M0,n:Z0,u:U0) input
 IinvkPrimArg(i:I0,n:Z0,u:U0) input
 IinvkPrimRet(i:I0,n:Z0,u:U0) input
 
-MobjVarAsgnPrimInst(m:M,l:U0,r:U1) input
-MprimDataDep(m:M,l:U0,r:U1) input
 
-
-MgetStatFldPrimInst(m:M,l:U0,f:F) input
-MputStatFldPrimInst(m:M,f:F,r:U0) input
-MgetInstFldPrimInst(m:M,l:U,b:V,f:F) input
-MputInstFldPrimInst(m:M,b:V,f:F,r:U) input
-
-objVarAsgnPrimInst(l:U0,r:U1)
-primDataDep(l:U0,r:U1)
-getInstFldPrimInst(l:U0,b:V,f:F) 
-putInstFldPrimInst(b:V,f:F,r:U) 
-getStatFldPrimInst(l:U,f:F) 
-putStatFldPrimInst(f:F,r:U) 
+objVarAsgnPrimInst(l:U0,r:U1) input
+primDataDep(l:U0,r:U1) input
+getInstFldPrimInst(l:U0,b:V,f:F) input
+putInstFldPrimInst(b:V,f:F,r:U) input
+getStatFldPrimInst(l:U,f:F) input
+putStatFldPrimInst(f:F,r:U) input
 UcU(l:U,r:U)
 
 ####Prim tracking
-objVarAsgnPrimInst(l,r) :- reachableM(m), MobjVarAsgnPrimInst(m,l,r).
-primDataDep(l,r) :- reachableM(m), MprimDataDep(m,l,r).
-
-getStatFldPrimInst(l,f)   :- reachableM(m), MgetStatFldPrimInst(m,l,f).
-putStatFldPrimInst(f,r)   :- reachableM(m), MputStatFldPrimInst(m,f,r).
-
-getInstFldPrimInst(l,b,f) :- reachableM(m), MgetInstFldPrimInst(m,l,b,f).
-putInstFldPrimInst(b,f,r) :- reachableM(m), MputInstFldPrimInst(m,b,f,r).
-
 
 UcU(v,u) :- IinvkPrimArg(i,z,u), IM(i,m), MmethPrimArg(m,z,v).
 UcU(u,v) :- IinvkPrimRet(i,z,u), IM(i,m), MmethPrimRet(m,z,v).

@@ -5,13 +5,13 @@
 .include "H.dom"
 .include "V.dom"
 .include "Z.dom"
-.include "ZZ.dom"
+.include "K.dom"
 .include "StrConst.dom"
 .include "UV.dom"
 .include "U.dom"
 
 
-.bddvarorder I0xStrConst0_H0_Z0_Z1_V0_V1_UV0_V2_U0_ZZ0
+.bddvarorder I0xStrConst0_H0_Z0_Z1_V0_V1_UV0_V2_U0_K0
 
 
 
@@ -22,8 +22,8 @@ confUVV(i:I, o:UV, in:V) input
 objVarAsgnInst(l:V,r:V) input
 confWrites(i:I, o:UV, in:V) input
 
-SBAppendU(i:I, v0:V0,c:U0,z:ZZ0) input
-SBAppendV(i:I, v0:V0,c:V1,z:ZZ0) input
+SBAppendU(i:I, v0:V0,c:U0,z:K0) input
+SBAppendV(i:I, v0:V0,c:V1,z:K0) input
 
 toString(i:I,l:V,r:V) input
 IinvkArg0(i:I0,v:V1) input
@@ -46,23 +46,23 @@ RlogStmt(i:I)
 
 strCtorParm(v:V0,cst:V1)
 
-logString(i:I, str:StrConst, z:ZZ) output
+logString(i:I, str:StrConst, z:K) output
 
 
-vHoldsV(v:V, str:V1, z:ZZ) output
-vHoldsU(v:V, str:U, z:ZZ) output
+vHoldsV(v:V, str:V1, z:K) output
+vHoldsU(v:V, str:U, z:K) output
 
-logVHolds(i:I, cmpt:V, z:ZZ) output
-logVHoldsU(i:I, cmpt:U, z:ZZ) output
+logVHolds(i:I, cmpt:V, z:K) output
+logVHoldsU(i:I, cmpt:U, z:K) output
 
 
-vLen(v:V, z:ZZ)
-confOptName(i:I, str:StrConst, z:ZZ) output
-confOptLen(i:I,z:ZZ) output
+vLen(v:V, z:K)
+confOptName(i:I, str:StrConst, z:K) output
+confOptLen(i:I,z:K) output
 confOpts(i:I) output
 
-confWritesByName(i:I, str:StrConst, z:ZZ) output
-confOptWriteLen(i:I,z:ZZ) output
+confWritesByName(i:I, str:StrConst, z:K) output
+confOptWriteLen(i:I,z:K) output
 confOptWrites(i:I) output
 
 RConstructs(i,v) :- Constructs(i,v),reachableI(i).

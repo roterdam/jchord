@@ -5,13 +5,14 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.ExceptionHandler;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.IntIfCmp;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.LookupSwitch;
-import chord.doms.*;
+import chord.analyses.invk.DomI;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
@@ -143,7 +144,10 @@ public class RelPControlDep extends ProgramRel implements IMethodVisitor {
     
   }
 
-  
+  /**
+   * A worklist of basic blocks, each of which can only be in the queue once
+   *
+   */
   private static class UniqueBQ {
     Set<Integer> listContents= new HashSet<Integer>();
     Queue<BasicBlock> list = new java.util.LinkedList<BasicBlock>();
@@ -175,21 +179,32 @@ public class RelPControlDep extends ProgramRel implements IMethodVisitor {
       return;
     if(m.getDeclaringClass().getName().equals("org.apache.hadoop.conf.Configuration"))
       return;
-    
+    boolean DEBUGLOG = m.getName().toString().contains("replayRecoveredEditsIfAny");
+
     ControlFlowGraph cfg = m.getCFG();
     BasicBlock entry = cfg.entry();
     HashMap<BasicBlock, CDepList> blockDep = new HashMap<BasicBlock, CDepList>(cfg.getNumberOfBasicBlocks());
     HashMap<Integer, Quad> lastQOfB = new HashMap<Integer,Quad>(cfg.getNumberOfBasicBlocks());
     
-
-//    System.err.println("WORKLIST: visiting " + m.getName()); 
+    if(DEBUGLOG)
+    	System.err.println("WORKLIST: visiting " + m.getName()); 
     UniqueBQ worklist = new UniqueBQ();
     worklist.add(entry);
     blockDep.put(entry, new CDepList());
+    
+    for(Object _eh: cfg.getExceptionHandlers()) {
+    	ExceptionHandler eh = (ExceptionHandler) _eh;
+    	blockDep.put(eh.getEntry(), new CDepList());
+      worklist.add(eh.getEntry());
+      if(DEBUGLOG)
+      	System.err.println("WORKLIST: adding EH block " + eh.getEntry().getID());
+    }
+    
     while(!worklist.isEmpty()) {
       BasicBlock b = worklist.remove();
       CDepList curConds = blockDep.get(b);
-//      System.err.println("WORKLIST: block "+b.getID() + " has condition " + curConds);
+      if(DEBUGLOG)
+      	System.err.println("WORKLIST: block "+b.getID() + " has condition " + curConds);
       CDepList[] conds = getSuccConds(b, curConds);
       int i = 0;
       for(Object nextB_: b.getSuccessors()) {
@@ -198,12 +213,16 @@ public class RelPControlDep extends ProgramRel implements IMethodVisitor {
         if(conds[i] == null) {
           System.err.println("ERR: conds["+i+"] unexpectedly null for block" + b.getID() + " of " + m.getName());
           System.exit(1);
-        } else
+        } else {
+          if(DEBUGLOG)
+          	System.err.println("WORKLIST:  "+ nextB + " has entry condition " + conds[i]);
+
           if(!conds[i].equals(prevCD)) {
             CDepList merged = conds[i].merge(prevCD);
             blockDep.put(nextB, merged);
             worklist.add(nextB);
           }
+        }
         i++;
       }      
     }
@@ -215,7 +234,8 @@ public class RelPControlDep extends ProgramRel implements IMethodVisitor {
     for(Map.Entry<BasicBlock, CDepList> deps: blockDep.entrySet()) {
       BasicBlock bb = deps.getKey();
       CDepList l = deps.getValue();
-//      System.out.println("WRITEBACK: block" + bb.getID() + " of " + m.getName() + " has constraint set " + l);
+      if(DEBUGLOG)
+      	System.out.println("WRITEBACK: block" + bb.getID() + " of " + m.getName() + " has constraint set " + l);
       for(int uIdx: l.regIDs(lastQOfB)) {
         int n = bb.size();
         for (int j = 0; j < n; j++) {

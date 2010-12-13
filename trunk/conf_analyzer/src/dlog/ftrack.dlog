@@ -9,10 +9,9 @@
 .include "H.dom"
 .include "V.dom"
 .include "Z.dom"
+.include "K.dom"
 
-# .include "StrConst.dom"
-
-.bddvarorder I0xM0xM1_T0_V0xV1_E0_H0_F0_Z0_F1_UV0_ZZ0
+.bddvarorder I0xM0xM1_T0_V0xV1_E0_H0_F0_Z0_F1_UV0_K0
 
 
 MmethArg(m:M0,n:Z0,v:V0) input
@@ -30,7 +29,7 @@ MgetInstFldInst(m:M,l:V,b:V,f:F) input
 MputInstFldInst(m:M,b:V,f:F,r:V) input
 MgetStatFldInst(m:M,l:V,f:F) input
 MputStatFldInst(m:M,f:F,r:V) input
-SBAppendV(i:I, v0:V,v1:V1,z:ZZ) input
+SBAppendV(i:I, v0:V,v1:V1,z:K) input
 IRetrieve(i:I,o:V,c:V) input
 IInsert(i:I,c:V,o:V) input
 

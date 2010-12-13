@@ -1,8 +1,8 @@
 package chord.analyses.confdep;
 
 import chord.analyses.confdep.optnames.DomOpts;
-import chord.doms.DomI;
-import chord.doms.DomV;
+import chord.analyses.invk.DomI;
+import chord.analyses.var.DomV;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.ClassicProject;

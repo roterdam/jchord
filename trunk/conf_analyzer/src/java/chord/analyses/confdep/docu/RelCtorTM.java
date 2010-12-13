@@ -2,7 +2,8 @@ package chord.analyses.confdep.docu;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import chord.doms.*;
+import chord.analyses.method.DomM;
+import chord.analyses.type.DomT;
 import chord.program.visitors.*;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;

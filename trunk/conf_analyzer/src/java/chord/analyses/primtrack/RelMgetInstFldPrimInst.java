@@ -18,9 +18,10 @@ import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 
-import chord.doms.DomV;
-import chord.doms.DomM;
-import chord.doms.DomF;
+import chord.analyses.var.DomV;
+import chord.analyses.method.DomM;
+import chord.analyses.field.DomF;
+
 import chord.program.visitors.IHeapInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;

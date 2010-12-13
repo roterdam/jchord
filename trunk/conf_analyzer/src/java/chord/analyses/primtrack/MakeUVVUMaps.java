@@ -2,10 +2,9 @@ package chord.analyses.primtrack;
 
 
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import chord.doms.*;
+import chord.analyses.var.DomV;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
