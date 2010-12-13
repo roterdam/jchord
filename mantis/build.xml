@@ -9,8 +9,8 @@
 		</path>
 		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/> 
 		<path id="chord_dlog_analysis_path">
-			<pathelement location="${chord.home.dir}/src/dlog"/>
-			<pathelement location="src/dlog"/>
+			<pathelement location="${chord.home.dir}/src"/>
+			<pathelement location="src"/>
 		</path>
 		<property name="chord.dlog.analysis.path" refid="chord_dlog_analysis_path"/> 
 	</target>
@@ -23,7 +23,7 @@
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars"
 			source="1.5" target="1.5" includeAntRuntime="false"
-			srcdir="src/java" destdir="classes" classpath="${chord.main.class.path}"/>
+			srcdir="src" destdir="classes" classpath="${chord.main.class.path}"/>
 	</target>
 
 	<target name="run" depends="paths">
