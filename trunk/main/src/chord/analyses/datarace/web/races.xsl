@@ -3,7 +3,8 @@
 	xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-<xsl:import href="misc.xsl"/>
+<xsl:include href="F.xsl"/>
+<xsl:include href="O.xsl"/>
 
 <xsl:template match="/">
 	<xsl:for-each select="results/dataracelist/datarace">

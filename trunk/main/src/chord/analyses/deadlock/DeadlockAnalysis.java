@@ -348,18 +348,23 @@ public class DeadlockAnalysis extends JavaAnalysis {
 		domL.saveToXMLFile();
 
 		OutDirUtils.copyFileFromMainDir("web/style.css");
-		OutDirUtils.copyFileFromMainDir("web/misc.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/Hlist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/invk/Ilist.dtd");
 		OutDirUtils.copyFileFromMainDir("src/chord/analyses/method/Mlist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/Llist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/method/M.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/lock/Llist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/Hlist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/H.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/invk/Ilist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/invk/I.xsl");
 		OutDirUtils.copyFileFromMainDir("src/chord/analyses/thread/Alist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/thread/A.xsl");
 		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Olist.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/O.xsl");
 		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Clist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/results.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/results.xml");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/group.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/paths.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/C.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/web/results.dtd");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/web/results.xml");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/web/group.xsl");
+		OutDirUtils.copyFileFromMainDir("src/chord/analyses/deadlock/web/paths.xsl");
 
 		OutDirUtils.runSaxon("results.xml", "group.xsl");
 		OutDirUtils.runSaxon("results.xml", "paths.xsl");

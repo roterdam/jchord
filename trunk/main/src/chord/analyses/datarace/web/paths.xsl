@@ -3,7 +3,10 @@
 	xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-<xsl:import href="misc.xsl"/>
+<xsl:include href="I.xsl"/>
+<xsl:include href="E.xsl"/>
+<xsl:include href="O.xsl"/>
+<xsl:include href="C.xsl"/>
 
 <xsl:output omit-xml-declaration="yes"/>
 
