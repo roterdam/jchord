@@ -4,7 +4,7 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import chord.doms.DomB;
+import chord.analyses.basicblock.DomB;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.analyses.ProgramRel;
