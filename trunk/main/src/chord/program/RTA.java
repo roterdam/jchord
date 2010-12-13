@@ -56,7 +56,7 @@ import chord.project.Config;
 import chord.program.reflect.CastBasedStaticReflect;
 import chord.program.reflect.DynamicReflectResolver;
 import chord.program.reflect.StaticReflectResolver;
-import chord.rels.RelExtraEntryPoints;
+import chord.analyses.method.RelExtraEntryPoints;
 import chord.util.IndexSet;
 import chord.util.Timer;
 import chord.util.ArraySet;

@@ -78,8 +78,6 @@ import joeq.Main.Helper;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Program {
-	private static final String INVALID_SCOPE_KIND =
-		"ERROR: Program: Invalid value `%s` used for property chord.scope.kind; must be one of [dynamic|rta|cha].";
 	private static final String LOADING_CLASS =
 		"INFO: Program: Loading class %s.";
 	private static final String EXCLUDING_CLASS =
@@ -180,9 +178,8 @@ public class Program {
 				CHA cha = new CHA(getClassHierarchy());
 				methods = cha.getMethods();
 				reflect = new Reflect();
-			} else {
-				Messages.fatal(INVALID_SCOPE_KIND, scopeKind);
-			}
+			} else
+				assert (false);
 			buildSignToMethodMap();
 			saveMethodsFile(methodsFile);
 			saveReflectFile(reflectFile);

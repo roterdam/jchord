@@ -84,27 +84,25 @@ public class Config {
 
 	public final static String mainClassName = System.getProperty("chord.main.class");
 	public final static String classPathName = System.getProperty("chord.class.path");
-  public final static String extraClasses = System.getProperty("chord.class.extrapaths", "");
+	public final static String extraClasses = System.getProperty("chord.class.extrapaths", "");
 	public final static String srcPathName = System.getProperty("chord.src.path");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
 	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
 
 	// Program scope properties
 
-	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
-	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
+	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public final static String reflectKind = System.getProperty("chord.reflect.kind", "none");
+	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
+	public final static String stubsFileName = mainRel2AbsPath("chord.stubs.file", "src/chord/program/stubs/stubs.txt");
 	static {
-		if (!reflectKind.equals("none") && !reflectKind.equals("static") && !reflectKind.equals("dynamic")
-			&& !reflectKind.equals("static_cast"))
-			Messages.fatal(BAD_OPTION, reflectKind, "chord.reflect.kind", "[none|static|dynamic|static_cast]");
+		check(scopeKind, new String[] { "rta", "cha", "dynamic" }, "chord.scope.kind");
+		check(CHkind, new String[] { "static", "dynamic" }, "chord.ch.kind");
+		check(reflectKind, new String[] { "none", "static", "dynamic", "static_cast" }, "chord.reflect.kind");
 	}
-	public final static String stubsFileName =
-		mainRel2AbsPath("chord.stubs.file", "src/chord/program/stubs/stubs.txt");
 
 	public final static String mainClassPathPackages = "chord.,javassist.,joeq.,net.sf.bddbddb.,net.sf.javabdd.";
-
 	public final static String DEFAULT_SCOPE_EXCLUDES =
 		concat(mainClassPathPackages, ',', "sun.,com.sun.,com.ibm.,org.apache.harmony.");
 	public final static String DEFAULT_CHECK_EXCLUDES =
@@ -112,8 +110,8 @@ public class Config {
 
 	public final static String scopeStdExcludeStr = System.getProperty("chord.std.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExtExcludeStr = System.getProperty("chord.ext.scope.exclude", "");
-	public static String scopeExcludeStr = System.getProperty("chord.scope.exclude",
-		concat(scopeStdExcludeStr, ',', scopeExtExcludeStr));
+	public static String scopeExcludeStr =
+		System.getProperty("chord.scope.exclude", concat(scopeStdExcludeStr, ',', scopeExtExcludeStr));
 	public static String[] scopeExcludeAry = toArray(scopeExcludeStr);
 
 	public static boolean isExcludedFromScope(String typeName) {
@@ -162,14 +160,10 @@ public class Config {
 	// Chord instrumentation properties
 
 	public final static String instrKind = System.getProperty("chord.instr.kind", "offline");
-	static {
-		if (!instrKind.equals("offline") && !instrKind.equals("online"))
-			Messages.fatal(BAD_OPTION, instrKind, "chord.instr.kind", "[offline|online]");
-	}
 	public final static String traceKind = System.getProperty("chord.trace.kind", "full");
 	static {
-		if (!traceKind.equals("none") && !traceKind.equals("full") && !traceKind.equals("pipe"))
-			Messages.fatal(BAD_OPTION, traceKind, "chord.trace.kind", "[full|pipe|none]");
+		check(instrKind, new String[] { "offline", "online" }, "chord.instr.kind");
+		check(traceKind, new String[] { "none", "full", "pipe" }, "chord.trace.kind");
 	}
 	public final static boolean reuseTraces = buildBoolProperty("chord.reuse.traces", false);
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
@@ -190,7 +184,7 @@ public class Config {
 					break;
 			}
 		}
-	System.setProperty("chord.out.dir", outDirName); // This could be read by someone else
+		System.setProperty("chord.out.dir", outDirName);
 		FileUtils.mkdirs(outDirName);
 	}
 	public final static String outFileName = outRel2AbsPath("chord.out.file", "log.txt");
@@ -199,7 +193,6 @@ public class Config {
 	public final static String methodsFileName = outRel2AbsPath("chord.methods.file", "methods.txt");
 	public final static String classesFileName = outRel2AbsPath("chord.classes.file", "classes.txt");
 	public static String bddbddbWorkDirName = outRel2AbsPath("chord.bddbddb.work.dir", "bddbddb");
-	// TODO: create this dir on demand
 	static {
 		FileUtils.mkdirs(bddbddbWorkDirName);
 	}
@@ -249,14 +242,14 @@ public class Config {
 		System.out.println("chord.runtime.jvmargs: " + runtimeJvmargs);
 
 		System.out.println("*** Program scope properties:");
-		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reuse.scope: " + reuseScope);
-		System.out.println("chord.ch.kind: " + CHkind);
+		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reflect.kind: " + reflectKind);
+		System.out.println("chord.ch.kind: " + CHkind);
+		System.out.println("chord.stubs.file: " + stubsFileName);
 		System.out.println("chord.std.scope.exclude: " + scopeStdExcludeStr);
 		System.out.println("chord.ext.scope.exclude: " + scopeExtExcludeStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);
-		System.out.println("chord.stubs.file: " + stubsFileName);
 
 		System.out.println("*** Program analysis properties:");
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
@@ -325,5 +318,16 @@ public class Config {
 		if (s1.equals("")) return s2;
 		if (s2.equals("")) return s1;
 		return s1 + sep + s2;
+	}
+	public static void check(String val, String[] legalVals, String key) {
+		for (String s : legalVals) {
+			if (val.equals(s))
+				return;
+		}
+		String legalValsStr = "[ ";
+		for (String s : legalVals)
+			legalValsStr += s + " ";
+		legalValsStr += "]";
+		Messages.fatal(BAD_OPTION, val, key, legalValsStr);
 	}
 }
