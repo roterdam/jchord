@@ -10,7 +10,7 @@ import java.util.*;
 
 import chord.program.ClassHierarchy;
 import chord.program.Program;
-import chord.rels.RelScopeExcludedM;
+import chord.analyses.method.RelScopeExcludedM;
 import chord.util.ArraySet;
 import chord.util.IndexSet;
 import chord.util.tuple.object.Pair;

@@ -34,8 +34,6 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ClassHierarchy {
-	private static final String INVALID_CH_KIND =
-		"ERROR: Invalid value `%s` used for property chord.ch.kind; must be one of [static|dynamic]";
 	private static final String IGNORED_DUPLICATE_TYPES =
 		"INFO: Class hierarchy builder: Ignored the following duplicate classes/interfaces coming from the indicated classpath elements:";
 	private static final String EXCLUDED_TYPES_IN_CHORD =
@@ -49,7 +47,6 @@ public class ClassHierarchy {
 	private static final String MISSING_SUPERINTERFS =
 		"WARN: Class hierarchy builder: Ignored the following classes/interfaces as some (direct or transitive) interface implemented/extended by each of them is missing in scope:";
 
-	private final String CHkind;
 	/**
 	 * Map from each class or interface in scope to the kind of its type
 	 * (interface, abstract class, or concrete class).
@@ -194,17 +191,11 @@ public class ClassHierarchy {
 		return clintToAllConcreteSubs.get(s);
 	}
 
-	public ClassHierarchy() {
-		CHkind = Config.CHkind;
-		if (!CHkind.equals("static") && !CHkind.equals("dynamic"))
-			Messages.fatal(INVALID_CH_KIND);
-	}
-
 	// builds maps clintToKind, classToDeclaredSuperclass, and clintToDeclaredInterfaces
 	private void build() {
 		System.out.println("Starting to build class hierarchy; this may take a while ...");
 		Set<String> dynLoadedTypes = null;
-		if (CHkind.equals("dynamic")) {
+		if (Config.CHkind.equals("dynamic")) {
 			List<String> list = Program.getDynamicallyLoadedClasses();
 			dynLoadedTypes = new HashSet<String>(list.size());
 			dynLoadedTypes.addAll(list);

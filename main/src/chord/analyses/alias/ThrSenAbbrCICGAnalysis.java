@@ -6,7 +6,7 @@
  */
 package chord.analyses.alias;
 
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.analyses.ProgramRel;

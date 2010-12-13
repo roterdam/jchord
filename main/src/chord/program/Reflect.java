@@ -41,26 +41,33 @@ public class Reflect {
 		resolvedAryNewInstSites = new ArrayList<Pair<Quad, List<jq_Reference>>>();
 	}
 	/**
-	 * Provides a map from each java.lang.Class.forName(s) call site,
-	 * whose argument s could be resolved, to the names of all classes
-	 * to which it was resolved.
+	 * Provides a list containing each call to static method forName(String s)
+	 * defined in class java.lang.Class, along with the types of all classes denoted
+	 * by argument s.
 	 */
 	public List<Pair<Quad, List<jq_Reference>>> getResolvedClsForNameSites() {
 		return resolvedClsForNameSites;
 	}
 	/**
-	 * Provides each java.lang.Object.newInstance() call site whose
-	 * receiver's class could be resolved.
+	 * Provides a list containing each call to instance method newInstance()
+	 * defined in class java.lang.Class, along with the types of all classes
+	 * instantiated by it.
 	 */
 	public List<Pair<Quad, List<jq_Reference>>> getResolvedObjNewInstSites() {
 		return resolvedObjNewInstSites;
 	}
 	/**
+	 * Provides a list containing each call to instance method newInstance(Object[])
+	 * defined in class java.lang.reflect.Constructor, along with the types of all
+	 * classes instantiated by it.
 	 */
 	public List<Pair<Quad, List<jq_Reference>>> getResolvedConNewInstSites() {
 		return resolvedConNewInstSites;
 	}
 	/**
+	 * Provides a list containing each call to static method newInstance(Class, int)
+	 * defined in class java.lang.reflect.Array, along with the types of all classes 
+	 * instantiated by it.
 	 */
 	public List<Pair<Quad, List<jq_Reference>>> getResolvedAryNewInstSites() {
 		return resolvedAryNewInstSites;

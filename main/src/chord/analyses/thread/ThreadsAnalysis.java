@@ -12,7 +12,7 @@ import chord.project.ClassicProject;
 import chord.program.Program;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.DomC;
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.object.Pair;
