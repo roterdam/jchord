@@ -13,7 +13,7 @@
       
 		</path>
 	<path id="chord_dlog_analysis_path">
-	     <pathelement location="../main/src/dlog"/>
+	     <pathelement location="../main/src"/>
 	    <pathelement location="src/dlog"/>
 	</path>
 		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/> 
