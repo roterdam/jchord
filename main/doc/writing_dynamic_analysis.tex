@@ -114,15 +114,15 @@ Obviously, a pipe is more efficient for very long traces, but it
 not portable (e.g., it does not currently work on Windows/Cygwin), and the traces cannot be reused
 across Chord runs (see the following item).
 \item
-You can reuse dynamic traces from a previous \Chord\ run by setting property
+You can reuse dynamic traces from a previous Chord run by setting property
 \code{chord.reuse.traces} to {\tt true}.  In this case, you must also set property
 {\tt chord.trace.kind} to {\tt full}.
 \item
-You can set property \code{chord.dynamic.haltonerr} to {\tt false} to prevent \Chord\ from terminating
+You can set property \code{chord.dynamic.haltonerr} to {\tt false} to prevent Chord from terminating
 even if the program on which dynamic analysis is being performed crashes.
 \end{itemize}
 
-\Chord\ offers much more flexibility in crafting dynamic analyses.
+Chord offers much more flexibility in crafting dynamic analyses.
 You can define your own instrumentor (by subclassing \code{chord.instr.CoreInstrumentor}
 instead of using the default \code{chord.instr.Instrumentor}) and your own event handler (by subclassing \code{chord.runtime.CoreEventHandler}
 instead of using the default \code{chord.runtime.EventHandler}).

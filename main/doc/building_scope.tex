@@ -1,7 +1,7 @@
 \section{Computing Program Scope}
 \label{sec:building-scope}
 
-\Chord\ computes the scope (i.e., reachable methods) of the given
+Chord computes the scope (i.e., reachable methods) of the given
 program either if property \code{chord.build.scope} is set to {\tt
   true} or if some other task (e.g., a program analysis specified via
 property \code{chord.run.analyses}) demands it by calling method
@@ -27,7 +27,7 @@ Users can set the following properties to control scope computation:
 
 If property \code{chord.reuse.scope} has value {\tt true} and both
 files specified by properties \code{chord.methods.file} and
-\code{chord.reflect.file} exist, then \Chord\ regards those files as
+\code{chord.reflect.file} exist, then Chord regards those files as
 specifying which methods to consider reachable and how to resolve
 reflection, respectively.
 
@@ -88,7 +88,7 @@ execution.
 
 If property \code{chord.reuse.scope} has value {\tt false} or the
 files specified by properties \code{chord.methods.file} or
-\code{chord.reflect.file} do not exist, then \Chord\ computes program
+\code{chord.reflect.file} do not exist, then Chord computes program
 scope using the algorithm specified by property
 \code{chord.scope.kind} and then writes the list of methods deemed
 reachable and the reflection resolved by that algorithm to the files
@@ -96,13 +96,13 @@ specified by properties \code{chord.methods.file} and
 \code{chord.reflect.file}, respectively.
 
 The possible legal values of property \code{chord.scope.kind} are
-[\code{dynamic}$|$\code{rta}$|$\code{cha}].  In each case, \Chord\ at
+[\code{dynamic}$|$\code{rta}$|$\code{cha}].  In each case, Chord at
 least expects properties \code{chord.main.class} and
 \code{chord.class.path} to be set.
 
 \begin{itemize}
 \item
-The {\tt dynamic} value instructs \Chord\ to compute program scope
+The {\tt dynamic} value instructs Chord to compute program scope
 dynamically, by running the program and observing using JVMTI the
 classes that are loaded at run-time.  The number of times the program
 is run and the command-line arguments to be supplied to the program in
@@ -117,12 +117,12 @@ JVMTI and to increase the predictive power of program analyses
 performed using the computed program scope.
 
 \item
-The {\tt rta} value instructs \Chord\ to compute program scope
+The {\tt rta} value instructs Chord to compute program scope
 statically using Rapid Type Analysis (RTA).
 
 RTA is an iterative fixed-point algorithm.  It maintains a set of
 reachable methods $M$.  The initial iteration starts by assuming that
-only the main method in the main class is reachable (\Chord\ also
+only the main method in the main class is reachable (Chord also
 handles class initializer methods but we ignore them here for brevity;
 we also ignore the set of reachable classes maintained besides the set
 of reachable methods).  All object allocation sites $H$ contained in
@@ -141,7 +141,7 @@ added.
 %The next option attempts to overcome this problem.
 %
 %\item
-%The \code{rta_reflect} value instructs \Chord\ to compute program scope statically using Rapid Type Analysis
+%The \code{rta_reflect} value instructs Chord to compute program scope statically using Rapid Type Analysis
 %and, moreover, to resolve a common reflection pattern:
 %
 %\begin{quote}
@@ -157,10 +157,10 @@ added.
 %such as the last statement in the above snippet,
 %and queries the class hierarchy to find all concrete classes that subclass \code{T} (if \code{T} is a class)
 %or that implement \code{T} (if \code{T} is an interface).
-%\Chord\ allows users to control which classes are included in the class hierarchy (see below).
+%Chord allows users to control which classes are included in the class hierarchy (see below).
 %
 \item
-The {\tt cha} value instructs \Chord\ to compute program scope
+The {\tt cha} value instructs Chord to compute program scope
 statically using Class Hierarchy Analysis (CHA).
 
 The key difference between CHA and RTA is that for invokevirtual and
@@ -170,7 +170,7 @@ possible target methods, whereas RTA restricts them to types of
 objects allocated in methods deemed reachable so far.  As a result,
 CHA is highly imprecise in practice, and also expensive since it
 grossly overestimates the set of reachable classes and methods.
-Nevertheless, \Chord\ allows users to control which classes are
+Nevertheless, Chord allows users to control which classes are
 included in the class hierarchy (see below) and thereby control the
 precision and cost of CHA.
 
@@ -183,7 +183,7 @@ The class hierarchy is built if property \code{chord.scope.kind} has
 value {\tt cha}.  Users can control which classes are included in
 building the class hierarchy by setting property \code{chord.ch.kind},
 whose possible legal values are [\code{static}$|$\code{dynamic}].
-\Chord\ first constructs the entire classpath of the given program by
+Chord first constructs the entire classpath of the given program by
 concatenating in order the following classpaths:
 
 \begin{enumerate}
@@ -193,7 +193,7 @@ The boot classpath, specified by property \code{sun.boot.class.path}.
 The library extensions classpath, comprising all jar files in
 directory \code{[java.home]/lib/dir/}.
 \item
-\Chord's classpath, specified by property
+Chord's classpath, specified by property
 \code{chord.main.class.path}.  This includes the classpath of any
 user-defined Java analyses, specified by user-defined property
 \code{chord.java.analysis.path}, which is empty by default.
@@ -214,7 +214,7 @@ Any class whose name's prefix is specified in the value of property
 \code{chord.scope.exclude}.
 \item
 If property \code{chord.ch.kind} has value {\tt dynamic}, then
-\Chord\ runs the given program and observes the set of all classes the
+Chord runs the given program and observes the set of all classes the
 JVM loads; any class not in this set is excluded.  By default,
 property \code{chord.ch.kind} has value {\tt static}.
 \item
