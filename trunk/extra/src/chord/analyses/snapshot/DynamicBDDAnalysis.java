@@ -24,7 +24,7 @@ import chord.project.Config;
 import chord.project.ClassicProject;
 import chord.program.Program;
 import chord.project.analyses.DynamicAnalysis;
-import chord.doms.DomH;
+import chord.analyses.alloc.DomH;
 import joeq.Class.jq_Field;
 import joeq.Compiler.Quad.Quad;
 

@@ -26,9 +26,9 @@ import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 
 import chord.analyses.escape.ThrEscException;
-import chord.doms.DomE;
-import chord.doms.DomH;
-import chord.doms.DomF;
+import chord.analyses.heapacc.DomE;
+import chord.analyses.alloc.DomH;
+import chord.analyses.field.DomF;
 import chord.instr.InstrScheme;
 import chord.program.Program;
 import chord.program.MethodElem;

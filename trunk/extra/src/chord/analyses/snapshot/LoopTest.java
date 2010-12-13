@@ -11,7 +11,7 @@ import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
-import chord.doms.DomB;
+import chord.analyses.basicblock.DomB;
 
 /**
  * @author omertripp

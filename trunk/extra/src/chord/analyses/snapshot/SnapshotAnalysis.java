@@ -35,12 +35,12 @@ import chord.util.StatFig;
 import chord.util.Utils;
 
 import chord.project.ClassicProject;
-import chord.doms.DomE;
-import chord.doms.DomF;
-import chord.doms.DomH;
-import chord.doms.DomI;
-import chord.doms.DomL;
-import chord.doms.DomM;
+import chord.analyses.heapacc.DomE;
+import chord.analyses.field.DomF;
+import chord.analyses.alloc.DomH;
+import chord.analyses.invk.DomI;
+import chord.analyses.lock.DomL;
+import chord.analyses.method.DomM;
 
 /**
  * Evaluate the precision and complexity of various heap abstractions.
