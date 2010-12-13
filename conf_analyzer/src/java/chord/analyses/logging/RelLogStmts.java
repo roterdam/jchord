@@ -1,17 +1,15 @@
 package chord.analyses.logging;
 
 import java.util.*;
-import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
-import chord.doms.DomI;
-import chord.doms.DomV;
+import chord.analyses.invk.DomI;
+import chord.analyses.var.DomV;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 

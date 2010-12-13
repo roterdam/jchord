@@ -9,12 +9,12 @@ import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import chord.analyses.confdep.ConfDefines;
 import chord.analyses.confdep.ConfDeps;
 import chord.analyses.confdep.optnames.DomOpts;
 import chord.bddbddb.Rel.RelView;
-import chord.doms.DomH;
-import chord.doms.DomV;
+import chord.analyses.var.DomV;
+import chord.analyses.alloc.DomH;
+
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Config;

@@ -8,7 +8,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.ALength;
 import joeq.Compiler.Quad.Operator.Invoke;
-import chord.doms.DomV;
+import chord.analyses.var.DomV;
 import chord.program.visitors.*;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;

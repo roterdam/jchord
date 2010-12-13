@@ -2,8 +2,8 @@ package chord.analyses.confdep.docu;
 
 
 import joeq.Compiler.Quad.Quad;
-import chord.doms.DomH;
-import chord.doms.DomI;
+import chord.analyses.alloc.DomH;
+import chord.analyses.invk.DomI;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 

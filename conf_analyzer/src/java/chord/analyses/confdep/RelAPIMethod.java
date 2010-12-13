@@ -4,7 +4,7 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
-import chord.doms.DomI;
+import chord.analyses.invk.DomI;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
@@ -39,8 +39,8 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
     
     //compareTo and equals should taint return value, only
     //that's handled in primRefDep for control dependencies
-    if(methname.equals("compareTo") || methname.equals("equals") || methname.equals("hashCode"))
-      return false;
+//    if(methname.equals("compareTo") || methname.equals("equals") || methname.equals("hashCode"))
+//      return false;
 
     if(classname.equals("java.lang.Thread"))
     	return false;

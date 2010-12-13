@@ -6,6 +6,7 @@
 # Context-insensitive may-alias/call-graph analysis.
 
 # Author: Mayur Naik (mhn@cs.stanford.edu)
+# Modified by Ariel Rabkin (asrabkin@cs.berkeley.edu)
 # name=cipa-0cfa-arr-dlog
 
 .include "T.dom"

@@ -7,11 +7,11 @@
 .include "U.dom"
 .include "UV.dom"
 .include "Z.dom"
-.include "ZZ.dom"
+.include "K.dom"
 .include "StrConst.dom"
 .include "Opt.dom"
 
-.bddvarorder I0xStrConst0_Opt0_H0_ZZ0_Z0_V0_V1_U0_UV0
+.bddvarorder I0xStrConst0_Opt0_H0_K0_Z0_V0_V1_U0_UV0
 
 #  WE'RE ONLY HANDLING LOCAL CONTROL DEPENDENCE
 #    There's also load-dependence, where a log statement depends on its container
@@ -24,8 +24,8 @@
 
 
 logStmt(i:I) input
-logVHolds(i:I, cmpt:V, z:ZZ) input
-logVHoldsU(i:I, cmpt:U, z:ZZ) input
+logVHolds(i:I, cmpt:V, z:K) input
+logVHoldsU(i:I, cmpt:U, z:K) input
 
 
 #cOnLine(i:I, h:H, cst:StrConst) input
@@ -47,9 +47,9 @@ IinvkPrimArg(i:I0,n:Z0,u:U0) input
 
 dependentLogStmt(i:I,u:UV) 
 uvConf(uv:UV,src:Opt)
-logArg(i:I, cmpt:V, z:ZZ)
+logArg(i:I, cmpt:V, z:K)
 
-logFieldDataDep(logStmt:I0, fld:ZZ, src:Opt) output
+logFieldDataDep(logStmt:I0, fld:K, src:Opt) output
 logConfDep(logStmt:I0, src:Opt) output
 
 

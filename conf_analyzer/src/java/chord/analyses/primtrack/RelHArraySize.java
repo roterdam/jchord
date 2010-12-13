@@ -1,15 +1,12 @@
 package chord.analyses.primtrack;
 
-import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
-import chord.doms.DomH;
-import chord.doms.DomT;
+import chord.analyses.alloc.DomH;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 

@@ -16,7 +16,10 @@
 
 refCdep(v:V,site:Opt) input
 primCdep(u:U,site:Opt) input
-
+scopeExcludedM(m:M) input
+APIMethod(i:I) input
+#confCall(i:I) input
+IM(i:I,m:M) input
 
 MmethPrimArg(m:M0,n:Z0,u:U0) input
 MmethPrimRet(m:M0,n:Z0,u:U0) input
@@ -28,9 +31,13 @@ MmethArg(m:M0,n:Z0,u:V0) input
 IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
 
+APIMeth(m:M)
+
 argCdep(m:M, z:Z, opt:Opt)  output
 IargCdep(i:I, z:Z, opt:Opt)  output
 IretDep(i:I, opt:Opt)  output
+
+unmodeledM(m:M) output
 
 ####Debugging
 
@@ -41,3 +48,12 @@ IargCdep(i, z, opt) :- IinvkArg(i,z,v),refCdep(v,opt).
 IargCdep(i, z, opt) :- IinvkPrimArg(i,z,v),primCdep(v,opt).
 IretDep(i,opt) :- IinvkRet(i,_,v),refCdep(v,opt).
 IretDep(i,opt) :- IinvkPrimRet(i,_,v),primCdep(v,opt).
+
+# Method actually taking a tain
+#
+APIMeth(m) :- IM(i,m),APIMethod(i).
+#,!confCall(i).
+
+scopeExcludeArgMeth(m) :- scopeExcludedM(m),argCdep(m, _,_).
+
+unmodeledM(m) :- scopeExcludeArgMeth(m),!APIMeth(m).

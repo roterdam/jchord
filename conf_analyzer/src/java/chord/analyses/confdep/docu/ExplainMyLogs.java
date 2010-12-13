@@ -12,6 +12,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.confdep.ConfDefines;
 import chord.analyses.confdep.ConfDeps;
 import chord.analyses.confdep.optnames.DomOpts;
+import chord.analyses.invk.DomI;
 import chord.bddbddb.Rel.RelView;
 import chord.doms.*;
 import chord.project.*;
@@ -57,8 +58,8 @@ public class ExplainMyLogs extends JavaAnalysis{
     if(miniDatadep)
     	project.runTask("minidatadep-dlog"); //just rename primFlow to primCdep, etc
     else
-    	project.runTask("datadep-dlog"); //Use the broad-scope datadep, not narrow flow
-
+    	project.runTask("datadep-func-dlog"); //Use the broad-scope datadep, not narrow flow
+//was datadep-func-
     project.runTask("logconfdep-dlog");
     
     ConfDeps c = new ConfDeps();
@@ -78,9 +79,14 @@ public class ExplainMyLogs extends JavaAnalysis{
 		for(String opt: opts) {
 			if(opt.equals("UNKNOWN"))
 				continue;
+			//if(opt.contains("PROP-.*@|myinstance|myScribeInstance|lower") continue;
+			if(opt.contains("lower|upper|peerreview") || opt.split("\\|").length > 3) {
+				System.err.println("skipping option " + opt);
+				continue;
+			} 
 			String prunedName = ConfDefines.pruneName(opt);
 			
-			optPats.put(opt, Pattern.compile("[^$|-]"+prunedName));
+			optPats.put(opt, Pattern.compile("^"+prunedName+"|[^$|-]"+prunedName));
 		}
 		return optPats;
 	}
@@ -92,7 +98,7 @@ public class ExplainMyLogs extends JavaAnalysis{
   	Map<String, Pattern> optPats = depMap(opts);
   	for(String opt: optPats.keySet()) {
   		
-  		writer.println("\t"+opt);
+  		writer.println("\t"+opt+ " recognized by " + optPats.get(opt).pattern());
   	}
   	writer.println("-----------------\n");
 
@@ -114,13 +120,14 @@ public class ExplainMyLogs extends JavaAnalysis{
 	}
   
   //expect message to have options substituted in already
+  //returns a set of qualified option names
   private static Set<String> optionMentions(String formattedMsg, Map<String, Pattern> opts) {
   	TreeSet<String> deps = new TreeSet<String>();
   	for(Map.Entry<String, Pattern> p: opts.entrySet()) {
   		Matcher m = p.getValue().matcher(formattedMsg);
-  		
-  		if(m.find())
-  			deps.add(p.getKey());
+  		String name = p.getKey();
+  		if(m.find() )
+  			deps.add(name);
   	}
   	return deps;
   }
@@ -177,10 +184,16 @@ public class ExplainMyLogs extends JavaAnalysis{
     ProgramRel logConfDeps =
       (ProgramRel) project.getTrgt("logConfDep");//ouputs I0,Opt (stmt, src)
     logConfDeps.load();
+    
+    DomI domI = (DomI) project.getTrgt("I");
+   
     int depCount = 0;
     
+    int mentionCount = 0;
+    int detectedMentions = 0;
     for(Map.Entry<Quad, Pair<String,Integer>> msgPair: renderedMessages.entrySet()) {
     	Quad logCall = msgPair.getKey();
+    	int idx = domI.indexOf(logCall);
       jq_Method m = logCall.getMethod();
       jq_Class cl = m.getDeclaringClass();
       int lineno = logCall.getLineNumber();
@@ -188,6 +201,7 @@ public class ExplainMyLogs extends JavaAnalysis{
     	String msg = msgPair.getValue().val0;
 
     	Set<String> optionMentions = optionMentions(msg, optPats);
+    	mentionCount += optionMentions.size();
     	
       RelView ctrlDepView = logConfDeps.getView();
       ctrlDepView.selectAndDelete(0, logCall);
@@ -197,7 +211,7 @@ public class ExplainMyLogs extends JavaAnalysis{
     	
       for(String thisLine: msg.split("\n")) {
         String formatted =  cl.toString()+":" +lineno  + " (" + m.getName() +") " +
-            Invoke.getMethod(logCall).getMethod().getName()+ "("  + thisLine+")";
+            Invoke.getMethod(logCall).getMethod().getName()+ "("  + thisLine+")  Iidx = " + idx;
         writer.println(formatted);
       }
       int dataDeps = msgPair.getValue().val1;
@@ -207,9 +221,14 @@ public class ExplainMyLogs extends JavaAnalysis{
         if(ctrlDep == null)
           continue;
 //          optName = "Unknown Conf";
+        
+//        TreeSet<String> matchedOpts = new TreeSet<String>(); //do all the removal after checking in case 
+        							//the same string matches multiple options
         boolean foundOpt = optionMentions.remove(ctrlDep);
-        if(foundOpt)
+        if(foundOpt) {
         	writer.println("\texplicitly control-depends on "+ctrlDep);
+      		detectedMentions ++;
+        } 
         else
         	writer.println("\tcontrol-depends on "+ctrlDep);
       }
@@ -218,13 +237,17 @@ public class ExplainMyLogs extends JavaAnalysis{
       	if(!msg.contains(s)) { //we already filtered out the control deps. There's
       					//copy of the option name embedded if there's a datadep
       		writer.println("\texplicit-but-undetected dep:" + s);
-      	} else
+      	} else {
       		writer.println("\texplicit data dependence:" + s);
+      		detectedMentions ++;
+      	}
       }
       
     }
     
-    writer.println("total of " + renderedMessages.size() + " log statements; " + depCount + " dependencies");
+    writer.println("total of " + renderedMessages.size() + " log statements; " + depCount +
+    		" dependencies, and " + optPats.size() + " options");
+    writer.println("explicit: " + mentionCount + " detected-explicit: " + detectedMentions);
     writer.close();
 
     logConfDeps.close();
@@ -279,7 +302,7 @@ public class ExplainMyLogs extends JavaAnalysis{
     	//don't dump excess control deps
     	if(ctrlDepCnt <= MAX_CTRLDEPS_TO_DUMP) {
 	    	for(Quad logStmt: deptsOfThisOpt.<Quad>getAry1ValTuples()) {
-	    		tagAndAddMsg(renderedMessages, messagesForThisOpt, logStmt);
+	    			tagAndAddMsg(renderedMessages, messagesForThisOpt, logStmt);
 	    	}
       }
     	
@@ -300,9 +323,11 @@ public class ExplainMyLogs extends JavaAnalysis{
 
 	private void tagAndAddMsg(Map<Quad, Pair<String,Integer>> renderedMessages,
 			TreeSet<String> messagesForThisOpt, Quad logStmt) {
-		String rendered = renderedMessages.get(logStmt).val0;
-		if(rendered == null)
+		Pair<String,Integer> p = renderedMessages.get(logStmt);
+		if(p == null || p.val0 == null)
 			return;
+		
+		String rendered = p.val0;
 		
 		jq_Method m = logStmt.getMethod();
 		jq_Class cl = m.getDeclaringClass();
@@ -320,7 +345,7 @@ public class ExplainMyLogs extends JavaAnalysis{
   public static String renderLogMsg(Quad quad, ProgramRel logStrings, ProgramRel dataDep) {
     RelView constStrs = logStrings.getView();
     constStrs.selectAndDelete(0, quad);
-    String[] wordsByPos = new String[DomZZ.MAXZ];
+    String[] wordsByPos = new String[DomK.MAXZ];
 
     int maxFilled = -1;
     if(constStrs.size() == 0)

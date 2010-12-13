@@ -1,22 +1,18 @@
 package chord.analyses.confdep.optnames;
 
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.analyses.confdep.ConfDefines;
-import chord.analyses.confdep.ConfDeps;
 import chord.bddbddb.Rel.RelView;
-import chord.doms.DomH;
-import chord.doms.DomZZ;
+import chord.analyses.alloc.DomH;
+import chord.doms.DomK;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.project.OutDirUtils;
 import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.object.Pair;
@@ -52,13 +48,13 @@ public class DomOpts extends ProgramDom<String> {
   
 
   //reconstruct the string at program point quad, using relation logStrings, of form I,Cst,Z
-  public static String reconcatenate(Quad quad, ProgramRel logStrings, boolean makeRegex, int maxFilled) {
+  public static String[] reconcatenate(Quad quad, ProgramRel logStrings, boolean makeRegex, int maxFilled) {
     RelView v = logStrings.getView();
     v.selectAndDelete(0, quad);
-    String[] wordsByPos = new String[DomZZ.MAXZ];
+    String[] wordsByPos = new String[DomK.MAXZ];
 
     if(v.size() == 0)
-      return "X";
+      return new String[] {"X"};
     
     for(Pair<String,Integer> t: v.<String,Integer>getAry2ValTuples()) {
       int i = t.val1;
@@ -81,16 +77,26 @@ public class DomOpts extends ProgramDom<String> {
         sb.append(" X ");
     }
     v.free();
-    	//prune options starting with .*
+    
+  	//prune prefix from options starting with .*
+    String trimmed;
     if(sb.substring(0, 2).equals(".*"))
-    	return sb.substring(2);
+    	trimmed = sb.substring(2);
     else
-    	return sb.toString();
+    	trimmed = sb.toString();
+    
+    if(maxFilled == 0) {
+    	return sb.toString().split("\\|");
+    } else {
+	    	return new String[] {trimmed};
+    }
   }
   
   
 
-  
+  /**
+   * Returns the raw names, without prefix
+   */
   public static Map<Quad,String> computeOptNames(String ptRel, String lenRel, String nameRel, DomH domH) {
     
     ClassicProject Project = ClassicProject.g();
@@ -98,7 +104,7 @@ public class DomOpts extends ProgramDom<String> {
     Map<Quad, String> returnedMap = new LinkedHashMap<Quad, String>();
     
     ProgramRel relConfOptStrs =
-      (ProgramRel) Project.getTrgt(nameRel);//outputs I, Str, ZZ
+      (ProgramRel) Project.getTrgt(nameRel);//outputs I, Str, K
     relConfOptStrs.load();
     ProgramRel relConfOptLens =  (ProgramRel) Project.getTrgt(lenRel);
     relConfOptLens.load();
@@ -122,19 +128,20 @@ public class DomOpts extends ProgramDom<String> {
         if(aLen > lenMax)
           lenMax = aLen;
       }
-      String regexStr = reconcatenate(quad, relConfOptStrs, true, lenMax);
-      
-      String s  = supplementName(quad, vh, strs, cnfNodeSucc, domH);
-      if(s.length() > 1 ) {
-        if(s.length() > regexStr.length()) {
-          System.out.println("RENAME: changing '"+regexStr + "' to " + s);
-          regexStr = s;
-        } else if(!s.equals(regexStr)) {
-          System.err.println("WARN: rename wants to turn " + regexStr + " into " + s);
-        }
+      String regexStrs[] = reconcatenate(quad, relConfOptStrs, true, lenMax);
+      for(String regexStr: regexStrs) {
+	      String s  = supplementName(quad, vh, strs, cnfNodeSucc, domH);
+	      if(s.length() > 1 ) {
+	        if(s.length() > regexStr.length()) {
+	          System.out.println("RENAME: changing '"+regexStr + "' to " + s);
+	          regexStr = s;
+	        } else if(!s.equals(regexStr)) {
+	          System.err.println("WARN: rename wants to turn " + regexStr + " into " + s);
+	        }
+	      }
+	      
+	      returnedMap.put(quad, regexStr);
       }
-      
-      returnedMap.put(quad, regexStr);
     }
     opts.close();
     relConfOptStrs.close();

@@ -6,7 +6,9 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.primtrack.*;
-import chord.doms.*;
+import chord.analyses.invk.DomI;
+import chord.analyses.var.DomV;
+import chord.doms.DomK;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
@@ -21,12 +23,12 @@ import java.util.*;
 @Chord(
     name = "SBAppend",
     
-    consumes = { "I","V", "U", "ZZ"},
+    consumes = { "I","V", "U", "K"},
     produces = { "SBAppendU", "SBAppendV"},
-     signs = {"I0,V0,U0,ZZ0:I0_V0_U0_ZZ0","I0,V0,V1,ZZ0:I0_V0_V1_ZZ0"},
+     signs = {"I0,V0,U0,K0:I0_V0_U0_K0","I0,V0,V1,K0:I0_V0_V1_K0"},
   namesOfSigns = { "SBAppendU", "SBAppendV"},
-  namesOfTypes = { "I" ,"V", "U", "ZZ"},
-  types = { DomI.class, DomV.class, DomU.class, DomZZ.class }
+  namesOfTypes = { "I" ,"V", "U", "K"},
+  types = { DomI.class, DomV.class, DomU.class, DomK.class }
 
 //    sign = "I0,V0,UV0,Z0:I0_V0_UV0_Z0"
   )
@@ -34,7 +36,7 @@ public class RelSBAppend extends JavaAnalysis {
   DomI domI;
   DomV domV;
   DomU domU;
-  DomZZ domZ;
+  DomK domK;
   jq_Method method;
   ProgramRel relRef, relPrim;
   public void init() {
@@ -42,7 +44,7 @@ public class RelSBAppend extends JavaAnalysis {
     domI = (DomI) project.getTrgt("I");
     domV = (DomV) project.getTrgt("V");
     domU = (DomU) project.getTrgt("U");
-    domZ = (DomZZ) project.getTrgt("ZZ");
+    domK = (DomK) project.getTrgt("K");
     relRef = (ProgramRel) project.getTrgt("SBAppendV");
     relPrim = (ProgramRel) project.getTrgt("SBAppendU");
     relRef.zero();
@@ -99,7 +101,7 @@ public class RelSBAppend extends JavaAnalysis {
       int retVarIdx = domV.indexOf(Invoke.getDest(q).getRegister());
       if(retVarIdx > 0)
         vidxToLen.put(retVarIdx, z+1);
-      if(v1 != -1 && (domZ.size() > z)) {
+      if(v1 != -1 && (domK.size() > z)) {
             
         RegisterOperand i1 = Invoke.getParam(q, 1);
         if(i1.getType().isReferenceType()) {

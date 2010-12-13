@@ -2,17 +2,14 @@ package chord.analyses.primtrack;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Binary;
 import joeq.Compiler.Quad.Operator.Unary;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import chord.doms.DomI;
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.program.visitors.*;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
