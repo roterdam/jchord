@@ -11,13 +11,15 @@ import chord.project.analyses.ProgramDom;
 /**
  * Another domain of integers. Unlike domZ, has fixed size, unconnected
  * to max_args.
+ * 
+ * Size is set via option chord.domK.size. Default is 32.
  *
  */
 @Chord(
-	name = "ZZ"
+	name = "K"
   )
-public class DomZZ extends ProgramDom<Integer> {
-  public static final int MAXZ = 32;
+public class DomK extends ProgramDom<Integer> {
+  public static final int MAXZ = Integer.getInteger("chord.domK.size", 32);
   
   @Override
   public void fill() {
