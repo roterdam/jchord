@@ -21,7 +21,7 @@ import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Util.Templates.ListIterator;
 
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.Config;

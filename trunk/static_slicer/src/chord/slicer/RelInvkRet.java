@@ -4,7 +4,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import chord.doms.DomI;
+import chord.analyses.invk.DomI;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 

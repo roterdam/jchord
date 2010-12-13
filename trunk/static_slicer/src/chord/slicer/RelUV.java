@@ -3,7 +3,7 @@ package chord.slicer;
 import java.util.Iterator;
 
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import chord.doms.DomV;
+import chord.analyses.var.DomV;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
