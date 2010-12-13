@@ -1,39 +1,50 @@
 \section{What is Chord?}
 \label{sec:whatis-chord}
 
-\Chord\ is a static and dynamic program analysis framework for Java.
-It has the following key characteristics:
+\Chord\ is a program analysis platform for Java designed with the
+primary goal of helping advance the state-of-the-art in the field by
+enabling researchers to productively design, implement, and evaluate a
+broad variety of program analyses. To this end, Chord has the
+following key characteristics:
 
 \begin{itemize}
 \item
-Stand-alone: various off-the-shelf program analyses are provided (e.g., may-alias, thread-escape, datarace, deadlock, etc.).
+Stand-alone: it provides various off-the-shelf analyses (e.g., various
+call-graph analyses; points-to analyses; thread-escape analysis;
+static slicing; static and dynamic concurrency analyses for finding
+races, deadlocks, and atomicity violations; etc.)
 \item
-Extensible: users can build their own program analyses on top of the provided ones.
+Extensible: it allows users to build their own analyses atop the
+provided analyses.
 \item
-Compositional: each program analysis can be written independently and yet made to interact in complex ways with other program analyses.
+Compositional: it allows users to write each analysis independently
+yet allow it to interact in complex ways with other analyses by
+specifying lightweight data- and control-dependencies.
 \item
-Efficient: results computed by each program analysis are cached for reuse by other program analyses without re-computation.
+Efficient: It executes analyses in a demand-driven fashion, caches
+results computed by each analysis for reuse by other analyses without
+re-computation, and can execute analyses without dependencies between
+them in parallel.
 \item
-Flexible: a broad range of program analyses can be expressed, including those
-written imperatively in Java or declaratively in Datalog, summary-based as well as cloning-based context-sensitive analyses,
-iterative refinement-based analyses, client-driven analyses, and combined static and dynamic analyses.
+Deterministic: It guarantees that the result is the same regardless of
+the order in which different analyses are executed; moreover, results
+can be shared across different runs.
+\item
+Flexible: It allows a broad range of analyses to be expressed,
+including both static and dynamic analyses, analyses written
+imperatively in Java or declaratively in Datalog, summary-based as
+well as cloning-based inter-procedural context-sensitive analyses,
+iterative refinement-based analyses, client-driven analyses, and
+combined static/dynamic analyses.
 \end{itemize}
 
-\noindent \Chord\ is intended for use by a broad range of users:
+\noindent \Chord\ is intended to work on a variety of platforms,
+including Linux, Windows/Cygwin, and MacOS.  It has been tested most
+extensively on Linux.  It is open source software distributed under
+the \htmladdnormallink{New BSD
+  License}{http://www.opensource.org/licenses/bsd-license.php}.
+Improvements by users are welcome and encouraged.  The project website
+is \url{http://berkeley.intel-research.net/chord/} and the software
+website is \url{http://code.google.com/p/jchord/}.
 
-\begin{itemize}
-\item
-Program analysis writers: Program analysis researchers wanting to implement and evaluate new program analysis algorithms.
-\item
-Program analysis appliers: Researchers with possibly a limited program analysis background wanting to build applications on
-top of program analyses in Chord used as black boxes.
-\item
-Software engineers: Programmers wanting to use program analyses in Chord to assist with software development and testing.
-\end{itemize}
-
-\noindent \Chord\ is intended to work on a variety of platforms, including Linux, Windows/Cygwin, and MacOS.
-It has been tested most extensively on Linux.
-It is open source software distributed under the \htmladdnormallink{New BSD License}{http://www.opensource.org/licenses/bsd-license.php}.
-Improvements by users are welcome and encouraged.
-The project website is located at \url{http://code.google.com/p/jchord/}.
 

@@ -22,13 +22,15 @@ Suppose the program to be analyzed has the following directory structure:
         chord.properties
 \end{verbatim}
 
-\noindent The above structure is typical: the program's Java source files are under {\tt src/},
-its class files are under {\tt classes/}, the source and jar files of the libraries
-used by the program are under \code{lib/src/} and \code{lib/jar/}, respectively.
+\noindent The above structure is typical: the program's Java source
+files are under {\tt src/}, its class files are under {\tt classes/},
+the source and jar files of the libraries used by the program are
+under \code{lib/src/} and \code{lib/jar/}, respectively.
 
-File \code{chord.properties} specifies properties to be passed to Chord (alternatively,
-these properties may be passed on the command-line, in format \code{-D<name>=<value>}).
-A sample such file for the above program is as follows:
+File \code{chord.properties} specifies properties to be passed to
+Chord (alternatively, these properties may be passed on the
+command-line, in format \code{-D<name>=<value>}).  A sample such file
+for the above program is as follows:
 
 \begin{verbatim}
     chord.main.class=foo.Main
@@ -39,55 +41,62 @@ A sample such file for the above program is as follows:
     chord.args.1="-thread 2 -n 50"
 \end{verbatim}
 
-Each relative path element in the value of any property
-named \code{chord.<...>.path} defined in this file is converted to an absolute path element with respect
-to the directory containing this file, which in the above case is \code{example/}.
+Each relative path element in the value of any property named
+\code{chord.<...>.path} defined in this file is converted to an
+absolute path element with respect to the directory containing this
+file, which in the above case is \code{example/}.
 
-Section \ref{sec:chord-sysprops} presents an exhaustive
-listing of properties recognized by \Chord.
-Here, we only describe those defined in the above
-sample \code{chord.properties} file:
+Section \ref{sec:chord-sysprops} presents an exhaustive listing of
+properties recognized by \Chord.  Here, we only describe those defined
+in the above sample \code{chord.properties} file:
 
 \begin{itemize}
 \item
-\code{chord.main.class} specifies the fully-qualified name of the main class of the
-program.
+\code{chord.main.class} specifies the fully-qualified name of the main
+class of the program.
 \item
-\code{chord.class.path} specifies the application-specific classpath of the program
-(the standard library classpath is implicitly included).
+\code{chord.class.path} specifies the application-specific classpath
+of the program (the standard library classpath is implicitly
+included).
 \item
 \code{chord.src.path} specifies the Java source path of the program.
-All program analyses in Chord operate on Java bytecode.
-The only use of this property is to HTMLize the Java source files of the program so that the
-results of program analyses can be reported at the Java source code level.
+All program analyses in Chord operate on Java bytecode.  The only use
+of this property is to HTMLize the Java source files of the program so
+that the results of program analyses can be reported at the Java
+source code level.
 \item
-\code{chord.run.ids} specifies a list of IDs to identify runs of the program.
-It is used by dynamic program analyses to determine how many times the program must be run.
-An additional use of this property is to allow specifying the command-line arguments to use
-in the run having ID {\tt <id>} via property \code{chord.args.<id>}, as illustrated by
-properties \code{chord.args.0} and \code{chord.args.1} in the above example.
+\code{chord.run.ids} specifies a list of IDs to identify runs of the
+program.  It is used by dynamic program analyses to determine how many
+times the program must be run.  An additional use of this property is
+to allow specifying the command-line arguments to use in the run
+having ID {\tt <id>} via property \code{chord.args.<id>}, as
+illustrated by properties \code{chord.args.0} and \code{chord.args.1}
+in the above example.
 \end{itemize}
 
-To run Chord on the above program, run the following command in Chord's {\tt main/} directory:
+To run Chord on the above program, run the following command in
+Chord's {\tt main/} directory:
 
 \begin{verbatim}
     prompt> ant -Dchord.work.dir=<...>/example run
 \end{verbatim}
 
-\noindent where {\tt <...>} denotes either the absolute path, or the path relative to Chord's {\tt main/} directory,
-of the parent of directory {\tt example/}.
-System property \code{chord.work.dir} specifies the working directory during Chord's execution.
+\noindent where {\tt <...>} denotes the absolute path of the parent of
+directory {\tt example/}.  Property \code{chord.work.dir} specifies
+the working directory during Chord's execution.
 
-The above command causes Chord to load the \code{chord.properties} file if present.
-The location of this file may be specified explicitly via property
-\code{chord.props.file} on the above command line.
-By default, it is \code{[chord.work.dir]/chord.properties}.
+The above command causes Chord to load the \code{chord.properties}
+file if present.  The location of this file may be specified
+explicitly via property \code{chord.props.file} on the above command
+line.  By default, it is \code{[chord.work.dir]/chord.properties}.
 
-In the above case, Chord does not do much beyond loading the sample \code{chord.properties} file.
-For Chord to do something interesting, you need to set additional properties, either
-on the above command line or in the \code{chord.properties} file, specifying the task(s)
-Chord must perform.
-All tasks are summarized in Section \ref{sec:chord-sysprops:task}.
-The two most common tasks, described next, are computing the scope of the given program (Section \ref{sec:building-scope})
-and running analyses on the given program (Section \ref{sec:running-analysis}).
+In the above case, Chord does not do much beyond loading the sample
+\code{chord.properties} file.  For Chord to do something interesting,
+you need to set additional properties, either on the above command
+line or in the \code{chord.properties} file, specifying the task(s)
+Chord must perform.  All tasks are summarized in Section
+\ref{sec:chord-sysprops:task}.  The two most common tasks, described
+next, are computing the scope of the given program (Section
+\ref{sec:building-scope}) and running analyses on the given program
+(Section \ref{sec:running-analysis}).
 
