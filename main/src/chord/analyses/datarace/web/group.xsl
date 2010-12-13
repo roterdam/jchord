@@ -4,7 +4,11 @@
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
     xmlns:chord="http://chord.stanford.edu/">
 
-<xsl:include href="misc.xsl"/>
+<xsl:include href="A.xsl"/>
+<xsl:include href="E.xsl"/>
+<xsl:include href="C.xsl"/>
+<xsl:include href="F.xsl"/>
+<xsl:include href="O.xsl"/>
 
 <xsl:function name="chord:group_races">
 	<xsl:param name="list"/>

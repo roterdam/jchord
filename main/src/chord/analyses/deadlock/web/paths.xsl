@@ -4,7 +4,8 @@
    xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
    xmlns:chord="http://chord.stanford.xsl/">
 
-<xsl:import href="misc.xsl"/>
+<xsl:include href="C.xsl"/>
+<xsl:include href="I.xsl"/>
 
 <xsl:output omit-xml-declaration="yes"/>
 
