@@ -23,7 +23,7 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.*;
 import joeq.Class.jq_Field;
 import chord.bddbddb.Rel.PairIterable;
-import chord.doms.DomE;
+import chord.analyses.heapacc.DomE;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.program.Program;

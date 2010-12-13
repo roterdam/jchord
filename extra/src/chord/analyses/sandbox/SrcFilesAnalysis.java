@@ -16,7 +16,7 @@ import joeq.Class.jq_Method;
 import chord.util.FileUtils;
 import chord.program.MethodSign;
 import chord.program.Program;
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;

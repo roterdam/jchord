@@ -12,8 +12,8 @@ import chord.project.ClassicProject;
 import chord.project.Project;
 import chord.project.analyses.ProgramDom;
 import chord.util.tuple.object.Pair;
-import chord.doms.DomM;
-import chord.doms.DomH;
+import chord.analyses.method.DomM;
+import chord.analyses.alloc.DomH;
 
 /**
  * Domain of abstract threads.

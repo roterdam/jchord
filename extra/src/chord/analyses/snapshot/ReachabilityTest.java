@@ -16,7 +16,7 @@ import java.util.Set;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.doms.DomE;
+import chord.analyses.heapacc.DomE;
 
 /**
  * @author omertripp

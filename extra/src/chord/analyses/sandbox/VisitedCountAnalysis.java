@@ -11,7 +11,7 @@ import java.util.Set;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.Messages;
