@@ -68,7 +68,7 @@ such as computing the scope of the given program or running program analyses on 
 \item
 \code{chord.build.scope} \\
 {\bf Type:} bool \\
-{\bf Description:} Compute the scope (i.e., reachable classes and methods) of the given program using the algorithm specified by properties \code{chord.scope.kind} and \code{chord.reuse.scope}. \\
+{\bf Description:} Compute the scope of the given program using the algorithm specified by properties \code{chord.scope.kind} and \code{chord.reuse.scope}. \\
 {\bf Default value:} {\tt false} \\
 {\bf Note:} The program scope is computed regardless of the value of this property if another task (e.g., a program analysis specified via property \code{chord.run.analyses}) demands it by calling method \code{chord.program.Program.g()}.
 
@@ -159,20 +159,20 @@ This section describes properties of the JVM running \Chord, such as the working
 \subsection{Program Scope Properties}
 \label{sec:scope-props}
 
-This section describes properties that specify how the analysis scope is computed.
+This section describes properties that specify how the program scope is computed.
 See Section \ref{sec:building-scope} for more details.
 
 \begin{itemize}
 \item
 \code{chord.reuse.scope} \\
 {\bf Type:} bool \\
-{\bf Description:} Treat analysis scope as the classes and methods listed in files specified by properties \code{chord.classes.file} and \code{chord.methods.file}, respectively.  Property \code{chord.scope.kind} is ignored if this property is set to {\tt true} and the two files exist. \\
+{\bf Description:} Compute program scope using the information in files specified by properties \code{chord.methods.file} and \code{chord.reflect.file}.  Property \code{chord.scope.kind} is ignored if this property is set to {\tt true} and the two files exist. \\
 {\bf Default value:} {\tt false}
 
 \item
 \code{chord.scope.kind} \\
 {\bf Type:} {\tt [dynamic|rta|cha]} \\
-{\bf Description:} Algorithm to compute analysis scope (i.e., reachable classes and methods).  Current choices include {\tt dynamic} (dynamic analysis), {\tt rta} (static Rapid Type Analysis), and {\tt cha} (static Class Hierarchy Analysis). \\
+{\bf Description:} Algorithm to compute program scope.  Current choices include {\tt dynamic} (dynamic analysis), {\tt rta} (Rapid Type Analysis), and {\tt cha} (Class Hierarchy Analysis). \\
 {\bf Default value:} {\tt rta}
 
 \item
@@ -186,19 +186,19 @@ See Section \ref{sec:building-scope} for more details.
 \item
 \code{chord.std.scope.exclude} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes inside the standard library whose method bodies must be treated as no-ops by static scope building algorithms. \\
+{\bf Description:} List of prefixes of names of classes inside the standard library whose method bodies must be treated as no-ops. \\
 {\bf Default value:} \code{[chord.main.class.path]}
 
 \item
 \code{chord.ext.scope.exclude} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes outside the standard library whose method bodies must be treated as no-ops by static scope building algorithms. \\
+{\bf Description:} List of prefixes of names of classes outside the standard library whose method bodies must be treated as no-ops. \\
 {\bf Default value:} {\tt ""}
 
 \item
 \code{chord.scope.exclude} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes whose method bodies must be treated as no-ops by static scope building algorithms. \\
+{\bf Description:} List of prefixes of names of classes whose method bodies must be treated as no-ops. \\
 {\bf Default value:} \code{"[chord.std.scope.exclude],[chord.ext.scope.exclude]"}
 \end{itemize}
 
@@ -217,7 +217,7 @@ This section describes properties regarding program analyses executed by \Chord.
 \code{chord.dlog.analysis.path} \\
 {\bf Type:} path \\
 {\bf Description:} Path of directories containing program analyses written in Datalog (i.e., files with suffix {\tt .dlog} or {\tt .datalog}). \\
-{\bf Default value:} \code{[chord.main.dir]/src/dlog/} 
+{\bf Default value:} \code{[chord.main.dir]/src/} 
 
 \item
 \code{chord.analysis.exclude} \\
@@ -264,7 +264,7 @@ This section describes properties regarding program transformations performed by
 \item
 \code{chord.ssa} \\
 {\bf Type:} bool \\
-{\bf Description:} Do SSA transformation for all methods deemed reachable by the algorithm used to compute analysis scope. \\
+{\bf Description:} Do SSA transformation for all methods deemed reachable by the algorithm used to compute program scope. \\
 {\bf Default value:} {\tt true} 
 \end{itemize}
 

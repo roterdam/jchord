@@ -5,7 +5,8 @@ Ensure that the following software is installed on your machine:
 
 \begin{itemize}
 \item
-JDK 5 or higher, e.g. from \htmladdnormallink{IBM}{http://www.ibm.com/developerworks/java/jdk/} or
+JDK 5 or higher, e.g. from
+\htmladdnormallink{IBM}{http://www.ibm.com/developerworks/java/jdk/} or
 \htmladdnormallink{Sun}{http://java.sun.com/javase/downloads/index.jsp}
 \item
 \htmladdnormallink{Apache Ant}{http://ant.apache.org/}, a Java-based build tool
@@ -17,17 +18,29 @@ a Make utility, e.g. \htmladdnormallink{GNU Make}{http://www.gnu.org/software/ma
 \htmladdnormallink{Cygwin}{http://www.cygwin.com/}, if it is a Windows machine
 \end{itemize}
 
-Download a \Chord\ source release from \url{http://code.google.com/p/jchord/downloads/list} or
-the latest source from the SVN repository at \url{http://code.google.com/p/jchord/source/checkout}.
+Download the latest Chord source code from the SVN repository:
 
-Directory {\tt main/} contains a {\tt build.xml} file which is interpreted by Apache Ant.
-To see the various targets available, run the following command in that directory:
+\begin{verbatim}
+    prompt> svn checkout http://jchord.googlecode.com/svn/trunk/ chord
+\end{verbatim}
+For many users, it may be sufficient to only checkout directory {\tt
+  trunk/main/} instead of the entire {\tt trunk/}.  Other directories
+of interest are {\tt trunk/test/}, which contains regression tests,
+and {\tt trunk/libsrc/}, which contains the source code of software
+used by Chord (Joeq, Javassist, bddbddb, JavaBDD, and jwutil).  All
+other directories under {\tt trunk/} are projects built atop Chord
+that might be of interest to some users.
+
+Directory {\tt main/} contains a {\tt build.xml} file which is
+interpreted by Apache Ant.  To see the various targets available, run
+the following command in that directory:
 
 \begin{verbatim}
     prompt> ant
 \end{verbatim}
 
-\noindent To compile \Chord, run the following command in the same directory:
+\noindent To compile \Chord, run the following command in the same
+directory:
 
 \begin{verbatim}
     prompt> ant compile
@@ -36,10 +49,22 @@ To see the various targets available, run the following command in that director
 \noindent This will compile the following:
 \begin{itemize}
 \item
-the Java source code of \Chord\ from \code{main/src/java/} (and from \code{extra/src/java/} if that directory is present) to Java bytecode in \code{main/classes/}.
+the Java source code of \Chord\ from \code{main/src/} to Java bytecode
+in \code{main/classes/}.
 \item
-the C source code of BDD library \htmladdnormallink{BuDDy}{http://buddy.sourceforge.net/} from \code{main/src/bdd/} to a shared library in \code{main/lib/} (\code{libbuddy.so} on Linux, \code{buddy.dll} on Windows, and \code{libbuddy.dylib} on MacOS); this library is needed for executing program analyses written in Datalog using \htmladdnormallink{bddbddb}{http://bddbddb.sourceforge.net/} (a BDD-based Datalog solver).
+the C source code of BDD library
+\htmladdnormallink{BuDDy}{http://buddy.sourceforge.net/} from
+\code{main/bdd/} to a shared library in \code{main/lib/}
+(\code{libbuddy.so} on Linux, \code{buddy.dll} on Windows, and
+\code{libbuddy.dylib} on MacOS); this library is needed for executing
+program analyses written in Datalog using
+\htmladdnormallink{bddbddb}{http://bddbddb.sourceforge.net/} (a
+BDD-based Datalog solver).
 \item
-the C++ source code of the Chord instrumentation agent from \code{main/src/agent/} to a shared library in \code{main/lib/} (\code{libchord_instr_agent.so} on all architectures); this agent is needed for computing program scope dynamically and for executing dynamic program analyses.
+the C++ source code of the Chord instrumentation agent from
+\code{main/agent/} to a shared library in \code{main/lib/}
+(\code{libchord_instr_agent.so} on all architectures); this agent is
+needed for computing program scope dynamically and for executing
+dynamic program analyses.
 \end{itemize}
 
