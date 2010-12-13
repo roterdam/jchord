@@ -27,6 +27,8 @@ import chord.project.analyses.ProgramRel;
 /**
  * Relation containing each tuple (m,v1,v2) such that method m
  * contains a statement of the form <tt>v1 = v2</tt>.
+ * 
+ * Includes cast and phi instructions as moves.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
