@@ -287,7 +287,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
 
 		String globalInstr = "", localInstr = "";
         int numFldInfos = fldInfosList.size();
-		for (int i = 0, currMantisPrintMethodId = 0; i < numFldInfos; i++) {
+		for (int i = 0, currMantisPrintMethodId = 0; i < numFldInfos;) {
             FldInfo fldInfo = fldInfosList.get(i);
             String fldBaseName = fldInfo.fldBaseName;
             String javaPos = fldInfo.javaPos;
@@ -333,7 +333,8 @@ public class MantisInstrumentor extends CoreInstrumentor {
                     break;
                 }
             }
-            if (i % maxFldsPerMantisPrintMethod == 0 || i == numFldInfos - 1) {
+			++i;
+            if (i % maxFldsPerMantisPrintMethod == 0 || i == numFldInfos) {
                 String mName = "print" + currMantisPrintMethodId;
                 try {
                     CtMethod m = CtNewMethod.make("private static void " + mName +
@@ -345,7 +346,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
                 localInstr = "";
                 globalInstr += mName + "();";
                 currMantisPrintMethodId++;
-            }
+			}
         }
         ctrlWriter.close();
         boolWriter.close();
