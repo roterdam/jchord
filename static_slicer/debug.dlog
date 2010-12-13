@@ -47,26 +47,21 @@ PDefReg(p:P0,u:U0) input
 PRefReg(p:P0,u:U0) input
 MArg(m:M0,u:U0,z:Z0) input
 MRet(m:M0,u:U0) input
-formalIn(m:M0,x:X0) input
-formalOut(m:M0,x:X0) input
-actualIn(i:I0,x:X0) input
-actualOut(i:I0,x:X0) input
+formalArg(m:M0,x:X0) input
+formalRet(m:M0,x:X0) input
+actualArg(i:I0,x:X0) input
+actualRet(i:I0,x:X0) input
 
-formalInOrActualOutXPU(x:X0,p:P0,u:U0) input
-formalInOrActualOutXPG(x:X0,p:P0,f:F0) input
-formalInOrActualOutXPE(x:X0,p:P0,e:E0) input
-actualInOrFormalOutXPU(x:X0,p:P0,u:U0) input
-actualInOrFormalOutXPG(x:X0,p:P0,f:F0) input
-actualInOrFormalOutXPE(x:X0,p:P0,e:E0) input
+formalArgOrActualRetXPU(x:X0,p:P0,u:U0) input
+formalArgOrActualRetXPG(x:X0,p:P0,f:F0) input
+formalArgOrActualRetXPE(x:X0,p:P0,e:E0) input
+actualArgOrFormalRetXPU(x:X0,p:P0,u:U0) input
+actualArgOrFormalRetXPG(x:X0,p:P0,f:F0) input
+actualArgOrFormalRetXPE(x:X0,p:P0,e:E0) input
 
 callP(p:P0) input
-nonCallP(p:P0) input
 EH(e:E0,h:H0) input
 mayAlias(e:E0,e2:E1) input
-
-nonCallRefPU(p:P0,u:U0) input
-nonCallRefPG(p:P0,f:F0) input
-nonCallRefPE(p:P0,e:E0) input
 
 refPU(p:P0,u:U0) input
 refPG(p:P0,f:F0) input
@@ -83,10 +78,10 @@ inPU(p:P0,p2:P1,u:U0) input
 inPG(p:P0,p2:P1,f:F0) input
 inPE(p:P0,p2:P1,e:E0) input
 
-PPReachingDef(p1:P0,p2:P1) input
-XPReachingDef(x:X0,p2:P0) input
-PXReachingDef(p1:P0,x:X0) input
-XXReachingDef(x1:X0,x2:X1) input
+PPDataDep(p1:P0,p2:P1) input
+XPDataDep(x:X0,p:P0) input
+PXDataDep(p:P0,x:X0) input
+XXDataDep(x1:X0,x2:X1) input
 
 linkageEntry(x0:X0,x1:X1) input
 linkageExit(x0:X0,x1:X1) input
@@ -95,15 +90,13 @@ PPCtrlDep(p1:P0,p2:P1) input
 PXCtrlDep(p:P0,x:X0) input
 Seeds(p:P0) input
 NewInitPP(p1:P0,p2:P1) input
-SuperInitPP(p1:P0,p2:P1) input
+SupInitPP(p1:P0,p2:P1) input
 
 XXPathEdge(x1:X0,x2:X1) input
 PXPathEdge(p:P0,x:X0) input
 SummaryEdge(x1:X0,x2:X1) input
 
-PConc(p:P0) input
 instI(i:I0) input
-FirstArgOfInstInvk(p:P0,x:X0) input
 
 Pmarked(p:P0) input
 Xmarked(x:X0) input
