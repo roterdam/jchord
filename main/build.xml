@@ -40,7 +40,7 @@
 		          - max.tuples (default=1000)
 		          - verbose    ([0..6]; default=4)
 		javadoc   Generate javadoc for Chord's Java source code
-		htmldoc   Generate HTML user guide (needs latex2html)
+		htmldoc   Generate HTML user guide (needs hyperlatex)
 		pdfdoc    Generate PDF user guide (needs pdflatex)
 		clean     Cleanup all generated class files
 		cleandoc  Cleanup all generated javadoc/htmldoc/pdfdoc files
@@ -406,8 +406,7 @@
 	</target>
 
 	<target name="htmldoc">
-		<exec executable="latex2html" dir="doc">
-			<arg value="-local_icons"/>
+		<exec executable="hyperlatex" dir="doc">
 			<arg value="user_guide.tex"/>
 		</exec>
 	</target>
