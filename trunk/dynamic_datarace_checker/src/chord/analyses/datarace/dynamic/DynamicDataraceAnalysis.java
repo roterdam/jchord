@@ -18,12 +18,12 @@ import gnu.trove.TIntObjectHashMap;
 
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.instr.InstrScheme;
-import chord.doms.DomL;
-import chord.doms.DomR;
-import chord.doms.DomE;
-import chord.doms.DomF;
-import chord.doms.DomI;
-import chord.doms.DomM;
+import chord.analyses.lock.DomL;
+import chord.analyses.lock.DomR;
+import chord.analyses.heapacc.DomE;
+import chord.analyses.field.DomF;
+import chord.analyses.invk.DomI;
+import chord.analyses.method.DomM;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Messages;
