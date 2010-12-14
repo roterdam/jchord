@@ -13,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Collections;
-import java.io.File;
 import java.io.InputStream;
 import java.io.DataInputStream;
 import java.io.DataInput;
@@ -26,6 +25,7 @@ import joeq.Class.ClasspathElement;
 import chord.project.Messages;
 import chord.project.Config;
 import chord.util.ArraySet;
+import chord.util.Utils;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -138,17 +138,19 @@ public class ClassHierarchy {
 				String d = c;
 				while (true) {
 					success2 &= populateInterfaces(d, clints);
-					String e = classToDeclaredSuperclass.get(d);
-					if (e == null) {
+					String superClass = classToDeclaredSuperclass.get(d);
+					if (superClass == null) {
 						if (!d.equals("java.lang.Object")) {
 							missingClints.add(d);
 							success1 = false;
 						}
 						break;
 					}
-					boolean added = clints.add(e);
+					boolean added = clints.add(superClass);
 					assert (added);
-					d = e;
+					d = superClass;
+					if(!Utils.prefixMatch(d, Config.scopeExcludeAry))  //do this AFTER d =ce note that we handle original c below
+						populateInterfaces(d, clints); //added by asr
 				}
 				if (success1 && success2) {
 					concreteClassToAllSups.put(c, clints);
@@ -178,7 +180,11 @@ public class ClassHierarchy {
 				Set<String> sups = concreteClassToAllSups.get(c);
 				for (String d : sups) {
 					Set<String> subs = clintToAllConcreteSubs.get(d);
-					assert (subs != null);
+					if(subs == null) {
+						System.err.println("WARN: found no subs for " + d);
+						subs = emptyRdOnlySet;
+					}
+					//					assert (subs != null);
 					if (subs == emptyRdOnlySet) {
 						subs = new ArraySet<String>(2);
 						clintToAllConcreteSubs.put(d, subs);
@@ -187,8 +193,12 @@ public class ClassHierarchy {
 				}
 			}
 			missingClints.clear();
-		}
-		return clintToAllConcreteSubs.get(s);
+		}  //if we got here, the clintToAllConcreteSubs table is built and we can just use it. [asr]
+
+		Set<String> matches = clintToAllConcreteSubs.get(s);
+		System.out.println("ClassHierarchy trying to resolve " + s + " got " + (matches == null ? 0 : matches.size()) + " matches");
+
+		return matches;
 	}
 
 	// builds maps clintToKind, classToDeclaredSuperclass, and clintToDeclaredInterfaces
@@ -213,22 +223,28 @@ public class ClassHierarchy {
 		classToDeclaredSuperclass = new HashMap<String, String>();
 		clintToDeclaredInterfaces = new HashMap<String, Set<String>>();
 
+		String[] toExclude = Config.toArray(Config.scopeStdExcludeStr);
+
 		for (ClasspathElement cpe : cpeList) {
 			for (String fileName : cpe.getEntries()) {
 				if (!fileName.endsWith(".class"))
 					continue;
 				String baseName = fileName.substring(0, fileName.length() - 6);
 				String typeName = baseName.replace('/', '.');
+
+				// ignore types excluded from scope
+				if (chord.util.Utils.prefixMatch(typeName, toExclude)) {
+			//		System.out.println("ClassHierarcy ignoring chord class " + typeName);
+					excludedTypes.add(typeName);
+					continue;
+				}
+
 				// ignore duplicate types in classpath
 				if (clintToKind.containsKey(typeName)) {
 					duplicateTypes.add(new Pair<String, String>(typeName, cpe.toString()));
 					continue;
 				}
-				// ignore types excluded from scope
-				if (Config.isExcludedFromScope(typeName)) {
-					excludedTypes.add(typeName);
-					continue;
-				}
+
 				if (dynLoadedTypes != null && !dynLoadedTypes.contains(typeName)) {
 					typesNotDynLoaded.add(typeName);
 					continue;
