@@ -251,11 +251,12 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		out.println("</escapelist>");
 		out.close();
 
-        OutDirUtils.copyFileFromMainDir("src/web/style.css");
-        OutDirUtils.copyFileFromMainDir("src/web/misc.xsl");
-        OutDirUtils.copyFileFromMainDir("src/web/Mlist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/Elist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/web/Hlist.dtd");
+        OutDirUtils.copyFileFromMainDir("web/style.css");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/method/Mlist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/heapacc/Elist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/heapacc/E.xsl");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/Hlist.dtd");
+        OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/H.xsl");
         OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.xml");
         OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.dtd");
         OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.xsl");
