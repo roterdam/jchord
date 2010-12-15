@@ -80,7 +80,7 @@ public class ConfDefines {
     else if((classname.equals("rice.environment.params.Parameters") || classname.equals("rice.environment.params.simple.SimpleParameters"))
         && methname.startsWith("get"))
       return 1;
-    else if((classname.equals("jchord.project.Properties") ||classname.equals("jchord.project.Config")) && (methname.equals("buildBoolProperty") ||
+    else if((classname.endsWith("chord.project.Properties") ||classname.endsWith("chord.project.Config")) && (methname.equals("buildBoolProperty") ||
         methname.equals("mainRel2AbsPath") || methname.equals("workRel2AbsPath") || methname.equals("outRel2AbsPath")))
       return 0;
     else if(classname.equals("nachos.machine.Config") && methname.startsWith("get"))
@@ -150,6 +150,8 @@ public class ConfDefines {
     if(classname.startsWith("nachos.machine.Config"))
         return "PROP-";
     if(classname.startsWith("org.apache.tools.ant"))
+    	return "PROP-";
+    if(classname.startsWith("chord") || classname.startsWith("jchord"))
     	return "PROP-";
     else 
       return "";

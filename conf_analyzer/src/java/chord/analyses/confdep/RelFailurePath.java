@@ -25,7 +25,7 @@ public class RelFailurePath extends ProgramRel implements IInvokeInstVisitor{
   boolean methodMatches;
   jq_Method cur_m;
   
-  IndexSet<String> callsOnFailPath = new IndexSet<String>();
+  Set<String> callsOnFailPath = new HashSet<String>();
   Map<String, Quad> pointOnTrace = new HashMap<String, Quad>();
   
   public void init() {
@@ -34,14 +34,18 @@ public class RelFailurePath extends ProgramRel implements IInvokeInstVisitor{
     
     try {
       String straceFName = System.getProperty(FAILTRACE_OPT);
-      if(straceFName == null)
+      if(straceFName == null) {
         System.err.println("need to set option failtrace.file if using super-context sensitivity");
+        System.exit(-1);
+      }
       else {
         File straceFile = new File(straceFName);
         if(!straceFile.exists())
           System.err.println("no such file " + straceFile);
-        else
+        else {
           slurpStacktrace(straceFile);
+          System.out.println("FailurePath read stacktrace, found " + callsOnFailPath.size() + " methods on-path");
+        }
       }
     } catch(IOException e) {
       e.printStackTrace();
@@ -82,20 +86,21 @@ public class RelFailurePath extends ProgramRel implements IInvokeInstVisitor{
     this.cur_m = m;
   }
 
+  /**
+   * We've build a list of class-lineno-method tuples from the stacktrace.
+   * If a given quad matches, we add that quad to the relation.
+   * 
+   * We're adding call points, so no need to resolve callees
+   */
   @Override
   public void visitInvokeInst(Quad q) {
     int lineNo = q.getLineNumber();
     String query = cur_m.getDeclaringClass().getName() + " " + cur_m.getName() + " " + lineNo;
 //    System.err.println("query for " + query);
-    if(callsOnFailPath.contains(query))
+    if(callsOnFailPath.contains(query)) {
       super.add(q);
-
-//    jq_Method called = callsOnFailPath.get(query);
- //   if(called != null) {
-//      System.err.println("found caller in " + cur_m.getName());
-   
-//    else 
-//      System.err.println("failed to find caller in " + cur_m.getName());
+      callsOnFailPath.remove(query);
+    }
   }
   
   
@@ -104,6 +109,12 @@ public class RelFailurePath extends ProgramRel implements IInvokeInstVisitor{
   public void save() {
     //create relation here
     super.save();
+    if(callsOnFailPath.size() > 0) {
+    	System.out.println("failed to match some stacktrace lines: ");
+	    for(String s: callsOnFailPath) {
+	    	System.out.println(s);
+	    }
+    }
   }
   
 }

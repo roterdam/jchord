@@ -57,21 +57,12 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
     
     if(classname.equals("org.apache.hadoop.fs.Path"))
       return true;
+    if(classname.startsWith("joeq") || classname.startsWith("net.sf.bddb")) //for analyzing jchord itself
+    	return true;
     
     return classname.startsWith("java") 
-//    && !classname.startsWith("java.lang.reflect") 
-//    && !classname.equals("java.net.URI")
     && (!classname.startsWith("java.io") || classname.equals("java.io.File"));//io is mostly bad, File is ok
 
-  /*  
-    return (classname.startsWith("java.lang") && !classname.startsWith("java.lang.reflect"))
-       || classname.equals("java.io.File")
-       || classname.startsWith("javax")
-       || classname.startsWith("java.util") //safe, even with subfield rule
-       || (classname.startsWith("java.net") && !classname.equals("java.net.URI"))
- //      || classname.startsWith("java.net")   //OK with field sensitivity
-       || classname.startsWith("java.text"); //ditto
-*/  
   }
 
   @Override

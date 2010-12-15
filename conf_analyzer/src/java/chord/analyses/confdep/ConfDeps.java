@@ -7,6 +7,7 @@ package chord.analyses.confdep;
 
 import java.io.PrintWriter;
 import java.util.*;
+
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
@@ -15,6 +16,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import chord.project.Chord;
 import chord.project.Config;
+import chord.project.ITask;
 import chord.project.OutDirUtils;
 import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
@@ -47,10 +49,13 @@ public class ConfDeps extends JavaAnalysis {
   DomF domF;
   DomStrConst domConst;
   public boolean lookAtLogs = false;
+	boolean fakeExec;
+
   
 	public void run() {
 	  ClassicProject Project = ClassicProject.g();
 	  
+	  fakeExec = Config.buildBoolProperty("programUnchanged", false);
 	  lookAtLogs = Config.buildBoolProperty(CONFDEP_SCANLOGS_OPT, true);
 	  String dynamism = System.getProperty(CONFDEP_DYNAMIC_OPT, "static");
 	  if(dynamism.equals("static")) {
@@ -73,15 +78,14 @@ public class ConfDeps extends JavaAnalysis {
     slurpDoms();
 
     if(STATIC) {
-      Project.runTask("cipa-0cfa-arr-dlog");
+    	maybeRun(Project,"cipa-0cfa-arr-dlog");
       
-//      Project.runTask("mini-findconf-dlog");
-      Project.runTask("findconf-dlog");
+    	maybeRun(Project,"findconf-dlog");
 
       if(miniStrings)
-        Project.runTask("mini-str-dlog");
+      	maybeRun(Project,"mini-str-dlog");
       else
-        Project.runTask("strcomponents-dlog");
+      	maybeRun(Project,"strcomponents-dlog");
       
       Project.runTask("CnfNodeSucc");
 
@@ -90,13 +94,12 @@ public class ConfDeps extends JavaAnalysis {
       Project.runTask("dynamic-cdep-java");	  
       Project.runTask("cipa-0cfa-arr-dlog");
     }
-    
-	  
+   
 	  if(DYNTRACK) {
 	    Project.runTask("dyn-datadep");
-	  } else
-	    Project.runTask("datadep-func-dlog");
-	  
+	  } else {
+	  		maybeRun(Project,"datadep-func-dlog");
+	  }
 	  
 	  if(SUPERCONTEXT) {
       Project.runTask("scs-datadep-dlog");
@@ -104,7 +107,6 @@ public class ConfDeps extends JavaAnalysis {
 	  } else 
 	    Project.runTask("confdep-dlog");
 	
-//    dumpOptsRead(domH, domConst, domUV);
 	  DomOpts domOpt  = (DomOpts) Project.getTrgt("Opt");
 
     dumpOptUses(domOpt);
@@ -333,5 +335,16 @@ public class ConfDeps extends JavaAnalysis {
     domV = (DomV) project.getTrgt("V");
     domUV = (DomUV) project.getTrgt("UV");
     domF = (DomF) project.getTrgt("F");
+  }
+  
+  public void maybeRun(ClassicProject Project, String taskName) {
+		ITask task = Project.getTask(taskName);
+
+  	if(fakeExec && Project.resultsExist(task)) {
+			System.out.println("marking " + taskName + " as done");
+			Project.fakeExec(task);
+  	}
+  	else 
+  		Project.runTask(taskName);
   }
 }

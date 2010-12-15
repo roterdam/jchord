@@ -80,12 +80,13 @@ public class ExplainMyLogs extends JavaAnalysis{
 			if(opt.equals("UNKNOWN"))
 				continue;
 			//if(opt.contains("PROP-.*@|myinstance|myScribeInstance|lower") continue;
-			if(opt.contains("lower|upper|peerreview") || opt.split("\\|").length > 3) {
+			if(opt.contains("lower|upper|peerreview") || opt.split("\\|").length > 3 ||
+					opt.equals("PROP-Replicas")) {
 				System.err.println("skipping option " + opt);
 				continue;
 			} 
 			String prunedName = ConfDefines.pruneName(opt);
-			
+			prunedName = prunedName.replaceAll("\\.([^\\*])", "\\\\.$1");
 			optPats.put(opt, Pattern.compile("^"+prunedName+"|[^$|-]"+prunedName));
 		}
 		return optPats;
@@ -137,7 +138,7 @@ public class ExplainMyLogs extends JavaAnalysis{
     ClassicProject project = ClassicProject.g();
 
   	Map<Quad, Pair<String,Integer>> rendered = new LinkedHashMap<Quad, Pair<String,Integer>>();
-    ProgramRel allLogs = (ProgramRel) project.getTrgt("logStmt"); //just quads
+    ProgramRel allLogs = (ProgramRel) project.getTrgt("RlogStmt"); //just quads
     allLogs.load();
 
     ProgramRel logStrings = (ProgramRel) project.getTrgt("logString"); //i,cst,z

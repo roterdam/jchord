@@ -60,8 +60,8 @@ putInstFldInst(b:V,f:F,r:V) input
 putStatFldInst(f:F,r:V) input
 getStatFldInst(l:V,f:F) input
 
-objVarAsgnPrimInst(l:U0,r:U1) input
 primDataDep(l:U0,r:U1) input
+
 getInstFldPrimInst(l:U0,b:V,f:F) input
 putInstFldPrimInst(b:V,f:F,r:U) input
 getStatFldPrimInst(l:U,f:F)  input
@@ -98,8 +98,10 @@ instHF(b:H,f:F,site:Opt) output
 refCdep(v:V,site:Opt) output
 primCdep(u:U,site:Opt) output
 
+# super-context-sensitive analysis needs these three
 absoluteRefCdep(v:V,site:Opt) output
 absolutePrimCdep(u:U,site:Opt) output
+absoluteReturn(m:M,name:Opt) output
 
 confMethCall(i:I,z:Z,site:Opt) output
 confReturn(m:M, site:Opt) output
@@ -204,13 +206,13 @@ vColHolds(colV,site) :- IInsert(_,colV,v),refCdep(v,site).
 absoluteRefCdep(v,site) :- clones(v,r),absoluteRefCdep(r,site).
 absoluteRefCdep(v,site) :- localMustAlias(v,u),absoluteRefCdep(u,site).
 absoluteRefCdep(v,site) :- objVarAsgnInst(v,u),absoluteRefCdep(u,site).
-absolutePrimCdep(v,site) :- objVarAsgnPrimInst(v,u),absolutePrimCdep(u,site).
 absolutePrimCdep(v,site) :- primDataDep(v,u),absolutePrimCdep(u,site).
 
 #treat arrays and elements interchangeably
 absoluteRefCdep(b,site)  :- putInstFldInst(b,0,r), absoluteRefCdep(r,site).
 absoluteRefCdep(l,site) :- getInstFldInst(l,b,0), absoluteRefCdep(b,site).
 
+#  why are these commented out?
 #absoluteRefCdep(b,site)  :- putInstFldPrimInst(b,0,r), absolutePrimCdep(r,site).
 #absolutePrimCdep(l,site) :- getInstFldPrimInst(l,b,0), absoluteRefCdep(b,site).
 
@@ -240,10 +242,6 @@ absoluteRefCdep(v,opt) :- taintingCall(i, opt),IinvkArg(i,0,v),instI(i),!APIRead
 #refCdep(v,site) :- checkCastInst(v,_,u),refCdep(u,site).
 
 refCdep(v,site) :- IRetrieve(_,v,colV),refCdep(colV,site).
-
-
-#This is here to handle cases where the conf method itself returns a collection
-#May be unneeded because of API-call tainting?
 
 
 ##Below is dangerous; a tainted ref with a conf field can infect everything.
