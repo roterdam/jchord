@@ -47,7 +47,6 @@ confCall(i:I)
 UVV(u:UV,v:V) input
 UVU(uv:UV,u:U) input
 
-objVarAsgnPrimInst(l:U0,r:U1) input
 primDataDep(l:U0,r:U1) input
 getInstFldPrimInst(l:U0,b:V,f:F) input
 putInstFldPrimInst(b:V,f:F,r:U) input
@@ -173,8 +172,6 @@ refFlow(v,site) :- IRetrieve(_,v,colV),refFlow(colV,site).
 # Handle case where we iterate over a returned conf
 refFlow(v,site) :- refFlow(prevV,site),INewColl(_,v,prevV).
 
-
-primFlow(v,site) :- objVarAsgnPrimInst(v,u),primFlow(u,site).
 primFlow(v,site) :- primDataDep(v,u),primFlow(u,site).
 primFlow(v,site) :- UcU(v,u),primFlow(u,site).
 primFlow(v,site) :- statFieldHolds(f,site),getStatFldPrimInst(v,f).

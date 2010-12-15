@@ -40,6 +40,7 @@ public class DeadClasses extends JavaAnalysis {
 //    ClassicProject project = ClassicProject.g();
 
     ClassHierarchy ch = program.getClassHierarchy();
+
 //    DomT domT = (DomT) project.getTrgt("T");
 
     TreeSet<String> sortedDead = new TreeSet<String>();

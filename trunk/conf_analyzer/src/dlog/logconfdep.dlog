@@ -52,11 +52,15 @@ logArg(i:I, cmpt:V, z:K)
 logFieldDataDep(logStmt:I0, fld:K, src:Opt) output
 logConfDep(logStmt:I0, src:Opt) output
 
+reachableI(i:I) input
+RlogStmt(i:I) output
 
-logArg(i,v,z) :- logVHolds(i,v,z),logStmt(i).
-logPrimArg(i,z,u) :- logVHoldsU(i,u,z),logStmt(i).
+RlogStmt(i) :- logStmt(i),reachableI(i).
 
-dependentLogStmt(logStmt,uv) :- logStmt(logStmt),primControlDep(logStmt,uv).
+logArg(i,v,z) :- logVHolds(i,v,z),RlogStmt(i).
+logPrimArg(i,z,u) :- logVHoldsU(i,u,z),RlogStmt(i).
+
+dependentLogStmt(logStmt,uv) :- RlogStmt(logStmt),primControlDep(logStmt,uv).
 uvConf(uv,src) :- UVU(uv,u),primCdep(u,src).
 uvConf(uv,src) :- primRefDep(uv,v),refCdep(v,src).
 

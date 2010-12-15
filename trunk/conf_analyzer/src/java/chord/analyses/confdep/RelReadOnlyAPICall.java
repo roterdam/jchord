@@ -32,10 +32,13 @@ public void visitInvokeInst(Quad q) {
   jq_Method meth = Invoke.getMethod(q).getMethod();
   String classname = meth.getDeclaringClass().getName();
   String methname = meth.getName().toString();
-  if(methname.equals("equals") || methname.equals("compareTo")) {
+  if(methname.equals("equals") || methname.equals("compareTo") ||
+  		classname.startsWith("joeq") || classname.startsWith("net.sf.bddb")) {
     int iIdx = domI.indexOf(q);
     super.add(iIdx);
   }
+  
+
 }
 
 }

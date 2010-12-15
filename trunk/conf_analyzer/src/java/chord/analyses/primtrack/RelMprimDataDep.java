@@ -2,11 +2,15 @@ package chord.analyses.primtrack;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Binary;
+import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Unary;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.analyses.method.DomM;
@@ -17,6 +21,8 @@ import chord.project.analyses.ProgramRel;
 /**
  * Relation containing each tuple (m,v1,v2) such that method m
  * contains a statement of the form <tt>v1 = op v2 </tt> or v1 = v2 op .....
+ *
+ *  INCLUDES copies
  *
  */
 @Chord(
@@ -79,18 +85,33 @@ public class RelMprimDataDep extends ProgramRel
         if(i != -1 && j != -1)
           add(mID, i, j);
       } 
-    }
-    /*
-    Operand rx = Move.getSrc(q);
-    if (rx instanceof RegisterOperand) {
-      RegisterOperand ro = (RegisterOperand) rx;
-      if (!ro.getType().isReferenceType()) {
-        Register r = ro.getRegister();
-        RegisterOperand lo = Move.getDest(q);
-        Register l = lo.getRegister();
-        add(ctnrMethod, l, r);
+    } else if(op instanceof Move) {
+      Operand rx = Move.getSrc(q);
+      if (rx instanceof RegisterOperand) {
+        RegisterOperand ro = (RegisterOperand) rx;
+        if (!ro.getType().isReferenceType()) {
+          Register r = ro.getRegister();
+          RegisterOperand lo = Move.getDest(q);
+          Register l = lo.getRegister();
+          add(ctnrMethod, l, r);
+        }
       }
-    }*/
+    } else if(op instanceof Phi) {
+      RegisterOperand lo = Phi.getDest(q);
+      jq_Type t = lo.getType();
+      if (t != null && !t.isReferenceType()) {
+        Register l = lo.getRegister();
+        ParamListOperand ros = Phi.getSrcs(q);
+        int n = ros.length();
+        for (int i = 0; i < n; i++) {
+          RegisterOperand ro = ros.get(i);
+          if (ro != null) {
+            Register r = ro.getRegister();
+            add(ctnrMethod, l, r);
+          }
+        }
+      }
+    }
   }
 
 }

@@ -33,7 +33,6 @@ IinvkPrimArg(i:I0,n:Z0,u:U0) input
 IinvkPrimRet(i:I0,n:Z0,u:U0) input
 
 objVarAsgnInst(l:V,r:V) input
-objVarAsgnPrimInst(l:U0,r:U1) input
 primDataDep(l:U0,r:U1) input
 
 getInstFldPrimInst(l:U0,b:V,f:F) input
@@ -93,7 +92,6 @@ refLambdaDep(z,v) :- clones(v,r),refLambdaDep(z,r).
 refLambdaDep(z,v) :- locMustAlias(v,u),refLambdaDep(z,u).
 
 primLambdaDep(z,v) :- primDataDep(v,u),primLambdaDep(z,u).
-primLambdaDep(z,v) :- objVarAsgnPrimInst(v,u),primLambdaDep(z,u).
 
 # Recursive rule: 
 
@@ -134,7 +132,6 @@ refLambdaDep(z,l) :- getInstFldInst(l,b,0), refLambdaDep(z,b).
 
 #refLambdaDep(z,b)  :- putInstFldPrimInst(b,0,r), primLambdaDep(z,r).
 #refLambdaDep(z,l) :- getInstFldInst(l,b,0), refLambdaDep(z,b).
-
 
 #prim fields too
 primLambdaDep(z,v) :- getInstFldPrimInst(v,b,_),refLambdaDep(z,b).
