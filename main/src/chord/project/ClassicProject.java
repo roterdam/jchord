@@ -536,4 +536,42 @@ public class ClassicProject extends Project {
 			Messages.log(msg);
 		}
 	}
+
+	public void fakeExec(ITask task) {
+
+		List<Object> consumedTrgts = taskToConsumedTrgtsMap.get(task);
+		for (Object trgt : consumedTrgts) {
+			if (isTrgtDone(trgt))
+				continue;
+
+			ITask task2 = getTaskProducingTrgt(trgt);
+			if(task2 instanceof Dom<?>) {
+				task2.run();
+			} else
+				fakeExec(task2);
+		}
+		setTaskDone(task);
+		List<Object> producedTrgts = taskToProducedTrgtsMap.get(task);
+		assert(producedTrgts != null);
+		for (Object trgt : producedTrgts) {
+			setTrgtDone(trgt);
+		}
+	}
+
+	public boolean resultsExist(ITask task) {
+		List<Object> producedTrgts = taskToProducedTrgtsMap.get(task);
+		boolean outRelsExist = true;
+		for (Object trgt : producedTrgts) {
+			if(trgt instanceof ProgramRel) {
+				ProgramRel trgtRel = (ProgramRel) trgt;
+				File relOnDisk = new File(Config.bddbddbWorkDirName, trgtRel.getName()+".bdd");
+				if(!relOnDisk.exists()) {
+					System.err.println("no such target " + relOnDisk+", regenerating?");
+					outRelsExist = false;
+					break;
+				}
+			}
+		}
+		return outRelsExist;
+	}
 }
