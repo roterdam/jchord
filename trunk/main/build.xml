@@ -2,7 +2,7 @@
 <!--
 	Main build file for Chord
 -->
-<project name="chord" default="help">
+<project name="chord" default="compile">
 
 	<!--
 	==========================================================================
@@ -126,7 +126,6 @@
 		<path id="bddbddb_class_path">
 			<fileset dir="${lib.home}/bddbddb" includes="*.jar"/>
 			<pathelement location="${lib.home}/jwutil.jar"/>
-			<pathelement location="tmp"/>
 		</path>
 		<property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
 		<!-- Classpath of Chord -->
@@ -391,7 +390,7 @@
 	==========================================================================
 	-->
 
-	<target name="javadoc">
+	<target name="javadoc" depends="paths">
 		<javadoc destdir="javadoc" classpathref="main_class_path">
 			<fileset dir="src">
 				<include name="**/*.java"/>

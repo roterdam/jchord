@@ -223,7 +223,6 @@ public class CastBasedStaticReflect extends StaticReflectResolver {
   boolean propagatedAReturn = false;
   /**
    * Used to cue RTA to do a new iteration
-   * @return
    */
 	public boolean needNewIter() {
 	  return propagatedAReturn;

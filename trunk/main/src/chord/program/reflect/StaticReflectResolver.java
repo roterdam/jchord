@@ -327,13 +327,12 @@ public class StaticReflectResolver {
 			}
 		}
 	}
-/**
- * Used to cue RTA to do a new iteration
- * @return
- */
+	/**
+	 * Used to cue RTA to do a new iteration
+	 */
 	public boolean needNewIter() {
-	return false;
-  }
+		return false;
+	}
 	
 	public void startedNewIter() {}
 }
