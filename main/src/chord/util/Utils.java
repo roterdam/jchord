@@ -74,15 +74,15 @@ public class Utils {
 	return sb.toString();
   }
   /**
-   * Checks a string against a set of prefixes. Returns true if and only if the
+   * Checks a string against a set of prefixes. Returns true iff the
    * string starts with one of the prefixes.
    * 
    * Return false if prefixes is empty. Returns true if prefixes contains the 
    * empty string.
    * 
-   * @param str a string
-   * @param prefixes an array of prefixes
-   * @return
+   * @param	str			a string
+   * @param	prefixes	an array of prefixes
+   * @return			true iff the string starts with one of the prefixes
    */
   public static boolean prefixMatch(String str, String[] prefixes) {
 	for(String prefix: prefixes) {

@@ -28,19 +28,17 @@ public interface ITask {
 	/**
 	 * Executes this analysis in a "classic" project.
 	 * 
-	 * This method must usually not be called directly from another
-	 * analysis that wishes to execute this analysis.
-	 * The correct way to achieve this is to call
-	 * {@link chord.project.Project#runTask(String)} or
-	 * {@link chord.project.Project#runTask(ITask)}, providing this
-	 * analysis either by its name or its object.
+	 * This method must usually not be called directly.
+	 * The correct way to call it is to call
+	 * {@link chord.project.ClassicProject#runTask(String)} or
+	 * {@link chord.project.ClassicProject#runTask(ITask)}, providing
+	 * this analysis either by its name or its object.
 	 */
 	public void run();
 	/**
 	 * Executes this analysis in a "modern" project.
 	 * 
-	 * This method must usually not be called directly from another
-	 * analysis that wishes to execute this analysis.
+	 * This method must usually not be called directly.
 	 * 
 	 * @param	ctrl
 	 * @param	sc
