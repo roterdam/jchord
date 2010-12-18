@@ -8,10 +8,11 @@ To run this example:
 
 2. Run the following command in Chord's main directory:
 
-   ant -Dchord.work.dir=examples/deadlock_test -Dchord.run.analyses=deadlock-java run
+   ant -Dchord.work.dir=/.../examples/deadlock_test -Dchord.run.analyses=deadlock-java run
 
-   This will produce file deadlocks.html in directory
-   examples/deadlock_test/chord_output/.
+   where "..." is the absolute path.
 
-   For reference, file deadlocks.html produced using this command is
-   provided at http://code.google.com/p/jchord/wiki/DeadlockChecker
+   This will produce file deadlocks.html in directory examples/deadlock_test/chord_output/.
+
+   For reference, file deadlocks.html produced using this command is provided at
+   http://code.google.com/p/jchord/wiki/DeadlockChecker
