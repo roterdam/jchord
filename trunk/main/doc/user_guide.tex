@@ -1,18 +1,15 @@
 \documentclass{article}
-%\usepackage{html}
-%\usepackage{hyperref}
+\usepackage{hyperlatex}
+\usepackage{hyperref}
 
 \texonly{\oddsidemargin=0in}
 \texonly{\evensidemargin=0in}
 \texonly{\textwidth=6.0in}
 \texonly{\textheight=8.0in}
 
-%\html{\def\code#1{{\tt {#1}}}}
-%\def\code#1{{\tt #1}}
-
-\newcommand\url[1]{\xlink{#1}{#1}}
+\htmlonly{\newcommand\url[1]{\xlink{#1}{#1}}}
 \htmlonly{\newcommand\code[1]{{\tt #1}}}
-\texonly{\newcommand\code[1]{\path{#1}}}
+\texonly{\renewcommand\code[1]{\path{#1}}}
 
 \htmltitle{Chord}
 \htmladdress{mhn@cs.stanford.edu}

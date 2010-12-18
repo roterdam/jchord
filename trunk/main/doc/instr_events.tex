@@ -1,4 +1,4 @@
-\section{Instrumentation Events}
+\section{Instrumentation events}
 \label{sec:instr-events}
 
 Chord allows a given Java program to be instrumented to generate the
@@ -22,11 +22,8 @@ Loop entry and exit. \\
 \item
 Object allocation \\
 {\bf Event:} \code{BEF_NEW} h t \\
-{\bf Desc.:} Generated only in the crude trace before thread t executes a \code{new} bytecode instruction at program point h. \\
+{\bf Desc.:} Generated before thread t executes a \code{new} bytecode instruction at program point h and allocates new object o. \\
 {\bf Event:} \code{AFT_NEW} h t o \\
-{\bf Desc.:} Generated only in the crude trace after thread t executes a \code{new} bytecode instruction at program point h and allocates new object o. \\
-%Note: Both above events are visible only in the crude trace and not in the final trace. They are generated only if argument \code{hasObj} of method {@link #setNewAndNewArrayEvent} is true.
-{\bf Event:} \code{NEW} h t o \\
 {\bf Desc.:} Generated after thread t executes a \code{new} bytecode instruction at program point h and allocates new object o. \\
 {\bf Event:} \code{NEW_ARRAY} h t o \\
 {\bf Desc.:} Generated after thread t executes a \code{newarray} bytecode instruction at program point h and allocates new object o.
@@ -93,8 +90,11 @@ Astore reference \\
 
 \item
 Method call \\
-{\bf Event:} \code{METHOD_CALL} i t \\
-{\bf Desc.:} Generated before or after thread t executes the method invocation statement at program point i.
+{\bf Event:} \code{BEF_METHOD_CALL} i t o \\
+{\bf Desc.:} Generated before thread t executes the method invocation statement at program point i with this argument as object o. \\
+{\bf Event:} \code{AFT_METHOD_CALL} i t o \\
+{\bf Desc.:} Generated after thread t executes the method invocation statement at program point i with this argument as object o. \\
+{\bf Note:} These events are not generated before/after constructor calls; use \code{BEF_NEW} and \code{AFT_NEW} events for that purpose.
 
 \item
 Thread start call \\

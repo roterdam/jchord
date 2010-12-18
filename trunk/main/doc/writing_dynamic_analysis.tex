@@ -1,9 +1,9 @@
-\section{Writing a Dynamic Analysis}
+\section{Writing a dynamic analysis}
 \label{sec:writing-dynamic-analysis}
 
 Follow the following steps to write your own dynamic analysis.
 
-\subsection{Implementing the Analysis}
+\subsection{Implementing the analysis}
 
 Create a class extending \code{chord.project.analyses.DynamicAnalysis} and override
 the appropriate methods in it.
@@ -81,7 +81,7 @@ A sample such class \code{MyDynamicAnalysis} is shown below:
     }
 \end{verbatim}
 
-\subsection{Configuring the Analysis}
+\subsection{Configuring the analysis}
 
 You can change the default values of various properties for configuring your dynamic analysis;
 see Sections \ref{sec:scope-props} and \ref{sec:instr-props}.
@@ -131,7 +131,7 @@ methods \code{getInstrumentor()} and \code{getEventHandler()}, respectively, def
 Finally, you can define your own dynamic analysis template by subclassing \code{chord.project.analyses.CoreDynamicAnalysis}
 instead of subclassing the default \code{chord.project.analyses.DynamicAnalysis}.
 
-\subsection{Compiling and Running the Analysis}
+\subsection{Compiling and running the analysis}
 
 Compile the analysis by placing the directory containing class \code{MyDynamicAnalysis} created
 above in the path defined by property \code{chord.java.analysis.path}.

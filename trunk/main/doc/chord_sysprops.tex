@@ -1,7 +1,7 @@
 % TODO: write some text at beginning of each subsection
 % TODO: do cross-referencing (i.e. put "See Also" for properties used by multiple subsections)
 
-\section{Chord System Properties}
+\section{Chord system properties}
 \label{sec:chord-sysprops}
 
 Users can use system properties to control Chord's functionality.
@@ -172,7 +172,7 @@ See Section \ref{sec:building-scope} for more details.
 \item
 \code{chord.scope.kind} \\
 {\bf Type:} {\tt [dynamic|rta|cha]} \\
-{\bf Description:} Algorithm to compute program scope.  Current choices include {\tt dynamic} (dynamic analysis), {\tt rta} (Rapid Type Analysis), and {\tt cha} (Class Hierarchy Analysis). \\
+{\bf Description:} Algorithm to compute program scope.  The choices are {\tt dynamic} (dynamic analysis), {\tt rta} (Rapid Type Analysis), and {\tt cha} (Class Hierarchy Analysis). \\
 {\bf Default value:} {\tt rta}
 
 \item
@@ -186,19 +186,21 @@ See Section \ref{sec:building-scope} for more details.
 \item
 \code{chord.std.scope.exclude} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes inside the standard library whose method bodies must be treated as no-ops. \\
+{\bf Description:} Partial list of prefixes of names of classes whose declared methods must be treated as no-ops.  Conventionally, this property is used to specify classes to be
+excluded from the scope of all programs to be analyzed, e.g., classes in the JDK standard library.  \\
 {\bf Default value:} \code{[chord.main.class.path]}
 
 \item
 \code{chord.ext.scope.exclude} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes outside the standard library whose method bodies must be treated as no-ops. \\
+{\bf Description:} Partial list of prefixes of names of classes whose declared methods must be treated as no-ops.  Conventionally, this property is used to specify classes to be
+excluded from the scope of specific programs to be analyzed. \\
 {\bf Default value:} {\tt ""}
 
 \item
 \code{chord.scope.exclude} \\
 {\bf Type:} string list \\
-{\bf Description:} List of prefixes of names of classes whose method bodies must be treated as no-ops. \\
+{\bf Description:} Complete list of prefixes of names of classes whose declared methods must be treated as no-ops. \\
 {\bf Default value:} \code{"[chord.std.scope.exclude],[chord.ext.scope.exclude]"}
 \end{itemize}
 
@@ -238,6 +240,7 @@ This section describes properties regarding program analyses executed by Chord.
 {\bf Description:} Print the results of program analyses in HTML.  Interpretation of this property is analysis-specific. \\
 {\bf Default value:} {\tt true} 
 
+\item
 \code{chord.std.check.exclude} \\
 {\bf Type:} string list \\
 {\bf Description:} List of prefixes of names of classes and packages inside the standard library to be excluded by program analyses.  Interpretation of this property is analysis-specific. \\
@@ -275,15 +278,9 @@ This section describes properties that specify the amount of debug information t
 \begin{itemize}
 \item
 \code{chord.verbose} \\
-{\bf Type:} int in the range [0..3] \\
+{\bf Type:} int in the range [0..6] \\
 {\bf Description:} Control the verbosity of logging during Chord's execution. \\
 {\bf Default value:} {\tt 2} 
-
-\item
-\code{chord.bddbddb.verbose} \\
-{\bf Type:} int in the range [0..5] \\
-{\bf Description:} Control the verbosity of logging during the execution of JavaBDD (BDD library) and bddbddb (Datalog solver). \\
-{\bf Default value:} {\tt 0} 
 
 \item
 \code{chord.save.maps} \\
@@ -302,11 +299,10 @@ This section describes properties regarding execution of instrumented programs f
 
 \begin{itemize}
 \item
-\code{chord.reuse.traces} \\
-{\bf Type:} bool \\
-{\bf Description:} Reuse dynamic traces computed by a previous run of Chord if they exist. \\
-{\bf Default value:} {\tt false} \\
-{\bf Note:} Property \code{chord.trace.kind} must be set to {\tt full} if this property is set to {\tt true}.
+\code{chord.instr.kind} \\
+{\bf Type:} {\tt [offline|online]} \\
+{\bf Description:} The kind of bytecode instrumentation.  The choices are offline and load-time. \\
+{\bf Default value:} {\tt offline} \\
 
 \item
 \code{chord.trace.kind} \\
@@ -321,11 +317,11 @@ This section describes properties regarding execution of instrumented programs f
 {\bf Default value:} {\tt 4096} 
 
 \item
-\code{chord.max.cons.size} \\
-{\bf Type:} int \\
-{\bf Description:} Maximum number of bytes over which events generated during the execution of any constructor in the given program may span. \\
-{\bf Default value:} 50000000 \\
-{\bf Note:} This property is relevant only for dynamic analyses which want events of the form {\tt NEW} $h$ $t$ $o$ to be generated (see Section \ref{sec:instr-events}).  The problem with generating such events at run-time is that the ID $o$ of the object freshly created by thread $t$ at object allocation site $h$ cannot be instrumented until the object is fully initialized (i.e., its constructor has finished executing).  Hence, Chord first generates a ``crude dynamic trace", which has events of the form {\tt BEF\_NEW} $h$ $t$ and {\tt AFT\_NEW} $h$ $t$ $o$ generated before and after the execution of the constructor, respectively.  A subsequent pass generates a ``final dynamic trace", which replaces the {\tt BEF\_NEW} $h$ $t$ events by {\tt NEW} $h$ $t$ $o$ and discards the {\tt AFT\_NEW} $h$ $t$ $o$ events.  For this purpose, however, Chord must buffer all events generated between the {\tt BEF\_NEW} and {\tt AFT\_NEW} events, and this property specifies the number of bytes over which these events may span.  If the actual number of bytes exceeds the value specified by this property (e.g., if the constructor throws an exception and the {\tt AFT\_NEW} event is not generated at all), then Chord simply generates event {\tt NEW} $h$ $i$ $0$ (i.e., it treats the created object as having ID 0, which is the ID also used for {\tt null}).
+\code{chord.reuse.traces} \\
+{\bf Type:} bool \\
+{\bf Description:} Reuse dynamic traces computed by a previous run of Chord if they exist. \\
+{\bf Default value:} {\tt false} \\
+{\bf Note:} Property \code{chord.trace.kind} must be set to {\tt full} if this property is set to {\tt true}.
 
 \item
 \code{chord.dynamic.haltonerr} \\
@@ -338,6 +334,13 @@ This section describes properties regarding execution of instrumented programs f
 {\bf Type:} int \\
 {\bf Description:} The amount of time, in milliseconds, after which to kill the process running the given program during dynamic analysis, or -1 if the process must never be killed. \\
 {\bf Default value:} -1
+
+\item
+\code{chord.max.cons.size} \\
+{\bf Type:} int \\
+{\bf Description:} Maximum number of bytes over which events generated during the execution of any constructor in the given program may span. \\
+{\bf Default value:} 50000000 \\
+{\bf Note:} This property is relevant only for dynamic analyses which want events of the form {\tt BEF\_NEW} $h$ $t$ $o$ to be generated (see Section \ref{sec:instr-events}).  The problem with generating such events at run-time is that the ID $o$ of the object freshly created by thread $t$ at object allocation site $h$ cannot be instrumented until the object is fully initialized (i.e., its constructor has finished executing).  Hence, Chord first generates a ``crude dynamic trace", which has events of the form {\tt BEF\_NEW} $h$ $t$ and {\tt AFT\_NEW} $h$ $t$ $o$ generated before and after the execution of the constructor, respectively.  A subsequent pass generates a ``final dynamic trace", which replaces each {\tt BEF\_NEW} $h$ $t$ event by {\tt BEF\_NEW} $h$ $t$ $o$.  For this purpose, however, Chord must buffer all events generated between the {\tt BEF\_NEW} and {\tt AFT\_NEW} events, and this property specifies the number of bytes over which these events may span.  If the actual number of bytes exceeds the value specified by this property (e.g., if the constructor throws an exception and the {\tt AFT\_NEW} event is not generated at all), then Chord simply generates event {\tt BEF\_NEW} $h$ $i$ $0$ (i.e., it treats the created object as having ID 0, which is the ID also used for {\tt null}).
 \end{itemize}
 
 \subsection{Chord Output Properties}
@@ -365,16 +368,22 @@ Most users will not want to alter the default values of these properties.
 {\bf Default value:} \code{[chord.out.dir]/log.txt}
 
 \item
-\code{chord.classes.file} \\
+\code{chord.reflect.file} \\
 {\bf Type:} location \\
-{\bf Description:} Absolute location of the file from/to which list of classes deemed reachable is read/written. \\
-{\bf Default value:} \code{[chord.out.dir]/classes.txt}
+{\bf Description:} Absolute location of the file from/to which resolved reflection information is read/written. \\
+{\bf Default value:} \code{[chord.out.dir]/reflect.txt}
 
 \item
 \code{chord.methods.file} \\
 {\bf Type:} location \\
 {\bf Description:} Absolute location of the file from/to which list of methods deemed reachable is read/written. \\
 {\bf Default value:} \code{[chord.out.dir]/methods.txt}
+
+\item
+\code{chord.classes.file} \\
+{\bf Type:} location \\
+{\bf Description:} Absolute location of the file from/to which list of classes deemed reachable is read/written. \\
+{\bf Default value:} \code{[chord.out.dir]/classes.txt}
 
 \item
 \code{chord.bddbddb.work.dir} \\

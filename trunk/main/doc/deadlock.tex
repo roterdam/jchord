@@ -1,22 +1,26 @@
-\section{Deadlock Analysis}
+\section{Deadlock analysis}
 \label{sec:deadlock}
 
-Run the deadlock analysis provided in Chord by running the following command in Chord's {\tt main/} directory:
+Run the deadlock analysis provided in Chord by running the following
+command in Chord's {\tt main/} directory:
 
 \begin{verbatim}
     prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=deadlock-java run
 \end{verbatim}
 
-\noindent where directory {\tt <...>} contains a file named \code{chord.properties} which
-defines properties \code{chord.main.class}, \code{chord.class.path}, and \code{chord.src.path}.
-See Section \ref{sec:chord-sysprops} for the meaning of these properties.
+\noindent where {\tt <...>} is the absolute path of a directory
+containing a file named \code{chord.properties} which defines
+properties \code{chord.main.class}, \code{chord.class.path}, and
+\code{chord.src.path}.  See Section \ref{sec:chord-sysprops} for the
+meaning of these properties.
 
-Directory \code{main/examples/deadlock_test/} provides a toy Java program on which you can run
-the deadlock analysis.
-First run {\tt ant} in that directory (in order to compile the program's {\tt .java} files to
-{\tt .class} files) and then run the above command in Chord's {\tt main/} directory with
-{\tt <...>} replaced by \code{examples/deadlock_test/}.
-Upon successful completion, the file \code{deadlocks.html} should be produced in directory
+Directory \code{main/examples/deadlock_test/} provides a toy Java
+program on which you can run the deadlock analysis.  First run {\tt
+  ant} in that directory (in order to compile the program's {\tt
+  .java} files to {\tt .class} files) and then run the above command
+in Chord's {\tt main/} directory with {\tt <...>} replaced by
+\code{/.../examples/deadlock_test/}.  Upon successful completion, the
+file \code{deadlocks.html} should be produced in directory
 \code{main/examples/deadlock_test/chord_output/}.
 
 
