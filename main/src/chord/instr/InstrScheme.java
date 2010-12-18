@@ -27,42 +27,43 @@ import chord.util.ChordRuntimeException;
 public class InstrScheme implements Serializable {
 	public final static String INSTR_SCHEME_FILE_KEY = "instr_scheme_file_name";
 
-	public static final int NEW_AND_NEWARRAY = 0;
+	public static final int NEW = 0;
+	public static final int NEWARRAY = 1;
 
-	public static final int GETSTATIC_PRIMITIVE = 1;
-	public static final int GETSTATIC_REFERENCE = 2;
-	public static final int PUTSTATIC_PRIMITIVE = 3;
-	public static final int PUTSTATIC_REFERENCE = 4;
+	public static final int GETSTATIC_PRIMITIVE = 2;
+	public static final int GETSTATIC_REFERENCE = 3;
+	public static final int PUTSTATIC_PRIMITIVE = 4;
+	public static final int PUTSTATIC_REFERENCE = 5;
 
-	public static final int GETFIELD_PRIMITIVE = 5;
-	public static final int GETFIELD_REFERENCE = 6;
-	public static final int PUTFIELD_PRIMITIVE = 7;
-	public static final int PUTFIELD_REFERENCE = 8;
+	public static final int GETFIELD_PRIMITIVE = 6;
+	public static final int GETFIELD_REFERENCE = 7;
+	public static final int PUTFIELD_PRIMITIVE = 8;
+	public static final int PUTFIELD_REFERENCE = 9;
 
-	public static final int ALOAD_PRIMITIVE = 9;
-	public static final int ALOAD_REFERENCE = 10;
-	public static final int ASTORE_PRIMITIVE = 11;
-	public static final int ASTORE_REFERENCE = 12;
+	public static final int ALOAD_PRIMITIVE = 10;
+	public static final int ALOAD_REFERENCE = 11;
+	public static final int ASTORE_PRIMITIVE = 12;
+	public static final int ASTORE_REFERENCE = 13;
 
-	public static final int METHOD_CALL = 13;
-	public static final int RETURN_PRIMITIVE = 14;
-	public static final int RETURN_REFERENCE = 15;
-	public static final int EXPLICIT_THROW = 16;
-	public static final int IMPLICIT_THROW = 17;
+	public static final int METHOD_CALL = 14;
+	public static final int RETURN_PRIMITIVE = 15;
+	public static final int RETURN_REFERENCE = 16;
+	public static final int EXPLICIT_THROW = 17;
+	public static final int IMPLICIT_THROW = 18;
 
-	public static final int THREAD_START = 18;
-	public static final int THREAD_JOIN = 19;
-	public static final int ACQUIRE_LOCK = 20;
-	public static final int RELEASE_LOCK = 21;
-	public static final int WAIT = 22;
-	public static final int NOTIFY = 23;
+	public static final int THREAD_START = 19;
+	public static final int THREAD_JOIN = 20;
+	public static final int ACQUIRE_LOCK = 21;
+	public static final int RELEASE_LOCK = 22;
+	public static final int WAIT = 23;
+	public static final int NOTIFY = 24;
 	
-	public static final int ENTER_METHOD = 24;
-	public static final int LEAVE_METHOD = 25;
+	public static final int ENTER_METHOD = 25;
+	public static final int LEAVE_METHOD = 26;
 
-	public static final int ENTER_MAIN_METHOD = 26;
+	public static final int ENTER_MAIN_METHOD = 27;
 
-	public static final int MAX_NUM_EVENT_FORMATS = 27;
+	public static final int MAX_NUM_EVENT_FORMATS = 28;
 
 	public class EventFormat implements Serializable {
 		private boolean present;
@@ -169,19 +170,30 @@ public class InstrScheme implements Serializable {
 		return events[eventId];
 	}
 
-	public void setNewAndNewArrayEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
-		EventFormat e = events[NEW_AND_NEWARRAY];
+	public void setNewEvent(boolean hasLoc, boolean hasThr, boolean hasObj,
+			boolean isBef, boolean isAft) {
+		if (!isBef && !isAft)
+			return;
+		EventFormat e = events[NEW];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
-		if (hasObj) {
-			e.setObj();
-			// also set location and thread id as they will be needed to
-			// match BEF_NEW and AFT_NEW events
-			e.setLoc();
-			e.setThr();
+		if (hasObj) e.setObj();
+		if (isBef) e.setBef();
+		if (isAft) e.setAft();
+		if (isBef && hasObj) {
+			assert (isAft);
+			assert (hasLoc);
+			assert (hasThr);
 		}
+	}
+
+	public void setNewArrayEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
+		EventFormat e = events[NEWARRAY];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
 
 	public void setGetstaticPrimitiveEvent(boolean hasLoc, boolean hasThr,
@@ -482,7 +494,7 @@ public class InstrScheme implements Serializable {
 	}
 
 	public boolean needsHmap() {
-		return events[NEW_AND_NEWARRAY].hasLoc();
+		return events[NEW].hasLoc() || events[NEWARRAY].hasLoc();
 	}
 
 	public boolean needsEmap() {
@@ -539,7 +551,7 @@ public class InstrScheme implements Serializable {
 	}
 
 	public boolean needsTraceTransform() {
-		return events[NEW_AND_NEWARRAY].hasObj();
+		return events[NEW].isBef() && events[NEW].hasObj();
 	}
 
 	public static InstrScheme load(String fileName) {

@@ -48,27 +48,41 @@ import chord.project.analyses.ProgramRel;
 	signs = { "E0", "E0", "E0" }
 )
 public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
-	private final boolean isFlowIns = System.getProperty("chord.escape.flowins", "false").equals("true");
-    private boolean[] chkE;	// true iff heap access stmt with index e in domE must be checked
-    private boolean[] accE;	// true iff heap access stmt with index e in domE is visited
-    private boolean[] escE;	// true iff heap access stmt with index e in domE thread-escapes
-    private boolean[] accH;	// true iff alloc site with index h in domH is visited
-	private boolean[] escH;	// true iff alloc site with index h in domH thread-escapes
-    private TIntHashSet escObjs;	// set of IDs of currently escaping objects/alloc sites
-	private TIntObjectHashMap<List<FldObj>> objToFldObjs;	// map from each object to list of each non-null instance field of ref type with its value
-    private TIntIntHashMap objToHid;	// map from each object to the index in domH of its alloc site
-    private TIntArrayList[] HidToPendingEids;	// map from index in domH of each alloc site not yet known to be escaping to list of indices in domE of
-												// stmts that should escape if this alloc site escapes; escH[h] = true => HidToPendingEids[h] == null
+	private final boolean isFlowIns;
+	// true iff heap access stmt with index e in domE must be checked
+    private boolean[] chkE;
+	// true iff heap access stmt with index e in domE is visited
+    private boolean[] accE;
+	// true iff heap access stmt with index e in domE thread-escapes
+    private boolean[] escE;
+	// true iff alloc site with index h in domH is visited
+    private boolean[] accH;
+	// true iff alloc site with index h in domH thread-escapes
+	private boolean[] escH;
+	// set of IDs of currently escaping objects/alloc sites
+    private TIntHashSet escObjs;
+	// map from each object to list of each non-null instance field of ref type with its value
+	private TIntObjectHashMap<List<FldObj>> objToFldObjs;
+	// map from each object to the index in domH of its alloc site
+    private TIntIntHashMap objToHid;
+	// map from index in domH of each alloc site not yet known to be escaping to list of indices in domE of
+	// stmts that should escape if this alloc site escapes; escH[h] = true => HidToPendingEids[h] == null
+    private TIntArrayList[] HidToPendingEids;
     private InstrScheme instrScheme;
 	private DomE domE;
 	private DomH domH;
 	private int numE, numH;
 
+	public DynamicThreadEscapeAnalysis() {
+		isFlowIns = System.getProperty("chord.escape.flowins", "false").equals("true");
+	}
+
 	@Override
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null) return instrScheme;
     	instrScheme = new InstrScheme();
-    	instrScheme.setNewAndNewArrayEvent(true, false, true);
+    	instrScheme.setNewEvent(true, true, true, true, true);
+    	instrScheme.setNewArrayEvent(true, false, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);
     	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
@@ -182,9 +196,22 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		locEout.close();
 	}
 
-	public void processNewOrNewArray(int h, int t, int o) {
-		if (o == 0)
-			return;
+	@Override
+	public void processBefNew(int h, int t, int o) {
+		processNew(h, o);
+	}
+
+	@Override
+	public void processAftNew(int h, int t, int o) {
+	}
+
+	@Override
+	public void processNewArray(int h, int t, int o) {
+		processNew(h, o);
+	}
+
+	private void processNew(int h, int o) {
+		if (o == 0) return;
 		objToFldObjs.remove(o);
 		escObjs.remove(o);
 		if (isFlowIns) {
@@ -195,53 +222,54 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 		}
 	}
 
+	@Override
 	public void processGetfieldPrimitive(int e, int t, int b, int f) { 
-		if (e >= 0)
-			processHeapRd(e, b);
+		if (e >= 0) processHeapRd(e, b);
 	}
 
+	@Override
 	public void processAloadPrimitive(int e, int t, int b, int i) { 
-		if (e >= 0)
-			processHeapRd(e, b);
+		if (e >= 0) processHeapRd(e, b);
 	}
 
+	@Override
 	public void processGetfieldReference(int e, int t, int b, int f, int o) { 
-		if (e >= 0)
-			processHeapRd(e, b);
+		if (e >= 0) processHeapRd(e, b);
 	}
 
+	@Override
 	public void processAloadReference(int e, int t, int b, int i, int o) { 
-		if (e >= 0)
-			processHeapRd(e, b);
+		if (e >= 0) processHeapRd(e, b);
 	}
 
+	@Override
 	public void processPutfieldPrimitive(int e, int t, int b, int f) {
-		if (e >= 0)
-			processHeapRd(e, b);
+		if (e >= 0) processHeapRd(e, b);
 	}
 
+	@Override
 	public void processAstorePrimitive(int e, int t, int b, int i) {
-		if (e >= 0)
-			processHeapRd(e, b);
+		if (e >= 0) processHeapRd(e, b);
 	}
 
+	@Override
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {
-		if (e >= 0)
-			processHeapWr(e, b, f, o);
+		if (e >= 0) processHeapWr(e, b, f, o);
 	}
 
+	@Override
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
-		if (e >= 0)
-			processHeapWr(e, b, i, o);
+		if (e >= 0) processHeapWr(e, b, i, o);
 	}
 
+	@Override
 	public void processPutstaticReference(int e, int t, int b, int f, int o) { 
-		if (o != 0)
-			markAndPropEsc(o);
+		if (o != 0) markAndPropEsc(o);
 	}
+
+	@Override
 	public void processThreadStart(int p, int t, int o) { 
-		if (o != 0)
-			markAndPropEsc(o);
+		if (o != 0) markAndPropEsc(o);
 	}
 
 	private void processHeapRd(int e, int b) {

@@ -15,6 +15,7 @@ import chord.util.ChordRuntimeException;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
 import chord.util.tuple.integer.IntTrio;
+import chord.instr.InstrScheme.EventFormat;
 
 /**
  * Functionality for transforming a trace of events containing BEF_NEW
@@ -60,10 +61,7 @@ public class TraceTransformer {
 	private final int verbose;
 
 	// cached values from scheme for efficiency
-	private final boolean newAndNewArrayHasHid;
-	private final boolean newAndNewArrayHasTid;
-	private final boolean newAndNewArrayHasOid;
-	private final int newAndNewArrayNumBytes;
+	private final int newArrayNumBytes;
 	private final int getstaticPrimitiveNumBytes;
 	private final int getstaticReferenceNumBytes;
 	private final int putstaticPrimitiveNumBytes;
@@ -128,11 +126,7 @@ public class TraceTransformer {
 		this.rdFileName = rdFileName;
 		this.wrFileName = wrFileName;
 		this.verbose = Config.verbose;
-		newAndNewArrayHasHid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasLoc();
-		newAndNewArrayHasTid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasThr();
-		newAndNewArrayHasOid = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).hasObj();
-		assert (newAndNewArrayHasOid);
-		newAndNewArrayNumBytes = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY).size();
+		newArrayNumBytes = scheme.getEvent(InstrScheme.NEWARRAY).size();
 		getstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE).size();
 		getstaticReferenceNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE).size();
 		putstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE).size();
@@ -188,7 +182,7 @@ public class TraceTransformer {
 				switch (opcode) {
 				case EventKind.BEF_NEW:
 				{
-					addToTmp(EventKind.NEW);
+					addToTmp(EventKind.BEF_NEW);
 					byte hIdx1 = reader.getByte();
 					byte hIdx2 = reader.getByte();
 					byte hIdx3 = reader.getByte();
@@ -197,18 +191,15 @@ public class TraceTransformer {
 					byte tIdx2 = reader.getByte();
 					byte tIdx3 = reader.getByte();
 					byte tIdx4 = reader.getByte();
-					if (newAndNewArrayHasHid) {
-						addToTmp(hIdx1);
-						addToTmp(hIdx2);
-						addToTmp(hIdx3);
-						addToTmp(hIdx4);
-					}
-					if (newAndNewArrayHasTid) {
-						addToTmp(tIdx1);
-						addToTmp(tIdx2);
-						addToTmp(tIdx3);
-						addToTmp(tIdx4);
-					}
+					reader.getInt();
+					addToTmp(hIdx1);
+					addToTmp(hIdx2);
+					addToTmp(hIdx3);
+					addToTmp(hIdx4);
+					addToTmp(tIdx1);
+					addToTmp(tIdx2);
+					addToTmp(tIdx3);
+					addToTmp(tIdx4);
 					int hIdx = ByteBufferedFile.assemble(hIdx1, hIdx2, hIdx3, hIdx4);
 					int tIdx = ByteBufferedFile.assemble(tIdx1, tIdx2, tIdx3, tIdx4);
 					pending.add(new IntTrio(hIdx, tIdx, count));
@@ -220,8 +211,16 @@ public class TraceTransformer {
 				} 
 				case EventKind.AFT_NEW:
 				{
-					int hIdx = reader.getInt();
-					int tIdx = reader.getInt();
+					byte hIdx1 = reader.getByte();
+					byte hIdx2 = reader.getByte();
+					byte hIdx3 = reader.getByte();
+					byte hIdx4 = reader.getByte();
+					int hIdx = ByteBufferedFile.assemble(hIdx1, hIdx2, hIdx3, hIdx4);
+					byte tIdx1 = reader.getByte();
+					byte tIdx2 = reader.getByte();
+					byte tIdx3 = reader.getByte();
+					byte tIdx4 = reader.getByte();
+					int tIdx = ByteBufferedFile.assemble(tIdx1, tIdx2, tIdx3, tIdx4);
 					byte oIdx1 = reader.getByte();
 					byte oIdx2 = reader.getByte();
 					byte oIdx3 = reader.getByte();
@@ -242,6 +241,29 @@ public class TraceTransformer {
 								adjust();
 							break;
 						}
+					}
+					if (count != 0) {
+						addToTmp(EventKind.AFT_NEW);
+						addToTmp(hIdx1);
+						addToTmp(hIdx2);
+						addToTmp(hIdx3);
+						addToTmp(hIdx4);
+						addToTmp(tIdx1);
+						addToTmp(tIdx2);
+						addToTmp(tIdx3);
+						addToTmp(tIdx4);
+						addToTmp(oIdx1);
+						addToTmp(oIdx2);
+						addToTmp(oIdx3);
+						addToTmp(oIdx4);
+					} else {
+						writer.putByte(EventKind.AFT_NEW);
+						writer.putInt(hIdx);
+						writer.putInt(tIdx);
+						writer.putByte(oIdx1);
+						writer.putByte(oIdx2);
+						writer.putByte(oIdx3);
+						writer.putByte(oIdx4);
 					}
 					break;
 				}
@@ -282,9 +304,8 @@ public class TraceTransformer {
 	}
 	private int getOffset(int opcode) {
 		switch (opcode) {
-		case EventKind.NEW:
-		case EventKind.NEW_ARRAY:
-			return newAndNewArrayNumBytes;
+		case EventKind.NEWARRAY:
+			return newArrayNumBytes;
 		case EventKind.GETSTATIC_PRIMITIVE:
 			return getstaticPrimitiveNumBytes;
 		case EventKind.GETSTATIC_REFERENCE:
@@ -309,8 +330,8 @@ public class TraceTransformer {
 			return astorePrimitiveNumBytes;
 		case EventKind.ASTORE_REFERENCE:
 			return astoreReferenceNumBytes;
-		case EventKind.METHOD_CALL_BEF:
-		case EventKind.METHOD_CALL_AFT:
+		case EventKind.BEF_METHOD_CALL:
+		case EventKind.AFT_METHOD_CALL:
 			return methodCallNumBytes;
 		case EventKind.RETURN_PRIMITIVE:
 			return returnPrimitiveNumBytes;

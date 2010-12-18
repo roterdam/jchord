@@ -299,14 +299,31 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 			}
 			break;
 		}
-		case EventKind.NEW:
-		case EventKind.NEW_ARRAY:
+		case EventKind.BEF_NEW:
 		{
-			EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+			EventFormat ef = scheme.getEvent(InstrScheme.NEW);
 			int h = ef.hasLoc() ? buffer.getInt() : -1;
 			int t = ef.hasThr() ? buffer.getInt() : -1;
 			int o = ef.hasObj() ? buffer.getInt() : -1;
-			processNewOrNewArray(h, t, o);
+			processBefNew(h, t, o);
+			break;
+		}
+		case EventKind.AFT_NEW:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+			int h = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			int o = ef.hasObj() ? buffer.getInt() : -1;
+			processAftNew(h, t, o);
+			break;
+		}
+		case EventKind.NEWARRAY:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.NEWARRAY);
+			int h = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			int o = ef.hasObj() ? buffer.getInt() : -1;
+			processNewArray(h, t, o);
 			break;
 		}
 		case EventKind.GETSTATIC_PRIMITIVE:
@@ -489,22 +506,22 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 			processNotify(p, t, l);
 			break;
 		}
-		case EventKind.METHOD_CALL_BEF:
+		case EventKind.BEF_METHOD_CALL:
 		{
 			EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 			int i = ef.hasLoc() ? buffer.getInt() : -1;
 			int t = ef.hasThr() ? buffer.getInt() : -1;
 			int o = ef.hasObj() ? buffer.getInt() : -1;
-			processMethodCallBef(i, t, o);
+			processBefMethodCall(i, t, o);
 			break;
 		}
-		case EventKind.METHOD_CALL_AFT:
+		case EventKind.AFT_METHOD_CALL:
 		{
 			EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 			int i = ef.hasLoc() ? buffer.getInt() : -1;
 			int t = ef.hasThr() ? buffer.getInt() : -1;
 			int o = ef.hasObj() ? buffer.getInt() : -1;
-			processMethodCallAft(i, t, o);
+			processAftMethodCall(i, t, o);
 			break;
 		}
 		case EventKind.RETURN_PRIMITIVE:
@@ -600,8 +617,14 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	public void processLeaveLoop(int w, int t) { 
 		error("void processLeaveLoop(int w, int t)");
 	}
-	public void processNewOrNewArray(int h, int t, int o) { 
-		error("void processNewOrNewArray(int h, int t, int o)");
+	public void processBefNew(int h, int t, int o) { 
+		error("void processBefNew(int h, int t, int o)");
+	}
+	public void processAftNew(int h, int t, int o) { 
+		error("void processAftNew(int h, int t, int o)");
+	}
+	public void processNewArray(int h, int t, int o) { 
+		error("void processNewArray(int h, int t, int o)");
 	}
 	public void processGetstaticPrimitive(int e, int t, int b, int f) { 
 		error("void processGetstaticPrimitive(int e, int t, int b, int f)");
@@ -657,11 +680,11 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	public void processNotify(int i, int t, int o) { 
 		error("void processNotify(int i, int t, int o)");
 	}
-	public void processMethodCallBef(int i, int t, int o) { 
-		error("void processMethodCallBef(int i, int t, int o)");
+	public void processBefMethodCall(int i, int t, int o) { 
+		error("void processBefMethodCall(int i, int t, int o)");
 	}
-	public void processMethodCallAft(int i, int t, int o) { 
-		error("void processMethodCallAft(int i, int t, int o)");
+	public void processAftMethodCall(int i, int t, int o) { 
+		error("void processAftMethodCall(int i, int t, int o)");
 	}
 	public void processReturnPrimitive(int p, int t) { 
 		error("void processReturnPrimitive(int p, int t) ");
