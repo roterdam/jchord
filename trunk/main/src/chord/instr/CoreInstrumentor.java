@@ -15,6 +15,7 @@ import javassist.expr.NewExpr;
 import javassist.expr.NewArray;
 import javassist.expr.ArrayAccess;
 import javassist.expr.FieldAccess;
+import javassist.expr.ConstructorCall;
 import javassist.expr.MethodCall;
 import javassist.expr.MonitorEnter;
 import javassist.expr.MonitorExit;
@@ -194,6 +195,8 @@ public class CoreInstrumentor extends ExprEditor {
 	public void edit(MonitorEnter e) throws CannotCompileException { }
 
 	public void edit(MonitorExit e) throws CannotCompileException { }
+
+	public void edit(ConstructorCall e) throws CannotCompileException { }
 
 	public void edit(MethodCall e) throws CannotCompileException { }
 }

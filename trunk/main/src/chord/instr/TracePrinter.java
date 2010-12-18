@@ -10,7 +10,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 
+import joeq.Compiler.Quad.Quad;
 import chord.project.Config;
+import chord.analyses.alloc.DomH;
+import chord.analyses.invk.DomI;
+import chord.project.ClassicProject;
 import chord.instr.InstrScheme.EventFormat;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
@@ -48,6 +52,10 @@ public class TracePrinter {
 	 */
 	public void run() {
 		try {
+			DomH domH = (DomH) ClassicProject.g().getTrgt("H");
+			ClassicProject.g().runTask(domH);
+			DomI domI = (DomI) ClassicProject.g().getTrgt("I");
+			ClassicProject.g().runTask(domI);
 			int traceBlockSize = Config.traceBlockSize;
 			ByteBufferedFile buffer = new ByteBufferedFile(traceBlockSize, traceFileName, true);
 			while (!buffer.isDone()) {
@@ -71,35 +79,31 @@ public class TracePrinter {
 				}
 				case EventKind.BEF_NEW:
 				{
-					int h = buffer.getInt();
-					int t = buffer.getInt();
-					System.out.println("BEF_NEW " + h + " " + t);
+					EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+					int h = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					String hStr = h > 0 ? ((Quad) domH.get(h)).toJavaLocStr() : Integer.toString(h);
+					System.out.println("BEF_NEW " + hStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.AFT_NEW:
 				{
-					int h = buffer.getInt();
-					int t = buffer.getInt();
-					int o = buffer.getInt();
-					System.out.println("AFT_NEW " + h + " " + t + " " + o);
-					break;
-				}
-				case EventKind.NEW:
-				{
-					EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+					EventFormat ef = scheme.getEvent(InstrScheme.NEW);
 					int h = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					System.out.println("NEW " + h + " " + t + " " + o);
+					String hStr = h > 0 ? ((Quad) domH.get(h)).toJavaLocStr() : Integer.toString(h);
+					System.out.println("AFT_NEW " + hStr + " " + t + " " + o);
 					break;
 				}
-				case EventKind.NEW_ARRAY:
+				case EventKind.NEWARRAY:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+					EventFormat ef = scheme.getEvent(InstrScheme.NEWARRAY);
 					int h = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					System.out.println("NEW_ARRAY " + h + " " + t + " " + o);
+					System.out.println("NEWARRAY " + h + " " + t + " " + o);
 					break;
 				}
 				case EventKind.GETSTATIC_PRIMITIVE:
@@ -291,22 +295,24 @@ public class TracePrinter {
 					System.out.println("NOTIFY_ALL " + i + " " + t + " " + o);
 					break;
 				}
-				case EventKind.METHOD_CALL_BEF:
+				case EventKind.BEF_METHOD_CALL:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 					int i = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					System.out.println("METHOD_CALL_BEF " + i + " " + t + " " + o);
+					String iStr = i > 0 ? domI.get(i).toJavaLocStr() : Integer.toString(i);
+					System.out.println("BEF_METHOD_CALL " + iStr + " " + t + " " + o);
 					break;
 				}
-				case EventKind.METHOD_CALL_AFT:
+				case EventKind.AFT_METHOD_CALL:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
 					int i = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					System.out.println("METHOD_CALL_AFT " + i + " " + t + " " + o);
+					String iStr = i > 0 ? domI.get(i).toJavaLocStr() : Integer.toString(i);
+					System.out.println("AFT_METHOD_CALL " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.RETURN_PRIMITIVE:

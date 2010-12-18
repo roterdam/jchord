@@ -26,7 +26,9 @@ import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 
 import chord.analyses.escape.ThrEscException;
+import chord.analyses.method.DomM;
 import chord.analyses.heapacc.DomE;
+import chord.analyses.invk.DomI;
 import chord.analyses.alloc.DomH;
 import chord.analyses.field.DomF;
 import chord.instr.InstrScheme;
@@ -53,39 +55,50 @@ import chord.util.FileUtils;
 	signs = { "E0", "E0", "E0", "E0,H0:E0_H0" }
 )
 public class ThreadEscapePathAnalysis extends DynamicAnalysis {
-	private static final boolean verbose = false;
-
-	private static final String printAccFileName = System.getProperty("chord.escape.check.file");
+	/*****************************************************************/
+	// analysis configuration
+	/*****************************************************************/
+	
+	private final boolean verbose = false;
 
 	private static final int TC = 0, TC_ALLOC = 1, TC_ALLOC_PRUNE = 2;
-	private static final int checkKind;
-	static {
-		String s = System.getProperty("chord.escape.check.kind", "tc");
-		if (s.equals("tc"))
-			checkKind = TC;
-		else if (s.equals("tc_alloc"))
-			checkKind = TC_ALLOC;
-		else if (s.equals("tc_alloc_prune"))
-			checkKind = TC_ALLOC_PRUNE;
-		else {
-			checkKind = -1;
-			Messages.fatal("Invalid value for chord.escape.check.kind");
-		}
-	}
 
-	private static final boolean doStrongUpdates = true;
+	// one of TC, TC_ALLOC, TC_ALLOC_PRUNE
+	private final int checkKind;
+
+	private final boolean doStrongUpdates = true;
 
  	// use field 0 in domF instead of array indices in OtoFOlistFwd
-	private static final boolean smashArrayElems = false;
+	private final boolean smashArrayElems = false;
 
-	private int numPrintedHeaps = 0;
+	// print heaps if this property is set
+	private final String printAccFileName;
 
- 	// contains only non-null objects
-	private final IntArraySet tmpO = new IntArraySet();
-	private final IntArraySet tmpH = new IntArraySet();
+	// how much of the call stack to keep in printing heaps
+	private final int callStkDepth;
 
-	// accesses to be checked; allows excluding certain accesses (e.g.
-	// from JDK library code)
+	/*****************************************************************/
+	// data structures representing heap
+	/*****************************************************************/
+
+	// set of escaping objects; once an object is put into this set,
+	// it remains in it for the rest of the execution
+	private TIntHashSet escO;
+
+	// map from each object to a list of each instance field of ref type
+	// along with the pointed object; fields with null value are not stored
+ 	// invariant: OtoFOlistFwd(o) contains (f,o1) and (f,o2) => o1=o2
+	private TIntObjectHashMap<List<FldObj>> OtoFOlistFwd;
+
+	// inverse of above map
+	private TIntObjectHashMap<List<FldObj>> OtoFOlistInv;
+
+	/*****************************************************************/
+	// various computed properties of accesses
+	/*****************************************************************/
+
+	// accesses to be checked; allows excluding certain accesses such as
+	// those from JDK library code
 	private boolean[] chkE;
 
 	// visited accesses (subset of chkE)
@@ -102,54 +115,105 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	// static analysis to prove thread-local (subset of accE)
 	private boolean[] impE;
 
-	// visited allocation sites
-	private boolean[] accH;
-
 	// map from each access deemed thread-local to set of allocation sites
 	// deemed "relevant" to proving it
 	private IntArraySet[] EtoLocHset;
 
-	// set of escaping objects; once an object is put into this set,
-	// it remains in it for the rest of the execution
-	private TIntHashSet escO;
+	/*****************************************************************/
+	// data structures related to object allocation
+	/*****************************************************************/
 
-	// map from each object to a list of each instance field of ref type
-	// along with the pointed object; fields with null value are not stored
- 	// invariant: OtoFOlistFwd(o) contains (f,o1) and (f,o2) => o1=o2
-	private TIntObjectHashMap<List<FldObj>> OtoFOlistFwd;
-
-	// inverse of above map
-	private TIntObjectHashMap<List<FldObj>> OtoFOlistInv;
+	// visited allocation sites
+	private boolean[] accH;
 
 	// map from each object to the index in domH of its alloc site
     private TIntIntHashMap OtoH;
 
+	// map from each object to the list of 'callStkDepth' call sites on 
+	// the stack at the time of its creation
+	private TIntObjectHashMap<TIntArrayList> OtoIlist;
+
+	// map from each allocation site to list of all objects created at it;
+	// used only if checkKind is TC_ALLOC or TC_ALLOC_PRUNE
+	private TIntArrayList[] HtoOlist;
+
+	// global object timestamp counter;
+	// used only if checkKind is TC_ALLOC or TC_ALLOC_PRUNE
 	private int timestamp = 1;	// must start at 1
 
-	// map from each object to its timestamp
+	// map from each object to its timestamp;
 	// records the order in which objects are created; note that the
 	// object IDs are not in order of creation since an object can be
-	// assigned an ID only after its constructor has executed
+	// assigned an ID only after its constructor has executed;
+	// used only if checkKind is TC_ALLOC or TC_ALLOC_PRUNE
 	private TIntIntHashMap OtoS;
 
+	/*****************************************************************/
+	// data structures related to threads
+	/*****************************************************************/
+
+	// map from each object to its creating thread
 	private TIntIntHashMap OtoT;
 
-	// map from each allocation site to list of all objects allocated
-	// at that site
-	private TIntArrayList[] HtoOlist;
-	
+	// denotes which methods are class initializers
+	private boolean[] clinitM;
+
+	// map from each thread to number of class initializer methods currently
+	// on its call stack
+	private TIntIntHashMap TtoNumClinits;
+
+	// map from each thread to its current call stack; used only to provide
+	// more information in printed heaps
+	private TIntObjectHashMap<TIntArrayList> TtoIlist;
+
+	/*****************************************************************/
+	// miscellaneous
+	/*****************************************************************/
+
+	private int numPrintedHeaps = 0;
+
+ 	// contains only non-null objects
+	private final IntArraySet tmpO = new IntArraySet();
+	private final IntArraySet tmpH = new IntArraySet();
+
     private InstrScheme instrScheme;
 
 	private DomH domH;
 	private DomE domE;
 	private DomF domF;
+	private DomI domI;
 	private int numH, numE, numF;
+
+	public ThreadEscapePathAnalysis() {
+		String s = System.getProperty("chord.escape.kind", "tc");
+		if (s.equals("tc"))
+			checkKind = TC;
+		else if (s.equals("tc_alloc"))
+			checkKind = TC_ALLOC;
+		else if (s.equals("tc_alloc_prune"))
+			checkKind = TC_ALLOC_PRUNE;
+		else {
+			checkKind = -1;
+			Messages.fatal("Invalid value for chord.escape.kind");
+		}
+		printAccFileName = System.getProperty("chord.escape.file");
+		callStkDepth = Integer.getInteger("chord.escape.k", 0);
+	}
 
 	@Override
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null) return instrScheme;
     	instrScheme = new InstrScheme();
-    	instrScheme.setNewAndNewArrayEvent(true, true, true);
+		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
+			instrScheme.setEnterMethodEvent(true, true);
+			instrScheme.setLeaveMethodEvent(true, true);
+		}
+		if (printAccFileName != null) {
+			instrScheme.setMethodCallEvent(true, true, false, true, true);
+    		instrScheme.setNewEvent(true, true, true, true, true);
+		} else
+    		instrScheme.setNewEvent(true, true, true, true, false);
+    	instrScheme.setNewArrayEvent(true, true, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);
     	instrScheme.setGetfieldPrimitiveEvent(true, false, true, false);
@@ -167,10 +231,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	public void initAllPasses() {
 		if (smashArrayElems)
 			assert (!doStrongUpdates);
+ 		if (printAccFileName != null)
+			assert (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE);
+
 		escO = new TIntHashSet();
 		OtoFOlistFwd = new TIntObjectHashMap<List<FldObj>>();
 		OtoFOlistInv = new TIntObjectHashMap<List<FldObj>>();
-		OtoH = new TIntIntHashMap();
 
 		domE = (DomE) ClassicProject.g().getTrgt("E");
 		ClassicProject.g().runTask(domE);
@@ -199,6 +265,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				System.out.println("e: " + e);
 				chkE[e] = true;
 			}
+			TtoIlist = new TIntObjectHashMap<TIntArrayList>();
+			OtoIlist = new TIntObjectHashMap<TIntArrayList>();
+			domI = (DomI) ClassicProject.g().getTrgt("I");
+			ClassicProject.g().runTask(domI);
 		} else {
 			ProgramRel relCheckExcludedE = (ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
 			relCheckExcludedE.load();
@@ -219,11 +289,20 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		impE = new boolean[numE];
 		EtoLocHset = new IntArraySet[numE];
 		accH = new boolean[numH];
+
+		OtoH = new TIntIntHashMap();
 		OtoT = new TIntIntHashMap();
+		DomM domM = (DomM) ClassicProject.g().getTrgt("M");
+		ClassicProject.g().runTask(domM);
+		int numM = domM.size();
+		clinitM = new boolean[numM];
+		for (int m = 0; m < numM; m++)
+			clinitM[m] = domM.get(m).getName().toString().equals("<clinit>");
+		TtoNumClinits = new TIntIntHashMap();
 
 		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
-			OtoS = new TIntIntHashMap();
 			HtoOlist = new TIntArrayList[numH];
+			OtoS = new TIntIntHashMap();
 		}
 	}
 
@@ -292,6 +371,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		return e < 0 ? Integer.toString(e) : domE.get(e).toJavaLocStr();
 	}
 
+	private String iStr(int i) {
+		return i < 0 ? Integer.toString(i) : domI.get(i).toJavaLocStr();
+	}
+
 	private String hStr(int h) {
 		if (h <= 0)
 			return Integer.toString(h);
@@ -305,8 +388,91 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		return Integer.toString(f - numF);
 	}
 
+	private String ilStr(int o) {
+		TIntArrayList il = OtoIlist.get(o);
+		if (il == null) return null;
+		int n = il.size();
+		if (n == 0) return null;
+		String s = "";
+		for (int i = 0; true; i++) {
+			s += iStr(il.get(i));
+			if (i == n - 1) break;
+			s += ",";
+		}
+		return s;
+	}
+
+	private String oStr(int o, String color) {
+		int s = OtoS.get(o);
+		int t = OtoT.get(o);
+		String url = ilStr(o);
+		String label = "\"" + s + "," + t + (url == null ? "" : "*") + "\"";
+		return o + "[label=" + label + ",URL=\"" + url + "\",style=filled,color=" + color + "];";
+	}
+
 	@Override
-	public void processNewOrNewArray(int h, int t, int o) {
+	public void processEnterMethod(int m, int t) {
+		if (m < 0 || t == 0) return;
+		if (clinitM[m]) {
+			int k = TtoNumClinits.get(t);
+			TtoNumClinits.put(t, k + 1);
+		}
+	}
+
+	@Override
+	public void processLeaveMethod(int m, int t) {
+		if (m < 0 || t == 0) return;
+		if (clinitM[m]) {
+			int k = TtoNumClinits.get(t);
+			if (k == 0)
+				return;
+			TtoNumClinits.put(t, k - 1);
+		}
+	}
+
+	@Override
+	public void processBefMethodCall(int i, int t, int o) {
+		if (i < 0 || t == 0) return;
+		TIntArrayList iList = TtoIlist.get(t);
+		if (iList == null) {
+			iList = new TIntArrayList();
+			TtoIlist.put(t, iList);
+		}
+		iList.add(i);
+		
+    }
+
+	@Override
+    public void processAftMethodCall(int i, int t, int o) {
+		if (i < 0 || t == 0) return;
+		TIntArrayList iList = TtoIlist.get(t);
+		if (iList == null)
+			return;
+		int k;
+		while ((k = iList.size()) > 0) {
+			int j = iList.remove(k - 1);
+			if (j == i)
+				return;
+		}
+	}
+
+	@Override
+	public void processBefNew(int h, int t, int o) {
+		processNew(h, t, o);
+		// TODO
+	}
+
+	@Override
+	public void processAftNew(int h, int t, int o) {
+		// TODO
+	}
+
+	@Override
+	public void processNewArray(int h, int t, int o) {
+		processNew(h, t, o);
+	}
+
+	private void processNew(int h, int t, int o) {
 		if (verbose) System.out.println(t + " NEW " + hStr(h) + " o=" + o);
 		if (o == 0 || t == 0) return;
 		assert (!escO.contains(o));
@@ -318,11 +484,19 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			accH[h] = true;
 			result = OtoH.put(o, h);
 			assert (result == 0);
-		}
-		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
-			result = OtoS.put(o, timestamp++);
-			assert (result == 0);
-			if (h >= 0) {
+			if (printAccFileName != null) {
+				TIntArrayList itl = TtoIlist.get(t);
+				if (itl != null) {
+					TIntArrayList iol = new TIntArrayList(callStkDepth);
+					OtoIlist.put(o, iol);
+					int n = itl.size();
+					for (int i = 0; i < n && i < callStkDepth; i++)
+						iol.add(itl.get(i));
+				}
+			}
+			if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
+				result = OtoS.put(o, timestamp++);
+				assert (result == 0);
 				TIntArrayList ol = HtoOlist[h];
 				if (ol == null) {
 					ol = new TIntArrayList();
@@ -666,13 +840,13 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			int o = tmpO.get(i);
 			int h = OtoH.get(o);
 			tmpH.add(h);
-			int t = OtoS.get(o);
+			int s = OtoS.get(o);
 			if (i == 0)
-				out.println(o + "[label=\"" + t + "\",style=filled,color=blue];");
+				out.println(oStr(o, "blue"));
 			else if (escO.contains(o))
-				out.println(o + "[label=\"" + t + "\",style=filled,color=red];");
+				out.println(oStr(o, "red"));
 			else
-				out.println(o + "[label=\"" + t + "\",style=filled,color=green];");
+				out.println(oStr(o, "green"));
 			if (h != 0) {
 				TIntArrayList l = HtoOlist[h];
 				int m = l.size();
@@ -718,14 +892,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		int no = tmpO.size();
 		for (int i = 0; i < no; i++) {
 			int o = tmpO.get(i);
-			int s = OtoS.get(o);
-			int t = OtoT.get(o);
 			if (i == 0)
-				out.println(o + "[label=\"" + s + "," + t + "\",style=filled,color=blue];");
+				out.println(oStr(o, "blue"));
 			else if (escO.contains(o))
-				out.println(o + "[label=\"" + s + "," + t + "\",style=filled,color=red];");
+				out.println(oStr(o, "red"));
 			else
-				out.println(o + "[label=\"" + s + "," + t + "\",style=filled,color=green];");
+				out.println(oStr(o, "green"));
 			List<FldObj> foList = OtoFOlistInv.get(o);
 			if (foList != null) {
 				int m = foList.size();

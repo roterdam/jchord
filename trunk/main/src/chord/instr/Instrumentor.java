@@ -87,7 +87,8 @@ public class Instrumentor extends CoreInstrumentor {
 	protected final EventFormat enterMainMethodEvent;
 	protected final EventFormat enterMethodEvent;
 	protected final EventFormat leaveMethodEvent;
-	protected final EventFormat newAndNewArrayEvent;
+	protected final EventFormat newEvent;
+	protected final EventFormat newArrayEvent;
 	protected final EventFormat getstaticPrimitiveEvent;
 	protected final EventFormat getstaticReferenceEvent;
 	protected final EventFormat putstaticPrimitiveEvent;
@@ -113,7 +114,6 @@ public class Instrumentor extends CoreInstrumentor {
 	protected final String leaveMethodEventCall;
 	protected final String befNewEventCall;
 	protected final String aftNewEventCall;
-	protected final String newEventCall;
 	protected final String newArrayEventCall;
 	protected final String getstaticPriEventCall;
 	protected final String putstaticPriEventCall;
@@ -127,8 +127,8 @@ public class Instrumentor extends CoreInstrumentor {
 	protected final String aloadRefEventCall;
 	protected final String astorePriEventCall;
 	protected final String astoreRefEventCall;
-	protected final String methodCallBefEventCall;
-	protected final String methodCallAftEventCall;
+	protected final String befMethodCallEventCall;
+	protected final String aftMethodCallEventCall;
 	protected final String quadEventCall;
 	protected final String basicBlockEventCall;
 	protected final String threadStartEventCall;
@@ -239,7 +239,8 @@ public class Instrumentor extends CoreInstrumentor {
 		enterMainMethodEvent = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
 		enterMethodEvent = scheme.getEvent(InstrScheme.ENTER_METHOD);
 		leaveMethodEvent = scheme.getEvent(InstrScheme.LEAVE_METHOD);
-		newAndNewArrayEvent = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
+		newEvent = scheme.getEvent(InstrScheme.NEW);
+		newArrayEvent = scheme.getEvent(InstrScheme.NEWARRAY);
 		getstaticPrimitiveEvent = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE);
 		getstaticReferenceEvent = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE);
 		putstaticPrimitiveEvent = scheme.getEvent(InstrScheme.PUTSTATIC_PRIMITIVE);
@@ -265,7 +266,6 @@ public class Instrumentor extends CoreInstrumentor {
 		leaveMethodEventCall = eventHandlerClassName + "leaveMethodEvent(";
 		befNewEventCall = eventHandlerClassName + "befNewEvent(";
 		aftNewEventCall = eventHandlerClassName + "aftNewEvent(";
-		newEventCall = eventHandlerClassName + "newEvent(";
 		newArrayEventCall = eventHandlerClassName + "newArrayEvent(";
 		getstaticPriEventCall = eventHandlerClassName + "getstaticPrimitiveEvent(";
 		putstaticPriEventCall = eventHandlerClassName + "putstaticPrimitiveEvent(";
@@ -279,8 +279,8 @@ public class Instrumentor extends CoreInstrumentor {
 		aloadRefEventCall = eventHandlerClassName + "aloadReferenceEvent(";
 		astorePriEventCall = eventHandlerClassName + "astorePrimitiveEvent(";
 		astoreRefEventCall = eventHandlerClassName + "astoreReferenceEvent(";
-		methodCallBefEventCall = eventHandlerClassName + "methodCallBefEvent(";
-		methodCallAftEventCall = eventHandlerClassName + "methodCallAftEvent(";
+		befMethodCallEventCall = eventHandlerClassName + "befMethodCallEvent(";
+		aftMethodCallEventCall = eventHandlerClassName + "aftMethodCallEvent(";
 		quadEventCall = eventHandlerClassName + "quadEvent(";
 		basicBlockEventCall = eventHandlerClassName + "basicBlockEvent(";
 		threadStartEventCall = eventHandlerClassName + "threadStartEvent(";
@@ -580,29 +580,25 @@ public class Instrumentor extends CoreInstrumentor {
 
 	@Override
 	public void edit(NewExpr e) throws CannotCompileException {
-		if (newAndNewArrayEvent.present()) {
-			String instr1, instr2;
-			if (newAndNewArrayEvent.hasObj()) {
-				// instrument hId regardless of whether the client wants it
-				int hId = set(Hmap, e);
-				instr1 = befNewEventCall + hId + ");";
-				instr2 = aftNewEventCall + hId + ",$_);";
-			} else {
-				 int hId = newAndNewArrayEvent.hasLoc() ?
-					set(Hmap, e) : EventHandler.MISSING_FIELD_VAL;
-				instr1 = newEventCall + hId + ");";
-				instr2 = "";
+		if (newEvent.present()) {
+			int hId = newEvent.hasLoc() ? set(Hmap, e) : EventHandler.MISSING_FIELD_VAL;
+			String befInstr = "", aftInstr = "";
+			if (newEvent.isBef()) {
+				befInstr = befNewEventCall + hId + ");";
 			}
-			e.replace("{ " + instr1 + " $_ = $proceed($$); " + instr2 + " }");
+			if (newEvent.isAft()) {
+				String o = newEvent.hasObj() ? "$_" : "null";
+				aftInstr = aftNewEventCall + hId + "," + o + ");";
+			}
+			e.replace("{ " + befInstr + " $_ = $proceed($$); " + aftInstr + " }");
 		}
 	}
 
 	@Override
 	public void edit(NewArray e) throws CannotCompileException {
-		if (newAndNewArrayEvent.present()) {
-			int hId = newAndNewArrayEvent.hasLoc() ?
-				set(Hmap, e) : EventHandler.MISSING_FIELD_VAL;
-			String o = newAndNewArrayEvent.hasObj() ? "$_" : "null";
+		if (newArrayEvent.present()) {
+			int hId = newArrayEvent.hasLoc() ? set(Hmap, e) : EventHandler.MISSING_FIELD_VAL;
+			String o = newArrayEvent.hasObj() ? "$_" : "null";
 			String instr = newArrayEventCall + hId + "," + o + ");";
 			e.replace("{ $_ = $proceed($$); " + instr + " }");
 		}
@@ -682,7 +678,28 @@ public class Instrumentor extends CoreInstrumentor {
 	}
 
 	@Override
+	public void edit(ConstructorCall e) throws CannotCompileException {
+		CtConstructor m;
+		try {
+			m = e.getConstructor();
+		} catch (NotFoundException ex) {
+			throw new CannotCompileException(ex);
+		} 
+		edit(e, m);
+	}
+
+	@Override
 	public void edit(MethodCall e) throws CannotCompileException {
+		CtMethod m;
+		try {
+			m = e.getMethod();
+		} catch (NotFoundException ex) {
+			throw new CannotCompileException(ex);
+		}
+		edit(e, m);
+	}
+
+	private void edit(MethodCall e, CtBehavior m) throws CannotCompileException {
 		String befInstr = "";
 		String aftInstr = "";
 		// Part 1: add METHOD_CALL event if present
@@ -691,37 +708,11 @@ public class Instrumentor extends CoreInstrumentor {
 				EventHandler.MISSING_FIELD_VAL;
 			String o = methodCallEvent.hasObj() ? "$0" : "null";
 			if (methodCallEvent.isBef())
-				befInstr += methodCallBefEventCall + iId + "," + o + ");";
+				befInstr += befMethodCallEventCall + iId + "," + o + ");";
 			if (methodCallEvent.isAft())
-				aftInstr += methodCallAftEventCall + iId + "," + o + ");";
+				aftInstr += aftMethodCallEventCall + iId + "," + o + ");";
 		}
-		CtMethod m;
-		try {
-			m = e.getMethod();
-		} catch (NotFoundException ex) {
-			throw new CannotCompileException(ex);
-		}
-		// Part 2: add BEF_NEW and AFT_NEW, or just NEW, event
-		// if present and applicable
-		if (newAndNewArrayEvent.present()) {
-			String mDesc = m.getSignature();
-			if (mDesc.equals("()Ljava/lang/Object;")) {
-				String mName = m.getName();
-				String cName = m.getDeclaringClass().getName();
-				if ((mName.equals("newInstance") && cName.equals("java.lang.Class")) ||
-					(mName.equals("clone") && cName.equals("java.lang.Object"))) {
-					int hId = newAndNewArrayEvent.hasLoc() ? set(Hmap, e) :
-						EventHandler.MISSING_FIELD_VAL;
-					if (newAndNewArrayEvent.hasObj()) {
-						befInstr += befNewEventCall + hId + ");";
-						aftInstr += aftNewEventCall + hId + ",$_);";
-					} else {
-						befInstr += newEventCall + hId + ");";
-					}
-				}
-			}
-		}
-		// Part 3: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
+		// Part 2: add THREAD_START, THREAD_JOIN, WAIT, or NOTIFY event
 		// if present and applicable
 		String instr = processThreadRelatedCall(e, m);
 		if (instr != null)
@@ -933,7 +924,7 @@ public class Instrumentor extends CoreInstrumentor {
 		return null;
 	}
 
-	protected String processThreadRelatedCall(MethodCall e, CtMethod m) {
+	protected String processThreadRelatedCall(MethodCall e, CtBehavior m) {
 		String instr = null;
 		String cName = m.getDeclaringClass().getName();
 		if (cName.equals("java.lang.Object")) {

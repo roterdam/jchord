@@ -84,7 +84,6 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	private final TIntObjectHashMap<TLongArrayList> t2fakeHeapID = new TIntObjectHashMap<TLongArrayList>();
 	private final TIntObjectHashMap<Stack<MethodExecutionState>> t2m = new TIntObjectHashMap<Stack<MethodExecutionState>>();
 	private final TIntObjectHashMap<TIntLongHashMap> thr2formalBindings = new TIntObjectHashMap<TIntLongHashMap>(); 
-//	private final TIntObjectHashMap<ControlFlowGraph> method2cfg = new TIntObjectHashMap<ControlFlowGraph>();
 	private InstrScheme instrScheme;
 	private DomM M;
 	private DomB B;
@@ -97,7 +96,8 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		instrScheme.setLeaveMethodEvent(true, true);
 		instrScheme.setBasicBlockEvent();
 		instrScheme.setMethodCallEvent(true, true, true, true, true);
-		instrScheme.setNewAndNewArrayEvent(true, true, true);
+		instrScheme.setNewEvent(true, true, true, true, false);
+		instrScheme.setNewArrayEvent(true, true, true);
 		instrScheme.setAloadPrimitiveEvent(false, true, true, false);
 		instrScheme.setAloadReferenceEvent(false, true, true, false, true);
 		instrScheme.setAstorePrimitiveEvent(false, true, true, false);
@@ -475,17 +475,6 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 		}
 		
 		initEnv(t, m);
-//		ControlFlowGraph cfg = method2cfg.get(m);
-//		if (cfg == null) {
-//			jq_Method mthd = M.get(m);
-//			assert (mthd != null);
-//			BytecodeToQuad b2q = new BytecodeToQuad(mthd);
-//			method2cfg.put(m, cfg = b2q.convert());
-//			if (PRINT_CFG || DEBUG_LEVEL >= 3) {
-//				printCFG(cfg);
-//			}
-//		}
-//		assert (cfg != null);
 	}
 	
 	private void initEnv(int t, int m) {
@@ -531,17 +520,22 @@ public class DynamicShapeAnalysis extends DynamicAnalysis {
 	}
 	
 	@Override
-	public void processMethodCallBef(int i, int t, int o) {
+	public void processBefMethodCall(int i, int t, int o) {
 		/* Do nothing 4 now. */
 	}
 	
 	@Override
-	public void processMethodCallAft(int i, int t, int o) {
+	public void processAftMethodCall(int i, int t, int o) {
 		/* Do nothing 4 now. */
+	}
+
+	@Override
+	public void processBefNew(int h, int t, int o) {
+		updateAbstraction(t, InstructionType.NEW_OR_NEW_ARRAY, o);
 	}
 	
 	@Override
-	public void processNewOrNewArray(int h, int t, int o) {
+	public void processNewArray(int h, int t, int o) {
 		updateAbstraction(t, InstructionType.NEW_OR_NEW_ARRAY, o);
 	}
 	

@@ -58,6 +58,7 @@ public class DynamicBDDAnalysis extends DynamicAnalysis {
 	BDDPairing pair;
 	// BDD iterLabelsBdd;
 
+	@Override
 	public void initAllPasses() {
 		domH = (DomH) ClassicProject.g().getTrgt("H");
 		String varOrder;
@@ -121,14 +122,18 @@ public class DynamicBDDAnalysis extends DynamicAnalysis {
 		// iterLabelsBdd.andWith(h0dom.id());
 	}
 
+	@Override
 	public InstrScheme getInstrScheme() {
 		if (instrScheme != null) return instrScheme;
 		instrScheme = new InstrScheme();
-		instrScheme.setNewAndNewArrayEvent(true, true, true);
+		instrScheme.setNewEvent(true, true, true, true, false);
+		instrScheme.setNewArrayEvent(true, true, true);
 		instrScheme.setPutfieldReferenceEvent(true, false, true, true, true);
 		instrScheme.setAstoreReferenceEvent(true, false, true, true, true);
 		return instrScheme;
 	}
+
+	@Override
 	public void initPass() {
         objToFldObjs.clear();
         objToHidx.clear();
@@ -136,7 +141,28 @@ public class DynamicBDDAnalysis extends DynamicAnalysis {
 		initLabelsBdd = factory.zero();
 		currLabelsBdd = factory.zero();
 	}
-	public void processNewOrNewArray(int h, int t, int o) {
+
+	@Override
+	public void processBefNew(int h, int t, int o) {
+		processNew(h, t, o);
+	}
+
+	@Override
+	public void processNewArray(int h, int t, int o) {
+		processNew(h, t, o);
+	}
+
+	@Override
+    public void processPutfieldReference(int e, int t, int b, int f, int o) {
+		processHeapWr(e, b, f, o, t);
+    }
+
+	@Override
+    public void processAstoreReference(int e, int t, int b, int i, int o) {
+		processHeapWr(e, b, i, o, t);
+	}
+
+	private void processNew(int h, int t, int o) {
 		assert (o >= 0);
 		assert (h != 0);	// 0 is a special value in domain H
 		if (o == 0 || h < 0)
@@ -155,12 +181,7 @@ public class DynamicBDDAnalysis extends DynamicAnalysis {
 			throw new RuntimeException(ex);
 		}
 	}
-    public void processPutfieldReference(int e, int t, int b, int f, int o) {
-		processHeapWr(e, b, f, o, t);
-    }
-    public void processAstoreReference(int e, int t, int b, int i, int o) {
-		processHeapWr(e, b, i, o, t);
-	}
+
 	private void processHeapWr(int e, int b, int f, int r, int t) {
 		assert (b >= 0);	// allow null object value
 		assert (r >= 0);	// allow null object value

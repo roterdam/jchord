@@ -41,45 +41,39 @@ public class EventHandler extends CoreEventHandler {
 	public static final int UNKNOWN_FIELD_VAL = -2;
 	protected static InstrScheme scheme;
 
-	// befNew event is present => h,t,o present
 	public synchronized static void befNewEvent(int hId) {
 		if (trace) {
 			trace = false;
 			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.NEW);
 				buffer.putByte(EventKind.BEF_NEW);
-				buffer.putInt(hId);
-				int tId = getObjectId(Thread.currentThread());
-				buffer.putInt(tId);
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	// aftNew event is present => h,t,o present
-	public synchronized static void aftNewEvent(int hId, Object o) {
-		if (trace) {
-			trace = false;
-			try {
-				buffer.putByte(EventKind.AFT_NEW);
-				buffer.putInt(hId);
-				int tId = getObjectId(Thread.currentThread());
-				buffer.putInt(tId);
-				int oId = getObjectId(o);
-				buffer.putInt(oId);
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void newEvent(int hId) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
-				buffer.putByte(EventKind.NEW);
 				if (hId != MISSING_FIELD_VAL)
 					buffer.putInt(hId);
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);
+				}
+				if (ef.hasObj())
+					buffer.putInt(UNKNOWN_FIELD_VAL);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void aftNewEvent(int hId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+				buffer.putByte(EventKind.AFT_NEW);
+				if (hId != MISSING_FIELD_VAL)
+					buffer.putInt(hId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
 				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
@@ -89,8 +83,8 @@ public class EventHandler extends CoreEventHandler {
 		if (trace) {
 			trace = false;
 			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.NEW_AND_NEWARRAY);
-				buffer.putByte(EventKind.NEW_ARRAY);
+				EventFormat ef = scheme.getEvent(InstrScheme.NEWARRAY);
+				buffer.putByte(EventKind.NEWARRAY);
 				if (hId != MISSING_FIELD_VAL)
 					buffer.putInt(hId);
 				if (ef.hasThr()) {
@@ -535,12 +529,12 @@ public class EventHandler extends CoreEventHandler {
 			trace = true;
 		}
 	}
-	public synchronized static void methodCallBefEvent(int iId, Object o) {
+	public synchronized static void befMethodCallEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-				buffer.putByte(EventKind.METHOD_CALL_BEF);
+				buffer.putByte(EventKind.BEF_METHOD_CALL);
 				if (iId != MISSING_FIELD_VAL)
 					buffer.putInt(iId);
 				if (ef.hasThr()) {
@@ -555,12 +549,12 @@ public class EventHandler extends CoreEventHandler {
 			trace = true;
 		}
 	}
-	public synchronized static void methodCallAftEvent(int iId, Object o) {
+	public synchronized static void aftMethodCallEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-				buffer.putByte(EventKind.METHOD_CALL_AFT);
+				buffer.putByte(EventKind.AFT_METHOD_CALL);
 				if (iId != MISSING_FIELD_VAL)
 					buffer.putInt(iId);
 				if (ef.hasThr()) {

@@ -61,14 +61,24 @@ public class ReachabilityTest extends LabelBasedAnalysis {
 	@Override
 	public InstrScheme getInstrScheme() {
 		InstrScheme result = super.getInstrScheme();
-		result.setNewAndNewArrayEvent(true, false, true);
+		result.setNewEvent(true, false, true, true, false);
+		result.setNewArrayEvent(true, false, true);
 		result.setPutfieldReferenceEvent(true, false, true, true, true);
 		result.setAstoreReferenceEvent(true, false, true, true, true);
 		return result;
 	}
+
+	@Override
+	public void processBefNew(int h, int t, int o) {
+		processNew(h, o);
+	}
 	
 	@Override
-	public void processNewOrNewArray(int h, int t, int o) {
+	public void processNewArray(int h, int t, int o) {
+		processNew(h, o);
+	}
+
+	private void processNew(int h, int o) {
 		if (o != 0 && h >= 0) {
 			Set<Label> S = new HashSet<Label>(1);
 			S.add(new AllocationSiteLabel(h));
