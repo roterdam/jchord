@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.doms;
+package chord.analyses.argret;
 
 import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
