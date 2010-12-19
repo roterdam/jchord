@@ -31,6 +31,7 @@
 	</target>
 
 	<target name="clean">
+		<ant dir="${chord.home.dir}" target="clean"/>
 		<delete dir="classes"/>
 	</target>
 </project>
