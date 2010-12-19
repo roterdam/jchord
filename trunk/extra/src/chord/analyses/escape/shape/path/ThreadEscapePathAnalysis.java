@@ -182,7 +182,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	private DomE domE;
 	private DomF domF;
 	private DomI domI;
-	private int numH, numE, numF;
+	private int numH, numE, numF, numI;
 
 	public ThreadEscapePathAnalysis() {
 		String s = System.getProperty("chord.escape.kind", "tc");
@@ -266,6 +266,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			TtoIlist = new TIntObjectHashMap<TIntArrayList>();
 			OtoIlist = new TIntObjectHashMap<TIntArrayList>();
 			domI = (DomI) ClassicProject.g().getTrgt("I");
+			numI = domI.size();
 			ClassicProject.g().runTask(domI);
 		} else {
 			ProgramRel relCheckExcludedE = (ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
@@ -370,7 +371,10 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	}
 
 	private String iStr(int i) {
-		return i < 0 ? Integer.toString(i) : domI.get(i).toJavaLocStr();
+		if (i < 0) return Integer.toString(i);
+		if (i < numI) return domI.get(i).toJavaLocStr();
+		Quad q = (Quad) domH.get(i - numI);
+		return q.toJavaLocStr();
 	}
 
 	private String hStr(int h) {
@@ -410,7 +414,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void processEnterMethod(int m, int t) {
-		if (m < 0 || t == 0) return;
+		if (m < 0) return;
 		if (clinitM[m]) {
 			int k = TtoNumClinits.get(t);
 			TtoNumClinits.put(t, k + 1);
@@ -419,7 +423,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void processLeaveMethod(int m, int t) {
-		if (m < 0 || t == 0) return;
+		if (m < 0) return;
 		if (clinitM[m]) {
 			int k = TtoNumClinits.get(t);
 			if (k == 0)
@@ -430,7 +434,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void processBefMethodCall(int i, int t, int o) {
-		if (i < 0 || t == 0) return;
+		if (i < 0) return;
 		TIntArrayList iList = TtoIlist.get(t);
 		if (iList == null) {
 			iList = new TIntArrayList();
@@ -442,7 +446,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	@Override
     public void processAftMethodCall(int i, int t, int o) {
-		if (i < 0 || t == 0) return;
+		if (i < 0) return;
 		TIntArrayList iList = TtoIlist.get(t);
 		if (iList == null)
 			return;
@@ -457,12 +461,32 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	@Override
 	public void processBefNew(int h, int t, int o) {
 		processNew(h, t, o);
-		// TODO
+		if (printAccFileName != null) {
+			if (h < 0) return;
+			TIntArrayList iList = TtoIlist.get(t);
+			if (iList == null) {
+				iList = new TIntArrayList();
+				TtoIlist.put(t, iList);
+			}
+			iList.add(h + numI);
+		}
 	}
 
 	@Override
 	public void processAftNew(int h, int t, int o) {
-		// TODO
+		if (printAccFileName != null) {
+			if (h < 0) return;
+			TIntArrayList iList = TtoIlist.get(t);
+			if (iList == null)
+				return;
+			int i = h + numI;
+			int k;
+			while ((k = iList.size()) > 0) {
+				int j = iList.remove(k - 1);
+				if (j == i)
+					return;
+			}
+		}
 	}
 
 	@Override
@@ -472,7 +496,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	private void processNew(int h, int t, int o) {
 		if (verbose) System.out.println(t + " NEW " + hStr(h) + " o=" + o);
-		if (o == 0 || t == 0) return;
+		if (o == 0) return;
 		assert (!escO.contains(o));
 		assert (!OtoFOlistFwd.containsKey(o));
 		assert (!OtoFOlistInv.containsKey(o));
@@ -489,7 +513,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					OtoIlist.put(o, iol);
 					int n = itl.size();
 					for (int i = 0; i < n && i < callStkDepth; i++)
-						iol.add(itl.get(i));
+						iol.add(itl.get(n - i - 1));
 				}
 			}
 			if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {

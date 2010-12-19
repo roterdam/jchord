@@ -1,0 +1,1 @@
+dot -Tsvg $1 | sed 's/xlink:title=.*/>/g' | sed 's/xlink:href/xlink:title/g' > heap.svg
