@@ -149,8 +149,6 @@ public class ClassHierarchy {
 					boolean added = clints.add(superClass);
 					assert (added);
 					d = superClass;
-					if(!Utils.prefixMatch(d, Config.scopeExcludeAry))  //do this AFTER d =ce note that we handle original c below
-						populateInterfaces(d, clints); //added by asr
 				}
 				if (success1 && success2) {
 					concreteClassToAllSups.put(c, clints);
@@ -180,12 +178,7 @@ public class ClassHierarchy {
 				Set<String> sups = concreteClassToAllSups.get(c);
 				for (String d : sups) {
 					Set<String> subs = clintToAllConcreteSubs.get(d);
-					if(subs == null) {
-						System.err.println("WARN: found no subs for " + d);
-						subs = emptyRdOnlySet;
-					}
-					//					assert (subs != null);
-					if (subs == emptyRdOnlySet) {
+					if (subs == null || subs == emptyRdOnlySet) {
 						subs = new ArraySet<String>(2);
 						clintToAllConcreteSubs.put(d, subs);
 					}
@@ -193,12 +186,9 @@ public class ClassHierarchy {
 				}
 			}
 			missingClints.clear();
-		}  //if we got here, the clintToAllConcreteSubs table is built and we can just use it. [asr]
+		}
 
-		Set<String> matches = clintToAllConcreteSubs.get(s);
-		System.out.println("ClassHierarchy trying to resolve " + s + " got " + (matches == null ? 0 : matches.size()) + " matches");
-
-		return matches;
+		return clintToAllConcreteSubs.get(s);
 	}
 
 	// builds maps clintToKind, classToDeclaredSuperclass, and clintToDeclaredInterfaces
@@ -223,8 +213,6 @@ public class ClassHierarchy {
 		classToDeclaredSuperclass = new HashMap<String, String>();
 		clintToDeclaredInterfaces = new HashMap<String, Set<String>>();
 
-		String[] toExclude = Config.toArray(Config.scopeStdExcludeStr);
-
 		for (ClasspathElement cpe : cpeList) {
 			for (String fileName : cpe.getEntries()) {
 				if (!fileName.endsWith(".class"))
@@ -233,8 +221,7 @@ public class ClassHierarchy {
 				String typeName = baseName.replace('/', '.');
 
 				// ignore types excluded from scope
-				if (chord.util.Utils.prefixMatch(typeName, toExclude)) {
-			//		System.out.println("ClassHierarcy ignoring chord class " + typeName);
+				if (Config.isExcludedFromScope(typeName)) {
 					excludedTypes.add(typeName);
 					continue;
 				}

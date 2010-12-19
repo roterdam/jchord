@@ -565,10 +565,6 @@ public class Program {
 		if (classPathName == null)
 			Messages.fatal(CLASS_PATH_NOT_DEFINED);
 		String[] runIDs = Config.runIDs.split(Config.LIST_SEPARATOR);
-		String extraClasses = Config.extraClasses;
-		if(extraClasses.length() > 0) {
-			classPathName = extraClasses + File.pathSeparator + classPathName;
-		}
 		assert(runIDs.length > 0);
 		List<String> classNames = new ArrayList<String>();
 		String fileName = Config.classesFileName;
