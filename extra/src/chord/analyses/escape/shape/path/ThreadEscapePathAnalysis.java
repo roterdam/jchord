@@ -307,6 +307,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void doneAllPasses() {
+		if (printAccFileName != null)
+			return;
         int numAccH = 0;
         for (int h = 0; h < numH; h++) {
             if (accH[h]) numAccH++;
