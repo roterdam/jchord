@@ -328,15 +328,10 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		} else {
 			String bootClassesDirName = Config.bootClassesDirName;
 			String userClassesDirName = Config.userClassesDirName;
-			String extraClasses = Config.extraClasses;
-			if(extraClasses.length() > 0) {
-			  extraClasses = extraClasses + File.pathSeparator;
-			}
 			basecmd.add("-Xbootclasspath/p:" + Config.mainClassPathName +
 				File.pathSeparator + bootClassesDirName);
 			basecmd.add("-cp");
-			basecmd.add(extraClasses + userClassesDirName + File.pathSeparator +
-				classPathName);
+			basecmd.add(userClassesDirName + File.pathSeparator + classPathName);
 		}
 		{
 			Pair<Class, Map<String, String>> kind = getEventHandler();

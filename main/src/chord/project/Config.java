@@ -84,7 +84,6 @@ public class Config {
 
 	public final static String mainClassName = System.getProperty("chord.main.class");
 	public final static String classPathName = System.getProperty("chord.class.path");
-	public final static String extraClasses = System.getProperty("chord.class.extrapaths", "");
 	public final static String srcPathName = System.getProperty("chord.src.path");
 	public final static String runIDs = System.getProperty("chord.run.ids", "0");
 	public final static String runtimeJvmargs = System.getProperty("chord.runtime.jvmargs", "-ea -Xmx1024m");
@@ -165,8 +164,8 @@ public class Config {
 		check(instrKind, new String[] { "offline", "online" }, "chord.instr.kind");
 		check(traceKind, new String[] { "none", "full", "pipe" }, "chord.trace.kind");
 	}
-	public final static boolean reuseTraces = buildBoolProperty("chord.reuse.traces", false);
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
+	public final static boolean reuseTraces = buildBoolProperty("chord.reuse.traces", false);
 	public final static boolean dynamicHaltOnErr = buildBoolProperty("chord.dynamic.haltonerr", true);
 	public final static int dynamicTimeout = Integer.getInteger("chord.dynamic.timeout", -1);
 	public final static int maxConsSize = Integer.getInteger("chord.max.cons.size", 50000000);
@@ -271,8 +270,8 @@ public class Config {
 		System.out.println("*** Chord instrumentation properties:");
 		System.out.println("chord.instr.kind: " + instrKind);
 		System.out.println("chord.trace.kind: " + traceKind);
-		System.out.println("chord.reuse.traces: " + reuseTraces);
 		System.out.println("chord.trace.block.size: " + traceBlockSize);
+		System.out.println("chord.reuse.traces: " + reuseTraces);
 		System.out.println("chord.dynamic.haltonerr: " + dynamicHaltOnErr);
 		System.out.println("chord.dynamic.timeout: " + dynamicTimeout);
 		System.out.println("chord.max.cons.size: " + maxConsSize);
@@ -281,8 +280,8 @@ public class Config {
 		System.out.println("chord.out.dir: " + outDirName);
 		System.out.println("chord.out.file: " + outFileName);
 		System.out.println("chord.err.file: " + errFileName);
-		System.out.println("chord.reflect.file: " + reflectFileName);
 		System.out.println("chord.methods.file: " + methodsFileName);
+		System.out.println("chord.reflect.file: " + reflectFileName);
 		System.out.println("chord.classes.file: " + classesFileName);
 		System.out.println("chord.bddbddb.work.dir: " + bddbddbWorkDirName);
 		System.out.println("chord.boot.classes.dir: " + bootClassesDirName);
