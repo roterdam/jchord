@@ -211,11 +211,11 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		PrintWriter out;
 		out = OutDirUtils.newPrintWriter("shape_fullEscE.txt");
 		for (Quad e : allEscEs)
-			out.println(e.toLocStr());
+			out.println(e.toVerboseStr());
 		out.close();
 		out = OutDirUtils.newPrintWriter("shape_fullLocE.txt");
 		for (Quad e : allLocEs)
-			out.println(e.toLocStr());
+			out.println(e.toVerboseStr());
 		out.close();
 
         domE.saveToXMLFile();

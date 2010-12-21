@@ -158,12 +158,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	// denotes which methods are class initializers
 	private boolean[] clinitM;
 
-	// map from each thread to number of class initializer methods currently
+	// map from each thread to class initializer methods currently
 	// on its call stack
-	private TIntIntHashMap TtoNumClinits;
+	private TIntObjectHashMap<TIntArrayList> TtoMlist;
 
-	// map from each thread to its current call stack; used only to provide
-	// more information in printed heaps
+	// map from each thread to its current call stack; used only to
+	// provide more information in printed heaps
 	private TIntObjectHashMap<TIntArrayList> TtoIlist;
 
 	/*****************************************************************/
@@ -297,7 +297,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 		clinitM = new boolean[numM];
 		for (int m = 0; m < numM; m++)
 			clinitM[m] = domM.get(m).getName().toString().equals("<clinit>");
-		TtoNumClinits = new TIntIntHashMap();
+		TtoMlist = new TIntObjectHashMap<TIntArrayList>();
 
 		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
 			HtoOlist = new TIntArrayList[numH];
@@ -418,8 +418,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	public void processEnterMethod(int m, int t) {
 		if (m < 0) return;
 		if (clinitM[m]) {
-			int k = TtoNumClinits.get(t);
-			TtoNumClinits.put(t, k + 1);
+			TIntArrayList l = TtoMlist.get(t);
+			if (l == null) {
+				l = new TIntArrayList();
+				TtoMlist.put(t, l);
+			}
+			l.add(m);
 		}
 	}
 
@@ -427,34 +431,36 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	public void processLeaveMethod(int m, int t) {
 		if (m < 0) return;
 		if (clinitM[m]) {
-			int k = TtoNumClinits.get(t);
-			if (k == 0)
-				return;
-			TtoNumClinits.put(t, k - 1);
+			TIntArrayList l = TtoMlist.get(t);
+			if (l == null) return;
+			int k = l.size();
+			while (k > 0) {
+				int n = l.remove(--k);
+				if (n == m)
+					return;
+			}
 		}
 	}
 
 	@Override
 	public void processBefMethodCall(int i, int t, int o) {
 		if (i < 0) return;
-		TIntArrayList iList = TtoIlist.get(t);
-		if (iList == null) {
-			iList = new TIntArrayList();
-			TtoIlist.put(t, iList);
+		TIntArrayList l = TtoIlist.get(t);
+		if (l == null) {
+			l = new TIntArrayList();
+			TtoIlist.put(t, l);
 		}
-		iList.add(i);
-		
+		l.add(i);
     }
 
 	@Override
     public void processAftMethodCall(int i, int t, int o) {
 		if (i < 0) return;
-		TIntArrayList iList = TtoIlist.get(t);
-		if (iList == null)
-			return;
-		int k;
-		while ((k = iList.size()) > 0) {
-			int j = iList.remove(k - 1);
+		TIntArrayList l = TtoIlist.get(t);
+		if (l == null) return;
+		int k = l.size();
+		while (k > 0) {
+			int j = l.remove(--k);
 			if (j == i)
 				return;
 		}
@@ -498,36 +504,42 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 
 	private void processNew(int h, int t, int o) {
 		if (verbose) System.out.println(t + " NEW " + hStr(h) + " o=" + o);
-		if (o == 0) return;
+		if (o == 0 || h < 0) return;
 		assert (!escO.contains(o));
 		assert (!OtoFOlistFwd.containsKey(o));
 		assert (!OtoFOlistInv.containsKey(o));
-		int result = OtoT.put(o, t);
+		TIntArrayList mtl = TtoMlist.get(t);
+		int n, result;
+		if (mtl != null && (n = mtl.size()) > 0) {
+			int m = mtl.get(n - 1);
+			// map objects created in a class initializer method to a
+			// hypothetical thread corresponding to that method
+			result = OtoT.put(o, -m);
+		} else
+			result = OtoT.put(o, t);
 		assert (result == 0);
-		if (h >= 0) {
-			accH[h] = true;
-			result = OtoH.put(o, h);
+		accH[h] = true;
+		result = OtoH.put(o, h);
+		assert (result == 0);
+		if (printAccFileName != null) {
+			TIntArrayList itl = TtoIlist.get(t);
+			if (itl != null) {
+				TIntArrayList iol = new TIntArrayList(callStkDepth);
+				OtoIlist.put(o, iol);
+				int k = itl.size();
+				for (int i = 0; i < k && i < callStkDepth; i++)
+					iol.add(itl.get(k - i - 1));
+			}
+		}
+		if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
+			result = OtoS.put(o, timestamp++);
 			assert (result == 0);
-			if (printAccFileName != null) {
-				TIntArrayList itl = TtoIlist.get(t);
-				if (itl != null) {
-					TIntArrayList iol = new TIntArrayList(callStkDepth);
-					OtoIlist.put(o, iol);
-					int n = itl.size();
-					for (int i = 0; i < n && i < callStkDepth; i++)
-						iol.add(itl.get(n - i - 1));
-				}
+			TIntArrayList ol = HtoOlist[h];
+			if (ol == null) {
+				ol = new TIntArrayList();
+				HtoOlist[h] = ol;
 			}
-			if (checkKind == TC_ALLOC || checkKind == TC_ALLOC_PRUNE) {
-				result = OtoS.put(o, timestamp++);
-				assert (result == 0);
-				TIntArrayList ol = HtoOlist[h];
-				if (ol == null) {
-					ol = new TIntArrayList();
-					HtoOlist[h] = ol;
-				}
-				ol.add(o);
-			}
+			ol.add(o);
 		}
 	}
 
@@ -620,9 +632,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 							throw new ThrEscException();
 						tmpH.add(h2);
 						int t2 = OtoT.get(o2);
-						if (t2 == 0)
+						if (t2 == 0 || t2 != t)
 							throw new ThrEscException();
-						assert (t2 == t);
 					}
 				}
 			}
@@ -636,6 +647,21 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 				computeExtendedTC(t);
 		}
 		return imp;
+	}
+
+	private void process(int o) {
+		if (tmpO.add(o)) {
+			int h = OtoH.get(o);
+			tmpH.add(h);
+			List<FldObj> foList = OtoFOlistInv.get(o);
+			if (foList != null) {
+				int n = foList.size();
+				for (int i = 0; i < n; i++) {
+					FldObj fo = foList.get(i);
+					process(fo.o);
+				}
+			}
+		}
 	}
 
 	// assumes tmpO and tmpH is non-null and contains at least one object
@@ -674,7 +700,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					continue;
 				if (escO.contains(o2)) {
 					if (checkKind == TC_ALLOC_PRUNE) {
-						tmpO.add(o2); // XXX
+						tmpO.add(o2);
+						// process(o2); // XXX
 						return true;
 					}
 					continue;
@@ -693,9 +720,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 					FldObj fo = foList.get(k);
 					int o3 = fo.o;
 					int t3 = OtoT.get(o3);
-					if (t3 == 0)
+					if (t3 == 0 || t3 != t)
 						throw new ThrEscException();
-					assert (t3 == t);
 					int s3 = OtoS.get(o3);
 					if (s3 == 0)
 						throw new ThrEscException();
@@ -703,7 +729,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 						continue;
 					if (escO.contains(o3)) {
 						if (checkKind == TC_ALLOC_PRUNE) {
-							tmpO.add(o3);  // XXX
+							tmpO.add(o3);
+							// process(o3);  // XXX
 							return true;
 						}
 						continue;
