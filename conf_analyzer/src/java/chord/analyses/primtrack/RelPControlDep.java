@@ -144,42 +144,17 @@ public class RelPControlDep extends ProgramRel implements IMethodVisitor {
     
   }
 
-  /**
-   * A worklist of basic blocks, each of which can only be in the queue once
-   *
-   */
-  private static class UniqueBQ {
-    Set<Integer> listContents= new HashSet<Integer>();
-    Queue<BasicBlock> list = new java.util.LinkedList<BasicBlock>();
-
-    
-    public void add(BasicBlock b) {
-      int id = b.getID();
-      if(!listContents.contains(id)) {
-        listContents.add(id);
-        list.add(b);
-      }
-    }
-    
-    public boolean isEmpty() {
-      return list.isEmpty();
-    }
-    
-    public BasicBlock remove() {
-      BasicBlock b = list.remove();
-      listContents.remove(b.getID());
-      return b;
-    }
-  }
-  
   public void visit(jq_Class c) { }
   
   public void visit(jq_Method m) {
     if (m.isAbstract())
       return;
+    
     if(m.getDeclaringClass().getName().equals("org.apache.hadoop.conf.Configuration"))
       return;
-    boolean DEBUGLOG = m.getName().toString().contains("replayRecoveredEditsIfAny");
+    boolean DEBUGLOG = false; 
+    //can replace this with any useful predicate, e.g.:
+    //m.getName().toString().contains("replayRecoveredEditsIfAny");
 
     ControlFlowGraph cfg = m.getCFG();
     BasicBlock entry = cfg.entry();
@@ -192,6 +167,8 @@ public class RelPControlDep extends ProgramRel implements IMethodVisitor {
     worklist.add(entry);
     blockDep.put(entry, new CDepList());
     
+    //every exception handler is reachable.
+    //But exceptions don't depend on prims, so not adding those deps in this class
     for(Object _eh: cfg.getExceptionHandlers()) {
     	ExceptionHandler eh = (ExceptionHandler) _eh;
     	blockDep.put(eh.getEntry(), new CDepList());

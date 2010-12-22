@@ -40,9 +40,10 @@ public class RelFailurePath extends ProgramRel implements IInvokeInstVisitor{
       }
       else {
         File straceFile = new File(straceFName);
-        if(!straceFile.exists())
+        if(!straceFile.exists()) {
           System.err.println("no such file " + straceFile);
-        else {
+          System.exit(-1);
+        } else {
           slurpStacktrace(straceFile);
           System.out.println("FailurePath read stacktrace, found " + callsOnFailPath.size() + " methods on-path");
         }

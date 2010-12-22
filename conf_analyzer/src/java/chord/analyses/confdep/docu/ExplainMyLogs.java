@@ -14,7 +14,7 @@ import chord.analyses.confdep.ConfDeps;
 import chord.analyses.confdep.optnames.DomOpts;
 import chord.analyses.invk.DomI;
 import chord.bddbddb.Rel.RelView;
-import chord.doms.*;
+import chord.analyses.argret.DomK;
 import chord.project.*;
 import chord.project.analyses.*;
 import chord.util.Utils;

@@ -16,9 +16,12 @@
 
 APIMethod(i:I) input
 APIReadOnly(i:I) input
+extraSummary(m:M) input
+
 #primConversion(u:U,i:I,v:V) input
 #primToRefConversion(v:V,i:I,u:U) input
-extraSummary(m:M) input
+#passThru(v:V0,i:I,u:V1) input
+
 
 IM(i:I,m:M) input
 reachableI(i:I) input
@@ -33,7 +36,7 @@ badCalls(i:I) input
 MmethRet(m:M0,n:Z0,v:V1) input
 MmethArg(m:M0,n:Z0,u:V0) input
 IinvkArg(i:I0,n:Z0,v:V1) input
-virtIM(i:I,m:M) input
+#virtIM(i:I,m:M) input
 IinvkRet(i:I0,n:Z0,v:V0) input
 
 MmethPrimArg(m:M0,n:Z0,u:U0) input
@@ -50,7 +53,6 @@ UcU(l:U,r:U)
 restVV(v1:V,v2:V)  output
 
 excludedCall(i:I)
-passThru(v:V0,i:I,u:V1) input
 
 
 ###  Flow relations
