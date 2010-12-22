@@ -17,7 +17,6 @@
 
 reachableM(m:M) input
 IM(i:I,m:M) input
-instI(i:I) input
 extraSummary(m:M) input
 
 #Relations about program points
@@ -71,6 +70,15 @@ primLambdaDep(z:Z,u:U)
 
 MrefLambdaDep(m:M,z:Z,v:V) output
 MprimLambdaDep(m:M,z:Z,u:U) output
+
+## Do this here, not because it's tied to funcFind but because this means it 
+#happens just once at the right time.
+instI(i:I) input
+
+#virtIM(i:I0,m:M0) input
+#virtI(i:I0) output
+#virtI(i) :- virtIM(i,_).
+
 
 ############   Rules
 

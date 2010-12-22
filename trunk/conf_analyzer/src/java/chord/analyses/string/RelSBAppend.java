@@ -8,7 +8,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.primtrack.*;
 import chord.analyses.invk.DomI;
 import chord.analyses.var.DomV;
-import chord.doms.DomK;
+import chord.analyses.argret.DomK;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;

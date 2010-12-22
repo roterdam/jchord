@@ -10,7 +10,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.analyses.confdep.ConfDefines;
 import chord.bddbddb.Rel.RelView;
 import chord.analyses.alloc.DomH;
-import chord.doms.DomK;
+import chord.analyses.argret.DomK;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;

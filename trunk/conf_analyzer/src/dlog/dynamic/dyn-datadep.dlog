@@ -86,10 +86,12 @@ primCdep(u,opt) :- getStatFldPrimInst(u,f), statHF(f,opt).
 # Duplicate with APIMethod rule above?
 ##primCdep(u,h,cst) :- refCdep(v,opt),IinvkPrimRet(i,_,u),IinvkArg(i,0,v),APIMethod(i).
 
-
+#Only wory about prim fields -- we have object tracking for the reference types
 instHF(h1,f,opt) :- putInstFldPrimInst(b,f,r), VH(b,h1), primCdep(r,opt). split
 statHF(f,opt) :- putStatFldPrimInst(f,r), primCdep(r,opt).
 
+# Needed for null propagation?
+statHF(f,opt) :- putStatFldInst(f,r), refCdep(r,opt).
 
 # Propagate null values.
 #
@@ -102,8 +104,7 @@ nullCV(v,opt) :- objVarAsgnInst(u,v),nullCV(u,opt).
 nullCV(v,opt) :- checkCastInst(u,_,v),nullCV(u,opt).
 
 
-refCdep(v,name) :- IinvkRet(site, 0, v),OptNames(name,site).
+refCdep(v,opt) :- IinvkRet(site, 0, v),OptNames(opt,site).
 refCdep(v,opt) :-  nullCV(v,opt).
 refCdep(v,opt)  :- dynCUse(i,z,opt),IinvkArg(i,z,v).
 refCdep(v,opt)  :- dynCUse(i,_,opt),IinvkRet(i,0,v).
-statHF(f,opt) :- putStatFldInst(f,r), refCdep(r,opt).

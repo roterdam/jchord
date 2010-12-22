@@ -9,12 +9,12 @@
 .include "I.dom"
 .include "Z.dom"
 .include "H.dom"
-.include "M.dom"
 .include "U.dom"
 .include "M.dom"
 .include "F.dom"
+.include "P.dom"
 
-.bddvarorder I0_Z0_Opt0_M0_F0_V0_H0_H1_V1_V2_U0_U1
+.bddvarorder I0_Z0_Opt0_M0_F0_V0_H0_H1_V1_V2_U0_U1_P0_P1
 
 ###
 # Relations
@@ -31,7 +31,7 @@ IinvkPrimArg(i:I0,n:Z0,u:U0) input
 IinvkPrimRet(i:I0,n:Z0,u:U0) input
 
 MprimDataDep(m:M,l:U0,r:U1) input
-MobjVarAsgnInst(m:M0,l:V0,r:V1) input
+PobjVarAsgnInst(p:P0,l:V0,r:V1) input
 
 
 MgetInstFldInst(m:M,l:V,b:V,f:F) input
@@ -76,25 +76,26 @@ primCdep(u:U,site:Opt) input
 #MrefLambdaDep(m:M,z:Z,v:V) input
 #MprimLambdaDep(m:M,z:Z,u:U) input
 
-
 ### 
 OptNames(o:Opt,site:I) input
 APIMethod(i:I) input
 extraSummary(m:M) input
-instI(i:I) input
 APIReadOnly(i:I) input
 
+#Failure path
 FailurePath(i:I0) input
+failPathM(m:M) input
+failPathI(i:I) input
+failPathIM(i:I,m:M) input
 
 
 ## Intermediates
+BeforeFail(p:P) input
 looseSummary(i:I)
 taintingCall(i:I, opt:Opt)
 callLabel(i:I, opt:Opt)
-failPathIM(i:I,m:M) output
 
 straceBase(m:M) output
-failPathM(m:M) output
 
 VVSCS(v:V0,u:V1) output
 UUSCS(u:U0,v:U1) output
@@ -107,12 +108,16 @@ primCdepSCS(u:U,cst:Opt) output
 #failPathUFU(u:U,f:F,v:U) output
 #maybeUGet(u:U,cst:Opt)
 
+#virtI(i:I0) input
+instI(i:I0) input
+##
+
+
 ######### Build the failure path; find the relevant basic ops
 
-failPathM(m) :- MI(m,i),FailurePath(i).
-failPathI(i) :- MI(m,i),failPathM(m).
-failPathIM(i,m) :- IM(i,m),failPathI(i).
 
+
+#methods on the failure path, excluding the base
 calledOnFail(m) :- failPathIM(i,m),FailurePath(i).
 straceBase(m) :- failPathM(m),!calledOnFail(m).
 
@@ -122,7 +127,7 @@ getStatFldInst(l,f)   :- failPathM(m), MgetStatFldInst(m,l,f).
 getStatFldPrimInst(l,f)   :- failPathM(m), MgetStatFldPrimInst(m,l,f).
 getInstFldPrimInst(l,b,f) :- failPathM(m), MgetInstFldPrimInst(m,l,b,f).
 
-objVarAsgnInst(l,r) :-  failPathM(m),MobjVarAsgnInst(m,l,r).
+objVarAsgnInst(l,r) :-  BeforeFail(p),PobjVarAsgnInst(p,l,r).
 primDataDep(l,r) :- failPathM(m), MprimDataDep(m,l,r).
 
 
@@ -158,8 +163,8 @@ primCdepSCS(v,cst) :- UUSCS(v,u),primCdepSCS(u,cst).
 
 ### Basic intra-procedure flow. 
 #Note that must-alias is here computed only on the fail path
-localMustAlias(v,u) :- objVarAsgnInst(u,v).
-localMustAlias(v,u) :- objVarAsgnInst(v,u).
+localMustAlias(v,u) :- PobjVarAsgnInst(p,u,v),BeforeFail(p).
+localMustAlias(v,u) :- PobjVarAsgnInst(p,v,u),BeforeFail(p).
 
 refCdepSCS(v,site) :- localMustAlias(v,u),refCdepSCS(u,site).
 refCdepSCS(v,site) :- objVarAsgnInst(v,u),refCdepSCS(u,site).

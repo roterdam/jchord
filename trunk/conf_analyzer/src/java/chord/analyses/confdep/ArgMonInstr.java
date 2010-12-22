@@ -79,7 +79,7 @@ public class ArgMonInstr extends Instrumentor {
   
       int iId =  set(Imap, e) ;
       String o = "$0";
-      befInstr += methodCallBefEventCall + iId + "," + o + ");";
+      befInstr += befMethodCallEventCall + iId + "," + o + ");";
   
       if(Modifier.isStatic(e.getMethod().getModifiers())) { 
         aftInstr += methodCallAftEventCallSuper +iId + ",\""+e.getClassName()+"\",\""+ 
