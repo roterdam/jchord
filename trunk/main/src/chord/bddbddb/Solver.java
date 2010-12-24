@@ -35,7 +35,7 @@ public class Solver {
 			"-cp",
 			Config.bddbddbClassPathName,
 			"-Dverbose=" + Config.verbose,
-			"-Djava.library.path=" + Config.libDirName,
+			Config.useBuddy ? ("-Djava.library.path=" + Config.libDirName) : "-Dbdd=j",
 			"-Dbasedir=" + Config.bddbddbWorkDirName,
 			"net.sf.bddbddb.Solver",
 			fileName

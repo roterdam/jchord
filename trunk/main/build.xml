@@ -12,7 +12,7 @@
 
 	<target name="help">
 		<echo>
-		compile   Compile Chord source code
+		compile   Compile Chord
 		run       Run Chord
 		          Optional properties: See Chord user guide
 		j2h_xref  Convert .java files to .html with cross-references
@@ -42,91 +42,116 @@
 		javadoc   Generate javadoc for Chord's Java source code
 		htmldoc   Generate HTML user guide (needs hyperlatex)
 		pdfdoc    Generate PDF user guide (needs pdflatex)
-		clean     Cleanup all generated class files
+		clean     Cleanup all generated executable files
 		cleandoc  Cleanup all generated javadoc/htmldoc/pdfdoc files
 		</echo>
 	</target>
 
 	<!--
 	==========================================================================
-		STATIC PROPERTIES
+		STATIC AND DYNAMIC PROPERTIES
 	==========================================================================
 	-->
 
-	<!--
-		Location of tools for building infrastructure.
-	-->
 	<property name="tools.home" location="tools"/>
 
-	<!--
-		Location of runtime libraries.
-	-->
 	<property name="lib.home" location="lib"/>
 
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${tools.home}/ant-contrib.jar"/>
+
 	<!--
-	==========================================================================
-		DYNAMIC PROPERTIES
-	==========================================================================
+		This target does the following things in order:
+		1. Loads file build.properties from Chord's main/ directory
+		2. Sets property chord.use.buddy if use_buddy=true occurs in that file
+		3. Sets property chord.use.jvmti if use_jvmti=true occurs in that file
+		4. If either property chord.use.buddy or chord.use.jvmti is set then:
+			1. sets property chord.jdk_root to the root of the JDK installation
+			2. sets property chord.arch to '-m32' or '-m64'
+			3. sets property chord.make to 'make' on Linux and to 'gmake' on
+			   non-GNU operation systems
 	-->
-	
-	<!--
-		This target solves the problem that the C part of the 
-		project needs GNU make, which is 'make' on Linux, but
-		usually 'gmake' on non-GNU operation systems.
-	-->
-	<target name="select-make-implementation"
-			description="Selects proper make implementation for the platform">
-		<if>
-			<equals arg1="${os.name}" arg2="FreeBSD"/>
+	<target name="build-props">
+		<property file="build.properties"/>
+		<fail message="Property chord.use.buddy must not be explicitly set.">
+			<condition><isset property="chord.use.buddy"/></condition>
+		</fail>
+		<fail message="Property chord.use.jvmti must not be explicitly set.">
+			<condition><isset property="chord.use.jvmti"/></condition>
+		</fail>
+		<condition property="chord.use.buddy">
+			<equals arg1="${use_buddy}" arg2="true"/>
+		</condition>
+		<condition property="chord.use.jvmti">
+			<equals arg1="${use_jvmti}" arg2="true"/>
+		</condition>
+		<if><or><isset property="chord.use.buddy"/><isset property="chord.use.jvmti"/></or>
 			<then>
-				<property name="make" value="gmake"/>
+				<path id="jdk_root"><pathelement location="${java.home}/.."/></path>
+				<pathconvert targetos="unix" property="chord.jdk_root" refid="jdk_root"/>
+				<if><equals arg1="${os.name}" arg2="FreeBSD"/>
+					<then><property name="chord.make" value="gmake"/></then>
+					<else><property name="chord.make" value="make"/></else>
+				</if>
+				<if><equals arg1="${sun.arch.data.model}" arg2="32"/>
+					<then><property name="chord.arch" value="-m32"/></then>
+					<else><property name="chord.arch" value="-m64"/></else>
+				</if>
 			</then>
-			<else>
-				<property name="make" value="make"/>
-			</else>
 		</if>
-		<echo message="Make command is '${make}'."/>
 	</target>
 
 	<!--
-		This target solves the problem of selecting
-		a proper 32 or 64 bit switch for C compiler.
+		This target does the following things in order:
+		1. Sets property chord.work.dir to the current directory if not already set.
+		2. Checks that the value of property chord.work.dir is an existing directory.
+		3. Sets property chord.props.file to "${chord.work.dir}/chord.properties" if
+		   not already set.
+		4. If the file specified by property chord.props.file exists, then loads all
+		   properties defined in the file.  Each relative (as opposed to absolute) path
+		   element in the value of any property named chord.<...>.path set in this file
+		   is converted to an absolute path element w.r.t. chord.work.dir.
 	-->
-	<target name="select-architecture"
-			description="Selects proper 32 or 64 bit switch for C compiler">
-		<if>
-			<equals arg1="${sun.arch.data.model}" arg2="32"/>
-			<then>
-				<property name="architecture" value="-m32"/>
-				<property name="jvm-32-or-64" value="32"/>
-			</then>
-			<else>
-				<property name="architecture" value="-m64"/>
-				<property name="jvm-32-or-64" value="64"/>
-			</else>
-		</if>
-		<echo message="Using ${jvm-32-or-64}-bit JVM."/>
+	<target name="exec-props" depends="build-props">
+	<if><isset property="chord.work.dir"/>
+		<then>
+			<fail message="ERROR: Directory ${chord.work.dir} does not exist.">
+				<condition>
+					<not><available file="${chord.work.dir}" type="dir"/></not>
+				</condition>
+			</fail>
+		</then>
+		<else>
+			<property name="chord.work.dir" location="."/>
+		</else>
+	</if>
+	<property name="chord.props.file" location="${chord.work.dir}/chord.properties"/>
+	<if><available file="${chord.props.file}"/>
+		<then>
+			<property file="${chord.props.file}"/>
+			<dirname property="chord.props.dir" file="${chord.props.file}"/>
+			<propertyselector property="chord.path.prop.list" delimiter=","
+				match="chord\..*\.path"/>
+			<antfetch antfile="${tools.home}/pathconvert.xml" dir="${chord.props.dir}"
+				target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
+		</then>
+	</if>
 	</target>
 
 	<!--
-		TOOLS FOR BUILDING INFRASTRUCTURE
+		This target does the following things in order:
+		1. Sets property chord.bddbddb.class.path to the classpath of bddbddb.
+		2. Sets property chord.java.analysis.path to classes/ if not already set.
+		3. Sets property chord.main.class.path to the entire Chord classpath.
 	-->
-
-	<taskdef resource="net/sf/antcontrib/antlib.xml"
-		classpath="${tools.home}/ant-contrib.jar"/>
-
-	<!--
-	==========================================================================
-		SET PATHS
-	==========================================================================
-	-->
-	
 	<target name="paths">
 		<!-- Classpath of bddbddb -->
 		<path id="bddbddb_class_path">
 			<fileset dir="${lib.home}/bddbddb" includes="*.jar"/>
 			<pathelement location="${lib.home}/jwutil.jar"/>
 		</path>
+		<fail message="ERROR: Property chord.bddbddb.class.path must not be explicitly set.">
+			<condition><isset property="chord.bddbddb.class.path"/></condition>
+		</fail>
 		<property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
 		<!-- Classpath of Chord -->
 		<property name="chord.java.analysis.path" location="classes"/>
@@ -142,6 +167,9 @@
 			<pathelement location="${lib.home}/hj.jar"/>
 			<pathelement location="${lib.home}/CnCHj.jar"/>
 		</path>
+		<fail message="Property chord.main.class.path must not be explicitly set.">
+			<condition><isset property="chord.main.class.path"/></condition>
+		</fail>
 		<property name="chord.main.class.path" refid="main_class_path"/>
 	</target>
 
@@ -151,25 +179,23 @@
 	==========================================================================
 	-->
 
-	<!--
-		A meta-target just for fast checking whether java part is
-		compilable from scratch. Useful for refactoring.
-	-->
-	<target name="check" depends="clean, jcompile"
-		description="Fast check whether project can be compiled from scratch"/>
-
-	<!--
-		Compilation meta-target. It only calls compilation targets
-		for Java and C parts.
-	-->
-	<target name="compile" depends="jcompile, ccompile"
-		description="Compiles entire project"/>
-
-	<!--
-		Compiles Java part of the project.
-	-->
-	<target name="jcompile" depends="paths"
-			description="Compiles Java part of the project">
+	<target name="compile" depends="build-props, paths" description="Compile Chord.">
+		<if><isset property="chord.use.buddy"/>
+			<then>
+				<exec executable="${chord.make}" dir="bdd">
+					<arg value="JDK_ROOT=${chord.jdk_root}"/>
+					<arg value="M32_FLAG=${chord.arch}"/>
+				</exec>
+			</then>
+		</if>
+		<if><isset property="chord.use.jvmti"/>
+			<then>
+				<exec executable="${chord.make}" dir="agent">
+					<arg value="JDK_ROOT=${chord.jdk_root}"/>
+					<arg value="M32_FLAG=${chord.arch}"/>
+				</exec>
+			</then>
+		</if>
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
 			source="1.5" target="1.5" destdir="classes"
@@ -184,87 +210,14 @@
 	</target>
 
 	<!--
-		Compiles C part of the project.
-	-->
-	<target name="ccompile" depends="select-make-implementation, select-architecture"
-			description="Compiles C part of the project">
-		<path id="jdk_root">
-			<pathelement location="${java.home}/.."/>
-		</path>
-		<pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
-		<exec executable="${make}" dir="bdd">
-			<arg value="JDK_ROOT=${jdk_root}"/>
-			<arg value="M32_FLAG=${architecture}"/>
-		</exec>
-		<exec executable="${make}" dir="agent">
-			<arg value="JDK_ROOT=${jdk_root}"/>
-			<arg value="M32_FLAG=${architecture}"/>
-		</exec>
-	</target>
-
-	<!--
-	==========================================================================
-		LOAD USER-DEFINED CHORD PROPERTIES FROM FILE
-	==========================================================================
-	-->
-
-	<!--
-		Target props-file does following things in order:
-		1. Sets property ${chord.work.dir} to the current directory if not already set.
-		2. Checks that the value of property ${chord.work.dir} is an existing directory.
-		3. Sets property ${chord.props.file} to "${chord.work.dir}/chord.properties" if
-		   not already set.
-		4. If the file specified by property ${chord.props.file} exists, then loads all
-		   properties defined in the file.  Each relative (as opposed to absolute) path
-		   element in the value of any property named chord.<...>.path set in this file
-		   is converted to an absolute path element w.r.t. ${chord.work.dir}.
-		-->
-	<target name="props-file">
-	<if>
-		<isset property="chord.work.dir"/>
-		<then>
-			<fail message="ERROR: Directory ${chord.work.dir} does not exist">
-				<condition>
-					<not>
-						<available file="${chord.work.dir}" type="dir"/>
-					</not>
-				</condition>
-			</fail>
-		</then>
-		<else>
-			<property name="chord.work.dir" location="."/>
-		</else>
-	</if>
-	<property name="chord.props.file" location="${chord.work.dir}/chord.properties"/>
-	<if>
-		<available file="${chord.props.file}"/>
-		<then>
-			<property file="${chord.props.file}"/>
-			<dirname property="chord.props.dir" file="${chord.props.file}"/>
-			<!--
-			Commented out due to "supported regexp pattern matcher not found" error.
-			<propertyselector property="chord.path.prop.list" delimiter=","
-				match="chord\..*\.path"/>
-			-->
-      		<property name="chord.path.prop.list" value="chord.class.path,chord.src.path"/>
-			<antfetch antfile="${tools.home}/pathconvert.xml" dir="${chord.props.dir}"
-				target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
-		</then>
-		<else/>
-	</if>
-	</target>
-
-	<!--
 	==========================================================================
 		RUN CHORD
 	==========================================================================
 	-->
 
-	<target name="run" depends="props-file, paths">
-		<fail message="ERROR: Property chord.main.dir must not be explicitly set">
-			<condition>
-				<isset property="chord.main.dir"/>
-			</condition>
+	<target name="run" depends="exec-props, paths" description="Run Chord.">
+		<fail message="Property chord.main.dir must not be explicitly set.">
+			<condition><isset property="chord.main.dir"/></condition>
 		</fail>
 		<property name="chord.main.dir" location="."/>
 		<property name="chord.max.heap" value="2048m"/>
@@ -312,7 +265,7 @@
 	==========================================================================
 	-->
 
-	<target name="j2h_xref">
+	<target name="j2h_xref" description="HTMLize Java source code with cross-referencing.">
 		<fail unless="java.dir"/>
 		<fail unless="html.dir"/>
 		<java classname="j2h" fork="true" failonerror="true">
@@ -324,19 +277,15 @@
 			<arg value="4"/>
 			<arg value="-t"/>
 			<arg value="4"/>
-			<classpath>
-				<pathelement location="${lib.home}/j2h.jar"/>
-			</classpath>
+			<classpath><pathelement location="${lib.home}/j2h.jar"/></classpath>
 		</java>
 	</target>
   
-	<target name="j2h_fast">
+	<target name="j2h_fast" description="HTMLize Java source code without cross-referencing.">
 		<fail unless="java.dir"/>
 		<fail unless="html.dir"/>
 		<taskdef name="java2html" classname="de.java2html.anttasks.Java2HtmlTask">
-			<classpath>
-				<pathelement location="${lib.home}/java2html.jar"/>
-			</classpath>
+			<classpath><pathelement location="${lib.home}/java2html.jar"/></classpath>
 		</taskdef>
 		<java2html srcdir="${java.dir}" destdir="${html.dir}" includes="**/*.java"
 			style="eclipse" showLineNumbers="true" addLineAnchors="true" tabs="4"/>
@@ -348,7 +297,7 @@
 	==========================================================================
 	-->
 
-	<target name="solve" depends="paths">
+	<target name="solve" depends="paths" description="Run bddbddb (BDD-based Datalog solver).">
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
@@ -366,7 +315,7 @@
 		</java>
 	</target>
 
-	<target name="debug" depends="paths">
+	<target name="debug" depends="paths" description="Run bddbddb's interactive interpreter.">
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
@@ -390,7 +339,7 @@
 	==========================================================================
 	-->
 
-	<target name="javadoc" depends="paths">
+	<target name="javadoc" depends="paths" description="Generate Javadoc.">
 		<javadoc destdir="javadoc" classpathref="main_class_path">
 			<fileset dir="src">
 				<include name="**/*.java"/>
@@ -404,13 +353,13 @@
 		</copy>
 	</target>
 
-	<target name="htmldoc">
+	<target name="htmldoc" description="Generate HTML user guide (needs Hyperlatex).">
 		<exec executable="hyperlatex" dir="doc">
 			<arg value="user_guide.tex"/>
 		</exec>
 	</target>
 
-	<target name="pdfdoc">
+	<target name="pdfdoc" description="Generate PDF user guide (needs pdflatex).">
 		<exec executable="pdflatex" dir="doc">
 			<arg value="user_guide.tex"/>
 		</exec>
@@ -422,31 +371,26 @@
 	==========================================================================
 	-->
 
-	<target name="clean" depends="select-make-implementation"
-			description="Cleans everything produced by the build">
-		<parallel>
-			<delete dir="classes"/>
-			<delete file="${lib.home}/chord_instr_agent.jar"/>
-			<sequential>
-				<path id="jdk_root">
-					<pathelement location="${java.home}/.."/>
-				</path>
-				<pathconvert targetos="unix" property="jdk_root" refid="jdk_root"/>
-				<parallel>
-					<exec executable="${make}" dir="bdd">
-						<arg value="JDK_ROOT=${jdk_root}"/>
-						<arg value="clean"/>
-					</exec>
-					<exec executable="${make}" dir="agent">
-						<arg value="JDK_ROOT=${jdk_root}"/>
-						<arg value="clean"/>
-					</exec>
-				</parallel>
-			</sequential>
-		</parallel>
+	<target name="clean" depends="build-props" description="Clean all generated files.">
+		<delete dir="classes"/>
+		<delete file="${lib.home}/chord_instr_agent.jar"/>
+		<if><isset property="chord.use.jvmti"/>
+			<then>
+				<exec executable="${chord.make}" dir="bdd">
+					<arg value="clean"/>
+				</exec>
+			</then>
+		</if>
+		<if><isset property="chord.use.buddy"/>
+			<then>
+				<exec executable="${chord.make}" dir="agent">
+					<arg value="clean"/>
+				</exec>
+			</then>
+		</if>
 	</target>
 
-	<target name="cleandoc" description="Cleans Javadoc and HTML user guide">
+	<target name="cleandoc" description="Clean generated Javadoc and user guide.">
 		<delete dir="javadoc"/>
 		<delete dir="doc/user_guide"/>
 		<delete file="doc/user_guide.pdf"/>

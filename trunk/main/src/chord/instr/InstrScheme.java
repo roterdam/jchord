@@ -435,10 +435,9 @@ public class InstrScheme implements Serializable {
 		if (hasThr) e.setThr();
 	}
 
-	public void setEnterMainMethodEvent(boolean hasLoc, boolean hasThr) {
+	public void setEnterMainMethodEvent(boolean hasThr) {
 		EventFormat e = events[ENTER_MAIN_METHOD];
 		e.setPresent();
-		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 	}
 

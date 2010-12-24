@@ -196,7 +196,7 @@ public class Instrumentor extends CoreInstrumentor {
 
 	// doesn't matter if the class name is in '.' or '/' separated form
 	private static String getEventHandlerClassName(Map<String, String> argsMap) {
-		String s = argsMap.get(CoreEventHandler.EVENT_HANDLER_CLASS_KEY);
+		String s = argsMap.get(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY);
 		if (s == null)
 			s = EventHandler.class.getName();
 		try {
@@ -261,7 +261,7 @@ public class Instrumentor extends CoreInstrumentor {
 		notifyEvent = scheme.getEvent(InstrScheme.NOTIFY);
 		methodCallEvent = scheme.getEvent(InstrScheme.METHOD_CALL);
 
-		enterMainMethodEventCall = eventHandlerClassName + "enterMainMethodEvent(";
+		enterMainMethodEventCall = eventHandlerClassName + "enterMainMethodEvent();";
 		enterMethodEventCall = eventHandlerClassName + "enterMethodEvent(";
 		leaveMethodEventCall = eventHandlerClassName + "leaveMethodEvent(";
 		befNewEventCall = eventHandlerClassName + "befNewEvent(";
@@ -489,13 +489,12 @@ public class Instrumentor extends CoreInstrumentor {
 				leaveStr += releaseLockEventCall + rId + "," + syncExpr + ");";
 			}
 		}
-		if (currMethod == mainMethod && enterMainMethodEvent.present()) {
-			int nId = enterMainMethodEvent.hasLoc() ? 0 : EventHandler.MISSING_FIELD_VAL;
-			enterStr = enterMainMethodEventCall + nId + ");" + enterStr;
-		}
 		if (enterMethodEvent.present()) {
 			int nId = enterMethodEvent.hasLoc() ? mId : EventHandler.MISSING_FIELD_VAL;
 			enterStr = enterMethodEventCall + nId + ");" + enterStr;
+		}
+		if (currMethod == mainMethod && enterMainMethodEvent.present()) {
+			enterStr = enterMainMethodEventCall + enterStr;
 		}
 		if (leaveMethodEvent.present()) {
 			int nId = leaveMethodEvent.hasLoc() ? mId : EventHandler.MISSING_FIELD_VAL;

@@ -382,9 +382,8 @@ public class TracePrinter {
 				case EventKind.ENTER_MAIN_METHOD:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
-					int m = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					System.out.println("ENTER_MAIN_METHOD " + m + " " + t);
+					System.out.println("ENTER_MAIN_METHOD " + t);
 					break;
 				}
 				default: 

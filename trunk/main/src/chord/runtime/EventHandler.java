@@ -670,14 +670,12 @@ public class EventHandler extends CoreEventHandler {
 			trace = true;
 		}
 	}
-	public synchronized static void enterMainMethodEvent(int mId) {
+	public synchronized static void enterMainMethodEvent() {
 		if (trace) {
 			trace = false;
 			try {
 				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
 				buffer.putByte(EventKind.ENTER_MAIN_METHOD);
-				if (mId != MISSING_FIELD_VAL)
-					buffer.putInt(mId);
 				if (ef.hasThr()) {
 					int tId = getObjectId(Thread.currentThread());
 					buffer.putInt(tId);

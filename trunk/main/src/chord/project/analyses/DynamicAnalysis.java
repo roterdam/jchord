@@ -33,7 +33,7 @@ import chord.program.CFGLoopFinder;
 import chord.project.ClassicProject;
 import chord.project.Messages;
 import chord.project.Config;
-import chord.runtime.CoreEventHandler;
+import chord.instr.CoreInstrumentor;
 import chord.runtime.EventHandler;
 import chord.util.ByteBufferedFile;
 import chord.util.ChordRuntimeException;
@@ -88,6 +88,8 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	private final TIntObjectHashMap<TIntHashSet> loopHead2body =
 		new TIntObjectHashMap<TIntHashSet>(16);
 	private TIntHashSet visited4loops = new TIntHashSet();
+	private Pair<Class, Map<String, String>> instrumentor;
+	private Pair<Class, Map<String, String>> eventHandler;
 
 	// subclasses MUST override unless this dynamic analysis
 	// is performed using an instrumentation scheme (and traces)
@@ -103,19 +105,25 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 
 	@Override
 	public Pair<Class, Map<String, String>> getInstrumentor() {
-		Class instrumentorClass = Instrumentor.class;
-		Map<String, String> instrumentorArgs = new HashMap(1);
-		instrumentorArgs.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
-		instrumentorArgs.put(CoreEventHandler.EVENT_HANDLER_CLASS_KEY, getEventHandler().val0.getName());
-		return new Pair<Class, Map<String, String>>(instrumentorClass, instrumentorArgs);
+		if (instrumentor == null) {
+			Class instrumentorClass = Instrumentor.class;
+			Map<String, String> argsMap = super.getInstrumentor().val1;
+			argsMap.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
+			argsMap.put(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY, getEventHandler().val0.getName());
+			instrumentor = new Pair<Class, Map<String, String>>(instrumentorClass, argsMap);
+		}
+		return instrumentor;
 	}
 
 	@Override
 	public Pair<Class, Map<String, String>> getEventHandler() {
-		Class eventHandlerClass = EventHandler.class;
-		Map<String, String> eventHandlerArgs = new HashMap(1);
-		eventHandlerArgs.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
-		return new Pair<Class, Map<String, String>>(eventHandlerClass, eventHandlerArgs);
+		if (eventHandler == null) {
+			Class eventHandlerClass = EventHandler.class;
+			Map<String, String> argsMap = super.getEventHandler().val1;
+			argsMap.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
+			eventHandler = new Pair<Class, Map<String, String>>(eventHandlerClass, argsMap);
+		}
+		return eventHandler;
 	}
 
 	public List<Runnable> getTraceTransformers() {
@@ -587,9 +595,8 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 		case EventKind.ENTER_MAIN_METHOD:
 		{
 			EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
-			int m = ef.hasLoc() ? buffer.getInt() : -1;
 			int t = ef.hasThr() ? buffer.getInt() : -1;
-			processEnterMainMethod(m, t);
+			processEnterMainMethod(t);
 			break;
 		}
 		default:
@@ -601,8 +608,8 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 		error("void processLoopIteration(int w, int t)");
 	}
 
-	public void processEnterMainMethod(int m, int t) {
-		error("void processEnterMainMethod(int m, int t)");
+	public void processEnterMainMethod(int t) {
+		error("void processEnterMainMethod(int t)");
 	}
 	
 	public void processEnterMethod(int m, int t) {
