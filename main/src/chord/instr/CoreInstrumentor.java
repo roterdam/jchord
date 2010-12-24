@@ -34,7 +34,10 @@ import chord.project.Config;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class CoreInstrumentor extends ExprEditor {
-	public final static String INSTRUMENTOR_CLASS_KEY = "instrumentor_class_name";
+    public final static String INSTRUMENTOR_CLASS_KEY = "instrumentor_class_name";
+    public final static String EVENT_HANDLER_CLASS_KEY = "event_handler_class_name";
+    public final static String EVENT_HANDLER_ARGS_KEY = "event_handler_args";
+	public final static String USE_JVMTI_KEY = "use_jvmti";
 
 	private final static String EXPLICITLY_EXCLUDING_CLASS =
 		"WARN: CoreInstrumentor: Not instrumenting class %s as it was excluded by chord.scope.exclude.";
@@ -49,6 +52,10 @@ public class CoreInstrumentor extends ExprEditor {
 	protected Map<String, String> argsMap;
 	protected CtClass currentClass;
 	protected CtBehavior currentMethod;
+	protected boolean useJvmti;
+	protected boolean isMainClass;
+	protected String eventHandlerInitCall;
+	protected String eventHandlerDoneCall;
 
 	/**
 	 * Constructor.
@@ -63,6 +70,18 @@ public class CoreInstrumentor extends ExprEditor {
 		String mainClassPathName = Config.mainClassPathName;
 		String userClassPathName = Config.classPathName;
 		pool = new JavassistPool(mainClassPathName, userClassPathName);
+		{
+			String s = argsMap.get(USE_JVMTI_KEY);
+			useJvmti = (s == null) ? Config.useJvmti : s.equals("true");
+		}
+		if (!useJvmti) {
+			String c = argsMap.get(EVENT_HANDLER_CLASS_KEY);
+			assert (c != null);
+			String a = argsMap.get(EVENT_HANDLER_ARGS_KEY);
+			if (a == null) a = "";
+			eventHandlerInitCall = c + ".init(\"" + a + "\");";
+			eventHandlerDoneCall = c + ".done();"; 
+		}
 	}
 
 	public JavassistPool getPool() {
@@ -116,9 +135,12 @@ public class CoreInstrumentor extends ExprEditor {
 			return null;
 		CtClass clazz = pool.get(cName);
 		assert (clazz != null);
+		if (!useJvmti)
+			isMainClass = cName.equals(Config.mainClassName);
 		CtClass clazz2 = edit(clazz);
-		if (clazz2 == null)
+		if (clazz2 == null) {
 			if (verbose > 2) Messages.log(EXCLUDING_CLASS, cName);
+		}
 		return clazz2;
 	}
 
@@ -146,8 +168,14 @@ public class CoreInstrumentor extends ExprEditor {
 		for (CtBehavior m : inits)
 			edit(m);
 		CtBehavior[] meths = clazz.getDeclaredMethods();
-		for (CtBehavior m : meths)
+		for (CtBehavior m : meths) {
 			edit(m);
+			if (!useJvmti && isMainClass && m.getName().equals("main") &&
+					m.getSignature().equals("([Ljava/lang/String;)V")) {
+				m.insertBefore(eventHandlerInitCall);
+				m.insertAfter(eventHandlerDoneCall);
+			}
+		}
 		return clazz;
 	}
 

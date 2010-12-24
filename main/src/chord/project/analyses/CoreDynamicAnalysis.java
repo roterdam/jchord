@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.Properties;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Collections;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -63,14 +64,45 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 
 	public final static boolean DEBUG = false;
 	
+	private Pair<Class, Map<String, String>> eventHandler;
+	private Pair<Class, Map<String, String>> instrumentor;
+
 	// subclasses can override
 	public Pair<Class, Map<String, String>> getInstrumentor() {
-		return new Pair<Class, Map<String, String>>(CoreInstrumentor.class, Collections.EMPTY_MAP);
+		if (instrumentor == null) {
+			Map<String, String> argsMap = new HashMap<String, String>(4);
+			if (!useJvmti()) {
+				argsMap.put(CoreInstrumentor.USE_JVMTI_KEY, "false");
+				Pair<Class, Map<String, String>> eh = getEventHandler();
+				String c = eh.val0.getName();
+				String a = mapToStr(eh.val1);
+				if (a.length() > 0) a = a.substring(1);
+				argsMap.put(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY, c);
+				argsMap.put(CoreInstrumentor.EVENT_HANDLER_ARGS_KEY, a);
+			}
+			instrumentor = new Pair<Class, Map<String, String>>(CoreInstrumentor.class, argsMap);
+		}
+		return instrumentor;
 	}
 
 	// subclasses can override
 	public Pair<Class, Map<String, String>> getEventHandler() {
-		return new Pair<Class, Map<String, String>>(CoreEventHandler.class, Collections.EMPTY_MAP);
+		if (eventHandler == null) {
+			Map<String, String> argsMap = new HashMap<String, String>(2);
+			if (!getTraceKind().equals("none")) {
+				int traceBlockSize = getTraceBlockSize();
+				String traceFileName = getTraceFileName(getTraceTransformers().size());
+ 				argsMap.put("trace_block_size", Integer.toString(traceBlockSize));
+				argsMap.put("trace_file_name", traceFileName);
+			}
+			eventHandler = new Pair<Class, Map<String, String>>(CoreEventHandler.class, argsMap);
+		}
+		return eventHandler;
+	}
+
+	// subclasses can override
+	public boolean useJvmti() {
+		return Config.useJvmti;
 	}
 
 	// subclasses can override
@@ -188,10 +220,11 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			return;
 		}
 		boolean offline = getInstrKind().equals("offline");
+		boolean useJvmti = useJvmti();
 		if (offline)
 			doOfflineInstrumentation();
 		if (traceKind.equals("none")) {
-			List<String> basecmd = getBaseCmd(!offline, false, 0);
+			List<String> basecmd = getBaseCmd(!offline, useJvmti, false, 0);
 			initAllPasses();
 			for (String runID : runIDs) {
 				String args = System.getProperty("chord.args." + runID, "");
@@ -209,7 +242,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		boolean pipeTraces = traceKind.equals("pipe");
 		List<Runnable> transformers = getTraceTransformers();
 		int numTransformers = transformers == null ? 0 : transformers.size();
-		List<String> basecmd = getBaseCmd(!offline, true, numTransformers);
+		List<String> basecmd = getBaseCmd(!offline, useJvmti, true, numTransformers);
 		initAllPasses();
 		for (String runID : runIDs) {
 			if (pipeTraces) {
@@ -305,8 +338,8 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		}
 	}
 
-	private List<String> getBaseCmd(boolean isOnline, boolean isWithTrace,
-			int numTransformers) {
+	private List<String> getBaseCmd(boolean isOnline, boolean useJvmti,
+			boolean isWithTrace, int numTransformers) {
 		String mainClassName = Config.mainClassName;
 		assert (mainClassName != null);
 		String classPathName = Config.classPathName;
@@ -333,18 +366,12 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			basecmd.add("-cp");
 			basecmd.add(userClassesDirName + File.pathSeparator + classPathName);
 		}
-		{
+		if (useJvmti) {
 			Pair<Class, Map<String, String>> kind = getEventHandler();
 			String name = kind.val0.getName().replace('.', '/');
 			String args = mapToStr(kind.val1);
-			String cAgentArgs = "=" + CoreEventHandler.EVENT_HANDLER_CLASS_KEY +
+			String cAgentArgs = "=" + CoreInstrumentor.EVENT_HANDLER_CLASS_KEY +
 				"=" + name + args;
-			if (isWithTrace) {
-				int traceBlockSize = getTraceBlockSize();
-				String traceFileName = getTraceFileName(numTransformers);
-				cAgentArgs += "=trace_block_size=" + traceBlockSize +
-					"=trace_file_name=" + traceFileName;
-			}
 			basecmd.add("-agentpath:" + Config.cInstrAgentFileName + cAgentArgs);
 		}
 		if (isOnline) {

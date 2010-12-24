@@ -49,6 +49,10 @@ public class Config {
 	public final static String jInstrAgentFileName = libDirName + File.separator + "chord_instr_agent.jar";
 	public final static String javadocURL = "http://jchord.googlecode.com/svn/wiki/javadoc/";
 
+	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
+	public final static boolean useBuddy = buildBoolProperty("chord.use.buddy", false);
+	public final static boolean useJvmti = buildBoolProperty("chord.use.jvmti", false);
+
 	// Chord boot properties
 
 	public static String workDirName = System.getProperty("chord.work.dir");
@@ -67,7 +71,6 @@ public class Config {
 	public final static String maxHeap = System.getProperty("chord.max.heap");
 	public final static String maxStack = System.getProperty("chord.max.stack");
 	public final static String jvmargs = System.getProperty("chord.jvmargs");
-	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 
 	// Chord task properties
 
@@ -214,6 +217,9 @@ public class Config {
 		System.out.println("chord.main.dir: " + mainDirName);
 		System.out.println("chord.main.class.path: " + mainClassPathName);
 		System.out.println("chord.bddbddb.class.path: " + bddbddbClassPathName);
+		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
+		System.out.println("chord.use.buddy: " + useBuddy);
+		System.out.println("chord.use.jvmti: " + useJvmti);
 
 		System.out.println("*** Chord boot properties:");
 		System.out.println("chord.work.dir: " + workDirName);
@@ -221,7 +227,6 @@ public class Config {
 		System.out.println("chord.max.heap: " + maxHeap);
 		System.out.println("chord.max.stack: " + maxStack);
 		System.out.println("chord.jvmargs: " + jvmargs);
-		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 
 		System.out.println("*** Chord task properties:");
 		System.out.println("chord.build.scope: " + buildProgram);
