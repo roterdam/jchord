@@ -43,6 +43,7 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(
 	name = "thresc-dynamic-java",
+	consumes = { "checkExcludedE" },
 	produces = { "accE", "escE", "likelyLocE" }, 
 	namesOfSigns = { "accE", "escE", "likelyLocE" },
 	signs = { "E0", "E0", "E0" }
