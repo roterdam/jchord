@@ -4,7 +4,7 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  */
-package chord.analyses.check;
+package chord.analyses.type;
 
 import joeq.Class.jq_Reference;
 import chord.analyses.type.DomT;
