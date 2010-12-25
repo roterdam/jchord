@@ -78,7 +78,7 @@ public class CoreInstrumentor extends ExprEditor {
 			String c = argsMap.get(EVENT_HANDLER_CLASS_KEY);
 			assert (c != null);
 			String a = argsMap.get(EVENT_HANDLER_ARGS_KEY);
-			if (a == null) a = "";
+			a = (a == null) ? "" : a.replace("\\", "\\\\");
 			eventHandlerInitCall = c + ".init(\"" + a + "\");";
 			eventHandlerDoneCall = c + ".done();"; 
 		}
