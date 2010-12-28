@@ -112,7 +112,8 @@ public class ConfDeps extends JavaAnalysis {
     dumpOptUses(domOpt);
     dumpFieldTaints(domOpt);
     if(dumpIntermediates)  {
-      dumpOptRegexes("conf_regex.txt", DomOpts.optSites());
+    	if(STATIC)
+    		dumpOptRegexes("conf_regex.txt", DomOpts.optSites());
       Project.runTask("datadep-debug-dlog");
       dumpArgDTaints();
     }
@@ -129,9 +130,14 @@ public class ConfDeps extends JavaAnalysis {
       int z = methArg.val1;
       jq_Method meth = methArg.val0;
 //      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
-      jq_Type ty = meth.getParamTypes()[z];
-      writer.println(meth.getDeclaringClass() + " " + meth.getNameAndDesc().toString() +
-          " arg " + z +  " of type " + ty + " " +  optName);
+      if(meth.getParamTypes().length <= z)
+      	System.err.println("WARN: expected to find more args to " + meth + 
+      			" (found " + meth.getParamTypes().length + " expected at least " + (z+1) +")");
+      else {
+	      jq_Type ty = meth.getParamTypes()[z];
+	      writer.println(meth.getDeclaringClass() + " " + meth.getNameAndDesc().toString() +
+	          " arg " + z +  " of type " + ty + " " +  optName);
+      }
     }
     
     confArgRel.close();
@@ -148,6 +154,9 @@ public class ConfDeps extends JavaAnalysis {
       jq_Method calledMeth = Invoke.getMethod(methArg.val0).getMethod();
       jq_Method callerM = methArg.val0.getMethod();
 //      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
+      if(calledMeth.getParamTypes().length <= z) 
+      	continue;
+
       jq_Type ty = calledMeth.getParamTypes()[z];
       String caller = callerM.getDeclaringClass() + " " + callerM.getName() + ":" + methArg.val0.getLineNumber();
       writer.println(caller + " calling " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +

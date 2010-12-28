@@ -1,15 +1,16 @@
 # name=datadep-debug-dlog
 
-.include "T.dom"
 .include "F.dom"
-.include "M.dom"
+.include "H.dom"
 .include "I.dom"
+.include "M.dom"
+.include "T.dom"
+.include "U.dom"
 .include "V.dom"
 .include "Z.dom"
-.include "U.dom"
 .include "Opt.dom"
 
-.bddvarorder I0xI1xM0xM1_T0_V0xV1_Opt0_T1_F0_Z0xU0xU1
+.bddvarorder I0xI1xM0xM1_H0_T0_V0xV1_Opt0_T1_F0_Z0xU0xU1
 
 
 ### Inputs
@@ -20,6 +21,8 @@ scopeExcludedM(m:M) input
 APIMethod(i:I) input
 #confCall(i:I) input
 IM(i:I,m:M) input
+VH(v:V,h:H) input
+
 
 MmethPrimArg(m:M0,n:Z0,u:U0) input
 MmethPrimRet(m:M0,n:Z0,u:U0) input
@@ -37,7 +40,10 @@ argCdep(m:M, z:Z, opt:Opt)  output
 IargCdep(i:I, z:Z, opt:Opt)  output
 IretDep(i:I, opt:Opt)  output
 
+putInstFldInst(b:V,f:F,r:V) input
+
 unmodeledM(m:M) output
+failedWrite(v:V, f:F, opt:Opt) output
 
 ####Debugging
 
@@ -57,3 +63,7 @@ APIMeth(m) :- IM(i,m),APIMethod(i).
 scopeExcludeArgMeth(m) :- scopeExcludedM(m),argCdep(m, _,_).
 
 unmodeledM(m) :- scopeExcludeArgMeth(m),!APIMeth(m).
+
+allocated(v) :- VH(v,_).
+
+failedWrite(b, f, opt) :- putInstFldInst(b,f,r),refCdep(r,opt),!allocated(b). split

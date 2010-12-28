@@ -36,7 +36,7 @@ public class DynConfDep extends CoreDynamicAnalysis {
   static File results = new File("dyn_cdep.temp");
   static final String SCHEME_FILE= "dynconfdep.instr";
   
-  static final Pattern readPat = Pattern.compile("([0-9]*) calling .* returns option (.*)-([0-9]+) value=(.+)");
+  static final Pattern readPat = Pattern.compile("([0-9]*) calling .* returns option (.*)-([0-9]+) value=(.*)");
   static final Pattern usePat = Pattern.compile("([0-9]*) invoking .* ([0-9]+)=(.*)");
   static final Pattern nullVPat = Pattern.compile("([0-9]*) returns null");
   
@@ -59,10 +59,9 @@ public class DynConfDep extends CoreDynamicAnalysis {
   @Override
   public void initAllPasses() {
   	retrace = Config.buildBoolProperty("retrace_conf", false);
-
   	if(!retrace)
   		results.delete();
-    System.out.println("starting execution; clearing buffer file.");
+    System.out.println("DynConfDep starting execution; clearing buffer file.");
   }
 
   @Override
@@ -93,7 +92,7 @@ public class DynConfDep extends CoreDynamicAnalysis {
 
     try {
       
-      DomOpts domOpts = buildDomOpts();
+      DomOpts domOpts = buildDomOpts(domI);
       //need to save so adding tuples will work
 //      DomOpts domOpts =  (DomOpts)  project.getTrgt("Opt");
  //     domOpts.clear(); //necessary?
@@ -182,11 +181,11 @@ public class DynConfDep extends CoreDynamicAnalysis {
     
   }
 
-  private DomOpts buildDomOpts() throws IOException {
+  private DomOpts buildDomOpts(DomI domI) throws IOException {
     ClassicProject project = ClassicProject.g();
     
     DomOpts domOpts =  (DomOpts)  project.getTrgt("Opt");
-    domOpts.getOrAdd(DomOpts.NONE);
+    domOpts.addPt(domI.get(0), DomOpts.NONE);
 //    System.out.println("in buildDomOpts, filename is " + results);
     BufferedReader br = new BufferedReader(new FileReader(results));
     String s;
@@ -197,7 +196,10 @@ public class DynConfDep extends CoreDynamicAnalysis {
         
         String cst = m.group(2);
 //        String prefix = ConfDefines.optionPrefix(domI.get(iId))
-        int cstID = domOpts.getOrAdd(cst);
+        if(domOpts.contains(cst))
+        	continue;
+        
+        int cstID = domOpts.addPt(domI.get(iId), cst);
         if(cstID == -1) {
           cstID = 0;
           System.err.println("UNKNOWN OPTION " + cst);
