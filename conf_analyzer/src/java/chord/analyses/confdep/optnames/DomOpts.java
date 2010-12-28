@@ -248,4 +248,12 @@ public class DomOpts extends ProgramDom<String> {
     return new Pair<Register,String>(basePart, str);
   }
 
+	public int addPt(Quad quad, String cst) {
+		if(optSites == null)
+			optSites = new LinkedHashMap<Quad, String>();
+		int idx = getOrAdd(cst);
+		optSites.put(quad, cst);
+		return idx;
+	}
+
 }

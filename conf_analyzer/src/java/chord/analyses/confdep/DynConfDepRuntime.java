@@ -1,6 +1,7 @@
 package chord.analyses.confdep;
 
 import chord.analyses.logging.RelLogStmts;
+import chord.util.IndexMap;
 import chord.util.WeakIdentityHashMap;
 import java.io.*;
 import java.util.*;
@@ -9,7 +10,47 @@ public class DynConfDepRuntime {
   //extends DynamicAnalysis
 
   static PrintStream out;
+  public static boolean FULL = false;
   protected static WeakIdentityHashMap labels;
+  
+  static class TaintList {
+  	static IndexMap<String> names = new IndexMap<String>();
+  	BitSet taints = new BitSet();
+  	
+  	public int size() {
+  		return taints.size();
+  	}
+  	
+  	public void add(String s) {
+  		int idx = names.getOrAdd(s);
+  		taints.set(idx);
+  	}
+  	
+  	public void addAll(TaintList t) {
+  		taints.or(t.taints);
+  	}
+  	
+  	public String toString() {
+      StringBuilder sb = new StringBuilder();
+      
+      for (int i = taints.nextSetBit(0); i >= 0; i = taints.nextSetBit(i+1)) {
+        sb.append(names.get(i));
+        sb.append("|");
+      }
+      if(sb.length() > 0)
+        sb.deleteCharAt(sb.length() -1);
+      return sb.toString();
+  	}
+  	
+  	public TaintList copy() {
+  		TaintList t = new TaintList();
+  		t.addAll(this);
+  		return t;
+  	}
+  }
+  
+  static TaintList EMPTY_TLIST = new TaintList();
+  
   static {
     try {
 
@@ -27,16 +68,25 @@ public class DynConfDepRuntime {
   	if(!aType.isPrimitive()) {
   		Object[] arr = (Object[]) s;
   		StringBuilder sb = new StringBuilder();
+  		sb.append("{");
   		for(Object a : arr) {
   			sb.append(a.toString());
   			sb.append(",");
   		}
   		if(sb.length() > 0)
   			sb.deleteCharAt(sb.length() -1);
+  		sb.append("}");
   		return sb.toString();
   	} else {
   		return "PRIM-array";
   	}
+  }
+
+  static HashSet<String> linesPrinted = new HashSet<String>(); //uniqueify
+
+  public static void printOnce(String s) {
+  	if(linesPrinted.add(s))
+  	  out.println(s);
   }
   
   public synchronized static void methodCallAftEventSuper(int iIdx, String cname, String mname, Object ret,
@@ -48,7 +98,6 @@ public class DynConfDepRuntime {
     for(; cOpt < args.length; ++cOpt)
       if(args[cOpt] instanceof String)
         break;
-    
     if(isConf && cOpt < args.length) {
 //      if(tref != null)
 //        cOpt --;
@@ -64,16 +113,18 @@ public class DynConfDepRuntime {
       		prettyRet = reformatArray(ret);
       	else 
       		prettyRet = ret.toString();
-        out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=" + prettyRet);
+//      	if(prettyRet.length() == 0)
+//      		prettyRet = ""
+      	printOnce(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=" + prettyRet);
         addLabel(ret,  confOpt);
       }
       else
-        out.println(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=null");
+      	printOnce(iIdx +" calling " + cname + " " + mname + " returns option " + confOpt + " value=null");
       
     } else {
       boolean taintedCall = false;
-      HashSet<String> rtaints = new HashSet<String>();
-      rtaints.addAll(taintlist(tref)); // start by adding all taints from this
+      TaintList returnTaints = new TaintList();
+      returnTaints.addAll(taintlist(tref)); // start by adding all taints from this
 
       if(RelLogStmts.isLogStmt(cname, mname)) {
         for(int i= 0; i < args.length; ++i)
@@ -83,34 +134,32 @@ public class DynConfDepRuntime {
       
       String thisT = taintStr(tref);
       if(thisT.length() > 0) {
-        out.println(iIdx + " invoking " + cname + " " + mname + " 0=" + thisT);
+      	printOnce(iIdx + " invoking " + cname + " " + mname + " 0=" + thisT);
         taintedCall = true;
       }
       
       for(int i= 0; i < args.length; ++i) {  //then all taints from other args
-        rtaints.addAll(taintlist(args[i]));
+        returnTaints.addAll(taintlist(args[i]));
         String tStr = taintStr(args[i]);
         if(tStr.length() > 0) {
           if(tref == null)
-            out.println(iIdx + " invoking " + cname + " " + mname + " " + (i) + "=" + tStr);
+          	printOnce(iIdx + " invoking " + cname + " " + mname + " " + (i) + "=" + tStr);
           else
-            out.println(iIdx + " invoking " + cname + " " + mname + " " + (i+1) + "=" + tStr);
+          	printOnce(iIdx + " invoking " + cname + " " + mname + " " + (i+1) + "=" + tStr);
           taintedCall = true;
         }
       }
       
-      if(!taintedCall) {
+      if(!taintedCall && FULL) {
         out.println("call to "+ cname + " " + mname  + " without taint at " + iIdx);
       }
       
-      ArrayList<String> newTList = new ArrayList<String>();
-      newTList.addAll(rtaints);
       if(RelAPIMethod.isAPI(cname, mname)) {
         if(ret == null) {
-          out.println(iIdx + " returns null");
+        	printOnce(iIdx + " returns null");
         } else
-          setTaints(ret, newTList); //mark return value
-        setTaints(tref, newTList);   //and add taints to this
+          setTaints(ret, returnTaints); //mark return value
+        setTaints(tref, returnTaints);   //and add taints to this
       } 
       
       /*
@@ -128,36 +177,47 @@ public class DynConfDepRuntime {
   public synchronized static void astoreReferenceEvent(int eId,Object array, int iId, Object parm) {
     //this message is just for debugging
 //    out.println("store to array with taints: " + taintStr(parm));
-    List<String> taintlist = taintlist(parm);
-    for(String t: taintlist) {
-      addLabel(array, t);
-    }
+    if(array == parm)
+    	return;
+    TaintList taintlist = taintlist(parm);
+    addTaints(array, taintlist);
   }
-  
+
+	//load from tainted array/object should taint loaded object
   public synchronized static void aloadReferenceEvent(int eId,Object array, int iId, Object result) {
     //message is just for debugging
 //    out.println("load from array with taints: " + taintStr(array));
  //   out.println("(array contents were " + reformatArray(array) +")");
-    List<String> taintlist = taintlist(array);
-    for(String t: taintlist) {
-      addLabel(result, t);
+  	
+  	if(array == result) //can this happen, if an object points to itself?
+  		return;
+  	
+    TaintList taintlist = taintlist(array);
+    TaintList objTaintlist = taintlist(result);
+    if(taintlist == objTaintlist && taintlist.size() > 0)
+    	System.out.println("AAARGH somehow same array is used for taintlist of both array and contents. " +
+    			"Array was " + reformatArray(array) + " and content was " + result + 
+    			" Taintlist was '" + taintlist+"', size = "+ taintlist.size());
+    else {
+    	objTaintlist.addAll(taintlist);
     }
   }
      
-  private static void setTaints(Object o, ArrayList<String> newTList) {
+  private static void setTaints(Object o, TaintList newTList) {
     if(o != null)
       labels.put(o, newTList);    
   }
 
-  public static List<String> taintlist(Object o) {
+  //guaranteed to never be null
+  public static TaintList taintlist(Object o) {
     if(o == null)
-      return Collections.EMPTY_LIST;
+      return EMPTY_TLIST;
     Object l = labels.get(o);
     if(l != null) {
-      List<String> l2 = (List<String>) l;
+    	TaintList l2 = (TaintList) l;
       return l2;
     } else {
-      return Collections.EMPTY_LIST;
+      return EMPTY_TLIST;
     }
   }
 
@@ -167,36 +227,46 @@ public class DynConfDepRuntime {
       return "";
     Object l = labels.get(o);
     if(l != null) {
-      List<String> l2 = (List<String>) l;
-      StringBuilder sb = new StringBuilder();
-      for(String s: l2) {
-        sb.append(s);
-        sb.append("|");
-      }
-      if(sb.length() > 0)
-        sb.deleteCharAt(sb.length() -1);
-      return sb.toString();
+      TaintList l2 = (TaintList) l;
+      return l2.toString();
     } else {
       return "";
     }
   }
-  
+
   public static void addLabel(Object o, String label) {
     if(o == null)
       return;
-    
+    if(label.length() < 1) {
+    	System.out.println("AARGH.  DynConfDep trying to add a zero-length label");
+    }
     Object l = labels.get(o);
     if(l != null) {
-      ((List<String>)l).add(label);
+      ((TaintList)l).add(label);
     } else {
-      ArrayList<String> l2 = new ArrayList<String>();
-      l2.add(label);
+    	TaintList l2 = new TaintList();
+     	l2.add(label);
       labels.put(o, l2);
     }
   }
   
+
+  
+  private static void addTaints(Object o, TaintList taintlist) {
+  	 if(o == null)
+       return;
+
+     Object l = labels.get(o);
+     if(l != null) {
+       ((TaintList) l).addAll(taintlist);
+     } else {
+       labels.put(o, taintlist.copy());
+     }		
+	}
+  
   public static void returnReferenceEvent(int pId, Object o) {
-    out.println("returning " + o + " at " + pId);
+  	if(FULL)
+  		out.println("returning " + o + " at " + pId);
   }
 
 }

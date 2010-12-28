@@ -10,7 +10,7 @@
 .include "U.dom"
 .include "Opt.dom"
 
-.bddvarorder I0xM0_T0_V0xV1_Opt0_H0_F1_F0_Z1_Z0xU0xU1xOpt1
+.bddvarorder I0xM0_T0_V0xV1_Opt0_H0_F0_F1_Z1_Z0xU0xU1xOpt1
 
 
 
