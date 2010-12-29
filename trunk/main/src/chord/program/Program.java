@@ -464,6 +464,10 @@ public class Program {
 		return nameToTypeMap.get(name);
 	}
 
+	public Quad getQuad(MethodElem e) {
+		return getQuad(e, new Class[] { Operator.class });
+	}
+
 	public Quad getQuad(MethodElem e, Class quadOpClass) {
 		return getQuad(e, new Class[] { quadOpClass });
 	}
