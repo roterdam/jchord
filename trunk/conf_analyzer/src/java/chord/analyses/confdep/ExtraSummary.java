@@ -22,8 +22,10 @@ import chord.project.analyses.ProgramRel;
 	  public void visit(jq_Class c) { cl = c; }
 	  public void visit(jq_Method m) {
 	  	String clname = cl.getName();
+	  	String mname = m.getName().toString();
 	  	if(clname.startsWith("org.apache.hadoop.net.SocketIOWithTimeout") 
 	  			|| clname.startsWith("org.apache.tools.ant.BuildEvent")
+	  			|| clname.startsWith("org.apache.hadoop.util") && mname.startsWith("compare")
 	  ///			||	clname.startsWith("org.apache.hadoop.fs.FileStatus")
 	  			)
 		      add(m);

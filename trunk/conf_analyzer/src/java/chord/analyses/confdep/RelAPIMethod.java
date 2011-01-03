@@ -4,6 +4,7 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
+import chord.analyses.collection.*;
 import chord.analyses.invk.DomI;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
@@ -64,13 +65,17 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
     && (!classname.startsWith("java.io") || classname.equals("java.io.File"));//io is mostly bad, File is ok
 
   }
+  
+  private boolean isCollection(Quad q) {
+    return RelInserts.isInsert(q);
+  }
 
   @Override
   public void visitInvokeInst(Quad q) {
     jq_Method meth = Invoke.getMethod(q).getMethod();
     String classname = meth.getDeclaringClass().getName();
     String methname = meth.getName().toString();
-    if(isAPI(classname, methname)) {
+    if(isAPI(classname, methname) && !isCollection(q)) {
       int iIdx = domI.indexOf(q);
       super.add(iIdx);
     }
