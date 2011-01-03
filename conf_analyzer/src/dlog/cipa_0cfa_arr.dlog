@@ -80,8 +80,11 @@ MM(m:M,n:M) output
 
 ### Handle unresolved calls
 
+scopeExcludedM(m:M) input
+
 MMx(m:M,n:M) output
-badCalls(i:I) output
+unresolvedInvk(i:I) output
+badCalls(i:I,m:M) output
 
 ## Entrypoints and threads
 
@@ -108,6 +111,8 @@ collHoldsV(c:V, o:H)
 RIRetrieve(o:V,c:V) 
 RIInsert(c:V,o:V) 
 RINewColl(c:V,o:V) 
+#emptyColl(v:V)
+#undefV(v:V) output
 
 ###### End of declarations
 
@@ -197,9 +202,10 @@ MM(m,n) :- IM(i,n), MI(m,i).
 
 ### Extended call graph for unresolved calls
 
-badCalls(i) :- reachableI(i),!IM(i,_).
+unresolvedInvk(i) :- reachableI(i),!IM(i,_).
+badCalls(i,m) :- unresolvedInvk(i),virtIM(i,m).
 MMx(m,n) :- MM(m,n).
-MMx(m,n) :- badCalls(i),MI(m,i),virtIM(i,n). split
+MMx(m,n) :- badCalls(i,n),MI(m,i).
 
 ### Thread modeling
 
@@ -213,13 +219,19 @@ reachableM(tRun) :- startedRunnable(_,tRun).
 IM(i,m2) :- reachableI(i),virtIM(i,m),resolveRPC(m,m2,_).
 VH(v,h) :- MmethArg(m,0,v),resolveRPC(_,m,t),clsTH(t,h).
 
-#should really only do this for instance methods?  [instM(m)]
+#should we only do this for instance methods?  [instM(m)]
+retI(i) :- IRetrieve(i,_,_).
+exclCall(i) :- IM(i,m),scopeExcludedM(m),!retI(i).
 externalArg(v) :- MmethArg(m,_,v),MentryPoints(m).
-VH(v,h) :- externalArg(v),VT(v,t),clsTH(t,h).
+externalArg(v) :- IinvkRet(i,_,v),exclCall(i).
+
+VH(v,h) :- externalArg(v),VT(v,t),clsTH(t2,h),sub(t,t2).
 #fields of external args point to external args
 HFH(h1,f,h2) :- clsTH(t,h1),TFT(t,f,t2),clsTH(t2,h2).
 
 reachableM(m) :- MentryPoints(m).
+
+
 
 #### Collection-tracking relations
 
@@ -235,6 +247,13 @@ collHolds(ch,oh) :- collHoldsV(cv,oh),VH(cv,ch).
 collHoldsV(c2v,oh) :- collHoldsV(cv,oh),RINewColl(c2v,cv).
 
 VH(v,oh) :- collHoldsV(cv,oh),RIRetrieve(v,cv). 
+
+#try to set return from empty collection to the hypothetical of the class?
+# Somehow this doesn't stratify right.
+#emptyColl(v) :- !collHoldsV(v,_).
+#VH(v,clsH) :- emptyColl(cv),RIRetrieve(v,cv),VT(v,t),clsTH(t,clsH).
+#VH(v,clsH) :- RIRetrieve(v,_),VT(v,t),clsTH(t,clsH).
+
 
 ### Misc enhancements
 

@@ -31,7 +31,6 @@ VH(v:V,h:H) input
 HI(h:H,i:I) input
 scopeExcludedM(m:M) input
 MPrimCmp(m:M, u1:U, u2:U) input
-badCalls(i:I) input
 
 MmethRet(m:M0,n:Z0,v:V1) input
 MmethArg(m:M0,n:Z0,u:V0) input
@@ -45,6 +44,7 @@ IinvkPrimArg(i:I0,n:Z0,u:U0) input
 IinvkPrimRet(i:I0,n:Z0,u:U0) input
 
 OptNames(o:Opt,site:I) input
+OptNameWithCC(o:Opt,site:I)
 confCall(i:I) output
 confConf(o:Opt0,site:I,pos:Z,s:Opt1) output
 
@@ -114,12 +114,16 @@ summarized(m:M)
 summarizedFlowThru(m:M,z:Z) input
 summarizedCallArg(i:I,z:Z)
 
-##Just for debugging
+##Just output for debugging
 trimmedIM(i:I,m:M) output
 insertM(m:M) output
 retrieveM(m:M) output
 taintMeth(m:M,opt:Opt) output
 taintedSubfield(v:V,b:V,f:F,opt:Opt) output
+
+
+########## Rules
+
 
 #collHolds(hST,site) :- HI(hST,site),confUVV(site,_,_).
 vColHolds(col,site) :- VH(col, hST),collHolds(hST,site).
@@ -179,8 +183,9 @@ absoluteRefCdep(v,site) :- instHF(bh,f,site),getInstFldInst(v,b,f), VH(b,bh). sp
 absolutePrimCdep(v,site) :- statHF(f,site),getStatFldPrimInst(v,f).
 absolutePrimCdep(v,site) :- instHF(bh, f,site),getInstFldPrimInst(v,b,f), VH(b,bh). split
 
-absoluteRefCdep(v,name) :- IinvkRet(site,0,v),OptNames(name,site).
-absolutePrimCdep(u,name) :- IinvkPrimRet(site,0,u),OptNames(name,site).
+absoluteRefCdep(v,name) :- IinvkRet(site,0,v),OptNameWithCC(name,site).
+absolutePrimCdep(u,name) :- IinvkPrimRet(site,0,u),OptNameWithCC(name,site).
+
 
 absoluteRefCdep(v,site) :- vColHolds(colV,site),IRetrieve(_,v,colV).
 
@@ -231,8 +236,11 @@ absolutePrimCdep(u,name) :- absCallLabel(i,name),IinvkPrimRet(i,_,u).
 looseSummary(i) :- extraSummary(m),IM(i,m).
 looseSummary(i) :- APIMethod(i).
 
+allocated(u) :- VH(u,_).
+insertUnalloc(i,u) :- IInsert(i,_,u),!allocated(u).
 taintingCall(i, opt) :- absoluteRefCdep(u,opt),IinvkArg(i,_,u),looseSummary(i). split
 taintingCall(i, opt) :- absolutePrimCdep(u,opt),IinvkPrimArg(i,_,u),looseSummary(i). split
+taintingCall(i, opt) :- absoluteRefCdep(u,opt),insertUnalloc(i,u).
 
 #taint this and return value from args
 absoluteRefCdep(v,opt) :- taintingCall(i, opt),IinvkRet(i,_,v).
@@ -266,6 +274,13 @@ returnsConf(i,v,site) :- IinvkRet(i,_,v),refCdep(v,site),!APIMethod(i).
 
 confConf(o,i,z,s) :-  OptNames(o,i),IinvkArg(i,z,v),refCdep(v,s).
 confConf(o,i,z,s) :-  OptNames(o,i),IinvkPrimArg(i,z,v),primCdep(v,s).
+
+#apply conf-conf dependency
+OptNameWithCC(name,site) :- OptNames(name,site).
+
+#comment out next two lines to disable conf-conf dependency
+OptNameWithCC(name,site) :- optReadCall(site),IinvkPrimArg(site,_,v),primCdep(v,name).
+OptNameWithCC(name,site) :- optReadCall(site),IinvkArg(site,_,v),refCdep(v,name).
 
 
 taintMeth(m,opt) :- taintingCall(i, opt),IM(i,m).

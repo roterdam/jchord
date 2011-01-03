@@ -26,7 +26,6 @@ VH(v:V,h:H) input
 HI(h:H,i:I) input
 scopeExcludedM(m:M) input
 MPrimCmp(m:M, u1:U, u2:U) input
-badCalls(i:I) input
 
 MmethRet(m:M0,n:Z0,v:V1) input
 MmethArg(m:M0,n:Z0,u:V0) input

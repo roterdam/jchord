@@ -29,19 +29,35 @@ public class RelInserts extends ProgramRel implements IInvokeInstVisitor {
   DomV domV;
   jq_Method method;
   jq_Type OBJ_T;
-  boolean MAP_PUT = false;
+  
+  static boolean MAP_PUT = false;
+  static {
+    MAP_PUT = Config.buildBoolProperty("putIsInsert", false);
+  }
   public void init() {
     domI = (DomI) doms[0];
     domV = (DomV) doms[1];
 //    MAP_PUT = Config.buildBoolProperty("modelPuts", false);
     OBJ_T = jq_Type.parseType("java.lang.Object");
     RelINewColl.tInit();
-    MAP_PUT = Config.buildBoolProperty("putIsInsert", false);
   }
 
   public void visit(jq_Class c) { }
   public void visit(jq_Method m) {
     method = m;
+  }
+  
+  public static boolean isInsert(Quad q) {
+    jq_Method meth = Invoke.getMethod(q).getMethod();
+    jq_Class cl = meth.getDeclaringClass();
+    String classname = cl.getName();
+    String mname = meth.getName().toString();
+  	if(!meth.isStatic() && RelINewColl.isCollectionType(cl)) {
+      //I'm nervous about "put" because of worries about tainting conf objects
+      return mname.equals("offer") || mname.equals("add") || mname.toLowerCase().contains("set")
+      		|| (MAP_PUT && classname.contains("Map") && mname.equals("put"));
+  	}
+  	return false;
   }
 
   @Override
@@ -52,23 +68,14 @@ public class RelInserts extends ProgramRel implements IInvokeInstVisitor {
 
       Register thisObj = Invoke.getParam(q, 0).getRegister();
       int thisObjID = domV.indexOf(thisObj);
-      jq_Method meth = Invoke.getMethod(q).getMethod();
-      jq_Class cl = meth.getDeclaringClass();
-      String classname = cl.getName();
-      String mname = meth.getName().toString();
-      
-      if(!meth.isStatic() && RelINewColl.isCollectionType(cl)) {
-        //I'm nervous about "put" because of worries about tainting conf objects
-        if(mname.equals("offer") || mname.equals("add") || mname.toLowerCase().contains("set")
-  || (MAP_PUT && classname.contains("Map") && mname.equals("put"))
-            ) {
-          for(int i =1; i< args; ++i) {
-            RegisterOperand op = argList.get(i);
-            if(op.getType().isReferenceType()) {
-              int iID = domI.indexOf(q);
-              int idx1 = domV.indexOf(op.getRegister());
-              super.add(iID,thisObjID, idx1);
-            }
+
+      if(isInsert(q)) {
+        for(int i =1; i< args; ++i) {
+          RegisterOperand op = argList.get(i);
+          if(op.getType().isReferenceType()) {
+            int iID = domI.indexOf(q);
+            int idx1 = domV.indexOf(op.getRegister());
+            super.add(iID,thisObjID, idx1);
           }
         }
       }

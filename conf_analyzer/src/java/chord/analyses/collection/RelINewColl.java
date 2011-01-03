@@ -1,5 +1,7 @@
 package chord.analyses.collection;
 
+import java.util.ArrayList;
+
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
@@ -31,28 +33,35 @@ public class RelINewColl extends ProgramRel implements IInvokeInstVisitor {
   DomV domV;
   jq_Method method;
 //  static jq_Type COLLECTION, MAP, ITERATOR;
-  static final String[] colTypeNames = {"java.util.Collection","java.util.Map","java.util.Iterator",
-    "java.util.concurrent.atomic.AtomicReference"};
-  static jq_Type[] collTypes;
+  private static final String[] colTypeNames = {"java.util.Collection","java.util.Map","java.util.Iterator",
+    "java.util.concurrent.atomic.AtomicReference", "jchord.util.IndexMap", "jchord.util.IndexSet"};
+ // static jq_Type[] collTypes;
+  static ArrayList<jq_Type> collTypes;
   public void init() {
     domI = (DomI) doms[0];
     domV = (DomV) doms[1];
     tInit();
-
   }
   
   static void tInit() {
     if(collTypes != null)
       return;
     
-    collTypes = new jq_Type[colTypeNames.length];
+//    collTypes = new jq_Type[colTypeNames.length];
+    collTypes = new ArrayList<jq_Type>();
     for(int i =0; i < colTypeNames.length; ++i) {
-      collTypes[i] = jq_Type.parseType(colTypeNames[i]);
-      collTypes[i].prepare();
+    	 try {
+	    	jq_Type t = jq_Type.parseType(colTypeNames[i]);
+	    	Class.forName(colTypeNames[i]);
+	    	t.prepare();
+	      collTypes.add(t);
+    	 } catch(Exception e) {
+    		 System.err.println("couldn't handle collection type " + colTypeNames[i] + " " + e.getMessage());
+    	 }
     }
   }
   
-  static boolean isCollectionType(jq_Type cl) {
+  public static boolean isCollectionType(jq_Type cl) {
 
     if(cl.getName().contains("Propert") || cl.getName().contains("Config"))
       return false;

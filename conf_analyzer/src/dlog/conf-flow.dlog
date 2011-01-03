@@ -32,7 +32,7 @@ VH(v:V,h:H) input
 HI(h:H,i:I) input
 scopeExcludedM(m:M) input
 MPrimCmp(m:M, u1:U, u2:U) input
-badCalls(i:I) input
+unresolvedInvk(i:I) input
 enumT(t:T) input
 
 MmethRet(m:M0,n:Z0,v:V1) input
@@ -184,7 +184,7 @@ enumCast(t,v) :- checkCastInst(_,t,v),enumT(t).
 enumOpts(site,t) :- enumCast(t,v),refFlow(v,site).
 
 excludedCall(i) :- scopeExcludedM(m),IM(i,m).
-excludedCall(i) :- badCalls(i).
+excludedCall(i) :- unresolvedInvk(i).
 
 refAPIOpt(i,z,v) :- excludedCall(i),IinvkArg(i,z,v). 
 primAPIOpt(i,z,v) :- excludedCall(i),IinvkPrimArg(i,z,v). 
