@@ -50,6 +50,9 @@ getStatFldInst(l:V,f:F)
 getInstFldPrimInst(l:U0,b:V,f:F) 
 getStatFldPrimInst(l:U,f:F) 
 
+#needed for arrays on data path
+putInstFldInst(b:V,f:F,r:V) input
+
 objVarAsgnInst(l:V,r:V)
 primDataDep(l:U0,r:U1)
 
@@ -143,6 +146,11 @@ primCdepSCS(v,site) :- statHF(f,site),getStatFldPrimInst(v,f).
 primCdepSCS(v,site) :- instHF(bh, f,site),getInstFldPrimInst(v,b,f), VH(b,bh). split
 
 ONInScope(name, site) :- OptNames(name,site),failPathI(site).
+
+optReadCall(site) :- OptNames(_,site).
+ONInScope(name,site) :- optReadCall(site),IinvkPrimArg(site,_,v),primCdep(v,name),failPathI(site).
+ONInScope(name,site) :- optReadCall(site),IinvkArg(site,_,v),refCdep(v,name),failPathI(site).
+
 refCdepSCS(v,name) :- IinvkRet(site,0,v),ONInScope(name,site).
 primCdepSCS(u,name) :- IinvkPrimRet(site,0,u),ONInScope(name,site).
 
@@ -191,6 +199,11 @@ refCdepSCS(v,opt) :- taintingCall(i, opt),IinvkRet(i,_,v).
 primCdepSCS(v,opt) :- taintingCall(i, opt),IinvkPrimRet(i,_,v).
 refCdepSCS(v,opt) :- taintingCall(i, opt),IinvkArg(i,0,v),instI(i),!APIReadOnly(i).
 
+## Apply array rule
+refCdepSCS(b,site)  :- putInstFldInst(b,0,r), refCdepSCS(r,site).
+refCdepSCS(l,site) :- getInstFldInst(l,b,0), refCdepSCS(b,site).
+
+# arrays of primitives?
 
 ##### This was intended as a crude sort of path-sensitive analysis for fields.
 # But I don't remember anymore why I wanted it, or why just for prim types.

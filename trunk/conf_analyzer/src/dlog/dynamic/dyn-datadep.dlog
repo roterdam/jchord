@@ -99,9 +99,11 @@ nullCV(v,opt) :- nullConf(v,opt).
 nullCV(v,opt) :- nullI(i),dynCUse(i,_,opt),IinvkRet(i,0,v).
 nullCV(v,opt) :- VV(v,v2),nullCV(v2,opt).
 nullCV(v,opt) :- objVarAsgnInst(v,u),nullCV(u,opt).
-nullCV(v,opt) :- objVarAsgnInst(u,v),nullCV(u,opt).
-nullCV(v,opt) :- objVarAsgnInst(u,v),nullCV(u,opt).
-nullCV(v,opt) :- checkCastInst(u,_,v),nullCV(u,opt).
+
+#nulls should only go forward so next two lines are unneeded
+#nullCV(v,opt) :- objVarAsgnInst(u,v),nullCV(u,opt).
+#nullCV(v,opt) :- objVarAsgnInst(u,v),nullCV(u,opt).
+#nullCV(v,opt) :- checkCastInst(u,_,v),nullCV(u,opt).
 
 
 refCdep(v,opt) :- IinvkRet(site, 0, v),OptNames(opt,site).

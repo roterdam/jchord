@@ -7,9 +7,7 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.BasicBlockVisitor;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
-import joeq.Util.Templates.ListIterator;
 import chord.analyses.invk.DomI;
 import chord.analyses.point.DomP;
 import chord.analyses.primtrack.UniqueBQ;
@@ -18,6 +16,12 @@ import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.analyses.ProgramRel;
 
+/**
+ * Set of points in each failure-path method that happen before the 
+ * failure.
+ * @author asrabkin
+ *
+ */
 @Chord(
     name = "BeforeFail",
     sign = "P0:P0",
@@ -82,20 +86,8 @@ public class RelFailPBefore extends ProgramRel implements IMethodVisitor {
 		FindContainingBB finder = new FindContainingBB(failPt);
 		cfg.visitBasicBlocks( finder);
 		bbWithFail = finder.bbWithTarg;
-		for(int i=0; i< finder.failIdx; ++i)
-			super.add(bbWithFail.getQuad(i));
-
- /*
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			int failIdx = bb.getQuadIndex(failPt);
-			if(failIdx >= 0) {
-				bbWithFail = bb;
-				for(int i=0; i< failIdx; ++i)
-					super.add(bb.getQuad(i));
-				break;
-			}
-		}*/
+		for(int i=0; i< finder.failIdx; ++i) //used to determine which aliases took effect. 
+			super.add(bbWithFail.getQuad(i)); //No need to include index of failing call
 		
 		Set<BasicBlock> marked = new HashSet<BasicBlock>();
 		UniqueBQ worklist = new UniqueBQ();
@@ -103,6 +95,8 @@ public class RelFailPBefore extends ProgramRel implements IMethodVisitor {
 			System.err.println("In FailPBefore, couldn't find a BB with target quad");
 			return;
 		} else {
+			//start with not the failblock, but its predecessors.
+			//this way, if failBlock is its own indirect predecessor it'll get re-analyzed
 			for (Object bo : bbWithFail.getPredecessors()) {
 				BasicBlock bp = (BasicBlock) bo;
 				worklist.add(bp);
@@ -124,8 +118,6 @@ public class RelFailPBefore extends ProgramRel implements IMethodVisitor {
 				}
 			}
 		}
-		
+	}//end method
 	
-	}
-
 }

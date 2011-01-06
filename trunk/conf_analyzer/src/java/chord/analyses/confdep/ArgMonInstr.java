@@ -5,6 +5,7 @@ import javassist.*;
 import javassist.expr.*;
 import chord.instr.CoreInstrumentor;
 import chord.instr.Instrumentor;
+import chord.project.Config;
 import chord.runtime.EventHandler;
 import chord.util.ChordRuntimeException;
 
@@ -15,7 +16,7 @@ import chord.util.ChordRuntimeException;
 public class ArgMonInstr extends Instrumentor {
   
   protected static final String methodCallAftEventCallSuper = DynConfDepRuntime.class.getCanonicalName() + ".methodCallAftEventSuper(";
-
+  boolean HANDLE_EXCEPTIONS = false;
 
   public ArgMonInstr(Map<String, String> argsMap) {
     super(argsMap);
@@ -25,6 +26,7 @@ public class ArgMonInstr extends Instrumentor {
       System.err.println("ArgMonInstr expected load and store events");
       System.exit(-1);
     }
+    HANDLE_EXCEPTIONS = Config.buildBoolProperty("confdep.dyn.catchexceptions", false);
   }
   
   /*
@@ -32,7 +34,7 @@ public class ArgMonInstr extends Instrumentor {
    */
   @Override
   public void edit(ConstructorCall c)  {
-    System.out.println("editing a constructor call, method is " + c.getClassName());
+//    System.out.println("editing a constructor call, class is " + c.getClassName());
     try {
       String aftInstr = "";
       int iId =  set(Imap, c) ;
@@ -73,22 +75,32 @@ public class ArgMonInstr extends Instrumentor {
   public void edit(MethodCall e) {
     try {
   
-      String befInstr = "";
       String aftInstr = "";
-      // Part 1: add METHOD_CALL event if present
-  
+      String exRet = "";
       int iId =  set(Imap, e) ;
-      String o = "$0";
-      befInstr += befMethodCallEventCall + iId + "," + o + ");";
-  
+      
+
       if(Modifier.isStatic(e.getMethod().getModifiers())) { 
         aftInstr += methodCallAftEventCallSuper +iId + ",\""+e.getClassName()+"\",\""+ 
         e.getMethodName() + "\",($w)$_,null,$args);";
+        
+        exRet += methodCallAftEventCallSuper +iId + ",\""+e.getClassName()+"\",\""+ 
+        e.getMethodName() + "\",null,null,$args);";
+
       } else {
         aftInstr += methodCallAftEventCallSuper + iId+",\""+e.getClassName()+"\",\""+ 
         e.getMethodName() + "\",($w)$_,$0,$args);"; 
+        
+        exRet += methodCallAftEventCallSuper + iId+",\""+e.getClassName()+"\",\""+ 
+        e.getMethodName() + "\",null,$0,$args);";
       }
-      e.replace("{ $_ = $proceed($$); " +  aftInstr + " }");
+      
+      if(HANDLE_EXCEPTIONS)
+       e.replace(" { try { $_ = $proceed($$); " +aftInstr + " } catch (java.lang.Throwable ex) { " +
+      		 exRet +  " throw ex;} }");
+      else
+      	e.replace("{ $_ = $proceed($$); " +  aftInstr + " }"); 
+
       return;
     } catch (CannotCompileException ex) {
       throw new ChordRuntimeException(ex);

@@ -154,12 +154,15 @@ public class DynConfDepRuntime {
         out.println("call to "+ cname + " " + mname  + " without taint at " + iIdx);
       }
       
-      if(RelAPIMethod.isAPI(cname, mname)) {
+
+      if(RelAPIMethod.isAPI(cname, mname) ) {
         if(ret == null) {
         	printOnce(iIdx + " returns null");
-        } else
+        } else {
           setTaints(ret, returnTaints); //mark return value
-        setTaints(tref, returnTaints);   //and add taints to this
+        	if(!RelReadOnlyAPICall.isReadOnly(cname, mname))
+          	setTaints(tref, returnTaints.copy());   //and add taints to this
+        }
       } 
       
       /*
@@ -199,7 +202,7 @@ public class DynConfDepRuntime {
     			"Array was " + reformatArray(array) + " and content was " + result + 
     			" Taintlist was '" + taintlist+"', size = "+ taintlist.size());
     else {
-    	objTaintlist.addAll(taintlist);
+    	addTaints(result, taintlist);
     }
   }
      
@@ -251,7 +254,8 @@ public class DynConfDepRuntime {
   }
   
 
-  
+  //adds taints from taintlist to those for object.
+  //taintlist is not modified, assuming taintlist isn't already the taint list for o
   private static void addTaints(Object o, TaintList taintlist) {
   	 if(o == null)
        return;
