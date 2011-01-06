@@ -7,6 +7,7 @@ import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.ALength;
+import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.var.DomV;
 import chord.program.visitors.*;
@@ -70,6 +71,15 @@ public class RelPrimRefDep extends ProgramRel implements IInstVisitor{
         super.add(resultIdx, argIdx);
       }
       
+    } else if(q.getOperator() instanceof Operator.CheckCast) {
+    	RegisterOperand res = CheckCast.getDest(q);
+      int destIdx = domUV.indexOf(res.getRegister());
+      if(CheckCast.getSrc(q) instanceof RegisterOperand) {
+	      Register src =  ((RegisterOperand) CheckCast.getSrc(q)).getRegister();
+	      int srcIdx = domV.indexOf(src);
+	      if(destIdx > -1 && srcIdx > -1)
+	      	super.add(destIdx, srcIdx);
+      }
     }
   }
 
