@@ -158,9 +158,10 @@ public class ConfDeps extends JavaAnalysis {
       	continue;
 
       jq_Type ty = calledMeth.getParamTypes()[z];
+      String regName = Invoke.getParam(methArg.val0, z).getRegister().toString();
       String caller = callerM.getDeclaringClass() + " " + callerM.getName() + ":" + methArg.val0.getLineNumber();
       writer.println(caller + " calling " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +
-          " arg " + z +  " of type " + ty + " " +  optName);
+          " arg " + z + "(" +regName +") of type " + ty + " " +  optName);
     }
     
     confArgRel.close();
