@@ -27,17 +27,20 @@ primCdepSCS(u:U,cst:Opt) input
 primControlDep(i:I,u:UV) input 
 
 UVU(uv:UV,u:U) input
+UVV(uv:UV,v:V) input
 primRefDep(u:UV,v:V) input
 
-primConfDep(u:UV,cnf:Opt)
+uvConfDep(u:UV,cnf:Opt)
 
 cOnLine(i:I, cnf:Opt) output
 confControlDep(i:I, cnf:Opt) output
 
 
-primConfDep(u,cnf) :- primRefDep(u,v),refCdepSCS(v,cnf).
-confControlDep(i,cnf) :- primConfDep(u,cnf),primControlDep(i,u).
-confControlDep(i,cnf) :- primCdepSCS(u,cnf),UVU(uv,u),primControlDep(i,uv).
+uvConfDep(u,opt) :- primRefDep(u,v),refCdepSCS(v,opt).
+uvConfDep(u,opt) :- UVV(u,v),refCdepSCS(v,opt).
+
+confControlDep(i,opt) :- uvConfDep(u,opt),primControlDep(i,u).
+confControlDep(i,opt) :- primCdepSCS(u,opt),UVU(uv,u),primControlDep(i,uv).
 
 cOnLine(i,cnf) :- IinvkArg(i,_,v),refCdepSCS(v,cnf).
 cOnLine(i,cnf) :- IinvkPrimArg(i,_,u),primCdepSCS(u,cnf).
