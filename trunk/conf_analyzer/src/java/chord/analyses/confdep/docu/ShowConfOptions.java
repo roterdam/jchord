@@ -131,7 +131,7 @@ public class ShowConfOptions extends JavaAnalysis {
     ConfDeps.dumpOptRegexes("conf_writes.txt", DomOpts.computeOptNames("confOptWrites", "confOptWriteLen", "confWritesByName", domH));
     project.runTask("conf-flow-dlog");
 
-    Map<Quad, String> returnedMap = DomOpts.optSites();
+    Set<Pair<Quad,String>> returnedMap = DomOpts.optSites();
 
     System.out.println(new Date() + ": Done classifying.  Used " + methTypeTable.size() + " inference rules for conf typing");
 
@@ -143,28 +143,15 @@ public class ShowConfOptions extends JavaAnalysis {
 //    System.out.println(new Date() + ": Inferring opt types")
 //    recordClassOpts(returnedMap);
     project.runTask("classname-type-inf-dlog");
-    readOptClassCasts(returnedMap);
+    readOptClassCasts();
     
     PrintWriter writer = OutDirUtils.newPrintWriter( System.getProperty("dictionary.name", "options.dict"));
     dict.dump(writer, true);
     writer.close();
   }
-  /*
-  //dump 
-  private void recordClassOpts(Map<Quad, String> optNames ) {
-    ProgramRel classOpts =  (ProgramRel) ClassicProject.g().getTrgt("classOpts");//i
-    classOpts.zero();
-    for(Map.Entry<Quad,String> nameP: optNames.entrySet()) {
-      String name = nameP.getValue();
-      if("ClassName".equals(dict.get(name))) {
-        classOpts.add(nameP.getKey());
-      }
-    }
-    
-    classOpts.close();
-  }*/
 
-  private void readOptClassCasts(Map<Quad, String> returnedMap) {
+
+  private void readOptClassCasts() {
     PrintWriter writer =
       OutDirUtils.newPrintWriter("opt_casts.txt");
     

@@ -17,6 +17,7 @@
 APIMethod(i:I) input
 APIReadOnly(i:I) input
 extraSummary(m:M) input
+scopeExcludedT(t:T) input
 
 #primConversion(u:U,i:I,v:V) input
 #primToRefConversion(v:V,i:I,u:U) input
@@ -29,13 +30,15 @@ reachableM(m:M) input
 instI(i:I) input
 VH(v:V,h:H) input
 HI(h:H,i:I) input
+VT(v:V, t:T) input
+clsTH(t:T0,h:H0) input
 scopeExcludedM(m:M) input
 MPrimCmp(m:M, u1:U, u2:U) input
 
 MmethRet(m:M0,n:Z0,v:V1) input
 MmethArg(m:M0,n:Z0,u:V0) input
 IinvkArg(i:I0,n:Z0,v:V1) input
-#virtIM(i:I,m:M) input
+IinvkArg0(i:I0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
 
 MmethPrimArg(m:M0,n:Z0,u:U0) input
@@ -75,12 +78,13 @@ localMustAlias(v:V,u:V) output
 
 
 #### Collection model
-IRetrieve(i:I,o:V,c:V) input
+RIRetrieve(o:V,c:V) input
 IInsert(i:I,c:V,o:V) input
-INewColl(i:I,c:V,o:V) input
+RIInsert(c:V,o:V) input
+RINewColl(c:V,o:V) input
 
-collHolds(collectionSrc:H,site:Opt)
-vColHolds(collection:V,site:Opt) output
+colHoldsConf(collectionSrc:H,site:Opt) output
+vColHoldsConf(collection:V,site:Opt) output
 taintingCall(call:I,site:Opt) output
 
 Mclones(m:M,l:V,i:I,r:V) input
@@ -106,7 +110,7 @@ absolutePrimCdep(u:U,site:Opt) output
 absoluteReturn(m:M,name:Opt) output
 
 confMethCall(i:I,z:Z,site:Opt) output
-confReturn(m:M, site:Opt) output
+#confReturn(m:M, site:Opt) output
 confArg(m:M,z:Z, site:Opt) output
 returnsConf(i:I,v:V,site:Opt) output
 
@@ -116,19 +120,19 @@ summarizedCallArg(i:I,z:Z)
 
 ##Just output for debugging
 trimmedIM(i:I,m:M) output
-insertM(m:M) output
-retrieveM(m:M) output
 taintMeth(m:M,opt:Opt) output
 taintedSubfield(v:V,b:V,f:F,opt:Opt) output
 
 
 ########## Rules
 
+#commented out purely for debugging...but doesn't seem needed?
+#vColHoldsConf(col,objSite) :- VH(col, hST),colHoldsConf(hST,objSite).
+colHoldsConf(colH,site) :- VH(v,colH),vColHoldsConf(v,site).
+vColHoldsConf(newCol,site) :- RINewColl(newCol, oldCol),vColHoldsConf(oldCol,site).
 
-#collHolds(hST,site) :- HI(hST,site),confUVV(site,_,_).
-vColHolds(col,site) :- VH(col, hST),collHolds(hST,site).
-collHolds(newH,site) :- VH(v,newH),vColHolds(v,site).
-vColHolds(newCol,site) :- INewColl(_,newCol, oldCol),vColHolds(oldCol,site).
+vColHoldsConf(colV,site) :- RIInsert(colV,v),refCdep(v,site).
+
 
 clones(l,r) :- reachableM(m),Mclones(m,l,_,r).
 
@@ -162,12 +166,13 @@ absoluteReturn(m,name) :- MmethPrimRet(m,_,v),absolutePrimCdep(v,name).
 optReadCall(i) :- OptNames(_,i).
 trimmedIM(i,m) :- IM(i,m),!extraSummary(m),!optReadCall(i).
 
+#propagate labels up
 absoluteRefCdep(v,name) :- IinvkRet(i,_,v), trimmedIM(i,m), absoluteReturn(m,name).
 absolutePrimCdep(v,name) :- IinvkPrimRet(i,_,v), trimmedIM(i,m), absoluteReturn(m,name).
 
 #  apply the model
 
-passedThru(i,z) :- functDep(m,z),IM(i,m).
+passedThru(i,z) :- functDep(m,z),IM(i,m),!optReadCall(i).
 
 callLabel(i,name) :-  IinvkArg(i,z,u), passedThru(i,z), refCdep(u,name).
 callLabel(i,name) :-  IinvkPrimArg(i,z,u), passedThru(i,z), primCdep(u,name).
@@ -187,7 +192,7 @@ absoluteRefCdep(v,name) :- IinvkRet(site,0,v),OptNameWithCC(name,site).
 absolutePrimCdep(u,name) :- IinvkPrimRet(site,0,u),OptNameWithCC(name,site).
 
 
-absoluteRefCdep(v,site) :- vColHolds(colV,site),IRetrieve(_,v,colV).
+absoluteRefCdep(v,site) :- vColHoldsConf(colV,site),RIRetrieve(v,colV).
 
 ## (Replace lambdas with arguments)
 
@@ -205,7 +210,6 @@ statHF(f,i) :- putStatFldPrimInst(f,r),primCdep(r,i).
 instHF(bh,f,i) :- putInstFldInst(b,f,r),refCdep(r,i),VH(b,bh). split
 instHF(bh,f,i) :- putInstFldPrimInst(b,f,r),primCdep(r,i),VH(b,bh).  split
 
-vColHolds(colV,site) :- IInsert(_,colV,v),refCdep(v,site).
 
 ## Propagate absolute labels.
 #every rule here should have a duplicate in funcFind
@@ -225,11 +229,12 @@ absoluteRefCdep(l,site) :- getInstFldInst(l,b,0), absoluteRefCdep(b,site).
 
 absolutePrimCdep(v,site) :- getInstFldPrimInst(v,b,_),absoluteRefCdep(b,site).
 
+#Absolute labels propagate through summarized calls
 absCallLabel(i,name) :-  IinvkArg(i,z,u), passedThru(i,z), absoluteRefCdep(u,name).
 absCallLabel(i,name) :-  IinvkPrimArg(i,z,u), passedThru(i,z), absolutePrimCdep(u,name).
-
 absoluteRefCdep(v,name) :- absCallLabel(i,name),IinvkRet(i,_,v).
 absolutePrimCdep(u,name) :- absCallLabel(i,name),IinvkPrimRet(i,_,u).
+
 
 ## Conf flows through API calls
 
@@ -237,7 +242,7 @@ looseSummary(i) :- extraSummary(m),IM(i,m).
 looseSummary(i) :- APIMethod(i).
 
 allocated(u) :- VH(u,_).
-insertUnalloc(i,u) :- IInsert(i,_,u),!allocated(u).
+insertUnalloc(i,u) :- IInsert(i,_,u),!allocated(u),reachableI(i).
 taintingCall(i, opt) :- absoluteRefCdep(u,opt),IinvkArg(i,_,u),looseSummary(i). split
 taintingCall(i, opt) :- absolutePrimCdep(u,opt),IinvkPrimArg(i,_,u),looseSummary(i). split
 taintingCall(i, opt) :- absoluteRefCdep(u,opt),insertUnalloc(i,u).
@@ -248,10 +253,10 @@ absolutePrimCdep(v,opt) :- taintingCall(i, opt),IinvkPrimRet(i,_,v).
 absoluteRefCdep(v,opt) :- taintingCall(i, opt),IinvkArg(i,0,v),instI(i),!APIReadOnly(i).
 
 #propagate other labels
-#cast is a move
-#refCdep(v,site) :- checkCastInst(v,_,u),refCdep(u,site).
 
-refCdep(v,site) :- IRetrieve(_,v,colV),refCdep(colV,site).
+#Collections normally don't get tainted; this handles cases where, e.g.
+# a collection is returned from an API call
+refCdep(v,site) :- RIRetrieve(v,colV),refCdep(colV,site).
 
 
 ##Below is dangerous; a tainted ref with a conf field can infect everything.
@@ -264,11 +269,21 @@ taintedSubfield(v,b,f,opt) :- getInstFldInst(v,b,f),refCdep(b,opt),f!=0.
    
 #refCdep(v,site) :- clones(v,r),instHF(h1,f,site).
 
+#
+# Want to allow mutable references to external types
+
+
+mutatingCall(i) :- instI(i),APIMethod(i),!APIReadOnly(i).
+callAddsTaint(i, opt) :- mutatingCall(i),IinvkPrimArg(i,_,v),primCdep(v,opt).
+callAddsTaint(i, opt) :- mutatingCall(i),IinvkArg(i,z,v),refCdep(v,opt),z!=0.
+mutatedThis(v, opt) :- IinvkArg0(i,v),callAddsTaint(i,opt).
+
+taintedOpaqueRef(v, opt) :- mutatedThis(v,opt),VT(v,t),scopeExcludedT(t).
+instHF(h, f, opt) :- getInstFldInst(l, b, f),VH(b,h),taintedOpaqueRef(l, opt).
+#statHF(f, opt) :- getStatFldInst(b, f),taintedOpaqueRef(b, opt).
 
 ####Debugging
 
-insertM(m) :- IInsert(i,_,_),IM(i,m).
-retrieveM(m) :- IRetrieve(i,_,_),IM(i,m).
 
 returnsConf(i,v,site) :- IinvkRet(i,_,v),refCdep(v,site),!APIMethod(i).
 

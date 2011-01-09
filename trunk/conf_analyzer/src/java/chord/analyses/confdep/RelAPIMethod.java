@@ -74,9 +74,16 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 	}
 
 	private boolean isCollection(Quad q) {
-		return RelInserts.isInsert(q);
+		return RelInserts.isInsert(q) ;
+//		jq_Method meth = Invoke.getMethod(q).getMethod();
+//		jq_Class cl = meth.getDeclaringClass();
+
+//		return RelINewColl.isCollectionType(cl);
 	}
 
+	/**
+	 * Shouldn't taint collections when there's a put.  Or a get.
+	 */
 	@Override
 	public void visitInvokeInst(Quad q) {
 		jq_Method meth = Invoke.getMethod(q).getMethod();

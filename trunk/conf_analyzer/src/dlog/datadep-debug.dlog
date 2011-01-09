@@ -38,6 +38,7 @@ APIMeth(m:M)
 argCdep(m:M, z:Z, opt:Opt)  output
 IargCdep(i:I, z:Z, opt:Opt)  output
 IretDep(i:I, opt:Opt)  output
+MretDep(m:M,opt:Opt) output
 
 putInstFldInst(b:V,f:F,r:V) input
 putInstFldPrimInst(b:V,f:F,r:U) input
@@ -56,6 +57,10 @@ IargCdep(i, z, opt) :- IinvkArg(i,z,v),refCdep(v,opt).
 IargCdep(i, z, opt) :- IinvkPrimArg(i,z,v),primCdep(v,opt).
 IretDep(i,opt) :- IinvkRet(i,_,v),refCdep(v,opt).
 IretDep(i,opt) :- IinvkPrimRet(i,_,v),primCdep(v,opt).
+
+MretDep(m,opt) :- MmethRet(m,_,v),refCdep(v,opt).
+MretDep(m,opt) :- MmethPrimRet(m,_,v),primCdep(v,opt).
+
 
 # Method actually taking a tain
 #

@@ -160,9 +160,10 @@ public class DynConfDepRuntime {
         	printOnce(iIdx + " returns null");
         } else {
           setTaints(ret, returnTaints); //mark return value
-        	if(!RelReadOnlyAPICall.isReadOnly(cname, mname))
-          	setTaints(tref, returnTaints.copy());   //and add taints to this
         }
+        //potentially this regardless of whether we returned null
+      	if(!RelReadOnlyAPICall.isReadOnly(cname, mname))
+        	setTaints(tref, returnTaints.copy());   //and add taints to this
       } 
       
       /*
