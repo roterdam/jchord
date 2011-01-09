@@ -105,14 +105,19 @@ IRetrieve(i:I,o:V,c:V) input
 IInsert(i:I,c:V,o:V) input
 INewColl(i:I,c:V,o:V) input
 
-collHolds(c:H, o:H)
-collHoldsV(c:V, o:H)
+collHolds(c:H, o:H) output
+collHoldsV(c:V, o:H) output
 
-RIRetrieve(o:V,c:V) 
-RIInsert(c:V,o:V) 
-RINewColl(c:V,o:V) 
+RIRetrieve(o:V,c:V) output
+RIInsert(c:V,o:V) output
+RINewColl(c:V,o:V) output
 #emptyColl(v:V)
 #undefV(v:V) output
+
+#debugging
+#insertM(m:M) output
+#retrieveM(m:M) output
+putsInto(v:V, collH:H) output
 
 ###### End of declarations
 
@@ -225,6 +230,7 @@ exclCall(i) :- IM(i,m),scopeExcludedM(m),!retI(i).
 externalArg(v) :- MmethArg(m,_,v),MentryPoints(m).
 externalArg(v) :- IinvkRet(i,_,v),exclCall(i).
 
+#POTENTIALLY DANGEROUS: if v is an object, then sets v to point to everything.
 VH(v,h) :- externalArg(v),VT(v,t),clsTH(t2,h),sub(t,t2).
 #fields of external args point to external args
 HFH(h1,f,h2) :- clsTH(t,h1),TFT(t,f,t2),clsTH(t2,h2).
@@ -240,13 +246,19 @@ RIRetrieve(o,c) :- reachableI(i),IRetrieve(i,o,c).
 RIInsert(c,o) :- reachableI(i),IInsert(i,c,o).
 RINewColl(c1,c2) :- reachableI(i),INewColl(i,c1,c2).
 
+#if v is being inserted into collection at collH
+putsInto(v, collH) :- RIInsert(cv,v),VH(cv,collH).
 
-collHoldsV(cv,oh) :- RIInsert(cv,o),VH(o,oh). 
+collHolds(ch,oh) :- putsInto(v, ch),VH(v,oh). 
+external(h) :- clsTH(_,h).
+#collHoldsV(cv,oh) :- RIInsert(cv,o),VH(o,oh),!external(oh). 
+
 collHoldsV(cv,oh) :- collHolds(ch,oh),VH(cv,ch).
-collHolds(ch,oh) :- collHoldsV(cv,oh),VH(cv,ch).
+#just commenting out the below as a test
+#collHolds(ch,oh) :- collHoldsV(cv,oh),VH(cv,ch).
 collHoldsV(c2v,oh) :- collHoldsV(cv,oh),RINewColl(c2v,cv).
 
-VH(v,oh) :- collHoldsV(cv,oh),RIRetrieve(v,cv). 
+VH(v,oh) :- collHoldsV(cv,oh),RIRetrieve(v,cv),VHfilter(v,oh). 
 
 #try to set return from empty collection to the hypothetical of the class?
 # Somehow this doesn't stratify right.
@@ -258,3 +270,9 @@ VH(v,oh) :- collHoldsV(cv,oh),RIRetrieve(v,cv).
 ### Misc enhancements
 
 checkCastInst(l,t,r)   :- reachableM(m), McheckCastInst(m,l,t,r).
+
+
+## debugging
+#insertM(m) :- IInsert(i,_,_),IM(i,m).
+#retrieveM(m) :- IRetrieve(i,_,_),IM(i,m).
+

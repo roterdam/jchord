@@ -24,6 +24,7 @@ import chord.project.analyses.ProgramRel;
 import chord.util.tuple.integer.*;
 import chord.util.tuple.object.*;
 import chord.analyses.confdep.optnames.DomOpts;
+import java.util.Set;
 import chord.analyses.primtrack.DomUV;
 import chord.analyses.string.DomStrConst;
 import chord.bddbddb.Rel.*;
@@ -205,7 +206,7 @@ public class ConfDeps extends JavaAnalysis {
         String optName = opts.get(p.idx2);
   
         if(f == null ) {
-          if(p.idx1 != 0) //null f when p.idx1 == 0 is uninteresting
+          if(p.idx1 != 0) //null f when p.idx1 == 0 is uninteresting; that's just the array case
             System.out.println("ERR: no F entry for " + p.idx1+ " (Option was " + optName+")");
           continue;
         }
@@ -223,9 +224,9 @@ public class ConfDeps extends JavaAnalysis {
         }
       }
       relConfFields.close();
-    }
+    } //end dynamic block
     ProgramRel relStatFields =
-      (ProgramRel) ClassicProject.g().getTrgt("statHF");//ouputs F0,I
+      (ProgramRel) ClassicProject.g().getTrgt("statHF");//ouputs F0,Opt
     relStatFields.load();
     IntPairIterable statTuples = relStatFields.getAry2IntTuples();
     for (IntPair p : statTuples) {
@@ -249,7 +250,7 @@ public class ConfDeps extends JavaAnalysis {
             f.getName() + " of type " + f.getType().getName()+ ".");
       }
     }
-    
+    relStatFields.close();
     writer.close();
   }
 
@@ -316,13 +317,13 @@ public class ConfDeps extends JavaAnalysis {
   }
 
   
-  public static void dumpOptRegexes(String filename, Map<Quad,String> names) {
+  public static void dumpOptRegexes(String filename, Set<Pair<Quad,String>> names) {
     PrintWriter writer =
       OutDirUtils.newPrintWriter(filename);
 
-    for(Map.Entry<Quad, String> s: names.entrySet()) {
-      Quad quad = s.getKey();
-      String regexStr = s.getValue();
+    for(Pair<Quad, String> s: names) {
+      Quad quad = s.val0;
+      String regexStr = s.val1;
       jq_Method m = quad.getMethod();
       jq_Class cl = m.getDeclaringClass();
       int lineno = quad.getLineNumber();
