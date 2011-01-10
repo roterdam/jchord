@@ -32,7 +32,6 @@ public class RelINewColl extends ProgramRel implements IInvokeInstVisitor {
   DomI domI;
   DomV domV;
   jq_Method method;
-//  static jq_Type COLLECTION, MAP, ITERATOR;
   private static final String[] colTypeNames = {"java.util.Collection","java.util.Map","java.util.Iterator",
     "java.util.concurrent.atomic.AtomicReference", "jchord.util.IndexMap", "jchord.util.IndexSet"};
  // static jq_Type[] collTypes;
