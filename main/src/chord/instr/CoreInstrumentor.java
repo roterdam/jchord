@@ -45,6 +45,9 @@ public class CoreInstrumentor extends ExprEditor {
 		"WARN: CoreInstrumentor: Not instrumenting class %s as it was excluded implicity.";
 	private final static String EXCLUDING_CLASS =
 		"WARN: CoreInstrumentor: Not instrumenting class %s as commanded by overriding instrumentor.";
+	private final static String EXPECTED_EVENT_HANDLER_CLASS =
+		"ERROR: CoreInstrumentor: Could not find value of key " + EVENT_HANDLER_CLASS_KEY +
+			" in instrumentor args; needed if JVMTI is not used.";
 
 	protected int verbose;
 	protected final JavassistPool pool;
@@ -76,9 +79,10 @@ public class CoreInstrumentor extends ExprEditor {
 		}
 		if (!useJvmti) {
 			String c = argsMap.get(EVENT_HANDLER_CLASS_KEY);
-			assert (c != null);
+			if (c == null)
+				Messages.fatal(EXPECTED_EVENT_HANDLER_CLASS);
 			String a = argsMap.get(EVENT_HANDLER_ARGS_KEY);
-			a = (a == null) ? "" : a.replace("\\", "\\\\");
+			a = (a == null) ? "" : a.replace("@", "=").replace("\\", "\\\\");
 			eventHandlerInitCall = c + ".init(\"" + a + "\");";
 			eventHandlerDoneCall = c + ".done();"; 
 		}

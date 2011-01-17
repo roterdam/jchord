@@ -16,6 +16,7 @@ import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
 import chord.project.analyses.CoreDynamicAnalysis;
 import chord.project.Chord;
+import chord.project.Config;
 
 /**
  * Dynamic analysis for resolving reflection.
@@ -31,6 +32,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		new ArrayList<Pair<String, List<String>>>();
 	private final List<Pair<String, List<String>>> resolvedAryNewInstSites =
 		new ArrayList<Pair<String, List<String>>>();
+	private final boolean verbose = (Config.verbose > 2);
 
 	public List<Pair<String, List<String>>> getResolvedClsForNameSites() {
 		return resolvedClsForNameSites;
@@ -54,13 +56,13 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 	}
 
 	@Override
-	public Pair<Class, Map<String, String>> getInstrumentor() {
-		return new Pair<Class, Map<String, String>>(ReflectInstrumentor.class, Collections.EMPTY_MAP);
+	public Class getInstrumentorClass() {
+		return ReflectInstrumentor.class;
 	}
 
 	@Override
-	public Pair<Class, Map<String, String>> getEventHandler() {
-		return new Pair<Class, Map<String, String>>(ReflectEventHandler.class, Collections.EMPTY_MAP);
+	public Class getEventHandlerClass() {
+		return ReflectEventHandler.class;
 	}
 
 	@Override
@@ -71,7 +73,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		{
 			String q = buffer.getString();
 			String c = buffer.getString();
-			// System.out.println("CLS_FOR_NAME: " + q + " " + c);
+			if (verbose) System.out.println("CLS_FOR_NAME: " + q + " " + c);
 			add(resolvedClsForNameSites, q, c);
 			break;
 		}
@@ -79,7 +81,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		{
 			String q = buffer.getString();
 			String c = buffer.getString();
-			// System.out.println("OBJ_NEW_INST: " + q + " " + c);
+			if (verbose) System.out.println("OBJ_NEW_INST: " + q + " " + c);
 			add(resolvedObjNewInstSites, q, c);
 			break;
 		}
@@ -87,7 +89,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		{
 			String q = buffer.getString();
 			String c = buffer.getString();
-			// System.out.println("CON_NEW_INST: " + q + " " + c);
+			if (verbose) System.out.println("CON_NEW_INST: " + q + " " + c);
 			add(resolvedConNewInstSites, q, c);
 			break;
 		}
@@ -95,7 +97,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		{
 			String q = buffer.getString();
 			String c = buffer.getString();
-			// System.out.println("ARY_NEW_INST: " + q + " " + c);
+			if (verbose) System.out.println("ARY_NEW_INST: " + q + " " + c);
 			add(resolvedAryNewInstSites, q, c);
 			break;
 		}

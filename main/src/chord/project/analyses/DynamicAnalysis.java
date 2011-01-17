@@ -104,26 +104,28 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	}
 
 	@Override
-	public Pair<Class, Map<String, String>> getInstrumentor() {
-		if (instrumentor == null) {
-			Class instrumentorClass = Instrumentor.class;
-			Map<String, String> argsMap = super.getInstrumentor().val1;
-			argsMap.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
-			argsMap.put(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY, getEventHandler().val0.getName());
-			instrumentor = new Pair<Class, Map<String, String>>(instrumentorClass, argsMap);
-		}
-		return instrumentor;
+	public Class getInstrumentorClass() {
+		return Instrumentor.class;
 	}
 
 	@Override
-	public Pair<Class, Map<String, String>> getEventHandler() {
-		if (eventHandler == null) {
-			Class eventHandlerClass = EventHandler.class;
-			Map<String, String> argsMap = super.getEventHandler().val1;
-			argsMap.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
-			eventHandler = new Pair<Class, Map<String, String>>(eventHandlerClass, argsMap);
-		}
-		return eventHandler;
+	public Class getEventHandlerClass() {
+		return EventHandler.class;
+	}
+
+	@Override
+	protected Map<String, String> getImplicitInstrumentorArgs() {
+		Map<String, String> args = super.getImplicitInstrumentorArgs();
+		args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
+		args.put(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY, getEventHandlerClass().getName());
+		return args;
+	}
+
+	@Override
+	protected Map<String, String> getImplicitEventHandlerArgs() {
+		Map<String, String> args = super.getImplicitEventHandlerArgs();
+		args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
+		return args;
 	}
 
 	public List<Runnable> getTraceTransformers() {
