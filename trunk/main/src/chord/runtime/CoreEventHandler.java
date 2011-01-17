@@ -19,6 +19,8 @@ import chord.util.ByteBufferedFile;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class CoreEventHandler {
+	public static final String TRACE_BLOCK_SIZE_KEY = "trace_block_size";
+	public static final String TRACE_FILE_NAME_KEY = "trace_file_name";
 	/**
 	 * Flag determining when it is safe to start handling events at runtime.
 	 * It is false when the JVM starts.  It is set to true in the
@@ -77,9 +79,9 @@ public class CoreEventHandler {
 		String traceFileName = null;
 		for (int i = 0; i < a.length; i += 2) {
 			String k = a[i];
-			if (k.equals("trace_block_size"))
+			if (k.equals(TRACE_BLOCK_SIZE_KEY))
 				traceBlockSize = Integer.parseInt(a[i+1]);
-			else if (k.equals("trace_file_name"))
+			else if (k.equals(TRACE_FILE_NAME_KEY))
 				traceFileName = a[i+1];
 		}
 		if (traceFileName != null) {
