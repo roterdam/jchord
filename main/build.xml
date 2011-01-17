@@ -61,30 +61,22 @@
 
 	<!--
 		This target does the following things in order:
-		1. Loads file build.properties from Chord's main/ directory
-		2. Sets property chord.use.buddy if use_buddy=true occurs in that file
-		3. Sets property chord.use.jvmti if use_jvmti=true occurs in that file
-		4. If either property chord.use.buddy or chord.use.jvmti is set then:
+		1. Loads file chord.properties from Chord's main/ directory
+		2. Sets properties chord.use.buddy and chord.use.jvmti to false unless they
+		   have been already set.
+		3. If either property chord.use.buddy or chord.use.jvmti is set to true then:
 			1. sets property chord.jdk_root to the root of the JDK installation
 			2. sets property chord.arch to '-m32' or '-m64'
 			3. sets property chord.make to 'make' on Linux and to 'gmake' on
 			   non-GNU operation systems
 	-->
 	<target name="build-props">
-		<property file="build.properties"/>
-		<fail message="Property chord.use.buddy must not be explicitly set.">
-			<condition><isset property="chord.use.buddy"/></condition>
-		</fail>
-		<fail message="Property chord.use.jvmti must not be explicitly set.">
-			<condition><isset property="chord.use.jvmti"/></condition>
-		</fail>
-		<condition property="chord.use.buddy">
-			<equals arg1="${use_buddy}" arg2="true"/>
-		</condition>
-		<condition property="chord.use.jvmti">
-			<equals arg1="${use_jvmti}" arg2="true"/>
-		</condition>
-		<if><or><isset property="chord.use.buddy"/><isset property="chord.use.jvmti"/></or>
+		<property file="chord.properties"/>
+		<property name="chord.use.buddy" value="false"/>
+		<property name="chord.use.jvmti" value="false"/>
+		<if><or><equals arg1="${chord.use.buddy}" arg2="true"/>
+				<equals arg1="${chord.use.jvmti}" arg2="true"/>
+			</or>
 			<then>
 				<path id="jdk_root"><pathelement location="${java.home}/.."/></path>
 				<pathconvert targetos="unix" property="chord.jdk_root" refid="jdk_root"/>
@@ -180,7 +172,7 @@
 	-->
 
 	<target name="compile" depends="build-props, paths" description="Compile Chord.">
-		<if><isset property="chord.use.buddy"/>
+		<if><equals arg1="${chord.use.buddy}" arg2="true"/>
 			<then>
 				<exec executable="${chord.make}" dir="bdd">
 					<arg value="JDK_ROOT=${chord.jdk_root}"/>
@@ -188,7 +180,7 @@
 				</exec>
 			</then>
 		</if>
-		<if><isset property="chord.use.jvmti"/>
+		<if><equals arg1="${chord.use.jvmti}" arg2="true"/>
 			<then>
 				<exec executable="${chord.make}" dir="agent">
 					<arg value="JDK_ROOT=${chord.jdk_root}"/>
@@ -374,14 +366,14 @@
 	<target name="clean" depends="build-props" description="Clean all generated files.">
 		<delete dir="classes"/>
 		<delete file="${lib.home}/chord_instr_agent.jar"/>
-		<if><isset property="chord.use.jvmti"/>
+		<if><equals arg1="${chord.use.buddy}" arg2="true"/>
 			<then>
 				<exec executable="${chord.make}" dir="bdd">
 					<arg value="clean"/>
 				</exec>
 			</then>
 		</if>
-		<if><isset property="chord.use.buddy"/>
+		<if><equals arg1="${chord.use.jvmti}" arg2="true"/>
 			<then>
 				<exec executable="${chord.make}" dir="agent">
 					<arg value="clean"/>
