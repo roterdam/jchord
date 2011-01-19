@@ -61,6 +61,8 @@ primDataDep(l:U0,r:U1)
 IM(i:I,m:M) input
 MI(m:M,i:I) input
 VH(v:V,h:H) input
+MV(m:M,v:V) input
+MU(m:M,u:U) input
 
 
 #### Inputs from regular data-dependence analysis
@@ -71,8 +73,8 @@ functDep(m:M,z:Z) input
 
 refCdep(v:V,site:Opt) input
 primCdep(u:U,site:Opt) input
-#absoluteRefCdep(v:V,site:Opt) input
-#absolutePrimCdep(u:U,site:Opt) input
+absoluteRefCdep(v:V,site:Opt) input
+absolutePrimCdep(u:U,site:Opt) input
 
 
 # Don't do lambda-substitution here, instead do VV propagation down path
@@ -123,6 +125,9 @@ instI(i:I0) input
 #methods on the failure path, excluding the base
 calledOnFail(m) :- failPathIM(i,m),FailurePath(i).
 straceBase(m) :- failPathM(m),!calledOnFail(m).
+failPathV(v) :- MV(m,v),failPathM(m).
+failPathU(u) :- MU(m,u),failPathM(m).
+
 
 getInstFldInst(l,b,f) :- failPathM(m), MgetInstFldInst(m,l,b,f).
 getStatFldInst(l,f)   :- failPathM(m), MgetStatFldInst(m,l,f).
@@ -133,26 +138,22 @@ getInstFldPrimInst(l,b,f) :- failPathM(m), MgetInstFldPrimInst(m,l,b,f).
 objVarAsgnInst(l,r) :-  BeforeFail(p),PobjVarAsgnInst(p,l,r).
 primDataDep(l,r) :- failPathM(m), MprimDataDep(m,l,r).
 
+# try copying in from absolute
+
+refCdepSCS(v,name) :- absoluteRefCdep(v,name),failPathV(v).
+primCdepSCS(u,name) :- absolutePrimCdep(u,name),failPathU(u).
 
 ## Copy-in return values from off-path and field reads
 
-refCdepSCS(v,name) :- IinvkRet(i,_,v), failPathIM(i,m), absoluteReturn(m,name).
-primCdepSCS(v,name) :- IinvkPrimRet(i,_,v), failPathIM(i,m), absoluteReturn(m,name).
+#ONInScope(name, site) :- OptNames(name,site),failPathI(site).
 
-refCdepSCS(v,site) :- statHF(f,site),getStatFldInst(v,f).
-refCdepSCS(v,site) :- instHF(bh,f,site),getInstFldInst(v,b,f), VH(b,bh). split
+#optReadCall(site) :- OptNames(_,site).
+#ONInScope(name,site) :- optReadCall(site),IinvkPrimArg(site,_,v),primCdep(v,name),failPathI(site).
+#ONInScope(name,site) :- optReadCall(site),IinvkArg(site,_,v),refCdep(v,name),failPathI(site).
+#refCdepSCS(v,name) :- IinvkRet(site,0,v),ONInScope(name,site).
+#primCdepSCS(u,name) :- IinvkPrimRet(site,0,u),ONInScope(name,site).
 
-primCdepSCS(v,site) :- statHF(f,site),getStatFldPrimInst(v,f).
-primCdepSCS(v,site) :- instHF(bh, f,site),getInstFldPrimInst(v,b,f), VH(b,bh). split
 
-ONInScope(name, site) :- OptNames(name,site),failPathI(site).
-
-optReadCall(site) :- OptNames(_,site).
-ONInScope(name,site) :- optReadCall(site),IinvkPrimArg(site,_,v),primCdep(v,name),failPathI(site).
-ONInScope(name,site) :- optReadCall(site),IinvkArg(site,_,v),refCdep(v,name),failPathI(site).
-
-refCdepSCS(v,name) :- IinvkRet(site,0,v),ONInScope(name,site).
-primCdepSCS(u,name) :- IinvkPrimRet(site,0,u),ONInScope(name,site).
 
 #should do this, but not needed yet.
 #refCdepSCS(v,site) :- vColHolds(colV,site),IRetrieve(i,v,colV),failPathI(i).

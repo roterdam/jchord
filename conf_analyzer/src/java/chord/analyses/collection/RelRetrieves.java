@@ -44,6 +44,9 @@ public class RelRetrieves extends ProgramRel implements IInvokeInstVisitor {
 		jq_Class cl = meth.getDeclaringClass();
 		String mname = meth.getName().toString();
 
+		if(mname.equals("toArray"))
+			return true;
+		
 		return (RelINewColl.isCollectionType(cl) && !meth.isStatic() ) &&
 		meth.getReturnType().equals(OBJ_T);
 	}
