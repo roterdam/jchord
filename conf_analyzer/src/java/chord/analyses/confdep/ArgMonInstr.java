@@ -15,7 +15,9 @@ import chord.util.ChordRuntimeException;
  */
 public class ArgMonInstr extends Instrumentor {
   
-  protected static final String methodCallAftEventCallSuper = DynConfDepRuntime.class.getCanonicalName() + ".methodCallAftEventSuper(";
+  protected static final String methodCallAftEventCallSuper = DynConfDepRuntime.class.getCanonicalName() + ".afterMethodCall(";
+  protected static final String methodCallBefEventCallSuper = DynConfDepRuntime.class.getCanonicalName() + ".beforeMethodCall(";
+
   boolean HANDLE_EXCEPTIONS = false;
 
   public ArgMonInstr(Map<String, String> argsMap) {
@@ -77,10 +79,14 @@ public class ArgMonInstr extends Instrumentor {
   
       String aftInstr = "";
       String exRet = "";
+      String befInstr = "";
       int iId =  set(Imap, e) ;
       
 
       if(Modifier.isStatic(e.getMethod().getModifiers())) { 
+      	befInstr += methodCallBefEventCallSuper + iId + ",\""+e.getClassName()+"\",\""+ 
+        e.getMethodName() + "\",null,$args);";
+      	
         aftInstr += methodCallAftEventCallSuper +iId + ",\""+e.getClassName()+"\",\""+ 
         e.getMethodName() + "\",($w)$_,null,$args);";
         
@@ -88,6 +94,9 @@ public class ArgMonInstr extends Instrumentor {
         e.getMethodName() + "\",null,null,$args);";
 
       } else {
+      	befInstr += methodCallBefEventCallSuper + iId+",\""+e.getClassName()+"\",\""+ 
+        e.getMethodName() + "\",$0,$args);"; 
+
         aftInstr += methodCallAftEventCallSuper + iId+",\""+e.getClassName()+"\",\""+ 
         e.getMethodName() + "\",($w)$_,$0,$args);"; 
         
@@ -96,10 +105,10 @@ public class ArgMonInstr extends Instrumentor {
       }
       
       if(HANDLE_EXCEPTIONS)
-       e.replace(" { try { $_ = $proceed($$); " +aftInstr + " } catch (java.lang.Throwable ex) { " +
+       e.replace(" { "+ befInstr+ " try { $_ = $proceed($$); " +aftInstr + " } catch (java.lang.Throwable ex) { " +
       		 exRet +  " throw ex;} }");
       else
-      	e.replace("{ $_ = $proceed($$); " +  aftInstr + " }"); 
+      	e.replace("{ " + befInstr+  "  $_ = $proceed($$); " +  aftInstr + " }"); 
 
       return;
     } catch (CannotCompileException ex) {

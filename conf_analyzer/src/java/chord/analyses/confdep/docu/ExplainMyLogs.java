@@ -87,7 +87,7 @@ public class ExplainMyLogs extends JavaAnalysis{
 			} 
 			String prunedName = ConfDefines.pruneName(opt);
 			prunedName = prunedName.replaceAll("\\.([^\\*])", "\\\\.$1");
-			optPats.put(opt, Pattern.compile("^"+prunedName+"|[^$|-]"+prunedName));
+			optPats.put(opt, Pattern.compile("^"+prunedName+"|[^$-]"+prunedName));
 		}
 		return optPats;
 	}

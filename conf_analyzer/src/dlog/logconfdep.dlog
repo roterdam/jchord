@@ -63,6 +63,7 @@ logPrimArg(i,z,u) :- logVHoldsU(i,u,z),RlogStmt(i).
 dependentLogStmt(logStmt,uv) :- RlogStmt(logStmt),primControlDep(logStmt,uv).
 uvConf(uv,src) :- UVU(uv,u),primCdep(u,src).
 uvConf(uv,src) :- primRefDep(uv,v),refCdep(v,src).
+uvConf(uv,src) :- UVV(uv,v),refCdep(v,src).
 
 logConfDep(logStmt, src) :-  dependentLogStmt(logStmt,uv),uvConf(uv, src).
 

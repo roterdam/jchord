@@ -38,7 +38,7 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 	 *
 	 */
 	public static final boolean isAPI(String classname, String methname) {
-		if(ConfDefines.isConf(classname, methname))
+		if(ConfDefines.isConf(classname, methname) && !methname.equals("toArray"))
 			return false;
 
 		//compareTo and equals should taint return value, only
