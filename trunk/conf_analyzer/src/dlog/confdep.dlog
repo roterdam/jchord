@@ -41,6 +41,8 @@ uvConfDep(u:UV,src:Opt) output
 # also array length
 uvConfDep(u,opt) :- primRefDep(u,v),refCdep(v,opt).
 uvConfDep(u,opt) :- UVV(u,v),refCdep(v,opt).
+#uvConfDep(u,opt) :- UVU(u,v),primCdep(v,opt).
+
 
 confControlDep(i,opt) :- uvConfDep(u,opt),primControlDep(i,u).
 confControlDep(i,opt) :- primCdep(u,opt),UVU(uv,u),primControlDep(i,uv).

@@ -77,15 +77,9 @@ public class DynConfDep extends CoreDynamicAnalysis {
     ClassicProject project = ClassicProject.g();
     System.out.println("done all passes; slurping results");
 
-//    DomH domH = (DomH) project.getTrgt("H");
-//    project.runTask(domH);
-
     DomI domI = (DomI) project.getTrgt("I");
     project.runTask(domI);
     
-
-//    DomUV domUV = (DomUV) project.getTrgt("UV");
-//    project.runTask(domUV);
     DomV domV = (DomV) project.getTrgt("V");
     project.runTask(domV);
 
@@ -93,10 +87,6 @@ public class DynConfDep extends CoreDynamicAnalysis {
     try {
       
       DomOpts domOpts = buildDomOpts(domI);
-      //need to save so adding tuples will work
-//      DomOpts domOpts =  (DomOpts)  project.getTrgt("Opt");
- //     domOpts.clear(); //necessary?
- //     domOpts.getOrAdd(DomOpts.NONE);
       
       ProgramRel relConf = (ProgramRel) project.getTrgt("OptNames"); //opt, i
       ProgramRel relUse = (ProgramRel) project.getTrgt("dynCUse");

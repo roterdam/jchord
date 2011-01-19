@@ -63,6 +63,7 @@ public class RelReadOnlyAPICall extends ProgramRel implements IInvokeInstVisitor
 
 	public static boolean isReadOnly(String classname, String methname) {
 		return methname.equals("equals") || methname.equals("compareTo") || methname.equals("get") ||
+		methname.equals("toArray") ||
 		classname.startsWith("joeq") || classname.startsWith("net.sf.bddb") ;
 	}
 
