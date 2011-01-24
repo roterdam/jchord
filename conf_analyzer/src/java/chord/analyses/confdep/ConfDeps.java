@@ -1,6 +1,5 @@
 /*
- * Copyright (c) 2008-2009, Intel Corporation.
- * Copyright (c) 2006-2007, The Trustees of Stanford University.
+ * Copyright (c) 2010-2011, Ariel Rabkin.
  * All rights reserved.
  */
 package chord.analyses.confdep;
@@ -103,6 +102,9 @@ public class ConfDeps extends JavaAnalysis {
 	  }
 	  
 	  if(SUPERCONTEXT) {
+//    	Project.runTask("PobjVarAsgnInst"); //to avoid counting domP time in SCS
+//  		maybeRun(Project,"confdep-dlog"); //to mark primRefDep as done
+
       Project.runTask("scs-datadep-dlog");
       Project.runTask("scs-confdep-dlog");
 	  } else 
