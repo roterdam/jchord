@@ -70,7 +70,10 @@ public class DynConfDepRuntime {
 			StringBuilder sb = new StringBuilder();
 			sb.append("{");
 			for(Object a : arr) {
-				sb.append(a.toString());
+				if(a != null)
+					sb.append(a.toString());
+				else 
+					sb.append("null");
 				sb.append(",");
 			}
 			if(sb.length() > 0)
