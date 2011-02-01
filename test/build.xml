@@ -8,6 +8,7 @@
 
 	<target name="help">
 		<echo>
+		compile  Compile testing infrastructure
 		test-all Test all Chord components
 				Optional properties:
 				- test.dirs       (comma-separated list of directories under bench/ to be included; default="${test.dirs}")
@@ -55,14 +56,14 @@
 			<sequential>
 				<ant dir="@{testdir}" target="clean"/>
 				<ant dir="@{testdir}" target="compile"/>
-				<ant dir="${chord.home.dir}" target="run">
-					<property name="chord.work.dir" value="@{testdir}"/>
-					<property name="chord.build.scope" value="true"/>
-				</ant>
-				<antcall target="subset">
-					<param name="arg1" location="@{testdir}/correct_output/methods.txt"/>
-					<param name="arg2" location="@{testdir}/chord_output/methods.txt"/>
-				</antcall> 
+				<if>
+					<isset property="test.scope"/>
+					<then>
+						<antcall target="test-scope">
+							<param name="testdir" value="@{testdir}"/>
+						</antcall>
+					</then>
+				</if>
 				<if>
 					<isset property="test.main"/>
 					<then>
@@ -120,11 +121,29 @@
 	-->
 
 	<!--
+		Test program scope construction.
+	-->
+	<target name="test-scope">
+		<fail unless="testdir"/>
+		<echo message="===== STARTING test-scope ON: ${testdir}"/>
+		<ant dir="${chord.home.dir}" target="run">
+			<property name="chord.work.dir" value="${testdir}"/>
+			<property name="chord.reuse.scope" value="true"/>
+			<property name="chord.build.scope" value="true"/>
+		</ant>
+		<antcall target="subset">
+			<param name="arg1" location="${testdir}/correct_output/methods.txt"/>
+			<param name="arg2" location="${testdir}/chord_output/methods.txt"/>
+		</antcall> 
+	</target>
+
+	<!--
 		Test basic program domains and relations.
 	-->
 	<target name="test-main">
 		<fail unless="testdir"/>
 		<echo message="===== STARTING test-main ON: ${testdir}"/>
+		<echo message="Generating following domains and relations: ${chord.main.doms_and_rels}."/>
 		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
@@ -283,7 +302,7 @@
 	<!--
 		params: arg1, arg2
 	-->
-	<target name="eqset" depends="compile">
+	<target name="eqset">
 		<java classname="FileCmp" fork="true" classpath="classes">
 			<arg line="-eq ${arg1} ${arg2}"/> 
 		</java>
@@ -291,7 +310,7 @@
 	<!--
 		params: arg1, arg2
 	-->
-	<target name="subset" depends="compile">
+	<target name="subset">
 		<java classname="FileCmp" fork="true" classpath="classes">
 			<arg line="-sub ${arg1} ${arg2}"/> 
 		</java>

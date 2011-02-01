@@ -35,20 +35,23 @@ public class FileCmp {
 		for (String s : lines1) {
 			if (!lines2.contains(s)) {
 				if (isFirst) {
-					System.out.println("ERROR: File " + fileName1 +
-						" not equal to file " + fileName2 + ":");
+					System.out.println("FAILED: File " + fileName1 +
+						" is not equal to file " + fileName2 + ":");
 					isFirst = false;
 				}
 				System.out.println("< " + s);
 			}
 		}
-		if (isFirst && lines2.size() == lines1.size())
+		if (isFirst && lines2.size() == lines1.size()) {
+			System.out.println("PASSED: File " + fileName1 +
+				" is equal to file " + fileName2 + ".");
 			return 0;
+		}
 		for (String s : lines2) {
 			if (!lines1.contains(s)) {
 				if (isFirst) {
-					System.out.println("ERROR: File " + fileName1 +
-						" not equal to file " + fileName2 + ":");
+					System.out.println("FAILED: File " + fileName1 +
+						" is not equal to file " + fileName2 + ":");
 					isFirst = false;
 				}
 				System.out.println("> " + s);
@@ -69,14 +72,19 @@ public class FileCmp {
 		for (String s : lines1) {
 			if (!lines2.contains(s)) {
 				if (isFirst) {
-					System.out.println("ERROR: File " + fileName1 +
-						" not a subset of file " + fileName2 + ":");
+					System.out.println("FAILED: File " + fileName1 +
+						" is not a subset of file " + fileName2 + ":");
 					isFirst = false;
 				}
 				System.out.println("< " + s);
 			}
 		}
-		return (isFirst) ? 0 : 1;
+		if (isFirst) {
+			System.out.println("PASSED: File " + fileName1 +
+				" is a subset of file " + fileName2 + ".");
+			return 0;
+		}
+		return 1;
 	}
 	private static Set<String> readFileToSet(String fileName) throws IOException {
 		BufferedReader in = new BufferedReader(new FileReader(fileName));
