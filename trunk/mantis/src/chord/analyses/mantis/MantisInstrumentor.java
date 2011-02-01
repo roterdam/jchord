@@ -11,7 +11,7 @@ import java.util.ArrayList;
 import chord.instr.CoreInstrumentor;
 import chord.program.Program;
 import chord.project.ClassicProject;
-import chord.doms.DomM;
+import chord.analyses.method.DomM;
 import chord.project.Messages;
 import chord.project.Config;
 

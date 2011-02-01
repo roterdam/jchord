@@ -11,12 +11,16 @@ import java.io.FileReader;
 public class PostProcessor {
 	static final boolean keepSum = true;
 	public static void main(String[] args) throws IOException {
-		String dataDirName = System.getProperty("datadir", "results/");
-		int numData = Integer.getInteger("numdata", 1000);
-		List<String> ctrlFeatureNames = readStrings(new File("final/ctrl_feature_name.txt"));
-		List<String> boolFeatureNames = readStrings(new File("final/bool_feature_name.txt"));
-		List<String> longFeatureNames = readStrings(new File("final/long_feature_name.txt"));
-		List<String> realFeatureNames = readStrings(new File("final/real_feature_name.txt"));
+		String profileDirName = System.getProperty("profile_dir");
+		assert (profileDirName != null);
+		String featureDirName = System.getProperty("feature_dir");
+		assert (featureDirName != null);
+		int numData = Integer.getInteger("num_runs");
+		assert (numData != 0);
+		List<String> ctrlFeatureNames = readStrings(new File(featureDirName, "ctrl_feature_name.txt"));
+		List<String> boolFeatureNames = readStrings(new File(featureDirName, "bool_feature_name.txt"));
+		List<String> longFeatureNames = readStrings(new File(featureDirName, "long_feature_name.txt"));
+		List<String> realFeatureNames = readStrings(new File(featureDirName, "real_feature_name.txt"));
 		int numCtrlFeatures = ctrlFeatureNames.size();
 		int numBoolFeatures = boolFeatureNames.size();
 		int numLongFeatures = longFeatureNames.size();
@@ -29,7 +33,7 @@ public class PostProcessor {
 		int   [][] realFrqData = new int   [numData][numRealFeatures/2];
 		boolean[] ignoreData = new boolean[numData];
 		for (int i = 0; i < numData; i++) {
-			File dir = new File(dataDirName, Integer.toString(i));
+			File dir = new File(profileDirName, Integer.toString(i));
 			if (!dir.exists()) {
 				System.err.println("WARN: Skipping data: " + dir);
 				ignoreData[i] = true;
