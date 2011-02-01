@@ -45,6 +45,14 @@ import chord.util.IntArraySet;
 import chord.util.FileUtils;
 
 /**
+ * Dynamic thread-escape analysis.
+ *
+ * Relevant system properties:
+ *
+ * chord.escape.kind = [tc|tc_alloc|tc_alloc_prune] (default = tc)
+ * chord.escape.file = <filename> (default = null)
+ * chord.escape.k = <int> (default = 0)
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(

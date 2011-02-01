@@ -75,8 +75,14 @@ import chord.util.Timer;
 import chord.project.OutDirUtils;
 
 /**
+ * Static thread-escape analysis.
+ *
  * Consumes relation locEH
  * Produces files shape_fullEscE.txt, shape_fullLocE.txt, and results.html
+ *
+ * Relevant system properties:
+ * chord.escape.opt = [true|false] (default = true)
+ * chord.rhs.timeout = N (default = 300000)
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -87,6 +93,7 @@ import chord.project.OutDirUtils;
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
+	private final boolean optimizeSummaries;
 	private DomM domM;
 	private DomI domI;
 	private DomV domV;
@@ -105,6 +112,11 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
     private MyQuadVisitor qv = new MyQuadVisitor();
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
+
+	public ThreadEscapeFullAnalysis() {
+ 		optimizeSummaries = System.getProperty("chord.escape.opt", "true").equals("true");
+		System.out.println("optimizeSummaries: " + optimizeSummaries);
+	}
 
 	@Override
 	public void run() {
@@ -341,18 +353,22 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			int numVars = methToNumVars.get(m2);
 			Obj[] env = new Obj[numVars];
 			int z = 0;
+			boolean allEsc = optimizeSummaries ? false : true;
 			for (int i = 0; i < numArgs; i++) {
 				RegisterOperand ao = args.get(i);
 				if (ao.getType().isReferenceType()) {
 					int aIdx = getIdx(ao);
-					Obj o = dstEnv[aIdx];
-					env[z++] = o;
+					Obj aPts = dstEnv[aIdx];
+					if (aPts != Obj.EMTY && aPts != Obj.ONLY_ESC)
+						allEsc = false;
+					env[z++] = aPts;
 				}
 			}
 			while (z < numVars)
 				env[z++] = Obj.EMTY;
-			SrcNode srcNode2 = new SrcNode(env, dstNode.heap);
-			DstNode dstNode2 = new DstNode(env, dstNode.heap, false, false);
+			ArraySet<FldObj> dstHeap2 = allEsc ? emptyHeap : dstNode.heap;
+			SrcNode srcNode2 = new SrcNode(env, dstHeap2);
+			DstNode dstNode2 = new DstNode(env, dstHeap2, false, false);
 			pe2 = new Edge(srcNode2, dstNode2);
 		}
 		return pe2;
@@ -410,12 +426,11 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		}
 		DstNode clrDstNode = clrPE.dstNode;
 		SrcNode tgtSrcNode = tgtSE.srcNode;
-		if (!clrDstNode.heap.equals(tgtSrcNode.heap))
-			return null;
 		Obj[] clrDstEnv = clrDstNode.env;
 		Obj[] tgtSrcEnv = tgtSrcNode.env;
         ParamListOperand args = Invoke.getParamList(q);
         int numArgs = args.length();
+		boolean allEsc = optimizeSummaries ? false : true;
         for (int i = 0, fIdx = 0; i < numArgs; i++) {
             RegisterOperand ao = args.get(i);
             if (ao.getType().isReferenceType()) {
@@ -423,11 +438,26 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
                 Obj aPts = clrDstEnv[aIdx];
                 Obj fPts = tgtSrcEnv[fIdx];
                 if (aPts != fPts)
-                	return null;
+					return null;
+				if (aPts != Obj.EMTY && aPts != Obj.ONLY_ESC)
+					allEsc = false;
                 fIdx++;
 			}
 		}
+		ArraySet<FldObj> clrDstHeap = clrDstNode.heap;
+		ArraySet<FldObj> tgtSrcHeap = tgtSrcNode.heap;
 		DstNode tgtRetNode = tgtSE.dstNode;
+		ArraySet<FldObj> tgtRetHeap = tgtRetNode.heap;
+		ArraySet<FldObj> clrDstHeap2;
+		if (allEsc) {
+			assert (tgtSrcHeap == emptyHeap);
+			clrDstHeap2 = new ArraySet<FldObj>(clrDstHeap);
+			clrDstHeap2.addAll(tgtRetHeap);
+		} else {
+			if (!clrDstHeap.equals(tgtSrcHeap))
+				return null;
+			clrDstHeap2 = tgtRetHeap;
+		}
         int n = clrDstEnv.length;
         Obj[] clrDstEnv2 = new Obj[n];
         RegisterOperand ro = Invoke.getDest(q);
@@ -437,7 +467,13 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
         	clrDstEnv2[rIdx] = tgtRetNode.env[0];
         }
 		boolean isKill = tgtRetNode.isKill;
-		if (isKill) {
+		if (allEsc || !isKill) {
+			for (int i = 0; i < n; i++) {
+				if (i != rIdx) {
+					clrDstEnv2[i] = clrDstEnv[i];
+				}
+			}
+		} else {
 			for (int i = 0; i < n; i++) {
 				if (i != rIdx) {
 					if (clrDstEnv[i] == Obj.EMTY)
@@ -446,15 +482,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
         				clrDstEnv2[i] = Obj.ONLY_ESC;
 				}
 			}
-		} else {
-			for (int i = 0; i < n; i++) {
-				if (i != rIdx) {
-					clrDstEnv2[i] = clrDstEnv[i];
-				}
-			}
         }
         DstNode clrDstNode2 = new DstNode(clrDstEnv2,
-			tgtRetNode.heap, isKill || clrDstNode.isKill, false);
+			clrDstHeap2, isKill || clrDstNode.isKill, false);
 		return new Edge(clrPE.srcNode, clrDstNode2);
 	}
 	
