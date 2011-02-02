@@ -3,10 +3,12 @@ package chord.analyses.mantis;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.FileWriter;
+import java.io.File;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import chord.instr.CoreInstrumentor;
 import chord.program.Program;
@@ -36,9 +38,135 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Util.Templates.ListIterator;
 
+/**
+ * 1. Instruments all classes not excluded by property chord.scope.exclude.
+ * 2. Generates user classes Mantis0, ..., MantisN.
+ * 3. Generates user class MantisPrinter and instruments the program's main method.
+ * 4. Generates files [ctrl|bool|long|real]_feature_name.txt in the directory
+ *    specified by property chord.mantis.out.dir.  Each of these files contains the 
+ *    names of all features resulting from the corresponding instrumentation scheme
+ *    defined below.
+ *
+ * Relevant system properties:
+ * - chord.scope.exclude
+ * - chord.mantis.out.dir (default = chord.out.dir)
+ * - chord.mantis.max.flds.class
+ * - chord.mantis.max.flds.method
+ *
+ * Instrumentation is done as follows, one class at a time:
+ *
+ * Let <CNAME> denote the name of a class not in chord.scope.exclude.
+ * Let <Mid> be the index in domain M of a method in such a class.
+ * Let <Bid> be the bytecode index of an instruction in the body of such a method.
+ * Let <K> be the number of the current Mantis<K> class being generated.
+ *
+ * 1. If the instruction is an IntIfCmp quad then the following fields are created
+ *    in class Mantis<K>:
+ *    public static int <C>_b<Bid>m<Mid>_bef;
+ *    public static int <C>_b<Bid>m<Mid>_aft;
+ *    and the following code is inserted immediately before/after the
+ *    instruction respectively:
+ *    Mantis<K>.<C>_b<Bid>m<Mid>_bef++;
+ *    Mantis<K>.<C>_b<Bid>m<Mid>_aft++;
+ * 
+ * 2. If the instruction is a method call that returns a value V of type boolean
+ *    then the following fields are created in class Mantis<K>:
+ *    public static int <C>_b<Bid>m<Mid>_true;
+ *    public static int <C>_b<Bid>m<Mid>_false;
+ *    and the following code is inserted immediately after the call:
+ *    if (V)
+ *        Mantis<K>.<C>_b<Bid>m<Mid>_true++;
+ *    else
+ *        Mantis<K>.<C>_b<Bid>m<Mid>_false++;
+ * 3. If the instruction is a method call that returns a value V of type byte,
+ *    short, int, or long then the following fields are created in class Mantis<K>:
+ *    public static long <C>_b<Bid>m<Mid>_long_sum;
+ *    public static int  <C>_b<Bid>m<Mid>_long_freq;
+ *    and the following code is inserted immediately after the call:
+ *    Mantis<K>.<C>_b<Bid>m<Mid>_long_sum += V;
+ *    Mantis<K>.<C>_b<Bid>m<Mid>_long_freq++;
+ *
+ * 4. If the instruction is a method call that returns a value V of type float or
+ *    double then the following fields are created in class Mantis<K>:
+ *    public static double <C>_b<Bid>m<Mid>_double_sum;
+ *    public static int    <C>_b<Bid>m<Mid>_double_freq;
+ *    and the following code is inserted immediately after the call:
+ *    Mantis<K>.<C>_b<Bid>m<Mid>_double_sum += V;
+ *    Mantis<K>.<C>_b<Bid>m<Mid>_double_freq++;
+ *
+ * ======
+ *
+ * Generated classes Mantis0, Mantis1, ..., MantisN are of the form:
+ *
+ * class Mantis<K> {
+ *    // each static field below is generated during instrumentation of classes
+ *    // as described above; at most chord.mantis.max.flds.class fields are
+ *    // defined in each such Mantis<K> class. 
+ *    public static int <C>_b<Bid>m<Mid>_bef;
+ *    public static int <C>_b<Bid>m<Mid>_aft;
+ *    public static int <C>_b<Bid>m<Mid>_true;
+ *    public static int <C>_b<Bid>m<Mid>_false;
+ *    public static long <C>_b<Bid>m<Mid>_long_sum;
+ *    public static int <C>_b<Bid>m<Mid>_long_freq;
+ *    public static double <C>_b<Bid>m<Mid>_double_sum;
+ *    public static int <C>_b<Bid>m<Mid>_double_freq;
+ * }
+ *
+ * ======
+ *
+ * Generated class MantisPrinter is of the form:
+ *
+ * class MantisPrinter {
+ *     public static java.io.PrintWriter ctrlOut;
+ *     public static java.io.PrintWriter boolOut;
+ *     public static java.io.PrintWriter longOut;
+ *     public static java.io.PrintWriter realOut;
+ *     // each print<K> method below prints the values of at most
+ *     // chord.mantis.max.flds.method static fields defined in classes
+ *     // Mantis0, Mantis1, ..., MantisN to one of the four relevant
+ *     // output files above.
+ *     public static void print0() { ... }
+ *     public static void print1() { ... }
+ *     ...
+ *     public static void printM() { ... }
+ *     public static void done() {
+ *        try { 
+ *           ctrlOut = new java.io.PrintWriter(new java.io.FileWriter(...));
+ *           boolOut = new java.io.PrintWriter(new java.io.FileWriter(...));
+ *           longOut = new java.io.PrintWriter(new java.io.FileWriter(...));
+ *           realOut = new java.io.PrintWriter(new java.io.FileWriter(...));
+ *           print0();
+ *           print1();
+ *           ...
+ *           printM();
+ *           ctrlOut.close();
+ *           boolOut.close();
+ *           longOut.close();
+ *           realOut.close();
+ *        } catch (java.io.IOException ex) {
+ *           ex.printStackTrace();
+ *           System.exit(1);
+ *        }
+ *     }
+ * }
+ *
+ * This class generates at runtime files [ctrl|bool|long|real]_feature_data.txt
+ * in the current directory.  Each of these files contains feature values
+ * resulting from the corresponding instrumentation scheme, in the same order as
+ * that in the *_feature_name.txt files.
+ *
+ * ======
+ *
+ * Finally, a call to MantisPrinter.done() is inserted at the end of the
+ * main method of the program.
+ */
 public class MantisInstrumentor extends CoreInstrumentor {
-    private static final int maxFldsPerMantisClass = 8000;
-    private static final int maxFldsPerMantisPrintMethod = 1000;
+	private static final String outDirName =
+		System.getProperty("chord.mantis.out.dir", Config.outDirName);
+    private static final int maxFldsPerMantisClass =
+		Integer.getInteger("chord.mantis.max.flds.class", 8000);
+    private static final int maxFldsPerMantisPrintMethod = 
+		Integer.getInteger("chord.mantis.max.flds.method", 1000);
 	private final DomM domM;
 	// index in domain M of currently instrumented method
 	private int mIdx;
@@ -54,7 +182,7 @@ public class MantisInstrumentor extends CoreInstrumentor {
     }
 
 	public MantisInstrumentor() {
-		super(null);
+		super(Collections.EMPTY_MAP);
 		domM = (DomM) ClassicProject.g().getTrgt("M");
 		ClassicProject.g().runTask(domM);
 	}
@@ -79,13 +207,6 @@ public class MantisInstrumentor extends CoreInstrumentor {
 
 	@Override
 	public boolean isExplicitlyExcluded(String cName) {
-		if (cName.startsWith("java.") ||
-				cName.startsWith("javax.") ||
-				cName.startsWith("com.sun.") ||
-				cName.startsWith("com.ibm.") ||
-				cName.startsWith("sun.") ||
-				cName.startsWith("org.apache.harmony."))
-			return true;
 		if (cName.startsWith("Mantis"))
 			Messages.fatal("Instrumenting Mantis class itself.");
 		return super.isExplicitlyExcluded(cName);
@@ -268,10 +389,10 @@ public class MantisInstrumentor extends CoreInstrumentor {
             Messages.fatal(ex);
         }
 
-        String ctrlFeatureNameFileName = "ctrl_feature_name.txt";
-        String boolFeatureNameFileName = "bool_feature_name.txt";
-        String longFeatureNameFileName = "long_feature_name.txt";
-        String realFeatureNameFileName = "real_feature_name.txt";
+        File ctrlFeatureNameFileName = new File(outDirName, "ctrl_feature_name.txt");
+        File boolFeatureNameFileName = new File(outDirName, "bool_feature_name.txt");
+        File longFeatureNameFileName = new File(outDirName, "long_feature_name.txt");
+        File realFeatureNameFileName = new File(outDirName, "real_feature_name.txt");
         PrintWriter ctrlWriter = null;
         PrintWriter boolWriter = null;
         PrintWriter longWriter = null;
