@@ -2,19 +2,19 @@
 
 %% Parsing argument list
 arg_list = argv ();
-%for i = 1:nargin
-%    printf ('%s\n', arg_list{i});
-%end
+for i = 1:nargin
+    printf ('%s\n', arg_list{i});
+end
 dir_input = arg_list{1};
 key = '';
 round = str2num(arg_list{2});
+max_terms = str2num(arg_list{3});
 
 %% Hyper-parameters for the algorithm
 nu = 0.5;
 degree = 3;
 threshold = 0.01;
 f_scale = 0.1;
-max_terms = 10;
 portion = 0.1;
 
 
@@ -24,7 +24,7 @@ file_data   = strcat(dir_input, key, '/feature_data.mat');
 file_var    = strcat(dir_input, key, '/varying_features.mat');
 file_costly = strcat(dir_input, key, '/costly_features.txt');
 file_chosen = strcat(dir_input, key, '/currently_chosen_features.txt');
-file_out    = strcat(dir_input, key, '_rejecting_costly_features.txt');
+file_out    = strcat(dir_input, key, '/rejecting_costly_features.txt');
 
 %% Read in input files                    
 load(file_time);
@@ -41,7 +41,7 @@ features = (raw_data(:, useful_f));
 costs = ones(1, D);
 
 %% Randomly split data into training and testing sets
-rand_indics = randperm(num_data);
+rand_indics = 1:num_data;
 num_train = floor(portion*num_data);
 train_indics = rand_indics(1:num_train);
 test_indics  = rand_indics(num_train+1:num_data);

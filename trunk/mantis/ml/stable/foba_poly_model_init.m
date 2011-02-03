@@ -7,7 +7,7 @@ arg_list = argv ();
 %end
 dir_input = arg_list{1};
 key = '';
-runs = str2num(arg_list{2});
+runs = str2num(arg_list{3});
 
 %% Input files
 file_time   = strcat(dir_input, key, '/exectime.mat');
@@ -17,23 +17,16 @@ file_costly = strcat(dir_input, key, '/costly_features.txt');
 
 %% Reading data
 % Execution time file
-if (runs == 1)
-    file_name = strcat(dir_input, key, '/exectime', '.txt');
-    runtime = load(file_name);
-else
-    for i = 1:runs
-        file_name = strcat(dir_input, key, '/exectime', int2str(i), '.txt');
-        raw_time(:, i) = load(file_name);
-    end
-    runtime = sum(raw_time, 2)/runs;
-end
+file_exectime = strcat(dir_input, key, '/exectime.txt');
+raw_time = load(file_exectime);
+runtime = sum(raw_time, 2)/runs;
 % Cost file
-file_costs = strcat(dir_input, key, '/feature_cost.txt');
-costs = load(file_costs);
+file_feature_cost = strcat(dir_input, key, '/feature_cost.txt');
+costs = load(file_feature_cost);
 costs = costs';
 % Feature file
-file_feats = strcat(dir_input, key, '/feature_data.txt');
-raw_data = load(file_feats);
+file_feature_data = strcat(dir_input, key, '/feature_data.txt');
+raw_data = load(file_feature_data);
 raw_data = raw_data';
 num_orig_feats = size(raw_data, 2);
 
@@ -46,8 +39,12 @@ var_f = find(var_data > 0);
 var_f = var_f(unique_f);
 
 raw_data = normalization(raw_data);
-var_data = raw_data(:, var_f);
 costly_f = [0];
+
+[num_data, D] = size(raw_data);
+rand_indics = randperm(num_data);
+var_data = raw_data(rand_indics, var_f);
+runtime = runtime(rand_indics);
 
 % For storing intermediate results
 save(file_time, 'runtime');
