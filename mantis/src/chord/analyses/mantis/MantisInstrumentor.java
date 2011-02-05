@@ -43,13 +43,13 @@ import joeq.Util.Templates.ListIterator;
  * 2. Generates user classes Mantis0, ..., MantisN.
  * 3. Generates user class MantisPrinter and instruments the program's main method.
  * 4. Generates files [ctrl|bool|long|real]_feature_name.txt in the directory
- *    specified by property chord.mantis.out.dir.  Each of these files contains the 
+ *    specified by property chord.mantis.data.dir.  Each of these files contains the 
  *    names of all features resulting from the corresponding instrumentation scheme
  *    defined below.
  *
  * Relevant system properties:
  * - chord.scope.exclude
- * - chord.mantis.out.dir (default = chord.out.dir)
+ * - chord.mantis.data.dir
  * - chord.mantis.max.flds.class
  * - chord.mantis.max.flds.method
  *
@@ -161,8 +161,8 @@ import joeq.Util.Templates.ListIterator;
  * main method of the program.
  */
 public class MantisInstrumentor extends CoreInstrumentor {
-	private static final String outDirName =
-		System.getProperty("chord.mantis.out.dir", Config.outDirName);
+	private static final String dataDirName =
+		System.getProperty("chord.mantis.data.dir");
     private static final int maxFldsPerMantisClass =
 		Integer.getInteger("chord.mantis.max.flds.class", 8000);
     private static final int maxFldsPerMantisPrintMethod = 
@@ -389,10 +389,10 @@ public class MantisInstrumentor extends CoreInstrumentor {
             Messages.fatal(ex);
         }
 
-        File ctrlFeatureNameFileName = new File(outDirName, "ctrl_feature_name.txt");
-        File boolFeatureNameFileName = new File(outDirName, "bool_feature_name.txt");
-        File longFeatureNameFileName = new File(outDirName, "long_feature_name.txt");
-        File realFeatureNameFileName = new File(outDirName, "real_feature_name.txt");
+        File ctrlFeatureNameFileName = new File(dataDirName, "ctrl_feature_name.txt");
+        File boolFeatureNameFileName = new File(dataDirName, "bool_feature_name.txt");
+        File longFeatureNameFileName = new File(dataDirName, "long_feature_name.txt");
+        File realFeatureNameFileName = new File(dataDirName, "real_feature_name.txt");
         PrintWriter ctrlWriter = null;
         PrintWriter boolWriter = null;
         PrintWriter longWriter = null;

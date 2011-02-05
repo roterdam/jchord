@@ -7,7 +7,8 @@ use Cwd;
 
 my $cur_dir = getcwd;
 my $main_class;
-my $program_dir;
+my $prog_dir;
+my $data_dir;
 my $out_dir;
 my $num_runs = 5;
 my $max_terms = 5;
@@ -15,7 +16,8 @@ my $chord_ext_scope_exclude="java.,javax.";
 
 my $result = GetOptions(
 	'main_class=s' => \$main_class,
-    'program_dir=s' => \$program_dir,
+    'prog_dir=s' => \$prog_dir,
+	'data_dir=s' => \$data_dir,
     'out_dir=s' => \$out_dir,
     'num_runs=i' => \$num_runs,
     'max_terms=i' => \$max_terms,
@@ -25,25 +27,26 @@ my $result = GetOptions(
 if (!$main_class) {
 	die "Expected -main_class=<main class name>\n";
 }
-if (!$program_dir) {
-	die "Expected -program_dir=<program dir name>\n";
+if (!$prog_dir) {
+	die "Expected -prog_dir=<program dir name>\n";
+}
+if (!$data_dir) {
+	die "Expected -data_dir=<input data dir name>\n";
 }
 if (!$out_dir) {
 	die "Expected -out_dir=<output dir name>\n";
 }
 
-my $orig_data_dir = "$out_dir/orig_data";
-my $aggr_data_dir = "$out_dir/aggr_data";
-my $ml_dir = "$out_dir/ml";
+make_path $out_dir;
 
-my $do_instrument = 0;
-my $run_original = 0;
-my $run_instrumented = 0;
-my $do_aggregate = 0;
+my $do_instrument = 1;
+my $run_original = 1;
+my $run_instrumented = 1;
+my $do_aggregate = 1;
 my $build_model = 1;
 
-my $clean_classpath = "$program_dir/classes";
-my $instr_classpath = "$program_dir/chord_output/user_classes";
+my $clean_classpath = "$prog_dir/classes";
+my $instr_classpath = "$prog_dir/chord_output/user_classes";
 
 ### instrument given program
 
@@ -51,8 +54,8 @@ if ($do_instrument) {
     print "*** Instrumenting program\n";
     my $cmd = "ant -f ./build.xml " .
 		"-Dchord.ext.scope.exclude=$chord_ext_scope_exclude " .
-		"-Dchord.mantis.out.dir=$out_dir " .
-		"-Dchord.work.dir=$program_dir " .
+		"-Dchord.mantis.data.dir=$data_dir " .
+		"-Dchord.work.dir=$prog_dir " .
 		"-Dchord.run.analyses=mantis-java " .
 		"run";
     system($cmd) == 0 or die "Failed: $cmd: $!\n";
@@ -65,7 +68,7 @@ if ($run_original) {
 
 	for (my $i = 0; $i < $num_runs; $i++) {
 		print "Running program on input in directory: $i\n";
-		my $dir = "$orig_data_dir/$i";
+		my $dir = "$data_dir/$i";
 		if (-d $dir) {
 			chdir $dir;
 			my $cmd = "/usr/bin/time -f %e --output=exectime.txt " .
@@ -91,7 +94,7 @@ if ($run_instrumented) {
 
 	for (my $i = 0; $i < $num_runs; $i++) {
 		print "Running program on input in directory: $i\n";
-		my $dir = "$orig_data_dir/$i";
+		my $dir = "$data_dir/$i";
 		if (-d $dir) {
 			chdir $dir;
 			my $cmd = "java -cp $instr_classpath $main_class input.txt " .
@@ -113,16 +116,16 @@ if ($do_aggregate) {
     print "*** Aggregating profile data\n";
 
     my $cmd = "java -cp $cur_dir/classes " .
-		"-Dchord.mantis.orig.data.dir=$orig_data_dir " .
-		"-Dchord.mantis.aggr.data.dir=$aggr_data_dir " .
+		"-Dchord.mantis.data.dir=$data_dir " .
+		"-Dchord.mantis.out.dir=$out_dir " .
 		"-Dchord.mantis.num.runs=$num_runs " .
 		"chord.analyses.mantis.PostProcessor";
     system($cmd) == 0 or die "Failed: $cmd: $!\n";
 
-    my $global_exectime_file = "$aggr_data_dir/exectime.txt";
+    my $global_exectime_file = "$out_dir/exectime.txt";
     open GLOBAL_FILE, ">$global_exectime_file" or die "Failed to create file: $global_exectime_file: $!\n";
     for (my $i = 0; $i < $num_runs; $i++) {
-        my $local_exectime_file = "$orig_data_dir/$i/exectime.txt";
+        my $local_exectime_file = "$data_dir/$i/exectime.txt";
         open LOCAL_FILE, "<$local_exectime_file" or die "Failed to read file: $local_exectime_file: $!\n";
         my $line = <LOCAL_FILE>;
         chomp $line;
@@ -135,11 +138,11 @@ if ($do_aggregate) {
 if ($build_model) {
     print "*** Building performance model\n";
 
-    my $cmd = "octave -qf -p $cur_dir/ml/common $cur_dir/ml/stable/foba_poly_model_init.m $aggr_data_dir 1 $max_terms";
+    my $cmd = "octave -qf -p $cur_dir/ml/common $cur_dir/ml/stable/foba_poly_model_init.m $out_dir 1 $max_terms";
     print "Running command: $cmd ...\n";
     system($cmd) == 0 or die "Failed: $cmd: $!\n";
 
-    my $cmd = "octave -qf -p $cur_dir/ml/common $cur_dir/ml/stable/foba_poly_model.m $aggr_data_dir 2 $max_terms";
+    my $cmd = "octave -qf -p $cur_dir/ml/common $cur_dir/ml/stable/foba_poly_model.m $out_dir 2 $max_terms";
     print "Running command: $cmd ...\n";
     system($cmd) == 0 or die "Failed: $cmd: $!\n";
 

@@ -10,30 +10,30 @@ import java.io.FileReader;
 
 /*
  * Relevant system properties;
- * - chord.mantis.orig.data.dir
- * - chord.mantis.aggr.data.dir
+ * - chord.mantis.data.dir
+ * - chord.mantis.out.dir
  * - chord.mantis.num.runs
  *
- * Reads the following files from the directory specified by property chord.mantis.orig.data.dir:
+ * Reads the following files from the directory specified by property chord.mantis.data.dir:
  * 1. [ctrl|bool|long|real]_feature_name.txt
  * 2. [ctrl|bool|long|real]_feature_data.txt from sub-directories
  *    0, 1, ..., [chord.mantis.num.runs]-1.
  * Writes aggregated results to files feature_name.txt, feature_data.txt, and
- * feature_cost.txt in the directory specified by property chord.mantis.aggr.data.dir.
+ * feature_cost.txt in the directory specified by property chord.mantis.out.dir.
  */
 public class PostProcessor {
 	static final boolean keepSum = true;
 	public static void main(String[] args) throws IOException {
-		String origDataDirName = System.getProperty("chord.mantis.orig.data.dir");
-		assert (origDataDirName != null);
-		String aggrDataDirName = System.getProperty("chord.mantis.aggr.data.dir");
-		assert (aggrDataDirName != null);
+		String dataDirName = System.getProperty("chord.mantis.data.dir");
+		assert (dataDirName != null);
+		String outDirName = System.getProperty("chord.mantis.out.dir");
+		assert (outDirName != null);
 		int numData = Integer.getInteger("chord.mantis.num.runs");
 		assert (numData != 0);
-		List<String> ctrlFeatureNames = readStrings(new File(origDataDirName, "ctrl_feature_name.txt"));
-		List<String> boolFeatureNames = readStrings(new File(origDataDirName, "bool_feature_name.txt"));
-		List<String> longFeatureNames = readStrings(new File(origDataDirName, "long_feature_name.txt"));
-		List<String> realFeatureNames = readStrings(new File(origDataDirName, "real_feature_name.txt"));
+		List<String> ctrlFeatureNames = readStrings(new File(dataDirName, "ctrl_feature_name.txt"));
+		List<String> boolFeatureNames = readStrings(new File(dataDirName, "bool_feature_name.txt"));
+		List<String> longFeatureNames = readStrings(new File(dataDirName, "long_feature_name.txt"));
+		List<String> realFeatureNames = readStrings(new File(dataDirName, "real_feature_name.txt"));
 		int numCtrlFeatures = ctrlFeatureNames.size();
 		int numBoolFeatures = boolFeatureNames.size();
 		int numLongFeatures = longFeatureNames.size();
@@ -46,7 +46,7 @@ public class PostProcessor {
 		int   [][] realFrqData = new int   [numData][numRealFeatures/2];
 		boolean[] ignoreData = new boolean[numData];
 		for (int i = 0; i < numData; i++) {
-			File dir = new File(origDataDirName, Integer.toString(i));
+			File dir = new File(dataDirName, Integer.toString(i));
 			if (!dir.exists()) {
 				System.err.println("WARN: Skipping data: " + dir);
 				ignoreData[i] = true;
@@ -58,9 +58,9 @@ public class PostProcessor {
 			readRealData(new File(dir, "real_feature_data.txt"), realSumData[i], realFrqData[i]);
 		}
 
-		PrintWriter featureNameOut = new PrintWriter(new File(aggrDataDirName, "feature_name.txt"));
-		PrintWriter featureDataOut = new PrintWriter(new File(aggrDataDirName, "feature_data.txt"));
-		PrintWriter featureCostOut = new PrintWriter(new File(aggrDataDirName, "feature_cost.txt"));
+		PrintWriter featureNameOut = new PrintWriter(new File(outDirName, "feature_name.txt"));
+		PrintWriter featureDataOut = new PrintWriter(new File(outDirName, "feature_data.txt"));
+		PrintWriter featureCostOut = new PrintWriter(new File(outDirName, "feature_cost.txt"));
 
 		for (int i = 0; i < numCtrlFeatures; i += 2) {
 			int befIdx = i, aftIdx = i + 1;
