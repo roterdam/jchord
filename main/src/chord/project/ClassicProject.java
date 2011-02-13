@@ -148,12 +148,7 @@ public class ClassicProject extends Project {
 	public void print() {
 		build();
 		PrintWriter out;
-		try {
-			File file = new File(Config.outDirName, "targets.xml");
-			out = new PrintWriter(new FileWriter(file));
-		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
-		}
+		out = OutDirUtils.newPrintWriter("targets.xml");
 		out.println("<targets " +
 			"java_analysis_path=\"" + Config.javaAnalysisPathName + "\" " +
 			"dlog_analysis_path=\"" + Config.dlogAnalysisPathName + "\">");
@@ -184,6 +179,27 @@ public class ClassicProject extends Project {
 				otherProducersStr + "</target>");
 		}
 		out.println("</targets>");
+		out.close();
+		out = OutDirUtils.newPrintWriter("taskgraph.dot");
+		out.println("digraph G {");
+		for (String name : nameToTrgtMap.keySet()) {
+			String trgtId = "\"" + name + "_trgt\"";
+			out.println(trgtId + "[label=\"\",shape=ellipse,style=filled,color=blue];");
+			Object trgt = nameToTrgtMap.get(name);
+			for (ITask task : trgtToProducingTasksMap.get(trgt)) {
+				String taskId = "\"" + task.getName() + "_task\"";
+				out.println(taskId + " -> " + trgtId + ";");
+			}
+			for (ITask task : trgtToConsumingTasksMap.get(trgt)) {
+				String taskId = "\"" + task.getName() + "_task\"";
+				out.println(taskId + " -> " + trgtId + ";");
+			}
+		}
+		for (String name : nameToTaskMap.keySet()) {
+			String taskId = "\"" + name + "_task\"";
+			out.println(taskId + "[label=\"\",shape=square,style=filled,color=red];");
+		}
+		out.println("}");
 		out.close();
 		OutDirUtils.copyFileFromMainDir("web/style.css");
 		OutDirUtils.copyFileFromMainDir("web/targets.xsl");
