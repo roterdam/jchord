@@ -131,6 +131,21 @@ import chord.util.ChordRuntimeException;
  * program.</li>
  * </ul>
  * 
+ * 
+ * This analysis outputs the following relations:
+ * <ul>
+ *  <li>C, the abstract domain of contexts</li>
+ *  <li>CC (c,c2) if c2 is all but the last element of context c</li>
+ *  <li>CH/CI (c,h) (c,i) if allocation site h or call site i is the last element of abstract context c</li>
+ *  <li>CVC (c,v,c2) if v, (local to the method in context c) might point to object c2</li>
+ *  <li>CFC (c,f,c2) if field f of abstract object c might point to abstract object c2</li>
+ *  <li>FC (f,c2) if static field f might point to abstract object c2</li>
+
+ *  <li>CICM: (c,i,c2,m) if invocation i in context c can reach method 2 (in context c2)</li>
+ *  <li>rootCM (c,m) if m can be called in the root context, c</li>
+ *  <li>reachableCM (c,m) if m can be called in context c</li>
+ * </ul>
+ * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
