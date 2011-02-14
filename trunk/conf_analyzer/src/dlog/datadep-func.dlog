@@ -286,7 +286,7 @@ mutatedThis(v, opt) :- IinvkArg0(i,v),callAddsTaint(i,opt).
 
 taintedOpaqueRef(v, opt) :- mutatedThis(v,opt),VT(v,t),scopeExcludedT(t).
 instHF(h, f, opt) :- getInstFldInst(l, b, f),VH(b,h),taintedOpaqueRef(l, opt).
-#statHF(f, opt) :- getStatFldInst(b, f),taintedOpaqueRef(b, opt).
+statHF(f, opt) :- getStatFldInst(b, f),taintedOpaqueRef(b, opt).
 
 ####Debugging
 

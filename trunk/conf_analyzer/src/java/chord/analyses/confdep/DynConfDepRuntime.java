@@ -106,6 +106,14 @@ public class DynConfDepRuntime {
 		}
 		return null;
 	}
+	
+	public static void init(String s) {
+		
+	}
+	
+	public static void done() {
+		
+	}
 
 	public synchronized static void beforeMethodCall(int iIdx, String cname, String mname,
 			Object tref, Object[] args) {

@@ -11,6 +11,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.confdep.ConfDefines;
 import chord.analyses.confdep.ConfDeps;
+import chord.analyses.confdep.RelFailurePath;
 import chord.analyses.confdep.optnames.DomOpts;
 import chord.analyses.invk.DomI;
 import chord.bddbddb.Rel.RelView;
@@ -29,6 +30,7 @@ public class ExplainMyLogs extends JavaAnalysis{
   boolean miniStrings;
   
   int MAX_CTRLDEPS_TO_DUMP = 30;
+  int TOO_MANY_MENTIONS = 8;
   static final String PURE_DYNAMIC = "<dynamic>";
   
   String[] inScopePrefixes;
@@ -44,7 +46,10 @@ public class ExplainMyLogs extends JavaAnalysis{
     miniStrings = Config.buildBoolProperty("useMiniStrings", false);
     boolean miniDatadep = Config.buildBoolProperty("explainlogs.minidatadep", false);
 
-    
+    if(!justStatic()) {
+    	System.out.println("refusing to run ExplainMyLogs with nontrivial ConfDeps set up");
+    	return;
+    }
     project.runTask("cipa-0cfa-arr-dlog");
     
     project.runTask("findconf-dlog");
@@ -74,7 +79,13 @@ public class ExplainMyLogs extends JavaAnalysis{
 //    dumpLogToProgPtMap();
   }
   
-  private Map<String, Pattern> depMap(DomOpts opts) {
+  private boolean justStatic() {
+	  String dynamism = System.getProperty(ConfDeps.CONFDEP_DYNAMIC_OPT, "static");
+	  return dynamism.equals("static") &&
+	    System.getProperty(RelFailurePath.FAILTRACE_OPT, "").length() == 0;
+	}
+
+	private Map<String, Pattern> depMap(DomOpts opts) {
 	  Map<String, Pattern> optPats = new LinkedHashMap<String, Pattern>();
 		for(String opt: opts) {
 			if(opt.equals("UNKNOWN"))
@@ -202,9 +213,8 @@ public class ExplainMyLogs extends JavaAnalysis{
     	String msg = msgPair.getValue().val0;
 
     	Set<String> optionMentions = optionMentions(msg, optPats);
-    	mentionCount += optionMentions.size();
-    	
-      RelView ctrlDepView = logConfDeps.getView();
+
+    	RelView ctrlDepView = logConfDeps.getView();
       ctrlDepView.selectAndDelete(0, logCall);
 
     	if(msg.equals(PURE_DYNAMIC) && ctrlDepView.size() == 0)
@@ -215,6 +225,12 @@ public class ExplainMyLogs extends JavaAnalysis{
             Invoke.getMethod(logCall).getMethod().getName()+ "("  + thisLine+")  Iidx = " + idx;
         writer.println(formatted);
       }
+    	if(optionMentions.size() > TOO_MANY_MENTIONS) {
+    		writer.println("too many mentions; ignoring all");
+    		continue;
+    	} else 
+    		mentionCount += optionMentions.size();
+    	
       int dataDeps = msgPair.getValue().val1;
       depCount += dataDeps + ctrlDepView.size();
       

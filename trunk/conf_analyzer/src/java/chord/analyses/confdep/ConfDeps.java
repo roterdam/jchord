@@ -76,7 +76,11 @@ public class ConfDeps extends JavaAnalysis {
 	  boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", false);
 	  
     slurpDoms();
-
+    
+    boolean wideCallModel = Config.buildBoolProperty("externalCallsReachEverything", true);
+    if(!wideCallModel)
+    	makeEmptyRelation(Project, "externalThis");
+    
     if(STATIC) {
     	maybeRun(Project,"cipa-0cfa-arr-dlog");
       
@@ -98,12 +102,12 @@ public class ConfDeps extends JavaAnalysis {
 	  if(DYNTRACK) {
 	    Project.runTask("dyn-datadep");
 	  } else {
-	  		maybeRun(Project,"datadep-func-dlog");
+	  	maybeRun(Project,"datadep-func-dlog");
 	  }
 	  
 	  if(SUPERCONTEXT) {
 //    	Project.runTask("PobjVarAsgnInst"); //to avoid counting domP time in SCS
-//  		maybeRun(Project,"confdep-dlog"); //to mark primRefDep as done
+  		maybeRun(Project,"confdep-dlog"); //to mark primRefDep as done
 
       Project.runTask("scs-datadep-dlog");
       Project.runTask("scs-confdep-dlog");
@@ -122,7 +126,13 @@ public class ConfDeps extends JavaAnalysis {
     }
 	}
 	
-  private void dumpArgDTaints() {
+  private void makeEmptyRelation(ClassicProject Project, String name) {
+    ProgramRel rel = (ProgramRel) Project.getTrgt(name);
+    rel.zero();
+    rel.save();
+	}
+
+	private void dumpArgDTaints() {
     PrintWriter writer =
       OutDirUtils.newPrintWriter("meth_arg_conf_taints.txt");
     
@@ -132,7 +142,6 @@ public class ConfDeps extends JavaAnalysis {
       String optName = methArg.val2;
       int z = methArg.val1;
       jq_Method meth = methArg.val0;
-//      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
       if(meth.getParamTypes().length <= z)
       	System.err.println("WARN: expected to find more args to " + meth + 
       			" (found " + meth.getParamTypes().length + " expected at least " + (z+1) +")");
@@ -156,7 +165,6 @@ public class ConfDeps extends JavaAnalysis {
       int z = methArg.val1;
       jq_Method calledMeth = Invoke.getMethod(methArg.val0).getMethod();
       jq_Method callerM = methArg.val0.getMethod();
-//      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
       if(calledMeth.getParamTypes().length <= z) 
       	continue;
 
@@ -179,7 +187,6 @@ public class ConfDeps extends JavaAnalysis {
       String optName = invkRet.val1;
       jq_Method calledMeth = Invoke.getMethod(invkRet.val0).getMethod();
       jq_Method callerM = invkRet.val0.getMethod();
-//      jq_Type ty = meth.getParamTypes()[meth.isStatic() ? z : z-1];
       jq_Type ty = calledMeth.getReturnType();
       String caller = callerM.getDeclaringClass() + " " + callerM.getName() + ":" + invkRet.val0.getLineNumber();
       writer.println(caller + " calling " + calledMeth.getDeclaringClass() + " " + calledMeth.getNameAndDesc().toString() +
@@ -290,11 +297,7 @@ public class ConfDeps extends JavaAnalysis {
         quadsPrinted.add(p.idx0);
         jq_Method calledMethod = Invoke.getMethod(q1).getMethod();
         String calltarg = calledMethod.getDeclaringClass().getName() + " "+ calledMethod.getName();
-//        if(p.idx2 == 0)
-//          writer.println(filename+ " "+ lineno + ": " + optName +"-"+ p.idx1 + " in use  (" + m.getName() + ").");
-//        else
-          writer.println(filename+ " "+ lineno + ": " + optName + " in use  (" + m.getName() + "). Called method was " + calltarg);
-//          writer.println("\tCall to " + calltarg + " tainted by " +  optName);
+        writer.println(filename+ " "+ lineno + ": " + optName + " in use  (" + m.getName() + "). Called method was " + calltarg);
       }
     }
     writer.close();
