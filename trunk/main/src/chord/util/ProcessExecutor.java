@@ -67,6 +67,7 @@ public final class ProcessExecutor {
 		private StreamGobbler(InputStream s, String n) {
 			this.s = s;
 			this.n = n;
+			this.setDaemon(true);
 		}
 		public void run() {
 			try {
@@ -78,7 +79,7 @@ public final class ProcessExecutor {
 						System.out.println(n + "> " + l);
 				}
 			} catch (IOException e) {
-				throw new RuntimeException(e.getMessage());
+				throw new RuntimeException(e.getMessage(),e);
 			}
 		}
 	}
