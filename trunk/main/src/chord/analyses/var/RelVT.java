@@ -37,6 +37,8 @@ import joeq.Util.Templates.ListIterator;
  * of reference type has type t.
  * If SSA is used (system property chord.ssa is set to true) then it is
  * guaranteed that each local variable v has a unique type t.
+ * 
+ * These types will usually be more precise than "Object".
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
