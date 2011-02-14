@@ -41,7 +41,11 @@ public class DynConfDep extends CoreDynamicAnalysis {
   static final Pattern nullVPat = Pattern.compile("([0-9]*) returns null");
   
   @Override
-  public Pair<Class, Map<String, String>> getInstrumentor() {
+  public Map<String, String> getExplicitInstrumentorArgs() {
+    Map<String,String> args = super.getExplicitInstrumentorArgs();
+    if(args == null)
+    	args = new HashMap<String, String>();
+
     InstrScheme instrScheme = new InstrScheme();
     
     instrScheme.setAloadReferenceEvent(false, false, true, false, true);
@@ -49,26 +53,41 @@ public class DynConfDep extends CoreDynamicAnalysis {
     instrScheme.setMethodCallEvent(true, false, true, false, true);
     instrScheme.save(SCHEME_FILE);
     
-    Map<String,String> args = new HashMap<String,String>();
     args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, SCHEME_FILE);
-    args.put(CoreEventHandler.EVENT_HANDLER_CLASS_KEY, DynConfDepRuntime.class.getCanonicalName());
-    return new Pair<Class, Map<String, String>>(ArgMonInstr.class, args);
+//    args.put(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY, DynConfDepRuntime.class.getCanonicalName());
+    return args;
   }
+  
+  @Override
+  public Class getInstrumentorClass() {
+  	return ArgMonInstr.class;
+  }
+  
+  @Override
+	public Class getEventHandlerClass() {
+		return DynConfDepRuntime.class;
+	}
+  
+  @Override
+	public void processTrace(String fileName) {
+	}
  
   boolean retrace = false;
   @Override
   public void initAllPasses() {
   	retrace = Config.buildBoolProperty("retrace_conf", false);
-  	if(!retrace)
+  	if(!retrace) {
   		results.delete();
-    System.out.println("DynConfDep starting execution; clearing buffer file.");
+  		System.out.println("DynConfDep starting execution; clearing buffer file.");
+  	}
   }
 
   @Override
 	public void run() {
-  	if(retrace && results.exists())
+  	if(retrace && results.exists()) {			
+  		doneAllPasses();
   		return;
-  	else
+  	} else
   		super.run();
   }
 
@@ -118,11 +137,11 @@ public class DynConfDep extends CoreDynamicAnalysis {
           int vID = domV.indexOf(targ);
           
           String value = m.group(4);
-          if(vID >-1 && iId > -1 ) {
-            if("null".equals(value))
-              relNullC.add(vID,cstID);
 
+          if(iId > -1 ) {
             relConf.add(cstID, iId);
+            if(vID >-1 && "null".equals(value)) //vID will be null for prim-typed options
+              relNullC.add(vID,cstID); 
           }
         } else {
           m = usePat.matcher(s);

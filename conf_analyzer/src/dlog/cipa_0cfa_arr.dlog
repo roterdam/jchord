@@ -33,9 +33,11 @@ IinvkArg0(i:I0,v:V1) input
 IinvkArg(i:I0,n:Z0,v:V1) input
 IinvkRet(i:I0,n:Z0,v:V0) input
 MI(m:M,i:I) input
+MH(m:M,h:H) input
 statIM(i:I,m:M) input
 specIM(i:I,m:M) input
 virtIM(i:I,m:M) input
+instM(m:M) input
 MobjValAsgnInst(m:M0,l:V0,h:H0) input
 MobjVarAsgnInst(m:M0,l:V0,r:V1) input
 MgetInstFldInst(m:M0,l:V0,b:V1,f:F0) input
@@ -54,6 +56,7 @@ staticTF(t:T,f:F) input
 clinitTM(t:T,m:M) input
 
 clsTH(t:T0,h:H0) input
+externalThis(v:V) input
 #objTH(t:T0,h:H0) input
 
 IHM(i:I,h:H,m:M)
@@ -118,6 +121,7 @@ RINewColl(c:V,o:V) output
 #insertM(m:M) output
 #retrieveM(m:M) output
 putsInto(v:V, collH:H) output
+reachableHT(h:H,t:T) output
 
 ###### End of declarations
 
@@ -229,11 +233,16 @@ retI(i) :- IRetrieve(i,_,_).
 exclCall(i) :- IM(i,m),scopeExcludedM(m),!retI(i).
 externalArg(v) :- MmethArg(m,_,v),MentryPoints(m).
 externalArg(v) :- IinvkRet(i,_,v),exclCall(i).
+nonThisExtArg(v) :- externalArg(v),!externalThis(v).
 
-#POTENTIALLY DANGEROUS: if v is an object, then sets v to point to everything.
-VH(v,h) :- externalArg(v),VT(v,t),clsTH(t2,h),sub(t,t2).
 #fields of external args point to external args
 HFH(h1,f,h2) :- clsTH(t,h1),TFT(t,f,t2),clsTH(t2,h2).
+
+#POTENTIALLY DANGEROUS: if v is a reference to object, then sets v to point to everything.
+VH(v,h) :- nonThisExtArg(v),VT(v,t),clsTH(t2,h),sub(t,t2).
+#Be more aggressive with this-es
+reachableHT(h,t) :- HT(h,t),reachableM(m),MH(m,h).
+VH(v,h) :- externalThis(v),VT(v,t),reachableHT(h,t).
 
 reachableM(m) :- MentryPoints(m).
 

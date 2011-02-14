@@ -7,6 +7,10 @@ import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
+/**
+ *  Functions that should be treated as library functions.
+ *  Intended for test/debug usage.
+ */
 	@Chord(
 	    name = "extraSummary",
 	    sign = "M0:M0"
@@ -23,12 +27,12 @@ import chord.project.analyses.ProgramRel;
 	  public void visit(jq_Method m) {
 	  	String clname = cl.getName();
 	  	String mname = m.getName().toString();
-/*	  	if(clname.startsWith("org.apache.hadoop.net.SocketIOWithTimeout") 
-	  			|| clname.startsWith("org.apache.tools.ant.BuildEvent")
-	  			|| (clname.startsWith("org.apache.hadoop.util") && mname.startsWith("compare"))
-	  			|| (clname.startsWith("org.apache.hadoop.net.NetUtils") && mname.startsWith("getStaticResolution"))
+	  	if(false //clname.startsWith("org.apache.hadoop.net.SocketIOWithTimeout") 
+	  		//	  			 clname.startsWith("org.apache.tools.ant.BuildEvent")
+	  //			|| (clname.startsWith("org.apache.hadoop.util") && mname.startsWith("compare"))
+	  //			|| (clname.startsWith("org.apache.hadoop.net.NetUtils") && mname.startsWith("getStaticResolution"))
 	  ///			||	clname.startsWith("org.apache.hadoop.fs.FileStatus")
 	  			)
-		      add(m);*/
+		      add(m);
 	  }
 }

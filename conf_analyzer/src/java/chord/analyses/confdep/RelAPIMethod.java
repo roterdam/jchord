@@ -61,6 +61,8 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 
 		if(classname.equals("org.apache.hadoop.fs.Path"))
 			return true;
+		if(classname.equals("org.apache.tools.ant.types.Path"))
+			return true;
 
 		if(classname.startsWith("joeq") || classname.startsWith("net.sf.bddb")) //for analyzing jchord itself
 			return true;
@@ -73,23 +75,21 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 
 	}
 
-	private boolean isCollection(Quad q) {
+	private boolean isCollectionGet(Quad q) {
 		return RelInserts.isInsert(q) ;
-//		jq_Method meth = Invoke.getMethod(q).getMethod();
-//		jq_Class cl = meth.getDeclaringClass();
-
-//		return RelINewColl.isCollectionType(cl);
+		
+		//we treat gets as APIReadOnly calls
 	}
 
 	/**
-	 * Shouldn't taint collections when there's a put.  Or a get.
+	 * Shouldn't taint collections when there's a put. .
 	 */
 	@Override
 	public void visitInvokeInst(Quad q) {
 		jq_Method meth = Invoke.getMethod(q).getMethod();
 		String classname = meth.getDeclaringClass().getName();
 		String methname = meth.getName().toString();
-		if(isAPI(classname, methname) && !isCollection(q)) {
+		if(isAPI(classname, methname) && !isCollectionGet(q)) {
 			int iIdx = domI.indexOf(q);
 			super.add(iIdx);
 		}

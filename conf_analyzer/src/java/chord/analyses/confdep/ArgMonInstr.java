@@ -22,6 +22,7 @@ public class ArgMonInstr extends Instrumentor {
 
   public ArgMonInstr(Map<String, String> argsMap) {
     super(argsMap);
+    System.out.println("using ArgMonInstr");
    // assert aloadReferenceEvent.present();
    // assert astoreReferenceEvent.present();
     if(!aloadReferenceEvent.present() || !astoreReferenceEvent.present()) {
