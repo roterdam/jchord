@@ -357,8 +357,6 @@ public class TraceTransformer {
 		case EventKind.NOTIFY:
 		case EventKind.NOTIFY_ALL:
 			return notifyNumBytes;
-		case EventKind.FINALIZE:
-			return 4;
 		case EventKind.ENTER_METHOD:
 			return enterMethodNumBytes;
 		case EventKind.LEAVE_METHOD:

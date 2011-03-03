@@ -83,7 +83,6 @@ public class Instrumentor extends CoreInstrumentor {
 
 	protected final boolean genBasicBlockEvent;
 	protected final boolean genQuadEvent;
-	protected final boolean genFinalizeEvent;
 	protected final EventFormat enterMainMethodEvent;
 	protected final EventFormat enterMethodEvent;
 	protected final EventFormat leaveMethodEvent;
@@ -138,7 +137,6 @@ public class Instrumentor extends CoreInstrumentor {
 	protected final String notifyAllEventCall;
 	protected final String acquireLockEventCall;
 	protected final String releaseLockEventCall;
-	protected final String finalizeEventCall;
 
 	protected DomF domF;
 	protected DomM domM;
@@ -235,7 +233,6 @@ public class Instrumentor extends CoreInstrumentor {
 		mainMethod = program.getMainMethod();
 		genBasicBlockEvent = scheme.hasBasicBlockEvent();
 		genQuadEvent = scheme.hasQuadEvent();
-		genFinalizeEvent = scheme.hasFinalizeEvent();
 		enterMainMethodEvent = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
 		enterMethodEvent = scheme.getEvent(InstrScheme.ENTER_METHOD);
 		leaveMethodEvent = scheme.getEvent(InstrScheme.LEAVE_METHOD);
@@ -290,7 +287,6 @@ public class Instrumentor extends CoreInstrumentor {
 		notifyAllEventCall = eventHandlerClassName + "notifyAllEvent(";
 		acquireLockEventCall = eventHandlerClassName + "acquireLockEvent(";
 		releaseLockEventCall = eventHandlerClassName + "releaseLockEvent(";
-		finalizeEventCall = eventHandlerClassName + "finalizeEvent(";
 
 		if (scheme.needsFmap()) {
 			domF = (DomF) ClassicProject.g().getTrgt("F");
@@ -466,11 +462,6 @@ public class Instrumentor extends CoreInstrumentor {
 		// bytecode instrumentation offsets could get messed up 
 		String enterStr = "";
 		String leaveStr = "";
-		// is this finalize() method of java.lang.Object?
-		if (genFinalizeEvent && mName.equals("finalize") &&
-				mDesc.equals("()V") && cName.equals("java.lang.Object")) {
-			leaveStr += finalizeEventCall + "$0);";
-		}
 		if (Modifier.isSynchronized(mods) &&
 				(acquireLockEvent.present() || releaseLockEvent.present())) {
 			String syncExpr;

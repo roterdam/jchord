@@ -39,7 +39,6 @@ public class Execution {
   public Execution(String name) {
 	this.name = name;
 	basePath = Config.outDirName;
-	System.out.println("Execution directory: "+basePath);
 	logOut = new PrintWriter(System.out);
 	output.put("hostname", getHostName());
 	output.put("exec.status", "running");

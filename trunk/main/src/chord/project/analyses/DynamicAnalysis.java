@@ -209,7 +209,7 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 				if (!loopBody.contains(b)) {
 					stack.pop();
 					processLeaveLoop(lr.b, t);
-						hasRemoved = true;
+					hasRemoved = true;
 				}
 			}
 		} while (hasRemoved);
@@ -588,12 +588,6 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 			}
 			break;
 		}
-		case EventKind.FINALIZE:
-		{
-			int o = buffer.getInt();
-			processFinalize(o);
-			break;
-		}
 		case EventKind.ENTER_MAIN_METHOD:
 		{
 			EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
@@ -606,14 +600,9 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 		}
 	}
 	
-	public void processLoopIteration(int w, int t) {
-		error("void processLoopIteration(int w, int t)");
-	}
-
 	public void processEnterMainMethod(int t) {
 		error("void processEnterMainMethod(int t)");
 	}
-	
 	public void processEnterMethod(int m, int t) {
 		error("void processEnterMethod(int m, int t)");
 	}
@@ -623,8 +612,23 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	public void processEnterLoop(int w, int t) { 
 		error("void processEnterLoop(int w, int t)");
 	}
+	public void processLoopIteration(int w, int t) {
+		error("void processLoopIteration(int w, int t)");
+	}
 	public void processLeaveLoop(int w, int t) { 
 		error("void processLeaveLoop(int w, int t)");
+	}
+	public void processBasicBlock(int b, int t) { 
+		error("void processBasicBlock(int b, int t)");
+	}
+	public void processQuad(int p, int t) { 
+		error("void processQuad(int p, int t)");
+	}
+	public void processBefMethodCall(int i, int t, int o) { 
+		error("void processBefMethodCall(int i, int t, int o)");
+	}
+	public void processAftMethodCall(int i, int t, int o) { 
+		error("void processAftMethodCall(int i, int t, int o)");
 	}
 	public void processBefNew(int h, int t, int o) { 
 		error("void processBefNew(int h, int t, int o)");
@@ -671,6 +675,18 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	public void processAstoreReference(int e, int t, int b, int i, int o) { 
 		error("void processAstoreReference(int e, int t, int b, int i, int o)");
 	}
+	public void processReturnPrimitive(int p, int t) { 
+		error("void processReturnPrimitive(int p, int t) ");
+	}
+	public void processReturnReference(int p, int t, int o) { 
+		error("void processReturnReference(int p, int t, int o)");
+	}
+	public void processExplicitThrow(int p, int t, int o) { 
+		error("void processExplicitThrow(int p, int t, int o)");
+	}
+	public void processImplicitThrow(int p, int t, int o) { 
+		error("void processImplicitThrow(int p, int t, int o)");
+	}
 	public void processThreadStart(int i, int t, int o) { 
 		error("void processThreadStart(int i, int t, int o)");
 	}
@@ -688,33 +704,6 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	}
 	public void processNotify(int i, int t, int o) { 
 		error("void processNotify(int i, int t, int o)");
-	}
-	public void processBefMethodCall(int i, int t, int o) { 
-		error("void processBefMethodCall(int i, int t, int o)");
-	}
-	public void processAftMethodCall(int i, int t, int o) { 
-		error("void processAftMethodCall(int i, int t, int o)");
-	}
-	public void processReturnPrimitive(int p, int t) { 
-		error("void processReturnPrimitive(int p, int t) ");
-	}
-	public void processReturnReference(int p, int t, int o) { 
-		error("void processReturnReference(int p, int t, int o)");
-	}
-	public void processExplicitThrow(int p, int t, int o) { 
-		error("void processExplicitThrow(int p, int t, int o)");
-	}
-	public void processImplicitThrow(int p, int t, int o) { 
-		error("void processImplicitThrow(int p, int t, int o)");
-	}
-	public void processQuad(int p, int t) { 
-		error("void processQuad(int p, int t)");
-	}
-	public void processBasicBlock(int b, int t) { 
-		error("void processBasicBlock(int b, int t)");
-	}
-	public void processFinalize(int o) {
-		error("void processFinalize(int o)");
 	}
 	private void error(String mSign) {
 		Messages.fatal(EVENT_NOT_HANDLED, getName(), mSign);

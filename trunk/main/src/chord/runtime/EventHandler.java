@@ -716,17 +716,6 @@ public class EventHandler extends CoreEventHandler {
 			trace = true;
 		}
 	}
-	public synchronized static void finalizeEvent(Object o) {
-		if (trace) {
-			trace = false;
-			try {
-				buffer.putByte(EventKind.FINALIZE);
-				int oId = getObjectId(o);
-				buffer.putInt(oId);
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
 	public synchronized static void init(String args) {
 		String[] a = args.split("=");
 		String instrSchemeFileName = null;

@@ -54,6 +54,4 @@ public class EventKind {
 	public static final byte WAIT = 30;
 	public static final byte NOTIFY = 31;
 	public static final byte NOTIFY_ALL = 32;
-
-	public static final byte FINALIZE = 33;
 }
