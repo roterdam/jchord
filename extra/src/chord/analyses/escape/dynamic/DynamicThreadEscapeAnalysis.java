@@ -32,12 +32,25 @@ import chord.project.analyses.ProgramRel;
 /**
  * Dynamic thread-escape analysis.
  * 
- * Outputs relations accE, escE, likelyLocE, and
- * files dynamic_accE.txt, dynamic_escE.txt, dynamic_locE.txt
+ * It outputs the following relations and files:
+ *
+ * - relation accE and file dynamic_accE.txt, containing all instance
+ *   field and array element accessing statements that were reached
+ *   at least once.
+ * - relation escE and file dynamic_escE.txt, containing those
+ *   statements in accE that were observed to access thread-shared
+ *   data at least once.
+ * - relation likelyLocE and file dynamic_locE.txt, containing those
+ *   statements in accE that were observed to always access
+ *   thread-local data.
+ *
+ * Relation accE is the disjoint union of relations escE and locE.
  *
  * Recognized system properties:
  *
- * chord.escape.flowins ([true|false]; default=false)
+ * - chord.escape.flowins ([true|false]; default=false)
+ * - chord.check.exclude
+ * - chord.scope.exclude
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -62,12 +75,15 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	private boolean[] escH;
 	// set of IDs of currently escaping objects/alloc sites
     private TIntHashSet escObjs;
-	// map from each object to list of each non-null instance field of ref type with its value
+	// map from each object to list of each non-null instance field of
+    // ref type with its value
 	private TIntObjectHashMap<List<FldObj>> objToFldObjs;
 	// map from each object to the index in domH of its alloc site
     private TIntIntHashMap objToHid;
-	// map from index in domH of each alloc site not yet known to be escaping to list of indices in domE of
-	// stmts that should escape if this alloc site escapes; escH[h] = true => HidToPendingEids[h] == null
+	// map from index in domH of each alloc site not yet known to be
+    // escaping to list of indices in domE of
+	// stmts that should escape if this alloc site escapes;
+	// escH[h] = true => HidToPendingEids[h] == null
     private TIntArrayList[] HidToPendingEids;
     private InstrScheme instrScheme;
 	private DomE domE;
@@ -184,9 +200,10 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 				if (escE[i]) {
 					escEout.println(s);
 					escErel.add(i);
-				} else
+				} else {
 					locEout.println(s);
 					locErel.add(i);
+				}
 			}
 		}
 		accErel.save();

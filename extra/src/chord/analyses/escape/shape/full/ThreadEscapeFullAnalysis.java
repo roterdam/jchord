@@ -81,7 +81,7 @@ import chord.project.OutDirUtils;
  * Produces files shape_fullEscE.txt, shape_fullLocE.txt, and results.html
  *
  * Relevant system properties:
- * chord.escape.opt = [true|false] (default = true)
+ * chord.escape.optimize = [true|false] (default = true)
  * chord.rhs.timeout = N (default = 300000)
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -114,7 +114,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private jq_Method threadStartMethod;
 
 	public ThreadEscapeFullAnalysis() {
- 		optimizeSummaries = System.getProperty("chord.escape.opt", "true").equals("true");
+ 		optimizeSummaries = System.getProperty("chord.escape.optimize", "true").equals("true");
 		System.out.println("optimizeSummaries: " + optimizeSummaries);
 	}
 
@@ -207,7 +207,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			} catch (ThrEscException ex) {
 				// do nothing
 			}
-			// printSummaries();
+			printSummaries();
 			for (Quad q : currLocEs)
 				System.out.println("LOC: " + q.toVerboseStr());
 			for (Quad q : currEscEs)
@@ -353,7 +353,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			int numVars = methToNumVars.get(m2);
 			Obj[] env = new Obj[numVars];
 			int z = 0;
-			boolean allEsc = optimizeSummaries ? false : true;
+			boolean allEsc = optimizeSummaries ? true : false;
 			for (int i = 0; i < numArgs; i++) {
 				RegisterOperand ao = args.get(i);
 				if (ao.getType().isReferenceType()) {
@@ -430,7 +430,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		Obj[] tgtSrcEnv = tgtSrcNode.env;
         ParamListOperand args = Invoke.getParamList(q);
         int numArgs = args.length();
-		boolean allEsc = optimizeSummaries ? false : true;
+		boolean allEsc = optimizeSummaries ? true : false;
         for (int i = 0, fIdx = 0; i < numArgs; i++) {
             RegisterOperand ao = args.get(i);
             if (ao.getType().isReferenceType()) {
