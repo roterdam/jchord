@@ -127,7 +127,6 @@ public class InstrScheme implements Serializable {
 	}
 
 	private boolean hasEnterAndLeaveLoopEvent;
-	private boolean hasFinalizeEvent;
 	private boolean hasBasicBlockEvent;
 	private boolean hasQuadEvent;
 	private final EventFormat[] events;
@@ -136,6 +135,30 @@ public class InstrScheme implements Serializable {
 		events = new EventFormat[MAX_NUM_EVENT_FORMATS];
 		for (int i = 0; i < MAX_NUM_EVENT_FORMATS; i++)
 			events[i] = new EventFormat();
+	}
+
+	public EventFormat getEvent(int eventId) {
+		return events[eventId];
+	}
+
+	public void setEnterMainMethodEvent(boolean hasThr) {
+		EventFormat e = events[ENTER_MAIN_METHOD];
+		e.setPresent();
+		if (hasThr) e.setThr();
+	}
+
+	public void setEnterMethodEvent(boolean hasLoc, boolean hasThr) {
+		EventFormat e = events[ENTER_METHOD];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+	}
+
+	public void setLeaveMethodEvent(boolean hasLoc, boolean hasThr) {
+		EventFormat e = events[LEAVE_METHOD];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
 	}
 
 	public void setEnterAndLeaveLoopEvent() {
@@ -162,12 +185,17 @@ public class InstrScheme implements Serializable {
 		return hasQuadEvent;
 	}
 
-	public boolean hasFinalizeEvent() {
-		return hasFinalizeEvent;
-	}
-
-	public EventFormat getEvent(int eventId) {
-		return events[eventId];
+	public void setMethodCallEvent(boolean hasLoc, boolean hasThr, boolean hasObj,
+			boolean isBef, boolean isAft) {
+		if (!isBef && !isAft)
+			return;
+		EventFormat e = events[METHOD_CALL];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
+		if (isBef) e.setBef();
+		if (isAft) e.setAft();
 	}
 
 	public void setNewEvent(boolean hasLoc, boolean hasThr, boolean hasObj,
@@ -322,19 +350,6 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setMethodCallEvent(boolean hasLoc, boolean hasThr, boolean hasObj,
-			boolean isBef, boolean isAft) {
-		if (!isBef && !isAft)
-			return;
-		EventFormat e = events[METHOD_CALL];
-		e.setPresent();
-		if (hasLoc) e.setLoc();
-		if (hasThr) e.setThr();
-		if (hasObj) e.setObj();
-		if (isBef) e.setBef();
-		if (isAft) e.setAft();
-	}
-
 	public void setReturnPrimitiveEvent(boolean hasLoc, boolean hasThr) {
 		EventFormat e = events[RETURN_PRIMITIVE];
 		e.setPresent();
@@ -421,30 +436,6 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 	
-	public void setEnterMethodEvent(boolean hasLoc, boolean hasThr) {
-		EventFormat e = events[ENTER_METHOD];
-		e.setPresent();
-		if (hasLoc) e.setLoc();
-		if (hasThr) e.setThr();
-	}
-
-	public void setLeaveMethodEvent(boolean hasLoc, boolean hasThr) {
-		EventFormat e = events[LEAVE_METHOD];
-		e.setPresent();
-		if (hasLoc) e.setLoc();
-		if (hasThr) e.setThr();
-	}
-
-	public void setEnterMainMethodEvent(boolean hasThr) {
-		EventFormat e = events[ENTER_MAIN_METHOD];
-		e.setPresent();
-		if (hasThr) e.setThr();
-	}
-
-	public void setFinalizeEvent() {
-		hasFinalizeEvent = true;
-	}
-
 	public boolean hasFieldEvent() {
 		return hasGetfieldEvent() || hasPutfieldEvent();
 	}

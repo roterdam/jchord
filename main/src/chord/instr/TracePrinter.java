@@ -374,11 +374,6 @@ public class TracePrinter {
 					System.out.println("BASIC_BLOCK " + b + " " + t);
 					break;
 				}
-				case EventKind.FINALIZE:
-				{
-					int o = buffer.getInt();
-					System.out.println("FINALIZE " + o);
-				}
 				case EventKind.ENTER_MAIN_METHOD:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
