@@ -1,128 +1,94 @@
 \section{Instrumentation events}
 \label{sec:instr-events}
 
-Chord allows a given Java program to be instrumented to generate the
-following kinds of events during its execution.
+Chord provides support for instrumenting the following common kinds of events.
 
-\begin{enumerate}
-\item
-Method entry and exit. \\
-{\bf Event:} \code{ENTER_METHOD} m t \\
-{\bf Desc.:} Generated after thread t enters method m respectively. \\
-{\bf Event:} \code{LEAVE_METHOD} m t \\
-{\bf Desc.:} Generated before thread t leaves method m respectively.
-
-\item
-Loop entry and exit. \\
-{\bf Event:} \code{ENTER_LOOP} w t \\
-{\bf Desc.:} Generated before thread t enters loop w respectively. \\
-{\bf Event:} \code{LEAVE_LOOP} w t \\
-{\bf Desc.:} Generated after thread t leaves loop w respectively.
-
-\item
-Object allocation \\
-{\bf Event:} \code{BEF_NEW} h t \\
-{\bf Desc.:} Generated before thread t executes a \code{new} bytecode instruction at program point h and allocates new object o. \\
-{\bf Event:} \code{AFT_NEW} h t o \\
-{\bf Desc.:} Generated after thread t executes a \code{new} bytecode instruction at program point h and allocates new object o. \\
-{\bf Event:} \code{NEW_ARRAY} h t o \\
-{\bf Desc.:} Generated after thread t executes a \code{newarray} bytecode instruction at program point h and allocates new object o.
-
-\item
-Getstatic primitive \\
-{\bf Event:} \code{GETSTATIC_PRIMITIVE} e t f \\
-{\bf Desc.:} Generated after thread t reads primitive-typed static field f at program point e.
-
-\item
-Getstatic reference \\
-{\bf Event:} \code{GETSTATIC_REFERENCE} e t f o \\
-{\bf Desc.:} Generated after thread t reads object o from reference-typed static field f at program point e.
-
-\item
-Putstatic primitive \\
-{\bf Event:} \code{PUTSTATIC_PRIMITIVE} e t f \\
-{\bf Desc.:} Generated after thread t writes primitive-typed static field f at program point e.
-
-\item
-Putstatic reference \\
-{\bf Event:} \code{PUTSTATIC_REFERENCE} e t f o \\
-{\bf Desc.:} Generated after thread t writes object o to reference-typed static field f at program point e.
-
-\item
-Getfield primitive \\
-{\bf Event:} \code{GETFIELD_PRIMITIVE} e t b f \\
-{\bf Desc.:} Generated after thread t reads primitive-typed instance field f of object b at program point e.
-
-\item
-Getfield reference \\
-{\bf Event:} \code{GETFIELD_REFERENCE} e t b f o \\
-{\bf Desc.:} Generated after thread t reads object o from reference-typed instance field f of object b at program point e.
-
-\item
-Putfield primitive \\
-{\bf Event:} \code{PUTFIELD_PRIMITIVE} e t b f \\
-{\bf Desc.:} Generated after thread t writes primitive-typed instance field f of object b at program point e.
-
-\item
-Putfield reference \\
-{\bf Event:} \code{PUTFIELD_REFERENCE} e t b f o \\
-{\bf Desc.:} Generated after thread t writes object o to reference-typed instance field f of object b at program point e.
-
-\item
-Aload primitive \\
-{\bf Event:} \code{ALOAD_PRIMITIVE} e t b i \\
-{\bf Desc.:} Generated after thread t reads the primitive-typed element at index i of array object b at program point e.
-
-\item
-Aload reference \\
-{\bf Event:} \code{ALOAD_REFERENCE} e t b i o \\
-{\bf Desc.:} Generated after thread t reads object o from the reference-typed element at index i of array object b at program point e.
-
-\item
-Astore primitive \\
-{\bf Event:} \code{ASTORE_PRIMITIVE} e t b i \\
-{\bf Desc.:} Generated after thread t writes the primitive-typed element at index i of array object b at program point e.
-
-\item
-Astore reference \\
-{\bf Event:} \code{ASTORE_REFERENCE} e t b i o \\
-{\bf Desc.:} Generated after thread t writes object o to the reference-typed element at index i of array object b at program point e.
-
-\item
-Method call \\
-{\bf Event:} \code{BEF_METHOD_CALL} i t o \\
-{\bf Desc.:} Generated before thread t executes the method invocation statement at program point i with this argument as object o. \\
-{\bf Event:} \code{AFT_METHOD_CALL} i t o \\
-{\bf Desc.:} Generated after thread t executes the method invocation statement at program point i with this argument as object o. \\
-{\bf Note:} These events are not generated before/after constructor calls; use \code{BEF_NEW} and \code{AFT_NEW} events for that purpose.
-
-\item
-Thread start call \\
-{\bf Event:} \code{THREAD_START} i t o \\
-{\bf Desc.:} Generated before thread t calls the \code{start()} method of \code{java.lang.Thread} at program point i and spawns a thread o. 
-
-\item
-Thread join call \\
-{\bf Event:} \code{THREAD_JOIN} i t o \\
-{\bf Desc.:} Generated before thread t calls the \code{join()} method of \code{java.lang.Thread} at program point i to join with thread o.
-
-\item
-Lock acquire \\
-{\bf Event:} \code{ACQUIRE_LOCK} l t o \\
-{\bf Desc.:} Generated after thread t executes a statement of the form monitorenter o or enters a method synchronized on o at program point l.
-
-\item
-Lock release \\
-{\bf Event:} \code{RELEASE_LOCK} r t o \\
-{\bf Desc.:} Generated before thread t executes a statement of the form monitorexit o or leaves a method synchronized on o at program point r.
-
-\item
-Thread wait call \\
-{\bf Event:} \code{WAIT} i t o \\
-{\bf Desc.:} Generated before thread t calls the \code{wait()} method of \code{java.lang.Object} at program point i on object o.
-
-\item
-Thread notify call \\
-{\bf Event:} \code{NOTIFY} i t o \\
-{\bf Desc.:} Generated before thread t calls the \code{notify()} or \code{notifyAll()} method of \code{java.lang.Object} at program point i on object o.
-\end{enumerate}
+\begin{table}
+\begin{center}
+\htmlattributes*{table}{border="1" cellpadding="10"}
+\begin{tabular}{|l|l|l|}
+\hline
+{\bf Event Kind} & {\bf Description} \\
+\hline
+EnterMainMethod(\bt) & Generated after thread \bt\ enters method \bm\ (index in domain M).
+\\
+EnterMethod(\bm, \bt) & Generated after thread \bt\ enters method \bm\ (index in domain M).
+\\
+LeaveMethod(\bm, \bt) & Generated before thread \bt\ leaves method \bm\ (index in domain M).
+\\
+EnterLoop(\bw, \bt) & Generated before thread \bt\ begins loop \bw\ (index in domain W).
+\\
+LoopIteration(\bw, \bt) & Generated before thread \bt\ starts a new iteration of loop \bw\ (index in domain W).
+\\
+LeaveLoop(\bw, \bt) & Generated after thread \bt\ finishes loop \bw\ (index in domain W).
+\\
+BasicBlock(\bb, \bt) & Generated before thread \bt\ enters basic block \bb\ (index in domain B).
+\\
+Quad(\bp, \bt) & Generated before thread \bt\ executes quad at program point \bp\ (index in domain P).
+\\
+BefMethodCall(\bi, \bt, \bo) & 
+\begin{tabular}{l}
+Generated before thread \bt\ executes the method invocation statement at program point \bi\ (index in domain I) with this argument as object \bo. \\
+{\bf Note:} This event is not generated before constructor calls; use the BefNew event for that purpose.
+\end{tabular}
+\\
+AftMethodCall(\bi, \bt, \bo) &
+\begin{tabular}{l}
+Generated after thread \bt\ executes the method invocation statement at program point \bi\ (index in domain I) with this argument as object \bo. \\
+{\bf Note:} This event is not generated after constructor calls; use the AftNew event for that purpose.
+\end{tabular}
+\\
+BefNew(\bh, \bt, \bo) & Generated before thread \bt\ executes a \code{new} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (index in domain H).
+\\
+AftNew(\bh, \bt, \bo) & Generated after thread \bt\ executes a \code{new} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (index in domain H).
+\\
+NewArray(\bh, \bt, \bo) & Generated after thread \bt\ executes a \code{newarray} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (index in domain H).
+\\
+GetstaticPrimitive(\be, \bt, \bg) & Generated after thread \bt\ reads primitive-typed static field \bg\ (index in domain F) at program point \be\ (index in domain E).
+\\
+GetstaticReference(\be, \bt, \bg, \bo) & Generated after thread \bt\ reads object \bo\ from reference-typed static field \bg\ (index in domain F) at program point \be\ (index in domain E).
+\\
+PutstaticPrimitive(\be, \bt, \bg) & Generated after thread \bt\ writes primitive-typed static field \bg\ (index in domain F) at program point \be\ (index in domain E).
+\\
+PutstaticReference(\be, \bt, \bg, \bo) & Generated after thread \bt\ writes object \bo\ to reference-typed static field \bg\ (index in domain F) at program point \be\ (index in domain E).
+\\
+GetfieldPrimitive(\be, \bt, \bb, \bg) & Generated after thread \bt\ reads primitive-typed instance field \bg\ (index in domain F) of object \bb\ at program point \be\ (index in domain E).
+\\
+GetfieldReference(\be, \bt, \bb, \bg, \bo) & Generated after thread \bt\ reads object \bo\ from reference-typed instance field \bg\ (index in domain F) of object \bb\ at program point \be\ (index in domain E).
+\\
+PutfieldPrimitive(\be, \bt, \bb, \bg) & Generated after thread \bt\ writes primitive-typed instance field \bg\ (index in domain F) of object \bb\ at program point \be\ (index in domain E).
+\\
+PutfieldReference(\be, \bt, \bb, \bg, \bo) & Generated after thread \bt\ writes object \bo\ to reference-typed instance field \bg\ (index in domain F) of object \bb\ at program point \be\ (index in domain E).
+\\
+AloadPrimitive(\be, \bt, \bb, \bi) & Generated after thread \bt\ reads the primitive-typed element at index \bi\ of array object \bb\ at program point \be\ (index in domain E).
+\\
+AloadReference(\be, \bt, \bb, \bi, \bo) & Generated after thread \bt\ reads object \bo\ from the reference-typed element at index \bi\ of array object \bb\ at program point \be\ (index in domain E).
+\\
+AstorePrimitive(\be, \bt, \bb, \bi) & Generated after thread \bt\ writes the primitive-typed element at index \bi\ of array object \bb\ at program point \be\ (index in domain E).
+\\
+AstoreReference(\be, \bt, \bb, \bi, \bo) & Generated after thread \bt\ writes object \bo\ to the reference-typed element at index \bi\ of array object \bb\ at program point \be\ (index in domain E).
+\\
+ReturnPrimitive(\bp, \bt) & Not yet supported.
+\\
+ReturnReference(\bp, \bt) & Not yet supported.
+\\
+ExplicitThrow(\bp, \bt, \bo) & Not yet supported.
+\\
+ImplicitThrow(\bp, \bt, \bo) & Not yet supported.
+\\
+ThreadStart(\bi, \bt, \bo) & Generated before thread \bt\ calls the \code{start()} method of \code{java.lang.Thread} at program point \bi\ (index in domain I) and spawns a thread \bo.
+\\
+ThreadJoin(\bi, \bt, \bo) & Generated before thread \bt\ calls the \code{join()} method of \code{java.lang.Thread} at program point \bi\ (index in domain I) to join with thread \bo.
+\\
+AcquireLock(\bl, \bt, \bo) & Generated after thread \bt\ executes a statement of the form ``monitorenter \bo'' or enters a method synchronized on \bo\ at program point \bl\ (index in domain L).
+\\
+ReleaseLock(\br, \bt, \bo) & Generated before thread \bt\ executes a statement of the form ``monitorexit \bo'' or leaves a method synchronized on \bo\ at program point \br\ (index in domain R).
+\\
+Wait(\bi, \bt, \bo) & Generated before thread \bt\ calls the \code{wait()} method of \code{java.lang.Object} on object \bo\ at program point \bi\ (index in domain I).
+\\
+Notify(\bi, \bt, \bo) & Generated before thread \bt\ calls the \code{notify()} or \code{notifyAll()} method of \code{java.lang.Object} on object \bo\ at program point \bi\ (index in domain I).
+\T \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}

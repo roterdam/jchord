@@ -5,20 +5,20 @@ Ensure that the following software is installed on your machine:
 
 \begin{itemize}
 \item
-JDK 5 or higher, e.g. from
-\xlink{IBM}{http://www.ibm.com/developerworks/java/jdk/} or
-\xlink{Sun}{http://java.sun.com/javase/downloads/index.jsp}
+A JVM with JDK 5 or higher, e.g.
+\xlink{IBM J9}{http://www.ibm.com/developerworks/java/jdk/} or
+\xlink{Oracle HotSpot}{http://www.oracle.com/technetwork/java/javase/downloads/index.html}
 \item
 \xlink{Apache Ant}{http://ant.apache.org/}, a Java-based build tool
-\item
-a C++ compiler, e.g. \xlink{GCC}{http://gcc.gnu.org/}
-\item
-a Make utility, e.g. \xlink{GNU Make}{http://www.gnu.org/software/make/}
-\item
-\xlink{Cygwin}{http://www.cygwin.com/}, if it is a Windows machine
 \end{itemize}
 
-Download the latest Chord source code from the SVN repository:
+{\bf Note:} If you intend to use Chord for dynamic analysis, then
+IBM J9 is highly recommended, as it allows you to instrument
+the entire JDK; using any other JVM will likely require excluding
+large parts of the JDK from being instrumented.
+
+Obtain the latest stable release of Chord from \url{http://jchord.googlecode.com/checkout/}
+or the latest development snapshot from the SVN repository: 
 
 \begin{verbatim}
     prompt> svn checkout http://jchord.googlecode.com/svn/trunk/ chord
@@ -46,25 +46,33 @@ directory:
     prompt> ant 
 \end{verbatim}
 
-\noindent This will compile the following:
-\begin{itemize}
-\item
+\noindent This will compile
 the Java source code of Chord from \code{main/src/} to Java bytecode
 in \code{main/classes/}.
+Additionally:
+\begin{itemize}
 \item
-the C source code of BDD library
+If system property \code{chord.use.buddy} is set to true (default is false),
+then the C source code of BDD library
 \xlink{BuDDy}{http://buddy.sourceforge.net/} from
-\code{main/bdd/} to a shared library in \code{main/lib/}
+\code{main/bdd/} will be compiled to a shared library in \code{main/lib/}
 (\code{libbuddy.so} on Linux, \code{buddy.dll} on Windows, and
-\code{libbuddy.dylib} on MacOS); this library is needed for executing
+\code{libbuddy.dylib} on MacOS); this library is used for executing
 program analyses written in Datalog using
 \xlink{bddbddb}{http://bddbddb.sourceforge.net/} (a
 BDD-based Datalog solver).
 \item
-the C++ source code of the Chord instrumentation agent from
-\code{main/agent/} to a shared library in \code{main/lib/}
+If system property \code{chord.use.jvmti} is set to true (default is false),
+then the C++ source code of the Chord instrumentation agent from
+\code{main/agent/} will be compiled to a shared library in \code{main/lib/}
 (\code{libchord_instr_agent.so} on all architectures); this agent is
-needed for computing program scope dynamically and for executing
+used for computing program scope dynamically and for executing
 dynamic program analyses.
 \end{itemize}
+The above system properties can be set either in file \code{main/chord.properties}
+(recommended) or on the command line as follows:
+
+\begin{verbatim}
+    prompt> ant -Dchord.use.buddy=true -Dchord.use.jvmti=true
+\end{verbatim}
 
