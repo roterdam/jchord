@@ -7,14 +7,29 @@
 \texonly{\textwidth=6.0in}
 \texonly{\textheight=8.0in}
 
-\htmlonly{\newcommand\url[1]{\xlink{#1}{#1}}}
 \htmlonly{\newcommand\code[1]{{\tt #1}}}
+\htmlonly{\newcommand\url[1]{\xlink{#1}{#1}}}
+
 \texonly{\renewcommand\code[1]{\path{#1}}}
+\texonly{\renewcommand\xlink[2]{\href{#2}{#1}}}
+\newcommand\bh{{\bf h}}
+\newcommand\bi{{\bf i}}
+\newcommand\bo{{\bf o}}
+\newcommand\bt{{\bf t}}
+\newcommand\bm{{\bf m}}
+\newcommand\be{{\bf e}}
+\newcommand\bg{{\bf f}}
+\newcommand\bb{{\bf b}}
+\newcommand\bl{{\bf l}}
+\newcommand\bp{{\bf p}}
+\newcommand\br{{\bf r}}
+\newcommand\bw{{\bf w}}
+
 
 \htmltitle{Chord}
 \htmladdress{mhn@cs.stanford.edu}
 
-\title{Chord: A Static and Dynamic Program Analysis Framework for Java}
+\title{Chord: A Static and Dynamic Program Analysis Platform for Java}
 \author{Mayur Naik}
 \date{\today}
 \begin{document}
@@ -42,10 +57,10 @@
 \texonly{\newpage}
 \input{bdd_representation}
 \texonly{\newpage}
-\input{program_representation}
-\texonly{\newpage}
-\input{pointsto}
-\texonly{\newpage}
+%\input{program_representation}
+%\texonly{\newpage}
+%\input{pointsto}
+%\texonly{\newpage}
 \input{datarace}
 \texonly{\newpage}
 \input{deadlock}

@@ -229,17 +229,17 @@ of names of classes all of whose declared methods must be treated as no-ops:
 
 \begin{itemize}
 \item
-\code{chord.std.scope.exclude} This property conventionally specifies
+Property \code{chord.std.scope.exclude} conventionally specifies
 classes to be excluded from the scope of {\it all} programs to be
 analyzed, e.g., classes in the JDK standard library.  Its default
 value is \code{[chord.main.class.path]}, i.e., the classes comprising
 Chord itself.
 \item
-\code{chord.ext.scope.exclude} This property conventionally specifies
+Property \code{chord.ext.scope.exclude} conventionally specifies
 classes to be excluded from the scope of specific programs to be
 analyzed.  Its default value is the empty list.
 \item
-\code{chord.scope.exclude} This property specifies the final list of
+Property \code{chord.scope.exclude} specifies the final list of
 classes to be excluded from scope.  Its default value is simply the
 concatenation of the values of properties
 \code{chord.std.scope.exclude} and \code{chord.ext.scope.exclude}.
