@@ -59,7 +59,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 	}
 	public void init() { }
 	public void save() {
-		if (Config.verbose > 1)
+		if (Config.verbose >= 1)
 			System.out.println("SAVING dom " + name + " size: " + size());
 		try {
 			super.save(Config.bddbddbWorkDirName, Config.saveDomMaps);

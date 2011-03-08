@@ -71,7 +71,7 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 		scheme.setAcquireLockEvent(true, true, true);
 		scheme.setReleaseLockEvent(true, true, true);
 		
-		scheme.setEnterMainMethodEvent(true, true);
+		scheme.setEnterMainMethodEvent(true);
 		
 		scheme.setThreadStartEvent(true, true, true);
 		
@@ -314,12 +314,10 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 	}	
 	
 	@Override
-	public void processEnterMainMethod(int m, int t) {
+	public void processEnterMainMethod(int t) {
 		if (DEBUG) {			
-			Messages.log("processEnterMainMethod: m = " + m + ", t = " + t);
+			Messages.log("processEnterMainMethod: t = " + t);
 		}
-				
-		assert (m == 0);
 		StackTraceElement[] elems = Thread.currentThread().getStackTrace();
 		int i = getIndexOfFirstUserMethod(elems);
 		assert (elems[i].getMethodName().equals("main"));

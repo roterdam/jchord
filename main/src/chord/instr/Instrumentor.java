@@ -381,7 +381,7 @@ public class Instrumentor extends CoreInstrumentor {
 		String cName = clazz.getName();
 		currClass = (jq_Class) program.getClass(cName);
 		if (currClass == null) {
-			if (verbose > 2) Messages.log(CLASS_NOT_FOUND, cName);
+			if (verbose >= 2) Messages.log(CLASS_NOT_FOUND, cName);
 			return null;
 		}
 		return super.edit(clazz);
@@ -402,13 +402,13 @@ public class Instrumentor extends CoreInstrumentor {
 		currSign = mName + ":" + mDesc + "@" + cName;
 		currMethod = program.getMethod(currSign);
 		if (currMethod == null) {
-			if (verbose > 2) Messages.log(METHOD_NOT_FOUND, currSign);
+			if (verbose >= 2) Messages.log(METHOD_NOT_FOUND, currSign);
 			return;
 		}
 		int mId;
 		if (Mmap != null) {
 			mId = Mmap.indexOf(currSign);
-			if (mId == -1 && verbose > 2)
+			if (mId == -1 && verbose >= 2)
 				Messages.log(NOT_IN_DOMAIN, getDomainName(Mmap), currSign);
 		} else
 			mId = -1;
@@ -417,12 +417,12 @@ public class Instrumentor extends CoreInstrumentor {
 			try{
 				bcMap = currMethod.getBCMap();
 			} catch (RuntimeException ex) {
-				if (verbose > 2) Messages.log(CANNOT_INSTRUMENT_METHOD, currSign);
+				if (verbose >= 2) Messages.log(CANNOT_INSTRUMENT_METHOD, currSign);
 				ex.printStackTrace();
 				return;
 			}
 			if (bcMap == null) {
-				if (verbose > 2) Messages.log(METHOD_BYTECODE_NOT_FOUND, currSign);
+				if (verbose >= 2) Messages.log(METHOD_BYTECODE_NOT_FOUND, currSign);
 				return;
 			}
 			ControlFlowGraph cfg = currMethod.getCFG();
@@ -539,7 +539,7 @@ public class Instrumentor extends CoreInstrumentor {
 		String s = bci + "!" + currSign;
 		int id = map.indexOf(s);
 		if (id == -1) {
-			if (verbose > 2) Messages.log(NOT_IN_DOMAIN, getDomainName(map), s);
+			if (verbose >= 2) Messages.log(NOT_IN_DOMAIN, getDomainName(map), s);
 			id = EventHandler.UNKNOWN_FIELD_VAL;
 		}
 		return id;
@@ -552,7 +552,7 @@ public class Instrumentor extends CoreInstrumentor {
 		String s = fName + ":" + fDesc + "@" + cName;
 		int id = Fmap.indexOf(s);
 		if (id == -1) {
-			if (verbose > 2) Messages.log(NOT_IN_DOMAIN, getDomainName(Fmap), s);
+			if (verbose >= 2) Messages.log(NOT_IN_DOMAIN, getDomainName(Fmap), s);
 			id = EventHandler.UNKNOWN_FIELD_VAL;
 		}
 		return id;

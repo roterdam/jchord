@@ -13,41 +13,62 @@ import chord.program.Program;
 import chord.util.Timer;
 
 /**
- * Main entry point of Chord.
+ * Entry point of Chord after JVM settings are resolved.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Main {
 	public static void main(String[] args) throws Exception {
-		PrintStream outStream = null;
-		PrintStream errStream = null;
-		final String outFileName = Config.outFileName;
-		final String errFileName = Config.errFileName;
-		System.out.println("Redirecting stdout to file: " + outFileName);
-		System.out.println("Redirecting stderr to file: " + errFileName);
-		final File outFile = new File(outFileName);
-		outStream = new PrintStream(outFile);
-		System.setOut(outStream);
-		final File errFile = new File(errFileName);
-		if (errFile.equals(outFile))
-			errStream = outStream;
-		else
-			errStream = new PrintStream(errFile);
-		System.setErr(errStream);
-		run();
-		outStream.close();
-		if (errStream != outStream)
-			errStream.close();
-	}
+        File outFile;
+        {
+            String outFileName = Config.outFileName;
+            if (outFileName == null)
+                outFile = null;
+            else {
+                outFile = new File(outFileName);
+                System.out.println("Redirecting stdout to file: " + outFile);
+            }
+        }
+        File errFile;
+        {
+            String errFileName = Config.errFileName;
+            if (errFileName == null)
+                errFile = null;
+            else {
+                errFile = new File(errFileName);
+                System.out.println("Redirecting stderr to file: " + errFile);
+            }
+        }
+        PrintStream outStream = null;
+        PrintStream errStream = null;
+        if (outFile != null) {
+            outStream = new PrintStream(outFile);
+            System.setOut(outStream);
+        }
+        if (errFile != null) {
+            if (outFile != null && errFile.equals(outFile))
+                errStream = outStream;
+            else
+                errStream = new PrintStream(errFile);
+            System.setErr(errStream);
+        }
+        run();
+        if (outStream != null)
+            outStream.close();
+        if (errStream != null && errStream != outStream)
+            errStream.close();
+    }
 	private static void run() {
-		if (Config.verbose > 0)
-			Config.print();
 		Timer timer = new Timer("chord");
 		timer.init();
 		String initTime = timer.getInitTimeStr();
+		if (Config.verbose >= 0)
+			System.out.println("Chord run initiated at: " + initTime);
+		if (Config.verbose >= 2)
+			Config.print();
 		Program program = Program.g();
 		Project project = Project.g();
-		if (Config.buildProgram) {
+		if (Config.buildScope) {
 			program.build();
 		}
 		if (Config.printAllClasses)
@@ -75,8 +96,7 @@ public class Main {
 		}
 		timer.done();
 		String doneTime = timer.getDoneTimeStr();
-		if (Config.verbose > 0) {
-			System.out.println("Chord run initiated at: " + initTime);
+		if (Config.verbose >= 0) {
 			System.out.println("Chord run completed at: " + doneTime);
 			System.out.println("Total time: " + timer.getInclusiveTimeStr());
 		}

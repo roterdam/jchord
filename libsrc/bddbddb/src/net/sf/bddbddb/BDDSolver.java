@@ -171,16 +171,16 @@ public class BDDSolver extends Solver {
     public BDDSolver() {
         super();
         if (BDDCACHE == 0) BDDCACHE = BDDNODES / 4;
-		if (VERBOSE > 2)
+		if (VERBOSE >= 2)
         	out.println("Initializing BDD library (" + BDDNODES + " nodes, cache size " + BDDCACHE + ", min free " + BDDMINFREE + "%)");
         bdd = BDDFactory.init(1000, BDDCACHE);
-        if (VERBOSE > 2) out.println("Using BDD library "+bdd.getVersion());
+        if (VERBOSE >= 2) out.println("Using BDD library "+bdd.getVersion());
         fielddomainsToBDDdomains = new GenericMultiMap(ListFactory.linkedListFactory);
         bdd.setMinFreeNodes(BDDMINFREE);
         try {
             fbo = new FindBestDomainOrder(this);
         } catch (NoClassDefFoundError x) {
-            if (VERBOSE > 2) out.println("No machine learning library found, learning disabled.");
+            if (VERBOSE >= 2) out.println("No machine learning library found, learning disabled.");
         }
     }
 
@@ -265,8 +265,8 @@ public class BDDSolver extends Solver {
      */
     public void setVariableOrdering() {
         if (VARORDER != null) {
-            VARORDER = fixVarOrder(VARORDER, VERBOSE > 2);
-            if (VERBOSE > 2) out.print("Setting variable ordering to " + VARORDER + ", ");
+            VARORDER = fixVarOrder(VARORDER, VERBOSE >= 2);
+            if (VERBOSE >= 2) out.print("Setting variable ordering to " + VARORDER + ", ");
             if (bdd instanceof net.sf.javabdd.JFactory && BDDREORDER != null) {
                 System.out.println("Target var order:");
                 int[] varOrder = bdd.makeVarOrdering(true, VARORDER);
@@ -283,7 +283,7 @@ public class BDDSolver extends Solver {
                     bdd.varBlockAll();
                 }
             }
-            if (VERBOSE > 2) out.println("done.");
+            if (VERBOSE >= 2) out.println("done.");
             int[] varOrder = bdd.getVarOrder();
 			// for (int i = 0; i < varOrder.length; ++i) System.out.print(varOrder[i]+",");
             // System.out.println();

@@ -125,7 +125,7 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 
 JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 {
-    cout << "***** ENTER Agent_OnLoad" << endl;
+    cout << "ENTER Agent_OnLoad" << endl;
 	if (options == NULL) {
 		cerr << "ERROR: Expected options to agent" << endl;
 		exit(1);
@@ -191,14 +191,14 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
     retval = jvmti_env->SetEventCallbacks(&callbacks, sizeof(callbacks));
     assert(retval == JVMTI_ERROR_NONE);
 
-    cout << "***** LEAVE Agent_OnLoad" << endl;
+    cout << "LEAVE Agent_OnLoad" << endl;
 	return JNI_OK;
 }
 
 
 JNIEXPORT void JNICALL Agent_OnUnload(JavaVM *jvm)
 {
-    cout << "***** ENTER Agent_OnUnload" << endl;
-    cout << "***** LEAVE Agent_OnUnload" << endl;
+    cout << "ENTER Agent_OnUnload" << endl;
+    cout << "LEAVE Agent_OnUnload" << endl;
 }
 

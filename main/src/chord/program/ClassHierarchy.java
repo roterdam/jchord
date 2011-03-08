@@ -239,13 +239,13 @@ public class ClassHierarchy {
 				InputStream is = cpe.getResourceAsStream(fileName);
 				assert (is != null);
 				DataInputStream in = new DataInputStream(is);
-				if (Config.verbose > 2)
+				if (Config.verbose >= 2)
 					Messages.log("Processing class file %s from %s", fileName, cpe);
 				processClassFile(in, typeName);
 			}
 		}
 
-		if (Config.verbose > 2) {
+		if (Config.verbose >= 2) {
 			if (!duplicateTypes.isEmpty()) {
 				Messages.log(IGNORED_DUPLICATE_TYPES);
 				for (Pair<String, String> p : duplicateTypes)

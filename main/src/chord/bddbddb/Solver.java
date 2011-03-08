@@ -6,6 +6,7 @@
  */
 package chord.bddbddb;
 
+import java.io.File;
 import chord.project.Config;
 import chord.project.OutDirUtils;
 
@@ -33,9 +34,9 @@ public class Solver {
 			"-ea",
 			"-Xmx" + Config.bddbddbMaxHeap,
 			"-cp",
-			Config.bddbddbClassPathName,
+			Config.mainDirName + File.separator + "chord.jar",
 			"-Dverbose=" + Config.verbose,
-			Config.useBuddy ? ("-Djava.library.path=" + Config.libDirName) : "-Dbdd=j",
+			Config.useBuddy ? ("-Djava.library.path=" + Config.mainDirName) : "-Dbdd=j",
 			"-Dbasedir=" + Config.bddbddbWorkDirName,
 			"net.sf.bddbddb.Solver",
 			fileName

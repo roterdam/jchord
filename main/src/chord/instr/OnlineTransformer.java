@@ -141,7 +141,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			String cname = c.getName();
 			if (!cname.startsWith("[")) {
 				if (!isModifiableClass(instrumentation, c)) {
-					if (Config.verbose > 2)
+					if (Config.verbose >= 2)
 						Messages.log(CANNOT_MODIFY_CLASS, cname);
 				} else
 					l.add(c);
@@ -170,7 +170,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		//  array. The input classfileBuffer must not be modified.
 		// className is of the form "java/lang/Object"
 		String cName = className.replace('/', '.');
-		if (Config.verbose > 2)
+		if (Config.verbose >= 2)
 			Messages.log(TRANSFORMING_CLASS, cName);
 		Exception ex = null;
 		try {
@@ -186,7 +186,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			ex = e; 
 		}
 		if (ex != null) {
-			if (Config.verbose > 2) {
+			if (Config.verbose >= 2) {
 				Messages.log(CANNOT_INSTRUMENT_CLASS, cName);
 				ex.printStackTrace();
 			}

@@ -7,7 +7,8 @@
 package chord.project;
 
 import java.io.File;
-import java.io.FilenameFilter;
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -18,6 +19,11 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Enumeration;
+import java.util.zip.ZipFile;
+import java.util.zip.ZipEntry;
+import java.util.jar.JarFile;
+import java.util.jar.JarEntry;
 
 import org.scannotation.AnnotationDB;
 
@@ -36,19 +42,19 @@ import chord.bddbddb.RelSign;
  */
 public class TaskParser {
 	private static final String ANON_JAVA_TASK =
-		"WARN: Project builder: Java analysis '%s' is not named via a @Chord(name=\"...\") annotation; using its class name itself as its name.";
+		"WARN: TaskParser: Java analysis '%s' is not named via a @Chord(name=\"...\") annotation; using its class name itself as its name.";
 	private static final String ANON_DLOG_TASK =
-		"WARN: Project builder: Dlog analysis '%s' is not named via a # name=... line; using its filename itself as its name.";
-	private static final String NON_EXISTENT_PATH_ELEM = "WARN: Project builder: Ignoring non-existent entry '%s' in path '%s'.";
-	private static final String MALFORMED_PATH_ELEM = "WARN: Project builder: Ignoring malformed entry '%s' in path '%s'.";
+		"WARN: TaskParser: Dlog analysis '%s' is not named via a # name=... line; using its filename itself as its name.";
+	private static final String NON_EXISTENT_PATH_ELEM = "WARN: TaskParser: Ignoring non-existent entry '%s' in path '%s'.";
+	private static final String MALFORMED_PATH_ELEM = "WARN: TaskParser: Ignoring malformed entry '%s' in path '%s': %s";
 	private static final String JAVA_TASK_REDEFINED =
-		"ERROR: Project builder: Ignoring Java analysis '%s': its @Chord(name=\"...\") annotation uses name '%s' that is also used for another task '%s'.";
+		"ERROR: TaskParser: Ignoring Java analysis '%s': its @Chord(name=\"...\") annotation uses name '%s' that is also used for another task '%s'.";
 	private static final String DLOG_TASK_REDEFINED =
-		"ERROR: Project builder: Ignoring Dlog analysis '%s': its # name=\"...\" line uses name '%s' that is also used for another task '%s'.";
+		"ERROR: TaskParser: Ignoring Dlog analysis '%s': its # name=\"...\" line uses name '%s' that is also used for another task '%s'.";
 	private static final String IGNORE_DLOG_TASK =
-		"ERROR: Project builder: Ignoring Dlog analysis '%s'; errors were found while parsing it (see above).";
+		"ERROR: TaskParser: Ignoring Dlog analysis '%s'; errors were found while parsing it (see above).";
 	private static final String IGNORE_JAVA_TASK =
-		"ERROR: Project builder: Ignoring Java analysis '%s'; errors were found in its @Chord annotation (see above).";
+		"ERROR: TaskParser: Ignoring Java analysis '%s'; errors were found in its @Chord annotation (see above).";
 
 	private final Map<String, Class<ITask>> nameToJavaTaskMap =
 		new HashMap<String, Class<ITask>>();
@@ -115,8 +121,7 @@ public class TaskParser {
 			try {
 			   list.add(file.toURL());
 			} catch (MalformedURLException ex) {
-				malformedPathElem(fileName, "chord.java.analysis.path",
-					ex.getMessage());
+				malformedPathElem(fileName, "chord.java.analysis.path", ex.getMessage());
 				continue;
 		   }
 		}
@@ -138,14 +143,6 @@ public class TaskParser {
 			processJavaAnalysis(className);
 		}
 	}
-
-	private static final FilenameFilter filter = new FilenameFilter() {
-		public boolean accept(File dir, String name) {
-			if (name.startsWith("."))
-				return false;
-			return true;
-		}
-	};
 
 	private void buildDlogAnalysisMap() {
 		String dlogAnalysisPathName = Config.dlogAnalysisPathName;
@@ -177,12 +174,8 @@ public class TaskParser {
 		}
 		String name = info.getName();
 		if (name.equals("")) {
-			if (Config.verbose > 2) Messages.log(ANON_JAVA_TASK, className);
+			if (Config.verbose >= 2) Messages.log(ANON_JAVA_TASK, className);
 			name = className;
-		}
-		for (String name2 : Config.analysisExcludeAry) {
-			if (name.equals(name2))
-				return;
 		}
 		DlogAnalysis dlogTask = nameToDlogTaskMap.get(name);
 		if (dlogTask != null) {
@@ -236,14 +229,52 @@ public class TaskParser {
 
 	private void processDlogAnalysis(File file) {
 		if (file.isDirectory()) {
-			File[] subFiles = file.listFiles(filter);
-			for (File subFile : subFiles)
-				processDlogAnalysis(subFile);
-			return;
+			File[] subFiles = file.listFiles();
+			for (File subFile : subFiles) {
+				if (subFile.isDirectory())
+					processDlogAnalysis(subFile);
+				else {
+					String subFileName = subFile.getAbsolutePath();
+					if (subFileName.endsWith(".dlog") || subFileName.endsWith(".datalog")) {
+						processDlogAnalysis(subFileName);
+					}
+				}
+			}
+		} else {
+			String fileName = file.getAbsolutePath();
+			try {
+				if (fileName.endsWith(".jar")) {
+					JarFile jarFile = new JarFile(fileName);
+					Enumeration e = jarFile.entries();
+					while (e.hasMoreElements()) {
+						JarEntry je = (JarEntry) e.nextElement();
+						String fileName2 = je.getName();
+						if (fileName2.endsWith(".dlog") || fileName2.endsWith(".datalog")) {
+							InputStream is = jarFile.getInputStream(je);
+							String fileName3 = OutDirUtils.copyResource(fileName2, is);
+							processDlogAnalysis(fileName3);
+						}
+					}
+				} else if (fileName.endsWith(".zip")) {
+					ZipFile zipFile = new ZipFile(fileName);
+					Enumeration e = zipFile.entries();
+					while (e.hasMoreElements()) {
+						ZipEntry ze = (ZipEntry) e.nextElement();
+						String fileName2 = ze.getName();
+						if (fileName2.endsWith(".dlog") || fileName2.endsWith(".datalog")) {
+							InputStream is = zipFile.getInputStream(ze);
+							String fileName3 = OutDirUtils.copyResource(fileName2, is);
+							processDlogAnalysis(fileName3);
+						}
+					}
+				}
+			} catch (IOException ex) {
+				malformedPathElem(fileName, "chord.dlog.analysis.path", ex.getMessage());
+			}
 		}
-		String fileName = file.getAbsolutePath();
-		if (!fileName.endsWith(".dlog") && !fileName.endsWith(".datalog"))
-			return;
+	}
+
+	private void processDlogAnalysis(String fileName) {
 		DlogAnalysis task = new DlogAnalysis();
 		boolean success = task.parse(fileName);
 		if (!success) {
@@ -252,12 +283,8 @@ public class TaskParser {
 		}
 		String name = task.getDlogName();
 		if (name == null) {
-			if (Config.verbose > 2) Messages.log(ANON_DLOG_TASK, fileName);
+			if (Config.verbose >= 2) Messages.log(ANON_DLOG_TASK, fileName);
 			name = fileName;
-		}
-		for (String name2 : Config.analysisExcludeAry) {
-			if (name.equals(name2))
-				return;
 		}
 		DlogAnalysis dlogTask = nameToDlogTaskMap.get(name);
 		if (dlogTask != null) {
@@ -344,10 +371,10 @@ public class TaskParser {
 	}
 
 	private void malformedPathElem(String elem, String path, String msg) {
-		if (Config.verbose > 2) Messages.log(MALFORMED_PATH_ELEM, elem, path, msg);
+		if (Config.verbose >= 2) Messages.log(MALFORMED_PATH_ELEM, elem, path, msg);
 	}
 
 	private void nonexistentPathElem(String elem, String path) {
-		if (Config.verbose > 2) Messages.log(NON_EXISTENT_PATH_ELEM, elem, path);
+		if (Config.verbose >= 2) Messages.log(NON_EXISTENT_PATH_ELEM, elem, path);
 	}
 }

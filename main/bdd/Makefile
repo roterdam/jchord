@@ -7,7 +7,7 @@
 #   M32_FLAG     -- "-m32" if using 32-bit JVM on 64-bit machine
 
 BUDDY_SRC = buddy/src
-LIB_DIR = ../lib
+DIST_DIR = ..
 JNI_H_DIR = $(shell find $(JDK_ROOT) -name jni.h -exec dirname '{}' \;)
 INCLUDES = -I. -I$(BUDDY_SRC) -I$(BUDDY_SRC)/.. -I$(JNI_H_DIR)
 JNI_MD_H_DIR = $(shell find $(JDK_ROOT) -name jni_md.h -exec dirname '{}' \;)
@@ -21,16 +21,16 @@ ifeq (${OS},Windows_NT)
   CFLAGS = $(M32_FLAG) -fPIC -Wall -O2 -mno-cygwin
   LINK = dllwrap
   LINKFLAGS = $(M32_FLAG) -lm -s --target=i386-mingw32 --add-underscore --driver-name gcc -mno-cygwin
-  BUDDY_LIB_NAME = $(LIB_DIR)/buddy.dll
+  BUDDY_LIB_NAME = $(DIST_DIR)/buddy.dll
 else
   CFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
   LINK = $(CC)
   ifeq (${shell uname -s},Darwin)
     LINKFLAGS = $(M32_FLAG) -lm -dynamiclib -framework JavaVM -single_module -undefined suppress -flat_namespace
-    BUDDY_LIB_NAME = $(LIB_DIR)/libbuddy.dylib
+    BUDDY_LIB_NAME = $(DIST_DIR)/libbuddy.dylib
   else
     LINKFLAGS = $(M32_FLAG) -lm -shared
-    BUDDY_LIB_NAME = $(LIB_DIR)/libbuddy.so
+    BUDDY_LIB_NAME = $(DIST_DIR)/libbuddy.so
   endif
 endif
 

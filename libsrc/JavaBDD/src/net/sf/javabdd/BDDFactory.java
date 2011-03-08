@@ -82,8 +82,6 @@ public abstract class BDDFactory {
                 return JFactory.init(nodenum, cachesize);
             if (bddpackage.equals("u") || bddpackage.equals("micro"))
                 return MicroFactory.init(nodenum, cachesize);
-            if (bddpackage.equals("jdd"))
-                return JDDFactory.init(nodenum, cachesize);
             if (bddpackage.equals("test"))
                 return TestBDDFactory.init(nodenum, cachesize);
             if (bddpackage.equals("typed"))

@@ -150,8 +150,9 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		if (instrScheme != null)
 			return instrScheme;
 		instrScheme = new InstrScheme();
-		instrScheme.setEnterMainMethodEvent(true, true);
-        instrScheme.setNewAndNewArrayEvent(true, true, true);
+		instrScheme.setEnterMainMethodEvent(true);
+        instrScheme.setNewEvent(true, true, true, true, true);
+        instrScheme.setNewArrayEvent(true, true, true);
 		instrScheme.setThreadStartEvent(true, true, true);
 		instrScheme.setThreadJoinEvent(true, true, true);
 		instrScheme.setAcquireLockEvent(true, true, true);
@@ -596,12 +597,26 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	public void doneAllPasses() { }
 
 	@Override
-	public void processEnterMainMethod(int m, int t) {
-		if (verbose) System.out.println("MAIN: " + m + " " + t);
+	public void processEnterMainMethod(int t) {
+		if (verbose) System.out.println("MAIN: " + t);
 	}
 
 	@Override
-    public void processNewOrNewArray(int h, int t, int o) {
+    public void processBefNew(int h, int t, int o) {
+		processNewOrNewArray(h, t, o);
+	}
+
+	@Override
+	public void processAftNew(int h, int i, int o) {
+		// do nothing
+	}
+
+	@Override
+    public void processNewArray(int h, int t, int o) {
+		processNewOrNewArray(h, t, o);
+	}
+
+	private void processNewOrNewArray(int h, int t, int o) {
 		if (verbose) System.out.println("NEW: " + h + " " + t + " " + o);
         if (o == 0) return;
 		if (needAbsObjs) {

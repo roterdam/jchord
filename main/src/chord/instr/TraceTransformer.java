@@ -172,7 +172,7 @@ public class TraceTransformer {
 				if (count != 0) {
 					if (count >= MAX_CONS_SIZE) {
 						warn();
-						if (verbose > 2) System.out.println("Evicting oldest.");
+						if (verbose >= 2) System.out.println("Evicting oldest.");
 						// remove 1st item in pending, it is oldest
 						pending.remove(0);
 						adjust();
@@ -402,7 +402,7 @@ public class TraceTransformer {
 		tmp[count++] = v;
 	}
 	private void warn() {
-		if (verbose > 2) {
+		if (verbose >= 2) {
 			System.out.println("WARN: Active constructors in order are as follows:");
 			for (int i = 0; i < pending.size(); i++) {
 				IntTrio trio = pending.get(i);

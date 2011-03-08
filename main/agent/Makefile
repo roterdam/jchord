@@ -4,14 +4,14 @@
 #   JDK_ROOT    -- location where you installed JDK
 #   M32_FLAG    -- "-m32" if using 32-bit JVM on 64-bit machine
 
-LIB_DIR = ../lib
+DIST_DIR = ..
 JNI_H_DIR = $(shell find $(JDK_ROOT) -name jni.h -exec dirname '{}' \;)
 INCLUDES = -I. -I$(BUDDY_SRC) -I$(BUDDY_SRC)/.. -I$(JNI_H_DIR)
 JNI_MD_H_DIR = $(shell find $(JDK_ROOT) -name jni_md.h -exec dirname '{}' \;)
 ifneq (x$(JNI_MD_H_DIR),x)
 	INCLUDES += -I$(JNI_MD_H_DIR)
 endif
-INSTR_LIB_NAME = $(LIB_DIR)/libchord_instr_agent.so
+INSTR_LIB_NAME = $(DIST_DIR)/libchord_instr_agent.so
 
 ifeq (${OS},Windows_NT)
   CXXFLAGS = $(M32_FLAG) -mno-cygwin -Wall -O2

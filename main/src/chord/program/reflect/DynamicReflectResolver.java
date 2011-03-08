@@ -32,7 +32,7 @@ public class DynamicReflectResolver extends CoreDynamicAnalysis {
 		new ArrayList<Pair<String, List<String>>>();
 	private final List<Pair<String, List<String>>> resolvedAryNewInstSites =
 		new ArrayList<Pair<String, List<String>>>();
-	private final boolean verbose = (Config.verbose > 2);
+	private final boolean verbose = (Config.verbose >= 2);
 
 	public List<Pair<String, List<String>>> getResolvedClsForNameSites() {
 		return resolvedClsForNameSites;
