@@ -2,11 +2,7 @@
 <project name="dynamic_atomicity" default="compile">
 	<property name="chord.home.dir" location="../main"/>
 
-	<target name="paths">
-		<property name="chord.ext.java.analysis.path" location="classes"/>
-	</target>
-
-	<target name="compile" depends="paths">
+	<target name="compile">
 		<ant dir="${chord.home.dir}" target="compile"/>
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
@@ -14,7 +10,8 @@
 			classpath="${chord.home.dir}/chord.jar"/>
 	</target>
 
-	<target name="run" depends="paths">
+	<target name="run">
+		<property name="chord.ext.java.analysis.path" location="classes"/>
 		<property name="chord.run.analyses" value="atomizer-java"/> 
 		<ant dir="${chord.home.dir}" target="run"/>
 	</target>
