@@ -54,7 +54,6 @@ public class DynConfDep extends CoreDynamicAnalysis {
     instrScheme.save(SCHEME_FILE);
     
     args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, SCHEME_FILE);
-//    args.put(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY, DynConfDepRuntime.class.getCanonicalName());
     return args;
   }
   
