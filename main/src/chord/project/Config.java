@@ -139,7 +139,7 @@ public class Config {
 	public final static String mainDirName = System.getProperty("chord.main.dir");
 	public final static String javaClassPathName = System.getProperty("java.class.path");
 	public final static String toolClassPathName =
-		FileUtils.makePath(new String[] { mainDirName + File.separator + "chord.jar", javaAnalysisPathName });
+		mainDirName + File.separator + "chord.jar" + File.pathSeparator + javaAnalysisPathName;
 	public final static String stubsFileName = "chord/program/stubs/stubs.txt";
 	// This source of this agent is defined in main/agent/chord_instr_agent.cpp.
 	// See the ccompile target in main/build.xml and main/agent/Makefile for how it is built.
