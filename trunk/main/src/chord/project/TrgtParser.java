@@ -138,7 +138,7 @@ public class TrgtParser {
 	
 	private void inconsistentDomOrders(String relName,
 			String order1, String order2, String loc1, String loc2) {
-		if (Config.verbose > 2) Messages.log(DOM_ORDERS_INCONSISTENT, relName,
+		if (Config.verbose >= 2) Messages.log(DOM_ORDERS_INCONSISTENT, relName,
 			order1, order2, loc1, loc2);
 	}
 

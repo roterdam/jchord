@@ -404,9 +404,9 @@ public class BDDRelation extends Relation {
         }
         if (r2 != null) {
             if (r2.isZero()) {
-                if (solver.VERBOSE > 2) solver.out.println("Warning: " + filename + " is zero.");
+                if (solver.VERBOSE >= 2) solver.out.println("Warning: " + filename + " is zero.");
             } else if (r2.isOne()) {
-                if (solver.VERBOSE > 2) solver.out.println("Warning: " + filename + " is one.");
+                if (solver.VERBOSE >= 2) solver.out.println("Warning: " + filename + " is one.");
             } else {
                 if (!verify(r2)) {
                     throw new IOException("Expected domains for loaded BDD " + filename + " to be " + domains + ", but found " + activeDomains(r2)
@@ -602,7 +602,7 @@ public class BDDRelation extends Relation {
      */
     public void save(String filename) throws IOException {
         Assert._assert(isInitialized);
-        if (solver.VERBOSE > 1)
+        if (solver.VERBOSE >= 1)
 			solver.out.println("Relation " + this + ": " + relation.nodeCount() + " nodes, " + dsize() + " elements ("+activeDomains(relation)+")");
         BufferedWriter out = null;
         try {

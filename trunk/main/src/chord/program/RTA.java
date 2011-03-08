@@ -190,7 +190,7 @@ public class RTA {
 		methods = new IndexSet<jq_Method>();
 		methodWorklist = new ArrayList<jq_Method>();
 	
-		if (Config.verbose > 1) System.out.println("ENTER: RTA");
+		if (Config.verbose >= 1) System.out.println("ENTER: RTA");
 		Timer timer = new Timer();
 		timer.init();
 		if (reflectKind.equals("static")) {
@@ -205,20 +205,12 @@ public class RTA {
 			dynamicReflectResolver.run();
 			dynamicResolvedClsForNameSites =
 				dynamicReflectResolver.getResolvedClsForNameSites();
-			// System.out.println("Dynamic resolved clsForName sites:");
-			// print(dynamicResolvedClsForNameSites);
 			dynamicResolvedObjNewInstSites =
 				dynamicReflectResolver.getResolvedObjNewInstSites();
-			// System.out.println("Dynamic resolved objNewInst sites:");
-			// print(dynamicResolvedObjNewInstSites);
 			dynamicResolvedConNewInstSites =
 				dynamicReflectResolver.getResolvedConNewInstSites();
-			// System.out.println("Dynamic resolved conNewInst sites:");
-			// print(dynamicResolvedConNewInstSites);
 			dynamicResolvedAryNewInstSites =
 				dynamicReflectResolver.getResolvedAryNewInstSites();
-			// System.out.println("Dynamic resolved aryNewInst sites:");
-			// print(dynamicResolvedAryNewInstSites);
 		}
 		 
 		reflect = new Reflect();
@@ -237,7 +229,7 @@ public class RTA {
 		prepAdditionalEntrypoints();
 		
 		for (int i = 0; repeat; i++) {
-			if (Config.verbose > 1) System.out.println("Iteration: " + i);
+			if (Config.verbose >= 1) System.out.println("Iteration: " + i);
 			repeat = false;
 			classesVisitedForClinit.clear();
 			methods.clear();
@@ -255,11 +247,11 @@ public class RTA {
 				staticReflectResolver.startedNewIter();
 			}
 		}
-		if (Config.verbose > 1) System.out.println("LEAVE: RTA");
+		if (Config.verbose >= 1) System.out.println("LEAVE: RTA");
 		timer.done();
-		if (Config.verbose > 1)
+		if (Config.verbose >= 1)
 			System.out.println("Time: " + timer.getInclusiveTimeStr());
-		staticReflectResolver = null; //no longer in use;stop referencing it
+		staticReflectResolver = null; // no longer in use; stop referencing it
 	}
 	
   
@@ -310,14 +302,10 @@ public class RTA {
 				(staticReflectResolver != null && staticReflectResolver.needNewIter()))
 			repeat = true;
 		if (r instanceof jq_Class) {
-			System.err.println("In RTA, processing resolution of newInstance site inside method " +
-					q.getMethod() +  "." + q.getMethod().getDeclaringClass() + " resolved to " + r);
 			jq_Class c = (jq_Class) r;
 			jq_Method n = c.getInitializer(new jq_NameAndDesc("<init>", "()V"));
 			if (n != null)
 				visitMethod(n);
-			else
-				System.err.println("Note: couldn't find ctor for " + r);
 		}
 	}
 

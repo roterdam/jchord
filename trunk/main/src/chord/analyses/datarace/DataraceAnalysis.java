@@ -135,11 +135,11 @@ public class DataraceAnalysis extends JavaAnalysis {
 
 		init();
 
-		if (Config.verbose > 2) Messages.log("maxIters=" + maxIters);
+		if (Config.verbose >= 2) Messages.log("maxIters=" + maxIters);
 		int numIters = 0; // Number of refinement iterations
 		while (true) {
 			// Run analysis
-			if (Config.verbose > 2) Messages.log("Running datarace analysis (numIters="+numIters+")");
+			if (Config.verbose >= 2) Messages.log("Running datarace analysis (numIters="+numIters+")");
 			ClassicProject.g().runTask("ctxts-java");
 			ClassicProject.g().runTask(CtxtsAnalysis.getCspaKind());
 			ClassicProject.g().runTask("datarace-prologue-dlog");
@@ -419,29 +419,29 @@ public class DataraceAnalysis extends JavaAnalysis {
 		domF.saveToXMLFile();
 		domL.saveToXMLFile();
 
-		OutDirUtils.copyFileFromMainDir("web/style.css");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/method/Mlist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/method/M.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/lock/Llist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/Hlist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/H.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/invk/Ilist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/invk/I.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/heapacc/Elist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/heapacc/E.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/field/Flist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/field/F.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/thread/Alist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/thread/A.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Olist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/O.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/Clist.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/alias/C.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/web/results.dtd");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/web/results.xml");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/web/group.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/web/paths.xsl");
-		OutDirUtils.copyFileFromMainDir("src/chord/analyses/datarace/web/races.xsl");
+		OutDirUtils.copyResource("web/style.css");
+		OutDirUtils.copyResource("chord/analyses/method/Mlist.dtd");
+		OutDirUtils.copyResource("chord/analyses/method/M.xsl");
+		OutDirUtils.copyResource("chord/analyses/lock/Llist.dtd");
+		OutDirUtils.copyResource("chord/analyses/alloc/Hlist.dtd");
+		OutDirUtils.copyResource("chord/analyses/alloc/H.xsl");
+		OutDirUtils.copyResource("chord/analyses/invk/Ilist.dtd");
+		OutDirUtils.copyResource("chord/analyses/invk/I.xsl");
+		OutDirUtils.copyResource("chord/analyses/heapacc/Elist.dtd");
+		OutDirUtils.copyResource("chord/analyses/heapacc/E.xsl");
+		OutDirUtils.copyResource("chord/analyses/field/Flist.dtd");
+		OutDirUtils.copyResource("chord/analyses/field/F.xsl");
+		OutDirUtils.copyResource("chord/analyses/thread/Alist.dtd");
+		OutDirUtils.copyResource("chord/analyses/thread/A.xsl");
+		OutDirUtils.copyResource("chord/analyses/alias/Olist.dtd");
+		OutDirUtils.copyResource("chord/analyses/alias/O.xsl");
+		OutDirUtils.copyResource("chord/analyses/alias/Clist.dtd");
+		OutDirUtils.copyResource("chord/analyses/alias/C.xsl");
+		OutDirUtils.copyResource("chord/analyses/datarace/web/results.dtd");
+		OutDirUtils.copyResource("chord/analyses/datarace/web/results.xml");
+		OutDirUtils.copyResource("chord/analyses/datarace/web/group.xsl");
+		OutDirUtils.copyResource("chord/analyses/datarace/web/paths.xsl");
+		OutDirUtils.copyResource("chord/analyses/datarace/web/races.xsl");
 
 		OutDirUtils.runSaxon("results.xml", "group.xsl");
 		OutDirUtils.runSaxon("results.xml", "paths.xsl");

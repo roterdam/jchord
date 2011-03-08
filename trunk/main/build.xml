@@ -2,7 +2,7 @@
 <!--
 	Main build file for Chord
 -->
-<project name="chord" default="compile">
+<project name="chord" default="help">
 
 	<!--
 	==========================================================================
@@ -12,17 +12,20 @@
 
 	<target name="help">
 		<echo>
+		===============================================================
+		Primary Targets:
+		===============================================================
 		compile   Compile Chord
 		run       Run Chord
-		          Optional properties: See Chord user guide
-		j2h_xref  Convert .java files to .html with cross-references
-		          Required properties:
-		          - java.dir (dir containing Java source files)
-		          - html.dir (dir to dump generated HTML files)
-		j2h_fast  Convert .java files to .html without cross-references
-		          Required properties:
-		          - java.dir (dir containing Java source files)
-		          - html.dir (dir to dump generated HTML files)
+		          Optional properties:
+		          - chord.main.class (main class of analyzed program)
+		          - chord.class.path (classpath of analyzed program)
+		          - chord.run.analyses (names of analyses to be run)
+		          - many more ... (see Chord user guide)
+		clean     Cleanup all generated binary files
+		===============================================================
+		Utility Targets:
+		===============================================================
 		solve     Run bddbddb (BDD-based Datalog solver)
 		          Required properties:
 		          - work.dir   (dir containing input/output BDD files)
@@ -39,25 +42,31 @@
 		          - max.heap   (default=2048m)
 		          - max.tuples (default=1000)
 		          - verbose    ([0..6]; default=4)
+		j2h_xref  Convert .java files to .html with cross-references
+		          Required properties:
+		          - java.dir (dir containing Java source files)
+		          - html.dir (dir to dump generated HTML files)
+		j2h_fast  Convert .java files to .html without cross-references
+		          Required properties:
+		          - java.dir (dir containing Java source files)
+		          - html.dir (dir to dump generated HTML files)
+		===============================================================
+		Documentation Targets:
+		===============================================================
 		javadoc   Generate javadoc for Chord's Java source code
 		htmldoc   Generate HTML user guide (needs hyperlatex)
 		pdfdoc    Generate PDF user guide (needs pdflatex)
-		clean     Cleanup all generated executable files
 		cleandoc  Cleanup all generated javadoc/htmldoc/pdfdoc files
 		</echo>
 	</target>
 
 	<!--
 	==========================================================================
-		STATIC AND DYNAMIC PROPERTIES
+		BUILD PROPERTIES
 	==========================================================================
 	-->
 
-	<property name="tools.home" location="tools"/>
-
-	<property name="lib.home" location="lib"/>
-
-	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${tools.home}/ant-contrib.jar"/>
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar"/>
 
 	<!--
 		This target does the following things in order:
@@ -70,7 +79,7 @@
 			3. sets property chord.make to 'make' on Linux and to 'gmake' on
 			   non-GNU operation systems
 	-->
-	<target name="build-props">
+	<target name="props">
 		<property file="chord.properties"/>
 		<property name="chord.use.buddy" value="false"/>
 		<property name="chord.use.jvmti" value="false"/>
@@ -93,85 +102,73 @@
 	</target>
 
 	<!--
-		This target does the following things in order:
-		1. Sets property chord.work.dir to the current directory if not already set.
-		2. Checks that the value of property chord.work.dir is an existing directory.
-		3. Sets property chord.props.file to "${chord.work.dir}/chord.properties" if
-		   not already set.
-		4. If the file specified by property chord.props.file exists, then loads all
-		   properties defined in the file.  Each relative (as opposed to absolute) path
-		   element in the value of any property named chord.<...>.path set in this file
-		   is converted to an absolute path element w.r.t. chord.work.dir.
-	-->
-	<target name="exec-props" depends="build-props">
-	<if><isset property="chord.work.dir"/>
-		<then>
-			<fail message="ERROR: Directory ${chord.work.dir} does not exist.">
-				<condition>
-					<not><available file="${chord.work.dir}" type="dir"/></not>
-				</condition>
-			</fail>
-		</then>
-		<else>
-			<property name="chord.work.dir" location="."/>
-		</else>
-	</if>
-	<property name="chord.props.file" location="${chord.work.dir}/chord.properties"/>
-	<if><available file="${chord.props.file}"/>
-		<then>
-			<property file="${chord.props.file}"/>
-			<dirname property="chord.props.dir" file="${chord.props.file}"/>
-			<propertyselector property="chord.path.prop.list" delimiter=","
-				match="chord\..*\.path"/>
-			<antfetch antfile="${tools.home}/pathconvert.xml" dir="${chord.props.dir}"
-				target="pathconvert" inheritAll="true" return="${chord.path.prop.list}"/>
-		</then>
-	</if>
-	</target>
-
-	<!--
-		This target does the following things in order:
-		1. Sets property chord.bddbddb.class.path to the classpath of bddbddb.
-		2. Sets property chord.java.analysis.path to classes/ if not already set.
-		3. Sets property chord.main.class.path to the entire Chord classpath.
-	-->
-	<target name="paths">
-		<!-- Classpath of bddbddb -->
-		<path id="bddbddb_class_path">
-			<fileset dir="${lib.home}/bddbddb" includes="*.jar"/>
-			<pathelement location="${lib.home}/jwutil.jar"/>
-		</path>
-		<fail message="ERROR: Property chord.bddbddb.class.path must not be explicitly set.">
-			<condition><isset property="chord.bddbddb.class.path"/></condition>
-		</fail>
-		<property name="chord.bddbddb.class.path" refid="bddbddb_class_path"/>
-		<!-- Classpath of Chord -->
-		<property name="chord.java.analysis.path" location="classes"/>
-		<path id="main_class_path">
-			<pathelement path="${chord.java.analysis.path}"/>
-			<pathelement location="classes"/>
-			<pathelement path="${chord.bddbddb.class.path}"/>
-			<pathelement location="${lib.home}/trove-2.0.4.jar"/>
-			<pathelement location="${lib.home}/scannotation-1.0.2.jar"/>
-			<pathelement location="${lib.home}/joeq.jar"/>
-			<pathelement location="${lib.home}/javassist.jar"/>
-			<pathelement location="${lib.home}/j2h.jar"/>
-			<pathelement location="${lib.home}/hj.jar"/>
-			<pathelement location="${lib.home}/CnCHj.jar"/>
-		</path>
-		<fail message="Property chord.main.class.path must not be explicitly set.">
-			<condition><isset property="chord.main.class.path"/></condition>
-		</fail>
-		<property name="chord.main.class.path" refid="main_class_path"/>
-	</target>
-
-	<!--
 	==========================================================================
 		COMPILE CHORD
 	==========================================================================
 	-->
 
-	<target name="compile" depends="build-props, paths" description="Compile Chord.">
+	<target name="compile" description="Compile Chord.">
+		<antcall target="compile-j-part"/>
+		<antcall target="compile-c-part"/>
+	</target>
+
+	<target name="compile-j-part">
+		<mkdir dir="classes"/>
+		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
+				source="1.5" target="1.5" destdir="classes" srcdir="src">
+			<classpath>
+				<pathelement location="lib/joeq.jar"/>
+				<pathelement location="lib/jwutil.jar"/>
+				<pathelement location="lib/jdom.jar"/>
+				<pathelement location="lib/bddbddb.jar"/>
+				<pathelement location="lib/javabdd-1.0b2.jar"/>
+				<pathelement location="lib/javassist.jar"/>
+				<pathelement location="lib/hj.jar"/>
+				<pathelement location="lib/CnCHj.jar"/>
+				<pathelement location="lib/trove-2.0.4.jar"/>
+				<pathelement location="lib/scannotation-1.0.2.jar"/>
+				<pathelement location="lib/j2h.jar"/>
+				<pathelement location="lib/saxon9.jar"/>
+			</classpath>
+		</javac>
+		<jar destfile="chord.jar" basedir="classes" duplicate="fail">
+            <zipfileset includes="**/*.class" src="lib/joeq.jar"/>
+            <zipfileset includes="**/*.class" src="lib/jwutil.jar"/>
+            <zipfileset includes="**/*.class" src="lib/jdom.jar"/>
+            <zipfileset includes="**/*.class" src="lib/bddbddb.jar"/>
+            <zipfileset includes="**/*.class" src="lib/javabdd-1.0b2.jar"/>
+            <zipfileset includes="**/*.class" src="lib/javassist.jar"/>
+            <zipfileset includes="**/*.class" src="lib/hj.jar"/>
+            <zipfileset includes="**/*.class" src="lib/CnCHj.jar"/>
+            <zipfileset includes="**/*.class" src="lib/trove-2.0.4.jar"/>
+            <zipfileset includes="**/*.class" src="lib/scannotation-1.0.2.jar"/>
+            <zipfileset includes="**/*.class" src="lib/j2h.jar"/>
+            <zipfileset includes="**/*.class" src="lib/saxon9.jar"/>
+			<fileset dir=".">
+				<include name="web/*"/>
+			</fileset>
+			<fileset dir="src">
+				<include name="**/*.txt"/>
+				<include name="**/*.dlog"/>
+				<include name="**/*.datalog"/>
+				<include name="**/*.xsl"/>
+				<include name="**/*.xml"/>
+				<include name="**/*.dtd"/>
+			</fileset>
+			<manifest>
+				<attribute name="Main-Class" value="chord.project.Boot"/>
+				<attribute name="Premain-Class" value="chord.instr.OnlineTransformer"/>
+				<attribute name="Can-Retransform-Classes" value="true"/>
+			</manifest>
+		</jar>
+	</target>
+
+	<target name="compile-c-part">
+		<antcall target="compile-buddy"/>
+		<antcall target="compile-agent"/>
+	</target>
+
+	<target name="compile-buddy" depends="props">
 		<if><equals arg1="${chord.use.buddy}" arg2="true"/>
 			<then>
 				<exec executable="${chord.make}" dir="bdd">
@@ -180,6 +177,9 @@
 				</exec>
 			</then>
 		</if>
+	</target>
+
+	<target name="compile-agent" depends="props">
 		<if><equals arg1="${chord.use.jvmti}" arg2="true"/>
 			<then>
 				<exec executable="${chord.make}" dir="agent">
@@ -188,17 +188,6 @@
 				</exec>
 			</then>
 		</if>
-		<mkdir dir="classes"/>
-		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
-			source="1.5" target="1.5" destdir="classes"
-			classpathref="main_class_path" srcdir="src"/>
-		<jar destfile="${lib.home}/chord_instr_agent.jar">
-			<manifest>
-				<attribute name="Premain-Class" value="chord.instr.OnlineTransformer"/>
-				<attribute name="Boot-Class-Path" value="${chord.main.class.path}"/>
-				<attribute name="Can-Retransform-Classes" value="true"/>
-			</manifest>
-		</jar>
 	</target>
 
 	<!--
@@ -207,48 +196,12 @@
 	==========================================================================
 	-->
 
-	<target name="run" depends="exec-props, paths" description="Run Chord.">
-		<fail message="Property chord.main.dir must not be explicitly set.">
-			<condition><isset property="chord.main.dir"/></condition>
-		</fail>
-		<property name="chord.main.dir" location="."/>
-		<property name="chord.max.heap" value="2048m"/>
-		<property name="chord.max.stack" value="32m"/>
-		<property name="chord.jvmargs"
-			value="-ea -Xmx${chord.max.heap} -Xss${chord.max.stack}"/>
-		<property name="chord.classic" value="true"/>
-		<if>
-			<equals arg1="${chord.classic}" arg2="true"/>
-			<then>
-				<property name="chord.entry.class" value="chord.project.Main"/>
-				<property name="chord.entry.args" value=""/>
-			</then>
-			<else>
-				<property name="chord.entry.class" value="hj.lang.Runtime"/>
-				<property name="chord.entry.args"
-					value="-INIT_THREADS_PER_PLACE=1 -NUMBER_OF_LOCAL_PLACES=1
-					   -rt=wsh CnCHJ.runtime.CnCRuntime -policy=BlockingCoarse
-					   chord.project.Main"/>
-			</else>
-		</if>
-		<java classname="${chord.entry.class}" fork="true" dir="${chord.work.dir}"
-				resultproperty="chord.run.result">
-			<jvmarg line="${chord.jvmargs}"/>
-			<arg line="${chord.entry.args}"/>
+	<target name="run" description="Run Chord.">
+		<java classname="chord.project.Boot" failonerror="true" classpath="chord.jar">
 			<syspropertyset>
 				<propertyref builtin="all"/>
 			</syspropertyset>
-			<classpath>
-				<pathelement path="${chord.main.class.path}"/>
-				<pathelement path="${chord.class.path}"/>
-			</classpath>
 		</java>
-		<if>
-			<not><equals arg1="${chord.run.result}" arg2="0"/></not>
-			<then>
-				<fail message="Chord exited abnormally; see above file(s) for details."/>
-			</then>
-		</if>
 	</target>
 
 	<!--
@@ -269,7 +222,7 @@
 			<arg value="4"/>
 			<arg value="-t"/>
 			<arg value="4"/>
-			<classpath><pathelement location="${lib.home}/j2h.jar"/></classpath>
+			<classpath><pathelement location="lib/j2h.jar"/></classpath>
 		</java>
 	</target>
   
@@ -277,7 +230,7 @@
 		<fail unless="java.dir"/>
 		<fail unless="html.dir"/>
 		<taskdef name="java2html" classname="de.java2html.anttasks.Java2HtmlTask">
-			<classpath><pathelement location="${lib.home}/java2html.jar"/></classpath>
+			<classpath><pathelement location="lib/java2html.jar"/></classpath>
 		</taskdef>
 		<java2html srcdir="${java.dir}" destdir="${html.dir}" includes="**/*.java"
 			style="eclipse" showLineNumbers="true" addLineAnchors="true" tabs="4"/>
@@ -289,15 +242,19 @@
 	==========================================================================
 	-->
 
-	<target name="solve" depends="paths" description="Run bddbddb (BDD-based Datalog solver).">
+	<target name="solve" description="Run bddbddb (BDD-based Datalog solver).">
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
 		<property name="verbose" value="4"/>
-		<java classname="net.sf.bddbddb.Solver"
-				fork="true" failonerror="true" maxmemory="${max.heap}"
-				classpath="${chord.bddbddb.class.path}">
-			<sysproperty key="java.library.path" file="${lib.home}"/>
+		<java classname="net.sf.bddbddb.Solver" maxmemory="${max.heap}">
+			<classpath>
+				<pathelement location="lib/bddbddb.jar"/>
+				<pathelement location="lib/javabdd-1.0b2.jar"/>
+				<pathelement location="lib/jdom.jar"/>
+				<pathelement location="lib/jwutil.jar"/>
+			</classpath>
+			<sysproperty key="java.library.path" file="."/>
 			<sysproperty key="basedir" file="${work.dir}"/>
 			<sysproperty key="verbose" value="${verbose}"/>
 			<syspropertyset>
@@ -307,15 +264,19 @@
 		</java>
 	</target>
 
-	<target name="debug" depends="paths" description="Run bddbddb's interactive interpreter.">
+	<target name="debug" description="Run bddbddb's interactive interpreter.">
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
 		<property name="verbose" value="4"/>
-		<java classname="net.sf.bddbddb.Interactive"
-				fork="true" failonerror="true" maxmemory="${max.heap}"
-				classpath="${chord.bddbddb.class.path}">
-			<sysproperty key="java.library.path" file="${lib.home}"/>
+		<java classname="net.sf.bddbddb.Interactive" maxmemory="${max.heap}">
+			<classpath>
+				<pathelement location="lib/bddbddb.jar"/>
+				<pathelement location="lib/javabdd-1.0b2.jar"/>
+				<pathelement location="lib/jdom.jar"/>
+				<pathelement location="lib/jwutil.jar"/>
+			</classpath>
+			<sysproperty key="java.library.path" file="."/>
 			<sysproperty key="basedir" file="${work.dir}"/>
 			<sysproperty key="verbose" value="${verbose}"/>
 			<syspropertyset>
@@ -331,8 +292,8 @@
 	==========================================================================
 	-->
 
-	<target name="javadoc" depends="paths" description="Generate Javadoc.">
-		<javadoc destdir="javadoc" classpathref="main_class_path">
+	<target name="javadoc" depends="compile-j-part" description="Generate Javadoc.">
+		<javadoc destdir="javadoc" classpath="chord.jar">
 			<fileset dir="src">
 				<include name="**/*.java"/>
 			</fileset>
@@ -363,9 +324,9 @@
 	==========================================================================
 	-->
 
-	<target name="clean" depends="build-props" description="Clean all generated files.">
+	<target name="clean" depends="props" description="Clean all generated files.">
 		<delete dir="classes"/>
-		<delete file="${lib.home}/chord_instr_agent.jar"/>
+		<delete file="chord.jar"/>
 		<if><equals arg1="${chord.use.buddy}" arg2="true"/>
 			<then>
 				<exec executable="${chord.make}" dir="bdd">

@@ -70,9 +70,7 @@ public class CoreInstrumentor extends ExprEditor {
 		this.argsMap = argsMap;
 		scopeExcludeAry = Config.scopeExcludeAry;
 		verbose = Config.verbose;
-		String mainClassPathName = Config.mainClassPathName;
-		String userClassPathName = Config.classPathName;
-		pool = new JavassistPool(mainClassPathName, userClassPathName);
+		pool = new JavassistPool();
 		{
 			String s = argsMap.get(USE_JVMTI_KEY);
 			useJvmti = (s == null) ? Config.useJvmti : s.equals("true");
@@ -108,11 +106,11 @@ public class CoreInstrumentor extends ExprEditor {
 
 	public boolean isExcluded(String cName) {
 		if (isImplicitlyExcluded(cName)) {
-			if (verbose > 2) Messages.log(IMPLICITLY_EXCLUDING_CLASS, cName);
+			if (verbose >= 2) Messages.log(IMPLICITLY_EXCLUDING_CLASS, cName);
 			return true;
 		}
 		if (isExplicitlyExcluded(cName)) {
-			if (verbose > 2) Messages.log(EXPLICITLY_EXCLUDING_CLASS, cName);
+			if (verbose >= 2) Messages.log(EXPLICITLY_EXCLUDING_CLASS, cName);
 			return true;
 		}
 		return false;
@@ -143,7 +141,7 @@ public class CoreInstrumentor extends ExprEditor {
 			isMainClass = cName.equals(Config.mainClassName);
 		CtClass clazz2 = edit(clazz);
 		if (clazz2 == null) {
-			if (verbose > 2) Messages.log(EXCLUDING_CLASS, cName);
+			if (verbose >= 2) Messages.log(EXCLUDING_CLASS, cName);
 		}
 		return clazz2;
 	}

@@ -53,7 +53,7 @@ public final class OfflineTransformer {
 	}
 
 	public void run() {
-		if (Config.verbose > 1) Messages.log(INSTR_STARTING);
+		if (Config.verbose >= 1) Messages.log(INSTR_STARTING);
 		FileUtils.deleteFile(bootClassesDirName);
 		FileUtils.deleteFile(userClassesDirName);
 		Program program = Program.g();
@@ -69,7 +69,7 @@ public final class OfflineTransformer {
 					String outDir = getOutDir(cName);
 					if (outDir != null) {
 						clazz.writeFile(outDir);
-						if (Config.verbose > 2)
+						if (Config.verbose >= 2)
 							Messages.log(WROTE_INSTRUMENTED_CLASS, cName);
 					}
 				}
@@ -85,7 +85,7 @@ public final class OfflineTransformer {
 				ex.printStackTrace();
 			}
 		}
-		if (Config.verbose > 1) Messages.log(INSTR_FINISHED);
+		if (Config.verbose >= 1) Messages.log(INSTR_FINISHED);
 	}
 
 	public String getOutDir(String cName) {

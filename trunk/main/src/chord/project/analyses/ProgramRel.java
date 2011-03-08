@@ -81,7 +81,7 @@ public class ProgramRel extends Rel implements ITask {
 	}
 	public void init() { }
 	public void save() {
-		if (Config.verbose > 1)
+		if (Config.verbose >= 1)
 			System.out.println("SAVING rel " + name + " size: " + size());
 		super.save(Config.bddbddbWorkDirName);
 		if (Config.classic)

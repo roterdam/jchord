@@ -6,6 +6,10 @@
  */
 package chord.util;
 
+import java.io.InputStream;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+
 /**
  * Class related utilities.
  *
@@ -38,4 +42,13 @@ public final class ClassUtils {
 		return true;
 	}
 
+	public static InputStream getResourceAsStream(String resName) {
+		ClassLoader cl = Thread.currentThread().getContextClassLoader();
+		return cl.getResourceAsStream(resName);
+	}
+
+	public static BufferedReader getResourceAsReader(String resName) {
+		InputStream is = getResourceAsStream(resName);
+		return (is == null) ? null : new BufferedReader(new InputStreamReader(is));
+	}
 }

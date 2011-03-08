@@ -76,7 +76,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			Map<String, String> explicitArgs = getExplicitEventHandlerArgs();
 			if (explicitArgs != null)
 				eventHandlerArgs.putAll(explicitArgs);
-			if (Config.verbose > 2) {
+			if (Config.verbose >= 2) {
 				String argsStr = "";
 				for (Map.Entry<String, String> e : eventHandlerArgs.entrySet())
 					argsStr += "\n\t[" + e.getKey() + " = " + e.getValue() + "]";
@@ -93,7 +93,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			Map<String, String> explicitArgs = getExplicitInstrumentorArgs();
 			if (explicitArgs != null)
 				instrumentorArgs.putAll(explicitArgs);
-			if (Config.verbose > 2) {
+			if (Config.verbose >= 2) {
 				String argsStr = "";
 				for (Map.Entry<String, String> e : instrumentorArgs.entrySet())
 					argsStr += "\n\t[" + e.getKey() + " = " + e.getValue() + "]";
@@ -261,10 +261,10 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		if (canReuseTraces()) {
 			initAllPasses();
 			for (String runID : runIDs) {
-				if (Config.verbose > 1) Messages.log(STARTING_RUN, runID, "reuse");
+				if (Config.verbose >= 1) Messages.log(STARTING_RUN, runID, "reuse");
 				String s = getTraceFileName(0, runID);
 				processTrace(s);
-				if (Config.verbose > 1) Messages.log(FINISHED_RUN, runID, "reuse");
+				if (Config.verbose >= 1) Messages.log(FINISHED_RUN, runID, "reuse");
 			}
 			doneAllPasses();
 			return;
@@ -282,11 +282,11 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 				String args = System.getProperty("chord.args." + runID, "");
 				List<String> fullcmd = new ArrayList<String>(basecmd);
 				fullcmd.addAll(StringUtils.tokenize(args));
-				if (Config.verbose > 1) Messages.log(STARTING_RUN, runID, msg);
+				if (Config.verbose >= 1) Messages.log(STARTING_RUN, runID, msg);
 				initPass();
 				runInstrProgram(fullcmd);
 				donePass();
-				if (Config.verbose > 1) Messages.log(FINISHED_RUN, runID, msg);
+				if (Config.verbose >= 1) Messages.log(FINISHED_RUN, runID, msg);
 			}
 			doneAllPasses();
 			return;
@@ -321,7 +321,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			String msg = "multi-JVM " + (pipeTraces ? "POSIX-pipe " : "regular-file ") +
 				(offline ? "offline" : "online") + "-instrumentation " +
 				(useJvmti ? "JVMTI-based" : "non-JVMTI");
-			if (Config.verbose > 1) Messages.log(STARTING_RUN, runID, msg);
+			if (Config.verbose >= 1) Messages.log(STARTING_RUN, runID, msg);
 			executor.execute(instrProgram);
 			if (transformers != null) {
 				for (Runnable r : transformers)
@@ -339,7 +339,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 				String[] cmd = new String[] { "mv", src, dst };
 				OutDirUtils.executeWithFailOnError(cmd);
 			}
-			if (Config.verbose > 1) Messages.log(FINISHED_RUN, runID, msg);
+			if (Config.verbose >= 1) Messages.log(FINISHED_RUN, runID, msg);
 		}
 		doneAllPasses();
 	}
@@ -377,7 +377,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		try {
 			Process beforeProc = null;
 			if(runBefore != null)
-				beforeProc = ProcessExecutor.executeAsynch( new String[] {runBefore});
+				beforeProc = ProcessExecutor.executeAsynch(new String[] { runBefore }, null, null);
 			
 			if (haltOnErr)
 				OutDirUtils.executeWithFailOnError(cmdList);
@@ -395,7 +395,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			boolean isWithTrace, int numTransformers) {
 		String mainClassName = Config.mainClassName;
 		assert (mainClassName != null);
-		String classPathName = Config.classPathName;
+		String classPathName = Config.userClassPathName;
 		assert (classPathName != null);
 		List<String> basecmd = new ArrayList<String>();
 		basecmd.add("java");
@@ -414,7 +414,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		} else {
 			String bootClassesDirName = Config.bootClassesDirName;
 			String userClassesDirName = Config.userClassesDirName;
-			basecmd.add("-Xbootclasspath/p:" + Config.mainClassPathName +
+			basecmd.add("-Xbootclasspath/p:" + Config.toolClassPathName +
 				File.pathSeparator + bootClassesDirName);
 			basecmd.add("-cp");
 			basecmd.add(userClassesDirName + File.pathSeparator + classPathName);
@@ -456,7 +456,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 				++count;
 			}
 			donePass();
-			if (Config.verbose > 1) Messages.log(FINISHED_PROCESSING_TRACE, count);
+			if (Config.verbose >= 1) Messages.log(FINISHED_PROCESSING_TRACE, count);
 		} catch (IOException ex) {
 			Messages.fatal(ex);
 		} catch (ReadException ex) {

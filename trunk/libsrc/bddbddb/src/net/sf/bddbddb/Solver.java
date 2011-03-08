@@ -48,12 +48,12 @@ public abstract class Solver {
     boolean SPLIT_ALL_RULES = !SystemProperties.getProperty("split_all_rules", "no").equals("no");
     /** Split no rules, even if they have a "split" keyword. */
     boolean SPLIT_NO_RULES = !SystemProperties.getProperty("split_no_rules", "no").equals("no");
-    int VERBOSE = Integer.getInteger("verbose", 2).intValue();
+    int VERBOSE = Integer.getInteger("verbose", 1).intValue();
     /** Report the stats for each rule at the end. */
-	boolean REPORT_STATS = VERBOSE > 2;
-    boolean NOISY = VERBOSE > 3 || System.getProperty("noisy", "no").equals("yes");
-    boolean TRACE = VERBOSE > 4 || System.getProperty("tracesolve", "no").equals("yes");
-    boolean TRACE_FULL = VERBOSE > 5 || System.getProperty("fulltracesolve", "no").equals("yes");
+	boolean REPORT_STATS = VERBOSE >= 2;
+    boolean NOISY = VERBOSE >= 3 || System.getProperty("noisy", "no").equals("yes");
+    boolean TRACE = VERBOSE >= 4 || System.getProperty("tracesolve", "no").equals("yes");
+    boolean TRACE_FULL = VERBOSE >= 5 || System.getProperty("fulltracesolve", "no").equals("yes");
     int MAX = Integer.getInteger("max.tuples", 1000).intValue();
     /** Trace the solver. */
     /** Do a full trace, even dumping the contents of relations. */
@@ -241,7 +241,7 @@ public abstract class Solver {
             if (PRINT_IR) ir.printIR();
         } else {
             ifg = new IterationFlowGraph(rules, stratify);
-			if (VERBOSE > 2) ifg.getIterationList().print();
+			if (VERBOSE >= 2) ifg.getIterationList().print();
             //IterationList list = ifg.expand();
         }
     }
@@ -378,19 +378,19 @@ public abstract class Solver {
         loadInitialRelations();
         time = System.currentTimeMillis() - time;
         if (NOISY) out.println("done. (" + time + " ms)");
-        if (VERBOSE > 2) out.println("Stratifying: ");
+        if (VERBOSE >= 2) out.println("Stratifying: ");
         time = System.currentTimeMillis();
         stratify();
         time = System.currentTimeMillis() - time;
-        if (VERBOSE > 2) out.println("done. (" + time + " ms)");
-        if (VERBOSE > 2) out.println("Solving: ");
+        if (VERBOSE >= 2) out.println("done. (" + time + " ms)");
+        if (VERBOSE >= 2) out.println("Solving: ");
     }
     public long startTime;
     public void run() {
         startTime = System.currentTimeMillis();
         solve();
         long solveTime = System.currentTimeMillis() - startTime;
-        if (VERBOSE > 2) out.println("done. (" + solveTime + " ms)");
+        if (VERBOSE >= 2) out.println("done. (" + solveTime + " ms)");
         
         finish();
         if (REPORT_STATS) {

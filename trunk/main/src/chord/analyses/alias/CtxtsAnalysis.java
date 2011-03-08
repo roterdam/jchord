@@ -860,10 +860,10 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			Map<jq_Method, Set<jq_Method>> methToPredsMap) {
 		IGraph<jq_Method> graph = new MutableGraph<jq_Method>(roots, methToPredsMap, null);
 		List<Set<jq_Method>> sccList = graph.getTopSortedSCCs();
-		if (Config.verbose > 2) System.out.println("numSCCs: " + sccList.size());
+		if (Config.verbose >= 2) System.out.println("numSCCs: " + sccList.size());
 		for (int i = 0; i < sccList.size(); i++) { // For each SCC...
 			Set<jq_Method> scc = sccList.get(i);
-			if (Config.verbose > 2)
+			if (Config.verbose >= 2)
 				System.out.println("Processing SCC #" + i + " of size: " + scc.size());
 			if (scc.size() == 1) { // Singleton
 				jq_Method cle = scc.iterator().next();
@@ -880,7 +880,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			}
 			boolean changed = true;
 			for (int count = 0; changed; count++) { // Iterate...
-				if (Config.verbose > 2)
+				if (Config.verbose >= 2)
 					System.out.println("\tIteration  #" + count);
 				changed = false;
 				for (jq_Method cle : scc) { // For each node (method) in SCC

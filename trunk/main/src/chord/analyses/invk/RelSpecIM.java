@@ -43,7 +43,7 @@ public class RelSpecIM extends ProgramRel {
 					int mIdx = domM.indexOf(m);
 					if (mIdx >= 0)
 						add(iIdx, mIdx);
-					else if (Config.verbose > 2)
+					else if (Config.verbose >= 2)
 						Messages.log(NOT_FOUND, m, i.toLocStr());
 				}
 			}

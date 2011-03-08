@@ -28,9 +28,7 @@ public class JavassistPool {
 	private final Set<String> bootClassPathResourceNames;
 	private final Set<String> userClassPathResourceNames;
 	private final ClassPool pool;
-	public JavassistPool(String mainClassPathName, String userClassPathName) {
-		assert (mainClassPathName != null);
-		assert (userClassPathName != null);
+	public JavassistPool() {
 		pool = new ClassPool();
 
 		bootClassPathResourceNames = new HashSet<String>();
@@ -70,22 +68,15 @@ public class JavassistPool {
 				}
 			}
 		}
+
+		String userClassPathName = System.getProperty("java.class.path");
 		String[] userClassPathElems = userClassPathName.split(File.pathSeparator);
 		for (String pathElem : userClassPathElems) {
 			userClassPathResourceNames.add(pathElem);
 			try {
-				pool.appendClassPath(pathElem);
-			} catch (NotFoundException ex) {
-				Messages.log(IGNORE_PATH_ELEMENT, pathElem, "user classpath");
-			}
-		}
-
-		String[] mainClassPathElems = mainClassPathName.split(File.pathSeparator);
-		for (String pathElem : mainClassPathElems) {
-			try {
 				   pool.appendClassPath(pathElem);
 			} catch (NotFoundException ex) {
-				Messages.log(IGNORE_PATH_ELEMENT, pathElem, "main classpath");
+				Messages.log(IGNORE_PATH_ELEMENT, pathElem, "user classpath");
 			}
 		}
 	}

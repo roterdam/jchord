@@ -201,9 +201,9 @@ public class ClassicProject extends Project {
 		}
 		out.println("}");
 		out.close();
-		OutDirUtils.copyFileFromMainDir("web/style.css");
-		OutDirUtils.copyFileFromMainDir("web/targets.xsl");
-		OutDirUtils.copyFileFromMainDir("web/targets.dtd");
+		OutDirUtils.copyResource("web/style.css");
+		OutDirUtils.copyResource("web/targets.xsl");
+		OutDirUtils.copyResource("web/targets.dtd");
 		OutDirUtils.runSaxon("targets.xml", "targets.xsl");
 	}
 
@@ -399,12 +399,12 @@ public class ClassicProject extends Project {
 
 	public void runTask(ITask task) {
 		if (isTaskDone(task)) {
-			if (Config.verbose > 1)
+			if (Config.verbose >= 1)
 				System.out.println("TASK " + task + " ALREADY DONE.");
 			return;
 		}
 		Timer timer = new Timer(task.getName());
-		if (Config.verbose > 1)
+		if (Config.verbose >= 1)
 			System.out.println("ENTER: " + task + " at " + (new Date()));
 		timer.init();
 		timer.pause();
@@ -418,7 +418,7 @@ public class ClassicProject extends Project {
 		timer.resume();
 		task.run();
 		timer.done();
-		if (Config.verbose > 1) {
+		if (Config.verbose >= 1) {
 			System.out.println("LEAVE: " + task);
 			printTimer(timer);
 		}
@@ -531,7 +531,7 @@ public class ClassicProject extends Project {
 	}
 
 	private void undefinedTarget(String name, List<String> consumerTaskNames) {
-		if (Config.verbose > 2) {
+		if (Config.verbose >= 2) {
 			String msg = "WARNING: '" + name + "' not declared as produced name of any task";
 			if (consumerTaskNames.isEmpty())
 				msg += "\n";
@@ -545,7 +545,7 @@ public class ClassicProject extends Project {
 	}
 	
 	private void redefinedTarget(String name, List<String> producerTaskNames) {
-		if (Config.verbose > 2) {
+		if (Config.verbose >= 2) {
 			String msg = "WARNING: '" + name + "' declared as produced name of multiple tasks:\n";
 			for (String taskName : producerTaskNames) 
 				msg += "\t'" + taskName + "'\n";

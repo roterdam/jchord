@@ -7,12 +7,17 @@
 package chord.project;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.FileNotFoundException;
 import java.util.List;
 import java.util.ArrayList;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.BufferedReader;
 
 import chord.util.IndexMap;
+import chord.util.ClassUtils;
 import chord.util.FileUtils;
 import chord.util.ChordRuntimeException;
 import chord.util.ProcessExecutor;
@@ -27,59 +32,66 @@ public class OutDirUtils {
 	private static final String PROCESS_STARTING = "Starting command: `%s`";
 	private static final String PROCESS_FINISHED = "Finished command: `%s`";
 	private static final String PROCESS_FAILED = "Command `%s` terminated abnormally: %s";
+	private static final String RESOURCE_NOT_FOUND = "Could not find resource `%s`.";
 
-	private static final String outDirName = Config.outDirName;
 	public static PrintWriter newPrintWriter(String fileName) {
 		try {
-			return new PrintWriter(new File(outDirName, fileName));
+			return new PrintWriter(new File(Config.outDirName, fileName));
 		} catch (FileNotFoundException ex) {
 			throw new ChordRuntimeException(ex);
 		}
 	}
-	public static void copyFile(String baseDirName, String fileName) {
-		File srcFile = new File(baseDirName, fileName);
-		if (!srcFile.exists()) {
-			throw new ChordRuntimeException("File '" + fileName +
-				"' does not exist in dir: " + baseDirName);
+
+	public static String copyResource(String srcFileName) {
+		InputStream is = ClassUtils.getResourceAsStream(srcFileName);
+		return copyResource(srcFileName, is);
+	}
+
+	public static String copyResource(String srcFileName, InputStream is) {
+		if (is == null)
+			Messages.fatal(RESOURCE_NOT_FOUND, srcFileName);
+		File dstFile = new File(Config.outDirName, (new File(srcFileName)).getName());
+		try {
+			BufferedReader r = new BufferedReader(new InputStreamReader(is));
+			PrintWriter w = new PrintWriter(dstFile);
+			String s;
+			while ((s = r.readLine()) != null)
+				w.println(s);
+			r.close();
+			w.close();
+		} catch (IOException ex) {
+			Messages.fatal(ex);
 		}
-		File dstFile = new File(outDirName, srcFile.getName());
-		FileUtils.copy(srcFile.getAbsolutePath(),
-			dstFile.getAbsolutePath());
+		return dstFile.getAbsolutePath();
 	}
-	public static void copyFileFromMainDir(String fileName) {
-		String mainDirName = Config.mainDirName;
-		copyFile(mainDirName, fileName);
-	}
+
 	public static void writeMapToFile(IndexMap<String> map, String fileName) {
-		FileUtils.writeMapToFile(map, new File(outDirName, fileName));
+		FileUtils.writeMapToFile(map, new File(Config.outDirName, fileName));
 	}
+
 	public static void runSaxon(String xmlFileName, String xslFileName) {
-		String dummyFileName = (new File(outDirName, "dummy")).getAbsolutePath();
-		xmlFileName = (new File(outDirName, xmlFileName)).getAbsolutePath();
-		xslFileName = (new File(outDirName, xslFileName)).getAbsolutePath();
-		String[] cmdarray = { "java",
-			"-cp", Config.libDirName + File.separator + "saxon9.jar",
-			"net.sf.saxon.Transform",
-			"-o", dummyFileName, xmlFileName, xslFileName
-		};
-		executeWithFailOnError(cmdarray);
-/*
-		// commented out to reduce footprint of chord.main.class.path
-		// (i.e. to enable excluding saxon9.jar from it)
-		net.sf.saxon.Transform.main(new String[] {
-			"-o", dummyFileName, xmlFileName, xslFileName
-		});
-*/
+		String dummyFileName = (new File(Config.outDirName, "dummy")).getAbsolutePath();
+		xmlFileName = (new File(Config.outDirName, xmlFileName)).getAbsolutePath();
+		xslFileName = (new File(Config.outDirName, xslFileName)).getAbsolutePath();
+		try {
+			net.sf.saxon.Transform.main(new String[] {
+				"-o", dummyFileName, xmlFileName, xslFileName
+			});
+		} catch (Exception ex) {
+			throw new RuntimeException(ex);
+		}
 	}
+
 	public static final void executeWithFailOnError(List<String> cmdlist) {
 		String[] cmdarray = new String[cmdlist.size()];
 		executeWithFailOnError(cmdlist.toArray(cmdarray));
 	}
+
 	public static final void executeWithFailOnError(String[] cmdarray) {
 		String cmd = "";
 		for (String s : cmdarray)
 			cmd += s + " ";
-		if (Config.verbose > 1) Messages.log(PROCESS_STARTING, cmd);
+		if (Config.verbose >= 1) Messages.log(PROCESS_STARTING, cmd);
 		try {
 			int result = ProcessExecutor.execute(cmdarray);
 			if (result != 0)
@@ -87,19 +99,21 @@ public class OutDirUtils {
 		} catch (Throwable ex) {
 			Messages.fatal(PROCESS_FAILED, cmd, ex.getMessage());
 		}
-		if (Config.verbose > 1) Messages.log(PROCESS_FINISHED, cmd);
+		if (Config.verbose >= 1) Messages.log(PROCESS_FINISHED, cmd);
 	}
+
 	public static final void executeWithWarnOnError(List<String> cmdlist, int timeout) {
 		String[] cmdarray = new String[cmdlist.size()];
 		executeWithWarnOnError(cmdlist.toArray(cmdarray), timeout);
 	}
+
 	public static final void executeWithWarnOnError(String[] cmdarray, int timeout) {
 		String cmd = "";
 		for (String s : cmdarray)
 			cmd += s + " ";
 		Messages.log(PROCESS_STARTING, cmd);
 		try {
-			ProcessExecutor.execute(cmdarray, timeout);
+			ProcessExecutor.execute(cmdarray, null, null, timeout);
 		} catch (Throwable ex) {
 			Messages.fatal(PROCESS_FAILED, cmd, ex.getMessage());
 		}

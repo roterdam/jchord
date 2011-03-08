@@ -9,6 +9,8 @@ package chord.project.analyses;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -21,6 +23,7 @@ import java.util.HashSet;
 
 import CnCHJ.api.ItemCollection;
 
+import chord.project.Messages;
 import chord.bddbddb.RelSign;
 import chord.bddbddb.Solver;
 import chord.project.ICtrlCollection;
@@ -71,7 +74,7 @@ public class DlogAnalysis extends JavaAnalysis {
 	 * @return	The file containing this Datalog analysis.
 	 */
 	public String getFileName() {
-		return fileName;
+		return fileName.toString();
 	}
 	/**
 	 * Parses the Datalog analysis in the specified file.
@@ -87,12 +90,11 @@ public class DlogAnalysis extends JavaAnalysis {
 		consumedRels = new HashMap<String, RelSign>();
 		producedRels = new HashMap<String, RelSign>();
 		minorDomNames = new ArrayList<String>();
-		BufferedReader in;
+		BufferedReader in = null;
 		try {
-			in = new BufferedReader(new FileReader(new File(fileName)));
+			in = new BufferedReader(new FileReader(fileName));
 		} catch (IOException ex) {
-			System.err.println("ERROR: IOException thrown while opening file '" +
-				fileName + "'; message follows: " + ex.getMessage());
+			Messages.log(ex.getMessage());
 			return false;
 		}
 		Pattern p = Pattern.compile(
@@ -102,8 +104,7 @@ public class DlogAnalysis extends JavaAnalysis {
 			try {
 				s = in.readLine();
 			} catch (IOException ex) {
-				error("IOException thrown while reading line; message follows: " +
-					ex.getMessage());
+				Messages.log(ex.getMessage());
 				return false;
 			}
 			if (s == null)
@@ -292,7 +293,7 @@ public class DlogAnalysis extends JavaAnalysis {
 	 * Executes this Datalog analysis.
 	 */
 	public void run() {
-		Solver.run(fileName);
+		Solver.run(fileName.toString());
 	}
 	public void run(Object ctrl, IStepCollection sc) {
 		ModernProject p = ModernProject.g();

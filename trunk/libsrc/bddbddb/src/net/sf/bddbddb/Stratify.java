@@ -67,7 +67,7 @@ public class Stratify {
         Set unnecessary = new HashSet(solver.nameToRelation.values());
         unnecessary.addAll(solver.rules);
         unnecessary.removeAll(necessary);
-        if (solver.VERBOSE > 2 && !unnecessary.isEmpty()) {
+        if (solver.VERBOSE >= 2 && !unnecessary.isEmpty()) {
             solver.out.println("Note: the following rules/relations are unused:");
             for (Iterator i = unnecessary.iterator(); i.hasNext();) {
                 solver.out.println("    " + i.next());

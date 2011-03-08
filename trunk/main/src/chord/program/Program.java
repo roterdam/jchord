@@ -33,6 +33,7 @@ import chord.util.tuple.object.Pair;
 import chord.util.ArraySet;
 import chord.util.IndexSet;
 import chord.util.FileUtils;
+import chord.util.ClassUtils;
 import chord.util.StringUtils;
 import chord.util.ChordRuntimeException;
  
@@ -96,19 +97,23 @@ public class Program {
 		"ERROR: Program: Could not find class `%s`.";
 	private static final String DYNAMIC_CLASS_NOT_FOUND =
 		"WARN: Program: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
+	private static final String STUBS_FILE_NOT_FOUND =
+		"ERROR: Program: Cannot find native method stubs file `%s`.";
 
 	static {
-		if (Config.verbose > 2)
+		if (Config.verbose >= 2)
 			jq_Method.setVerbose();
 		if (Config.doSSA)
 			jq_Method.doSSA();
 		jq_Method.exclude(Config.scopeExcludeAry);
 		Map<String, String> map = new HashMap<String, String>();
+		String stubsFileName = Config.stubsFileName;
+		BufferedReader r = ClassUtils.getResourceAsReader(stubsFileName);
+		if (r == null)
+			Messages.fatal(STUBS_FILE_NOT_FOUND, stubsFileName);
 		try {
-			BufferedReader in = new BufferedReader(
-				new FileReader(Config.stubsFileName));
 			String s;
-			while ((s = in.readLine()) != null) {
+			while ((s = r.readLine()) != null) {
 				String[] a = s.split(" ");
 				assert (a.length == 2);
 				map.put(a[0], a[1]);
@@ -378,7 +383,7 @@ public class Program {
 	}
 
 	public static jq_Reference loadClass(String s) {
-		if (Config.verbose > 2)
+		if (Config.verbose >= 2)
 			Messages.log(LOADING_CLASS, s);
 		try {
 			jq_Reference c = (jq_Reference) jq_Type.parseType(s);
@@ -565,7 +570,7 @@ public class Program {
 		String mainClassName = Config.mainClassName;
 		if (mainClassName == null)
 			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
-		String classPathName = Config.classPathName;
+		String classPathName = Config.userClassPathName;
 		if (classPathName == null)
 			Messages.fatal(CLASS_PATH_NOT_DEFINED);
 		String[] runIDs = Config.runIDs.split(Config.LIST_SEPARATOR);
