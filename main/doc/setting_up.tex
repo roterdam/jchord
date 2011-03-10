@@ -1,5 +1,5 @@
-\section{Setting up a Java program}
-\label{sec:program-setup}
+\section{Setting up a Java Program}
+\label{sec:setting-up}
 
 Suppose the program to be analyzed has the following directory structure:
 
@@ -27,24 +27,34 @@ files are under {\tt src/}, its class files are under {\tt classes/},
 the source and jar files of the libraries used by the program are
 under \code{lib/src/} and \code{lib/jar/}, respectively.
 
-File \code{chord.properties} specifies properties to be passed to
-Chord (alternatively, these properties may be passed on the
-command-line, in format \code{-D<name>=<value>}).  A sample such file
-for the above program is as follows:
+To run Chord on the above program, run the following command in
+Chord's {\tt main/} directory:
+
+\begin{verbatim}
+    prompt> ant -Dchord.work.dir=<...>/example run
+\end{verbatim}
+
+\noindent where \code{<...>} denotes the absolute or relative path of the
+directory containing the above \code{example/} directory.
+Property \code{chord.work.dir} specifies the working directory during Chord's execution.
+Chord searches for a file named \code{chord.properties} under that working directory, and
+loads upfront all properties defined in that file, if it exists.  Alternatively, these properties
+may be defined on the command-line, using the \code{-D<key>=<value>} format.
+A sample \code{chord.properties} file for the above program is as follows:
 
 \begin{verbatim}
     chord.main.class=foo.Main
     chord.class.path=classes:lib/jar/taz.jar
-    chord.src.path=src:../lib/src
+    chord.src.path=src:lib/src
     chord.run.ids=0,1
     chord.args.0="-thread 1 -n 10"
     chord.args.1="-thread 2 -n 50"
 \end{verbatim}
 
-Each relative path element in the value of any property named
-\code{chord.<...>.path} defined in this file is converted to an
-absolute path element with respect to the directory containing this
-file, which in the above case is \code{example/}.
+Each relative file/directory name in the value of any property
+defined in this file (e.g., the \code{lib/src} directory name in the value of
+property \code{chord.src.path} above) is treated relative to Chord's working directory
+(which is specified by property \code{chord.work.dir}).
 
 Section \ref{sec:chord-sysprops} presents an exhaustive listing of
 properties recognized by Chord.  Here, we only describe those defined
@@ -55,7 +65,7 @@ in the above sample \code{chord.properties} file:
 \code{chord.main.class} specifies the fully-qualified name of the main
 class of the program.
 \item
-\code{chord.class.path} specifies the application-specific classpath
+\code{chord.class.path} specifies the application classpath
 of the program (the standard library classpath is implicitly
 included).
 \item
@@ -74,29 +84,13 @@ illustrated by properties \code{chord.args.0} and \code{chord.args.1}
 in the above example.
 \end{itemize}
 
-To run Chord on the above program, run the following command in
-Chord's {\tt main/} directory:
-
-\begin{verbatim}
-    prompt> ant -Dchord.work.dir=<...>/example run
-\end{verbatim}
-
-\noindent where {\tt <...>} denotes the absolute path of the parent of
-directory {\tt example/}.  Property \code{chord.work.dir} specifies
-the working directory during Chord's execution.
-
-The above command causes Chord to load the \code{chord.properties}
-file if present.  The location of this file may be specified
-explicitly via property \code{chord.props.file} on the above command
-line.  By default, it is \code{[chord.work.dir]/chord.properties}.
-
-In the above case, Chord does not do much beyond loading the sample
+In the above case, Chord does not do much beyond loading the above
 \code{chord.properties} file.  For Chord to do something interesting,
 you need to set additional properties, either on the above command
 line or in the \code{chord.properties} file, specifying the task(s)
 Chord must perform.  All tasks are summarized in Section
-\ref{sec:chord-sysprops:task}.  The two most common tasks, described
-next, are computing the scope of the given program (Section
+\ref{sec:func-props}.  The two most common tasks, described
+next, are computing the analysis scope of the given program (Section
 \ref{sec:building-scope}) and running analyses on the given program
 (Section \ref{sec:running-analysis}).
 

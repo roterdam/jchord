@@ -1,4 +1,4 @@
-\section{Writing a Datalog analysis}
+\section{Writing a Datalog Analysis}
 \label{sec:writing-datalog-analysis}
 
 Chord interprets each file with extension {\tt .dlog} or {\tt .datalog} in the path specified by
@@ -39,13 +39,13 @@ An example of such an analysis is as follows:
 \end{verbatim}
 
 Any line that begins with a {\tt \#} is regarded a comment, except a
-line of the form {\tt \#} {\tt name=<...>}, which specifies the name
+line of the form ``{\tt \#} {\tt name=<...>}", which specifies the name
 {\tt <...>} of the Datalog analysis.
 Each Datalog analysis is expected to have exactly one such line.
 The above Datalog analysis is named {\tt datarace-dlog}.
 In Chord, all Datalog analysis names have suffix
 {\tt -dlog} and all Java analysis names have suffix {\tt -java}, but
-this is merely a convention that user-defined analyses are free to deviate from.
+this is merely a convention that analysis writers are free to deviate from.
 The name of each analysis, written in Datalog or in Java, is expected to be
 unique across all analyses in scope (i.e., across all analyses in paths
 specified by properties \code{chord.dlog.analysis.path} and \code{chord.java.analysis.path}).

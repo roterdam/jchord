@@ -1,12 +1,11 @@
-\section{Computing program scope}
-\label{sec:building-scope}
+\section{Computing Analysis Scope}
+\label{sec:computing-scope}
 
-Chord computes the scope (i.e., reachable methods) of the given
+Chord computes the analysis scope (i.e., reachable methods) of the given
 program either if property \code{chord.build.scope} is set to {\tt
   true} or if some other task (e.g., a program analysis specified via
 property \code{chord.run.analyses}) demands it by calling method
 \code{chord.program.Program.g()}.
-
 Users can set the following properties to control scope computation:
 
 \begin{itemize}
@@ -22,6 +21,10 @@ Users can set the following properties to control scope computation:
 \item \code{chord.ext.scope.exclude}
 \item \code{chord.scope.exclude}
 \end{itemize}
+
+\noindent The meaning of these properties is explained on demand in
+the following sections which describe Chord's analysis scope 
+computation in more detail.
 
 \subsection{Scope reuse}
 
@@ -98,12 +101,14 @@ specified by properties \code{chord.methods.file} and
 The possible legal values of property \code{chord.scope.kind} are
 [\code{dynamic}$|$\code{rta}$|$\code{cha}].  In each case, Chord at
 least expects properties \code{chord.main.class} and
-\code{chord.class.path} to be set.
+\code{chord.class.path} to be set to the fully-qualified name of the
+program's main class (e.g., \code{com.example.Main}) and the
+program's application classpath, respectively.
 
 \begin{itemize}
 \item
-The {\tt dynamic} value instructs Chord to compute program scope
-dynamically, by running the program and observing using JVMTI the
+The {\tt dynamic} value instructs Chord to compute analysis scope
+dynamically, by running the program and observing the
 classes that are loaded at run-time.  The number of times the program
 is run and the command-line arguments to be supplied to the program in
 each run is specified by properties \code{chord.run.ids} and
@@ -112,12 +117,12 @@ program is run only once, using run ID {\tt 0}, and without any
 command-line arguments.  Only classes loaded in some run are regarded
 as reachable but {\it all} methods of each loaded class are regarded
 as reachable regardless of whether they were invoked in the run.  The
-rationale behind this decision is to both reduce run-time overhead of
-JVMTI and to increase the predictive power of program analyses
-performed using the computed program scope.
+rationale behind this decision is to both reduce the run-time instrumentation
+overhead and increase the predictive power of program analyses
+performed using the computed analysis scope.
 
 \item
-The {\tt rta} value instructs Chord to compute program scope
+The {\tt rta} value instructs Chord to compute analysis scope
 statically using Rapid Type Analysis (RTA).
 RTA is an iterative fixed-point algorithm.  It maintains a set of
 reachable methods $M$.  The initial iteration starts by assuming that
@@ -140,7 +145,7 @@ added.
 %therefore be unsound (i.e., underestimate the set of reachable
 %classes and methods).  The next option attempts to overcome this
 %problem.  \item The \code{rta_reflect} value instructs Chord to
-%compute program scope statically using Rapid Type Analysis and,
+%compute analysis scope statically using Rapid Type Analysis and,
 %moreover, to resolve a common reflection
 %pattern: \begin{quote} \begin{verbatim} String s = ...; Class c =
 %Class.forName(s); Object o = c.newInstance(); T t = (T)
@@ -153,7 +158,7 @@ added.
 %classes are included in the class hierarchy (see Section
 %\ref{sec:cha}).
 \item
-The {\tt cha} value instructs Chord to compute program scope
+The {\tt cha} value instructs Chord to compute analysis scope
 statically using Class Hierarchy Analysis (CHA).
 The key difference between CHA and RTA is that for invokevirtual and
 invokeinterface sites with receiver of static type $t$, CHA considers
@@ -163,7 +168,7 @@ objects allocated in methods deemed reachable so far.  As a result,
 CHA is highly imprecise in practice, and also expensive since it
 grossly overestimates the set of reachable classes and methods.
 Nevertheless, Chord allows users to control which classes are
-included in the class hierarchy (see \ref{sec:cha}) and thereby control the
+included in the class hierarchy (see Section \ref{sec:cha}) and thereby control the
 precision and cost of CHA.
 
 \end{itemize}
@@ -186,16 +191,11 @@ The boot classpath, specified by property \code{sun.boot.class.path}.
 The library extensions classpath, comprising all jar files in
 directory \code{[java.home]/lib/dir/}.
 \item
-Chord's classpath, specified by property
-\code{chord.main.class.path}.  This includes the classpath of any
-user-defined Java analyses, specified by user-defined property
-\code{chord.java.analysis.path}, which is empty by default.
-\item
-The classpath of the given program, specified by user-defined property
-\code{chord.class.path}, which is empty by default.
+The application classpath of the given program, specified by property \code{chord.class.path},
+which is empty by default.
 \end{enumerate}
 
-All classes in the entire classpath (resulting from items 1--4 above)
+All classes in the entire classpath (resulting from items 1--3 above)
 are included in the class hierarchy with the following exceptions:
 \begin{itemize}
 \item
@@ -214,7 +214,7 @@ property \code{chord.ch.kind} has value {\tt static}.
 If the superclass of a class C is missing or if an interface
 implemented/extended by a class/interface C is missing, where
 ``missing" means that it is either not in the classpath resulting from
-items 1--4 above or it is excluded by one of these rules, then C
+items 1--3 above or it is excluded by one of these rules, then C
 itself is excluded.  Note that this rule is recursive, e.g., if C has
 superclass B which in turn has superclass A, and A is missing, then
 both B and C are excluded.
@@ -232,17 +232,15 @@ of names of classes all of whose declared methods must be treated as no-ops:
 Property \code{chord.std.scope.exclude} conventionally specifies
 classes to be excluded from the scope of {\it all} programs to be
 analyzed, e.g., classes in the JDK standard library.  Its default
-value is \code{[chord.main.class.path]}, i.e., the classes comprising
-Chord itself.
+value is the empty list.
 \item
 Property \code{chord.ext.scope.exclude} conventionally specifies
 classes to be excluded from the scope of specific programs to be
 analyzed.  Its default value is the empty list.
 \item
 Property \code{chord.scope.exclude} specifies the final list of
-classes to be excluded from scope.  Its default value is simply the
-concatenation of the values of properties
-\code{chord.std.scope.exclude} and \code{chord.ext.scope.exclude}.
+classes to be excluded from scope.  Its default value is
+\code{[chord.std.scope.exclude]:[chord.ext.scope.exclude]}.
 \end{itemize}
 
 %\begin{tabular}
