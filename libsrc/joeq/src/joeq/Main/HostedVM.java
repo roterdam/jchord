@@ -78,7 +78,7 @@ public abstract class HostedVM {
                 return null;
             }
         };
-		PrimordialClassLoader.loader.getClasspath().addStandardClasspath();
+		PrimordialClassLoader.loader.getClasspath().addFullClasspath();
         Reflection.obj_trav = ClassLibInterface.DEFAULT.getObjectTraverser();
         Reflection.obj_trav.initialize();
     }

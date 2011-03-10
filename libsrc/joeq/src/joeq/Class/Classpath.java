@@ -43,12 +43,13 @@ public class Classpath {
 		return classpathList;
 	}
 
-	public void addStandardClasspath() {
-        String systemClasspath = System.getProperty("sun.boot.class.path");
-        for (Iterator it = classpaths(systemClasspath); it.hasNext();) {
-            String s = (String) it.next();
-            addToClasspath(s);
-        }
+	public void addFullClasspath() {
+		addToClasspath(System.getProperty("sun.boot.class.path"));
+		addExtClasspath();
+		addToClasspath(System.getProperty("java.class.path"));
+	}
+
+	public void addExtClasspath() {
         String javaHomeDir = System.getProperty("java.home");
         assert (javaHomeDir != null);
         File libExtDir = new File(javaHomeDir, File.separator + "lib" + File.separator + "ext");
@@ -65,11 +66,6 @@ public class Classpath {
                 String fileName = file.getAbsolutePath();
                 addToClasspath(fileName);
             }
-        }
-        String userClasspath = System.getProperty("java.class.path");
-        for (Iterator it = classpaths(userClasspath); it.hasNext();) {
-            String s = (String) it.next();
-            addToClasspath(s);
         }
 	}
 
