@@ -1,78 +1,61 @@
-\section{Download and installation}
+\section{Download and Installation}
 \label{sec:download-and-installation}
 
-Ensure that the following software is installed on your machine:
+You can obtain pre-built binaries as well as the source code of Chord.
+The following sections explain both options in detail.
 
-\begin{itemize}
+\subsection {Binary Installation}
+\label{sec:binary-install}
+
+To obtain Chord's pre-built binaries, download file \xlink{chord-bin-2.0.tar.gz}{http://jchord.googlecode.com/files/chord-bin-2.0.tar.gz}.
+It contains the following files:
+
+\begin{enumerate}
 \item
-A JVM with JDK 5 or higher, e.g.
-\xlink{IBM J9}{http://www.ibm.com/developerworks/java/jdk/} or
-\xlink{Oracle HotSpot}{http://www.oracle.com/technetwork/java/javase/downloads/index.html}
+\code{chord.jar}, which contains the class files of Chord and of libraries used by Chord.
 \item
-\xlink{Apache Ant}{http://ant.apache.org/}, a Java-based build tool
-\end{itemize}
+\code{libbuddy.so}, \code{buddy.dll}, and \code{libbuddy.dylib}: you can keep one of these files
+depending upon whether you intend to run Chord on Linux, Windows/Cygwin, or MacOS, respectively.
+These files are needed only if you want to use the BuDDy BDD library for executing program
+analyses written in Datalog.
+\item
+\code{libchord_instr_agent.so}: this file is needed only if you want to use the JVMTI-based bytecode
+instrumentation agent for executing dynamic program analyses in Chord.
+\end{enumerate}
 
-{\bf Note:} If you intend to use Chord for dynamic analysis, then
-IBM J9 is highly recommended, as it allows you to instrument
-the entire JDK; using any other JVM will likely require excluding
-large parts of the JDK from being instrumented.
+\noindent Novice users can ignore items (2) and (3) above until they become more familiar with Chord.
+The provided binaries in those items might not be compatible with your machine, in which case you
+will either have to forgo using them (with hardly any noticeable difference in Chord's functionality)
+or you will have to build them yourself (see Section \ref{sec:source-install}).
 
-Obtain the latest stable release of Chord from \url{http://jchord.googlecode.com/checkout/}
-or the latest development snapshot from the SVN repository: 
+\subsection{Source Installation}
+\label{sec:source-install}
+
+To obtain Chord's source code, download the following files:
+
+\begin{enumerate}
+\item
+Mandatory: file \xlink{chord-src-2.0.tar.gz}{http://jchord.googlecode.com/files/chord-src-2.0.tar.gz}, which contains Chord's source code and the jars of libraries used by Chord.
+\item
+Optional: file \xlink{chord-libsrc-2.0.tar.gz}{http://jchord.googlecode.com/files/chord-libsrc-2.0.tar.gz}, which contains the source
+code of libraries used by Chord (e.g., joeq, javassist, bddbddb, etc.)
+\end{enumerate}
+
+\noindent Alternatively, you can obtain the latest development snapshot from the SVN repository:
 
 \begin{verbatim}
     prompt> svn checkout http://jchord.googlecode.com/svn/trunk/ chord
 \end{verbatim}
-For many users, it may be sufficient to only checkout directory {\tt
-  trunk/main/} instead of the entire {\tt trunk/}.  Other directories
-of interest are {\tt trunk/test/}, which contains regression tests,
-and {\tt trunk/libsrc/}, which contains the source code of software
-used by Chord (Joeq, Javassist, bddbddb, JavaBDD, and jwutil).  All
-other directories under {\tt trunk/} are projects built atop Chord
-that might be of interest to some users.
 
-Directory {\tt main/} contains a {\tt build.xml} file which is
-interpreted by Apache Ant.  To see the various targets available, run
-the following command in that directory:
-
-\begin{verbatim}
-    prompt> ant help
-\end{verbatim}
-
-\noindent To compile Chord, simply run the following command in the same
-directory:
-
-\begin{verbatim}
-    prompt> ant 
-\end{verbatim}
-
-\noindent This will compile
-the Java source code of Chord from \code{main/src/} to Java bytecode
-in \code{main/classes/}.
-Additionally:
+\noindent Instead of checking out the entire \code{trunk/}, which contains several sub-directories, you can check out
+specific sub-directories:
 \begin{itemize}
-\item
-If system property \code{chord.use.buddy} is set to true (default is false),
-then the C source code of BDD library
-\xlink{BuDDy}{http://buddy.sourceforge.net/} from
-\code{main/bdd/} will be compiled to a shared library in \code{main/lib/}
-(\code{libbuddy.so} on Linux, \code{buddy.dll} on Windows, and
-\code{libbuddy.dylib} on MacOS); this library is used for executing
-program analyses written in Datalog using
-\xlink{bddbddb}{http://bddbddb.sourceforge.net/} (a
-BDD-based Datalog solver).
-\item
-If system property \code{chord.use.jvmti} is set to true (default is false),
-then the C++ source code of the Chord instrumentation agent from
-\code{main/agent/} will be compiled to a shared library in \code{main/lib/}
-(\code{libchord_instr_agent.so} on all architectures); this agent is
-used for computing program scope dynamically and for executing
-dynamic program analyses.
+\item \code{main/} contains Chord's source code and the jars of libraries used by Chord.
+\item \code{libsrc/} contains the source code of libraries used by Chord (e.g., joeq, javassist, bddbddb, etc.).
+\item \code{test/} contains Chord's regression tests.
+\item many more; these might eventually move into \code{main/}.
 \end{itemize}
-The above system properties can be set either in file \code{main/chord.properties}
-(recommended) or on the command line as follows:
 
-\begin{verbatim}
-    prompt> ant -Dchord.use.buddy=true -Dchord.use.jvmti=true
-\end{verbatim}
+\noindent Files \code{chord-2.0-src.tar.gz} and \code{chord-2.0-libsrc.tar.gz} mentioned above are essentially stable releases of
+the \code{main/} and \code{libsrc/} directories, respectively. 
 
