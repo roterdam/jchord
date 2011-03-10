@@ -200,9 +200,11 @@ public class ClassHierarchy {
 			dynLoadedTypes = new HashSet<String>(list.size());
 			dynLoadedTypes.addAll(list);
 		}
-		final Classpath cp = new Classpath();
-		cp.addStandardClasspath();
-		final List<ClasspathElement> cpeList = cp.getClasspathElements();
+		Classpath cp = new Classpath();
+		cp.addToClasspath(System.getProperty("sun.boot.class.path"));
+        cp.addExtClasspath();
+        cp.addToClasspath(Config.userClassPathName);
+		List<ClasspathElement> cpeList = cp.getClasspathElements();
 
 		// logging info
 		List<Pair<String, String>> duplicateTypes = new ArrayList<Pair<String, String>>();
