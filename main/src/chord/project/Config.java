@@ -20,6 +20,12 @@ public class Config {
 
 	private Config() { }
 
+	// properties concerning settings of the JVM running Chord
+
+	public final static String maxHeap = System.getProperty("chord.max.heap");
+	public final static String maxStack = System.getProperty("chord.max.stack");
+	public final static String jvmargs = System.getProperty("chord.jvmargs");
+
 	// basic properties about program being analyzed (its main class, classpath, command line args, etc.)
 
 	public final static String workDirName = System.getProperty("chord.work.dir");
@@ -40,19 +46,17 @@ public class Config {
 		check(reflectKind, new String[] { "none", "static", "dynamic", "static_cast" }, "chord.reflect.kind");
 	}
 	public final static boolean doSSA = buildBoolProperty("chord.ssa", true);
-	public final static String toolClassPathPackages = "chord.,javassist.,joeq.,net.sf.bddbddb.,net.sf.javabdd.,jdom.";
-	public final static String DEFAULT_SCOPE_EXCLUDES =
-		concat(toolClassPathPackages, ',', "sun.,com.sun.,com.ibm.,org.apache.harmony.");
+	public final static String DEFAULT_SCOPE_EXCLUDES = "";
 	public final static String scopeStdExcludeStr = System.getProperty("chord.std.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExtExcludeStr = System.getProperty("chord.ext.scope.exclude", "");
 	public static String scopeExcludeStr =
 		System.getProperty("chord.scope.exclude", concat(scopeStdExcludeStr, ',', scopeExtExcludeStr));
 	public final static String DEFAULT_CHECK_EXCLUDES =
-		concat(toolClassPathPackages, ',', "java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.");
+		"java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.";
 	public final static String checkStdExcludeStr = System.getProperty("chord.std.check.exclude", DEFAULT_CHECK_EXCLUDES);
 	public final static String checkExtExcludeStr = System.getProperty("chord.ext.check.exclude", "");
-	public final static String checkExcludeStr = System.getProperty("chord.check.exclude",
-		concat(checkStdExcludeStr, ',', checkExtExcludeStr));
+	public final static String checkExcludeStr =
+		System.getProperty("chord.check.exclude", concat(checkStdExcludeStr, ',', checkExtExcludeStr));
 
 	// properties dictating what gets computed/printed by Chord
 
@@ -78,19 +82,20 @@ public class Config {
 
 	// Chord project properties
 
+	public final static boolean classic = System.getProperty("chord.classic").equals("true");
 	public final static String stdJavaAnalysisPathName = System.getProperty("chord.std.java.analysis.path");
 	public final static String extJavaAnalysisPathName = System.getProperty("chord.ext.java.analysis.path");
 	public final static String javaAnalysisPathName = System.getProperty("chord.java.analysis.path");
 	public final static String stdDlogAnalysisPathName = System.getProperty("chord.std.dlog.analysis.path");
 	public final static String extDlogAnalysisPathName = System.getProperty("chord.ext.dlog.analysis.path");
 	public final static String dlogAnalysisPathName = System.getProperty("chord.dlog.analysis.path");
-	public final static boolean classic = System.getProperty("chord.classic").equals("true");
 
 	// properties specifying configuration of instrumentation and dynamic analysis
 
 	public final static boolean useJvmti = buildBoolProperty("chord.use.jvmti", false);
 	public final static String instrKind = System.getProperty("chord.instr.kind", "offline");
 	public final static String traceKind = System.getProperty("chord.trace.kind", "full");
+	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 	static {
 		check(instrKind, new String[] { "offline", "online" }, "chord.instr.kind");
 		check(traceKind, new String[] { "none", "full", "pipe" }, "chord.trace.kind");
@@ -99,20 +104,16 @@ public class Config {
 	public final static int dynamicTimeout = Integer.getInteger("chord.dynamic.timeout", -1);
 	public final static int maxConsSize = Integer.getInteger("chord.max.cons.size", 50000000);
 
-	// properties concerning aspects that can affect Chord's performance
-
-	public final static String maxHeap = System.getProperty("chord.max.heap");
-	public final static String maxStack = System.getProperty("chord.max.stack");
-	public final static String jvmargs = System.getProperty("chord.jvmargs");
-	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
-	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
-	public final static boolean useBuddy = buildBoolProperty("chord.use.buddy", false);
-
 	// properties dictating what is reused across Chord runs
 
 	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
 	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
 	public final static boolean reuseTraces = buildBoolProperty("chord.reuse.traces", false);
+
+	// properties concerning BDDs
+
+	public final static boolean useBuddy = buildBoolProperty("chord.use.buddy", false);
+	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 
 	// properties specifying names of Chord's output files and directories
 
@@ -171,6 +172,9 @@ public class Config {
 		System.out.println("os.name: " + System.getProperty("os.name"));
 		System.out.println("os.version: " + System.getProperty("os.version"));
 		System.out.println("java.class.path: " + javaClassPathName);
+		System.out.println("chord.max.heap: " + maxHeap);
+		System.out.println("chord.max.stack: " + maxStack);
+		System.out.println("chord.jvmargs: " + jvmargs);
 		System.out.println("chord.main.dir: " + mainDirName);
 		System.out.println("chord.work.dir: " + workDirName);
 		System.out.println("chord.main.class: " + mainClassName);
@@ -198,28 +202,25 @@ public class Config {
 		System.out.println("chord.print.results: " + printResults);
 		System.out.println("chord.save.maps: " + saveDomMaps);
 		System.out.println("chord.verbose: " + verbose);
+		System.out.println("chord.classic: " + classic);
 		System.out.println("chord.std.java.analysis.path: " + stdJavaAnalysisPathName);
 		System.out.println("chord.ext.java.analysis.path: " + extJavaAnalysisPathName);
 		System.out.println("chord.java.analysis.path: " + javaAnalysisPathName);
 		System.out.println("chord.std.dlog.analysis.path: " + stdDlogAnalysisPathName);
 		System.out.println("chord.ext.dlog.analysis.path: " + extDlogAnalysisPathName);
 		System.out.println("chord.dlog.analysis.path: " + dlogAnalysisPathName);
-		System.out.println("chord.classic: " + classic);
 		System.out.println("chord.use.jvmti: " + useJvmti);
 		System.out.println("chord.instr.kind: " + instrKind);
 		System.out.println("chord.trace.kind: " + traceKind);
+		System.out.println("chord.trace.block.size: " + traceBlockSize);
 		System.out.println("chord.dynamic.haltonerr: " + dynamicHaltOnErr);
 		System.out.println("chord.dynamic.timeout: " + dynamicTimeout);
 		System.out.println("chord.max.cons.size: " + maxConsSize);
-		System.out.println("chord.max.heap: " + maxHeap);
-		System.out.println("chord.max.stack: " + maxStack);
-		System.out.println("chord.jvmargs: " + jvmargs);
-		System.out.println("chord.trace.block.size: " + traceBlockSize);
-		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
-		System.out.println("chord.use.buddy: " + useBuddy);
 		System.out.println("chord.reuse.scope: " + reuseScope);
 		System.out.println("chord.reuse.rels: " + reuseRels);
 		System.out.println("chord.reuse.traces: " + reuseTraces);
+		System.out.println("chord.use.buddy: " + useBuddy);
+		System.out.println("chord.bddbddb.max.heap: " + bddbddbMaxHeap);
 	}
 
     public static String outRel2Abs(String fileName) {
