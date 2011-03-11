@@ -36,7 +36,7 @@ import chord.instr.InstrScheme.EventFormat;
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class EventHandler extends CoreEventHandler {
+public class EventHandler extends TraceEventHandler {
 	public static final int MISSING_FIELD_VAL = -1;
 	public static final int UNKNOWN_FIELD_VAL = -2;
 	protected static InstrScheme scheme;
@@ -725,9 +725,13 @@ public class EventHandler extends CoreEventHandler {
 				break;
 			}
 		}
-		assert (instrSchemeFileName != null);
+		if (instrSchemeFileName == null) {
+			System.err.println("ERROR: EventHandler: Expected argument " +
+				InstrScheme.INSTR_SCHEME_FILE_KEY + "=<FILE NAME>");
+			System.exit(1);
+		}
 		scheme = InstrScheme.load(instrSchemeFileName);
-		CoreEventHandler.init(args);
+		TraceEventHandler.init(args);
 	}
 }
 

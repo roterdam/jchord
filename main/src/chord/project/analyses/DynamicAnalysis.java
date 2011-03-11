@@ -33,7 +33,7 @@ import chord.program.CFGLoopFinder;
 import chord.project.ClassicProject;
 import chord.project.Messages;
 import chord.project.Config;
-import chord.instr.CoreInstrumentor;
+import chord.instr.BasicInstrumentor;
 import chord.runtime.EventHandler;
 import chord.util.ByteBufferedFile;
 import chord.util.ChordRuntimeException;
@@ -42,19 +42,22 @@ import chord.util.ReadException;
 import chord.util.tuple.object.Pair;
 
 /**
- * Generic implementation of a dynamic program analysis
- * (a specialized kind of Java task).
+ * Generic implementation of a dynamic analysis that allows choosing
+ * from a limited but commonly-used set of events, such as
+ * method entry/exit, field reads/writes, lock acquires/releases, etc.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  * @author omertripp (omertrip@post.tau.ac.il)
  */
-public class DynamicAnalysis extends CoreDynamicAnalysis {
+public class DynamicAnalysis extends BasicDynamicAnalysis {
 	///// Shorthands for error/warning messages in this class
 
 	private static final String EVENT_NOT_HANDLED =
-		"ERROR: Dynamic analysis '%s' must either override method '%s' or omit the corresponding event from its instrumentation scheme.";
+		"ERROR: DynamicAnalysis: Analysis named '%s' must either override method '%s' or omit the corresponding event from its instrumentation scheme.";
 	private static final String NO_INSTR_SCHEME =
-		"ERROR: Dynamic analysis %s must override method 'InstrScheme getInstrScheme()'.";
+		"ERROR: Dynamicanalysis: Analysis named '%s' must override method 'InstrScheme getInstrScheme()'.";
+	private static final String INVALID_TRACE_KIND =
+		"ERROR: DynamicAnalysis: Analysis named '%s' must use (regular or piped) trace file.";
 
 	///// Data structures for loop entry/iter/leave events
 
@@ -114,20 +117,21 @@ public class DynamicAnalysis extends CoreDynamicAnalysis {
 	}
 
 	@Override
-	protected Map<String, String> getImplicitInstrumentorArgs() {
-		Map<String, String> args = super.getImplicitInstrumentorArgs();
+	public Map<String, String> getInstrumentorArgs() {
+		Map<String, String> args = super.getInstrumentorArgs();
 		args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
-		args.put(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY, getEventHandlerClass().getName());
+		args.put(BasicInstrumentor.EVENT_HANDLER_CLASS_KEY, getEventHandlerClass().getName());
 		return args;
 	}
 
 	@Override
-	protected Map<String, String> getImplicitEventHandlerArgs() {
-		Map<String, String> args = super.getImplicitEventHandlerArgs();
+	public Map<String, String> getEventHandlerArgs() {
+		Map<String, String> args = super.getEventHandlerArgs();
 		args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, getInstrSchemeFileName());
 		return args;
 	}
 
+	@Override
 	public List<Runnable> getTraceTransformers() {
 		if (!scheme.needsTraceTransform())
 			return Collections.EMPTY_LIST;

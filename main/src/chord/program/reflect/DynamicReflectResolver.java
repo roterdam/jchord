@@ -14,7 +14,7 @@ import java.util.Collections;
 import chord.util.tuple.object.Pair;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
-import chord.project.analyses.CoreDynamicAnalysis;
+import chord.project.analyses.BasicDynamicAnalysis;
 import chord.project.Chord;
 import chord.project.Config;
 
@@ -23,7 +23,7 @@ import chord.project.Config;
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DynamicReflectResolver extends CoreDynamicAnalysis {
+public class DynamicReflectResolver extends BasicDynamicAnalysis {
 	private final List<Pair<String, List<String>>> resolvedClsForNameSites =
 		new ArrayList<Pair<String, List<String>>>();
 	private final List<Pair<String, List<String>>> resolvedObjNewInstSites =

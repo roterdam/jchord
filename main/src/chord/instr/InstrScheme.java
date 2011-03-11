@@ -25,7 +25,7 @@ import chord.util.ChordRuntimeException;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class InstrScheme implements Serializable {
-	public final static String INSTR_SCHEME_FILE_KEY = "instr_scheme_file_name";
+	public final static String INSTR_SCHEME_FILE_KEY = "instr_scheme_file";
 
 	public static final int NEW = 0;
 	public static final int NEWARRAY = 1;

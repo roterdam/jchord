@@ -13,14 +13,24 @@ import chord.util.WeakIdentityHashMap;
 import chord.util.ByteBufferedFile;
 
 /**
- * Core handler of events generated during an instrumented program's
- * execution.
+ * Basic handler of events generated during an instrumented program's
+ * execution for use by single-JVM dynamic analyses.
  * 
+ * Methods {@link #init(String)} and {@link #done()} are called when
+ * event handling starts and ends, respectively, at runtime.
+ * Who calls these methods depends on whether or not the dynamic analysis
+ * using this event handler uses JVMTI (see {@link #useJvmti()}):
+ *
+ * - If it uses JVMTI, then these methods are called from the JVMTI agent
+ *   implemented in main/agent/; see that directory for more details.
+ * - If it does not use JVMTI, then calls to these methods are injected
+ *   by the instrumentor at the entry and exit of the bytecode of the
+ *   main method of the analyzed program; see the constructor of class
+ *  {@link chord.instr.BasicInstrumentor} for more details.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CoreEventHandler {
-	public static final String TRACE_BLOCK_SIZE_KEY = "trace_block_size";
-	public static final String TRACE_FILE_NAME_KEY = "trace_file_name";
+public class BasicEventHandler {
 	/**
 	 * Flag determining when it is safe to start handling events at runtime.
 	 * It is false when the JVM starts.  It is set to true in the
@@ -29,19 +39,11 @@ public class CoreEventHandler {
 	 * for the definition of this handler).
 	 */
 	protected static boolean trace = false;
-
-	/**
-	 * A buffer used to buffer events sent from event-generating JVM to
-	 * event-handling JVM.
-	 * It is irrelevant if events are generated/handled by the same JVM.
-	 */ 
-	protected static ByteBufferedFile buffer;
-
 	/**
 	 * Unique ID given to each object created at runtime.
 	 * ID 0 is reserved for null and ID 1 is reserved for the hypothetical
-	 * lone object of a hypothetical class all of whose instance fields are
-	 * static fields in other real classes.
+	 * lone object of a hypothetical class all of whose instance fields
+	 * are static fields in other real classes.
 	 */
 	protected static int currentId = 2;
 
@@ -68,40 +70,22 @@ public class CoreEventHandler {
 	}
 
 	/**
-	 * This method is called during handing of JVMTI event "VMInit".
-	 * arguments: trace_file_name, trace_block_size
-	 * if trace_file_name is absent then buffer is not created (i.e. it is
-	 * assumed that dynamic analysis is intra-JVM).
+	 * Method signaling the start of event handling by a dynamic analysis.
+	 *
+	 * See the documentation of this class for more details.
 	 */
 	public synchronized static void init(String args) {
-		String[] a = args.split("=");
-		int traceBlockSize = 4096;
-		String traceFileName = null;
-		for (int i = 0; i < a.length; i += 2) {
-			String k = a[i];
-			if (k.equals(TRACE_BLOCK_SIZE_KEY))
-				traceBlockSize = Integer.parseInt(a[i+1]);
-			else if (k.equals(TRACE_FILE_NAME_KEY))
-				traceFileName = a[i+1];
-		}
-		if (traceFileName != null) {
-			try {
-				buffer = new ByteBufferedFile(traceBlockSize, traceFileName, false);
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-		}
 		objmap = new WeakIdentityHashMap();
 		trace = true;
 	}
 
-	// called during VMDeath JVMTI event
-	// DO NOT REMOVE THIS SYNCHRONIZATION
+	/**
+	 * Method signaling the end of event handling by a dynamic analysis.
+	 *
+	 * See the documentation of this class for more details.
+	 */
 	public synchronized static void done() {
 		trace = false;
-		if (buffer != null) {
-			try {
-				buffer.flush();
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-		}
 	}
 }
 

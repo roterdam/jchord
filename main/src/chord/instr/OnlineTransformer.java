@@ -106,7 +106,7 @@ public final class OnlineTransformer implements ClassFileTransformer {
 			for (int k = 0; k < n; k++)
 				argsMap.put(args[k*2], args[k*2+1]);
 		}
-		String instrClassName = argsMap.get(CoreInstrumentor.INSTRUMENTOR_CLASS_KEY);
+		String instrClassName = argsMap.get(BasicInstrumentor.INSTRUMENTOR_CLASS_KEY);
 		Class instrClass = null;
 		if (instrClassName != null) {
 			try {
@@ -115,14 +115,14 @@ public final class OnlineTransformer implements ClassFileTransformer {
 				Messages.fatal(e);
 			}
 		} else
-			instrClass = CoreInstrumentor.class;
-		CoreInstrumentor instr = null;
+			instrClass = BasicInstrumentor.class;
+		BasicInstrumentor instr = null;
 		ClassicProject.g().build();
 		Exception ex = null;
 		try {
 			Constructor c = instrClass.getConstructor(new Class[] { Map.class });
 			Object o = c.newInstance(new Object[] { argsMap });
-			instr = (CoreInstrumentor) o;
+			instr = (BasicInstrumentor) o;
 		} catch (InstantiationException e) {
 			ex = e;
 		} catch (NoSuchMethodException e) {
@@ -151,9 +151,9 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		retransformClasses(instrumentation, a);
 	}
 
-	private final CoreInstrumentor instrumentor;
+	private final BasicInstrumentor instrumentor;
 
-	public OnlineTransformer(CoreInstrumentor instr) {
+	public OnlineTransformer(BasicInstrumentor instr) {
 		instrumentor = instr;
 	}
 

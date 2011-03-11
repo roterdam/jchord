@@ -19,7 +19,7 @@ import java.util.HashSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Arrays;
-
+import java.util.Properties;
 import java.io.PrintWriter;
 import java.io.IOException;
 
@@ -37,7 +37,8 @@ import chord.util.ClassUtils;
 import chord.util.StringUtils;
 import chord.util.ChordRuntimeException;
  
-import chord.instr.OnlineTransformer;
+import chord.runtime.BasicEventHandler;
+import chord.instr.BasicInstrumentor;
 
 import joeq.Class.Classpath;
 import joeq.Class.jq_Reference.jq_NullType;
@@ -577,14 +578,28 @@ public class Program {
 		assert(runIDs.length > 0);
 		List<String> classNames = new ArrayList<String>();
 		String fileName = Config.classesFileName;
-
 		List<String> basecmd = new ArrayList<String>();
 		basecmd.add("java");
 		basecmd.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
-		String agentArgs = "=classes_file_name=" + Config.classesFileName;
-		basecmd.add("-agentpath:" + Config.cInstrAgentFileName + agentArgs);
+		Properties props = System.getProperties();
 		basecmd.add("-cp");
 		basecmd.add(classPathName);
+		String cAgentArgs = "=classes_file=" + Config.classesFileName;
+		if (Config.useJvmti)
+            basecmd.add("-agentpath:" + Config.cInstrAgentFileName + cAgentArgs);
+		else {
+			String jAgentArgs = cAgentArgs +
+				"=" + BasicInstrumentor.INSTRUMENTOR_CLASS_KEY +
+				"=" + LoadedClassesInstrumentor.class.getName().replace('.', '/') +
+				"=" + BasicInstrumentor.EVENT_HANDLER_CLASS_KEY +
+				"=" + BasicEventHandler.class.getName().replace('.', '/');
+			basecmd.add("-javaagent:" + Config.jInstrAgentFileName + jAgentArgs);
+			for (Map.Entry e : props.entrySet()) {
+				String key = (String) e.getKey();
+				if (key.startsWith("chord."))
+					basecmd.add("-D" + key + "=" + e.getValue());
+			}
+		}
 		basecmd.add(mainClassName);
 		for (String runID : runIDs) {
 			String args = System.getProperty("chord.args." + runID, "");
@@ -596,7 +611,7 @@ public class Program {
 				String s;
 				while ((s = in.readLine()) != null) {
 					// convert "Ljava/lang/Object;" to "java.lang.Object"
-					String cName = typesToStr(s);
+					String cName = Config.useJvmti ? typesToStr(s) : s;
 					classNames.add(cName);
 				}
 				in.close();

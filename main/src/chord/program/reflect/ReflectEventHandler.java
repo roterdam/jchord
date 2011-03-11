@@ -7,16 +7,17 @@
 package chord.program.reflect;
 
 import java.io.IOException;
-import chord.runtime.CoreEventHandler;
+import chord.runtime.BasicEventHandler;
+import chord.runtime.TraceEventHandler;
 
 /*
  * Event handler for dynamic analysis for resolving reflection.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ReflectEventHandler extends CoreEventHandler {
+public class ReflectEventHandler extends TraceEventHandler {
 	public static void clsForNameEvent(String q, String c) {
-		synchronized (CoreEventHandler.class) {
+		synchronized (BasicEventHandler.class) {
 			if (trace) {
 				trace = false;
 				try {
@@ -29,7 +30,7 @@ public class ReflectEventHandler extends CoreEventHandler {
 		}
 	}
 	public static void objNewInstEvent(String q, String c) {
-		synchronized (CoreEventHandler.class) {
+		synchronized (BasicEventHandler.class) {
 			if (trace) {
 				trace = false;
 				try {
@@ -42,7 +43,7 @@ public class ReflectEventHandler extends CoreEventHandler {
 		}
 	}
 	public static void conNewInstEvent(String q, String c) {
-		synchronized (CoreEventHandler.class) {
+		synchronized (BasicEventHandler.class) {
 			if (trace) {
 				trace = false;
 				try {
@@ -55,7 +56,7 @@ public class ReflectEventHandler extends CoreEventHandler {
 		}
 	}
 	public static void aryNewInstEvent(String q, String c) {
-		synchronized (CoreEventHandler.class) {
+		synchronized (BasicEventHandler.class) {
 			if (trace) {
 				trace = false;
 				try {
