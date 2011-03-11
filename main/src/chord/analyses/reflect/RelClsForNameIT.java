@@ -13,8 +13,8 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 
-import chord.analyses.facts.invk.DomI;
-import chord.analyses.facts.type.DomT;
+import chord.analyses.invk.DomI;
+import chord.analyses.type.DomT;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;

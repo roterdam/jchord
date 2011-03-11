@@ -14,9 +14,9 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Compiler.Quad.Quad;
 
-import chord.analyses.facts.alloc.DomH;
-import chord.analyses.facts.invk.DomI;
-import chord.analyses.facts.method.DomM;
+import chord.analyses.alloc.DomH;
+import chord.analyses.invk.DomI;
+import chord.analyses.method.DomM;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ClassicProject;

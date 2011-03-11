@@ -14,8 +14,8 @@ import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
 import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;
-import chord.analyses.facts.alloc.DomH;
-import chord.analyses.facts.invk.DomI;
+import chord.analyses.alloc.DomH;
+import chord.analyses.invk.DomI;
 
 /**
  * Domain of abstract contexts.
