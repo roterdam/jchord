@@ -12,8 +12,8 @@ import java.io.FileWriter;
 
 import joeq.Compiler.Quad.Quad;
 import chord.project.Config;
-import chord.analyses.alloc.DomH;
-import chord.analyses.invk.DomI;
+import chord.analyses.facts.alloc.DomH;
+import chord.analyses.facts.invk.DomI;
 import chord.project.ClassicProject;
 import chord.instr.InstrScheme.EventFormat;
 import chord.util.ByteBufferedFile;

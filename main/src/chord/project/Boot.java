@@ -70,17 +70,17 @@ import chord.util.ProcessExecutor;
  */
 public class Boot {
 	private static final String CHORD_JAR_NOT_FOUND =
-		"ERROR: Expected Chord to be loaded from chord.jar instead of from `%s`.";
+		"ERROR: Boot: Expected Chord to be loaded from chord.jar instead of from '%s'.";
     private static final String USER_DIR_AS_CHORD_WORK_DIR =
-        "WARN: Property chord.work.dir not set; using value of user.dir `%s` instead.";
+        "WARN: Boot: Property chord.work.dir not set; using value of user.dir '%s' instead.";
     private static final String CHORD_MAIN_DIR_UNDEFINED =
-        "ERROR: Property chord.main.dir must be set to location of directory named 'main' in your Chord installation.";
+        "ERROR: Boot: Property chord.main.dir must be set to location of directory named 'main' in your Chord installation.";
     private static final String CHORD_MAIN_DIR_NOT_FOUND =
-        "ERROR: Directory `%s` specified by property chord.main.dir not found.";
+        "ERROR: Boot: Directory '%s' specified by property chord.main.dir not found.";
     private static final String CHORD_WORK_DIR_UNDEFINED =
-        "ERROR: Property chord.work.dir must be set to location of working directory desired during Chord's execution.";
+        "ERROR: Boot: Property chord.work.dir must be set to location of working directory desired during Chord's execution.";
     private static final String CHORD_WORK_DIR_NOT_FOUND =
-        "ERROR: Directory `%s` specified by property chord.work.dir not found.";
+        "ERROR: Boot: Directory '%s' specified by property chord.work.dir not found.";
 
 	public static void main(String[] args) throws Throwable {
 		String chordJarFile = getChordJarFile();

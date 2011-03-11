@@ -12,15 +12,15 @@ import javassist.expr.*;
 
 import chord.runtime.EventHandler;
 import chord.project.Messages;
-import chord.analyses.heapacc.DomE;
-import chord.analyses.field.DomF;
-import chord.analyses.alloc.DomH;
-import chord.analyses.invk.DomI;
-import chord.analyses.method.DomM;
-import chord.analyses.lock.DomL;
-import chord.analyses.lock.DomR;
-import chord.analyses.point.DomP;
-import chord.analyses.basicblock.DomB;
+import chord.analyses.facts.alloc.DomH;
+import chord.analyses.facts.basicblock.DomB;
+import chord.analyses.facts.field.DomF;
+import chord.analyses.facts.heapacc.DomE;
+import chord.analyses.facts.invk.DomI;
+import chord.analyses.facts.lock.DomL;
+import chord.analyses.facts.lock.DomR;
+import chord.analyses.facts.method.DomM;
+import chord.analyses.facts.point.DomP;
 import chord.instr.InstrScheme.EventFormat;
 import chord.program.Program;
 import chord.project.ClassicProject;
@@ -56,7 +56,7 @@ import java.util.Map;
  */
 public class Instrumentor extends BasicInstrumentor {
 	private static final String INSTR_SCHEME_UNDEFINED =
-		"ERROR: Instrumentor: expected value for option `" + InstrScheme.INSTR_SCHEME_FILE_KEY + "`.";
+		"ERROR: Instrumentor: expected value for option '" + InstrScheme.INSTR_SCHEME_FILE_KEY + "'.";
 	private static final String NOT_IN_DOMAIN =
 		"WARN: Instrumentor: Domain '%s' does not contain '%s'";
 	private static final String CANNOT_INSTRUMENT_METHOD =
