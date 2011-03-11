@@ -115,7 +115,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 	public ThreadEscapeFullAnalysis() {
  		optimizeSummaries = System.getProperty("chord.escape.optimize", "true").equals("true");
-		System.out.println("optimizeSummaries: " + optimizeSummaries);
 	}
 
 	@Override
@@ -263,15 +262,15 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		out.println("</escapelist>");
 		out.close();
 
-        OutDirUtils.copyFileFromMainDir("web/style.css");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/method/Mlist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/heapacc/Elist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/heapacc/E.xsl");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/Hlist.dtd");
-        OutDirUtils.copyFileFromMainDir("src/chord/analyses/alloc/H.xsl");
-        OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.xml");
-        OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.dtd");
-        OutDirUtils.copyFileFromMainDir("../extra/src/chord/analyses/escape/web/results.xsl");
+        OutDirUtils.copyResourceByName("web/style.css");
+        OutDirUtils.copyResourceByName("chord/analyses/method/Mlist.dtd");
+        OutDirUtils.copyResourceByName("chord/analyses/heapacc/Elist.dtd");
+        OutDirUtils.copyResourceByName("chord/analyses/heapacc/E.xsl");
+        OutDirUtils.copyResourceByName("chord/analyses/alloc/Hlist.dtd");
+        OutDirUtils.copyResourceByName("chord/analyses/alloc/H.xsl");
+        OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xml");
+        OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.dtd");
+        OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xsl");
         OutDirUtils.runSaxon("results.xml", "results.xsl");
         Program.g().HTMLizeJavaSrcFiles();
 	}
