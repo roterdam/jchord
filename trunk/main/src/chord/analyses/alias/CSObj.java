@@ -10,7 +10,7 @@ import java.util.Set;
 import java.io.Serializable;
 
 /**
- * Representation of a object-sensitive abstract object.
+ * Representation of an object-sensitive abstract object.
  * <p>
  * It is a set of abstract contexts
  * (see {@link chord.analyses.alias.Ctxt}).

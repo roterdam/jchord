@@ -12,8 +12,8 @@ import chord.project.Project;
 import chord.project.analyses.ProgramDom;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.DomC;
+import chord.analyses.facts.method.DomM;
 import chord.util.tuple.object.Trio;
-import chord.analyses.method.DomM;
 
 /**
  * Domain of abstract threads.

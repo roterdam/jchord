@@ -26,8 +26,8 @@ import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import chord.util.StringUtils;
-import chord.analyses.basicblock.DomB;
-import chord.analyses.method.DomM;
+import chord.analyses.facts.basicblock.DomB;
+import chord.analyses.facts.method.DomM;
 import chord.instr.EventKind;
 import chord.instr.BasicInstrumentor;
 import chord.instr.OfflineTransformer;
@@ -142,7 +142,7 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 	 *
 	 * The value of <CLASS NAME> above is determined by method {@link #getEventHandlerClass()}.
 	 * The values of <KEY1>, <VAL1>, ..., <KEYn>, <VALn> above are determined by
-	 * method {@link getEventHandlerArgs()}.
+	 * method {@link #getEventHandlerArgs()}.
 	 *
 	 * Subclasses can override this method but must call
 	 * <code>super.getInstrumentorArgs()</code>, add any additional arguments to the

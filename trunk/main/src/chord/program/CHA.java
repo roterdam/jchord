@@ -53,7 +53,7 @@ public class CHA {
 	private static final String MAIN_CLASS_NOT_DEFINED =
 		"ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
 	private static final String MAIN_METHOD_NOT_FOUND =
-		"ERROR: Could not find main class `%s` or main method in that class.";
+		"ERROR: Could not find main class '%s' or main method in that class.";
 
 	public static final boolean DEBUG = false;
 

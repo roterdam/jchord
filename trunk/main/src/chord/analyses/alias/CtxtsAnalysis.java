@@ -40,10 +40,10 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.util.Execution;
 import chord.util.StatFig;
 import chord.bddbddb.Rel.RelView;
-import chord.analyses.alloc.DomH;
-import chord.analyses.invk.DomI;
-import chord.analyses.method.DomM;
-import chord.analyses.var.DomV;
+import chord.analyses.facts.alloc.DomH;
+import chord.analyses.facts.invk.DomI;
+import chord.analyses.facts.method.DomM;
+import chord.analyses.facts.var.DomV;
 import chord.program.Program;
 import chord.project.Config;
 import chord.project.Chord;
@@ -58,92 +58,56 @@ import chord.util.graph.MutableGraph;
 import chord.util.ChordRuntimeException;
 
 /**
- * Abstract contexts analysis.
+ * Analysis for pre-computing abstract contexts.
  * <p>
- * The goal of this analysis is to translate client-specified inputs
- * concerning the kind of context sensitivity desired into relations
- * that are subsequently consumed by context-sensitive may alias and
- * call graph analyses.
+ * The goal of this analysis is to translate client-specified inputs concerning the desired kind of context sensitivity
+ * into relations that are subsequently consumed by context-sensitive may alias and call graph analyses.
  * <p>
  * This analysis allows:
  * <ul>
- * <li>each method to be analyzed using a different kind of context
- * sensitivity (one of context insensitivity, k-CFA,
- * k-object-sensitivity, and copy-context-sensitivity),</li>
- * <li>each local variable to be analyzed context sensitively or
- * insensitively, and</li>
- * <li>a different 'k' value to be used for each object allocation
- * statement and method invocation statement in the program.</li>
+ *   <li>each method to be analyzed using a different kind of context sensitivity (one of context insensitivity, k-CFA,
+ *       k-object-sensitivity, and copy-context-sensitivity),</li>
+ *   <li>each local variable to be analyzed context sensitively or insensitively, and</li>
+ *   <li>a different 'k' value to be used for each object allocation site and method call site.</li>
  * </ul>
- * This analysis can be called multiple times and in each invocation
- * it can incorporate feedback from a client to adjust the
- * precision of the points-to information and call graph computed
- * subsequently by the may alias and call graph analyses.  Clients
- * can indicate in each invocation:
+ * This analysis can be called multiple times and in each invocation it can incorporate feedback from a client to adjust
+ * the precision of the points-to information and call graph computed subsequently by the may alias and call graph
+ * analyses.  Clients can indicate in each invocation:
  * <ul>
- * <li>Which methods must be analyzed context sensitively (in
- * addition to those already being analyzed context sensitively in
- * the previous invocation of this analysis) and using what kind
- * of context sensitivity; the remaining methods will be analyzed
- * context insensitively (that is, in the lone <tt>epsilon</tt>
- * context)
- * </li>
- * <li>Which local variables of reference type must be analyzed
- * context sensitively (in addition to those already being analyzed
- * context sensitively in the previous invocation of this analysis);
- * the remaining ones will be analyzed context insensitively
- * (that is, their points-to information will be maintained in the
- * lone <tt>epsilon</tt context).
- * </li>
- * <li>The object alocation statements and method invocation
- * statements in the program whose 'k' values must be incremented
- * (over those used in the previous invocation of this analysis).
- * </li>
+ *   <li>Which methods must be analyzed context sensitively (in addition to those already being analyzed context
+ *       sensitively in the previous invocation of this analysis) and using what kind of context sensitivity; the
+ *       remaining methods will be analyzed context insensitively (that is, in the lone 'epsilon' context)</li>
+ *   <li>Which local variables of reference type must be analyzed context sensitively (in addition to those already being
+ *       analyzed context sensitively in the previous invocation of this analysis); the remaining ones will be analyzed
+ *       context insensitively (that is, their points-to information will be tracked in the lone 'epsilon' context).</li>
+ *   <li>The object alocation sites and method call sites whose 'k' values must be incremented (over those used in the
+ *       previous invocation of this analysis).</li>
  * </ul>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.ctxt.kind</tt> which specifies the kind of context
- * sensitivity to be used for each method (and all its local
- * variables) in the program.
- * It may be one of
- * <tt>ci</tt> (context insensitive) or
- * <tt>cs</tt> (k-CFA).
- * </li>
- * <li><tt>chord.inst.ctxt.kind</tt> which specifies the kind of
- * context sensitivity to be used for each instance method (and all
- * its local variables) in the program.
- * It may be one of
- * <tt>ci</tt> (context insensitive),
- * <tt>cs</tt> (k-CFA), or
- * <tt>co</tt> (k-object-sensitive).
- * </li>
- * <li><tt>chord.stat.ctxt.kind</tt> which specifies the kind of
- * context sensitivity to be used for each static method (and all
- * its local variables) in the program.
- * It may be one of
- * <tt>ci</tt> (context insensitive),
- * <tt>cs</tt> (k-CFA), or
- * <tt>cc</tt> (copy-context-sensitive).
- * </li>
- * <li><tt>chord.kobj.k</tt> and <tt>chord.kcfa.k</tt> which specify
- * the 'k' value to be used each object allocation statement and for
- * each method invocation statement, respectively, in the
- * program.</li>
+ *   <li>chord.ctxt.kind: the kind of context sensitivity to use for each method (and all its locals).
+ *       It may be 'ci' (context insensitive) or 'cs' (k-CFA).</li>
+ *   <li>chord.inst.ctxt.kind: the kind of context sensitivity to use for each instance method (and all its locals).
+ *       It may be 'ci' (context insensitive), 'cs' (k-CFA), or 'co' (k-object-sensitive).</li>
+ *   <li>chord.stat.ctxt.kind: the kind of context sensitivity to use for each static method (and all its locsals).
+ *       It may be one of 'ci' (context insensitive), 'cs' (k-CFA), or 'cc' (copy-context-sensitive).</li>
+ *   <li>chord.kobj.k and chord.kcfa.k: the 'k' value to use for each object allocation site and each method call site,
+ *       respectively.</li>
  * </ul>
  * 
  * 
- * This analysis outputs the following relations:
+ * This analysis outputs the following domains and relations:
  * <ul>
- *  <li>C, the abstract domain of contexts</li>
- *  <li>CC (c,c2) if c2 is all but the last element of context c</li>
- *  <li>CH/CI (c,h) (c,i) if allocation site h or call site i is the last element of abstract context c</li>
- *  <li>CVC (c,v,c2) if v, (local to the method in context c) might point to object c2</li>
- *  <li>CFC (c,f,c2) if field f of abstract object c might point to abstract object c2</li>
- *  <li>FC (f,c2) if static field f might point to abstract object c2</li>
-
- *  <li>CICM: (c,i,c2,m) if invocation i in context c can reach method 2 (in context c2)</li>
- *  <li>rootCM (c,m) if m can be called in the root context, c</li>
- *  <li>reachableCM (c,m) if m can be called in context c</li>
+ *   <li>C: domain containing all abstract contexts</li>
+ *   <li>CC: relation containing each pair (c,c2) such that c2 is all but the last element of context c</li>
+ *   <li>CH: relation containing each (c,h) such that object allocation site h is the last element of abstract context c</li>
+ *   <li>CI: relation containing each (c,i) such that call site i is the last element of abstract context c</li>
+ *   <li>CVC: relation containing each (c,v,o) such that local v might point to object o in context c of its declaring method.</li>
+ *   <li>CFC: relation containing each (o1,f,o2) such that instance field f of object o1 might point to object o2</li>
+ *   <li>FC: relation containing each (f,o) such that static field f may point to object o</li>
+ *   <li>CICM: relation containing each (c,i,c2,m) if invocation i in context c can reach method 2 (in context c2)</li>
+ *   <li>rootCM: relation containing each (c,m) such that method m is an entry method in context c</li>
+ *   <li>reachableCM: relation containing each (c,m) such that method m can be called in context c</li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -151,10 +115,8 @@ import chord.util.ChordRuntimeException;
 @Chord(
 	name = "ctxts-java",
 	consumes = { "IM", "VH" },
-	produces = { "C", "CC", "CH", "CI",
-		"epsilonV", "epsilonM", "kcfaSenM", "kobjSenM", "ctxtCpyM",
+	produces = { "C", "CC", "CH", "CI", "epsilonV", "epsilonM", "kcfaSenM", "kobjSenM", "ctxtCpyM",
 		"refinableCH", "refinableCI", "refinableM", "refinableV" },
-
 	namesOfTypes = { "C" },
 	types = { DomC.class }
 )
@@ -321,118 +283,117 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		String inValuesPath = X.getStringArg("inValuesPath", null); // Specifies which values to use
 		boolean keepOnlyReachable = X.getBooleanArg("keepOnlyReachable", false);
 
-	// Link back results to where the in values came from
-	if (inValuesPath != null) X.symlinkPath = inValuesPath+".results";
+		// Link back results to where the in values came from
+		if (inValuesPath != null) X.symlinkPath = inValuesPath+".results";
 
-	// Save options
-	X.putOption("version", 1);
-	X.putOption("program", System.getProperty("chord.work.dir"));
-	X.putOption("senProb", senProb);
-	X.putOption("randSeed", randSeed);
-	X.putOption("kobj", kobjK);
-	X.putOption("kcfa", kcfaK);
-	X.putOption("minH", kobjK);
-	X.putOption("minI", kcfaK);
-	X.putOption("kobjRange", kobjRange);
-	X.putOption("kcfaRange", kcfaRange);
-	X.putOption("numRefineIters", System.getProperty("chord.max.iters"));
-	X.putOption("inValuesPath", inValuesPath);
-	X.putOption("initK", kobjK+","+kcfaK);
+		// Save options
+		X.putOption("version", 1);
+		X.putOption("program", System.getProperty("chord.work.dir"));
+		X.putOption("senProb", senProb);
+		X.putOption("randSeed", randSeed);
+		X.putOption("kobj", kobjK);
+		X.putOption("kcfa", kcfaK);
+		X.putOption("minH", kobjK);
+		X.putOption("minI", kcfaK);
+		X.putOption("kobjRange", kobjRange);
+		X.putOption("kcfaRange", kcfaRange);
+		X.putOption("numRefineIters", System.getProperty("chord.max.iters"));
+		X.putOption("inValuesPath", inValuesPath);
+		X.putOption("initK", kobjK+","+kcfaK);
 
-	boolean useObjectSensitivity = "co".equals(System.getProperty("chord.inst.ctxt.kind", null));
-	X.putOption("useObjectSensitivity", useObjectSensitivity);
+		boolean useObjectSensitivity = "co".equals(System.getProperty("chord.inst.ctxt.kind", null));
+		X.putOption("useObjectSensitivity", useObjectSensitivity);
 			
-	X.flushOptions();
+		X.flushOptions();
 
-	Random random = randSeed != 0 ? new Random(randSeed) : new Random();
-	kobjValue = new int[domH.size()];
-	kcfaValue = new int[domI.size()];
+		Random random = randSeed != 0 ? new Random(randSeed) : new Random();
+		kobjValue = new int[domH.size()];
+		kcfaValue = new int[domI.size()];
 
-	// Only modify k values of sites in reachable methods
-	ProgramRel relReachableM = (ProgramRel) ClassicProject.g().getTrgt("reachableM");
-	Set<jq_Method> reachableMethods = new HashSet<jq_Method>();
-	relReachableM.load();
-	final Iterable<jq_Method> tuples = relReachableM.getAry1ValTuples();
-	for (jq_Method m : tuples)
-	  reachableMethods.add(m);
-	relReachableM.close();
+		// Only modify k values of sites in reachable methods
+		ProgramRel relReachableM = (ProgramRel) ClassicProject.g().getTrgt("reachableM");
+		Set<jq_Method> reachableMethods = new HashSet<jq_Method>();
+		relReachableM.load();
+		final Iterable<jq_Method> tuples = relReachableM.getAry1ValTuples();
+		for (jq_Method m : tuples)
+			reachableMethods.add(m);
+		relReachableM.close();
 
-	// The sites we actually care about
-	Set<Inst> hSet = new HashSet<Inst>();
-	Set<Inst> iSet = new HashSet<Inst>();
-	for (Object inst : domH) {
-	  if (inst == null) continue; // Skip null
-	  if (keepOnlyReachable && !reachableMethods.contains(((Inst)inst).getMethod())) continue;
-	  hSet.add((Inst)inst);
-	}
-	for (Inst inst : domI) {
-	  if (keepOnlyReachable && !reachableMethods.contains(inst.getMethod())) continue;
-	  iSet.add(inst);
-	}
-
-	if (inValuesPath != null) {
-	  System.out.println("Reading k values from "+inValuesPath);
-	  try {
-		BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(inValuesPath)));
-		String line;
-		while ((line = in.readLine()) != null) {
-		  // Format: H32 2 or I3 5
-		  String[] tokens = line.split(" ");		 
-		  assert tokens.length == 2;
-		  int idx = Integer.parseInt(tokens[0].substring(1));
-		  int value = Integer.parseInt(tokens[1]);
-		  switch (tokens[0].charAt(0)) {
-			case 'H': kobjValue[idx] = value; break;
-			case 'I': kcfaValue[idx] = value; break;
-			default: assert false;
-		  }
+		// The sites we actually care about
+		Set<Inst> hSet = new HashSet<Inst>();
+		Set<Inst> iSet = new HashSet<Inst>();
+		for (Object inst : domH) {
+			if (inst == null) continue; // Skip null
+			if (keepOnlyReachable && !reachableMethods.contains(((Inst)inst).getMethod())) continue;
+			hSet.add((Inst)inst);
 		}
-		in.close();
-	  } catch (IOException e) {
-		throw new RuntimeException(e);
-	  }
-	}
-	else {
-	  System.out.println("Generating k values with senProb="+senProb);
-	  for (Inst inst : hSet) {
-		int h = domH.indexOf(inst);
-		kobjValue[h] = kobjK + sampleBinomial(random, kobjRange, senProb);
-	  }
-	  for (Inst inst : iSet) {
-		int i = domI.indexOf(inst);
-		kcfaValue[i] = kcfaK + sampleBinomial(random, kcfaRange, senProb);
-	  }
-	}
+		for (Inst inst : domI) {
+			if (keepOnlyReachable && !reachableMethods.contains(inst.getMethod())) continue;
+			iSet.add(inst);
+		}
 
-	// Output k-values and strings
-	PrintWriter datOut = OutDirUtils.newPrintWriter("inputs.dat");
-	PrintWriter strOut = OutDirUtils.newPrintWriter("inputs.strings");
-	for (Inst inst : hSet) {
-	  int h = domH.indexOf(inst);
-	  datOut.println("H"+h+" " + kobjValue[h]);
-	  strOut.println("H"+h+" " + inst.toVerboseStr());
-	}
-	for (Inst inst : iSet) {
-	  int i = domI.indexOf(inst);
-	  datOut.println("I"+i+" " + kcfaValue[i]);
-	  strOut.println("I"+i+" " + inst.toVerboseStr());
-	}
-	datOut.close();
-	strOut.close();
+		if (inValuesPath != null) {
+			System.out.println("Reading k values from "+inValuesPath);
+			try {
+				BufferedReader in = new BufferedReader(new InputStreamReader(new FileInputStream(inValuesPath)));
+				String line;
+				while ((line = in.readLine()) != null) {
+					// Format: H32 2 or I3 5
+					String[] tokens = line.split(" ");		 
+					assert tokens.length == 2;
+					int idx = Integer.parseInt(tokens[0].substring(1));
+					int value = Integer.parseInt(tokens[1]);
+					switch (tokens[0].charAt(0)) {
+					case 'H': kobjValue[idx] = value; break;
+					case 'I': kcfaValue[idx] = value; break;
+					default: assert false;
+					}
+				}
+				in.close();
+			} catch (IOException e) {
+				throw new RuntimeException(e);
+			}
+		} else {
+			System.out.println("Generating k values with senProb="+senProb);
+			for (Inst inst : hSet) {
+				int h = domH.indexOf(inst);
+				kobjValue[h] = kobjK + sampleBinomial(random, kobjRange, senProb);
+			}
+			for (Inst inst : iSet) {
+				int i = domI.indexOf(inst);
+				kcfaValue[i] = kcfaK + sampleBinomial(random, kcfaRange, senProb);
+			}
+		}
 
-	// Compute statistics on the k values actually used
-	StatFig kobjFig = new StatFig();
-	StatFig kcfaFig = new StatFig();
-	for (Inst inst : hSet) {
-	  int h = domH.indexOf(inst);
-	  kobjFig.add(kobjValue[h]);
-	}
-	for (Inst inst : iSet) {
-	  int i = domI.indexOf(inst);
-	  kcfaFig.add(kcfaValue[i]);
-	}
-	X.output.put("avg.kobj", kobjFig.mean());
-	X.output.put("avg.kcfa", kcfaFig.mean());
+		// Output k-values and strings
+		PrintWriter datOut = OutDirUtils.newPrintWriter("inputs.dat");
+		PrintWriter strOut = OutDirUtils.newPrintWriter("inputs.strings");
+		for (Inst inst : hSet) {
+			int h = domH.indexOf(inst);
+			datOut.println("H"+h+" " + kobjValue[h]);
+			strOut.println("H"+h+" " + inst.toVerboseStr());
+		}
+		for (Inst inst : iSet) {
+			int i = domI.indexOf(inst);
+			datOut.println("I"+i+" " + kcfaValue[i]);
+			strOut.println("I"+i+" " + inst.toVerboseStr());
+		}
+		datOut.close();
+		strOut.close();
+
+		// Compute statistics on the k values actually used
+		StatFig kobjFig = new StatFig();
+		StatFig kcfaFig = new StatFig();
+		for (Inst inst : hSet) {
+			int h = domH.indexOf(inst);
+			kobjFig.add(kobjValue[h]);
+		}
+		for (Inst inst : iSet) {
+			int i = domI.indexOf(inst);
+			kcfaFig.add(kcfaValue[i]);
+		}
+		X.output.put("avg.kobj", kobjFig.mean());
+		X.output.put("avg.kcfa", kcfaFig.mean());
 	}
 
 	private int sampleBinomial(Random random, int n, double p) {
@@ -454,13 +415,13 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 		if (currIter == 0 || (global_kcfaValue != null || global_kobjValue != null)) {
 			isCtxtSenV = new boolean[numV];
-	  // Set the context-sensitivity of various methods
+			// Set the context-sensitivity of various methods
 			methKind = new int[numM];
 			for (int mIdx = 0; mIdx < numM; mIdx++) {
 				jq_Method mVal = domM.get(mIdx);
 				methKind[mIdx] = (maxIters > 0) ? CTXTINS : getCtxtKind(mVal);
 			}
-	  // Based on context-sensitivity of methods, set the context-sensitivity of variables inside the method
+			// Based on context-sensitivity of methods, set the context-sensitivity of variables inside the method
 			for (int mIdx = 0; mIdx < numM; mIdx++) {
 				if (methKind[mIdx] != CTXTINS) {
 					jq_Method m = domM.get(mIdx);
@@ -501,14 +462,14 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			if (percy) {
 				setAdaptiveValues();
 
-		if (global_kcfaValue != null) {
-		  System.out.println("Using global_kcfaValue");
-		  System.arraycopy(global_kcfaValue, 0, kcfaValue, 0, kcfaValue.length);
-		}
-		if (global_kobjValue != null) {
-		  System.out.println("Using global_kobjValue");
-		  System.arraycopy(global_kobjValue, 0, kobjValue, 0, kobjValue.length);
-		}
+				if (global_kcfaValue != null) {
+					System.out.println("Using global_kcfaValue");
+					System.arraycopy(global_kcfaValue, 0, kcfaValue, 0, kcfaValue.length);
+				}
+				if (global_kobjValue != null) {
+					System.out.println("Using global_kobjValue");
+					System.arraycopy(global_kobjValue, 0, kobjValue, 0, kobjValue.length);
+				}
 			}
 		} else {
 			refine();
@@ -546,29 +507,22 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Messages.log("H " + i + " " + histogramH[i]);
 			}
 
-	  /*String path = null;
-	  for (int i = 0; ; i++) {
-		path = X.path("iter"+i+".cause.values");
-		if (!new java.io.File(path).exists()) break;
-	  }
-	  PrintWriter out = chord.analyses.snapshot.Utils.openOut(path);*/
-
-	  // Output values
-	  PrintWriter out = OutDirUtils.newPrintWriter("inputs.dat");
-	  for (int h = 0; h < numH; h++)
-		if (kobjValue[h] > 0) out.println("H"+h+" " + kobjValue[h]);
-	  for (int i = 0; i < numI; i++)
-		if (kcfaValue[i] > 0) out.println("I"+i+" " + kcfaValue[i]);
-	  out.close();
+			// Output values
+			PrintWriter out = OutDirUtils.newPrintWriter("inputs.dat");
+			for (int h = 0; h < numH; h++)
+				if (kobjValue[h] > 0) out.println("H"+h+" " + kobjValue[h]);
+			for (int i = 0; i < numI; i++)
+				if (kcfaValue[i] > 0) out.println("I"+i+" " + kcfaValue[i]);
+			out.close();
 		}
 		
-	// Do the heavy crunching
+		// Do the heavy crunching
 		doAnalysis();
 
 		relIM.close();
 		relVH.close();
 
-	// Populate domC
+		// Populate domC
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			Quad invk = (Quad) domI.get(iIdx);
 			jq_Method meth = invk.getMethod();
@@ -613,7 +567,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Quad[] newElems = combine(k, invk, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
-		//System.out.println("CfromJC " + jstr(invk) + " " + cstr(oldCtxt) + " => " + cstr(newCtxt));
 				if (!isLastIter && newElems.length < oldElems.length + 1) {
 					relRefinableCI.add(oldCtxt, invk);
 				}
@@ -640,7 +593,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Quad[] newElems = combine(k, inst, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
-		//System.out.println("CfromJC " + jstr(inst) + " " + cstr(oldCtxt) + " => " + cstr(newCtxt));
 				if (!isLastIter && newElems.length < oldElems.length + 1) {
 					relRefinableCH.add(oldCtxt, inst);
 				}
@@ -855,7 +807,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		process(roots, methToPredsMap);
 	}
 
-  // Compute all the contexts that each method can be called in
+	// Compute all the contexts that each method can be called in
 	private void process(Set<jq_Method> roots,
 			Map<jq_Method, Set<jq_Method>> methToPredsMap) {
 		IGraph<jq_Method> graph = new MutableGraph<jq_Method>(roots, methToPredsMap, null);
@@ -1021,48 +973,46 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		return cspaKind;
 	}
 
-  jq_Type h2t(Quad h) {
-	Operator op = h.getOperator();
-	if (op instanceof New) 
-	  return New.getType(h).getType();
-	else if (op instanceof NewArray)
-	  return NewArray.getType(h).getType();
-	else if (op instanceof MultiNewArray)
-	  return MultiNewArray.getType(h).getType();
-	else
-	  return null;
-  }
-  String hstr(Quad h) {
-	String path = new File(h.toJavaLocStr()).getName();
-	jq_Type t = h2t(h);
-	return path+"("+(t == null ? "?" : t.shortName())+")";
-  }
-  String istr(Quad i) {
-	String path = new File(i.toJavaLocStr()).getName();
-	jq_Method m = InvokeStatic.getMethod(i).getMethod();
-	return path+"("+m.getName()+")";
-  }
-  String jstr(Quad j) { return isAlloc(j) ? hstr(j) : istr(j); }
-  String estr(Quad e) {
-	String path = new File(e.toJavaLocStr()).getName();
-	Operator op = e.getOperator();
-	return path+"("+op+")";
-  }
-  String cstr(Ctxt c) {
-	StringBuilder buf = new StringBuilder();
-	//buf.append(domC.indexOf(c));
-	buf.append('{');
-	for (int i = 0; i < c.length(); i++) {
-	  if (i > 0) buf.append(" | ");
-	  Quad q = c.get(i);
-	  buf.append(isAlloc(q) ? hstr(q) : istr(q));
+	jq_Type h2t(Quad h) {
+		Operator op = h.getOperator();
+		if (op instanceof New) 
+			return New.getType(h).getType();
+		else if (op instanceof NewArray)
+			return NewArray.getType(h).getType();
+		else if (op instanceof MultiNewArray)
+			return MultiNewArray.getType(h).getType();
+		else
+			return null;
 	}
-	buf.append('}');
-	return buf.toString();
-  }
-  String fstr(jq_Field f) { return f.getDeclaringClass()+"."+f.getName(); }
-  String vstr(Register v) { return v+"@"+mstr(domV.getMethod(v)); }
-  String mstr(jq_Method m) { return m.getDeclaringClass().shortName()+"."+m.getName(); }
-
-  boolean isAlloc(Quad q) { return domH.indexOf(q) != -1; }
+	String hstr(Quad h) {
+		String path = new File(h.toJavaLocStr()).getName();
+		jq_Type t = h2t(h);
+		return path+"("+(t == null ? "?" : t.shortName())+")";
+	}
+	String istr(Quad i) {
+		String path = new File(i.toJavaLocStr()).getName();
+		jq_Method m = InvokeStatic.getMethod(i).getMethod();
+		return path+"("+m.getName()+")";
+	}
+	String jstr(Quad j) { return isAlloc(j) ? hstr(j) : istr(j); }
+	String estr(Quad e) {
+		String path = new File(e.toJavaLocStr()).getName();
+		Operator op = e.getOperator();
+		return path+"("+op+")";
+	}
+	String cstr(Ctxt c) {
+		StringBuilder buf = new StringBuilder();
+		buf.append('{');
+		for (int i = 0; i < c.length(); i++) {
+			if (i > 0) buf.append(" | ");
+			Quad q = c.get(i);
+			buf.append(isAlloc(q) ? hstr(q) : istr(q));
+		}
+		buf.append('}');
+		return buf.toString();
+	}
+	String fstr(jq_Field f) { return f.getDeclaringClass()+"."+f.getName(); }
+	String vstr(Register v) { return v+"@"+mstr(domV.getMethod(v)); }
+	String mstr(jq_Method m) { return m.getDeclaringClass().shortName()+"."+m.getName(); }
+	boolean isAlloc(Quad q) { return domH.indexOf(q) != -1; }
 }

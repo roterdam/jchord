@@ -12,7 +12,7 @@ import java.io.Serializable;
 import joeq.Compiler.Quad.Quad;
 
 /**
- * Representation of a context-insensitive abstract object.
+ * Representation of an object-insensitive abstract object.
  * <p>
  * It is a set of object allocation sites.
  * 

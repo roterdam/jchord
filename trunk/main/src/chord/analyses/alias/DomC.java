@@ -14,11 +14,11 @@ import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
 import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;
-import chord.analyses.invk.DomI;
-import chord.analyses.alloc.DomH;
+import chord.analyses.facts.alloc.DomH;
+import chord.analyses.facts.invk.DomI;
 
 /**
- * Domain of abstract contexts of methods.
+ * Domain of abstract contexts.
  * <p>
  * The 0th element in this domain denotes the distinguished
  * abstract context <tt>epsilon</tt>

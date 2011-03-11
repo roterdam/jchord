@@ -17,9 +17,10 @@ import chord.util.ByteBufferedFile;
  * execution for use by single-JVM dynamic analyses.
  * 
  * Methods {@link #init(String)} and {@link #done()} are called when
- * event handling starts and ends, respectively, at runtime.
- * Who calls these methods depends on whether or not the dynamic analysis
- * using this event handler uses JVMTI (see {@link #useJvmti()}):
+ * event handling starts and ends, respectively, at runtime.  Who calls
+ * these methods depends upon whether or not the dynamic analysis using
+ * this event handler uses JVMTI
+ * (see {@link chord.project.analyses.BasicDynamicAnalysis#useJvmti()}):
  *
  * - If it uses JVMTI, then these methods are called from the JVMTI agent
  *   implemented in main/agent/; see that directory for more details.

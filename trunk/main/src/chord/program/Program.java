@@ -87,19 +87,19 @@ public class Program {
 	private static final String MAIN_CLASS_NOT_DEFINED =
 		"ERROR: Program: Property chord.main.class must be set to specify the main class of program to be analyzed.";
 	private static final String MAIN_METHOD_NOT_FOUND =
-		"ERROR: Program: Could not find main class `%s` or main method in that class.";
+		"ERROR: Program: Could not find main class '%s' or main method in that class.";
 	private static final String CLASS_PATH_NOT_DEFINED =
 		"ERROR: Program: Property chord.class.path must be set to specify location(s) of .class files of program to be analyzed.";
 	private static final String SRC_PATH_NOT_DEFINED =
 		"ERROR: Program: Property chord.src.path must be set to specify location(s) of .java files of program to be analyzed.";
 	private static final String METHOD_NOT_FOUND =
-		"ERROR: Program: Could not find method `%s`.";
+		"ERROR: Program: Could not find method '%s'.";
 	private static final String CLASS_NOT_FOUND =
-		"ERROR: Program: Could not find class `%s`.";
+		"ERROR: Program: Could not find class '%s'.";
 	private static final String DYNAMIC_CLASS_NOT_FOUND =
-		"WARN: Program: Class named `%s` likely loaded dynamically was not found in classpath; skipping.";
+		"WARN: Program: Class named '%s' likely loaded dynamically was not found in classpath; skipping.";
 	private static final String STUBS_FILE_NOT_FOUND =
-		"ERROR: Program: Cannot find native method stubs file `%s`.";
+		"ERROR: Program: Cannot find native method stubs file '%s'.";
 
 	static {
 		if (Config.verbose >= 2)

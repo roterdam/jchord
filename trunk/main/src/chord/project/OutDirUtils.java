@@ -29,10 +29,10 @@ import chord.util.ProcessExecutor;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class OutDirUtils {
-	private static final String PROCESS_STARTING = "Starting command: `%s`";
-	private static final String PROCESS_FINISHED = "Finished command: `%s`";
-	private static final String PROCESS_FAILED = "Command `%s` terminated abnormally: %s";
-	private static final String RESOURCE_NOT_FOUND = "Could not find resource `%s`.";
+	private static final String PROCESS_STARTING = "Starting command: '%s'";
+	private static final String PROCESS_FINISHED = "Finished command: '%s'";
+	private static final String PROCESS_FAILED = "Command '%s' terminated abnormally: %s";
+	private static final String RESOURCE_NOT_FOUND = "Could not find resource '%s'.";
 
 	public static PrintWriter newPrintWriter(String fileName) {
 		try {

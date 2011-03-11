@@ -302,21 +302,21 @@ This section describes properties regarding execution of instrumented programs f
 \noindent \code{chord.instr.kind}
 \begin{quote}
 {\bf Type:} {\tt [offline|online]}  \\
-{\bf Description:} The kind of bytecode instrumentation.  The choices are offline and load-time.  \\
+{\bf Description:} The kind of bytecode instrumentation.  The choices are offline and online (load-time).  \\
 {\bf Default value:} {\tt offline}
 \end{quote}
 
 \noindent \code{chord.trace.kind}
 \begin{quote}
-{\bf Type:} {\tt [none|full|pipe]}  \\
-{\bf Description:} The medium to store dynamic traces (none, regular file, or POSIX pipe).  \\
-{\bf Default value:} {\tt full}
+{\bf Type:} {\tt [full|pipe]}  \\
+{\bf Description:} The medium by which an event-generating JVM and an event-handling JVM communicate in a dynamic analysis.  The choices are regular file and POSIX pipe.  \\
+{\bf Default value:} {\tt full} 
 \end{quote}
 
 \noindent \code{chord.trace.block.size}
 \begin{quote}
 {\bf Type:} int \\
-{\bf Description:} Number of bytes to read/write in a single operation from/to the dynamic trace file. \\
+{\bf Description:} Number of bytes to read/write in a single operation from/to the event file used by a multi-JVM dynamic analysis. \\
 {\bf Default value:} {\tt 4096}
 \end{quote}
 

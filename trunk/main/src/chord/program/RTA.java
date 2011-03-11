@@ -56,7 +56,7 @@ import chord.project.Config;
 import chord.program.reflect.CastBasedStaticReflect;
 import chord.program.reflect.DynamicReflectResolver;
 import chord.program.reflect.StaticReflectResolver;
-import chord.analyses.method.RelExtraEntryPoints;
+import chord.analyses.facts.method.RelExtraEntryPoints;
 import chord.util.IndexSet;
 import chord.util.Timer;
 import chord.util.ArraySet;
@@ -74,7 +74,7 @@ public class RTA {
 	private static final String MAIN_CLASS_NOT_DEFINED =
 		"ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
 	private static final String MAIN_METHOD_NOT_FOUND =
-		"ERROR: Could not find main class `%s` or main method in that class.";
+		"ERROR: Could not find main class '%s' or main method in that class.";
 	private static final String METHOD_NOT_FOUND_IN_SUBTYPE =
 		"WARN: Expected instance method %s in class %s implementing/extending interface/class %s.";
 
