@@ -9,8 +9,8 @@ package chord.analyses.reflect;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
 
-import chord.analyses.facts.alloc.DomH;
-import chord.analyses.facts.type.DomT;
+import chord.analyses.alloc.DomH;
+import chord.analyses.type.DomT;
 import chord.program.PhantomClsVal;
 import chord.program.Program;
 import chord.project.Chord;
