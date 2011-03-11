@@ -42,15 +42,28 @@ public class OutDirUtils {
 		}
 	}
 
-	public static String copyResource(String srcFileName) {
+	public static String copyResourceByName(String srcFileName) {
 		InputStream is = ClassUtils.getResourceAsStream(srcFileName);
-		return copyResource(srcFileName, is);
+		return copyResource(srcFileName, is, (new File(srcFileName)).getName());
 	}
 
-	public static String copyResource(String srcFileName, InputStream is) {
+	public static String copyResourceByName(String srcFileName, InputStream is) {
+		return copyResource(srcFileName, is, (new File(srcFileName)).getName());
+	}
+
+	public static String copyResourceByPath(String srcFileName) {
+		InputStream is = ClassUtils.getResourceAsStream(srcFileName);
+		return copyResource(srcFileName, is, srcFileName.replace('/', '_'));
+	}
+
+	public static String copyResourceByPath(String srcFileName, InputStream is) {
+		return copyResource(srcFileName, is, srcFileName.replace('/', '_'));
+	}
+
+	public static String copyResource(String srcFileName, InputStream is, String dstFileName) {
 		if (is == null)
 			Messages.fatal(RESOURCE_NOT_FOUND, srcFileName);
-		File dstFile = new File(Config.outDirName, (new File(srcFileName)).getName());
+		File dstFile = new File(Config.outDirName, dstFileName);
 		try {
 			BufferedReader r = new BufferedReader(new InputStreamReader(is));
 			PrintWriter w = new PrintWriter(dstFile);
