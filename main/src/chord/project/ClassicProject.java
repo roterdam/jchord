@@ -201,9 +201,9 @@ public class ClassicProject extends Project {
 		}
 		out.println("}");
 		out.close();
-		OutDirUtils.copyResource("web/style.css");
-		OutDirUtils.copyResource("web/targets.xsl");
-		OutDirUtils.copyResource("web/targets.dtd");
+		OutDirUtils.copyResourceByName("web/style.css");
+		OutDirUtils.copyResourceByName("web/targets.xsl");
+		OutDirUtils.copyResourceByName("web/targets.dtd");
 		OutDirUtils.runSaxon("targets.xml", "targets.xsl");
 	}
 
