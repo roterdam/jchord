@@ -1,12 +1,18 @@
 /*
- * This agent takes following arguments:
- * event_handler_class_name, classes_file_name
- * If event_handler_class_name is set then after the VMInit event is
- * called by JVMTI, this agent calls the static "void init(String)"
- * method in the class denoted by event_handler_class_name; also, all
- * agent options are passed via the string argument to that method.
- * If classes_file_name is set then this agent writes the list of 
- * all loaded classes to the file denoted by it.
+ * This agent expects at least one of the following arguments:
+ *
+ * 1. event_handler_class=<CLASS NAME>
+ *    If this argument is present, then this agent takes the following actions:
+ *    a) When the VMInit event is called by JVMTI, this agent calls the static
+ *       synchronized method "void init(String)" in the class denoted by
+ *       <CLASS NAME>; also, all agent options are passed via the string
+ *       argument to that method.
+ *    b) When the VMDeath event is called by JVMTI, this agent calls the static
+ *       synchronized method "void done()" in the class denoted by <CLASS NAME>.
+ *
+ * 2. classes_file=<FILE NAME>
+ *    If this argument is present, then this agent collects all loaded classes
+ *    and writes their names, one per line, to the file denoted by <FILE NAME>.
  */
 #include <jvmti.h>
 #include <assert.h>
@@ -25,10 +31,10 @@ static jvmtiEnv* jvmti_env;
 #define MAX 20000
 
 static bool list_loaded_classes = false;
-static char classes_file_name[MAX];
+static char classes_file[MAX];
 
 static bool enable_event_handler = false;
-static char event_handler_class_name[MAX];
+static char event_handler_class[MAX];
 static char* event_handler_args_str = NULL;
 
 char* get_token(char *str, char *seps, char *buf, int max)
@@ -53,16 +59,16 @@ char* get_token(char *str, char *seps, char *buf, int max)
 static void call_event_handler_class_method(JNIEnv* jni_env,
 	const char* mName, const char* mSign, const char* args)
 {
-	jclass c = jni_env->FindClass(event_handler_class_name);
+	jclass c = jni_env->FindClass(event_handler_class);
 	if (c == NULL) {
 		cout << "ERROR: JNI: Cannot find class: " <<
-			event_handler_class_name << endl;
+			event_handler_class << endl;
 		exit(1);
 	}
 	jmethodID m = jni_env->GetStaticMethodID(c, mName, mSign);
 	if (m == NULL) {
 		cout << "ERROR: JNI: Cannot get method " << mName << mSign <<
-			" from class: " << event_handler_class_name << endl;
+			" from class: " << event_handler_class << endl;
 		exit(1);
 	}
 	if (args != NULL) {
@@ -102,7 +108,7 @@ static void JNICALL VMDeath(jvmtiEnv *jvmti_env, JNIEnv* jni_env)
 		result = jvmti_env->GetLoadedClasses(&class_count, &classes);
 		assert(result == JVMTI_ERROR_NONE);
 		fstream classes_out;
- 		classes_out.open(classes_file_name, ios::out);
+ 		classes_out.open(classes_file, ios::out);
 		for (int i = 0; i < class_count; i++) {
 			jclass klass = classes[i];
 			char* class_name;
@@ -136,20 +142,20 @@ JNIEXPORT jint JNICALL Agent_OnLoad(JavaVM *jvm, char *options, void *reserved)
 		next = get_token(next, (char*) ",=", token, sizeof(token));
 		if (next == NULL)
 			break;
-        if (strcmp(token, "event_handler_class_name") == 0) {
-            next = get_token(next, (char*) ",=", event_handler_class_name, MAX);
+        if (strcmp(token, "event_handler_class") == 0) {
+            next = get_token(next, (char*) ",=", event_handler_class, MAX);
             if (next == NULL) {
-                cerr << "ERROR: Bad option event_handler_class_name=<name>: "
+                cerr << "ERROR: Bad option event_handler_class=<name>: "
 					<< options << endl;
 				exit(1);
             }
 			enable_event_handler = true;
 			continue;
         }
-		if (strcmp(token, "classes_file_name") == 0) {
-            next = get_token(next, (char*) ",=", classes_file_name, MAX);
+		if (strcmp(token, "classes_file") == 0) {
+            next = get_token(next, (char*) ",=", classes_file, MAX);
             if (next == NULL) {
-                cerr << "ERROR: Bad option classes_file_name=<name>: "
+                cerr << "ERROR: Bad option classes_file=<name>: "
 					<< options << endl;
 				exit(1);
             }

@@ -29,7 +29,7 @@ import chord.util.StringUtils;
 import chord.analyses.basicblock.DomB;
 import chord.analyses.method.DomM;
 import chord.instr.EventKind;
-import chord.instr.CoreInstrumentor;
+import chord.instr.BasicInstrumentor;
 import chord.instr.OfflineTransformer;
 import chord.instr.TracePrinter;
 import chord.instr.TraceTransformer;
@@ -37,175 +37,244 @@ import chord.project.Messages;
 import chord.project.Project;
 import chord.project.Config;
 import chord.project.OutDirUtils;
-import chord.runtime.CoreEventHandler;
+import chord.runtime.TraceEventHandler;
+import chord.runtime.BasicEventHandler;
 import chord.util.ByteBufferedFile;
 import chord.util.ChordRuntimeException;
 import chord.util.Executor;
 import chord.util.FileUtils;
 import chord.util.ProcessExecutor;
 import chord.util.ReadException;
+import chord.util.ClassUtils;
 import chord.util.tuple.object.Pair;
 
 /**
- * Generic implementation of a dynamic program analysis
- * (a specialized kind of Java task).
+ * Generic implementation of a basic dynamic analysis.
  * 
+ * Custom dynamic analyses must extend either this class or class
+ * {@link chord.project.analyses.DynamicAnalysis}.
+
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CoreDynamicAnalysis extends JavaAnalysis {
+public class BasicDynamicAnalysis extends JavaAnalysis {
 	///// Shorthands for error/warning messages in this class
 
-	private static final String STARTING_RUN = "INFO: CoreDynamicAnalysis: Starting Run ID %s in %s mode.";
-	private static final String FINISHED_RUN = "INFO: CoreDynamicAnalysis: Finished Run ID %s in %s mode.";
+	private static final String STARTING_RUN = "INFO: BasicDynamicAnalysis: Starting Run ID %s in %s mode.";
+	private static final String FINISHED_RUN = "INFO: BasicDynamicAnalysis: Finished Run ID %s in %s mode.";
 	private static final String FINISHED_PROCESSING_TRACE =
-		"INFO: CoreDynamicAnalysis: Finished processing trace with %d events.";
+		"INFO: BasicDynamicAnalysis: Finished processing trace with %d events.";
 	private static final String REUSE_ONLY_FULL_TRACES =
-		"ERROR: CoreDynamicAnalysis: Can only reuse full traces.";
-    private final static String INSTRUMENTOR_ARGS = "INFO: CoreDynamicAnalysis: Instrumentor arguments: %s";
-    private final static String EVENTHANDLER_ARGS = "INFO: CoreDynamicAnalysis: Event handler arguments: %s";
+		"ERROR: BasicDynamicAnalysis: Can only reuse full traces.";
+    private final static String INSTRUMENTOR_ARGS = "INFO: BasicDynamicAnalysis: Instrumentor arguments: %s";
+    private final static String EVENTHANDLER_ARGS = "INFO: BasicDynamicAnalysis: Event handler arguments: %s";
 
 	public final static boolean DEBUG = false;
 
 	protected Map<String, String> eventHandlerArgs;
 	protected Map<String, String> instrumentorArgs;
 
-	// subclasses cannot override
-	public final Map<String, String> getEventHandlerArgs() {
+	/**
+	 * Arguments to be passed to the event handler.
+	 *
+	 * If this dynamic analysis is multi-JVM (uses separate JVMs for generating
+	 * and handling events), then the following arguments are passed to the event
+	 * handler by default:
+	 * 1. trace_block_size=<SIZE>
+	 * 2. trace_file=<FILE NAME>
+	 * 
+	 * If this dynamic analysis is single-JVM, then no arguments are passed to the
+	 * event handler by default.
+	 * 
+	 * Whether or not this dynamic analysis is single- or multi-JVM is determined
+	 * by method {@link #getEventHandlerClass()}.  If this method returns a
+	 * subclass of {@link chord.runtime.TraceEventHandler}, then it is multi-JVM;
+	 * otherwise, it is single-JVM.
+	 * 
+	 * The value of <SIZE> is determined by method {@link #getTraceBlockSize()}.
+	 * The value of <FILE NAME> is determined by method {@link #getTraceFileName(int)}.
+	 *
+	 * Subclasses can override this method but must call
+	 * <code>super.getEventHandlerArgs()</code>, add any additional arguments to the
+	 * returned map, and return that same map.
+	 */
+	public Map<String, String> getEventHandlerArgs() {
 		if (eventHandlerArgs == null) {
-			eventHandlerArgs = getImplicitEventHandlerArgs();
-			Map<String, String> explicitArgs = getExplicitEventHandlerArgs();
-			if (explicitArgs != null)
-				eventHandlerArgs.putAll(explicitArgs);
-			if (Config.verbose >= 2) {
-				String argsStr = "";
-				for (Map.Entry<String, String> e : eventHandlerArgs.entrySet())
-					argsStr += "\n\t[" + e.getKey() + " = " + e.getValue() + "]";
-				Messages.log(EVENTHANDLER_ARGS, argsStr);
+			eventHandlerArgs = new HashMap<String, String>();
+			if (useTraces()) {
+				int traceBlockSize = getTraceBlockSize();
+				String traceFileName = getTraceFileName(getTraceTransformers().size());
+				eventHandlerArgs.put(TraceEventHandler.TRACE_BLOCK_SIZE_KEY, Integer.toString(traceBlockSize));
+				eventHandlerArgs.put(TraceEventHandler.TRACE_FILE_KEY, traceFileName);
 			}
 		}
 		return eventHandlerArgs;
 	}
 
-	// subclasses cannot override
-	public final Map<String, String> getInstrumentorArgs() {
+	/**
+	 * Determines whether this dynamic analysis is multi-JVM (uses separate JVMs for
+	 * generating and handling events) or single-JVM.
+	 *
+	 * @return true if this dynamic analysis is multi-JVM.
+	 */
+	private boolean useTraces() {
+		return ClassUtils.isSubclass(getEventHandlerClass(), TraceEventHandler.class);
+	}
+
+	/**
+	 * Arguments to be passed to the instrumentor.
+	 *
+	 * If this dynamic analysis uses the JVMTI agent implemented in main/agent/
+	 * to start and end the event handler at runtime, then the only argument passed
+	 * to the instrumentor by default is use_jvmti=true.
+	 *
+	 * If this dynamic analysis does not use the JVMTI agent, then the following
+	 * arguments are passed to the instrumentor by default:
+	 * 1. use_jvmti=false
+	 * 2. event_handler_class=<CLASS NAME>
+	 * 3. event_handler_args=<KEY1>@<VAL1>@ ... @<KEYn>@<VALn>
+	 * The reason these arguments are passed to the instrumentor is because, in
+	 * the absence of the JVMTI agent, the instrumentor must inject calls to
+	 * start and end the event handler at runtime, at the entry and exit,
+	 * respectively, of the bytecode of the main method of the analyzed program.
+	 *
+	 * Whether or not this dynamic analysis uses the JVMTI agent is determined
+	 * by method {@link #useJvmti()}.
+	 *
+	 * The value of <CLASS NAME> above is determined by method {@link #getEventHandlerClass()}.
+	 * The values of <KEY1>, <VAL1>, ..., <KEYn>, <VALn> above are determined by
+	 * method {@link getEventHandlerArgs()}.
+	 *
+	 * Subclasses can override this method but must call
+	 * <code>super.getInstrumentorArgs()</code>, add any additional arguments to the
+	 * returned map, and return that same map.
+	 */
+	public Map<String, String> getInstrumentorArgs() {
 		if (instrumentorArgs == null) {
-			instrumentorArgs = getImplicitInstrumentorArgs();
-			Map<String, String> explicitArgs = getExplicitInstrumentorArgs();
-			if (explicitArgs != null)
-				instrumentorArgs.putAll(explicitArgs);
-			if (Config.verbose >= 2) {
-				String argsStr = "";
-				for (Map.Entry<String, String> e : instrumentorArgs.entrySet())
-					argsStr += "\n\t[" + e.getKey() + " = " + e.getValue() + "]";
-				Messages.log(INSTRUMENTOR_ARGS, argsStr);
+			instrumentorArgs = new HashMap<String, String>();
+			if (useJvmti()) {
+				instrumentorArgs.put(BasicInstrumentor.USE_JVMTI_KEY, "true");
+			} else {
+				instrumentorArgs.put(BasicInstrumentor.USE_JVMTI_KEY, "false");
+				String c = getEventHandlerClass().getName();
+				Map<String, String> ehArgs = getEventHandlerArgs();
+				String a = mapToStr(ehArgs, '@');
+				if (a.length() > 0) a = a.substring(1);
+				instrumentorArgs.put(BasicInstrumentor.EVENT_HANDLER_CLASS_KEY, c);
+				instrumentorArgs.put(BasicInstrumentor.EVENT_HANDLER_ARGS_KEY, a);
 			}
 		}
 		return instrumentorArgs;
 	}
 
-	// must return non-null map; if subclass overrides then must call super
-	// and add its args to that map and return it
-	protected Map<String, String> getImplicitInstrumentorArgs() {
-		Map<String, String> args = new HashMap<String, String>();
-		if (!useJvmti()) {
-			args.put(CoreInstrumentor.USE_JVMTI_KEY, "false");
-			String c = getEventHandlerClass().getName();
-			Map<String, String> ehArgs = getEventHandlerArgs();
-			String a = mapToStr(ehArgs, '@');
-			if (a.length() > 0) a = a.substring(1);
-			args.put(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY, c);
-			args.put(CoreInstrumentor.EVENT_HANDLER_ARGS_KEY, a);
-		}
-		return args;
-	}
-
-	protected Map<String, String> getImplicitEventHandlerArgs() {
-		Map<String, String> args = new HashMap<String, String>();
-		if (!getTraceKind().equals("none")) {
-			int traceBlockSize = getTraceBlockSize();
-			String traceFileName = getTraceFileName(getTraceTransformers().size());
- 			args.put(CoreEventHandler.TRACE_BLOCK_SIZE_KEY, Integer.toString(traceBlockSize));
-			args.put(CoreEventHandler.TRACE_FILE_NAME_KEY, traceFileName);
-		}
-		return args;
-	}
-
-	// subclasses can override
-	public Map<String, String> getExplicitInstrumentorArgs() {
-		return null;
-	}
-
-	// subclasses can override
-	public Map<String, String> getExplicitEventHandlerArgs() {
-		return null;
-	}
-
-	// subclasses can override
+	/**
+	 * The class of the instrumentor to be used.
+	 *
+	 * Subclasses can override this method but must return a class which is a
+	 * subclass of {@link chord.instr.BasicInstrumentor}.
+	 */
 	public Class getInstrumentorClass() {
-		return CoreInstrumentor.class;
+		return BasicInstrumentor.class;
 	}
 
-	// subclasses can override
+	/**
+	 * The class of the event handler to be used.
+	 *
+	 * Subclasses can override this method but must return a class which extends
+	 * {@link chord.runtime.BasicEventHandler}.  Additionally, if the dynamic
+	 * analysis implemented by the subclass is multi-JVM (uses separate JVMs for
+	 * generating and handling events), then this method must return a class
+	 * which extends {@link chord.runtime.TraceEventHandler}.
+	 */
 	public Class getEventHandlerClass() {
-		return CoreEventHandler.class;
+		return BasicEventHandler.class;
 	}
 
-	// subclasses can override
+	/**
+	 * Determines whether or not this dynamic analysis must use the JVMTI agent
+	 * implemented in main/agent/ in order to start and end the event handler
+	 * at runtime.
+	 *
+	 * If any dynamic analysis uses this JVMTI agent, then Chord must have been
+	 * compiled by setting chord.use.jvmti=true (default is false) either on
+	 * the command line or in file main/chord.properties.
+	 *
+	 * Subclasses can override this method.
+	 */
 	public boolean useJvmti() {
 		return Config.useJvmti;
 	}
 
-	// subclasses can override
+	/**
+	 * Subclasses can override this method.
+	 */
 	public List<Runnable> getTraceTransformers() {
 		return Collections.EMPTY_LIST;
 	}
 
-	// subclasses can override
+	/**
+	 * Subclasses can override this method.
+	 */
 	public String getInstrKind() {
 		return Config.instrKind;
 	}
 
-	// subclasses can override
+	/**
+	 * Subclasses can override this method.
+	 */
 	public String getTraceKind() {
 		return Config.traceKind;
 	}
 
-	// subclasses may override
+	/**
+	 * Subclasses can override this method.
+	 */
 	public boolean haltOnErr() {
 		return Config.dynamicHaltOnErr;
 	}
 
-	// subclasses may override
+	/**
+	 * Subclasses can override this method.
+	 */
 	public int getTimeout() {
 		return Config.dynamicTimeout;
 	}
 
-	// subclasses can override
+	/**
+	 * Subclasses can override this method.
+	 */
 	public int getTraceBlockSize() {
 		return Config.traceBlockSize;
 	}
 
-	// subclasses may override
+	/**
+	 * Subclasses can override this method.
+	 */
 	public boolean reuseTraces() {
 		return Config.reuseTraces;
 	}
 
+	/**
+	 * Subclasses can override this method.
+	 */
 	public void initPass() {
-		// signals beginning of parsing of a trace
-		// do nothing by default; subclasses can override
 	}
 
+	/**
+	 * Subclasses can override this method.
+	 */
 	public void donePass() {
-		// signals end of parsing of a trace
-		// do nothing by default; subclasses can override
 	}
 
+	/**
+	 * Subclasses can override this method.
+	 */
 	public void initAllPasses() {
-		// do nothing by default; subclasses can override
 	}
 
+	/**
+	 * Subclasses can override this method.
+	 */
 	public void doneAllPasses() {
-		// do nothing by default; subclasses can override
 	}
 
 	// provides name of regular (i.e. non-pipe) file to store entire trace
@@ -273,10 +342,10 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		boolean useJvmti = useJvmti();
 		if (offline)
 			doOfflineInstrumentation();
-		if (traceKind.equals("none")) {
-			String msg = "single-JVM " + (offline ? "offline" : "online") + "-instrumentation " +
+		if (!useTraces()) {
+			String msg = "inline " + (offline ? "offline" : "online") + "-instrumentation " +
 				(useJvmti ? "JVMTI-based" : "non-JVMTI");
-			List<String> basecmd = getBaseCmd(!offline, useJvmti, false, 0);
+			List<String> basecmd = getBaseCmd(!offline, useJvmti, 0);
 			initAllPasses();
 			for (String runID : runIDs) {
 				String args = System.getProperty("chord.args." + runID, "");
@@ -294,7 +363,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		boolean pipeTraces = traceKind.equals("pipe");
 		List<Runnable> transformers = getTraceTransformers();
 		int numTransformers = transformers == null ? 0 : transformers.size();
-		List<String> basecmd = getBaseCmd(!offline, useJvmti, true, numTransformers);
+		List<String> basecmd = getBaseCmd(!offline, useJvmti, numTransformers);
 		initAllPasses();
 		for (String runID : runIDs) {
 			if (pipeTraces) {
@@ -318,7 +387,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 					runInstrProgram(fullcmd);
 				}
 			};
-			String msg = "multi-JVM " + (pipeTraces ? "POSIX-pipe " : "regular-file ") +
+			String msg = "traced " + (pipeTraces ? "POSIX-pipe " : "regular-file ") +
 				(offline ? "offline" : "online") + "-instrumentation " +
 				(useJvmti ? "JVMTI-based" : "non-JVMTI");
 			if (Config.verbose >= 1) Messages.log(STARTING_RUN, runID, msg);
@@ -347,12 +416,12 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 	private void doOfflineInstrumentation() {
 		Class instrClass = getInstrumentorClass();
 		Map<String, String> instrArgs = getInstrumentorArgs();
-		CoreInstrumentor instr = null;
+		BasicInstrumentor instr = null;
 		Exception ex = null;
 		try {
 			Constructor c = instrClass.getConstructor(new Class[] { Map.class });
 			Object o = c.newInstance(new Object[] { instrArgs });
-			instr = (CoreInstrumentor) o;
+			instr = (BasicInstrumentor) o;
 		} catch (InstantiationException e) {
 			ex = e;
 		} catch (NoSuchMethodException e) {
@@ -391,8 +460,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		}
 	}
 
-	private List<String> getBaseCmd(boolean isOnline, boolean useJvmti,
-			boolean isWithTrace, int numTransformers) {
+	private List<String> getBaseCmd(boolean isOnline, boolean useJvmti, int numTransformers) {
 		String mainClassName = Config.mainClassName;
 		assert (mainClassName != null);
 		String classPathName = Config.userClassPathName;
@@ -406,7 +474,7 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 			Properties props = System.getProperties();
 			for (Map.Entry e : props.entrySet()) {
 				String key = (String) e.getKey();
-				if (key.startsWith("chord.") && !key.equals("chord.out.pooldir"))
+				if (key.startsWith("chord."))
 					basecmd.add("-D" + key + "=" + e.getValue());
 			}
 			basecmd.add("-cp");
@@ -422,14 +490,14 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		if (useJvmti) {
 			String name = getEventHandlerClass().getName().replace('.', '/');
 			String args = mapToStr(getEventHandlerArgs(), '=');
-			String cAgentArgs = "=" + CoreInstrumentor.EVENT_HANDLER_CLASS_KEY +
+			String cAgentArgs = "=" + BasicInstrumentor.EVENT_HANDLER_CLASS_KEY +
 				"=" + name + args;
 			basecmd.add("-agentpath:" + Config.cInstrAgentFileName + cAgentArgs);
 		}
 		if (isOnline) {
 			String name = getInstrumentorClass().getName().replace('.', '/');
 			String args = mapToStr(getInstrumentorArgs(), '=');
-			String jAgentArgs = "=" + CoreInstrumentor.INSTRUMENTOR_CLASS_KEY +
+			String jAgentArgs = "=" + BasicInstrumentor.INSTRUMENTOR_CLASS_KEY +
 				"=" + name + args;
 			basecmd.add("-javaagent:" + Config.jInstrAgentFileName + jAgentArgs);
 		}
@@ -468,3 +536,18 @@ public class CoreDynamicAnalysis extends JavaAnalysis {
 		throw new RuntimeException();
 	}
 }
+
+/*
+			if (Config.verbose >= 2) {
+				String argsStr = "";
+				for (Map.Entry<String, String> e : eventHandlerArgs.entrySet())
+					argsStr += "\n\t[" + e.getKey() + " = " + e.getValue() + "]";
+				Messages.log(EVENTHANDLER_ARGS, argsStr);
+			}
+			if (Config.verbose >= 2) {
+                String argsStr = "";
+                for (Map.Entry<String, String> e : instrumentorArgs.entrySet())
+                    argsStr += "\n\t[" + e.getKey() + " = " + e.getValue() + "]";
+                Messages.log(INSTRUMENTOR_ARGS, argsStr);
+            }
+*/

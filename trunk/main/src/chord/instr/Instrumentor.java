@@ -10,7 +10,6 @@ import gnu.trove.TIntObjectHashMap;
 import javassist.*;
 import javassist.expr.*;
 
-import chord.runtime.CoreEventHandler;
 import chord.runtime.EventHandler;
 import chord.project.Messages;
 import chord.analyses.heapacc.DomE;
@@ -55,7 +54,7 @@ import java.util.Map;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class Instrumentor extends CoreInstrumentor {
+public class Instrumentor extends BasicInstrumentor {
 	private static final String INSTR_SCHEME_UNDEFINED =
 		"ERROR: Instrumentor: expected value for option `" + InstrScheme.INSTR_SCHEME_FILE_KEY + "`.";
 	private static final String NOT_IN_DOMAIN =
@@ -194,7 +193,7 @@ public class Instrumentor extends CoreInstrumentor {
 
 	// doesn't matter if the class name is in '.' or '/' separated form
 	private static String getEventHandlerClassName(Map<String, String> argsMap) {
-		String s = argsMap.get(CoreInstrumentor.EVENT_HANDLER_CLASS_KEY);
+		String s = argsMap.get(BasicInstrumentor.EVENT_HANDLER_CLASS_KEY);
 		if (s == null)
 			s = EventHandler.class.getName();
 		try {

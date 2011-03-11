@@ -98,7 +98,7 @@ public class Config {
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
 	static {
 		check(instrKind, new String[] { "offline", "online" }, "chord.instr.kind");
-		check(traceKind, new String[] { "none", "full", "pipe" }, "chord.trace.kind");
+		check(traceKind, new String[] { "full", "pipe" }, "chord.trace.kind");
 	}
 	public final static boolean dynamicHaltOnErr = buildBoolProperty("chord.dynamic.haltonerr", true);
 	public final static int dynamicTimeout = Integer.getInteger("chord.dynamic.timeout", -1);

@@ -7,7 +7,7 @@
 package chord.program.reflect;
 
 import java.util.Map;
-import chord.instr.CoreInstrumentor;
+import chord.instr.BasicInstrumentor;
 import javassist.expr.MethodCall;
 import javassist.CannotCompileException;
 import javassist.CtConstructor;
@@ -18,7 +18,7 @@ import chord.program.MethodElem;
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class ReflectInstrumentor extends CoreInstrumentor {
+public class ReflectInstrumentor extends BasicInstrumentor {
 	private static final String clsForNameEventStr =
 		ReflectEventHandler.class.getName() + ".clsForNameEvent(";
 	private static final String objNewInstEventStr =

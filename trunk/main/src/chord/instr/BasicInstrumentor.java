@@ -25,28 +25,28 @@ import chord.project.Messages;
 import chord.project.Config;
 
 /**
- * Bytecode instrumentor providing hooks for transforming classes,
- * methods, and instructions.
+ * Basic bytecode instrumentor providing hooks for transforming
+ * classes, methods, and instructions.
  * 
- * If you want to write a custom instrumentor, you should subclass either this
- * or Instrumentor.
+ * Custom instrumentors must extend either this class or class
+ * {@link chord.instr.Instrumentor}.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CoreInstrumentor extends ExprEditor {
-    public final static String INSTRUMENTOR_CLASS_KEY = "instrumentor_class_name";
-    public final static String EVENT_HANDLER_CLASS_KEY = "event_handler_class_name";
+public class BasicInstrumentor extends ExprEditor {
+    public final static String INSTRUMENTOR_CLASS_KEY = "instrumentor_class";
+    public final static String EVENT_HANDLER_CLASS_KEY = "event_handler_class";
     public final static String EVENT_HANDLER_ARGS_KEY = "event_handler_args";
 	public final static String USE_JVMTI_KEY = "use_jvmti";
 
 	private final static String EXPLICITLY_EXCLUDING_CLASS =
-		"WARN: CoreInstrumentor: Not instrumenting class %s as it was excluded by chord.scope.exclude.";
+		"WARN: BasicInstrumentor: Not instrumenting class %s as it was excluded by chord.scope.exclude.";
 	private final static String IMPLICITLY_EXCLUDING_CLASS =
-		"WARN: CoreInstrumentor: Not instrumenting class %s as it was excluded implicity.";
+		"WARN: BasicInstrumentor: Not instrumenting class %s as it was excluded implicity.";
 	private final static String EXCLUDING_CLASS =
-		"WARN: CoreInstrumentor: Not instrumenting class %s as commanded by overriding instrumentor.";
+		"WARN: BasicInstrumentor: Not instrumenting class %s as commanded by overriding instrumentor.";
 	private final static String EXPECTED_EVENT_HANDLER_CLASS =
-		"ERROR: CoreInstrumentor: Could not find value of key " + EVENT_HANDLER_CLASS_KEY +
+		"ERROR: BasicInstrumentor: Could not find value of key " + EVENT_HANDLER_CLASS_KEY +
 			" in instrumentor args; needed if JVMTI is not used.";
 
 	protected int verbose;
@@ -66,15 +66,13 @@ public class CoreInstrumentor extends ExprEditor {
 	 * @param	argsMap	Arguments to the instrumentor in the form of a
 	 *			map of (key, value) pairs.
 	 */
-	public CoreInstrumentor(Map<String, String> argsMap) {
+	public BasicInstrumentor(Map<String, String> argsMap) {
 		this.argsMap = argsMap;
 		scopeExcludeAry = Config.scopeExcludeAry;
 		verbose = Config.verbose;
 		pool = new JavassistPool();
-		{
-			String s = argsMap.get(USE_JVMTI_KEY);
-			useJvmti = (s == null) ? Config.useJvmti : s.equals("true");
-		}
+		String s = argsMap.get(USE_JVMTI_KEY);
+		useJvmti = (s == null) ? Config.useJvmti : s.equals("true");
 		if (!useJvmti) {
 			String c = argsMap.get(EVENT_HANDLER_CLASS_KEY);
 			if (c == null)
