@@ -1,0 +1,22 @@
+\section{Running Chord}
+\label{sec:running-chord}
+
+Running Chord requires a JVM with JDK 5 or higher.
+There are two equivalent ways to run Chord.
+One way is to run the following command in the \code{main/} directory:
+
+\begin{verbatim}
+    prompt> ant -D<key1>=<value1> ... -D<keyN>=<valueN> run
+\end{verbatim}
+
+The above requires Apache Ant to be installed.  The alternative, which
+does not require Apache Ant, is to invoke Chord directly as follows:
+
+\begin{verbatim}
+    prompt> java -cp <...>/chord.jar -D<key1>=<value1> ... -D<keyN>=<valueN> chord.project.Boot
+\end{verbatim}
+
+where \code{<...>} denotes the absolute or relative path of the directory containing file \code{chord.jar};
+that directory is also expected to contain any other binaries in Chord's installation
+(e.g., \code{libbuddy.so} and \code{libchord_instr_agent.so}).
+

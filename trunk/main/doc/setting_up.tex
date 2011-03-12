@@ -22,7 +22,7 @@ Suppose the program to be analyzed has the following directory structure:
         chord.properties
 \end{verbatim}
 
-\noindent The above structure is typical: the program's Java source
+The above structure is typical: the program's Java source
 files are under {\tt src/}, its class files are under {\tt classes/},
 the source and jar files of the libraries used by the program are
 under \code{lib/src/} and \code{lib/jar/}, respectively.
@@ -34,7 +34,7 @@ Chord's {\tt main/} directory:
     prompt> ant -Dchord.work.dir=<...>/example run
 \end{verbatim}
 
-\noindent where \code{<...>} denotes the absolute or relative path of the
+where \code{<...>} denotes the absolute or relative path of the
 directory containing the above \code{example/} directory.
 Property \code{chord.work.dir} specifies the working directory during Chord's execution.
 Chord searches for a file named \code{chord.properties} under that working directory, and
@@ -88,9 +88,9 @@ In the above case, Chord does not do much beyond loading the above
 \code{chord.properties} file.  For Chord to do something interesting,
 you need to set additional properties, either on the above command
 line or in the \code{chord.properties} file, specifying the task(s)
-Chord must perform.  All tasks are summarized in Section
-\ref{sec:func-props}.  The two most common tasks, described
+Chord must perform.  All tasks are summarized under ``Functionality Properties"
+in Section \ref{sec:chord-sysprops}.  The two most common tasks, described
 next, are computing the analysis scope of the given program (Section
-\ref{sec:building-scope}) and running analyses on the given program
+\ref{sec:computing-scope}) and running analyses on the given program
 (Section \ref{sec:running-analysis}).
 
