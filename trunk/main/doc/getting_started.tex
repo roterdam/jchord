@@ -37,13 +37,13 @@ or you can download the sources (see Section \ref{sec:downloading-sources}) and 
 
 To obtain Chord's source code, download the following files:
 
-\begin{enumerate}
+\begin{itemize}
 \item
 Mandatory: file \xlink{chord-src-2.0.tar.gz}{http://jchord.googlecode.com/files/chord-src-2.0.tar.gz}, which contains Chord's source code and the jars of libraries used by Chord.
 \item
 Optional: file \xlink{chord-libsrc-2.0.tar.gz}{http://jchord.googlecode.com/files/chord-libsrc-2.0.tar.gz}, which contains the source
 code of libraries used by Chord (e.g., joeq, javassist, bddbddb, etc.)
-\end{enumerate}
+\end{itemize}
 
 Alternatively, you can obtain the latest development snapshot from the SVN repository:
 
@@ -53,11 +53,16 @@ Alternatively, you can obtain the latest development snapshot from the SVN repos
 
 Instead of checking out the entire \code{trunk/}, which contains several sub-directories, you can check out
 specific sub-directories:
+
 \begin{itemize}
-\item \code{main/} contains Chord's source code and the jars of libraries used by Chord.
-\item \code{libsrc/} contains the source code of libraries used by Chord (e.g., joeq, javassist, bddbddb, etc.).
-\item \code{test/} contains Chord's regression tests.
-\item many more; these might eventually move into \code{main/}.
+\item
+\code{main/} contains Chord's source code and the jars of libraries used by Chord.
+\item
+\code{libsrc/} contains the source code of libraries used by Chord (e.g., joeq, javassist, bddbddb, etc.).
+\item
+\code{test/} contains Chord's regression tests.
+\item
+many more; these might eventually move into \code{main/}.
 \end{itemize}
 
 Files \code{chord-2.0-src.tar.gz} and \code{chord-2.0-libsrc.tar.gz} mentioned above are essentially stable releases of
@@ -96,8 +101,10 @@ these class files as well as the class files in the jars of libraries that are u
 and are provided under \code{main/lib/} (e.g., \code{joeq.jar}, \code{javassist.jar},
 \code{bddbddb.jar}, etc.).
 Additionally:
+
 \begin{itemize}
 \item
+
 If system property \code{chord.use.buddy} is set to \code{true},
 then the C source code of the \xlink{BuDDy}{http://buddy.sourceforge.net/} BDD library
 from \code{main/bdd/} will be compiled to a shared library in \code{main/}
@@ -105,7 +112,9 @@ from \code{main/bdd/} will be compiled to a shared library in \code{main/}
 \code{libbuddy.dylib} on MacOS); this library is used for executing
 program analyses written in Datalog
 using \xlink{bddbddb}{http://bddbddb.sourceforge.net/} (a BDD-based Datalog solver).
+
 \item
+
 If system property \code{chord.use.jvmti} is set to \code{true},
 then the C++ source code of the JVMTI-based bytecode instrumentation agent from
 \code{main/agent/} will be compiled to a shared library in \code{main/}
@@ -113,9 +122,10 @@ then the C++ source code of the JVMTI-based bytecode instrumentation agent from
 used for computing program scope dynamically and for executing
 dynamic program analyses.
 \end{itemize}
+
 Properties \code{chord.use.buddy} and \code{chord.use.jvmti} are defined in file \code{main/chord.properties}.  The
 default value of both these properties is \code{false}.
-If either of them is set to \code{true}, then you will also need a utility like GNU Make (to run the
+If you set either of them to \code{true}, then you will also need a utility like GNU Make (to run the
 \code{Makefile}'s under \code{main/bdd/} and \code{main/agent/}) and a C++ compiler.
 
 \section{Running Chord}
@@ -140,8 +150,8 @@ where \code{<...>} denotes the absolute or relative path of the directory contai
 that directory is also expected to contain any other binaries in Chord's installation
 (e.g., \code{libbuddy.so} and \code{libchord_instr_agent.so}).
 
-Each ``\code{-D<key>=<value>}" argument above sets the system property named \code{<key>} to value
-\code{<value>}.  The only way to specify inputs to Chord is via system properties; there is no
+Each ``\code{-D<key>=<value>}" argument above sets the system property named \code{<key>} to
+the value denoted by \code{<value>}.  The only way to specify inputs to Chord is via system properties; there is no
 command-line argument processing.
 Chapter\ref{chap:properties} describes all system properties recognized by Chord.
 
