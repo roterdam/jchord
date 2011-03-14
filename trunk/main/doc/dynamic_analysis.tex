@@ -169,91 +169,87 @@ The below table describes these events.
 \begin{table}
 \begin{center}
 \htmlattributes*{table}{border="1" cellpadding="10"}
-\begin{tabular}{|l|l|}
+\begin{tabular}{| l | p{4.3in} | } 
 \hline
 {\bf Event Kind} & {\bf Description} \\
 \hline
-EnterMainMethod(\bt) & Generated after thread \bt\ enters method \bm\ (index in domain M).
+EnterMainMethod(\bt) & After thread \bt\ enters method \bm\ (in domain M).
 \\
 \hline
-EnterMethod(\bm, \bt) & Generated after thread \bt\ enters method \bm\ (index in domain M).
+EnterMethod(\bm, \bt) & After thread \bt\ enters method \bm\ (in domain M).
 \\
 \hline
-LeaveMethod(\bm, \bt) & Generated before thread \bt\ leaves method \bm\ (index in domain M).
+LeaveMethod(\bm, \bt) & Before thread \bt\ leaves method \bm\ (in domain M).
 \\
 \hline
-EnterLoop(\bw, \bt) & Generated before thread \bt\ begins loop \bw\ (index in domain W).
+EnterLoop(\bw, \bt) & Before thread \bt\ begins loop \bw\ (in domain W).
 \\
 \hline
-LoopIteration(\bw, \bt) & Generated before thread \bt\ starts a new iteration of loop \bw\ (index in domain W).
+LoopIteration(\bw, \bt) & Before thread \bt\ starts a new iteration of loop \bw\ (in domain W).
 \\
 \hline
-LeaveLoop(\bw, \bt) & Generated after thread \bt\ finishes loop \bw\ (index in domain W).
+LeaveLoop(\bw, \bt) & After thread \bt\ finishes loop \bw\ (in domain W).
 \\
 \hline
-BasicBlock(\bb, \bt) & Generated before thread \bt\ enters basic block \bb\ (index in domain B).
+BasicBlock(\bb, \bt) & Before thread \bt\ enters basic block \bb\ (in domain B).
 \\
 \hline
-Quad(\bp, \bt) & Generated before thread \bt\ executes quad at program point \bp\ (index in domain P).
+Quad(\bp, \bt) & Before thread \bt\ executes quad at program point \bp\ (in domain P).
 \\
 \hline
 BefMethodCall(\bi, \bt, \bo) & 
-\begin{tabular}{l}
-Generated before thread \bt\ executes the method invocation statement at program point \bi\ (index in domain I) with this argument as object \bo. \\
-{\bf Note:} This event is not generated before constructor calls; use the BefNew event for that purpose.
-\end{tabular}
+Before thread \bt\ executes the method invocation statement at program point \bi\ (in domain I) with this argument as object \bo. 
+{\bf Note:} This event is not generated before constructor calls; use the BefNew event.
 \\
 \hline
 AftMethodCall(\bi, \bt, \bo) &
-\begin{tabular}{l}
-Generated after thread \bt\ executes the method invocation statement at program point \bi\ (index in domain I) with this argument as object \bo. \\
-{\bf Note:} This event is not generated after constructor calls; use the AftNew event for that purpose.
-\end{tabular}
+After thread \bt\ executes the method invocation statement at program point \bi\ (in domain I) with this argument as object \bo. 
+{\bf Note:} This event is not generated after constructor calls; use the AftNew event.
 \\
 \hline
-BefNew(\bh, \bt, \bo) & Generated before thread \bt\ executes a \code{new} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (index in domain H).
+BefNew(\bh, \bt, \bo) & Before thread \bt\ executes a \code{new} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (in domain H).
 \\
 \hline
-AftNew(\bh, \bt, \bo) & Generated after thread \bt\ executes a \code{new} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (index in domain H).
+AftNew(\bh, \bt, \bo) & After thread \bt\ executes a \code{new} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (in domain H).
 \\
 \hline
-NewArray(\bh, \bt, \bo) & Generated after thread \bt\ executes a \code{newarray} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (index in domain H).
+NewArray(\bh, \bt, \bo) & After thread \bt\ executes a \code{newarray} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (in domain H).
 \\
 \hline
-GetstaticPrimitive(\be, \bt, \bg) & Generated after thread \bt\ reads primitive-typed static field \bg\ (index in domain F) at program point \be\ (index in domain E).
+GetstaticPrimitive(\be, \bt, \bg) & After thread \bt\ reads primitive-typed static field \bg\ (in domain F) at program point \be\ (in domain E).
 \\
 \hline
-GetstaticReference(\be, \bt, \bg, \bo) & Generated after thread \bt\ reads object \bo\ from reference-typed static field \bg\ (index in domain F) at program point \be\ (index in domain E).
+GetstaticReference(\be, \bt, \bg, \bo) & After thread \bt\ reads object \bo\ from reference-typed static field \bg\ (in domain F) at program point \be\ (in domain E).
 \\
 \hline
-PutstaticPrimitive(\be, \bt, \bg) & Generated after thread \bt\ writes primitive-typed static field \bg\ (index in domain F) at program point \be\ (index in domain E).
+PutstaticPrimitive(\be, \bt, \bg) & After thread \bt\ writes primitive-typed static field \bg\ (in domain F) at program point \be\ (in domain E).
 \\
 \hline
-PutstaticReference(\be, \bt, \bg, \bo) & Generated after thread \bt\ writes object \bo\ to reference-typed static field \bg\ (index in domain F) at program point \be\ (index in domain E).
+PutstaticReference(\be, \bt, \bg, \bo) & After thread \bt\ writes object \bo\ to reference-typed static field \bg\ (in domain F) at program point \be\ (in domain E).
 \\
 \hline
-GetfieldPrimitive(\be, \bt, \bb, \bg) & Generated after thread \bt\ reads primitive-typed instance field \bg\ (index in domain F) of object \bb\ at program point \be\ (index in domain E).
+GetfieldPrimitive(\be, \bt, \bb, \bg) & After thread \bt\ reads primitive-typed instance field \bg\ (in domain F) of object \bb\ at program point \be\ (in domain E).
 \\
 \hline
-GetfieldReference(\be, \bt, \bb, \bg, \bo) & Generated after thread \bt\ reads object \bo\ from reference-typed instance field \bg\ (index in domain F) of object \bb\ at program point \be\ (index in domain E).
+GetfieldReference(\be, \bt, \bb, \bg, \bo) & After thread \bt\ reads object \bo\ from reference-typed instance field \bg\ (in domain F) of object \bb\ at program point \be\ (in domain E).
 \\
 \hline
-PutfieldPrimitive(\be, \bt, \bb, \bg) & Generated after thread \bt\ writes primitive-typed instance field \bg\ (index in domain F) of object \bb\ at program point \be\ (index in domain E).
+PutfieldPrimitive(\be, \bt, \bb, \bg) & After thread \bt\ writes primitive-typed instance field \bg\ (in domain F) of object \bb\ at program point \be\ (in domain E).
 \\
 \hline
-PutfieldReference(\be, \bt, \bb, \bg, \bo) & Generated after thread \bt\ writes object \bo\ to reference-typed instance field \bg\ (index in domain F) of object \bb\ at program point \be\ (index in domain E).
+PutfieldReference(\be, \bt, \bb, \bg, \bo) & After thread \bt\ writes object \bo\ to reference-typed instance field \bg\ (in domain F) of object \bb\ at program point \be\ (in domain E).
 \\
 \hline
-AloadPrimitive(\be, \bt, \bb, \bi) & Generated after thread \bt\ reads the primitive-typed element at index \bi\ of array object \bb\ at program point \be\ (index in domain E).
+AloadPrimitive(\be, \bt, \bb, \bi) & After thread \bt\ reads the primitive-typed element at index \bi\ of array object \bb\ at program point \be\ (in domain E).
 \\
 \hline
-AloadReference(\be, \bt, \bb, \bi, \bo) & Generated after thread \bt\ reads object \bo\ from the reference-typed element at index \bi\ of array object \bb\ at program point \be\ (index in domain E).
+AloadReference(\be, \bt, \bb, \bi, \bo) & After thread \bt\ reads object \bo\ from the reference-typed element at index \bi\ of array object \bb\ at program point \be\ (in domain E).
 \\
 \hline
-AstorePrimitive(\be, \bt, \bb, \bi) & Generated after thread \bt\ writes the primitive-typed element at index \bi\ of array object \bb\ at program point \be\ (index in domain E).
+AstorePrimitive(\be, \bt, \bb, \bi) & After thread \bt\ writes the primitive-typed element at index \bi\ of array object \bb\ at program point \be\ (in domain E).
 \\
 \hline
-AstoreReference(\be, \bt, \bb, \bi, \bo) & Generated after thread \bt\ writes object \bo\ to the reference-typed element at index \bi\ of array object \bb\ at program point \be\ (index in domain E).
+AstoreReference(\be, \bt, \bb, \bi, \bo) & After thread \bt\ writes object \bo\ to the reference-typed element at index \bi\ of array object \bb\ at program point \be\ (in domain E).
 \\
 \hline
 %ReturnPrimitive(\bp, \bt) & Not yet supported.
@@ -264,22 +260,22 @@ AstoreReference(\be, \bt, \bb, \bi, \bo) & Generated after thread \bt\ writes ob
 %\\
 %ImplicitThrow(\bp, \bt, \bo) & Not yet supported.
 %\\
-ThreadStart(\bi, \bt, \bo) & Generated before thread \bt\ calls the \code{start()} method of \code{java.lang.Thread} at program point \bi\ (index in domain I) and spawns a thread \bo.
+ThreadStart(\bi, \bt, \bo) & Before thread \bt\ calls the \code{start()} method of \code{java.lang.Thread} at program point \bi\ (in domain I) and spawns a thread \bo.
 \\
 \hline
-ThreadJoin(\bi, \bt, \bo) & Generated before thread \bt\ calls the \code{join()} method of \code{java.lang.Thread} at program point \bi\ (index in domain I) to join with thread \bo.
+ThreadJoin(\bi, \bt, \bo) & Before thread \bt\ calls the \code{join()} method of \code{java.lang.Thread} at program point \bi\ (in domain I) to join with thread \bo.
 \\
 \hline
-AcquireLock(\bl, \bt, \bo) & Generated after thread \bt\ executes a statement of the form ``monitorenter \bo'' or enters a method synchronized on \bo\ at program point \bl\ (index in domain L).
+AcquireLock(\bl, \bt, \bo) & After thread \bt\ executes a statement of the form ``monitorenter \bo'' or enters a method synchronized on \bo\ at program point \bl\ (in domain L).
 \\
 \hline
-ReleaseLock(\br, \bt, \bo) & Generated before thread \bt\ executes a statement of the form ``monitorexit \bo'' or leaves a method synchronized on \bo\ at program point \br\ (index in domain R).
+ReleaseLock(\br, \bt, \bo) & Before thread \bt\ executes a statement of the form ``monitorexit \bo'' or leaves a method synchronized on \bo\ at program point \br\ (in domain R).
 \\
 \hline
-Wait(\bi, \bt, \bo) & Generated before thread \bt\ calls the \code{wait()} method of \code{java.lang.Object} on object \bo\ at program point \bi\ (index in domain I).
+Wait(\bi, \bt, \bo) & Before thread \bt\ calls the \code{wait()} method of \code{java.lang.Object} on object \bo\ at program point \bi\ (in domain I).
 \\
 \hline
-Notify(\bi, \bt, \bo) & Generated before thread \bt\ calls the \code{notify()} or \code{notifyAll()} method of \code{java.lang.Object} on object \bo\ at program point \bi\ (index in domain I).
+Notify(\bi, \bt, \bo) & Before thread \bt\ calls the \code{notify()} or \code{notifyAll()} method of \code{java.lang.Object} on object \bo\ at program point \bi\ (in domain I).
 \T \\
 \hline
 \end{tabular}
