@@ -151,11 +151,11 @@ public class Boot {
 		String stdJavaAnalysisPath = getOrSetProperty("chord.std.java.analysis.path", chordJarFile);
 		String extJavaAnalysisPath = getOrSetProperty("chord.ext.java.analysis.path", "");
 		String javaAnalysisPath = getOrSetProperty("chord.java.analysis.path",
-			concat(stdJavaAnalysisPath, ";", extJavaAnalysisPath));
+			concat(stdJavaAnalysisPath, File.pathSeparator, extJavaAnalysisPath));
 		String stdDlogAnalysisPath = getOrSetProperty("chord.std.dlog.analysis.path", chordJarFile);
 		String extDlogAnalysisPath = getOrSetProperty("chord.ext.dlog.analysis.path", "");
 		String dlogAnalysisPath = getOrSetProperty("chord.dlog.analysis.path",
-			concat(stdDlogAnalysisPath, ";", extDlogAnalysisPath));
+			concat(stdDlogAnalysisPath, File.pathSeparator, extDlogAnalysisPath));
 		String userClassPath = getOrSetProperty("chord.class.path", "");
 
 		System.setProperty("user.dir", workDirName);
