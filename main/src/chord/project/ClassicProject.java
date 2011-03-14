@@ -39,32 +39,19 @@ import chord.bddbddb.Dom;
  */
 public class ClassicProject extends Project {
 	private static final String CANNOT_INSTANTIATE_TASK =
-		"ERROR: ClassicProject builder: Cannot instantiate task '%s': %s";
+		"ERROR: ClassicProject: Cannot instantiate task '%s': %s";
 	private static final String CANNOT_INSTANTIATE_TRGT =
-		"ERROR: ClassicProject builder: Cannot instantiate trgt '%s': %s";
+		"ERROR: ClassicProject: Cannot instantiate trgt '%s': %s";
 	private static final String MULTIPLE_TASKS_PRODUCING_TRGT =
-		"ERROR: Multiple tasks producing target '%s' in project:%s; either include exactly one of them via -Dchord.run.analyses or exclude all but one of them via -Dchord.analysis.exclude";
+		"ERROR: ClassicProject: Multiple tasks (%s) producing target '%s'; include exactly one of them via -Dchord.run.analyses";
 	private static final String TASK_PRODUCING_TRGT_NOT_FOUND =
-		"ERROR: No task producing target '%s' found in project";
-	private static final String TASK_NOT_FOUND = "ERROR: Task named '%s' not found in project";
+		"ERROR: ClassicProject: No task producing target '%s' found in project";
+	private static final String TASK_NOT_FOUND =
+		"ERROR: ClassicProject: Task named '%s' not found in project";
 	private static final String TRGT_NOT_FOUND =
-		"ERROR: Target named '%s' not found in produces/consumes field of any task in project";
+		"ERROR: ClassicProject: Target named '%s' not found in produces/consumes field of any task in project";
 
-	private final Map<String, ITask> nameToTaskMap =
-		new HashMap<String, ITask>();
-	private final Map<String, Object> nameToTrgtMap =
-		new HashMap<String, Object>();
-	private final Map<ITask, List<Object>> taskToProducedTrgtsMap =
-		new HashMap<ITask, List<Object>>();
-	private final Map<ITask, List<Object>> taskToConsumedTrgtsMap =
-		new HashMap<ITask, List<Object>>();
-	private final Map<Object, Set<ITask>> trgtToProducingTasksMap =
-		new HashMap<Object, Set<ITask>>();
-	private final Map<Object, Set<ITask>> trgtToConsumingTasksMap =
-		new HashMap<Object, Set<ITask>>();
-	private final Set<ITask> doneTasks = new HashSet<ITask>();
-	private final Set<Object> doneTrgts = new HashSet<Object>();
-	private boolean isBuilt = false;
+	private ClassicProject() { }
 
 	private static ClassicProject project = null;
 
@@ -73,6 +60,16 @@ public class ClassicProject extends Project {
 			project = new ClassicProject();
 		return project;
 	}
+
+	private final Map<String, ITask> nameToTaskMap = new HashMap<String, ITask>();
+	private final Map<String, Object> nameToTrgtMap = new HashMap<String, Object>();
+	private final Map<ITask, List<Object>> taskToProducedTrgtsMap = new HashMap<ITask, List<Object>>();
+	private final Map<ITask, List<Object>> taskToConsumedTrgtsMap = new HashMap<ITask, List<Object>>();
+	private final Map<Object, Set<ITask>> trgtToProducingTasksMap = new HashMap<Object, Set<ITask>>();
+	private final Map<Object, Set<ITask>> trgtToConsumingTasksMap = new HashMap<Object, Set<ITask>>();
+	private final Set<ITask> doneTasks = new HashSet<ITask>();
+	private final Set<Object> doneTrgts = new HashSet<Object>();
+	private boolean isBuilt = false;
 
 	@Override
 	public void build() {
@@ -390,7 +387,7 @@ public class ClassicProject extends Project {
 			String tasksStr = "";
 			for (ITask task : tasks)
 				tasksStr += " " + task.getName();
-			Messages.fatal(MULTIPLE_TASKS_PRODUCING_TRGT, trgt.toString(), tasksStr);
+			Messages.fatal(MULTIPLE_TASKS_PRODUCING_TRGT, tasksStr, trgt.toString());
 		}
 		if (n == 0)
 			Messages.fatal(TASK_PRODUCING_TRGT_NOT_FOUND, trgt.toString());

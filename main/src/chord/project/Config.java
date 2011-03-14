@@ -9,6 +9,7 @@ package chord.project;
 import java.io.File;
 import java.io.IOException;
 import chord.util.FileUtils;
+import chord.util.Constants;
 
 /**
  * System properties recognized by Chord.
@@ -136,7 +137,6 @@ public class Config {
 
 	// commonly-used constants
 
-	public final static String LIST_SEPARATOR = " |,|:|;";
 	public final static String mainDirName = System.getProperty("chord.main.dir");
 	public final static String javaClassPathName = System.getProperty("java.class.path");
 	public final static String toolClassPathName =
@@ -236,7 +236,7 @@ public class Config {
 	}
 
 	public static String[] toArray(String str) {
-		return str.equals("") ? new String[0] : str.split(LIST_SEPARATOR);
+		return str.equals("") ? new String[0] : str.split(Constants.LIST_SEPARATOR);
 	}
 
 	private static String concat(String s1, char sep, String s2) {

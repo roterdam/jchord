@@ -54,21 +54,18 @@ import chord.util.tuple.object.Trio;
 /**
  * Static datarace analysis.
  * <p>
- * Outputs relation <tt>datarace</tt> containing each tuple
- * <tt>(a1,c1,e1,a2,c2,e2)</tt> denoting a possible race between
- * abstract threads <tt>a1</tt> and <tt>a2</tt> executing
- * accesses <tt>e1</tt> and <tt>e2</tt>, respectively, in
- * abstract contexts <tt>c1</tt> and <tt>c2</tt> of their
- * containing methods, respectively.
+ * Outputs relation 'datarace' containing each tuple (a1,c1,e1,a2,c2,e2) denoting a possible race
+ * between abstract threads a1 and a2 executing accesses e1 and e2, respectively, in abstract contexts
+ * c1 and c2 of the methods containing those accesses, respectively.
  * <p>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.exclude.escaping</tt> (default is false).</li>
- * <li><tt>chord.exclude.parallel</tt> (default is false).</li>
- * <li><tt>chord.exclude.nongrded</tt> (default is false).</li>
- * <li><tt>chord.print.results</tt> (default is false).</li>
- * <li>All system properties recognized by abstract contexts analysis
- * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
+ *   <li>chord.exclude.escaping (default is false).</li>
+ *   <li>chord.exclude.parallel (default is false).</li>
+ *   <li>chord.exclude.nongrded (default is false).</li>
+ *   <li>chord.print.results (default is false).</li>
+ *   <li>All system properties recognized by abstract contexts analysis
+ *       (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)

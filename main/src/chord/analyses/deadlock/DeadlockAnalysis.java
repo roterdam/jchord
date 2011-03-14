@@ -46,22 +46,19 @@ import chord.util.tuple.object.Trio;
 /**
  * Static deadlock analysis.
  * <p>
- * Outputs relation <tt>deadlock</tt> containing each tuple
- * <tt>(a1,l1,l2,a2,l3,l4)</tt> denoting a possible deadlock between
- * abstract thread <tt>a1</tt>, which acquires abstract lock
- * <tt>l1</tt> followed by abstract lock <tt>l2</tt>, and
- * abstract thread <tt>a2</tt>, which acquires abstract lock
- * <tt>l3</tt> followed by abstract lock <tt>l4</tt>.
+ * Outputs relation 'deadlock' containing each tuple (a1,l1,l2,a2,l3,l4) denoting a possible
+ * deadlock between abstract thread a1, which acquires abstract lock l1 followed by abstract lock l2,
+ * and abstract thread a2, which acquires abstract lock l3 followed by abstract lock l4.
  * <p>
  * Recognized system properties:
  * <ul>
- * <li><tt>chord.exclude.escaping</tt> (default is false).</li>
- * <li><tt>chord.exclude.parallel</tt> (default is false).</li>
- * <li><tt>chord.exclude.nonreent</tt> (default is false).</li>
- * <li><tt>chord.exclude.nongrded</tt> (default is false).</li>
- * <li><tt>chord.print.results</tt> (default is false).</li>
- * <li>All system properties recognized by abstract contexts analysis
- * (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
+ *   <li>chord.exclude.escaping (default is false).</li>
+ *   <li>chord.exclude.parallel (default is false).</li>
+ *   <li>chord.exclude.nonreent (default is false).</li>
+ *   <li>chord.exclude.nongrded (default is false).</li>
+ *   <li>chord.print.results (default is false).</li>
+ *   <li>All system properties recognized by abstract contexts analysis
+ *       (see {@link chord.analyses.alias.CtxtsAnalysis}).</li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)

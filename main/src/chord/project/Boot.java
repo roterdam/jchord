@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Properties;
 import java.io.FileInputStream;
 import chord.util.ProcessExecutor;
+import chord.util.Constants;
 
 /**
  * Entry point of Chord before JVM settings are resolved.
@@ -150,11 +151,11 @@ public class Boot {
 		String stdJavaAnalysisPath = getOrSetProperty("chord.std.java.analysis.path", chordJarFile);
 		String extJavaAnalysisPath = getOrSetProperty("chord.ext.java.analysis.path", "");
 		String javaAnalysisPath = getOrSetProperty("chord.java.analysis.path",
-			concat(stdJavaAnalysisPath, File.pathSeparator, extJavaAnalysisPath));
+			concat(stdJavaAnalysisPath, ";", extJavaAnalysisPath));
 		String stdDlogAnalysisPath = getOrSetProperty("chord.std.dlog.analysis.path", chordJarFile);
 		String extDlogAnalysisPath = getOrSetProperty("chord.ext.dlog.analysis.path", "");
 		String dlogAnalysisPath = getOrSetProperty("chord.dlog.analysis.path",
-			concat(stdDlogAnalysisPath, File.pathSeparator, extDlogAnalysisPath));
+			concat(stdDlogAnalysisPath, ";", extDlogAnalysisPath));
 		String userClassPath = getOrSetProperty("chord.class.path", "");
 
 		System.setProperty("user.dir", workDirName);
@@ -162,21 +163,21 @@ public class Boot {
 		List<String> cpList = new ArrayList<String>(10);
 		cpList.add(chordJarFile);
 		if (!javaAnalysisPath.equals("")) {
-			String[] a = javaAnalysisPath.split(File.pathSeparator);
+			String[] a = javaAnalysisPath.split(Constants.PATH_SEPARATOR);
 			for (String s : a) {
 				if (!cpList.contains(s))
 					cpList.add(s);
 			}
 		}
 		if (!dlogAnalysisPath.equals("")) {
-			String[] a = dlogAnalysisPath.split(File.pathSeparator);
+			String[] a = dlogAnalysisPath.split(Constants.PATH_SEPARATOR);
 			for (String s : a) {
 				if (!cpList.contains(s))
 					cpList.add(s);
 			}
 		}
 		if (!userClassPath.equals("")) {
-			String[] a = userClassPath.split(File.pathSeparator);
+			String[] a = userClassPath.split(Constants.PATH_SEPARATOR);
 			for (String s : a) {
 				if (!cpList.contains(s))
 					cpList.add(s);
