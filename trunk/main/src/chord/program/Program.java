@@ -36,6 +36,7 @@ import chord.util.FileUtils;
 import chord.util.ClassUtils;
 import chord.util.StringUtils;
 import chord.util.ChordRuntimeException;
+import chord.util.Constants;
  
 import chord.runtime.BasicEventHandler;
 import chord.instr.BasicInstrumentor;
@@ -101,7 +102,7 @@ public class Program {
 	private static final String STUBS_FILE_NOT_FOUND =
 		"ERROR: Program: Cannot find native method stubs file '%s'.";
 
-	static {
+	private Program() {
 		if (Config.verbose >= 2)
 			jq_Method.setVerbose();
 		if (Config.doSSA)
@@ -125,6 +126,14 @@ public class Program {
 		jq_Method.setNativeCFGBuilders(map);
 	}
 
+	private static Program program = null;
+
+	public static Program g() {
+		if (program == null)
+			program = new Program();
+		return program;
+	}
+
 	private IndexSet<jq_Method> methods;
 	private Reflect reflect;
 	private IndexSet<jq_Reference> classes;
@@ -136,13 +145,6 @@ public class Program {
 	private boolean HTMLizedJavaSrcFiles;
 	private ClassHierarchy ch;
 	private boolean isBuilt;
-	private static Program program;
-
-	public static Program g() {
-		if (program == null)
-			program = new Program();
-		return program;
-	}
 
 	/**
 	 * Provides the class hierarchy.
@@ -574,7 +576,7 @@ public class Program {
 		String classPathName = Config.userClassPathName;
 		if (classPathName == null)
 			Messages.fatal(CLASS_PATH_NOT_DEFINED);
-		String[] runIDs = Config.runIDs.split(Config.LIST_SEPARATOR);
+		String[] runIDs = Config.runIDs.split(Constants.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
 		List<String> classNames = new ArrayList<String>();
 		String fileName = Config.classesFileName;
@@ -630,7 +632,7 @@ public class Program {
 			String srcPathName = Config.srcPathName;
 			if (srcPathName == null)
 				Messages.fatal(SRC_PATH_NOT_DEFINED);
-			String[] srcDirNames = srcPathName.split(File.pathSeparator);
+			String[] srcDirNames = srcPathName.split(Constants.PATH_SEPARATOR);
 			try {
 				Java2HTML java2HTML = new Java2HTML();
 				java2HTML.setMarginSize(4);

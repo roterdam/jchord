@@ -46,6 +46,7 @@ import chord.util.FileUtils;
 import chord.util.ProcessExecutor;
 import chord.util.ReadException;
 import chord.util.ClassUtils;
+import chord.util.Constants;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -302,7 +303,7 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 			getTraceFileName(Config.traceFileName + "_full", version, runID);
 	}
 
-	protected String[] runIDs = Config.runIDs.split(Config.LIST_SEPARATOR);
+	protected String[] runIDs = Config.runIDs.split(Constants.LIST_SEPARATOR);
 
 	public boolean canReuseTraces() {
 		boolean reuse = false;
