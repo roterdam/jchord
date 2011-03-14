@@ -19,11 +19,11 @@ It contains the following files:
 \item
 \code{libbuddy.so}, \code{buddy.dll}, and \code{libbuddy.dylib}: you can keep one of these files
 depending upon whether you intend to run Chord on Linux, Windows/Cygwin, or MacOS, respectively.
-These files are needed only if you want to use the BuDDy BDD library for executing program
-analyses written in Datalog.
+These files are needed only if you want BDD library BuDDy to be used when 
+the BDD-based Datalog solver bddbddb in Chord runs analyses written in Datalog.
 \item
-\code{libchord_instr_agent.so}: this file is needed only if you want to use the JVMTI-based bytecode
-instrumentation agent for executing dynamic program analyses in Chord.
+\code{libchord_instr_agent.so}: this file is needed only if you want the JVMTI-based bytecode
+instrumentation agent to be used when Chord runs dynamic analyses.
 \end{enumerate}
 
 Novice users can ignore items (2) and (3) until they become more familiar with Chord.
@@ -106,12 +106,12 @@ Additionally:
 \item
 
 If system property \code{chord.use.buddy} is set to \code{true},
-then the C source code of the \xlink{BuDDy}{http://buddy.sourceforge.net/} BDD library
+then the C source code of BDD library \xlink{BuDDy}{http://buddy.sourceforge.net/} 
 from \code{main/bdd/} will be compiled to a shared library in \code{main/}
 (\code{libbuddy.so} on Linux, \code{buddy.dll} on Windows, and
-\code{libbuddy.dylib} on MacOS); this library is used for executing
-program analyses written in Datalog
-using \xlink{bddbddb}{http://bddbddb.sourceforge.net/} (a BDD-based Datalog solver).
+\code{libbuddy.dylib} on MacOS); this library is used 
+by BDD-based Datalog solver \xlink{bddbddb}{http://bddbddb.sourceforge.net/} 
+in Chord for running analyses written in Datalog.
 
 \item
 
@@ -119,8 +119,8 @@ If system property \code{chord.use.jvmti} is set to \code{true},
 then the C++ source code of the JVMTI-based bytecode instrumentation agent from
 \code{main/agent/} will be compiled to a shared library in \code{main/}
 (\code{libchord_instr_agent.so} on all architectures); this agent is
-used for computing program scope dynamically and for executing
-dynamic program analyses.
+used in Chord for computing analysis scope dynamically and for running
+dynamic analyses.
 \end{itemize}
 
 Properties \code{chord.use.buddy} and \code{chord.use.jvmti} are defined in file \code{main/chord.properties}.  The
