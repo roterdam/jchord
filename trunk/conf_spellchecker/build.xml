@@ -4,25 +4,16 @@
 	<property name="version" value="0.1"/>
 
 
-	<target name="paths">
-		<path id="chord_java_analysis_path">
-			<pathelement location="${chord.home.dir}/classes"/>
-			<pathelement location="classes"/>
-			<fileset dir="lib" includes="*.jar"/>
-
-		</path>
-		<property name="chord.java.analysis.path" refid="chord_java_analysis_path"/> 
-		
-	</target>
-
-	<target name="compile" depends="paths">
-        <taskdef resource="net/sf/antcontrib/antlib.xml"
-            classpath="${chord.home.dir}/tools/ant-contrib.jar"/>
-        <antfetch dir="${chord.home.dir}" target="paths" return="chord.main.class.path"/>
+	<target name="compile">
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
-			source="1.5" target="1.5" srcdir="src/java" destdir="classes"
-			classpath="${chord.main.class.path}"/>
+			source="1.5" target="1.5" srcdir="src/java" destdir="classes">
+			<classpath>
+				<pathelement location="${chord.home.dir}/chord.jar"/>
+				<pathelement location="classes"/>
+				<fileset dir="lib" includes="*.jar"/>
+			</classpath>
+			</javac>
 		<jar destfile="confspellcheck.jar">
 			<fileset dir="classes"/>
 			<fileset dir="src/java"/>
