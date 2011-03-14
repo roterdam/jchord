@@ -1,20 +1,74 @@
-% TODO: write some text at beginning of each subsection
-% TODO: do cross-referencing (i.e. put "See Also" for properties used by multiple subsections)
+\chapter{Chord Properties}
+\label{chap:properties}
 
-\section{Chord System Properties}
-\label{sec:chord-sysprops}
+The only way to specify inputs to Chord is by means of system properties.
+There is no command-line argument processing in Chord and any command-line arguments are ignored.
+Section \ref{sec:properties-setting} explains how to set properties and
+Section \ref{sec:properties-meaning} explains the meaning of properties recognized by Chord.
 
-Users can use system properties to control Chord's execution.
+\section{How to Set Properties}
+\label{sec:properties-setting}
+
+A property can be passed to Chord in any of several ways.
+The reason for providing multiple ways is to provide users shorthand ways for defining properties
+once and for all for a particular input Java program, or even once and for all across all Chord runs. 
+The following are the different ways by which a property can be passed to Chord in decreasing order of precedence:
+\begin{enumerate}
+\item
+On the command-line via the \code{-D<key>=<value>} format.
+
+Use this option to specify properties specific to the current run of Chord.
+
+Typical usage of this option is by running the following command in
+the \code{main/} directory of Chord's installation:
+\begin{verbatim}
+    prompt> ant -D<key1>=<value1> ... -D<keyN>=<valueN> run
+\end{verbatim}
+
+\item
+Via the file specified by property \code{chord.props.file}.
+
+Use this option to specify once and for all properties of the program to
+be analyzed (e.g., property \code{chord.main.class} specifying the name of that program's main class, property \code{chord.class.path}
+specifying the application classpath of that program, etc.).
+
+The default value of this property is \code{[chord.work.dir]/chord.properties} and typically
+does not need to be changed by users.
+Property \code{chord.work.dir} specifies the directory in which Chord will run.
+The default value of this property is the current directory but users must typically set
+it on the command line, as follows:
+
+\begin{verbatim}
+    prompt> ant -Dchord.work.dir=<...> run
+\end{verbatim}
+where ``\code{<...>}" denotes the absolute or relative path of the top-level directory of
+the program to be analyzed, which contains a file named \code{chord.properties} that users
+must create themselves and populate with properties that are recognized by chord and
+are specific to that program.
+
+\item
+Via file \code{main/chord.properties}.
+
+Use this option to specify once and for all properties you would like to hold in every run of Chord
+(e.g., property \code{chord.max.heap} specifying the maximum runtime heap size to be used by the
+JVM running Chord).
+\end{enumerate}
+
+\section{Meaning of Properties}
+\label{sec:properties-meaning}
+
 The following properties are recognized by Chord.
 The separator for list-valued properties can be either a blank space, a comma, a colon, or a semi-colon.
 Notation {\tt [<...>]} is used in this section to denote the value of the property named {\tt <...>}.
 
-\paragraph{Program Properties} 
+\subsection{Java Program Properties} 
+\label{sec:program-props}
 
-This section describes basic properties of the given program, such as
+This section describes basic properties of the given Java program, such as
 its main class, the location(s) of its class files and Java source
 files, and command-line arguments to be used to run the program.
 \\[10pt]
+
 \code{chord.work.dir}
 \begin{quote}
 {\bf Type:} location \\
@@ -84,11 +138,13 @@ standard extensions (i.e., classes in {\tt .jar} files in directory
 {\bf Note:} This property is used only when Chord executes the given program, namely, when it is asked to compute the program scope dynamically (i.e., when \code{[chord.scope.kind]=dynamic}) or when it is asked to execute a dynamic program analysis. 
 \end{quote}
 
-\paragraph{Analysis Scope Properties}
+\subsection{Analysis Scope Properties}
+\label{sec:scope-props}
 
 This section describes properties that specify how the analysis scope of the given program is computed.
-See Section \ref{sec:computing-scope} for more details.
+See Chapter \ref{chap:computing-scope} for more details.
 \\[10pt]
+
 \code{chord.scope.kind}
 \begin{quote}
 {\bf Type:} {\tt [dynamic|rta|cha]} \\
@@ -162,9 +218,11 @@ See Section \ref{sec:computing-scope} for more details.
 {\bf Default value:} \code{"[chord.std.check.exclude],[chord.ext.check.exclude]"}
 \end{quote}
 
-\paragraph{Functionality Properties}
+\subsection{Functionality Properties}
+\label{sec:func-props}
 
-This section describes properties that dictate what Chord outputs during execution.
+This section describes properties that dictate what task(s) Chord must perform.
+\\[10pt]
 
 \code{chord.build.scope}
 \begin{quote}
@@ -234,9 +292,11 @@ This section describes properties that dictate what Chord outputs during executi
 {\bf Default value:} {\tt 2}
 \end{quote}
 
-\paragraph{Project Properties}
+\subsection{Project Properties}
+\label{sec:project-props}
 
 This section describes properties regarding program analyses executed by Chord.
+\\[10pt]
 
 \code{chord.classic}
 \begin{quote}
@@ -287,9 +347,11 @@ This section describes properties regarding program analyses executed by Chord.
 {\bf Default value:} \code{[chord.main.dir]/src/}
 \end{quote}
 
-\paragraph{Instrumentation Properties}
+\subsection{Instrumentation Properties}
+\label{sec:instr-props}
 
 This section describes properties regarding execution of instrumented programs for dynamic analyses.
+\\[10pt]
 
 % TODO: mention chord.scope.exclude* here
 \code{chord.use.jvmti}
@@ -342,9 +404,11 @@ This section describes properties regarding execution of instrumented programs f
 {\bf Note:} This property is relevant only for dynamic analyses which want events of the form {\tt BEF\_NEW} $h$ $t$ $o$ to be generated (see Section \ref{sec:instr-events}).  The problem with generating such events at run-time is that the ID $o$ of the object freshly created by thread $t$ at object allocation site $h$ cannot be instrumented until the object is fully initialized (i.e., its constructor has finished executing).  Hence, Chord first generates a ``crude dynamic trace", which has events of the form {\tt BEF\_NEW} $h$ $t$ and {\tt AFT\_NEW} $h$ $t$ $o$ generated before and after the execution of the constructor, respectively.  A subsequent pass generates a ``final dynamic trace", which replaces each {\tt BEF\_NEW} $h$ $t$ event by {\tt BEF\_NEW} $h$ $t$ $o$.  For this purpose, however, Chord must buffer all events generated between the {\tt BEF\_NEW} and {\tt AFT\_NEW} events, and this property specifies the number of bytes over which these events may span.  If the actual number of bytes exceeds the value specified by this property (e.g., if the constructor throws an exception and the {\tt AFT\_NEW} event is not generated at all), then Chord simply generates event {\tt BEF\_NEW} $h$ $i$ $0$ (i.e., it treats the created object as having ID 0, which is the ID also used for {\tt null}). 
 \end{quote}
 
-\paragraph{Caching Properties}
+\subsection{Caching Properties}
+\label{sec:caching-props}
 
 TODO
+\\[10pt]
 
 \code{chord.reuse.scope}
 \begin{quote}
@@ -368,9 +432,11 @@ TODO
 {\bf Default value:} {\tt false}
 \end{quote}
 
-\paragraph{Chord JVM Properties}
+\subsection{Chord JVM Properties}
+\label{sec:jvm-props}
 
 TODO
+\\[10pt]
 
 \code{java.class.path}
 \begin{quote}
@@ -407,9 +473,11 @@ TODO
 {\bf Default value:} \code{"-showversion} \code{-ea} \code{-Xmx[chord.max.heap]} \code{-Xss[chord.max.stack]"}
 \end{quote}
 
-\paragraph{BDD Properties}
+\subsection{BDD Properties}
+\label{sec:bdd-props}
 
 TODO
+\\[10pt]
 
 \code{chord.use.buddy}
 \begin{quote}
@@ -426,10 +494,12 @@ TODO
 {\bf Note:}  Each program analysis written in Datalog is run in a separate JVM.  This is primarily because there may be multiple invocations of bddbddb in a single run of Chord and it is difficult to reset the global state of bddbddb on each invocation. 
 \end{quote}
 
-\paragraph{Output Location Properties}
+\subsection{Output Location Properties}
+\label{sec:output-props}
 
 This section describes properties specifying the names of files and directories output by Chord.
 Most users will not want to alter the default values of these properties.
+\\[10pt]
 
 \code{chord.out.file}
 \begin{quote}

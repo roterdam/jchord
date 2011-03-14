@@ -1,5 +1,5 @@
-\section{Setting up a Java Program}
-\label{sec:setting-up}
+\chapter{An Example Run of Chord}
+\label{chap:example}
 
 Suppose the program to be analyzed has the following directory structure:
 
@@ -56,7 +56,7 @@ defined in this file (e.g., the \code{lib/src} directory name in the value of
 property \code{chord.src.path} above) is treated relative to Chord's working directory
 (which is specified by property \code{chord.work.dir}).
 
-Section \ref{sec:chord-sysprops} presents an exhaustive listing of
+Chapter \ref{chap:properties} presents an exhaustive listing of
 properties recognized by Chord.  Here, we only describe those defined
 in the above sample \code{chord.properties} file:
 
@@ -86,11 +86,8 @@ in the above example.
 
 In the above case, Chord does not do much beyond loading the above
 \code{chord.properties} file.  For Chord to do something interesting,
-you need to set additional properties, either on the above command
-line or in the \code{chord.properties} file, specifying the task(s)
-Chord must perform.  All tasks are summarized under ``Functionality Properties"
-in Section \ref{sec:chord-sysprops}.  The two most common tasks, described
-next, are computing the analysis scope of the given program (Section
-\ref{sec:computing-scope}) and running analyses on the given program
-(Section \ref{sec:running-analysis}).
+you need to set additional properties that specify the task(s)
+Chord must perform.  All tasks are summarized in Section \ref{sec:func-props}.
+The most common task is to run one or more analyses on the given program
+(see Chapter \ref{chap:analyses}).
 
