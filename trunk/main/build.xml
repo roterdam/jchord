@@ -346,7 +346,6 @@
 
 	<target name="cleandoc" description="Clean generated Javadoc and user guide.">
 		<delete dir="javadoc"/>
-		<delete dir="doc/user_guide"/>
 		<delete file="doc/user_guide.pdf"/>
 		<delete file="doc/user_guide.aux"/>
 		<delete file="doc/user_guide.log"/>
