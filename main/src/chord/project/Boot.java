@@ -13,9 +13,12 @@ import java.io.File;
 import java.net.URL;
 import java.io.IOException;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.io.FileInputStream;
 import chord.util.ProcessExecutor;
 import chord.util.Constants;
+//import edu.berkeley.confspell.*;
 
 /**
  * Entry point of Chord before JVM settings are resolved.
@@ -95,6 +98,9 @@ public class Boot {
 			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 		System.setProperty("chord.main.dir", mainDirName);
 
+//Uncomment these to enable configuration spellcheck
+//		Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
+//				   OptionSet.fromPropsFile(mainDirName + File.separator + "chord.properties"));
 		// resolve Chord's work dir
 
 		String workDirName = System.getProperty("chord.work.dir");
@@ -132,6 +138,9 @@ public class Boot {
 			}
 		}
 
+	//Uncomment these to enable configuration spellcheck
+//		Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
+//			   OptionSet.fromPropsFile(propsFileName));
 		// load system-wide Chord properties, if any
 
 		try {
@@ -139,7 +148,6 @@ public class Boot {
 		} catch (IOException ex) {
 			// ignore silently; user is not required to provide this file
 		}
-
 
 		// process other JVM settings (maximum runtime heap size, classpath, etc.)
 
@@ -238,12 +246,41 @@ public class Boot {
 		for (Map.Entry e : props.entrySet()) {
 			String key = (String) e.getKey();
 			String val = (String) e.getValue();
+			val = substituteVars(props, val);
 			String oldVal = (String) sysprops.get(key);
 			if (oldVal == null)
 				sysprops.setProperty(key, val);
 			else if (!oldVal.equals(val))
 				Messages.log(WARN_DUPLICATE_SYSPROP, key, oldVal, val);
 		}
+	}
+	
+		//${} substitution code from Hadoop's Configuration class.
+		//   [under Apache license]
+	private static Pattern varPat = Pattern.compile("\\$\\{[^\\}\\$\u0020]+\\}");
+	private static int MAX_SUBST = 50;
+	private static String substituteVars(Properties props, String expr) {
+		if (expr == null) {
+			return null;
+		}
+		Matcher match = varPat.matcher("");
+		String eval = expr;
+		for(int s=0; s<MAX_SUBST; s++) {
+			match.reset(eval);
+			if (!match.find()) {
+				return eval;
+			}
+			String variableName = match.group();
+			variableName = variableName.substring(2, variableName.length()-1); // remove ${ .. }
+			String val = props.getProperty(variableName, System.getProperty(variableName));
+			if (val == null) {
+				return eval; // return literal ${var}: var is unbound
+			}
+			// substitute
+			eval = eval.substring(0, match.start())+val+eval.substring(match.end());
+		}
+		throw new IllegalStateException("Variable substitution depth too large: " 
+				+ MAX_SUBST + " " + expr);
 	}
 
     private static String concat(String s1, String sep, String s2) {
