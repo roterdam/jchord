@@ -8,23 +8,30 @@ following key features:
 
 \begin{itemize}
 \item
+
 {\bf Stand-alone:} It provides various off-the-shelf analyses (e.g., various
-call-graph analyses; points-to analyses; thread-escape analysis;
-static slicing; static and dynamic concurrency analyses for finding
+may-alias and call-graph analyses; thread-escape analysis;
+static slicing analysis; static and dynamic concurrency analyses for finding
 races, deadlocks, and atomicity violations; etc.)
+
 \item
+
 {\bf Flexible:} It allows users to express a broad range of analyses,
 including both static and dynamic analyses, analyses written
 imperatively in Java or declaratively in Datalog, summary-based as
 well as cloning-based inter-procedural context-sensitive analyses,
 iterative refinement-based analyses, client-driven analyses, and
 combined static/dynamic analyses.
+
 \item
+
 {\bf Efficient:} It executes analyses in a demand-driven fashion, caches
 results computed by each analysis for reuse by other analyses without
 re-computation, and can execute analyses without dependencies between
 them in parallel.
+
 \item
+
 {\bf Deterministic:} It guarantees that the result is the same regardless of
 the order in which different analyses are executed; moreover, results
 can be shared across different runs.

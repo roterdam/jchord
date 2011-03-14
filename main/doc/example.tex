@@ -1,7 +1,10 @@
 \chapter{An Example Run of Chord}
 \label{chap:example}
 
-Suppose the program to be analyzed has the following directory structure:
+This chapter describes how to setup a Java program and run predefined analyses
+in Chord on it.
+
+Suppose the Java program to be analyzed has the following directory structure:
 
 \begin{verbatim}
     example/
@@ -37,7 +40,7 @@ Chord's {\tt main/} directory:
 where \code{<...>} denotes the absolute or relative path of the
 directory containing the above \code{example/} directory.
 Property \code{chord.work.dir} specifies the working directory during Chord's execution.
-Chord searches for a file named \code{chord.properties} under that working directory, and
+Chord searches for a file named \code{chord.properties} under that directory, and
 loads upfront all properties defined in that file, if it exists.  Alternatively, these properties
 may be defined on the command-line, using the \code{-D<key>=<value>} format.
 A sample \code{chord.properties} file for the above program is as follows:
@@ -86,8 +89,161 @@ in the above example.
 
 In the above case, Chord does not do much beyond loading the above
 \code{chord.properties} file.  For Chord to do something interesting,
-you need to set additional properties that specify the task(s)
+additional properties must be set that specify the task(s)
 Chord must perform.  All tasks are summarized in Section \ref{sec:func-props}.
-The most common task is to run one or more analyses on the given program
-(see Chapter \ref{chap:analyses}).
+The most common task is to run one or more analyses on an input Java program.
+Chord implements many standard analyses, including various may-alias and
+call-graph analyses, thread-escape analysis, various concurrency analyses,
+etc. Many of these analyses are described in Chapter \ref{chap:predefined-analyses}.
+Moreover, users can extend these analyses or define their own ones, as
+explained in Chapter \ref{chap:analyses}.
+Broadly, there are two kinds of analyses in Chord:
 
+\begin{itemize}
+\item
+Those expressed imperatively in Java. They are in \code{*.java} files under
+directory \code{main/src/chord/analyses/}, and are of the form:
+
+\begin{verbatim}
+    @Chord(
+        name=<JAVA ANALYSIS NAME>
+        ...
+    )
+    public class XYZ extends ... {
+        ...
+    }
+\end{verbatim}
+
+\item
+
+Those expressed declaratively in Datalog.  They are in \code{*.dlog} files under
+directory \code{main/src/chord/analyses/}, and are of the form:
+
+\begin{verbatim}
+    # name=<DLOG ANALYSIS NAME>
+
+    # Program domains
+    .include ...
+    .include ...
+
+    # BDD variable order
+    .bddvarorder ...
+\end{verbatim}
+\end{itemize}
+
+To run one or more such analyses, run the following command in Chord's \code{main/} directory:
+
+\begin{verbatim}
+    prompt> ant -Dchord.work.dir=<PROGRAM DIR NAME> -Dchord.run.analyses=<name1>,...,<nameN> run
+\end{verbatim}
+
+where \code{<PROGRAM DIR NAME>} specifies an example Java program as described above,
+and each of \code{<name1>}, ..., \code{<nameN>} is the name of an analysis to run,
+such as \code{<JAVA ANALYSIS NAME>} and \code{<DLOG ANALYSIS NAME>} in the Java and
+Datalog analyses depicted above.
+
+For instance, to run a basic may-alias and call-graph analysis (called 0CFA),
+run the following command in Chord's main directory:
+
+\begin{verbatim}
+    prompt> ant -Dchord.work.dir=<PROGRAM DIR NAME> -Dchord.run.analyses=cipa-0cfa-dlog run
+\end{verbatim}
+
+This instructs Chord to run the Datalog analysis named \code{cipa-0cfa-dlog},
+which happens to be defined in file \code{main/src/chord/analyses/alias/cipa_0cfa.dlog}.
+
+The output of the above command is of the form:
+
+\begin{verbatim}
+    Buildfile: build.xml
+
+    run:
+         [java] Chord run initiated at: Mar 13, 2011 10:31:08 PM
+         [java] ENTER: cipa-0cfa-dlog
+         [java] ENTER: T
+         [java] ENTER: RTA
+         [java] Iteration: 0
+         [java] Iteration: 1
+         [java] Iteration: 2
+         [java] LEAVE: RTA
+         [java] SAVING dom T size: 1386
+         [java] LEAVE: T
+         [java] ENTER: F
+         [java] SAVING dom F size: 4120
+         [java] LEAVE: F
+         ...
+         [java] ENTER: MputStatFldInst
+         [java] SAVING rel MputStatFldInst size: 739
+         [java] LEAVE: MputStatFldInst
+         [java] ENTER: statIM
+         [java] SAVING rel statIM size: 3359
+         [java] LEAVE: statIM
+         [java] Starting command: 'java ... net.sf.bddbddb.Solver ...\chord_analyses_alias_cipa_0cfa.dlog'
+         [java] Relation VH: 541 nodes, 449.0 elements (V0,H0)
+         [java] Relation FH: 137 nodes, 8.0 elements (H0,F0)
+         [java] Relation HFH: 199 nodes, 35.0 elements (H0,F0,H1)
+         [java] Relation IM: 590 nodes, 69.0 elements (I0,M0)
+         [java] Finished command: 'java ... net.sf.bddbddb.Solver ...\chord_analyses_alias_cipa_0cfa.dlog'
+         [java] LEAVE: cipa-0cfa-dlog
+         [java] Chord run completed at: Mar 13, 2011 10:31:36 PM
+         [java] Total time: 00:00:27:671 hh:mm:ss:ms
+
+    BUILD SUCCESSFUL
+    Total time: 28 seconds
+\end{verbatim}
+
+Notice that although Chord is only asked to run the 0CFA analysis on the command line, it automatically
+runs many other analyses before finally running the desired analysis and terminating.
+Each analysis in Chord is written modularly, independent of other analyses, along with lightweight
+annotations specifying the inputs and outputs of the analysis.  Chord's runtime automatically computes
+producer-consumer relationships between analyses (e.g., determines which analysis produces as output a
+result that is needed as input by another analysis).  Before running a desired analysis
+(such as 0CFA in the above example), Chord recursively runs other analyses until the
+inputs to the desired analysis have been computed; it finally runs the desired analysis to produce
+the outputs of that analysis.
+
+In the above example, the 0CFA analysis consumes {\it program relations} 
+such as \code{MputStatFldInst} and \code{statIM}, each of which is produced by a separate Java analysis with the
+corresponding name, and produces program relations \code{VH}, \code{FH}, \code{HFH}, and \code{IM}.
+
+The program relations consumed by the 0CFA analysis contain basic program facts.  For instance,
+\code{MputStatFldInst} is a relation containing each tuple (m,f,v) such that method m in the input Java
+program contains a putstatic instruction of the form ``f = v", while \code{statIM} is a relation
+containing each tuple (i,m) such that m is the target method of invokestatic instruction i.
+
+The program relations produced by the 0CFA analysis represent points-to information and the
+call graph of the input Java program as computed by the analysis.
+Specifically, relations \code{VH}, \code{FH}, and \code{HFH} represent points-to information 
+for local variables, static fields, and instance fields, respectively,
+while relation \code{IM} represents the call graph, namely, it contain each tuple (i,m) such that
+m is a possible target method of call site i.
+
+Metavariables m, f, i, and v above range over entities in so-called {\it program domains} M, F, I, and V, respectively.
+A program domain is a set of entities of a certain kind in the input Java program.  For instance, M is the domain representing
+the set of all methods in the input Java program, F is the domain representing the set of all fields, I is the domain representing
+the set of all call sites in methods in M, and V is the domain representing the set of all local variables of reference type in methods in M.
+Each of these domains is produced by a separate Java analysis with the corresponding name.
+Notice that the analyses producing these domains run upfront because these domains
+are consumed by the analyses that produce relations such as \code{MputStatFldInst} and
+\code{statIM}, which in turn are consumed by the desired 0CFA analysis.
+
+During execution, Chord dumps intermediate and final results to files in the
+directory specified by property \code{chord.out.dir}, whose default value is \code{[chord.work.dir]/chord_output/}
+and typically does not need to be changed by users.
+For the above example, this directory is \code{<PROGRAM DIR NAME>/chord_output/}.
+
+The verbosity of Chord's output above is controlled by property \code{chord.verbose}, whose
+default value is 1.  At verbosity level 0, the above command produces less voluminous output
+of the form:
+
+\begin{verbatim}
+	Buildfile: build.xml
+	
+	run:
+	     [java] Chord run initiated at: Mar 13, 2011 10:35:01 PM
+	     [java] Chord run completed at: Mar 13, 2011 10:35:28 PM
+	     [java] Total time: 00:00:26:297 hh:mm:ss:ms
+
+    BUILD SUCCESSFUL
+    Total time: 26 seconds
+\end{verbatim}

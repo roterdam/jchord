@@ -13,8 +13,10 @@ A property can be passed to Chord in any of several ways.
 The reason for providing multiple ways is to provide users shorthand ways for defining properties
 once and for all for a particular input Java program, or even once and for all across all Chord runs. 
 The following are the different ways by which a property can be passed to Chord in decreasing order of precedence:
+
 \begin{enumerate}
 \item
+
 On the command-line via the \code{-D<key>=<value>} format.
 
 Use this option to specify properties specific to the current run of Chord.
@@ -26,6 +28,7 @@ the \code{main/} directory of Chord's installation:
 \end{verbatim}
 
 \item
+
 Via the file specified by property \code{chord.props.file}.
 
 Use this option to specify once and for all properties of the program to
@@ -47,6 +50,7 @@ must create themselves and populate with properties that are recognized by chord
 are specific to that program.
 
 \item
+
 Via file \code{main/chord.properties}.
 
 Use this option to specify once and for all properties you would like to hold in every run of Chord
