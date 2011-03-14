@@ -69,6 +69,8 @@ import chord.util.ProcessExecutor;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Boot {
+	private static final String WARN_DUPLICATE_SYSPROP =
+		"WARN: Property '%s' defined multiple times; assuming value '%s' instead of '%s'.";
 	private static final String CHORD_JAR_NOT_FOUND =
 		"ERROR: Boot: Expected Chord to be loaded from chord.jar instead of from '%s'.";
     private static final String USER_DIR_AS_CHORD_WORK_DIR =
@@ -91,14 +93,6 @@ public class Boot {
         if (mainDirName == null)
 			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 		System.setProperty("chord.main.dir", mainDirName);
-
-		// load system-wide Chord properties, if any
-
-		try {
-			readProps(mainDirName + File.separator + "chord.properties");
-		} catch (IOException ex) {
-			// ignore silently; user is not required to provide this file
-		}
 
 		// resolve Chord's work dir
 
@@ -137,13 +131,21 @@ public class Boot {
 			}
 		}
 
+		// load system-wide Chord properties, if any
+
+		try {
+			readProps(mainDirName + File.separator + "chord.properties");
+		} catch (IOException ex) {
+			// ignore silently; user is not required to provide this file
+		}
+
+
 		// process other JVM settings (maximum runtime heap size, classpath, etc.)
 
 		String maxHeap = getOrSetProperty("chord.max.heap", "2048m");
 		String maxStack = getOrSetProperty("chord.max.stack", "32m");
 		String jvmargs = getOrSetProperty("chord.jvmargs",
 			"-ea -Xmx" + maxHeap + " -Xss" + maxStack);
-
 		boolean isClassic = getOrSetProperty("chord.classic", "true").equals("true");
 		String stdJavaAnalysisPath = getOrSetProperty("chord.std.java.analysis.path", chordJarFile);
 		String extJavaAnalysisPath = getOrSetProperty("chord.ext.java.analysis.path", "");
@@ -227,10 +229,20 @@ public class Boot {
 	}
 
 	private static void readProps(String fileName) throws IOException {
-		Properties props = System.getProperties();
+		Properties props = new Properties();
 		FileInputStream in = new FileInputStream(fileName);
 		props.load(in);
 		in.close();
+		Properties sysprops = System.getProperties();
+		for (Map.Entry e : props.entrySet()) {
+			String key = (String) e.getKey();
+			String val = (String) e.getValue();
+			String oldVal = (String) sysprops.get(key);
+			if (oldVal == null)
+				sysprops.setProperty(key, val);
+			else if (!oldVal.equals(val))
+				Messages.log(WARN_DUPLICATE_SYSPROP, key, oldVal, val);
+		}
 	}
 
     private static String concat(String s1, String sep, String s2) {
