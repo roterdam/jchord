@@ -8,7 +8,6 @@ import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Config;
 import chord.project.analyses.*;
-import chord.runtime.CoreEventHandler;
 import chord.util.tuple.object.Pair;
 import java.io.*;
 import java.util.HashMap;
@@ -31,7 +30,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 //    namesOfTypes = { "H" ,"UV","StrConst", "Z","I"},
 //    types = { DomH.class, DomUV.class, DomStrConst.class, DomZ.class, DomI.class }
 )
-public class DynConfDep extends CoreDynamicAnalysis {
+public class DynConfDep extends BasicDynamicAnalysis {
   //Config.workDirName, 
   static File results = new File("dyn_cdep.temp");
   static final String SCHEME_FILE= "dynconfdep.instr";
@@ -41,19 +40,19 @@ public class DynConfDep extends CoreDynamicAnalysis {
   static final Pattern nullVPat = Pattern.compile("([0-9]*) returns null");
   
   @Override
-  public Map<String, String> getExplicitInstrumentorArgs() {
-    Map<String,String> args = super.getExplicitInstrumentorArgs();
+  public Map<String, String> getInstrumentorArgs() {
+    Map<String,String> args = super.getInstrumentorArgs();
     if(args == null)
     	args = new HashMap<String, String>();
 
     InstrScheme instrScheme = new InstrScheme();
+    args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, SCHEME_FILE);
     
     instrScheme.setAloadReferenceEvent(false, false, true, false, true);
     instrScheme.setAstoreReferenceEvent(false, false, true, false, true);
     instrScheme.setMethodCallEvent(true, false, true, false, true);
     instrScheme.save(SCHEME_FILE);
     
-    args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, SCHEME_FILE);
     return args;
   }
   
