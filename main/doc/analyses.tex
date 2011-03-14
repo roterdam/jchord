@@ -1,5 +1,5 @@
-\section{Writing an Analysis}
-\label{sec:writing-analysis}
+\chapter{Writing and Running Analyses}
+\label{chap:analyses}
 
 Chord is built around the notion of modeling a program with relations.
 A Chord analysis is a program component that operates on these relations.
@@ -11,15 +11,13 @@ It may also print output in some other format, perhaps human-readable text or HT
 
 An analysis can be written in one of two ways: either as a Java class or as a datalog program. 
 
-\subsection{Dependency information}
+\section{Dependency information}
 
 Chord has two kinds of projects: ``Classic'' and ``Modern''.  Despite the names, classic is effectively the standard at this point.
 In the classic model, each analysis specifies the domains/relations it consumes and that it produces.
 This defines an implicit dependency graph between analyses.  For a datalog analysis, the ``input'' and ``output'' keywords on relations specify the requirements and results of an analysis.  For a Java analysis, the \texttt{@Chord} annotation does so. 
 
-
-
-\subsection{Domains}
+\section{Domains}
 
 In Chord, a domain is represented as a list of possible values. 
 The value types must be comparable and hashable.
@@ -67,14 +65,14 @@ accommodate the method with the greatest number of arguments.
 ZZ is another domain of integers, this one of fixed size and available for other uses.
 \end{itemize}
 
-\subsection{Core relations}
+\section{Core relations}
 
 Chord includes code to build a very large number of relations. These standard relations
 are very useful in writing your own analyses.
 For example, relation \texttt{sub} includes all pairs of types \texttt{(t1, t2)} where \texttt{t2} is a subclass of \texttt{t1}.
 Most of these standard relations are in the package \texttt{chord.rels}.
 
-\subsection{Java analyses}
+\section{Java analyses}
 
 A Java analysis should extend JavaAnalysis or ProgramRel.  It's usually easiest if an analysis
 only produces one relation, in which case extending ProgramRel is the best approach.
@@ -119,4 +117,21 @@ is \code{chord.std.dlog.analysis.path}:\code{chord.ext.java.analysis.path},
 where the defalt value of \code{chord.std.java.analysis.path} is the location of file \code{chord.jar}, and
 the default value of \code{chord.ext.java.analysis.path} is empty (users defining their own Java analyses are expected to
 set the latter property).
+
+\section{Running an Analysis}
+\label{sec:running-analysis}
+
+Running a Chord analysis is straightforward.
+The property  \texttt{chord.run.analyses} is a list of analyses to be run. Chord will compute the listed dependencies for each of these relations and run these prerequisites before running the analysis you specify.
+
+Chord has two kinds of projects: ``Classic'' and ``Modern''.  Despite the names, classic is effectively the standard at this point.
+In the classic model, there is an implicit dependency graph between analyses. For a datalog analysis (program), the ``input'' and ``output'' keywords in defining a relation specify the requirements and outputs of an analysis.  For a Java analysis, the \texttt{@Chord} annotation does so. See the section ``writing a Java analysis'' for details.
+
+\texttt{chord.print.rels} is a list of relations to dump to disk. Note that these relations are printed in a somewhat unfriendly format; this is more useful for debugging than for interpreting programs. Note also that listing a relation here does not cause it to be computed; you will get an error at the end of your Chord execution if you ask it to print a relation that has not been computed.
+
+%List of names of program analyses to be run in order.
+%chord.java.analysis.path    path    Classpath containing program analyses in Java (i.e. @Chord-annotated classes). ${chord.main.dir}/classes/
+%chord.dlog.analysis.path    path    Path of directories containing program analyses in Datalog (i.e. *.datalog and *.dlog files).  ${chord.main.dir}/src/main/dlog/
+%chord.reuse.rels    bool    Construct program relations from BDDs stored on disk (from a previous run of Chord) whenever possible instead of re-computing them.    false
+%chord.print.results     bool    Print the results of program analyses in HTML. true
 

@@ -1,6 +1,7 @@
-\documentclass{article}
+\documentclass[openany]{book}
 \usepackage{hyperlatex}
 \usepackage{hyperref}
+\usepackage{graphicx}
 
 \texonly{\parindent=0in}
 \texonly{\oddsidemargin=0in}
@@ -26,6 +27,8 @@
 \newcommand\br{{\bf r}}
 \newcommand\bw{{\bf w}}
 
+\setcounter{htmldepth}{2}
+\setcounter{htmlautomenu}{3}
 
 \htmltitle{Chord}
 \htmladdress{mhn@cs.stanford.edu}
@@ -37,41 +40,16 @@
 \maketitle
 
 \input{whatis_chord}
-\texonly{\newpage}
-\input{download_and_installation}
-\texonly{\newpage}
-\input{building_chord}
-\texonly{\newpage}
-\input{running_chord}
-\texonly{\newpage}
-\input{setting_up}
-\texonly{\newpage}
+\input{getting_started}
+\input{example}
+\input{architecture}
+\input{properties}
+\input{predefined_analyses}
+\input{analyses}
+\input{dynamic_analysis}
+\input{datalog_analysis}
 \input{computing_scope}
-\texonly{\newpage}
-\input{running_analysis}
-\texonly{\newpage}
-\input{writing_analysis}
-\texonly{\newpage}
-\input{writing_dynamic_analysis}
-\texonly{\newpage}
-\input{instr_events}
-\texonly{\newpage}
-\input{writing_datalog_analysis}
-\texonly{\newpage}
-\input{tuning_datalog_analysis}
-\texonly{\newpage}
-\input{bdd_representation}
-\texonly{\newpage}
-%\input{program_representation}
-%\texonly{\newpage}
-%\input{pointsto}
-%\texonly{\newpage}
-\input{datarace}
-\texonly{\newpage}
-\input{deadlock}
-\texonly{\newpage}
-\input{chord_sysprops}
-\texonly{\newpage}
+\input{program_representation}
 \input{acknowledgments}
 
 \end{document}
