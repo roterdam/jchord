@@ -112,7 +112,7 @@ standard extensions (i.e., classes in jar files in directory \code{[java.home]/l
 {\bf Type:} path \\
 {\bf Description:} Source path of the input Java program. \\
 {\bf Default value:} {\tt ""} \\
-{\bf Note:} Chord analyzes only Java bytecode, not Java source code.  This property is used only by the task of converting Java source files into HTML files by analyses that need to present their analysis results at the Java source code level (by calling method \code{chord.program.Program.g().HTMLizeJavaSrcFiles())}.
+{\bf Note:} Chord analyzes only Java bytecode, not Java source code.  This property is used only by the task of converting Java source files into HTML files by analyses that need to present their results at the Java source code level (by calling method \code{chord.program.Program.g().HTMLizeJavaSrcFiles())}.
 \end{quote}
 
 \code{chord.run.ids}
@@ -155,8 +155,11 @@ See Chapter \ref{chap:computing-scope} for more details.
 
 \code{chord.reflect.kind}
 \begin{quote}
-{\bf Type:} {\tt [none|static|dynamic|static\_cast]} \\
-{\bf Description:} TODO \\
+{\bf Type:} {\tt [none|dynamic|static|static\_cast]} \\
+{\bf Description:} Algorithm to resolve reflection.  The choices are {\tt none} (do not resolve any reflection),
+{\tt dynamic} (run the program and observe how reflection is resolved),
+{\tt static} (resolve reflection statically but without analyzing casts), and
+{\tt static\_cast} (resolve reflection statically by analyzing casts). \\
 {\bf Default value:} {\tt none}
 \end{quote}
 
@@ -302,8 +305,8 @@ This section describes properties regarding analyses executed by Chord.
 \code{chord.classic}
 \begin{quote}
 {\bf Type:} bool \\
-{\bf Description:} TODO \\
-{\bf Default value:} TODO
+{\bf Description:} Whether to use the classic project (as opposed to the modern project).  See Chapter\ref{chap:analyses} for the difference between the two kinds of projects. \\
+{\bf Default value:} \code{true}
 \end{quote}
 
 \code{chord.std.java.analysis.path}
