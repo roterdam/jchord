@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 import java.io.FileInputStream;
 import chord.util.ProcessExecutor;
 import chord.util.Constants;
-//import edu.berkeley.confspell.*;
+import edu.berkeley.confspell.*;
 
 /**
  * Entry point of Chord before JVM settings are resolved.
@@ -90,7 +90,7 @@ public class Boot {
 
 	public static void main(String[] args) throws Throwable {
 		String chordJarFile = getChordJarFile();
-
+		boolean SPELLCHECK_ON = Integer.getInteger("chord.verbose", 1) > 0;
 		// resolve Chord's main dir
 
 		String mainDirName = (new File(chordJarFile)).getParent();
@@ -98,11 +98,11 @@ public class Boot {
 			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 		System.setProperty("chord.main.dir", mainDirName);
 
-//Uncomment these to enable configuration spellcheck
-//		Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
-//				   OptionSet.fromPropsFile(mainDirName + File.separator + "chord.properties"));
-		// resolve Chord's work dir
+		if(SPELLCHECK_ON)
+			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
+				   OptionSet.fromPropsFile(mainDirName + File.separator + "chord.properties"));
 
+		// resolve Chord's work dir
 		String workDirName = System.getProperty("chord.work.dir");
         if (workDirName == null) {
             workDirName = System.getProperty("user.dir");
@@ -137,10 +137,9 @@ public class Boot {
 				// ignore silently; user did not provide this file
 			}
 		}
-
-	//Uncomment these to enable configuration spellcheck
-//		Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
-//			   OptionSet.fromPropsFile(propsFileName));
+		if(SPELLCHECK_ON)
+			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
+				   OptionSet.fromPropsFile(propsFileName));
 		// load system-wide Chord properties, if any
 
 		try {
