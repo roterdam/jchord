@@ -129,6 +129,7 @@
 				<pathelement location="lib/scannotation-1.0.2.jar"/>
 				<pathelement location="lib/j2h.jar"/>
 				<pathelement location="lib/saxon9.jar"/>
+				<pathelement location="lib/confspellcheck-0.1.jar"/>
 			</classpath>
 		</javac>
 		<jar destfile="chord.jar" basedir="classes" includes="**/*.class" duplicate="fail">
@@ -144,9 +145,11 @@
             <zipfileset includes="**/*.class" src="lib/scannotation-1.0.2.jar"/>
             <zipfileset includes="**/*.class" src="lib/j2h.jar"/>
             <zipfileset includes="**/*.class" src="lib/saxon9.jar"/>
+            <zipfileset includes="**/*.class" src="lib/confspellcheck-0.1.jar"/>
 			<fileset dir=".">
 				<include name="web/*"/>
 			</fileset>
+			<file file="lib/options.dict"/>
 			<fileset dir="src">
 				<include name="**/*.txt"/>
 				<include name="**/*.dlog"/>
