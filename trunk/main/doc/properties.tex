@@ -43,7 +43,7 @@ it on the command line, as follows:
 \begin{verbatim}
     prompt> ant -Dchord.work.dir=<...> run
 \end{verbatim}
-where ``\code{<...>}" denotes the absolute or relative path of the top-level directory of
+where \code{<...>} denotes the absolute or relative path of the top-level directory of
 the program to be analyzed, which contains a file named \code{chord.properties} that users
 must create themselves and populate with properties that are recognized by chord and
 are specific to that program.
@@ -69,8 +69,7 @@ Notation {\tt [<...>]} is used in this section to denote the value of the proper
 
 This section describes properties of the Java program to be analyzed, such as
 its main class, the location(s) of its class files and Java source
-files, and command-line arguments to be used to run the program.
-\\[10pt]
+files, and command-line arguments to be used when running the program.
 
 \code{chord.work.dir}
 \begin{quote}
@@ -145,7 +144,6 @@ standard extensions (i.e., classes in jar files in directory \code{[java.home]/l
 
 This section describes properties that specify how the analysis scope of the input Java program is computed.
 See Chapter \ref{chap:computing-scope} for more details.
-\\[10pt]
 
 \code{chord.scope.kind}
 \begin{quote}
@@ -227,7 +225,6 @@ scope computing algorithm queries the class hierarchy.
 \label{sec:func-props}
 
 This section describes properties that dictate what task(s) Chord must perform.
-\\[10pt]
 
 \code{chord.build.scope}
 \begin{quote}
@@ -301,7 +298,6 @@ This section describes properties that dictate what task(s) Chord must perform.
 \label{sec:project-props}
 
 This section describes properties regarding analyses executed by Chord.
-\\[10pt]
 
 \code{chord.classic}
 \begin{quote}
@@ -360,7 +356,6 @@ Conventionally, it includes all such external analyses that users want to run. \
 \label{sec:instr-props}
 
 This section describes properties regarding bytecode instrumentation and dynamic analysis.
-\\[10pt]
 
 % TODO: mention chord.scope.exclude* here
 \code{chord.use.jvmti}
@@ -417,7 +412,6 @@ This section describes properties regarding bytecode instrumentation and dynamic
 \label{sec:caching-props}
 
 This section describes properties that specify what must be reused by Chord, if available, from previous runs instead of recomputing.
-\\[10pt]
 
 \code{chord.reuse.scope}
 \begin{quote}
@@ -447,7 +441,6 @@ Property \code{chord.trace.kind} must be set to {\tt full} if this property is s
 \label{sec:jvm-props}
 
 This section describes properties regarding the JVM that runs Chord.
-\\[10pt]
 
 \code{chord.max.heap}
 \begin{quote}
@@ -474,7 +467,6 @@ This section describes properties regarding the JVM that runs Chord.
 \label{sec:bdd-props}
 
 This section describes properties concerning BDD-based Datalog solver bddbddb that is used by Chord to run analyses written in Datalog.
-\\[10pt]
 
 \code{chord.use.buddy}
 \begin{quote}
@@ -498,7 +490,6 @@ resulting in multiple invocations of bddbddb, and it is difficult to reset the s
 
 This section describes properties specifying the names of files and directories output by Chord.
 Most users will not need to alter the default values of these properties.
-\\[10pt]
 
 \code{chord.out.file}
 \begin{quote}

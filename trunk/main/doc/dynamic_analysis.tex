@@ -22,8 +22,10 @@ plus each \code{process<event>(<args>)} method that corresponds to event {\tt <e
 with format {\tt <args>} enabled by the chosen instrumentation scheme.
 See Section \ref{sec:instr-events} for the kinds of supported events and their formats.
 
-A sample such class \code{MyDynamicAnalysis} is shown below:
+A sample such class \code{MyDynamicAnalysis} is shown in Figure \ref{fig:dynamic-analysis}.
 
+\begin{figure}
+{\small
 \begin{verbatim}
     import chord.project.analyses.DynamicAnalysis;
     import chord.instr.InstrScheme;
@@ -32,7 +34,6 @@ A sample such class \code{MyDynamicAnalysis} is shown below:
     @Chord(name=<name-of-analysis>)    
     public class MyDynamicAnalysis extends DynamicAnalysis {
         InstrScheme scheme;
-
         @Override
         public InstrScheme getInstrScheme() {
             if (scheme != null)
@@ -47,46 +48,39 @@ A sample such class \code{MyDynamicAnalysis} is shown below:
             scheme.set<eventN>(<argsN>);
             return scheme;
         }
-
         @Override
         public void initAllPasses() {
             // ***TODO***: User code to be executed once and for all
             // before all instrumented program runs start.
         }
-
         @Override
         public void doneAllPasses() {
             // ***TODO***: User code to be executed once and for all
             // after all instrumented program runs finish.
         }
-
         @Override
         public void initPass() {
-            // ***TODO***: User code to be executed once before each
-            // instrumented program run starts.
+            // ***TODO***: User code to be executed once before each instrumented program run starts.
         }
-
         @Override
         public void donePass() {
-            // ***TODO***: User code to be executed once after each
-            // instrumented program run finishes.
+            // ***TODO***: User code to be executed once after each instrumented program run finishes.
         }
-
-        // User-defined event handlers for this dynamic analysis.
-        // No-ops if not overridden.
         @Override
         public void process<event1>(<args1>) {
-            // ***TODO***: User code for handling events of kind
-            // <event1> with format <args1>.
+            // ***TODO***: User code for handling events of kind <event1> with format <args1>.
         }
         ...
         @Override
         public void process<eventN>(<argsN>) {
-            // ***TODO***: User code for handling events of kind
-            // <eventN> with format <argsN>.
+            // ***TODO***: User code for handling events of kind <eventN> with format <argsN>.
         }
     }
 \end{verbatim}
+}
+\label{fig:dynamic-analysis}
+\caption{Dynamic Analysis Template.}
+\end{figure}
 
 \section{Compiling and Running a Dynamic Analysis}
 \label{sec:running-dynamic-analysis}
@@ -198,13 +192,17 @@ Quad(\bp, \bt) & Before thread \bt\ executes quad at program point \bp\ (in doma
 \\
 \hline
 BefMethodCall(\bi, \bt, \bo) & 
-Before thread \bt\ executes the method invocation statement at program point \bi\ (in domain I) with this argument as object \bo. 
-{\bf Note:} This event is not generated before constructor calls; use the BefNew event.
+\begin{tabular}{p{4.3in}}
+Before thread \bt\ executes the method invocation statement at program point \bi\ (in domain I) with this argument as object \bo. \\
+{\bf Note:} Not generated before constructor calls; use BefNew event.
+\end{tabular}
 \\
 \hline
 AftMethodCall(\bi, \bt, \bo) &
-After thread \bt\ executes the method invocation statement at program point \bi\ (in domain I) with this argument as object \bo. 
-{\bf Note:} This event is not generated after constructor calls; use the AftNew event.
+\begin{tabular}{p{4.3in}}
+After thread \bt\ executes the method invocation statement at program point \bi\ (in domain I) with this argument as object \bo. \\
+{\bf Note:} Not generated after constructor calls; use AftNew event.
+\end{tabular}
 \\
 \hline
 BefNew(\bh, \bt, \bo) & Before thread \bt\ executes a \code{new} bytecode instruction and allocates fresh object \bo\ at program point \bh\ (in domain H).

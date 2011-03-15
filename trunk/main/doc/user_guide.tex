@@ -2,18 +2,29 @@
 \usepackage{hyperlatex}
 \usepackage{hyperref}
 \usepackage{graphicx}
+\usepackage{float}
 
-\texonly{\parindent=0in}
-\texonly{\oddsidemargin=-0.3in}
-\texonly{\evensidemargin=-0.3in}
-\texonly{\textwidth=7in}
-\texonly{\textheight=8.0in}
+\texonly{
+% put borders around figures
+	\floatstyle{boxed} 
+	\restylefloat{figure}
+% set dimensions of page/text
+	\parindent=0in
+	\parskip=10pt
+	\oddsidemargin=-0.3in
+	\evensidemargin=-0.3in
+	\textwidth=7in
+	\textheight=8.0in
+% redefine certain commands
+	\renewcommand\code[1]{\path{#1}}
+	\renewcommand\xlink[2]{\href{#2}{#1}}
+}
 
-\htmlonly{\newcommand\code[1]{{\tt #1}}}
-\htmlonly{\newcommand\url[1]{\xlink{#1}{#1}}}
+\htmlonly{
+	\newcommand\code[1]{{\tt #1}}
+	\newcommand\url[1]{\xlink{#1}{#1}}
+}
 
-\texonly{\renewcommand\code[1]{\path{#1}}}
-\texonly{\renewcommand\xlink[2]{\href{#2}{#1}}}
 \newcommand\bh{{\bf h}}
 \newcommand\bi{{\bf i}}
 \newcommand\bo{{\bf o}}
