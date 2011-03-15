@@ -77,46 +77,44 @@ public class Boot {
 		"WARN: Property '%s' defined multiple times; assuming value '%s' instead of '%s'.";
 	private static final String CHORD_JAR_NOT_FOUND =
 		"ERROR: Boot: Expected Chord to be loaded from chord.jar instead of from '%s'.";
-    private static final String USER_DIR_AS_CHORD_WORK_DIR =
-        "WARN: Boot: Property chord.work.dir not set; using value of user.dir '%s' instead.";
-    private static final String CHORD_MAIN_DIR_UNDEFINED =
-        "ERROR: Boot: Property chord.main.dir must be set to location of directory named 'main' in your Chord installation.";
-    private static final String CHORD_MAIN_DIR_NOT_FOUND =
-        "ERROR: Boot: Directory '%s' specified by property chord.main.dir not found.";
-    private static final String CHORD_WORK_DIR_UNDEFINED =
-        "ERROR: Boot: Property chord.work.dir must be set to location of working directory desired during Chord's execution.";
-    private static final String CHORD_WORK_DIR_NOT_FOUND =
-        "ERROR: Boot: Directory '%s' specified by property chord.work.dir not found.";
+	private static final String USER_DIR_AS_CHORD_WORK_DIR =
+		"WARN: Boot: Property chord.work.dir not set; using value of user.dir '%s' instead.";
+	private static final String CHORD_MAIN_DIR_UNDEFINED =
+		"ERROR: Boot: Property chord.main.dir must be set to location of directory named 'main' in your Chord installation.";
+	private static final String CHORD_MAIN_DIR_NOT_FOUND =
+		"ERROR: Boot: Directory '%s' specified by property chord.main.dir not found.";
+	private static final String CHORD_WORK_DIR_UNDEFINED =
+		"ERROR: Boot: Property chord.work.dir must be set to location of working directory desired during Chord's execution.";
+	private static final String CHORD_WORK_DIR_NOT_FOUND =
+		"ERROR: Boot: Directory '%s' specified by property chord.work.dir not found.";
+
+	public static boolean SPELLCHECK_ON = Integer.getInteger("chord.verbose", 1) > 0;
+	static String mainDirName;
 
 	public static void main(String[] args) throws Throwable {
 		String chordJarFile = getChordJarFile();
-		boolean SPELLCHECK_ON = Integer.getInteger("chord.verbose", 1) > 0;
 		// resolve Chord's main dir
 
-		String mainDirName = (new File(chordJarFile)).getParent();
-        if (mainDirName == null)
+		mainDirName = (new File(chordJarFile)).getParent();
+		if (mainDirName == null)
 			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 		System.setProperty("chord.main.dir", mainDirName);
 
-		if(SPELLCHECK_ON)
-			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
-				   OptionSet.fromPropsFile(mainDirName + File.separator + "chord.properties"));
-
 		// resolve Chord's work dir
 		String workDirName = System.getProperty("chord.work.dir");
-        if (workDirName == null) {
-            workDirName = System.getProperty("user.dir");
-            if (workDirName == null)
-                Messages.fatal(CHORD_WORK_DIR_UNDEFINED);
-            Messages.log(USER_DIR_AS_CHORD_WORK_DIR, workDirName);
-        }
-        try {
-            workDirName = (new File(workDirName)).getCanonicalPath();
-        } catch (IOException ex) {
-            Messages.fatal(ex);
-        }
-        if (!(new File(workDirName)).isDirectory()) {
-           	Messages.fatal(CHORD_WORK_DIR_NOT_FOUND, workDirName);
+		if (workDirName == null) {
+			workDirName = System.getProperty("user.dir");
+			if (workDirName == null)
+				Messages.fatal(CHORD_WORK_DIR_UNDEFINED);
+			Messages.log(USER_DIR_AS_CHORD_WORK_DIR, workDirName);
+		}
+		try {
+			workDirName = (new File(workDirName)).getCanonicalPath();
+		} catch (IOException ex) {
+			Messages.fatal(ex);
+		}
+		if (!(new File(workDirName)).isDirectory()) {
+			Messages.fatal(CHORD_WORK_DIR_NOT_FOUND, workDirName);
 		}
 		System.setProperty("chord.work.dir", workDirName);
 
@@ -137,9 +135,6 @@ public class Boot {
 				// ignore silently; user did not provide this file
 			}
 		}
-		if(SPELLCHECK_ON)
-			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
-				   OptionSet.fromPropsFile(propsFileName));
 		// load system-wide Chord properties, if any
 
 		try {
@@ -237,10 +232,17 @@ public class Boot {
 	}
 
 	private static void readProps(String fileName) throws IOException {
+		
+		
 		Properties props = new Properties();
 		FileInputStream in = new FileInputStream(fileName);
 		props.load(in);
 		in.close();
+
+		if(SPELLCHECK_ON)
+			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
+				   new OptionSet(props));
+		
 		Properties sysprops = System.getProperties();
 		for (Map.Entry e : props.entrySet()) {
 			String key = (String) e.getKey();
@@ -282,9 +284,9 @@ public class Boot {
 				+ MAX_SUBST + " " + expr);
 	}
 
-    private static String concat(String s1, String sep, String s2) {
-        if (s1.equals("")) return s2;
-        if (s2.equals("")) return s1;
-        return s1 + sep + s2;
-    }
+	private static String concat(String s1, String sep, String s2) {
+		if (s1.equals("")) return s2;
+		if (s2.equals("")) return s1;
+		return s1 + sep + s2;
+	}
 }
