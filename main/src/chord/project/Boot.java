@@ -256,8 +256,8 @@ public class Boot {
 		}
 	}
 	
-		//${} substitution code from Hadoop's Configuration class.
-		//   [under Apache license]
+	// ${} substitution code from Hadoop's Configuration class.
+	// [under Apache license]
 	private static Pattern varPat = Pattern.compile("\\$\\{[^\\}\\$\u0020]+\\}");
 	private static int MAX_SUBST = 50;
 	private static String substituteVars(Properties props, String expr) {
@@ -266,13 +266,13 @@ public class Boot {
 		}
 		Matcher match = varPat.matcher("");
 		String eval = expr;
-		for(int s=0; s<MAX_SUBST; s++) {
+		for(int s = 0; s < MAX_SUBST; s++) {
 			match.reset(eval);
 			if (!match.find()) {
 				return eval;
 			}
 			String variableName = match.group();
-			variableName = variableName.substring(2, variableName.length()-1); // remove ${ .. }
+			variableName = variableName.substring(2, variableName.length() - 1); // remove ${ .. }
 			String val = props.getProperty(variableName, System.getProperty(variableName));
 			if (val == null) {
 				return eval; // return literal ${var}: var is unbound
@@ -280,8 +280,7 @@ public class Boot {
 			// substitute
 			eval = eval.substring(0, match.start())+val+eval.substring(match.end());
 		}
-		throw new IllegalStateException("Variable substitution depth too large: " 
-				+ MAX_SUBST + " " + expr);
+		Messages.fatal("Variable substitution depth too large: " + MAX_SUBST + " " + expr);
 	}
 
 	private static String concat(String s1, String sep, String s2) {
