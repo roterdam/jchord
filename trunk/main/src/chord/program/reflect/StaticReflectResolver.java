@@ -71,7 +71,7 @@ public class StaticReflectResolver {
 		resolvedObjNewInstSites.clear();
 		cfg = m.getCFG();
 		initForNameAndNewInstSites();
-//		System.out.println("processing " + m.getName() + " found " + )
+		//		System.out.println("processing " + m.getName() + " found " + )
 		if (forNameSites.isEmpty())
 			return;
 		numArgs = m.getParamTypes().length;
@@ -98,13 +98,13 @@ public class StaticReflectResolver {
 						else if (mName.equals("newInstance"))
 							newInstSites.add(q);
 					} else if(cName.equals("java.lang.reflect.Constructor")) {
-			   String mName = n.getName().toString();
-			   if (mName.equals("newInstance"))
-				  newInstSites.add(q);
+						String mName = n.getName().toString();
+						if (mName.equals("newInstance"))
+							newInstSites.add(q);
 					} else if(cName.equals("java.lang.ClassLoader")) {
-			String mName = n.getName().toString();
-			if (mName.equals("loadClass"))
-			  forNameSites.add(q);
+						String mName = n.getName().toString();
+						if (mName.equals("loadClass"))
+							forNameSites.add(q);
 					}
 				}
 			}
@@ -153,8 +153,8 @@ public class StaticReflectResolver {
 								if (t != null) {
 									Pair<Register, jq_Reference> p =
 										new Pair<Register, jq_Reference>(l, t);
-									if (resolutions.add(p))
-										changed = true;
+										if (resolutions.add(p))
+											changed = true;
 								}
 							}
 						}
@@ -183,8 +183,8 @@ public class StaticReflectResolver {
 		}
 	}
 	protected void resolveNewInstSites() {
-	  if(DEBUG)
-		System.out.println("resolveNewInstSites on " + cfg.getMethod());
+		if(DEBUG)
+			System.out.println("resolveNewInstSites on " + cfg.getMethod());
 		resolutions.clear();
 		for (Pair<Quad, jq_Reference> p : resolvedClsForNameSites) {
 			Quad q = p.val0;
@@ -217,15 +217,15 @@ public class StaticReflectResolver {
 							Register r = ((RegisterOperand) ro).getRegister();
 							processCopy(l, r);
 
-				if(op instanceof CheckCast)
-				  processCheckCast(l, r, q);
+							if(op instanceof CheckCast)
+								processCheckCast(l, r, q);
 						}
 					} else if (op instanceof Phi)
 						processPhi(q);
 					else if(op instanceof Invoke) {
-					  processInvoke(q);
+						processInvoke(q);
 					} else if(op instanceof Return) {
-					  processReturn(q);
+						processReturn(q);
 					}
 				}
 			}
@@ -249,19 +249,19 @@ public class StaticReflectResolver {
 			}
 		}
 	}
-	
+
 	protected void processInvoke(Quad q) {
-  }
-	
+	}
+
 	protected void processReturn(Quad q) {
 	}
 
-  
+
 	protected void processCheckCast(Register l, Register r, Quad q) {
-	  //for benefit of subclasses
+		//for benefit of subclasses
 	}
-  
-  protected void initAbortedVars(boolean isNewInst) {
+
+	protected void initAbortedVars(boolean isNewInst) {
 		RegisterFactory rf = cfg.getRegisterFactory();
 		for (int i = 0; i < numArgs; i++)
 			abortedVars.add(rf.get(i));
@@ -308,9 +308,9 @@ public class StaticReflectResolver {
 				for (jq_Reference t : tl) {
 					Pair<Register, jq_Reference> p =
 						new Pair<Register, jq_Reference>(l, t);
-					if (resolutions.add(p))
-						changed = true;
-				 }
+						if (resolutions.add(p))
+							changed = true;
+				}
 			}
 		}
 	}
@@ -333,6 +333,6 @@ public class StaticReflectResolver {
 	public boolean needNewIter() {
 		return false;
 	}
-	
+
 	public void startedNewIter() {}
 }
