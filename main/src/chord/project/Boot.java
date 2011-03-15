@@ -281,6 +281,7 @@ public class Boot {
 			eval = eval.substring(0, match.start())+val+eval.substring(match.end());
 		}
 		Messages.fatal("Variable substitution depth too large: " + MAX_SUBST + " " + expr);
+		return null;
 	}
 
 	private static String concat(String s1, String sep, String s2) {
