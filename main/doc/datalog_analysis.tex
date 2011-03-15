@@ -16,8 +16,10 @@ which are a data structure central to executing Datalog analyses.
 A Datalog analysis declares a bunch of input/output program relations,
 each over one or more program domains, and provides a bunch of rules (constraints)
 specifying how to compute the output relations from the input relations.
-An example of such an analysis is as follows:
+An example of such an analysis is shown in Figure \ref{fig:datalog-analysis}.
 
+\begin{figure}
+{\small
 \begin{verbatim}
     # name=datarace-dlog
 
@@ -47,6 +49,10 @@ An example of such an analysis is as follows:
     datarace(t1,e1,t2,e2) :- candidate(e1,e2), reach(t1,e1), reach(t2,e2), \
         alias(e1,e2), escape(e1), escape(e2), unguarded(t1,e1,t2,e2).
 \end{verbatim}
+}
+\label{fig:datalog-analysis}
+\caption{An Example Datalog Analysis.}
+\end{figure}
 
 Any line that begins with a {\tt \#} is regarded a comment, except a
 line of the form ``{\tt \#} {\tt name=<...>}", which specifies the name
@@ -84,7 +90,7 @@ order for this Datalog analysis.
 Using a {\tt x} between two domains, such as {\tt E0xE1}, means that the
 BDD variables assigned to domains {\tt E0} and {\tt E1}
 will be interleaved in the BDD variable order for this Datalog analysis.
-See Section \ref{chap:bdd-representation} for more details on BDD representations.
+See Section \ref{sec:bdd} for more details on BDD representations.
 
 Each Datalog analysis rule is a Horn clause of the form
 {\tt R(t) :- R1(t1), ..., Rn(tn)}

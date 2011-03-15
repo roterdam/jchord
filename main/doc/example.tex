@@ -134,19 +134,19 @@ directory \code{main/src/chord/analyses/}, and are of the form:
 To run one or more such analyses, run the following command in Chord's \code{main/} directory:
 
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<PROGRAM DIR NAME> -Dchord.run.analyses=<name1>,...,<nameN> run
+    prompt> ant -Dchord.work.dir=<PROGRAM DIR> -Dchord.run.analyses=<ANALYSIS NAME> run
 \end{verbatim}
 
-where \code{<PROGRAM DIR NAME>} specifies an example Java program as described above,
-and each of \code{<name1>}, ..., \code{<nameN>} is the name of an analysis to run,
-such as \code{<JAVA ANALYSIS NAME>} and \code{<DLOG ANALYSIS NAME>} in the Java and
+where {\tt <PROGRAM DIR>} denotes a directory containing a Java program as described above,
+and {\tt <ANALYSIS NAME>} denotes the name of an analysis to run,
+such as {\tt <JAVA ANALYSIS NAME>} and {\tt <DLOG ANALYSIS NAME>} in the Java and
 Datalog analyses depicted above.
 
 For instance, to run a basic may-alias and call-graph analysis (called 0CFA),
 run the following command in Chord's \code{main/} directory:
 
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<PROGRAM DIR NAME> -Dchord.run.analyses=cipa-0cfa-dlog run
+    prompt> ant -Dchord.work.dir=<PROGRAM DIR> -Dchord.run.analyses=cipa-0cfa-dlog run
 \end{verbatim}
 
 This instructs Chord to run the Datalog analysis named \code{cipa-0cfa-dlog},
@@ -178,12 +178,12 @@ The output of the above command is of the form:
          [java] ENTER: statIM
          [java] SAVING rel statIM size: 3359
          [java] LEAVE: statIM
-         [java] Starting command: 'java ... net.sf.bddbddb.Solver ...\chord_analyses_alias_cipa_0cfa.dlog'
+         [java] Starting command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
          [java] Relation VH: 541 nodes, 449.0 elements (V0,H0)
          [java] Relation FH: 137 nodes, 8.0 elements (H0,F0)
          [java] Relation HFH: 199 nodes, 35.0 elements (H0,F0,H1)
          [java] Relation IM: 590 nodes, 69.0 elements (I0,M0)
-         [java] Finished command: 'java ... net.sf.bddbddb.Solver ...\chord_analyses_alias_cipa_0cfa.dlog'
+         [java] Finished command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
          [java] LEAVE: cipa-0cfa-dlog
          [java] Chord run completed at: Mar 13, 2011 10:31:36 PM
          [java] Total time: 00:00:27:671 hh:mm:ss:ms
@@ -207,21 +207,24 @@ such as \code{MputStatFldInst} and \code{statIM}, each of which is produced by a
 corresponding name, and produces program relations \code{VH}, \code{FH}, \code{HFH}, and \code{IM}.
 
 The program relations consumed by the 0CFA analysis contain basic program facts.  For instance,
-\code{MputStatFldInst} is a relation containing each tuple (m,f,v) such that method m in the input Java
-program contains a putstatic instruction of the form ``f = v", while \code{statIM} is a relation
-containing each tuple (i,m) such that m is the target method of invokestatic instruction i.
+\code{MputStatFldInst} is a relation containing each tuple ($m$,$f$,$v$) such that method $m$ in the input Java
+program contains a putstatic instruction of the form ``$f$ = $v$", while \code{statIM} is a relation
+containing each tuple ($i$,$m$) such that $m$ is the target method of invokestatic instruction $i$.
 
 The program relations produced by the 0CFA analysis represent points-to information and the
 call graph of the input Java program as computed by the analysis.
 Specifically, relations \code{VH}, \code{FH}, and \code{HFH} represent points-to information 
 for local variables, static fields, and instance fields, respectively,
-while relation \code{IM} represents the call graph, namely, it contain each tuple (i,m) such that
-m is a possible target method of call site i.
+while relation \code{IM} represents the call graph, namely, it contain each tuple ($i$,$m$) such that
+$m$ is a possible target method of call site $i$.
 
-Metavariables m, f, i, and v above range over entities in so-called {\it program domains} M, F, I, and V, respectively.
-A program domain is a set of entities of a certain kind in the input Java program.  For instance, M is the domain representing
-the set of all methods in the input Java program, F is the domain representing the set of all fields, I is the domain representing
-the set of all call sites in methods in M, and V is the domain representing the set of all local variables of reference type in methods in M.
+Metavariables $m$, $f$, $i$, and $v$ above range over entities in so-called {\it program domains} \code{M},
+\code{F}, \code{I}, and \code{V}, respectively.
+A program domain is a set of entities of a certain kind in the input Java program.  For instance,
+\code{M} is the domain representing
+the set of all methods in the input Java program, \code{F} is the domain representing the set of all fields,
+\code{I} is the domain representing
+the set of all call sites in methods in \code{M}, and \code{V} is the domain representing the set of all local variables of reference type in methods in \code{M}.
 Each of these domains is produced by a separate Java analysis with the corresponding name.
 Notice that the analyses producing these domains run upfront because these domains
 are consumed by the analyses that produce relations such as \code{MputStatFldInst} and
@@ -230,19 +233,19 @@ are consumed by the analyses that produce relations such as \code{MputStatFldIns
 During execution, Chord dumps intermediate and final results to files in the
 directory specified by property \code{chord.out.dir}, whose default value is \code{[chord.work.dir]/chord_output/}
 and typically does not need to be changed by users.
-For the above example, this directory is \code{<PROGRAM DIR NAME>/chord_output/}.
+For the above example, this directory is {\tt <PROGRAM DIR>}\code{/chord_output/}.
 
 The verbosity of Chord's output above is controlled by property \code{chord.verbose}, whose
 default value is 1.  At verbosity level 0, the above command produces less voluminous output
 of the form:
 
 \begin{verbatim}
-	Buildfile: build.xml
-	
-	run:
-	     [java] Chord run initiated at: Mar 13, 2011 10:35:01 PM
-	     [java] Chord run completed at: Mar 13, 2011 10:35:28 PM
-	     [java] Total time: 00:00:26:297 hh:mm:ss:ms
+    Buildfile: build.xml
+    
+    run:
+         [java] Chord run initiated at: Mar 13, 2011 10:35:01 PM
+         [java] Chord run completed at: Mar 13, 2011 10:35:28 PM
+         [java] Total time: 00:00:26:297 hh:mm:ss:ms
 
     BUILD SUCCESSFUL
     Total time: 26 seconds
