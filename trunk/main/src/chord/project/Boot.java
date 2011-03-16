@@ -88,7 +88,7 @@ public class Boot {
 	private static final String CHORD_WORK_DIR_NOT_FOUND =
 		"ERROR: Boot: Directory '%s' specified by property chord.work.dir not found.";
 
-	public static boolean SPELLCHECK_ON = Integer.getInteger("chord.verbose", 1) > 0;
+	public static boolean SPELLCHECK_ON = Integer.getInteger("chord.verbose", 1) > 1;
 	static String mainDirName;
 
 	public static void main(String[] args) throws Throwable {
