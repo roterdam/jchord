@@ -19,8 +19,11 @@
 
 #.bddvarorder X0xX1_P0xP1xP2_E0xE1_U0_F0
 #.bddvarorder E0xE1_X0xX1_P0xP1xP2_U0_F0
-.bddvarorder P0xP1xP2_E0xE1_X0xX1_U0_F0
+#.bddvarorder P0xP1xP2_E0xE1_X0xX1_U0_F0
 
+# P < E is very important for inPE :- outPE, PP rule to converge
+# UxP is also very important
+.bddvarorder U0xP0xP1xP2_E0xE1_X0xX1_F0
 
 ###
 # Relations
