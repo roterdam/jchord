@@ -40,7 +40,7 @@ public class SeedReader extends ProgramRel {
 	HashSet<Integer> registerSet = new HashSet<Integer>();
 	boolean arrayTypeSeed = false;
 
-	public void fill(){
+	public void fill() {
 		List<String> fStrList = FileUtils.readFileToList("seeds.txt");
 		int n = fStrList.size();
 		assert (n > 0);
@@ -49,7 +49,7 @@ public class SeedReader extends ProgramRel {
 		String methodSignStr = fStrList.get(0);
 		MethodSign mSign = MethodSign.parse(methodSignStr);
 		jq_Method m = program.getMethod(mSign);
-		if(m == null){
+		if (m == null) {
 			Messages.fatal("Failed to find method %s", methodSignStr);
 		}
 
@@ -58,7 +58,7 @@ public class SeedReader extends ProgramRel {
 			MethodSign sign = MethodSign.parse(fStr);
 			jq_Reference r = program.getClass(sign.cName);
 			if (r == null) {
-				Messages.log("WARN: Ignoring slicing on field %s: " +
+				Messages.fatal("ERROR: Cannot slice on field %s: " +
 						" its declaring class was not found.", fStr);
 				continue;
 			}
@@ -71,75 +71,78 @@ public class SeedReader extends ProgramRel {
 						"it was not found in its declaring class.", fStr);
 			}
 			assert(f.isStatic());				
-			if(f.getType().isArrayType()){
+			if (f.getType().isArrayType()) {
 				arrayTypeSeed = true;
 				registerSet.clear();
 			}
+			System.out.println("AAA: searching " + f + " in " + m);
 			searchFieldAccess(m,f);
 			arrayTypeSeed = false;
 		}
 
 	}
 
-	private void searchFieldAccess(jq_Method m, jq_Field f){
-		assert(f.isStatic());
+	private void searchFieldAccess(jq_Method m, jq_Field f) {
+		assert (f.isStatic());
 		joeq.Util.Templates.ListIterator.BasicBlock bbIter = m.getCFG().reversePostOrderIterator();
-		while(bbIter.hasNext()){
+		while (bbIter.hasNext()) {
 			BasicBlock bb = bbIter.nextBasicBlock();
 			joeq.Util.Templates.ListIterator.Quad quadIter = bb.iterator();
-			while(quadIter.hasNext()){
+			while (quadIter.hasNext()) {
 				Quad q = quadIter.nextQuad();
 
-				if(arrayTypeSeed && registerSet.size() > 0){
+				if (arrayTypeSeed && registerSet.size() > 0) {
 					// register is overwritten
 					joeq.Util.Templates.ListIterator.RegisterOperand iter
 					= q.getDefinedRegisters().registerOperandIterator();
-					while(iter.hasNext()){
+					while (iter.hasNext()) {
 						Register defined = iter.nextRegisterOperand().getRegister();
 						registerSet.remove(defined.getNumber());
 					}
 				}
 
-				if(q.getOperator() instanceof Operator.Getstatic){
-					if(Getstatic.getField(q).getField().toString().equals(f.toString())){
+				if (q.getOperator() instanceof Operator.Getstatic) {
+					if (Getstatic.getField(q).getField().toString().equals(f.toString())) {
 						// if seed is an array type, we want to search for array load
-						if(arrayTypeSeed){
+						if (arrayTypeSeed) {
 							// store the register
 							registerSet.add(Getstatic.getDest(q).getRegister().getNumber());
 						} else {
+							System.out.println("ADDING: " + q);
 							add(q);
 						}
 					}
-				} else if(q.getOperator() instanceof Operator.ALoad){
-					if(arrayTypeSeed){
+				} else if (q.getOperator() instanceof Operator.ALoad) {
+					if (arrayTypeSeed) {
 						Operand base = Operator.ALoad.getBase(q);
-						if(base instanceof Operand.RegisterOperand){
+						if (base instanceof Operand.RegisterOperand) {
 							int regNum = ((Operand.RegisterOperand)base).getRegister().getNumber();
-							if (registerSet.contains(regNum)){
+							if (registerSet.contains(regNum)) {
+								System.out.println("ADDING: " + q);
 								add(q);
 							}
 						}
 					}
-				} else if (q.getOperator() instanceof Operator.Move.MOVE_A){ 
+				} else if (q.getOperator() instanceof Operator.Move.MOVE_A) { 
 					Operand src = Move.getSrc(q);
 					int dstRegNum = Move.getDest(q).getRegister().getNumber();
 					registerSet.remove(dstRegNum);
 
-					if(src instanceof RegisterOperand){						
+					if (src instanceof RegisterOperand) {						
 						int srcRegNum = ((RegisterOperand)src).getRegister().getNumber();
 						assert dstRegNum != srcRegNum;
-						if(registerSet.contains(srcRegNum)){
+						if (registerSet.contains(srcRegNum)) {
 							registerSet.add(dstRegNum);
 						}
 					}
-				} else if(q.getOperator() instanceof Operator.Invoke.InvokeStatic){
+				} else if (q.getOperator() instanceof Operator.Invoke.InvokeStatic) {
 					// This is to handle the case like the following:
-					// public static void dummyRead(){
+					// public static void dummyRead() {
 					// 			dummyRead0();
 					//			dummyRead1();
 					// }
 					jq_Method method = Invoke.getMethod(q).getMethod();
-					if(method.getDeclaringClass().toString().equals(m.getDeclaringClass().toString())){
+					if (method.getDeclaringClass().toString().equals(m.getDeclaringClass().toString())) {
 						searchFieldAccess(method, f);
 					}
 				}
