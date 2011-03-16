@@ -38,6 +38,8 @@ parallelRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
 
 guardedE(t:A0,c:C0,e:E0,o:C1) input
 unlikelyRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+
+ctxtInsStartingRace(e1:E0,e2:E1) output
 datarace(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) output
 
 ###
@@ -50,6 +52,7 @@ startingRaceHext(t1,c1,e1,t2,c2,e2) :- onlyWrTCEF(t1,c1,e1,f), onlyWrTCEF(t2,c2,
 	e1 = e2, c1 < c2.
 startingRaceHext(t1,c1,e1,t2,c2,e2) :- onlyWrTCEF(t1,c1,e1,f), onlyWrTCEF(t2,c2,e2,f), \
 	e1 = e2, c1 = c2, t1 <= t2.
+ctxtInsStartingRace(e1,e2) :- startingRaceHext(_,_,e1,_,_,e2).
 
 ###
 
@@ -73,6 +76,3 @@ unlikelyRaceHext(t1,c1,e1,t2,c2,e2) :- parallelRaceHext(t1,c1,e1,t2,c2,e2), \
 datarace(t1,c1,e1,t2,c2,e2) :- parallelRaceHext(t1,c1,e1,t2,c2,e2), \
 	!unlikelyRaceHext(t1,c1,e1,t2,c2,e2).
 
-#startingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) input
-ctxtInsStartingRace(e1:E0,e2:E1) output
-ctxtInsStartingRace(e1,e2) :- startingRaceHext(_,_,e1,_,_,e2).
