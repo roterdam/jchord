@@ -117,7 +117,7 @@ your machine.  The alternative, which does not require Apache Ant and
 is available in both the source and binary installations of Chord, is
 to run the following command:
 
-java -cp <...>/chord.jar -D<key1>=<value1> ... -D<keyN>=<valueN>
+java -cp <...>/chord.jar -D<key1>=<value1> ... -D<keyN>=<valueN> \
 chord.project.Boot
 
 where <...> denotes the absolute or relative path of the directory
@@ -139,7 +139,8 @@ example Java program as follows.  First run command "ant" in directory
 examples/hello_world/.  This will compile the Java source code of that
 example.  Then, run the following command in Chord's main directory:
 
-ant -Dchord.work.dir=examples/hello_world -Dchord.run.analyses=cipa-0cfa-dlog run
+java -cp chord.jar -Dchord.work.dir=examples/hello_world \
+-Dchord.run.analyses=cipa-0cfa-dlog chord.project.Boot
 
 This will run a basic may-alias and call-graph analysis (called 0CFA)
 on the example Java program.  It will produce somewhat verbose output
