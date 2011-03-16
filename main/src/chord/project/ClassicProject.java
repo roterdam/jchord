@@ -112,25 +112,6 @@ public class ClassicProject extends Project {
 			taskParser.getNameToProduceNamesMap();
 		buildDerivedMaps(nameToConsumeNamesMap, nameToProduceNamesMap);
 
-		if (Config.reuseRels) {
-			File file = new File(Config.bddbddbWorkDirName);
-			File[] subFiles = file.listFiles(filter);
-			for (File subFile : subFiles) {
-				String fileName = subFile.getName();
-				if (fileName.endsWith(".bdd")) {
-					int n = fileName.length();
-					String relName = fileName.substring(0, n - 4);
-					ProgramRel rel = (ProgramRel) getTrgt(relName);
-					for (Dom dom : rel.getDoms()) {
-						ITask task2 = getTaskProducingTrgt(dom);
-						runTask(task2);
-					}
-					rel.load();
-					setTrgtDone(relName);
-				}
-			}
-		}
-
 		isBuilt = true;
 	}
 
@@ -409,6 +390,18 @@ public class ClassicProject extends Project {
 		for (Object trgt : consumedTrgts) {
 			if (isTrgtDone(trgt))
 				continue;
+			if (Config.reuseRels && trgt instanceof ProgramRel) {
+				ProgramRel rel = (ProgramRel) trgt;
+				File file = new File(Config.bddbddbWorkDirName, rel.getName() + ".bdd");
+				if (file.exists()) {
+					for (Dom dom : rel.getDoms()) {
+						ITask task2 = getTaskProducingTrgt(dom);
+						runTask(task2);
+					}
+					setTrgtDone(trgt);
+					continue;
+				}
+			}
 			ITask task2 = getTaskProducingTrgt(trgt);
 			runTask(task2);
 		}
