@@ -36,51 +36,47 @@ import net.sf.javabdd.BDDFactory;
  * <p>
  * Typical usage is as follows:
  * <ul>
- * <li>The relation is initialized by calling the following:
- * <ul>
- * <li>{@link #setName(String)}, which sets the name of the
- * relation,</li>
- * <li>{@link #setSign(RelSign)}, which sets the signature of the
- * relation, and</li>
- * <li>{@link #setDoms(Dom[])}, which sets the domains of the
- * relation.</li>
- * </ul>
- * </li>
- * <li>The relation is next built either on disk, by executing a
- * Datalog program that declares the relation as an output relation,
- * or in memory, by executing the following sequence of operations:
- * <ul>
- * <li>calling {@link #zero()} or {@link #one()} which initializes
- * the relation in memory to an empty or full one, respectively;</li>
- * <li>repeatedly calling {@link #add(int[])} or
- * {@link #add(Object[])} with the argument in each call being a
- * tuple to be added to the relation in memory.  If the tuple
- * already exists in the relation then the call does not have any
- * effect.</li>
- * </ul>
- * </li>
- * <li>The relation built in memory is reflected onto disk by calling
- * {@link #save(String)} which also removes the relation from memory in
- * that the BDDs allocated for the relation in memory are freed).</li>
- * <li>The relation on disk can be read by a Datalog program that
- * declares the relation as an input relation.</li>
- * <li>The relation on disk can also be read by first calling
- * {@link #load(String)}, which loads the relation from disk into memory,
- * and then calling any of the following:
- * <ul>
- * <li>{@link #size()}, which provides the number of tuples in the
- * relation in memory, and</li>
- * <li>{@link #getView()}, which provides an immutable view of the
- * relation in memory; operations such as selection and projection
- * can be performed on the view.</li>
- * </ul>
- * </li>
- * <li>The relation can be removed from memory by calling
- * {@link #close()}.</li>
+ *   <li>
+ *       The relation is initialized by calling the following:
+ *       <ul>
+ *         <li>{@link #setName(String)}, which sets the name of the relation,</li>
+ *         <li>{@link #setSign(RelSign)}, which sets the signature of the relation, and</li>
+ *         <li>{@link #setDoms(Dom[])}, which sets the domains of the relation.</li>
+ *       </ul>
+ *   </li>
+ *   <li>
+ *       The relation is next built either on disk, by executing a Datalog analysis that declares the
+ *       relation as an output relation, or in memory, by executing the following sequence of operations:
+ *       <ul>
+ *         <li>calling {@link #zero()} or {@link #one()} which initializes the relation in memory to an
+ *             empty or full one, respectively;</li>
+ *         <li>repeatedly calling {@link #add(int[])} or {@link #add(Object[])} with the argument in each
+ *             call being a tuple to be added to the relation in memory.  If the tuple already exists in
+ *             the relation then the call does not have any effect.</li>
+ *       </ul>
+ *   </li>
+ *   <li>
+ *       The relation built in memory is reflected onto disk by calling {@link #save(String)}, which also
+ *       removes the relation from memory (i.e., BDDs allocated for the relation in memory are freed).
+ *   </li>
+ *   <li>
+ *       The relation on disk can be read by a Datalog analysis that declares it as an input relation.
+ *   </li>
+ *   <li>
+ *       The relation on disk can also be read by first calling {@link #load(String)}, which loads the
+ *       relation from disk into memory, and then calling any of the following:
+ *       <ul>
+ *         <li>{@link #size()}, which provides the number of tuples in the relation in memory, and</li>
+ *         <li>{@link #getView()}, which provides an immutable view of the relation in memory;
+ *             operations such as selection and projection can be performed on the view.</li>
+ *       </ul>
+ *   </li>
+ *   <li>
+ *       The relation can be removed from memory by calling {@link #close()}.
+ *   </li>
  * </ul>
  * <p>
- * Note: Much of the BDD-related code in this class is adapted from
- * bddbddb.
+ * Note: Much of the BDD-related code in this class is adapted from bddbddb.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
