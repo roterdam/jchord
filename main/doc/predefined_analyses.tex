@@ -4,10 +4,131 @@
 
 This chapter describes various predefined analyses in Chord.
 
+\section{Points-to and Call-Graph Analyses}
+
+Chord offers several choices for computing points-to and call-graph information of Java programs.
+In each of these choices, points-to and call-graph information is computed simultaneously
+(called ``on-the-fly call-graph construction" in the literature in contrast to ``ahead-of-time call-graph
+construction" in which the call graph is computed first followed by points-to information).
+On-the-fly approaches are more precise because, in a dynamically dispatching language like Java,
+as more points-to facts are discovered, more (dynamically dispatched) methods are deemed reachable,
+thereby growing the call graph; the code in these newly added methods in turn results in more
+points-to facts.
+
+Flow-insensitive analysis computes a single abstract heap whereas flow-sensitive analysis computes
+per-program-point abstract heaps.  Context-insensitive analysis analyzes each method at most once (i.e. in a single abstract context),
+whereas context-sensitive analyses potentially analyze each method multiple times, in different abstract contexts.
+Thus, flow- and context-sensitive analyses are more precise but less scalable than flow- and context-insensitive
+analyses, respectively.
+
+Flow-sensitive analysis does not offer much precision over flow-insensitive analysis in
+practice, especially in the absence of strong updates and in the presence of SSA (Static Single Assignment form),
+a program representation that renders a flow-insensitive analysis almost as precise as a flow-sensitive analysis.
+Since analyses in Chord currently perform only weak updates, and since they all operate on an SSA form of the
+input Java program by default, the rest of this section focuses only on flow-insensitive analysis, which is the predominant
+kind of points-to/call-graph analysis in Chord.
+
+We describe context-insensitive analysis first because understanding the concepts behind it will help understand
+the more sophisticated context-sensitive analyses.
+We first recall some relevant program domains:
+\begin{itemize}
+\item M is the domain of all methods.
+\item I is the domain of all method call sites.
+\item F is the domain of all (instance and static) fields.
+\item V is the domain of all local variables of reference type.
+\item H is the domain of all object allocation sites.
+\end{itemize}
+
+\subsection{Context-Insensitive Analysis}
+
+The context-insensitive points-to/call-graph analysis 
+treats each object allocation site as a separate abstract memory location; in other words, it
+can distinguish objects created at different sites but not those created at the same site.
+Additionally, it is field-sensitive, in that it distinguishes between different instance fields of the same object,
+but array-insensitive, in that it cannot distinguish between different elements of the same array;
+all array elements are modeled using a distinguished hypothetical instance field (that has index 0 in domain F).
+
+To run this analysis, run the following command in Chord's main directory:
+
+\begin{verbatim}
+    prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=cipa-0cfa-dlog run
+\end{verbatim}
+
+This analysis outputs the following relations:
+
+%is implemented in \code{chord/analyses/alias/cipa-0cfa.dlog}.
+
+\begin{itemize}
+\item
+{\it Call-graph information:}
+\begin{itemize}
+\item rootM subset M contains the set of entry methods that may be reachable; this includes the program's main method
+as well as each static initializer method that may be reachable from the main method.
+\item reachableM subset M contains the set of methods that may be reachable from the program's main method.
+\item IM subset (I $\times$ M) contains tuples \texttt{(i,m)} such that call site \texttt{i} may call method \texttt{m}.
+%\item MM subset (M $\times$ M) contains tuples \texttt{(m1,m2)} such that method \texttt{m1} may call method \texttt{m2}.
+%\item reachableI subset I contains the set of call sites that may be reachable.
+%\item reachableT subset T contains the set of classes that may be reachable.
+\end{itemize}
+\item
+{\it Points-to information:}
+\begin{itemize}
+\item FH subset (F $\times$ H) contains tuples \texttt{(f,h)} such that static field (i.e. global variable) \texttt{f} may point to an object allocated at site \texttt{h}.
+\item VH subset (V $\times$ H) contains tuples \texttt{(v,h)} such that local variable \texttt{v} may point to an object allocated at site \texttt{h}.
+\item HFH subset (H $\times$ F $\times$ H) contains tuples \texttt{(h1,f,h2)} such that instance field \texttt{f} of some object allocated at
+site \texttt{h1} may point to some object allocated at site \texttt{h2}.
+\end{itemize}
+\end{itemize}
+
+\subsection{Context-Sensitive Analysis}
+
+In a context-sensitive analysis, there is no longer just one abstract memory location per object allocation site.
+Rather, the set of objects a reference can point to depends on the \textit{context} in which the method containing the
+reference is called.
+Whereas a context-insensitive analysis talks about the domain of methods (M) and the domain
+of allocation sites (H), a context-sensitive analysis talks about the domain of abstract contexts, labeled C.
+Elements of domain C contain both abstract calling contexts and abstract objects. (These are merged for reasons
+described below.)
+
+Chord has several context-sensitive analyses, but they all expose the same relations, which are
+described below:
+
+\begin{itemize}
+\item
+{\it Context information:}
+\begin{itemize}
+\item C is the domain of all abstract calling contexts and abstract objects.  Each element in this domain is a sequence of zero or more sites,
+where each site can be a call site or an object allocation site.  A sequence may have mixed call sites and object allocation sites.
+The most significant site (i.e. the first site) in each sequence is called the head; the remaining sub-sequence is called the tail.  The
+below three relations relate a sequence with its head and tail.
+\item CC subset (C $\times$ C) contains tuples \texttt{(c1,c2)} such that context \texttt{c2} is the tail of context \texttt{c1}.
+\item CH subset (C $\times$ H) contains tuples \texttt{(c,h)} such that object allocation site \texttt{h} is the head of context \texttt{c}.
+\item CI subset (C $\times$ I) contains tuples \texttt{(c,i)} such that call site \texttt{i} is the head of context \texttt{c}.
+\end{itemize}
+\item
+{\it Call-graph information:}
+\begin{itemize}
+\item rootCM subset (C $\times$ M) contains tuples \texttt{(c,m)} such that method \texttt{m} is an entry method in context \texttt{c}.
+\item reachableCM subset (C $\times$ M) contains tuples \texttt{(c,m)} such that method \texttt{m} may be reachable in context \texttt{c}.
+\item CICM subset (C $\times$ I $\times$ C $\times$ M) contains tuples \texttt{(c1,i,c2,m)} such that call site \texttt{i} in
+context \texttt{c1} may call method \texttt{m2} in context \texttt{c2}.
+\end{itemize}
+\item
+{\it Points-to information:}
+\begin{itemize}
+\item FC subset (F $\times$ C) contains tuples \texttt{(f,o)} such that static field (i.e. global variable) \texttt{f} may point to object \texttt{o}.
+\item CVC subset (C $\times$ V $\times$ C) contains tuples \texttt{(c,v,o)} such that local variable \texttt{v} may point to
+object \texttt{o} in context \texttt{c} of that variable's declaring method. Note that both \texttt{o} and \texttt{c} are elements of domain C.
+\item CFC subset (C $\times$ F $\times$ C) contains tuples \texttt{(o1,f,o2)} such that instance field \texttt{f} of object \texttt{o1} may point to object \texttt{o2}.
+\end{itemize}
+\end{itemize}
+
+{\bf Under Construction: explain object-sensitive vs context-sensitive, plus how to invoke.}
+
 \section{Static Datarace Analysis}
 
 To run Chord's static datarace analysis, run the following
-command in Chord's {\tt main/} directory:
+command in Chord's main directory:
 
 \begin{verbatim}
     prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=datarace-java run
@@ -19,11 +140,11 @@ properties \code{chord.main.class}, \code{chord.class.path}, and
 \code{chord.src.path}.  See Section \ref{sec:program-props} for the
 meaning of these properties.
 
-Directory \code{main/examples/datarace_test/} provides a toy Java
+Directory \code{examples/datarace_test/} in Chord's main directory provides a toy Java
 program on which one can run the datarace analysis.  First run {\tt
   ant} in that directory (in order to compile the program's {\tt
   .java} files to {\tt .class} files) and then run the above command
-in Chord's {\tt main/} directory with {\tt <...>} replaced by
+in Chord's main directory with {\tt <...>} replaced by
 \code{examples/datarace_test/}.  Upon successful completion, the
 following files should be produced in directory
 \code{examples/datarace_test/chord_output/}:
@@ -44,7 +165,7 @@ instance fields of the same abstract object.
 \section{Static Deadlock Analysis}
 
 To run Chord's static deadlock analysis,  run the following
-command in Chord's {\tt main/} directory:
+command in Chord's main directory:
 
 \begin{verbatim}
     prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=deadlock-java run
@@ -56,70 +177,12 @@ properties \code{chord.main.class}, \code{chord.class.path}, and
 \code{chord.src.path}.  See Section \ref{sec:program-props} for the
 meaning of these properties.
 
-Directory \code{main/examples/deadlock_test/} provides a toy Java
+Directory \code{examples/deadlock_test/} in Chord's main directory provides a toy Java
 program on which one can run the deadlock analysis.  First run {\tt
   ant} in that directory (in order to compile the program's {\tt
   .java} files to {\tt .class} files) and then run the above command
-in Chord's {\tt main/} directory with {\tt <...>} replaced by
+in Chord's main directory with {\tt <...>} replaced by
 \code{examples/deadlock_test/}.  Upon successful completion, the
 file \code{deadlocks.html} should be produced in directory
 \code{examples/deadlock_test/chord_output/}.
 
-\section{Points-to and Call-Graph Analyses}
-
-Chord offers several choices for computing points-to and call graphs for programs.
-The simplest of these is a context-insensitive analysis. We describe this first,
-because understanding the concepts behind it will help you understand the more
-sophisticated context-sensitive analysis.
-
-In general, context-sensitive approaches are more precise but run more slowly;
-the higher the degree of precision, the slower the analysis.
-
-\subsection{Context-insensitive points-to}
-
-The context-insenstive points-to is implemented in \code{analyses/alias/cipa-0cfa.dlog}.
-The analysis treats all objects allocated at the same site as interchangeable.
-Put another way, each allocation site defines a unique abstract object.
-Domain H is the set of all allocation sites and therefore also of all abstract objects.
-The analysis produces several output relations. 
-
-\begin{description}
-\item[VH] contains tuples \texttt{(v,h)} if variable \texttt{v} can point to abstract object \texttt{h}.
-\item[MM] contains tuples \texttt{(m1,m2)} if method \texttt{m1} might call \texttt{m2}.
-\item[IM] contains tuples \texttt{(i,m)} if invocation \texttt{i} might call \texttt{m}.
-\item[reachableM] contains the set of potentially-reachable methods.
-\item[reachableT] contains the set of potentially-reachable types.
-\item[reachableI] contains the set of potentially-reachable invocation statements.
-\item[rootM] contains the set of potentially-reachable methods without a caller (such as \texttt{main} and static initializers).
-\item[FH] contains tuples \texttt{(f,h)} if static field \texttt{f} can point to abstract object \texttt{h}.
-\item[HFH] contains tuples \texttt{(b,f,h)} if instance field \texttt{f} of abstract object \texttt{b} can point to abstract object \texttt{h}.
-\end{description}
-
-\subsection{Context-sensitive}
-
-In a context-sensitive analysis, there is no longer just one abstract object per site.
-Rather, the set of objects a reference can point to depends on the \textit{context} of
-the method call containing the reference.
-Whereas a context-insensitive analysis talks about the domain of methods and the domain
-of allocation sites (M and H), a context-sensitive analysis talks about the domain of contexts, labelled C.
-Domain C refers to both abstract objects and also to abstract calling contexts. (As we will see, these
-are merged for a reason.)
-
-Chord has several context-sensitive analyses, but they all expose the same relations.
-
-\begin{description}
-\item[C] domain containing all abstract contexts.
-\item[CC] contains tuples \texttt{(c,c2)} such that \texttt{c2} is all but the last element of context \texttt{c}.
-\item[CH] contains tuples \texttt{(c,h)} such that object allocation site \texttt{h} is the last element of abstract context \texttt{c}.
-\item[CI] contains tuples \texttt{(c,i)} such that call site \texttt{i} is the last element of abstract context \texttt{c}.
-\item[CVC] contains tuples \texttt{(c,v,o)} such that local \texttt{v} might point to object \texttt{o} in context \texttt{c} of its declaring method.  \\
-Note that both \texttt{o} and \texttt{c} are elements of domain C.
-\item[CFC] contains tuples \texttt{(o1,f,o2)} such that instance field \texttt{f} of object \texttt{o1} might point to object \texttt{o2}.
-\item[FC] contains tuples \texttt{(f,o)} such that static field \texttt{f} may point to object \texttt{o}.
-\item[CICM] contains tuples \texttt{(c,i,c2,m)} if invocation \texttt{i} in context \texttt{c} can reach method 2 (in context \texttt{c2}) .
-\item[rootCM] contains tuples \texttt{(c,m)} such that method \texttt{m} is an entry method in context \texttt{c}.
-\item[reachableCM] contains tuples \texttt{(c,m)} such that method \texttt{m} can be called in context \texttt{c}.
-\end{description}
-
-
-{\bf Under Construction: need to explain object-sensitive vs context-sensitive, plus how to invoke.}
