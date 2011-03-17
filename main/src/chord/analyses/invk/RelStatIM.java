@@ -8,7 +8,6 @@ package chord.analyses.invk;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operator;
-import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import chord.analyses.method.DomM;
@@ -41,6 +40,7 @@ public class RelStatIM extends ProgramRel {
 			if (op instanceof InvokeStatic) {
 				jq_Method m = InvokeStatic.getMethod(i).getMethod();
 				if (m.isStatic()) {
+					m = StubRewrite.maybeReplaceCallDest(m);
 					int mIdx = domM.indexOf(m);
 					if (mIdx >= 0)
 						add(iIdx, mIdx);
@@ -50,4 +50,6 @@ public class RelStatIM extends ProgramRel {
 			}
 		}
 	}
+	
+
 }
