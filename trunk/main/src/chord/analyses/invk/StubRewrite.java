@@ -19,11 +19,25 @@ import java.util.regex.*;
  * methodName:desc@declaringClass
  * 
  * Blank lines and lines starting with a # are ignored as comments.
+ * 
+ * Note that for virtual function calls, the rewrite happens AFTER
+ * the call target is resolved. So if you have a stub implementation for
+ * Derived.foo, then a call to Base.foo on an instance of Derived should
+ * call the stub.
+ * 
+ * Be careful about the prototype for the function being mapped; the remap
+ * will fail with a warning message if any details do not match.
+ * 
+ * Note also that there is no checking performed that the old and new functions
+ * have the compatible prototypes. Arguments and return values may wind up
+ * not propagating correctly if, e.g., a 2-argument function is remapped
+ * to a 3-argument function.
  *
  */
 public class StubRewrite {
 	
 	private static jq_Method getMeth(String clName, String methname, String desc) {
+//		clName = clName.replace('$', '.');
 		jq_Class cl = (jq_Class) jq_Type.parseType(clName);
 		cl.prepare();
 
@@ -78,6 +92,7 @@ public class StubRewrite {
 					jq_Method src = getMeth(srcClassName, srcMethName, srcDesc);
 					jq_Method dest = getMeth(destClassName, destMethName, destDesc);
 					if(src != null && dest != null) {
+						//can do more checks here, for e.g., arity matching
 						lookupTable.put(src, dest);
 						System.out.println("StubRewrite mapping "+ srcClassName + "." + srcMethName + " to " + destClassName+"."+destMethName);
 					} else {
