@@ -8,6 +8,7 @@
 package chord.analyses.method;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import joeq.Class.jq_Class;
@@ -50,7 +51,7 @@ public class RelExtraEntryPoints extends ProgramRel {
 
 
 
-	public static Iterable<jq_Method> slurpMList(ClassHierarchy ch) {
+	public static Collection<jq_Method> slurpMList(ClassHierarchy ch) {
 		if(methods == null)
 			methods = new LinkedHashSet<jq_Method>();
 			else
@@ -96,7 +97,7 @@ public class RelExtraEntryPoints extends ProgramRel {
 					parentClass.prepare();  
 					jq_Method m = (jq_Method) parentClass.getDeclaredMember(mName, mDesc);
 					methods.add(m);
-				}
+				} //badly formatted; skip
 			} else { //s is a class name
 
 				jq_Class pubI  =  (jq_Class) jq_Type.parseType(s);
