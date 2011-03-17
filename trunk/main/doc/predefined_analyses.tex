@@ -65,6 +65,61 @@ in Chord's {\tt main/} directory with {\tt <...>} replaced by
 file \code{deadlocks.html} should be produced in directory
 \code{examples/deadlock_test/chord_output/}.
 
-\section{May-Alias and Call-Graph Analyses}
+\section{Points-to and Call-Graph Analyses}
 
-{\bf Under Construction}
+Chord offers several choices for computing points-to and call graphs for programs.
+The simplest of these is a context-insensitive analysis. We describe this first,
+because understanding the concepts behind it will help you understand the more
+sophisticated context-sensitive analysis.
+
+In general, context-sensitive approaches are more precise but run more slowly;
+the higher the degree of precision, the slower the analysis.
+
+\subsection{Context-insensitive points-to}
+
+The context-insenstive points-to is implemented in \code{analyses/alias/cipa-0cfa.dlog}.
+The analysis treats all objects allocated at the same site as interchangeable.
+Put another way, each allocation site defines a unique abstract object.
+Domain H is the set of all allocation sites and therefore also of all abstract objects.
+The analysis produces several output relations. 
+
+\begin{description}
+\item[VH] contains tuples \texttt{(v,h)} if variable \texttt{v} can point to abstract object \texttt{h}.
+\item[MM] contains tuples \texttt{(m1,m2)} if method \texttt{m1} might call \texttt{m2}.
+\item[IM] contains tuples \texttt{(i,m)} if invocation \texttt{i} might call \texttt{m}.
+\item[reachableM] contains the set of potentially-reachable methods.
+\item[reachableT] contains the set of potentially-reachable types.
+\item[reachableI] contains the set of potentially-reachable invocation statements.
+\item[rootM] contains the set of potentially-reachable methods without a caller (such as \texttt{main} and static initializers).
+\item[FH] contains tuples \texttt{(f,h)} if static field \texttt{f} can point to abstract object \texttt{h}.
+\item[HFH] contains tuples \texttt{(b,f,h)} if instance field \texttt{f} of abstract object \texttt{b} can point to abstract object \texttt{h}.
+\end{description}
+
+\subsection{Context-sensitive}
+
+In a context-sensitive analysis, there is no longer just one abstract object per site.
+Rather, the set of objects a reference can point to depends on the \textit{context} of
+the method call containing the reference.
+Whereas a context-insensitive analysis talks about the domain of methods and the domain
+of allocation sites (M and H), a context-sensitive analysis talks about the domain of contexts, labelled C.
+Domain C refers to both abstract objects and also to abstract calling contexts. (As we will see, these
+are merged for a reason.)
+
+Chord has several context-sensitive analyses, but they all expose the same relations.
+
+\begin{description}
+\item[C] domain containing all abstract contexts.
+\item[CC] contains tuples \texttt{(c,c2)} such that \texttt{c2} is all but the last element of context \texttt{c}.
+\item[CH] contains tuples \texttt{(c,h)} such that object allocation site \texttt{h} is the last element of abstract context \texttt{c}.
+\item[CI] contains tuples \texttt{(c,i)} such that call site \texttt{i} is the last element of abstract context \texttt{c}.
+\item[CVC] contains tuples \texttt{(c,v,o)} such that local \texttt{v} might point to object \texttt{o} in context \texttt{c} of its declaring method.  \\
+Note that both \texttt{o} and \texttt{c} are elements of domain C.
+\item[CFC] contains tuples \texttt{(o1,f,o2)} such that instance field \texttt{f} of object \texttt{o1} might point to object \texttt{o2}.
+\item[FC] contains tuples \texttt{(f,o)} such that static field \texttt{f} may point to object \texttt{o}.
+\item[CICM] contains tuples \texttt{(c,i,c2,m)} if invocation \texttt{i} in context \texttt{c} can reach method 2 (in context \texttt{c2}) .
+\item[rootCM] contains tuples \texttt{(c,m)} such that method \texttt{m} is an entry method in context \texttt{c}.
+\item[reachableCM] contains tuples \texttt{(c,m)} such that method \texttt{m} can be called in context \texttt{c}.
+\end{description}
+
+
+{\bf Under Construction: need to explain object-sensitive vs context-sensitive, plus how to invoke.}
