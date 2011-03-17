@@ -17,6 +17,7 @@ import joeq.Class.jq_NameAndDesc;
 import java.util.Set;
 import java.util.HashSet;
 
+import chord.analyses.invk.StubRewrite;
 import chord.analyses.method.DomM;
 import chord.program.Program;
 import chord.project.Chord;
@@ -40,6 +41,9 @@ public class RelCHA extends ProgramRel {
 	public void fill() {
 		DomM domM = (DomM) doms[0];
 		Program program = Program.g();
+
+		//set of instance methods that belong to in-scope classes where at least
+		//one object of the class exists in the program.
 		Set<jq_InstanceMethod> objClsInstanceMethods = new HashSet<jq_InstanceMethod>();
 		IndexSet<jq_Reference> classes = program.getClasses();
 		jq_Class objCls = (jq_Class) program.getClass("java.lang.Object");
@@ -51,12 +55,12 @@ public class RelCHA extends ProgramRel {
 		for (jq_Reference r : classes) {
 			if (r instanceof jq_Array) {
 				for (jq_InstanceMethod m : objClsInstanceMethods)
-					add(m, r, m);
+					add(m, r, StubRewrite.maybeReplaceCallDest(m));
 				continue;
 			}
 			jq_Class c = (jq_Class) r;
 			for (jq_InstanceMethod m : c.getDeclaredInstanceMethods()) {
-				if (m.isPrivate())
+				if (m.isPrivate()) //not in CHA
 					continue;
 				if (m instanceof jq_Initializer)
 					continue;
@@ -74,10 +78,10 @@ public class RelCHA extends ProgramRel {
 							jq_InstanceMethod n = d.getVirtualMethod(nd);
 							assert (n != null);
 							if (domM.contains(n))
-								add(m, d, n);
+								add(m, d, StubRewrite.maybeReplaceCallDest(n));//rewrite dest, after resolution
 						}
 					}
-				} else {
+				} else { //class, not interface
 					for (jq_Reference s : classes) {
 						if (s instanceof jq_Array) 
 							continue;
@@ -88,7 +92,7 @@ public class RelCHA extends ProgramRel {
 							jq_InstanceMethod n = d.getVirtualMethod(nd);
 							assert (n != null);
 							if (domM.contains(n))
-								add(m, d, n);
+								add(m, d, StubRewrite.maybeReplaceCallDest(n));//rewrite dest, after resolution
 						}
 					}
 				}

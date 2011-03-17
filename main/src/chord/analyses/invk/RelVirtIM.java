@@ -42,6 +42,8 @@ public class RelVirtIM extends ProgramRel {
 			Operator op = i.getOperator();
 			if (op instanceof InvokeVirtual || op instanceof InvokeInterface) {
 				jq_Method m = Invoke.getMethod(i).getMethod();
+				//don't do this here. Instead, do it in cha, after target resolution
+//				m = StubRewrite.maybeReplaceCallDest(m);
 				int mIdx = domM.indexOf(m);
 				if (mIdx >= 0) 
 					add(iIdx, mIdx);
