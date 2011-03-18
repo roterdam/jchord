@@ -13,70 +13,6 @@ and one that further abstracts allocation sites using type information
 (\refsec{classAbstraction}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\Subsection{klimitedAbstraction}{$k$-limited abstraction}
-
-The {\em $k$-limited abstraction}
-essentially partitions chains based on their length $k$ prefix.
-We first setup some notation.
-%Let $\dom$ be a set of values (e.g., $\dom = \{ 0, 1 \}$).
-For a chain $c \in \dom^*$, let $|c|$ denote the length of the chain.
-Let $c[i]$ be the $i$-th element of $c$ (starting with index 1) and
-let $c[i..j]$ be the subchain $[c[i] \cdots c[j]]$
-(boundary cases: $c[i..j] = [\,]$ if $i > j$ and $c[i..j] = c[i..|c|]$ if $j > |c|$).
-For two chains $c_1, c_2$, let $c_1+c_2$ denote concatenation.
-For a chain $c$, let $c*$ denote the set of all chains
-with prefix $c$; formally:
-\begin{align}
-c* \eqdef \{ c' \in \H^* : c'[1..|c|] = c \}.
-\end{align}
-%It is important that $c*$ is a set.
-
-For an integer truncation level $k \ge 0$, define the abstraction $\klimabs_k$ as follows:
-\begin{align}
-\label{eqn:klimitedAbstraction}
-\klimabs_k(c) \eqdef
-\begin{cases}
-\{c\}     & \text{if $|c| < k$} \\
-c[1..k]*  & \text{if $|c| \ge k$}. \\
-\end{cases}
-\end{align}
-If the concrete chain $c$ is shorter than length $k$,
-we map it to the singleton set $\{ c \}$;
-otherwise, we map it to the set of chains that share the first $k$ elements.
-It is easy to verify that $\klimabs_k$ as defined is a valid abstraction under \refdef{abstraction}.
-\reffig{repeatingExample} shows an example.
-
-\begin{figure}
-\[
-\arraycolsep=3.5pt
-\begin{array}{llllllll}
-\{\vec{0}\}    &            &              &            & \{\vec{1}\} \\
-\{\vec{00}\}   &            & \{\vec{01}\} &            & \{\vec{10}\} &            & \{\vec{11}\} \\
-\vec{000}*     & \vec{001}* & \vec{010}*   & \vec{011}* & \vec{100}*   & \vec{101}* & \vec{110}* & \vec{111}*
-\end{array}
-\]
-\caption{\label{fig:repeatingExample} For the $k$-limited abstraction
-with $\dom = \{ 0, 1 \}$ and $k = 3$, the equivalence classes defined by $\klimabs_k$.
-}
-\end{figure}
-
-Traditionally, $k$-limited analyses
-simply use a list of sites ``$c$'' to represent an abstract value,
-not making a distinction between $\{c\}$ and $c*$;
-however when we do pruning, this distinction is crucial.
-Suppose that $k=3$.
-Na\"ively, ``$\vec{01}$'' would just represent $\{\vec{01}\}$.
-The problem comes when we prune.
-If we prune ``$\vec{010}$'', then ``$\vec{01}$'' really represents $\{\vec{01}\}\cup \vec{010}*$
-because any chain starting with $\vec{010}$ must now fall back on ``$\vec{01}$''.
-This is unacceptable because pruning tuples should not change the abstraction.
-Actually, the situation is worse, because (i) in fact no pruning
-(in the sense that some chains are ignored)
-would happen and (ii) the resulting analysis would be much more imprecise because
-``$[\,]$'' is always present for representing the context of the main method,
-but this is a prefix of any chain.
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{barelyAbstraction}{Barely-repeating $k$-limited abstraction}
 
 When we applied the $k$-limited abstraction empirically,
@@ -124,12 +60,14 @@ $k$-object-sensitivity would conclude that both point to $\bzero_k*$, where $\bz
 \end{figure}
 
 For a sequence $c$, we say $c$ is {\em non-repeating} if all its elements are distinct.
-We say $c$ is {\em barely-repeating} if $c$ excluding the last element ($c[1..|c|-1]$)
-is {\em non-repeating}.  Note that a barely-repeating includes the non-repeating case.
+We say $c$ is {\em barely-repeating} if (i) $c$ excluding the last element ($c[1..|c|-1]$)
+is {\em non-repeating} and (ii) the last element of $c$ is repeated earlier in $c$.
+%Note that a barely-repeating includes the non-repeating case.
 Let $\delta(c)$ be the length of the longest prefix that is barely-repeating:
 \begin{align}
 \label{eqn:barelyLen}
 \distinct(c) \eqdef \max_{m' : c[1..m'] \text{ is barely-repeating}} m'.
+% XXX: infinity
 \end{align}
 For example, $\distinct(\vec{10010}) = 3$ because $\vec{100}$ is barely-repeating, but $\vec{1001}$ is not.
 
