@@ -1,0 +1,92 @@
+\Section{related}{Related Work}
+
+% Larger space of abstractions
+There is a wealth of literature which attempts to scale static analyses without
+sacrificing precision.  One general theme is to work with a flexible family of
+abstractions, which in principle allows us to conform to the needs of the
+client.  Milanova et al.~\cite{kobj,MilanovaRountevRyder2005} also consider
+abstractions, where each local variable can be independently treated context
+sensitively or insensitively, and different $k$ values can be chosen for
+different allocation sites.  Lhot\'{a}k and
+Hendren~\cite{LhotakHendren2006,LhotakHendren2008} present Paddle, a
+parametrized framework for BDD-based, $k$-limited alias analysis.
+\cite{smaragdakis11context} scale up $k$-object-sensitivity one more level by
+using types rather than allocation sites.  However, which parts of the
+abstraction should be more refined is largely left up to the user.
+
+% Client-driven
+Client-driven approaches use feedback from a client query to determine what
+parts of an abstraction to refine.
+Plevyak and Chien~\cite{PlevyakChien1994} use a refinement-based algorithm for
+type inference, where context sensitivity is driven by detecting type conflict.
+Guyer and Lin~\cite{GuyerLin2003} present a pointer analysis for C
+which detects loss of precision (e.g., at merge points) and introduce context sensitivity.
+Our method for determining relevant input tuples is similar in spirit but more general.
+
+Perhaps the closest to this work is the part of Liang et al.~\cite{liang11minimal}, which
+uses the same technique to compute the set of relevant tuples.  However, what
+is done with this information is quite different.  \cite{liang11minimal} merely
+stops refining the irrelevant sites whereas we actually prune all irrelevant
+tuples, thereby exploiting this information fuller.  As we saw in
+\refsec{experiments}, this difference had major ramifications.
+%An importance difference is that we are not 
+
+%Similar to iterative refinement client-driven approaches is lazy abstraction
+%\cite{henzinger02lazy,mcmillan06lazy} from model checking, which 
+
+% Demand-driven
+Demand-driven analyses \cite{HeintzeTardieu2001,ZhengRugina2008} do not refine
+the abstraction but rather compute an analysis on an existing
+abstraction faster.  Some approaches such as \cite{SridharanBodik2006} do both.
+Our \PR\ algorithm has a flavor of the client-driven approach, in that we do
+refine our abstraction, but also of the demand-driven approach, in that we do
+not perform a full computation (in particular, ignoring tuples which were
+pruned).
+
+%In contrast to client-driven analyses, which compute an exhaustive solution of
+%varying precision, demand-driven approaches compute a partial solution of fixed
+%precision.  Heintze and Tardieu's demand-driven alias analysis for
+%C~\cite{HeintzeTardieu2001} performs a provably optimal computation to
+%determine the points-to sets of variables queried by the client. Their analysis
+%is applied to call-graph construction in the presence of function pointers. A
+%more recent alias analysis developed by Zheng and Rugina~\cite{ZhengRugina2008}
+%uses a demand-driven algorithm that is capable of answering alias queries
+%without constructing points-to sets.
+
+% Model checking
+%Lazy abstraction \cite{henzinger02lazy} is an abstraction refinement technique
+%for model checking by which one starts with a small set of predicates and tries
+%to prove a query.  If the proof fails, an abstract counterexample (derivation
+%in our terminology) is generated, and predicates are refined on this path.
+%One difference is that they refine one predicate at a time.
+%
+%This work has been extended to interpolants \cite{mcmillan06lazy}, which
+%provide a richer (and as they show, more effective) class of abstraction
+%predicates.
+
+
+%Our family of abstractions is still $\sA = \{ \klimabs_k : k = 0, 1 \}$.
+%Let $K : \H \to \{ 0, 1, 2, \dots \}$ be a function mapping each site to a $k$ value.
+%In \cite{liang11minimal}, we considered the abstraction family:
+%\begin{align}
+%\klimabs_K(c) = \klimabs_{K(c[1])}(c).
+%\end{align}
+
+% Dynamic - lower bound
+Pruning has been implemented in various settings.
+\cite{vipindeep05pruning} use dynamic analysis to prune down set of paths and
+then focus a static analysis on these paths.
+\cite{spoon04ddp} use pruning for type inference in functional languages,
+where pruning is simply a heuristic which shortcuts a search algorithm.
+As a result, pruning can hurt precision.
+One advantage of our pruning approach is that it comes with strong soundness
+and completeness guarantees.
+
+%This is another fruitful but orthogonal way to prune.  The intuition is that if
+%a query was observed to be true dynamically, there is no point trying to prove
+%it statically.
+%For example, we can use the dynamic analysis framework of
+%\cite{liang10abstraction} to obtain lower bounds, predicates which are
+%certainly true.  If we observe dynamically observe that a variable $v$ points
+%to an object with abstraction $a$, the static analysis need not even attempt to
+%prove that $v$ does not point to $a$.

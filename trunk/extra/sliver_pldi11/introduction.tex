@@ -1,0 +1,78 @@
+\Section{introduction}{Introduction}
+
+% Problem: want precision, abstractions don't scale up, even with
+% client-driven, etc.
+Making a static analysis more precise requires increasing the complexity of the
+supporting abstraction---in pointer analysis, by increasing the amount of
+context/object sensitivity \cite{kcfa, kobj, MilanovaRountevRyder2005,
+WhaleyLam2004, LhotakHendren2006, LhotakHendren2008}; or in model checking, by
+adding more abstraction predicates \cite{graf97predicate,slam}.
+However, the complexity of these analyses often grows exponentially as the
+abstraction increases.
+Much work has been done on curbing this exponential growth
+(e.g., client-driven \cite{GuyerLin2003} and demand-driven
+\cite{HeintzeTardieu2001} approaches in pointer analysis,
+lazy abstraction \cite{henzinger02lazy,mcmillan06lazy} and other iterative refinement approaches in model checking).
+The general theme of all these approaches is that the
+complexity of the abstraction is increased only in parts deemed useful using
+some feedback from a client query.
+
+% Pruning idea: general
+In this paper, we use {\em pruning}, a different approach from
+the above selected refinement techniques for making static analyses scale.
+Our approach works on any analysis that can be expressed as a Datalog program.
+A Datalog program takes a set of input tuples (determined by the abstraction)
+and derives new tuples via a set of inference rules; the answer to a client
+query corresponds to whether a designated tuple can be derived.  The key idea
+is to identify input tuples which are provably irrelevant for deriving the
+query tuple and prune these away.  Selected refinement techniques
+attempt to keep the set of input tuples small by not refining some of them; we
+keep the set small by removing some of them entirely.
+
+% Soundness
+Pruning can be a dangerous affair though.  With selected refinement, at any
+point we are still performing static analysis with respect to an abstraction
+and therefore have soundness guarantees.  However, once we start pruning input
+tuples, we are no longer running a valid static analysis and thus do not
+automatically inherit soundness guarantees.  Nonetheless, we prove that our
+method is {\em sound with respect to the client}.
+
+% Completeness
+While soundness is trivial for selected refinement but requires some argument for pruning,
+the situation is reversed for {\em completeness}, that is, the guarantee that
+an analysis is as precise as some target.  For selected refinement,
+it is difficult to argue that the chosen coarser abstraction is as precise as if we
+had refined everything.  However, with pruning, we are working directly with
+the more complex abstraction, and thus automatically inherit its completeness
+guarantees.  By removing input tuples, we can only prove more queries.
+
+% Refinement algorithm
+%To capitalize on the idea of {\em pruning}, we propose an algorithm, which we
+%call Refinement-Pruning (\PR).  The idea is to start with a coarse abstraction
+%and prune the input tuples before moving to a more expensive abstraction.
+
+% Slivers
+We apply our pruning technique to the $k$-object-sensitivity abstraction
+\cite{kobj}, where objects on the heap are abstracted into a chain of
+allocation sites.  Pruning in this setting corresponds to maintaining a subset
+of these chains.  Although the main contribution of the paper is the general
+pruning technique, we also make the following contributions specific to
+$k$-limited pointer analysis which arise because we are pruning: First, we show
+that we need a more careful treatment of the $k$-object-sensitivity abstraction
+than before due to pruning.  Second, we introduce an abstraction which limits
+chains to length $k$ and also truncates to avoid having too many repeating
+sites; this is an effective way to increase $k$ further (possible now due to
+pruning) without getting bogged down by recursion.  Third, we show that an
+abstraction that replaces allocation sites by types (a generalization of
+\cite{smaragdakis11context}) is effective for pruning.
+
+% Experiments
+We ran our experiments on \numBenchmarks\ Java benchmarks using three clients that
+depend heavily on having an accurate pointer analysis: downcast safety
+checking, monomorphic call site inference, and race detection.
+We show that with pruning, our \PR\ algorithm enables us to perform $k$-object-sensitivity
+analysis with a substantially much finer abstraction (larger $k$)
+compared to a full $k$-object-sensitive analysis or even using the selected
+refinement strategy of \cite{liang11minimal}.
+In some cases, the non-pruning approaches hit a wall around $k=3$ but the \PR\
+algorithm is able to go well beyond $k=10$.

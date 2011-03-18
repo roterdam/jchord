@@ -1,0 +1,115 @@
+\def\I{{\mathbb I}}
+\def\S{{\mathbb S}}
+\def\L{{\mathbb L}}
+\def\V{{\mathbb V}}
+\def\H{{\mathbb H}}
+\def\I{{\mathbb I}}
+\def\J{{\mathbb J}}
+\def\F{{\mathbb F}}
+\def\N{{\mathbb N}}
+\def\M{{\mathbb M}}
+\def\D{{\mathbb D}}
+\def\G{{\mathbb G}}
+\def\T{{\mathbb T}}
+\def\P{{\mathbb P}}
+\def\Q{{\mathbb Q}}
+\def\O{{\mathbb O}}
+\def\A{{\mathbb A}}
+\def\C{{\mathbb C}}
+\def\U{{\mathbb U}}
+
+\def\fun{\rightarrow}
+\def\eqdef{\triangleq}
+
+\def\numBenchmarks{five}
+\def\elevator{{\small {\tt elevator}}}
+\def\hedc{{\small {\tt hedc}}}
+\def\weblech{{\small {\tt weblech}}}
+\def\lusearch{{\small {\tt lusearch}}}
+\def\avrora{{\small {\tt avrora}}}
+\def\hsqldb{{\small {\tt hsqldb}}}
+
+\newcommand\race{\text{\sc race}}
+\newcommand\monosite{\text{\sc monosite}}
+\newcommand\downcast{\text{\sc downcast}}
+\newcommand\dlogUpdate{\Leftarrow}
+
+%\newcommand{\denselist}{\itemsep 0pt\topsep-6pt\partopsep-6pt}
+
+\newcommand\xo{x_\text{\sc o}}
+%\newcommand\bDo{\bD_\text{\sc o}}
+\newcommand\dl[1]{\text{\tt #1}}
+\newcommand\defn[1]{\text{(#1)}}
+\newcommand\ind{\textcolor{white}{$-$}}
+\newcommand\range{\text{range}}
+\def\bigmid{\;\mid\;}
+\def\identity{\text{id}}
+
+\newcommand\ptsV{\dl{ptsV}}
+\newcommand\ptsG{\dl{ptsG}}
+\newcommand\heap{\dl{heap}}
+\newcommand\reachM{\dl{reachM}}
+\newcommand\reachP{\dl{reachP}}
+\newcommand\cg{\dl{cg}}
+\newcommand\new{\dl{new}}
+\newcommand\argI{\dl{argI}}
+\newcommand\argM{\dl{argM}}
+\newcommand\stmt{\dl{stmt}}
+\newcommand\trgt{\dl{trgt}}
+\newcommand\head{\dl{head}}
+\newcommand\inst{\dl{inst}}
+\newcommand\stat{\dl{stat}}
+\newcommand\escO{\dl{escO}}
+\newcommand\escP{\dl{escP}}
+\newcommand\body{\dl{body}}
+\newcommand\ext{\dl{ext}}
+\def\mmain{\ensuremath{m_\text{main}}}
+
+% Graph example
+\newcommand\path{\dl{path}}
+\newcommand\edge{\dl{edge}}
+\newcommand\common{\dl{common}}
+\renewcommand\head{\dl{head}}
+\newcommand\Ga{\text{\sc g}_1}
+\newcommand\Gb{\text{\sc g}_2}
+\newcommand\initNode{0}
+
+%\newcommand\vek[1]{\overrightarrow{#1}}
+\renewcommand\vec[1]{[#1]}
+\newcommand\vek[1]{[#1]}
+
+% Abstractions
+%\newcommand\dom{\sD}
+\newcommand\dom{\H}
+\newcommand\distinct{\delta}
+\newcommand\hclass{\tau}
+\newcommand\typeIs{\text{\sc i}}
+\newcommand\typeHas{\text{\sc c}}
+\newcommand\hclassIs{\tau_\typeIs}
+\newcommand\hclassHas{\tau_\typeHas}
+\newcommand\hclassIsHas{\tau_{\typeIs \times \typeHas}}
+\newcommand\klimabs{\pi}
+\newcommand\klimdabs{\hat\klimabs}
+\newcommand\Klimabs{\bpi}
+\newcommand\Klimdabs{\hat\Klimabs}
+\newcommand\cklimabsk{\klimabs_k\circ\hclass}
+\newcommand\cklimdabsk{\klimdabs_k\circ\hclass}
+
+% Algorithms
+\newcommand\PR{\text{\sc pr}}
+\newcommand\Full{\text{\sc full}}
+\newcommand\Site{\text{\sc site}}
+
+\newcommand\Fullk{\Full(\klimabs)}
+\newcommand\Sitek{\Site(\klimabs)}
+\newcommand\PRk{\ensuremath{\PR(\klimabs)}}
+\newcommand\PRkIs{\ensuremath{\PR(\klimabs,\hclassIs)}}
+\newcommand\PRkHas{\ensuremath{\PR(\klimabs,\hclassHas)}}
+\newcommand\PRkIsHas{\ensuremath{\PR(\klimabs,\hclassIsHas)}}
+
+\newcommand\Fullkd{\Full(\klimdabs)}
+\newcommand\Sitekd{\Site(\klimdabs)}
+\newcommand\PRkd{\ensuremath{\PR(\klimdabs)}}
+\newcommand\PRkIsd{\ensuremath{\PR(\klimdabs,\hclassIs)}}
+\newcommand\PRkHasd{\ensuremath{\PR(\klimdabs,\hclassHas)}}
+\newcommand\PRkIsHasd{\ensuremath{\PR(\klimdabs,\hclassIsHas)}}

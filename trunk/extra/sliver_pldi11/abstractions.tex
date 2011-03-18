@@ -1,0 +1,290 @@
+\Section{abstractionExamples}{Abstractions}
+
+Recall from \refsec{preliminaries} that we separate the Datalog program that
+computes the query from the abstraction.  In \refsec{klimited}, we described
+the Datalog programs that computed the queries for our three clients based on
+$\infty$-object-sensitivity.  We now describe the abstractions that use to
+further abstract this analysis.
+
+The basic abstraction (\refsec{klimitedAbstraction}) corresponds exactly to
+$k$-object-sensitivity.  We then present two orthogonal variants: one that in
+addition limits the repetition of allocation sites (\refsec{barelyAbstraction})
+and one that further abstracts allocation sites using type information
+(\refsec{classAbstraction}).
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\Subsection{klimitedAbstraction}{$k$-limited abstraction}
+
+The {\em $k$-limited abstraction}
+essentially partitions chains based on their length $k$ prefix.
+We first setup some notation.
+%Let $\dom$ be a set of values (e.g., $\dom = \{ 0, 1 \}$).
+For a chain $c \in \dom^*$, let $|c|$ denote the length of the chain.
+Let $c[i]$ be the $i$-th element of $c$ (starting with index 1) and let
+let $c[i..j]$ be the subchain $[c[i] \cdots c[j]]$
+(boundary cases: $c[i..j] = [\,]$ if $i > j$ and $c[i..j] = c[i..|c|]$ if $j > |c|$).
+For two chains $c_1, c_2$, let $c_1+c_2$ denote concatenation.
+For a chain $c$, let $c*$ denote the set of all chains
+with prefix $c$; formally:
+\begin{align}
+c* \eqdef \{ c' \times \H^* : c'[1..|c|] = c \}.
+\end{align}
+%It is important that $c*$ is a set.
+
+For an integer truncation level $k \ge 0$, define the abstraction $\klimabs_k$ as follows:
+\begin{align}
+\label{eqn:klimitedAbstraction}
+\klimabs_k(c) \eqdef
+\begin{cases}
+\{c\}     & \text{if $|c| < k$} \\
+c[1..k]*  & \text{if $|c| \ge k$}. \\
+\end{cases}
+\end{align}
+If the concrete chain $c$ is shorter than length $k$,
+we map it to the singleton set $\{ c \}$;
+otherwise, we map it to the set of chains that share the first $k$ elements.
+It is easy to verify that $\klimabs_k$ as defined is a valid abstraction under \refdef{abstraction}.
+\reffig{repeatingExample} shows an example.
+
+\begin{figure}
+\[
+\arraycolsep=3.5pt
+\begin{array}{llllllll}
+\{\vec{0}\}    &            &              &            & \{\vec{1}\} \\
+\{\vec{00}\}   &            & \{\vec{01}\} &            & \{\vec{10}\} &            & \{\vec{11}\} \\
+\vec{000}*     & \vec{001}* & \vec{010}*   & \vec{011}* & \vec{100}*   & \vec{101}* & \vec{110}* & \vec{111}*
+\end{array}
+\]
+\caption{\label{fig:repeatingExample} For the $k$-limited abstraction
+with $\dom = \{ 0, 1 \}$ and $k = 3$, the equivalence classes defined by $\klimabs_k$.
+}
+\end{figure}
+
+Traditionally, $k$-limited analyses
+simply use a list of sites ``$c$'' to represent an abstract value,
+not making a distinction between $\{c\}$ and $c*$;
+however when we do pruning, this distinction is crucial.
+Suppose that $k=3$.
+Na\"ively, ``$\vec{01}$'' would just represent $\{\vec{01}\}$.
+The problem comes when we prune.
+If we prune ``$\vec{010}$'', then ``$\vec{01}$'' really represents $\{\vec{01}\}\cup \vec{010}*$
+because any chain starting with $\vec{010}$ must now fall back on ``$\vec{01}$''.
+This is unacceptable because pruning tuples should not change the abstraction.
+Actually, the situation is worse, because (i) in fact no pruning
+(in the sense that some chains are ignored)
+would happen and (ii) the resulting analysis would be much more imprecise because
+``$[\,]$'' is always be present for representing the context of the main method,
+but this is a prefix of any chain.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\Subsection{barelyAbstraction}{Barely-repeating $k$-limited abstraction}
+
+When we applied the $k$-limited abstraction empirically,
+we noticed that a major reason why it did not scale was
+the seemingly unnecessary combinatorial explosion associated chains formed
+by cycling endlessly through the same allocation sites.
+For $k$-CFA, this repetition corresponds to recursion.
+For $k$-object-sensitivity, this corresponds to recursive allocation, as
+illustrated in \reffig{recursion}.\footnote{
+Incidentally, the example in the figure also gives an interesting example where
+$k$-object-sensitivity for any finite $k$ (no matter how large) is less precise
+than $\infty$-object-sensitivity.}
+We therefore wish to define an abstraction that not only truncates at $k$ but also truncates
+a chain when it starts repeating.
+
+\begin{figure}
+\begin{center}
+\begin{minipage}{2in}
+\begin{verbatim}
+class A {
+  f() {
+0:  v = new A
+    if (*) return v
+    else return v.f()
+  }
+}
+\end{verbatim}
+\end{minipage}
+\begin{minipage}{1in}
+\begin{verbatim}
+1:  x1 = new A
+2:  x2 = new A
+    y1 = x1.f()
+    y2 = x2.f()
+\end{verbatim}
+\end{minipage}
+\end{center}
+\caption{\label{fig:recursion} An example illustrating the repetition of allocation sites.
+The points-to set of {\tt y1} using $\infty$-object-sensitivity
+is $\{\vec{01},\vec{001},\vec{0001},\dots\}$ (any positive number of zeros followed by a 1),
+and the points-to set of {\tt y2} is $\{\vec{02},\vec{002},\vec{0002},\dots\}$.
+These two sets are disjoint, but for any finite $k$, no matter how large,
+$k$-object-sensitivity would conclude that both point to $\bzero_k*$, where $\bzero_k$ is a chain of $k$ zeros.
+}
+\end{figure}
+
+For a sequence $c$, we say $c$ is {\em non-repeating} if all its elements are distinct.
+We say $c$ is {\em barely-repeating} if $c$ excluding the last element ($c[1..|c|-1]$)
+is {\em non-repeating}.  Note that a barely-repeating includes the non-repeating case.
+Let $\delta(c)$ be the length of the longest prefix that is barely-repeating:
+\begin{align}
+\label{eqn:barelyLen}
+\distinct(c) \eqdef \max_{m' : c[1..m'] \text{ is barely-repeating}} m'.
+\end{align}
+For example, $\distinct(\vec{10010}) = 3$ because $\vec{100}$ is barely-repeating, but $\vec{1001}$ is not.
+
+Then we define the {\em barely-repeating $k$-limited abstraction} $\klimdabs_k$ as follows:
+\begin{align}
+\label{eqn:barelyAbstraction}
+\klimdabs_k(c) & \eqdef \klimabs_{\min\{k,\delta(c)\}}(c),
+\end{align}
+\reffig{barelyExample} shows an example of $\klimdabs_k$.
+It is not automatic that $\klimabs_k$ is a valid abstraction,
+but we can check that it is:
+\begin{proposition}
+\label{prop:barelyAbstraction}
+The function $\klimdabs_k$ defined in \refeqn{barelyAbstraction} is a valid abstraction
+(\refdef{abstraction}).
+\end{proposition}
+\begin{proof}
+We consider two cases: (i) for $\{c\} \in \range(\klimdabs_k)$,
+we have $\klimdabs_k(c) = \{c\}$; and (ii) for any $c* \in \range(\klimdabs_k)$,
+either $|c| = k$ or $c$ is barely-repeating; in either case,
+we can check that any extension $c' \in c*$ will have $\klimabs_k(c') = c*$.
+\end{proof}
+Remark: one might wonder why we defined the abstraction using the barely-repeating criterion
+as opposed to the simpler non-repeating criterion.
+It turns out that using the latter in \refeqn{barelyLen} would not result in a valid abstraction.
+If $\klimdabs_k$ were defined using the non-repeating criterion,
+then $\klimdabs_3(\vec{00}) = \vec{0}*$.
+But for $\vec{01} \in \vec{0}*$, we have $\klimdabs_3(\vec{01}) = \{\vec{01}\} \neq \vec{0}*$.
+
+\begin{figure}
+\[
+\begin{array}{lllllll}
+\{\vec{0}\}    &            &              &            & \{\vec{1}\} \\
+\vec{00}*      &            & \{\vec{01}\} &            & \{\vec{10}\} &            & \vec{11}* \\
+               &            & \vec{010}*   & \vec{011}* & \vec{100}*   & \vec{101}* &
+\end{array}
+\]
+\caption{\label{fig:barelyExample} For the barely-repeating $k$-limited abstraction
+for $\dom = \{0,1\}$ and $k = 3$, we show the equivalence classes under $\klimdabs_k$.
+Compare this with the classes for the $k$-limited abstraction (\reffig{repeatingExample}).
+Note that, for example,
+$\vec{000}*$ and $\vec{001}*$ are collapsed into $\vec{00}*$ since $\vec{000}$ and $\vec{001}$ are not barely-repeating,
+but $\vec{00}$ is.
+}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\Subsection{classAbstraction}{Class-based abstraction}
+
+We now introduce an abstraction that we will use in the pre-pruning step of the \PR\ algorithm.
+We start by defining an equivalence relation over allocation sites $\dom$,
+represented by a function $\hclass : \dom \mapsto \sP(\dom)$
+mapping each allocation site $h \in \dom$ to its its equivalence class.
+Given such such an $\hclass$, we could then extend it sequences by elementwise application:
+\begin{align}
+\hclass(c) = \hclass(c[1]) \times \cdots \times \hclass(c[|c|]), \quad c \in \dom^*.
+\end{align}
+
+To construct $\hclass$, we consider two sources of type information associated
+with an allocation site, motivated by \cite{smaragdakis11context}:
+\begin{align}
+\typeIs(h)  &= \text{declaring type of allocation site $h$} \label{eqn:typeIs} \\
+\typeHas(h) &= \text{type of class containing allocation site $h$} \label{eqn:typeHas}
+\end{align}
+Using these two functions, we can construct three equivalence relations,
+$\hclassIs$, $\hclassHas$, and $\hclassIsHas$ as follows:
+\begin{align}
+\hclass_f(h) = \{ h' : f(h) = f(h') \}, \label{eqn:hclass}
+\end{align}
+with $f \in \{ \typeIs, \typeHas, \typeIs \times \typeHas \}$.
+
+% Complementary
+Now we have three options for $\hclass$ which are complementary to the
+$k$-limited abstraction: $\hclass$ abstracts a chain by abstracting each site
+uniformly; $\pi_k$ keeps all sites up to a length $k$ prefix precisely but
+abstracts away the rest completely.  This complementarity is desirable
+for pre-pruning.
+However, $\hclass$ is not coarser than $\klimabs_k$, and therefore cannot
+be used directly in the \PR\ algorithm.
+
+However, we can compose $\hclass$ and $\klimabs_k$ to yield another abstraction which will be coarser than $\klimabs_k$.
+But in what order should we compose?
+We must take care because the composition of two equivalence relations is not necessarily an equivalence relation.
+The following proposition shows which orderings are valid:
+\begin{proposition}
+The functions
+(i) $\klimabs_k \circ \hclass$ and (ii) $\hclass \circ \klimabs_k$
+are valid abstractions (see \refdef{abstraction}) and equivalent;
+(iii) $\klimdabs_k \circ \hclass$ is also valid,
+but (iv) $\hclass \circ \klimdabs_k$ is not.
+\end{proposition}
+\begin{proof}
+For each of these four composed functions, each set $s$ in the range of the function
+must be either of the form $s = w_1 \times \cdots \times w_m$ for $m < k$ (case 1)
+or $s = w_1 \times \cdots \times w_m \times \dom^*$ for some $m \le k$ (case 2),
+where $w_i \in \range(\hclass)$ for each $i = 1, \dots, m$.
+
+For (i) and (ii), it is straightforward to check
+$(\klimabs_k \circ \hclass)(c) = (\hclass \circ \klimabs_k)(c) = s$ for each $c \in s$.
+Intuitively, the truncation ($\klimabs_k$) and coarsening ($\tau$) operate
+independently and can be interchanged.
+
+For (iii) and (iv), the two dimensions do not act independently;
+the amount of truncation depends on the amount of coarsening:
+the coarser $\hclass$ is, the more truncation one might need to limit repetitions.
+Showing that $\klimdabs_k \circ \hclass$ is valid
+proceeds in a similar manner to \refprop{barelyAbstraction}.
+If $s$ falls under case 1, note that no $c \in s$ is repeating
+because the $w_i$'s must be disjoint; therefore $\klimdabs_k(\tau(c)) = s$.
+If $s$ falls under case 2, note that for any $c[1..m] \in s$ must be barely-repeating but any longer prefix is not,
+and therefore, $\klimdabs_k(\tau(c)) = s$.
+
+To show that (iv) is not an abstraction,
+consider the following counterexample:
+let $\dom = \{ 0,1,2 \}$,
+and define $\hclass(v) = \dom$ for all $v \in \dom$
+(there is one equivalence class).
+Consider two elements $\vec{01}$ and $\vec{00}$ under the composed abstraction:
+For $\vec{01}$, we have $\klimdabs_3(\vec{01}) = \{ \vec{01 }\}$,
+so $\hclass(\klimdabs_3(\vec{01})) = \dom^2$;
+for $\vec{00}$, we have $\klimdabs_3(\vec{00}) = \vec{00}*$,
+so $\hclass(\klimdabs_3(\vec{00})) = \dom^2 \times \dom^*$.
+But $\dom^2 \subsetneq \dom^2 \times \dom^*$ (notably,
+the two sets are neither equal nor disjoint),
+so $\hclass \circ \klimdabs_3$ does not define an equivalence relation.
+\end{proof}
+
+In light of this result, we will use the valid abstractions $\cklimabsk$ and $\cklimdabsk$,
+which work by first applying $\hclass$ and then applying $\klimabs_k$ or $\klimdabs_k$.
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\Subsection{computation}{Computation}
+%
+%In order to use the PR algorithm (\reffig{pseudocode}),
+%we need to implement the various steps efficiently.
+%
+%We now present techniques for computing 
+%
+%\paragraph{Pre-pruning step}
+%
+%Computing $\cklimdabsk$
+%
+%\paragraph{Pruning step}
+%
+%However, need to compute $\ext$.
+%
+%\paragraph{Refinement step}
+%
+%We use $\alpha_t = \klimdabs_{t+1}$
+%and $\beta_t = \klimdabs_{t+1}$
+%and we set $\hclass(h)$ to be the dynamic type of allocation site $h$.
+%
+%Computing $\klimdabs_{k+1}$
+%
+%Suppose we have we have a current $A_k \subset \range(\klimdabs_k)$.
+%For $c \in \dom^*$.
+%$\alpha_{k+1}(\{c\}) = $
+%Given $c$, we consider
