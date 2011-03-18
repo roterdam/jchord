@@ -1,19 +1,18 @@
 \Section{preliminaries}{Preliminaries}
 
-The pruning approach that we present in this paper works on Datalog, a general
-language that has been used to express static analyses declaratively \cite{Whaley2007,bravenboer}.  Normally,
-these analyses are defined using one monolithic Datalog program which
-computes an abstract answer to a query.
-For us, it will be convenient to consider the Datalog program, which computes the concrete answer to a query,
-as distinct from the abstraction, which is applied on the Datalog program to generate an abstract answer.
-This separation will allow us to make theoretical
-statements comparing the same Datalog program across different
+Our pruning technique works on Datalog, a general language which can be used to
+express static analyses declaratively \cite{Whaley2007,bravenboer}.  Normally,
+these analyses are encoded by one monolithic Datalog program which computes an
+abstract answer to a query.  For us, it will be convenient to consider the
+Datalog program, which computes the concrete answer to a query, as distinct
+from the abstraction, which is applied on the Datalog program to compute an
+abstract answer.  This separation allow us to make theoretical statements
+comparing the behavior of the same Datalog program across different
 abstractions.
 
-We first define Datalog (\refsec{datalog}), which describes the
-computation of a query (think more in the direction of concrete semantics).
-Then, we focus on the abstraction (\refsec{abstractions}), which only interacts
-with the Datalog program via the input tuples.
+We first define Datalog and the computation of a concrete query
+(\refsec{datalog}).  Then, we focus on the abstraction (\refsec{abstractions}),
+which interacts with the Datalog program by transforming the input tuples.
 Throughout this section, we will use \reffig{graphExample} as a running example.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -41,6 +40,10 @@ Throughout this section, we will use \reffig{graphExample} as a running example.
 {\bf Constants}: $\sC = \{ \Ga, \Gb, 0, 1, 2, 3, \vec{0}, \vek{01}, \dots \}$.
 \\
 \\
+{\bf Abstraction}:
+%$\alpha_k(c) = \{ c' : \text{$c$ and $c'$ have same length $k$ prefix}\}$
+\\
+\\
 \includegraphics[scale=0.5]{figures/graphExample}
 \caption{\label{fig:graphExample}
 A simple example illustrating Datalog:
@@ -49,7 +52,7 @@ and we want to compute the query tuple $\common(\Ga,\Gb,3)$,
 asking whether the two graphs have a common path from node $0$ to node $3$.
 Given the input tuples encoding the graph,
 the Datalog program computes a set of derived tuples from the rules.
-In this case, the absence of $\common(\Ga,\Gb,3)$ means the query is false.
+In this case, the absence of $\common(\Ga,\Gb,3)$ from the derived tuples means the query is false (proven).
 }
 \end{figure}
 
@@ -87,7 +90,7 @@ constants.  To simplify notation later, we extend an assignment $f$ so that it
 can be applied (i) to constants ($f(c) = c$ for $c \in \sC$), and (ii) to terms by
 replacing the variables in the term with constants ($f(t) = t.r(f(t.a_1), \dots, f(t.a_{|t.\ba|}))$).
 
-\begin{figure}[ht]
+\begin{figure}[t]
 %{\bf Notation:} \\
 \[
 \begin{array}{ll}
@@ -154,34 +157,115 @@ This equivalence suggests that proving and pruning are intimately related;
 in some sense, proving the query is just pruning away the query tuple.
 In the remainder of the paper, we will make heavy use of $\bP$ as the principal
 proving/pruning operation.
+In our graph example, $\bD(X) = \bP(X) = \emptyset$,
+but as we will see later, this is not true if we apply an abstraction to $X$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \paragraph{Computation}
 
-We can compute $\bP(X)$ in Datalog by using the Datalog program transformation technique described in 
+We can compute $\bP(X)$ in Datalog itself by using the Datalog program transformation technique described in 
 \cite{liang11minimal}.
-This allows us to use off-the-shelf Datalog solvers which have already been optimized
-to compute $\bP(X)$.
-Specifically, we define a set of new relations $\sR' = \{ r' : r \in \sR \}$.
+This allows us to use off-the-shelf optimized Datalog solvers to compute $\bP(X)$.
+The technique is as follows: Define a set of new relations $\sR' = \{ r' : r \in \sR \}$.
 For a term $t = t.r(t.\ba)$ we let $t' = t.r'(t.\ba)$ be the term that uses the corresponding new relation.
 We then add the following new Datalog rules:
 \begin{align}
 \xo' &\dlogUpdate \xo, \label{eqn:revBase} \\
 s'   &\dlogUpdate z.t', z.\bs \quad \text{for each $z \in \sZ$ and $s \in z.\bs$.} \label{eqn:indBase}
 \end{align}
-The key point is that a tuple $x'$ is derived by the new Datalog program if and only if $x \in \bP(X)$.
+The key fact is that a tuple $x'$ is derived by the new Datalog program if and only if $x \in \bP(X)$.
+
 These two rules construct $\bP(X)$ recursively:
 The base case \refeqn{revBase} states that the query tuple $\xo \in \bP(X)$.
 The recursive case \refeqn{indBase} states that if $x \in \bP(X)$ and a rule $z$ (with some assignment $f$)
 was used to produce $x$, then for every source term $s \in z.\bs$ of that rule,
 we also have $f(s) \in \bP(X)$.
+For example, the last rule of \reffig{graphExample} creates the following three rules:
+\begin{center}
+\scalebox{0.85}{
+$
+\begin{array}{lcl}
+\path'(g_1,c)    &\dlogUpdate& \common'(g_1,g_2,i), \path(g_1,c), \path(g_2,c), \head(c,i). \\
+\path'(g_2,c)    &\dlogUpdate& \common'(g_1,g_2,i), \path(g_1,c), \path(g_2,c), \head(c,i). \\
+\head'(c,i)      &\dlogUpdate& \common'(g_1,g_2,i), \path(g_1,c), \path(g_2,c), \head(c,i). \\
+\end{array}
+$
+}
+\end{center}
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{abstractions}{Abstractions}
 
+%\Subsection{klimitedAbstraction}{$k$-limited abstraction}
+\paragraph{$k$-limited abstraction}
+
+The {\em $k$-limited abstraction}
+essentially partitions chains based on their length $k$ prefix.
+We first setup some notation.
+%Let $\dom$ be a set of values (e.g., $\dom = \{ 0, 1 \}$).
+For a chain $c \in \dom^*$, let $|c|$ denote the length of the chain.
+Let $c[i]$ be the $i$-th element of $c$ (starting with index 1) and
+let $c[i..j]$ be the subchain $[c[i] \cdots c[j]]$
+(boundary cases: $c[i..j] = [\,]$ if $i > j$ and $c[i..j] = c[i..|c|]$ if $j > |c|$).
+For two chains $c_1, c_2$, let $c_1+c_2$ denote concatenation.
+For a chain $c$, let $c*$ denote the set of all chains
+with prefix $c$; formally:
+\begin{align}
+c* \eqdef \{ c' \in \H^* : c'[1..|c|] = c \}.
+\end{align}
+%It is important that $c*$ is a set.
+
+For an integer truncation level $k \ge 0$, define the abstraction $\klimabs_k$ as follows:
+\begin{align}
+\label{eqn:klimitedAbstraction}
+\klimabs_k(c) \eqdef
+\begin{cases}
+\{c\}     & \text{if $|c| < k$} \\
+c[1..k]*  & \text{if $|c| \ge k$}. \\
+\end{cases}
+\end{align}
+If the concrete chain $c$ is shorter than length $k$,
+we map it to the singleton set $\{ c \}$;
+otherwise, we map it to the set of chains that share the first $k$ elements.
+It is easy to verify that $\klimabs_k$ as defined is a valid abstraction under \refdef{abstraction}.
+\reffig{repeatingExample} shows an example.
+
+\begin{figure}
+\[
+\arraycolsep=3.5pt
+\begin{array}{llllllll}
+\{\vec{0}\}    &            &              &            & \{\vec{1}\} \\
+\{\vec{00}\}   &            & \{\vec{01}\} &            & \{\vec{10}\} &            & \{\vec{11}\} \\
+\vec{000}*     & \vec{001}* & \vec{010}*   & \vec{011}* & \vec{100}*   & \vec{101}* & \vec{110}* & \vec{111}*
+\end{array}
+\]
+\caption{\label{fig:repeatingExample} For the $k$-limited abstraction
+with $\dom = \{ 0, 1 \}$ and $k = 3$, the equivalence classes defined by $\klimabs_k$.
+}
+\end{figure}
+
+Traditionally, $k$-limited analyses
+simply use a list of sites ``$c$'' to represent an abstract value,
+not making a distinction between $\{c\}$ and $c*$;
+however when we do pruning, this distinction is crucial.
+Suppose that $k=3$.
+Na\"ively, ``$\vec{01}$'' would just represent $\{\vec{01}\}$.
+The problem comes when we prune.
+If we prune ``$\vec{010}$'', then ``$\vec{01}$'' really represents $\{\vec{01}\}\cup \vec{010}*$
+because any chain starting with $\vec{010}$ must now fall back on ``$\vec{01}$''.
+This is unacceptable because pruning tuples should not change the abstraction.
+Actually, the situation is worse, because (i) in fact no pruning
+(in the sense that some chains are ignored)
+would happen and (ii) the resulting analysis would be much more imprecise because
+``$[\,]$'' is always present for representing the context of the main method,
+but this is a prefix of any chain.
+
+
+
 Given a Datalog program, we define an {\em abstraction} as a equivalence relation over
-the constants $\sC$ (concrete values).  In particular, we represent it as the projection
-function which maps each element to its equivalence class (its abstract value):
+constants $\sC$ (these are the concrete values).  In particular, we represent the abstraction as the projection
+function which maps each constant to its equivalence class (its abstract value):
 \begin{definition}
 \label{def:abstraction}
 An abstraction is a function $\alpha : \sC \to \sP(\sC)$
@@ -201,7 +285,7 @@ This abstraction is a simplified version of the abstractions we use in our
 $k$-limited analyses (see \refsec{abstractionExamples}).
 
 % Extend to sets
-We extend $\alpha$ to sets of constants (which we also call abstract values):
+We extend $\alpha$ to sets of constants (abstract values):
 \begin{align}
 \alpha(s) = \{ \alpha(c) : c \in s \}, \quad s \in \sP(\sC),
 \end{align}
@@ -216,18 +300,19 @@ that if $\alpha_1 \preceq \alpha_2$, then $\alpha_1 \circ \alpha_2 = \alpha_1$
 (applying a finer abstraction first has no impact).
 Note that in general for arbitrary $\alpha_1,\alpha_2$,
 the composition $\alpha_1 \circ \alpha_2$ is not an abstraction;
-it is something that we must check when we consider compositions in
+it is something that we must check when we define new compositions in
 \refsec{algorithm}.
 
 % Extend to tuples
-We also extend $\alpha$ to concrete tuples $x$ and sets of concrete tuples $X$:
+Next, we extend $\alpha$ to concrete tuples $x$ and sets of concrete tuples $X$
+in the usual way:
 \begin{align}
 \alpha(x) &= x.r(\alpha(x.a_1), \dots, \alpha(x.a_{|x.\ba|})), \\
 \alpha(X) &= \{ \alpha(x) : x \in X \}.
 \end{align}
 Here, $\alpha(x)$ is an abstract tuple (one where the arguments are abstract values)
 and $\alpha(X)$ is a set of abstract tuples.
-For example:
+For the abstraction $\alpha$ in the running example, we have:
 \begin{align}
 & \alpha(\ext(1, [0], [10])) = \\
 & \quad\quad \ext(1, \{[0], [00], [01], \dots\}, \{[1], [10], [11], \dots\}). \nonumber
@@ -237,7 +322,7 @@ Finally, we extend $\alpha$ to abstract tuples $b$ and sets of abstract tuples $
 \alpha(b) &= \{ b.r(s_1, \dots, s_{|b.\ba|}) : \forall i, s_i \in \alpha(b.a_i) \}, \label{eqn:alphab} \\
 \alpha(B) &= \cup_{b \in B} \alpha(b). \label{eqn:alphaB}
 \end{align}
-\refeqn{alphab} applies the abstraction function to each component and takes the cross product over the possible abstract values,
+\refeqn{alphab} applies the abstraction function to each component and takes the cross product over the resulting abstract values,
 yielding a set of abstract tuples;
 \refeqn{alphaB} aggregates these sets of abstract tuples.
 
