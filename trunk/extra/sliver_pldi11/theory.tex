@@ -11,7 +11,7 @@ full \PR\ algorithm (\refsec{algorithm}).
 Recall that the central operation is $\bP$, which serves two functions: (i)
 determining queries are proven (when $\bP$ returns $\emptyset$); and (ii)
 performing pruning by returning the subset of input tuples to keep.
-The following theorem is key equation that drives everything in this paper (see \refapp{proofs} for the proof):
+The following theorem is the key equation that drives everything in this paper (see \refapp{proofs} for the proof):
 
 \begin{theorem}[Pruning is sound and complete]
 \label{thm:master}
@@ -118,7 +118,7 @@ the \PR\ algorithm on the graph example from \reffig{graphExample} (without pre-
 where the abstraction $\alpha_t$ maps $c$ to all paths that match $c$ on the first $t+1$ nodes.
 Notation: $c*$ denotes the set of all paths with prefix $c$.
 During the first pruning step, $\ext(2,\vec{0}*,\vec{2}*)$ is pruned from $A_0$,
-yielding $\tilde A_0$.  In the refine step, we expand $\vec{1}*$ to $\vec{1}$ and $\vec{10}*$,
+yielding $\tilde A_0$.  In the refine step, we expand $\vec{1}*$ to $\{ \vec{1} \}$ and $\vec{10}*$,
 resulting in an extra tuple.  In the second pruning step, we prove the query
 (pruning everything).
 }
