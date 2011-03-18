@@ -1,0 +1,49 @@
+Experiments
+	Dimensions
+		Method
+			Full
+			Site
+			PR
+			pre-pruned PR (3 variants)
+		Benchmarks
+			elevator
+			hedc
+			weblech
+			lusearch
+			avrora
+			hsqldb
+		Clients
+			downcast
+			monosite
+			datarace
+		Iterations
+			...
+	Each point has
+		Abstraction sizes, number of queries proven, times, etc...
+	Messages
+		Aggregate statistics across clients and benchmarks and iterations (for comparing methods)
+			Fraction of full abstraction size
+			Number of extra iterations that can be extended (cut off at 20)
+		Full to site to PR to pre-pruned PR
+			Smaller abstraction sizes, higher $k$ values
+				GRAPH: abstraction size x iterations (each curve is a method: full, site, PR, PR-prepruning); 3 clients x 2?/6 benchmarks
+			More queries proven (sometimes)
+				TABLE: number of queries proven (3 clients, 6 benchmarks, highlight ones obtained by PR)
+					18 x iterations
+				Note: hits wall, refer to OOPSLA (limitation of $k$-limited)
+			Faster (sometimes)
+				GRAPH: time x iterations (full versus pre-pruned PR - just analysis, relevant computation, pre-pruning cumulative over iterations); 3 clients x 2?/6 benchmarks
+		Complexity control
+			Fraction change in abstraction size for each of these operations: refinement,
+			 pre-pruning (projection to coarse, pruning in in coarse), pruning
+			TABLE: 3*6*iterations (or projections) x fraction
+		Barely-repeating allows convergence ($k=\infty$)
+			downcast/hedc, downcast/avrora, downcast/lusearch, monosite/elevator, race/elevator (downcast/elevator is trivial)
+			GRAPH: abstraction size x iterations (each curve is a method)
+			Others client/benchmark pairs: slighty worse worse
+			Same precision except for one case
+		Class-based
+			Methods: none, is, has, is-has
+			TABLE: aggregate statistics 
+			Conclusion: is-has is best
+Conclusion
