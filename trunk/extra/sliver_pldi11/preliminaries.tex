@@ -1,11 +1,16 @@
 \Section{preliminaries}{Preliminaries}
 
 The pruning approach that we present in this paper works on Datalog, a general
-language that has been used recently to declaratively express static analyses \cite{Whaley2007,bravenboer}.  Normally, one thinks of
-the Datalog program as encapsulating the abstraction, but it will be useful for us
-to decouple the two.\footnote{The reason is that we want to make theoretical
+language that has been used to express static analyses declaratively \cite{Whaley2007,bravenboer}.  Normally,
+these analyses are defined using one monolithic Datalog program which
+computes an abstract answer to a query.
+For us, it will be convenient to consider the Datalog program, which computes the concrete answer to a query,
+as distinct from the abstraction, which is applied on the Datalog program to generate an abstract answer.
+This separation will allow us to make theoretical
 statements comparing the same Datalog program across different
-abstractions.}  We first define Datalog (\refsec{datalog}), which describes the
+abstractions.
+
+We first define Datalog (\refsec{datalog}), which describes the
 computation of a query (think more in the direction of concrete semantics).
 Then, we focus on the abstraction (\refsec{abstractions}), which only interacts
 with the Datalog program via the input tuples.
@@ -102,7 +107,7 @@ A_k \subset \sP(\sC)          & \defn{abstract input tuples after $k$ iterations
 %\Subsection{derivations}{Derivations}
 \paragraph{Derivations}
 
-Intuitively, a Datalog program takes a set of input tuples and derives new
+A Datalog program takes a set of input tuples and derives new
 tuples.  To formalize this computation, we define the notation of a derivation.
 
 A {\em derivation} (of the query $\xo$) with respect to a set of input tuples
@@ -113,7 +118,7 @@ there exists a set of indices $J$ such that $(J,i)$ satisfies the following cond
 $j < i$ for each $j \in J$, and
 there is a rule $z \in \sZ$ and an assignment $f$
 such that $f(z.t) = x_i$ and
-$\{ x_j : j \in J \} = \{ f(s) : s \in z.\bs \}$.
+$\{ x_j : j \in J \} = \{ f(s) : s \in z.\bs \}$;
 \item [(ii)] $x_n = \xo$; and
 \item [(iii)] 
 for each $j = 1, \dots, n\!-\!1$,
@@ -127,14 +132,14 @@ Condition (i) says that each tuple in a derivation
 should either be given as an input tuple ($x_i \in X$)
 or be the result of some rule $z \in \sZ$.
 Condition (ii) says that $\xo$ was finally produced via some sequence of rule applications.
-Condition (iii) says that the derivation of $x_n$ is minimal, that is, each tuple was
-used in some way; as we will see later, this condition is important because it allow us to
-define the set of relevant tuples for pruning.
+Condition (iii) says that in the derivation of $x_n$, every tuple is relevant for deriving $\xo$.
+%As we will see later, this condition is important because it allow us to
+%define the set of irrelevant tuples that can be pruned.
 
 A Datalog program computes $\bD(X)$.
-We say that the query $\xo$ is false (proven) if and only if $\bD(X) = \emptyset$.
+We say that the query $\xo$ is false (proven) if and only if $\bD(X)$ is empty.
 Although the query is the ultimate quantity of interest,
-the Datalog program can be used to provide more information that is useful for pruning.
+the Datalog program can be used to provide more information, which will be useful for pruning.
 Specifically, we define $\bP(X)$ to be the subset of the input tuples $X$
 which were used in some derivation:
 \begin{align}
@@ -154,15 +159,17 @@ proving/pruning operation.
 \paragraph{Computation}
 
 We can compute $\bP(X)$ in Datalog by using the Datalog program transformation technique described in 
-\cite{liang11minimal}; this allows us to use off-the-shelf Datalog solvers which have already been optimized.
+\cite{liang11minimal}.
+This allows us to use off-the-shelf Datalog solvers which have already been optimized
+to compute $\bP(X)$.
 Specifically, we define a set of new relations $\sR' = \{ r' : r \in \sR \}$.
-For a term $t = t.r(t.\ba)$ we let $t' = t.r'(t.\ba)$ be the term that using the corresponding new relation.
+For a term $t = t.r(t.\ba)$ we let $t' = t.r'(t.\ba)$ be the term that uses the corresponding new relation.
 We then add the following new Datalog rules:
 \begin{align}
-\xo' &\dlogUpdate \xo. \label{eqn:revBase} \\
-s'   &\dlogUpdate z.t', z.\bs. \label{eqn:indBase}
+\xo' &\dlogUpdate \xo, \label{eqn:revBase} \\
+s'   &\dlogUpdate z.t', z.\bs \quad \text{for each $z \in \sZ$ and $s \in z.\bs$.} \label{eqn:indBase}
 \end{align}
-The key is that a tuple $x'$ can be derived by the new Datalog program if and only if $x \in \bP(X)$.
+The key point is that a tuple $x'$ is derived by the new Datalog program if and only if $x \in \bP(X)$.
 These two rules construct $\bP(X)$ recursively:
 The base case \refeqn{revBase} states that the query tuple $\xo \in \bP(X)$.
 The recursive case \refeqn{indBase} states that if $x \in \bP(X)$ and a rule $z$ (with some assignment $f$)
