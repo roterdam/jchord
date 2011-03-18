@@ -14,7 +14,7 @@ Much work has been done on curbing this exponential growth
 \cite{HeintzeTardieu2001} approaches in pointer analysis,
 lazy abstraction \cite{henzinger02lazy,mcmillan06lazy} and other iterative refinement approaches in model checking).
 The general theme of all these approaches is that the
-complexity of the abstraction is increased only in parts deemed useful using
+complexity of the abstraction is increased only in parts deemed relevant using
 some feedback from a client query.
 
 % Pruning idea: general
@@ -53,7 +53,7 @@ guarantees.  By removing input tuples, we can only prove more queries.
 
 % Slivers
 We apply our pruning technique to the $k$-object-sensitivity abstraction
-\cite{kobj}, where objects on the heap are abstracted into a chain of
+\cite{kobj}, where objects in the heap are abstracted using chains of
 allocation sites.  Pruning in this setting corresponds to maintaining a subset
 of these chains.  Although the main contribution of the paper is the general
 pruning technique, we also make the following contributions specific to
@@ -68,7 +68,7 @@ abstraction that replaces allocation sites by types (a generalization of
 
 % Experiments
 We ran our experiments on \numBenchmarks\ Java benchmarks using three clients that
-depend heavily on having an accurate pointer analysis: downcast safety
+depend heavily on having a precise pointer analysis: downcast safety
 checking, monomorphic call site inference, and race detection.
 We show that with pruning, our \PR\ algorithm enables us to perform $k$-object-sensitivity
 analysis with a substantially much finer abstraction (larger $k$)

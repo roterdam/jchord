@@ -3,7 +3,7 @@
 Recall from \refsec{preliminaries} that we separate the Datalog program that
 computes the query from the abstraction.  In \refsec{klimited}, we described
 the Datalog programs that computed the queries for our three clients based on
-$\infty$-object-sensitivity.  We now describe the abstractions that use to
+$\infty$-object-sensitivity.  We now describe the abstractions that we use to
 further abstract this analysis.
 
 The basic abstraction (\refsec{klimitedAbstraction}) corresponds exactly to
@@ -20,14 +20,14 @@ essentially partitions chains based on their length $k$ prefix.
 We first setup some notation.
 %Let $\dom$ be a set of values (e.g., $\dom = \{ 0, 1 \}$).
 For a chain $c \in \dom^*$, let $|c|$ denote the length of the chain.
-Let $c[i]$ be the $i$-th element of $c$ (starting with index 1) and let
+Let $c[i]$ be the $i$-th element of $c$ (starting with index 1) and
 let $c[i..j]$ be the subchain $[c[i] \cdots c[j]]$
 (boundary cases: $c[i..j] = [\,]$ if $i > j$ and $c[i..j] = c[i..|c|]$ if $j > |c|$).
 For two chains $c_1, c_2$, let $c_1+c_2$ denote concatenation.
 For a chain $c$, let $c*$ denote the set of all chains
 with prefix $c$; formally:
 \begin{align}
-c* \eqdef \{ c' \times \H^* : c'[1..|c|] = c \}.
+c* \eqdef \{ c' \in \H^* : c'[1..|c|] = c \}.
 \end{align}
 %It is important that $c*$ is a set.
 
@@ -73,7 +73,7 @@ This is unacceptable because pruning tuples should not change the abstraction.
 Actually, the situation is worse, because (i) in fact no pruning
 (in the sense that some chains are ignored)
 would happen and (ii) the resulting analysis would be much more imprecise because
-``$[\,]$'' is always be present for representing the context of the main method,
+``$[\,]$'' is always present for representing the context of the main method,
 but this is a prefix of any chain.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -139,8 +139,7 @@ Then we define the {\em barely-repeating $k$-limited abstraction} $\klimdabs_k$ 
 \klimdabs_k(c) & \eqdef \klimabs_{\min\{k,\delta(c)\}}(c),
 \end{align}
 \reffig{barelyExample} shows an example of $\klimdabs_k$.
-It is not automatic that $\klimabs_k$ is a valid abstraction,
-but we can check that it is:
+We show that $\klimdabs_k$ is a valid abstraction:
 \begin{proposition}
 \label{prop:barelyAbstraction}
 The function $\klimdabs_k$ defined in \refeqn{barelyAbstraction} is a valid abstraction
@@ -150,7 +149,7 @@ The function $\klimdabs_k$ defined in \refeqn{barelyAbstraction} is a valid abst
 We consider two cases: (i) for $\{c\} \in \range(\klimdabs_k)$,
 we have $\klimdabs_k(c) = \{c\}$; and (ii) for any $c* \in \range(\klimdabs_k)$,
 either $|c| = k$ or $c$ is barely-repeating; in either case,
-we can check that any extension $c' \in c*$ will have $\klimabs_k(c') = c*$.
+it is easy to see that any extension $c' \in c*$ will have $\klimdabs_k(c') = c*$.
 \end{proof}
 Remark: one might wonder why we defined the abstraction using the barely-repeating criterion
 as opposed to the simpler non-repeating criterion.
@@ -183,7 +182,7 @@ We now introduce an abstraction that we will use in the pre-pruning step of the 
 We start by defining an equivalence relation over allocation sites $\dom$,
 represented by a function $\hclass : \dom \mapsto \sP(\dom)$
 mapping each allocation site $h \in \dom$ to its its equivalence class.
-Given such such an $\hclass$, we could then extend it sequences by elementwise application:
+Given such an $\hclass$, we could then extend it sequences by elementwise application:
 \begin{align}
 \hclass(c) = \hclass(c[1]) \times \cdots \times \hclass(c[|c|]), \quad c \in \dom^*.
 \end{align}

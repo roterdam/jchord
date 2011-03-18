@@ -67,7 +67,7 @@ For example, $\ext(j,c,c')$ is a term.
 We call a term whose arguments are all constants a {\em tuple}
 (e.g., $\ext(\initNode, [\,], \vec{\initNode})$).
 Note that the tuple includes the relation as well as the arguments.
-We let $\xo$ denote a designated {\em query tuple} (e.g., $\common()$),
+We let $\xo$ denote a designated {\em query tuple} (e.g., $\common(\Ga,\Gb,3)$),
 whose truth value we want to determine.
 
 Let $\sZ$ denote the set of rules,
@@ -127,7 +127,7 @@ Condition (i) says that each tuple in a derivation
 should either be given as an input tuple ($x_i \in X$)
 or be the result of some rule $z \in \sZ$.
 Condition (ii) says that $\xo$ was finally produced via some sequence of rule applications.
-Condition (iii) says that the derivation of $x_n$ is minimal; each tuple was
+Condition (iii) says that the derivation of $x_n$ is minimal, that is, each tuple was
 used in some way; as we will see later, this condition is important because it allow us to
 define the set of relevant tuples for pruning.
 
@@ -190,13 +190,8 @@ In the context of our example (\reffig{graphExample}),
 we could define an abstraction
 that maps a sequence $c$ to the set of sequences that have the same first element as $c$
 (e.g., $\alpha([10]) = \{ [1], [10], [11], \dots \}$).
-Applied to a tuple, we get
-\begin{align}
-& \alpha(\ext(1, [0], [10])) = \\
-& \quad\quad \ext(1, \{[0], [00], [01], \dots\}, \{[1], [10], [11], \dots\}). \nonumber
-\end{align}
 This abstraction is a simplified version of the abstractions we use in our
-$k$-limited analyses (see \refsec{abstractions}).
+$k$-limited analyses (see \refsec{abstractionExamples}).
 
 % Extend to sets
 We extend $\alpha$ to sets of constants (which we also call abstract values):
@@ -215,7 +210,7 @@ that if $\alpha_1 \preceq \alpha_2$, then $\alpha_1 \circ \alpha_2 = \alpha_1$
 Note that in general for arbitrary $\alpha_1,\alpha_2$,
 the composition $\alpha_1 \circ \alpha_2$ is not an abstraction;
 it is something that we must check when we consider compositions in
-\refsec{abstractions}.
+\refsec{algorithm}.
 
 % Extend to tuples
 We also extend $\alpha$ to concrete tuples $x$ and sets of concrete tuples $X$:
@@ -225,6 +220,11 @@ We also extend $\alpha$ to concrete tuples $x$ and sets of concrete tuples $X$:
 \end{align}
 Here, $\alpha(x)$ is an abstract tuple (one where the arguments are abstract values)
 and $\alpha(X)$ is a set of abstract tuples.
+For example:
+\begin{align}
+& \alpha(\ext(1, [0], [10])) = \\
+& \quad\quad \ext(1, \{[0], [00], [01], \dots\}, \{[1], [10], [11], \dots\}). \nonumber
+\end{align}
 Finally, we extend $\alpha$ to abstract tuples $b$ and sets of abstract tuples $B$:
 \begin{align}
 \alpha(b) &= \{ b.r(s_1, \dots, s_{|b.\ba|}) : \forall i, s_i \in \alpha(b.a_i) \}, \label{eqn:alphab} \\
@@ -258,7 +258,7 @@ then $\bP(X) = \emptyset$ (the query is false concretely).
 Computation of $\bP(X)$ on the graph example from \reffig{graphExample}
 under an abstraction which maps a path onto the set of paths with the same first element
 (e.g., $\alpha(\vec{10}) = \{\vec{1}, \vec{10}, \vec{11}, \dots \} \eqdef \vec{1}*$).
-Each abstract tuple is derived by a rule whose source terms corresponding to the incoming edges.
+Each abstract tuple is derived by a rule whose source terms correspond to the incoming edges.
 Relevant input tuples ($\bP(X)$, shown in green) are the ones which are reachable by following the edges backwards;
 ones which are not are pruned ($X\backslash\bP(X)$, shown in red).
 }
