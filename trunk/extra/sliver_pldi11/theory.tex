@@ -1,23 +1,24 @@
 \Section{theory}{General theory}
 
-In this section, we show how we can use pruning to obtain sound analyses which
-are complete with respect to a given abstraction.  We first describe the core
-idea behind pruning (\refsec{oneStep}) and then show how it can be used in our
-full \PR\ algorithm (\refsec{algorithm}).
+%In this section, we show how we can use pruning to obtain a sound analysis which
+%is complete with respect to a given abstraction.
+We first describe the core
+idea behind pruning (\refsec{oneStep}) and then show how it can be used in the
+Prune-Refine (\PR) algorithm (\refsec{algorithm}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{oneStep}{Pruning}
 
-Recall that the central operation is $\bP$, which serves two functions: (i)
-determining queries are proven (when $\bP$ returns $\emptyset$); and (ii)
-performing pruning by returning the subset of input tuples to keep.
-The following theorem is the key equation that drives everything in this paper (see \refapp{proofs} for the proof):
+Recall that the central operation of a static analysis is $\bP$, which serves two roles: (i)
+determining if the query is proven (when $\bP$ returns $\emptyset$); and (ii)
+returning the subset of relevant input tuples.
+The following theorem provides the key equation that drives everything in this paper (see \refapp{proofs} for the proof):
 
 \begin{theorem}[Pruning is sound and complete]
 \label{thm:master}
 Let $\alpha$ and $\beta$ be two abstractions such that $\beta \preceq \alpha$
 ($\beta$ is coarser than $\alpha$).
-Then for any set of input tuples $X$, we have:
+Then for any set of concrete input tuples $X$, we have:
 \begin{align}
 \label{eqn:master}
 \boxed{
@@ -37,38 +38,38 @@ Let us decipher \refeqn{master} a bit more.
 On the right-hand side,
 the abstract input tuples $\beta(X)$
 are fed into the Datalog solver which computes $\bP(\beta(X))$,
-which is the subset of input tuples that participate in a derivation of the abstract query tuple $\beta(\xo)$.
-These are then refined via $\alpha$ to yield a set of tuples which are used to prune $\alpha(X)$.
+which is the subset of input tuples, namely those that participate in any derivation of the abstract query tuple $\beta(\xo)$.
+These relevant tuples are then refined via $\alpha$ to yield a set of tuples which are used to prune $\alpha(X)$.
 The resulting subset is fed into the analysis $\bP$.
 On the left-hand side, $\bP(\alpha(X))$ is the result of directly running the analysis
 on the abstract tuples $\alpha(X)$ without pruning.
 
 % Generalization
-To obtain some intuition to why pruning works,
+To obtain some intuition behind pruning,
 consider the following simpler idea:
 first run the analysis with $\beta$; if the query is proven, stop and declare {\em proven}; otherwise, we run the analysis
-with $\alpha$ and output.
-It is easier to see that this two-step procedure returns the same answer as just running $\alpha$,
+with $\alpha$ and output that answer.
+It is easy to see that this two-step procedure returns the same answer as just running $\alpha$,
 because $\beta \preceq \alpha$ implies that if $\beta$ proves the query, then so does $\alpha$
 (\refprop{soundness}).
 \refeqn{master} can be thought of as an extension of this basic idea:
 instead of using $\beta$ to just determine where the query tuple is proven,
-we obtain more information, namely all the input tuples that are relevant.
+we obtain more information, namely the set of input tuples that are relevant.
 
 % Complexity
 The complexity of an analysis is largely determined by the number of input
-tuples.  Traditionally, the abstraction fully determines the set of input
-tuples and thus the complexity of the analysis.  In our case, however, the set
+tuples.  Traditionally, the abstraction alone determines the set of input
+tuples and thus also the complexity of the analysis.  In our case, however, the set
 of input tuples is pruned along the way, so the abstraction only partially
 determines the complexity.  As we will see later, with sufficient pruning of
-the input tuples, we can use a very refined abstraction at a very low cost.
+the input tuples, we can use a very refined abstraction at a low cost.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\Subsection{algorithm}{The Pruning-Refinement (\PR) algorithm}
+\Subsection{algorithm}{The Prune-Refine (\PR) algorithm}
 
 \begin{figure}[t]
 \begin{center} \scalebox{0.95}{\framebox{ \begin{minipage}{3.3in} % Begin model
-\begin{center} Pruning-Refinement (\PR) Algorithm \end{center}
+\begin{center} Prune-Refine (\PR) Algorithm \end{center}
 {\bf Input}: \\
 \ind Sequence of abstractions: $\alpha_0 \preceq \alpha_1 \preceq \alpha_2 \preceq \cdots$ \\
 \ind [Auxiliary abstractions: $\beta_t \preceq \alpha_t, t = 0, 1, 2, \dots$] \\
@@ -91,9 +92,9 @@ number of tuples.
 }
 \end{figure}
 
-We now turn \refthm{master} into an algorithm, which we call the
-Pruning-Refinement (\PR) algorithm.  \reffig{pseudocode} shows the pseudocode
-for the algorithm and a diagram showing the computation of the various abstract
+We now turn \refthm{master} into a full algorithm, which we call the
+Prune-Refine (\PR) algorithm.  \reffig{pseudocode} shows the pseudocode
+of the algorithm and a diagram showing the computation of the various abstract
 input tuples computed.
 
 % Basic
@@ -101,10 +102,10 @@ This algorithm essentially applies \refeqn{master} repeatedly.
 We first present a simplified version of the algorithm which
 ignores the pre-pruning step (we take $A_t = A_t'$).
 We are given a sequence of successively finer abstractions $\alpha_0, \alpha_1, \dots$,
-and an input set of abstract tuples $A_0$, computed
+and an input set of abstract tuples $A_0$, which is computed
 under the initial abstraction $\alpha_0$.  Then the algorithm alternates between a pruning step
-and a refining step, always maintaining a set of abstract tuples whose elements are the only 
-ones that could participate in a derivation of the query tuple $\xo$.
+and a refining step, always maintaining only the abstract tuples
+that could participate in a derivation of the query tuple $\xo$.
 On iteration $t$, our current input tuples $A_t$ are first pruned to $\tilde A_t$ using $\bP$;
 this is subsequently refined to $A_{t+1}$.
 % Example
