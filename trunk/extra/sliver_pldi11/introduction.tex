@@ -20,12 +20,12 @@ deemed relevant according to client feedback.
 % Pruning setup
 In this paper, we introduce {\em pruning}, a new approach which represents a
 significant departure from existing selected refinement techniques.  Pruning is
-applicable to static analyses represented by a set of inference rules where a
+applicable to static analyses expressed as a set of inference rules where a
 program property of interest (a client query) is proven by the inability to
 derive a designated fact using the given rules.  For concreteness, assume that
 the static analysis is expressed as a Datalog program.  A Datalog program takes
 a set of input tuples and derives new tuples via a set of inference rules.
-These inference rules capture the program semantics and computation of the
+These inference rules capture the abstract semantics and evaluation of the
 client query; the input tuples encode the program we are analyzing and the
 abstraction we are using.  The program property is proven if the
 designated query tuple cannot be derived.

@@ -79,7 +79,7 @@ if true
     'elevator' => 'discrete event simulation program',
     'hedc' => 'web crawler',
     'weblech' => 'website downloading and mirroring tool',
-    'lusearch' => 'text search tool',
+    'lusearch' => 'text indexing and search tool',
     'avrora' => 'simulation and analysis framework for AVR microcontrollers'
   }
 

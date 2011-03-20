@@ -64,29 +64,30 @@ This results in computational savings, and in this case, in no loss in precision
 \end{figure}
 
 For a sequence $c$, we say $c$ is {\em non-repeating} if all its elements are distinct.
-%We say $c$ is {\em barely-repeating} if (i) $c$ excluding the last element ($c[1..|c|-1]$)
-%is {\em non-repeating} and (ii) the last element of $c$ is repeated earlier in $c$.
-We say $c$ is {\em barely-repeating} if $c$ excluding the last element ($c[1..|c|-1]$) is {\em non-repeating}.
-Note that a barely-repeating includes the non-repeating case.
-Let $\delta(c)$ be the length of the longest prefix that is barely-repeating:
-%\begin{align}
-%\label{eqn:barelyLen}
-%\distinct(c) \eqdef
-%\begin{cases} 
-%\max_{m' : c[1..m'] \text{ is barely-repeating}} m' & \text{if $m'$ exists}, \\
-%\infty & \text{otherwise}.
-%\end{cases}
-%\end{align}
+We say $c$ is {\em barely-repeating} if (i) $c$ excluding the last element ($c[1..|c|-1]$)
+is {\em non-repeating} and (ii) the last element of $c$ is repeated earlier in $c$.
+%We say $c$ is {\em barely-repeating} if $c$ excluding the last element ($c[1..|c|-1]$) is {\em non-repeating}.
+%Note that a barely-repeating includes the non-repeating case.
+Let $\distinct(c)$ be the length of the longest prefix of $c$ that is barely-repeating, if it exists, and $\infty$
+otherwise:
 \begin{align}
 \label{eqn:barelyLen}
-\distinct(c) \eqdef \max_{m' : c[1..m'] \text{ is barely-repeating}} m'
+\distinct(c) \eqdef
+\begin{cases} 
+\max_{m' : c[1..m'] \text{ is barely-repeating}} m' & \text{if $m'$ exists}, \\
+\infty & \text{otherwise}.
+\end{cases}
 \end{align}
+%\begin{align}
+%\label{eqn:barelyLen}
+%\distinct(c) \eqdef \max_{m' : c[1..m'] \text{ is barely-repeating}} m'
+%\end{align}
 For example, $\distinct(\vec{10010}) = 3$ because $\vec{100}$ is barely-repeating, but $\vec{1001}$ is not.
 
 Then we define the {\em barely-repeating $k$-limited abstraction} $\klimdabs_k$ as follows:
 \begin{align}
 \label{eqn:barelyAbstraction}
-\klimdabs_k(c) & \eqdef \klimabs_{\min\{k,\delta(c)\}}(c),
+\klimdabs_k(c) & \eqdef \klimabs_{\min\{k,\distinct(c)\}}(c),
 \end{align}
 \reffig{barelyExample} shows an example of $\klimdabs_k$.
 We show that $\klimdabs_k$ is a valid abstraction:
@@ -207,6 +208,7 @@ the two sets are neither equal nor disjoint),
 so $\hclass \circ \klimdabs_3$ does not define an equivalence relation.
 \end{proof}
 
+\noindent 
 In light of this result, we will use the valid abstractions $\cklimabsk$ and $\cklimdabsk$,
 which work by first applying $\hclass$ and then applying $\klimabs_k$ or $\klimdabs_k$.
 
