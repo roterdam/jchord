@@ -9,7 +9,7 @@ abstractions where each local variable can be independently treated
 context-sensitively or context-insensitively, and different $k$ values can be
 chosen for different allocation sites.  Lhot\'{a}k and
 Hendren~\cite{LhotakHendren2006,LhotakHendren2008} present Paddle, a
-parametrized framework for BDD-based, $k$-limited alias analysis.
+parametrized framework for BDD-based, $k$-limited pointer analysis.
 \cite{smaragdakis11context} scale up $k$-object-sensitivity, increasing $k$ by one
 using types rather than allocation sites.  However, in all of this work, which parts of the
 abstraction should be more refined is largely left up to the user.
@@ -55,7 +55,7 @@ Prune-Refinement is based on generalizing the idea of program slicing.
 
 %In contrast to client-driven analyses, which compute an exhaustive solution of
 %varying precision, demand-driven approaches compute a partial solution of fixed
-%precision.  Heintze and Tardieu's demand-driven alias analysis for
+%precision.  Heintze and Tardieu's demand-driven points-to analysis for
 %C~\cite{HeintzeTardieu2001} performs a provably optimal computation to
 %determine the points-to sets of variables queried by the client. Their analysis
 %is applied to call-graph construction in the presence of function pointers. A

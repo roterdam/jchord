@@ -109,7 +109,7 @@ p ::= & v = \new\,h \bigmid v_2 = v_1 \bigmid g = v \bigmid v = g \bigmid \\
 \end{array}
 \]
 %\centering
-\caption{Datalog implementation of our $k$-object-sensitivity points-to analysis with call-graph construction.
+\caption{Datalog implementation of our $k$-object-sensitivity pointer analysis with call-graph construction.
 Our abstraction $\ba$ affects the analysis solely through $\ext$,
 which specifies that when we prepend $s$ to $c$, we truncate the resulting sequence to length $\ba_{s}$.
 }
@@ -157,7 +157,7 @@ of the same field in which at least one statement is a write.  We used the
 static race detector of \cite{NaikAikenWhaley2006}, which declares a
 $(p_1,p_2)$ pair as racing if both statements may be reachable, may access
 thread-escaping data, may point to the same object, and may happen in parallel.
-All four components rely heavily on the context- and object-sensitive points-to
+All four components rely heavily on the context- and object-sensitive pointer
 analysis.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

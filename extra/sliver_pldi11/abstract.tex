@@ -1,16 +1,16 @@
 \begin{abstract}
 
 Many static analyses do not scale as they are made more precise.  For example,
-increasing the amount of context sensitivity in a $k$-limited analysis causes
+increasing the amount of context sensitivity in a $k$-limited pointer analysis causes
 the number of contexts to grow exponentially.  Iterative refinement techniques
-can be employed to mitigate this growth by starting with a coarse abstraction and
-only refining parts of the abstraction deemed relevant with respect to a client.
+can mitigate this growth by starting with a coarse abstraction and
+only refining parts of the abstraction that are deemed relevant with respect to a client.
 
 In this paper, we introduce a new technique called {\em pruning} that uses this client
 feedback to greatly reduce the complexity of an analysis.  The pruned analysis is no
 longer a valid abstraction, but we prove that we do not forfeit correctness and
-that our analysis is still sound with respect to a given client.  In the
-context of $k$-limited analysis, our approach amounts to keeping track of a set
+that our analysis is still sound with respect to a given client. 
+For $k$-limited pointer analysis, our approach amounts to keeping track of a set
 of context prefix patterns.  By iteratively refining and pruning these
 patterns, we show that our analysis can greatly increase scalability.
 

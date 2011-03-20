@@ -16,7 +16,7 @@ which allows us to run analyses on finer abstractions.
 Our experiments were performed using IBM J9VM 1.6.0 on 64-bit Linux machines.
 All analyses were implemented in Chord,
 an extensible program analysis framework for Java bytecode,\footnote{{\tt{http://code.google.com/p/jchord/}}}
-which uses the BDD solver {\tt bddbddb} \cite{Whaley2007}.
+which uses the BDD Datalog solver {\tt bddbddb} \cite{Whaley2007}.
 We evaluated on \numBenchmarks\ Java benchmarks shown in \reftab{benchmarks}.
 In each run, we allocated 8GB of memory and terminated the process when it ran out of memory.
 
@@ -149,7 +149,7 @@ using types instead of allocation sites is much cheaper.
 Next, $\frac{|\tilde B_t|}{|B_t|}$ shows the fraction of abstract values kept during pre-pruning;
 When we return from types to allocation sites, see that the effect of pre-pruning essentially carries over
 ($\frac{|A_t'|}{|A_t|}$).
-After pre-pruning, pruning keps $\frac{|\tilde A_t|}{|A_t|}$ of the chains.
+After pre-pruning, pruning kept $\frac{|\tilde A_t|}{|A_t|}$ of the chains.
 Finally, $\frac{|A_{t+1}|}{|A_t|}$ measures the ratio between iterations,
 which includes both pruning and refinement.  Note that there is still almost a three-fold
 growth of the number of tuples (on average), but this growth would have been much more unmanageable
@@ -200,9 +200,8 @@ over the first five iterations.
 All analyses obtain the exact results on iterations where they obtain an answer.
 Bolded numbers refer to $k$ values reached by $\PR(\Klimabs,\hclassIsHas)$
 but not by any non-pruning algorithm.
-While pruning enables to increase $k$ more,
-only for two the client/benchmark pairs do we get strictly more precise results
-(\downcast/\hedc\ and \downcast/\lusearch).
+While pruning enables to increase $k$ more, we get strictly more precise results
+for only two of the client/benchmark pairs (\downcast/\hedc\ and \downcast/\lusearch).
 This points out inherent limitations of this family of $k$-limited abstractions.
 }
 \end{table}
