@@ -6,16 +6,15 @@ theorem which will be useful later:
 
 \begin{theorem}[Soundness]
 \label{thm:soundness}
-Let $\alpha$ and $\beta$ be two abstractions with $\beta \preceq \alpha$ ($\beta$ is coarser)
-and $X$ be any set of input tuples.
+Let $\alpha$ and $\beta$ be two abstractions with $\beta \preceq \alpha$ ($\beta$ is coarser),
+and let $X$ be any set of input tuples.
 For any derivation $\ba \in \bD(\alpha(X))$,
-define $\bb$ by
-$b_i \in \beta(a_i)$ (in fact, $b_i$ is unique) for each position $i$.
-Then $\bb \in \bD(\beta(X))$,
+define $\bb = (b_1, \dots, b_{|\ba|})$ where each $b_i$ is the unique element in $\beta(a_i)$.
+Then $\bb \in \bD(\beta(X))$.
 \end{theorem}
 \begin{proof}[Proof of \refthm{soundness}]
 Define $A=\alpha(X)$ and $B=\beta(X)$.
-Consider $\ba \in \bD(A)$ and define $\bb$ as in the theorem.
+Consider $\ba \in \bD(A)$ and let $\bb$ be as defined in the theorem.
 For each position $i$,
 we have two cases.
 First, if $a_i \in A$, then $b_i \in (\beta \circ \alpha)(X) = \beta(X) = B$.
@@ -25,8 +24,7 @@ Therefore, $\bb \in \bD(B)$.
 \end{proof}
 
 \begin{proof}[Proof of \refprop{soundness} (abstraction is sound)]
-Apply \refthm{soundness} with $\beta = \alpha$ and $\alpha$ corresponding to no
-abstraction.
+Apply \refthm{soundness} with $\beta = \alpha$ and $\alpha$ as the identity function (no abstraction).
 \end{proof}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -34,16 +32,15 @@ abstraction.
 Before we prove \refthm{master}, we state a useful lemma.
 \begin{lemma}[Pruning is idempotent]
 \label{lem:Pidem}
-For any set of tuples (concrete or abstract), $\bP(X) = \bP(\bP(X))$.
+For any set of tuples (concrete or abstract) $X$, $\bP(X) = \bP(\bP(X))$.
 \end{lemma}
 \begin{proof}[Proof]
-Since $\bP(X) \subset X$ by defnition and $\bP$ is monotonic,
+Since $\bP(X) \subset X$ by definition and $\bP$ is monotonic,
 we have $\bP(\bP(X)) \subset \bP(X)$.
 For the other direction, let $x \in \bP(X)$.
 Then $x$ is part of some derivation ($x \in \bx \in \bD(X)$).
 All the input tuples of $\bx$ (those in $\bx\cap X$) are also in $\bP(X)$,
-so $\bx \in \bD(\bP(X))$ (we can still derive $\bx$ using those tuples).
-Therefore $x \in \bP(\bP(X))$.
+so $\bx \in \bD(\bP(X))$.  Therefore $x \in \bP(\bP(X))$.
 \end{proof}
 
 \begin{proof}[Proof of \refthm{master} (pruning is sound and complete)]
@@ -99,10 +96,10 @@ where the last equality follows from idempotence (\reflem{Pidem}).
 %   The same rule still applies.
 %\end{proof}
 
-We now show that the \PR\ algorithm is correct, which follows from a
+We now show that the Prune-Refine algorithm is correct, which follows from a
 straightforward application of \refthm{master}.
 
-\begin{proof}[Proof of \refthm{algorithm} (correctness of the \PR\ algorithm)]
+\begin{proof}[Proof of \refthm{algorithm} (correctness of the Prune-Refine algorithm)]
 First, we argue that pre-pruning is correct.
 For each iteration $t$, we invoke \refthm{master} with $\alpha = \alpha_t,
 \beta = \beta_t$ and $X$ be such that $\alpha(X) = A_t$.
