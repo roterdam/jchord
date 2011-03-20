@@ -1,50 +1,5 @@
 \Section{klimited}{$k$-limited Pointer Analysis}
 
-% Basics
-We now introduce our $k$-limited pointer analysis,
-on which we will apply the Prune-Refine algorithm.
-Each node in the control-flow graph of each method $m \in \M$ is associated with a
-simple statement (e.g., $v_2 = v_1$).
-We omit statements that have no effect on our analysis (e.g., operations on
-data of primitive type).
-For simplicity, we assume each method has a single argument and no return value.\footnote{
-Our actual implementation is a straightforward extension of this simplified analysis
-which handles multiple arguments, return values, class initializers, and
-objects allocated through reflection.}
-\reffig{aliasAnalysisRules} describes the Datalog program corresponding to this
-analysis.
-
-% Context, abstraction
-The analysis represents both contexts and abstract objects using chains of
-allocation sites ($\C = \H^*$).  Contexts are extended into new contexts via the $\ext$ relation,
-which prepends an allocation site to a chain (e.g., $\ext(3,[12],[312])$).
-Note that these chains are not truncated in the Datalog program, and therefore,
-running the Datalog program directly (ignoring the fact that it might not
-terminate) corresponds to performing an $\infty$-object-sensitivity analysis.
-
-Although this Datalog program itself is an approximation to the concrete
-program semantics---it is flow-insensitive, does not handle primitive data,
-etc., we will informally say that a client query computed with respect to this
-analysis yields a concrete answer.  In contrast, we obtain an abstract
-answer by computing the client query with respect to a $k$-limited abstraction,
-which we will discuss in \refsec{generalRelationship}.
-
-% Rules
-We now briefly describe the Datalog rules in \reffig{aliasAnalysisRules}.  Rule (1)
-states that the main method $\mmain$ is reachable in a distinguished context $[\,]$.
-Rule (2) states that a target method of a reachable call site is also reachable.
-Rule (3) states that every statement in a reachable method is also reachable.
-Rules (4) through (9) implement the transfer function associated with each kind of statement.
-Rule (10) analyzes the target method
-$m$ in a separate context $o$ for each abstract object $o$ to which the distinguished
-{\tt this} argument of method $m$ points, and rule (11) sets the points-to set
-of the {\tt this} argument of method $m$ in context $o$ to the singleton $\{ o \}$.
-
-Our analysis computes the reachable methods ($\reachM$), reachable statements ($\reachP$), and
-points-to sets of local variables ($\ptsV$), each with the associated context;
-the context-insensitive points-to sets of static fields ($\ptsG$) and
-heap graph ($\heap$); and a context-sensitive call graph ($\cg$).
-
 \begin{figure*}
 \begin{minipage}{3.3in}
 {\bf Domains}: \\
@@ -116,11 +71,56 @@ which specifies that when we prepend $s$ to $c$, we truncate the resulting seque
 \label{fig:aliasAnalysisRules}
 \end{figure*}
 
+% Basics
+We now introduce our $k$-object-sensitive pointer analysis \cite{kobj},
+on which we will apply the Prune-Refine algorithm.
+Each node in the control-flow graph of each method $m \in \M$ is associated with a
+simple statement (e.g., $v_2 = v_1$).
+We omit statements that have no effect on our analysis (e.g., operations on
+data of primitive type).
+For simplicity, we assume each method has a single argument and no return value.\footnote{
+Our actual implementation is a straightforward extension of this simplified analysis
+which handles multiple arguments, return values, class initializers, and
+objects allocated through reflection.}
+\reffig{aliasAnalysisRules} describes the Datalog program corresponding to this
+analysis.
+
+% Context, abstraction
+The analysis represents both contexts and abstract objects using chains of
+allocation sites ($\C = \H^*$).  Contexts are extended into new contexts via the $\ext$ relation,
+which prepends an allocation site to a chain (e.g., $\ext(3,[12],[312])$).
+Note that these chains are not truncated in the Datalog program, and therefore,
+running the Datalog program directly (ignoring the fact that it might not
+terminate) corresponds to performing an $\infty$-object-sensitivity analysis.
+
+Although this Datalog program itself is an approximation to the concrete
+program semantics---it is flow-insensitive, does not handle primitive data,
+etc., we will informally say that a client query computed with respect to this
+analysis yields a concrete answer.  In contrast, we obtain an abstract
+answer by computing the client query with respect to a $k$-limited abstraction,
+which we will discuss in \refsec{generalRelationship}.
+
+% Rules
+We now briefly describe the Datalog rules in \reffig{aliasAnalysisRules}.  Rule (1)
+states that the main method $\mmain$ is reachable in a distinguished context $[\,]$.
+Rule (2) states that a target method of a reachable call site is also reachable.
+Rule (3) states that every statement in a reachable method is also reachable.
+Rules (4) through (9) implement the transfer function associated with each kind of statement.
+Rule (10) analyzes the target method
+$m$ in a separate context $o$ for each abstract object $o$ to which the distinguished
+{\tt this} argument of method $m$ points, and rule (11) sets the points-to set
+of the {\tt this} argument of method $m$ in context $o$ to the singleton $\{ o \}$.
+
+This pointer analysis computes the reachable methods ($\reachM$), reachable statements ($\reachP$), and
+points-to sets of local variables ($\ptsV$), each with the associated context;
+the context-insensitive points-to sets of static fields ($\ptsG$) and
+heap graph ($\heap$); and a context-sensitive call graph ($\cg$).
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{clients}{Clients}
 
 The core pointer analysis just described is used by three clients, which each
-define a set of queries.
+defines a set of queries.
 
 \paragraph{Monomorphic call site detection}
 
@@ -153,7 +153,7 @@ and $\dl{typeO}$ is a relation on an abstract object and its type
 \paragraph{Race detection}
 
 In race detection, each query consists of a pair of heap-accessing statements
-of the same field in which at least one statement is a write.  We used the
+of the same field in which at least one statement is a write.  We implemented the
 static race detector of \cite{NaikAikenWhaley2006}, which declares a
 $(p_1,p_2)$ pair as racing if both statements may be reachable, may access
 thread-escaping data, may point to the same object, and may happen in parallel.
@@ -164,7 +164,7 @@ analysis.
 \Subsection{generalRelationship}{Relationship to general notation}
 
 % Relate 
-We now describe our analysis in \reffig{aliasAnalysisRules} in terms of our general notation presented in \refsec{preliminaries}.
+We now describe the $k$-object-sensitive pointer analysis (\reffig{aliasAnalysisRules}) in terms of our general notation presented in \refsec{preliminaries}.
 The set of concrete values $\sC$ is the union of all the domains
 (e.g.., allocation sites $\H = \{ 1, 2, 3, \dots \}$, abstract objects $\C = \H^*$, etc.).
 The input tuples $X$ are specified by the input relations

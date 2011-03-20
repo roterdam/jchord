@@ -11,7 +11,7 @@ Prune-Refine algorithm (\refsec{algorithm}).
 
 Recall that the central operation of a static analysis is $\bP$, which serves two roles: (i)
 determining if the query is proven (when $\bP$ returns $\emptyset$); and (ii)
-returning the subset of relevant input tuples.
+returning the relevant input tuples.
 The following theorem provides the key equation that drives everything in this paper (see \refapp{proofs} for the proof):
 
 \begin{theorem}[Pruning is sound and complete]
@@ -48,14 +48,14 @@ on the abstract tuples $\alpha(X)$ without pruning.
 % Generalization
 To obtain some intuition behind pruning,
 consider the following simpler idea:
-first run the analysis with $\beta$; if the query is proven, stop and declare {\em proven}; otherwise, we run the analysis
+first run the analysis with $\beta$; if the query is proven, stop and declare {\em proven}; otherwise, run the analysis
 with $\alpha$ and output that answer.
-It is easy to see that this two-step procedure returns the same answer as just running $\alpha$,
-because $\beta \preceq \alpha$ implies that if $\beta$ proves the query, then so does $\alpha$
+It is easy to see that this two-step procedure returns the same answer as just running $\alpha$:
+Because $\beta \preceq \alpha$, if $\beta$ proves the query, then so does $\alpha$
 (\refprop{soundness}).
 \refeqn{master} can be thought of as an extension of this basic idea:
-instead of using $\beta$ to just determine where the query tuple is proven,
-we obtain more information, namely the set of input tuples that are relevant.
+instead of using $\beta$ to just determine whether the query tuple is proven,
+we obtain more information, namely the whole set of input tuples that are relevant.
 
 % Complexity
 The complexity of an analysis is largely determined by the number of input
@@ -104,9 +104,9 @@ We first present a simplified version of the algorithm which
 ignores the pre-pruning step (we take $A_t = A_t'$).
 We are given a sequence of successively finer abstractions $\alpha_0, \alpha_1, \dots$
 (e.g., $\alpha_t = \pi_t$ for the $k$-limited abstractions)
-and an input set of abstract tuples $A_0$, which is computed
+and a set of input abstract tuples $A_0$, which is computed
 under the initial abstraction $\alpha_0$.  Then the algorithm alternates between a pruning step
-and a refining step, always maintaining only the abstract tuples
+and a refining step, maintaining only the abstract input tuples
 that could participate in a derivation of the query tuple $\xo$.
 On iteration $t$, our current input tuples $A_t$ are first pruned to $\tilde A_t$ using $\bP$;
 this is subsequently refined to $A_{t+1}$.
@@ -134,12 +134,12 @@ The idea is that before refining $A_t$ to $A_{t+1}$,
 we perform two steps of pruning:
 (i) first we use $\beta_t$ in a pre-pruning step;
 (ii) then we use $\alpha_t$ during the main pruning step.
-Pre-pruning does not affect the output of the pruning step ($\tilde A_t$);
-the purpose is solely to make the pruning step faster.
+%Pre-pruning does not affect the output of the pruning step ($\tilde A_t$);
+%the purpose is solely to make the pruning step faster.
 
 Pre-pruning requires a sequence of auxiliary abstractions $(\beta_t)$ which are coarser than the main abstractions $(\alpha_t)$.
-We can obtain auxiliary abstractions by composing the main abstractions
-with another abstraction $\hclass$ ($\beta_t = \alpha_t \circ \hclass$).
+A standard way to obtain auxiliary abstractions is by composing the main abstractions
+with another abstraction $\hclass$; formally, $\beta_t = \alpha_t \circ \hclass$.
 We can use any $\hclass$ for which $\alpha_t \circ \hclass$ yields a valid abstraction,
 but the speedup we obtain from pre-pruning depends on the relationship between $\hclass$ and $\alpha_t$.
 If $\hclass$ is the total abstraction ($\hclass(c) = \sC$), then pre-pruning will be fast but nothing will be pre-pruned,
@@ -147,17 +147,17 @@ so we get no speedup.
 If $\hclass$ is no abstraction ($\hclass(c) = c$), then pre-pruning is equivalent to just running the pruning step,
 so we again get no speedup.
 A good rule of thumb is that $\hclass$ should be ``complementary'' to $\alpha_t$
-(we will see some examples in \refsec{abstractions}).
+(we will see some examples in \refsec{abstractionExamples}).
 
 \refthm{algorithm} states that the Prune-Refine algorithm is both
-sound and complete.  In other words, pruning has no impact on our answer to a
-query---we just compute it more efficiently.
+sound and complete.  In other words, pruning has no impact on the answer to a
+query.
 The proof is given in \refapp{proofs} and uses \refthm{master}.
 
 \begin{theorem}[Correctness of the Prune-Refine algorithm]
 \label{thm:algorithm}
 At iteration $t$,
-the incrementally pruned abstraction $A_t$ is equivalent
-to the full abstraction $\alpha_t(X)$ (formally, $\bP(\alpha_t(X)) = \bP(A_t)$).
-If the algorithm returns ``proven,'' then $\bP(X) = \emptyset$ (the query is actually false).
+using the incrementally pruned abstraction $A_t$ is equivalent
+to using the full abstraction $\alpha_t(X)$ in that $\bP(\alpha_t(X)) = \bP(A_t)$.
+Consequently, if the algorithm returns ``proven,'' then $\bP(X) = \emptyset$ (the query is actually false).
 \end{theorem}
