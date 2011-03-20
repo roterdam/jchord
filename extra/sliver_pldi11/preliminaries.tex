@@ -2,18 +2,19 @@
 
 Our pruning technique works on Datalog, a general language which can be used to
 express static analyses declaratively \cite{Whaley2007,bravenboer}.  Normally,
-these analyses are encoded by one monolithic Datalog program which computes an
-abstract answer to a query.  For us, it will be convenient to consider the
-Datalog program, which computes the concrete\footnote{We refer to this computation as ``concrete''
+these analyses and their underlying abstractions are encoded by one monolithic Datalog program
+which evaluates a query abstractly.
+For us, it will be convenient to consider the
+Datalog program, which evaluates a query concretely\footnote{We refer to this computation as ``concrete''
 to contrast with abstract computation we will consider later,
 but note that this ``concrete'' computation
 could already contain some level of abstraction.
 For example, the Datalog program might correspond to $\infty$-object-sensitivity
 without abstraction and $k$-object-sensitivity with abstraction.
-}
-answer to a query, as distinct
-from the abstraction, which is applied on the Datalog program to compute an
-abstract answer.  This separation allow us to make theoretical statements
+}, as distinct
+from the abstraction, which is defined as a transformation on the input to
+the Datalog program, and makes it evaluate the query abstractly.  This separation
+allows us to make theoretical statements
 comparing the behavior of the same Datalog program across different
 abstractions.
 
