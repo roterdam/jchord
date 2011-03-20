@@ -46,6 +46,7 @@ def graphExample
         '$\path(\Ga,\vek{10})$',
         '$\path(\Ga,\vek{20})$',
         '$\path(\Ga,\vek{310})$',
+        '$\path(\Gb,\vek{0})$',
         '$\path(\Gb,\vek{30})$',
       nil)),
     nil),

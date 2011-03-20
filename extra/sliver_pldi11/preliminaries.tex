@@ -36,11 +36,10 @@ Throughout this section, we will use \reffig{graphExample} as a running example.
 \]
 {\bf Rules}:
 \[
-\begin{array}{lcl}
-\path(g,[\initNode]). & \\
-\path(g,c')           &\dlogUpdate& \path(g,c), \head(c,i), \\
-                      &           & \edge(g, i, j), \ext(j, c, c'). \\
-\common(g_1,g_2,i)    &\dlogUpdate& \path(g_1,c), \path(g_2,c), \head(c,i). \\
+\begin{array}{l}
+\path(g,[\initNode]). \\
+\path(g,c')\ \dlogUpdate\ \path(g,c),\ \head(c,i),\ \edge(g, i, j),\ \ext(j, c, c'). \\
+\common(g_1,g_2,i)\ \dlogUpdate\ \path(g_1,c),\ \path(g_2,c),\ \head(c,i). \\
 \end{array}
 \]
 {\bf Query tuple}: $\xo = \common(\Ga,\Gb,3)$. \\
@@ -102,12 +101,13 @@ replacing the variables in the term with constants ($f(t) = t.r(f(t.a_1), \dots,
 %{\bf Notation:} \\
 \[
 \begin{array}{ll}
-\xo                           & \defn{designated query tuple} \\
 \sC                           & \defn{set of concrete values} \\
-\bD(X)                        & \defn{derivations using input tuples $X$} \\
-\bP(X) \subset X              & \defn{set of relevant input tuples} \\
+\sP(\sC)                      & \defn{set of abstract values} \\
 \alpha : \sC \mapsto \sP(\sC) & \defn{abstraction, maps to equivalence class} \\
-A_k \subset \sP(\sC)          & \defn{abstract input tuples after $k$ iterations} \\
+\xo                           & \defn{designated query tuple} \\
+\bD(X)                        & \defn{derivations of $\xo$ using input tuples $X$} \\
+\bP(X) \subseteq X            & \defn{set of input tuples relevant to deriving $\xo$} \\
+A_k                           & \defn{abstract input tuples after $k$ iterations} \\
 \tilde A_k = \bP(A_k)         & \defn{relevant abstract input tuples} \\
 \end{array}
 \]
@@ -192,9 +192,9 @@ For example, the last rule of \reffig{graphExample} creates the following three 
 \scalebox{0.85}{
 $
 \begin{array}{lcl}
-\path'(g_1,c)    &\dlogUpdate& \common'(g_1,g_2,i), \path(g_1,c), \path(g_2,c), \head(c,i). \\
-\path'(g_2,c)    &\dlogUpdate& \common'(g_1,g_2,i), \path(g_1,c), \path(g_2,c), \head(c,i). \\
-\head'(c,i)      &\dlogUpdate& \common'(g_1,g_2,i), \path(g_1,c), \path(g_2,c), \head(c,i). \\
+\path'(g_1,c)    &\!\!\dlogUpdate\!\!& \common'(g_1,g_2,i),\ \path(g_1,c),\ \path(g_2,c),\ \head(c,i). \\
+\path'(g_2,c)    &\!\!\dlogUpdate\!\!& \common'(g_1,g_2,i),\ \path(g_1,c),\ \path(g_2,c),\ \head(c,i). \\
+\head'(c,i)      &\!\!\dlogUpdate\!\!& \common'(g_1,g_2,i),\ \path(g_1,c),\ \path(g_2,c),\ \head(c,i). \\
 \end{array}
 $
 }
@@ -210,18 +210,18 @@ which we consider next.
 
 Given a Datalog program, an {\em abstraction} is an equivalence relation over
 constants $\sC$.  In particular, we represent the abstraction as the projection
-function which maps each constant to its equivalence class
+function which maps each constant to its equivalence class.
 \begin{definition}
 \label{def:abstraction}
 An abstraction is a function $\alpha : \sC \to \sP(\sC)$
 such that for each set $s \in \range(\alpha)$,
 we have $\alpha(c) = s$ for all $c \in s$.
 \end{definition}
+\noindent
 We will refer to constants $\sC$ as the concrete values and $\range(\alpha)$ as
 the abstract values.
-
-Define the natural partial order on abstractions,
-where $\alpha_1 \preceq \alpha_2$ iff $\alpha_1(c) \supset \alpha_2(c)$ for all $c$,
+We define the natural partial order on abstractions,
+where $\alpha_1 \preceq \alpha_2$ iff $\alpha_1(c) \supseteq \alpha_2(c)$ for all $c$,
 that is, $\alpha_2$ is finer than $\alpha_1$.
 
 %\Subsection{klimitedAbstraction}{$k$-limited abstraction}
