@@ -1,23 +1,23 @@
 \Section{abstractionExamples}{Abstractions}
 
-Recall from \refsec{preliminaries} that we separate the Datalog program that
-computes the query from the abstraction.  In \refsec{klimited}, we described
-the Datalog programs that computed the queries for our three clients based on
-$\infty$-object-sensitivity.  We now describe the abstractions that we use to
-further abstract this analysis.
+%Recall from \refsec{preliminaries} that we separate the Datalog program that
+%computes the query from the abstraction.  In \refsec{klimited}, we described
+%the Datalog programs that computed the queries for our three clients based on
+%$\infty$-object-sensitivity.  We now describe the abstractions that we use to
+%further abstract this analysis.
 
 We have already defined the $k$-limited abstraction, which corresponds to
-$k$-object-sensitivity.  We present two orthogonal variants of this basic abstraction: one that in
-addition limits the repetition of allocation sites (\refsec{barelyAbstraction})
+$k$-object-sensitivity.  We now present two orthogonal variants of this basic abstraction: one that
+additionally limits the repetition of allocation sites (\refsec{barelyAbstraction})
 and one that further abstracts allocation sites using type information
 (\refsec{classAbstraction}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{barelyAbstraction}{Barely-repeating $k$-limited abstraction}
 
-When we applied the $k$-limited abstraction empirically,
-we noticed that a major reason why it did not scale was
-the seemingly unnecessary combinatorial explosion associated chains formed
+When we applied the $k$-limited abstraction in practice,
+we noticed empirically that a major reason why it did not scale was
+the seemingly unnecessary combinatorial explosion associated with chains formed
 by cycling endlessly through the same allocation sites.
 For $k$-CFA, this repetition corresponds to recursion.
 For $k$-object-sensitivity, this corresponds to recursive allocation, as
@@ -25,7 +25,7 @@ illustrated in \reffig{recursion}.\footnote{
 Incidentally, the example in the figure also gives an interesting example where
 $k$-object-sensitivity for any finite $k$ (no matter how large) is less precise
 than $\infty$-object-sensitivity.}
-We therefore wish to define an abstraction that not only truncates at $k$ but also truncates
+We therefore wish to define an abstraction that not only truncates chains at length $k$ but also truncates
 a chain when it starts repeating.
 
 \begin{figure}
@@ -84,7 +84,7 @@ otherwise:
 %\end{align}
 For example, $\distinct(\vec{10010}) = 3$ because $\vec{100}$ is barely-repeating, but $\vec{1001}$ is not.
 
-Then we define the {\em barely-repeating $k$-limited abstraction} $\klimdabs_k$ as follows:
+We now define the {\em barely-repeating $k$-limited abstraction} $\klimdabs_k$ as follows:
 \begin{align}
 \label{eqn:barelyAbstraction}
 \klimdabs_k(c) & \eqdef \klimabs_{\min\{k,\distinct(c)\}}(c),
@@ -127,7 +127,7 @@ but $\vec{00}$ is.
 \end{figure}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\Subsection{classAbstraction}{Class-based abstraction}
+\Subsection{classAbstraction}{Type-based abstraction}
 
 We now introduce an abstraction that we will use in the pre-pruning step of the Prune-Refine algorithm.
 We start by defining an equivalence relation over allocation sites $\dom$,

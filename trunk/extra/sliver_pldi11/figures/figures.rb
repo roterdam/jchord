@@ -37,7 +37,7 @@ def graphExample
     scale(0.7),
     rtable(
       '{\bf Input tuples}:',
-      ind(rtable(*(tuples1+tuples2+['$\head(\vec{0}, 0)$', '$\ext(1, \vec{0}, \vek{10})$', '$\dots$']))),
+      ind(rtable(*(tuples1+tuples2+['$\head(\vec{0}, 0)$', '$\dots$', '$\ext(1, \vec{0}, \vek{10})$', '$\dots$']))),
     nil),
     rtable(
       '{\bf Derived tuples}:',
@@ -52,7 +52,7 @@ def graphExample
     nil),
   nil).cmargin(u(0.2))
 end
-printObj(:obj => graphExample.signature(96), :outPrefix => 'graphExample')
+printObj(:obj => graphExample.signature(99), :outPrefix => 'graphExample')
 
 def N(x); ctable(x).ospace(u(0.04)) end
 def a(i); N("$A_#{i}$") end

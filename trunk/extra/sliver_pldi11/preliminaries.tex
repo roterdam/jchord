@@ -5,15 +5,14 @@ express static analyses declaratively \cite{Whaley2007,bravenboer}.  Normally,
 these analyses and their underlying abstractions are encoded by one monolithic Datalog program
 which evaluates a query abstractly.
 For us, it will be convenient to consider the
-Datalog program, which evaluates a query concretely\footnote{We refer to this computation as ``concrete''
+Datalog program, which evaluates a query concretely,\footnote{We refer to this computation as ``concrete''
 to contrast with abstract computation we will consider later,
 but note that this ``concrete'' computation
 could already contain some level of abstraction.
 For example, the Datalog program might correspond to $\infty$-object-sensitivity
 without abstraction and $k$-object-sensitivity with abstraction.
-}, as distinct
-from the abstraction, which is defined as a transformation on the input to
-the Datalog program, and makes it evaluate the query abstractly.  This separation
+} as distinct from the abstraction, which transforms the input to
+the Datalog program, resulting in an abstract evaluation of the query.  This separation
 allows us to make theoretical statements
 comparing the behavior of the same Datalog program across different
 abstractions.
@@ -87,9 +86,9 @@ whose truth value we want to determine.
 
 Let $\sZ$ denote the set of rules,
 where each {\em rule} $z \in \sZ$ consists of a target term $z.t$ and a set of source terms $z.\bs$.
-We write a rule if $z.t = t$ and $z.\bs = \{ s_1, \dots, s_k \}$ as
+We write a rule with $z.t = t$ and $z.\bs = \{ s_1, \dots, s_k \}$ as
 \begin{align}
-t \dlogUpdate s_1, \dots, s_n.
+t \dlogUpdate s_1, \dots, s_k.
 \end{align}
 
 An {\em assignment} is a function $f : \sV \mapsto \sC$ which maps variables to
@@ -101,14 +100,15 @@ replacing the variables in the term with constants ($f(t) = t.r(f(t.a_1), \dots,
 %{\bf Notation:} \\
 \[
 \begin{array}{ll}
-\sC                           & \defn{set of concrete values} \\
-\sP(\sC)                      & \defn{set of abstract values} \\
+\sC                           & \defn{concrete values} \\
+\sP(\sC)                      & \defn{abstract values} \\
 \alpha : \sC \mapsto \sP(\sC) & \defn{abstraction, maps to equivalence class} \\
 \xo                           & \defn{designated query tuple} \\
 \bD(X)                        & \defn{derivations of $\xo$ using input tuples $X$} \\
-\bP(X) \subseteq X            & \defn{set of input tuples relevant to deriving $\xo$} \\
+\bE(X)                        & \defn{tuples involved in deriving $\xo$} \\
+\bP(X)                        & \defn{input tuples relevant to deriving $\xo$} \\
 A_k                           & \defn{abstract input tuples after $k$ iterations} \\
-\tilde A_k = \bP(A_k)         & \defn{relevant abstract input tuples} \\
+\tilde A_k                    & \defn{relevant abstract input tuples after pruning} \\
 \end{array}
 \]
 \caption{\label{fig:notation} Notation.}
@@ -125,7 +125,7 @@ A {\em derivation} (of the query $\xo$) with respect to a set of input tuples
 $X$ is a sequence $\bx = (x_1, \dots, x_n)$ such that
 \begin{enumerate}
 \item [(i)] for each $i = 1, \dots, n$, we have $x_i \in X$; or
-there exists a set of indices $J$ such that $(J,i)$ satisfies the following conditions:
+there exists a set of indices $J$ such that $(J,i)$ satisfies the following two conditions:
 $j < i$ for each $j \in J$, and
 there is a rule $z \in \sZ$ and an assignment $f$
 such that $f(z.t) = x_i$ and
@@ -134,7 +134,7 @@ $\{ x_j : j \in J \} = \{ f(s) : s \in z.\bs \}$;
 \item [(iii)] 
 for each $j = 1, \dots, n\!-\!1$,
 there exists $J$ such that $j \in J$ and an index $i$
-such that $(J,i)$ satisfies the conditions in (i).
+such that $(J,i)$ satisfies the two conditions in (i).
 \end{enumerate}
 Define $\bD(X)$ to be the set of all derivations with respect to the input tuples $X$.
 
@@ -142,52 +142,53 @@ Define $\bD(X)$ to be the set of all derivations with respect to the input tuple
 Condition (i) says that each tuple in a derivation
 should either be given as an input tuple ($x_i \in X$)
 or be the result of some rule $z \in \sZ$.
-Condition (ii) says that $\xo$ was finally produced via some sequence of rule applications.
-Condition (iii) says that in the derivation of $x_n$, every tuple is relevant for deriving $\xo$.
+Condition (ii) says that the query tuple $\xo$ is derived at the end.
+Condition (iii) says that in the derivation of $\xo$, every tuple is somehow ``relevant'' for deriving $\xo$.
 %As we will see later, this condition is important because it allow us to
 %define the set of irrelevant tuples that can be pruned.
 
-A Datalog program computes $\bD(X)$.
+%A Datalog program computes $\bD(X)$.
 We say that the query $\xo$ is false (proven) if and only if $\bD(X)$ is empty.
-Although the query is the ultimate quantity of interest,
+Although this answer to the query is the ultimate quantity of interest,
 the Datalog program can be used to provide more information, which will be useful for pruning.
-Specifically, we define $\bP(X)$ to be the subset of the input tuples $X$
-which were used in some derivation:
+Specifically, we define $\bE(X)$ as the set of all tuples used in any derivation (of $\xo$)
+and $\bP(X)$ to be the subset of $\bE(X)$ which are input tuples:
 \begin{align}
 \label{eqn:Pdef}
-\bP(X) \eqdef \{ x \in X : x \in \bx \in \bD(X) \}.
+\bE(X) &\eqdef \bigcup_{\bx \in \bD(X)} \bx, \\
+\bP(X) &\eqdef X \cap \bE(X).
+%\bP(X) \eqdef \{ x \in X : x \in \bx \in \bD(X) \}.
 \end{align}
 We call $\bP(X)$ the set of {\em relevant input tuples}.  As we will see later,
 any tuple not in this set can be safely pruned.
 In fact, $\bP(X)$ also tells us whether the query is true or false.
-In particular, $\bD(X) = \emptyset$ if and only if $\bP(X) = \emptyset$.
+In particular, $\bD(X) = \emptyset$ if and only if $\bP(X) = \emptyset$ (assuming $\xo$ cannot be derived trivially without inputs).
 This equivalence suggests that proving and pruning are intimately related;
 in some sense, proving the query is just pruning away the query tuple.
 In the remainder of the paper, we will make heavy use of $\bP$ as the principal
-proving/pruning operation.
+proving/pruning operator.
 In our graph example, $\bD(X) = \bP(X) = \emptyset$,
 but as we will see later, this is not true if we apply an abstraction to $X$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \paragraph{Computation}
 
-We can compute $\bP(X)$ in Datalog itself by using the Datalog program transformation technique described in 
-\cite{liang11minimal}.
-This allows us to use off-the-shelf optimized Datalog solvers to compute $\bP(X)$.
-The technique is as follows: Define a set of new relations $\sR' = \{ r' : r \in \sR \}$.
-For a term $t = t.r(t.\ba)$ we let $t' = t.r'(t.\ba)$ be the term that uses the corresponding new relation.
+Given input tuples $X$, a Datalog solver returns the set of derived tuples $Y$;
+the query is proven if $\xo \not\in Y$.  Note that $Y$ is a superset of the
+relevant derived tuples $\bE(X)$,
+which itself is a superset of the relevant input tuples
+$\bP(X)$, which is needed for pruning.
+
+We can compute $\bP(X)$ by using the Datalog program transformation technique described in 
+\cite{liang11minimal}:
+We augment our existing Datalog program with a set of new relations $\sR' = \{ r' : r \in \sR \}$.
+For a term $t = t.r(t.\ba)$ we let $t' = t.r'(t.\ba)$ be the term that uses the corresponding new relation $t.r'$.
 We then add the following new Datalog rules:
 \begin{align}
 \xo' &\dlogUpdate \xo, \label{eqn:revBase} \\
 s'   &\dlogUpdate z.t', z.\bs \quad \text{for each $z \in \sZ$ and $s \in z.\bs$.} \label{eqn:indBase}
 \end{align}
-
-These two rules construct $\bP(X)$ recursively:
-The base case \refeqn{revBase} states that the query tuple $\xo \in \bP(X)$.
-The recursive case \refeqn{indBase} states that if $x \in \bP(X)$ and a rule $z$ (with some assignment $f$)
-was used to produce $x$, then for every source term $s \in z.\bs$ of that rule,
-we also have $f(s) \in \bP(X)$.
-For example, the last rule of \reffig{graphExample} creates the following three rules:
+For example, the last rule of the original Datalog program in \reffig{graphExample} generates the following three new rules:
 \begin{center}
 \scalebox{0.85}{
 $
@@ -200,16 +201,25 @@ $
 }
 \end{center}
 
-The key fact is that a tuple $x'$ is derived by the new Datalog program if and only if $x \in \bP(X)$.
-Therefore, running the new Datalog program and examining tuples of the form $x'$ yields $\bP(X)$.
-In practice, we will not run $\bP$ on the concrete tuples $X$, but rather on an abstraction,
-which we consider next.
+The key is that a tuple $x'$ is derived by the new Datalog program if and only if $x \in \bE(X)$.
+Rules generated by \refeqns{revBase}{indBase} construct $\bE(X)$ recursively:
+The base case \refeqn{revBase} states that the query tuple $\xo \in \bE(X)$.
+The recursive case \refeqn{indBase} states that if $x \in \bE(X)$ and a rule $z$ (with some assignment $f$)
+was used to produce $x$, then for every source term $s \in z.\bs$ of that rule,
+we also have $f(s) \in \bE(X)$.
+Having obtained $\bE(X)$, we get $\bP(X)$ by keeping only tuples in $X$.
+
+The advantage of this technique is that we can use any Datalog solver as a black-box to compute $\bP(X)$.
+%Therefore, running the new Datalog program and examining tuples of the form $x'$ yields $\bP(X)$.
+In practice, we will not actually run $\bP$ on concrete input tuples $X$, but on abstract input tuples.
+From the point of view of the Datalog solver, there is no difference between the two.
+We consider constructing abstract tuples next.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{abstractions}{Abstractions}
 
 Given a Datalog program, an {\em abstraction} is an equivalence relation over
-constants $\sC$.  In particular, we represent the abstraction as the projection
+constants $\sC$.  In particular, we represent the abstraction as the
 function which maps each constant to its equivalence class.
 \begin{definition}
 \label{def:abstraction}
@@ -220,9 +230,8 @@ we have $\alpha(c) = s$ for all $c \in s$.
 \noindent
 We will refer to constants $\sC$ as the concrete values and $\range(\alpha)$ as
 the abstract values.
-We define the natural partial order on abstractions,
-where $\alpha_1 \preceq \alpha_2$ iff $\alpha_1(c) \supseteq \alpha_2(c)$ for all $c$,
-that is, $\alpha_2$ is finer than $\alpha_1$.
+We assume the natural partial order on abstractions,
+where $\alpha_1 \preceq \alpha_2$ if and only if $\alpha_1(c) \supseteq \alpha_2(c)$ for all $c$---that is, $\alpha_2$ is finer than $\alpha_1$.
 
 %\Subsection{klimitedAbstraction}{$k$-limited abstraction}
 \paragraph{Example: $k$-limited abstraction}
@@ -233,22 +242,22 @@ the abstraction here so we can use it as a running example.
 
 First, we define some notation.
 Let $\dom$ be an arbitrary set;
-for the graph example of \reffig{graphExample}, let $\dom = \{ 0, 1, 2, 3 \}$;
+for the graph example of \reffig{graphExample}, let $\dom = \{ 0, 1, 2, 3 \}$ be the nodes of the graph;
 later, $\dom$ will be the set of allocation sites in a program.
-Define a {\em chain} to be a finite sequence in $\dom^*$.
-For a chain $c \in \dom^*$, let $|c|$ denote the length of the chain.
+Define a {\em chain} $c \in \dom^*$ to be a finite sequence of elements from this set.
+Let $|c|$ denote the length of the chain.
 Let $c[i]$ be the $i$-th element of $c$ (starting with index 1) and
 let $c[i..j]$ be the subchain $[c[i] \cdots c[j]]$
 (boundary cases: $c[i..j] = [\,]$ if $i > j$ and $c[i..j] = c[i..|c|]$ if $j > |c|$).
 For two chains $c_1$ and $c_2$, let $c_1+c_2$ denote their concatenation.
-For a chain $c$, let $c*$ denote the set of all chains
+
+The {\em $k$-limited abstraction}
+partitions chains based on their length $k$ prefix.
+First, for a chain $c$, let $c*$ denote the set of all chains
 with prefix $c$; formally:
 \begin{align}
 c* \eqdef \{ c' \in \H^* : c'[1..|c|] = c \}.
 \end{align}
-
-The {\em $k$-limited abstraction}
-partitions chains based on their length $k$ prefix.
 For an integer truncation level $k \ge 0$, define the $k$-limited abstraction $\klimabs_k$ as follows:
 \begin{align}
 \label{eqn:klimitedAbstraction}
@@ -261,7 +270,7 @@ c[1..k]*  & \text{if $|c| \ge k$}. \\
 If the concrete chain $c$ is shorter than length $k$,
 we map it to the singleton set $\{ c \}$;
 otherwise, we map it to the set of chains that share the first $k$ elements.
-It is easy to verify that $\klimabs_k$ as defined is a valid abstraction under \refdef{abstraction}.
+It is easy to verify that $\klimabs_k$ is a valid abstraction under \refdef{abstraction}.
 
 For example, if $c = \vec{01}$,
 then we have that $\klimabs_1(c) = [0]* = \{ [0], [00], [01], [000], \dots \}$
@@ -278,9 +287,9 @@ As another example, \reffig{repeatingExample} shows the range of $\klimabs_3$.
 \end{array}
 \]
 \caption{\label{fig:repeatingExample}
-The equivalence classes defined by the $k$-limited abstraction $\klimabs_k$
-with $\dom = \{ 0, 1 \}$ and $k = 3$,
-In other words, $\klimabs_k$ maps each chain $c \in \dom^*$ to one of the 14 abstract values above.
+The 14 abstract values defined by the $k$-limited abstraction $\klimabs_k$
+with $\dom = \{ 0, 1 \}$ and $k = 3$.
+Specifically, $\klimabs_k$ maps each chain $c \in \dom^*$ to one of the values above.
 }
 \end{figure}
 
@@ -291,7 +300,7 @@ matching prefix in $S$ is $c$.
 With this setup,
 every concrete chain would map to some abstract value regardless of $S$
 (note that we must have $\text{``$[\,]$''} \in S$).
-Therefore, pruning would be impossible.
+Therefore, pruning would be impossible using this representation.
 
 %Suppose that $k=3$.
 %Na\"ively, ``$\vec{01}$'' would just represent $\{\vec{01}\}$.
@@ -320,11 +329,11 @@ $\alpha$ to not just concrete values, but also to abstract values,
 and (sets of) concrete/abstract tuples.
 
 % Extend to sets
-First, we extend $\alpha$ from concrete values $c$ to abstract values $s$:
+First, we extend $\alpha$ from concrete values $c$ to abstract values $s$ as follows:
 \begin{align}
-\alpha(s) \eqdef \{ \alpha(c) : c \in s \}, \quad s \in \sP(\sC),
+\alpha(s) \eqdef \{ \alpha(c) : c \in s \}, \quad s \in \sP(\sC).
 \end{align}
-which returns a set of abstract values.
+Note that $\alpha(s)$ returns a set of abstract values.
 This allows us to naturally define the composition of two abstractions.
 In particular, given two abstractions, $\alpha$ and $\beta$,
 define their composition to be:
@@ -332,7 +341,7 @@ define their composition to be:
 (\alpha \circ \beta)(c) \eqdef \cup_{s \in \alpha(\beta(c))} s.
 \end{align}
 Note that the composition $\alpha \circ \beta$ need not be an abstraction
-even if $\alpha_1$ and $\alpha_2$ are.\footnote{For example,
+even if $\alpha$ and $\beta$ are.\footnote{For example,
 suppose $\sC = \{1,2,3\}$;
 $\alpha(1) = \alpha(2) = \{1,2\}$, $\alpha(3) = \{ 3 \}$; and
 $\beta(1) = \beta(3) = \{1,3\}$, $\beta(2) = \{ 2 \}$.
@@ -344,7 +353,8 @@ it will be important to check that the resulting compositions are valid abstract
 
 An important case in which compositions yield valid abstractions
 is when $\alpha \preceq \beta$ ($\beta$ is finer than $\alpha$).
-In this case, $\alpha \circ \beta = \alpha$, that is,
+In this case, $\alpha \circ \beta = \alpha$,
+corresponding to the fact that
 applying a finer abstraction first has no impact.
 
 % Extend to tuples
@@ -354,7 +364,7 @@ in the natural way:
 \alpha(x) &\eqdef x.r(\alpha(x.a_1), \dots, \alpha(x.a_{|x.\ba|})), \\
 \alpha(X) &\eqdef \{ \alpha(x) : x \in X \}.
 \end{align}
-Here, $\alpha(x)$ is an abstract tuple (one where the arguments are abstract values)
+Here, $\alpha(x)$ is an {\em abstract tuple} (one where the arguments are abstract values)
 and $\alpha(X)$ is a set of abstract tuples.
 For example:
 \begin{align}
@@ -365,12 +375,12 @@ Finally, we extend $\alpha$ to abstract tuples $b$ and sets of abstract tuples $
 \alpha(b) &\eqdef \{ b.r(s_1, \dots, s_{|b.\ba|}) : \forall i, s_i \in \alpha(b.a_i) \}, \label{eqn:alphab} \\
 \alpha(B) &\eqdef \cup_{b \in B} \alpha(b). \label{eqn:alphaB}
 \end{align}
-\refeqn{alphab} applies the abstraction function to each component and takes the cross product over the resulting abstract values,
-yielding a set of abstract tuples;
+\refeqn{alphab} applies the abstraction function to each component of $b$ and takes the cross product over the resulting abstract values;
+the result is a set of abstract tuples.
 \refeqn{alphaB} aggregates these sets of abstract tuples.
 For example:
 \begin{align}
-\pi_1(\ext(1, [00]*, [10]*)) = \ext(1, [0]*, [1]*). \nonumber
+\pi_1(\ext(1, [00]*, [10]*)) = \{ \ext(1, [0]*, [1]*) \}. \nonumber
 \end{align}
 
 \paragraph{Using the abstraction}
@@ -378,7 +388,7 @@ For example:
 Given an abstraction $\alpha$,
 we want to run the Datalog program to compute an abstract answer to the query.
 We do this by applying the abstraction to the concrete input tuples $X$,
-to produce a set of abstract input tuples $\alpha(X)$.
+producing a set of abstract input tuples $\alpha(X)$.
 We then feed these tuples into the Datalog program to produce $\bP(\alpha(X))$.
 (Note that the Datalog program is oblivious to whether the tuples are abstract or concrete.)
 \reffig{graphDerivation} shows an example of performing this computation on the
@@ -386,14 +396,14 @@ graph example from \reffig{graphExample} with the $k$-limited abstraction $\pi_1
 
 We say the query is proven by $\alpha$ if $\bP(\alpha(X)) = \emptyset$.
 Because abstraction is sound,
-this happens only if the query is actually false ($\bP(X) = \emptyset$):
+this happens only if the query is actually false ($\bP(X) = \emptyset$).
+This fact is stated formally below (see \refapp{proofs} for the proof):
 \begin{proposition}[Abstraction is sound]
 \label{prop:soundness}
 Let $\alpha$ be an abstraction and let $X$ be any set of input tuples.
 If $\bP(\alpha(X)) = \emptyset$ (the query is false abstractly),
 then $\bP(X) = \emptyset$ (the query is false concretely).
 \end{proposition}
-See \refapp{proofs} for the proof.
 
 \FigStar{figures/graphDerivation}{0.3}{graphDerivation}{
 Computation of $\bP(\pi_1(X))$ on the graph example from \reffig{graphExample},
@@ -401,9 +411,9 @@ where $X$ is the set of concrete input tuples, and $\pi_1$ is the $1$-limited ab
 which maps each path onto the set of paths with the same first element.
 %(e.g., $\alpha(\vec{10}) = \{\vec{1}, \vec{10}, \vec{11}, \dots \} \eqdef \vec{1}*$).
 In the figure,
-each abstract tuple is derived by a rule whose source terms correspond to the incoming edges.
+each abstract tuple is derived by a rule whose source terms are connected via incoming edges.
 Relevant input tuples ($\bP(\pi_1(X))$, shown in green) are the ones which are reachable by following the edges backwards;
-ones which are not are pruned ($\pi_1(X)\backslash\bP(\pi_1(X))$, shown in red).
+ones which are not backwards-reachable are pruned ($\pi_1(X)\backslash\bP(\pi_1(X))$, shown in red).
 }
 
 If $\alpha$ is coarse, $\bP(\alpha(X))$ will be imprecise;
