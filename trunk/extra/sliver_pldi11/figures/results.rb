@@ -151,7 +151,7 @@ def absIterGraph(metric,logScale)
       g.yrotateAxisLabel(false)
       g.ysciNotation.xrange(0) if metric == 'Ap'
       g.yexpValue.ytickIncrValue(Math.log(10)) if logScale
-      g.xroundPlaces(0).xrange(1).xtickIncrValue([numIters/4,1].max)
+      g.xroundPlaces(0).xrange(0).xtickIncrValue([numIters/4,1].max)
       g.xlength(u(2.5)).ylength(u(2))
       g.colors(red, magenta, green, blue)
       nameGraphs << [CB(client, benchmark), g]
@@ -160,7 +160,7 @@ def absIterGraph(metric,logScale)
   #nameGraphs[0][1] = nameGraphs[1][1].getLegend
   arrangeGraphs(nameGraphs, $benchmarks.size)
 end
-printObj(:obj => absIterGraph('Ap',false).signature(147), :outPrefix => 'absSizeGraph')
+printObj(:obj => absIterGraph('Ap',false).signature(148), :outPrefix => 'absSizeGraph')
 #printObj(:obj => absIterGraph('Ap',true).signature(135), :outPrefix => 'absSizeGraph-log')
 #printObj(:obj => absIterGraph('time',false).signature(138), :outPrefix => 'timeGraph')
 #printObj(:obj => absIterGraph('time',true).signature(136), :outPrefix => 'timeGraph-log')
