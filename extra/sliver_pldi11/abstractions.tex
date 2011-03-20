@@ -6,8 +6,8 @@ the Datalog programs that computed the queries for our three clients based on
 $\infty$-object-sensitivity.  We now describe the abstractions that we use to
 further abstract this analysis.
 
-The basic abstraction (\refsec{klimitedAbstraction}) corresponds exactly to
-$k$-object-sensitivity.  We then present two orthogonal variants: one that in
+We have already defined the $k$-limited abstraction, which corresponds to
+$k$-object-sensitivity.  We present two orthogonal variants of this basic abstraction: one that in
 addition limits the repetition of allocation sites (\refsec{barelyAbstraction})
 and one that further abstracts allocation sites using type information
 (\refsec{classAbstraction}).
@@ -54,20 +54,32 @@ class A {
 The points-to set of {\tt y1} using $\infty$-object-sensitivity
 is $\{\vec{01},\vec{001},\vec{0001},\dots\}$ (any positive number of zeros followed by a 1),
 and the points-to set of {\tt y2} is $\{\vec{02},\vec{002},\vec{0002},\dots\}$.
-These two sets are disjoint, but for any finite $k$, no matter how large,
-$k$-object-sensitivity would conclude that both point to $\bzero_k*$, where $\bzero_k$ is a chain of $k$ zeros.
+While these two sets are disjoint, if we use a $k$-limited abstraction for any finite $k$,
+we would conclude erroneously that both variables might point to $\bzero_k*$, where $\bzero_k$ is a chain of $k$ zeros.
+Incidentally, this demonstrates an intrinsic limitation of the $k$-object-sensitivity abstraction.
+Using the barely-repeating $k$-limited abstraction, we can increase $k$ while avoiding chains longer than $\vec{00}$
+since $\vec{00}$ is barely-repeating.
+This results in computational savings, and in this case, in no loss in precision.
 }
 \end{figure}
 
 For a sequence $c$, we say $c$ is {\em non-repeating} if all its elements are distinct.
-We say $c$ is {\em barely-repeating} if (i) $c$ excluding the last element ($c[1..|c|-1]$)
-is {\em non-repeating} and (ii) the last element of $c$ is repeated earlier in $c$.
-%Note that a barely-repeating includes the non-repeating case.
+%We say $c$ is {\em barely-repeating} if (i) $c$ excluding the last element ($c[1..|c|-1]$)
+%is {\em non-repeating} and (ii) the last element of $c$ is repeated earlier in $c$.
+We say $c$ is {\em barely-repeating} if $c$ excluding the last element ($c[1..|c|-1]$) is {\em non-repeating}.
+Note that a barely-repeating includes the non-repeating case.
 Let $\delta(c)$ be the length of the longest prefix that is barely-repeating:
+%\begin{align}
+%\label{eqn:barelyLen}
+%\distinct(c) \eqdef
+%\begin{cases} 
+%\max_{m' : c[1..m'] \text{ is barely-repeating}} m' & \text{if $m'$ exists}, \\
+%\infty & \text{otherwise}.
+%\end{cases}
+%\end{align}
 \begin{align}
 \label{eqn:barelyLen}
-\distinct(c) \eqdef \max_{m' : c[1..m'] \text{ is barely-repeating}} m'.
-% XXX: infinity
+\distinct(c) \eqdef \max_{m' : c[1..m'] \text{ is barely-repeating}} m'
 \end{align}
 For example, $\distinct(\vec{10010}) = 3$ because $\vec{100}$ is barely-repeating, but $\vec{1001}$ is not.
 
@@ -116,16 +128,16 @@ but $\vec{00}$ is.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{classAbstraction}{Class-based abstraction}
 
-We now introduce an abstraction that we will use in the pre-pruning step of the \PR\ algorithm.
+We now introduce an abstraction that we will use in the pre-pruning step of the Prune-Refine algorithm.
 We start by defining an equivalence relation over allocation sites $\dom$,
 represented by a function $\hclass : \dom \mapsto \sP(\dom)$
 mapping each allocation site $h \in \dom$ to its its equivalence class.
-Given such an $\hclass$, we could then extend it sequences by elementwise application:
+Given such an $\hclass$, we extend it to sequences by elementwise application:
 \begin{align}
 \hclass(c) = \hclass(c[1]) \times \cdots \times \hclass(c[|c|]), \quad c \in \dom^*.
 \end{align}
 
-To construct $\hclass$, we consider two sources of type information associated
+To construct $\hclass$, we consider using two sources of type information associated
 with an allocation site, motivated by \cite{smaragdakis11context}:
 \begin{align}
 \typeIs(h)  &= \text{declaring type of allocation site $h$} \label{eqn:typeIs} \\
@@ -144,13 +156,14 @@ $k$-limited abstraction: $\hclass$ abstracts a chain by abstracting each site
 uniformly; $\pi_k$ keeps all sites up to a length $k$ prefix precisely but
 abstracts away the rest completely.  This complementarity is desirable
 for pre-pruning.
-However, $\hclass$ is not coarser than $\klimabs_k$, and therefore cannot
-be used directly in the \PR\ algorithm.
 
-However, we can compose $\hclass$ and $\klimabs_k$ to yield another abstraction which will be coarser than $\klimabs_k$.
-But in what order should we compose?
-We must take care because the composition of two equivalence relations is not necessarily an equivalence relation.
-The following proposition shows which orderings are valid:
+Since $\hclass$ is not coarser than $\klimabs_k$, we cannot
+use it directly in the Prune-Refine algorithm.
+We must compose $\hclass$ with $\klimabs_k$ or $\klimdabs_k$ to yield another
+abstraction which will be coarser than $\klimabs_k$ or $\klimdabs_k$,
+respectively.  But in what order should we compose?
+We must be careful because the composition of two abstractions is not necessarily an abstraction.
+The following proposition shows which compositions are valid:
 \begin{proposition}
 The functions
 (i) $\klimabs_k \circ \hclass$ and (ii) $\hclass \circ \klimabs_k$
