@@ -137,7 +137,7 @@ def algorithm(complex)
   def E(a,b,label,description=nil)
     e = clippedpath(a, b).arrow.arrowSize(6)
     stuff = [e]
-    stuff << centeredOverlay(ctable(label).opaque).scale(0.7).shift(tcenter(e)) if label
+    stuff << overlay(ctable(label).opaque).scale(0.7).shift(tcenter(e)).center if label
     stuff << overlay(ctable(description).opaque).pivot(0,+1).shift(tcenter(e).add(upair(0, -0.1))) if description
     overlay(*stuff)
   end
@@ -178,8 +178,8 @@ def algorithm(complex)
     E(a0,b0,beta(0)), # BEGIN
     E(b0,tb0,R()),
     E(tb0,pa0,alpha(0)),
-    E(a0,pa0,nil),
-    #E(a0,pa0,'$\cap$'),
+    #E(a0,pa0,nil),
+    E(a0,pa0,'$\cap$'),
     E(pa0,ta0,R(),prune),
     E(ta0,a1,alpha(1),refine),
     E(a1,b1,beta(1)), # BEGIN
@@ -196,6 +196,6 @@ def algorithm(complex)
   complex ? alg2 : alg1
   #rtable(alg1, alg2).rmargin(u(0.5))
 end
-printObj(:obj => algorithm(true).signature(116), :outPrefix => 'algorithm')
+printObj(:obj => algorithm(true).signature(117), :outPrefix => 'algorithm')
 
 finishFigureSet
