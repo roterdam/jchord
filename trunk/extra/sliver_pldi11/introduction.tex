@@ -89,9 +89,9 @@ replaces allocation sites by types (a generalization of
 We ran our experiments on \numBenchmarks\ Java benchmarks using three clients that
 depend heavily on having a precise pointer analysis: downcast safety
 checking, monomorphic call site inference, and race detection.
-We show that with pruning, our Prune-Refine algorithm enables us to perform $k$-object-sensitivity
-analysis with a substantially much finer abstraction (larger $k$)
-compared to a full $k$-object-sensitive analysis or even using the selected
+We show that with pruning, our Prune-Refine algorithm enables us to perform $k$-object-sensitive
+pointer analysis with a substantially much finer abstraction (larger $k$)
+compared to a full $k$-object-sensitive pointer analysis or even using the selected
 refinement strategy of \cite{liang11minimal}.
 In a few cases, the non-pruning approaches hit a wall around $k=3$ but the Prune-Refine
 algorithm is able to go well beyond $k=10$.
