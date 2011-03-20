@@ -3,7 +3,7 @@
 % Problem: want precision, abstractions don't scale up, even with
 % client-driven, etc.
 Making a static analysis more precise requires increasing the complexity of the
-supporting abstraction---in pointer analysis, by increasing the amount of
+underlying abstraction---in pointer analysis, by increasing the amount of
 context/object sensitivity \cite{kcfa, kobj, MilanovaRountevRyder2005,
 WhaleyLam2004, LhotakHendren2006, LhotakHendren2008}; or in model checking, by
 adding more abstraction predicates \cite{graf97predicate,slam}.
@@ -25,9 +25,9 @@ program property of interest (a client query) is proven by the inability to
 derive a designated fact using the given rules.  For concreteness, assume that
 the static analysis is expressed as a Datalog program.  A Datalog program takes
 a set of input tuples and derives new tuples via a set of inference rules.
-These inference rules capture the abstract semantics and evaluation of the
-client query; the input tuples encode the program we are analyzing and the
-abstraction we are using.  The program property is proven if the
+These inference rules capture the abstract semantics of the static analysis and
+the evaluation of the client query using the analysis result; the input tuples encode the program we are
+analyzing and the abstraction we are using.  The program property is proven if the
 designated query tuple cannot be derived.
 
 % Pruning idea
@@ -72,7 +72,7 @@ but possibly infeasible.
 
 % Slivers
 We apply pruning to the $k$-object-sensitivity abstraction
-\cite{kobj}, where objects in the heap are abstracted into chains of
+\cite{kobj}, where objects in the heap are abstracted using chains of
 allocation sites; these chains are the input tuples we maintain.
 Although the main contribution of this paper is the general
 pruning technique, we also make the following contributions specific to
