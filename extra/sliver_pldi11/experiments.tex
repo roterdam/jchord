@@ -83,7 +83,7 @@ computing the set of relevant allocation site chains.
 \caption{\label{tab:algorithms} Shows the abstractions and algorithms that we evaluated empirically.
 For example,
 $\PR(\Klimdabs,\hclassIsHas)$
-means running the \PR-algorithm on the barely-repeating $k$-limited abstraction ($\alpha_k = \klimdabs_k$),
+means running the Prune-Refine algorithm on the barely-repeating $k$-limited abstraction ($\alpha_k = \klimdabs_k$),
 using a composed abstraction based on the type of an allocation site ($\hclassIs$) 
 and the type of the declaring class ($\hclassHas$) to do pre-pruning
 (specifically, $\beta_k = \klimdabs_k \circ \hclassIsHas$).
@@ -129,7 +129,7 @@ by many orders of magnitude.
 }
 
 \reftab{sizeRatio} provides more details on the quantitative impact of pruning in our
-best instantiation of the \PR\ algorithm ($\PR(\bpi, \hclassIsHas)$).  We see that pre-pruning has a
+best instantiation of the Prune-Refine algorithm ($\PR(\bpi, \hclassIsHas)$).  We see that pre-pruning has a
 significant positive impact: we are able to perform eliminate many tuples by just operating on the coarser
 level of types rather than allocation sites (see the $\frac{|\tilde B_t|}{|B_t|}$ column).  Many of the tuples are pruned
 at the type level, and the results of this pruning carry over to the original

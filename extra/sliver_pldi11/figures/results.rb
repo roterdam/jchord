@@ -187,8 +187,8 @@ if true
       contents << (1..N).map { |i| numUnproven[i] || '-' }
     }
   }
-  tab = latexTable(DataTable.new(:contents => contents, :rowLabels => rowLabels, :cellName => '$k$',
-                                 :colLabels => (1..N).to_a)).lines(false).justify('r'*N)
+  tab = latexTable(DataTable.new(:contents => contents, :rowLabels => rowLabels, :cellName => '$k$', :colName => 'client/benchmark $\backslash$ $k$',
+                                 :colLabels => (1..N).to_a)).lines(false).justify('r'*N).upperLeftIsColName
   #puts tab.render
   IO.writelines("numUnproven.tex", [tab.render])
 end
@@ -264,7 +264,7 @@ def barelyRepeatingEffect(logScale)
     g.ysciNotation.xrange(0)
     g.yexpValue.ytickIncrValue(Math.log(10)) if logScale
     g.ylabelBold(false)
-    g.xroundPlaces(0).xrange(1).xtickIncrValue([numIters/4,1].max)
+    g.xroundPlaces(0).xrange(0).xtickIncrValue([numIters/4,1].max)
     g.xlength(u(2.5)).ylength(u(2))
     g.colors(red, blue)
     g.legendPosition(-1, 1)
@@ -273,7 +273,7 @@ def barelyRepeatingEffect(logScale)
   }
   arrangeGraphs(nameGraphs, 5)
 end
-printObj(:obj => barelyRepeatingEffect(false).signature(144), :outPrefix => 'barelyRepeatingEffect')
+printObj(:obj => barelyRepeatingEffect(false).signature(145), :outPrefix => 'barelyRepeatingEffect')
 printObj(:obj => barelyRepeatingEffect(true).signature(138), :outPrefix => 'barelyRepeatingEffect-log')
 
 # Show effect of class-based
