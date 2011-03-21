@@ -7,7 +7,7 @@ monomorphic call site inference (\monosite),
 and race detection (\race).
 Our main empirical result is that across different clients and benchmarks,
 pruning is effective at curbing the exponential growth,
-which allows us to run analyses on finer abstractions.
+which allows us to run analyses using abstractions finer than what is possible without pruning.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{setup}{Setup}
@@ -17,7 +17,7 @@ Our experiments were performed using IBM J9VM 1.6.0 on 64-bit Linux machines.
 All analyses were implemented in Chord,
 an extensible program analysis framework for Java bytecode,\footnote{{\tt{http://code.google.com/p/jchord/}}}
 which uses the BDD Datalog solver {\tt bddbddb} \cite{Whaley2007}.
-We evaluated on \numBenchmarks\ Java benchmarks shown in \reftab{benchmarks}.
+We evaluated our analyses on \numBenchmarks\ Java benchmarks shown in \reftab{benchmarks}.
 In each run, we allocated 8GB of memory and terminated the process when it ran out of memory.
 
 \begin{table*}
@@ -37,28 +37,27 @@ We experimented with various combinations of abstractions and refinement
 algorithms (see \reftab{algorithms}).  As a baseline, we consider running an analysis
 with a full abstraction $\alpha$ (denoted $\Full(\alpha)$).
 For $\alpha$, we can either use $k$-limited abstractions
-($(\klimabs_k)_{k=1}^\infty$), in which case we recover ordinary $k$-object-sensitivity,
-or the barely-repeating variants ($(\klimdabs_k)_{k=1}^\infty$).
+($\Klimabs = (\klimabs_k)_{k=0}^\infty$), in which case we recover ordinary $k$-object-sensitivity,
+or the barely-repeating variants ($\Klimdabs = (\klimdabs_k)_{k=0}^\infty$).
 We also consider the site-based refinement algorithm of \cite{liang11minimal},
-which considers a sequence of abstractions $\balpha = (\balpha_0, \balpha_1, \dots)$
+which considers a sequence of abstractions $\balpha = (\alpha_0, \alpha_1, \dots)$
 but stops refining sites which have been deemed irrelevant.  This algorithm is denoted $\Site(\balpha)$.
 
-As for the new methods that we propose in this paper,
+As for the new algorithms that we propose in this paper,
 we have $\PR(\balpha)$, which corresponds to the Prune-Refine (\PR) algorithm using a sequence of abstractions $\balpha$ with no pre-pruning;
 and $\PR(\balpha,\hclass)$, which performs pre-pruning using $\beta_t = \alpha_t
 \circ \hclass$ for $t = 0, 1, 2, \dots$.  We consider three choices of $\hclass$
-which use different kinds of type information ($\hclassIs,\hclassHas,\hclassIsHas$)
+which use different kinds of type information ($\hclassIs,\hclassHas,\hclassIsHas$).
 
 In our implementation of the Prune-Refine algorithm, we depart slightly from our
-presentation.  Instead of maintaining the set of relevant input tuples as
-determined by our $k$-limited Datalog program across iterations, we instead
-maintain the allocation site chains which were involved in any relevant input
+presentation.  Instead of maintaining the full set of relevant input tuples, we instead
+maintain only the set of allocation site chains which exist in some relevant input
 tuple.  This choice results in more conservative pruning, but reduces the
-amount of state that we have to keep.
-We can modify the original Datalog program so that the Prune-Refine algorithm
-is consistent with this implementation by introducing a new input relation
-$\dl{active}(c)$ for $c \in \H^*$, encoding existing $\ext$ input relations as rules
-with zero source terms, and adding $\dl{active}(c)$ for each existing
+amount of information that we have to keep.
+We can modify the original Datalog program so that the original Prune-Refine algorithm
+computes this new variant: Specifically, first introduce new input tuples
+$\dl{active}(c)$ for each $c \in \H^*$.   Then encode existing $\ext$ input tuples as rules
+with no source terms; $\ext$ is no longer an input relation.  Finally, add $\dl{active}(c)$ to the right-hand side of each existing
 rule that uses a chain-valued variable.  Computing the
 relevant input tuples in this modified Datalog program corresponds exactly to
 computing the set of relevant allocation site chains.
@@ -67,8 +66,8 @@ computing the set of relevant allocation site chains.
 \[
 \begin{array}{ll}
 \text{\bf Abstractions} \\
-\Klimabs = (\klimabs_k)_{k=1}^\infty   & \defn{$k$-limited abstractions \refeqn{klimitedAbstraction}} \\
-\Klimdabs = (\klimdabs_k)_{k=1}^\infty & \defn{barely-repeating $k$-limited abstractions \refeqn{barelyAbstraction}} \\
+\Klimabs = (\klimabs_k)_{k=0}^\infty   & \defn{$k$-limited abstractions \refeqn{klimitedAbstraction}} \\
+\Klimdabs = (\klimdabs_k)_{k=0}^\infty & \defn{barely-repeating $k$-limited abstractions \refeqn{barelyAbstraction}} \\
 \hclassIs                              & \defn{abstraction using type of allocation site} \\
 \hclassHas                             & \defn{abstraction using type of containing class} \\
 \hclassIsHas                           & \defn{abstraction using both types} \\
@@ -93,21 +92,21 @@ and the type of the declaring class ($\hclassHas$) to do pre-pruning
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \Subsection{results}{Results}
 
-We ran four analyses using $k$-limited abstractions, seeing
+We ran the four algorithms of \reftab{algorithms} using $k$-limited abstractions, seeing
 how far we could increase $k$ until the analyses ran out of memory.
 For each analysis, we also measured the number of input tuples given to
 the Datalog solver; this quantity is denoted as $|A_t'|$ (see
 \reffig{pseudocode}).  In this section, the number of iterations $t$ is the same as the $k$ value.
 
 \reffig{absSizeGraph} plots the number of tuples $|A_t'|$ as a function of
-number of iterations $t$ for our four algorithms.  We see that the
+number of iterations $t$.  We see that the
 non-pruning algorithms completely hit a wall after a few iterations, with the
 number of tuples exploding exponentially.  On most benchmark-client pairs, the
-pruning methods are able to continue increasing $k$ much farther, but on several
+pruning algorithms are able to continue increasing $k$ much further, though on several
 pairs, pruning only manages to increase $k$ by one beyond the non-pruning algorithms.
 We also observed that pruning does yield speedups, although these are
 less pronounced than the differences in the number of tuples.  Nonetheless, pruning
-overcomes the major bottleneck, which is that standard $k$-limited analyses run
+overcomes the major bottleneck---that standard $k$-limited analyses run
 out of memory even for moderate $k$.  By curbing the growth of the
 number of tuples, pruning makes it possible to run some analyses at all.
 
@@ -116,24 +115,28 @@ First, we are using BDDs, which can actually handle large numbers of tuples
 so long as they are structured; pruning destroys some of this structure,
 yielding less predictable running times.  Second, pruning requires solving
 the transformed Datalog program for computing $\bP(X)$, which is more expensive than the original Datalog program.
-Finally, we have to solve the Datalog program several times, not just once.
-These three caveats also apply to the site-based refinement algorithm of \cite{liang11minimal},
-so pruning is a strict improvement over that.
+Finally, we must solve the Datalog program several times, not just once.
+These three caveats also apply to the site-based refinement algorithm of \cite{liang11minimal} (\Site),
+so pruning is at least a strict improvement over that algorithm.
 
 \FigStar{figures/absSizeGraph}{0.35}{absSizeGraph}{For each client/benchmark pair,
-we show the growth of the number of input tuples $|A_t'|$ across iterations.
-Recall that $|A_t'|$ is the number of tuples fed into the Datalog program.
-\reftab{algorithms} describes the four methods.
-We see that the methods that prune drastically cut down the number of input tuples
+we show the growth of the number of input tuples $|A_t'|$ across iterations
+(recall that $A_t'$ are the tuples fed into the Datalog program).
+\reftab{algorithms} describes the four algorithms.
+We see that the pruning algorithms ($\PR(\Klimabs)$ and $\PR(\Klimabs,\hclassIsHas)$) drastically cut down the number of input tuples
 by many orders of magnitude.
 }
 
-\reftab{sizeRatio} provides more details on the quantitative impact of pruning in our
-best instantiation of the Prune-Refine algorithm ($\PR(\bpi, \hclassIsHas)$).  We see that pre-pruning has a
-significant positive impact: we are able to perform eliminate many tuples by just operating on the coarser
-level of types rather than allocation sites (see the $\frac{|\tilde B_t|}{|B_t|}$ column).  Many of the tuples are pruned
-at the type level, and the results of this pruning carry over to the original
-$k$-limited abstraction (see the $\frac{|\tilde A_t'|}{|A_t|}$ column).
+We found that the best instantiation of the Prune-Refine algorithm is $\PR(\Klimabs,
+\hclassIsHas)$, which involves pre-pruning with both kinds of type information ($\hclassIsHas$);
+this works better than both no pre-pruning and pre-pruning with only
+$\hclassIs$ or $\hclassHas$ alone.
+
+\reftab{sizeRatio} provides more details on the quantitative impact of pruning for $\PR(\Klimabs, \hclassIsHas)$.  We see that pre-pruning has a
+significant impact: we can eliminate about three-quarters of the tuples by just operating on the coarser
+level of types rather than allocation sites (see the $\frac{|\tilde B_t|}{|B_t|}$ column).
+Importantly, the effect of this pruning carries over to the original
+$k$-limited abstraction (see the $\frac{|A_t'|}{|A_t|}$ column).
 
 \begin{table}
 \centering
@@ -141,15 +144,15 @@ $k$-limited abstraction (see the $\frac{|\tilde A_t'|}{|A_t|}$ column).
 \input figures/sizeRatio
 \caption{\label{tab:sizeRatio} Shows the shrinking and growth of the
 number of tuples during the various pruning and refinement operations (see \reffig{pseudocode}) for 
-our best method $\PR(\Klimabs,\hclassIsHas)$ across all the clients and benchmarks, averaged across iterations.
+our best algorithm $\PR(\Klimabs,\hclassIsHas)$ across all the clients and benchmarks, averaged across iterations.
 The columns are as follows:
 First, $\frac{|B_t|}{|A_t|}$ measures the number of tuples after projecting
-down to the auxiliary abstraction $\beta_t = \klimdabs_t \circ \hclassIsHas$ for pre-pruning; note that running the analysis
+down to the auxiliary abstraction $\beta_t = \klimabs_t \circ \hclassIsHas$ for pre-pruning; note that running the analysis
 using types instead of allocation sites is much cheaper.
 Next, $\frac{|\tilde B_t|}{|B_t|}$ shows the fraction of abstract values kept during pre-pruning;
-When we return from types to allocation sites, see that the effect of pre-pruning essentially carries over
+When we return from types to allocation sites, we see that the effect of pre-pruning carries over
 ($\frac{|A_t'|}{|A_t|}$).
-After pre-pruning, pruning kept $\frac{|\tilde A_t|}{|A_t|}$ of the chains.
+Next, pruning kept $\frac{|\tilde A_t|}{|A_t|}$ of the chains.
 Finally, $\frac{|A_{t+1}|}{|A_t|}$ measures the ratio between iterations,
 which includes both pruning and refinement.  Note that there is still almost a three-fold
 growth of the number of tuples (on average), but this growth would have been much more unmanageable
@@ -159,19 +162,19 @@ without the pruning.
 
 So far, we have been using the $k$-limited abstraction; we now compare this abstraction
 with the barely-repeating $k$-limited abstraction introduced in \refsec{barelyAbstraction}.
-As \reffig{barelyRepeatingEffect} shows, we found that when we can increase the $k$
-value, the barely-repeating $k$-limited abstraction reduces the number of tuples, but in most
+As \reffig{barelyRepeatingEffect} shows, for a few cases,
+the barely-repeating $k$-limited abstraction requires fewer tuples than the $k$-limited abstraction; but in most
 cases, it does not improve scalability.  The reason is that the
-barely-repeating abstraction curbs refinement, but often, and somewhat
-paradoxically, it is exactly the refinement which enables us to prune more.
+barely-repeating abstraction curbs refinement, but often, somewhat
+paradoxically, it is exactly the refinement which enables more pruning.
 
 \FigStar{figures/barelyRepeatingEffect}{0.35}{barelyRepeatingEffect}{
-Shows the 5 (out of 15) client/benchmark pairs for which using the
+Shows the 5 (out of the 15) client/benchmark pairs for which using the
 barely-repeating $k$-limited abstraction ($\Klimdabs$) allows one to increase
 $k$ much more than the plain $k$-limited abstraction ($\Klimabs$).
 On the other 10 client/benchmarks where $k$ cannot get very large,
 limiting repetitions is actually slightly worse in terms of scalability.
-Three of the lines for $\Klimdabs$ stop early, not because the algorithm runs out of memory,
+Also note that three of the plots for $\Klimdabs$ stop early, not because the algorithm runs out of memory,
 but because the algorithm has actually converged and increasing $k$ would have no effect.
 }
 
@@ -183,10 +186,10 @@ we were only able to prove two queries more than using the non-pruning technique
 On the surface, these findings seem to contradict \cite{liang10abstraction},
 which showed a sharp increase in precision around $k=4$ for $k$-CFA.  However,
 this discrepancy merely suggests that our flow-insensitive analyses are simply
-limited: since \cite{liang10abstraction} obtains a lower bound, we know for
+limited: since \cite{liang10abstraction} offers upper bounds on precision, we know for
 sure that low $k$ values are insufficient; the fact that we don't see an
-increase in precision suggests that the non-$k$-related aspects of our analyses
-are insufficient.  However, given that our pruning approach is general, it
+increase in precision for higher $k$ suggests that the non-$k$-related aspects of our analyses
+are insufficient.  Given that our pruning approach is general, it
 would be interesting to tackle other aspects of program analysis such as
 flow-sensitivity.
 

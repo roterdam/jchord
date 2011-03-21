@@ -132,13 +132,18 @@ but $\vec{00}$ is.
 We now introduce an abstraction that we will use in the pre-pruning step of the Prune-Refine algorithm.
 We start by defining an equivalence relation over allocation sites $\dom$,
 represented by a function $\hclass : \dom \mapsto \sP(\dom)$
-mapping each allocation site $h \in \dom$ to its its equivalence class.
-Given such an $\hclass$, we extend it to sequences by elementwise application:
+mapping each allocation site $h \in \dom$ to its equivalence class.
+In the graph example, we might have
+$\hclass(0) = \hclass(1) = \{ 0,1 \}$
+and $\hclass(2) = \hclass(3) = \{ 2,3 \}$.
+
+Given such a $\hclass$, we extend it to sequences by taking the cross product over elementwise applications:
 \begin{align}
 \hclass(c) = \hclass(c[1]) \times \cdots \times \hclass(c[|c|]), \quad c \in \dom^*.
 \end{align}
+In the running example, $\hclass([02]) = \{ [02], [03], [12], [13] \}$.
 
-To construct $\hclass$, we consider using two sources of type information associated
+To construct $\hclass$ for $k$-limited pointer analysis, we consider using two sources of type information associated
 with an allocation site, motivated by \cite{smaragdakis11context}:
 \begin{align}
 \typeIs(h)  &= \text{declaring type of allocation site $h$} \label{eqn:typeIs} \\
@@ -149,22 +154,23 @@ $\hclassIs$, $\hclassHas$, and $\hclassIsHas$ as follows:
 \begin{align}
 \hclass_f(h) = \{ h' : f(h) = f(h') \}, \label{eqn:hclass}
 \end{align}
-with $f \in \{ \typeIs, \typeHas, \typeIs \times \typeHas \}$.
+for $f \in \{ \typeIs, \typeHas, \typeIs \times \typeHas \}$.
 
 % Complementary
-Now we have three options for $\hclass$ which are complementary to the
-$k$-limited abstraction: $\hclass$ abstracts a chain by abstracting each site
-uniformly; $\pi_k$ keeps all sites up to a length $k$ prefix precisely but
-abstracts away the rest completely.  This complementarity is desirable
-for pre-pruning.
+Now we have three choices for $\hclass$: one that uses the declaring type ($\hclassIs$),
+one that uses the type of the containing class ($\hclassHas$), and one that uses both ($\hclassIsHas$).
+Recall that all three are complementary to the
+$k$-limited abstraction $\pi_k$: Specifically, $\hclass$ abstracts a chain by abstracting each site
+uniformly, whereas $\pi_k$ performs no abstraction on the first $k$ sites, but performs a total abstraction
+on the rest of the chain.  Recall that this complementarity is desirable for effective pre-pruning.
 
 Since $\hclass$ is not coarser than $\klimabs_k$, we cannot
 use it directly in the Prune-Refine algorithm.
 We must compose $\hclass$ with $\klimabs_k$ or $\klimdabs_k$ to yield another
-abstraction which will be coarser than $\klimabs_k$ or $\klimdabs_k$,
+abstraction which is coarser than $\klimabs_k$ or $\klimdabs_k$,
 respectively.  But in what order should we compose?
 We must be careful because the composition of two abstractions is not necessarily an abstraction.
-The following proposition shows which compositions are valid:
+Fortunately, the following proposition shows which compositions are valid:
 \begin{proposition}
 The functions
 (i) $\klimabs_k \circ \hclass$ and (ii) $\hclass \circ \klimabs_k$
@@ -178,7 +184,7 @@ must be either of the form $s = w_1 \times \cdots \times w_m$ for $m < k$ (case 
 or $s = w_1 \times \cdots \times w_m \times \dom^*$ for some $m \le k$ (case 2),
 where $w_i \in \range(\hclass)$ for each $i = 1, \dots, m$.
 
-For (i) and (ii), it is straightforward to check
+For (i) and (ii), it is straightforward to check that
 $(\klimabs_k \circ \hclass)(c) = (\hclass \circ \klimabs_k)(c) = s$ for each $c \in s$.
 Intuitively, the truncation ($\klimabs_k$) and coarsening ($\tau$) operate
 independently and can be interchanged.
@@ -196,21 +202,21 @@ and therefore, $\klimdabs_k(\tau(c)) = s$.
 To show that (iv) is not an abstraction,
 consider the following counterexample:
 let $\dom = \{ 0,1,2 \}$,
-and define $\hclass(v) = \dom$ for all $v \in \dom$
+and define $\hclass(h) = \dom$ for all $h \in \dom$
 (there is one equivalence class).
-Consider two elements $\vec{01}$ and $\vec{00}$ under the composed abstraction:
+Consider applying $\hclass \circ \klimdabs_3$ to two elements $\vec{01}$ and $\vec{00}$:
 For $\vec{01}$, we have $\klimdabs_3(\vec{01}) = \{ \vec{01 }\}$,
 so $\hclass(\klimdabs_3(\vec{01})) = \dom^2$;
 for $\vec{00}$, we have $\klimdabs_3(\vec{00}) = \vec{00}*$,
 so $\hclass(\klimdabs_3(\vec{00})) = \dom^2 \times \dom^*$.
 But $\dom^2 \subsetneq \dom^2 \times \dom^*$ (notably,
 the two sets are neither equal nor disjoint),
-so $\hclass \circ \klimdabs_3$ does not define an equivalence relation.
+so $\hclass \circ \klimdabs_3$ does not define a valid abstraction.
 \end{proof}
 
 \noindent 
 In light of this result, we will use the valid abstractions $\cklimabsk$ and $\cklimdabsk$,
-which work by first applying $\hclass$ and then applying $\klimabs_k$ or $\klimdabs_k$.
+which work by first applying the type-based abstraction $\hclass$ and then applying $\klimabs_k$ or $\klimdabs_k$.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %\Subsection{computation}{Computation}

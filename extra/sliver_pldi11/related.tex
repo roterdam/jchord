@@ -9,7 +9,7 @@ abstractions where each local variable can be independently treated
 context-sensitively or context-insensitively, and different $k$ values can be
 chosen for different allocation sites.  Lhot\'{a}k and
 Hendren~\cite{LhotakHendren2006,LhotakHendren2008} present Paddle, a
-parametrized framework for BDD-based, $k$-limited pointer analysis.
+parametrized framework for BDD-based, $k$-limited pointer analyses.
 \cite{smaragdakis11context} scale up $k$-object-sensitivity, increasing $k$ by one
 using types rather than allocation sites.  However, in all of this work, which parts of the
 abstraction should be more refined is largely left up to the user.
@@ -25,9 +25,9 @@ Our method for determining relevant input tuples is similar in spirit but more g
 
 Section~3.1 of Liang et al.~\cite{liang11minimal} (not the focus of that work)
 also computes the set of relevant tuples by running a transformed Datalog program.  However, what
-is done with this information is quite different.  \cite{liang11minimal} merely
+is done with this information is quite different there.  \cite{liang11minimal} merely
 stops refining the irrelevant sites whereas we actually prune all irrelevant
-tuples, thereby exploiting this information fully.  As we saw in
+tuples, thereby exploiting this information more fully.  As we saw in
 \refsec{experiments}, this difference had major ramifications.
 
 %Similar to iterative refinement client-driven approaches is lazy abstraction
@@ -38,18 +38,22 @@ Demand-driven analyses \cite{HeintzeTardieu2001,ZhengRugina2008} do not refine
 the abstraction but rather try to compute an analysis on an existing
 abstraction more efficiently.
 Sridharan et al.~\cite{SridharanBodik2006} presents an algorithm
-which casts pointer analysis as a CFL-reachability problem and relaxes by
-introducing additional edges.
+which casts pointer analysis as a CFL-reachability problem and relaxes the problem by
+introducing additional ``match'' edges.
 
-Our Prune-Refine algorithm has a flavor of the client-driven approach, in that we do
-refine our abstraction, but also of the demand-driven approach, in that we do
+Our Prune-Refine algorithm has a client-driven flavor in that we
+refine our abstraction, but also a demand-driven flavor in that we do
 not perform a full computation (in particular, ignoring tuples which were
-pruned).  There are three important differences between the present work
+pruned).  However, there are two important differences between the present work
 and the work described earlier:
 First, while most of that work is specific to pointer analysis, our Prune-Refine algorithm
-is generally applicable to any Datalog program.
-Second, while past work is based on selected iterative refinement,
-Prune-Refinement is based on generalizing the idea of program slicing.
+is applicable to any Datalog program.
+Second, past work is based on selected refinement,
+which is orthogonal to pruning.
+Selected refinement merely governs the abstractions $(\alpha_t)_{t=0}^\infty$ that we use,
+whereas pruning focuses on removing input tuples.
+Given that the input tuples encode the program analysis,
+pruning is analogous to program slicing.
 %Finally, we were able to prove rigorous theoretical guarantees that our algorithm is as precise
 %as a more expensive algorithm.
 
@@ -84,9 +88,9 @@ Prune-Refinement is based on generalizing the idea of program slicing.
 
 % Dynamic - lower bound
 Other forms of pruning have been implemented in various settings.
-\cite{vipindeep05pruning} use dynamic analysis to prune down set of paths and
-then focus a static analysis on these paths.
-\cite{spoon04ddp} use pruning for type inference in functional languages,
+\cite{vipindeep05pruning} uses dynamic analysis to prune down the set of paths and
+then focuses a static analysis on these paths.
+\cite{spoon04ddp} uses pruning for type inference in functional languages,
 where pruning is simply a heuristic which shortcuts a search algorithm.
 As a result, pruning can hurt precision.
 One advantage of our pruning approach is that it comes with strong soundness
