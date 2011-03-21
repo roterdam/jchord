@@ -58,7 +58,7 @@ For each $a_i \in \ba$, let $b_i$ be the unique element in $\beta(a_i)$ (a singl
 and let $\bb$ be the corresponding sequence constructed from the $b_i$s.
 Since $\beta \preceq \alpha$, we have $\bb \in \bD(B)$ by \refthm{soundness},
 and so each input tuple in $\bb$ is also in $\bP(B) = \tilde B$;
-in particular, $b = \tilde B$ for $\beta(a) = \{ b \}$.
+in particular, $b \in \tilde B$ for $\beta(a) = \{ b \}$.
 Since $\beta \preceq \alpha$, $a \in \alpha(b)$, and so $a \in \tilde A$.
 We have thus shown that $\bP(A) \subset \tilde A$.
 Finishing up, $\bP(A') = \bP(A \cap \tilde A) \supset \bP(A \cap \bP(A)) = \bP(\bP(A)) = \bP(A)$,
@@ -117,7 +117,7 @@ we get that
 When $s = t-1$, we have $\bP(\alpha_t(X)) = \bP(\alpha_t(\tilde A_{t-1})) = \bP(A_t)$,
 completing the claim.
 Finally, if the algorithm returns {\em proven}, we have
-\[ \emptyset = \bP(A_t) = \bF(\alpha_t(X)) \supset \bF(X). \]
+\[ \emptyset = \bP(A_t) = \bP(\alpha_t(X)) \supset \bP(X). \]
 %If the algorithm returns {\em not proven},
 %then $A_t \subset \{ \{ x \} : x \in X \}$,
 %so $\xo \in \bF(A_t)$ (not proven) implies $\xo \in \bF(X)$ (not proven) by monotonicity of $\bF$.
