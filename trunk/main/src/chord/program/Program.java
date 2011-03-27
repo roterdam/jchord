@@ -515,7 +515,7 @@ public class Program {
 			int numDim = 0;
 			String baseType;
 			// Handle array case
-			while(typesStr.startsWith("[")) {
+			while (typesStr.startsWith("[")) {
 				isArray = true;
 				numDim++;
 				typesStr = typesStr.substring(1);
@@ -541,7 +541,7 @@ public class Program {
 				typesStr = typesStr.substring(1);
 			} else if (typesStr.startsWith("L")) {
 				int index = typesStr.indexOf(';');
-				if(index == -1)
+				if (index == -1)
 					throw new RuntimeException("Class reference has no ending ;");
 				String className = typesStr.substring(1, index);
 				baseType = className.replace('/', '.');

@@ -157,7 +157,7 @@ public class RTA {
 	public RTA(String reflectKind) {
 		this.reflectKind = reflectKind;
 		String fullscan = System.getProperty("chord.scope.fullscan");
-		if(fullscan == null)
+		if (fullscan == null)
 		  appCodePrefixes = new String[0];
 		else
 		  appCodePrefixes = Config.toArray(fullscan);
@@ -196,7 +196,7 @@ public class RTA {
 		if (reflectKind.equals("static")) {
 			staticReflectResolver = new StaticReflectResolver();
 			staticReflectResolved = new HashSet<jq_Method>();
-		} else if(reflectKind.equals("static_cast")) {
+		} else if (reflectKind.equals("static_cast")) {
 			staticReflectResolved = new HashSet<jq_Method>();
 			staticReflectResolver = new CastBasedStaticReflect(reachableAllocClasses, staticReflectResolved);
 		} else if (reflectKind.equals("dynamic")) {
@@ -226,8 +226,9 @@ public class RTA {
 		if (mainMethod == null)
 			Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
 		
-		prepAdditionalEntrypoints();
 		
+		Iterable<jq_Method> publicMethods = RelExtraEntryPoints.slurpMList();
+
 		for (int i = 0; repeat; i++) {
 			if (Config.verbose >= 1) System.out.println("Iteration: " + i);
 			repeat = false;
@@ -236,7 +237,7 @@ public class RTA {
 			visitClinits(mainClass);
 			visitMethod(mainMethod);
 
-			visitAdditionalEntrypoints();
+			visitAdditionalEntrypoints(publicMethods);
 			while (!methodWorklist.isEmpty()) {
 				int n = methodWorklist.size();
 				jq_Method m = methodWorklist.remove(n - 1);
@@ -247,39 +248,33 @@ public class RTA {
 				staticReflectResolver.startedNewIter();
 			}
 		}
-		if (Config.verbose >= 1) System.out.println("LEAVE: RTA");
 		timer.done();
-		if (Config.verbose >= 1)
+		if (Config.verbose >= 1) {
+			System.out.println("LEAVE: RTA");
 			System.out.println("Time: " + timer.getInclusiveTimeStr());
+		}
 		staticReflectResolver = null; // no longer in use; stop referencing it
 	}
 	
   
-  Iterable<jq_Method> publicMethods = new ArrayList<jq_Method>();
+	private void visitAdditionalEntrypoints(Iterable<jq_Method> publicMethods) {
+		// visit classes just once each
+		LinkedHashSet<jq_Class> extraClasses = new LinkedHashSet<jq_Class>();
+		for (jq_Method m: publicMethods) {
+			extraClasses.add(m.getDeclaringClass());
+		}
 
-  private void prepAdditionalEntrypoints() {
-		 publicMethods = RelExtraEntryPoints.slurpMList(Program.g().getClassHierarchy());
-  }
-
-  private void visitAdditionalEntrypoints() {
-	  //visit classes just once each
-	LinkedHashSet<jq_Class> extraClasses = new LinkedHashSet<jq_Class>();
-	for(jq_Method m: publicMethods) {
-	  extraClasses.add(m.getDeclaringClass());
-	}
-	
-	for(jq_Class cl: extraClasses) {
-	  visitClass(cl);
+		for (jq_Class cl: extraClasses) {
+			visitClass(cl);
 			jq_Method ctor = cl.getInitializer(new jq_NameAndDesc("<init>", "()V"));
 			if (ctor != null)
 				visitMethod(ctor);
-	}
+		}
 
-	for(jq_Method m: publicMethods) {
-	  visitMethod(m);
+		for (jq_Method m: publicMethods) {
+			visitMethod(m);
+		}
 	}
-  }
-
 
 	private void visitMethod(jq_Method m) {
 		if (methods.add(m)) {
@@ -516,7 +511,7 @@ public class RTA {
 	}
 	
 	private boolean shouldExpandAggressively(jq_Class c) {
-	  return Utils.prefixMatch(c.getName(), appCodePrefixes);
+		return Utils.prefixMatch(c.getName(), appCodePrefixes);
 	}
 
 	private void visitClass(jq_Reference r) {
@@ -526,11 +521,10 @@ public class RTA {
 		jq_Class c = (jq_Class) r;
 		visitClinits(c);
 		
-		if(shouldExpandAggressively(c)) {
-		  for(jq_Method m: c.getDeclaredInstanceMethods()) 
+		if (shouldExpandAggressively(c)) {
+		  for (jq_Method m: c.getDeclaredInstanceMethods()) 
 			visitMethod(m);
-		  
-		  for(jq_Method m: c.getDeclaredStaticMethods())
+		  for (jq_Method m: c.getDeclaredStaticMethods())
 			visitMethod(m); 
 		}
 	}
