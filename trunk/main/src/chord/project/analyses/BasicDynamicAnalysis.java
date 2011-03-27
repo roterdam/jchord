@@ -25,7 +25,7 @@ import java.lang.reflect.InvocationTargetException;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import chord.util.StringUtils;
+import chord.util.Utils;
 import chord.analyses.basicblock.DomB;
 import chord.analyses.method.DomM;
 import chord.instr.EventKind;
@@ -40,13 +40,9 @@ import chord.project.OutDirUtils;
 import chord.runtime.TraceEventHandler;
 import chord.runtime.BasicEventHandler;
 import chord.util.ByteBufferedFile;
-import chord.util.ChordRuntimeException;
 import chord.util.Executor;
-import chord.util.FileUtils;
 import chord.util.ProcessExecutor;
 import chord.util.ReadException;
-import chord.util.ClassUtils;
-import chord.util.Constants;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -118,7 +114,7 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 	 * @return true if this dynamic analysis is multi-JVM.
 	 */
 	private boolean useTraces() {
-		return ClassUtils.isSubclass(getEventHandlerClass(), TraceEventHandler.class);
+		return Utils.isSubclass(getEventHandlerClass(), TraceEventHandler.class);
 	}
 
 	/**
@@ -303,7 +299,7 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 			getTraceFileName(Config.traceFileName + "_full", version, runID);
 	}
 
-	protected String[] runIDs = Config.runIDs.split(Constants.LIST_SEPARATOR);
+	protected String[] runIDs = Config.runIDs.split(Utils.LIST_SEPARATOR);
 
 	public boolean canReuseTraces() {
 		boolean reuse = false;
@@ -313,7 +309,7 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 			boolean failed = false;
 			for (String runID : runIDs) {
 				String s = getTraceFileName(0, runID);
-				if (!FileUtils.exists(s)) {
+				if (!Utils.exists(s)) {
 					failed = true;
 					break;
 				}
@@ -344,14 +340,14 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 		if (offline)
 			doOfflineInstrumentation();
 		if (!useTraces()) {
-			String msg = "inline " + (offline ? "offline" : "online") + "-instrumentation " +
+			String msg = "single-JVM " + (offline ? "offline" : "online") + "-instrumentation " +
 				(useJvmti ? "JVMTI-based" : "non-JVMTI");
 			List<String> basecmd = getBaseCmd(!offline, useJvmti, 0);
 			initAllPasses();
 			for (String runID : runIDs) {
 				String args = System.getProperty("chord.args." + runID, "");
 				List<String> fullcmd = new ArrayList<String>(basecmd);
-				fullcmd.addAll(StringUtils.tokenize(args));
+				fullcmd.addAll(Utils.tokenize(args));
 				if (Config.verbose >= 1) Messages.log(STARTING_RUN, runID, msg);
 				initPass();
 				runInstrProgram(fullcmd);
@@ -369,7 +365,7 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 		for (String runID : runIDs) {
 			if (pipeTraces) {
 				for (int i = 0; i < numTransformers + 1; i++) {
-					FileUtils.deleteFile(getTraceFileName(i));
+					Utils.deleteFile(getTraceFileName(i));
 					String[] cmd = new String[] { "mkfifo", getTraceFileName(i) };
 					OutDirUtils.executeWithFailOnError(cmd);
 				}
@@ -382,13 +378,13 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 			Executor executor = new Executor(!pipeTraces);
 			String args = System.getProperty("chord.args." + runID, "");
 			final List<String> fullcmd = new ArrayList<String>(basecmd);
-			fullcmd.addAll(StringUtils.tokenize(args));
+			fullcmd.addAll(Utils.tokenize(args));
 			Runnable instrProgram = new Runnable() {
 				public void run() {
 					runInstrProgram(fullcmd);
 				}
 			};
-			String msg = "traced " + (pipeTraces ? "POSIX-pipe " : "regular-file ") +
+			String msg = "multi-JVM " + (pipeTraces ? "POSIX-pipe " : "regular-file ") +
 				(offline ? "offline" : "online") + "-instrumentation " +
 				(useJvmti ? "JVMTI-based" : "non-JVMTI");
 			if (Config.verbose >= 1) Messages.log(STARTING_RUN, runID, msg);
@@ -469,7 +465,7 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 		List<String> basecmd = new ArrayList<String>();
 		basecmd.add("java");
 		String jvmArgs = Config.runtimeJvmargs;
-		basecmd.addAll(StringUtils.tokenize(jvmArgs));
+		basecmd.addAll(Utils.tokenize(jvmArgs));
 		basecmd.add("-Xverify:none");
 		if (isOnline) {
 			Properties props = System.getProperties();

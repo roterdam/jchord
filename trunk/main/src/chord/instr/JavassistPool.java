@@ -13,7 +13,7 @@ import java.io.FilenameFilter;
 
 import chord.project.Messages;
 
-import chord.util.Constants;
+import chord.util.Utils;
 import javassist.NotFoundException;
 import javassist.ClassPool;
 import javassist.CtClass;
@@ -34,7 +34,7 @@ public class JavassistPool {
 
 		bootClassPathResourceNames = new HashSet<String>();
 		String bootClassPathName = System.getProperty("sun.boot.class.path");
-		String[] bootClassPathElems = bootClassPathName.split(Constants.PATH_SEPARATOR);
+		String[] bootClassPathElems = bootClassPathName.split(Utils.PATH_SEPARATOR);
 		for (String pathElem : bootClassPathElems) {
 			bootClassPathResourceNames.add(pathElem);
 			try {
@@ -71,7 +71,7 @@ public class JavassistPool {
 		}
 
 		String userClassPathName = System.getProperty("java.class.path");
-		String[] userClassPathElems = userClassPathName.split(Constants.PATH_SEPARATOR);
+		String[] userClassPathElems = userClassPathName.split(Utils.PATH_SEPARATOR);
 		for (String pathElem : userClassPathElems) {
 			userClassPathResourceNames.add(pathElem);
 			try {

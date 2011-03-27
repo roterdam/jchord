@@ -14,7 +14,7 @@ import java.util.HashMap;
 import chord.bddbddb.RelSign;
 import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
-import chord.util.ClassUtils;
+import chord.util.Utils;
 
 /**
  * Parser for Chord annotations on classes defining program analyses.
@@ -60,7 +60,7 @@ public class ChordAnnotParser {
 
 		String sign = chord.sign();
 		RelSign relSign = null;
-		if (ClassUtils.isSubclass(type, ProgramRel.class)) {
+		if (Utils.isSubclass(type, ProgramRel.class)) {
 			if (sign.equals("")) {
 				error("Method sign() cannot return empty string " +
 					"for Java analysis '" + type + "'");
@@ -101,8 +101,8 @@ public class ChordAnnotParser {
 		}
 
 		// program rels and doms should not declare any produces/controls
-		if (ClassUtils.isSubclass(type, ProgramRel.class) ||
-			ClassUtils.isSubclass(type, ProgramDom.class)) {
+		if (Utils.isSubclass(type, ProgramRel.class) ||
+			Utils.isSubclass(type, ProgramDom.class)) {
 			if (produces.size() > 0) {
 				error("Method produces() cannot return non-empty string " +
 					" for Java analysis '" + type + "'");
@@ -163,7 +163,7 @@ public class ChordAnnotParser {
 				}
 				Class type2 = nameToTypeMap.get(name2);
 				if (type2 != null) {
-					if (!ClassUtils.isSubclass(type2, ProgramRel.class)) {
+					if (!Utils.isSubclass(type2, ProgramRel.class)) {
 						error("Method namesOfSigns() implicitly declares " +
 							"name '" + name2 + "' as having type '" +
 							ProgramRel.class.getName() + "' whereas method " +

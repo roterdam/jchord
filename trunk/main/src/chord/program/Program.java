@@ -32,11 +32,7 @@ import chord.project.Config;
 import chord.util.tuple.object.Pair;
 import chord.util.ArraySet;
 import chord.util.IndexSet;
-import chord.util.FileUtils;
-import chord.util.ClassUtils;
-import chord.util.StringUtils;
-import chord.util.ChordRuntimeException;
-import chord.util.Constants;
+import chord.util.Utils;
  
 import chord.runtime.BasicEventHandler;
 import chord.instr.BasicInstrumentor;
@@ -110,7 +106,7 @@ public class Program {
 		jq_Method.exclude(Config.scopeExcludeAry);
 		Map<String, String> map = new HashMap<String, String>();
 		String stubsFileName = Config.stubsFileName;
-		BufferedReader r = ClassUtils.getResourceAsReader(stubsFileName);
+		BufferedReader r = Utils.getResourceAsReader(stubsFileName);
 		if (r == null)
 			Messages.fatal(STUBS_FILE_NOT_FOUND, stubsFileName);
 		try {
@@ -254,7 +250,7 @@ public class Program {
 
 
 	private void loadMethodsFile(File file) {
-		List<String> l = FileUtils.readFileToList(file);
+		List<String> l = Utils.readFileToList(file);
 		Set<String> excludedClasses = new HashSet<String>();
 		methods = new IndexSet<jq_Method>(l.size());
 		HostedVM.initialize();
@@ -284,7 +280,7 @@ public class Program {
 				out.println(m);
 			out.close();
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 
@@ -381,7 +377,7 @@ public class Program {
 			saveResolvedSites(reflect.getResolvedAryNewInstSites(), out);
 			out.close();
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 
@@ -576,13 +572,13 @@ public class Program {
 		String classPathName = Config.userClassPathName;
 		if (classPathName == null)
 			Messages.fatal(CLASS_PATH_NOT_DEFINED);
-		String[] runIDs = Config.runIDs.split(Constants.LIST_SEPARATOR);
+		String[] runIDs = Config.runIDs.split(Utils.LIST_SEPARATOR);
 		assert(runIDs.length > 0);
 		List<String> classNames = new ArrayList<String>();
 		String fileName = Config.classesFileName;
 		List<String> basecmd = new ArrayList<String>();
 		basecmd.add("java");
-		basecmd.addAll(StringUtils.tokenize(Config.runtimeJvmargs));
+		basecmd.addAll(Utils.tokenize(Config.runtimeJvmargs));
 		Properties props = System.getProperties();
 		basecmd.add("-cp");
 		basecmd.add(classPathName);
@@ -606,7 +602,7 @@ public class Program {
 		for (String runID : runIDs) {
 			String args = System.getProperty("chord.args." + runID, "");
 			List<String> fullcmd = new ArrayList<String>(basecmd);
-			fullcmd.addAll(StringUtils.tokenize(args));
+			fullcmd.addAll(Utils.tokenize(args));
 			OutDirUtils.executeWithWarnOnError(fullcmd, Config.dynamicTimeout);
 			try {
 				BufferedReader in = new BufferedReader(new FileReader(fileName));
@@ -632,7 +628,7 @@ public class Program {
 			String srcPathName = Config.srcPathName;
 			if (srcPathName == null)
 				Messages.fatal(SRC_PATH_NOT_DEFINED);
-			String[] srcDirNames = srcPathName.split(Constants.PATH_SEPARATOR);
+			String[] srcDirNames = srcPathName.split(Utils.PATH_SEPARATOR);
 			try {
 				Java2HTML java2HTML = new Java2HTML();
 				java2HTML.setMarginSize(4);
@@ -641,7 +637,7 @@ public class Program {
 				java2HTML.setDestination(Config.outDirName);
 				java2HTML.buildJava2HTML();
 			} catch (Exception ex) {
-				throw new ChordRuntimeException(ex);
+				throw new RuntimeException(ex);
 			}
 			HTMLizedJavaSrcFiles = true;
 		}

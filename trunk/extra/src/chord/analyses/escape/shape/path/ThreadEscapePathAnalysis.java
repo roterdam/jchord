@@ -42,7 +42,7 @@ import chord.project.ClassicProject;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
 import chord.util.IntArraySet;
-import chord.util.FileUtils;
+import chord.util.Utils;
 
 /**
  * Dynamic thread-escape analysis.
@@ -261,7 +261,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			Class[] classes = new Class[] { ALoad.class, AStore.class, Getfield.class, Putfield.class };
 			File file = new File(outDirName, printAccFileName);
 			List<String> list = new ArrayList<String>();
-			FileUtils.readFileToList(file, list);
+			Utils.readFileToList(file, list);
 			for (String s : list) {
 				String[] a = s.split(" ");
 				MethodElem me = MethodElem.parse(a[0]);

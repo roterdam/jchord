@@ -8,8 +8,7 @@ import java.util.Set;
 
 import chord.bddbddb.RelSign;
 import chord.project.analyses.ProgramRel;
-import chord.util.ArrayUtils;
-import chord.util.ClassUtils;
+import chord.util.Utils;
 
 public class TrgtParser {
 	private static final String DOM_NAMES_INCONSISTENT = 
@@ -68,10 +67,10 @@ public class TrgtParser {
 					if (resType == null) {
 						resType = curType;
 						resTypeLoc = info.location;
-					} else if (ClassUtils.isSubclass(curType, resType)) {
+					} else if (Utils.isSubclass(curType, resType)) {
 						resType = curType;
 						resTypeLoc = info.location;
-					} else if (!ClassUtils.isSubclass(resType, curType)) {
+					} else if (!Utils.isSubclass(resType, curType)) {
 						inconsistentTypes(name, resType.toString(),
 							curType.toString(), resTypeLoc, info.location);
 						corrupt = true;
@@ -86,8 +85,8 @@ public class TrgtParser {
 						resDomNamesLoc = info.location;
 					} else if (!Arrays.equals(resDomNames, curDomNames)) {
 						inconsistentDomNames(name,
-							ArrayUtils.toString(resDomNames),
-							ArrayUtils.toString(curDomNames),
+							Utils.toString(resDomNames),
+							Utils.toString(curDomNames),
 							resDomNamesLoc, info.location);
 						corrupt = true;
 						break;
@@ -111,7 +110,7 @@ public class TrgtParser {
 				continue;
 			}
 			RelSign sign = null;
-			if (ClassUtils.isSubclass(resType, ProgramRel.class)) {
+			if (Utils.isSubclass(resType, ProgramRel.class)) {
 				if (resDomNames == null) {
 					unknownSign(name);
 					continue;
@@ -129,21 +128,18 @@ public class TrgtParser {
 		return hasNoErrors;
 	}
 	
-	private void inconsistentDomNames(String relName,
-			String names1, String names2, String loc1, String loc2) {
+	private void inconsistentDomNames(String relName, String names1, String names2, String loc1, String loc2) {
 		Messages.log(DOM_NAMES_INCONSISTENT, relName,
 			names1, names2, loc1, loc2);
 		hasNoErrors = false;
 	}
 	
-	private void inconsistentDomOrders(String relName,
-			String order1, String order2, String loc1, String loc2) {
+	private void inconsistentDomOrders(String relName, String order1, String order2, String loc1, String loc2) {
 		if (Config.verbose >= 2) Messages.log(DOM_ORDERS_INCONSISTENT, relName,
 			order1, order2, loc1, loc2);
 	}
 
-	private void inconsistentTypes(String name,
-			String type1, String type2, String loc1, String loc2) {
+	private void inconsistentTypes(String name, String type1, String type2, String loc1, String loc2) {
 		Messages.log(TARGET_TYPE_INCONSISTENT, name, type1, type2, loc1, loc2);
 		hasNoErrors = false;
 	}

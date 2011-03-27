@@ -19,8 +19,7 @@ import chord.project.IDataCollection;
 import chord.project.IStepCollection;
 import chord.project.ModernProject;
 import chord.project.VisitorHandler;
-import chord.util.ChordRuntimeException;
-import chord.util.StringUtils;
+import chord.util.Utils;
 import chord.project.Messages;
 import chord.project.ITask;
 
@@ -65,7 +64,7 @@ public class ProgramRel extends Rel implements ITask {
 		int m = domNames.length;
 		ProgramDom[] doms = new ProgramDom[m];
 		for (int i = 0; i < m; i++) {
-			String domName = StringUtils.trimNumSuffix(domNames[i]);
+			String domName = Utils.trimNumSuffix(domNames[i]);
 			for (ProgramDom dom : uniqDoms) {
 				if (dom.getName().equals(domName)) {
 					doms[i] = dom;
@@ -95,7 +94,7 @@ public class ProgramRel extends Rel implements ITask {
 			VisitorHandler vh = new VisitorHandler(this);
 			vh.visitProgram();
 		} else {
-			throw new ChordRuntimeException("Relation '" + name +
+			throw new RuntimeException("Relation '" + name +
 				"' must override method fill().");
 		}
 	}

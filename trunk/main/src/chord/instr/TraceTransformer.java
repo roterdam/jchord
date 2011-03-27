@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.ArrayList;
 
 import chord.project.Config;
-import chord.util.ChordRuntimeException;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
 import chord.util.tuple.integer.IntTrio;
@@ -297,9 +296,9 @@ public class TraceTransformer {
 				assert (pending.size() == 0);
 			writer.flush();
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		} catch (ReadException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 	private int getOffset(int opcode) {
@@ -364,7 +363,7 @@ public class TraceTransformer {
 		case EventKind.ENTER_MAIN_METHOD:
 			return enterMainMethodNumBytes;
 		default:
-			throw new ChordRuntimeException("Unknown opcode: " + opcode);
+			throw new RuntimeException("Unknown opcode: " + opcode);
 		}
 	}
 	private void adjust() throws IOException {

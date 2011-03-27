@@ -13,7 +13,7 @@ import java.util.List;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 
-import chord.util.FileUtils;
+import chord.util.Utils;
 import chord.program.MethodSign;
 import chord.program.Program;
 import chord.analyses.method.DomM;
@@ -36,7 +36,7 @@ public class SrcFilesAnalysis extends JavaAnalysis {
 		ProgramRel relReachableM;
 		if (methodsFileName != null) {
 			relReachableM = null;
-			List<String> methodList = FileUtils.readFileToList(methodsFileName);
+			List<String> methodList = Utils.readFileToList(methodsFileName);
 			Set<jq_Method> methodSet = new HashSet<jq_Method>(methodList.size());
 			for (String s : methodList) {
 				jq_Method m = Program.g().getMethod(MethodSign.parse(s));

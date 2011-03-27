@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.ArrayList;
 import java.io.File;
 
-import chord.util.FileUtils;
+import chord.util.Utils;
 import chord.program.Program;
 import chord.program.MethodElem;
 import joeq.Compiler.Quad.Quad;
@@ -23,7 +23,7 @@ public class LocEH extends ProgramRel {
 		Program program = Program.g();
 		File file = new File(Config.outDirName, "locEH.txt");
 		List<String> list = new ArrayList<String>();
-		FileUtils.readFileToList(file, list);
+		Utils.readFileToList(file, list);
 		for (String s : list) {
 			String[] a = s.split(" ");
 			MethodElem me1 = MethodElem.parse(a[0]);

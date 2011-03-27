@@ -6,7 +6,7 @@
  */
 package chord.util.tuple.object;
 
-import chord.util.CompareUtils;
+import chord.util.Utils;
 
 /**
  * An ordered 3-tuple of objects.
@@ -42,9 +42,9 @@ public class Trio<T0, T1, T2> implements java.io.Serializable {
 	public boolean equals(Object o) {
 		if (o instanceof Trio) {
 			Trio that = (Trio) o;
-			return CompareUtils.areEqual(this.val0, that.val0) &&
-				   CompareUtils.areEqual(this.val1, that.val1) &&
-				   CompareUtils.areEqual(this.val2, that.val2);
+			return Utils.areEqual(this.val0, that.val0) &&
+				   Utils.areEqual(this.val1, that.val1) &&
+				   Utils.areEqual(this.val2, that.val2);
 		}
 		return false;
 	}

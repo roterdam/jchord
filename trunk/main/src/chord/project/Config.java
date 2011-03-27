@@ -8,8 +8,7 @@ package chord.project;
 
 import java.io.File;
 import java.io.IOException;
-import chord.util.FileUtils;
-import chord.util.Constants;
+import chord.util.Utils;
 
 /**
  * System properties recognized by Chord.
@@ -131,8 +130,8 @@ public class Config {
 	public final static String traceFileName = System.getProperty("chord.trace.file", outRel2Abs("trace"));
 
 	static {
-		FileUtils.mkdirs(outDirName);
-		FileUtils.mkdirs(bddbddbWorkDirName);
+		Utils.mkdirs(outDirName);
+		Utils.mkdirs(bddbddbWorkDirName);
 	}
 
 	// commonly-used constants
@@ -224,11 +223,11 @@ public class Config {
 	}
 
     public static String outRel2Abs(String fileName) {
-        return (fileName == null) ? null : FileUtils.getAbsolutePath(outDirName, fileName);
+        return (fileName == null) ? null : Utils.getAbsolutePath(outDirName, fileName);
     }
 
     public static String workRel2Abs(String fileName) {
-        return (fileName == null) ? null : FileUtils.getAbsolutePath(workDirName, fileName);
+        return (fileName == null) ? null : Utils.getAbsolutePath(workDirName, fileName);
     }
 
 	public static boolean buildBoolProperty(String propName, boolean defaultVal) {
@@ -236,7 +235,7 @@ public class Config {
 	}
 
 	public static String[] toArray(String str) {
-		return str.equals("") ? new String[0] : str.split(Constants.LIST_SEPARATOR);
+		return str.equals("") ? new String[0] : str.split(Utils.LIST_SEPARATOR);
 	}
 
 	private static String concat(String s1, char sep, String s2) {

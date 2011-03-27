@@ -31,7 +31,7 @@ import chord.project.analyses.DlogAnalysis;
 import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 import chord.project.ITask;
-import chord.util.Constants;
+import chord.util.Utils;
 import chord.bddbddb.RelSign;
 
 /**
@@ -111,7 +111,7 @@ public class TaskParser {
 		if (javaAnalysisPathName.equals(""))
 			return;
 		ArrayList<URL> list = new ArrayList<URL>();
-		String[] fileNames = javaAnalysisPathName.split(Constants.PATH_SEPARATOR);
+		String[] fileNames = javaAnalysisPathName.split(Utils.PATH_SEPARATOR);
 		for (String fileName : fileNames) {
 			File file = new File(fileName);
 			if (!file.exists()) {
@@ -148,7 +148,7 @@ public class TaskParser {
 		String dlogAnalysisPathName = Config.dlogAnalysisPathName;
 		if (dlogAnalysisPathName.equals(""))
 			return;
-		String[] fileNames = dlogAnalysisPathName.split(Constants.PATH_SEPARATOR);
+		String[] fileNames = dlogAnalysisPathName.split(Utils.PATH_SEPARATOR);
 		for (String fileName : fileNames) {
 			File file = new File(fileName);
 			if (!file.exists()) {

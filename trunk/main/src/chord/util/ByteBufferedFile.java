@@ -18,7 +18,8 @@ import java.io.BufferedOutputStream;
 import java.util.zip.GZIPOutputStream;
 
 /**
- * 
+ * Implementation of a buffered input or output file stream of bytes.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class ByteBufferedFile {
@@ -64,12 +65,10 @@ public class ByteBufferedFile {
 				oStream = new FileOutputStream(fileName);
 		}
 	}
-	// Must be called only when put[Byte|Int|Long] is called
-	// and curPos is at or beyond fileBlockSize.
+	// Must be called only when put[Byte|Int|Long] is called and curPos is at or beyond fileBlockSize.
 	// This operation performs the following steps in order:
 	// 1. Copies buffer from [0..fileBlockSize) to file
-	// 2. Copies buffer from [fileBlockSize..curPos) to
-	//	[0..N) where N = curPos - fileBlockSize
+	// 2. Copies buffer from [fileBlockSize..curPos) to [0..N) where N = curPos - fileBlockSize
 	// 3. Sets curPos to N
 	private void write() throws IOException {
 		oStream.write(buffer, 0, fileBlockSize);
@@ -78,10 +77,8 @@ public class ByteBufferedFile {
 			buffer[numMoved++] = buffer[i];
 		curPos = numMoved;
 	}
-	// Must be called only once and only after all calls to
-	// put[Byte|Int|Long] are done.
-	// Writes any data remaining in the buffer to file and
-	// closes the file.
+	// Must be called only once and only after all calls to put[Byte|Int|Long] are done.
+	// Writes any data remaining in the buffer to file and closes the file.
 	public void flush() throws IOException {
 		oStream.write(buffer, 0, curPos);
 		oStream.close();

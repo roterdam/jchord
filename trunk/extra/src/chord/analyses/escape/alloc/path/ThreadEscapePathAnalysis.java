@@ -24,7 +24,6 @@ import gnu.trove.TIntArrayList;
 
 import chord.program.Program;
 import chord.project.Config;
-import chord.util.ChordRuntimeException;
 import chord.util.ArraySet;
 import chord.util.IndexMap;
 import chord.util.tuple.integer.IntTrio;

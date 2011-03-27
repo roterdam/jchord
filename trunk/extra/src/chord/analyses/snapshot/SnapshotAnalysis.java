@@ -31,9 +31,9 @@ import chord.program.Program;
 import chord.project.Config;
 import chord.project.analyses.DynamicAnalysis;
 import chord.util.Execution;
-import chord.util.StatFig;
 import chord.util.Utils;
 
+import chord.util.StatFig;
 import chord.project.ClassicProject;
 import chord.analyses.heapacc.DomE;
 import chord.analyses.field.DomF;

@@ -57,7 +57,6 @@ import chord.project.analyses.ProgramRel;
 import chord.project.analyses.rhs.ForwardRHSAnalysis;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.project.Config;
-import chord.util.ChordRuntimeException;
 import chord.analyses.heapacc.DomE;
 import chord.analyses.field.DomF;
 import chord.analyses.alloc.DomH;
@@ -67,7 +66,7 @@ import chord.analyses.var.DomV;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.util.ArraySet;
-import chord.util.CompareUtils;
+import chord.util.Utils;
 import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntTrio;
 import chord.util.Timer;
@@ -378,7 +377,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
                 int aIdx = getIdx(ao);
                 IntArraySet aPts = clrDstEnv[aIdx];
                 IntArraySet fPts = tgtSrcEnv[fIdx];
-                if (!CompareUtils.areEqual(aPts, fPts))
+                if (!Utils.areEqual(aPts, fPts))
                 	return null;
                 fIdx++;
 			}

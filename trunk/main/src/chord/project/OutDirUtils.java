@@ -17,9 +17,7 @@ import java.io.InputStreamReader;
 import java.io.BufferedReader;
 
 import chord.util.IndexMap;
-import chord.util.ClassUtils;
-import chord.util.FileUtils;
-import chord.util.ChordRuntimeException;
+import chord.util.Utils;
 import chord.util.ProcessExecutor;
 
 /**
@@ -38,12 +36,12 @@ public class OutDirUtils {
 		try {
 			return new PrintWriter(new File(Config.outDirName, fileName));
 		} catch (FileNotFoundException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 
 	public static String copyResourceByName(String srcFileName) {
-		InputStream is = ClassUtils.getResourceAsStream(srcFileName);
+		InputStream is = Utils.getResourceAsStream(srcFileName);
 		return copyResource(srcFileName, is, (new File(srcFileName)).getName());
 	}
 
@@ -52,7 +50,7 @@ public class OutDirUtils {
 	}
 
 	public static String copyResourceByPath(String srcFileName) {
-		InputStream is = ClassUtils.getResourceAsStream(srcFileName);
+		InputStream is = Utils.getResourceAsStream(srcFileName);
 		return copyResource(srcFileName, is, srcFileName.replace('/', '_'));
 	}
 
@@ -79,7 +77,7 @@ public class OutDirUtils {
 	}
 
 	public static void writeMapToFile(IndexMap<String> map, String fileName) {
-		FileUtils.writeMapToFile(map, new File(Config.outDirName, fileName));
+		Utils.writeMapToFile(map, new File(Config.outDirName, fileName));
 	}
 
 	public static void runSaxon(String xmlFileName, String xslFileName) {
@@ -108,7 +106,7 @@ public class OutDirUtils {
 		try {
 			int result = ProcessExecutor.execute(cmdarray);
 			if (result != 0)
-				throw new ChordRuntimeException("Return value=" + result);
+				throw new RuntimeException("Return value=" + result);
 		} catch (Throwable ex) {
 			Messages.fatal(PROCESS_FAILED, cmd, ex.getMessage());
 		}

@@ -17,7 +17,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.io.FileInputStream;
 import chord.util.ProcessExecutor;
-import chord.util.Constants;
+import chord.util.Utils;
 import edu.berkeley.confspell.*;
 
 /**
@@ -165,21 +165,21 @@ public class Boot {
 		List<String> cpList = new ArrayList<String>(10);
 		cpList.add(chordJarFile);
 		if (!javaAnalysisPath.equals("")) {
-			String[] a = javaAnalysisPath.split(Constants.PATH_SEPARATOR);
+			String[] a = javaAnalysisPath.split(Utils.PATH_SEPARATOR);
 			for (String s : a) {
 				if (!cpList.contains(s))
 					cpList.add(s);
 			}
 		}
 		if (!dlogAnalysisPath.equals("")) {
-			String[] a = dlogAnalysisPath.split(Constants.PATH_SEPARATOR);
+			String[] a = dlogAnalysisPath.split(Utils.PATH_SEPARATOR);
 			for (String s : a) {
 				if (!cpList.contains(s))
 					cpList.add(s);
 			}
 		}
 		if (!userClassPath.equals("")) {
-			String[] a = userClassPath.split(Constants.PATH_SEPARATOR);
+			String[] a = userClassPath.split(Utils.PATH_SEPARATOR);
 			for (String s : a) {
 				if (!cpList.contains(s))
 					cpList.add(s);

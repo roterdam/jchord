@@ -25,7 +25,6 @@ import chord.project.VisitorHandler;
 import chord.project.analyses.ProgramDom;
 import chord.project.ITask;
 import chord.project.ModernProject;
-import chord.util.ChordRuntimeException;
 
 /**
  * Generic implementation of a program domain (a specialized kind
@@ -64,7 +63,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 		try {
 			super.save(Config.bddbddbWorkDirName, Config.saveDomMaps);
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 		if (Config.classic)
 			ClassicProject.g().setTrgtDone(this);
@@ -74,7 +73,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 			VisitorHandler vh = new VisitorHandler(this);
 			vh.visitProgram();
 		} else {
-			throw new ChordRuntimeException("Domain '" + getName() +
+			throw new RuntimeException("Domain '" + getName() +
 				"' must override method fill().");
 		}
 	}
@@ -115,7 +114,7 @@ public class ProgramDom<T> extends Dom<T> implements ITask {
 			File file = new File(Config.outDirName, fileName);
 			out = new PrintWriter(new FileWriter(file));
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 		out.println("<" + tag + ">");
 		for (int i = 0; i < size(); i++) {

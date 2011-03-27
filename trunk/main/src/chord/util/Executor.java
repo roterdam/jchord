@@ -10,30 +10,20 @@ import java.util.List;
 import java.util.ArrayList;
 
 /**
- * An executor can execute tasks synchronously or asynchronously.
- * Even if this implementation is synchronized and the implementation
- * is thread-safe, it not scale well: it is not possible to submit
- * new tasks if any thread is waiting for completion of previously
- * finished tasks.  
+ * Utility for executing a set of given tasks serially or in parallel.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public final class Executor { // TODO: MIGHT BE REPLACED BY USING java.util.concurrent, WHICH ALLOWS MUCH BETTER CONCURRENCY CONTROL MUCH MORE SCALABLE LOCKING.
-
-	/**
-	 * Submitted tasks. This field is {@code null} if the executor is serial.
-	 */
+public final class Executor {
+	// set of submitted tasks if this executor is parallel (and null if it is serial)
 	private final List<Thread> tasks;
-
-	/**
-	 * A flag indicating that submitted tasks will be executed serially.
-	 */
+	// flag indicating that this executor is serial as opposed to parallel
 	private final boolean serial;
 
 	/**
-	 * Creates a new executor.
+	 * Creates a new serial or parallel executor.
 	 *
-	 * @param serial a flag indicating that submitted tasks will be executed serially.
+	 * @param serial Flag indicating that executor is serial as opposed to parallel.
 	 */
 	public Executor(final boolean serial) {
 		this.serial = serial;
@@ -41,11 +31,14 @@ public final class Executor { // TODO: MIGHT BE REPLACED BY USING java.util.conc
 	}
 
 	/**
-	 * Executes given runnable task. If the executor is serial, this method blocks
-	 * until the submitted task is completed. If the executor is not serial, this
-	 * method only starts a new thread for the submitted task and returns immediately.
+	 * Executes given runnable task.
 	 *
-	 * @param task a task to be executed.
+	 * If the executor is serial, this method returns after the submitted task is completed.
+	 * If the executor is parallel, this method starts a new thread for the submitted task
+	 * and returns immediately.
+	 *
+	 * @param task A task to be executed.
+	 *
 	 * @throws IllegalArgumentException if {@code task} is {@code null}.
 	 */
 	public synchronized void execute(final Runnable task) {
@@ -64,7 +57,7 @@ public final class Executor { // TODO: MIGHT BE REPLACED BY USING java.util.conc
 	/**
 	 * Waits for completion of all submitted tasks and returns afterwards.
 	 *
-	 * @throws InterruptedException if any occurs during waiting for tasks completion.
+	 * @throws InterruptedException if any occurs during waiting for tasks to be completed.
 	 */
 	public synchronized void waitForCompletion() throws InterruptedException {
 		if (!serial) {
