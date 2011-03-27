@@ -117,7 +117,6 @@ public final class OnlineTransformer implements ClassFileTransformer {
 		} else
 			instrClass = BasicInstrumentor.class;
 		BasicInstrumentor instr = null;
-		ClassicProject.g().build();
 		Exception ex = null;
 		try {
 			Constructor c = instrClass.getConstructor(new Class[] { Map.class });
