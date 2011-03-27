@@ -2,17 +2,12 @@
 \chapter{Architecture of Chord}
 \label{chap:architecture}
 
-This chapter presents the high-level architecture of Chord, depicted in Figure \ref{fig:architecture}, and describes its key components.
+This chapter presents the high-level architecture of Chord, depicted below, and describes its key components.
 
-\begin{figure}
 \begin{center}
-\begin{label}{fig:architecture}
-%\texonly{\includegraphics[scale=0.7]{chord_arch.png}}
+\texonly{\includegraphics[scale=0.7]{chord_arch.png}}
 \htmlonly{{\htmlimg{chord_arch.png}}}
-\caption{Architecture of Chord}
-\end{label}
 \end{center}
-\end{figure}
 
 \subsubsection*{Chord Properties}
 
@@ -22,15 +17,16 @@ each property that is recognized by Chord.
 
 The Java program to be analyzed is also specified via properties.
 These properties are described in Section \ref{sec:program-props}.
-Chord analyzes Java bytecode, not Java source code, and therefore only requires
+Chord analyzes Java bytecode, not Java source code, and thus only requires
 the program's class files.  Certain analyses, however, present
-their results at the Java source level and therefore require the program's
+their results at the Java source code level, and thus require the program's
 Java source files as well.
 
 \subsubsection*{Java Program Representation}
 
 Chord uses the \xlink{Joeq}{http://joeq.sourceforce.net/} Java compiler framework
-to convert Java bytecode, one class file at a time, into an intermediate representation called quadcode
+to convert the Java bytecode of the input Java program, one class file at a time,
+into a three-address-like intermediate program representation called {\it quadcode}
 that is more suitable for analysis. Chapter \ref{chap:program-representation}
 describes the quadcode representation in detail.
 

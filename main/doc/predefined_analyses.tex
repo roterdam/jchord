@@ -31,6 +31,9 @@ kind of points-to/call-graph analysis in Chord.
 We describe context-insensitive analysis first because understanding the concepts behind it will help understand
 the more sophisticated context-sensitive analyses.
 We first recall some relevant program domains:
+
+\texonly{\newpage}
+
 \begin{itemize}
 \item M is the domain of all methods.
 \item I is the domain of all method call sites.
@@ -50,9 +53,11 @@ all array elements are modeled using a distinguished hypothetical instance field
 
 To run this analysis, run the following command in Chord's main directory:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=cipa-0cfa-dlog run
+ant -Dchord.work.dir=<...> -Dchord.run.analyses=cipa-0cfa-dlog run
 \end{verbatim}
+\end{framed}
 
 This analysis outputs the following relations:
 
@@ -130,9 +135,11 @@ object \texttt{o} in context \texttt{c} of that variable's declaring method. Not
 To run Chord's static datarace analysis, run the following
 command in Chord's main directory:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=datarace-java run
+ant -Dchord.work.dir=<...> -Dchord.run.analyses=datarace-java run
 \end{verbatim}
+\end{framed}
 
 where {\tt <...>} denotes the absolute or relative path of a directory
 containing a file named \code{chord.properties} which defines
@@ -167,9 +174,11 @@ instance fields of the same abstract object.
 To run Chord's static deadlock analysis,  run the following
 command in Chord's main directory:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<...> -Dchord.run.analyses=deadlock-java run
+ant -Dchord.work.dir=<...> -Dchord.run.analyses=deadlock-java run
 \end{verbatim}
+\end{framed}
 
 where {\tt <...>} denotes the absolute or relative path of a directory
 containing a file named \code{chord.properties} which defines

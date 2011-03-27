@@ -67,6 +67,8 @@ specifying the method's name {\tt mname}, the method's descriptor
 
 The format of the file specified by property \code{chord.reflect.file}
 is of the form:
+
+\begin{framed}
 \begin{verbatim}
 # resolvedClsForNameSites
 ...
@@ -77,6 +79,8 @@ is of the form:
 # resolvedAryNewInstSites
 ...
 \end{verbatim}
+\end{framed}
+
 where each of the above ``{\tt ...}'' is a list of zero or more lines, where
 each line is of the form
 \code{bci!mname:mdesc@cname->type1,type2,...typeN}
@@ -87,19 +91,19 @@ The meaning of the above four sections is as follows.
 \begin{itemize}
 \item {\tt resolvedClsForNameSites} lists
 each call to static method {\tt forName(String)} defined in class
-{\tt java.lang.Class}, along with a list of the types of the named
+\code{java.lang.Class}, along with a list of the types of the named
 classes.
 \item {\tt resolvedObjNewInstSites} lists
 each call to instance method {\tt newInstance()} defined in class
-{\tt java.lang.Class}, along with a list of the types of the
+\code{java.lang.Class}, along with a list of the types of the
 instantiated classes.
 \item {\tt resolvedConNewInstSites} lists
 each call to instance method {\tt newInstance(Object[])} defined in class
-{\tt java.lang.reflect.Constructor}, along with a list of the types of the
+\code{java.lang.reflect.Constructor}, along with a list of the types of the
 instantiated classes.
 \item {\tt resolvedAryNewInstSites} lists
 each call to instance method {\tt newInstance(Class,int)} defined in class
-{\tt java.lang.reflect.Array}, along with a list of the types of the
+\code{java.lang.reflect.Array}, along with a list of the types of the
 instantiated classes.
 \end{itemize}
 The default value of property \code{chord.reuse.scope} is {\tt false}.
