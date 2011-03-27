@@ -117,7 +117,6 @@ public class ClassicProject extends Project {
 
 	@Override
 	public void run(String[] taskNames) {
-		build();
 		for (String name : taskNames)
 			runTask(name);
 	}
@@ -348,6 +347,7 @@ public class ClassicProject extends Project {
 	}
 
 	public Object getTrgt(String name) {
+		build();
 		Object trgt = nameToTrgtMap.get(name);
 		if (trgt == null)
 			Messages.fatal(TRGT_NOT_FOUND, name);
@@ -355,6 +355,7 @@ public class ClassicProject extends Project {
 	}
 
 	public ITask getTask(String name) {
+		build();
 		ITask task = nameToTaskMap.get(name);
 		if (task == null) 
 			Messages.fatal(TASK_NOT_FOUND, name);
@@ -544,14 +545,12 @@ public class ClassicProject extends Project {
 	}
 
 	public void fakeExec(ITask task) {
-
 		List<Object> consumedTrgts = taskToConsumedTrgtsMap.get(task);
 		for (Object trgt : consumedTrgts) {
 			if (isTrgtDone(trgt))
 				continue;
-
 			ITask task2 = getTaskProducingTrgt(trgt);
-			if(task2 instanceof Dom<?>) {
+			if (task2 instanceof Dom<?>) {
 				task2.run();
 			} else
 				fakeExec(task2);
@@ -568,10 +567,10 @@ public class ClassicProject extends Project {
 		List<Object> producedTrgts = taskToProducedTrgtsMap.get(task);
 		boolean outRelsExist = true;
 		for (Object trgt : producedTrgts) {
-			if(trgt instanceof ProgramRel) {
+			if (trgt instanceof ProgramRel) {
 				ProgramRel trgtRel = (ProgramRel) trgt;
 				File relOnDisk = new File(Config.bddbddbWorkDirName, trgtRel.getName()+".bdd");
-				if(!relOnDisk.exists()) {
+				if (!relOnDisk.exists()) {
 					System.err.println("no such target " + relOnDisk+", regenerating?");
 					outRelsExist = false;
 					break;
