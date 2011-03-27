@@ -19,7 +19,7 @@ import javassist.NotFoundException;
 import chord.program.Program;
 import chord.project.Messages;
 import chord.project.Config;
-import chord.util.FileUtils;
+import chord.util.Utils;
 
 /**
  * Offline class-file transformer.
@@ -54,8 +54,8 @@ public final class OfflineTransformer {
 
 	public void run() {
 		if (Config.verbose >= 1) Messages.log(INSTR_STARTING);
-		FileUtils.deleteFile(bootClassesDirName);
-		FileUtils.deleteFile(userClassesDirName);
+		Utils.deleteFile(bootClassesDirName);
+		Utils.deleteFile(userClassesDirName);
 		Program program = Program.g();
 		for (jq_Reference r : program.getClasses()) {
 			if (r instanceof jq_Array)

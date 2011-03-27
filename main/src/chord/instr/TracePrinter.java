@@ -18,7 +18,6 @@ import chord.project.ClassicProject;
 import chord.instr.InstrScheme.EventFormat;
 import chord.util.ByteBufferedFile;
 import chord.util.ReadException;
-import chord.util.ChordRuntimeException;
 import chord.runtime.EventHandler;
 
 /**
@@ -382,13 +381,13 @@ public class TracePrinter {
 					break;
 				}
 				default: 
-					throw new ChordRuntimeException("Unknown opcode: " + opcode);
+					throw new RuntimeException("Unknown opcode: " + opcode);
 				}
 			}
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		} catch (ReadException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 }

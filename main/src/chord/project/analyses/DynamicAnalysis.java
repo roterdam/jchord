@@ -36,8 +36,7 @@ import chord.project.Config;
 import chord.instr.BasicInstrumentor;
 import chord.runtime.EventHandler;
 import chord.util.ByteBufferedFile;
-import chord.util.ChordRuntimeException;
-import chord.util.FileUtils;
+import chord.util.Utils;
 import chord.util.ReadException;
 import chord.util.tuple.object.Pair;
 
@@ -153,7 +152,7 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 
 	@Override
 	public boolean canReuseTraces() {
-		return FileUtils.exists(getInstrSchemeFileName()) && super.canReuseTraces();
+		return Utils.exists(getInstrSchemeFileName()) && super.canReuseTraces();
 	}
 
 	@Override
@@ -600,7 +599,7 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 			break;
 		}
 		default:
-			throw new ChordRuntimeException("Unknown opcode: " + opcode);
+			throw new RuntimeException("Unknown opcode: " + opcode);
 		}
 	}
 	

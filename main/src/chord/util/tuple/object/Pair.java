@@ -6,7 +6,7 @@
  */
 package chord.util.tuple.object;
 
-import chord.util.CompareUtils;
+import chord.util.Utils;
 
 /**
  * An ordered 2-tuple of objects.
@@ -36,8 +36,8 @@ public class Pair<T0, T1> implements java.io.Serializable {
 	public boolean equals(Object o) {
 		if (o instanceof Pair) {
 			Pair that = (Pair) o;
-			return CompareUtils.areEqual(this.val0, that.val0) &&
-				   CompareUtils.areEqual(this.val1, that.val1);
+			return Utils.areEqual(this.val0, that.val0) &&
+				   Utils.areEqual(this.val1, that.val1);
 		}
 		return false;
 	}

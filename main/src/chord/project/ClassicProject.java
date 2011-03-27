@@ -25,8 +25,7 @@ import chord.project.analyses.ProgramDom;
 import chord.project.analyses.ProgramRel;
 import chord.project.ITask;
 import chord.util.ArraySet;
-import chord.util.StringUtils;
-import chord.util.ChordRuntimeException;
+import chord.util.Utils;
 import chord.util.Timer;
 import chord.bddbddb.RelSign;
 import chord.bddbddb.Dom;
@@ -262,7 +261,7 @@ public class ClassicProject extends Project {
 			int n = domNames.length;
 			ProgramDom[] doms = new ProgramDom[n];
 			for (int i = 0; i < n; i++) {
-				String domName = StringUtils.trimNumSuffix(domNames[i]);
+				String domName = Utils.trimNumSuffix(domNames[i]);
 				ProgramDom dom = (ProgramDom) nameToTrgtMap.get(domName);
 				assert (dom != null);
 				doms[i] = (ProgramDom) dom;

@@ -30,7 +30,7 @@ import chord.project.ICtrlCollection;
 import chord.project.IDataCollection;
 import chord.project.IStepCollection;
 import chord.project.ModernProject;
-import chord.util.StringUtils;
+import chord.util.Utils;
 
 import gnu.trove.TIntArrayList;
 
@@ -145,8 +145,7 @@ public class DlogAnalysis extends JavaAnalysis {
 							"considering first occurrence.");
 					} else {
 						minorDomNames.add(minorDomName);
-						String majorDomName =
-							StringUtils.trimNumSuffix(minorDomName);
+						String majorDomName = Utils.trimNumSuffix(minorDomName);
 						majorDomNames.add(majorDomName);
 					}
 				}
@@ -312,7 +311,7 @@ public class DlogAnalysis extends JavaAnalysis {
 			String[] domNames = sign.getDomNames();
 			ProgramDom[] doms = new ProgramDom[domNames.length];
 			for (int i = 0; i < domNames.length; i++) {
-				String domName = StringUtils.trimNumSuffix(domNames[i]);
+				String domName = Utils.trimNumSuffix(domNames[i]);
 				for (ProgramDom dom : allDoms) {
 					if (dom.getName().equals(domName)) {
 						doms[i] = dom;

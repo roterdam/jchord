@@ -14,7 +14,6 @@ import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 import chord.project.analyses.ProgramDom;
-import chord.util.CollectionUtils;
 import chord.util.ArraySet;
 import chord.project.Chord;
 import joeq.Compiler.Quad.RegisterFactory;

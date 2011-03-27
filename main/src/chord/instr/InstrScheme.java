@@ -13,8 +13,6 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import chord.util.ChordRuntimeException;
-
 /**
  * Scheme specifying the kind and format of events to be generated
  * during an instrumented program's execution.
@@ -552,9 +550,9 @@ public class InstrScheme implements Serializable {
 			scheme = (InstrScheme) stream.readObject();
 			stream.close();
 		} catch (ClassNotFoundException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 		return scheme;
 	}
@@ -566,7 +564,7 @@ public class InstrScheme implements Serializable {
 			stream.writeObject(this);
 			stream.close();
 		} catch (IOException ex) {
-			throw new ChordRuntimeException(ex);
+			throw new RuntimeException(ex);
 		}
 	}
 }

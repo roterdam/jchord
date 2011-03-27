@@ -6,7 +6,7 @@
  */
 package chord.util.tuple.object;
 
-import chord.util.CompareUtils;
+import chord.util.Utils;
 
 /**
  * An ordered 6-tuple of objects.
@@ -60,12 +60,12 @@ public class Hext<T0, T1, T2, T3, T4, T5> implements java.io.Serializable {
 	public boolean equals(Object o) {
 		if (o instanceof Hext) {
 			Hext that = (Hext) o;
-			return CompareUtils.areEqual(this.val0, that.val0) &&
-				   CompareUtils.areEqual(this.val1, that.val1) &&
-				   CompareUtils.areEqual(this.val2, that.val2) &&
-				   CompareUtils.areEqual(this.val3, that.val3) &&
-				   CompareUtils.areEqual(this.val4, that.val4) &&
-				   CompareUtils.areEqual(this.val5, that.val5);
+			return Utils.areEqual(this.val0, that.val0) &&
+				   Utils.areEqual(this.val1, that.val1) &&
+				   Utils.areEqual(this.val2, that.val2) &&
+				   Utils.areEqual(this.val3, that.val3) &&
+				   Utils.areEqual(this.val4, that.val4) &&
+				   Utils.areEqual(this.val5, that.val5);
 		}
 		return false;
 	}

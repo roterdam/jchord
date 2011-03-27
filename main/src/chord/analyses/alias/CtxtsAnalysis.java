@@ -55,7 +55,6 @@ import chord.project.analyses.ProgramRel;
 import chord.util.ArraySet;
 import chord.util.graph.IGraph;
 import chord.util.graph.MutableGraph;
-import chord.util.ChordRuntimeException;
 
 /**
  * Analysis for pre-computing abstract contexts.
@@ -949,7 +948,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		} else if (instCtxtKindStr.equals("co")) {
 			instCtxtKind = CtxtsAnalysis.KOBJSEN;
 		} else
-			throw new ChordRuntimeException();
+			throw new RuntimeException();
 		if (statCtxtKindStr.equals("ci")) {
 			statCtxtKind = CtxtsAnalysis.CTXTINS;
 		} else if (statCtxtKindStr.equals("cs")) {
@@ -957,7 +956,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		} else if (statCtxtKindStr.equals("cc")) {
 			statCtxtKind = CtxtsAnalysis.CTXTCPY;
 		} else
-			throw new ChordRuntimeException();
+			throw new RuntimeException();
 		String cspaKind;
 		if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
 			statCtxtKind == CtxtsAnalysis.CTXTINS)

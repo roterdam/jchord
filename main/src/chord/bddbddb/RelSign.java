@@ -9,8 +9,7 @@ package chord.bddbddb;
 import java.util.ArrayList;
 import java.util.List;
 
-import chord.util.ArrayUtils;
-import chord.util.StringUtils;
+import chord.util.Utils;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -46,11 +45,11 @@ public class RelSign extends Pair<String[], String> {
 		validate();
 	}
 	public String toString() {
-		return ArrayUtils.toString(val0, "[", ",", "]") + " " + val1;
+		return Utils.toString(val0, "[", ",", "]") + " " + val1;
 	}
 	private void validate() {
 		assert (val0 != null);
-		assert (!ArrayUtils.hasDuplicates(val0));
+		assert (!Utils.hasDuplicates(val0));
 		if (val1 == null)
 			return;
 		String[] domNamesFromDomOrder = val1.split("_|x");
@@ -59,7 +58,7 @@ public class RelSign extends Pair<String[], String> {
 				"Number of domains in domNames and domOrder of relSign '" +
 				this + "' do not match.");
 		}
-		assert (!ArrayUtils.hasDuplicates(domNamesFromDomOrder));
+		assert (!Utils.hasDuplicates(domNamesFromDomOrder));
 		for (String domName : val0) {
 			boolean found = false;
 			for (String domName2 : domNamesFromDomOrder) {
@@ -105,7 +104,7 @@ public class RelSign extends Pair<String[], String> {
 		List<String> domKindsList =
 			new ArrayList<String>(val0.length);
 		for (String domName : val0) {
-			String domKind = StringUtils.trimNumSuffix(domName);
+			String domKind = Utils.trimNumSuffix(domName);
 			if (!domKindsList.contains(domKind))
 				domKindsList.add(domKind);
 		}
