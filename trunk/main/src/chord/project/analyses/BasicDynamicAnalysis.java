@@ -478,6 +478,7 @@ public class BasicDynamicAnalysis extends JavaAnalysis {
 				if (key.startsWith("chord."))
 					basecmd.add("-D" + key + "=" + e.getValue());
 			}
+			basecmd.add("-Xbootclasspath/p:" + Config.toolClassPathName);
 			basecmd.add("-cp");
 			basecmd.add(classPathName);
 		} else {
