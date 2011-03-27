@@ -23,9 +23,12 @@ plus each \code{process<event>(<args>)} method that corresponds to event {\tt <e
 with format {\tt <args>} enabled by the chosen instrumentation scheme.
 See Section \ref{sec:instr-events} for the kinds of supported events and their formats.
 
-A sample such class \code{MyDynamicAnalysis} is shown in Figure \ref{fig:dynamic-analysis}.
+A sample such class \code{MyDynamicAnalysis} is shown below:
 
-\begin{figure}
+\texonly{\newpage}
+
+\begin{center}
+\begin{framed}
 {\small
 \begin{verbatim}
     import chord.project.analyses.DynamicAnalysis;
@@ -79,9 +82,8 @@ A sample such class \code{MyDynamicAnalysis} is shown in Figure \ref{fig:dynamic
     }
 \end{verbatim}
 }
-\label{fig:dynamic-analysis}
-\caption{Dynamic Analysis Template.}
-\end{figure}
+\end{framed}
+\end{center}
 
 \section{Compiling and Running a Dynamic Analysis}
 \label{sec:running-dynamic-analysis}

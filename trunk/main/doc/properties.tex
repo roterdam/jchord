@@ -18,18 +18,21 @@ The following are the different ways by which a property can be passed to Chord 
 \begin{enumerate}
 \item
 
-On the command-line via the \code{-D<key>=<value>} format.
+On the command-line via the ``\code{-D<key>=<val>}" format.
 
 Use this option to specify properties specific to the current run of Chord.
 
-Typical usage of this option is by running the following command in Chord's \code{main/} directory:
+Typical usage of this option is by running the following command in Chord's main directory:
+
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -D<key1>=<value1> ... -D<keyN>=<valueN> run
+ant -D<key1>=<val1> ... -D<keyN>=<valN> run
 \end{verbatim}
+\end{framed}
 
 \item
 
-Via the file specified by property \code{chord.props.file}.
+Via a user-defined file specified by property \code{chord.props.file}.
 
 Use this option to specify once and for all properties of the program to
 be analyzed (e.g., property \code{chord.main.class} specifying the name of that program's main class, property \code{chord.class.path}
@@ -41,9 +44,12 @@ Property \code{chord.work.dir} specifies the directory in which Chord will run.
 The default value of this property is the current directory but users must typically set
 it on the command line, as follows:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<...> run
+ant -Dchord.work.dir=<...> run
 \end{verbatim}
+\end{framed}
+
 where \code{<...>} denotes the absolute or relative path of the top-level directory of
 the program to be analyzed, which contains a file named \code{chord.properties} that users
 must create themselves and populate with properties that are recognized by chord and
@@ -51,7 +57,7 @@ are specific to that program.
 
 \item
 
-Via file \code{main/chord.properties}.
+Via provided file \code{chord.properties} in Chord's main directory.
 
 Use this option to specify once and for all properties you would like to hold in every run of Chord
 (e.g., property \code{chord.max.heap} specifying the maximum heap memory size to be used by the
@@ -86,7 +92,7 @@ usually the top-level directory of the input Java program. \\
 {\bf Description:} Properties file loaded by Chord at the
 beginning before doing anything else.  Any of the below properties may
 be defined in this file to avoid defining them on the command line
-(using the \code{-D<key>=<value>} format) every time Chord is run.
+(using the \code{-D<key>=<val>} format) every time Chord is run.
 Each relative file/directory name in the value of any property defined
 in this file is treated relative to Chord's working directory (which
 is specified by property \code{chord.work.dir}). \\
@@ -274,7 +280,7 @@ This section describes properties that dictate what task(s) Chord must perform.
 {\bf Type:} string list  \\
 {\bf Description:} List of names of program relations whose contents must be printed to files \code{[chord.out.dir]/<...>.txt} where {\tt <...>} denotes the relation name. \\
 {\bf Default value:} {\tt ""} \\
-{\bf Note:} This functionality must be used with caution as certain program relations, albeit represented compactly as BDDs, may contain a large number (e.g., millions) of tuples, resulting in voluminous output when printed in explicit form to a text file.  See Section \ref{sec:tuning-datalog-analysis} for a more efficient way to query the contents of program relations (namely, by using the {\tt debug} target provided in file {\tt build.xml} in Chord's \code{main/} directory).
+{\bf Note:} This functionality must be used with caution as certain program relations, albeit represented compactly as BDDs, may contain a large number (e.g., millions) of tuples, resulting in voluminous output when printed in explicit form to a text file.  See Section \ref{sec:tuning-datalog-analysis} for a more efficient way to query the contents of program relations (namely, by using the {\tt debug} target provided in file {\tt build.xml} in Chord's main directory).
 \end{quote}
 
 \code{chord.print.project}
@@ -583,5 +589,5 @@ Most users will not need to alter the default values of these properties.
 % bool
 %Write to file \code{[chord.bddbddb.work.dir]/<...>.map} when saving program domain named {\tt <...>}.
 %{\tt true}
-%{\bf Note:} This functionality is useful for debugging Datalog programs using the {\tt debug} target provided in file {\tt build.xml} in Chord's {\tt main/} directory (see Section \ref{sec:tuning-datalog-analysis}).
+%{\bf Note:} This functionality is useful for debugging Datalog programs using the {\tt debug} target provided in file {\tt build.xml} in Chord's main directory (see Section \ref{sec:tuning-datalog-analysis}).
 

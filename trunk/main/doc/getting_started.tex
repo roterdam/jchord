@@ -15,7 +15,7 @@ Section \ref{sec:running-chord} describes how to run Chord.
 
 To obtain Chord's pre-built binaries, download and uncompress file
 \xlink{chord-bin-2.0.tar.gz}{http://jchord.googlecode.com/files/chord-bin-2.0.tar.gz}.
-It contains the following files:
+It includes the following files:
 
 \begin{enumerate}
 \item
@@ -64,9 +64,11 @@ javassist, bddbddb, etc.)
 Alternatively, you can obtain the latest development snapshot from the
 SVN repository by running the following command:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> svn checkout http://jchord.googlecode.com/svn/trunk/ chord
+svn checkout http://jchord.googlecode.com/svn/trunk/ chord
 \end{verbatim}
+\end{framed}
 
 Instead of checking out the entire \code{trunk/}, which contains
 several sub-directories, you can check out specific sub-directories:
@@ -80,7 +82,7 @@ several sub-directories, you can check out specific sub-directories:
 \item
 \code{test/} contains Chord's regression tests.
 \item
-many more; these might eventually move into \code{main/}.
+many more; these might eventually move under \code{main/}.
 \end{itemize}
 
 Files \code{chord-2.0-src.tar.gz} and \code{chord-2.0-libsrc.tar.gz}
@@ -140,7 +142,7 @@ defined in file \code{chord.properties} in Chord's main directory.
 The default value of both these properties is \code{false}.  If you set
 either of them to \code{true}, then you will also need a utility like
 GNU Make (to run the \code{Makefile}'s in directories \code{bdd/} and
-\code{agent/}) and a C++ compiler.
+\code{agent/}) and a C++ compiler (to build the above shared libraries).
 
 \section{Running Chord}
 \label{sec:running-chord}
@@ -150,27 +152,31 @@ There are two equivalent ways to run Chord.
 One way, which is available only in the source installation of Chord, is to run the
 following command in Chord's main directory:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -D<key1>=<value1> ... -D<keyN>=<valueN> run
+ant -D<key1>=<val1> ... -D<keyN>=<valN> run
 \end{verbatim}
+\end{framed}
 
 The above requires Apache Ant (a Java build tool) to be installed on
 your machine.  The alternative, which does not require Apache Ant and is
 available in both the source and binary installations of Chord, is
 to run the following command:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> java -cp <...>/chord.jar -D<key1>=<value1> ... -D<keyN>=<valueN> chord.project.Boot
+java -cp <...>/chord.jar -D<key1>=<val1> ... -D<keyN>=<valN> chord.project.Boot
 \end{verbatim}
+\end{framed}
 
 where \code{<...>} denotes the absolute or relative path of the
 directory containing file \code{chord.jar}; that directory is also
-expected to contain any other binaries in Chord's installation (e.g.,
+expected to contain any shared libraries in Chord's installation (e.g.,
 \code{libbuddy.so} and \code{libchord_instr_agent.so}).
 
-Each ``\code{-D<key>=<value>}" argument above sets the system property
-named \code{<key>} to the value denoted by \code{<value>}.  The only
+Each ``\code{-D<key>=<val>}" argument above sets the system property
+named \code{<key>} to the value denoted by \code{<val>}.  The only
 way to specify inputs to Chord is via system properties; there is no
-command-line argument processing.  Chapter\ref{chap:properties}
+command-line argument processing.  Chapter \ref{chap:properties}
 describes all system properties recognized by Chord.
 

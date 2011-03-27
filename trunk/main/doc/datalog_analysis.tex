@@ -17,9 +17,12 @@ which are a data structure central to executing Datalog analyses.
 A Datalog analysis declares a bunch of input/output program relations,
 each over one or more program domains, and provides a bunch of rules (constraints)
 specifying how to compute the output relations from the input relations.
-An example of such an analysis is shown in Figure \ref{fig:datalog-analysis}.
+An example of such an analysis is shown below:
 
-\begin{figure}
+\texonly{\newpage}
+
+\begin{center}
+\begin{framed}
 {\small
 \begin{verbatim}
     # name=datarace-dlog
@@ -51,9 +54,8 @@ An example of such an analysis is shown in Figure \ref{fig:datalog-analysis}.
         alias(e1,e2), escape(e1), escape(e2), unguarded(t1,e1,t2,e2).
 \end{verbatim}
 }
-\label{fig:datalog-analysis}
-\caption{An Example Datalog Analysis.}
-\end{figure}
+\end{framed}
+\end{center}
 
 Any line that begins with a {\tt \#} is regarded a comment, except a
 line of the form ``{\tt \#} {\tt name=<...>}", which specifies the name
@@ -122,9 +124,12 @@ performance of bddbddb, the Datalog solver used by Chord, often
 by several orders of magnitude.
 Try these tricks by running the following command:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -Ddlog.file=<file> -Dwork.dir=<dir> solve
+ant -Ddlog.file=<file> -Dwork.dir=<dir> solve
 \end{verbatim}
+\end{framed}
+
 where {\tt <file>} denotes the file defining the Datalog analysis
 to be tuned, and {\tt <dir>} is the directory containing the
 program domains ({\tt *.dom} files) and program relations ({\tt *.bdd} files)
@@ -166,6 +171,7 @@ removed the problem of rules getting ``stuck", the rules will roughly
 be in the order of the number of times they were applied.  Here is an
 example:
 
+\begin{framed}
 \begin{verbatim}
 OUT> Rule VH(u:V0,h:H0) :- VV(u:V0,v:V1), VH(v:V1,h:H0), VHfilter
 (u:V0,h:H0).
@@ -177,6 +183,7 @@ OUT>    Updates: 5031
 OUT>    Time: 6972 ms
 OUT>    Longest Iteration: 0 (0 ms)
 \end{verbatim}
+\end{framed}
 
 Notice that the second rule was applied 5031 times whereas the first
 was applied 2871 times.  More importantly, the second rule took 6972
@@ -262,6 +269,7 @@ Each BDD variable is at a unique ``level" which is its 0-based position in the B
 
 We will next illustrate the format of a BDD stored on disk (in a .bdd file) using the following example:
 
+\begin{framed}
 \begin{verbatim}
 # V0:16 H0:12
 # 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29
@@ -278,6 +286,7 @@ We will next illustrate the format of a BDD stored on disk (in a .bdd file) usin
 349138 85 0 349123
 ...
 \end{verbatim}
+\end{framed}
 
 The first comment line indicates the domains in the relation (in the above case, {\tt V0} and {\tt H0},
 represented using 16 and 12 unique BDD variables, respectively).

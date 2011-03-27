@@ -1,13 +1,16 @@
 \documentclass[openany]{book}
 \usepackage{hyperlatex}
 \usepackage{hyperref}
-\usepackage{graphicx}
-\usepackage{float}
+\texonly{
+	\usepackage{graphicx}
+	\usepackage{framed}
+}
 
 \texonly{
 % put borders around figures
-	\floatstyle{boxed} 
-	\restylefloat{figure}
+	%\usepackage{float}
+	%\floatstyle{boxed} 
+	%\restylefloat{figure}
 % set dimensions of page/text
 	\parindent=0in
 	\parskip=10pt
@@ -23,6 +26,7 @@
 \htmlonly{
 	\newcommand\code[1]{{\tt #1}}
 	\newcommand\url[1]{\xlink{#1}{#1}}
+	\newenvironment{framed}{\xmlattributes*{table}{border=1 frame=box rules=none cellpadding=8}\begin{tabular}{l}}{\end{tabular}}
 }
 
 \newcommand\bh{{\bf h}}

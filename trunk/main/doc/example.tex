@@ -7,6 +7,7 @@ in Chord on it.
 
 Suppose the Java program to be analyzed has the following directory structure:
 
+\begin{framed}
 \begin{verbatim}
     example/
         src/
@@ -25,6 +26,7 @@ Suppose the Java program to be analyzed has the following directory structure:
                 taz.jar
         chord.properties
 \end{verbatim}
+\end{framed}
 
 The above structure is typical: the program's Java source
 files are under {\tt src/}, its class files are under {\tt classes/},
@@ -32,11 +34,13 @@ the source and jar files of the libraries used by the program are
 under \code{lib/src/} and \code{lib/jar/}, respectively.
 
 To run Chord on the above program, run the following command in
-Chord's {\tt main/} directory:
+Chord's main directory:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<...>/example run
+ant -Dchord.work.dir=<...>/example run
 \end{verbatim}
+\end{framed}
 
 where \code{<...>} denotes the absolute or relative path of the
 directory containing the above \code{example/} directory.
@@ -46,6 +50,7 @@ loads upfront all properties defined in that file, if it exists.  Alternatively,
 may be defined on the command-line, using the \code{-D<key>=<value>} format.
 A sample \code{chord.properties} file for the above program is as follows:
 
+\begin{framed}
 \begin{verbatim}
     chord.main.class=foo.Main
     chord.class.path=classes:lib/jar/taz.jar
@@ -54,6 +59,7 @@ A sample \code{chord.properties} file for the above program is as follows:
     chord.args.0="-thread 1 -n 10"
     chord.args.1="-thread 2 -n 50"
 \end{verbatim}
+\end{framed}
 
 Each relative file/directory name in the value of any property
 defined in this file (e.g., the \code{lib/src} directory name in the value of
@@ -105,6 +111,7 @@ Broadly, there are two kinds of analyses in Chord:
 Those expressed imperatively in Java. They are in \code{*.java} files under
 directory \code{main/src/chord/analyses/}, and are of the form:
 
+\begin{framed}
 \begin{verbatim}
     @Chord(
         name=<JAVA ANALYSIS NAME>
@@ -114,12 +121,14 @@ directory \code{main/src/chord/analyses/}, and are of the form:
         ...
     }
 \end{verbatim}
+\end{framed}
 
 \item
 
 Those expressed declaratively in Datalog.  They are in \code{*.dlog} files under
 directory \code{main/src/chord/analyses/}, and are of the form:
 
+\begin{framed}
 \begin{verbatim}
     # name=<DLOG ANALYSIS NAME>
 
@@ -130,13 +139,16 @@ directory \code{main/src/chord/analyses/}, and are of the form:
     # BDD variable order
     .bddvarorder ...
 \end{verbatim}
+\end{framed}
 \end{itemize}
 
-To run one or more such analyses, run the following command in Chord's \code{main/} directory:
+To run one or more such analyses, run the following command in Chord's main directory:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<PROGRAM DIR> -Dchord.run.analyses=<ANALYSIS NAME> run
+ant -Dchord.work.dir=<PROGRAM DIR> -Dchord.run.analyses=<ANALYSIS NAME> run
 \end{verbatim}
+\end{framed}
 
 where {\tt <PROGRAM DIR>} denotes a directory containing a Java program as described above,
 and {\tt <ANALYSIS NAME>} denotes the name of an analysis to run,
@@ -144,17 +156,21 @@ such as {\tt <JAVA ANALYSIS NAME>} and {\tt <DLOG ANALYSIS NAME>} in the Java an
 Datalog analyses depicted above.
 
 For instance, to run a basic may-alias and call-graph analysis (called 0CFA),
-run the following command in Chord's \code{main/} directory:
+run the following command in Chord's main directory:
 
+\begin{framed}
 \begin{verbatim}
-    prompt> ant -Dchord.work.dir=<PROGRAM DIR> -Dchord.run.analyses=cipa-0cfa-dlog run
+ant -Dchord.work.dir=<PROGRAM DIR> -Dchord.run.analyses=cipa-0cfa-dlog run
 \end{verbatim}
+\end{framed}
 
 This instructs Chord to run the Datalog analysis named \code{cipa-0cfa-dlog},
 which happens to be defined in file \code{main/src/chord/analyses/alias/cipa_0cfa.dlog}.
 
 The output of the above command is of the form:
 
+\begin{framed}
+{\small
 \begin{verbatim}
     Buildfile: build.xml
 
@@ -192,6 +208,8 @@ The output of the above command is of the form:
     BUILD SUCCESSFUL
     Total time: 28 seconds
 \end{verbatim}
+}
+\end{framed}
 
 Notice that although Chord is only asked to run the 0CFA analysis on the command line, it automatically
 runs many other analyses before finally running the desired analysis and terminating.
@@ -240,6 +258,8 @@ The verbosity of Chord's output above is controlled by property \code{chord.verb
 default value is 1.  At verbosity level 0, the above command produces less voluminous output
 of the form:
 
+\begin{framed}
+{\small
 \begin{verbatim}
     Buildfile: build.xml
     
@@ -251,3 +271,5 @@ of the form:
     BUILD SUCCESSFUL
     Total time: 26 seconds
 \end{verbatim}
+}
+\end{framed}
