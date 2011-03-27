@@ -25,6 +25,7 @@ confCallArg(i:I,v:V,base:I)
 confWrapper(i:I,base:I) output
 confUVV(i:I,uv:UV,v:V) output
 mConfArgs(m:M,z:Z,base:I) output
+confMethod(m:M) output
 
 # (m,z,v) is in argCopies if v is a copy of the z'th argument to m.
 argCopies(m,z,v)  :- MmethArg(m,z,v).
@@ -47,3 +48,6 @@ confWrapper(i, base) :- confCallArg(i,_,base).
 confUVV(i,uv,v) :- confCallArg(i,v,_),IinvkRetUV(i,0,uv).
 #confUVV(0,0,0).   
 #main's arg is a special conf value
+
+
+confMethod(m) :- mConfArgs(m,_,_).

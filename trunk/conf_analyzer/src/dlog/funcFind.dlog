@@ -43,10 +43,6 @@ getInstFldInst(l:V,b:V,f:F) input
 MV(m:M,v:V) input
 MU(m:M,u:U) input
 
-Mclones(m:M,l:V,i:I,r:V) input
-clones(l:V,r:V)
-
-
 # Conftrack specific
 
 APIMethod(i:I) input
@@ -96,7 +92,6 @@ functDep(m,z) :- MmethPrimRet(m,_,v),primLambdaDep(z,v).
 
 # rules that move lambdas
 refLambdaDep(z,v) :- objVarAsgnInst(v,u),refLambdaDep(z,u).
-refLambdaDep(z,v) :- clones(v,r),refLambdaDep(z,r).
 refLambdaDep(z,v) :- locMustAlias(v,u),refLambdaDep(z,u).
 
 primLambdaDep(z,v) :- primDataDep(v,u),primLambdaDep(z,u).
@@ -130,9 +125,6 @@ refLambdaDep(z,v) :- taintingCall(i, z),IinvkArg(i,0,v),instI(i),!APIReadOnly(i)
 
 ## Probably we don't have functional dependence on collections?
 #refLambdaDep(z,v) :- IRetrieve(_,v,colV),refLambdaDep(zcolV).
-
-#
-clones(l,r) :- reachableM(m),Mclones(m,l,_,r).
 
 #treat arrays and elements interchangeably
 refLambdaDep(z,b)  :- putInstFldInst(b,0,r), refLambdaDep(z,r).

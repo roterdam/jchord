@@ -57,7 +57,6 @@ clinitTM(t:T,m:M) input
 
 clsTH(t:T0,h:H0) input
 externalThis(v:V) input
-#objTH(t:T0,h:H0) input
 
 IHM(i:I,h:H,m:M)
 VV(v1:V,v2:V) output
@@ -206,6 +205,7 @@ reachableT(t) :- classT(t), reachableT(s), sub(s,t).
 
 rootM(0).
 rootM(m) :- reachableT(t), clinitTM(t,m).
+rootM(m) :- MentryPoints(m).
 MM(m,n) :- IM(i,n), MI(m,i).
 
 
@@ -218,7 +218,8 @@ MMx(m,n) :- badCalls(i,n),MI(m,i).
 
 ### Thread modeling
 
-
+## Still needed with the new StubRewrite mechanism --
+  #many calls will start runnables, not just new Thread()
 startedRunnable(h,tRun) :- reachableI(i),newThread(i,tRun,v), VH(v,h).
 VH(arg,h) :- MmethArg(tRun, 0, arg),startedRunnable(h,tRun).
 reachableM(tRun) :- startedRunnable(_,tRun).

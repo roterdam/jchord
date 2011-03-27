@@ -88,9 +88,6 @@ colHoldsConf(collectionSrc:H,site:Opt) output
 vColHoldsConf(collection:V,site:Opt) output
 taintingCall(call:I,site:Opt) output
 
-Mclones(m:M,l:V,i:I,r:V) input
-clones(l:V,r:V)
-
 # purity related
 
 functDep(m:M,z:Z) input
@@ -115,6 +112,7 @@ confMethCall(i:I,z:Z,site:Opt) output
 confArg(m:M,z:Z, site:Opt) output
 returnsConf(i:I,v:V,site:Opt) output
 
+#from previous round of summary-based analysis. Obsolescent?
 summarized(m:M)
 summarizedFlowThru(m:M,z:Z) input
 summarizedCallArg(i:I,z:Z)
@@ -133,9 +131,6 @@ colHoldsConf(colH,site) :- VH(v,colH),vColHoldsConf(v,site).
 vColHoldsConf(newCol,site) :- RINewColl(newCol, oldCol),vColHoldsConf(oldCol,site).
 vColHoldsConf(newCol,site) :- vColHoldsConf(oldCol,site),objVarAsgnInst(newCol,oldCol).
 vColHoldsConf(colV,site) :- RIInsert(colV,v),refCdep(v,site).
-
-
-clones(l,r) :- reachableM(m),Mclones(m,l,_,r).
 
 confCall(i) :- OptNames(_,i).
 
@@ -220,7 +215,6 @@ instHF(bh,f,i) :- putInstFldPrimInst(b,f,r),primCdep(r,i),VH(b,bh).  split
 ## Propagate absolute labels.
 #every rule here should have a duplicate in funcFind
 
-absoluteRefCdep(v,site) :- clones(v,r),absoluteRefCdep(r,site).
 absoluteRefCdep(v,site) :- localMustAlias(v,u),absoluteRefCdep(u,site).
 absoluteRefCdep(v,site) :- objVarAsgnInst(v,u),absoluteRefCdep(u,site).
 absolutePrimCdep(v,site) :- primDataDep(v,u),absolutePrimCdep(u,site).
@@ -229,7 +223,8 @@ absolutePrimCdep(v,site) :- primDataDep(v,u),absolutePrimCdep(u,site).
 absoluteRefCdep(b,site)  :- putInstFldInst(b,0,r), absoluteRefCdep(r,site).
 absoluteRefCdep(l,site) :- getInstFldInst(l,b,0), absoluteRefCdep(b,site).
 
-#  why are these commented out?
+#  why are these commented out? they do array-element equivalence for prims
+#   This may not be needed since we have field-sensitivity here
 #absoluteRefCdep(b,site)  :- putInstFldPrimInst(b,0,r), absolutePrimCdep(r,site).
 #absolutePrimCdep(l,site) :- getInstFldPrimInst(l,b,0), absoluteRefCdep(b,site).
 
@@ -273,8 +268,6 @@ refCdep(v,site) :- RIRetrieve(v,colV),refCdep(colV,site).
 #refCdep(v,site) :- getInstFldInst(v,b,_),refCdep(b,site).
 taintedSubfield(v,b,f,opt) :- getInstFldInst(v,b,f),refCdep(b,opt),f!=0.
    
-#refCdep(v,site) :- clones(v,r),instHF(h1,f,site).
-
 #
 # Want to allow mutable references to external types
 
