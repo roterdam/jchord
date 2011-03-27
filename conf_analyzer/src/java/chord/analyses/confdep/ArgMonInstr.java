@@ -5,7 +5,6 @@ import javassist.*;
 import javassist.expr.*;
 import chord.instr.Instrumentor;
 import chord.project.Config;
-import chord.util.ChordRuntimeException;
 
 /**
  * Code to insert calls to DynConfDepRuntime and similar.
@@ -49,7 +48,7 @@ public class ArgMonInstr extends Instrumentor {
       aftInstr += methodCallAftEventCallSuper +iId + ",\""+c.getClassName()+"\",\"<init>\",($w)$_,null,$args);";        
       c.replace("{ $_ = $proceed($$); " +  aftInstr + " }");
     } catch (CannotCompileException ex) {
-      throw new ChordRuntimeException(ex);
+      throw new RuntimeException(ex);
     } 
   }
   
@@ -103,9 +102,9 @@ public class ArgMonInstr extends Instrumentor {
 
       return;
     } catch (CannotCompileException ex) {
-      throw new ChordRuntimeException(ex);
+      throw new RuntimeException(ex);
     } catch (NotFoundException ex) {
-      throw new ChordRuntimeException(ex);
+      throw new RuntimeException(ex);
     }
   }
 }
