@@ -216,7 +216,7 @@
 	<target name="j2h_xref" description="HTMLize Java source code with cross-referencing.">
 		<fail unless="java.dir"/>
 		<fail unless="html.dir"/>
-		<java classname="j2h" fork="true" failonerror="true">
+		<java classname="j2h" failonerror="true">
 			<arg value="-js"/>
 			<arg file="${java.dir}"/>
 			<arg value="-d"/>

@@ -147,17 +147,16 @@ public class Boot {
 
 		String maxHeap = getOrSetProperty("chord.max.heap", "2048m");
 		String maxStack = getOrSetProperty("chord.max.stack", "32m");
-		String jvmargs = getOrSetProperty("chord.jvmargs",
-			"-ea -Xmx" + maxHeap + " -Xss" + maxStack);
+		String jvmargs = getOrSetProperty("chord.jvmargs", "-ea -Xmx" + maxHeap + " -Xss" + maxStack);
 		boolean isClassic = getOrSetProperty("chord.classic", "true").equals("true");
 		String stdJavaAnalysisPath = getOrSetProperty("chord.std.java.analysis.path", chordJarFile);
 		String extJavaAnalysisPath = getOrSetProperty("chord.ext.java.analysis.path", "");
 		String javaAnalysisPath = getOrSetProperty("chord.java.analysis.path",
-			concat(stdJavaAnalysisPath, File.pathSeparator, extJavaAnalysisPath));
+			Utils.concat(stdJavaAnalysisPath, File.pathSeparator, extJavaAnalysisPath));
 		String stdDlogAnalysisPath = getOrSetProperty("chord.std.dlog.analysis.path", chordJarFile);
 		String extDlogAnalysisPath = getOrSetProperty("chord.ext.dlog.analysis.path", "");
 		String dlogAnalysisPath = getOrSetProperty("chord.dlog.analysis.path",
-			concat(stdDlogAnalysisPath, File.pathSeparator, extDlogAnalysisPath));
+			Utils.concat(stdDlogAnalysisPath, File.pathSeparator, extDlogAnalysisPath));
 		String userClassPath = getOrSetProperty("chord.class.path", "");
 
 		System.setProperty("user.dir", workDirName);
@@ -211,7 +210,8 @@ public class Boot {
 		cmdList.add("chord.project.Main");
 		String[] cmdAry = new String[cmdList.size()];
 		cmdList.toArray(cmdAry);
-		ProcessExecutor.execute(cmdAry, null, new File(workDirName), -1);
+		int result = ProcessExecutor.execute(cmdAry, null, new File(workDirName), -1);
+		System.exit(result);
 	}
 
 	private static String getChordJarFile() {
@@ -232,17 +232,15 @@ public class Boot {
 	}
 
 	private static void readProps(String fileName) throws IOException {
-		
-		
 		Properties props = new Properties();
 		FileInputStream in = new FileInputStream(fileName);
 		props.load(in);
 		in.close();
 
-		if(SPELLCHECK_ON)
+		if (SPELLCHECK_ON)
 			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
 				   new OptionSet(props));
-		
+
 		Properties sysprops = System.getProperties();
 		for (Map.Entry e : props.entrySet()) {
 			String key = (String) e.getKey();
@@ -266,7 +264,7 @@ public class Boot {
 		}
 		Matcher match = varPat.matcher("");
 		String eval = expr;
-		for(int s = 0; s < MAX_SUBST; s++) {
+		for (int s = 0; s < MAX_SUBST; s++) {
 			match.reset(eval);
 			if (!match.find()) {
 				return eval;
@@ -282,11 +280,5 @@ public class Boot {
 		}
 		Messages.fatal("Variable substitution depth too large: " + MAX_SUBST + " " + expr);
 		return null;
-	}
-
-	private static String concat(String s1, String sep, String s2) {
-		if (s1.equals("")) return s2;
-		if (s2.equals("")) return s1;
-		return s1 + sep + s2;
 	}
 }
