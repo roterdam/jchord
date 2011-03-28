@@ -26,6 +26,7 @@ import java.util.Set;
 
 public class AllocAbstraction extends LocalAbstraction {
 	int kCFA;
+
 	public AllocAbstraction(int kCFA) { this.kCFA = kCFA; }
 
 	@Override
@@ -39,8 +40,11 @@ public class AllocAbstraction extends LocalAbstraction {
 		setValue(o, computeValue(info, o));
 	}
 
-	@Override public void edgeCreated(int b, int f, int o) { }
-	@Override public void edgeDeleted(int b, int f, int o) { }
+	@Override
+	public void edgeCreated(int b, int f, int o) { }
+
+	@Override
+	public void edgeDeleted(int b, int f, int o) { }
 
 	public Object computeValue(ThreadInfo info, int o) {
 		if (kCFA == 0) return state.o2h.get(o); // No context
@@ -48,16 +52,17 @@ public class AllocAbstraction extends LocalAbstraction {
 		StringBuilder buf = new StringBuilder();
 		buf.append(state.o2h.get(o));
 
-    for (int i = 0; i < kCFA; i++) {
-      int j = info.callSites.size() - i - 1;
-      if (j < 0)
-        break;
-      buf.append('_');
-      buf.append(info.callSites.get(j));
-    }
+		for (int i = 0; i < kCFA; i++) {
+			int j = info.callSites.size() - i - 1;
+			if (j < 0)
+				break;
+			buf.append('_');
+			buf.append(info.callSites.get(j));
+		}
 
 		return buf.toString();
 	}
 
-  @Override public boolean requireGraph() { return false; }
+	@Override
+	public boolean requireGraph() { return false; }
 }
