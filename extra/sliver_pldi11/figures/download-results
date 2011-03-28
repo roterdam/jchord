@@ -1,4 +1,0 @@
-wc -l sliver.results
-rsync -az ec2:pa/sliver.results .
-rm sliver.db
-wc -l sliver.results
