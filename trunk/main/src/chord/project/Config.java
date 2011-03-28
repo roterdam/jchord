@@ -50,13 +50,13 @@ public class Config {
 	public final static String scopeStdExcludeStr = System.getProperty("chord.std.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExtExcludeStr = System.getProperty("chord.ext.scope.exclude", "");
 	public static String scopeExcludeStr =
-		System.getProperty("chord.scope.exclude", concat(scopeStdExcludeStr, ',', scopeExtExcludeStr));
+		System.getProperty("chord.scope.exclude", Utils.concat(scopeStdExcludeStr, ",", scopeExtExcludeStr));
 	public final static String DEFAULT_CHECK_EXCLUDES =
 		"java.,javax.,sun.,com.sun.,com.ibm.,org.apache.harmony.";
 	public final static String checkStdExcludeStr = System.getProperty("chord.std.check.exclude", DEFAULT_CHECK_EXCLUDES);
 	public final static String checkExtExcludeStr = System.getProperty("chord.ext.check.exclude", "");
 	public final static String checkExcludeStr =
-		System.getProperty("chord.check.exclude", concat(checkStdExcludeStr, ',', checkExtExcludeStr));
+		System.getProperty("chord.check.exclude", Utils.concat(checkStdExcludeStr, ",", checkExtExcludeStr));
 
 	// properties dictating what gets computed/printed by Chord
 
@@ -149,14 +149,14 @@ public class Config {
 	public final static String jInstrAgentFileName = mainDirName + File.separator + "chord.jar";
 	public final static String javadocURL = "http://chord.stanford.edu/javadoc/";
 
-	public static String[] scopeExcludeAry = toArray(scopeExcludeStr);
+	public final static String[] scopeExcludeAry = Utils.toArray(scopeExcludeStr);
 	public static boolean isExcludedFromScope(String typeName) {
 		for (String c : scopeExcludeAry)
 			if (typeName.startsWith(c))
 				return true;
 		return false;
 	}
-	public final static String[] checkExcludeAry = toArray(checkExcludeStr);
+	public final static String[] checkExcludeAry = Utils.toArray(checkExcludeStr);
 	public static boolean isExcludedFromCheck(String typeName) {
 		for (String c : checkExcludeAry)
 			if (typeName.startsWith(c))
@@ -232,16 +232,6 @@ public class Config {
 
 	public static boolean buildBoolProperty(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
-	}
-
-	public static String[] toArray(String str) {
-		return str.equals("") ? new String[0] : str.split(Utils.LIST_SEPARATOR);
-	}
-
-	private static String concat(String s1, char sep, String s2) {
-		if (s1.equals("")) return s2;
-		if (s2.equals("")) return s1;
-		return s1 + sep + s2;
 	}
 
 	private static void check(String val, String[] legalVals, String key) {

@@ -162,6 +162,16 @@ public final class Utils {
 		return sb.toString();
 	}
 
+    public static String[] toArray(String str) {
+        return str.equals("") ? new String[0] : str.split(LIST_SEPARATOR);
+    }
+
+    public static String concat(String s1, String sep, String s2) {
+        if (s1.equals("")) return s2;
+        if (s2.equals("")) return s1;
+        return s1 + sep + s2;
+    }
+
 	public static int[] samplePermutation(Random random, int n) {
 		int[] perm = new int[n];
 		for (int i = 0; i < n; i++) perm[i] = i;
