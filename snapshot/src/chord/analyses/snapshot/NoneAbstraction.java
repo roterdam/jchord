@@ -29,5 +29,5 @@ public class NoneAbstraction extends Abstraction {
 	@Override public void nodeCreated(ThreadInfo info, int o) { setValue(o, o); }
 	@Override public void edgeCreated(int b, int f, int o) { }
 	@Override public void edgeDeleted(int b, int f, int o) { }
-  @Override public boolean requireGraph() { return false; }
+	@Override public boolean requireGraph() { return false; }
 }

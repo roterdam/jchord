@@ -172,7 +172,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 	}
 
 	public void computedExcludedClasses() {
-		String[] checkExcludedPrefixes = Config.toArray(Config.checkExcludeStr);
+		String[] checkExcludedPrefixes = Utils.toArray(Config.checkExcludeStr);
 		Program program = Program.g();
 		for (jq_Reference r : program.getClasses()) {
 			String rName = r.getName();
