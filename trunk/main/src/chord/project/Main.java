@@ -11,6 +11,7 @@ import java.io.PrintStream;
 
 import chord.program.Program;
 import chord.util.Timer;
+import chord.util.Utils;
 
 /**
  * Entry point of Chord after JVM settings are resolved.
@@ -73,21 +74,21 @@ public class Main {
 		}
 		if (Config.printAllClasses)
 			program.printAllClasses();
-		String[] printClasses = Config.toArray(Config.printClasses);
+		String[] printClasses = Utils.toArray(Config.printClasses);
 		if (printClasses.length > 0) {
 			for (String className : printClasses)
 				program.printClass(className);
 		}
-		String[] printMethods = Config.toArray(Config.printMethods);
+		String[] printMethods = Utils.toArray(Config.printMethods);
 		if (printMethods.length > 0) {
 			for (String methodSign : printMethods)
 				program.printMethod(methodSign);
 		}
-		String[] analysisNames = Config.toArray(Config.runAnalyses);
+		String[] analysisNames = Utils.toArray(Config.runAnalyses);
 		if (analysisNames.length > 0) {
 			project.run(analysisNames);
 		}
-		String[] relNames = Config.toArray(Config.printRels);
+		String[] relNames = Utils.toArray(Config.printRels);
 		if (relNames.length > 0) {
 			project.printRels(relNames);
 		}
