@@ -160,7 +160,7 @@ public class RTA {
 		if (fullscan == null)
 		  appCodePrefixes = new String[0];
 		else
-		  appCodePrefixes = Config.toArray(fullscan);
+		  appCodePrefixes = Utils.toArray(fullscan);
 	}
 
 	public IndexSet<jq_Method> getMethods() {
