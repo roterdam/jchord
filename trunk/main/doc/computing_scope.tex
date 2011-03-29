@@ -3,18 +3,17 @@
 \label{chap:computing-scope}
 
 A pre-requisite to analyzing a Java program using any program analysis framework,
-including Chord, is to compute the {\it analysis scope}: the set of methods
-of the program to be analyzed.  Several scope construction algorithms (so-called
-call-graph algorithms) exist in the literature that differ in scalability (i.e., how large
-a program they can handle with the available resources) and precision (i.e., how small a
-set of methods they deem is reachable).
+including Chord, is to compute the {\it analysis scope}: which parts of the
+program to analyze.  Several scope construction algorithms (so-called
+call-graph algorithms) exist in the literature that differ in scalability (i.e.,
+how large a program they can handle with the available resources) and precision (i.e., 
+how much of the program they deem is reachable).
 
 Chord implements several standard scope construction algorithms.  Besides scalability and precision,
 an additional metric of these algorithms in Chord that can be controlled by users is usability,
-which concerns aspects such as excluding certain methods from being analyzed even if they
-are reachable, and modeling Java features such as reflection,
-dynamic class loading, and native methods.
-These features affect which methods are
+which concerns aspects such as excluding certain code from being analyzed even if it
+is reachable, and modeling Java features such as reflection, dynamic class loading, and native methods.
+These features affect which code are
 reachable but, in general, they cannot be modeled soundly by any program analysis framework.  The best
 a framework can do is
  provide stubs for commonly-used native methods in the standard JDK library (e.g., the \code{arraycopy}
