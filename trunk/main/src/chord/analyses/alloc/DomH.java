@@ -33,14 +33,12 @@ import chord.program.Reflect;
 import chord.program.Program;
 
 /**
- * Domain of object allocation statements.
+ * Domain of object allocation quads.
  * <p>		
- * The 0th element of this domain (null) is a distinguished		
- * hypothetical object allocation statement that may be used		
- * for various purposes.
+ * The 0th element of this domain is null and denotes a distinguished hypothetical
+ * object allocation quad that may be used for various purposes.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
- * @author omertripp (omertrip@post.tau.ac.il)
  */
 @Chord(
 	name = "H",
