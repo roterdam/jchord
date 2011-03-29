@@ -10,7 +10,7 @@ quadcode, which is useful for debugging analyses and deciphering their
 output, as well as the API of Joeq and Chord that concerns bytecode
 and quadcode, which is useful for users writing their own analyses.
 
-\section{Pretty-Printing Bytecode and Quadcode}
+\section{Pretty-Printing}
 
 Consider the following Java program contained in
 file \code{examples/hello_world/src/test/HelloWorld.java} in Chord's
@@ -37,12 +37,18 @@ javap -classpath <...> -private -verbose <CLASS NAME>
 \end{verbatim}
 \end{framed}
 
-where {\tt <CLASS NAME>} is the fully-qualified name of the class
-whose bytecode is to be printed (\code{test.HelloWorld} in our
-example) and \code{<...>} is the classpath of that class
-(\code{examples/hello_world/} in our example).  Program \code{javap}
-comes along with the JVM.  The output of the above command for our
-example is as follows:
+where:
+
+\begin{itemize}
+\item
+{\tt <CLASS NAME>} is the fully-qualified name of the class whose
+bytecode is to be printed (\code{test.HelloWorld} in our example).
+\item
+\code{<...>} is the classpath of that class (\code{examples/hello_world/} in our example).
+\end{itemize}
+
+Program \code{javap} comes along with the JVM.  The output of the
+above command for our example is as follows:
 
 \begin{framed}
 \begin{verbatim}
@@ -125,16 +131,25 @@ ant -Dchord.work.dir=<...> -Dchord.print.classes=<CLASS NAME> \
 \end{verbatim}
 \end{framed}
 
-where \code{<...>} is the path of a directory
-(\code{examples/hello_world/} in our example) that is expected to
+where:
+
+\begin{itemize}
+\item
+\code{<...>} is the path of a directory (\code{examples/hello_world/} in our example) that is expected to
 contain a file named \code{chord.properties} which defines
 properties \code{chord.main.class} and \code{chord.class.path}
 specifying the main class and the classpath of the input Java program
 (alternatively, these two properties can be defined directly on the
-above command line), {\tt <CLASS NAME>} is the name of the class whose
-quadcode is to be printed, and {\tt <...>/<FILE NAME>} is the name of
-a file to which the quadcode is to be dumped.  The output of the above
-command for our example is as follows:
+above command line).
+\item
+{\tt <CLASS NAME>} is the name of the class whose quadcode is to be
+printed.
+\item
+{\tt <FILE NAME>} is the name of a file to which the quadcode is to be
+dumped.
+\end{itemize}
+
+The output of the above command for our example is as follows:
 
 \begin{framed}
 \begin{verbatim}
@@ -160,114 +175,80 @@ Register factory: Registers: 3
 \end{verbatim}
 \end{framed}
 
-\section{Traversing Quadcode}
+\section{Program}
 
-\subsection{Program}
+The quadcode representation of the whole input Java program is a
+unique global object of
+class \javadoc{chord.program.Program}{chord/program/Program.html}
+which can be obtained by calling static
+method \javadoc{chord.program.Program.g()}{chord/program/Program.html\#g()}.
+The various instance methods of this class provide access to various
+parts of the quadcode representation, most notably:
 
-\begin{framed}
-\begin{verbatim}
-package chord.program;
+\begin{mytable}{|l|p{4.3in}|}
+\verb+IndexSet<jq_Type> getTypes()+ & Representation of all types referenced in classes that may be loaded at runtime. \\
+\hline
+\verb+IndexSet<jq_Reference> getClasses()+ & Representation of all classes that may be loaded at runtime.* \\
+\hline
+\verb+IndexSet<jq_Method> getMethods()+ & Representation of all methods that may be called at runtime.
+\end{mytable}
 
-class Program {
-    static Program g() {
-        // provides quadcode representation of program
-    }
-    public IndexSet<jq_Type> getTypes() {
-        // provides quadcode representation of all reachable types
-    }
-    public IndexSet<jq_Reference> getClasses() {
-        // provides quadcode representation of all reachable classes
-    }
-    public IndexSet<jq_Method> getMethods() {
-        // provides quadcode representation of all reachable methods
-    }
-    public Reflect getReflect() {
-        // provides information about resolved reflection
-    }
-    public jq_Reference getClass(String name) {
-        // provides quadcode representation of class 
-    }
-    public jq_Type getType(String name) {
-    }
-    public jq_Method getMainMethod() {
-    }
-    public jq_Method getMethod(String mName, String mDesc, String cName) {
-    }
-    public jq_Method getMethod(String sign) {
-    }
-    public Quad getQuad(MethodElem e) {
-    }
-    public Quad getQuad(MethodElem e, Class quadOpClass) {
-    }
-}    
-\end{verbatim}
-\end{framed}
+* Includes both classes/interfaces and array types, represented as objects
+of \code{jq_Class} and \code{jq_Array}, respectively (these are
+subclasses of \code{jq_Reference}).
 
-\subsection{Type}
+\section{Types}
+
+The quadcode representation of each type in the input Java program is
+an object of the appropriate class in the below hierarchy:
 
 \begin{framed}
 \begin{verbatim}
-class jq_Type {
-}
+jq_Type
+  |
+  |--- jq_Primitive
+  |
+  |--- jq_Reference
+            |
+            |--- jq_Class
+            |
+            |--- jq_Array
 \end{verbatim}
 \end{framed}
 
-\subsection{Class}
+\section{Class Members}
 
-\begin{framed}
-\begin{verbatim}
-class jq_Reference {
-}
-\end{verbatim}
-\end{framed}
+The quadcode representation of members (i.e., fields and methods) of a class/interface in the
+input Java program can be accessed by calling instance methods of
+the \code{jq_Class} object representing that class/interface, most
+notably:
 
-\subsection{Field}
+\begin{mytable}{|l|p{3in}|}
+\verb+String getName()+ & Fully-qualified name of the class, e.g., ``\code{java.lang.String[]}''. \\
+\hline
+\verb+jq_InstanceField[] getDeclaredInstanceFields()+ & All instance fields declared in the class. \\
+\hline
+\verb+jq_StaticField[] getDeclaredStaticFields()+ & All static fields declared in the class. \\
+\hline
+\verb+jq_InstanceMethod[] getDeclaredInstanceMethods()+ & All instance methods declared in the class. \\
+\hline
+\verb+jq_StaticMethod[] getDeclaredStaticMethods()+ & All static methods declared in the class.
+\end{mytable}
 
-\begin{framed}
-\begin{verbatim}
-class jq_Field {
-     public String getName();
-     public jq_Class getDeclaringClass();
-     public jq_Type getType() {
-     }
-     public String toString() {
-         // print this field in format fname:fdesc@cname where:
-         // - fname is the name of the field
-         // - fdesc is the descriptor of the field's type
-         // - cname is the name of the field's declaring class
-         // example: buf:[B@java.io.BufferedInputStream
-     }
-}
-\end{verbatim}
-\end{framed}
+Chord uses format \code{mName:mDesc@cName} to uniquely identify each
+field and each method in the input Java program, where
+\code{mName} denotes the name of the field/method,
+\code{mDesc} denotes the descriptor of the field/method (see below),
+and \code{cName} denotes the fully-qualified name of the class
+declaring the field/method.
 
-\subsection{Method}
+For instance, ``\code{main:[Ljava/lang/String;@test.HelloWorld}''
+uniquely identifies the main method in the example above.
 
-\begin{framed}
-\begin{verbatim}
-class jq_Method {
-    
-}
-\end{verbatim}
-\end{framed}
-
-Register Factory
-
-Control-Flow Graph
-
-Basic Block
-
-Quad
-
-\begin{framed}
-\begin{verbatim}
-Traversing a control-flow graph
-\end{verbatim}
-\end{framed}
-
-\section{Program Descriptors}
-
-MethodSign
+The above format is described in
+class \javadoc{chord.program.MethodSign}{chord/program/MethodSign.html}.
+We next review field descriptors and method descriptors from the Java
+bytecode specification.
 
 A field descriptor represents the type of a local variable or a
 (static or instance) field.  It is a series of characters generated by
@@ -291,9 +272,7 @@ The {\tt <classname>} represents a fully qualified class or interface
 name.  The interpretation of the field types is as shown in the below
 table:
 
-\begin{table}
-\htmlattributes*{table}{border=1 cellpadding=10}
-\begin{tabular}{l|l|l}
+\begin{mytable}{l|l|l}
 BaseType Character	& Type	& Interpretation \\
 \hline
 {\tt B} &byte& signed byte \\
@@ -306,8 +285,7 @@ BaseType Character	& Type	& Interpretation \\
 {\tt S}	&short& signed short \\
 {\tt Z}	&boolean& true or false \\
 {\tt [}	&reference& one array dimension
-\end{tabular}
-\end{table}
+\end{mytable}
 
 For example, the descriptor of type {\tt int}
  is simply {\tt I}.  The descriptor of an instance variable of
@@ -316,8 +294,8 @@ For example, the descriptor of type {\tt int}
  used. The descriptor of a multidimensional double array of type
  ``\code{double[][][]}'' is ``\code{[[[D}''.
 
-A method descriptor represents the parameters that the method takes
-and the value that it returns:
+A method descriptor represents the types of the arguments and 
+return result of a method:
 
 \begin{framed}
 \begin{verbatim}
@@ -327,26 +305,155 @@ ParameterDescriptor : FieldType
 \end{verbatim}
 \end{framed}
 
-A parameter descriptor represents a parameter passed to a method.  A
-return descriptor represents the type of the value returned from a
+A parameter descriptor represents the type of an argument of a method.
+A return descriptor represents the type of the return result of a
 method.  The character \code{V} indicates that the method returns no
-value (its return type is void).  For example, the method descriptor
-for the method
-``\code{Object foo(int i, double d, Thread t)}'' is
-``\code{(IDLjava/lang/Thread;)Ljava/lang/Object;}''.
-Note that internal forms of the fully qualified names of \code{Thread} and
-\code{Object} are used in the method descriptor.  The method descriptor for
-\code{foo} is the same whether it is a static or an instance
-method. Although an instance method is passed \code{this}, a reference to the
-current class instance, in addition to its intended parameters, that
-fact is not reflected in the method descriptor.
+value (its return type is void).
 
-Chord uniquely represents each bytecode instruction in each method
-declared in each class of the program by a
-four-tuple \code{bci!mname:mdesc@cname} where \code{bci} is the
-(0-based) bytecode offset of the instruction in its containing method,
-whose name is \code{mname}, whose descriptor is \code{mname}, and
-whose declaring class is \code{cname}.  For
-instance, \code{8!main:[Ljava/lang/String;@test.HelloWorld} is the
-unique string representation of the \code{return} instruction in the
-main method above.
+The method descriptor is the same whether it is a static or an instance
+method.  Although an instance method is passed \code{this}, a reference
+to the current class instance, in addition to its intended arguments,
+that fact is not reflected in the method descriptor.
+
+For example, the method descriptor
+for the method ``\code{Object foo(int i, double d, Thread t)}'' is
+``\code{(IDLjava/lang/Thread;)Ljava/lang/Object;}''.  Note that
+internal forms of the fully qualified names of \code{Thread} and
+\code{Object} are used in the method descriptor.
+
+\section{Methods}
+
+The quadcode representation of each method in the input Java program
+is a unique \code{jq_Method} object.  Components of a method (e.g.,
+its control-flow graph) can be accessed by calling instance methods of
+the \code{jq_Method} object representing that method, most notably:
+
+\begin{mytable}{|l|p{3in}|}
+\verb+String getName()+ & Name of the method. \\
+\hline
+\verb+String getDesc().toString()+ & Descriptor of the method, e.g., ``\code{(Ljava/lang/String;)V}''. \\
+\hline
+\verb+jq_Class getDeclaringClass()+ & Declaring class of the method. \\
+\hline
+\verb+ControlFlowGraph getCFG()+ & Control-flow graph of the method.* \\
+\hline
+\verb+int getLineNumber(int bci)+ & The line number of the given bytecode offset. \\
+\hline
+\verb+Quad getQuad(int bci)+ & The first quad at the given bytecode offset. \\
+\hline
+\verb+Quad getQuad(int bci, Class kind)+ & The first quad of the given kind at the given bytecode offset. \\
+\hline
+\verb+Quad getQuad(int bci, Class[] kind)+ & The first quad of any of the given kinds at the given bytecode offset. \\
+\hline
+\verb+String toString()+ & Unique identifier of the method in format \code{mName:mDesc@cName}.
+\end{mytable}
+
+* The control-flow graph must not be asked if the method is abstract (which can be determined by calling instance method \code{isAbstract()} of \code{jq_Method}).
+
+\section{Control-Flow Graphs}
+
+A control-flow graph is a graph whose nodes are basic blocks and whose
+edges denote flow of control between basic blocks.
+
+\begin{mytable}{|l|p{4.3in}|}
+\verb+getRegisterFactory()+ & \\
+\verb+EntryOrExitBasicBlock entry()+ & \\
+\verb+EntryOrExitBasicBlock exit()+ & \\
+\verb+ListIterator.BasicBlock reversePostOrderIterator()+ & \\
+\verb+jq_Method getMethod()+ &
+\end{mytable}
+
+basic blocks
+
+\begin{mytable}{|l|p{4.3in}|}
+\verb+int size()+ & \\
+\verb+Quad getQuad(int index)+ & \\
+\verb+ListIterator.BasicBlock getPredecessors().basicBlockIterator()+ &  \\
+\verb+ListIterator.BasicBlock getSuccessors().basicBlockIterator()+ & \\
+\verb+jq_Method getMethod()+ &
+\end{mytable}
+
+\begin{framed}
+\begin{verbatim}
+ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
+while (it.hasNext()) {
+    BasicBlock b = it.nextBasicBlock();
+    for (int i = 0; i < b.size(); i++) {
+        Quad q = b.getQuad(i);
+    }
+}
+\end{verbatim}
+\end{framed}
+
+\section{Quads}
+
+\begin{mytable}{|l|p{4.3in}|}
+\verb+Operator getOperator()+ & \\
+\hline
+\verb+jq_Method getMethod()+ & \\
+\hline
+\verb+int getBCI()+ & \\
+\hline
+\verb+String toByteLocStr()+ & \code{offset!mName:mDesc@cName} \\
+\hline
+\verb+String toJavaLocStr()+ & \code{fileName:lineNum}
+\hline
+\verb+String toLocStr()+ & \\
+\hline
+\verb+String toVerboseStr()+ &  
+\end{mytable}
+
+Chord uses format \code{offset!mName:mDesc@cName} to uniquely identify
+each bytecode instruction in the body of each method in the input Java
+program, where \code{offset} is the (0-based) bytecode offset of the
+instruction in its containing method, \code{mName} is the name of the
+method, \code{mDesc} is the descriptor of the method, and \code{cName}
+is the fully-qualified name of the class declaring the method.
+
+For instance, ``\code{8!main:[Ljava/lang/String;@test.HelloWorld}''
+uniquely identifies the \code{return} instruction in the main method
+in the example above.
+
+The above format is described in
+class \javadoc{chord.program.MethodElem}{chord/program/MethodElem.html}.
+
+\begin{framed}
+\begin{verbatim}
+Operator
+    |--- Move
+    |--- Phi
+    |--- Binary
+    |--- Unary
+    |--- New
+    |--- NewAray
+    |--- MultiNewArray
+    |--- CheckCast
+    |--- InstanceOf
+    |--- ALength
+    |--- ALoad
+    |--- AStore
+    |--- Getstatic
+    |--- Putstatic
+    |--- Getfield
+    |--- Putfield
+    |--- Return
+    |--- Branch
+    |       |--- IntIfCmp
+    |       |--- Goto
+    |       |--- Jsr
+    |       |--- Ret
+    |       |--- LookupSwitch
+    |       |--- TableSwitch
+    |--- Invoke
+    |       |--- InvokeVirtual
+    |       |--- InvokeStatic
+    |       |--- InvokeInterface
+    |--- Monitor
+            |--- MONITORENTER
+            |--- MONITOREXIT
+\end{verbatim}
+\end{framed}
+
+explain QuadVisitor and manual switch on Oeprator type, and how to access
+all methods of each kind of quad
+

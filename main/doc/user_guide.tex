@@ -29,6 +29,12 @@
 	\newenvironment{framed}{\xmlattributes*{table}{border=1 frame=box rules=none cellpadding=8}\begin{tabular}{l}}{\end{tabular}}
 }
 
+\newcommand\javadoc[2]{\xlink{\code{#1}}{http://chord.stanford.edu/javadoc/#2}}
+
+\newenvironment{mytable}[1]
+	{\htmlattributes*{table}{border=1 cellpadding=10}\begin{tabular}{#1}}
+	{\end{tabular}}
+
 \newcommand\bh{{\bf h}}
 \newcommand\bi{{\bf i}}
 \newcommand\bo{{\bf o}}

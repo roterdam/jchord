@@ -27,7 +27,6 @@ A sample such class \code{MyDynamicAnalysis} is shown below:
 
 \texonly{\newpage}
 
-\begin{center}
 \begin{framed}
 {\small
 \begin{verbatim}
@@ -83,7 +82,6 @@ A sample such class \code{MyDynamicAnalysis} is shown below:
 \end{verbatim}
 }
 \end{framed}
-\end{center}
 
 \section{Compiling and Running a Dynamic Analysis}
 \label{sec:running-dynamic-analysis}
@@ -163,10 +161,7 @@ instead of subclassing the default \code{chord.project.analyses.DynamicAnalysis}
 Chord provides support for instrumenting common dynamic analysis events.
 The below table describes these events.
 
-\begin{table}
-\begin{center}
-\htmlattributes*{table}{border="1" cellpadding="10"}
-\begin{tabular}{|l|p{4.3in}|} 
+\begin{mytable}{|l|p{4.3in}|} 
 \hline
 {\bf Event Kind} & {\bf Description} \\
 \hline
@@ -279,7 +274,5 @@ Wait(\bi, \bt, \bo) & Before thread \bt\ calls the \code{wait()} method of \code
 Notify(\bi, \bt, \bo) & Before thread \bt\ calls the \code{notify()} or \code{notifyAll()} method of \code{java.lang.Object} on object \bo\ at program point \bi\ (in domain I).
 \T \\
 \hline
-\end{tabular}
-\end{center}
-\end{table}
+\end{mytable}
 
