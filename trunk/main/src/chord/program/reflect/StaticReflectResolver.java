@@ -10,8 +10,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
-
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
@@ -149,7 +149,7 @@ public class StaticReflectResolver {
 								trackedVars.contains(l)) {
 							Object v = ((AConstOperand) ro).getValue();
 							if (v instanceof String) {
-								jq_Reference t = Program.g().parseType((String) v);
+								jq_Reference t = (jq_Reference) jq_Type.parseType((String) v);
 								if (t != null) {
 									Pair<Register, jq_Reference> p =
 										new Pair<Register, jq_Reference>(l, t);
