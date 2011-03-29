@@ -25,10 +25,11 @@ import chord.program.PhantomClsVal;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.object.Pair;
+import chord.project.Messages;
 
 /**
- * Relation containing each tuple (h,t) such that object allocation
- * statement h allocates objects of non-array type t.
+ * Relation containing each tuple (h,t) such that object allocation quad h
+ * allocates objects of non-array type t.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -53,36 +54,26 @@ public class RelHT extends ProgramRel {
 				t = New.getType(h).getType();
 			else if (op instanceof NewArray) {
 				t = NewArray.getType(h).getType();
-			} else if(op instanceof Invoke) {	 
-		t = Invoke.getDest(h).getType();
-			} else if(op instanceof MultiNewArray) {
-		t = MultiNewArray.getType(h).getType();
-	  } else {
-			  System.err.println("unexpected operator " + op + " in RelHT");
-			  t = null;
+			} else if (op instanceof Invoke) {	 
+				t = Invoke.getDest(h).getType();
+			} else if (op instanceof MultiNewArray) {
+				t = MultiNewArray.getType(h).getType();
+			} else {
+				Messages.fatal("ERROR: RelHT: Unexpected quad kind %s in domain H", op);
+				t = null;
 			} 
-
 			int tIdx = domT.indexOf(t);
-
-	  if (tIdx == -1) {
-		System.out.println("WARNING: HT: can't find type " + t  + " of allocation site " + h);
-		continue;
-	  }
+			if (tIdx == -1) {
+				Messages.log("WARN: RelHT: Cannot find type %s in domain T; " +
+					" referenced by quad %s in method %s", t, h, h.getMethod());
+				continue;
+			}
 			add(hIdx, tIdx);
 		}
 		Reflect reflect = Program.g().getReflect();
 		processResolvedNewInstSites(reflect.getResolvedObjNewInstSites());
 		processResolvedNewInstSites(reflect.getResolvedConNewInstSites());
 		processResolvedNewInstSites(reflect.getResolvedAryNewInstSites());
-/*
-		jq_Reference cls = Program.g().getClass("java.lang.Class");
-		if (cls != null) {
-			int tIdx = domT.indexOf(cls);
-			assert (tIdx >= 0);
-			for (int hIdx = numA; hIdx < numH; hIdx++)
-				add(hIdx, tIdx);
-		}
-*/
 	}
 	private void processResolvedNewInstSites(List<Pair<Quad, List<jq_Reference>>> l) {
 		for (Pair<Quad, List<jq_Reference>> p : l) {
