@@ -7,43 +7,40 @@
 package chord.program;
 
 /**
- * Representation of the unique location of any bytecode in any method
- * declared in any class in the program.
+ * Representation of the unique identifier of any bytecode instruction in any method in the program.
  * 
- * Its format is <tt>offset!mName:mDesc@cName</tt> where:
+ * Its format is {@code offset!mName:mDesc@cName} where:
  * <ul>
- * <li><tt>offset</tt> denotes the offset of the bytecode in its
- * containing method,</li>
- * <li><tt>mName</tt> denotes the name of the containing method,</li>
- * <li><tt>mDesc</tt> denotes the descriptor of the containing
- * method, and</li>
- * <li><tt>cName</tt> denotes the name of the class declaring the
- * method.</li>
+ *   <li>{@code offset} denotes the bytecode offset of the instruction in its containing method.</li>
+ *   <li>{@code mName} denotes the name of the method.</li>
+ *   <li>{@code mDesc} denotes the descriptor of the method.</li>
+ *   <li>{@code cName} denotes the fully-qualified name of the class declaring the method.</li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class MethodElem extends MethodSign {
 	public final int offset;
+
 	/**
-	 * Creates the representation of the specified bytecode location.
+	 * Creates the representation of the unique identifier of the given bytecode instruction.
 	 * 
-	 * @param	offset	The offset of the bytecode in its containing
-	 * method.
-	 * @param	mName	The name of the containing method.
-	 * @param	mDesc	The descriptor of the containing method.
-	 * @param	cName	The name of the class declaring the method.
+	 * @param offset The bytecode offset of the instruction in its containing method.
+	 * @param mName  The name of the method.
+	 * @param mDesc  The descriptor of the method.
+	 * @param cName  The fully-qualified name of the class declaring the method.
 	 */
 	public MethodElem(int offset, String mName, String mDesc, String cName) {
 		super(mName, mDesc, cName);
 		this.offset = offset;
 	}
+
 	/**
-	 * Creates the representation of the specified bytecode location.
+	 * Provides the representation of the unique identifier of the given bytecode instruction.
 	 * 
-	 * @param	s	A string of the form <tt>offset!mName:mDesc@cName</tt>
-	 * specifying a unique bytecode location.
-	 * @return	The representation of the specified bytecode location.
+	 * @param s A string of the form {@code offset!mName:mDesc@cName} uniquely identifying a bytecode instruction.
+	 *
+	 * @return  The representation of the unique identifier of the given bytecode instruction.
 	 */
 	public static MethodElem parse(String s) {
 		int exclIdx = s.indexOf('!');
@@ -55,6 +52,7 @@ public class MethodElem extends MethodSign {
 		String cName = s.substring(atIdx + 1);
 		return new MethodElem(num, mName, mDesc, cName);
 	}
+
 	public String toString() {
 		return offset + "!" + mName + ":" + mDesc + "@" + cName;
 	}
