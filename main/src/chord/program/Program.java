@@ -72,7 +72,7 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Main.Helper;
 
 /**
- * Representation of a Java program.
+ * Quadcode intermediate representation of a Java program.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -109,9 +109,6 @@ public class Program {
 	private boolean HTMLizedJavaSrcFiles;
 	private ClassHierarchy ch;
 
-	/**
-	 * Program constructor.
-	 */
 	private Program() {
 		if (Config.verbose >= 2)
 			jq_Method.setVerbose();
@@ -159,7 +156,7 @@ public class Program {
 	}
 
 	/**
-	 * Builds the program's quadcode representation.
+	 * Constructs the program's quadcode representation.
 	 *
 	 * Users need not call this method explicitly as it is called by each
 	 * method in this class that requires the representation to be built.
@@ -576,11 +573,10 @@ public class Program {
 	}
 
 	/**
-	 * The first quad corresponding to the given bytecode instruction and of any of the given quad kinds,
+	 * Provides the first quad corresponding to the given bytecode instruction and of any of the given quad kinds,
 	 * if it exists, and null otherwise.
 	 *
-	 * @return
-	 * The first quad corresponding to the given bytecode instruction and of any of the given quad kinds,
+	 * @return  The first quad corresponding to the given bytecode instruction and of any of the given quad kinds,
 	 * if it exists, and null otherwise.
 	 */
 	public Quad getQuad(MethodElem e, Class[] quadOpClasses) {
