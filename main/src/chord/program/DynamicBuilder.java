@@ -28,13 +28,12 @@ public class DynamicBuilder {
 	public IndexSet<jq_Method> getMethods() {
 		if (methods != null)
 			return methods;
-		List<String> classNames = Program.getDynamicallyLoadedClasses();
+		Program program = Program.g();
+		List<String> classNames = program.getDynamicallyLoadedClasses();
 		HostedVM.initialize();
 		methods = new IndexSet<jq_Method>();
 		for (String s : classNames) {
-			jq_Class c = (jq_Class) Program.loadClass(s);
-			if (c == null)
-				continue;
+			jq_Class c = (jq_Class) program.loadClass(s);
 			for (jq_Method m : c.getDeclaredStaticMethods()) {
 				if (!m.isAbstract())
 					m.getCFG();

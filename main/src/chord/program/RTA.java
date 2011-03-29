@@ -219,7 +219,9 @@ public class RTA {
 		String mainClassName = Config.mainClassName;
 		if (mainClassName == null)
 			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
-		   jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
+		jq_Class mainClass = (jq_Class) jq_Type.parseType(mainClassName);
+		if (mainClass == null)
+			Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
 		prepareClass(mainClass);
 		jq_Method mainMethod = (jq_Method) mainClass.getDeclaredMember(
 			new jq_NameAndDesc("main", "([Ljava/lang/String;)V"));
@@ -376,8 +378,7 @@ public class RTA {
 						if (c instanceof Class) {
 							String s = ((Class) c).getName();
 							// s is in encoded form only if it is an array type
-							// if (s.startsWith("[")) s = Program.typesToStr(s);
-							jq_Reference d = (jq_Reference) Program.parseType(s);
+							jq_Reference d = (jq_Reference) jq_Type.parseType(s);
 							if (d != null)
 								visitClass(d);
 						}
@@ -409,7 +410,7 @@ public class RTA {
 				for (Pair<String, List<String>> p : dynamicResolvedObjNewInstSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
-							jq_Reference r = (jq_Reference) Program.parseType(s);
+							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
 							if (r != null)
 								processResolvedObjNewInstSite(q, r);
 						}
@@ -424,7 +425,7 @@ public class RTA {
 				for (Pair<String, List<String>> p : dynamicResolvedConNewInstSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
-							jq_Reference r = (jq_Reference) Program.parseType(s);
+							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
 							if (r != null)
 								processResolvedConNewInstSite(q, r);
 						}
@@ -467,7 +468,7 @@ public class RTA {
 				for (Pair<String, List<String>> p : dynamicResolvedClsForNameSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
-							jq_Reference r = (jq_Reference) Program.parseType(s);
+							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
 							if (r != null)
 								processResolvedClsForNameSite(q, r);
 						}
@@ -482,7 +483,7 @@ public class RTA {
 				for (Pair<String, List<String>> p : dynamicResolvedAryNewInstSites) {
 					if (matches(p.val0, m, q)) {
 						for (String s : p.val1) {
-							jq_Reference r = (jq_Reference) Program.parseType(s);
+							jq_Reference r = (jq_Reference) jq_Type.parseType(s);
 							if (r != null)
 								processResolvedAryNewInstSite(q, r);
 						}

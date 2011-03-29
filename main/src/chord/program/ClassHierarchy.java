@@ -196,7 +196,7 @@ public class ClassHierarchy {
 		System.out.println("Starting to build class hierarchy; this may take a while ...");
 		Set<String> dynLoadedTypes = null;
 		if (Config.CHkind.equals("dynamic")) {
-			List<String> list = Program.getDynamicallyLoadedClasses();
+			List<String> list = Program.g().getDynamicallyLoadedClasses();
 			dynLoadedTypes = new HashSet<String>(list.size());
 			dynLoadedTypes.addAll(list);
 		}

@@ -93,11 +93,25 @@ public class Program {
 		"ERROR: Program: Could not find method '%s'.";
 	private static final String CLASS_NOT_FOUND =
 		"ERROR: Program: Could not find class '%s'.";
-	private static final String DYNAMIC_CLASS_NOT_FOUND =
-		"WARN: Program: Class named '%s' likely loaded dynamically was not found in classpath; skipping.";
 	private static final String STUBS_FILE_NOT_FOUND =
 		"ERROR: Program: Cannot find native method stubs file '%s'.";
 
+	private static Program program = null;
+	private boolean isBuilt;
+	private IndexSet<jq_Method> methods;
+	private Reflect reflect;
+	private IndexSet<jq_Reference> classes;
+	private IndexSet<jq_Type> types;
+	private Map<String, jq_Type> nameToTypeMap;
+	private Map<String, jq_Reference> nameToClassMap;
+	private Map<String, jq_Method> signToMethodMap;
+	private jq_Method mainMethod;
+	private boolean HTMLizedJavaSrcFiles;
+	private ClassHierarchy ch;
+
+	/**
+	 * Program constructor.
+	 */
 	private Program() {
 		if (Config.verbose >= 2)
 			jq_Method.setVerbose();
@@ -122,28 +136,21 @@ public class Program {
 		jq_Method.setNativeCFGBuilders(map);
 	}
 
-	private static Program program = null;
-
+	/**
+	 * Provides the program's quadcode representation.
+	 *
+	 * @return  The program's quadcode representation.
+	 */
 	public static Program g() {
 		if (program == null)
 			program = new Program();
 		return program;
 	}
 
-	private IndexSet<jq_Method> methods;
-	private Reflect reflect;
-	private IndexSet<jq_Reference> classes;
-	private IndexSet<jq_Type> types;
-	private Map<String, jq_Type> nameToTypeMap;
-	private Map<String, jq_Reference> nameToClassMap;
-	private Map<String, jq_Method> signToMethodMap;
-	private jq_Method mainMethod;
-	private boolean HTMLizedJavaSrcFiles;
-	private ClassHierarchy ch;
-	private boolean isBuilt;
-
 	/**
-	 * Provides the class hierarchy.
+	 * Provides the program's class hierarchy.
+	 *
+	 * @return  The program's class hierarchy.
 	 */
 	public ClassHierarchy getClassHierarchy() {
 		if (ch == null)
@@ -151,12 +158,22 @@ public class Program {
 		return ch;
 	}
 
+	/**
+	 * Builds the program's quadcode representation.
+	 *
+	 * Users need not call this method explicitly as it is called by each
+	 * method in this class that requires the representation to be built.
+	 */
 	public void build() {
 		if (!isBuilt) {
 			buildClasses();
 			isBuilt = true;
 		}
 	}
+
+	/************************************************************************
+	 * Private helper functions
+	 ************************************************************************/
 
 	private void buildMethods() {
 		assert (methods == null);
@@ -218,58 +235,21 @@ public class Program {
 		buildNameToTypeMap();
 	}
 
-	/**
-	 * Provides all methods deemed reachable.
-	 */
-	public IndexSet<jq_Method> getMethods() {
-		if (methods == null)
-			buildMethods();
-		return methods;
-	}
-
-	/**
-	 * Provides resolved reflection information.
-	 */
-	public Reflect getReflect() {
-		if (reflect == null)
-			buildMethods();
-		return reflect;
-	}
-
-	public IndexSet<jq_Reference> getClasses() {
-		if (classes == null)
-			buildClasses();
-		return classes;
-	}
-
-	public IndexSet<jq_Type> getTypes() {
-		if (types == null)
-			buildClasses();
-		return types;
-	}
-
-
 	private void loadMethodsFile(File file) {
 		List<String> l = Utils.readFileToList(file);
-		Set<String> excludedClasses = new HashSet<String>();
 		methods = new IndexSet<jq_Method>(l.size());
 		HostedVM.initialize();
 		for (String s : l) {
 			MethodSign sign = MethodSign.parse(s);
 			String cName = sign.cName;
-			if (excludedClasses.contains(cName))
-				continue;
 			jq_Class c = (jq_Class) loadClass(cName);
-			if (c != null) {
-				String mName = sign.mName;
-				String mDesc = sign.mDesc;
-				jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
-				assert (m != null);
-				if (!m.isAbstract())
-					m.getCFG();
-				methods.add(m);
-			} else
-				excludedClasses.add(cName);
+			String mName = sign.mName;
+			String mDesc = sign.mDesc;
+			jq_Method m = (jq_Method) c.getDeclaredMember(mName, mDesc);
+			assert (m != null);
+			if (!m.isAbstract())
+				m.getCFG();
+			methods.add(m);
 		}
 	}
 
@@ -285,8 +265,7 @@ public class Program {
 	}
 
 	private List<Pair<Quad, List<jq_Reference>>> loadResolvedSites(BufferedReader in) {
-		List<Pair<Quad, List<jq_Reference>>> l =
-			new ArrayList<Pair<Quad, List<jq_Reference>>>();
+		List<Pair<Quad, List<jq_Reference>>> l = new ArrayList<Pair<Quad, List<jq_Reference>>>();
 		String s;
 		try {
 			while ((s = in.readLine()) != null) {
@@ -299,6 +278,13 @@ public class Program {
 			Messages.fatal(ex);
 		}
 		return l;
+	}
+
+	private void saveResolvedSites(List<Pair<Quad, List<jq_Reference>>> l, PrintWriter out) {
+		for (Pair<Quad, List<jq_Reference>> p : l) {
+			String s = siteToStr(p);
+			out.println(s);
+		}
 	}
 
 	private void loadReflectFile(File file) {
@@ -329,41 +315,6 @@ public class Program {
 			resolvedConNewInstSites, resolvedAryNewInstSites);
 	}
 
-	private Pair<Quad, List<jq_Reference>> strToSite(String s) {
-		String[] a = s.split("->");
-		assert (a.length == 2);
-		MethodElem e = MethodElem.parse(a[0]);
-		Quad q = getQuad(e, Invoke.class);
-		assert (q != null);
-		String[] rNames = a[1].split(",");
-		List<jq_Reference> rTypes = new ArrayList<jq_Reference>(rNames.length);
-		for (String rName : rNames) {
-			jq_Reference r = loadClass(rName);
-			if (r != null)
-				rTypes.add(r);
-		}
-		return new Pair<Quad, List<jq_Reference>>(q, rTypes);
-	}
-
-	private String siteToStr(Pair<Quad, List<jq_Reference>> p) {
-		List<jq_Reference> l = p.val1;
-		assert (l != null);
-		int n = l.size();
-		Iterator<jq_Reference> it = l.iterator();
-		 assert (n > 0);
-		String s = p.val0.toByteLocStr() + "->" + it.next();
-		for (int i = 1; i < n; i++)
-			s += "," + it.next();
-		return s;
-	}
-
-	private void saveResolvedSites(List<Pair<Quad, List<jq_Reference>>> l, PrintWriter out) {
-		for (Pair<Quad, List<jq_Reference>> p : l) {
-			String s = siteToStr(p);
-			out.println(s);
-		}
-	}
-
 	private void saveReflectFile(File file) {
 		try {
 			PrintWriter out = new PrintWriter(file);
@@ -381,18 +332,31 @@ public class Program {
 		}
 	}
 
-	public static jq_Reference loadClass(String s) {
-		if (Config.verbose >= 2)
-			Messages.log(LOADING_CLASS, s);
-		try {
-			jq_Reference c = (jq_Reference) jq_Type.parseType(s);
-			c.prepare();
-			return c;
-		} catch (Throwable ex) {
-			Messages.log(EXCLUDING_CLASS, s);
-			ex.printStackTrace();
-			return null;
+	private Pair<Quad, List<jq_Reference>> strToSite(String s) {
+		String[] a = s.split("->");
+		assert (a.length == 2);
+		MethodElem e = MethodElem.parse(a[0]);
+		Quad q = getQuad(e, Invoke.class);
+		assert (q != null);
+		String[] rNames = a[1].split(",");
+		List<jq_Reference> rTypes = new ArrayList<jq_Reference>(rNames.length);
+		for (String rName : rNames) {
+			jq_Reference r = loadClass(rName);
+			rTypes.add(r);
 		}
+		return new Pair<Quad, List<jq_Reference>>(q, rTypes);
+	}
+
+	private String siteToStr(Pair<Quad, List<jq_Reference>> p) {
+		List<jq_Reference> l = p.val1;
+		assert (l != null);
+		int n = l.size();
+		Iterator<jq_Reference> it = l.iterator();
+		 assert (n > 0);
+		String s = p.val0.toByteLocStr() + "->" + it.next();
+		for (int i = 1; i < n; i++)
+			s += "," + it.next();
+		return s;
 	}
 
 	private void buildNameToTypeMap() {
@@ -426,26 +390,136 @@ public class Program {
 		}
 	}
 
+	private static Comparator comparator = new Comparator() {
+		public int compare(Object o1, Object o2) {
+			jq_Type t1 = (jq_Type) o1;
+			jq_Type t2 = (jq_Type) o2;
+			String s1 = t1.getName();
+			String s2 = t2.getName();
+			return s1.compareTo(s2);
+		}
+	};
+
+	/**
+	 * Loads the given class, if it is not already loaded, and provides its quadcode representation.
+	 *
+	 * @param s The name of the class to be loaded.  It may be provided in any of several formats.
+	 * <p>
+	 * Examples: "{@code [I}", "{@code int[]}", "{@code java.lang.String[]}", "{@code [Ljava/lang/String;}".
+	 *
+	 * @return  The quadcode representation of the given class.
+	 *
+	 * @throws Error
+	 * If the class loading failed.
+	 */
+	public jq_Reference loadClass(String s) throws Error {
+		if (Config.verbose >= 2)
+			Messages.log(LOADING_CLASS, s);
+		jq_Reference c = (jq_Reference) jq_Type.parseType(s);
+		if (c == null)
+			throw new NoClassDefFoundError(s);
+		c.prepare();
+		return c;
+	}
+
+	/**
+	 * Provides The quadcode representation of all types deemed reachable.
+	 * A type is deemed reachable if it is referenced in any loaded class.
+	 *
+	 * @return  The quadcode representation of all types deemed reachable.
+	 */
+	public IndexSet<jq_Type> getTypes() {
+		if (types == null)
+			buildClasses();
+		return types;
+	}
+
+	/**
+	 * Provides the quadcode representation of all methods deemed reachable by analysis scope construction.
+	 *
+	 * @return  The quadcode representation of all methods deemed reachable by analysis scope construction.
+	 */
+	public IndexSet<jq_Method> getMethods() {
+		if (methods == null)
+			buildMethods();
+		return methods;
+	}
+
+	/**
+	 * Reflection information resolved by analysis scope construction.
+	 *
+	 * @return
+	 * Reflection information resolved by analysis scope construction.
+	 */
+	public Reflect getReflect() {
+		if (reflect == null)
+			buildMethods();
+		return reflect;
+	}
+
+	/**
+	 * Provides the quadcode representation of all classes deemed reachable by analysis scope construction.
+	 *
+	 * @return  The quadcode representation of all classes deemed reachable by analysis scope construction.
+	 */
+	public IndexSet<jq_Reference> getClasses() {
+		if (classes == null)
+			buildClasses();
+		return classes;
+	}
+
+	/**
+	 * Provides the quadcode representation of the given class, if it is deemed reachable, and null otherwise.
+	 *
+	 * @return  The quadcode representation of the given class, if it is deemed reachable, and null otherwise.
+	 */
 	public jq_Reference getClass(String name) {
 		if (nameToClassMap == null)
 			buildClasses();
 		return nameToClassMap.get(name);
 	}
 
+	/**
+	 * Provides the quadcode representation of the given method, if it is deemed reachable, and null otherwise.
+	 *
+	 * @param mName Name of the method.
+	 * @param mDesc Descriptor of the method.
+	 * @param cName Name of the class declaring the method.
+	 *
+	 * @return  The quadcode representation of the given method, if it is deemed reachable, and null otherwise.
+	 */
 	public jq_Method getMethod(String mName, String mDesc, String cName) {
 		return getMethod(mName + ":" + mDesc + "@" + cName);
 	}
 
+	/**
+	 * Provides the quadcode representation of the given method, if it is deemed reachable, and null otherwise.
+	 *
+	 * @param sign Signature of the method specifying its name, its descriptor, and its declaring class.
+	 *
+	 * @return  The quadcode representation of the given method, if it is deemed reachable, and null otherwise.
+	 */
 	public jq_Method getMethod(MethodSign sign) {
 		return getMethod(sign.mName, sign.mDesc, sign.cName);
 	}
 
+	/**
+	 * Provides the quadcode representation of the given method, if it is deemed reachable, and null otherwise.
+	 *
+	 * @param sign Signature of the method in format {@code mName:mDesc@cName} specifying its name (mName),
+	 * its descriptor (mDesc), and its declaring class (cName).
+	 *
+	 * @return  The quadcode representation of the given method, if it is deemed reachable, and null otherwise.
+	 */
 	public jq_Method getMethod(String sign) {
 		if (signToMethodMap == null)
 			buildMethods();
 		return signToMethodMap.get(sign);
 	}
 
+	/**
+	 * Provides the quadcode representation of the main method of the program, if it exists, and exits otherwise.
+	 */
 	public jq_Method getMainMethod() {
 		if (mainMethod == null) {
 			String mainClassName = Config.mainClassName;
@@ -458,24 +532,57 @@ public class Program {
 		return mainMethod;
 	}
 
+	/**
+	 * Provides the quadcode representation of the {@code start()} method of class {@code java.lang.Thread},
+	 * if it is deemed reachable, and null otherwise.
+	 *
+	 * @return  The quadcode representation of the {@code start()} method of class {@code java.lang.Thread},
+	 * if it is deemed reachable, and null otherwise.
+	 */
 	public jq_Method getThreadStartMethod() {
 		return getMethod("start", "()V", "java.lang.Thread");
 	}
 
+	/**
+	 * The quadcode representation of the given type, if it is deemed reachable, and null otherwise.
+	 *
+	 * @return
+	 * The quadcode representation of the given type, if it is deemed reachable, and null otherwise.
+	 */
 	public jq_Type getType(String name) {
 		if (nameToTypeMap == null)
 			buildClasses();
 		return nameToTypeMap.get(name);
 	}
 
+	/**
+	 * Provides the first quad corresponding to the given bytecode instruction, if it exists, and null otherwise.
+	 *
+	 * @return  The first quad corresponding to the given bytecode instruction, if it exists, and null otherwise.
+	 */
 	public Quad getQuad(MethodElem e) {
 		return getQuad(e, new Class[] { Operator.class });
 	}
 
+	/**
+	 * Provides the first quad corresponding to the given bytecode instruction and of the given quad kind,
+	 * if it exists, and null otherwise.
+	 *
+	 * @return  The first quad corresponding to the given bytecode instruction and of the given quad kind,
+	 * if it exists, and null otherwise.
+	 */
 	public Quad getQuad(MethodElem e, Class quadOpClass) {
 		return getQuad(e, new Class[] { quadOpClass });
 	}
 
+	/**
+	 * The first quad corresponding to the given bytecode instruction and of any of the given quad kinds,
+	 * if it exists, and null otherwise.
+	 *
+	 * @return
+	 * The first quad corresponding to the given bytecode instruction and of any of the given quad kinds,
+	 * if it exists, and null otherwise.
+	 */
 	public Quad getQuad(MethodElem e, Class[] quadOpClasses) {
 		int offset = e.offset;
 		jq_Method m = getMethod(e.mName, e.mDesc, e.cName);
@@ -483,26 +590,15 @@ public class Program {
 		return m.getQuad(offset, quadOpClasses);
 	}
 
-	public static String getSign(jq_Method m) {
-		String d = m.getDesc().toString();
-		return m.getName().toString() + methodDescToStr(d);
-	}
-	
-	// convert the given method descriptor string to a string
-	// denoting the comma-separated list of types of the method's
-	// arguments in human-readable form
-	// e.g.: convert <tt>([Ljava/lang/String;I)V<tt> to
-	// <tt>(java.lang.String[],int)</tt>
-	public static String methodDescToStr(String desc) {
-		String t = desc.substring(1, desc.indexOf(')'));
-		return "(" + typesToStr(t) + ")";
-	}
-	
-	// convert the given bytecode string encoding a (possibly empty)
-	// list of types to a string denoting the comma-separated list
-	// of those types in human-readable form
-	// e.g. convert <tt>[Ljava/lang/String;I</tt> to
-	// <tt>java.lang.String[],int</tt>
+	/**
+	 * Provides a human-readable string that corresponds to the given bytecode string encoding a list of zero
+	 * or more types, if it is well-formed, and null otherwise.
+     * <p>
+     * Example: Converts "{@code [Ljava/lang/String;I}" to "{@code java.lang.String[],int}".
+	 *
+	 * @return  A human-readable string that corresponds to the given bytecode string encoding a list of zero
+	 * or more types, if it is well-formed, and null otherwise.
+     */
 	public static String typesToStr(String typesStr) {
 		String result = "";
 		boolean needsSep = false;
@@ -538,7 +634,7 @@ public class Program {
 			} else if (typesStr.startsWith("L")) {
 				int index = typesStr.indexOf(';');
 				if (index == -1)
-					throw new RuntimeException("Class reference has no ending ;");
+					return null;
 				String className = typesStr.substring(1, index);
 				baseType = className.replace('/', '.');
 				typesStr = typesStr.substring(index + 1);
@@ -552,7 +648,7 @@ public class Program {
 				baseType = "void";
 				typesStr = typesStr.substring(1);
 			} else
-				throw new RuntimeException("Unknown field type!");
+				return null;
 			if (needsSep)
 				result += ",";
 			result += baseType;
@@ -565,7 +661,12 @@ public class Program {
 		return result;
 	}
 
-	public static List<String> getDynamicallyLoadedClasses() {
+	/**
+	 * Executes the program and provides a list of all dynamically loaded classes.
+	 *
+	 * @return  A list of all dynamically loaded classes.
+	 */
+	public List<String> getDynamicallyLoadedClasses() {
 		String mainClassName = Config.mainClassName;
 		if (mainClassName == null)
 			Messages.fatal(MAIN_CLASS_NOT_DEFINED);
@@ -621,7 +722,8 @@ public class Program {
 	}
 
 	/**
-	 * Dumps this program's Java source files in HTML form.
+	 * Converts and dumps the program's Java source files specified by property {@code chord.src.path}
+	 * to HTML files in the directory specified by property {@code chord.out.dir}.
 	 */
 	public void HTMLizeJavaSrcFiles() {
 		if (!HTMLizedJavaSrcFiles) {
@@ -643,23 +745,10 @@ public class Program {
 		}
 	}
 	
-	/**************************************************************
+	/************************************************************************
 	 * Functions for printing methods and classes
-	 **************************************************************/
+	 ************************************************************************/
 
-	public void printMethod(String sign) {
-		jq_Method m = getMethod(sign);
-		if (m == null)
-			Messages.fatal(METHOD_NOT_FOUND, sign);
-		printMethod(m);
-	}
-
-	public void printClass(String className) {
-		jq_Reference c = getClass(className);
-		if (c == null)
-			Messages.fatal(CLASS_NOT_FOUND, className);
-		printClass(c);
-	}
 	private void printClass(jq_Reference r) {
 		System.out.println("*** Class: " + r);
 		if (r instanceof jq_Array)
@@ -692,51 +781,32 @@ public class Program {
 		}
 	}
 
+	/**
+	 * Prints the quadcode representation of the given method, if it is deemed reachable, and exits otherwise.
+	 */
+	public void printMethod(String sign) {
+		jq_Method m = getMethod(sign);
+		if (m == null)
+			Messages.fatal(METHOD_NOT_FOUND, sign);
+		printMethod(m);
+	}
+
+	/**
+	 * Prints the quadcode representation of the given class, if it is deemed reachable, and exits otherwise.
+	 */
+	public void printClass(String className) {
+		jq_Reference c = getClass(className);
+		if (c == null)
+			Messages.fatal(CLASS_NOT_FOUND, className);
+		printClass(c);
+	}
+
+	/**
+	 * Prints the quadcode representation of all reachable classes.
+	 */
 	public void printAllClasses() {
 		for (jq_Reference c : getClasses())
 			printClass(c);
-	}
-
-	private static Comparator comparator = new Comparator() {
-		public int compare(Object o1, Object o2) {
-			jq_Type t1 = (jq_Type) o1;
-			jq_Type t2 = (jq_Type) o2;
-			String s1 = t1.getName();
-			String s2 = t2.getName();
-			return s1.compareTo(s2);
-		}
-	};
-
-	// Functionality for determining the representation of a reference type, if
-	// it is present in the classpath, without giving a NoClassDefFoundError if
-	// it is absent.  It must accept the name of the reference type in a variety
-	// of formats, e.g.: "[B", "int[]", "java.lang.String[]", and
-	// "[Ljava.lang.Character;".
-	public static jq_Reference parseType(String refName) {
-		String s = refName;
-		while (s.endsWith("[]"))
-			s = s.substring(0, s.length() - 2);
-		while (s.startsWith("["))
-			s = s.substring(1);
-		if (s.startsWith("L") && s.endsWith(";"))
-			s = s.substring(1, s.length() - 1);
-		boolean isPrim = (s.length() == 1 &&
-			(s.equals("B") || s.equals("C") || s.equals("D") ||
-			 s.equals("F") || s.equals("I") || s.equals("J") ||
-			 s.equals("S") || s.equals("V") || s.equals("Z")
-			)) || s.equals("byte") || s.equals("char") || s.equals("double") ||
-			s.equals("float") || s.equals("int") || s.equals("long") ||
-			s.equals("short") || s.equals("void") || s.equals("boolean");
-		if (!isPrim) {
-			s = s.replace('/', '.');
-			String rscName = Classpath.classnameToResource(s);
-			Classpath cp = PrimordialClassLoader.loader.getClasspath();
-			if (cp.getResourcePath(rscName) == null) {
-				Messages.log(DYNAMIC_CLASS_NOT_FOUND, refName);
-				return null;
-			}
-		}
-		return (jq_Reference) jq_Type.parseType(refName);
 	}
 }
 

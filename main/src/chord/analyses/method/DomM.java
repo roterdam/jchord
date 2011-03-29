@@ -62,7 +62,9 @@ public class DomM extends ProgramDom<jq_Method>
 			sign += "&lt;clinit&gt;";
 		else
 			sign += methName;
-		sign += Program.methodDescToStr(m.getDesc().toString());
+		String desc = m.getDesc().toString();
+		String args = desc.substring(1, desc.indexOf(')'));
+		sign += "(" + Program.typesToStr(args) + ")";
 		String file = c.getSourceFileName();
 		int line = 0;  // TODO
 		return "sign=\"" + sign +
