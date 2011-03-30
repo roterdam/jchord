@@ -26,7 +26,9 @@
 \htmlonly{
 	\newcommand\code[1]{{\tt #1}}
 	\newcommand\url[1]{\xlink{#1}{#1}}
-	\newenvironment{framed}{\xmlattributes*{table}{border=1 frame=box rules=none cellpadding=8}\begin{tabular}{l}}{\end{tabular}}
+	\newenvironment{framed}
+		{\xmlattributes*{table}{border=1 frame=box rules=none cellpadding=8 bgcolor=CCFFFF width=100%
+		}\begin{tabular}{l}}{\end{tabular}}
 }
 
 \newcommand\javadoc[2]{\xlink{\code{#1}}{http://chord.stanford.edu/javadoc/#2}}

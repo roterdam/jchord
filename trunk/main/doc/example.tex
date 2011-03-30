@@ -9,22 +9,22 @@ Suppose the Java program to be analyzed has the following directory structure:
 
 \begin{framed}
 \begin{verbatim}
-    example/
+example/
+    src/
+        foo/
+            Main.java
+            ...
+    classes/
+        foo/
+            Main.class
+            ...
+    lib/
         src/
-            foo/
-                Main.java
+            taz/
                 ...
-        classes/
-            foo/
-                Main.class
-                ...
-        lib/
-            src/
-                taz/
-                    ...
-            jar/
-                taz.jar
-        chord.properties
+        jar/
+            taz.jar
+    chord.properties
 \end{verbatim}
 \end{framed}
 
@@ -52,12 +52,12 @@ A sample \code{chord.properties} file for the above program is as follows:
 
 \begin{framed}
 \begin{verbatim}
-    chord.main.class=foo.Main
-    chord.class.path=classes:lib/jar/taz.jar
-    chord.src.path=src:lib/src
-    chord.run.ids=0,1
-    chord.args.0="-thread 1 -n 10"
-    chord.args.1="-thread 2 -n 50"
+chord.main.class=foo.Main
+chord.class.path=classes:lib/jar/taz.jar
+chord.src.path=src:lib/src
+chord.run.ids=0,1
+chord.args.0="-thread 1 -n 10"
+chord.args.1="-thread 2 -n 50"
 \end{verbatim}
 \end{framed}
 
@@ -113,13 +113,13 @@ directory \code{main/src/chord/analyses/}, and are of the form:
 
 \begin{framed}
 \begin{verbatim}
-    @Chord(
-        name=<JAVA ANALYSIS NAME>
-        ...
-    )
-    public class XYZ extends ... {
-        ...
-    }
+@Chord(
+    name=<JAVA ANALYSIS NAME>
+    ...
+)
+public class XYZ extends ... {
+    ...
+}
 \end{verbatim}
 \end{framed}
 
@@ -130,14 +130,14 @@ directory \code{main/src/chord/analyses/}, and are of the form:
 
 \begin{framed}
 \begin{verbatim}
-    # name=<DLOG ANALYSIS NAME>
+# name=<DLOG ANALYSIS NAME>
 
-    # Program domains
-    .include ...
-    .include ...
+# Program domains
+.include ...
+.include ...
 
-    # BDD variable order
-    .bddvarorder ...
+# BDD variable order
+.bddvarorder ...
 \end{verbatim}
 \end{framed}
 \end{itemize}
@@ -172,41 +172,41 @@ The output of the above command is of the form:
 \begin{framed}
 {\small
 \begin{verbatim}
-    Buildfile: build.xml
+Buildfile: build.xml
 
-    run:
-         [java] Chord run initiated at: Mar 13, 2011 10:31:08 PM
-         [java] ENTER: cipa-0cfa-dlog
-         [java] ENTER: T
-         [java] ENTER: RTA
-         [java] Iteration: 0
-         [java] Iteration: 1
-         [java] Iteration: 2
-         [java] LEAVE: RTA
-         [java] SAVING dom T size: 1386
-         [java] LEAVE: T
-         [java] ENTER: F
-         [java] SAVING dom F size: 4120
-         [java] LEAVE: F
-         ...
-         [java] ENTER: MputStatFldInst
-         [java] SAVING rel MputStatFldInst size: 739
-         [java] LEAVE: MputStatFldInst
-         [java] ENTER: statIM
-         [java] SAVING rel statIM size: 3359
-         [java] LEAVE: statIM
-         [java] Starting command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
-         [java] Relation VH: 541 nodes, 449.0 elements (V0,H0)
-         [java] Relation FH: 137 nodes, 8.0 elements (H0,F0)
-         [java] Relation HFH: 199 nodes, 35.0 elements (H0,F0,H1)
-         [java] Relation IM: 590 nodes, 69.0 elements (I0,M0)
-         [java] Finished command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
-         [java] LEAVE: cipa-0cfa-dlog
-         [java] Chord run completed at: Mar 13, 2011 10:31:36 PM
-         [java] Total time: 00:00:27:671 hh:mm:ss:ms
+run:
+     [java] Chord run initiated at: Mar 13, 2011 10:31:08 PM
+     [java] ENTER: cipa-0cfa-dlog
+     [java] ENTER: T
+     [java] ENTER: RTA
+     [java] Iteration: 0
+     [java] Iteration: 1
+     [java] Iteration: 2
+     [java] LEAVE: RTA
+     [java] SAVING dom T size: 1386
+     [java] LEAVE: T
+     [java] ENTER: F
+     [java] SAVING dom F size: 4120
+     [java] LEAVE: F
+     ...
+     [java] ENTER: MputStatFldInst
+     [java] SAVING rel MputStatFldInst size: 739
+     [java] LEAVE: MputStatFldInst
+     [java] ENTER: statIM
+     [java] SAVING rel statIM size: 3359
+     [java] LEAVE: statIM
+     [java] Starting command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
+     [java] Relation VH: 541 nodes, 449.0 elements (V0,H0)
+     [java] Relation FH: 137 nodes, 8.0 elements (H0,F0)
+     [java] Relation HFH: 199 nodes, 35.0 elements (H0,F0,H1)
+     [java] Relation IM: 590 nodes, 69.0 elements (I0,M0)
+     [java] Finished command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
+     [java] LEAVE: cipa-0cfa-dlog
+     [java] Chord run completed at: Mar 13, 2011 10:31:36 PM
+     [java] Total time: 00:00:27:671 hh:mm:ss:ms
 
-    BUILD SUCCESSFUL
-    Total time: 28 seconds
+BUILD SUCCESSFUL
+Total time: 28 seconds
 \end{verbatim}
 }
 \end{framed}
@@ -261,15 +261,15 @@ of the form:
 \begin{framed}
 {\small
 \begin{verbatim}
-    Buildfile: build.xml
-    
-    run:
-         [java] Chord run initiated at: Mar 13, 2011 10:35:01 PM
-         [java] Chord run completed at: Mar 13, 2011 10:35:28 PM
-         [java] Total time: 00:00:26:297 hh:mm:ss:ms
+Buildfile: build.xml
 
-    BUILD SUCCESSFUL
-    Total time: 26 seconds
+run:
+     [java] Chord run initiated at: Mar 13, 2011 10:35:01 PM
+     [java] Chord run completed at: Mar 13, 2011 10:35:28 PM
+     [java] Total time: 00:00:26:297 hh:mm:ss:ms
+
+BUILD SUCCESSFUL
+Total time: 26 seconds
 \end{verbatim}
 }
 \end{framed}
