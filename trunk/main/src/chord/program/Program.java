@@ -757,12 +757,10 @@ public class Program {
 			return;
 		jq_Class c = (jq_Class) r;
 		for (jq_Method m : c.getDeclaredInstanceMethods()) {
-			if (methods.contains(m))
-				printMethod(m);
+			printMethod(m);
 		}
 		for (jq_Method m : c.getDeclaredStaticMethods()) {
-			if (methods.contains(m))
-				printMethod(m);
+			printMethod(m);
 		}
 	}
 
