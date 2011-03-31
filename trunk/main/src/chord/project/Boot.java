@@ -100,6 +100,12 @@ public class Boot {
 			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 		System.setProperty("chord.main.dir", mainDirName);
 
+		if(SPELLCHECK_ON) {
+			OptionSet optSet = new OptionSet(getChordSysProps());
+			optSet.enableSubstitution();
+			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
+				optSet);
+		}
 		// resolve Chord's work dir
 		String workDirName = System.getProperty("chord.work.dir");
 		if (workDirName == null) {
@@ -198,6 +204,9 @@ public class Boot {
 		for (Map.Entry e : System.getProperties().entrySet()) {
 			String k = (String) e.getKey();
 			String v = (String) e.getValue();
+		//no need to pass standard params
+			if(k.startsWith("sun") || k.startsWith("jikes")) //|| k.startsWith("java") 
+				continue; 
 			cmdList.add("-D" + k + "=" + v);
 		}
 		if (!isClassic) {
@@ -212,6 +221,15 @@ public class Boot {
 		cmdList.toArray(cmdAry);
 		int result = ProcessExecutor.execute(cmdAry, null, new File(workDirName), -1);
 		System.exit(result);
+	}
+
+	private static Properties getChordSysProps() {
+		Properties p = new Properties();
+		for (Map.Entry e : System.getProperties().entrySet()) {
+			if(e.getKey().toString().startsWith("chord"))
+				p.setProperty(e.getKey().toString(), e.getValue().toString());
+		}
+		return p;
 	}
 
 	private static String getChordJarFile() {
@@ -237,9 +255,12 @@ public class Boot {
 		props.load(in);
 		in.close();
 
-		if (SPELLCHECK_ON)
+		if(SPELLCHECK_ON) { //Check the params we just read in
+			OptionSet optSet = new OptionSet(props);
+			optSet.enableSubstitution();
 			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
-				   new OptionSet(props));
+				   optSet);
+		}
 
 		Properties sysprops = System.getProperties();
 		for (Map.Entry e : props.entrySet()) {
