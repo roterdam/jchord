@@ -6,16 +6,21 @@
  */
 package chord.analyses.invk;
 
-import joeq.Class.jq_Method;
+import java.util.List;
+
+import joeq.Class.*;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import chord.analyses.method.DomM;
+import chord.program.Program;
+import chord.program.Reflect;
 import chord.project.Messages;
 import chord.project.Chord;
 import chord.project.Config;
 import chord.project.analyses.ProgramRel;
+import chord.util.tuple.object.Pair;
 
 /**
  * Relation containing each tuple (i,m) such that m is the resolved
@@ -40,7 +45,7 @@ public class RelSpecIM extends ProgramRel {
 			if (op instanceof InvokeStatic) {
 				jq_Method m = InvokeStatic.getMethod(i).getMethod();
 				if (!m.isStatic()) {
-					m = StubRewrite.maybeReplaceCallDest(m);
+					m = StubRewrite.maybeReplaceCallDest(i.getMethod(), m);
 					int mIdx = domM.indexOf(m);
 					if (mIdx >= 0)
 						add(iIdx, mIdx);
@@ -49,5 +54,23 @@ public class RelSpecIM extends ProgramRel {
 				}
 			}
 		}
+		/*
+		Reflect reflect = Program.g().getReflect();
+		for(Pair<Quad, List<jq_Reference>> p: reflect.getResolvedObjNewInstSites()) {
+			Quad q = p.val0;
+			int iIdx = domI.indexOf(q);
+			if(iIdx < 0) {
+				System.err.println("WARN: getResolvedObjNewInstSites returns a site not in DomI");
+			}
+			for(jq_Reference r: p.val1) {
+				if(r instanceof jq_Class) {
+					int mIdx;
+					jq_Method m = ((jq_Class) r).getInitializer(new jq_NameAndDesc("<init>", "()V"));
+					if (m != null && (mIdx = domM.indexOf(m)) > 0) {
+						add(iIdx,mIdx);
+					}
+				}
+			}
+		}*/
 	}
 }
