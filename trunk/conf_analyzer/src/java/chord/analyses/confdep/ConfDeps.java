@@ -4,6 +4,7 @@
  */
 package chord.analyses.confdep;
 
+import java.io.File;
 import java.io.PrintWriter;
 import java.util.*;
 
@@ -13,6 +14,7 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
+import chord.program.Program;
 import chord.project.Chord;
 import chord.project.Config;
 import chord.project.ITask;
@@ -26,6 +28,7 @@ import chord.analyses.confdep.optnames.DomOpts;
 import java.util.Set;
 import chord.analyses.primtrack.DomUV;
 import chord.analyses.string.DomStrConst;
+import chord.bddbddb.Dom;
 import chord.bddbddb.Rel.*;
 import chord.analyses.invk.DomI;
 import chord.analyses.var.DomV;
@@ -356,11 +359,51 @@ public class ConfDeps extends JavaAnalysis {
 	public void maybeRun(ClassicProject Project, String taskName) {
 		ITask task = Project.getTask(taskName);
 
-		if(fakeExec && Project.resultsExist(task)) {
+		if(fakeExec && resultsExist(task)) {
 			System.out.println("marking " + taskName + " as done");
-			Project.fakeExec(task);
+			fakeExec(task);
 		}
 		else 
 			Project.runTask(taskName);
 	}
+	public void fakeExec(ITask task) {
+		ClassicProject p = ClassicProject.g();
+
+		List<Object> consumedTrgts = p.taskToConsumedTrgtsMap.get(task);
+		for (Object trgt : consumedTrgts) {
+			if (p.isTrgtDone(trgt))
+				continue;
+			ITask task2 = p.getTaskProducingTrgt(trgt);
+			if (task2 instanceof Dom<?>) {
+				task2.run();
+			} else
+				fakeExec(task2);
+		}
+		p.setTaskDone(task);
+		List<Object> producedTrgts = p.taskToProducedTrgtsMap.get(task);
+		assert(producedTrgts != null);
+		for (Object trgt : producedTrgts) {
+			p.setTrgtDone(trgt);
+		}
+	}
+
+	public boolean resultsExist(ITask task) {
+		ClassicProject p = ClassicProject.g();
+
+		List<Object> producedTrgts = p.taskToProducedTrgtsMap.get(task);
+		boolean outRelsExist = true;
+		for (Object trgt : producedTrgts) {
+			if (trgt instanceof ProgramRel) {
+				ProgramRel trgtRel = (ProgramRel) trgt;
+				File relOnDisk = new File(Config.bddbddbWorkDirName, trgtRel.getName()+".bdd");
+				if (!relOnDisk.exists()) {
+					System.err.println("no such target " + relOnDisk+", regenerating?");
+					outRelsExist = false;
+					break;
+				}
+			}
+		}
+		return outRelsExist;
+	}
 }
+

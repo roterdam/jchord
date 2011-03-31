@@ -30,7 +30,7 @@ public class DeadClasses extends JavaAnalysis {
 	
   @Override
   public void run() {
-    relevantPrefixes = Config.toArray(System.getProperty("deadClasses.relevantPrefixes", ""));
+    relevantPrefixes = Utils.toArray(System.getProperty("deadClasses.relevantPrefixes", ""));
     if(relevantPrefixes.length == 0) {
     	System.err.println("You must specify property deadClasses.relevantPrefixes to use the DeadClasses analysis");
     	System.exit(-1);

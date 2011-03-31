@@ -37,7 +37,7 @@ public class ExplainMyLogs extends JavaAnalysis{
   @Override
   public void run() {
     
-    inScopePrefixes = Config.toArray(System.getProperty("dictionary.scope", ""));
+    inScopePrefixes = Utils.toArray(System.getProperty("dictionary.scope", ""));
     if(inScopePrefixes.length == 0)
       inScopePrefixes = new String[] {""};
   	
