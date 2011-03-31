@@ -20,11 +20,22 @@ import joeq.Compiler.Quad.Quad;
 import chord.program.reflect.DynamicReflectResolver;
 
 /**
- * 
+ * Dynamic analysis-based scope builder.
+ *
+ * Constructs scope by running the given Java program on the given input,
+ * observing which classes are loaded (either using JVMTI or load-time bytecode
+ * instrumentation, depending upon whether property {@code chord.use.jvmti}
+ * is set to true or false, respectively), and then regarding all methods
+ * declared in those classes as reachable.
+ *
+ * This scope builder does not currently resolve any reflection; use RTA instead.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DynamicBuilder {
+public class DynamicBuilder implements ScopeBuilder {
 	private IndexSet<jq_Method> methods;
+
+	@Override
 	public IndexSet<jq_Method> getMethods() {
 		if (methods != null)
 			return methods;
@@ -46,5 +57,10 @@ public class DynamicBuilder {
 			}
 		}
 		return methods;
+	}
+
+	@Override
+	public Reflect getReflect() {
+		return new Reflect();
 	}
 }
