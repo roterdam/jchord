@@ -204,8 +204,8 @@ public class Boot {
 		for (Map.Entry e : System.getProperties().entrySet()) {
 			String k = (String) e.getKey();
 			String v = (String) e.getValue();
-		//no need to pass standard params
-			if(k.startsWith("sun") || k.startsWith("jikes")) //|| k.startsWith("java") 
+			// no need to pass standard params
+			if (k.startsWith("sun") || k.startsWith("jikes"))
 				continue; 
 			cmdList.add("-D" + k + "=" + v);
 		}
