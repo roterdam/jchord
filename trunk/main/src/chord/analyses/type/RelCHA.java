@@ -55,7 +55,7 @@ public class RelCHA extends ProgramRel {
 		for (jq_Reference r : classes) {
 			if (r instanceof jq_Array) {
 				for (jq_InstanceMethod m : objClsInstanceMethods)
-					add(m, r, StubRewrite.maybeReplaceCallDest(m));
+					add(m, r, StubRewrite.maybeReplaceVirtCallDest(m, m));
 				continue;
 			}
 			jq_Class c = (jq_Class) r;
@@ -78,7 +78,7 @@ public class RelCHA extends ProgramRel {
 							jq_InstanceMethod n = d.getVirtualMethod(nd);
 							assert (n != null);
 							if (domM.contains(n))
-								add(m, d, StubRewrite.maybeReplaceCallDest(n));//rewrite dest, after resolution
+								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n));//rewrite dest, after resolution
 						}
 					}
 				} else { //class, not interface
@@ -92,7 +92,7 @@ public class RelCHA extends ProgramRel {
 							jq_InstanceMethod n = d.getVirtualMethod(nd);
 							assert (n != null);
 							if (domM.contains(n))
-								add(m, d, StubRewrite.maybeReplaceCallDest(n));//rewrite dest, after resolution
+								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n));//rewrite dest, after resolution
 						}
 					}
 				}
