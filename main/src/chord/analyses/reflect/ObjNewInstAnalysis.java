@@ -25,13 +25,17 @@ import chord.project.analyses.JavaAnalysis;
 import chord.util.tuple.object.Pair;
 
 /**
- * Analysis producing the following two relations:
- * - objNewInstIH: Relation containing each tuple (i,h) such that call site i
- *   calling method "Object newInstance()" defined in class "java.lang.Class"
- *   is treated as object allocation site h.
- * - objNewInstIM: Relation containing each tuple (i,m) such that call site i
- *   calling method "Object newInstance()" defined in class "java.lang.Class"
- *   is treated as calling the nullary constructor m on the freshly created object.
+ * Analysis producing relations objNewInstIH and objNewInstIM.
+ *
+ * <ul>
+ *   <li>objNewInstIH: Relation containing each tuple (i,h) such that call site i
+ *       calling method {@code Object newInstance()} defined in class
+ *       {@code java.lang.Class} is treated as object allocation site h.</li>
+ *   <li>objNewInstIM: Relation containing each tuple (i,m) such that call site i
+ *       calling method {@code Object newInstance()} defined in class 
+ *       {@code java.lang.Class} is treated as calling the nullary constructor m
+ *       on the freshly created object.</li>
+ * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

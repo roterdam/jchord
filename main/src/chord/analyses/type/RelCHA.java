@@ -42,8 +42,8 @@ public class RelCHA extends ProgramRel {
 		DomM domM = (DomM) doms[0];
 		Program program = Program.g();
 
-		//set of instance methods that belong to in-scope classes where at least
-		//one object of the class exists in the program.
+		// Set of instance methods that belong to in-scope classes where at least
+		// one object of the class exists in the program.
 		Set<jq_InstanceMethod> objClsInstanceMethods = new HashSet<jq_InstanceMethod>();
 		IndexSet<jq_Reference> classes = program.getClasses();
 		jq_Class objCls = (jq_Class) program.getClass("java.lang.Object");
@@ -77,8 +77,10 @@ public class RelCHA extends ProgramRel {
 						if (d.implementsInterface(c)) {
 							jq_InstanceMethod n = d.getVirtualMethod(nd);
 							assert (n != null);
-							if (domM.contains(n))
-								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n));//rewrite dest, after resolution
+							if (domM.contains(n)) {
+								// rewrite dest, after resolution
+								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n));
+							}
 						}
 					}
 				} else { //class, not interface
@@ -91,8 +93,10 @@ public class RelCHA extends ProgramRel {
 						if (d.extendsClass(c)) {
 							jq_InstanceMethod n = d.getVirtualMethod(nd);
 							assert (n != null);
-							if (domM.contains(n))
-								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n));//rewrite dest, after resolution
+							if (domM.contains(n)) {
+								// rewrite dest, after resolution
+								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n));
+							}
 						}
 					}
 				}

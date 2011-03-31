@@ -17,9 +17,8 @@ import chord.project.Config;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (i,m) such that m is the resolved
- * method of method invocation statement i of kind
- * <tt>INVK_STATIC</tt>.
+ * Relation containing each tuple (i,m) such that m is the resolved method of
+ * method invocation statement i of kind {@code INVK_STATIC}.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -29,7 +28,7 @@ import chord.project.analyses.ProgramRel;
 )
 public class RelStatIM extends ProgramRel {
 	private static final String NOT_FOUND =
-		"WARN: RelStatIM: Target method %s of call site %s not found in domain M.";
+		"WARN: RelStatIM: Target %s of call site %s not in domain M; skipping.";
 	public void fill() {
 		DomI domI = (DomI) doms[0];
 		DomM domM = (DomM) doms[1];
@@ -40,7 +39,7 @@ public class RelStatIM extends ProgramRel {
 			if (op instanceof InvokeStatic) {
 				jq_Method m = InvokeStatic.getMethod(i).getMethod();
 				if (m.isStatic()) {
-					m = StubRewrite.maybeReplaceCallDest(i.getMethod(),m);
+					m = StubRewrite.maybeReplaceCallDest(i.getMethod(), m);
 					int mIdx = domM.indexOf(m);
 					if (mIdx >= 0)
 						add(iIdx, mIdx);

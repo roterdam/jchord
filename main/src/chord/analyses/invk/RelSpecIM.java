@@ -23,8 +23,8 @@ import chord.project.analyses.ProgramRel;
 import chord.util.tuple.object.Pair;
 
 /**
- * Relation containing each tuple (i,m) such that m is the resolved
- * method of method invocation statement i of kind <tt>INVK_SPECIAL</tt>.
+ * Relation containing each tuple (i,m) such that m is the resolved method of
+ * method invocation statement i of kind {@code INVK_SPECIAL}.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -34,7 +34,7 @@ import chord.util.tuple.object.Pair;
 )
 public class RelSpecIM extends ProgramRel {
 	private static final String NOT_FOUND =
-		"WARN: RelSpecIM: Target method %s of call site %s not found in domain M.";
+		"WARN: RelSpecIM: Target  %s of call site %s not in domain M; skipping.";
 	public void fill() {
 		DomI domI = (DomI) doms[0];
 		DomM domM = (DomM) doms[1];
@@ -54,23 +54,5 @@ public class RelSpecIM extends ProgramRel {
 				}
 			}
 		}
-		/*
-		Reflect reflect = Program.g().getReflect();
-		for(Pair<Quad, List<jq_Reference>> p: reflect.getResolvedObjNewInstSites()) {
-			Quad q = p.val0;
-			int iIdx = domI.indexOf(q);
-			if(iIdx < 0) {
-				System.err.println("WARN: getResolvedObjNewInstSites returns a site not in DomI");
-			}
-			for(jq_Reference r: p.val1) {
-				if(r instanceof jq_Class) {
-					int mIdx;
-					jq_Method m = ((jq_Class) r).getInitializer(new jq_NameAndDesc("<init>", "()V"));
-					if (m != null && (mIdx = domM.indexOf(m)) > 0) {
-						add(iIdx,mIdx);
-					}
-				}
-			}
-		}*/
 	}
 }

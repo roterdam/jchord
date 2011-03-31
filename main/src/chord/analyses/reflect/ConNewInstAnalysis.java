@@ -25,14 +25,18 @@ import chord.project.analyses.ProgramRel;
 import chord.util.tuple.object.Pair;
 
 /**
- * Analysis producing the following two relations:
- * - conNewInstIH: Relation containing each tuple (i,h) such that call site i
- *   calling method "Object newInstance(Object[])" defined in class
- *   "java.lang.reflect.Constructor" is treated as object allocation site h.
- * - conNewInstIM: Relation containing each tuple (i,m) such that call site i
- *   calling method "Object newInstance(Object[])" defined in class
- *   "java.lang.reflect.Constructor" is treated as calling constructor m on
- *   the freshly created object.
+ * Analysis producing relations conNewInstIH and conNewInstIM.
+ *
+ * <ul>
+ *   <li>conNewInstIH: Relation containing each tuple (i,h) such that call site i
+ *       calling method {@code Object newInstance(Object[])} defined in class 
+ *       {@code java.lang.reflect.Constructor} is treated as object allocation
+ *       site h.</li>
+ *   <li>conNewInstIM: Relation containing each tuple (i,m) such that call site i
+ *       calling method {@code Object newInstance(Object[])} defined in class
+ *       {@code java.lang.reflect.Constructor} is treated as calling constructor
+ *       m on the freshly created object.</li>
+ * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
