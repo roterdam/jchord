@@ -7,6 +7,7 @@
 package chord.program;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -56,6 +57,7 @@ import chord.project.Config;
 import chord.program.reflect.CastBasedStaticReflect;
 import chord.program.reflect.DynamicReflectResolver;
 import chord.program.reflect.StaticReflectResolver;
+import chord.analyses.invk.StubRewrite;
 import chord.analyses.method.RelExtraEntryPoints;
 import chord.util.IndexSet;
 import chord.util.Timer;
@@ -70,7 +72,7 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  * @author Omer Tripp (omertripp@post.tau.ac.il)
  */
-public class RTA {
+public class RTA implements ScopeBuilder {
 	private static final String MAIN_CLASS_NOT_DEFINED =
 		"ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
 	private static final String MAIN_METHOD_NOT_FOUND =
@@ -109,6 +111,10 @@ public class RTA {
 
 	// methods in which forName/newInstance sites have already been analyzed
 	private Set<jq_Method> staticReflectResolved;
+
+	//constructors invoked implicitly via reflection
+	private LinkedHashSet<jq_Method> reflectiveCtors;
+
 
 	/////////////////////////
 
@@ -152,23 +158,22 @@ public class RTA {
 	// set reachableAllocClasses grows in the current iteration
 	private boolean repeat = true;
 	
-	private String[] appCodePrefixes;
-
 	public RTA(String reflectKind) {
 		this.reflectKind = reflectKind;
-		String fullscan = System.getProperty("chord.scope.fullscan");
-		if (fullscan == null)
-		  appCodePrefixes = new String[0];
-		else
-		  appCodePrefixes = Utils.toArray(fullscan);
 	}
 
+	/* (non-Javadoc)
+	 * @see chord.program.ScopeBuilder#getMethods()
+	 */
 	public IndexSet<jq_Method> getMethods() {
 		if (methods == null)
 			build();
 		return methods;
 	}
 
+	/* (non-Javadoc)
+	 * @see chord.program.ScopeBuilder#getReflect()
+	 */
 	public Reflect getReflect() {
 		if (reflect == null)
 			build();
@@ -183,7 +188,7 @@ public class RTA {
 		}
 	}
 
-	private void build() {
+	protected void build() {
 		classes = new IndexSet<jq_Reference>();
 		classesVisitedForClinit = new HashSet<jq_Class>();
 		reachableAllocClasses = new IndexSet<jq_Reference>();
@@ -196,8 +201,10 @@ public class RTA {
 		if (reflectKind.equals("static")) {
 			staticReflectResolver = new StaticReflectResolver();
 			staticReflectResolved = new HashSet<jq_Method>();
+			reflectiveCtors = new LinkedHashSet<jq_Method>();
 		} else if (reflectKind.equals("static_cast")) {
 			staticReflectResolved = new HashSet<jq_Method>();
+			reflectiveCtors = new LinkedHashSet<jq_Method>();
 			staticReflectResolver = new CastBasedStaticReflect(reachableAllocClasses, staticReflectResolved);
 		} else if (reflectKind.equals("dynamic")) {
 			DynamicReflectResolver dynamicReflectResolver =
@@ -228,9 +235,8 @@ public class RTA {
 		if (mainMethod == null)
 			Messages.fatal(MAIN_METHOD_NOT_FOUND, mainClassName);
 		
+		prepAdditionalEntrypoints(); //called for subclasses
 		
-		Iterable<jq_Method> publicMethods = RelExtraEntryPoints.slurpMList();
-
 		for (int i = 0; repeat; i++) {
 			if (Config.verbose >= 1) System.out.println("Iteration: " + i);
 			repeat = false;
@@ -239,7 +245,13 @@ public class RTA {
 			visitClinits(mainClass);
 			visitMethod(mainMethod);
 
-			visitAdditionalEntrypoints(publicMethods);
+			visitAdditionalEntrypoints(); //called for subclasses
+			
+			if(reflectiveCtors != null)
+				for(jq_Method m: reflectiveCtors) {
+					visitMethod(m);
+				}
+			
 			while (!methodWorklist.isEmpty()) {
 				int n = methodWorklist.size();
 				jq_Method m = methodWorklist.remove(n - 1);
@@ -257,28 +269,32 @@ public class RTA {
 		}
 		staticReflectResolver = null; // no longer in use; stop referencing it
 	}
-	
-  
-	private void visitAdditionalEntrypoints(Iterable<jq_Method> publicMethods) {
-		// visit classes just once each
-		LinkedHashSet<jq_Class> extraClasses = new LinkedHashSet<jq_Class>();
-		for (jq_Method m: publicMethods) {
-			extraClasses.add(m.getDeclaringClass());
-		}
 
-		for (jq_Class cl: extraClasses) {
-			visitClass(cl);
-			jq_Method ctor = cl.getInitializer(new jq_NameAndDesc("<init>", "()V"));
-			if (ctor != null)
-				visitMethod(ctor);
-		}
 
-		for (jq_Method m: publicMethods) {
-			visitMethod(m);
-		}
+	/**
+	 * Invoked by RTA before starting iterations. A hook so subclasses can
+	 * add additional things to visit.
+	 * 
+	 * Note that this is invoked AFTER the hosted JVM is set up.
+	 */
+	protected void prepAdditionalEntrypoints() {
+		
 	}
 
-	private void visitMethod(jq_Method m) {
+	/**
+	 * Invoked by RTA each iteration. A hook so subclasses can
+	 * add additional things to visit.
+	 */
+	protected void visitAdditionalEntrypoints() {
+		
+	}
+
+	/**
+	 * Called whenever RTA sees a method.
+	 * Adds to worklist if it hasn't previously been seen on this iteration.
+	 * @param m
+	 */
+	protected void visitMethod(jq_Method m) {
 		if (methods.add(m)) {
 			if (DEBUG) System.out.println("\tAdding method: " + m);
 			if (!m.isAbstract()) {
@@ -301,8 +317,12 @@ public class RTA {
 		if (r instanceof jq_Class) {
 			jq_Class c = (jq_Class) r;
 			jq_Method n = c.getInitializer(new jq_NameAndDesc("<init>", "()V"));
-			if (n != null)
+			if (n != null) {
 				visitMethod(n);
+				reflectiveCtors.add(n);
+			}
+			else
+				System.out.println("WARN: RTA.processResolvedObjNewInstSite can't find ctor for " + c);
 		}
 	}
 
@@ -324,8 +344,10 @@ public class RTA {
 		// this is also unsound because we are not visiting constrs in superclasses
 		for (int i = 0; i < meths.length; i++) {
 			jq_InstanceMethod m = meths[i];
-			if (m.getName().toString().equals("<init>"))
+			if (m.getName().toString().equals("<init>")) {
 				visitMethod(m);
+				reflectiveCtors.add(m);
+			}
 		}
 	}
 
@@ -511,26 +533,16 @@ public class RTA {
 		}
 	}
 	
-	private boolean shouldExpandAggressively(jq_Class c) {
-		return Utils.prefixMatch(c.getName(), appCodePrefixes);
-	}
-
-	private void visitClass(jq_Reference r) {
+	
+	protected void visitClass(jq_Reference r) {
 		prepareClass(r);
 		if (r instanceof jq_Array)
 			return;
 		jq_Class c = (jq_Class) r;
 		visitClinits(c);
-		
-		if (shouldExpandAggressively(c)) {
-		  for (jq_Method m: c.getDeclaredInstanceMethods()) 
-			visitMethod(m);
-		  for (jq_Method m: c.getDeclaredStaticMethods())
-			visitMethod(m); 
-		}
 	}
 
-	private void visitClinits(jq_Class c) {
+	protected void visitClinits(jq_Class c) {
 		if (classesVisitedForClinit.add(c)) {
 			jq_ClassInitializer m = c.getClassInitializer();
 			// m is null for classes without class initializer method
