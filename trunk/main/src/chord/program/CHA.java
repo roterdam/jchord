@@ -49,7 +49,7 @@ import chord.util.Timer;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CHA {
+public class CHA implements ScopeBuilder {
 	private static final String MAIN_CLASS_NOT_DEFINED =
 		"ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
 	private static final String MAIN_METHOD_NOT_FOUND =
@@ -212,5 +212,13 @@ public class CHA {
 			for (jq_Class i : c.getDeclaredInterfaces())
 				visitClinits(i);
 		}
+	}
+
+	/**
+	 * Returns an empty reflect. CHA doesn't do reflection analysis.
+	 */
+	@Override
+	public Reflect getReflect() {
+		return new Reflect();
 	}
 }

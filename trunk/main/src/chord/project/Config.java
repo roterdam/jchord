@@ -41,7 +41,8 @@ public class Config {
 	public final static String reflectKind = System.getProperty("chord.reflect.kind", "none");
 	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
 	static {
-		check(scopeKind, new String[] { "rta", "cha", "dynamic" }, "chord.scope.kind");
+		//we check scope kinds in Program; note that class names are also now OK
+//		check(scopeKind, new String[] { "rta", "cha", "dynamic" }, "chord.scope.kind");
 		check(CHkind, new String[] { "static", "dynamic" }, "chord.ch.kind");
 		check(reflectKind, new String[] { "none", "static", "dynamic", "static_cast" }, "chord.reflect.kind");
 	}

@@ -184,20 +184,26 @@ public class Program {
 			loadReflectFile(reflectFile);
 		} else {
 			String scopeKind = Config.scopeKind;
+			ScopeBuilder b = null;
 			if (scopeKind.equals("rta")) {
-				RTA rta = new RTA(Config.reflectKind);
-				methods = rta.getMethods();
-				reflect = rta.getReflect();
+				b = new RTA(Config.reflectKind);
 			} else if (scopeKind.equals("dynamic")) {
-				DynamicBuilder dyn = new DynamicBuilder();
-				methods = dyn.getMethods();
-				reflect = new Reflect();
+				b = new DynamicBuilder();
 			} else if (scopeKind.equals("cha")) {
-				CHA cha = new CHA(getClassHierarchy());
-				methods = cha.getMethods();
-				reflect = new Reflect();
-			} else
-				assert (false);
+				b = new CHA(getClassHierarchy());
+			} else {
+				try {
+					Class<?> scopeBuildClass = Class.forName(scopeKind);
+					b = (ScopeBuilder) scopeBuildClass.newInstance();
+				} catch(Exception e) {
+					System.err.println("didn't recognize scope builder named " + scopeKind +
+							". Expected 'rta', 'cha', 'dynamic', or the name of a class implementing ScopeBuilder.");
+					System.exit(1);
+				}
+			}
+			methods = b.getMethods();
+			reflect = b.getReflect();
+
 			buildSignToMethodMap();
 			saveMethodsFile(methodsFile);
 			saveReflectFile(reflectFile);
