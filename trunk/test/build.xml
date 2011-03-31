@@ -4,7 +4,14 @@
   Run with "ant -quiet"
 -->
 <project name="chord-tester" default="help">
+	<property name="chord.home.dir" location="../main"/>
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${chord.home.dir}/lib/ant-contrib.jar"/>
 	<property name="test.dirs" value="tsp,elevator"/>
+    <property name="chord.main.doms" value="M,F,P,I,E,H,L,R,T"/>
+    <property name="chord.main.rels" value="cha,aryElemE,statFldE,writeE,EF,HT,PI,PL,PP,specIM,statIM,virtIM,clinitM,statM,syncM"/>
+	<property name="chord.main.doms_and_rels" value="${chord.main.doms},${chord.main.rels}"/>
+	<property name="chord.cia.rels" value="FH,HFH,IM,MM,rootM,reachableM,thrOblAbbrRootM,thrOblAbbrReachableM,thrOblAbbrIM,thrOblAbbrMM,thrSenAbbrRootM,thrSenAbbrReachableM,thrSenAbbrIM,thrSenAbbrMM"/>
+	<property name="chord.csa.rels" value="FC,CFC,CICM,CMCM,rootCM,reachableCM,thrOblAbbrRootCM,thrOblAbbrReachableCM,thrOblAbbrCICM,thrOblAbbrCMCM,thrSenAbbrRootCM,thrSenAbbrReachableCM,thrSenAbbrCICM,thrSenAbbrCMCM,epsilonM,kcfaSenM,kobjSenM,ctxtCpyM,CC,CH,CI"/>
 
 	<target name="help">
 		<echo>
@@ -21,18 +28,9 @@
 				- test.csa.kobj   (test k-object-sensitive may alias and call graph analyses; default=false)
 				- test.csa.kcfa   (test k-CFA may alias and call graph analyses; default=false)
 				- test.csa.hybrid (test hybrid context-sensitive may alias and call graph analyses; default=false)
+				- test.dynamic    (test dynamic analyses; default=false)
 		</echo>
 	</target>
-
-	<property name="chord.home.dir" location="../main"/>
-    <property name="chord.main.doms" value="M,F,P,I,E,H,L,R,T"/>
-    <property name="chord.main.rels" value="cha,aryElemE,statFldE,writeE,EF,HT,PI,PL,PP,specIM,statIM,virtIM,clinitM,statM,syncM"/>
-	<property name="chord.main.doms_and_rels" value="${chord.main.doms},${chord.main.rels}"/>
-	<property name="chord.cia.rels" value="FH,HFH,IM,MM,rootM,reachableM,thrOblAbbrRootM,thrOblAbbrReachableM,thrOblAbbrIM,thrOblAbbrMM,thrSenAbbrRootM,thrSenAbbrReachableM,thrSenAbbrIM,thrSenAbbrMM"/>
-	<property name="chord.csa.rels" value="FC,CFC,CICM,CMCM,rootCM,reachableCM,thrOblAbbrRootCM,thrOblAbbrReachableCM,thrOblAbbrCICM,thrOblAbbrCMCM,thrSenAbbrRootCM,thrSenAbbrReachableCM,thrSenAbbrCICM,thrSenAbbrCMCM,epsilonM,kcfaSenM,kobjSenM,ctxtCpyM,CC,CH,CI"/>
-
-	<taskdef resource="net/sf/antcontrib/antlib.xml"
-		classpath="${chord.home.dir}/lib/ant-contrib.jar"/>
 
 	<!--
 		Test all Chord components.
@@ -44,6 +42,7 @@
 		<property name="test.csa.kobj" value="true"/>
 		<property name="test.csa.kcfa" value="true"/>
 		<property name="test.csa.hybrid" value="true"/>
+		<property name="test.dynamic" value="true"/>
 		<antcall target="test"/>
 	</target>
 
@@ -108,6 +107,14 @@
 					<isset property="test.csa.hybrid"/>
 					<then>
 						<antcall target="test-csa-hybrid">
+							<param name="testdir" value="@{testdir}"/>
+						</antcall>
+					</then>
+				</if>
+				<if>
+					<isset property="test.dynamic"/>
+					<then>
+						<antcall target="test-dynamic">
 							<param name="testdir" value="@{testdir}"/>
 						</antcall>
 					</then>
@@ -272,6 +279,27 @@
 	</target>
 
 	<!--
+		Test dynamic analyses.
+	-->
+	<target name="test-dynamic">
+		<fail unless="testdir"/>
+		<echo message="===== STARTING test-dynamic ON: ${testdir}"/>
+		<ant dir="${chord.home.dir}" target="run">
+			<property name="chord.work.dir" value="${testdir}"/>
+			<property name="chord.reuse.scope" value="true"/>
+			<property name="chord.ext.java.analysis.path" value="classes"/>
+			<property name="chord.run.analyses" value="dynamic-test-java"/>
+			<property name="chord.scope.exclude" value="java.,javax.,com.,org.,sun."/>
+		</ant>
+		<antcall target="compare-rels">
+			<param name="testdir" value="${testdir}"/>
+			<param name="correctdir" value="${testdir}/correct_output/cia"/>
+			<param name="relnames" value="${chord.cia.rels}"/>
+		</antcall>
+		<echo message="===== FINISHED test-dynamic ON: ${testdir}"/>
+	</target>
+
+	<!--
 	params: testdir, correctdir, domnames
 	-->
 	<target name="compare-doms">
@@ -317,9 +345,25 @@
 	</target>
 
 	<target name="compile">
+		<ant dir="${chord.home.dir}" target="compile"/>
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
-			source="1.5" target="1.5" srcdir="src" destdir="classes"/>
+				source="1.5" target="1.5" srcdir="src" destdir="classes">
+			<classpath>
+				<pathelement location="${chord.home.dir}/chord.jar"/>
+				<pathelement location="lib/soot.jar"/>
+			</classpath>
+		</javac>
+	</target>
+
+	<target name="run">
+		<path id="chord_ext_java_analysis_path">
+			<pathelement location="classes"/>
+			<pathelement location="lib/soot.jar"/>
+		</path>
+		<property name="chord.ext.java.analysis.path" refid="chord_ext_java_analysis_path"/>
+		<property name="chord.ext.dlog.analysis.path" location="src"/>
+		<ant dir="${chord.home.dir}" target="run"/>
 	</target>
 
 	<target name="clean">
