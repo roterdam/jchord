@@ -44,8 +44,9 @@ import chord.util.IndexSet;
 import chord.util.Timer;
 
 /**
- * Class Hierarchy Analysis algorithm for computing program scope
- * (reachable classes and methods).
+ * Class Hierarchy Analysis (CHA) based scope builder.
+ *
+ * This scope builder currently does not resolve any reflection; use RTA instead.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -76,6 +77,7 @@ public class CHA implements ScopeBuilder {
 		ch = _ch;
 	}
 
+	@Override
 	public IndexSet<jq_Method> getMethods() {
 		if (methods != null)
 			return methods;
@@ -214,9 +216,6 @@ public class CHA implements ScopeBuilder {
 		}
 	}
 
-	/**
-	 * Returns an empty reflect. CHA doesn't do reflection analysis.
-	 */
 	@Override
 	public Reflect getReflect() {
 		return new Reflect();

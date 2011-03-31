@@ -16,6 +16,8 @@ import joeq.Class.jq_Reference;
 import chord.util.tuple.object.Pair;
 
 /**
+ * Resolved reflection information.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Reflect {
@@ -41,32 +43,32 @@ public class Reflect {
 		resolvedAryNewInstSites = new ArrayList<Pair<Quad, List<jq_Reference>>>();
 	}
 	/**
-	 * Provides a list containing each call to static method forName(String s)
-	 * defined in class java.lang.Class, along with the types of all classes denoted
-	 * by argument s.
+	 * Provides a list containing each call to static method {@code Class forName(String s)}
+	 * defined in class {@code java.lang.Class}, along with the types of all classes
+	 * denoted by argument {@code s}.
 	 */
 	public List<Pair<Quad, List<jq_Reference>>> getResolvedClsForNameSites() {
 		return resolvedClsForNameSites;
 	}
 	/**
-	 * Provides a list containing each call to instance method newInstance()
-	 * defined in class java.lang.Class, along with the types of all classes
+	 * Provides a list containing each call to instance method {@code Object newInstance()}
+	 * defined in class {@code java.lang.Class}, along with the types of all classes
 	 * instantiated by it.
 	 */
 	public List<Pair<Quad, List<jq_Reference>>> getResolvedObjNewInstSites() {
 		return resolvedObjNewInstSites;
 	}
 	/**
-	 * Provides a list containing each call to instance method newInstance(Object[])
-	 * defined in class java.lang.reflect.Constructor, along with the types of all
+	 * Provides a list containing each call to instance method {@code Object newInstance(Object[])}
+	 * defined in class {@code java.lang.reflect.Constructor}, along with the types of all
 	 * classes instantiated by it.
 	 */
 	public List<Pair<Quad, List<jq_Reference>>> getResolvedConNewInstSites() {
 		return resolvedConNewInstSites;
 	}
 	/**
-	 * Provides a list containing each call to static method newInstance(Class, int)
-	 * defined in class java.lang.reflect.Array, along with the types of all classes 
+	 * Provides a list containing each call to static method {@code Object newInstance(Class, int)}
+	 * defined in class {@code java.lang.reflect.Array}, along with the types of all classes 
 	 * instantiated by it.
 	 */
 	public List<Pair<Quad, List<jq_Reference>>> getResolvedAryNewInstSites() {

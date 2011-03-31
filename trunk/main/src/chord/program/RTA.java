@@ -66,19 +66,18 @@ import chord.util.Utils;
 import chord.util.tuple.object.Pair;
 
 /**
- * Rapid Type Analysis algorithm for computing program scope
- * (reachable classes and methods).
+ * Rapid Type Analysis (RTA) based scope builder.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  * @author Omer Tripp (omertripp@post.tau.ac.il)
  */
 public class RTA implements ScopeBuilder {
 	private static final String MAIN_CLASS_NOT_DEFINED =
-		"ERROR: Property chord.main.class must be set to specify the main class of program to be analyzed.";
+		"ERROR: RTA: Property chord.main.class must be set to specify the main class of program to be analyzed.";
 	private static final String MAIN_METHOD_NOT_FOUND =
-		"ERROR: Could not find main class '%s' or main method in that class.";
+		"ERROR: RTA: Could not find main class '%s' or main method in that class.";
 	private static final String METHOD_NOT_FOUND_IN_SUBTYPE =
-		"WARN: Expected instance method %s in class %s implementing/extending interface/class %s.";
+		"WARN: RTA: Expected instance method %s in class %s implementing/extending interface/class %s.";
 
 	public static final boolean DEBUG = false;
 
@@ -101,32 +100,30 @@ public class RTA implements ScopeBuilder {
 	 * Data structures used only if reflectKind == static
 	 */
 
-	// enable intra-procedural analysis for inferring the class
-	// loaded by calls to <code>Class.forName(s)</code> and the class of
-	// objects allocated by calls to <code>v.newInstance()</code>.
-	// The analysis achieves this by intra-procedurally tracking flow of
-	// string constants to "s" and flow of class constants to "v".
-
+	// Intra-procedural analysis for inferring the class loaded by calls to
+	// {@code Class.forName(s)} and the class of objects allocated by calls to
+	// {@code v.newInstance()}.  The analysis achieves this by
+	// intra-procedurally tracking the flow of string constants to {@code s}
+	// and the flow of class constants to {@code v}.
 	private StaticReflectResolver staticReflectResolver;
 
-	// methods in which forName/newInstance sites have already been analyzed
+	// Methods in which forName/newInstance sites have already been analyzed
 	private Set<jq_Method> staticReflectResolved;
 
 	//constructors invoked implicitly via reflection
 	private LinkedHashSet<jq_Method> reflectiveCtors;
 
-
 	/////////////////////////
 
 	/*
-	 * Data structures reset after every iteration.
+	 * Transient data structures reset after every iteration.
 	 */
 
 	// Set of all classes whose clinits and super class/interface clinits
-	// have been processed so far in current interation; this set is kept
-	// to avoid repeatedly visiting super classes/interfaces within an
-	// iteration (which incurs a huge runtime penalty) only to find that
-	 // all their clinits have already been processed in that iteration.
+	// have been processed so far in current interation; this set is kept to
+	// avoid repeatedly visiting super classes/interfaces within an
+	// iteration (which incurs a huge runtime penalty) only to find that all
+	// their clinits have already been processed in that iteration.
 	private Set<jq_Class> classesVisitedForClinit;
 
 	// Set of all methods deemed reachable so far in current iteration.
@@ -135,7 +132,7 @@ public class RTA implements ScopeBuilder {
 	/////////////////////////
 
 	/*
-	 * Persistent data structures (not reset after iterations).
+	 * Persistent data structures not reset after iterations.
 	 */
 
 	private Reflect reflect;
@@ -162,18 +159,20 @@ public class RTA implements ScopeBuilder {
 		this.reflectKind = reflectKind;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see chord.program.ScopeBuilder#getMethods()
 	 */
+	@Override
 	public IndexSet<jq_Method> getMethods() {
 		if (methods == null)
 			build();
 		return methods;
 	}
 
-	/* (non-Javadoc)
+	/**
 	 * @see chord.program.ScopeBuilder#getReflect()
 	 */
+	@Override
 	public Reflect getReflect() {
 		if (reflect == null)
 			build();
@@ -247,8 +246,8 @@ public class RTA implements ScopeBuilder {
 
 			visitAdditionalEntrypoints(); //called for subclasses
 			
-			if(reflectiveCtors != null)
-				for(jq_Method m: reflectiveCtors) {
+			if (reflectiveCtors != null)
+				for (jq_Method m: reflectiveCtors) {
 					visitMethod(m);
 				}
 			
