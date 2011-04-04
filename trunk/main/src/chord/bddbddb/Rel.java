@@ -253,7 +253,7 @@ public class Rel {
 				assert (s != null && s.startsWith("#"));
 				StringTokenizer st = new StringTokenizer(s.substring(2));
 				for (int i = 0; i < numDoms; i++) {
-					   String dname = st.nextToken(": ");
+					String dname = st.nextToken(": ");
 					int dbits = Integer.parseInt(st.nextToken());
 					BDDDomain d = domBdds[i];
 					assert (d.getName().equals(dname));
@@ -352,14 +352,14 @@ public class Rel {
 		close();
 	}
 	private BDD makeIterBdd(boolean[] keptDoms) {
-		   BDD iterBdd = factory.one();
-		   for (int i = 0; i < keptDoms.length; i++) {
-			   if (keptDoms[i]) {
-				   iterBdd.andWith(domBdds[i].set());
-			   }
-		   }
-		   return iterBdd;
-	   }
+		BDD iterBdd = factory.one();
+		for (int i = 0; i < keptDoms.length; i++) {
+			if (keptDoms[i]) {
+				iterBdd.andWith(domBdds[i].set());
+			}
+		}
+		return iterBdd;
+	}
 	/**
 	 * An immutable view of a relation.
 	 * 
@@ -486,8 +486,7 @@ public class Rel {
 		 * 
 		 * @return	true iff this view contains the specified tuple.
 		 */
-		public <T0, T1, T2, T3> boolean contains(T0 val0, T1 val1,
-				T2 val2, T3 val3) {
+		public <T0, T1, T2, T3> boolean contains(T0 val0, T1 val1, T2 val2, T3 val3) {
 			int domIdx0 = getNextDomIdx(-1);
 			int domIdx1 = getNextDomIdx(domIdx0);
 			int domIdx2 = getNextDomIdx(domIdx1);
@@ -511,8 +510,7 @@ public class Rel {
 				throw new RuntimeException(ex);
 			}
 		}
-		public <T0, T1, T2, T3, T4> boolean contains(
-				T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
+		public <T0, T1, T2, T3, T4> boolean contains(T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
 			int domIdx0 = getNextDomIdx(-1);
 			int domIdx1 = getNextDomIdx(domIdx0);
 			int domIdx2 = getNextDomIdx(domIdx1);
@@ -540,8 +538,7 @@ public class Rel {
 				throw new RuntimeException(ex);
 			}
 		}
-		public <T0, T1, T2, T3, T4, T5> boolean contains(
-				T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
+		public <T0, T1, T2, T3, T4, T5> boolean contains(T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
 			int domIdx0 = getNextDomIdx(-1);
 			int domIdx1 = getNextDomIdx(domIdx0);
 			int domIdx2 = getNextDomIdx(domIdx1);
@@ -579,24 +576,19 @@ public class Rel {
 		public <T> Iterable<T> getAry1ValTuples() {
 			return new SelfIterable<T>(b, keptDoms);
 		}
-		public <T0, T1> PairIterable<T0, T1>
-				getAry2ValTuples() {
+		public <T0, T1> PairIterable<T0, T1> getAry2ValTuples() {
 			return new PairIterable<T0,T1>(b, keptDoms);
 		}
-		public <T0, T1, T2> TrioIterable<T0, T1, T2>
-				getAry3ValTuples() {
+		public <T0, T1, T2> TrioIterable<T0, T1, T2> getAry3ValTuples() {
 			return new TrioIterable<T0, T1, T2>(b, keptDoms);
 		}
-		public <T0,T1,T2,T3> QuadIterable<T0,T1,T2,T3>
-				getAry4ValTuples() {
+		public <T0,T1,T2,T3> QuadIterable<T0,T1,T2,T3> getAry4ValTuples() {
 			return new QuadIterable<T0,T1,T2,T3>(b, keptDoms);
 		}
-		public <T0,T1,T2,T3,T4> PentIterable<T0,T1,T2,T3,T4>
-				getAry5ValTuples() {
+		public <T0,T1,T2,T3,T4> PentIterable<T0,T1,T2,T3,T4> getAry5ValTuples() {
 			return new PentIterable<T0,T1,T2,T3,T4>(b, keptDoms);
 		}
-		public <T0,T1,T2,T3,T4,T5> HextIterable<T0,T1,T2,T3,T4,T5>
-				getAry6ValTuples() {
+		public <T0,T1,T2,T3,T4,T5> HextIterable<T0,T1,T2,T3,T4,T5> getAry6ValTuples() {
 			return new HextIterable<T0,T1,T2,T3,T4,T5>(b, keptDoms);
 		}
 		public AryNIterable getAryNValTuples() {
@@ -1024,7 +1016,7 @@ public class Rel {
 		protected final BDD bdd;
 		protected final BDD iterBdd;
 		protected final int[] domIdxs;
-			public TupleIterable(BDD bdd, boolean[] keptDoms) {
+		public TupleIterable(BDD bdd, boolean[] keptDoms) {
 			this.bdd = bdd;
 			if (keptDoms == null) {
 				iterBdd = Rel.this.iterBdd;
@@ -1050,12 +1042,12 @@ public class Rel {
 	public abstract class TupleIterator<T> implements Iterator<T> {
 		protected final BDDIterator it;
 		protected final int[] domIdxs;
-		  public TupleIterator(BDDIterator it, int[] domIdxs) {
+		public TupleIterator(BDDIterator it, int[] domIdxs) {
 			this.it = it;
 			this.domIdxs = domIdxs;
 		}
 		public boolean hasNext() {
-			   return it.hasNext();
+			return it.hasNext();
 		}
 		public void remove() {
 			throw new UnsupportedOperationException();
@@ -1064,11 +1056,11 @@ public class Rel {
 
 	public class SelfIterable<T> extends TupleIterable<T> {
 		public SelfIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<T> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<T>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<T>(it, domIdxs) {
 				public T next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx = domIdxs[0];
@@ -1084,14 +1076,14 @@ public class Rel {
 
 	public class PairIterable<T0,T1> extends TupleIterable<Pair<T0,T1>> {
 		public PairIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<Pair<T0,T1>> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<Pair<T0,T1>>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<Pair<T0,T1>>(it, domIdxs) {
 				public Pair<T0,T1> next() {
 					int[] tuple = it.nextTuple2();
-					   int domIdx0 = domIdxs[0];
+					int domIdx0 = domIdxs[0];
 					int idx0 = tuple[domIdx0];
 					T0 val0 = (T0) doms[domIdx0].get(idx0);
 					int domIdx1 = domIdxs[1];
@@ -1105,14 +1097,14 @@ public class Rel {
 
 	public class IntPairIterable extends TupleIterable<IntPair> {
 		public IntPairIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<IntPair> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<IntPair>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<IntPair>(it, domIdxs) {
 				public IntPair next() {
 					int[] tuple = it.nextTuple2();
-					   int domIdx0 = domIdxs[0];
+					int domIdx0 = domIdxs[0];
 					int idx0 = tuple[domIdx0];
 					int domIdx1 = domIdxs[1];
 					int idx1 = tuple[domIdx1];
@@ -1124,11 +1116,11 @@ public class Rel {
 
 	public class TrioIterable<T0,T1,T2> extends TupleIterable<Trio<T0,T1,T2>> {
 		public TrioIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<Trio<T0,T1,T2>> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<Trio<T0,T1,T2>>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<Trio<T0,T1,T2>>(it, domIdxs) {
 				public Trio<T0,T1,T2> next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx0 = domIdxs[0];
@@ -1148,17 +1140,17 @@ public class Rel {
 
 	public class IntTrioIterable extends TupleIterable<IntTrio> {
 		public IntTrioIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<IntTrio> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<IntTrio>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<IntTrio>(it, domIdxs) {
 				public IntTrio next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx0 = domIdxs[0];
 					int idx0 = tuple[domIdx0];
 					int domIdx1 = domIdxs[1];
-						int idx1 = tuple[domIdx1];
+					int idx1 = tuple[domIdx1];
 					int domIdx2 = domIdxs[2];
 					int idx2 = tuple[domIdx2];
 					return new IntTrio(idx0, idx1, idx2);
@@ -1169,11 +1161,11 @@ public class Rel {
 
 	public class QuadIterable<T0,T1,T2,T3> extends TupleIterable<Quad<T0,T1,T2,T3>> {
 		public QuadIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<Quad<T0,T1,T2,T3>> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<Quad<T0,T1,T2,T3>>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<Quad<T0,T1,T2,T3>>(it, domIdxs) {
 				public Quad<T0,T1,T2,T3> next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx0 = domIdxs[0];
@@ -1196,11 +1188,11 @@ public class Rel {
 
 	public class IntQuadIterable extends TupleIterable<IntQuad> {
 		public IntQuadIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<IntQuad> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<IntQuad>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<IntQuad>(it, domIdxs) {
 				public IntQuad next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx0 = domIdxs[0];
@@ -1219,11 +1211,11 @@ public class Rel {
 
 	public class PentIterable<T0,T1,T2,T3,T4> extends TupleIterable<Pent<T0,T1,T2,T3,T4>> {
 		public PentIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<Pent<T0,T1,T2,T3,T4>> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<Pent<T0,T1,T2,T3,T4>>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<Pent<T0,T1,T2,T3,T4>>(it, domIdxs) {
 				public Pent<T0,T1,T2,T3,T4> next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx0 = domIdxs[0];
@@ -1249,11 +1241,11 @@ public class Rel {
 
 	public class IntPentIterable extends TupleIterable<IntPent> {
 		public IntPentIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<IntPent> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<IntPent>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<IntPent>(it, domIdxs) {
 				public IntPent next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx0 = domIdxs[0];
@@ -1274,11 +1266,11 @@ public class Rel {
 
 	public class HextIterable<T0,T1,T2,T3,T4,T5> extends TupleIterable<Hext<T0,T1,T2,T3,T4,T5>> {
 		public HextIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<Hext<T0,T1,T2,T3,T4,T5>> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<Hext<T0,T1,T2,T3,T4,T5>>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<Hext<T0,T1,T2,T3,T4,T5>>(it, domIdxs) {
 				public Hext<T0,T1,T2,T3,T4,T5> next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx0 = domIdxs[0];
@@ -1307,11 +1299,11 @@ public class Rel {
 
 	public class IntHextIterable extends TupleIterable<IntHext> {
 		public IntHextIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<IntHext> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<IntHext>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<IntHext>(it, domIdxs) {
 				public IntHext next() {
 					int[] tuple = it.nextTuple2();
 					int domIdx0 = domIdxs[0];
@@ -1334,11 +1326,11 @@ public class Rel {
 
 	public class AryNIterable extends TupleIterable<Object[]> {
 		public AryNIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+			super(bdd, keptDoms);
 		}
 		public Iterator<Object[]> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<Object[]>(it, domIdxs) {
+			BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<Object[]>(it, domIdxs) {
 				public Object[] next() {
 					int numDoms = domIdxs.length;
 					int[] tuple = it.nextTuple2();
@@ -1357,11 +1349,11 @@ public class Rel {
 
 	public class IntAryNIterable extends TupleIterable<int[]> {
 		public IntAryNIterable(BDD bdd, boolean[] keptDoms) {
-			   super(bdd, keptDoms);
+		   super(bdd, keptDoms);
 		}
 		public Iterator<int[]> iterator() {
-			   BDDIterator it = new BDDIterator(bdd, iterBdd);
-				return new TupleIterator<int[]>(it, domIdxs) {
+		   BDDIterator it = new BDDIterator(bdd, iterBdd);
+			return new TupleIterator<int[]>(it, domIdxs) {
 				public int[] next() {
 					int numDoms = domIdxs.length;
 					int[] tuple = it.nextTuple2();
@@ -1693,8 +1685,7 @@ public class Rel {
 	 * Ary5Rel operations.
 	 */
 	
-	public <T0,T1,T2,T3,T4> void add(
-			T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
+	public <T0,T1,T2,T3,T4> void add(T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
 		if (bdd == null)
 			throw new RuntimeException("");
 		int idx0 = doms[0].indexOf(val0);
@@ -1718,8 +1709,7 @@ public class Rel {
 			throw new RuntimeException(ex);
 		}
 	}
-	public void add(
-			int idx0, int idx1, int idx2, int idx3, int idx4) {
+	public void add(int idx0, int idx1, int idx2, int idx3, int idx4) {
 		if (bdd == null)
 			throw new RuntimeException("");
 		try {
@@ -1739,8 +1729,7 @@ public class Rel {
 		}
 
 	}
-	public <T0,T1,T2,T3,T4> boolean contains(
-			T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
+	public <T0,T1,T2,T3,T4> boolean contains(T0 val0, T1 val1, T2 val2, T3 val3, T4 val4) {
 		if (bdd == null)
 			throw new RuntimeException("");
 		int idx0 = doms[0].indexOf(val0);
@@ -1764,8 +1753,7 @@ public class Rel {
 			throw new RuntimeException(ex);
 		}
 	}
-	public <T0,T1,T2,T3,T4> PentIterable<T0,T1,T2,T3,T4>
-			getAry5ValTuples() {
+	public <T0,T1,T2,T3,T4> PentIterable<T0,T1,T2,T3,T4> getAry5ValTuples() {
 		if (bdd == null)
 			throw new RuntimeException("");
 		return new PentIterable<T0,T1,T2,T3,T4>(bdd, null);
@@ -1780,8 +1768,7 @@ public class Rel {
 	 * Ary6Rel operations.
 	 */
 	
-	public <T0,T1,T2,T3,T4,T5> void add(
-			T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
+	public <T0,T1,T2,T3,T4,T5> void add(T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
 		if (bdd == null)
 			throw new RuntimeException("");
 		int idx0 = doms[0].indexOf(val0);
@@ -1808,8 +1795,7 @@ public class Rel {
 			throw new RuntimeException(ex);
 		}
 	}
-	public void add(
-			int idx0, int idx1, int idx2, int idx3, int idx4, int idx5) {
+	public void add(int idx0, int idx1, int idx2, int idx3, int idx4, int idx5) {
 		if (bdd == null)
 			throw new RuntimeException("");
 		try {
@@ -1829,8 +1815,7 @@ public class Rel {
 			checkRange(idx5, 5);
 		}
 	}
-	public <T0,T1,T2,T3,T4,T5> boolean contains(
-			T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
+	public <T0,T1,T2,T3,T4,T5> boolean contains(T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
 		if (bdd == null)
 			throw new RuntimeException("");
 		int idx0 = doms[0].indexOf(val0);
@@ -1857,8 +1842,7 @@ public class Rel {
 			throw new RuntimeException(ex);
 		}
 	}
-	public <T0,T1,T2,T3,T4,T5> HextIterable<T0,T1,T2,T3,T4,T5>
-			getAry6ValTuples() {
+	public <T0,T1,T2,T3,T4,T5> HextIterable<T0,T1,T2,T3,T4,T5> getAry6ValTuples() {
 		if (bdd == null)
 			throw new RuntimeException("");
 		return new HextIterable<T0,T1,T2,T3,T4,T5>(bdd, null);
