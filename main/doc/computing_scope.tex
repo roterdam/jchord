@@ -127,7 +127,7 @@ specified by properties \code{chord.methods.file} and
 \code{chord.reflect.file}, respectively.
 
 The possible values of property \code{chord.scope.kind} are
-[\code{dynamic}$|$\code{rta}$|$\code{cha}] (the default value is {\tt rta}).
+[\code{rta}$|$\code{cha}$|$\code{dynamic}] (the default value is {\tt rta}).
 The following subsections describe the scope construction algorithm
 that Chord runs in each of these three cases.
 In each case, Chord at
@@ -135,23 +135,6 @@ least expects properties \code{chord.main.class} and
 \code{chord.class.path} to be set to the fully-qualified name of the
 program's main class (e.g., \code{com.example.Main}) and the
 program's application classpath, respectively.
-
-\subsection{Dynamic Scope Construction}
-
-If property \code{chord.scope.kind} has value {\tt dynamic}, then Chord
-computes analysis scope
-dynamically, by running the program and observing the
-classes that are loaded at run-time.  The number of times the program
-is run and the command-line arguments to be supplied to the program in
-each run is specified by properties \code{chord.run.ids} and
-\code{chord.args.<id>} for each run ID {\tt <id>}.  By default, the
-program is run only once, using run ID {\tt 0}, and without any
-command-line arguments.  Only classes loaded in some run are regarded
-as reachable but {\it all} methods of each loaded class are regarded
-as reachable regardless of whether they were invoked in the run.  The
-rationale behind this decision is to both reduce the run-time instrumentation
-overhead and increase the predictive power of program analyses
-performed using the computed analysis scope.
 
 \subsection{RTA Scope Construction}
 
@@ -246,6 +229,23 @@ superclass B which in turn has superclass A, and A is missing, then
 both B and C are excluded.
 \end{itemize}
 
+\subsection{Dynamic Scope Construction}
+
+If property \code{chord.scope.kind} has value {\tt dynamic}, then Chord
+computes analysis scope
+dynamically, by running the program and observing the
+classes that are loaded at run-time.  The number of times the program
+is run and the command-line arguments to be supplied to the program in
+each run is specified by properties \code{chord.run.ids} and
+\code{chord.args.<id>} for each run ID {\tt <id>}.  By default, the
+program is run only once, using run ID {\tt 0}, and without any
+command-line arguments.  Only classes loaded in some run are regarded
+as reachable but {\it all} methods of each loaded class are regarded
+as reachable regardless of whether they were invoked in the run.  The
+rationale behind this decision is to both reduce the run-time instrumentation
+overhead and increase the predictive power of program analyses
+performed using the computed analysis scope.
+
 \section{Scope Exclusion}
 \label{sec:scope-exclude}
 
@@ -276,8 +276,8 @@ classes to be excluded from scope.  Its default value is
 \end{itemize}
 
 {\bf Note:} The value of each of the above properties is a list of {\it prefixes},
-not {\it regular expressions}.  A valid value is \code{java.,com.sun.},
-but not \code{java.*,com.sun.*}.
+not {\it regular expressions}.  A valid value is ``\code{java.,com.sun.}",
+but not ``\code{java.*,com.sun.*}".
 
 %\begin{tabular}
 %chord.scope.kind,chord.ch.dynamic & runs program? & \# reachable classes & \# reachable methods & running time \\
