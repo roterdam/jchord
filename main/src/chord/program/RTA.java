@@ -217,6 +217,7 @@ public class RTA implements ScopeBuilder {
 				dynamicReflectResolver.getResolvedConNewInstSites();
 			dynamicResolvedAryNewInstSites =
 				dynamicReflectResolver.getResolvedAryNewInstSites();
+			reflectiveCtors = new LinkedHashSet<jq_Method>();
 		}
 		 
 		reflect = new Reflect();
@@ -321,7 +322,7 @@ public class RTA implements ScopeBuilder {
 				reflectiveCtors.add(n);
 			}
 			else
-				System.out.println("WARN: RTA.processResolvedObjNewInstSite can't find ctor for " + c);
+				Messages.log("WARN: RTA.processResolvedObjNewInstSite can't find ctor for " + c);
 		}
 	}
 

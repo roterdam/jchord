@@ -16,7 +16,6 @@ import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.TypeOperand;
 import joeq.Compiler.Quad.Operand.IConstOperand;
-import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;
@@ -31,7 +30,6 @@ import joeq.Compiler.Quad.Operator.AStore.ASTORE_A;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Return.RETURN_V;
 import joeq.Compiler.Quad.Operator.Return.RETURN_A;
-import joeq.Compiler.Quad.SSA.EnterSSA;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.Operand;
 
