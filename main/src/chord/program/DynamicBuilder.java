@@ -54,7 +54,7 @@ public class DynamicBuilder implements ScopeBuilder {
 
 	/*
 	 * Returns an empty reflect. Dynamic scope doesn't do reflection analysis.
-	 * Instead, it uses the concrete classes that got created at run time.
+	 * Instead, Program.java uses the concrete classes that got created at run time.
 	 */
 	@Override
 	public Reflect getReflect() {
