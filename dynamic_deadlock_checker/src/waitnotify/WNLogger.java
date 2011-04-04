@@ -22,7 +22,7 @@ import chord.program.Program;
 import chord.util.IndexMap;
 
 import chord.util.tuple.object.Pair;
-import chord.util.FileUtils;
+import chord.util.Utils;
 import chord.project.Config;
 
 import java.io.PrintWriter;
@@ -54,12 +54,9 @@ public class WNLogger extends DynamicAnalysis {
     protected static Map<Integer, Integer> thrToNumTabs = new TreeMap<Integer, Integer>();
     
 	@Override
-    public Pair<Class, Map<String, String>> getEventHandler() {
-		Class eventHandlerClass = WNLoggerObserver.class;
-        Map<String, String> eventHandlerArgs = new HashMap(1);
-        eventHandlerArgs.put("instr_scheme_file_name", getInstrSchemeFileName());
-        return new Pair<Class, Map<String, String>>(eventHandlerClass, eventHandlerArgs);
-    }
+    public Class getEventHandlerClass() {
+		return WNLoggerObserver.class;
+	}
 
 	@Override
     public String getTraceKind() {
@@ -108,7 +105,7 @@ public class WNLogger extends DynamicAnalysis {
 			locs.add(loc);
 		}
 		String outDirName = Config.outDirName;
-		FileUtils.writeListToFile(locs, outDirName+"/"+name);
+		Utils.writeListToFile(locs, outDirName+"/"+name);
 	}
 
 	public static void doPutstaticPrimitive(int eId, int tId, int bId,  int fId) {

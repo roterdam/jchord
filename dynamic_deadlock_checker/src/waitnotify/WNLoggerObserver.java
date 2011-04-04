@@ -1,8 +1,8 @@
 package waitnotify;
 
-import chord.util.FileUtils;
+import chord.util.Utils;
 
-import chord.runtime.CoreEventHandler;
+import chord.runtime.BasicEventHandler;
 
 import java.io.IOException;
 import java.io.File;
@@ -11,7 +11,7 @@ import java.io.PrintWriter;
 
 import java.util.List;
 
-public class WNLoggerObserver extends CoreEventHandler {
+public class WNLoggerObserver extends BasicEventHandler {
 	protected static List<String> Elist;
 	protected static List<String> Ilist;
 	protected static List<String> Llist;
@@ -155,11 +155,11 @@ public class WNLoggerObserver extends CoreEventHandler {
 
 	 public synchronized static void init(String args) {
 		 outDirName = extractOutDirName(args);
-		 Elist = FileUtils.readFileToList(new File(outDirName, "Elocs.dynamic.txt"));
-		 Ilist = FileUtils.readFileToList(new File(outDirName, "Ilocs.dynamic.txt"));
-		 Llist = FileUtils.readFileToList(new File(outDirName, "Llocs.dynamic.txt"));
-		 Rlist = FileUtils.readFileToList(new File(outDirName, "Rlocs.dynamic.txt"));
-		 CoreEventHandler.init(args);
+		 Elist = Utils.readFileToList(new File(outDirName, "Elocs.dynamic.txt"));
+		 Ilist = Utils.readFileToList(new File(outDirName, "Ilocs.dynamic.txt"));
+		 Llist = Utils.readFileToList(new File(outDirName, "Llocs.dynamic.txt"));
+		 Rlist = Utils.readFileToList(new File(outDirName, "Rlocs.dynamic.txt"));
+		 BasicEventHandler.init(args);
 	 }
 
 	 public synchronized static void done() {

@@ -3,6 +3,7 @@
 	<property name="chord.home.dir" location="../main"/>
 
 	<target name="compile">
+        <ant dir="${chord.home.dir}" target="compile"/>
 		<mkdir dir="classes"/>
 		<javac debug="true" debuglevel="source,lines,vars" includeAntRuntime="false"
 			source="1.5" target="1.5" srcdir="src" destdir="classes"
