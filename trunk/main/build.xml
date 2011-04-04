@@ -3,6 +3,7 @@
 	Main build file for Chord
 -->
 <project name="chord" default="help">
+	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar"/>
 
 	<!--
 	==========================================================================
@@ -65,8 +66,6 @@
 		BUILD PROPERTIES
 	==========================================================================
 	-->
-
-	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar"/>
 
 	<!--
 		This target does the following things in order:
@@ -250,7 +249,7 @@
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
 		<property name="verbose" value="4"/>
-		<java classname="net.sf.bddbddb.Solver" maxmemory="${max.heap}">
+		<java classname="net.sf.bddbddb.Solver" fork="true" maxmemory="${max.heap}">
 			<classpath>
 				<pathelement location="lib/bddbddb.jar"/>
 				<pathelement location="lib/javabdd-1.0b2.jar"/>
@@ -272,7 +271,7 @@
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
 		<property name="verbose" value="4"/>
-		<java classname="net.sf.bddbddb.Interactive" maxmemory="${max.heap}">
+		<java classname="net.sf.bddbddb.Interactive" fork="true" maxmemory="${max.heap}">
 			<classpath>
 				<pathelement location="lib/bddbddb.jar"/>
 				<pathelement location="lib/javabdd-1.0b2.jar"/>
