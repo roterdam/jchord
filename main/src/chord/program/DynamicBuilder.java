@@ -7,17 +7,10 @@
 package chord.program;
 
 import java.util.List;
-import java.util.Collections;
-
 import chord.util.IndexSet;
  
 import joeq.Main.HostedVM;
-import joeq.Class.jq_Class;
-import joeq.Class.jq_Array;
-import joeq.Class.jq_Reference;
-import joeq.Class.jq_Method;
-import joeq.Compiler.Quad.Quad;
-import chord.program.reflect.DynamicReflectResolver;
+import joeq.Class.*;
 
 /**
  * Dynamic analysis-based scope builder.
@@ -59,6 +52,10 @@ public class DynamicBuilder implements ScopeBuilder {
 		return methods;
 	}
 
+	/*
+	 * Returns an empty reflect. Dynamic scope doesn't do reflection analysis.
+	 * Instead, it uses the concrete classes that got created at run time.
+	 */
 	@Override
 	public Reflect getReflect() {
 		return new Reflect();
