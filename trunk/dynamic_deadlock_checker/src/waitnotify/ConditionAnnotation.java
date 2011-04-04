@@ -7,7 +7,7 @@ import java.util.Set;
 import java.util.HashMap;
 import java.util.Map;
 
-import chord.runtime.CoreEventHandler;
+import chord.runtime.BasicEventHandler;
 
 public abstract class ConditionAnnotation {
 	protected static Class globalLock = WNLoggerObserver.class;
@@ -83,7 +83,7 @@ public abstract class ConditionAnnotation {
 	}
 	
 	private void put(Object o) {
-		int objId = CoreEventHandler.getObjectId(o);
+		int objId = BasicEventHandler.getObjectId(o);
 		Set<ConditionAnnotation> setOfConds = (Set<ConditionAnnotation>) objects.get(objId);
 		if (setOfConds == null) {
 			setOfConds = new HashSet<ConditionAnnotation>();
@@ -96,7 +96,7 @@ public abstract class ConditionAnnotation {
 	
 	public void waitBegin(Object lock) {
 		synchronized (globalLock) {
-			int lockId = CoreEventHandler.getObjectId(lock);
+			int lockId = BasicEventHandler.getObjectId(lock);
 			logCondForWaitOrNotify(true, lockId);
 		}
 	}
@@ -108,7 +108,7 @@ public abstract class ConditionAnnotation {
 	}
 	
 	private void logCondForWaitOrNotify(boolean isWait, int lockId){
-		int tId = CoreEventHandler.getObjectId(Thread.currentThread());
+		int tId = BasicEventHandler.getObjectId(Thread.currentThread());
 		boolean val = isConditionTrue();
 		List<String> instrs = new LinkedList<String>();
 		
@@ -138,7 +138,7 @@ public abstract class ConditionAnnotation {
 	}
 	
 	private void logCondEndForWaitOrNotify(){
-		int tId = CoreEventHandler.getObjectId(Thread.currentThread());
+		int tId = BasicEventHandler.getObjectId(Thread.currentThread());
 		WNLogger.decNumTabs(tId);
 		String instr = WNLogger.getStringWithTabs(tId) + "}";
 		WNLogger.addInstr(instr, tId, WNLogger.T_OTHER, WNLogger.LID_NA);
@@ -146,7 +146,7 @@ public abstract class ConditionAnnotation {
 	
 	public void notifyBegin(Object lock) {
 		synchronized (globalLock) {
-			int lockId = CoreEventHandler.getObjectId(lock);
+			int lockId = BasicEventHandler.getObjectId(lock);
 			logCondForWaitOrNotify(false, lockId);
 		}
 	}
@@ -161,7 +161,7 @@ public abstract class ConditionAnnotation {
 		synchronized (globalLock) {
 			curVal = isConditionTrue();	
 			
-			int tId = CoreEventHandler.getObjectId(Thread.currentThread());
+			int tId = BasicEventHandler.getObjectId(Thread.currentThread());
 			String tabs = WNLogger.getStringWithTabs(tId);
 			String instr = tabs + "c" + conditionId + " = " + curVal + ";";
 			WNLogger.condIds.add(conditionId);
@@ -173,7 +173,7 @@ public abstract class ConditionAnnotation {
 		synchronized (globalLock) {
 			boolean newVal = isConditionTrue();
 			if (newVal != curVal) {
-				int tId = CoreEventHandler.getObjectId(Thread.currentThread());
+				int tId = BasicEventHandler.getObjectId(Thread.currentThread());
 				String tabs = WNLogger.getStringWithTabs(tId);
 				String instr = tabs + "c" + conditionId + " = " + newVal + ";" + " //"+iidDescr;
 				curVal = newVal;
@@ -188,7 +188,7 @@ public abstract class ConditionAnnotation {
 	public void forciblyLogCondVal() {
 		synchronized (globalLock) {
 			boolean newVal = isConditionTrue();
-			int tId = CoreEventHandler.getObjectId(Thread.currentThread());
+			int tId = BasicEventHandler.getObjectId(Thread.currentThread());
 			String tabs = WNLogger.getStringWithTabs(tId);
 			String instr = tabs + "c" + conditionId + " = " + newVal + ";";
 			if (newVal != curVal)
