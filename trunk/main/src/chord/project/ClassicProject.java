@@ -368,7 +368,7 @@ public class ClassicProject extends Project {
 			String tasksStr = "";
 			for (ITask task : tasks)
 				tasksStr += " " + task.getName();
-			Messages.fatal(MULTIPLE_TASKS_PRODUCING_TRGT, tasksStr, trgt.toString());
+			Messages.fatal(MULTIPLE_TASKS_PRODUCING_TRGT, tasksStr.substring(1), trgt.toString());
 		}
 		if (n == 0)
 			Messages.fatal(TASK_PRODUCING_TRGT_NOT_FOUND, trgt.toString());
