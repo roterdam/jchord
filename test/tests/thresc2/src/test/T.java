@@ -29,11 +29,17 @@ class A {
 
 /*
 path program analysis:
-hybridVisitedE: e1,e2,e3,e4,e5
-hybridEscE: e3
-relevantEH: (e1,h1), (e2,h1), (e2,h2), (e4,h3), (e5,h3), (e5,h4)
+visitedE:
+  e1, e2, e3, e4, e5
+escE:
+  e3
+locEH:
+  e1: h1, 
+  e2: h1, h2
+  e4: h3 
+  e5: h3, h4
 
 full program analysis:
-must be able to prove e1, e2, e4
-must not be able to prove e5 since h5 goes into the glob
+  must be able to prove: e1, e2, e4
+  must not be able to prove: e5 since h5 is not reached dynamically
 */
