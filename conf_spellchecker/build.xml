@@ -14,7 +14,7 @@
 				<fileset dir="lib" includes="*.jar"/>
 			</classpath>
 			</javac>
-		<jar destfile="confspellcheck.jar">
+		<jar destfile="confspellcheck-${version}.jar">
 			<fileset dir="classes"/>
 			<fileset dir="src/java"/>
 			<file file="COPYING"/>
@@ -46,7 +46,6 @@
 					<jar destfile="confspellcheck-${version}-javadoc.jar">
 								<fileset dir="javadoc"/>
 					</jar>
-				<copy file="confspellcheck.jar" tofile="confspellcheck-${version}.jar"/>
 		</target>
 
 <!--

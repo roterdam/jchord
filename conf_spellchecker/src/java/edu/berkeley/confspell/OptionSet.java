@@ -128,8 +128,14 @@ public class OptionSet { // extends TreeMap<String,String>
 		return result;
 	}
 
-	private void enableSubstitution() {
+	public void enableSubstitution() {
 		substitute = true;
+		if(conf.size() > 0 && usedBySubst.size() == 0) {
+			for (Map.Entry<String,String> e : conf.entrySet()) {
+				String v = e.getValue();
+				checkForSubst(v);
+			}
+		}
 	}
 
 	public void checkForSubst(String rawV) {

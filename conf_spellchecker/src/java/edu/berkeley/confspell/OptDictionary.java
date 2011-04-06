@@ -31,6 +31,10 @@ public class OptDictionary {
 	public OptDictionary(File f) throws IOException {
 		read(f);
 	}
+	
+	public OptDictionary(InputStream is) throws IOException {
+		read(is);
+	}
 
 	// use a tree map to get alphabetization for free
 	TreeMap<String, String> dict = new TreeMap<String, String>();
@@ -94,8 +98,13 @@ public class OptDictionary {
 	 */
 	public void read(File dictionary) throws IOException {
 
-		BufferedReader br = new BufferedReader(new InputStreamReader(
-				new FileInputStream(dictionary)));
+		FileInputStream fis = new FileInputStream(dictionary);
+		read(fis);
+		fis.close();
+	}
+	
+	public void read(InputStream in) throws IOException {
+		BufferedReader br = new BufferedReader(new InputStreamReader(in));
 		String s = null;
 		while ((s = br.readLine()) != null) {
 			if (s.contains("#"))
@@ -119,7 +128,6 @@ public class OptDictionary {
 				annotations.put(opt, parts[2]);
 			}
 		}
-		br.close();
 	}
 
 	private String pruneName(String s) {
