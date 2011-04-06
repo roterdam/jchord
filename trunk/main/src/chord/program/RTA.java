@@ -303,9 +303,19 @@ public class RTA implements ScopeBuilder {
 		}
 	}
 
+	/*
+	 * It can happen that we see Class.forName("something not in classpath").
+	 * Should handle this gracefully.
+	 */
 	private void processResolvedClsForNameSite(Quad q, jq_Reference r) {
-		reflect.addResolvedClsForNameSite(q, r);
-		visitClass(r);
+		try {
+			r.load(); //triggers NoClassDefFoundError if not found. Do this before adding to reflect.
+			reflect.addResolvedClsForNameSite(q, r);
+			visitClass(r);
+		} catch(NoClassDefFoundError e) {
+			String qpos = q.getMethod().getDeclaringClass() + " " +  q.getMethod() + ":" + q.getLineNumber(); 
+			System.out.println(qpos + " references class "+ r + " via reflection. Class not found in classpath");
+		}
 	}
 
 	private void processResolvedObjNewInstSite(Quad q, jq_Reference r) {
@@ -321,8 +331,12 @@ public class RTA implements ScopeBuilder {
 				visitMethod(n);
 				reflectiveCtors.add(n);
 			}
-			else
-				Messages.log("WARN: RTA.processResolvedObjNewInstSite can't find ctor for " + c);
+			//This is mostly not an interesting case. Turns out that it can happen if
+			//the reflection analysis is imprecise; e.g. cast-based will identify subclasses
+			//without a suitable ctor. So we just ignore it quietly for now.
+//			else
+//				Messages.log("NOTE: RTA.processResolvedObjNewInstSite can't find ctor for " + c+
+//						"invoked at line " + q.getLineNumber() + " of " + q.getMethod());
 		}
 	}
 
