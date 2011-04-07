@@ -17,7 +17,7 @@ import java.util.Stack;
 import chord.instr.InstrScheme;
 import chord.project.Chord;
 import chord.project.analyses.DynamicAnalysis;
-import chord.runtime.CoreEventHandler;
+import chord.runtime.BasicEventHandler;
 import chord.project.Messages;
 
 /**
@@ -255,62 +255,62 @@ public class AtomizerAnalysis extends DynamicAnalysis {
 
 	@Override
 	public void processGetstaticPrimitive(int e, int t, int b, int f) {
-		processReadAfter(t, CoreEventHandler.getPrimitiveId(b, f));
+		processReadAfter(t, BasicEventHandler.getPrimitiveId(b, f));
 	}
 	
 	@Override
 	public void processGetstaticReference(int e, int t, int b, int f, int o) {		
-		processReadAfter(t, CoreEventHandler.getPrimitiveId(b, f));
+		processReadAfter(t, BasicEventHandler.getPrimitiveId(b, f));
 	}
 	
 	@Override
 	public void processPutstaticPrimitive(int e, int t, int b, int f) {		
-		processWriteAfter(t, CoreEventHandler.getPrimitiveId(b, f));		
+		processWriteAfter(t, BasicEventHandler.getPrimitiveId(b, f));		
 	}
 	
 	@Override
 	public void processPutstaticReference(int e, int t, int b, int f, int o) {		
-		processWriteAfter(t, CoreEventHandler.getPrimitiveId(b, f));		
+		processWriteAfter(t, BasicEventHandler.getPrimitiveId(b, f));		
 	}
 	
 	@Override
 	public void processGetfieldPrimitive(int e, int t, int b, int f) {
-		processReadAfter(t, CoreEventHandler.getPrimitiveId(b, f));
+		processReadAfter(t, BasicEventHandler.getPrimitiveId(b, f));
 	}
 	
 	@Override
 	public void processGetfieldReference(int e, int t, int b, int f, int o) {		
-		processReadAfter(t, CoreEventHandler.getPrimitiveId(b, f));
+		processReadAfter(t, BasicEventHandler.getPrimitiveId(b, f));
 	}
 	
 	@Override
 	public void processPutfieldPrimitive(int e, int t, int b, int f) {
-		processWriteAfter(t, CoreEventHandler.getPrimitiveId(b, f));		
+		processWriteAfter(t, BasicEventHandler.getPrimitiveId(b, f));		
 	}
 	
 	@Override
 	public void processPutfieldReference(int e, int t, int b, int f, int o) {		
-		processWriteAfter(t, CoreEventHandler.getPrimitiveId(b, f));		
+		processWriteAfter(t, BasicEventHandler.getPrimitiveId(b, f));		
 	}
 	
 	@Override
 	public void processAloadPrimitive(int e, int t, int b, int i) {
-		processReadAfter(t, CoreEventHandler.getPrimitiveId(b, i));
+		processReadAfter(t, BasicEventHandler.getPrimitiveId(b, i));
 	}
 	
 	@Override
 	public void processAloadReference(int e, int t, int b, int i, int o) {
-		processReadAfter(t, CoreEventHandler.getPrimitiveId(b, i));		
+		processReadAfter(t, BasicEventHandler.getPrimitiveId(b, i));		
 	}
 	
 	@Override
 	public void processAstorePrimitive(int e, int t, int b, int i) {
-		processWriteAfter(t, CoreEventHandler.getPrimitiveId(b, i));		
+		processWriteAfter(t, BasicEventHandler.getPrimitiveId(b, i));		
 	}
 	
 	@Override
 	public void processAstoreReference(int e, int t, int b, int i, int o) {
-		processWriteAfter(t, CoreEventHandler.getPrimitiveId(b, i));		
+		processWriteAfter(t, BasicEventHandler.getPrimitiveId(b, i));		
 	}	
 	
 	@Override

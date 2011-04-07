@@ -21,7 +21,7 @@ import chord.program.Program;
 import chord.project.Chord;
 import chord.project.Messages;
 import chord.project.analyses.ProgramRel;
-import chord.util.FileUtils;
+import chord.util.Utils;
 
 /**
  * Relation containing slicing seeds.
@@ -41,7 +41,7 @@ public class SeedReader extends ProgramRel {
 	boolean arrayTypeSeed = false;
 
 	public void fill() {
-		List<String> fStrList = FileUtils.readFileToList("seeds.txt");
+		List<String> fStrList = Utils.readFileToList("seeds.txt");
 		int n = fStrList.size();
 		assert (n > 0);
 		Program program = Program.g();

@@ -4,13 +4,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.FileWriter;
 import java.io.File;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Collections;
 
-import chord.instr.CoreInstrumentor;
+import chord.instr.BasicInstrumentor;
 import chord.program.Program;
 import chord.project.ClassicProject;
 import chord.analyses.method.DomM;
@@ -160,7 +158,7 @@ import joeq.Util.Templates.ListIterator;
  * Finally, a call to MantisPrinter.done() is inserted at the end of the
  * main method of the program.
  */
-public class MantisInstrumentor extends CoreInstrumentor {
+public class MantisInstrumentor extends BasicInstrumentor {
 	private static final String dataDirName =
 		System.getProperty("chord.mantis.data.dir");
     private static final int maxFldsPerMantisClass =
