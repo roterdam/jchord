@@ -3,6 +3,7 @@ package chord.analyses.confdep;
 import chord.analyses.alias.CtxtsAnalysis;
 import chord.analyses.alloc.DomH;
 import chord.analyses.confdep.optnames.DomOpts;
+import chord.analyses.confdep.rels.RelFailurePath;
 import chord.analyses.field.DomF;
 import chord.analyses.invk.DomI;
 import chord.analyses.primtrack.DomUV;
@@ -87,6 +88,8 @@ public class CS_ConfDeps extends ConfDeps {
 		
 		if(DYNTRACK) {
 			Project.runTask("dyn-datadep");
+				//no need for another points-to here. Only datadep-cs uses
+				//the context-sensitive points-to
 		} else {
 			
 			Project.runTask("ctxts-java"); //do the context-sensitive points-to
@@ -100,7 +103,12 @@ public class CS_ConfDeps extends ConfDeps {
 		DomOpts domOpt  = (DomOpts) Project.getTrgt("Opt");
 		slurpDoms();
 		dumpOptUses(domOpt);
-		dumpFieldTaints(domOpt, "instFOpt", "statFOpt");
+
+		if(DYNTRACK)
+			dumpFieldTaints(domOpt, "instHF", "statHF");
+		else
+			dumpFieldTaints(domOpt, "instFOpt", "statFOpt");
+		
 		if(dumpIntermediates)  {
 			if(STATIC)
 				dumpOptRegexes("conf_regex.txt", DomOpts.optSites());

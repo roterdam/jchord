@@ -13,21 +13,27 @@ import joeq.Compiler.Quad.Operator.IntIfCmp;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.LookupSwitch;
 import chord.analyses.invk.DomI;
+import chord.analyses.point.DomP;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
+/**
+ * Tuples (i, uv) where reaching i depends on uv
+ * @author asrabkin
+ *
+ */
 @Chord(
-    name = "primControlDep",
-    sign = "I0,UV0:I0_UV0"
+    name = "PControlDep",
+    sign = "P0,UV0:P0_UV0"
   )
 public class RelPControlDep extends ProgramRel implements IMethodVisitor {
 
   DomUV domUV;
-  DomI domI;
+  DomP domP;
   jq_Method method;
   public void init() {
-    domI = (DomI) doms[0];
+    domP = (DomP) doms[0];
     domUV = (DomUV) doms[1];
   }
   
@@ -218,10 +224,8 @@ public class RelPControlDep extends ProgramRel implements IMethodVisitor {
         for (int j = 0; j < n; j++) {
           Quad q = bb.getQuad(j);
           Operator op = q.getOperator();
-          if(op instanceof Invoke) {
-            int iIdx = domI.indexOf(q);
-            super.add(iIdx, uIdx);
-          }
+          int pIdx = domP.indexOf(q);
+          super.add(pIdx, uIdx);
         }
       }
     }

@@ -25,6 +25,8 @@ import chord.project.analyses.ProgramRel;
 import chord.util.tuple.integer.*;
 import chord.util.tuple.object.*;
 import chord.analyses.confdep.optnames.DomOpts;
+import chord.analyses.confdep.rels.RelFailurePath;
+
 import java.util.Set;
 import chord.analyses.primtrack.DomUV;
 import chord.analyses.string.DomStrConst;
@@ -338,7 +340,7 @@ public class ConfDeps extends JavaAnalysis {
 			String optType = ConfDefines.optionPrefix(quad);
 			String readingMeth = Invoke.getMethod(quad).getMethod().getName().toString();
 
-			writer.println(optType + " " + regexStr + " read by " +
+			writer.println(optType + regexStr + " read by " +
 					m.getDeclaringClass().getName()+ " " + m.getName() + ":" + lineno + " " + readingMeth);
 		}
 		writer.close();

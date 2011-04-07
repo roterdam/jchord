@@ -69,6 +69,7 @@ confMethod(m:M) input
 functDep(m:M,z:Z) input
 MrefLambdaDep(m:M,z:Z,v:V) input
 MprimLambdaDep(m:M,z:Z,u:U) input
+retDepends(ctrlVar:V, m:M) input
 
 ## Contexts
 reachableCI(c:C,i:I) input
@@ -157,9 +158,12 @@ absCUOpt(c,v,name) :- primDataDep(v,v2),absCUOpt(c,v2,name).
 
 absoluteReturnV(c,m,name) :- MmethRet(m,_,v),absCVOpt(c,v,name),filteredMethReturns(m).
 absoluteReturnU(c,m,name) :- MmethPrimRet(m,_,v),absCUOpt(c,v,name),filteredMethReturns(m).
+absoluteReturnV(c,m,name) :- retDepends(v,m),absCVOpt(c,v,name).
+
 
 absCVOpt(c,v,name) :-  CICM(c,i,c2,m),IinvkRet(i,_,v),absoluteReturnV(c2,m,name).
 absCUOpt(c,v,name) :-  CICM(c,i,c2,m),IinvkPrimRet(i,_,v),absoluteReturnU(c2,m,name).
+
 
 # Propagation via regular calls
 

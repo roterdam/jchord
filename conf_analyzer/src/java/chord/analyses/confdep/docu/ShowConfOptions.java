@@ -131,8 +131,6 @@ public class ShowConfOptions extends JavaAnalysis {
     ConfDeps.dumpOptRegexes("conf_writes.txt", DomOpts.computeOptNames("confOptWrites", "confOptWriteLen", "confWritesByName", domH));
     project.runTask("conf-flow-dlog");
 
-    Set<Pair<Quad,String>> returnedMap = DomOpts.optSites();
-
     System.out.println(new Date() + ": Done classifying.  Used " + methTypeTable.size() + " inference rules for conf typing");
 
     dumpFieldContents();
