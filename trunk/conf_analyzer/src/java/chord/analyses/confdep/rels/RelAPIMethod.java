@@ -1,10 +1,11 @@
-package chord.analyses.confdep;
+package chord.analyses.confdep.rels;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.collection.*;
+import chord.analyses.confdep.ConfDefines;
 import chord.analyses.invk.DomI;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;

@@ -347,5 +347,8 @@ public class ModelList<E> implements List<E>, Queue<E>, Deque<E>, SortedSet<E> {
 	public SortedSet<E> tailSet(E fromElement) {
 		return this;
 	}
+	
+	public void trimToSize() {
+	}
 
 }

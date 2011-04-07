@@ -66,10 +66,10 @@ public class RTAPlus extends RTA {
 			jq_Class c = (jq_Class) r;
 			
 			if (shouldExpandAggressively(c)) {
-			  for (jq_Method m: c.getDeclaredInstanceMethods()) 
-				visitMethod(m);
-			  for (jq_Method m: c.getDeclaredStaticMethods())
-				visitMethod(m); 
+				for (jq_Method m: c.getDeclaredInstanceMethods()) 
+					visitMethod(m);
+				for (jq_Method m: c.getDeclaredStaticMethods())
+					visitMethod(m); 
 			}
 		}
 	}

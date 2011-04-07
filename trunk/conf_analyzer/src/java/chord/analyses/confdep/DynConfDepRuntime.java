@@ -1,5 +1,7 @@
 package chord.analyses.confdep;
 
+import chord.analyses.confdep.rels.RelAPIMethod;
+import chord.analyses.confdep.rels.RelReadOnlyAPICall;
 import chord.analyses.logging.RelLogStmts;
 import chord.util.IndexMap;
 import chord.util.WeakIdentityHashMap;
@@ -22,6 +24,7 @@ public class DynConfDepRuntime {
 		}
 
 		public void add(String s) {
+
 			int idx = names.getOrAdd(s);
 			taints.set(idx);
 		}
@@ -237,11 +240,15 @@ public class DynConfDepRuntime {
 
 		TaintList taintlist = taintlist(array);
 		TaintList objTaintlist = taintlist(result);
-		if(taintlist == objTaintlist && taintlist.size() > 0)
-			System.out.println("AAARGH somehow same array is used for taintlist of both array and contents. " +
-					"Array was " + reformatArray(array) + " and content was " + result + 
-					" Taintlist was '" + taintlist+"', size = "+ taintlist.size());
-		else {
+		if(taintlist == objTaintlist && taintlist.size() > 0) {
+			//this is probably not an error; sensible way to model
+			//a getArray conf read method
+			
+			
+//			System.out.println("AAARGH somehow same array is used for taintlist of both array and contents. " +
+//					"Array was " + reformatArray(array) + " and content was " + result + 
+//					" Taintlist was '" + taintlist+"', size = "+ taintlist.size());
+		} else {
 			addTaints(result, taintlist);
 		}
 	}

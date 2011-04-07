@@ -128,8 +128,8 @@ public class DynConfDep extends BasicDynamicAnalysis {
           if(cstID == -1) {
             cstID = 0;
             System.err.println("UNKNOWN OPTION " + cst);
-          } else
-            System.out.println("Found option " + cst + " at idx " + cstID);
+          }
+//           else System.out.println("Found option " + cst + " at idx " + cstID);
           
           RegisterFactory.Register targ = Invoke.getDest(q).getRegister();
           int vID = domV.indexOf(targ);

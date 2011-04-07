@@ -1,0 +1,42 @@
+#
+#
+#    Ari Rabkin
+# name=nullret-dlog
+
+.include "V.dom"
+.include "I.dom"
+.include "Z.dom"
+.include "M.dom"
+.include "P.dom"
+.include "U.dom"
+.include "UV.dom"
+
+
+.bddvarorder I0_Z0_M0_V0_U0_UV0_V1_P0
+
+
+objVarAsgnInst(l:V,r:V) input
+
+MmethRet(m:M0,n:Z0,v:V1) input
+MmethPrimRet(m:M0,n:Z0,u:U0) input
+PobjVarAsgnInst(p:P0,l:V0,r:V1) input
+nullRet(m:M0, pt:P0) input
+nullConst(p:P, v:V) input
+PControlDep(p:P, uv:UV) input
+UVV(uv:UV,v:V) input
+primRefDep(u:UV,v:V) input
+
+PControlDepV(p:P, v:V) output
+
+assignDependsOn(controlVar:V, dest:V) output
+retDepends(ctrlVar:V, m:M) output
+
+PControlDepV(p,v) :- PControlDep(p,uv),primRefDep(uv,v).
+PControlDepV(p,v) :- PControlDep(p,uv),UVV(uv,v).
+
+assignDependsOn(ctrl, dest) :- PControlDepV(pt, ctrl),nullConst(pt, dest).
+assignDependsOn(ctrl, dest2) :- assignDependsOn(ctrl, dest1),objVarAsgnInst(dest2, dest1).
+
+#retDepends(ctrl, m) :- assignDependsOn(ctrl, dest), MmethRet(m,_,dest).
+#retDepends(ctrl, m) :- PControlDepV(pt, ctrl), nullRet(m,pt).
+retDepends(0,0).

@@ -1,4 +1,4 @@
-package chord.analyses.confdep;
+package chord.analyses.confdep.rels;
 
 import java.util.HashMap;
 import java.util.HashSet;
