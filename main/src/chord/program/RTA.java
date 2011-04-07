@@ -319,6 +319,14 @@ public class RTA implements ScopeBuilder {
 	}
 
 	private void processResolvedObjNewInstSite(Quad q, jq_Reference r) {
+		try {
+			r.load();
+		} catch(NoClassDefFoundError e) {
+			String qpos = q.getMethod().getDeclaringClass() + " " +  q.getMethod() + ":" + q.getLineNumber(); 
+			System.out.println(qpos + " references class "+ r + " via reflection. Class not found in classpath");
+			return;
+		}
+		
 		reflect.addResolvedObjNewInstSite(q, r);
 		visitClass(r);
 		if (reachableAllocClasses.add(r) ||
