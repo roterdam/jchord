@@ -88,7 +88,9 @@ public class Boot {
 	private static final String CHORD_WORK_DIR_NOT_FOUND =
 		"ERROR: Boot: Directory '%s' specified by property chord.work.dir not found.";
 
-	public static boolean SPELLCHECK_ON = Integer.getInteger("chord.verbose", 1) > 1;
+	public static boolean SPELLCHECK_ON = Integer.getInteger("chord.verbose", 1) > 1  || 
+	"true".equals(System.getProperty("chord.useSpellcheck"));
+
 	static String mainDirName;
 
 	public static void main(String[] args) throws Throwable {
@@ -103,7 +105,7 @@ public class Boot {
 		if(SPELLCHECK_ON) {
 			OptionSet optSet = new OptionSet(getChordSysProps());
 			optSet.enableSubstitution();
-			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
+			Checker.checkConf(new OptDictionary(Boot.class.getResourceAsStream("/options.dict") ),
 				optSet);
 		}
 		// resolve Chord's work dir
@@ -184,6 +186,9 @@ public class Boot {
 			}
 		}
 		if (!userClassPath.equals("")) {
+			userClassPath= userClassPath.replace(';', File.pathSeparatorChar);//normalize
+			System.setProperty("chord.class.path", userClassPath);//write back new value
+
 			String[] a = userClassPath.split(Utils.PATH_SEPARATOR);
 			for (String s : a) {
 				if (!cpList.contains(s))
@@ -219,8 +224,21 @@ public class Boot {
 		cmdList.add("chord.project.Main");
 		String[] cmdAry = new String[cmdList.size()];
 		cmdList.toArray(cmdAry);
+		
+		if(Config.buildBoolProperty("showMainArgs", false)) //undocumented option for debugging
+			showArgsToMain(cmdAry);
+		
 		int result = ProcessExecutor.execute(cmdAry, null, new File(workDirName), -1);
 		System.exit(result);
+	}
+
+	private static void showArgsToMain(String[] cmdAry) {
+		StringBuilder cmdLine = new StringBuilder();
+		for(String s: cmdAry) {
+			cmdLine.append(s);
+			cmdLine.append(" ");
+		}
+		System.out.println("Boot spawning subprocess with command line " + cmdLine.toString());
 	}
 
 	private static Properties getChordSysProps() {
@@ -258,7 +276,7 @@ public class Boot {
 		if(SPELLCHECK_ON) { //Check the params we just read in
 			OptionSet optSet = new OptionSet(props);
 			optSet.enableSubstitution();
-			Checker.checkConf(new OptDictionary(new File(mainDirName+ "/lib/options.dict")),
+			Checker.checkConf(new OptDictionary(Boot.class.getResourceAsStream("/options.dict")),
 				   optSet);
 		}
 
