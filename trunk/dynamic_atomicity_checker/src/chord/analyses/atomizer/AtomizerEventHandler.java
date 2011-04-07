@@ -6,12 +6,12 @@
 package chord.analyses.atomizer;
 
 import chord.project.analyses.DynamicAnalysis;
-import chord.runtime.CoreEventHandler;
+import chord.runtime.BasicEventHandler;
 
 /**
  * @author Zhifeng Lai (zflai.cn@gmail.com)
  */
-public class AtomizerEventHandler extends CoreEventHandler {
+public class AtomizerEventHandler extends BasicEventHandler {
 	private static DynamicAnalysis analysis;
 	
 	public synchronized static void getstaticPrimitiveEvent(int eId, Object b, int fId) {
@@ -197,11 +197,11 @@ public class AtomizerEventHandler extends CoreEventHandler {
 		} catch (Exception ex) {
 			throw new RuntimeException(ex);
 		}
-		CoreEventHandler.init(args);
+		BasicEventHandler.init(args);
 	}
 
 	public synchronized static void done() {
-		CoreEventHandler.done();
+		BasicEventHandler.done();
 		analysis.donePass();
 	}
 }

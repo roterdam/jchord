@@ -2,19 +2,12 @@ package waitnotify;
 
 import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntStack;
-import java.util.Set;
-import java.util.HashSet;
 
 public class LockStack {
 	TIntStack lStack = new TIntStack();
 	TIntIntHashMap lAcqCounts = new TIntIntHashMap();
-	//Set<Integer> locksToConsider = null;
 	int lastLockPopped = -1;
 
-	//public void setLocksToConsider(Set<Integer> s){
-		//locksToConsider = new HashSet<Integer>(s);
-	//}
-	
 	public boolean lock(int lId){
 		int nAcq = lAcqCounts.adjustOrPutValue(lId, 1, 1);
 		lStack.push(lId);

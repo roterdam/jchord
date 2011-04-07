@@ -11,7 +11,6 @@ import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.List;
 
-import gnu.trove.TIntArrayList;
 import gnu.trove.TIntHashSet;
 import gnu.trove.TIntIntHashMap;
 import gnu.trove.TIntObjectHashMap;
@@ -21,7 +20,6 @@ import chord.instr.InstrScheme;
 import chord.analyses.lock.DomL;
 import chord.analyses.lock.DomR;
 import chord.analyses.heapacc.DomE;
-import chord.analyses.field.DomF;
 import chord.analyses.invk.DomI;
 import chord.analyses.method.DomM;
 import chord.project.Chord;
@@ -29,7 +27,7 @@ import chord.project.ClassicProject;
 import chord.project.Messages;
 import chord.project.analyses.DynamicAnalysis;
 import chord.project.analyses.ProgramRel;
-import chord.runtime.CoreEventHandler;
+import chord.runtime.BasicEventHandler;
 import chord.util.IntArraySet;
 import chord.util.tuple.integer.IntPair;
 
@@ -837,7 +835,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			re.o = b;
 			break;
 		case CONCRETE:
-			re.o = (i == -1) ? b : CoreEventHandler.getPrimitiveId(b, i);
+			re.o = (i == -1) ? b : BasicEventHandler.getPrimitiveId(b, i);
 			break;
 		case ABSTRACT:
 			re.o = objToAllocSite.get(b);
