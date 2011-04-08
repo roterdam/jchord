@@ -7,7 +7,7 @@
 	<property name="chord.home.dir" location="../main"/>
 	<property name="chord.test.dir" location="."/>
 	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${chord.home.dir}/lib/ant-contrib.jar"/>
-	<property name="test.dirs" value="bubblesort,bellman-ford"/>
+	<property name="test.dirs" value="elevator,tsp"/>
     <property name="chord.main.doms" value="M,F,P,I,E,H,L,R,T"/>
     <property name="chord.main.rels" value="cha,aryElemE,statFldE,writeE,EF,HT,PI,PL,PP,specIM,statIM,virtIM,clinitM,statM,syncM"/>
 	<property name="chord.main.doms_and_rels" value="${chord.main.doms},${chord.main.rels}"/>
