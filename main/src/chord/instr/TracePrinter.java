@@ -39,8 +39,8 @@ public class TracePrinter {
 	/**
 	 * Initializes a trace printer.
 	 * 
-	 * @param	traceFileName	Location of the file containing the trace to be printed.
-	 * @param	scheme			Instrumentation scheme used to generate this trace.
+	 * @param traceFileName Location of the file containing the trace to be printed.
+	 * @param scheme        Instrumentation scheme used to generate this trace.
 	 */
 	public TracePrinter(String traceFileName, InstrScheme scheme) {
 		this.traceFileName = traceFileName;
@@ -60,6 +60,13 @@ public class TracePrinter {
 			while (!buffer.isDone()) {
 				byte opcode = buffer.getByte();
 				switch (opcode) {
+				case EventKind.ENTER_MAIN_METHOD:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
+					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					System.out.println("ENTER_MAIN_METHOD " + t);
+					break;
+				}
 				case EventKind.ENTER_METHOD:
 				{
 					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_METHOD);
@@ -76,9 +83,43 @@ public class TracePrinter {
 					System.out.println("LEAVE_METHOD " + m + " " + t);
 					break;
 				}
+				case EventKind.BASIC_BLOCK:
+				{
+					int b = buffer.getInt();
+					int t = buffer.getInt();
+					System.out.println("BASIC_BLOCK " + b + " " + t);
+					break;
+				}
+				case EventKind.QUAD:
+				{
+					int p = buffer.getInt();
+					int t = buffer.getInt();
+					System.out.println("QUAD " + p + " " + t);
+					break;
+				}
+				case EventKind.BEF_METHOD_CALL:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.BEF_METHOD_CALL);
+					int i = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					String iStr = i > 0 ? domI.get(i).toJavaLocStr() : Integer.toString(i);
+					System.out.println("BEF_METHOD_CALL " + iStr + " " + t + " " + o);
+					break;
+				}
+				case EventKind.AFT_METHOD_CALL:
+				{
+					EventFormat ef = scheme.getEvent(InstrScheme.AFT_METHOD_CALL);
+					int i = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					String iStr = i > 0 ? domI.get(i).toJavaLocStr() : Integer.toString(i);
+					System.out.println("AFT_METHOD_CALL " + iStr + " " + t + " " + o);
+					break;
+				}
 				case EventKind.BEF_NEW:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+					EventFormat ef = scheme.getEvent(InstrScheme.BEF_NEW);
 					int h = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
@@ -88,7 +129,7 @@ public class TracePrinter {
 				}
 				case EventKind.AFT_NEW:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+					EventFormat ef = scheme.getEvent(InstrScheme.AFT_NEW);
 					int h = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
@@ -276,42 +317,22 @@ public class TracePrinter {
 					System.out.println("WAIT " + i + " " + t + " " + o);
 					break;
 				}
-				case EventKind.NOTIFY:
+				case EventKind.NOTIFY_ANY:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
+					EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY_ANY);
 					int i = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					System.out.println("NOTIFY " + i + " " + t + " " + o);
+					System.out.println("NOTIFY_ANY " + i + " " + t + " " + o);
 					break;
 				}
 				case EventKind.NOTIFY_ALL:
 				{
-					EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
+					EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY_ALL);
 					int i = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					System.out.println("NOTIFY_ALL " + i + " " + t + " " + o);
-					break;
-				}
-				case EventKind.BEF_METHOD_CALL:
-				{
-					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-					int i = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					String iStr = i > 0 ? domI.get(i).toJavaLocStr() : Integer.toString(i);
-					System.out.println("BEF_METHOD_CALL " + iStr + " " + t + " " + o);
-					break;
-				}
-				case EventKind.AFT_METHOD_CALL:
-				{
-					EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-					int i = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					String iStr = i > 0 ? domI.get(i).toJavaLocStr() : Integer.toString(i);
-					System.out.println("AFT_METHOD_CALL " + iStr + " " + t + " " + o);
 					break;
 				}
 				case EventKind.RETURN_PRIMITIVE:
@@ -333,51 +354,20 @@ public class TracePrinter {
 				}
 				case EventKind.EXPLICIT_THROW:
 				{
-					EventFormat ef = scheme.getEvent(
-						InstrScheme.EXPLICIT_THROW);
-					int p = ef.hasLoc() ? buffer.getInt() :
-						EventHandler.MISSING_FIELD_VAL;
-					int t = ef.hasThr() ? buffer.getInt() :
-						EventHandler.MISSING_FIELD_VAL;
-					int o = ef.hasObj() ? buffer.getInt() :
-						EventHandler.MISSING_FIELD_VAL;
-					System.out.println("EXPLICIT_THROW " +
-						p + " " + t + " " + o);
+					EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
+					int p = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					System.out.println("EXPLICIT_THROW " + p + " " + t + " " + o);
 					break;
 				}
 				case EventKind.IMPLICIT_THROW:
 				{
-					EventFormat ef = scheme.getEvent(
-						InstrScheme.IMPLICIT_THROW);
-					int p = ef.hasLoc() ? buffer.getInt() :
-						EventHandler.MISSING_FIELD_VAL;
-					int t = ef.hasThr() ? buffer.getInt() :
-						EventHandler.MISSING_FIELD_VAL;
-					int o = ef.hasObj() ? buffer.getInt() :
-						EventHandler.MISSING_FIELD_VAL;
-					System.out.println("IMPLICIT_THROW " +
-						p + " " + t + " " + o);
-					break;
-				}
-				case EventKind.QUAD:
-				{
-					int p = buffer.getInt();
-					int t = buffer.getInt();
-					System.out.println("QUAD " + p + " " + t);
-					break;
-				}
-				case EventKind.BASIC_BLOCK:
-				{
-					int b = buffer.getInt();
-					int t = buffer.getInt();
-					System.out.println("BASIC_BLOCK " + b + " " + t);
-					break;
-				}
-				case EventKind.ENTER_MAIN_METHOD:
-				{
-					EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
+					EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
+					int p = ef.hasLoc() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
 					int t = ef.hasThr() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
-					System.out.println("ENTER_MAIN_METHOD " + t);
+					int o = ef.hasObj() ? buffer.getInt() : EventHandler.MISSING_FIELD_VAL;
+					System.out.println("IMPLICIT_THROW " + p + " " + t + " " + o);
 					break;
 				}
 				default: 

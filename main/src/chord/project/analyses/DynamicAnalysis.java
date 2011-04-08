@@ -286,6 +286,13 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 	public void handleEvent(ByteBufferedFile buffer) throws IOException, ReadException {
 		byte opcode = buffer.getByte();
 		switch (opcode) {
+		case EventKind.ENTER_MAIN_METHOD:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			processEnterMainMethod(t);
+			break;
+		}
 		case EventKind.ENTER_METHOD:
 		{
 			EventFormat ef = scheme.getEvent(InstrScheme.ENTER_METHOD);
@@ -312,9 +319,46 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 			}
 			break;
 		}
+		case EventKind.BASIC_BLOCK:
+		{
+			int b = buffer.getInt();
+			int t = buffer.getInt();
+			if (hasEnterAndLeaveLoopEvent) {
+				processBasicBlock4loopConsistency(b, t);
+			}
+			if (isUserReqBasicBlockEvent) {
+				processBasicBlock(b, t);
+			}
+			break;
+		}
+		case EventKind.QUAD:
+		{
+			int q = buffer.getInt();
+			int t = buffer.getInt();
+			processQuad(q, t);
+			break;
+		}
+		case EventKind.BEF_METHOD_CALL:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.BEF_METHOD_CALL);
+			int i = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			int o = ef.hasObj() ? buffer.getInt() : -1;
+			processBefMethodCall(i, t, o);
+			break;
+		}
+		case EventKind.AFT_METHOD_CALL:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.AFT_METHOD_CALL);
+			int i = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			int o = ef.hasObj() ? buffer.getInt() : -1;
+			processAftMethodCall(i, t, o);
+			break;
+		}
 		case EventKind.BEF_NEW:
 		{
-			EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+			EventFormat ef = scheme.getEvent(InstrScheme.BEF_NEW);
 			int h = ef.hasLoc() ? buffer.getInt() : -1;
 			int t = ef.hasThr() ? buffer.getInt() : -1;
 			int o = ef.hasObj() ? buffer.getInt() : -1;
@@ -323,7 +367,7 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 		}
 		case EventKind.AFT_NEW:
 		{
-			EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+			EventFormat ef = scheme.getEvent(InstrScheme.AFT_NEW);
 			int h = ef.hasLoc() ? buffer.getInt() : -1;
 			int t = ef.hasThr() ? buffer.getInt() : -1;
 			int o = ef.hasObj() ? buffer.getInt() : -1;
@@ -465,6 +509,41 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 			processAstoreReference(e, t, b, i, o);
 			break;
 		}
+		case EventKind.RETURN_PRIMITIVE:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
+			int p = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			processReturnPrimitive(p, t);
+			break;
+		}
+		case EventKind.RETURN_REFERENCE:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
+			int p = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			int o = ef.hasObj() ? buffer.getInt() : -1;
+			processReturnReference(p, t, o);
+			break;
+		}
+		case EventKind.EXPLICIT_THROW:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
+			int p = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			int o = ef.hasObj() ? buffer.getInt() : -1;
+			processExplicitThrow(p, t, o);
+			break;
+		}
+		case EventKind.IMPLICIT_THROW:
+		{
+			EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
+			int p = ef.hasLoc() ? buffer.getInt() : -1;
+			int t = ef.hasThr() ? buffer.getInt() : -1;
+			int o = ef.hasObj() ? buffer.getInt() : -1;
+			processImplicitThrow(p, t, o);
+			break;
+		}
 		case EventKind.THREAD_START:
 		{
 			EventFormat ef = scheme.getEvent(InstrScheme.THREAD_START);
@@ -510,92 +589,22 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 			processWait(p, t, l);
 			break;
 		}
-		case EventKind.NOTIFY:
+		case EventKind.NOTIFY_ANY:
 		{
-			EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
+			EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY_ANY);
 			int p = ef.hasLoc() ? buffer.getInt() : -1;
 			int t = ef.hasThr() ? buffer.getInt() : -1;
 			int l = ef.hasObj() ? buffer.getInt() : -1;
-			processNotify(p, t, l);
+			processNotifyAny(p, t, l);
 			break;
 		}
-		case EventKind.BEF_METHOD_CALL:
+		case EventKind.NOTIFY_ALL:
 		{
-			EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-			int i = ef.hasLoc() ? buffer.getInt() : -1;
-			int t = ef.hasThr() ? buffer.getInt() : -1;
-			int o = ef.hasObj() ? buffer.getInt() : -1;
-			processBefMethodCall(i, t, o);
-			break;
-		}
-		case EventKind.AFT_METHOD_CALL:
-		{
-			EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-			int i = ef.hasLoc() ? buffer.getInt() : -1;
-			int t = ef.hasThr() ? buffer.getInt() : -1;
-			int o = ef.hasObj() ? buffer.getInt() : -1;
-			processAftMethodCall(i, t, o);
-			break;
-		}
-		case EventKind.RETURN_PRIMITIVE:
-		{
-			EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
+			EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY_ALL);
 			int p = ef.hasLoc() ? buffer.getInt() : -1;
 			int t = ef.hasThr() ? buffer.getInt() : -1;
-			processReturnPrimitive(p, t);
-			break;
-		}
-		case EventKind.RETURN_REFERENCE:
-		{
-			EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
-			int p = ef.hasLoc() ? buffer.getInt() : -1;
-			int t = ef.hasThr() ? buffer.getInt() : -1;
-			int o = ef.hasObj() ? buffer.getInt() : -1;
-			processReturnReference(p, t, o);
-			break;
-		}
-		case EventKind.EXPLICIT_THROW:
-		{
-			EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
-			int p = ef.hasLoc() ? buffer.getInt() : -1;
-			int t = ef.hasThr() ? buffer.getInt() : -1;
-			int o = ef.hasObj() ? buffer.getInt() : -1;
-			processExplicitThrow(p, t, o);
-			break;
-		}
-		case EventKind.IMPLICIT_THROW:
-		{
-			EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
-			int p = ef.hasLoc() ? buffer.getInt() : -1;
-			int t = ef.hasThr() ? buffer.getInt() : -1;
-			int o = ef.hasObj() ? buffer.getInt() : -1;
-			processImplicitThrow(p, t, o);
-			break;
-		}
-		case EventKind.QUAD:
-		{
-			int q = buffer.getInt();
-			int t = buffer.getInt();
-			processQuad(q, t);
-			break;
-		}
-		case EventKind.BASIC_BLOCK:
-		{
-			int b = buffer.getInt();
-			int t = buffer.getInt();
-			if (hasEnterAndLeaveLoopEvent) {
-				processBasicBlock4loopConsistency(b, t);
-			}
-			if (isUserReqBasicBlockEvent) {
-				processBasicBlock(b, t);
-			}
-			break;
-		}
-		case EventKind.ENTER_MAIN_METHOD:
-		{
-			EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
-			int t = ef.hasThr() ? buffer.getInt() : -1;
-			processEnterMainMethod(t);
+			int l = ef.hasObj() ? buffer.getInt() : -1;
+			processNotifyAll(p, t, l);
 			break;
 		}
 		default:
@@ -603,112 +612,40 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 		}
 	}
 	
-	public void processEnterMainMethod(int t) {
-		error("void processEnterMainMethod(int t)");
-	}
-	public void processEnterMethod(int m, int t) {
-		error("void processEnterMethod(int m, int t)");
-	}
-	public void processLeaveMethod(int m, int t) { 
-		error("void processLeaveMethod(int m, int t)");
-	}
-	public void processEnterLoop(int w, int t) { 
-		error("void processEnterLoop(int w, int t)");
-	}
-	public void processLoopIteration(int w, int t) {
-		error("void processLoopIteration(int w, int t)");
-	}
-	public void processLeaveLoop(int w, int t) { 
-		error("void processLeaveLoop(int w, int t)");
-	}
-	public void processBasicBlock(int b, int t) { 
-		error("void processBasicBlock(int b, int t)");
-	}
-	public void processQuad(int p, int t) { 
-		error("void processQuad(int p, int t)");
-	}
-	public void processBefMethodCall(int i, int t, int o) { 
-		error("void processBefMethodCall(int i, int t, int o)");
-	}
-	public void processAftMethodCall(int i, int t, int o) { 
-		error("void processAftMethodCall(int i, int t, int o)");
-	}
-	public void processBefNew(int h, int t, int o) { 
-		error("void processBefNew(int h, int t, int o)");
-	}
-	public void processAftNew(int h, int t, int o) { 
-		error("void processAftNew(int h, int t, int o)");
-	}
-	public void processNewArray(int h, int t, int o) { 
-		error("void processNewArray(int h, int t, int o)");
-	}
-	public void processGetstaticPrimitive(int e, int t, int b, int f) { 
-		error("void processGetstaticPrimitive(int e, int t, int b, int f)");
-	}
-	public void processGetstaticReference(int e, int t, int b, int f, int o) { 
-		error("void processGetstaticReference(int e, int t, int b, int f, int o)");
-	}
-	public void processPutstaticPrimitive(int e, int t, int b, int f) { 
-		error("void processPutstaticPrimitive(int e, int t, int b, int f)");
-	}
-	public void processPutstaticReference(int e, int t, int b, int f, int o) { 
-		error("void processPutstaticReference(int e, int t, int b, int f, int o");
-	}
-	public void processGetfieldPrimitive(int e, int t, int b, int f) { 
-		error("void processGetfieldPrimitive(int e, int t, int b, int f)");
-	}
-	public void processGetfieldReference(int e, int t, int b, int f, int o) { 
-		error("void processGetfieldReference(int e, int t, int b, int f, int o)");
-	}
-	public void processPutfieldPrimitive(int e, int t, int b, int f) { 
-		error("void processPutfieldPrimitive(int e, int t, int b, int f)");
-	}
-	public void processPutfieldReference(int e, int t, int b, int f, int o) {
-		error("void processPutfieldReference(int e, int t, int b, int f, int o)");
-	}
-	public void processAloadPrimitive(int e, int t, int b, int i) { 
-		error("void processAloadPrimitive(int e, int t, int b, int i)");
-	}
-	public void processAloadReference(int e, int t, int b, int i, int o) { 
-		error("void processAloadReference(int e, int t, int b, int i, int o)");
-	}
-	public void processAstorePrimitive(int e, int t, int b, int i) { 
-		error("void processAstorePrimitive(int e, int t, int b, int i)");
-	}
-	public void processAstoreReference(int e, int t, int b, int i, int o) { 
-		error("void processAstoreReference(int e, int t, int b, int i, int o)");
-	}
-	public void processReturnPrimitive(int p, int t) { 
-		error("void processReturnPrimitive(int p, int t) ");
-	}
-	public void processReturnReference(int p, int t, int o) { 
-		error("void processReturnReference(int p, int t, int o)");
-	}
-	public void processExplicitThrow(int p, int t, int o) { 
-		error("void processExplicitThrow(int p, int t, int o)");
-	}
-	public void processImplicitThrow(int p, int t, int o) { 
-		error("void processImplicitThrow(int p, int t, int o)");
-	}
-	public void processThreadStart(int i, int t, int o) { 
-		error("void processThreadStart(int i, int t, int o)");
-	}
-	public void processThreadJoin(int i, int t, int o) { 
-		error("void processThreadJoin(int i, int t, int o) ");
-	}
-	public void processAcquireLock(int l, int t, int o) { 
-		error("void processAcquireLock(int l, int t, int o)");
-	}
-	public void processReleaseLock(int r, int t, int o) { 
-		error("void processReleaseLock(int r, int t, int o)");
-	}
-	public void processWait(int i, int t, int o) { 
-		error("void processWait(int i, int t, int o)");
-	}
-	public void processNotify(int i, int t, int o) { 
-		error("void processNotify(int i, int t, int o)");
-	}
-	private void error(String mSign) {
-		Messages.fatal(EVENT_NOT_HANDLED, getName(), mSign);
-	}
+	public void processEnterMainMethod(int t) { }
+	public void processEnterMethod(int m, int t) { }
+	public void processLeaveMethod(int m, int t) { }
+	public void processEnterLoop(int w, int t) { }
+	public void processLoopIteration(int w, int t) { }
+	public void processLeaveLoop(int w, int t) { }
+	public void processBasicBlock(int b, int t) { }
+	public void processQuad(int p, int t) { }
+	public void processBefMethodCall(int i, int t, int o) { }
+	public void processAftMethodCall(int i, int t, int o) { }
+	public void processBefNew(int h, int t, int o) { }
+	public void processAftNew(int h, int t, int o) { }
+	public void processNewArray(int h, int t, int o) { }
+	public void processGetstaticPrimitive(int e, int t, int b, int f) { }
+	public void processGetstaticReference(int e, int t, int b, int f, int o) { }
+	public void processPutstaticPrimitive(int e, int t, int b, int f) { }
+	public void processPutstaticReference(int e, int t, int b, int f, int o) { }
+	public void processGetfieldPrimitive(int e, int t, int b, int f) { }
+	public void processGetfieldReference(int e, int t, int b, int f, int o) { }
+	public void processPutfieldPrimitive(int e, int t, int b, int f) { }
+	public void processPutfieldReference(int e, int t, int b, int f, int o) { }
+	public void processAloadPrimitive(int e, int t, int b, int i) { }
+	public void processAloadReference(int e, int t, int b, int i, int o) { }
+	public void processAstorePrimitive(int e, int t, int b, int i) { }
+	public void processAstoreReference(int e, int t, int b, int i, int o) { }
+	public void processReturnPrimitive(int p, int t) { }
+	public void processReturnReference(int p, int t, int o) { }
+	public void processExplicitThrow(int p, int t, int o) { }
+	public void processImplicitThrow(int p, int t, int o) { }
+	public void processThreadStart(int i, int t, int o) { }
+	public void processThreadJoin(int i, int t, int o) { }
+	public void processAcquireLock(int l, int t, int o) { }
+	public void processReleaseLock(int r, int t, int o) { }
+	public void processWait(int i, int t, int o) { }
+	public void processNotifyAny(int i, int t, int o) { }
+	public void processNotifyAll(int i, int t, int o) { }
 }
