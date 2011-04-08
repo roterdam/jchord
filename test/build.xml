@@ -289,7 +289,7 @@
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.ext.java.analysis.path" value="${chord.test.dir}/classes"/>
-			<property name="chord.ext.dlog.analysis.path" value="${chord.test.dir}/classes"/>
+			<property name="chord.ext.dlog.analysis.path" value="${chord.test.dir}/src"/>
 			<property name="chord.run.analyses" value="dynamic-test-java"/>
 			<property name="chord.scope.exclude" value="java.,javax.,com.,org.,sun."/>
 		</ant>
