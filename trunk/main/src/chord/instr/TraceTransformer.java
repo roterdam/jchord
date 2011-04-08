@@ -60,6 +60,11 @@ public class TraceTransformer {
 	private final int verbose;
 
 	// cached values from scheme for efficiency
+	private final int enterMainMethodNumBytes;
+	private final int enterMethodNumBytes;
+	private final int leaveMethodNumBytes;
+	private final int befMethodCallNumBytes;
+	private final int aftMethodCallNumBytes;
 	private final int newArrayNumBytes;
 	private final int getstaticPrimitiveNumBytes;
 	private final int getstaticReferenceNumBytes;
@@ -78,15 +83,12 @@ public class TraceTransformer {
 	private final int acquireLockNumBytes;
 	private final int releaseLockNumBytes;
 	private final int waitNumBytes;
-	private final int notifyNumBytes;
-	private final int methodCallNumBytes;
+	private final int notifyAnyNumBytes;
+	private final int notifyAllNumBytes;
 	private final int returnPrimitiveNumBytes;
 	private final int returnReferenceNumBytes;
 	private final int explicitThrowNumBytes;
 	private final int implicitThrowNumBytes;
-	private final int enterMethodNumBytes;
-	private final int leaveMethodNumBytes;
-	private final int enterMainMethodNumBytes;
 
 	private ByteBufferedFile reader, writer;
 	private static final int MAX_CONS_SIZE = Config.maxConsSize;
@@ -95,20 +97,16 @@ public class TraceTransformer {
 	// the number of bytes currently accumulated in 'tmp'
 	// invariant: count < MAX_CONS_SIZE
 	private int count;
-	// The pending list contains triples (h, t, count) such that
-	// event "BEF_NEW h t" has been seen but event "AFT_NEW h t o"
-	// matching it has not yet been seen (i.e. the constructor at
-	// site h has not yet returned); 'count' in the triple is the
-	// index of byte ? of the placeholder event "NEW h t ?" kept
-	// in 'tmp'.  If the matching AFT_NEW event is encountered
-	// before the number of bytes accumulated in 'tmp' exceeds
-	// MAX_CONS_SIZE, the ? in the placeholder event is replaced
-	// by o.  Otherwise, a warning is printed that the object
-	// allocated at site h could not be determined, in which case
-	// ? takes value 0 which is the value of null.  This may
-	// happen either because MAX_CONS_SIZE is not big enough or
-	// because the constructor threw an exception, causing the
-	// matching AFT_NEW event to be bypassed.
+	// The pending list contains triples (h, t, count) such that event "BEF_NEW h t" has
+	// been seen but event "AFT_NEW h t o" matching it has not yet been seen (i.e. the
+	// constructor at site h has not yet returned); 'count' in the triple is the index of
+	// byte ? of the placeholder event "NEW h t ?" kept in 'tmp'.  If the matching
+	// AFT_NEW event is encountered before the number of bytes accumulated in 'tmp'
+	// exceeds MAX_CONS_SIZE, the ? in the placeholder event is replaced by o.  Otherwise,
+	// a warning is printed that the object allocated at site h could not be determined,
+	// in which case ? takes value 0 which is the value of null.  This may happen either
+	// because MAX_CONS_SIZE is not big enough or because the constructor threw an
+	// exception, causing the matching AFT_NEW event to be bypassed.
 	private List<IntTrio> pending;
 
 	/**
@@ -125,6 +123,11 @@ public class TraceTransformer {
 		this.rdFileName = rdFileName;
 		this.wrFileName = wrFileName;
 		this.verbose = Config.verbose;
+		enterMainMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD).size();
+		enterMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_METHOD).size();
+		leaveMethodNumBytes = scheme.getEvent(InstrScheme.LEAVE_METHOD).size();
+		befMethodCallNumBytes = scheme.getEvent(InstrScheme.BEF_METHOD_CALL).size();
+		aftMethodCallNumBytes = scheme.getEvent(InstrScheme.AFT_METHOD_CALL).size();
 		newArrayNumBytes = scheme.getEvent(InstrScheme.NEWARRAY).size();
 		getstaticPrimitiveNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_PRIMITIVE).size();
 		getstaticReferenceNumBytes = scheme.getEvent(InstrScheme.GETSTATIC_REFERENCE).size();
@@ -143,15 +146,12 @@ public class TraceTransformer {
 		acquireLockNumBytes = scheme.getEvent(InstrScheme.ACQUIRE_LOCK).size();
 		releaseLockNumBytes = scheme.getEvent(InstrScheme.RELEASE_LOCK).size();
 		waitNumBytes = scheme.getEvent(InstrScheme.WAIT).size();
-		notifyNumBytes = scheme.getEvent(InstrScheme.NOTIFY).size();
-		methodCallNumBytes = scheme.getEvent(InstrScheme.METHOD_CALL).size();
+		notifyAnyNumBytes = scheme.getEvent(InstrScheme.NOTIFY_ANY).size();
+		notifyAllNumBytes = scheme.getEvent(InstrScheme.NOTIFY_ALL).size();
 		returnPrimitiveNumBytes = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE).size();
 		returnReferenceNumBytes = scheme.getEvent(InstrScheme.RETURN_REFERENCE).size();
 		explicitThrowNumBytes = scheme.getEvent(InstrScheme.EXPLICIT_THROW).size();
 		implicitThrowNumBytes = scheme.getEvent(InstrScheme.IMPLICIT_THROW).size();
-		enterMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_METHOD).size();
-		leaveMethodNumBytes = scheme.getEvent(InstrScheme.LEAVE_METHOD).size();
-		enterMainMethodNumBytes = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD).size();
 	}
 	/**
 	 * Runs the trace transformer which creates a new trace that
@@ -303,6 +303,16 @@ public class TraceTransformer {
 	}
 	private int getOffset(int opcode) {
 		switch (opcode) {
+		case EventKind.ENTER_MAIN_METHOD:
+			return enterMainMethodNumBytes;
+		case EventKind.ENTER_METHOD:
+			return enterMethodNumBytes;
+		case EventKind.LEAVE_METHOD:
+			return leaveMethodNumBytes;
+		case EventKind.BEF_METHOD_CALL:
+			return befMethodCallNumBytes;
+		case EventKind.AFT_METHOD_CALL:
+			return aftMethodCallNumBytes;
 		case EventKind.NEWARRAY:
 			return newArrayNumBytes;
 		case EventKind.GETSTATIC_PRIMITIVE:
@@ -329,9 +339,6 @@ public class TraceTransformer {
 			return astorePrimitiveNumBytes;
 		case EventKind.ASTORE_REFERENCE:
 			return astoreReferenceNumBytes;
-		case EventKind.BEF_METHOD_CALL:
-		case EventKind.AFT_METHOD_CALL:
-			return methodCallNumBytes;
 		case EventKind.RETURN_PRIMITIVE:
 			return returnPrimitiveNumBytes;
 		case EventKind.RETURN_REFERENCE:
@@ -353,15 +360,10 @@ public class TraceTransformer {
 			return releaseLockNumBytes;
 		case EventKind.WAIT:
 			return waitNumBytes;
-		case EventKind.NOTIFY:
+		case EventKind.NOTIFY_ANY:
+			return notifyAnyNumBytes;
 		case EventKind.NOTIFY_ALL:
-			return notifyNumBytes;
-		case EventKind.ENTER_METHOD:
-			return enterMethodNumBytes;
-		case EventKind.LEAVE_METHOD:
-			return leaveMethodNumBytes;
-		case EventKind.ENTER_MAIN_METHOD:
-			return enterMainMethodNumBytes;
+			return notifyAllNumBytes;
 		default:
 			throw new RuntimeException("Unknown opcode: " + opcode);
 		}

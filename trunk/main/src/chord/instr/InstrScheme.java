@@ -25,43 +25,45 @@ import java.io.IOException;
 public class InstrScheme implements Serializable {
 	public final static String INSTR_SCHEME_FILE_KEY = "instr_scheme_file";
 
-	public static final int NEW = 0;
-	public static final int NEWARRAY = 1;
+	public static final int ENTER_MAIN_METHOD = 0;
+	public static final int ENTER_METHOD = 1;
+	public static final int LEAVE_METHOD = 2;
 
-	public static final int GETSTATIC_PRIMITIVE = 2;
-	public static final int GETSTATIC_REFERENCE = 3;
-	public static final int PUTSTATIC_PRIMITIVE = 4;
-	public static final int PUTSTATIC_REFERENCE = 5;
+	public static final int BEF_METHOD_CALL = 3;
+	public static final int AFT_METHOD_CALL = 4;
+	public static final int BEF_NEW = 5;
+	public static final int AFT_NEW = 6;
+	public static final int NEWARRAY = 7;
 
-	public static final int GETFIELD_PRIMITIVE = 6;
-	public static final int GETFIELD_REFERENCE = 7;
-	public static final int PUTFIELD_PRIMITIVE = 8;
-	public static final int PUTFIELD_REFERENCE = 9;
+	public static final int GETSTATIC_PRIMITIVE = 8;
+	public static final int GETSTATIC_REFERENCE = 9;
+	public static final int PUTSTATIC_PRIMITIVE = 10;
+	public static final int PUTSTATIC_REFERENCE = 11;
 
-	public static final int ALOAD_PRIMITIVE = 10;
-	public static final int ALOAD_REFERENCE = 11;
-	public static final int ASTORE_PRIMITIVE = 12;
-	public static final int ASTORE_REFERENCE = 13;
+	public static final int GETFIELD_PRIMITIVE = 12;
+	public static final int GETFIELD_REFERENCE = 13;
+	public static final int PUTFIELD_PRIMITIVE = 14;
+	public static final int PUTFIELD_REFERENCE = 15;
 
-	public static final int METHOD_CALL = 14;
-	public static final int RETURN_PRIMITIVE = 15;
-	public static final int RETURN_REFERENCE = 16;
-	public static final int EXPLICIT_THROW = 17;
-	public static final int IMPLICIT_THROW = 18;
+	public static final int ALOAD_PRIMITIVE = 16;
+	public static final int ALOAD_REFERENCE = 17;
+	public static final int ASTORE_PRIMITIVE = 18;
+	public static final int ASTORE_REFERENCE = 19;
 
-	public static final int THREAD_START = 19;
-	public static final int THREAD_JOIN = 20;
-	public static final int ACQUIRE_LOCK = 21;
-	public static final int RELEASE_LOCK = 22;
-	public static final int WAIT = 23;
-	public static final int NOTIFY = 24;
-	
-	public static final int ENTER_METHOD = 25;
-	public static final int LEAVE_METHOD = 26;
+	public static final int RETURN_PRIMITIVE = 20;
+	public static final int RETURN_REFERENCE = 21;
+	public static final int EXPLICIT_THROW = 22;
+	public static final int IMPLICIT_THROW = 23;
 
-	public static final int ENTER_MAIN_METHOD = 27;
+	public static final int THREAD_START = 24;
+	public static final int THREAD_JOIN = 25;
+	public static final int ACQUIRE_LOCK = 26;
+	public static final int RELEASE_LOCK = 27;
+	public static final int WAIT = 28;
+	public static final int NOTIFY_ANY = 29;
+	public static final int NOTIFY_ALL = 30;
 
-	public static final int MAX_NUM_EVENT_FORMATS = 28;
+	public static final int MAX_NUM_EVENT_FORMATS = 31;
 
 	public class EventFormat implements Serializable {
 		private boolean present;
@@ -70,8 +72,6 @@ public class InstrScheme implements Serializable {
 		private boolean hasFldOrIdx;
 		private boolean hasObj;
 		private boolean hasBaseObj;
-		private boolean isBef;
-		private boolean isAft;
 		private int size;
 		public void setPresent() { present = true; }
 		public boolean present() { return present; }
@@ -82,10 +82,6 @@ public class InstrScheme implements Serializable {
 		public boolean hasIdx() { return hasFldOrIdx; }
 		public boolean hasObj() { return hasObj; }
 		public boolean hasBaseObj() { return hasBaseObj; }
-		public void setBef() { isBef = true; }
-		public void setAft() { isAft = true; }
-		public boolean isBef() { return isBef; }
-		public boolean isAft() { return isAft; }
 		public void setLoc() {
 			if (!hasLoc) {
 				hasLoc = true; 
@@ -183,35 +179,41 @@ public class InstrScheme implements Serializable {
 		return hasQuadEvent;
 	}
 
-	public void setMethodCallEvent(boolean hasLoc, boolean hasThr, boolean hasObj,
-			boolean isBef, boolean isAft) {
-		if (!isBef && !isAft)
-			return;
-		EventFormat e = events[METHOD_CALL];
+	public void setBefMethodCallEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
+		EventFormat e = events[BEF_METHOD_CALL];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
-		if (isBef) e.setBef();
-		if (isAft) e.setAft();
 	}
 
-	public void setNewEvent(boolean hasLoc, boolean hasThr, boolean hasObj,
-			boolean isBef, boolean isAft) {
-		if (!isBef && !isAft)
-			return;
-		EventFormat e = events[NEW];
+	public void setAftMethodCallEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
+		EventFormat e = events[AFT_METHOD_CALL];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
 		if (hasObj) e.setObj();
-		if (isBef) e.setBef();
-		if (isAft) e.setAft();
-		if (isBef && hasObj) {
-			assert (isAft);
-			assert (hasLoc);
-			assert (hasThr);
+	}
+
+	public void setBefNewEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
+		EventFormat e = events[BEF_NEW];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) {
+			e.setLoc();
+			e.setThr();
+			e.setObj();
+			setAftNewEvent(true, true, true);
 		}
+	}
+
+	public void setAftNewEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
+		EventFormat e = events[AFT_NEW];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
 	}
 
 	public void setNewArrayEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
@@ -355,8 +357,7 @@ public class InstrScheme implements Serializable {
 		if (hasThr) e.setThr();
 	}
 
-	public void setReturnReferenceEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
+	public void setReturnReferenceEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
 		EventFormat e = events[RETURN_REFERENCE];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
@@ -364,8 +365,7 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setExplicitThrowEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
+	public void setExplicitThrowEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
 		EventFormat e = events[EXPLICIT_THROW];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
@@ -380,8 +380,7 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setThreadStartEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
+	public void setThreadStartEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
 		EventFormat e = events[THREAD_START];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
@@ -389,8 +388,7 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setThreadJoinEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
+	public void setThreadJoinEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
 		EventFormat e = events[THREAD_JOIN];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
@@ -398,8 +396,7 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setAcquireLockEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
+	public void setAcquireLockEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
 		EventFormat e = events[ACQUIRE_LOCK];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
@@ -407,8 +404,7 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setReleaseLockEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
+	public void setReleaseLockEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
 		EventFormat e = events[RELEASE_LOCK];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
@@ -416,8 +412,7 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setWaitEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
+	public void setWaitEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
 		EventFormat e = events[WAIT];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
@@ -425,9 +420,16 @@ public class InstrScheme implements Serializable {
 		if (hasObj) e.setObj();
 	}
 
-	public void setNotifyEvent(boolean hasLoc, boolean hasThr,
-			boolean hasObj) {
-		EventFormat e = events[NOTIFY];
+	public void setNotifyAnyEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
+		EventFormat e = events[NOTIFY_ANY];
+		e.setPresent();
+		if (hasLoc) e.setLoc();
+		if (hasThr) e.setThr();
+		if (hasObj) e.setObj();
+	}
+	
+	public void setNotifyAllEvent(boolean hasLoc, boolean hasThr, boolean hasObj) {
+		EventFormat e = events[NOTIFY_ALL];
 		e.setPresent();
 		if (hasLoc) e.setLoc();
 		if (hasThr) e.setThr();
@@ -482,7 +484,7 @@ public class InstrScheme implements Serializable {
 	}
 
 	public boolean needsHmap() {
-		return events[NEW].hasLoc() || events[NEWARRAY].hasLoc();
+		return events[BEF_NEW].hasLoc() || events[AFT_NEW].hasLoc() || events[NEWARRAY].hasLoc();
 	}
 
 	public boolean needsEmap() {
@@ -515,11 +517,13 @@ public class InstrScheme implements Serializable {
 
 	public boolean needsImap() {
 		return
-			events[METHOD_CALL].hasLoc() ||
+			events[BEF_METHOD_CALL].hasLoc() ||
+			events[AFT_METHOD_CALL].hasLoc() ||
 			events[THREAD_START].hasLoc() ||
 			events[THREAD_JOIN].hasLoc() ||
 			events[WAIT].hasLoc() ||
-			events[NOTIFY].hasLoc();
+			events[NOTIFY_ANY].hasLoc() ||
+			events[NOTIFY_ALL].hasLoc();
 	}
 
 	public boolean needsPmap() {
@@ -538,15 +542,18 @@ public class InstrScheme implements Serializable {
 		return hasBasicBlockEvent;
 	}
 
+	public boolean needsWmap() {
+		return hasEnterAndLeaveLoopEvent;
+	}
+
 	public boolean needsTraceTransform() {
-		return events[NEW].isBef() && events[NEW].hasObj();
+		return events[BEF_NEW].hasObj();
 	}
 
 	public static InstrScheme load(String fileName) {
 		InstrScheme scheme;
 		try {
-			ObjectInputStream stream = new ObjectInputStream(
-				new FileInputStream(fileName));
+			ObjectInputStream stream = new ObjectInputStream(new FileInputStream(fileName));
 			scheme = (InstrScheme) stream.readObject();
 			stream.close();
 		} catch (ClassNotFoundException ex) {
@@ -559,8 +566,7 @@ public class InstrScheme implements Serializable {
 
 	public void save(String fileName) {
 		try {
-			ObjectOutputStream stream = new ObjectOutputStream(
-				new FileOutputStream(fileName));
+			ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(fileName));
 			stream.writeObject(this);
 			stream.close();
 		} catch (IOException ex) {

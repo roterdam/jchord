@@ -41,11 +41,121 @@ public class EventHandler extends TraceEventHandler {
 	public static final int UNKNOWN_FIELD_VAL = -2;
 	protected static InstrScheme scheme;
 
+	public synchronized static void enterMainMethodEvent() {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
+				buffer.putByte(EventKind.ENTER_MAIN_METHOD);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void enterMethodEvent(int mId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_METHOD);
+				buffer.putByte(EventKind.ENTER_METHOD);
+				if (mId != MISSING_FIELD_VAL)
+					buffer.putInt(mId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void leaveMethodEvent(int mId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.LEAVE_METHOD);
+				buffer.putByte(EventKind.LEAVE_METHOD);
+				if (mId != MISSING_FIELD_VAL)
+					buffer.putInt(mId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void basicBlockEvent(int bId) {
+		if (trace) {
+			trace = false;
+			try {
+				buffer.putByte(EventKind.BASIC_BLOCK);
+				buffer.putInt(bId);
+				int tId = getObjectId(Thread.currentThread());
+				buffer.putInt(tId);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void quadEvent(int pId) {
+		if (trace) {
+			trace = false;
+			try {
+				buffer.putByte(EventKind.QUAD);
+				buffer.putInt(pId);
+				int tId = getObjectId(Thread.currentThread());
+				buffer.putInt(tId);
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void befMethodCallEvent(int iId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.BEF_METHOD_CALL);
+				buffer.putByte(EventKind.BEF_METHOD_CALL);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
+	public synchronized static void aftMethodCallEvent(int iId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.AFT_METHOD_CALL);
+				buffer.putByte(EventKind.AFT_METHOD_CALL);
+				if (iId != MISSING_FIELD_VAL)
+					buffer.putInt(iId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
 	public synchronized static void befNewEvent(int hId) {
 		if (trace) {
 			trace = false;
 			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+				EventFormat ef = scheme.getEvent(InstrScheme.BEF_NEW);
 				buffer.putByte(EventKind.BEF_NEW);
 				if (hId != MISSING_FIELD_VAL)
 					buffer.putInt(hId);
@@ -63,7 +173,7 @@ public class EventHandler extends TraceEventHandler {
 		if (trace) {
 			trace = false;
 			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.NEW);
+				EventFormat ef = scheme.getEvent(InstrScheme.AFT_NEW);
 				buffer.putByte(EventKind.AFT_NEW);
 				if (hId != MISSING_FIELD_VAL)
 					buffer.putInt(hId);
@@ -387,6 +497,83 @@ public class EventHandler extends TraceEventHandler {
 			trace = true;
 		}
 	}
+	public synchronized static void returnPrimitiveEvent(int pId) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
+				buffer.putByte(EventKind.RETURN_PRIMITIVE);
+				if (pId != MISSING_FIELD_VAL)
+					buffer.putInt(pId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	
+	}
+	public synchronized static void returnReferenceEvent(int pId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
+				buffer.putByte(EventKind.RETURN_REFERENCE);
+				if (pId != MISSING_FIELD_VAL)
+					buffer.putInt(pId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	
+	}
+	public synchronized static void explicitThrowEvent(int pId, Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
+				buffer.putByte(EventKind.EXPLICIT_THROW);
+				if (pId != MISSING_FIELD_VAL)
+					buffer.putInt(pId);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	
+	}
+	public synchronized static void implicitThrowEvent(Object o) {
+		if (trace) {
+			trace = false;
+			try {
+				EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
+				buffer.putByte(EventKind.IMPLICIT_THROW);
+				if (ef.hasThr()) {
+					int tId = getObjectId(Thread.currentThread());
+					buffer.putInt(tId);
+				}
+				if (ef.hasObj()) {
+					int oId = getObjectId(o);
+					buffer.putInt(oId);
+				}
+			} catch (IOException ex) { throw new RuntimeException(ex); }
+			trace = true;
+		}
+	}
 	public synchronized static void threadStartEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
@@ -489,12 +676,12 @@ public class EventHandler extends TraceEventHandler {
 			trace = true;
 		}
 	}
-	public synchronized static void notifyEvent(int iId, Object o) {
+	public synchronized static void notifyAnyEvent(int iId, Object o) {
 		if (trace) {
 			trace = false;
 			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
-				buffer.putByte(EventKind.NOTIFY);
+				EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY_ANY);
+				buffer.putByte(EventKind.NOTIFY_ANY);
 				if (iId != MISSING_FIELD_VAL)
 					buffer.putInt(iId);
 				if (ef.hasThr()) {
@@ -513,7 +700,7 @@ public class EventHandler extends TraceEventHandler {
 		if (trace) {
 			trace = false;
 			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY);
+				EventFormat ef = scheme.getEvent(InstrScheme.NOTIFY_ALL);
 				buffer.putByte(EventKind.NOTIFY_ALL);
 				if (iId != MISSING_FIELD_VAL)
 					buffer.putInt(iId);
@@ -524,193 +711,6 @@ public class EventHandler extends TraceEventHandler {
 				if (ef.hasObj()) {
 					int oId = getObjectId(o);
 					buffer.putInt(oId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void befMethodCallEvent(int iId, Object o) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-				buffer.putByte(EventKind.BEF_METHOD_CALL);
-				if (iId != MISSING_FIELD_VAL)
-					buffer.putInt(iId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-				if (ef.hasObj()) {
-					int oId = getObjectId(o);
-					buffer.putInt(oId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void aftMethodCallEvent(int iId, Object o) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.METHOD_CALL);
-				buffer.putByte(EventKind.AFT_METHOD_CALL);
-				if (iId != MISSING_FIELD_VAL)
-					buffer.putInt(iId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-				if (ef.hasObj()) {
-					int oId = getObjectId(o);
-					buffer.putInt(oId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void returnPrimitiveEvent(int pId) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.RETURN_PRIMITIVE);
-				buffer.putByte(EventKind.RETURN_PRIMITIVE);
-				if (pId != MISSING_FIELD_VAL)
-					buffer.putInt(pId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	
-	}
-	public synchronized static void returnReferenceEvent(int pId, Object o) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.RETURN_REFERENCE);
-				buffer.putByte(EventKind.RETURN_REFERENCE);
-				if (pId != MISSING_FIELD_VAL)
-					buffer.putInt(pId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-				if (ef.hasObj()) {
-					int oId = getObjectId(o);
-					buffer.putInt(oId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	
-	}
-	public synchronized static void explicitThrowEvent(int pId, Object o) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.EXPLICIT_THROW);
-				buffer.putByte(EventKind.EXPLICIT_THROW);
-				if (pId != MISSING_FIELD_VAL)
-					buffer.putInt(pId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-				if (ef.hasObj()) {
-					int oId = getObjectId(o);
-					buffer.putInt(oId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	
-	}
-	public synchronized static void implicitThrowEvent(Object o) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.IMPLICIT_THROW);
-				buffer.putByte(EventKind.IMPLICIT_THROW);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-				if (ef.hasObj()) {
-					int oId = getObjectId(o);
-					buffer.putInt(oId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void quadEvent(int pId) {
-		if (trace) {
-			trace = false;
-			try {
-				buffer.putByte(EventKind.QUAD);
-				buffer.putInt(pId);
-				int tId = getObjectId(Thread.currentThread());
-				buffer.putInt(tId);
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void basicBlockEvent(int bId) {
-		if (trace) {
-			trace = false;
-			try {
-				buffer.putByte(EventKind.BASIC_BLOCK);
-				buffer.putInt(bId);
-				int tId = getObjectId(Thread.currentThread());
-				buffer.putInt(tId);
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void enterMainMethodEvent() {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_MAIN_METHOD);
-				buffer.putByte(EventKind.ENTER_MAIN_METHOD);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void enterMethodEvent(int mId) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.ENTER_METHOD);
-				buffer.putByte(EventKind.ENTER_METHOD);
-				if (mId != MISSING_FIELD_VAL)
-					buffer.putInt(mId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
-				}
-			} catch (IOException ex) { throw new RuntimeException(ex); }
-			trace = true;
-		}
-	}
-	public synchronized static void leaveMethodEvent(int mId) {
-		if (trace) {
-			trace = false;
-			try {
-				EventFormat ef = scheme.getEvent(InstrScheme.LEAVE_METHOD);
-				buffer.putByte(EventKind.LEAVE_METHOD);
-				if (mId != MISSING_FIELD_VAL)
-					buffer.putInt(mId);
-				if (ef.hasThr()) {
-					int tId = getObjectId(Thread.currentThread());
-					buffer.putInt(tId);
 				}
 			} catch (IOException ex) { throw new RuntimeException(ex); }
 			trace = true;
