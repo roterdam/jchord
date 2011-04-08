@@ -168,7 +168,7 @@ public class ClassicProject extends Project {
 			}
 			for (ITask task : trgtToConsumingTasksMap.get(trgt)) {
 				String taskId = "\"" + task.getName() + "_task\"";
-				out.println(taskId + " -> " + trgtId + ";");
+				out.println(trgtId + " -> " + taskId + ";");
 			}
 		}
 		for (String name : nameToTaskMap.keySet()) {
