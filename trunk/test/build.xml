@@ -180,7 +180,7 @@
 		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
-			<property name="chord.run.analyses" value="cipa-0cfa-dlog,thrOblAbbrCICG-dlog,thrSenAbbrCICG-dlog"/>
+			<property name="chord.run.analyses" value="cipa-0cfa-dlog"/>
 			<property name="chord.print.rels" value="${chord.cia.rels}"/>
 		</ant>
 		<antcall target="compare-rels">
@@ -200,7 +200,7 @@
 		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
-			<property name="chord.run.analyses" value="cspa-0cfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+			<property name="chord.run.analyses" value="cspa-0cfa-dlog"/>
 			<property name="chord.print.rels" value="${chord.csa.rels}"/>
 		</ant>
 		<antcall target="compare-rels">
@@ -222,7 +222,7 @@
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.inst.ctxt.kind" value="co"/>
 			<property name="chord.kobj.k" value="1"/>
-			<property name="chord.run.analyses" value="cspa-kobj-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+			<property name="chord.run.analyses" value="cspa-kobj-dlog"/>
 			<property name="chord.print.rels" value="${chord.csa.rels}"/>
 		</ant>
 		<antcall target="compare-rels">
@@ -244,7 +244,7 @@
 			<property name="chord.reuse.scope" value="true"/>
 			<property name="chord.inst.ctxt.kind" value="cs"/>
 			<property name="chord.kcfa.k" value="1"/>
-			<property name="chord.run.analyses" value="cspa-kcfa-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+			<property name="chord.run.analyses" value="cspa-kcfa-dlog"/>
 			<property name="chord.print.rels" value="${chord.csa.rels}"/>
 		</ant>
 		<antcall target="compare-rels">
@@ -268,7 +268,7 @@
 			<property name="chord.stat.ctxt.kind" value="cs"/>
 			<property name="chord.kobj.k" value="1"/>
 			<property name="chord.kcfa.k" value="1"/>
-			<property name="chord.run.analyses" value="cspa-hybrid-dlog,thrOblAbbrCSCG-dlog,thrSenAbbrCSCG-dlog"/>
+			<property name="chord.run.analyses" value="cspa-hybrid-dlog"/>
 			<property name="chord.print.rels" value="${chord.csa.rels}"/>
 		</ant>
 		<antcall target="compare-rels">
@@ -293,6 +293,10 @@
 			<property name="chord.run.analyses" value="dynamic-test-java"/>
 			<property name="chord.scope.exclude" value="java.,javax.,com.,org.,sun."/>
 		</ant>
+		<antcall target="eqlist">
+			<param name="arg1" location="${testdir}/correct_output/trace.txt"/>
+			<param name="arg2" location="${testdir}/chord_output/trace.txt"/>
+		</antcall>
 		<echo message="===== FINISHED test-dynamic ON: ${testdir}"/>
 	</target>
 
@@ -327,17 +331,27 @@
 	<!--
 		params: arg1, arg2
 	-->
-	<target name="eqset">
+	<target name="eqlist">
 		<java classname="FileCmp" fork="true" classpath="classes">
-			<arg line="-eq ${arg1} ${arg2}"/> 
+			<arg line="-eqlist ${arg1} ${arg2}"/> 
 		</java>
 	</target>
+
+	<!--
+		params: arg1, arg2
+	-->
+	<target name="eqset">
+		<java classname="FileCmp" fork="true" classpath="classes">
+			<arg line="-eqset ${arg1} ${arg2}"/> 
+		</java>
+	</target>
+
 	<!--
 		params: arg1, arg2
 	-->
 	<target name="subset">
 		<java classname="FileCmp" fork="true" classpath="classes">
-			<arg line="-sub ${arg1} ${arg2}"/> 
+			<arg line="-subset ${arg1} ${arg2}"/> 
 		</java>
 	</target>
 
