@@ -59,54 +59,106 @@ import chord.util.graph.MutableGraph;
 /**
  * Analysis for pre-computing abstract contexts.
  * <p>
- * The goal of this analysis is to translate client-specified inputs concerning the desired kind of context sensitivity
- * into relations that are subsequently consumed by context-sensitive may alias and call graph analyses.
+ * The goal of this analysis is to translate client-specified inputs concerning the desired
+ * kind of context sensitivity into relations that are subsequently consumed by
+ * context-sensitive may alias and call graph analyses.
  * <p>
  * This analysis allows:
  * <ul>
- *   <li>each method to be analyzed using a different kind of context sensitivity (one of context insensitivity, k-CFA,
- *       k-object-sensitivity, and copy-context-sensitivity),</li>
- *   <li>each local variable to be analyzed context sensitively or insensitively, and</li>
- *   <li>a different 'k' value to be used for each object allocation site and method call site.</li>
+ *   <li>
+ *     each method to be analyzed using a different kind of context sensitivity, namely, one
+ *     of context insensitivity, k-CFA, k-object-sensitivity, and copy-context-sensitivity;
+ *   </li>
+ *   <li>
+ *     each local variable to be analyzed context sensitively or insensitively; and
+ *   </li>
+ *   <li>
+ *     a different 'k' value to be used for each object allocation site and method call site.
+ *   </li>
  * </ul>
- * This analysis can be called multiple times and in each invocation it can incorporate feedback from a client to adjust
- * the precision of the points-to information and call graph computed subsequently by the may alias and call graph
- * analyses.  Clients can indicate in each invocation:
+ * This analysis can be called multiple times and in each invocation it can incorporate
+ * feedback from a client to adjust the precision of the points-to information and call graph
+ * computed subsequently by the may alias and call graph analyses.  Clients can indicate in
+ * each invocation:
  * <ul>
- *   <li>Which methods must be analyzed context sensitively (in addition to those already being analyzed context
- *       sensitively in the previous invocation of this analysis) and using what kind of context sensitivity; the
- *       remaining methods will be analyzed context insensitively (that is, in the lone 'epsilon' context)</li>
- *   <li>Which local variables of reference type must be analyzed context sensitively (in addition to those already being
- *       analyzed context sensitively in the previous invocation of this analysis); the remaining ones will be analyzed
- *       context insensitively (that is, their points-to information will be tracked in the lone 'epsilon' context).</li>
- *   <li>The object alocation sites and method call sites whose 'k' values must be incremented (over those used in the
- *       previous invocation of this analysis).</li>
+ *   <li>
+ *     Which methods must be analyzed context sensitively (in addition to those already being
+ *     analyzed context sensitively in the previous invocation of this analysis) and using
+ *     what kind of context sensitivity; the remaining methods will be analyzed context
+ *     insensitively (that is, in the lone 'epsilon' context)
+ *   </li>
+ *   <li>
+ *     Which local variables of reference type must be analyzed context sensitively (in
+ *     addition to those already being analyzed context sensitively in the previous
+ *     invocation of this analysis); the remaining ones will be analyzed context insensitively
+ *     (that is, their points-to information will be tracked in the lone 'epsilon' context).
+ *   </li>
+ *   <li>
+ *     The object alocation sites and method call sites whose 'k' values must be incremented
+ *     (over those used in the previous invocation of this analysis).
+ *   </li>
  * </ul>
  * Recognized system properties:
  * <ul>
- *   <li>chord.ctxt.kind: the kind of context sensitivity to use for each method (and all its locals).
- *       It may be 'ci' (context insensitive) or 'cs' (k-CFA).</li>
- *   <li>chord.inst.ctxt.kind: the kind of context sensitivity to use for each instance method (and all its locals).
- *       It may be 'ci' (context insensitive), 'cs' (k-CFA), or 'co' (k-object-sensitive).</li>
- *   <li>chord.stat.ctxt.kind: the kind of context sensitivity to use for each static method (and all its locsals).
- *       It may be one of 'ci' (context insensitive), 'cs' (k-CFA), or 'cc' (copy-context-sensitive).</li>
- *   <li>chord.kobj.k and chord.kcfa.k: the 'k' value to use for each object allocation site and each method call site,
- *       respectively.</li>
+ *   <li>
+ *     chord.ctxt.kind: the kind of context sensitivity to use for each method (and all its
+ *     locals).  It may be 'ci' (context insensitive) or 'cs' (k-CFA).
+ *   </li>
+ *   <li>
+ *     chord.inst.ctxt.kind: the kind of context sensitivity to use for each instance method
+ *     (and all its locals).  It may be 'ci' (context insensitive), 'cs' (k-CFA), or 'co'
+ *     (k-object-sensitive).
+ *   </li>
+ *   <li>
+ *     chord.stat.ctxt.kind: the kind of context sensitivity to use for each static method
+ *     (and all its locals).  It may be one of 'ci' (context insensitive), 'cs' (k-CFA), or
+ *     'co' (copy-context-sensitive).
+ *   </li>
+ *   <li>
+ *     chord.kobj.k and chord.kcfa.k: the 'k' value to use for each object allocation site and
+ *     each method call site, respectively.
+ *   </li>
  * </ul>
  * 
  * 
  * This analysis outputs the following domains and relations:
  * <ul>
- *   <li>C: domain containing all abstract contexts</li>
- *   <li>CC: relation containing each pair (c,c2) such that c2 is all but the last element of context c</li>
- *   <li>CH: relation containing each (c,h) such that object allocation site h is the last element of abstract context c</li>
- *   <li>CI: relation containing each (c,i) such that call site i is the last element of abstract context c</li>
- *   <li>CVC: relation containing each (c,v,o) such that local v might point to object o in context c of its declaring method.</li>
- *   <li>CFC: relation containing each (o1,f,o2) such that instance field f of object o1 might point to object o2</li>
- *   <li>FC: relation containing each (f,o) such that static field f may point to object o</li>
- *   <li>CICM: relation containing each (c,i,c2,m) if invocation i in context c can reach method 2 (in context c2)</li>
- *   <li>rootCM: relation containing each (c,m) such that method m is an entry method in context c</li>
- *   <li>reachableCM: relation containing each (c,m) such that method m can be called in context c</li>
+ *   <li>
+ *     C: domain containing all abstract contexts
+ *   </li>
+ *   <li>
+ *     CC: relation containing each pair (c,c2) such that c2 is all but the last element of
+ *     context c
+ *   </li>
+ *   <li>
+ *     CH: relation containing each (c,h) such that object allocation site h is the last
+ *     element of abstract context c
+ *   </li>
+ *   <li>
+ *     CI: relation containing each (c,i) such that call site i is the last element of abstract
+ *     context c
+ *   </li>
+ *   <li>
+ *     CVC: relation containing each (c,v,o) such that local v might point to object o in
+ *     context c of its declaring method.
+ *   </li>
+ *   <li>
+ *     CFC: relation containing each (o1,f,o2) such that instance field f of object o1 might
+ *     point to object o2
+ *   </li>
+ *   <li>
+ *     FC: relation containing each (f,o) such that static field f may point to object o
+ *   </li>
+ *   <li>
+ *     CICM: relation containing each (c,i,c2,m) if invocation i in context c can reach
+ *     method m (in context c2)
+ *   </li>
+ *   <li>
+ *     rootCM: relation containing each (c,m) such that method m is an entry method in context c
+ *   </li>
+ *   <li>
+ *     reachableCM: relation containing each (c,m) such that method m can be called in context c
+ *   </li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -115,7 +167,8 @@ import chord.util.graph.MutableGraph;
 	name = "ctxts-java",
 	consumes = { "IM", "VH" },
 	produces = { "C", "CC", "CH", "CI", "epsilonV", "epsilonM", "kcfaSenM", "kobjSenM", "ctxtCpyM",
-		"refinableCH", "refinableCI", "refinableM", "refinableV" },
+		"refinableCH", "refinableCI", "refinableM", "refinableV"
+	},
 	namesOfTypes = { "C" },
 	types = { DomC.class }
 )
@@ -150,7 +203,7 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 	private jq_Method mainMeth;
 	private boolean[] isCtxtSenV;	// indexed by domV
-	private int[] methKind;		 // indexed by domM
+	private int[] methKind;			// indexed by domM
 	private int[] kobjValue;		// indexed by domH
 	private int[] kcfaValue;		// indexed by domI
 
@@ -232,26 +285,23 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		maxIters = Integer.getInteger("chord.max.iters", 0);
 		
 		String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
-		String instCtxtKindStr = System.getProperty(
-			"chord.inst.ctxt.kind", ctxtKindStr);
-		String statCtxtKindStr = System.getProperty(
-			"chord.stat.ctxt.kind", ctxtKindStr);
+		Config.check(ctxtKindStr, new String[] { "ci", "cs", "co" }, "chord.ctxt.kind");
+		String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
+		Config.check(instCtxtKindStr, new String[] { "ci", "cs", "co" }, "chord.inst.ctxt.kind");
+		String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
+		Config.check(statCtxtKindStr, new String[] { "ci", "cs", "co" }, "chord.stat.ctxt.kind");
 		if (instCtxtKindStr.equals("ci")) {
 			instCtxtKind = CTXTINS;
 		} else if (instCtxtKindStr.equals("cs")) {
 			instCtxtKind = KCFASEN;
-		} else if (instCtxtKindStr.equals("co")) {
-			instCtxtKind = KOBJSEN;
 		} else
-			assert false;
+			instCtxtKind = KOBJSEN;
 		if (statCtxtKindStr.equals("ci")) {
 			statCtxtKind = CTXTINS;
 		} else if (statCtxtKindStr.equals("cs")) {
 			statCtxtKind = KCFASEN;
-		} else if (statCtxtKindStr.equals("cc")) {
-			statCtxtKind = CTXTCPY;
 		} else
-			assert false;
+			statCtxtKind = CTXTCPY;
 
 		kobjK = Integer.getInteger("chord.kobj.k", 1);
 		assert (kobjK > 0);
@@ -321,10 +371,11 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		// The sites we actually care about
 		Set<Inst> hSet = new HashSet<Inst>();
 		Set<Inst> iSet = new HashSet<Inst>();
-		for (Object inst : domH) {
-			if (inst == null) continue; // Skip null
-			if (keepOnlyReachable && !reachableMethods.contains(((Inst)inst).getMethod())) continue;
-			hSet.add((Inst)inst);
+		for (Object o : domH) {
+			if (o == null) continue; // Skip null
+			Inst inst = (Inst) o;
+			if (keepOnlyReachable && !reachableMethods.contains(inst.getMethod())) continue;
+			hSet.add(inst);
 		}
 		for (Inst inst : domI) {
 			if (keepOnlyReachable && !reachableMethods.contains(inst.getMethod())) continue;
@@ -953,19 +1004,16 @@ public class CtxtsAnalysis extends JavaAnalysis {
 			statCtxtKind = CtxtsAnalysis.CTXTINS;
 		} else if (statCtxtKindStr.equals("cs")) {
 			statCtxtKind = CtxtsAnalysis.KCFASEN;
-		} else if (statCtxtKindStr.equals("cc")) {
+		} else if (statCtxtKindStr.equals("co")) {
 			statCtxtKind = CtxtsAnalysis.CTXTCPY;
 		} else
 			throw new RuntimeException();
 		String cspaKind;
-		if (instCtxtKind == CtxtsAnalysis.CTXTINS &&
-			statCtxtKind == CtxtsAnalysis.CTXTINS)
+		if (instCtxtKind == CtxtsAnalysis.CTXTINS && statCtxtKind == CtxtsAnalysis.CTXTINS)
 			cspaKind = "cspa-0cfa-dlog";
-		else if (instCtxtKind == CtxtsAnalysis.KOBJSEN &&
-			statCtxtKind == CtxtsAnalysis.CTXTCPY)
+		else if (instCtxtKind == CtxtsAnalysis.KOBJSEN && statCtxtKind == CtxtsAnalysis.CTXTCPY)
 			cspaKind = "cspa-kobj-dlog";
-		else if (instCtxtKind == CtxtsAnalysis.KCFASEN &&
-			statCtxtKind == CtxtsAnalysis.KCFASEN)
+		else if (instCtxtKind == CtxtsAnalysis.KCFASEN && statCtxtKind == CtxtsAnalysis.KCFASEN)
 			cspaKind = "cspa-kcfa-dlog";
 		else
 			cspaKind = "cspa-hybrid-dlog";
