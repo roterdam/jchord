@@ -5,8 +5,9 @@
 -->
 <project name="chord-tester" default="help">
 	<property name="chord.home.dir" location="../main"/>
+	<property name="chord.test.dir" location="."/>
 	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="${chord.home.dir}/lib/ant-contrib.jar"/>
-	<property name="test.dirs" value="tsp,elevator"/>
+	<property name="test.dirs" value="bubblesort,bellman-ford"/>
     <property name="chord.main.doms" value="M,F,P,I,E,H,L,R,T"/>
     <property name="chord.main.rels" value="cha,aryElemE,statFldE,writeE,EF,HT,PI,PL,PP,specIM,statIM,virtIM,clinitM,statM,syncM"/>
 	<property name="chord.main.doms_and_rels" value="${chord.main.doms},${chord.main.rels}"/>
@@ -287,15 +288,11 @@
 		<ant dir="${chord.home.dir}" target="run">
 			<property name="chord.work.dir" value="${testdir}"/>
 			<property name="chord.reuse.scope" value="true"/>
-			<property name="chord.ext.java.analysis.path" value="classes"/>
+			<property name="chord.ext.java.analysis.path" value="${chord.test.dir}/classes"/>
+			<property name="chord.ext.dlog.analysis.path" value="${chord.test.dir}/classes"/>
 			<property name="chord.run.analyses" value="dynamic-test-java"/>
 			<property name="chord.scope.exclude" value="java.,javax.,com.,org.,sun."/>
 		</ant>
-		<antcall target="compare-rels">
-			<param name="testdir" value="${testdir}"/>
-			<param name="correctdir" value="${testdir}/correct_output/cia"/>
-			<param name="relnames" value="${chord.cia.rels}"/>
-		</antcall>
 		<echo message="===== FINISHED test-dynamic ON: ${testdir}"/>
 	</target>
 
