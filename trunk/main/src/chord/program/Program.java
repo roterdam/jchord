@@ -25,14 +25,14 @@ import java.io.IOException;
 
 import com.java2html.Java2HTML;
 
-import chord.project.Project;
 import chord.project.OutDirUtils;
 import chord.project.Messages;
 import chord.project.Config;
 import chord.util.tuple.object.Pair;
-import chord.util.ArraySet;
 import chord.util.IndexSet;
+import chord.util.ProcessExecutor;
 import chord.util.Utils;
+
  
 import chord.runtime.BasicEventHandler;
 import chord.instr.BasicInstrumentor;
@@ -679,6 +679,19 @@ public class Program {
 		assert(runIDs.length > 0);
 		List<String> classNames = new ArrayList<String>();
 		String fileName = Config.classesFileName;
+		
+		String runBefore = System.getProperty("chord.dynamic.runBeforeCmd");
+		Process beforeProc = null;
+		try { 
+			
+			if(runBefore != null) {
+				System.out.println("for dynamic analysis, running pre-command " + runBefore);
+				beforeProc = ProcessExecutor.executeAsynch( new String[] {runBefore}, null, null);
+			}
+		} catch(Throwable ex) {
+			ex.printStackTrace();
+		}
+		
 		List<String> basecmd = new ArrayList<String>();
 		basecmd.add("java");
 		basecmd.addAll(Utils.tokenize(Config.runtimeJvmargs));
@@ -702,6 +715,7 @@ public class Program {
 			}
 		}
 		basecmd.add(mainClassName);
+		
 		for (String runID : runIDs) {
 			String args = System.getProperty("chord.args." + runID, "");
 			List<String> fullcmd = new ArrayList<String>(basecmd);
@@ -720,6 +734,8 @@ public class Program {
 				Messages.fatal(ex);
 			}
 		}
+		if(beforeProc != null)
+			beforeProc.destroy();
 		return classNames;
 	}
 
