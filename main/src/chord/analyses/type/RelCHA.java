@@ -55,7 +55,7 @@ public class RelCHA extends ProgramRel {
 		for (jq_Reference r : classes) {
 			if (r instanceof jq_Array) {
 				for (jq_InstanceMethod m : objClsInstanceMethods)
-					add(m, r, StubRewrite.maybeReplaceVirtCallDest(m, m));
+					add(m, r, StubRewrite.maybeReplaceVirtCallDest(m, m, domM));
 				continue;
 			}
 			jq_Class c = (jq_Class) r;
@@ -79,7 +79,7 @@ public class RelCHA extends ProgramRel {
 							assert (n != null);
 							if (domM.contains(n)) {
 								// rewrite dest, after resolution
-								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n));
+								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n, domM));
 							}
 						}
 					}
@@ -95,7 +95,8 @@ public class RelCHA extends ProgramRel {
 							assert (n != null);
 							if (domM.contains(n)) {
 								// rewrite dest, after resolution
-								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n));
+								add(m, d, StubRewrite.maybeReplaceVirtCallDest(m,n, domM));
+								add(m, d, n);
 							}
 						}
 					}

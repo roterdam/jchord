@@ -71,7 +71,7 @@ public class StubRewrite {
 	
 	//called for virtual function lookup
 	public static jq_Method maybeReplaceVirtCallDest(jq_InstanceMethod base,
-			jq_InstanceMethod derived) {
+			jq_InstanceMethod derived, DomM domM) {
 		jq_Class baseClass= base.getDeclaringClass();
 		jq_Class remapClass = classLookupTable.get(baseClass);
 		if(remapClass != null) {
@@ -82,15 +82,21 @@ public class StubRewrite {
 				System.err.println("WARN StubRewrite remap failed due to missing target method for " + remapClass + " " + nd);
 				assert false;
 				return derived; //assume no remap
-			}
-//				System.out.println("StubRewrite mapping "+ base + " to " + remapped);
-			return remapped;
-		} else {
-			jq_Method replacement = methLookupTable.get(derived);
-			if(replacement == null || replacement.equals(base))//can't map derived to base
+			} else  if(!domM.contains(remapped)) {
+				System.err.println("WARN: StubRewrite tried to map " + derived + " to "+ 
+						remapped + ", which doesn't exist");
 				return derived;
-			else return replacement;
-
+			} else
+				return remapped;
+		} else { //didn't remap entire class. What about methods?
+			jq_Method replacement = methLookupTable.get(derived);
+			if(replacement == null || replacement.equals(base)) {//can't map derived to base {
+//				System.out.println("NOTE: NOT virtual call to " + derived + "; no replacement found");
+				return derived;
+			} else {
+				System.out.println("NOTE: mapping virtual call to " + derived + " being redirected to " + replacement);
+				return replacement;
+			}
 		}
 	}
 

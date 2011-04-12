@@ -13,8 +13,12 @@ import chord.util.Utils;
 	)
 public class RelScopeExcludedT extends ProgramRel implements IClassVisitor {
 	public void visit(jq_Class c) {
-		if (Utils.prefixMatch(c.getName(), Config.scopeExcludeAry))
+		if (isExcluded(c.getName()))
 			add(c);
+	}
+	
+	public static boolean isExcluded(String n) {
+		return Utils.prefixMatch(n, Config.scopeExcludeAry);
 	}
 
 }
