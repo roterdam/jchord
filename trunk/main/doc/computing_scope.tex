@@ -1,5 +1,5 @@
 \xname{computing_scope}
-\chapter{Computing Analysis Scope}
+\chapter{Analysis Scope Construction}
 \label{chap:computing-scope}
 
 A pre-requisite to analyzing a Java program using any program analysis framework,
@@ -136,7 +136,7 @@ least expects properties \code{chord.main.class} and
 program's main class (e.g., \code{com.example.Main}) and the
 program's application classpath, respectively.
 
-\subsection{RTA Scope Construction}
+\subsection{Rapid Type Analysis}
 
 If property \code{chord.scope.kind} has value {\tt rta}, then Chord
 computes analysis scope statically using Rapid Type Analysis (RTA).
@@ -174,7 +174,7 @@ added.
 %classes are included in the class hierarchy (see Section
 %\ref{sec:cha}).
 
-\subsection{CHA Scope Construction}
+\subsection{Class Hierarchy Analysis}
 
 If property \code{chord.scope.kind} has value {\tt cha}, then Chord
 computes analysis scope statically using Class Hierarchy Analysis (CHA).
@@ -229,7 +229,7 @@ superclass B which in turn has superclass A, and A is missing, then
 both B and C are excluded.
 \end{itemize}
 
-\subsection{Dynamic Scope Construction}
+\subsection{Dynamic Analysis}
 
 If property \code{chord.scope.kind} has value {\tt dynamic}, then Chord
 computes analysis scope

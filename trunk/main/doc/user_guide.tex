@@ -35,6 +35,8 @@
 
 \newenvironment{mytable}[1]{\htmlattributes*{table}{border=1 cellpadding=10}\begin{tabular}{#1}}{\end{tabular}}
 
+\newcommand\includeimage[2]{\texonly{\includegraphics[scale=#1]{#2}}\htmlonly{{\htmlimg{#2}}}}
+
 \newcommand\bh{{\bf h}}
 \newcommand\bi{{\bf i}}
 \newcommand\bo{{\bf o}}
@@ -47,6 +49,9 @@
 \newcommand\bp{{\bf p}}
 \newcommand\br{{\bf r}}
 \newcommand\bw{{\bf w}}
+
+\newcommand\bsdlicense{\xlink{New BSD License}{http://www.opensource.org/licenses/bsd-license.php}}
+\newcommand\chordweb{\url{http://jchord.googlecode.com/}}
 
 \setcounter{htmldepth}{2}
 \setcounter{htmlautomenu}{3}
@@ -62,15 +67,17 @@
 
 \input{whatis_chord}
 \input{getting_started}
-\input{example}
 \input{architecture}
 \input{properties}
+\input{program_setup}
+\input{program_representation}
+\input{computing_scope}
+\input{running_analysis}
 \input{predefined_analyses}
-\input{analyses}
+\input{project}
+\input{writing_analysis}
 \input{dynamic_analysis}
 \input{datalog_analysis}
-\input{computing_scope}
-\input{program_representation}
 \input{acknowledgments}
 
 \end{document}
