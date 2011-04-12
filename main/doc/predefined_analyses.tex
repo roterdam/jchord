@@ -51,13 +51,19 @@ Additionally, it is field-sensitive, in that it distinguishes between different 
 but array-insensitive, in that it cannot distinguish between different elements of the same array;
 all array elements are modeled using a distinguished hypothetical instance field (that has index 0 in domain F).
 
-To run this analysis, run the following command in Chord's main directory:
+To run this analysis, run the following command:
 
 \begin{framed}
 \begin{verbatim}
-ant -Dchord.work.dir=<...> -Dchord.run.analyses=cipa-0cfa-dlog run
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=cipa-0cfa-dlog run
 \end{verbatim}
 \end{framed}
+
+where \code{<WORK_DIR>} is a directory
+containing a file named \code{chord.properties} that defines
+properties \code{chord.main.class} and \code{chord.class.path} specifying
+the main class and the application classpath, respectively, of the program
+to be analyzed.
 
 This analysis outputs the following relations:
 
@@ -68,7 +74,8 @@ This analysis outputs the following relations:
 {\it Call-graph information:}
 \begin{itemize}
 \item rootM subset M contains the set of entry methods that may be reachable; this includes the program's main method
-as well as each static initializer method that may be reachable from the main method.
+as well as each static initializer method that may be reachable from the main
+method.
 \item reachableM subset M contains the set of methods that may be reachable from the program's main method.
 \item IM subset (I $\times$ M) contains tuples \texttt{(i,m)} such that call site \texttt{i} may call method \texttt{m}.
 %\item MM subset (M $\times$ M) contains tuples \texttt{(m1,m2)} such that method \texttt{m1} may call method \texttt{m2}.
@@ -87,25 +94,28 @@ site \texttt{h1} may point to some object allocated at site \texttt{h2}.
 
 \subsection{Context-Sensitive Analysis}
 
-In a context-sensitive analysis, there is no longer just one abstract memory location per object allocation site.
-Rather, the set of objects a reference can point to depends on the \textit{context} in which the method containing the
-reference is called.
-Whereas a context-insensitive analysis talks about the domain of methods (M) and the domain
-of allocation sites (H), a context-sensitive analysis talks about the domain of abstract contexts, labeled C.
-Elements of domain C contain both abstract calling contexts and abstract objects. (These are merged for reasons
-described below.)
+In a context-sensitive analysis, there is no longer just one abstract memory
+location per object allocation site.  Rather, the set of objects a reference can
+point to depends on the \textit{context} in which the method containing the
+reference is called.  Whereas a context-insensitive analysis talks about the
+domain of methods (M) and the domain of allocation sites (H), a
+context-sensitive analysis talks about the domain of abstract contexts, labeled
+C.  Elements of domain C contain both abstract calling contexts and abstract
+objects. (These are merged for reasons described below.)
 
-Chord has several context-sensitive analyses, but they all expose the same relations, which are
-described below:
+Chord has several context-sensitive analyses, but they all expose the same
+relations, which are described below:
 
 \begin{itemize}
 \item
 {\it Context information:}
 \begin{itemize}
-\item C is the domain of all abstract calling contexts and abstract objects.  Each element in this domain is a sequence of zero or more sites,
-where each site can be a call site or an object allocation site.  A sequence may have mixed call sites and object allocation sites.
-The most significant site (i.e. the first site) in each sequence is called the head; the remaining sub-sequence is called the tail.  The
-below three relations relate a sequence with its head and tail.
+\item C is the domain of all abstract calling contexts and abstract objects.
+Each element in this domain is a sequence of zero or more sites, where each site
+can be a call site or an object allocation site.  A sequence may have mixed call
+sites and object allocation sites.  The most significant site (i.e. the first
+site) in each sequence is called the head; the remaining sub-sequence is called
+the tail.  The below three relations relate a sequence with its head and tail.
 \item CC subset (C $\times$ C) contains tuples \texttt{(c1,c2)} such that context \texttt{c2} is the tail of context \texttt{c1}.
 \item CH subset (C $\times$ H) contains tuples \texttt{(c,h)} such that object allocation site \texttt{h} is the head of context \texttt{c}.
 \item CI subset (C $\times$ I) contains tuples \texttt{(c,i)} such that call site \texttt{i} is the head of context \texttt{c}.
@@ -123,74 +133,71 @@ context \texttt{c1} may call method \texttt{m2} in context \texttt{c2}.
 \begin{itemize}
 \item FC subset (F $\times$ C) contains tuples \texttt{(f,o)} such that static field (i.e. global variable) \texttt{f} may point to object \texttt{o}.
 \item CVC subset (C $\times$ V $\times$ C) contains tuples \texttt{(c,v,o)} such that local variable \texttt{v} may point to
-object \texttt{o} in context \texttt{c} of that variable's declaring method. Note that both \texttt{o} and \texttt{c} are elements of domain C.
+object \texttt{o} in context \texttt{c} of that variable's declaring
+method. Note that both \texttt{o} and \texttt{c} are elements of domain C.
 \item CFC subset (C $\times$ F $\times$ C) contains tuples \texttt{(o1,f,o2)} such that instance field \texttt{f} of object \texttt{o1} may point to object \texttt{o2}.
 \end{itemize}
 \end{itemize}
 
-{\bf Under Construction: explain object-sensitive vs context-sensitive, plus how to invoke.}
+{\bf Under Construction: explain object-sensitive vs context-sensitive, plus how
+to invoke.}
 
 \section{Static Datarace Analysis}
 
-To run Chord's static datarace analysis, run the following
-command in Chord's main directory:
+To run Chord's static datarace analysis, run the following command:
 
 \begin{framed}
 \begin{verbatim}
-ant -Dchord.work.dir=<...> -Dchord.run.analyses=datarace-java run
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=datarace-java run
 \end{verbatim}
 \end{framed}
 
-where {\tt <...>} denotes the absolute or relative path of a directory
-containing a file named \code{chord.properties} which defines
+where \code{<WORK_DIR>} is a directory
+containing a file named \code{chord.properties} that defines
 properties \code{chord.main.class}, \code{chord.class.path}, and
-\code{chord.src.path}.  See Section \ref{sec:program-props} for the
-meaning of these properties.
+\code{chord.src.path} specifying the main class, the application classpath, and
+the Java source path, respectively, of the program to be analyzed.
 
-Directory \code{examples/datarace_test/} in Chord's main directory provides a toy Java
-program on which one can run the datarace analysis.  First run {\tt
-  ant} in that directory (in order to compile the program's {\tt
-  .java} files to {\tt .class} files) and then run the above command
-in Chord's main directory with {\tt <...>} replaced by
+Directory \code{<CHORD_MAIN_DIR>/examples/datarace_test/} provides a toy Java
+program on which one can run the datarace analysis.  First run {\tt ant} in that
+directory (in order to compile the program's {\tt .java} files to {\tt .class}
+files) and then run the above command with \code{<WORK_DIR>} replaced by
 \code{examples/datarace_test/}.  Upon successful completion, the
 following files should be produced in directory
 \code{examples/datarace_test/chord_output/}:
 
 \begin{itemize}
 \item
-File \code{dataraces_by_fld.html}, listing all dataraces grouped by
-the field on which they occur; all dataraces on the same instance
-field or the same static field are listed in the same group, and so
-are all dataraces on array elements.
+File \code{dataraces_by_fld.html}, listing all dataraces grouped by the field on
+which they occur; all dataraces on the same instance field or the same static
+field are listed in the same group, and so are all dataraces on array elements.
 \item
-File \code{dataraces_by_obj.html}, listing all dataraces grouped by
-the abstract object on whose field they occur; dataraces on all static
-fields are listed in the same group, and so are dataraces on different
-instance fields of the same abstract object.
+File \code{dataraces_by_obj.html}, listing all dataraces grouped by the abstract
+object on whose field they occur; dataraces on all static fields are listed in
+the same group, and so are dataraces on different instance fields of the same
+abstract object.
 \end{itemize}
 
 \section{Static Deadlock Analysis}
 
-To run Chord's static deadlock analysis,  run the following
-command in Chord's main directory:
+To run Chord's static deadlock analysis,  run the following command:
 
 \begin{framed}
 \begin{verbatim}
-ant -Dchord.work.dir=<...> -Dchord.run.analyses=deadlock-java run
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=deadlock-java run
 \end{verbatim}
 \end{framed}
 
-where {\tt <...>} denotes the absolute or relative path of a directory
-containing a file named \code{chord.properties} which defines
+where \code{<WORK_DIR>} is a directory
+containing a file named \code{chord.properties} that defines
 properties \code{chord.main.class}, \code{chord.class.path}, and
-\code{chord.src.path}.  See Section \ref{sec:program-props} for the
-meaning of these properties.
+\code{chord.src.path} specifying the main class, the application classpath,
+and the Java source path, respectively, of the program to be analyzed.
 
-Directory \code{examples/deadlock_test/} in Chord's main directory provides a toy Java
-program on which one can run the deadlock analysis.  First run {\tt
-  ant} in that directory (in order to compile the program's {\tt
-  .java} files to {\tt .class} files) and then run the above command
-in Chord's main directory with {\tt <...>} replaced by
+Directory \code{<CHORD_MAIN_DIR>/examples/deadlock_test/} provides a toy Java
+program on which one can run the deadlock analysis.  First run {\tt ant} in that
+directory (in order to compile the program's {\tt .java} files to {\tt .class}
+files) and then run the above command with \code{<WORK_DIR>} replaced by
 \code{examples/deadlock_test/}.  Upon successful completion, the
 file \code{deadlocks.html} should be produced in directory
 \code{examples/deadlock_test/chord_output/}.

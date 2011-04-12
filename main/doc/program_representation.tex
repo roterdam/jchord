@@ -12,13 +12,14 @@ debugging analyses and deciphering their output.  The remaining
 sections describe the quadcode representation along with the API of
 Joeq and Chord for navigating it.  Briefly, the representation
 consists of a set of classes that may be loaded
-(Section \ref{sec:program}).  Each class has a set of fields and
-methods, collectively called members of the class
-(Section \ref{sec:class-members}).  The representation of a concrete
+(Section \ref{sec:program}).  The representation of each class consists
+of a set of members (Section \ref{sec:class-members}) which are the fields and methods
+of the class.  The representation of a concrete
 method (Section \ref{sec:methods}) consists of a control-flow graph
 (CFG).  The representation of a CFG (Section \ref{sec:cfgs}) consists
-of a set of registers and a set of basic blocks.  Each basic
-block contains zero or more primitive statements called quads
+of a set of registers and a set of basic blocks linked by directed edges
+denoting flow of control between basic blocks.
+Each basic block contains zero or more primitive statements called quads
 (Section \ref{sec:quads}).  Finally, the most common way to traverse
 all quads is discussed (Section \ref{sec:traversing}).
 
@@ -46,7 +47,7 @@ directory \code{examples/hello_world/}.
 To pretty-print the bytecode representation of a class, run the following command:
 \begin{framed}
 \begin{verbatim}
-javap -classpath <...> -private -verbose <CLASS NAME>
+javap -classpath <CLASS_PATH> -bootclasspath <BOOT_CLASS_PATH> -private -verbose <CLASS_NAME>
 \end{verbatim}
 \end{framed}
 
@@ -54,10 +55,15 @@ where:
 
 \begin{itemize}
 \item
-{\tt <CLASS NAME>} is the fully-qualified name of the class whose
+\verb+<CLASS_NAME>+ is the fully-qualified name of the class whose
 bytecode is to be printed (\code{test.HelloWorld} in our example).
 \item
-\code{<...>} is the classpath of that class (\code{examples/hello_world/} in our example).
+\verb+<CLASS_PATH>+ is the classpath of that class (\code{examples/hello_world/} in our example).
+\item
+\verb+<BOOT_CLASS_PATH>+ is the boot classpath; it is optional and must be supplied if
+\verb+<CLASS_NAME>+ is a class from the JDK standard library (e.g., \code{java.util.ArrayList}) that has
+been modified and written to a user-defined location (e.g., it has been instrumented by Chord and
+written to \code{chord_output/boot_classes/}).
 \end{itemize}
 
 Program \code{javap} comes along with the JVM.  The output of the
@@ -139,8 +145,8 @@ To pretty-print the quadcode representation of a class, run the following comman
 
 \begin{framed}
 \begin{verbatim}
-ant -Dchord.work.dir=<...> -Dchord.print.classes=<CLASS NAME> \
-    -Dchord.verbose=0 -Dchord.out.file=<FILE NAME> run
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.print.classes=<CLASS_NAME> \
+    -Dchord.verbose=0 -Dchord.out.file=<OUT_FILE> run
 \end{verbatim}
 \end{framed}
 
@@ -148,18 +154,19 @@ where:
 
 \begin{itemize}
 \item
-\code{<...>} is the path of a directory (\code{examples/hello_world/} in our example) that is expected to
-contain a file named \code{chord.properties} which defines
+\code{<WORK_DIR>} is a directory (\code{examples/hello_world/} in our example) 
+that contains a file named \code{chord.properties} which defines
 properties \code{chord.main.class} and \code{chord.class.path}
-specifying the main class and the classpath of the input Java program
-(alternatively, these two properties can be defined directly on the
-above command line).
+specifying the main class and the classpath of the input Java program.
+Alternatively, these two properties can be defined directly on the
+above command-line.
 \item
-{\tt <CLASS NAME>} is the name of the class whose quadcode is to be
-printed.
+\code{<CLASS_NAME>} is the fully-qualified name of the class whose quadcode is to be printed
+({\tt test.HelloWorld} in our example).  Each occurrence of a `{\tt \$}' in the class name
+must be replaced by a `{\tt \#}'.
 \item
-{\tt <FILE NAME>} is the name of a file to which the quadcode is to be
-dumped.
+\code{<OUT_FILE>} is the file to which the quadcode must be written; if left unspecified,
+the quadcode is written to the standard output.
 \end{itemize}
 
 The output of the above command for our example is as follows:
@@ -194,8 +201,8 @@ Register factory: Registers: 3
 This and the following sections describe the quadcode representation
 along with the API of Joeq and Chord for navigating it.
 This API is contained in
-packages \javadoc{chord.program}{chord/program/package-tree.html}, \javadoc{joeq.Class}{joeq/Class/package-tree.html},
-and \javadoc{joeq.Compiler.Quad}{joeq/Compiler/Quad/package-tree.html}.
+packages \javadoc{chord.program}{chord/program/package-summary.html}, \javadoc{joeq.Class}{joeq/Class/package-summary.html},
+and \javadoc{joeq.Compiler.Quad}{joeq/Compiler/Quad/package-summary.html}.
 
 The quadcode representation of the whole program is a unique global
 object of
@@ -227,19 +234,17 @@ appropriate subclass
 of \javadoc{joeq.Class.jq_Type}{joeq/Class/jq_Type.html} in the following
 hierarchy:
 
-\begin{framed}
 \begin{verbatim}
-joeq.Class.jq_Type
-  |
-  |--- joeq.Class.jq_Primitive
-  |
-  |--- joeq.Class.jq_Reference
-            |
-            |--- joeq.Class.jq_Class
-            |
-            |--- joeq.Class.jq_Array
+                    jq_Type
+                       |
+      ------------------------------------
+      |                                  |
+jq_Primitive                       jq_Reference
+                                         |
+                          -------------------------------
+                          |                             |
+                      jq_Class                       jq_Array
 \end{verbatim}
-\end{framed}
 
 \section{Class Members}
 \label{sec:class-members}
@@ -285,7 +290,6 @@ A field descriptor represents the type of a local variable or a
 (static or instance) field.  It is a series of characters generated by
 the grammar:
 
-\begin{framed}
 \begin{verbatim}
 FieldDescriptor : FieldType
       FieldType : BaseType | ObjectType | ArrayType
@@ -294,10 +298,9 @@ FieldDescriptor : FieldType
       ArrayType : [ ComponentType
   ComponentType : FieldType
 \end{verbatim}
-\end{framed}
 
-The characters of \code{BaseType}, the {\tt L} and {\tt ;}
-of \code{ObjectType}, and the {\tt [} of
+The characters of \code{BaseType}, the `{\tt L}' and `{\tt ;}'
+of \code{ObjectType}, and the `{\tt [}' of
 \code{ArrayType} are all ASCII characters.
 The {\tt <classname>} represents a fully qualified class or interface
 name.  The interpretation of the field types is as shown in the below
@@ -330,17 +333,15 @@ For example, the descriptor of type {\tt int}
 A method descriptor represents the types of the arguments and 
 return result of a method:
 
-\begin{framed}
 \begin{verbatim}
    MethodDescriptor : ( ParameterDescriptor* ) ReturnDescriptor
 ParameterDescriptor : FieldType
    ReturnDescriptor : FieldType | V
 \end{verbatim}
-\end{framed}
 
 A parameter descriptor represents the type of an argument of a method.
 A return descriptor represents the type of the return result of a
-method.  The character \code{V} indicates that the method returns no
+method.  The character `{\tt V}' indicates that the method returns no
 value (its return type is void).
 
 The method descriptor is the same whether it is a static or an instance
@@ -394,7 +395,7 @@ given kind at the given bytecode offset (null if not found). \\
 \label{sec:cfgs}
 
 The control-flow graph (CFG) of each method consists of a set of registers,
-called the register factory, and a graph whose nodes are basic blocks and
+called the register factory, and a directed graph whose nodes are basic blocks and
 whose edges denote flow of control between basic blocks.
 
 The CFG of each method is a unique object of
@@ -416,7 +417,7 @@ by that class.
 \hline
 \end{mytable}
 
-\subsection{Register Factory}
+%\subsection{Register Factory}
 
 The register factory contains one register per argument of the method
 (called {\it local variables}) and one register per temporary 
@@ -437,10 +438,9 @@ and {\tt T1} and {\tt T2} denoting temporaries generated by Joeq.
 Each register factory is a unique object
 of class \javadoc{joeq.Compiler.Quad.RegisterFactory}{joeq/Compiler/Quad/RegisterFactory.html}.
 
-\subsection{Basic Blocks}
-
-Each CFG has a set of basic blocks each of which contains a
-straight-line sequence of zero or more primitive statements called quads
+Besides the register factory, a CFG has a directed graph whose nodes are basic blocks and whose edges
+denote flow of control between basic blocks.
+Each basic block contains a straight-line sequence of zero or more primitive statements called quads
 (Section \ref{sec:quads}).  Each CFG is guaranteed to contain at least
 two basic blocks: a unique entry basic block with no incoming edges
 and a unique exit block with no outgoing edges.  The entry and exit
@@ -523,23 +523,47 @@ the appropriate subclass
 of \javadoc{joeq.Compiler.Quad.Operator}{joeq/Compiler/Quad/Operator.html}
 in the following hierarchy:
 
-\begin{framed}
 \begin{verbatim}
 Operator
-    |    Move, Phi, Unary, Binary, New, NewArray, MultiNewArray, 
-    |--- Getstatic, Putstatic, Getfield, Putfield, ALoad, AStore,
-    |    CheckCast, InstanceOf, ALength, Return
+    |
+    |--- Move
+    |--- Phi
+    |--- Unary
+    |--- Binary
+    |--- New
+    |--- NewArray
+    |--- MultiNewArray
+    |--- Getstatic
+    |--- Putstatic
+    |--- ALoad
+    |--- AStore
+    |--- Getfield
+    |--- Putfield
+    |--- CheckCast
+    |--- InstanceOf
+    |--- ALength
+    |--- Return
     |
     |--- Branch
-    |       |--- IntIfCmp, Goto, Jsr, Ret, LookupSwitch, TableSwitch
+    |       |
+    |       |--- IntIfCmp
+    |       |--- Goto
+    |       |--- Jsr
+    |       |--- Ret
+    |       |--- LookupSwitch
+    |       |--- TableSwitch
     |
     |--- Invoke
-    |       |--- InvokeVirtual, InvokeStatic, InvokeInterface
+    |       |
+    |       |--- InvokeVirtual
+    |       |--- InvokeStatic
+    |       |--- InvokeInterface
     |
     |--- Monitor
-            |--- MONITORENTER, MONITOREXIT
+            |
+            |--- MONITORENTER
+            |--- MONITOREXIT
 \end{verbatim}
-\end{framed}
 
 The number and kinds of operands of each quad depends upon the kind of
 the operator.  Each of the above subclasses of \code{Operator}

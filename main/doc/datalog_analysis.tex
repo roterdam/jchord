@@ -2,11 +2,10 @@
 \chapter{Datalog Analysis}
 \label{chap:datalog-analysis}
 
-A common way to rapidly prototype program analyses in Chord is using a declarative
+A common way to rapidly prototype analyses in Chord is using a declarative
 logic-programming language called Datalog.  This chapter describes all aspects of
-Datalog analysis in Chord.
-Section \ref{sec:writing-datalog-analysis} explains how to write a Datalog analysis,
-Section \ref{sec:running-datalog-analysis} explains how to run it, and
+Datalog analyses in Chord.
+Section \ref{sec:writing-datalog-analysis} explains how to write and run a Datalog analysis.
 Section \ref{sec:tuning-datalog-analysis} explains how to tune its performance.
 Finally, Section \ref{sec:bdd} explains the representation of BDDs (Binary Decision Diagrams)
 which are a data structure central to executing Datalog analyses.
@@ -17,7 +16,9 @@ which are a data structure central to executing Datalog analyses.
 A Datalog analysis declares a bunch of input/output program relations,
 each over one or more program domains, and provides a bunch of rules (constraints)
 specifying how to compute the output relations from the input relations.
-An example of such an analysis is shown below:
+It can be defined in any file with extension {\tt .dlog}
+in any directory in the path specified by property \code{chord.dlog.analysis.path}.
+An example Datalog analysis is shown below:
 
 \texonly{\newpage}
 
@@ -55,46 +56,40 @@ An example of such an analysis is shown below:
 }
 \end{framed}
 
-Any line that begins with a {\tt \#} is regarded a comment, except a
-line of the form ``{\tt \#} {\tt name=<...>}", which specifies the name
-{\tt <...>} of the Datalog analysis.
+Any line that begins with a ``{\tt \#}" is regarded a comment, except a
+line of the form ``\code{# name=<ANALYSIS_NAME>}'', which specifies the name
+\code{<ANALYSIS_NAME>} of the Datalog analysis.
 Each Datalog analysis is expected to have exactly one such line.
 The above Datalog analysis is named {\tt datarace-dlog}.
-In Chord, all Datalog analysis names have suffix
-{\tt -dlog} and all Java analysis names have suffix {\tt -java}, but
-this is merely a convention that analysis writers are free to deviate from.
-The name of each analysis, written in Datalog or in Java, is expected to be
-unique across all analyses in scope (i.e., across all analyses in paths
-specified by properties \code{chord.dlog.analysis.path} and \code{chord.java.analysis.path}).
 
-The {\tt .include "<...>.dom"} lines specify each program domain named
-{\tt <...>} that is needed by the Datalog analysis, i.e., each domain over which
+The ``\code{.include "<DOM_NAME>.dom"}'' lines specify each program domain named
+\code{<DOM_NAME>} that is needed by the Datalog analysis, i.e., each domain over which
 any program relation that is input/output by the Datalog analysis is defined. 
 The declaration of each such relation specifies the domain of each of the relation's attributes.
 If the same domain appears in multiple attributes of a relation then
 contiguous integers starting from 0 must be used to distinguish them; for instance,
 in the above example, {\tt candidate} is a binary relation, both of whose
-attributes have domain E, and they are distinguished as E0 and E1.
+attributes have domain {\tt E}, and they are distinguished as {\tt E0} and {\tt E1}.
 
 Each relation is represented symbolically (as opposed to explicitly)
 using a graph-based data structure called a Binary Decision Diagram (BDD for short).
 Each domain containing N elements is assigned log2(N) BDD variables.
 The size of a BDD and the efficiency of operations on it depends heavily
 on the order of these BDD variables.
-The {\tt .bddvarorder <...>} line in the Datalog analysis enables the Datalog
+The ``\code{.bddvarorder <BDD_VAR_ORDER>}'' line in the Datalog analysis enables the Datalog
 analysis writer to specify this order.
 It must list all domains along with their numerical suffixes, separated
-by {\tt \_} or {\tt x}.
-Using a {\tt \_} between two domains, such as {\tt T0\_T1}, means that the BDD variables assigned
+by `{\tt \_}' or `{\tt x}'.
+Using a `{\tt \_}' between two domains, such as {\tt T0\_T1}, means that the BDD variables assigned
 to domain {\tt T0} precede those assigned to domain {\tt T1} in the BDD variable
 order for this Datalog analysis.
-Using a {\tt x} between two domains, such as {\tt E0xE1}, means that the
+Using a `{\tt x}' between two domains, such as {\tt E0xE1}, means that the
 BDD variables assigned to domains {\tt E0} and {\tt E1}
 will be interleaved in the BDD variable order for this Datalog analysis.
 See Section \ref{sec:bdd} for more details on BDD representations.
 
 Each Datalog analysis rule is a Horn clause of the form
-{\tt R(t) :- R1(t1), ..., Rn(tn)}
+``{\tt R(t) :- R1(t1), ..., Rn(tn)}"
 meaning that if relations {\tt R1}, ..., {\tt Rn} contain tuples {\tt t1}, ..., {\tt tn}
 respectively, then relation {\tt R} contains tuple {\tt t}.
 A backslash may be used at the end of a line to break long rules for readability.
@@ -106,15 +101,10 @@ long rules into multiple shorter rules communicating via intermediate relations.
 See Section \ref{sec:tuning-datalog-analysis} for hints on tuning the performance
 of Datalog analyses.
 
-\section{Running a Datalog Analysis}
-\label{sec:running-datalog-analysis}
+Running a Datalog analysis is no different from running any other kind of analysis
+in Chord.  See Chapter \ref{chap:running-analysis} for how to run an analysis.
 
-Chord interprets each file with extension {\tt .dlog} or {\tt .datalog} in the path specified by
-property \code{chord.dlog.analysis.path} as a program analysis expressed in Datalog.
-
-{\bf Under Construction}
-
-\section{Tuning a Datalog Analysis}
+\section{Tuning Performance}
 \label{sec:tuning-datalog-analysis}
 
 There are several tricks analysis writers can try to improve the
@@ -124,19 +114,21 @@ Try these tricks by running the following command:
 
 \begin{framed}
 \begin{verbatim}
-ant -Ddlog.file=<file> -Dwork.dir=<dir> solve
+ant -Ddlog.file=<FILE> -Dwork.dir=<DIR> solve
 \end{verbatim}
 \end{framed}
 
-where {\tt <file>} denotes the file defining the Datalog analysis
-to be tuned, and {\tt <dir>} is the directory containing the
+where {\tt <FILE>} is the file defining the Datalog analysis
+to be tuned, and {\tt <DIR>} is the directory containing the
 program domains ({\tt *.dom} files) and program relations ({\tt *.bdd} files)
 consumed by the analysis (this is by default the
 \code{chord_output/bddbddb/} directory generated
 by a previous run of Chord.
 
 \begin{enumerate}
+
 \item
+
 Set properties \verb+noisy=yes+, \verb+tracesolve=yes+, and \verb+fulltracesolve=yes+
 on the above command line and observe which rule gets ``stuck" (i.e., takes several seconds to solve).
 \verb+fulltracesolve+ is seldom useful, but \verb+noisy+ and \verb+tracesolve+ are
@@ -156,6 +148,7 @@ relations in the BDD variable order
 \end{itemize}
 
 \item
+
 Once you have ensured that none of the rules is getting ``stuck",
 you will notice that some rules are applied too many times, and so
 although each application of the rule itself isn't taking too much
@@ -196,6 +189,7 @@ that seems problematic, and then focus on speeding up just that sub-
 analysis.
 
 \item
+
 You can add the \verb+.split+ keyword at the end of certain rules as a
 hint to bddbddb to decompose those rules into simpler ones that can be
 solved faster.  You can also set property \verb+split_all_rules=yes+ as shorthand
@@ -203,6 +197,7 @@ for splitting all rules without adding the \verb+.split+ keyword to any of
 them, though I seldom find splitting all rules helpful.
 
 \item
+
 You can try to decompose a single Datalog analysis file into two separate Datalog analysis
 files.  Of course, you cannot separate mutually-recursive rules into two
 different analyses, but if you unnecessarily club
@@ -212,6 +207,7 @@ So if rule 2 uses the result of rule 1 and rule 1 does not use the result of
 rule 2, then put rule 1 and rule 2 in separate Datalog analyses.
 
 \item
+
 Observe the sizes of the BDDs representing the relations that are
 input and output.  bddbddb prints both the number of tuples in each
 relation and the number of nodes in the BDD.  Try changing the
@@ -222,6 +218,7 @@ note down these orders as invariants that you will not violate as
 you tweak other things.
 
 \item
+
 The relative order of values *within* domains (e.g.,
 in domains named \verb+M+, \verb+H+, \verb+C+, etc. in Chord) affects the
 performance of bddbddb, but
@@ -231,6 +228,7 @@ specific way in which he numbers contexts (in domain \verb+C+) and that it was
 fundamental to the speedup of his ``infinity"-CFA points-to analysis.
 
 \item
+
 Finally, it is worth emphasizing that BDDs are not magic.
 If your algorithm itself is fundamentally hard to scale, then BDDs are
 unlikely to help you a whole lot.  Secondly, many things are awkward to
@@ -252,12 +250,12 @@ For instance,
 domain {\tt F0} containing [128..256) elements will be assigned 8 variables with IDs (say) 63,64,65,66,67,68,69,70 and
 domain {\tt Z0} containing [8..16) elements will be assigned 4 variables with IDs (say) 105,106,107,108.
 
-If two domains are uninterleaved in the declared domain order in a Datalog program (i.e., {\tt \_} is used instead of {\tt x} between them),
+If two domains are uninterleaved in the declared domain order in a Datalog program (i.e., `{\tt \_}' is used instead of `{\tt x}' between them),
 then the BDD variables assigned to those domains are ordered in reverse order in the underlying BDD factory.
 For instance, the BDD variable order corresponding to the declared domain order {\tt F0\_Z0} is (in level2var format)
 ``70,69,68,67,66,65,64,63,108,107,106,105".
 
-If two domains are interleaved in the declared domain order in a Datalog program (i.e., {\tt x} is used instead of {\tt \_} between them),
+If two domains are interleaved in the declared domain order in a Datalog program (i.e., `{\tt x}' is used instead of `{\tt \_}' between them),
 then the BDD variables assigned to those domains are still ordered in reverse order of IDs in the underlying BDD factory,
 but they are also interleaved.
 For instance, the BDD variable order corresponding to the declared domain order {\tt F0xZ0} is (in level2var format)

@@ -1,0 +1,203 @@
+\xname{writing_analysis}
+\chapter{Writing an Analysis}
+\label{chap:writing-analysis}
+
+Chord provides several {\it analysis templates}: classes containing boilerplate
+code that can be extended by users to rapidly prototype different kinds of
+analyses.  These templates are organized in the following hierarchy in
+package \javadoc{chord.project.analyses}{chord/project/analyses/package-summary.html}:
+
+\begin{verbatim}
+JavaAnalysis
+    |
+    |--- ProgramDom
+    |
+    |--- ProgramRel
+    |
+    |--- DlogAnalysis
+    |
+    |--- RHSAnalysis
+    |        |
+    |        |--- ForwardRHSAnalysis
+    |        |
+    |        |--- BackwardRHSAnalysis
+    |
+    |--- BasicDynamicAnalysis
+             |
+             |--- DynamicAnalysis
+\end{verbatim}
+
+All these classes implement
+interface \javadoc{chord.project.ITask}{chord/project/ITask.html} and can
+therefore serve as tasks.  We next describe each of them in more detail.
+
+\section{JavaAnalysis}
+\label{sec:java-analysis}
+
+Class \code{chord.project.analyses.JavaAnalysis} provides the most general
+template for writing an analysis imperatively in Java.  An analysis can be
+created using this template by extending this class as follows:
+
+\begin{verbatim}
+@Chord(
+    name = "example-java",
+    consumes = { "C1", ..., "Cn" },
+    produces = { "P1", ..., "Pm" },
+    types = { A1.class, ..., An.class, B1.class, ..., Bm.class },
+    namesOfTypes = { "C1", ..., "Cn", "P1", ..., "Pm" },
+)
+public class ExampleAnalysis extends JavaAnalysis {
+    @Override
+    public void run() {
+        ClassicProject project = ClassicProject.g();
+
+        A1 c1 = (A1) project.getTrgt("C1");
+        ...
+        An cn = (An) project.getTrgt("Cn");
+
+        B1 p1 = (B1) project.getTrgt("P1");
+        ...
+        Bm pm = (Bm) project.getTrgt("Pm");
+
+        ... // analysis code computing p1, ..., pm from c1, ..., cn
+    }
+}
+\end{verbatim}
+
+The class must be compiled to a {\tt .class} file that occurs in
+some element (directory or jar/zip file) of the path
+specified by property \code{chord.java.analysis.path}.  Chord represents the
+corresponding analysis using a unique object of the class.
+
+The class is annotated with an {\tt @Chord} annotation defined in
+class \javadoc{chord.project.Chord}{chord/project/Chord.html}.  This annotation
+allows specifying the name of the analysis ({\tt example-java}), the names of
+the targets that are directly consumed ({\tt C1}, ..., {\tt Cn}) and directly
+produced ({\tt P1}, ..., {\tt Pm}) by the analysis, and the types of targets.
+There is a one-to-one correspondence between the arrays denoted by fields {\tt
+types} and {\tt namesOfTypes}, e.g., the type of the target named {\tt C1} is
+class {\tt A1}, and so on.  In principle, the type of {\it any} target in the
+project can be specified here.  In practice, however, the types of only the
+targets declared as directly consumed/produced by this analysis are specified.
+Moreover, although the type of each target that is directly consumed/produced by
+the above analysis is specified in the above annotation, in practice the types
+of hardly any targets need to be explicitly specified, because they can be
+automatically inferred by Chord from analyses created using more specialized
+templates discussed below that also consume/produce those targets.
+
+The code of the analysis must be supplied in the {\tt run()} method.  This
+method typically retrieves the representation of each directly consumed/produced
+target from the project, reads (the state of) the consumed targets, performs
+some computation over it, and writes to (the state of) the produced targets.
+
+The analysis templates presented in the following sections are more specialized
+forms of the JavaAnalysis template in that they restrict what the directly
+consumed/produced targets and the analysis code in the {\tt run()} method can
+be.
+
+%called JavaAnalysis (Section \ref{sec:java-analysis}), and the other for writing
+%analyses declaratively in Datalog, called DlogAnalysis
+%(Section \ref{sec:dlog-analysis}).  JavaAnalysis is the most general template:
+%it least constrains the kind of analysis that can be written but also offers the
+%least boilerplate code for writing an analysis.  Chord provides several
+%additional templates for writing analyses imperatively in Java that are
+%specialized forms of JavaAnalysis, namely, ProgramDom
+%(Section \ref{sec:program-dom}), ProgramRel (Section \ref{sec:program-rel}),
+%RHSAnalysis (Section \ref{sec:rhs-analysis}), and DynamicAnalysis
+%(Section \ref{sec:dynamic-analysis}).  We next explain each of these templates.
+
+\section{DlogAnalysis}
+\label{sec:dlog-analysis}
+
+A common way to rapidly prototype analyses in Chord is using a declarative
+logic-programming language called Datalog.  A Datalog analysis can be defined in
+any {\tt .dlog} file that occurs in some element (directory or jar/zip file)
+of the path specified by property \code{chord.dlog.analysis.path}.  Chord represents each such analysis
+using a unique object of class \javadoc{chord.project.analyses.DlogAnalysis}{chord/project/analyses/DlogAnalysis.html}.
+
+A Datalog analysis declares a bunch of input/output {\it program relations},
+each over one or more {\it program domains}, and provides a bunch of rules
+(constraints) specifying how to compute the output relations from the input
+relations.
+
+TODO: explain inputs, outputs, code
+
+Briefly, each Datalog analysis specifies the following:
+\begin{itemize}
+\item
+a set of program domains D1, ..., Dk; a program domain is a collection of program artifacts of a particular kind.
+\item
+a set of input program relations I1, .., In, each over one of more program domains D1, ..., Dk;
+a program relation
+\item
+I1, ..., In, each over one or more program domains D1, ..., Dk
+, of which , a set of output program
+relations O1, ..., Om, a set of rules specifying how to compute the output relations from the input
+relations, and a set of program domains D1, ..., Dk.  
+\end{itemize}
+
+Chapter \ref{chap:datalog-analysis} explains how to write a Datalog analysis in
+more detail.
+
+\section{ProgramDom}
+\label{sec:program-dom}
+
+\section{ProgramRel}
+\label{sec:program-rel}
+
+\section{DynamicAnalysis}
+\label{sec:dynamic-analysis}
+
+\section{RHSAnalysis}
+\label{sec:rhs-analysis}
+
+%\begin{itemize}
+%\item
+%B is the domain of basic blocks.
+%\item
+%C is the domain of abstract calling contexts.
+%\item
+%E is the domain of program points that read or write a field.
+%\item
+%F is the domain of fields inside a class.
+%\item
+%H is the domain of allocation sites.
+%\item
+%I is the domain of invocation statements (method calls)
+%\item
+%L is the domain of lock acquisition points.
+%\item
+%M is the domain of program methods.
+%\item
+%P is the domain of simple statements. %SAY MORE HERE?
+%\item
+%R is the domain of lock release points.
+%\item
+%T is the domain of types (classes and primitives).
+%\item
+%V is the domain of reference-typed variables.
+%\item
+%W is the domain of loop head statements. %SAY MORE HERE?
+%\item
+%Z is a domain of integers corresponding to argument positions.The size of the domain is chosen to 
+%accommodate the method with the greatest number of arguments.
+%\end{itemize}
+
+%\section{Core relations}
+
+%Chord includes code to build a very large number of relations. These standard relations are very useful in writing your own analyses.  For example, relation \texttt{sub} includes all pairs of types \texttt{(t1, t2)} where \texttt{t2} is a subclass of \texttt{t1}.  Most of these standard relations are in the package \texttt{chord.rels}.
+
+%A Java analysis should extend JavaAnalysis or ProgramRel.  It's usually easiest if an analysis only produces one relation, in which case extending ProgramRel is the best approach.  If you extend ProgramRel, all the work of creating and saving the relation is taken care of for you; all you need to do is add tuples to the relation.Typically you do this by calling \texttt{super.add(...)} with the tuple you wish to add to the relation.  For forther convenience, you can implement one of the Visitor interfaces defined in \texttt{chord.program.visitors}.  This will force you to implement some \texttt{visit} methods that iterate over all elements in some domain, such as all methods or all invocation points. 
+
+%Sometimes, you need to create two different relations at the same time. In this case, the right approach is to extend JavaAnalysis, and explicitly create and save the relations on your own.
+
+%Regardless of which of these approaches you take, every Java analysis must have an \texttt{@Chord} annotation.  This annotation is a set of named fields.  At a minimum, this annotation must specify the name of the analysis.  If you extend ProgramRel, the name of the analysis will be treated as the same as that of the generated relation.  For example, \texttt{@Chord(name = "F")} is a valid annotation.  The name of the Java class that generates the relation is ignored by Chord -- only the annotation matters.
+
+%\textbf{MAYUR, IS SIGN MANDATORY?   IF NOT, WHEN CAN IT BE OMITTED?}
+
+%There are also other annotation fields available.  You may specify the dependencies of your analysis via \texttt{consumes = \{ "xyz"\}}.
+
+%If your analysis does not extend ProgramRel, you should also specify the relations that your analysis produces. You do this via the \texttt{produces} relation.
+
+%Should mention the signs fields.
+

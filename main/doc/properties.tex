@@ -2,27 +2,31 @@
 \chapter{Chord Properties}
 \label{chap:properties}
 
-The only way to specify inputs to Chord is by means of system properties.
-There is no command-line argument processing in Chord and any command-line arguments are ignored.
-Section \ref{sec:properties-setting} explains how to set properties and
-Section \ref{sec:properties-meaning} explains the meaning of properties recognized by Chord.
+The only way to specify inputs to Chord is by means of system properties.  There
+is no command-line argument processing in Chord and any command-line arguments
+are ignored.  Section \ref{sec:properties-setting} explains how to set
+properties and Section \ref{sec:properties-meaning} explains the meaning of
+properties recognized by Chord.
+Notation {\tt [<...>]} is used in this chapter to denote the value of the property named {\tt <...>}.
 
 \section{How to Set Properties}
 \label{sec:properties-setting}
 
-A property can be passed to Chord in any of several ways.
-The reason for providing multiple ways is to provide users with shorthand ways for defining properties
-once and for all for a particular input Java program, or even once and for all across all Chord runs. 
-The following are the different ways by which a property can be passed to Chord in decreasing order of precedence:
+A property can be passed to Chord in any of several ways.  The reason for
+providing multiple ways is to provide users with shorthand ways for defining
+properties once and for all for a particular Java program under analysis, or
+even once and for all across all Chord runs.  The following are the different
+ways by which a property can be passed to Chord in decreasing order of
+precedence:
 
 \begin{enumerate}
 \item
 
-On the command-line via the ``\code{-D<key>=<val>}" format.
+{\bf How:} On the command-line via the ``\code{-D<key>=<val>}" format.
 
-Use this option to specify properties specific to the current run of Chord.
+{\bf When:} Use this option to specify properties specific to the {\it current run} of Chord.
 
-Typical usage of this option is by running the following command in Chord's main directory:
+Typical usage of this option is by running the following command:
 
 \begin{framed}
 \begin{verbatim}
@@ -32,44 +36,61 @@ ant -D<key1>=<val1> ... -D<keyN>=<valN> run
 
 \item
 
-Via a user-defined file specified by property \code{chord.props.file}.
+{\bf How:} Via a user-defined {\it properties file} whose location is specified by property \code{chord.props.file}.
 
-Use this option to specify once and for all properties of the program to
-be analyzed (e.g., property \code{chord.main.class} specifying the name of that program's main class, property \code{chord.class.path}
-specifying the application classpath of that program, etc.).
+{\bf When:} Use this option to specify once and for all properties of the
+Java program to be analyzed (e.g., property \code{chord.main.class} specifying the
+name of that program's main class).
+Chapter \ref{chap:program-setup} presents an example properties file 
+that defines the program properties that are most commonly used.  Section \ref{sec:program-props}
+presents all program properties that are recognized by Chord. 
 
-The default value of this property is \code{[chord.work.dir]/chord.properties} and typically
-does not need to be changed by users.
-Property \code{chord.work.dir} specifies the directory in which Chord will run.
-The default value of this property is the current directory but users must typically set
-it on the command line, as follows:
+The default value of property \code{chord.props.file} is \code{[chord.work.dir]/chord.properties}.
+Property \code{chord.work.dir} specifies the directory in which Chord must run; its default value
+is the current directory.
+
+There are three ways to use this option of setting properties:
+
+The first way is to override the default value of property \code{chord.work.dir} on the command-line.
+This requires naming the above properties file as \code{chord.properties}, placing it in the
+directory in which Chord will run, denoted \code{<WORK_DIR>}
+(e.g., this could be the top-level directory of the program to be analyzed),
+and running the following command:
 
 \begin{framed}
 \begin{verbatim}
-ant -Dchord.work.dir=<...> run
+ant -Dchord.work.dir=<WORK_DIR> run
 \end{verbatim}
 \end{framed}
 
-where \code{<...>} denotes the absolute or relative path of the top-level directory of
-the program to be analyzed, which contains a file named \code{chord.properties} that users
-must create themselves and populate with properties that are recognized by chord and
-are specific to that program.
+The second way is to override the default value of property \code{chord.props.file} on the command-line.
+In this case, the properties file can be in any user-desired location, denoted \code{<PROPS_FILE>}, and Chord
+will run in the current directory:
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.props.file=<PROPS_FILE> run
+\end{verbatim}
+\end{framed}
+
+The third (and most flexible) way is to override the default values of both properties \code{chord.work.dir}
+and \code{chord.props.file} on the command-line.
+
 
 \item
 
-Via provided file \code{chord.properties} in Chord's main directory.
+{\bf How:} Via the properties file named \code{chord.properties} that is already provided in Chord's main directory.
 
-Use this option to specify once and for all properties you would like to hold in every run of Chord
-(e.g., property \code{chord.max.heap} specifying the maximum heap memory size to be used by the
-JVM running Chord).
+{\bf When:} Use this option to specify once and for all properties you would
+like to hold in {\it every run} of Chord (e.g., property \code{chord.max.heap}
+specifying the maximum heap memory size to be used by the JVM running Chord).
 \end{enumerate}
 
-\section{Meaning of Properties}
+\section{Recognized Properties}
 \label{sec:properties-meaning}
 
 The following properties are recognized by Chord.
 The separator for list-valued properties can be either a blank space, a comma, a colon, or a semi-colon.
-Notation {\tt [<...>]} is used in this section to denote the value of the property named {\tt <...>}.
 
 \subsection{Java Program Properties} 
 \label{sec:program-props}
@@ -249,7 +270,7 @@ This section describes properties that dictate what task(s) Chord must perform.
 {\bf Type:} string list  \\
 {\bf Description:} List of names of analyses to be run in order. \\
 {\bf Default value:} {\tt ""} \\
-{\bf Note:} If the analysis is written in Java, its name is specified via statement {\tt name=<...>} in its {\tt @Chord} annotation.  If the analysis is written in Datalog, its name is specified via a line of the form ``{\tt \# name=<...>}".
+{\bf Note:} If the analysis is written in Java, its name is specified via statement {\tt name="..."} in its {\tt @Chord} annotation.  If the analysis is written in Datalog, its name is specified via a line of the form ``{\tt \# name=...}".
 \end{quote}
 
 \code{chord.print.methods}
@@ -257,7 +278,7 @@ This section describes properties that dictate what task(s) Chord must perform.
 {\bf Type:} string list  \\
 {\bf Description:} List of methods whose intermediate representation to print to standard output. \\
 {\bf Default value:} {\tt ""} \\
-{\bf Note:} Specify each method in format \code{<mname>:<mdesc>@<cname>} where {\tt <mname>} is the method's name, {\tt <mdesc>} is the method's descriptor, and {\tt <cname>} is the name of the method's declaring class. In {\tt <cname>}, use `.' instead of `/', and use {\tt \#} instead of the dollar character. 
+{\bf Note:} Specify each method in format \code{mname:mdesc@cname} where {\tt mname} is the method's name, {\tt mdesc} is the method's descriptor, and {\tt cname} is the name of the method's declaring class. In {\tt cname}, use `.' instead of `/', and use `{\tt \#}' instead of `{\tt \$}'. 
 \end{quote}
 
 \code{chord.print.classes}
@@ -278,15 +299,21 @@ This section describes properties that dictate what task(s) Chord must perform.
 \code{chord.print.rels}
 \begin{quote}
 {\bf Type:} string list  \\
-{\bf Description:} List of names of program relations whose contents must be printed to files \code{[chord.out.dir]/<...>.txt} where {\tt <...>} denotes the relation name. \\
+{\bf Description:} List of names of program relations whose contents must be printed to files \code{[chord.out.dir]/<RELNAME>.txt} where
+{\tt <RELNAME>} denotes the relation name. \\
 {\bf Default value:} {\tt ""} \\
-{\bf Note:} This functionality must be used with caution as certain program relations, albeit represented compactly as BDDs, may contain a large number (e.g., millions) of tuples, resulting in voluminous output when printed in explicit form to a text file.  See Section \ref{sec:tuning-datalog-analysis} for a more efficient way to query the contents of program relations (namely, by using the {\tt debug} target provided in file {\tt build.xml} in Chord's main directory).
+{\bf Note:} This functionality must be used with caution as certain program relations, albeit represented compactly as BDDs, may contain
+ a large number (e.g., millions) of tuples, resulting in voluminous output when printed in explicit form to a text file.  See Section
+ \ref{sec:tuning-datalog-analysis} for a more efficient way to query the contents of program relations (namely, by using the {\tt debug}
+ target provided in file {\tt build.xml} in Chord's main directory).
 \end{quote}
 
 \code{chord.print.project}
 \begin{quote}
 {\bf Type:} bool \\
-{\bf Description:} Create files \code{targets_sortby_name.html}, \code{targets_sortby_kind.html}, and \code{targets_sortby_producers.html} in directory \code{[chord.out.dir]}, publishing all tasks and targets defined by analyses in paths \code{[chord.java.analysis.path]} and \code{[chord.dlog.analysis.path]}.  \\
+{\bf Description:} Create files \code{targets_sortby_name.html}, \code{targets_sortby_kind.html}, and \code{targets_sortby_producers.html}
+ in directory \code{[chord.out.dir]}, publishing all tasks and targets defined by analyses in paths \code{[chord.java.analysis.path]} and
+ \code{[chord.dlog.analysis.path]}.  \\
 {\bf Default value:} {\tt false}
 \end{quote}
 
@@ -312,7 +339,8 @@ This section describes properties regarding analyses executed by Chord.
 \code{chord.classic}
 \begin{quote}
 {\bf Type:} bool \\
-{\bf Description:} Whether to use the classic project (as opposed to the modern project).  See Chapter\ref{chap:analyses} for the difference between the two kinds of projects. \\
+{\bf Description:} Whether to use the classic project (as opposed to the modern project).  See Chapter\ref{chap:analyses} for the difference
+ between the two kinds of projects. \\
 {\bf Default value:} \code{true}
 \end{quote}
 
@@ -320,15 +348,15 @@ This section describes properties regarding analyses executed by Chord.
 \begin{quote}
 {\bf Type:} path \\
 {\bf Description:} Partial classpath of analyses written in Java (i.e., {\tt @Chord}-annotated classes).
-Conventionally, it includes all such analyses that are predefined in Chord.  \\
-{\bf Default value:} The absolute path of file \code{chord.jar}
+Conventionally, it includes all Java analyses that are predefined in Chord.  \\
+{\bf Default value:} The absolute path of file \code{chord.jar}.
 \end{quote}
 
 \code{chord.ext.java.analysis.path}
 \begin{quote}
 {\bf Type:} path \\
 {\bf Description:} Partial classpath of analyses written in Java (i.e., {\tt @Chord}-annotated classes).
-Conventionally, it includes all such external analyses that users want to run. \\
+Conventionally, it includes all user-defined analyses. \\
 {\bf Default value:} {\tt ""}
 \end{quote}
 
@@ -342,23 +370,23 @@ Conventionally, it includes all such external analyses that users want to run. \
 \code{chord.std.dlog.analysis.path}
 \begin{quote}
 {\bf Type:} path \\
-{\bf Description:} Partial classpath of analyses written in Datalog (i.e., files with suffix {\tt .dlog} or {\tt .datalog}).
-Conventionally, it includes all such analyses that are predefined in Chord.  \\
-{\bf Default value:} The absolute path of file \code{chord.jar}
+{\bf Description:} Partial path of analyses written in Datalog (i.e., files with suffix {\tt .dlog}).
+Conventionally, it includes all Datalog analyses that are predefined in Chord. \\
+{\bf Default value:} The absolute path of file \code{chord.jar}.
 \end{quote}
 
 \code{chord.ext.dlog.analysis.path}
 \begin{quote}
 {\bf Type:} path \\
-{\bf Description:} Partial classpath of analyses written in Datalog (i.e., files with suffix {\tt .dlog} or {\tt .datalog}).
-Conventionally, it includes all such external analyses that users want to run. \\
+{\bf Description:} Partial path of analyses written in Datalog (i.e., files with suffix {\tt .dlog}).
+Conventionally, it includes all user-defined Datalog analyses. \\
 {\bf Default value:} {\tt ""}
 \end{quote}
 
 \code{chord.dlog.analysis.path}
 \begin{quote}
 {\bf Type:} path  \\
-{\bf Description:} Complete classpath of analyses written in Datalog (i.e., files with suffix {\tt .dlog} or {\tt .datalog}). \\
+{\bf Description:} Complete path of analyses written in Datalog (i.e., files with suffix {\tt .dlog}). \\
 {\bf Default value:} \code{[chord.std.dlog.analysis.path]:[chord.ext.dlog.analysis.path]}
 \end{quote}
 
