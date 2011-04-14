@@ -3,15 +3,30 @@
 \label{chap:running-analysis}
 
 Chord provides many standard analyses.  Moreover, it allows users to define their
-own analyses, possibly atop the predefined ones.
-Broadly, an analysis in Chord is written in either of the following two forms:
+own analyses, possibly atop the predefined ones. This chapter describes how to run
+predefined as well as user-defined analyses.
 
-\begin{itemize}
-\item
-imperatively in Java, in an \code{@Chord}-annotated class (see Chapter \ref{chap:templates}), or
-\item
-declaratively in Datalog, in a file with suffix {\tt .dlog} (see Chapter \ref{chap:datalog-analysis}).
-\end{itemize}
+Broadly, there are two kinds of analyses in Chord:
+
+\begin{mytable}{|l||c|c|}
+\hline
+ Kind: & imperative (see Chapter \ref{chap:writing-analysis}) & declarative (see Chapter \ref{chap:datalog-analysis}) \\
+\hline
+ Location: &
+    \begin{tabular}{c}
+    a {\tt .class} file in the path denoted by property \\
+    \code{chord.java.analysis.path} compiled \\
+    from a \code{@Chord}-annotated class implementing \\
+    interface \javadoc{chord.project.ITask}{chord/project/ITask.html}
+    \end{tabular} &
+    \begin{tabular}{c}
+    a {\tt .dlog} file in the path denoted by property \\
+    \code{chord.dlog.analysis.path}
+    \end{tabular} \\
+\hline
+ Name: & via stmt \verb+name="<NAME>"+ in {\tt @Chord} annotation & via line ``\verb+# name=<NAME>+'' in {\tt .dlog} file \T \\
+\hline
+\end{mytable}
 
 In its most general form, the command for running an analysis is as follows:
 
@@ -42,21 +57,6 @@ be needed to run the desired analysis.
 might be needed to run the desired analysis.
 \end{itemize}
 
-The name of an analysis is determined as follows:
-
-\begin{itemize}
-\item
-The name of an imperative analysis, defined in an \code{@Chord} annotated class, is
-specified via a statement \verb+name="<ANALYSIS_NAME>"+ in the {\tt @Chord} annotation.
-\item
-The name of a declarative analysis, defined in a file with suffix {\tt .dlog}, is
-specified via a standalong line ``\verb+# name=<ANALYSIS_NAME>+'' in the file.
-\end{itemize}
-
-Imperative analysis names typically have suffix ``{\tt -java}'' and
-declarative analysis names typically have suffix ``{\tt -dlog}'' but
-this is merely a convention that analysis writers are free to deviate from.
-
 In order to facilitate heavy reuse and rapid prototyping, each analysis in Chord is written modularly, independent of other analyses,
 along with lightweight annotations specifying the inputs and outputs of the
 analysis.  Chord's runtime automatically computes producer-consumer
@@ -69,20 +69,8 @@ Chapter \ref{chap:project} explains this process in detail.
 Each of these analyses must occur in the path denoted by \code{<JAVA_ANALYSIS_PATH>} or
 \code{<DLOG_ANALYSIS_PATH>}, depending upon whether the analysis is written 
 imperatively or declaratively, respectively.
-Specifically:
 
-\begin{itemize}
-\item
-each \code{@Chord}-annotated class that defines an imperative analysis to be included
-must be compiled to a {\tt .class} file that is located in some element (directory or jar/zip file)
-of the path specified by property \code{chord.java.analysis.path}.
-\item
-each file with extension {\tt .dlog} that defines a declarative analysis to be included
-must be located in some element (directory or jar/zip file) of the path specified by
-property \code{chord.dlog.analysis.path}.
-\end{itemize}
-
-To simplify the task of specifying which analyses to include, Chord provides the
+Chord provides shorthand ways for specifying analysis paths by means of the
 following six properties:
 
 \begin{mytable}{|c|l|l|l|}
