@@ -19,10 +19,6 @@ APIReadOnly(i:I) input
 extraSummary(m:M) input
 scopeExcludedT(t:T) input
 
-#primConversion(u:U,i:I,v:V) input
-#primToRefConversion(v:V,i:I,u:U) input
-#passThru(v:V0,i:I,u:V1) input
-
 
 IM(i:I,m:M) input
 reachableI(i:I) input

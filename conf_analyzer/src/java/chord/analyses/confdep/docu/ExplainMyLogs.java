@@ -32,6 +32,7 @@ public class ExplainMyLogs extends JavaAnalysis{
   int MAX_CTRLDEPS_TO_DUMP = 30;
   int TOO_MANY_MENTIONS = 8;
   static final String PURE_DYNAMIC = "<dynamic>";
+  static final boolean USE_NON_CS_DATADEP= false;
   
   String[] inScopePrefixes;
   @Override
@@ -63,7 +64,11 @@ public class ExplainMyLogs extends JavaAnalysis{
     if(miniDatadep)
     	project.runTask("minidatadep-dlog"); //just rename primFlow to primCdep, etc
     else
-    	project.runTask("datadep-func-dlog"); //Use the broad-scope datadep, not narrow flow
+    	if(!project.isTaskDone("datadep-func-cs-dlog") || USE_NON_CS_DATADEP) //if we already ran a dataflow, hope it was the fancy one
+    		project.runTask("datadep-func-dlog"); //Use the broad-scope datadep, not narrow flow
+    	else
+    		project.runTask("datadep-func-cs-dlog");
+//    	else
 //was datadep-func-
     project.runTask("logconfdep-dlog");
     
@@ -234,31 +239,41 @@ public class ExplainMyLogs extends JavaAnalysis{
       int dataDeps = msgPair.getValue().val1;
       depCount += dataDeps + ctrlDepView.size();
       
+      	//first deal with all control dependencies, explicit or otherwise
       for(String ctrlDep: ctrlDepView.<String>getAry1ValTuples()) {
         if(ctrlDep == null)
           continue;
 //          optName = "Unknown Conf";
-        
-//        TreeSet<String> matchedOpts = new TreeSet<String>(); //do all the removal after checking in case 
-        							//the same string matches multiple options
+
         boolean foundOpt = optionMentions.remove(ctrlDep);
         if(foundOpt) {
         	writer.println("\texplicitly control-depends on "+ctrlDep);
       		detectedMentions ++;
+      		int reduct = removeSimilarOpts(optionMentions, ctrlDep);
+      		depCount -= reduct;
+      		mentionCount -= reduct;
         } 
         else
         	writer.println("\tcontrol-depends on "+ctrlDep);
       }
       depsPerLine.put(logCall, ctrlDepView.size() + dataDeps);
+      
+      List<String> possiblyUndetected = new LinkedList<String>();
       for(String s: optionMentions) {
-      	if(!msg.contains(s)) { //we already filtered out the control deps. There's
+      	if(msg.contains(s)) { //we already filtered out the control deps. There's
       					//copy of the option name embedded if there's a datadep
-      		writer.println("\texplicit-but-undetected dep:" + s);
-      	} else {
       		writer.println("\texplicit data dependence:" + s);
       		detectedMentions ++;
-      	}
+      		int reduct = removeSimilarOpts(possiblyUndetected, s);
+      		depCount -= reduct;
+      		mentionCount -= reduct;
+      	} else
+      		possiblyUndetected.add(s);
       }
+      
+      for(String s: possiblyUndetected)//since not detected, we don't know if it's control or data
+      	writer.println("\texplicit-but-undetected dep:" + s);
+
       
     }
     
@@ -271,7 +286,21 @@ public class ExplainMyLogs extends JavaAnalysis{
     return depsPerLine;
   }
   
-  private void dumpIndexedDependencies(Map<Quad, Pair<String,Integer>> renderedMessages,
+  private int removeSimilarOpts(Collection<String> optionMentions, String ctrlDep) {
+  	String pruned =  ConfDefines.pruneName(ctrlDep);
+  	Iterator<String> iter = optionMentions.iterator();
+  	int removed = 0;
+  	while(iter.hasNext()) {
+  		String s = iter.next();
+  		if(ConfDefines.pruneName(s).equals(pruned)) {
+  			iter.remove();
+  			removed ++;
+  		}
+  	}	
+  	return removed;
+}
+
+	private void dumpIndexedDependencies(Map<Quad, Pair<String,Integer>> renderedMessages,
   		  Map<Quad,Integer> depsPerLine) {
 //  HashMap<String, Set<String>> messagesByDataOpt = new HashMap<String, Set<String>>();
 //HashMap<String, Set<String>> messagesByCtrlOpt = new HashMap<String, Set<String>>();

@@ -8,7 +8,7 @@
 .include "P.dom"
 .include "UV.dom"
 
-.bddvarorder I0_UV0_P0
+.bddvarorder I0xP0xUV0
 
 PControlDep(p:P, uv:UV) input
 PI(p:P, i:I) input

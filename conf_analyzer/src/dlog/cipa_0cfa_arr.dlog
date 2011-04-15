@@ -79,7 +79,6 @@ reachableM(m:M) output
 IM(i:I,m:M) output
 MM(m:M,n:M) output
 
-
 ### Handle unresolved calls
 
 scopeExcludedM(m:M) input
@@ -87,6 +86,7 @@ scopeExcludedM(m:M) input
 MMx(m:M,n:M) output
 unresolvedInvk(i:I) output
 badCalls(i:I,m:M) output
+IMplus(i:I,m:M) output
 
 ## Entrypoints and threads
 
@@ -268,18 +268,19 @@ collHoldsV(cv,oh) :- collHolds(ch,oh),VH(cv,ch).
 #collHolds(ch,oh) :- collHoldsV(cv,oh),VH(cv,ch).
 collHoldsV(c2v,oh) :- collHoldsV(cv,oh),RINewColl(c2v,cv).
 
-VH(v,oh) :- collHoldsV(cv,oh),RIRetrieve(v,cv),VHfilter(v,oh). 
+#VH(v,oh) :- collHoldsV(cv,oh),RIRetrieve(v,cv),VHfilter(v,oh). 
 
 #try to set return from empty collection to the hypothetical of the class?
 # Somehow this doesn't stratify right.
-#emptyColl(v) :- !collHoldsV(v,_).
-#VH(v,clsH) :- emptyColl(cv),RIRetrieve(v,cv),VT(v,t),clsTH(t,clsH).
-#VH(v,clsH) :- RIRetrieve(v,_),VT(v,t),clsTH(t,clsH).
 
 
 ### Misc enhancements
 
 checkCastInst(l,t,r)   :- reachableM(m), McheckCastInst(m,l,t,r).
+
+IMplus(i,m) :- IM(i,m).
+IMplus(i,m) :- objNewInstIM(i,m).
+IMplus(i,m) :- conNewInstIM(i,m).
 
 
 ## debugging

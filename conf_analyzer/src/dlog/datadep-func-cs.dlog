@@ -25,7 +25,6 @@ instI(i:I) input
 IM(i:I,m:M) input
 VT(v:V,t:T) input
 
-
 clsTH(t:T0,h:H0) input
 scopeExcludedM(m:M) input
 MPrimCmp(m:M, u1:U, u2:U) input
@@ -76,6 +75,9 @@ reachableCI(c:C,i:I) input
 reachableCM(c:C,m:M) input
 CICM(c:C,i:I,c2:C,m:M) input
 CVC(c:C,v:V,obj:C) input
+CH(c:C,h:H) input
+
+
 
 #####Intermediates
 localMustAlias(v:V,u:V) output
@@ -94,8 +96,15 @@ absCUOpt(c:C,u:U,opt:Opt) output
 statFOpt(f:F,site:Opt) output
 instFOpt(c:C,f:F,site:Opt) output
 
+statHF(f:F,site:Opt) output
+instHF(h:H,f:F,site:Opt) output
+
 refCdep(v:V,site:Opt) output
 primCdep(u:U,site:Opt) output
+
+absoluteReturn(m:M,name:Opt) output
+absoluteRefCdep(v:V,site:Opt) output
+absolutePrimCdep(u:U,site:Opt) output
 
 ########## Rules
 
@@ -227,6 +236,16 @@ statFOpt(f, opt) :- getStatFldInst(b, f),taintedOpaqueRef(_,b, opt).
 
 refCdep(v,o) :- CVOpt(_,v,o).
 primCdep(v,o) :- CUOpt(_,v,o).
+
+absoluteReturn(m,opt) :- absoluteReturnV(_,m,opt).
+absoluteReturn(m,opt) :- absoluteReturnU(_,m,opt).
+
+absoluteRefCdep(v,o) :- absCVOpt(_,v,o).
+absolutePrimCdep(v,o) :- absCUOpt(_,v,o).
+
+
+statHF(f,opt) :- statFOpt(f, opt).
+instHF(h, f, opt) :- instFOpt(c, f, opt), CH(c,h).
 
 ####Debugging
 

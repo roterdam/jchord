@@ -93,13 +93,21 @@ public class CS_ConfDeps extends ConfDeps {
 		} else {
 			
 			Project.runTask("ctxts-java"); //do the context-sensitive points-to
-			ClassicProject.g().runTask(CtxtsAnalysis.getCspaKind());
+					//need to do this unconditionally to build the domain
+			maybeRun(Project, CtxtsAnalysis.getCspaKind());
 
 			maybeRun(Project,"datadep-func-cs-dlog");
 		}
-		
-		Project.runTask("confdep-dlog");
-
+	
+		if(SUPERCONTEXT) {
+			//    	Project.runTask("PobjVarAsgnInst"); //to avoid counting domP time in SCS
+			maybeRun(Project,"confdep-dlog"); //to mark primRefDep as done
+			Project.runTask("scs-datadep-dlog");
+			Project.runTask("scs-confdep-dlog");
+		} else {
+			Project.runTask("confdep-dlog");
+		}
+	
 		DomOpts domOpt  = (DomOpts) Project.getTrgt("Opt");
 		slurpDoms();
 		dumpOptUses(domOpt);
@@ -108,10 +116,11 @@ public class CS_ConfDeps extends ConfDeps {
 			dumpFieldTaints(domOpt, "instHF", "statHF");
 		else
 			dumpFieldTaints(domOpt, "instFOpt", "statFOpt");
-		
+
+		if(STATIC)
+			dumpOptRegexes("conf_regex.txt", DomOpts.optSites());
+
 		if(dumpIntermediates)  {
-			if(STATIC)
-				dumpOptRegexes("conf_regex.txt", DomOpts.optSites());
 //			Project.runTask("datadep-debug-dlog");
 //			dumpArgDTaints();
 		}

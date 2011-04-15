@@ -2,7 +2,7 @@ package conf_analyzer.stubs;
 
 import java.util.*;
 
-public class ModelMap<K,V> implements SortedMap<K, V>,Map.Entry<K, V> {
+public class ModelMap<K,V> implements SortedMap<K, V>,Map.Entry<K, V>,NavigableMap<K,V> {
 
 	K key;
 	V value;
@@ -102,6 +102,10 @@ public class ModelMap<K,V> implements SortedMap<K, V>,Map.Entry<K, V> {
 		return null;
 	}
 
+	public Entry<K,V> firstEntry() {
+		return this;
+	}
+	
 	@Override
 	public K firstKey() {
 		return key;
@@ -124,6 +128,95 @@ public class ModelMap<K,V> implements SortedMap<K, V>,Map.Entry<K, V> {
 
 	@Override
 	public SortedMap<K, V> tailMap(K fromKey) {
+		return this;
+	}
+
+	@Override
+	public java.util.Map.Entry<K, V> ceilingEntry(K arg0) {
+		return this;
+}
+
+	@Override
+	public K ceilingKey(K arg0) {
+		return key;
+	}
+
+	@Override
+	public NavigableSet<K> descendingKeySet() {
+		ModelList<K> s = new ModelList<K>();
+		s.add(key);
+		return s;
+	}
+
+	@Override
+	public NavigableMap<K, V> descendingMap() {
+		return this;
+	}
+
+	@Override
+	public java.util.Map.Entry<K, V> floorEntry(K arg0) {
+		return this;
+	}
+
+	@Override
+	public K floorKey(K arg0) {
+		return key;
+	}
+
+	@Override
+	public NavigableMap<K, V> headMap(K arg0, boolean arg1) {
+		return this;
+	}
+
+	@Override
+	public java.util.Map.Entry<K, V> higherEntry(K arg0) {
+		return this;
+	}
+
+	@Override
+	public K higherKey(K arg0) {
+		return key;
+	}
+
+	@Override
+	public java.util.Map.Entry<K, V> lastEntry() {
+		return this;
+	}
+
+	@Override
+	public java.util.Map.Entry<K, V> lowerEntry(K arg0) {
+		return this;
+	}
+
+	@Override
+	public K lowerKey(K arg0) {
+		return key;
+	}
+
+	@Override
+	public NavigableSet<K> navigableKeySet() {
+		ModelList<K> s = new ModelList<K>();
+		s.add(key);
+		return s;
+	}
+
+	@Override
+	public java.util.Map.Entry<K, V> pollFirstEntry() {
+		return this;
+	}
+
+	@Override
+	public java.util.Map.Entry<K, V> pollLastEntry() {
+		return this;
+	}
+
+	@Override
+	public NavigableMap<K, V> subMap(K arg0, boolean arg1, K arg2, boolean arg3) {
+		return this;
+	}
+
+	@Override
+	public NavigableMap<K, V> tailMap(K arg0, boolean arg1) {
 		return this;
 	}
 

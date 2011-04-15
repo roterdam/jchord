@@ -1,4 +1,4 @@
-package chord.analyses.confdep.docu;
+package chord.analyses.confdep.rels;
 
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Field;

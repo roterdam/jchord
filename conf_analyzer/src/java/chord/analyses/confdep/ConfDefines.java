@@ -57,7 +57,6 @@ public class ConfDefines {
     }
   }
   
-  
   public static int confOptionPos(String classname, String methname) {
    if(classname.equals("java.lang.System")&& (methname.equals("getenv") || methname.equals("getProperty"))) {
       return 0;  
@@ -208,6 +207,12 @@ public class ConfDefines {
     return confOptionPos(inst) != -1;
   }
   
+  /**
+   * If inst is a config option READ, returns the index of the parameter name argument
+   * @param classname
+   * @param methname
+   * @return
+   */
   public static int confOptionPos(Quad inst) {
     jq_Method container = inst.getMethod();
 
@@ -241,6 +246,12 @@ public class ConfDefines {
   }
   
   
+  /**
+   * If inst is a config option WRITE, returns the index of the parameter name argument
+   * @param classname
+   * @param methname
+   * @return
+   */
   public static int confOptionWritePos(Quad inst) {
     if(inst.getOperator() instanceof Invoke) {
       jq_Method m = Invoke.getMethod(inst).getMethod();

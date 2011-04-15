@@ -35,7 +35,7 @@ uvConfDep(u:UV,cnf:Opt)
 cOnLine(i:I, cnf:Opt) output
 confControlDep(i:I, cnf:Opt) output
 
-primControlDep(i,uv)
+
 uvConfDep(u,opt) :- primRefDep(u,v),refCdepSCS(v,opt).
 uvConfDep(u,opt) :- UVV(u,v),refCdepSCS(v,opt).
 
