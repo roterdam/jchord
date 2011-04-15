@@ -8,7 +8,7 @@ This chapter presents the high-level architecture of Chord, depicted below, and 
 \includeimage{0.7}{chord_arch.png}
 \end{center}
 
-\subsubsection*{Chord Properties}
+{\bf Chord Properties}
 
 All inputs to Chord are specified by means of system properties.  Chapter
 \ref{chap:properties} describes how to set properties and the meaning of each
@@ -21,7 +21,7 @@ program's class files.  Certain analyses, however, present their results at the
 Java source code level, and thus require the program's Java source files as
 well.
 
-\subsubsection*{Java Program Representation}
+{\bf Java Program Representation}
 
 Chord uses the \xlink{Joeq}{http://joeq.sourceforce.net/} Java compiler
 framework to convert the Java bytecode of the input Java program, one class file
@@ -29,7 +29,7 @@ at a time, into a three-address-like intermediate program representation called
 {\it quadcode} that is more suitable for analysis. Chapter
 \ref{chap:program} describes the quadcode representation in detail.
 
-\subsubsection*{Analysis Scope Construction}
+{\bf Analysis Scope Construction}
 
 A pre-requisite to analyzing a Java program using any program analysis
 framework, including Chord, is to compute the {\it analysis scope}: which parts
@@ -38,7 +38,7 @@ algorithms from the literature that differ in aspects such as scalability,
 precision, and usability for the problem at hand.  Chapter \ref{chap:scope}
 describes these algorithms in detail.
 
-\subsubsection*{Writing and Running Analyses}
+{\bf Writing and Running Analyses}
 
 Chord provides many standard analyses.  Chapter \ref{chap:predefined} describes
 these analyses and how to run them.  Moreover, Chord allows users to define
@@ -63,10 +63,8 @@ without dependencies between them in parallel.  The parallel runtime is based on
 \xlink{Habanero-Java}{http://habanero.rice.edu/hj.html}, and the semantics of
 the dependencies between analyses is based on the
 \xlink{Habanero Concurrent Collections (CnC)}{http://habanero.rice.edu/cnc.html}
-declarative parallel programming model.
-
-Chapter \ref{chap:project} expands upon the modular architecture of analyses in
-Chord that is described above.
+declarative parallel programming model.  Chapter \ref{chap:project} expands upon
+the modular architecture of analyses in Chord.
 
 Chord provides various {\it analysis templates}: classes containing boilerplate
 code that can be extended by users to rapidly prototype different kinds of
@@ -76,12 +74,11 @@ inter-procedural context-sensitive static analysis by merely specifying the
 abstract domain and intra-procedural transfer functions.  Another example is
 DynamicAnalysis, which can be extended by users to write a dynamic analysis by
 merely specifying which of various provided events to instrument, and the
-transfer functions for those events.  
+transfer functions for those events.  Chapters \ref{chap:writing} and
+\ref{chap:running} describe how to write and run your own analyses in Chord
+using the provided analysis templates.
 
-Chapters \ref{chap:writing} and \ref{chap:running} describe how to write and run
-your own analyses in Chord using the provided analysis templates.
-
-\subsubsection*{Dynamic Analysis}
+{\bf Dynamic Analysis}
 
 Chord uses the \xlink{Javassist}{http://www.javassist.org/} Java bytecode
 manipulation framework for instrumenting bytecode and doing dynamic analysis.
@@ -106,7 +103,7 @@ streaming the trace of events in a piped file).
 
 Chapter \ref{chap:dynamic} describes all aspects of dynamic analysis in Chord.
 
-\subsubsection*{Datalog Analysis}
+{\bf Datalog Analysis}
 
 A common way to rapidly prototype an analysis in Chord is using a declarative
 logic-programming language called Datalog.  Chord uses the BDD-based Datalog

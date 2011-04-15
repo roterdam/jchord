@@ -2,35 +2,182 @@
 \chapter{Predefined Analyses}
 \label{chap:predefined}
 
-This chapter describes various predefined analyses in Chord.
+Chord provides many standard analyses.
+This chapter first explains how to run any such analysis and then provides
+descriptions of various predefined analyses.
+
+\section{Running an Analysis}
+\label{sec:running-predefined}
+
+Each predefined analysis in Chord has a unique name that can be used to run the
+analysis from the command-line.  The following command runs the analysis named
+\code{<ANALYSIS_NAME>} on the program specified by directory \code{<WORK_DIR>}
+(see Chapter \ref{chap:setup} for how to setup a program):
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=<ANALYSIS_NAME> run
+\end{verbatim}
+\end{framed}
+
+For instance, the following command runs a basic may-alias and call-graph
+analysis (called 0CFA) provided in Chord:
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=cipa-0cfa-dlog run
+\end{verbatim}
+\end{framed}
+
+This instructs Chord to run the analysis named \code{cipa-0cfa-dlog},
+which is defined in file \code{main/src/chord/analyses/alias/cipa_0cfa.dlog}.
+
+The output of the above command is of the form:
+
+\begin{framed}
+{\small
+\begin{verbatim}
+Buildfile: build.xml
+
+run:
+     [java] Chord run initiated at: Mar 13, 2011 10:31:08 PM
+     [java] ENTER: cipa-0cfa-dlog
+     [java] ENTER: T
+     [java] ENTER: RTA
+     [java] Iteration: 0
+     [java] Iteration: 1
+     [java] Iteration: 2
+     [java] LEAVE: RTA
+     [java] SAVING dom T size: 1386
+     [java] LEAVE: T
+     [java] ENTER: F
+     [java] SAVING dom F size: 4120
+     [java] LEAVE: F
+     ...
+     [java] ENTER: MputStatFldInst
+     [java] SAVING rel MputStatFldInst size: 739
+     [java] LEAVE: MputStatFldInst
+     [java] ENTER: statIM
+     [java] SAVING rel statIM size: 3359
+     [java] LEAVE: statIM
+     [java] Starting command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
+     [java] Relation VH: 541 nodes, 449.0 elements (V0,H0)
+     [java] Relation FH: 137 nodes, 8.0 elements (H0,F0)
+     [java] Relation HFH: 199 nodes, 35.0 elements (H0,F0,H1)
+     [java] Relation IM: 590 nodes, 69.0 elements (I0,M0)
+     [java] Finished command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
+     [java] LEAVE: cipa-0cfa-dlog
+     [java] Chord run completed at: Mar 13, 2011 10:31:36 PM
+     [java] Total time: 00:00:27:671 hh:mm:ss:ms
+
+BUILD SUCCESSFUL
+Total time: 28 seconds
+\end{verbatim}
+}
+\end{framed}
+
+Each analysis in Chord is written modularly, independent of other analyses,
+along with lightweight annotations specifying the inputs and outputs of the
+analysis.  Chord's runtime automatically computes producer-consumer
+relationships between analyses (e.g., determines which analysis produces as
+output a result that is needed as input by another analysis).  Before running a
+desired analysis (such as 0CFA in the above example), Chord recursively runs
+other analyses until the inputs to the desired analysis have been computed; it
+finally runs the desired analysis to produce the outputs of that analysis.
+
+The 0CFA analysis consumes and produces multiple {\it program relations}.  The
+consumed program relations include \code{MputStatFldInst} and \code{statIM},
+each of which is produced by a separate imperative analysis with the
+corresponding name, and the produced program relations include \code{VH},
+\code{FH}, \code{HFH}, and \code{IM}.  We next briefly discuss these relations.
+
+The program relations consumed by the 0CFA analysis contain basic program facts.
+For instance, \code{MputStatFldInst} is a relation containing each tuple
+($m$,$f$,$v$) such that method $m$ in the input Java program contains a
+putstatic instruction of the form ``$f$ = $v$", while \code{statIM} is a
+relation containing each tuple ($i$,$m$) such that $m$ is the target method of
+invokestatic instruction $i$.
+
+The program relations produced by the 0CFA analysis represent points-to
+information and the call graph of the input Java program as computed by the
+analysis.  Specifically, relations \code{VH}, \code{FH}, and \code{HFH}
+represent points-to information for local variables, static fields, and instance
+fields, respectively, while relation \code{IM} represents the call graph,
+namely, it contain each tuple ($i$,$m$) such that $m$ is a possible target
+method of call site $i$.
+
+Metavariables $m$, $f$, $i$, and $v$ above range over entities in so-called
+{\it program domains} \code{M}, \code{F}, \code{I}, and \code{V}, respectively.
+A program domain is a set of entities of a certain kind in the input Java
+program.  For instance, \code{M} is the domain representing the set of all
+methods in the input Java program, \code{F} is the domain representing the set
+of all fields, \code{I} is the domain representing the set of all call sites in
+methods in \code{M}, and \code{V} is the domain representing the set of all
+local variables of reference type in methods in \code{M}.  Each of these domains
+is produced by a separate Java analysis with the corresponding name.  Notice
+that the analyses producing these domains run upfront because these domains are
+consumed by the analyses that produce relations such as \code{MputStatFldInst}
+and \code{statIM}, which in turn are consumed by the desired 0CFA analysis.
+
+During execution, Chord dumps intermediate and final results to files in the
+directory specified by property \code{chord.out.dir}, whose default value is
+\code{[chord.work.dir]/chord_output/} and typically does not need to be changed
+by users.  For the above example, this directory is
+\code{<WORK_DIR>/chord_output/}.
+
+The verbosity of Chord's output above is controlled by property
+\code{chord.verbose}, whose default value is 1.  At verbosity level 0, the above
+command produces less voluminous output of the form:
+
+\begin{framed}
+{\small
+\begin{verbatim}
+Buildfile: build.xml
+
+run:
+     [java] Chord run initiated at: Mar 13, 2011 10:35:01 PM
+     [java] Chord run completed at: Mar 13, 2011 10:35:28 PM
+     [java] Total time: 00:00:26:297 hh:mm:ss:ms
+
+BUILD SUCCESSFUL
+Total time: 26 seconds
+\end{verbatim}
+}
+\end{framed}
 
 \section{Points-to and Call-Graph Analyses}
 
-Chord offers several choices for computing points-to and call-graph information of Java programs.
-In each of these choices, points-to and call-graph information is computed simultaneously
-(called ``on-the-fly call-graph construction" in the literature in contrast to ``ahead-of-time call-graph
-construction" in which the call graph is computed first followed by points-to information).
-On-the-fly approaches are more precise because, in a dynamically dispatching language like Java,
-as more points-to facts are discovered, more (dynamically dispatched) methods are deemed reachable,
-thereby growing the call graph; the code in these newly added methods in turn results in more
-points-to facts.
+Chord offers several choices for computing points-to and call-graph information
+of Java programs.  In each of these choices, the points-to and call-graph
+information is computed simultaneously (called ``on-the-fly call-graph
+construction" in the literature in contrast to ``ahead-of-time call-graph
+construction" in which the call graph is computed first followed by points-to
+information).  On-the-fly approaches are more precise because, in a dynamically
+dispatching language like Java, as more points-to facts are discovered, more
+(dynamically dispatched) methods are deemed reachable, thereby growing the call
+graph; the code in these newly added methods in turn results in more points-to
+facts.
 
-Flow-insensitive analysis computes a single abstract heap whereas flow-sensitive analysis computes
-per-program-point abstract heaps.  Context-insensitive analysis analyzes each method at most once (i.e. in a single abstract context),
-whereas context-sensitive analyses potentially analyze each method multiple times, in different abstract contexts.
-Thus, flow- and context-sensitive analyses are more precise but less scalable than flow- and context-insensitive
+Flow-insensitive analysis computes a single abstract heap whereas flow-sensitive
+analysis computes per-program-point abstract heaps.  Context-insensitive
+analysis analyzes each method at most once (i.e. in a single abstract context),
+whereas context-sensitive analyses potentially analyze each method multiple
+times, in different abstract contexts.  Thus, flow- and context-sensitive
+analyses are more precise but less scalable than flow- and context-insensitive
 analyses, respectively.
 
-Flow-sensitive analysis does not offer much precision over flow-insensitive analysis in
-practice, especially in the absence of strong updates and in the presence of SSA (Static Single Assignment form),
-a program representation that renders a flow-insensitive analysis almost as precise as a flow-sensitive analysis.
-Since analyses in Chord currently perform only weak updates, and since they all operate on an SSA form of the
-input Java program by default, the rest of this section focuses only on flow-insensitive analysis, which is the predominant
-kind of points-to/call-graph analysis in Chord.
+Flow-sensitive analysis does not offer much precision over flow-insensitive
+analysis in practice, especially in the absence of strong updates and in the
+presence of SSA (Static Single Assignment form), a program representation that
+renders a flow-insensitive analysis almost as precise as a flow-sensitive
+analysis.  Since analyses in Chord currently perform only weak updates, and
+since they all operate on an SSA form of the input Java program by default, the
+rest of this section focuses only on flow-insensitive analysis, which is the
+predominant kind of points-to/call-graph analysis in Chord.
 
-We describe context-insensitive analysis first because understanding the concepts behind it will help understand
-the more sophisticated context-sensitive analyses.
-We first recall some relevant program domains:
+We describe context-insensitive analysis first because understanding the
+concepts behind it will help understand the more sophisticated context-sensitive
+analyses.  We first recall some relevant program domains:
 
 \texonly{\newpage}
 
@@ -44,12 +191,14 @@ We first recall some relevant program domains:
 
 \subsection{Context-Insensitive Analysis}
 
-The context-insensitive points-to/call-graph analysis 
-treats each object allocation site as a separate abstract memory location; in other words, it
-can distinguish objects created at different sites but not those created at the same site.
-Additionally, it is field-sensitive, in that it distinguishes between different instance fields of the same object,
-but array-insensitive, in that it cannot distinguish between different elements of the same array;
-all array elements are modeled using a distinguished hypothetical instance field (that has index 0 in domain F).
+The context-insensitive points-to/call-graph analysis treats each object
+allocation site as a separate abstract memory location; in other words, it can
+distinguish objects created at different sites but not those created at the same
+site.  Additionally, it is field-sensitive, in that it distinguishes between
+different instance fields of the same object, but array-insensitive, in that it
+cannot distinguish between different elements of the same array; all array
+elements are modeled using a distinguished hypothetical instance field (that has
+index 0 in domain F).
 
 To run this analysis, run the following command:
 
@@ -70,25 +219,40 @@ This analysis outputs the following relations:
 %is implemented in \code{chord/analyses/alias/cipa-0cfa.dlog}.
 
 \begin{itemize}
-\item
-{\it Call-graph information:}
+\item {\it Call-graph information:}
 \begin{itemize}
-\item rootM subset M contains the set of entry methods that may be reachable; this includes the program's main method
-as well as each static initializer method that may be reachable from the main
-method.
-\item reachableM subset M contains the set of methods that may be reachable from the program's main method.
-\item IM subset (I $\times$ M) contains tuples \texttt{(i,m)} such that call site \texttt{i} may call method \texttt{m}.
-%\item MM subset (M $\times$ M) contains tuples \texttt{(m1,m2)} such that method \texttt{m1} may call method \texttt{m2}.
-%\item reachableI subset I contains the set of call sites that may be reachable.
-%\item reachableT subset T contains the set of classes that may be reachable.
+\item
+rootM subset M contains the set of entry methods that may be reachable; this
+includes the program's main method as well as each static initializer method
+that may be reachable from the main method.
+\item
+reachableM subset M contains the set of methods that may be reachable from the
+program's main method.
+\item
+IM subset (I $\times$ M) contains tuples \texttt{(i,m)} such that call site
+\texttt{i} may call method \texttt{m}.
+%\item
+% MM subset (M $\times$ M) contains tuples \texttt{(m1,m2)} such that
+%method \texttt{m1} may call method \texttt{m2}.
+%\item
+%reachableI subset I contains the set of call sites that may be reachable.
+%\item
+%reachableT subset T contains the set of classes that may be reachable.
 \end{itemize}
 \item
 {\it Points-to information:}
 \begin{itemize}
-\item FH subset (F $\times$ H) contains tuples \texttt{(f,h)} such that static field (i.e. global variable) \texttt{f} may point to an object allocated at site \texttt{h}.
-\item VH subset (V $\times$ H) contains tuples \texttt{(v,h)} such that local variable \texttt{v} may point to an object allocated at site \texttt{h}.
-\item HFH subset (H $\times$ F $\times$ H) contains tuples \texttt{(h1,f,h2)} such that instance field \texttt{f} of some object allocated at
-site \texttt{h1} may point to some object allocated at site \texttt{h2}.
+\item
+FH subset (F $\times$ H) contains tuples \texttt{(f,h)} such that static field
+(i.e.  global variable) \texttt{f} may point to an object allocated at site
+\texttt{h}.
+\item
+VH subset (V $\times$ H) contains tuples \texttt{(v,h)} such that local variable
+\texttt{v} may point to an object allocated at site \texttt{h}.
+\item
+HFH subset (H $\times$ F $\times$ H) contains tuples \texttt{(h1,f,h2)} such
+that instance field \texttt{f} of some object allocated at site \texttt{h1} may
+point to some object allocated at site \texttt{h2}.
 \end{itemize}
 \end{itemize}
 
@@ -110,33 +274,52 @@ relations, which are described below:
 \item
 {\it Context information:}
 \begin{itemize}
-\item C is the domain of all abstract calling contexts and abstract objects.
-Each element in this domain is a sequence of zero or more sites, where each site
-can be a call site or an object allocation site.  A sequence may have mixed call
+\item
+C is the domain of all abstract calling contexts and abstract objects.  Each
+element in this domain is a sequence of zero or more sites, where each site can
+be a call site or an object allocation site.  A sequence may have mixed call
 sites and object allocation sites.  The most significant site (i.e. the first
 site) in each sequence is called the head; the remaining sub-sequence is called
 the tail.  The below three relations relate a sequence with its head and tail.
-\item CC subset (C $\times$ C) contains tuples \texttt{(c1,c2)} such that context \texttt{c2} is the tail of context \texttt{c1}.
-\item CH subset (C $\times$ H) contains tuples \texttt{(c,h)} such that object allocation site \texttt{h} is the head of context \texttt{c}.
-\item CI subset (C $\times$ I) contains tuples \texttt{(c,i)} such that call site \texttt{i} is the head of context \texttt{c}.
+\item
+CC subset (C $\times$ C) contains tuples \texttt{(c1,c2)} such that context
+\texttt{c2} is the tail of context \texttt{c1}.
+\item
+CH subset (C $\times$ H) contains tuples \texttt{(c,h)} such that object
+allocation site \texttt{h} is the head of context \texttt{c}.
+\item
+CI subset (C $\times$ I) contains tuples \texttt{(c,i)} such that call site
+\texttt{i} is the head of context \texttt{c}.
 \end{itemize}
 \item
 {\it Call-graph information:}
 \begin{itemize}
-\item rootCM subset (C $\times$ M) contains tuples \texttt{(c,m)} such that method \texttt{m} is an entry method in context \texttt{c}.
-\item reachableCM subset (C $\times$ M) contains tuples \texttt{(c,m)} such that method \texttt{m} may be reachable in context \texttt{c}.
-\item CICM subset (C $\times$ I $\times$ C $\times$ M) contains tuples \texttt{(c1,i,c2,m)} such that call site \texttt{i} in
-context \texttt{c1} may call method \texttt{m2} in context \texttt{c2}.
+\item
+rootCM subset (C $\times$ M) contains tuples \texttt{(c,m)} such that method
+\texttt{m} is an entry method in context \texttt{c}.
+\item
+reachableCM subset (C $\times$ M) contains tuples \texttt{(c,m)} such that
+method \texttt{m} may be reachable in context \texttt{c}.
+\item
+CICM subset (C $\times$ I $\times$ C $\times$ M) contains tuples
+\texttt{(c1,i,c2,m)} such that call site \texttt{i} in context \texttt{c1} may
+call method \texttt{m2} in context \texttt{c2}.
 \end{itemize}
 \item
 {\it Points-to information:}
 \begin{itemize}
-\item FC subset (F $\times$ C) contains tuples \texttt{(f,o)} such that static field (i.e. global variable) \texttt{f} may point to object \texttt{o}.
-\item CVC subset (C $\times$ V $\times$ C) contains tuples \texttt{(c,v,o)} such that local variable \texttt{v} may point to
-object \texttt{o} in context \texttt{c} of that variable's declaring
-method. Note that both \texttt{o} and \texttt{c} are elements of domain C.
-\item CFC subset (C $\times$ F $\times$ C) contains tuples \texttt{(o1,f,o2)} such that instance field \texttt{f} of object \texttt{o1} may point to object \texttt{o2}.
-\end{itemize}
+\item
+FC subset (F $\times$ C) contains tuples \texttt{(f,o)} such that static field
+(i.e. global variable) \texttt{f} may point to object \texttt{o}.
+\item
+CVC subset (C $\times$ V $\times$ C) contains tuples \texttt{(c,v,o)} such that
+local variable \texttt{v} may point to object \texttt{o} in context \texttt{c}
+of that variable's declaring method.  Note that both \texttt{o} and \texttt{c}
+are elements of domain C.
+\item
+CFC subset (C $\times$ F $\times$ C) contains tuples \texttt{(o1,f,o2)} such
+that instance field \texttt{f} of object \texttt{o1} may point to object
+\texttt{o2}.  \end{itemize}
 \end{itemize}
 
 {\bf Under Construction: explain object-sensitive vs context-sensitive, plus how
@@ -152,19 +335,18 @@ ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=datarace-java run
 \end{verbatim}
 \end{framed}
 
-where \code{<WORK_DIR>} is a directory
-containing a file named \code{chord.properties} that defines
-properties \code{chord.main.class}, \code{chord.class.path}, and
-\code{chord.src.path} specifying the main class, the application classpath, and
-the Java source path, respectively, of the program to be analyzed.
+where \code{<WORK_DIR>} is a directory containing a file named
+\code{chord.properties} that defines properties \code{chord.main.class},
+\code{chord.class.path}, and \code{chord.src.path} specifying the main class,
+the application classpath, and the Java source path, respectively, of the
+program to be analyzed.
 
 Directory \code{<CHORD_MAIN_DIR>/examples/datarace_test/} provides a toy Java
 program on which one can run the datarace analysis.  First run {\tt ant} in that
 directory (in order to compile the program's {\tt .java} files to {\tt .class}
 files) and then run the above command with \code{<WORK_DIR>} replaced by
-\code{examples/datarace_test/}.  Upon successful completion, the
-following files should be produced in directory
-\code{examples/datarace_test/chord_output/}:
+\code{examples/datarace_test/}.  Upon successful completion, the following files
+should be produced in directory \code{examples/datarace_test/chord_output/}:
 
 \begin{itemize}
 \item
@@ -180,7 +362,7 @@ abstract object.
 
 \section{Static Deadlock Analysis}
 
-To run Chord's static deadlock analysis,  run the following command:
+To run Chord's static deadlock analysis, run the following command:
 
 \begin{framed}
 \begin{verbatim}
@@ -188,17 +370,17 @@ ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=deadlock-java run
 \end{verbatim}
 \end{framed}
 
-where \code{<WORK_DIR>} is a directory
-containing a file named \code{chord.properties} that defines
-properties \code{chord.main.class}, \code{chord.class.path}, and
-\code{chord.src.path} specifying the main class, the application classpath,
-and the Java source path, respectively, of the program to be analyzed.
+where \code{<WORK_DIR>} is a directory containing a file named
+\code{chord.properties} that defines properties \code{chord.main.class},
+\code{chord.class.path}, and \code{chord.src.path} specifying the main class,
+the application classpath, and the Java source path, respectively, of the
+program to be analyzed.
 
 Directory \code{<CHORD_MAIN_DIR>/examples/deadlock_test/} provides a toy Java
 program on which one can run the deadlock analysis.  First run {\tt ant} in that
 directory (in order to compile the program's {\tt .java} files to {\tt .class}
 files) and then run the above command with \code{<WORK_DIR>} replaced by
-\code{examples/deadlock_test/}.  Upon successful completion, the
-file \code{deadlocks.html} should be produced in directory
+\code{examples/deadlock_test/}.  Upon successful completion, the file
+\code{deadlocks.html} should be produced in directory
 \code{examples/deadlock_test/chord_output/}.
 

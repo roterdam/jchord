@@ -2,11 +2,8 @@
 \chapter{Running an Analysis}
 \label{chap:running}
 
-Chord provides many standard analyses.  Moreover, it allows users to define
-their own analyses, possibly atop the predefined analyses. This chapter describes
-how to run predefined as well as user-defined analyses.
-
-Broadly, there are two kinds of analyses in Chord:
+This chapter describes how to run an analysis in Chord.  Broadly, there are two
+kinds of analyses in Chord, summarized in the following table:
 
 \begin{mytable}{|l||c|c|}
 \hline
@@ -146,9 +143,9 @@ this property must specify the name of the desired analysis {\tt Ai}
 {\it before} the name of the analysis that caused the ambiguity error.
 
 The above command is for users who have defined their own analyses and wish
-to run them.  The following simpler command suffices for users who only want
-to run analyses predefined in Chord (it uses the default values for
-properties \code{chord.*.analysis.path}):
+to run them.  The following simpler command that uses the default values for
+properties \code{chord.*.analysis.path} suffices for users who only wish to run
+analyses predefined in Chord:
 
 \begin{framed}
 \begin{verbatim}
@@ -156,121 +153,6 @@ ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=<ANALYSIS_NAME> run
 \end{verbatim}
 \end{framed}
 
-For instance, to run a basic may-alias and call-graph analysis (called 0CFA),
-run the following command:
-
-\begin{framed}
-\begin{verbatim}
-ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=cipa-0cfa-dlog run
-\end{verbatim}
-\end{framed}
-
-This instructs Chord to run the declarative analysis named \code{cipa-0cfa-dlog},
-which is defined in file \code{main/src/chord/analyses/alias/cipa_0cfa.dlog}.
-
-The output of the above command is of the form:
-
-\begin{framed}
-{\small
-\begin{verbatim}
-Buildfile: build.xml
-
-run:
-     [java] Chord run initiated at: Mar 13, 2011 10:31:08 PM
-     [java] ENTER: cipa-0cfa-dlog
-     [java] ENTER: T
-     [java] ENTER: RTA
-     [java] Iteration: 0
-     [java] Iteration: 1
-     [java] Iteration: 2
-     [java] LEAVE: RTA
-     [java] SAVING dom T size: 1386
-     [java] LEAVE: T
-     [java] ENTER: F
-     [java] SAVING dom F size: 4120
-     [java] LEAVE: F
-     ...
-     [java] ENTER: MputStatFldInst
-     [java] SAVING rel MputStatFldInst size: 739
-     [java] LEAVE: MputStatFldInst
-     [java] ENTER: statIM
-     [java] SAVING rel statIM size: 3359
-     [java] LEAVE: statIM
-     [java] Starting command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
-     [java] Relation VH: 541 nodes, 449.0 elements (V0,H0)
-     [java] Relation FH: 137 nodes, 8.0 elements (H0,F0)
-     [java] Relation HFH: 199 nodes, 35.0 elements (H0,F0,H1)
-     [java] Relation IM: 590 nodes, 69.0 elements (I0,M0)
-     [java] Finished command: 'java ... chord_analyses_alias_cipa_0cfa.dlog'
-     [java] LEAVE: cipa-0cfa-dlog
-     [java] Chord run completed at: Mar 13, 2011 10:31:36 PM
-     [java] Total time: 00:00:27:671 hh:mm:ss:ms
-
-BUILD SUCCESSFUL
-Total time: 28 seconds
-\end{verbatim}
-}
-\end{framed}
-
-The 0CFA analysis consumes and produces multiple {\it program relations}.
-The consumed program relations include \code{MputStatFldInst} and
-\code{statIM}, each of which is produced by a separate imperative analysis
-with the corresponding name, and the produced program relations include
-\code{VH}, \code{FH}, \code{HFH}, and \code{IM}.  We next briefly discuss
-these relations.
-
-The program relations consumed by the 0CFA analysis contain basic program
-facts.  For instance, \code{MputStatFldInst} is a relation containing
-each tuple ($m$,$f$,$v$) such that method $m$ in the input Java program
-contains a putstatic instruction of the form ``$f$ = $v$", while
-\code{statIM} is a relation containing each tuple ($i$,$m$) such that $m$
-is the target method of invokestatic instruction $i$.
-
-The program relations produced by the 0CFA analysis represent points-to
-information and the call graph of the input Java program as computed by
-the analysis.  Specifically, relations \code{VH}, \code{FH}, and \code{HFH}
-represent points-to information for local variables, static fields, and
-instance fields, respectively, while relation \code{IM} represents the call
-graph, namely, it contain each tuple ($i$,$m$) such that $m$ is a possible
-target method of call site $i$.
-
-Metavariables $m$, $f$, $i$, and $v$ above range over entities in so-called
-{\it program domains} \code{M}, \code{F}, \code{I}, and \code{V}, respectively.
-A program domain is a set of entities of a certain kind in the input Java
-program.  For instance, \code{M} is the domain representing the set of all
-methods in the input Java program, \code{F} is the domain representing the set
-of all fields, \code{I} is the domain representing the set of all call sites
-in methods in \code{M}, and \code{V} is the domain representing the set of all
-local variables of reference type in methods in \code{M}.  Each of these
-domains is produced by a separate Java analysis with the corresponding name.
-Notice that the analyses producing these domains run upfront because these
-domains are consumed by the analyses that produce relations such as
-\code{MputStatFldInst} and \code{statIM}, which in turn are consumed by the
-desired 0CFA analysis.
-
-During execution, Chord dumps intermediate and final results to files in the
-directory specified by property \code{chord.out.dir}, whose default value is
-\code{[chord.work.dir]/chord_output/} and typically does not need to be changed
-by users.  For the above example, this directory is
-\code{<WORK_DIR>/chord_output/}.
-
-The verbosity of Chord's output above is controlled by property
-\code{chord.verbose}, whose default value is 1.  At verbosity level 0, the
-above command produces less voluminous output of the form:
-
-\begin{framed}
-{\small
-\begin{verbatim}
-Buildfile: build.xml
-
-run:
-     [java] Chord run initiated at: Mar 13, 2011 10:35:01 PM
-     [java] Chord run completed at: Mar 13, 2011 10:35:28 PM
-     [java] Total time: 00:00:26:297 hh:mm:ss:ms
-
-BUILD SUCCESSFUL
-Total time: 26 seconds
-\end{verbatim}
-}
-\end{framed}
+Section \ref{sec:running-predefined} illustrates this command using an example
+predefined analysis in Chord.
 
