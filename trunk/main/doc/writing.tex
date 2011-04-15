@@ -1,6 +1,6 @@
-\xname{writing_analysis}
+\xname{writing}
 \chapter{Writing an Analysis}
-\label{chap:writing-analysis}
+\label{chap:writing}
 
 Chord provides several {\it analysis templates}: classes containing boilerplate
 code that can be extended by users to rapidly prototype different kinds of
@@ -30,7 +30,7 @@ JavaAnalysis
 The following sections describe each of these analysis templates in more detail.
 
 \section{JavaAnalysis}
-\label{sec:java-analysis}
+\label{sec:java}
 
 Class \javadoc{chord.project.analyses.JavaAnalysis}{chord/project/analyses/JavaAnalysis.html}
 is the most general template for writing an analysis.  An analysis can be
@@ -112,16 +112,16 @@ The analysis templates presented in the following sections are more specialized
 forms of the {\tt JavaAnalysis} template: they constrain the number and kinds of
 consumed/produced targets and/or the analysis code in the {\tt run()} method.
 
-%called JavaAnalysis (Section \ref{sec:java-analysis}), and the other for writing
+%called JavaAnalysis (Section \ref{sec:java}), and the other for writing
 %analyses declaratively in Datalog, called DlogAnalysis
-%(Section \ref{sec:dlog-analysis}).  JavaAnalysis is the most general template:
+%(Section \ref{sec:dlog}).  JavaAnalysis is the most general template:
 %it least constrains the kind of analysis that can be written but also offers the
 %least boilerplate code for writing an analysis.  Chord provides several
 %additional templates for writing analyses imperatively in Java that are
 %specialized forms of JavaAnalysis, namely, ProgramDom
 %(Section \ref{sec:program-dom}), ProgramRel (Section \ref{sec:program-rel}),
-%RHSAnalysis (Section \ref{sec:rhs-analysis}), and DynamicAnalysis
-%(Section \ref{sec:dynamic-analysis}).  We next explain each of these templates.
+%RHSAnalysis (Section \ref{sec:rhs}), and DynamicAnalysis
+%(Section \ref{sec:dynamic}).  We next explain each of these templates.
 
 \section{ProgramDom}
 \label{sec:program-dom}
@@ -133,7 +133,7 @@ kind, typically from the program being analyzed, such as the set of all methods
 in the program, the set of all fields in the program, etc.  Indices are 
 assigned starting from 0 and in the order in which values are added to the set.
 A program domain primarily serves as an input to Datalog analyses
-(see Section \ref{sec:dlog-analysis}).  Thus, it is a kind of target (i.e.,
+(see Section \ref{sec:dlog}).  Thus, it is a kind of target (i.e.,
 analysis result) in a Chord project.  A common way to define a program domain
 is to create a program domain analysis by extending class {\tt ProgramDom} as
 follows:
@@ -232,7 +232,7 @@ Class \javadoc{chord.project.analyses.ProgramRel}{chord/project/analyses/Program
 is a template for writing a {\it program relation analysis}.
 A {\it program relation} represents a set of tuples over one or more fixed 
 program domains.  A program relation primarily serves as an input or output of
-Datalog analyses (see Section \ref{sec:dlog-analysis}).  Thus, it is a kind of
+Datalog analyses (see Section \ref{sec:dlog}).  Thus, it is a kind of
 target (i.e., analysis result) in a Chord project.  A common way to define a
 program relation is to create a program domain analysis by extending class
 {\tt ProgramRel} as follows:
@@ -348,9 +348,9 @@ CHA program relation above with \code{<DOM_LIST>} as ``\code{M0,T0,M1}''  is
 ``\code{M0xM1_T0}''; another example value is ``\code{M1_T0_M0}''.
 \end{itemize}
 
-Chapter \ref{chap:datalog-analysis} describes how BDDs are represented
-(Section \ref{sec:bdd-representation}) and how you can tune their size and the
-performance of operations on them (Section \ref{sec:tuning-datalog-analysis}).
+Chapter \ref{chap:datalog} describes how BDDs are represented
+(Section \ref{sec:bdd}) and how you can tune their size and the
+performance of operations on them (Section \ref{sec:tuning-datalog}).
 
 It is a runtime error to explicitly specify any produced targets in the
 {\tt @Chord} annotation of a class extending {\tt ProgramRel}.  If you wish to
@@ -393,7 +393,7 @@ such as {\tt namesOfTypes} and {\tt types}) must now be provided in the
 relation in the project with its sign.
 
 \section{DlogAnalysis}
-\label{sec:dlog-analysis}
+\label{sec:dlog}
 
 A common way to rapidly prototype analyses in Chord is using a declarative
 logic-programming language called Datalog.  A Datalog analysis is defined in a
@@ -414,7 +414,7 @@ of class \code{ProgramRel} (see Section \ref{sec:program-rel}).
 A set of rules (constraints) {\tt R} specifying how to compute the output
 relations from the input relations.
 \end{itemize}
-An example such file is shown in Chapter \ref{chap:datalog-analysis} which also
+An example such file is shown in Chapter \ref{chap:datalog} which also
 explains all aspects of Datalog analyses.
 
 To run the analysis, the {\tt .dlog} file must occur in some element (directory
@@ -440,10 +440,10 @@ by solving constraints {\tt R}.
 \end{itemize}
 
 \section{DynamicAnalysis}
-\label{sec:dynamic-analysis}
+\label{sec:dynamic}
 
 \section{RHSAnalysis}
-\label{sec:rhs-analysis}
+\label{sec:rhs}
 
 %\begin{itemize}
 %\item

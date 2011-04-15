@@ -1,15 +1,15 @@
-\xname{dynamic_analysis}
+\xname{dynamic}
 \chapter{Dynamic Analysis}
-\label{chap:dynamic-analysis}
+\label{chap:dynamic}
 
-This chapter describes all aspect of dynamic analysis in Chord.
-Section \ref{sec:writing-dynamic-analysis} describes how to write a dynamic analysis,
-Section \ref{sec:running-dynamic-analysis} describes how to compile and run it,
-and Section \ref{sec:instr-events} describes common dynamic analysis events
-supported in Chord.
+This chapter describes all aspect of dynamic analysis in Chord.  Section
+\ref{sec:writing-dynamic} describes how to write a dynamic analysis, Section
+\ref{sec:running-dynamic} describes how to compile and run it, and Section
+\ref{sec:instr-events} describes common dynamic analysis events supported in
+Chord.
 
 \section{Writing a Dynamic Analysis}
-\label{sec:writing-dynamic-analysis}
+\label{sec:writing-dynamic}
 
 Follow the following steps to write your own dynamic analysis.
 
@@ -30,11 +30,12 @@ A sample such class \code{MyDynamicAnalysis} is shown below:
 \begin{framed}
 {\small
 \begin{verbatim}
+    import chord.project.Chord;
     import chord.project.analyses.DynamicAnalysis;
     import chord.instr.InstrScheme;
 
     // ***TODO***: analysis won't be recognized by Chord without this annotation
-    @Chord(name=<name-of-analysis>)    
+    @Chord(name = "<ANALYSIS_NAME>")    
     public class MyDynamicAnalysis extends DynamicAnalysis {
         InstrScheme scheme;
         @Override
@@ -84,7 +85,7 @@ A sample such class \code{MyDynamicAnalysis} is shown below:
 \end{framed}
 
 \section{Compiling and Running a Dynamic Analysis}
-\label{sec:running-dynamic-analysis}
+\label{sec:running-dynamic}
 
 Compile the analysis by placing the directory containing class \code{MyDynamicAnalysis} created
 above in the path defined by property \code{chord.ext.java.analysis.path}.
@@ -95,9 +96,10 @@ used for the program in each of those runs (say \code{<args1>}, ..., \code{<args
 By default, \code{chord.run.ids=0} and \code{chord.args.0=""}, that is, the program will be run only
 once (using run ID 0) with no command-line arguments.
 
-To run the analysis, set property \code{chord.run.analyses} to \code{<name-of-analysis>}
-(recall that \code{<name-of-analysis>} is the name provided in the \code{@Chord} annotation for class
-\code{MyDynamicAnalysis} created above).
+To run the analysis, set property \code{chord.run.analyses} to
+\code{<ANALYSIS_NAME>} (recall that \code{<ANALYSIS_NAME>} is the name provided
+in the \code{@Chord} annotation for class \code{MyDynamicAnalysis} created
+above).
 
 {\bf Note:} The IBM J9 JVM on Linux is highly recommended if you intend to use Chord for
 dynamic program analysis, as it allows you to instrument the entire JDK; using any other

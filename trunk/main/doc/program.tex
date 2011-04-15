@@ -1,6 +1,6 @@
-\xname{program_representation}
+\xname{program}
 \chapter{Java Program Representation}
-\label{chap:program-representation}
+\label{chap:program}
 
 Chord uses \xlink{Joeq}{http://joeq.sourceforge.net/} to translate
 Java bytecode, one class file at a time, into a three-address-like
@@ -226,7 +226,7 @@ methods) to access various parts of the representation, most notably:
 of \code{jq_Class} and \code{jq_Array}, respectively; both these are
 subclasses of \code{jq_Reference}.
 
-See Chapter \ref{chap:computing-scope} for how Chord determines which
+See Chapter \ref{chap:scope} for how Chord determines which
 classes may be loaded and which methods may be called.
 
 The quadcode representation of each type is a unique object of the

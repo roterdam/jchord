@@ -1,24 +1,24 @@
-\xname{datalog_analysis}
+\xname{datalog}
 \chapter{Datalog Analysis}
-\label{chap:datalog-analysis}
+\label{chap:datalog}
 
 A common way to rapidly prototype an analysis in Chord is using a declarative
-logic-programming language called Datalog.  This chapter describes all aspects of
-Datalog analyses in Chord.
-Section \ref{sec:writing-datalog-analysis} explains how to write and run a Datalog analysis.
-Section \ref{sec:tuning-datalog-analysis} explains how to tune its performance.
-Finally, Section \ref{sec:bdd} explains the representation of BDDs (Binary Decision Diagrams)
-which are a data structure central to executing Datalog analyses.
+logic-programming language called Datalog.  This chapter describes all aspects
+of Datalog analyses in Chord.  Section \ref{sec:writing-datalog} explains how to
+write and run a Datalog analysis.  Section \ref{sec:tuning-datalog} explains how
+to tune its performance.  Finally, Section \ref{sec:bdd} explains the
+representation of BDDs (Binary Decision Diagrams) which are a data structure
+central to executing Datalog analyses.
 
 \section{Writing a Datalog Analysis}
-\label{sec:writing-datalog-analysis}
+\label{sec:writing-datalog}
 
-A Datalog analysis declares a bunch of input/output program relations,
-each over one or more program domains, and provides a bunch of rules (constraints)
-specifying how to compute the output relations from the input relations.
-It can be defined in any file with suffix {\tt .dlog}
-in any directory in the path specified by property \code{chord.dlog.analysis.path}.
-An example Datalog analysis is shown below:
+A Datalog analysis declares a bunch of input/output program relations, each over
+one or more program domains, and provides a bunch of rules (constraints)
+specifying how to compute the output relations from the input relations.  It can
+be defined in any file with suffix {\tt .dlog} in any directory in the path
+specified by property \code{chord.dlog.analysis.path}.  An example Datalog
+analysis is shown below:
 
 \texonly{\newpage}
 
@@ -99,14 +99,14 @@ sophisticated optimizations to simplify the rules; besides the BDD variable orde
 the manner in which these rules are expressed heavily affects the performance of
 the solver.  For instance, an important manual optimization involves breaking down
 long rules into multiple shorter rules communicating via intermediate relations.
-See Section \ref{sec:tuning-datalog-analysis} for hints on tuning the performance
+See Section \ref{sec:tuning-datalog} for hints on tuning the performance
 of Datalog analyses.
 
 Running a Datalog analysis is no different from running any other kind of analysis
-in Chord.  See Chapter \ref{chap:running-analysis} for how to run an analysis.
+in Chord.  See Chapter \ref{chap:running} for how to run an analysis.
 
 \section{Tuning Performance}
-\label{sec:tuning-datalog-analysis}
+\label{sec:tuning-datalog}
 
 There are several tricks analysis writers can try to improve the
 performance of bddbddb, the Datalog solver used by Chord, often
