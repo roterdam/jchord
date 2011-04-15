@@ -2,29 +2,33 @@
 \chapter{Running an Analysis}
 \label{chap:running-analysis}
 
-Chord provides many standard analyses.  Moreover, it allows users to define their
-own analyses, possibly atop the predefined ones. This chapter describes how to run
-predefined as well as user-defined analyses.
+Chord provides many standard analyses.  Moreover, it allows users to define
+their own analyses, possibly atop the predefined ones. This chapter describes
+how to run predefined as well as user-defined analyses.
 
 Broadly, there are two kinds of analyses in Chord:
 
 \begin{mytable}{|l||c|c|}
 \hline
- Kind: & imperative (see Chapter \ref{chap:writing-analysis}) & declarative (see Chapter \ref{chap:datalog-analysis}) \\
+Kind:
+	& imperative (see Chapter \ref{chap:writing-analysis})
+	& declarative (see Chapter \ref{chap:datalog-analysis}) \\
 \hline
- Location: &
-    \begin{tabular}{c}
-    a {\tt .class} file in the path denoted by property \\
-    \code{chord.java.analysis.path} compiled \\
-    from a \code{@Chord}-annotated class implementing \\
-    interface \javadoc{chord.project.ITask}{chord/project/ITask.html}
-    \end{tabular} &
-    \begin{tabular}{c}
-    a {\tt .dlog} file in the path denoted by property \\
-    \code{chord.dlog.analysis.path}
-    \end{tabular} \\
+Location:
+	& \begin{tabular}{c}
+	  a {\tt .class} file in the path denoted by property \\
+      \code{chord.java.analysis.path} compiled \\
+      from a \code{@Chord}-annotated class implementing \\
+      interface \javadoc{chord.project.ITask}{chord/project/ITask.html}
+      \end{tabular}
+	& \begin{tabular}{c}
+      a {\tt .dlog} file in the path denoted by property \\
+      \code{chord.dlog.analysis.path}
+      \end{tabular} \\
 \hline
- Name: & via stmt \verb+name="<NAME>"+ in {\tt @Chord} annotation & via line ``\verb+# name=<NAME>+'' in {\tt .dlog} file \T \\
+Name:
+	& via stmt \verb+name="<NAME>"+ in {\tt @Chord} annotation
+	& via line ``\verb+# name=<NAME>+'' in {\tt .dlog} file \T \\
 \hline
 \end{mytable}
 
@@ -41,93 +45,110 @@ ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=<ANALYSIS_NAME> \
 where:
 \begin{itemize}
 \item
-\code{<WORK_DIR>} is a directory
-containing a file named \code{chord.properties} that defines various properties
-of the program to be analyzed that might be needed by the analysis being run,
-such as the program's main class, the program's application classpath, etc.  (see
-Chapter \ref{chap:program-setup}).
+\code{<WORK_DIR>} is a directory containing a file named
+\code{chord.properties} that defines various properties of the program to be
+analyzed that might be needed by the analysis being run, such as the program's
+main class, the program's application classpath, etc.
+(see Chapter \ref{chap:program-setup}).
 \item
 \code{<ANALYSIS_NAME>} is the name of the analysis to run.  More generally, it
 can be a comma-separated list of names of analyses to run in order.
 \item
-\code{<JAVA_ANALYSIS_PATH>} is a path specifying all imperative analyses that might
-be needed to run the desired analysis.
+\code{<JAVA_ANALYSIS_PATH>} is a path specifying all imperative analyses that
+might be needed to run the desired analysis.
 \item
 \code{<DLOG_ANALYSIS_PATH>} is a path specifying all declarative analyses that
 might be needed to run the desired analysis.
 \end{itemize}
 
-In order to facilitate heavy reuse and rapid prototyping, each analysis in Chord is written modularly, independent of other analyses,
-along with lightweight annotations specifying the inputs and outputs of the
-analysis.  Chord's runtime automatically computes producer-consumer
-relationships between analyses (e.g., determines which analysis produces as
-output a result that is needed as input by another analysis).  Before running
-the desired analysis named \code{<ANALYSIS_NAME>}, Chord recursively runs other
-analyses until the inputs to the desired analysis have been computed; it finally
-runs the desired analysis to produce the outputs of that analysis.
-Chapter \ref{chap:project} explains this process in detail.
-Each of these analyses must occur in the path denoted by \code{<JAVA_ANALYSIS_PATH>} or
-\code{<DLOG_ANALYSIS_PATH>}, depending upon whether the analysis is written 
-imperatively or declaratively, respectively.
+In order to facilitate heavy reuse and rapid prototyping, each analysis in
+Chord is written modularly, independent of other analyses, along with
+lightweight annotations specifying the inputs and outputs of the analysis.
+Chord's runtime automatically computes producer-consumer relationships between
+analyses (e.g., determines which analysis produces as output a result that is
+needed as input by another analysis).  Before running the desired analysis
+named \code{<ANALYSIS_NAME>}, Chord recursively runs other analyses until the
+inputs to the desired analysis have been computed; it finally runs the desired
+analysis to produce the outputs of that analysis.  Chapter \ref{chap:project}
+explains this process in detail.  Each of these analyses must occur in the
+path denoted by \code{<JAVA_ANALYSIS_PATH>} or \code{<DLOG_ANALYSIS_PATH>},
+depending upon whether the analysis is written imperatively or declaratively,
+respectively.
 
 Chord provides shorthand ways for specifying analysis paths by means of the
 following six properties:
 
 \begin{mytable}{|c|l|l|l|}
 \hline
-Analysis Kind   &   \multicolumn{1}{c|}{Predefined} & \multicolumn{1}{c|}{User-defined} & \multicolumn{1}{c|}{All} \\
+Analysis Kind
+	& \multicolumn{1}{c|}{Predefined}
+	& \multicolumn{1}{c|}{User-defined}
+	& \multicolumn{1}{c|}{All} \\
 \hline
-imperative & \code{chord.std.java.analysis.path} & \code{chord.ext.java.analysis.path} & \code{chord.java.analysis.path} \\
+imperative
+	& \code{chord.std.java.analysis.path}
+	& \code{chord.ext.java.analysis.path}
+	& \code{chord.java.analysis.path} \\
 \hline
-declarative & \code{chord.std.dlog.analysis.path} & \code{chord.ext.dlog.analysis.path} & \code{chord.dlog.analysis.path}
+declarative
+	& \code{chord.std.dlog.analysis.path}
+	& \code{chord.ext.dlog.analysis.path}
+	& \code{chord.dlog.analysis.path}
 \T \\
 \hline
 \end{mytable}
 
 The paths specified by the \code{chord.std.*.analysis.path} properties
 conventionally include all ``standard'' analyses: analyses that are predefined
-in Chord.  The default value of each of these properties is the absolute path of
-file \code{chord.jar}.  Normally, users must not change the value of these
+in Chord.  The default value of each of these properties is the absolute path
+of file \code{chord.jar}.  Normally, users must not change the value of these
 properties.
 
 The paths specified by the \code{chord.ext.*.analysis.path} properties
 conventionally include all ``external'' analyses: analyses that are written by
 users.  The default value of each of these properties is the empty path.
 
-The paths specified by the \code{chord.*.analysis.path} properties include {\it
-all} analyses: both standard and external ones.  The default value of each of
-these properties is simply the concatenation of the values of the corresponding
-two properties above that specify the paths of standard and external analyses.
-Normally, users must not change the value of these properties.
+The paths specified by the \code{chord.*.analysis.path} properties include
+{\it all} analyses: both standard and external ones.  The default value of each
+of these properties is simply the concatenation of the values of the
+corresponding two properties above that specify the paths of standard and
+external analyses.  Normally, users must not change the value of these
+properties.
 
-Running the above command can cause Chord to report a runtime error in the following scenarios:
+Running the above command can cause Chord to report a runtime error in the
+following scenarios:
 
 \begin{itemize}
 \item
-Either no included analysis or multiple included analyses are named \code{<ANALYSIS_NAME>}.
+Either no included analysis or multiple included analyses are named
+\code{<ANALYSIS_NAME>}.
 \item
-A result declared as consumed by the analysis named \code{<ANALYSIS_NAME>} (or by some
-analysis on which the specified analysis is dependent directly or transitively) is either not 
-declared as produced by any included analysis or is declared as produced by multiple included analyses.
+A result declared as consumed by the analysis named \code{<ANALYSIS_NAME>}
+(or by some analysis on which the specified analysis is dependent directly or
+transitively) is either not declared as produced by any included analysis or
+is declared as produced by multiple included analyses.
 \end{itemize}
 
-To fix the error resulting from the ``missing analysis'' case in both the above scenarios,
-simply include the missing analysis in the path specified by properties \code{chord.*.analysis.path}.
+To fix the error resulting from the ``missing analysis'' case in both the above
+scenarios, simply include the missing analysis in the path specified by
+properties \code{chord.*.analysis.path}.
 
-To fix the error resulting from the ``ambiguous analysis'' case in both the above scenarios,
-the names {\tt A1}, ..., {\tt An} of all analyses that were involved in the ambiguity are
-provided in the error report.  Suppose {\tt Ai} is the desired analysis from this set.
-Then, one way to fix the error is to exclude all analyses in that set except analysis {\tt Ai}
-from the path specified by properties \code{chord.*.analysis.path}.
-A better way is to specify the names of {\it multiple} analyses in the value of property
-\code{chord.run.analyses} (recall that this property
-allows a comma-separated list of names of analyses to be run in order).
-Specifically, the value of this property must specify the name of the desired analysis {\tt Ai} 
+To fix the error resulting from the ``ambiguous analysis'' case in both the
+above scenarios, the names {\tt A1}, ..., {\tt An} of all analyses that were
+involved in the ambiguity are provided in the error report.  Suppose {\tt Ai}
+is the desired analysis from this set.  Then, one way to fix the error is to
+exclude all analyses in that set except analysis {\tt Ai} from the path
+specified by properties \code{chord.*.analysis.path}.  A better way is to
+specify the names of {\it multiple} analyses in the value of property
+\code{chord.run.analyses} (recall that this property allows a comma-separated
+list of names of analyses to be run in order).  Specifically, the value of
+this property must specify the name of the desired analysis {\tt Ai}
 {\it before} the name of the analysis that caused the ambiguity error.
 
-The above command is for users who have defined their own analyses and wish to run them.
-The following simpler command suffices for users who only want to run analyses predefined
-in Chord (it uses the default values for properties \code{chord.*.analysis.path}):
+The above command is for users who have defined their own analyses and wish
+to run them.  The following simpler command suffices for users who only want
+to run analyses predefined in Chord (it uses the default values for
+properties \code{chord.*.analysis.path}):
 
 \begin{framed}
 \begin{verbatim}
@@ -191,53 +212,51 @@ Total time: 28 seconds
 }
 \end{framed}
 
-%Each analysis in Chord is written modularly, independent of other analyses, along with lightweight
-%annotations specifying the inputs and outputs of the analysis.  Chord's runtime automatically computes
-%producer-consumer relationships between analyses (e.g., determines which analysis produces as output a
-%result that is needed as input by another analysis).  Before running a desired analysis
-%(such as 0CFA in the above example), Chord recursively runs other analyses until the
-%inputs to the desired analysis have been computed; it finally runs the desired analysis to produce
-%the outputs of that analysis.
-The 0CFA analysis consumes and produces multiple {\it program
-relations}.  The consumed program relations include \code{MputStatFldInst}
-and \code{statIM}, each of which is produced by a separate imperative analysis with
-the corresponding name, and the produced program relations include
-\code{VH}, \code{FH}, \code{HFH}, and \code{IM}.  We next briefly
-discuss these relations.
+The 0CFA analysis consumes and produces multiple {\it program relations}.
+The consumed program relations include \code{MputStatFldInst} and
+\code{statIM}, each of which is produced by a separate imperative analysis
+with the corresponding name, and the produced program relations include
+\code{VH}, \code{FH}, \code{HFH}, and \code{IM}.  We next briefly discuss
+these relations.
 
-The program relations consumed by the 0CFA analysis contain basic program facts.  For instance,
-\code{MputStatFldInst} is a relation containing each tuple ($m$,$f$,$v$) such that method $m$ in the input Java
-program contains a putstatic instruction of the form ``$f$ = $v$",
-while \code{statIM} is a relation containing each tuple ($i$,$m$) such that $m$
+The program relations consumed by the 0CFA analysis contain basic program
+facts.  For instance, \code{MputStatFldInst} is a relation containing
+each tuple ($m$,$f$,$v$) such that method $m$ in the input Java program
+contains a putstatic instruction of the form ``$f$ = $v$", while
+\code{statIM} is a relation containing each tuple ($i$,$m$) such that $m$
 is the target method of invokestatic instruction $i$.
 
-The program relations produced by the 0CFA analysis represent points-to information and the
-call graph of the input Java program as computed by the analysis.
-Specifically, relations \code{VH}, \code{FH}, and \code{HFH} represent points-to information
-for local variables, static fields, and instance fields, respectively,
-while relation \code{IM} represents the call graph, namely, it contain each tuple ($i$,$m$) such that
-$m$ is a possible target method of call site $i$.
+The program relations produced by the 0CFA analysis represent points-to
+information and the call graph of the input Java program as computed by
+the analysis.  Specifically, relations \code{VH}, \code{FH}, and \code{HFH}
+represent points-to information for local variables, static fields, and
+instance fields, respectively, while relation \code{IM} represents the call
+graph, namely, it contain each tuple ($i$,$m$) such that $m$ is a possible
+target method of call site $i$.
 
-Metavariables $m$, $f$, $i$, and $v$ above range over entities in so-called {\it program domains} \code{M},
-\code{F}, \code{I}, and \code{V}, respectively.
-A program domain is a set of entities of a certain kind in the input Java program.  For instance,
-\code{M} is the domain representing
-the set of all methods in the input Java program, \code{F} is the domain representing the set of all fields,
-\code{I} is the domain representing
-the set of all call sites in methods in \code{M}, and \code{V} is the domain representing the set of all local variables of reference type in methods in \code{M}.
-Each of these domains is produced by a separate Java analysis with the corresponding name.
-Notice that the analyses producing these domains run upfront because these domains
-are consumed by the analyses that produce relations such as \code{MputStatFldInst} and
-\code{statIM}, which in turn are consumed by the desired 0CFA analysis.
+Metavariables $m$, $f$, $i$, and $v$ above range over entities in so-called
+{\it program domains} \code{M}, \code{F}, \code{I}, and \code{V}, respectively.
+A program domain is a set of entities of a certain kind in the input Java
+program.  For instance, \code{M} is the domain representing the set of all
+methods in the input Java program, \code{F} is the domain representing the set
+of all fields, \code{I} is the domain representing the set of all call sites
+in methods in \code{M}, and \code{V} is the domain representing the set of all
+local variables of reference type in methods in \code{M}.  Each of these
+domains is produced by a separate Java analysis with the corresponding name.
+Notice that the analyses producing these domains run upfront because these
+domains are consumed by the analyses that produce relations such as
+\code{MputStatFldInst} and \code{statIM}, which in turn are consumed by the
+desired 0CFA analysis.
 
 During execution, Chord dumps intermediate and final results to files in the
-directory specified by property \code{chord.out.dir}, whose default value is \code{[chord.work.dir]/chord_output/}
-and typically does not need to be changed by users.
-For the above example, this directory is \code{<WORK_DIR>/chord_output/}.
+directory specified by property \code{chord.out.dir}, whose default value is
+\code{[chord.work.dir]/chord_output/} and typically does not need to be changed
+by users.  For the above example, this directory is
+\code{<WORK_DIR>/chord_output/}.
 
-The verbosity of Chord's output above is controlled by property \code{chord.verbose}, whose
-default value is 1.  At verbosity level 0, the above command produces less voluminous output
-of the form:
+The verbosity of Chord's output above is controlled by property
+\code{chord.verbose}, whose default value is 1.  At verbosity level 0, the
+above command produces less voluminous output of the form:
 
 \begin{framed}
 {\small
@@ -254,5 +273,4 @@ Total time: 26 seconds
 \end{verbatim}
 }
 \end{framed}
-
 

@@ -16,7 +16,7 @@ which are a data structure central to executing Datalog analyses.
 A Datalog analysis declares a bunch of input/output program relations,
 each over one or more program domains, and provides a bunch of rules (constraints)
 specifying how to compute the output relations from the input relations.
-It can be defined in any file with extension {\tt .dlog}
+It can be defined in any file with suffix {\tt .dlog}
 in any directory in the path specified by property \code{chord.dlog.analysis.path}.
 An example Datalog analysis is shown below:
 
@@ -62,11 +62,12 @@ line of the form ``\code{# name=<ANALYSIS_NAME>}'', which specifies the name
 Each Datalog analysis is expected to have exactly one such line.
 The above Datalog analysis is named {\tt datarace-dlog}.
 
-The ``\code{.include "<DOM_NAME>.dom"}'' lines specify each program domain named
+The ``\code{.include "<DOM_NAME>.dom"}'' lines specify each domain named
 \code{<DOM_NAME>} that is needed by the Datalog analysis, i.e., each domain over which
-any program relation that is input/output by the Datalog analysis is defined. 
-The declaration of each such relation specifies the domain of each of the relation's attributes.
-If the same domain appears in multiple attributes of a relation then
+any relation that is input/output by the Datalog analysis is defined. 
+The declaration of each such relation specifies the relation's schema:
+all the domains over which the relation is defined.
+If the same domain appears multiple times in a relation's schema then
 contiguous integers starting from 0 must be used to distinguish them; for instance,
 in the above example, {\tt candidate} is a binary relation, both of whose
 attributes have domain {\tt E}, and they are distinguished as {\tt E0} and {\tt E1}.
