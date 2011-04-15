@@ -53,8 +53,8 @@
 \newcommand\bsdlicense{\xlink{New BSD License}{http://www.opensource.org/licenses/bsd-license.php}}
 \newcommand\chordweb{\url{http://jchord.googlecode.com/}}
 
-\setcounter{htmldepth}{2}
-\setcounter{htmlautomenu}{3}
+\setcounter{htmldepth}{3}
+\setcounter{htmlautomenu}{4}
 
 \htmltitle{Chord}
 \htmladdress{mhn@cs.stanford.edu}
@@ -65,19 +65,33 @@
 \begin{document}
 \maketitle
 
+%\texonly{\tableofcontents}
+
+\xname{preface}
+\part{Preface}
+
+\input{organization}
+\input{acknowledgments}
+
+\xname{enduser_guide}
+\part{Guide for End-Users}
+
 \input{whatis_chord}
 \input{getting_started}
-\input{architecture}
 \input{properties}
 \input{program_setup}
-\input{program_representation}
 \input{computing_scope}
+\input{predefined_analyses}
+
+\xname{developer_guide}
+\part{Guide for Developers}
+
+\input{architecture}
+\input{program_representation}
 \input{project}
 \input{running_analysis}
-\input{predefined_analyses}
 \input{writing_analysis}
 \input{dynamic_analysis}
 \input{datalog_analysis}
-\input{acknowledgments}
 
 \end{document}
