@@ -41,7 +41,7 @@ ant -D<key1>=<val1> ... -D<keyN>=<valN> run
 {\bf When:} Use this option to specify once and for all properties of the
 Java program to be analyzed (e.g., property \code{chord.main.class} specifying the
 name of that program's main class).
-Chapter \ref{chap:program-setup} presents an example properties file 
+Chapter \ref{chap:setup} presents an example properties file 
 that defines the program properties that are most commonly used.  Section \ref{sec:program-props}
 presents all program properties that are recognized by Chord. 
 
@@ -171,7 +171,7 @@ standard extensions (i.e., classes in jar files in directory \code{[java.home]/l
 \label{sec:scope-props}
 
 This section describes properties that specify how the analysis scope of the input Java program is computed.
-See Chapter \ref{chap:computing-scope} for more details.
+See Chapter \ref{chap:scope} for more details.
 
 \code{chord.scope.kind}
 \begin{quote}
@@ -304,7 +304,7 @@ This section describes properties that dictate what task(s) Chord must perform.
 {\bf Default value:} {\tt ""} \\
 {\bf Note:} This functionality must be used with caution as certain program relations, albeit represented compactly as BDDs, may contain
  a large number (e.g., millions) of tuples, resulting in voluminous output when printed in explicit form to a text file.  See Section
- \ref{sec:tuning-datalog-analysis} for a more efficient way to query the contents of program relations (namely, by using the {\tt debug}
+ \ref{sec:tuning-datalog} for a more efficient way to query the contents of program relations (namely, by using the {\tt debug}
  target provided in file {\tt build.xml} in Chord's main directory).
 \end{quote}
 
@@ -339,7 +339,8 @@ This section describes properties regarding analyses executed by Chord.
 \code{chord.classic}
 \begin{quote}
 {\bf Type:} bool \\
-{\bf Description:} Whether to use the classic project (as opposed to the modern project).  See Chapter\ref{chap:analyses} for the difference
+{\bf Description:} Whether to use the classic project (as opposed to the modern
+project).  See Chapter\ref{chap:project} for the difference
  between the two kinds of projects. \\
 {\bf Default value:} \code{true}
 \end{quote}
@@ -617,5 +618,7 @@ Most users will not need to alter the default values of these properties.
 % bool
 %Write to file \code{[chord.bddbddb.work.dir]/<...>.map} when saving program domain named {\tt <...>}.
 %{\tt true}
-%{\bf Note:} This functionality is useful for debugging Datalog programs using the {\tt debug} target provided in file {\tt build.xml} in Chord's main directory (see Section \ref{sec:tuning-datalog-analysis}).
+%{\bf Note:} This functionality is useful for debugging Datalog programs using
+%the {\tt debug} target provided in file {\tt build.xml} in Chord's main
+%directory (see Section \ref{sec:tuning-datalog}).
 
