@@ -179,10 +179,13 @@ specialized form of the general \code{JavaAnalysis} template:
 
 \begin{itemize}
 \item
-It consumes any number and kinds of targets ({\tt C1}, ..., {\tt Cn}).
+It consumes any number and kinds of targets explicitly declared in the 
+{\tt @Chord} annotation ({\tt C1}, ..., {\tt Cn}).
 \item
 It produces a single target, namely, the defined program domain itself
-(named \code{<DOM_NAME>} and of type \code{ExampleDom}).
+(named \code{<DOM_NAME>} and of type \code{ExampleDom}).  It is a runtime error
+to explicitly declare any produced targets in the {\tt @Chord} annotation (see
+below).
 \item
 Its \code{run()} method adds values to the defined program domain.  Typically,
 it suffices to override the {\tt fill()} method (which is called by the
@@ -285,15 +288,20 @@ specialized form of the general \code{JavaAnalysis} template:
 
 \begin{itemize}
 \item
-It consumes any number and kinds of targets ({\tt C1}, ..., {\tt Cn}).
+It consumes any number and kinds of targets explicitly declared in the
+{\tt @Chord} annotation ({\tt C1}, ..., {\tt Cn}) as well as implicit targets
+corresponding to the program domains in the schema of the defined program
+relation (named {\tt D1}, ..., {\tt Dm} and having type {\tt ProgramDom}).
 \item
 It produces a single target, namely, the defined program relation itself
-(named \code{<REL_NAME>} and of type \code{ExampleRel}).
+(named \code{<REL_NAME>} and of type \code{ExampleRel}).  It is a runtime error
+to explicitly declare any produced targets in the {\tt @Chord} annotation (see
+below).
 \item
 Its \code{run()} method adds tuples to the defined program relation.  Typically,
 it suffices to override the {\tt fill()} method (which is called by the
-{\tt run()} method) and call from it the {\tt add(o1, ..., om)} method
-for each tuple ({\tt o1}, ..., {\tt om}) to be added to the relation.
+{\tt run()} method) and call from it the {\tt add(o1, ..., om)} method for each
+tuple ({\tt o1}, ..., {\tt om}) to be added to the relation.
 \end{itemize}
 
 Unlike for program domains, the order in which tuples are added to a program
@@ -442,8 +450,12 @@ by solving constraints {\tt R}.
 \section{DynamicAnalysis}
 \label{sec:dynamic}
 
+{\bf Under construction}
+
 \section{RHSAnalysis}
 \label{sec:rhs}
+
+{\bf Under construction}
 
 %\begin{itemize}
 %\item
