@@ -50,7 +50,7 @@ public class DynConfDep extends BasicDynamicAnalysis {
     
     instrScheme.setAloadReferenceEvent(false, false, true, false, true);
     instrScheme.setAstoreReferenceEvent(false, false, true, false, true);
-    instrScheme.setMethodCallEvent(true, false, true, false, true);
+    instrScheme.setBefMethodCallEvent(true, true, true);
     instrScheme.save(SCHEME_FILE);
     
     return args;

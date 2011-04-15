@@ -54,7 +54,8 @@ public class RelPrimToRefConversion extends ProgramRel implements IInvokeInstVis
       int rIdx = domU.indexOf(rreg);
       int iIdx = domI.indexOf(q);
       if(lIdx < 0 || rIdx < 0) {
-        System.err.println("args to " + methname +" not in dom");
+        System.err.println("args to " + methname +" not in dom [lIdx = " + lIdx + ", rIdx = " + rIdx +
+        		" for i in " + classname + " " + methname);
       } else
         super.add(lIdx, iIdx,rIdx);
     }

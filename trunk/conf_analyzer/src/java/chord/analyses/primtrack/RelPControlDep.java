@@ -25,7 +25,7 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(
     name = "PControlDep",
-    sign = "P0,UV0:P0_UV0"
+    sign = "P0,UV0:P0xUV0"
   )
 public class RelPControlDep extends ProgramRel implements IMethodVisitor {
 

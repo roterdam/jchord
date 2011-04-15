@@ -1,4 +1,4 @@
-package chord.analyses.confdep.docu;
+package chord.analyses.confdep.rels;
 
 
 import joeq.Compiler.Quad.Quad;

@@ -109,7 +109,6 @@ public class ShowConfOptions extends JavaAnalysis {
     boolean argGuesses = Config.buildBoolProperty("argGuesses", false);
     
     project.runTask("cipa-0cfa-arr-dlog");
-    
     project.runTask("findconf-dlog");
     
     if(miniStrings)

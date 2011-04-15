@@ -14,6 +14,7 @@ import chord.analyses.invk.DomI;
 import chord.analyses.var.DomV;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
+import chord.project.Config;
 import chord.project.analyses.ProgramRel;
 
 /**
@@ -42,12 +43,15 @@ public class RelINewColl extends ProgramRel implements IInvokeInstVisitor {
 		tInit();
 	}
 
-	static void tInit() {
+	public static void tInit() {
 		if(collTypes != null)
 			return;
 
-		//    collTypes = new jq_Type[colTypeNames.length];
 		collTypes = new ArrayList<jq_Type>();
+		
+		if(Config.buildBoolProperty("disableConfModel", false))
+			return; //do no construction; stop now.
+		
 		for(int i =0; i < colTypeNames.length; ++i) {
 			try {
 				jq_Type t = jq_Type.parseType(colTypeNames[i]);

@@ -1,4 +1,9 @@
 <init>:(Ljava/lang/Runnable;)V@java.lang.Thread stubThreadInit:(Ljava/lang/Thread;Ljava/lang/Runnable;)V@conf_analyzer.stubs.JavaStubs
+
+addShutdownHook:(Ljava/lang/Thread;)V@java.lang.Runtime stubThreadInit:(Ljava/lang/Thread;Ljava/lang/Runnable;)V@conf_analyzer.stubs.JavaStubs
+
+getRuntime:()Ljava/lang/Runtime;@java.lang.Runtime getRuntime:()Ljava/lang/Runtime;@conf_analyzer.stubs.JavaStubs
+
 #clone:(Ljava/lang/Object;)Ljava/lang/Object;@java.lang.Object anIdentityFunc:(Ljava/lang/Object;)Ljava/lang/Object;@ chord.program.stubs.JavaStubs
 java.util.Collection conf_analyzer.stubs.ModelList
 java.util.Queue conf_analyzer.stubs.ModelList
@@ -7,4 +12,3 @@ java.util.LinkedList conf_analyzer.stubs.ModelList
 java.util.ArrayList conf_analyzer.stubs.ModelList
 java.util.HashSet conf_analyzer.stubs.ModelList
 java.util.TreeSet conf_analyzer.stubs.ModelList
-#java.util.Iterator conf_analyzer.stubs.ModelList$ModelListIter

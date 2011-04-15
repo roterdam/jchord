@@ -45,9 +45,10 @@ public class RelReadOnlyAPICall extends ProgramRel implements IInvokeInstVisitor
 		jq_Method meth = Invoke.getMethod(q).getMethod();
 		jq_Class cl = meth.getDeclaringClass();
 	
+		return false;
 //		return RelINewColl.isCollectionType(cl) ;
-		return (RelINewColl.isCollectionType(cl) && !meth.isStatic() ) &&
-		meth.getReturnType().getName().equals("java.lang.Object");
+//		return (RelINewColl.isCollectionType(cl) && !meth.isStatic() ) &&
+//		meth.getReturnType().getName().equals("java.lang.Object");
 	}
 
 	@Override
@@ -62,8 +63,9 @@ public class RelReadOnlyAPICall extends ProgramRel implements IInvokeInstVisitor
 	}
 
 	public static boolean isReadOnly(String classname, String methname) {
-		return methname.equals("equals") || methname.equals("compareTo") || methname.equals("get") ||
-		methname.equals("toArray") ||
+		return methname.equals("equals") || methname.equals("compareTo") || methname.startsWith("get") ||
+		methname.equals("toArray") || methname.equals("isAbsolute") ||
+		methname.equals("toUri") || 
 		classname.startsWith("joeq") || classname.startsWith("net.sf.bddb") ;
 	}
 

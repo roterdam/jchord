@@ -7,6 +7,7 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import chord.analyses.collection.*;
 import chord.analyses.confdep.ConfDefines;
 import chord.analyses.invk.DomI;
+import chord.analyses.type.RelScopeExcludedT;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
@@ -21,6 +22,7 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 	jq_Method method;
 	public void init() {
 		domI = (DomI) doms[0];
+		RelINewColl.tInit();
 		//   domV = (DomV) doms[1];
 	}
 
@@ -60,7 +62,7 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
             || methname.equals("create"));*/
 		//apparently resolve is the dangerous method?
 
-		if(classname.equals("org.apache.hadoop.fs.Path"))
+		if(classname.equals("org.apache.hadoop.fs.Path") && RelScopeExcludedT.isExcluded(classname))
 			return true;
 		if(classname.equals("org.apache.tools.ant.types.Path"))
 			return true;
@@ -70,7 +72,7 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 		
 		if(classname.startsWith("org.mortbay.jetty"))
 			return true;
-
+		
 		return classname.startsWith("java") 
 		&& (!classname.startsWith("java.io") || classname.equals("java.io.File"));//io is mostly bad, File is ok
 
@@ -78,8 +80,7 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 
 	private boolean isCollectionGet(Quad q) {
 		return RelInserts.isInsert(q) ;
-		
-		//we treat gets as APIReadOnly calls
+		//we treat gets as APIReadOnly calls, for now
 	}
 
 	/**
@@ -90,6 +91,11 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 		jq_Method meth = Invoke.getMethod(q).getMethod();
 		String classname = meth.getDeclaringClass().getName();
 		String methname = meth.getName().toString();
+		
+		//an experiment
+		if(classname.startsWith("java.util") && classname.contains("Map"))
+			return;
+		
 		if(isAPI(classname, methname) && !isCollectionGet(q)) {
 			int iIdx = domI.indexOf(q);
 			super.add(iIdx);
