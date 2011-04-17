@@ -13,7 +13,7 @@ import chord.project.analyses.ProgramDom;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.DomC;
 import chord.analyses.method.DomM;
-import chord.util.tuple.object.Trio;
+import chord.util.tuple.object.Pair;
 
 /**
  * Domain of abstract threads.
@@ -26,19 +26,18 @@ import chord.util.tuple.object.Trio;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DomA extends ProgramDom<Trio<Ctxt, Ctxt, jq_Method>> {
+public class DomA extends ProgramDom<Pair<Ctxt, jq_Method>> {
 	private DomC domC;
 	private DomM domM;
-	public String toXMLAttrsString(Trio<Ctxt, Ctxt, jq_Method> aVal) {
+	public String toXMLAttrsString(Pair<Ctxt, jq_Method> aVal) {
 		if (domC == null)
 			domC = (DomC) ClassicProject.g().getTrgt("C");
 		if (domM == null)
 			domM = (DomM) ClassicProject.g().getTrgt("M");
 		if (aVal == null)
 			return "";
-		int o = domC.indexOf(aVal.val0);
-		int c = domC.indexOf(aVal.val1);
-		int m = domM.indexOf(aVal.val2);
-		return "Oid=\"C" + o + "\" Cid=\"C" + c + "\" Mid=\"M" + m + "\"";
+		int c = domC.indexOf(aVal.val0);
+		int m = domM.indexOf(aVal.val1);
+		return "Cid=\"C" + c + "\" Mid=\"M" + m + "\"";
 	}
 }

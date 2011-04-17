@@ -24,7 +24,7 @@ writeE(e:E0) input
 ME(m:M0,e:E0) input
 EF(e:E0,f:F0) input
 thrSenAbbrCICM(c:C0,i:I0,d:C1,m:M0) input
-threadAOCM(t:A0,o:C0,c:C1,m:M0) input
+threadACM(t:A0,c:C0,m:M0) input
 MI(m:M0,i:I0) input
 checkExcludedT(t:T0) input
 TM(t:T0,m:M0) input
@@ -42,7 +42,7 @@ onlyWrTCEF(t:A0,c:C0,e:E0,f:F0) output
 # Constraints
 ###
 
-reachableTCM(t,c,m) :- threadAOCM(t,_,c,m).
+reachableTCM(t,c,m) :- threadACM(t,c,m).
 reachableTCM(t,d,n) :- reachableTCM(t,c,m), MI(m,i), thrSenAbbrCICM(c,i,d,n).
 
 relevantM(m) :- TM(t,m), !checkExcludedT(t).

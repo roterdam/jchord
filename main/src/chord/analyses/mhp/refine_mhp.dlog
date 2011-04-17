@@ -25,7 +25,7 @@ MPhead(m:M,p:P) input
 MPtail(m:M,p:P) input
 PI(p:P,i:I) input
 CICM(c1:C,i:I,c2:C,m:M) input
-threadAOCM(t:A,o:C,c:C,m:M) input
+threadACM(t:A,c:C,m:M) input
 threadAC(t:A,c:C) 
 ForkPMcs   (caller:C,p1:P,callee:C) input
 ForkPHcs   (caller:C,p1:P,callee:C,p2:P) input
@@ -59,7 +59,7 @@ toBeRefinedCICM(c,i,d,1) :- refineForkPMcs(c,p,d), CICM(c,i,d,1), PI(p,i).
 
 refineForkPMcs(c,p,d) :- refineForkPHcs(c,p,d,h), ForkPMcs(c,p,d), MPhead(1,h).
 
-threadAC(a,c) :- threadAOCM(a,_,c,1).
+threadAC(a,c) :- threadACM(a,c,1).
 
 refinePathEdge(c,p,t,t1,t2) :- PathEdge(c,p,t,t1,t2), PP(p,q), refinePathEdge(c,q,t,t1,t2).
 
