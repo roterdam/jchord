@@ -35,8 +35,9 @@ We next explain how Chord builds a classic project
 (a set of tasks, a set of targets, and a set of dependencies between them).
 
 {\bf Tasks:}
-There are two kinds of tasks corresponding to the two broad kinds of analyses in Chord.
-They are summarized in the following table:
+There are two kinds of tasks corresponding to the two broad kinds of analyses in
+Chord: those written imperatively in Java and those written declaratively in
+Datalog.  They are summarized in the following table:
 
 \begin{mytable}{|l||c|c|}
 \hline
@@ -103,7 +104,7 @@ this chapter:
 \begin{framed}
 \begin{verbatim}
 {} T1 { R1 }
-{} T2 { R2 }
+{} T2 { R1 }
 { R4} T3 { R2 }
 { R1, R2 } T4 { R3, R4 }
 \end{verbatim}
@@ -150,15 +151,13 @@ be computed the next time it is demanded.  \T \\
 
 We next explain the above methods.
 
-The \code{getTask(name)} provides the representation
-of the unique task with the specified name, if it exists,
+The \code{getTask(name)} and \code{getTrgt(name)} methods provides the representation
+of the unique task or the unique target, respectively, with the specified name, if it exists,
 and a runtime error otherwise.
 
-The \code{getTrgt(name)} provides the representation
-of the unique target with the specified name, if it exists,
-and a runtime error otherwise.
+A ``done'' bit, initialized to false, is kept with each task and each target in
+the project.  The operation of the remaining methods above involves this bit.
 
-A ``done'' bit, initialized to false, is kept with each task and each target in the project. 
 The \code{runTask(name)} method runs the task with the specified name, if it exists,
 and reports a runtime error otherwise.  Running a task proceeds as follows.
 If the done bit of the task is true, no action is taken.  Otherwise, 
@@ -172,17 +171,16 @@ whose done bit is false, the unique task in the project producing that target
 is run recursively.
 A runtime error is reported if no such task exists or if multiple such tasks exist.
 \item
-Once all consumed targets are done, the code {\tt T} of this task itself
-is run.
+Once all consumed targets are computed, the code {\tt T} of this task itself is run.
 \item
-Finally, the done bit of this task as well as of each of its produced tasks
+Finally, the done bit of this task as well as of each of its produced targets
 {\tt P1}, ..., {\tt Pn} is set to true.
 \end{enumerate}
 
 It is the user's responsibility to ensure termination in the case in which there are
 cycles in the dependency graph.  The \code{isTaskDone(name)} and \code{isTrgtDone(name)}
 methods can be used in the code {\tt T} of any task to enquire
-whether the ``done'' bit of the task or target with the specified name is set to true.
+whether the done bit of the task or target with the specified name is set to true.
 Moreover, methods \code{setTaskDone(name)}, \code{setTrgtDone(name)} can be used to set
 the done bit of the task or target with the specified name to true, and likewise,
 methods \code{resetTaskDone(name)} and \code{resetTrgtDone(name)} can be used
@@ -222,6 +220,6 @@ in the cycle.
 This scenario resulting from a cycle in the dependence graph is rare in practice.
 It typically occurs in the case of iterative refinement-based client-driven analyses:
 the output of such an analysis in one iteration is fed as an input to the same analysis
-in a subsequent iteration.  The code of such an analysis (task) must explicitly
+in a subsequent iteration.  The code of such an analysis must explicitly
 control execution as described above to avert infinite recursion.
 

@@ -3,7 +3,8 @@
 \label{chap:running}
 
 This chapter describes how to run an analysis in Chord.  Broadly, there are two
-kinds of analyses in Chord, summarized in the following table:
+kinds of analyses in Chord: those written imperatively in Java and those written
+declaratively in Datalog. They are summarized in the following table:
 
 \begin{mytable}{|l||c|c|}
 \hline
@@ -43,7 +44,7 @@ where:
 \begin{itemize}
 \item
 \code{<WORK_DIR>} is a directory containing a file named
-\code{chord.properties} that defines various properties of the program to be
+\code{chord.properties} that defines various properties of the Java program to be
 analyzed that might be needed by the analysis being run, such as the program's
 main class, the program's application classpath, etc.
 (see Chapter \ref{chap:setup}).
@@ -51,26 +52,25 @@ main class, the program's application classpath, etc.
 \code{<ANALYSIS_NAME>} is the name of the analysis to run.  More generally, it
 can be a comma-separated list of names of analyses to run in order.
 \item
-\code{<JAVA_ANALYSIS_PATH>} is a path specifying all imperative analyses that
-might be needed to run the desired analysis.
+\code{<JAVA_ANALYSIS_PATH>} is a path specifying all imperative analyses written
+in Java that might be needed to run the desired analysis.
 \item
-\code{<DLOG_ANALYSIS_PATH>} is a path specifying all declarative analyses that
-might be needed to run the desired analysis.
+\code{<DLOG_ANALYSIS_PATH>} is a path specifying all declarative analyses
+written in Datalog that might be needed to run the desired analysis.
 \end{itemize}
 
-In order to facilitate heavy reuse and rapid prototyping, each analysis in
-Chord is written modularly, independent of other analyses, along with
-lightweight annotations specifying the inputs and outputs of the analysis.
-Chord's runtime automatically computes producer-consumer relationships between
-analyses (e.g., determines which analysis produces as output a result that is
-needed as input by another analysis).  Before running the desired analysis
-named \code{<ANALYSIS_NAME>}, Chord recursively runs other analyses until the
-inputs to the desired analysis have been computed; it finally runs the desired
-analysis to produce the outputs of that analysis.  Chapter \ref{chap:project}
-explains this process in detail.  Each of these analyses must occur in the
-path denoted by \code{<JAVA_ANALYSIS_PATH>} or \code{<DLOG_ANALYSIS_PATH>},
-depending upon whether the analysis is written imperatively or declaratively,
-respectively.
+Each analysis in Chord is written modularly, independent of other analyses,
+along with lightweight annotations specifying the inputs and outputs of the
+analysis.  Chord's runtime automatically computes dependencies between analyses
+(e.g., determines which analysis produces as output a result that is needed as
+input by another analysis).  Before running the desired analysis named
+\code{<ANALYSIS_NAME>}, Chord recursively runs other analyses until the inputs
+to the desired analysis have been computed; it finally runs the desired analysis
+to produce the outputs of that analysis.  Chapter \ref{chap:project} explains
+this process in detail.  Each of these analyses must occur in the path denoted
+by \code{<JAVA_ANALYSIS_PATH>} or \code{<DLOG_ANALYSIS_PATH>}, depending upon
+whether the analysis is written imperatively in Java or declaratively in
+Datalog, respectively.
 
 Chord provides shorthand ways for specifying analysis paths by means of the
 following six properties:

@@ -110,8 +110,11 @@ value of both these properties is \code{false}.  If you set either of them to \c
 \section{Running Chord}
 \label{sec:running-chord}
 
-Running Chord requires a JVM supporting Java 5 or higher.  There are two equivalent ways to run Chord.
-One way, which is available in both the source and binary installations of Chord, is to run the following command:
+Running Chord requires a JVM supporting Java 5 or higher.  There are two
+equivalent commands to run Chord.
+
+One command, which is available in the source and binary installations of
+Chord, is:
 
 \begin{framed}
 \begin{verbatim}
@@ -122,7 +125,8 @@ java -cp <CHORD_MAIN_DIR>/chord.jar -D<key1>=<val1> ... -D<keyN>=<valN> chord.pr
 where \code{<CHORD_MAIN_DIR>} denotes the directory containing file \code{chord.jar}; that directory is also expected
 to contain any shared libraries in Chord's installation (e.g., \code{libbuddy.so} and \code{libchord_instr_agent.so}).
 
-The alternative, which is available only in the source installation of Chord, is to run the following command:
+The alternate command, which is available only in the source installation of
+Chord, is:
 
 \begin{framed}
 \begin{verbatim}
@@ -130,10 +134,14 @@ ant -f <CHORD_MAIN_DIR>/build.xml -D<key1>=<val1> ... -D<keyN>=<valN> run
 \end{verbatim}
 \end{framed}
 
-This approach requires Apache Ant (a Java build tool) to be installed on your machine.  We use this approach 
-throughout this documentation.  Also, we omit the ``\code{-f <CHORD_MAIN_DIR>/build.xml}" argument on the command-line for brevity.
+This command requires Apache Ant (a Java build tool) to be installed on your
+machine.  This command is used throughout this guide.  Also, the
+``\code{-f <CHORD_MAIN_DIR>/build.xml}" argument in the command is omitted
+for brevity.
 
-Each ``\code{-D<key>=<val>}" argument above sets the system property named \code{<key>} to the value denoted by \code{<val>}.  The only way
-to specify inputs to Chord is via system properties; there is no command-line argument processing.  Chapter \ref{chap:properties} describes
-all system properties recognized by Chord.
+Each ``\code{-D<key>=<val>}" argument in either of the above commands sets the
+system property named \code{<key>} to the value denoted by \code{<val>}.  The
+only way to specify inputs to Chord is via system properties; there is no
+command-line argument processing.  Chapter \ref{chap:properties} describes all
+system properties recognized by Chord.
 
