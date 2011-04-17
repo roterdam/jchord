@@ -16,18 +16,17 @@ property that is recognized by Chord.
 
 The Java program to be analyzed is also specified via properties.  Chapter
 \ref{chap:setup} describes how to setup a Java program for analysis using Chord.
-Chord analyzes Java bytecode, not Java source code, and thus only requires the
-program's class files.  Certain analyses, however, present their results at the
-Java source code level, and thus require the program's Java source files as
-well.
 
 {\bf Java Program Representation}
 
-Chord uses the \xlink{Joeq}{http://joeq.sourceforce.net/} Java compiler
+Chord analyzes Java bytecode, not Java source code, and thus only requires the
+program's class files.  (Certain analyses, however, present their results at the
+Java source code level, and thus require the program's Java source files as
+well.) Chord uses the \xlink{Joeq}{http://joeq.sourceforce.net/} Java compiler
 framework to convert the Java bytecode of the input Java program, one class file
 at a time, into a three-address-like intermediate program representation called
-{\it quadcode} that is more suitable for analysis. Chapter
-\ref{chap:program} describes the quadcode representation in detail.
+{\it quadcode} that is more suitable for analysis. Chapter \ref{chap:program}
+describes the quadcode representation in detail.
 
 {\bf Analysis Scope Construction}
 
@@ -41,17 +40,17 @@ describes these algorithms in detail.
 {\bf Writing and Running Analyses}
 
 Chord provides many standard analyses.  Chapter \ref{chap:predefined} describes
-these analyses and how to run them.  Moreover, Chord allows users to define
-their own analyses, possibly atop the provided analyses.
+these analyses and explains how to run them.  Moreover, Chord allows users to
+write and run their own analyses, possibly atop the provided analyses.
 
-A distinctive aspect of Chord is that each analysis is written modularly,
-independent of other analyses, along with lightweight annotations specifying the
-inputs and outputs of the analysis.  Chord's runtime automatically computes
-dependencies between analyses (e.g., determines which analysis produces as
-output a result that is needed as input by another analysis).  Before running a
-desired analysis, Chord recursively runs other analyses until the inputs to the
-desired analysis have been computed; it finally runs the desired analysis to
-produce the outputs of that analysis.
+Each analysis in Chord is written modularly, independent of other analyses,
+along with lightweight annotations specifying the inputs and outputs of the
+analysis.  Chord's runtime automatically computes dependencies between analyses
+(e.g., determines which analysis produces as output a result that is needed as
+input by another analysis).  Before running a desired analysis, Chord
+recursively runs other analyses until the inputs to the desired analysis have
+been computed; it finally runs the desired analysis to produce the outputs of
+that analysis.
 
 Chord can be invoked in one of two modes: {\it classic} or {\it modern}.  These
 two modes defer in the semantics of dependencies between analyses.  In
@@ -75,8 +74,8 @@ abstract domain and intra-procedural transfer functions.  Another example is
 DynamicAnalysis, which can be extended by users to write a dynamic analysis by
 merely specifying which of various provided events to instrument, and the
 transfer functions for those events.  Chapters \ref{chap:writing} and
-\ref{chap:running} describe how to write and run your own analyses in Chord
-using the provided analysis templates.
+\ref{chap:running} describe how users can write and run their own analyses in
+Chord using the provided analysis templates.
 
 {\bf Dynamic Analysis}
 

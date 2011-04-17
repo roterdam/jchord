@@ -22,7 +22,7 @@ precedence:
 \begin{enumerate}
 \item
 
-{\bf How:} On the command-line via the ``\code{-D<key>=<val>}" format.
+{\bf How:} On the command-line via the ``\code{-D<key>=<val>}'' format.
 
 {\bf When:} Use this option to specify properties specific to the {\it current run} of Chord.
 
@@ -113,7 +113,7 @@ usually the top-level directory of the input Java program. \\
 {\bf Description:} Properties file loaded by Chord at the
 beginning before doing anything else.  Any of the below properties may
 be defined in this file to avoid defining them on the command line
-(using the \code{-D<key>=<val>} format) every time Chord is run.
+(using the ``\code{-D<key>=<val>}'' format) every time Chord is run.
 Each relative file/directory name in the value of any property defined
 in this file is treated relative to Chord's working directory (which
 is specified by property \code{chord.work.dir}). \\
@@ -260,7 +260,7 @@ This section describes properties that dictate what task(s) Chord must perform.
 \code{chord.build.scope}
 \begin{quote}
 {\bf Type:} bool \\
-{\bf Description:} Compute the analysis scope of the input Java program using the algorithm. \\
+{\bf Description:} Compute the analysis scope of the input Java program. \\
 {\bf Default value:} {\tt false} \\
 {\bf Note:} The analysis scope is computed regardless of the value of this property if another task (e.g., an analysis specified via property \code{chord.run.analyses}) demands it.
 \end{quote}
@@ -270,7 +270,10 @@ This section describes properties that dictate what task(s) Chord must perform.
 {\bf Type:} string list  \\
 {\bf Description:} List of names of analyses to be run in order. \\
 {\bf Default value:} {\tt ""} \\
-{\bf Note:} If the analysis is written in Java, its name is specified via statement {\tt name="..."} in its {\tt @Chord} annotation.  If the analysis is written in Datalog, its name is specified via a line of the form ``{\tt \# name=...}".
+{\bf Note:} If the analysis is written in Java, its name is specified via
+a statement {\tt name="..."} in the {\tt @Chord} annotation of the class defining
+the analysis.  If the analysis is written in Datalog, its name is specified via
+a line ``{\tt \# name=...}" in the {\tt .dlog} file defining the analysis.
 \end{quote}
 
 \code{chord.print.methods}

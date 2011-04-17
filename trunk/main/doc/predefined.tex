@@ -9,9 +9,32 @@ descriptions of various predefined analyses.
 \section{Running an Analysis}
 \label{sec:running-predefined}
 
-Each predefined analysis in Chord has a unique name that can be used to run the
-analysis from the command-line.  The following command runs the analysis named
-\code{<ANALYSIS_NAME>} on the program specified by directory \code{<WORK_DIR>}
+Each analysis in Chord is written modularly, independent of other analyses,
+along with lightweight annotations specifying the inputs and outputs of the
+analysis.  Chord's runtime automatically computes dependencies between analyses
+(e.g., determines which analysis produces as output a result that is needed as
+input by another analysis).  Before running a desired analysis, Chord
+recursively runs other analyses until the inputs to the desired analysis have
+been computed; it finally runs the desired analysis to produce the outputs of
+that analysis.
+
+Each analysis in Chord has a unique name that can be used to run the
+analysis from the command-line.  You can obtain the names of all analyses
+predefined in Chord by running the following command:
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.out.dir=<OUT_DIR> -Dchord.print.project=true run
+\end{verbatim}
+\end{framed}
+
+This command produces files \code{targets_sortby_name.html}, \code{targets_sortby_kind.html},
+and \code{targets_sortby_producers.html} in directory \code{<OUT_DIR>}.  These
+files publish the names and descriptions of all analyses that are predefined in
+Chord, along with the inputs and outputs of each analysis.
+
+The following command runs the analysis
+named \code{<ANALYSIS_NAME>} on the program specified by directory \code{<WORK_DIR>}
 (see Chapter \ref{chap:setup} for how to setup a program):
 
 \begin{framed}
@@ -76,20 +99,11 @@ Total time: 28 seconds
 }
 \end{framed}
 
-Each analysis in Chord is written modularly, independent of other analyses,
-along with lightweight annotations specifying the inputs and outputs of the
-analysis.  Chord's runtime automatically computes producer-consumer
-relationships between analyses (e.g., determines which analysis produces as
-output a result that is needed as input by another analysis).  Before running a
-desired analysis (such as 0CFA in the above example), Chord recursively runs
-other analyses until the inputs to the desired analysis have been computed; it
-finally runs the desired analysis to produce the outputs of that analysis.
-
 The 0CFA analysis consumes and produces multiple {\it program relations}.  The
 consumed program relations include \code{MputStatFldInst} and \code{statIM},
-each of which is produced by a separate imperative analysis with the
-corresponding name, and the produced program relations include \code{VH},
-\code{FH}, \code{HFH}, and \code{IM}.  We next briefly discuss these relations.
+each of which is produced by a separate analysis with the corresponding name.
+The produced program relations include \code{VH}, \code{FH}, \code{HFH}, and
+\code{IM}.  We next briefly discuss these relations.
 
 The program relations consumed by the 0CFA analysis contain basic program facts.
 For instance, \code{MputStatFldInst} is a relation containing each tuple
@@ -106,15 +120,15 @@ fields, respectively, while relation \code{IM} represents the call graph,
 namely, it contain each tuple ($i$,$m$) such that $m$ is a possible target
 method of call site $i$.
 
-Metavariables $m$, $f$, $i$, and $v$ above range over entities in so-called
+Metavariables $m$, $f$, $i$, and $v$ above range over values in so-called
 {\it program domains} \code{M}, \code{F}, \code{I}, and \code{V}, respectively.
-A program domain is a set of entities of a certain kind in the input Java
+A program domain is a set of values of a fixed kind in the input Java
 program.  For instance, \code{M} is the domain representing the set of all
 methods in the input Java program, \code{F} is the domain representing the set
 of all fields, \code{I} is the domain representing the set of all call sites in
 methods in \code{M}, and \code{V} is the domain representing the set of all
 local variables of reference type in methods in \code{M}.  Each of these domains
-is produced by a separate Java analysis with the corresponding name.  Notice
+is produced by a separate analysis with the corresponding name.  Notice
 that the analyses producing these domains run upfront because these domains are
 consumed by the analyses that produce relations such as \code{MputStatFldInst}
 and \code{statIM}, which in turn are consumed by the desired 0CFA analysis.
@@ -125,7 +139,7 @@ directory specified by property \code{chord.out.dir}, whose default value is
 by users.  For the above example, this directory is
 \code{<WORK_DIR>/chord_output/}.
 
-The verbosity of Chord's output above is controlled by property
+The verbosity of Chord's output is controlled by property
 \code{chord.verbose}, whose default value is 1.  At verbosity level 0, the above
 command produces less voluminous output of the form:
 
@@ -200,7 +214,9 @@ cannot distinguish between different elements of the same array; all array
 elements are modeled using a distinguished hypothetical instance field (that has
 index 0 in domain F).
 
-To run this analysis, run the following command:
+The following command can be used to run this analysis on the program specified
+by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup} for how to setup a
+program):
 
 \begin{framed}
 \begin{verbatim}
@@ -208,15 +224,7 @@ ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=cipa-0cfa-dlog run
 \end{verbatim}
 \end{framed}
 
-where \code{<WORK_DIR>} is a directory
-containing a file named \code{chord.properties} that defines
-properties \code{chord.main.class} and \code{chord.class.path} specifying
-the main class and the application classpath, respectively, of the program
-to be analyzed.
-
 This analysis outputs the following relations:
-
-%is implemented in \code{chord/analyses/alias/cipa-0cfa.dlog}.
 
 \begin{itemize}
 \item {\it Call-graph information:}
@@ -327,7 +335,9 @@ to invoke.}
 
 \section{Static Datarace Analysis}
 
-To run Chord's static datarace analysis, run the following command:
+The following command can be used to run Chord's static datarace analysis on the
+program specified by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup}
+for how to setup a program):
 
 \begin{framed}
 \begin{verbatim}
@@ -335,18 +345,12 @@ ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=datarace-java run
 \end{verbatim}
 \end{framed}
 
-where \code{<WORK_DIR>} is a directory containing a file named
-\code{chord.properties} that defines properties \code{chord.main.class},
-\code{chord.class.path}, and \code{chord.src.path} specifying the main class,
-the application classpath, and the Java source path, respectively, of the
-program to be analyzed.
-
-Directory \code{<CHORD_MAIN_DIR>/examples/datarace_test/} provides a toy Java
-program on which one can run the datarace analysis.  First run {\tt ant} in that
-directory (in order to compile the program's {\tt .java} files to {\tt .class}
-files) and then run the above command with \code{<WORK_DIR>} replaced by
-\code{examples/datarace_test/}.  Upon successful completion, the following files
-should be produced in directory \code{examples/datarace_test/chord_output/}:
+Directory \code{examples/datarace_test/} provides a toy Java program on which to
+run the datarace analysis.  First run {\tt ant} in that directory (in order to
+compile the program's {\tt .java} files to {\tt .class} files) and then run the
+above command with \code{<WORK_DIR>} replaced by \code{examples/datarace_test/}.
+Upon successful completion, the following files should be produced in directory
+\code{examples/datarace_test/chord_output/}:
 
 \begin{itemize}
 \item
@@ -362,7 +366,9 @@ abstract object.
 
 \section{Static Deadlock Analysis}
 
-To run Chord's static deadlock analysis, run the following command:
+The following command can be used to run Chord's static deadlock analysis on the
+program specified by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup}
+for how to setup a program):
 
 \begin{framed}
 \begin{verbatim}
@@ -370,17 +376,10 @@ ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=deadlock-java run
 \end{verbatim}
 \end{framed}
 
-where \code{<WORK_DIR>} is a directory containing a file named
-\code{chord.properties} that defines properties \code{chord.main.class},
-\code{chord.class.path}, and \code{chord.src.path} specifying the main class,
-the application classpath, and the Java source path, respectively, of the
-program to be analyzed.
-
-Directory \code{<CHORD_MAIN_DIR>/examples/deadlock_test/} provides a toy Java
-program on which one can run the deadlock analysis.  First run {\tt ant} in that
-directory (in order to compile the program's {\tt .java} files to {\tt .class}
-files) and then run the above command with \code{<WORK_DIR>} replaced by
-\code{examples/deadlock_test/}.  Upon successful completion, the file
-\code{deadlocks.html} should be produced in directory
-\code{examples/deadlock_test/chord_output/}.
+Directory \code{examples/deadlock_test/} provides a toy Java program on which to
+run the deadlock analysis.  First run {\tt ant} in that directory (in order to
+compile the program's {\tt .java} files to {\tt .class} files) and then run the
+above command with \code{<WORK_DIR>} replaced by \code{examples/deadlock_test/}.
+Upon successful completion, the file \code{deadlocks.html} should be produced in
+directory \code{examples/deadlock_test/chord_output/}.
 
