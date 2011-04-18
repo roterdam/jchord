@@ -41,27 +41,50 @@ public class OutDirUtils {
 	}
 
 	public static String copyResourceByName(String srcFileName) {
+		return copyResourceByName(srcFileName, (String) null);
+	}
+
+	public static String copyResourceByName(String srcFileName, String dstDirName) {
 		InputStream is = Utils.getResourceAsStream(srcFileName);
-		return copyResource(srcFileName, is, (new File(srcFileName)).getName());
+		return copyResource(srcFileName, is, dstDirName, (new File(srcFileName)).getName());
 	}
 
 	public static String copyResourceByName(String srcFileName, InputStream is) {
-		return copyResource(srcFileName, is, (new File(srcFileName)).getName());
+		return copyResourceByName(srcFileName, is, null);
+	}
+
+	public static String copyResourceByName(String srcFileName, InputStream is, String dstDirName) {
+		return copyResource(srcFileName, is, dstDirName, (new File(srcFileName)).getName());
 	}
 
 	public static String copyResourceByPath(String srcFileName) {
+		return copyResourceByPath(srcFileName, (String) null);
+	}
+
+	public static String copyResourceByPath(String srcFileName, String dstDirName) {
 		InputStream is = Utils.getResourceAsStream(srcFileName);
-		return copyResource(srcFileName, is, srcFileName.replace('/', '_'));
+		return copyResource(srcFileName, is, dstDirName, srcFileName.replace('/', '_'));
 	}
 
 	public static String copyResourceByPath(String srcFileName, InputStream is) {
-		return copyResource(srcFileName, is, srcFileName.replace('/', '_'));
+		return copyResourceByPath(srcFileName, is, null);
 	}
 
-	public static String copyResource(String srcFileName, InputStream is, String dstFileName) {
+	public static String copyResourceByPath(String srcFileName, InputStream is, String dstDirName) {
+		return copyResource(srcFileName, is, dstDirName, srcFileName.replace('/', '_'));
+	}
+
+	public static String copyResource(String srcFileName, InputStream is, String dstDirName, String dstFileName) {
 		if (is == null)
 			Messages.fatal(RESOURCE_NOT_FOUND, srcFileName);
-		File dstFile = new File(Config.outDirName, dstFileName);
+		File dstDir;
+		if (dstDirName != null) {
+			dstDir = new File(Config.outDirName, dstDirName);
+			if (!dstDir.exists())
+				dstDir.mkdir();
+		} else
+			dstDir = new File(Config.outDirName);
+		File dstFile = new File(dstDir, dstFileName);
 		try {
 			BufferedReader r = new BufferedReader(new InputStreamReader(is));
 			PrintWriter w = new PrintWriter(dstFile);
