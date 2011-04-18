@@ -251,7 +251,7 @@ public class TaskParser {
 						String fileName2 = je.getName();
 						if (fileName2.endsWith(".dlog") || fileName2.endsWith(".datalog")) {
 							InputStream is = jarFile.getInputStream(je);
-							String fileName3 = OutDirUtils.copyResourceByPath(fileName2, is);
+							String fileName3 = OutDirUtils.copyResourceByPath(fileName2, is, "dlog");
 							processDlogAnalysis(fileName3);
 						}
 					}
@@ -263,7 +263,7 @@ public class TaskParser {
 						String fileName2 = ze.getName();
 						if (fileName2.endsWith(".dlog") || fileName2.endsWith(".datalog")) {
 							InputStream is = zipFile.getInputStream(ze);
-							String fileName3 = OutDirUtils.copyResourceByPath(fileName2, is);
+							String fileName3 = OutDirUtils.copyResourceByPath(fileName2, is, "dlog");
 							processDlogAnalysis(fileName3);
 						}
 					}
