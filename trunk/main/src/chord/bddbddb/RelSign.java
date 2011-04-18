@@ -15,10 +15,8 @@ import chord.util.tuple.object.Pair;
 /**
  * Signature of a BDD-based relation.
  * It specifies:
- * (1) an ordered list of domain names of the relation
- * (e.g., [M1, H0]) and
- * (2) the BDD ordering of the domain names
- * (e.g., M1_H0 or M1xH0)
+ * (1) an ordered list of domain names of the relation (e.g., [M1, H0]) and
+ * (2) the BDD ordering of the domain names (e.g., M1_H0 or M1xH0)
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
