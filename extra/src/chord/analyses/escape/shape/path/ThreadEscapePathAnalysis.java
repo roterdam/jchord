@@ -216,9 +216,12 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			instrScheme.setEnterMethodEvent(true, true);
 			instrScheme.setLeaveMethodEvent(true, true);
 		}
-		if (printAccFileName != null)
-			instrScheme.setMethodCallEvent(true, true, false, true, true);
-    	instrScheme.setNewEvent(true, true, true, true, true);
+		if (printAccFileName != null) {
+			instrScheme.setBefMethodCallEvent(true, true, false);
+			instrScheme.setAftMethodCallEvent(true, true, false);
+			instrScheme.setAftNewEvent(true, true, false);
+		}
+    	instrScheme.setBefNewEvent(true, true, true);
     	instrScheme.setNewArrayEvent(true, true, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);

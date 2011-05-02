@@ -98,7 +98,7 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
     public InstrScheme getInstrScheme() {
     	if (instrScheme != null) return instrScheme;
     	instrScheme = new InstrScheme();
-    	instrScheme.setNewEvent(true, true, true, true, true);
+    	instrScheme.setBefNewEvent(true, false, true);
     	instrScheme.setNewArrayEvent(true, false, true);
     	instrScheme.setPutstaticReferenceEvent(false, false, false, false, true);
     	instrScheme.setThreadStartEvent(false, false, true);
@@ -217,10 +217,6 @@ public class DynamicThreadEscapeAnalysis extends DynamicAnalysis {
 	@Override
 	public void processBefNew(int h, int t, int o) {
 		processNew(h, o);
-	}
-
-	@Override
-	public void processAftNew(int h, int t, int o) {
 	}
 
 	@Override
