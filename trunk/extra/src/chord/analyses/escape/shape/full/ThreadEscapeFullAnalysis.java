@@ -204,7 +204,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			} catch (ThrEscException ex) {
 				// do nothing
 			}
-			printSummaries();
+			// printSummaries();
 			for (Quad q : currLocEs)
 				System.out.println("LOC: " + q.toVerboseStr());
 			for (Quad q : currEscEs)
