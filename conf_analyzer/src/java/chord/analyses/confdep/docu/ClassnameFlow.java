@@ -83,22 +83,6 @@ public class ClassnameFlow extends AbstractSummaryAnalysis {
     }
     return null;
   }
-
-
-  
-    /*
-    ProgramRel restIM = (ProgramRel) project.getTrgt("restIM");
-    restIM.zero();
-
-    ProgramRel IM = (ProgramRel) project.getTrgt("IM");
-    IM.load();
-    for(Pair<Quad, jq_Method> call:  IM.<Quad, jq_Method>getAry2ValTuples()) {
-      if(!summaries.containsKey(call.val1))
-        restIM.add(call.val0, call.val1);
-    }
-    IM.close();
-    
-    restIM.save();*/
    
 
 }

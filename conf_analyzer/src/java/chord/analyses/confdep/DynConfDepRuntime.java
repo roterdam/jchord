@@ -3,7 +3,10 @@ package chord.analyses.confdep;
 import chord.analyses.confdep.rels.RelAPIMethod;
 import chord.analyses.confdep.rels.RelReadOnlyAPICall;
 import chord.analyses.logging.RelLogStmts;
+import chord.analyses.type.RelScopeExcludedT;
+import chord.project.Config;
 import chord.util.IndexMap;
+import chord.util.Utils;
 import chord.util.WeakIdentityHashMap;
 import java.io.*;
 import java.util.*;
@@ -12,7 +15,7 @@ public class DynConfDepRuntime {
 	//extends DynamicAnalysis
 
 	static PrintStream out;
-	public static boolean FULL = false;
+	public static boolean FULL = true;
 	protected static WeakIdentityHashMap labels;
 
 	static class TaintList {
@@ -53,16 +56,21 @@ public class DynConfDepRuntime {
 	}
 
 	static TaintList EMPTY_TLIST = new TaintList();
-
+	String[] scopeExcludeList; //a hack: explicitly copied into child.
 	static {
 		try {
 
 			out = new PrintStream(new FileOutputStream(DynConfDep.results));
 			labels = new WeakIdentityHashMap();
+			
+			//args(chord.scopeExclude)
+//			scopeExcludeList = Utils.toArray(Config.scopeExcludeStr);
+
 		} catch(IOException e) {
 			e.printStackTrace();
 		}
-		out.println("runtime event handler alive "  + new Date());
+		out.println("// runtime event handler alive "  + new Date());
+		
 		out.flush();
 	}
 
@@ -130,17 +138,19 @@ public class DynConfDepRuntime {
 			printOnce(iIdx + " invoking " + cname + " " + mname + " 0=" + thisT);
 		}
 		
+		boolean noTaintedArgs = true;
 		for(int i= 0; i < args.length; ++i) {  //then all taints from other args
 			String tStr = taintStr(args[i]);
 			if(tStr.length() > 0) {
-				if(tref == null)
+				noTaintedArgs = false;
+				if(tref == null)//no this; static method
 					printOnce(iIdx + " invoking " + cname + " " + mname + " " + (i) + "=" + tStr);
-				else
+				else //instance method
 					printOnce(iIdx + " invoking " + cname + " " + mname + " " + (i+1) + "=" + tStr);
 			}
 		}
-
-		//  	printOnce(iIdx +" calling " + cname + " " + mname);
+		if(noTaintedArgs)
+			out.println("// " + iIdx +" calling " + cname + " " + mname + " without taint");
 	}
 
 	public synchronized static void afterMethodCall(int iIdx, String cname, String mname, Object ret,
@@ -179,42 +189,51 @@ public class DynConfDepRuntime {
 			}
 
 			for(int i= 0; i < args.length; ++i) {  //then all taints from other args
-				returnTaints.addAll(taintlist(args[i]));
-				String tStr = taintStr(args[i]);
-				if(tStr.length() > 0) {
-					/*
+				TaintList tList = taintlist(args[i]);
+				returnTaints.addAll(tList);
+				if(tList.size() > 0) {
+					String tStr = tList.toString();
+
 					if(tref == null)
-						printOnce(iIdx + " invoking " + cname + " " + mname + " " + (i) + "=" + tStr);
+						printOnce("// " + iIdx + " invoked " + cname + " " + mname + " " + (i) + "=" + tStr);
 					else
-						printOnce(iIdx + " invoking " + cname + " " + mname + " " + (i+1) + "=" + tStr);
-						*/
+						printOnce("// " + iIdx + " invoked " + cname + " " + mname + " " + (i+1) + "=" + tStr);
 					taintedCall = true;
 				}
 			}
 
 			if(!taintedCall && FULL) {
-				out.println("call to "+ cname + " " + mname  + " without taint at " + iIdx);
+				out.println("//  call to "+ cname + " " + mname  + " without taint at " + iIdx);
 			}
 
 
 			if(RelAPIMethod.isAPI(cname, mname) ) {
 				if(ret == null) {
 					printOnce(iIdx + " returns null");
+						
 				} else {
 					setTaints(ret, returnTaints); //mark return value
 				}
 				//potentially this regardless of whether we returned null
+				//Ctors should reach this point
 				if(!RelReadOnlyAPICall.isReadOnly(cname, mname))
 					setTaints(tref, returnTaints.copy());   //and add taints to this
-			} 
+				
+				//DEBUG
+			}
+			if(cname.equals("org.apache.hadoop.fs.Path") && mname.equals("<init>")) {
+				out.println("// Found call to Path <init>, afterwards, tref taints = " + taintStr(tref) + 
+						" and returnTaints itself is " + returnTaints.toString());
+				if(RelAPIMethod.isAPI(cname, mname))
+					out.println("// <init> is an API method");
+				if(RelReadOnlyAPICall.isReadOnly(cname, mname))
+					out.println("// also a read only API method");
+				if(RelScopeExcludedT.isExcluded(cname))
+					out.println("// class is excluded from scope");
+				else
+					out.println("// class is NOT excluded from scope");
+			}
 
-			/*
-      if(newTList.size() > 0) {
-        out.println("call " + iIdx+ " to " + cname + "  " + mname);
-        for(int i= 0; i < args.length; ++i) {
-          out.println("\targ"+i + " taintlist is "+ taintStr(args[i]));
-        }
-      }*/
 		}
 		out.flush();
 	}

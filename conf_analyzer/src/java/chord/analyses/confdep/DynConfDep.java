@@ -21,9 +21,9 @@ import joeq.Compiler.Quad.Operator.Invoke;
 @Chord(
   name = "dynamic-cdep-java",
   consumes = { "H","V", "Z", "I"},
-  produces = {"dynCUse","nullI", "Opt", "nullConf" },
-    signs = {"I0,Z0,Opt0",  "I0", "V0,Opt0:V0_Opt0"},
-    namesOfSigns = {"dynCUse" , "nullI", "nullConf"}
+  produces = {"dynCUse","nullI", "Opt", "nullConf","confMethod" },
+    signs = {"I0,Z0,Opt0",  "I0", "V0,Opt0:V0_Opt0", "M0"},
+    namesOfSigns = {"dynCUse" , "nullI", "nullConf", "confMethod"}
   //nullconf = "H0,UV0,Opt0",
   
   
@@ -36,7 +36,8 @@ public class DynConfDep extends BasicDynamicAnalysis {
   static final String SCHEME_FILE= "dynconfdep.instr";
   
   static final Pattern readPat = Pattern.compile("([0-9]*) calling .* returns option (.*)-([0-9]+) value=(.*)");
-  static final Pattern usePat = Pattern.compile("([0-9]*) invoking .* ([0-9]+)=(.*)");
+  static final Pattern taintlessCall = Pattern.compile("([0-9]*) calling .*");
+  static final Pattern usePat = Pattern.compile("([0-9]*) invoking .* ([0-9]+)=(.+)");
   static final Pattern nullVPat = Pattern.compile("([0-9]*) returns null");
   
   @Override
@@ -47,6 +48,7 @@ public class DynConfDep extends BasicDynamicAnalysis {
 
     InstrScheme instrScheme = new InstrScheme();
     args.put(InstrScheme.INSTR_SCHEME_FILE_KEY, SCHEME_FILE);
+    args.put("chord.scopeExclude", Config.scopeExcludeStr);
     
     instrScheme.setAloadReferenceEvent(false, false, true, false, true);
     instrScheme.setAstoreReferenceEvent(false, false, true, false, true);
@@ -109,15 +111,21 @@ public class DynConfDep extends BasicDynamicAnalysis {
       ProgramRel relUse = (ProgramRel) project.getTrgt("dynCUse");
       ProgramRel relNullC = (ProgramRel) project.getTrgt("nullConf");
       ProgramRel relNullI = (ProgramRel) project.getTrgt("nullI");
+      ProgramRel relConfM = (ProgramRel) project.getTrgt("confMethod");
+
       relConf.zero();
       relUse.zero();
       relNullC.zero();
       relNullI.zero();
+      relConfM.zero();
     
       BufferedReader br = new BufferedReader(new FileReader(results));
       
       String s = null;
       while( (s = br.readLine()) != null) {
+      	if(s.startsWith("//"))
+      		continue;
+      	
         Matcher m = readPat.matcher(s);
         if(m.matches()) {
           int iId = Integer.parseInt(m.group(1));
@@ -181,6 +189,7 @@ public class DynConfDep extends BasicDynamicAnalysis {
       relUse.save();
       relNullC.save();
       relNullI.save();
+      relConfM.save(); //note size == 0; we don't mark any outer methods as returning conf.
     } catch(IOException e) {
       e.printStackTrace();
       System.exit(-1);

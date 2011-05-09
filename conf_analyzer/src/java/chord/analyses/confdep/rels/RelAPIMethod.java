@@ -44,25 +44,12 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 		if(ConfDefines.isConf(classname, methname) && !methname.equals("toArray"))
 			return false;
 
-		//compareTo and equals should taint return value, only
-		//This is addressed in RelReadOnly
-		// if(methname.equals("compareTo") || methname.equals("equals") || methname.equals("hashCode"))
-		// return false;
-
-		if(classname.equals("java.lang.Thread"))
+		if(classname.equals("java.lang.Thread")) //handled separately
 			return false;
 		if(classname.startsWith("java.lang") && methname.equals("newInstance"))
 			return false;
 
-		/*    if(classname.equals("java.net.URI"))
-        return (methname.equals("<init>") || methname.startsWith("get")
-            || methname.startsWith("to")
-            || methname.equals("resolve")
-            || methname.equals("normalize")
-            || methname.equals("create"));*/
-		//apparently resolve is the dangerous method?
-
-		if(classname.equals("org.apache.hadoop.fs.Path") && RelScopeExcludedT.isExcluded(classname))
+		if(classname.equals("org.apache.hadoop.fs.Path"))// && RelScopeExcludedT.isExcluded(classname))
 			return true;
 		if(classname.equals("org.apache.tools.ant.types.Path"))
 			return true;
@@ -73,14 +60,19 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 		if(classname.startsWith("org.mortbay.jetty"))
 			return true;
 		
+			//debugging
+		if(classname.equals("conf_analyzer.ScopeExcludedAPITest$MyPath"))
+			return true;
+		
 		return classname.startsWith("java") 
-		&& (!classname.startsWith("java.io") || classname.equals("java.io.File"));//io is mostly bad, File is ok
+&& (!classname.startsWith("java.io") || classname.equals("java.io.File"));//io is mostly bad, File is ok
 
 	}
 
 	private boolean isCollectionGet(Quad q) {
 		return RelInserts.isInsert(q) ;
-		//we treat gets as APIReadOnly calls, for now
+		//we treat gets as APIReadOnly calls, for now. Handles case where
+		//a tainted collection is returned somehow or created.
 	}
 
 	/**
@@ -92,7 +84,8 @@ public class RelAPIMethod extends ProgramRel implements IInvokeInstVisitor {
 		String classname = meth.getDeclaringClass().getName();
 		String methname = meth.getName().toString();
 		
-		//an experiment
+		//Helps, even with context-sensitive analysis. Might be unneeded
+		//if we switched to doing analysis in the callee-side instead of caller side.
 		if(classname.startsWith("java.util") && classname.contains("Map"))
 			return;
 		

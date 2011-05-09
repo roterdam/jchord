@@ -7,6 +7,7 @@ import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hdfs.server.namenode.NameNode;
 import org.apache.hadoop.hdfs.server.protocol.DatanodeRegistration;
+import org.apache.hadoop.net.ScriptBasedMapping;
 
 public class StubNameNode {
 	
@@ -74,5 +75,9 @@ public class StubNameNode {
     inst.getNameNodeAddress ();
     inst.getHttpAddress ();
     inst.refreshServiceAcl ();
+    
+    ScriptBasedMapping t = new ScriptBasedMapping();
+    t.setConf(new Configuration());
+    t.resolve(new ModelList<String>());
   }
 }

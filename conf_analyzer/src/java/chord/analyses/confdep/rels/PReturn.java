@@ -20,16 +20,19 @@ import chord.project.analyses.ProgramRel;
  */
 
 @Chord(
-		name = "nullRet",
+		name = "PReturn",
 		sign = "M0,P0:M0_P0"
 )
-public class RelNullRet extends ProgramRel implements IReturnInstVisitor {
+public class PReturn extends ProgramRel implements IReturnInstVisitor {
 	
 	DomP domP;
 	DomM domM;
+//	DomU domU; //can't show var; what if we return a const?
+
 	public void init() {
 		domM = (DomM) doms[0];
 		domP = (DomP) doms[1];
+//		domU = (DomU) doms[2];
 
 	}
 	
@@ -45,10 +48,15 @@ public class RelNullRet extends ProgramRel implements IReturnInstVisitor {
 		Operand operand = Return.getSrc(q);
 		jq_Method meth = q.getMethod();
 		
-		if (operand instanceof Operand.AConstOperand) {
+		if(operand != null) {
+//			System.out.println(meth + " had non-null return");
+			super.add(meth,q);
+		}
+
+/*		if (operand instanceof Operand.) {
 			Object wrapped = ((Operand.AConstOperand) operand).getWrapped();
 			if (wrapped == null)
 				super.add(meth,q);
-		}
+		}*/
 	}
 }

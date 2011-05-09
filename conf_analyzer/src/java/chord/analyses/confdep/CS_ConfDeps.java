@@ -12,7 +12,6 @@ import chord.analyses.var.DomV;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Config;
-import chord.project.analyses.JavaAnalysis;
 
 /**
  * Context-sensitive version of ConfDeps
@@ -23,20 +22,6 @@ import chord.project.analyses.JavaAnalysis;
 		name = "CSConfDeps"
 	)
 public class CS_ConfDeps extends ConfDeps {
-
-	public boolean STATIC = false;
-	public boolean DYNTRACK = false;
-	public boolean SUPERCONTEXT = false;
-	public static final String CONFDEP_SCANLOGS_OPT = "confdep.scanlogs";
-	public static final String CONFDEP_DYNAMIC_OPT = "confdep.dynamic"; //should be either static, dynamic-load or dynamic-track
-	DomH domH;
-	DomI domI;
-	DomV domV;
-	DomUV domUV;
-	DomF domF;
-	DomStrConst domConst;
-	public boolean lookAtLogs = false;
-	boolean fakeExec;
 
 	public void run() {
 		ClassicProject Project = ClassicProject.g();
@@ -61,15 +46,16 @@ public class CS_ConfDeps extends ConfDeps {
 		boolean miniStrings = Config.buildBoolProperty("useMiniStrings", false);
 		boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", false);
 
-		boolean wideCallModel = Config.buildBoolProperty("externalCallsReachEverything", true);
-		if(!wideCallModel)
+		//Can't really use external entrypoints here anyway
+		//		boolean wideCallModel = Config.buildBoolProperty("externalCallsReachEverything", true);
+//		if(!wideCallModel)
 			makeEmptyRelation(Project, "externalThis");
 		
 		
 		//Start by doing points-to, string processing and opt-finding.
 		//are linked together because  
 		if(STATIC) {
-			Project.runTask("cipa-0cfa-arr-dlog");
+			maybeRun(Project,"cipa-0cfa-arr-dlog");
 
 			maybeRun(Project,"findconf-dlog");
 
@@ -89,13 +75,11 @@ public class CS_ConfDeps extends ConfDeps {
 		if(DYNTRACK) {
 			Project.runTask("dyn-datadep");
 				//no need for another points-to here. Only datadep-cs uses
-				//the context-sensitive points-to
+				//the context-sensitive points-to and that doesn't apply to Dyn track
 		} else {
-			
 			Project.runTask("ctxts-java"); //do the context-sensitive points-to
 					//need to do this unconditionally to build the domain
 			maybeRun(Project, CtxtsAnalysis.getCspaKind());
-
 			maybeRun(Project,"datadep-func-cs-dlog");
 		}
 	
@@ -103,6 +87,7 @@ public class CS_ConfDeps extends ConfDeps {
 			//    	Project.runTask("PobjVarAsgnInst"); //to avoid counting domP time in SCS
 			maybeRun(Project,"confdep-dlog"); //to mark primRefDep as done
 			Project.runTask("scs-datadep-dlog");
+//			Project.runTask("fcs-cs-datadep-dlog"); 
 			Project.runTask("scs-confdep-dlog");
 		} else {
 			Project.runTask("confdep-dlog");
@@ -121,8 +106,8 @@ public class CS_ConfDeps extends ConfDeps {
 			dumpOptRegexes("conf_regex.txt", DomOpts.optSites());
 
 		if(dumpIntermediates)  {
-//			Project.runTask("datadep-debug-dlog");
-//			dumpArgDTaints();
+			Project.runTask("datadep-debug-dlog");
+			dumpArgDTaints();
 		}
 
 		

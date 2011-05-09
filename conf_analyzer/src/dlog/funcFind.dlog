@@ -43,12 +43,14 @@ getInstFldInst(l:V,b:V,f:F) input
 MV(m:M,v:V) input
 MU(m:M,u:U) input
 
-retDepends(ctrlVar:V, m:M) input
-
 # Conftrack specific
 
 APIMethod(i:I) input
 APIReadOnly(i:I) input
+
+
+implicitRetFlow(ctrlVar:V, m:M) input
+implicitRetFlowU(ctrlVar:U, m:M) input
 
 # intermediates
 
@@ -138,7 +140,10 @@ refLambdaDep(z,l) :- getInstFldInst(l,b,0), refLambdaDep(z,b).
 #prim fields too
 primLambdaDep(z,v) :- getInstFldPrimInst(v,b,_),refLambdaDep(z,b).
 
-functDep(m,z) :- retDepends(v,m), refLambdaDep(z,v).
+functDep(m,z) :- implicitRetFlow(v,m), refLambdaDep(z,v).
+functDep(m,z) :- implicitRetFlowU(u,m), primLambdaDep(z,u).
+
+
 
 ##  Augment values before returning
 

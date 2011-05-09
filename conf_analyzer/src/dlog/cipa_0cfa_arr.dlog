@@ -237,13 +237,17 @@ externalArg(v) :- IinvkRet(i,_,v),exclCall(i).
 nonThisExtArg(v) :- externalArg(v),!externalThis(v).
 
 #fields of external args point to external args
-HFH(h1,f,h2) :- clsTH(t,h1),TFT(t,f,t2),clsTH(t2,h2).
+HFH(h1,f,h2) :- clsTH(t,h1),TFT(t,f,t2),sub(t3,t2),clsTH(t3,h2).
 
 #POTENTIALLY DANGEROUS: if v is a reference to object, then sets v to point to everything.
-VH(v,h) :- nonThisExtArg(v),VT(v,t),clsTH(t2,h),sub(t,t2).
+VH(v,h) :- nonThisExtArg(v),VT(v,t),clsTH(t2,h),sub(t2,t).
+VH(v,h) :- externalThis(v),VT(v,t),clsTH(t,h).
+
 #Be more aggressive with this-es
 reachableHT(h,t) :- HT(h,t),reachableM(m),MH(m,h).
 VH(v,h) :- externalThis(v),VT(v,t),reachableHT(h,t).
+
+
 
 reachableM(m) :- MentryPoints(m).
 
