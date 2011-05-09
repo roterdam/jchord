@@ -22,6 +22,7 @@ reachableI(i:I) input
 
 argCopies(m:M0,n:Z0,u:V0)
 confCallArg(i:I,v:V,base:I)
+
 confWrapper(i:I,base:I) output
 confUVV(i:I,uv:UV,v:V) output
 mConfArgs(m:M,z:Z,base:I) output
@@ -38,7 +39,7 @@ mConfArgs(m,z,base) :- argCopies(m,z,v),confCallArg(_,v,base).
 confCallArg(i,v,base) :- IM(i,m),mConfArgs(m,z,base),IinvkArg(i,z,v). split
 
 # ...or if it's a reachable call to the base conf. (note we're joining rawConfUVV
-# with itself to ensure i == base
+# with itself to ensure i == base on the output side
 confCallArg(i,v,base) :- rawConfUVV(i,_,v),rawConfUVV(base,_,v),reachableI(i).
 
 #m wraps m2 if m2 is a conf method and m calls it. This is slightly approximate.

@@ -1,4 +1,6 @@
 <init>:(Ljava/lang/Runnable;)V@java.lang.Thread stubThreadInit:(Ljava/lang/Thread;Ljava/lang/Runnable;)V@conf_analyzer.stubs.JavaStubs
+<init>:(Ljava/lang/Runnable;Ljava/lang/String;)V@java.lang.Thread stubThreadInit:(Ljava/lang/Thread;Ljava/lang/Runnable;)V@conf_analyzer.stubs.JavaStubs
+
 
 addShutdownHook:(Ljava/lang/Thread;)V@java.lang.Runtime stubThreadInit:(Ljava/lang/Thread;Ljava/lang/Runnable;)V@conf_analyzer.stubs.JavaStubs
 

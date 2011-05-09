@@ -111,7 +111,7 @@ public class RelFailurePath extends ProgramRel implements IInvokeInstVisitor{
     //create relation here
     super.save();
     if(callsOnFailPath.size() > 0) {
-    	System.out.println("failed to match some stacktrace lines: ");
+    	System.out.println("couldn't find DomM/DomI entries to match some stacktrace lines: ");
 	    for(String s: callsOnFailPath) {
 	    	System.out.println(s);
 	    }

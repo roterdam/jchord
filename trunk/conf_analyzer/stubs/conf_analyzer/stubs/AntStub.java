@@ -17,6 +17,9 @@ public class AntStub {
 			org.apache.tools.ant.Task task = taskCl.newInstance();
 			
 			task.init();
+			task.maybeConfigure();
+			task.perform();
+			task.getDescription();
 			task.reconfigure();
 			task.execute();
 			Target t = task.getOwningTarget();

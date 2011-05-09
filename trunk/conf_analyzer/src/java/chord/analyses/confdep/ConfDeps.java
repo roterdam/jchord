@@ -137,7 +137,7 @@ public class ConfDeps extends JavaAnalysis {
 		rel.save();
 	}
 
-	private void dumpArgDTaints() {
+	protected void dumpArgDTaints() {
 		PrintWriter writer =
 			OutDirUtils.newPrintWriter("meth_arg_conf_taints.txt");
 
@@ -218,23 +218,31 @@ public class ConfDeps extends JavaAnalysis {
 
 				jq_Field f = domF.get(p.idx1);
 				String optName = opts.get(p.idx2);
-
+				String clname,fieldName, fType;
 				if(f == null ) {
-					if(p.idx1 != 0) //null f when p.idx1 == 0 is uninteresting; that's just the array case
+					if(p.idx1 == 0) { //null f when p.idx1 == 0 is uninteresting; that's just the array case
+						fieldName = "array_contents";
+						clname = "Array";
+						fType = "java.lang.Object";
+					} else {
 						System.out.println("ERR: no F entry for " + p.idx1+ " (Option was " + optName+")");
-					continue;
+						continue;
+					}
+				} else {
+					jq_Class cl = f.getDeclaringClass();
+					if(cl == null)
+						clname = "UNKNOWN";
+					else
+						clname = cl.getName();
+					fieldName = f.getName().toString();
+					fType = f.getType().getName();
 				}
-				jq_Class cl = f.getDeclaringClass();
-				String clname;
-				if(cl == null)
-					clname = "UNKNOWN";
-				else
-					clname = cl.getName();
-				String optAndLine = optName + clname+ f.getName();
+				
+				String optAndLine = optName + clname+ fieldName;
 				if(!printedLines.contains(optAndLine)) {
 					printedLines.add(optAndLine);
 					writer.println(clname+ " "+ ": " + optName  + " affects field " + 
-							f.getName()+ " of type " + f.getType().getName() + ".");
+							fieldName+ " of type " + fType + ".");
 				}
 			}
 			relConfFields.close();
@@ -365,8 +373,10 @@ public class ConfDeps extends JavaAnalysis {
 			System.out.println("marking " + taskName + " as done");
 			fakeExec(task);
 		}
-		else 
+		else {
+			System.out.println("Can't use cached results for " + task +"; fakeExec = " + fakeExec);
 			Project.runTask(taskName);
+		}
 	}
 	public void fakeExec(ITask task) {
 		ClassicProject p = ClassicProject.g();
@@ -381,6 +391,7 @@ public class ConfDeps extends JavaAnalysis {
 			} else
 				fakeExec(task2);
 		}
+		System.out.println("Not running " + task.getName() + "; faking instead");
 		p.setTaskDone(task);
 		List<Object> producedTrgts = p.taskToProducedTrgtsMap.get(task);
 		assert(producedTrgts != null);

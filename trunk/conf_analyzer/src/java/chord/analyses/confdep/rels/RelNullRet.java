@@ -1,5 +1,6 @@
 package chord.analyses.confdep.rels;
 
+
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operand;
@@ -13,6 +14,11 @@ import chord.analyses.var.DomV;
 import chord.program.visitors.*;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
+
+/**
+ * Should really be called PConstReturn
+ */
+
 @Chord(
 		name = "nullRet",
 		sign = "M0,P0:M0_P0"
@@ -26,8 +32,15 @@ public class RelNullRet extends ProgramRel implements IReturnInstVisitor {
 		domP = (DomP) doms[1];
 
 	}
-	public void visit(jq_Class c) { }
+	
 	@Override
+	public void visit(jq_Class c) { }
+	
+
+	@Override
+	public void visit(jq_Method m) {		
+	}
+	
 	public void visitReturnInst(Quad q) {
 		Operand operand = Return.getSrc(q);
 		jq_Method meth = q.getMethod();
@@ -37,15 +50,5 @@ public class RelNullRet extends ProgramRel implements IReturnInstVisitor {
 			if (wrapped == null)
 				super.add(meth,q);
 		}
-		
 	}
-	@Override
-	public void visit(jq_Method m) {
-		// TODO Auto-generated method stub
-		
-	}
-
-
-
-
 }

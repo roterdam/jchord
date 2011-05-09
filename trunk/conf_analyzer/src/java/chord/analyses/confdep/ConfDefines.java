@@ -45,6 +45,7 @@ public class ConfDefines {
     hadoopConfOptMethods.add("getRange");
     hadoopConfOptMethods.add("getStringCollection");
     hadoopConfOptMethods.add("getStrings");
+    hadoopConfOptMethods.add("getTrimmedStrings");//in Cloudera's distribution
     hadoopConfOptMethods.add("getClasses");
     hadoopConfOptMethods.add("getLocalPath");
     
@@ -165,7 +166,7 @@ public class ConfDefines {
       return s.substring(7);
     else return s;
   }
-  public static final boolean EXPAND_RECURSIVE_CONF = true;
+  public static boolean EXPAND_RECURSIVE_CONF = true;
   
   static ProgramRel baseConfCall = null;
   public static String optionPrefix(Quad inst) {

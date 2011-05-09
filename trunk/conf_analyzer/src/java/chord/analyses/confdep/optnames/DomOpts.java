@@ -24,7 +24,7 @@ import chord.util.tuple.object.Pair;
 )
 public class DomOpts extends ProgramDom<String> {
 
-	static Set<Pair<Quad,String>> optSites= null;
+	static Set<Pair<Quad,String>> optSites= null;//the bare option names, without prefix
 	public static final String NONE = "UNKNOWN";
 
 	public static Set<Pair<Quad,String>> optSites() {
@@ -56,7 +56,10 @@ public class DomOpts extends ProgramDom<String> {
 		String[] wordsByPos = new String[DomK.MAXZ];
 
 		if(v.size() == 0)
-			return new String[] {"X"};
+			if(makeRegex)
+				return new String[] {".*"};
+			else
+				return new String[] {"X"};
 
 		for(Pair<String,Integer> t: v.<String,Integer>getAry2ValTuples()) {
 			int i = t.val1;
@@ -69,8 +72,12 @@ public class DomOpts extends ProgramDom<String> {
 		}
 
 		StringBuilder sb = new StringBuilder();
+		boolean needParens = maxFilled > 0;
 		for(int i =0; i < maxFilled+1 ; ++ i) {
 			if(wordsByPos[i] != null)
+				if(wordsByPos[i].contains("|") && needParens)
+					sb.append("(" +wordsByPos[i]+")");
+				else
 				sb.append(wordsByPos[i]);
 			else
 				if(makeRegex)
@@ -82,7 +89,7 @@ public class DomOpts extends ProgramDom<String> {
 
 		//prune prefix from options starting with .*
 		String trimmed;
-		if(sb.substring(0, 2).equals(".*"))
+		if(sb.toString().startsWith(".*") && (!makeRegex || sb.length() > 2))
 			trimmed = sb.substring(2);
 		else
 			trimmed = sb.toString();

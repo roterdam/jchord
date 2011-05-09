@@ -188,8 +188,8 @@ public class ModelList<E> implements List<E>, Queue<E>, Deque<E>, SortedSet<E>, 
 
 	@Override
 	public <T> T[] toArray(T[] a) {
-		Object[] cont = new Object[1];
-		cont[0] = contents;
+		T[] cont = a;
+		cont[0] = (T) contents;
 		return (T[]) cont;
 	}
 

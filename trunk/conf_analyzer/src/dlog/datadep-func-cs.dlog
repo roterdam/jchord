@@ -27,8 +27,6 @@ VT(v:V,t:T) input
 
 clsTH(t:T0,h:H0) input
 scopeExcludedM(m:M) input
-MPrimCmp(m:M, u1:U, u2:U) input
-IColSize(i:I,u:U,v:V) input
 
 ###  Base program-element relations
 
@@ -68,7 +66,9 @@ confMethod(m:M) input
 functDep(m:M,z:Z) input
 MrefLambdaDep(m:M,z:Z,v:V) input
 MprimLambdaDep(m:M,z:Z,u:U) input
-retDepends(ctrlVar:V, m:M) input
+implicitRetFlow(ctrlVar:V, m:M) input
+implicitRetFlowU(ctrlVar:U, m:M) input
+
 
 ## Contexts
 reachableCI(c:C,i:I) input
@@ -105,6 +105,8 @@ primCdep(u:U,site:Opt) output
 absoluteReturn(m:M,name:Opt) output
 absoluteRefCdep(v:V,site:Opt) output
 absolutePrimCdep(u:U,site:Opt) output
+
+ctaintArrConts(c:C,v:V,opt:Opt) output
 
 ########## Rules
 
@@ -155,6 +157,7 @@ absCVOpt(c,v,site) :- instFOpt(bh,f,site),getInstFldInst(v,b,f), CVC(c,b,bh). sp
 absCUOpt(c,v,site) :- statFOpt(f,site),RgetStatFldPrimInst(c,v,f).
 absCUOpt(c,v,site) :- instFOpt(bh, f,site),getInstFldPrimInst(v,b,f), CVC(c,b,bh). split
 
+ #reading from an array copies the array's taints
 absCVOpt(c,l,site) :- getInstFldInst(l,b,0), absCVOpt(c,b,site).
 absCUOpt(c,l,site) :- getInstFldPrimInst(l,b,0), absCVOpt(c,b,site).
 
@@ -164,10 +167,14 @@ absCVOpt(c,v,name) :- localMustAlias(v,v2),absCVOpt(c,v2,name).
 absCUOpt(c,v,name) :- primDataDep(v,v2),absCUOpt(c,v2,name).
 
 ## Propagation up of absolute labels via returns
-
+#  Note that the 'c' here is the CALLEE's context
+# 
 absoluteReturnV(c,m,name) :- MmethRet(m,_,v),absCVOpt(c,v,name),filteredMethReturns(m).
 absoluteReturnU(c,m,name) :- MmethPrimRet(m,_,v),absCUOpt(c,v,name),filteredMethReturns(m).
-absoluteReturnV(c,m,name) :- retDepends(v,m),absCVOpt(c,v,name).
+
+
+absoluteReturnV(c,m,name) :- implicitRetFlow(v,m),absCVOpt(c,v,name).
+absoluteReturnU(c,m,name) :- implicitRetFlowU(u,m),absCUOpt(c,u,name).
 
 
 absCVOpt(c,v,name) :-  CICM(c,i,c2,m),IinvkRet(i,_,v),absoluteReturnV(c2,m,name).
@@ -206,7 +213,9 @@ statFOpt(f,opt) :- putStatFldPrimInst(f,r),CUOpt(_,r,opt).
 instFOpt(bh,f,opt) :- putInstFldInst(b,f,r),CVOpt(c,r,opt),CVC(c,b,bh). split
 instFOpt(bh,f,opt) :- putInstFldPrimInst(b,f,r),CUOpt(c,r,opt),CVC(c,b,bh).  split
 
-
+  #stores into arrays taint the array, not just the contents
+#absCVOpt(c,b,opt) :- putInstFldInst(b,0,r),CVOpt(c,r,opt).
+#absCUOpt(c,b,opt) :- putInstFldPrimInst(b,0,r),CUOpt(c,r,opt).
 
 ##Below is dangerous; a tainted ref with a conf field can infect everything.
 #  Acceptable in some more restricted sense, perhaps. Which types are field-insensitive?
@@ -250,6 +259,7 @@ instHF(h, f, opt) :- instFOpt(c, f, opt), CH(c,h).
 ####Debugging
 
 
+ctaintArrConts(c,v,opt) :- instFOpt(c2, 0, opt),CVC(c,v,c2).
 
 #confConf(o,i,z,s) :-  OptNames(o,i),IinvkArg(i,z,v),refCdep(v,s).
 #confConf(o,i,z,s) :-  OptNames(o,i),IinvkPrimArg(i,z,v),primCdep(v,s).
