@@ -41,7 +41,7 @@ import org.scannotation.AnnotationDB;
  * @author Percy Liang (pliang@cs.berkeley.edu)
  */
 public final class Utils {
-    public final static String LIST_SEPARATOR = " |,|:|;";
+    public final static String LIST_SEPARATOR = ",|:|;";
     public final static String PATH_SEPARATOR = File.pathSeparator + "|;";
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
 
