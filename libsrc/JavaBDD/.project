@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>javabdd</name>
+	<name>JavaBDD</name>
 	<comment></comment>
 	<projects>
-		<project>javabdd</project>
+		<project>JavaBDD</project>
 	</projects>
 	<buildSpec>
 		<buildCommand>
