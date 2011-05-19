@@ -43,7 +43,7 @@ ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=<ANALYSIS_NAME> run
 \end{verbatim}
 \end{framed}
 
-For instance, the following command runs a basic may-alias and call-graph
+For instance, the following command runs a basic points-to and call-graph
 analysis (called 0CFA) provided in Chord:
 
 \begin{framed}
@@ -161,16 +161,21 @@ Total time: 26 seconds
 
 \section{Points-to and Call-Graph Analyses}
 
-Chord offers several choices for computing points-to and call-graph information
-of Java programs.  In each of these choices, the points-to and call-graph
-information is computed simultaneously (called ``on-the-fly call-graph
-construction" in the literature in contrast to ``ahead-of-time call-graph
-construction" in which the call graph is computed first followed by points-to
-information).  On-the-fly approaches are more precise because, in a dynamically
-dispatching language like Java, as more points-to facts are discovered, more
-(dynamically dispatched) methods are deemed reachable, thereby growing the call
-graph; the code in these newly added methods in turn results in more points-to
-facts.
+Chord provides several analyses with different precision/scalability tradeoff for
+computing points-to and call-graph information of Java programs.  All these
+analyses are defined under directory \code{src/chord/analyses/alias/}.
+
+In all these analyses, the points-to and call-graph information is computed
+simultaneously (called ``on-the-fly call-graph construction" in the literature
+in contrast to ``ahead-of-time call-graph construction" in which the call graph
+is computed first followed by points-to information).  On-the-fly approaches are
+more precise because, in a dynamically dispatching language like Java, as more
+points-to facts are discovered, more (dynamically dispatched) methods are deemed
+reachable, thereby growing the call graph; the code in these newly added methods
+in turn results in more points-to facts.
+
+Broadly, the various analyses are characterized by two aspects (1) flow
+sensitive vs. insensitive and (2) context sensitive vs. insensitive.
 
 Flow-insensitive analysis computes a single abstract heap whereas flow-sensitive
 analysis computes per-program-point abstract heaps.  Context-insensitive
@@ -205,14 +210,22 @@ analyses.  We first recall some relevant program domains:
 
 \subsection{Context-Insensitive Analysis}
 
-The context-insensitive points-to/call-graph analysis treats each object
-allocation site as a separate abstract memory location; in other words, it can
-distinguish objects created at different sites but not those created at the same
-site.  Additionally, it is field-sensitive, in that it distinguishes between
-different instance fields of the same object, but array-insensitive, in that it
-cannot distinguish between different elements of the same array; all array
-elements are modeled using a distinguished hypothetical instance field (that has
-index 0 in domain F).
+The context-insensitive points-to/call-graph analysis derives its name from the
+fact that it analyzes each method in a single abstract context.
+Additionally, the analysis is:
+\begin{itemize}
+\item
+{\it object-insensitive}: it cannot distinguish between
+different objects created at the same object allocation site; the reason is that
+it treats each object allocation site as a separate abstract memory location.
+\item
+{\it field-sensitive}: it distinguishes between
+different instance fields of the same object.
+\item
+{\it array-insensitive}: it cannot distinguish between
+different elements of the same array; all array elements are modeled using a
+distinguished hypothetical instance field (that has index 0 in domain F).
+\end{itemize}
 
 The following command can be used to run this analysis on the program specified
 by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup} for how to setup a
@@ -231,7 +244,7 @@ This analysis outputs the following relations:
 \begin{itemize}
 \item
 rootM subset M contains the set of entry methods that may be reachable; this
-includes the program's main method as well as each static initializer method
+includes the program's main method as well as each class initializer method
 that may be reachable from the main method.
 \item
 reachableM subset M contains the set of methods that may be reachable from the
@@ -266,24 +279,129 @@ point to some object allocated at site \texttt{h2}.
 
 \subsection{Context-Sensitive Analysis}
 
-In a context-sensitive analysis, there is no longer just one abstract memory
-location per object allocation site.  Rather, the set of objects a reference can
-point to depends on the \textit{context} in which the method containing the
-reference is called.  Whereas a context-insensitive analysis talks about the
-domain of methods (M) and the domain of allocation sites (H), a
-context-sensitive analysis talks about the domain of abstract contexts, labeled
-C.  Elements of domain C contain both abstract calling contexts and abstract
-objects. (These are merged for reasons described below.)
+In a context-sensitive analysis, each method is analyzed in potentially multiple
+contexts, in contrast to a context-insensitive analysis, in which each
+method is always analyzed in a single context.  Additionally, a
+context-sensitive analysis can be {\it object-sensitive} in that it can distinguish
+between different objects created at the same object allocation site, whereas
+a context-insensitive analysis is always object-insensitive.
 
-Chord has several context-sensitive analyses, but they all expose the same
-relations, which are described below:
+Different kinds of context- and object-sensitivity have been proposed in the
+literature.  Chord's context-sensitive points-to/call-graph analysis is highly
+parametric in the kind of context- and object-sensitivity.  It allows:
+\begin{itemize}
+\item
+each method to be analyzed using a different kind of context sensitivity,
+namely, one of context insensitivity, k-CFA, k-object-sensitivity, and
+copy-context-sensitivity;
+\item
+each local variable to be analyzed context sensitively or insensitively; and
+\item
+a different 'k' value to be used for each object allocation site and method
+call site.
+\end{itemize}
+
+The analysis can be called multiple times and in each invocation it can
+incorporate feedback from a client to adjust the precision of the points-to
+information and call graph computed subsequently by the points-to/call-graph
+analyses.  Clients can indicate in each invocation:
+
+\begin{itemize}
+\item
+Which methods must be analyzed context sensitively (in addition to those already being
+analyzed context sensitively in the previous invocation of this analysis) and using
+what kind of context sensitivity; the remaining methods will be analyzed context
+insensitively (that is, in the lone 'epsilon' context).
+\item
+Which local variables of reference type must be analyzed context sensitively (in
+addition to those already being analyzed context sensitively in the previous
+invocation of this analysis); the remaining ones will be analyzed context insensitively
+(that is, their points-to information will be tracked in the lone 'epsilon' context).
+\item
+The object allocation sites and method call sites whose 'k' values must be incremented
+(over those used in the previous invocation of this analysis).
+\end{itemize}
+
+The following command can be used to run this analysis on the program specified
+by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup} for how to setup a
+program):
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=cspa-hybrid-dlog run
+\end{verbatim}
+\end{framed}
+
+System properties recognized by this analysis are:
+\begin{itemize}
+\item
+\code{chord.inst.ctxt.kind}: the kind of context sensitivity to use for each
+instance method (and all its locals).  It may be 'ci' (context insensitive), 'cs'
+(k-CFA), or 'co' (k-object-sensitive).  It is 'ci' by default.
+\item
+\code{chord.stat.ctxt.kind}: the kind of context sensitivity to use for each
+static method (and all its locals).  It may be 'ci' (context insensitive), 'cs'
+(k-CFA), or 'co' (copy-context-sensitive).  It is 'ci' by default.
+\item
+\code{chord.ctxt.kind}: the kind of context sensitivity to use for each method
+(and all its locals).  It may be one of 'ci', 'cs', or 'co', and serves as
+shorthand for properties \code{chord.inst.ctxt.kind} and \code{chord.stat.ctxt.kind}.
+\item
+\code{chord.kobj.k} and \code{chord.kcfa.k}: the 'k' value to use for each object
+allocation site and each method call site, respectively.
+It is 1 by default.
+\end{itemize}
+
+The above command runs the most general form of context-sensitive
+points-to/call-graph analysis,
+allowing different kinds of context- and object-sensitivity to be mixed in the analysis of
+the same program, but this flexibility comes at the cost of efficiency.
+Hence, Chord provides three specialized forms of this analysis that more
+efficiently handle certain common instantiations of this analysis that do not
+arbitrarily mix different kinds of context- and object-sensitivity.  We next describe these
+three specialized analyses.
+
+If \code{chord.ctxt.kind} is 'ci' (the default value),
+the above command essentially performs a purely context-insensitive
+analysis; in this case, it is preferable to run the following more efficient
+implementation of that analysis:
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=cspa-0cfa-dlog run
+\end{verbatim}
+\end{framed}
+
+If \code{chord.ctxt.kind} is 'cs' and \code{chord.kcfa.k} is K,
+the above command essentially performs a purely K-CFA analysis; in this case, it
+is preferable to run the following more efficient implementation of that
+analysis:
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.ctxt.kind=cs -Dchord.kcfa.k=K -Dchord.run.analyses=cspa-kcfa-dlog run
+\end{verbatim}
+\end{framed}
+
+If \code{chord.ctxt.kind} is 'co' and \code{chord.kobj.k} is K,
+the above command essentially performs a purely K-object-sensitive analysis; in
+this case, it is preferable to run the following more efficient implementation
+of that analysis:
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.ctxt.kind=co -Dchord.kobj.k=K -Dchord.run.analyses=cspa-kobj-dlog run
+\end{verbatim}
+\end{framed}
+
+Each of the above four commands outputs the following relations:
 
 \begin{itemize}
 \item
 {\it Context information:}
 \begin{itemize}
 \item
-C is the domain of all abstract calling contexts and abstract objects.  Each
+C is the domain of all abstract contexts and abstract objects.  Each
 element in this domain is a sequence of zero or more sites, where each site can
 be a call site or an object allocation site.  A sequence may have mixed call
 sites and object allocation sites.  The most significant site (i.e. the first
@@ -330,8 +448,82 @@ that instance field \texttt{f} of object \texttt{o1} may point to object
 \texttt{o2}.  \end{itemize}
 \end{itemize}
 
-{\bf Under Construction: explain object-sensitive vs context-sensitive, plus how
-to invoke.}
+\subsection{Call Graph Variants}
+
+Chord offers two variants of each of the context-insensitive and
+context-sensitive baseline call graphs presented above, called {\it abbreviated
+thread-insensitive} and {\it abbreviated thread-sensitive} call graphs.  We
+explain these two variants for the context-insensitive case; they are analogous
+for the context-sensitive case.  Consider the following example Java program:
+
+\begin{framed}
+\begin{verbatim}
+public class T extends java.lang.Thread {
+    static {
+i1:     m1();
+    }
+    public static void m1() { }
+    public static void m2() { }
+    public static void m3() { }
+    public void run() {
+i2:     m2();
+    }
+    public static void main() {
+i3:     m3();
+        T t = ...;
+i4:     t.start();
+    }
+}
+\end{verbatim}
+\end{framed}
+
+The baseline call graph for this program is 
+rootM = \{ main, \code{<clinit>} \}, 
+reachableM = \{ main, \code{<clinit>}, m1, m2, m3, start, run \}, and
+IM = \{ (i1, m1), (i2, m2), (i3, m3), (i4, start), (i5, run) \}, where methods
+main, m1, m2, m3, and run are those declared in class C, method \code{<clinit>}
+is the class initializer method of class C, and the
+\code{java.lang.Thread.start()} method contains a call site labeled i5 that calls
+\code{this.run()}.
+
+An {\it abbreviated thread-insensitive} call graph excludes from the baseline call
+graph all methods that are unreachable from the main method.  In other words, it
+excludes all class initializer methods as well as methods that are reachable
+only from such methods.
+For the above example, this call graph is
+rootM = \{ main \},
+reachableM = \{ main, m2, m3, start, run \}, and
+IM = \{ (i2, m2), (i3, m3), (i4, start), (i5, run) \}.  Notice that methods
+\code{<clinit>} and m1 are omitted from reachableM, and call edge (i1, m1) is
+omitted from IM, since m1 is unreachable from the main method.
+
+An {\it abbreviated thread-sensitive} call graph excludes from the baseline call
+graph all methods that are unreachable from the main method, like the
+abbreviated thread-insensitive call graph, and additionally treats the
+\code{java.lang.Thread.start()} method as a root method and does not include
+call edges that target that method.
+For the above example, this call graph is
+rootM = \{ main, start \},
+reachableM = \{ main, m2, m3, start, run \}, and
+IM = \{ (i2, m2), (i3, m3), (i5, run) \}.  Notice that the start method is
+added to rootM and call edge (i4, start) is omitted from IM.
+
+The above two call graph variants are provided to simplify expressing
+certain forms of reachability:
+\begin{itemize}
+\item
+An {\it abbreviated} call graph allows to focus just on reachability
+from the main method, as opposed to from class initializer methods as well;
+this is used, for instance, in Chord's static datarace analysis to
+suppress reporting races on statements reachable only from class initializer
+methods, which are typically false races in practice.
+\item
+A {\it thread-sensitive} call graph additionally allows to focus just on
+``intra-thread'' reachability; this is used, for instance, in Chord's static datarace
+analysis to prevent reporting false races (t1,e1,t2,e2)
+where statement e1 (or e2 resp.) is unreachable from abstract thread
+t1 (or t2 resp.).
+\end{itemize}
 
 \section{Static Datarace Analysis}
 
