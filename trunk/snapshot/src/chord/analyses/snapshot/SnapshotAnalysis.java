@@ -225,7 +225,7 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 		if (instrScheme != null) return instrScheme;
 		instrScheme = new InstrScheme();
 
-		instrScheme.setNewEvent(true, true, true, true, false); // h, t, o, before, after
+        instrScheme.setBefNewEvent(true, true, true); // h, t, o
 		instrScheme.setNewArrayEvent(true, true, true); // h, t, o
 
 		instrScheme.setPutstaticReferenceEvent(true, true, true, true, true); // e, t, b, f, o
@@ -244,7 +244,8 @@ public abstract class SnapshotAnalysis extends DynamicAnalysis implements Abstra
 
 		instrScheme.setAcquireLockEvent(true, true, true); // l, t, o
 
-		instrScheme.setMethodCallEvent(true, true, true, true, true); // i, t, o, before, after
+		instrScheme.setBefMethodCallEvent(true, true, true); // i, t, o
+		instrScheme.setAftMethodCallEvent(true, true, true); // i, t, o
 
 		return instrScheme;
 	}
