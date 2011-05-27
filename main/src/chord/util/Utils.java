@@ -542,4 +542,8 @@ public final class Utils {
 	public static boolean exists(String fileName) {
 		return (new File(fileName)).exists();
 	}
+
+	public static boolean buildBoolProperty(String propName, boolean defaultVal) {
+		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true");
+	}
 }

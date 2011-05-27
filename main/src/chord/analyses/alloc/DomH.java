@@ -24,6 +24,7 @@ import joeq.Util.Templates.ListIterator;
 import chord.util.tuple.object.Pair;
 import chord.project.Chord;
 import chord.project.Config;
+import chord.util.Utils;
 import chord.project.ClassicProject;
 import chord.program.PhantomObjVal;
 import chord.program.PhantomClsVal;
@@ -58,7 +59,7 @@ public class DomH extends ProgramDom<Object> {
 
 	public void init() {
 		domM = (DomM) (Config.classic ? ClassicProject.g().getTrgt("M") : consumes[0]);
-		PHANTOM_CLASSES = Config.buildBoolProperty("chord.add.phantom.classes", false);
+		PHANTOM_CLASSES = Utils.buildBoolProperty("chord.add.phantom.classes", false);
 	}
 	public void fill() {
 		int numM = domM.size();

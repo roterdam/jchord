@@ -65,7 +65,7 @@ public class Main {
 		String initTime = timer.getInitTimeStr();
 		if (Config.verbose >= 0)
 			System.out.println("Chord run initiated at: " + initTime);
-		if (Config.verbose >= 2)
+		if (Config.verbose >= 1)
 			Config.print();
 		Program program = Program.g();
 		Project project = Project.g();
