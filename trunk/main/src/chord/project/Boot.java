@@ -70,6 +70,8 @@ import edu.berkeley.confspell.*;
  * The above altered properties plus all other system properties in the current JVM
  * are passed on to the new JVM.
  *
+ * Note: Do not refer to any properties defined in class chord.project.Config here.
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Boot {
@@ -88,13 +90,13 @@ public class Boot {
 	private static final String CHORD_WORK_DIR_NOT_FOUND =
 		"ERROR: Boot: Directory '%s' specified by property chord.work.dir not found.";
 
-	public static boolean SPELLCHECK_ON = Integer.getInteger("chord.verbose", 1) > 1  || 
-	"true".equals(System.getProperty("chord.useSpellcheck"));
+	public static boolean SPELLCHECK_ON = Utils.buildBoolProperty("chord.useSpellcheck", false);
 
 	static String mainDirName;
 
 	public static void main(String[] args) throws Throwable {
 		String chordJarFile = getChordJarFile();
+
 		// resolve Chord's main dir
 
 		mainDirName = (new File(chordJarFile)).getParent();
@@ -102,13 +104,15 @@ public class Boot {
 			Messages.fatal(CHORD_MAIN_DIR_UNDEFINED);
 		System.setProperty("chord.main.dir", mainDirName);
 
-		if(SPELLCHECK_ON) {
+		if (SPELLCHECK_ON) {
 			OptionSet optSet = new OptionSet(getChordSysProps());
 			optSet.enableSubstitution();
 			Checker.checkConf(new OptDictionary(Boot.class.getResourceAsStream("/options.dict") ),
 				optSet);
 		}
+
 		// resolve Chord's work dir
+
 		String workDirName = System.getProperty("chord.work.dir");
 		if (workDirName == null) {
 			workDirName = System.getProperty("user.dir");
@@ -143,6 +147,7 @@ public class Boot {
 				// ignore silently; user did not provide this file
 			}
 		}
+
 		// load system-wide Chord properties, if any
 
 		try {
@@ -225,7 +230,7 @@ public class Boot {
 		String[] cmdAry = new String[cmdList.size()];
 		cmdList.toArray(cmdAry);
 		
-		if(Config.buildBoolProperty("showMainArgs", false)) //undocumented option for debugging
+		if (Utils.buildBoolProperty("showMainArgs", false))
 			showArgsToMain(cmdAry);
 		
 		int result = ProcessExecutor.execute(cmdAry, null, new File(workDirName), -1);
@@ -238,13 +243,13 @@ public class Boot {
 			cmdLine.append(s);
 			cmdLine.append(" ");
 		}
-		System.out.println("Boot spawning subprocess with command line " + cmdLine.toString());
+		System.out.println("Boot spawning subprocess with command line: " + cmdLine.toString());
 	}
 
 	private static Properties getChordSysProps() {
 		Properties p = new Properties();
 		for (Map.Entry e : System.getProperties().entrySet()) {
-			if(e.getKey().toString().startsWith("chord"))
+			if (e.getKey().toString().startsWith("chord"))
 				p.setProperty(e.getKey().toString(), e.getValue().toString());
 		}
 		return p;
@@ -273,11 +278,10 @@ public class Boot {
 		props.load(in);
 		in.close();
 
-		if(SPELLCHECK_ON) { //Check the params we just read in
+		if (SPELLCHECK_ON) { //Check the params we just read in
 			OptionSet optSet = new OptionSet(props);
 			optSet.enableSubstitution();
-			Checker.checkConf(new OptDictionary(Boot.class.getResourceAsStream("/options.dict")),
-				   optSet);
+			Checker.checkConf(new OptDictionary(Boot.class.getResourceAsStream("/options.dict")), optSet);
 		}
 
 		Properties sysprops = System.getProperties();

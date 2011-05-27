@@ -44,7 +44,7 @@ public class Config {
 		check(CHkind, new String[] { "static", "dynamic" }, "chord.ch.kind");
 		check(reflectKind, new String[] { "none", "static", "dynamic", "static_cast" }, "chord.reflect.kind");
 	}
-	public final static boolean doSSA = buildBoolProperty("chord.ssa", true);
+	public final static boolean doSSA = Utils.buildBoolProperty("chord.ssa", true);
 	public final static String DEFAULT_SCOPE_EXCLUDES = "";
 	public final static String scopeStdExcludeStr = System.getProperty("chord.std.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExtExcludeStr = System.getProperty("chord.ext.scope.exclude", "");
@@ -59,15 +59,15 @@ public class Config {
 
 	// properties dictating what gets computed/printed by Chord
 
-	public final static boolean buildScope = buildBoolProperty("chord.build.scope", false);
+	public final static boolean buildScope = Utils.buildBoolProperty("chord.build.scope", false);
 	public final static String runAnalyses = System.getProperty("chord.run.analyses", "");
 	public final static String printMethods = System.getProperty("chord.print.methods", "").replace('#', '$');
 	public final static String printClasses = System.getProperty("chord.print.classes", "").replace('#', '$');
-	public final static boolean printAllClasses = buildBoolProperty("chord.print.all.classes", false);
+	public final static boolean printAllClasses = Utils.buildBoolProperty("chord.print.all.classes", false);
 	public final static String printRels = System.getProperty("chord.print.rels", "");
-	public final static boolean printProject = buildBoolProperty("chord.print.project", false);
-	public final static boolean printResults = buildBoolProperty("chord.print.results", true);
-	public final static boolean saveDomMaps = buildBoolProperty("chord.save.maps", true);
+	public final static boolean printProject = Utils.buildBoolProperty("chord.print.project", false);
+	public final static boolean printResults = Utils.buildBoolProperty("chord.print.results", true);
+	public final static boolean saveDomMaps = Utils.buildBoolProperty("chord.save.maps", true);
 	// Determines verbosity level of Chord:
 	// 0 => silent
 	// 1 => print task/process enter/leave/time messages and sizes of computed doms/rels
@@ -91,7 +91,7 @@ public class Config {
 
 	// properties specifying configuration of instrumentation and dynamic analysis
 
-	public final static boolean useJvmti = buildBoolProperty("chord.use.jvmti", false);
+	public final static boolean useJvmti = Utils.buildBoolProperty("chord.use.jvmti", false);
 	public final static String instrKind = System.getProperty("chord.instr.kind", "offline");
 	public final static String traceKind = System.getProperty("chord.trace.kind", "full");
 	public final static int traceBlockSize = Integer.getInteger("chord.trace.block.size", 4096);
@@ -99,26 +99,26 @@ public class Config {
 		check(instrKind, new String[] { "offline", "online" }, "chord.instr.kind");
 		check(traceKind, new String[] { "full", "pipe" }, "chord.trace.kind");
 	}
-	public final static boolean dynamicHaltOnErr = buildBoolProperty("chord.dynamic.haltonerr", true);
+	public final static boolean dynamicHaltOnErr = Utils.buildBoolProperty("chord.dynamic.haltonerr", true);
 	public final static int dynamicTimeout = Integer.getInteger("chord.dynamic.timeout", -1);
 	public final static int maxConsSize = Integer.getInteger("chord.max.cons.size", 50000000);
 
 	// properties dictating what is reused across Chord runs
 
-	public final static boolean reuseScope = buildBoolProperty("chord.reuse.scope", false);
-	public final static boolean reuseRels = buildBoolProperty("chord.reuse.rels", false);
-	public final static boolean reuseTraces = buildBoolProperty("chord.reuse.traces", false);
+	public final static boolean reuseScope = Utils.buildBoolProperty("chord.reuse.scope", false);
+	public final static boolean reuseRels =Utils.buildBoolProperty("chord.reuse.rels", false);
+	public final static boolean reuseTraces =Utils.buildBoolProperty("chord.reuse.traces", false);
 
 	// properties concerning BDDs
 
-	public final static boolean useBuddy = buildBoolProperty("chord.use.buddy", false);
+	public final static boolean useBuddy =Utils.buildBoolProperty("chord.use.buddy", false);
 	public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
 
 	// properties specifying names of Chord's output files and directories
 
 	public final static String outFileName = System.getProperty("chord.out.file", null);
 	public final static String errFileName = System.getProperty("chord.err.file", null);
-	public final static String outDirName = System.getProperty("chord.out.dir", workRel2Abs("chord_output"));
+	public static String outDirName = System.getProperty("chord.out.dir", workRel2Abs("chord_output"));
 	public final static String reflectFileName = System.getProperty("chord.reflect.file", outRel2Abs("reflect.txt"));
 	public final static String methodsFileName = System.getProperty("chord.methods.file", outRel2Abs("methods.txt"));
 	public final static String classesFileName = System.getProperty("chord.classes.file", outRel2Abs("classes.txt"));
@@ -228,10 +228,6 @@ public class Config {
     public static String workRel2Abs(String fileName) {
         return (fileName == null) ? null : Utils.getAbsolutePath(workDirName, fileName);
     }
-
-	public static boolean buildBoolProperty(String propName, boolean defaultVal) {
-		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true"); 
-	}
 
 	public static void check(String val, String[] legalVals, String key) {
 		for (String s : legalVals) {
