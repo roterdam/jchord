@@ -61,7 +61,7 @@ import chord.util.graph.MutableGraph;
  * <p>
  * The goal of this analysis is to translate client-specified inputs concerning the desired
  * kind of context sensitivity into relations that are subsequently consumed by
- * context-sensitive may alias and call graph analyses.
+ * context-sensitive points-to and call-graph analyses.
  * <p>
  * This analysis allows:
  * <ul>
@@ -78,14 +78,14 @@ import chord.util.graph.MutableGraph;
  * </ul>
  * This analysis can be called multiple times and in each invocation it can incorporate
  * feedback from a client to adjust the precision of the points-to information and call graph
- * computed subsequently by the may alias and call graph analyses.  Clients can indicate in
+ * computed subsequently by the points-to and call-graph analyses.  Clients can indicate in
  * each invocation:
  * <ul>
  *   <li>
  *     Which methods must be analyzed context sensitively (in addition to those already being
  *     analyzed context sensitively in the previous invocation of this analysis) and using
  *     what kind of context sensitivity; the remaining methods will be analyzed context
- *     insensitively (that is, in the lone 'epsilon' context)
+ *     insensitively (that is, in the lone 'epsilon' context).
  *   </li>
  *   <li>
  *     Which local variables of reference type must be analyzed context sensitively (in
@@ -94,29 +94,30 @@ import chord.util.graph.MutableGraph;
  *     (that is, their points-to information will be tracked in the lone 'epsilon' context).
  *   </li>
  *   <li>
- *     The object alocation sites and method call sites whose 'k' values must be incremented
+ *     The object allocation sites and method call sites whose 'k' values must be incremented
  *     (over those used in the previous invocation of this analysis).
  *   </li>
  * </ul>
  * Recognized system properties:
  * <ul>
  *   <li>
- *     chord.ctxt.kind: the kind of context sensitivity to use for each method (and all its
- *     locals).  It may be 'ci' (context insensitive) or 'cs' (k-CFA).
- *   </li>
- *   <li>
  *     chord.inst.ctxt.kind: the kind of context sensitivity to use for each instance method
  *     (and all its locals).  It may be 'ci' (context insensitive), 'cs' (k-CFA), or 'co'
- *     (k-object-sensitive).
+ *     (k-object-sensitive).  It is 'ci' by default.
  *   </li>
  *   <li>
  *     chord.stat.ctxt.kind: the kind of context sensitivity to use for each static method
- *     (and all its locals).  It may be one of 'ci' (context insensitive), 'cs' (k-CFA), or
- *     'co' (copy-context-sensitive).
+ *     (and all its locals).  It may be 'ci' (context insensitive), 'cs' (k-CFA), or 'co'
+ *     (copy-context-sensitive).  It is 'ci' by default.
  *   </li>
  *   <li>
- *     chord.kobj.k and chord.kcfa.k: the 'k' value to use for each object allocation site and
- *     each method call site, respectively.
+ *     chord.ctxt.kind: the kind of context sensitivity to use for each method (and all its
+ *     locals).  It may be one of 'ci', 'cs', or 'co', and serves as shorthand for
+ *     properties chord.inst.ctxt.kind and chord.stat.ctxt.kind.
+ *   </li>
+ *   <li>
+ *     chord.kobj.k and chord.kcfa.k: the 'k' value to use for each object allocation site
+ *     and each method call site, respectively.  It is 1 by default.
  *   </li>
  * </ul>
  * 

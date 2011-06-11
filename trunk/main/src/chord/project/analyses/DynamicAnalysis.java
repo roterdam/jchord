@@ -90,8 +90,6 @@ public class DynamicAnalysis extends BasicDynamicAnalysis {
 	private final TIntObjectHashMap<TIntHashSet> loopHead2body =
 		new TIntObjectHashMap<TIntHashSet>(16);
 	private TIntHashSet visited4loops = new TIntHashSet();
-	private Pair<Class, Map<String, String>> instrumentor;
-	private Pair<Class, Map<String, String>> eventHandler;
 
 	// subclasses MUST override unless this dynamic analysis
 	// is performed using an instrumentation scheme (and traces)
