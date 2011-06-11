@@ -69,6 +69,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	
 	private final boolean verbose = false;
 
+	private final boolean undirected = System.getProperty("chord.escape.undirected", "false").equals("true");
+
 	private static final int TC = 0, TC_ALLOC = 1, TC_ALLOC_PRUNE = 2;
 
 	// one of TC, TC_ALLOC, TC_ALLOC_PRUNE
@@ -606,8 +608,7 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 	@Override
 	public void processPutstaticReference(int e, int t, int b, int f, int o) { 
 		if (verbose) System.out.println(t + " PUTSTATIC_REF " + eStr(e));
-		if (o != 0)
-			markAndPropEsc(o);
+		if (o != 0) markAndPropEsc(o);
 	}
 
 	@Override
@@ -877,6 +878,8 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			inv.add(new FldObj(f, b));
 		if (escO.contains(b))
 			markAndPropEsc(r);
+		else if (undirected && escO.contains(r))
+			markAndPropEsc(b);
 	}
 
     private void markAndPropEsc(int o) {
@@ -885,6 +888,13 @@ public class ThreadEscapePathAnalysis extends DynamicAnalysis {
 			if (l != null) {
 				for (FldObj fo : l)
 					markAndPropEsc(fo.o);
+			}
+			if (undirected) {
+				l = OtoFOlistInv.get(o);
+				if (l != null) {
+					for (FldObj fo : l)
+						markAndPropEsc(fo.o);
+				}
 			}
 		}
 	}
