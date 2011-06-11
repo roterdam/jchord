@@ -101,10 +101,9 @@ Each of the following lines specifies a unique node in the represented BDD; it
 has format ``X V L H" where:
 \begin{itemize}
 \item X is the ID of the BDD node
-\item V is the ID of the bdd variable labeling that node (unless it is 0 or 1,
-in which case it represents a leaf node)
-\item L is the ID of the BDD node's low child
-\item H is the ID of the BDD node's high child
+\item V is the ID of the bdd variable labeling that node
+\item L is the ID of the BDD node's low child or 0 or 1
+\item H is the ID of the BDD node's high child or 0 or 1
 \end{itemize}
 
 The order of these lines specifying BDD nodes is such that the lines specifying

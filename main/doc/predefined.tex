@@ -227,7 +227,7 @@ different elements of the same array; all array elements are modeled using a
 distinguished hypothetical instance field (that has index 0 in domain F).
 \end{itemize}
 
-The following command can be used to run this analysis on the program specified
+The following command runs this analysis on the program specified
 by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup} for how to setup a
 program):
 
@@ -322,7 +322,7 @@ The object allocation sites and method call sites whose 'k' values must be incre
 (over those used in the previous invocation of this analysis).
 \end{itemize}
 
-The following command can be used to run this analysis on the program specified
+The following command runs this analysis on the program specified
 by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup} for how to setup a
 program):
 
@@ -482,12 +482,12 @@ rootM = \{ main, \code{<clinit>} \},
 reachableM = \{ main, \code{<clinit>}, m1, m2, m3, start, run \}, and
 IM = \{ (i1, m1), (i2, m2), (i3, m3), (i4, start), (i5, run) \}, where methods
 main, m1, m2, m3, and run are those declared in class C, method \code{<clinit>}
-is the class initializer method of class C, and the
-\code{java.lang.Thread.start()} method contains a call site labeled i5 that calls
+is the class initializer method of class C, and method start denotes the
+\code{java.lang.Thread.start()} method which (not shown) contains a call site labeled i5 that calls
 \code{this.run()}.
 
 An {\it abbreviated thread-insensitive} call graph excludes from the baseline call
-graph all methods that are unreachable from the main method.  In other words, it
+graph all methods that are unreachable from the main method in that call graph.  In other words, it
 excludes all class initializer methods as well as methods that are reachable
 only from such methods.
 For the above example, this call graph is
@@ -512,22 +512,40 @@ The above two call graph variants are provided to simplify expressing
 certain forms of reachability:
 \begin{itemize}
 \item
-An {\it abbreviated} call graph allows to focus just on reachability
-from the main method, as opposed to from class initializer methods as well;
+An {\it abbreviated} call graph allows to ignore reachability from
+class initializer methods;
 this is used, for instance, in Chord's static datarace analysis to
 suppress reporting races on statements reachable only from class initializer
 methods, which are typically false races in practice.
 \item
-A {\it thread-sensitive} call graph additionally allows to focus just on
-``intra-thread'' reachability; this is used, for instance, in Chord's static datarace
-analysis to prevent reporting false races (t1,e1,t2,e2)
-where statement e1 (or e2 resp.) is unreachable from abstract thread
-t1 (or t2 resp.).
+A {\it thread-sensitive} call graph additionally allows to ignore
+``inter-thread" reachability and focus on ``intra-thread'' reachability; this is
+used, for instance, in Chord's static datarace analysis to prevent reporting
+false races (t1,e1,t2,e2) where statement e1 (or e2 resp.) is unreachable from
+abstract thread t1 (or t2 resp.).
 \end{itemize}
+
+The following commands can be used to produce the above two call graph variants
+for the context-insensitive and context-sensitive cases, respectively, for the
+program specified by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup}
+for how to setup a program):
+
+\begin{framed}
+\begin{verbatim}
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=thrOblAbbrCICG-dlog run
+
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=thrSenAbbrCICG-dlog run
+
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=thrOblAbbrCSCG-dlog run
+
+ant -Dchord.work.dir=<WORK_DIR> -Dchord.run.analyses=thrSenAbbrCSCG-dlog run
+\end{verbatim}
+\end{framed}
+
 
 \section{Static Datarace Analysis}
 
-The following command can be used to run Chord's static datarace analysis on the
+The following command runs Chord's static datarace analysis on the
 program specified by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup}
 for how to setup a program):
 
@@ -558,7 +576,7 @@ abstract object.
 
 \section{Static Deadlock Analysis}
 
-The following command can be used to run Chord's static deadlock analysis on the
+The following command runs Chord's static deadlock analysis on the
 program specified by directory \code{<WORK_DIR>} (see Chapter \ref{chap:setup}
 for how to setup a program):
 

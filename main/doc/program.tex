@@ -572,7 +572,7 @@ the components of a \code{Getfield} quad {\tt q} of the form ``l = b.f'' can be 
 
 \begin{framed}
 \begin{verbatim}
-Operand lo = Getfield.getSrc(q);
+Operand lo = Getfield.getDest(q);
 Operand bo = Getfield.getBase(q);
 if (lo instanceof RegisterOperand && bo instanceof RegisterOperand) {
     Register l = ((RegisterOperand) lo).getRegister();
