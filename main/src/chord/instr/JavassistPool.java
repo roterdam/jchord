@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FilenameFilter;
 
 import chord.project.Messages;
+import chord.project.Config;
 
 import chord.util.Utils;
 import javassist.NotFoundException;
@@ -25,30 +26,26 @@ import javassist.CtClass;
  */
 public class JavassistPool {
 	private static final String IGNORE_PATH_ELEMENT =
-		"WARN: Instrumentor: Ignoring path element %s from %s";
+		"WARN: JavassistPool: Skipping path element %s from %s";
+	private static final String APPEND_PATH_ELEMENT =
+		"INFO: JavassistPool: Appending path element %s from %s";
 	private final Set<String> bootClassPathResourceNames;
 	private final Set<String> userClassPathResourceNames;
 	private final ClassPool pool;
 	public JavassistPool() {
 		pool = new ClassPool();
-
 		bootClassPathResourceNames = new HashSet<String>();
+		userClassPathResourceNames = new HashSet<String>();
+
 		String bootClassPathName = System.getProperty("sun.boot.class.path");
 		String[] bootClassPathElems = bootClassPathName.split(Utils.PATH_SEPARATOR);
 		for (String pathElem : bootClassPathElems) {
-			bootClassPathResourceNames.add(pathElem);
-			try {
-				pool.appendClassPath(pathElem);
-			} catch (NotFoundException ex) {
-				Messages.log(IGNORE_PATH_ELEMENT, pathElem, "boot classpath");
-			}
+			appendClassPathElem((new File(pathElem)).getAbsolutePath(), true);
 		}
 
-		userClassPathResourceNames = new HashSet<String>();
 		String javaHomeDir = System.getProperty("java.home");
 		assert (javaHomeDir != null);
-		File libExtDir = new File(javaHomeDir,
-			File.separator + "lib" + File.separator + "ext");
+		File libExtDir = new File(javaHomeDir, File.separator + "lib" + File.separator + "ext");
 		if (libExtDir.exists()) {
 			final FilenameFilter filter = new FilenameFilter() {
 				public boolean accept(File dir, String name) {
@@ -59,27 +56,30 @@ public class JavassistPool {
 			};
 			File[] subFiles = libExtDir.listFiles(filter);
 			for (File file : subFiles) {
-				String fileName = file.getAbsolutePath();
-				userClassPathResourceNames.add(fileName);
-				try {
-					pool.appendClassPath(fileName);
-				} catch (NotFoundException ex) {
-					Messages.log(IGNORE_PATH_ELEMENT, fileName,
-						libExtDir.getAbsolutePath());
-				}
+				appendClassPathElem(file.getAbsolutePath(), false);
 			}
 		}
 
 		String userClassPathName = System.getProperty("java.class.path");
 		String[] userClassPathElems = userClassPathName.split(Utils.PATH_SEPARATOR);
 		for (String pathElem : userClassPathElems) {
-			userClassPathResourceNames.add(pathElem);
-			try {
-				   pool.appendClassPath(pathElem);
-			} catch (NotFoundException ex) {
-				Messages.log(IGNORE_PATH_ELEMENT, pathElem, "user classpath");
-			}
+			appendClassPathElem((new File(pathElem)).getAbsolutePath(), false);
 		}
+	}
+
+	private void appendClassPathElem(String absPathElem, boolean isBoot) {
+		try {
+			pool.appendClassPath(absPathElem);
+		} catch (NotFoundException ex) {
+			Messages.log(IGNORE_PATH_ELEMENT, absPathElem, isBoot ? "boot classpath" : "user classpath");
+			return;
+		}
+		if (Config.verbose >= 2)
+			Messages.log(APPEND_PATH_ELEMENT, absPathElem, isBoot ? "boot classpath" : "user classpath");
+		if (isBoot)
+			bootClassPathResourceNames.add(absPathElem);
+		else
+			userClassPathResourceNames.add(absPathElem);
 	}
 
 	// never returns null

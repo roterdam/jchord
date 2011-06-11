@@ -28,17 +28,17 @@ import chord.util.Utils;
  */
 public final class OfflineTransformer {
 	private static final String INSTR_STARTING =
-		"INFO: Starting to instrument all classes; this may take a while ...";
+		"INFO: OfflineTransformer: Starting to instrument all classes; this may take a while ...";
 	private static final String INSTR_FINISHED =
-		"INFO: Finished instrumenting all classes.";
+		"INFO: OfflineTransformer: Finished instrumenting all classes.";
 	private static final String CANNOT_INSTRUMENT_CLASS =
-		"ERROR: Skipping instrumenting class %s; reason follows.";
+		"ERROR: OfflineTransformer: Skipping instrumenting class %s; reason follows.";
 	private static final String CLASS_NOT_BOOT_NOR_USER =
-		"ERROR: Skipping instrumenting class %s; its defining resource %s is neither in the boot nor user classpath.";
+		"ERROR: OfflineTransformer: Skipping instrumenting class %s; its defining resource %s is neither in the boot nor user classpath.";
 	private static final String WROTE_INSTRUMENTED_CLASS =
-		"INFO: Wrote instrumented class %s.";
+		"INFO: OfflineTransformer: Wrote instrumented class %s.";
 	private static final String CLASS_NOT_FOUND =
-		"WARN: Could not find class %s in Javassist class pool.";
+		"WARN: OfflineTransformer: Could not find class %s in Javassist class pool.";
 
 	private final String bootClassesDirName;
 	private final String userClassesDirName;

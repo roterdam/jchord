@@ -248,7 +248,7 @@
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
-		<property name="verbose" value="4"/>
+		<property name="verbose" value="3"/>
 		<java classname="net.sf.bddbddb.Solver" fork="true" maxmemory="${max.heap}">
 			<classpath>
 				<pathelement location="lib/bddbddb.jar"/>
@@ -270,7 +270,7 @@
 		<fail unless="work.dir"/>
 		<fail unless="dlog.file"/>
 		<property name="max.heap" value="2048m"/>
-		<property name="verbose" value="4"/>
+		<property name="verbose" value="3"/>
 		<java classname="net.sf.bddbddb.Interactive" fork="true" maxmemory="${max.heap}">
 			<classpath>
 				<pathelement location="lib/bddbddb.jar"/>
