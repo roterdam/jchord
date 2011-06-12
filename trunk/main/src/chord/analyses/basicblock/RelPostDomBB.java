@@ -7,6 +7,8 @@
 package chord.analyses.basicblock;
 
 import chord.util.ArraySet;
+
+import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
@@ -16,13 +18,11 @@ import joeq.Class.jq_Class;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import chord.program.visitors.IMethodVisitor;
-import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
-import joeq.Util.Templates.List;
 
 /**
- * Relation containing each pair of basic blocks (b1,b2) in each method
+ * Relation containing each pair of basic blocks (b1,b2)
  * such that b1 is immediate postdominator of b2.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -38,22 +38,21 @@ public class RelPostDomBB extends ProgramRel implements IMethodVisitor {
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
-		// System.out.println("VISITING: " + m);
 		pdomMap.clear();
 		ControlFlowGraph cfg = m.getCFG();
 		BasicBlock exit = cfg.exit();
 		Set<BasicBlock> exitSet = new ArraySet<BasicBlock>(1);
 		exitSet.add(exit);
 		pdomMap.put(exit, exitSet);
-		List.BasicBlock rpo = cfg.reversePostOrder(cfg.entry());
+		List<BasicBlock> rpo = cfg.reversePostOrder();
 		int n = rpo.size();
 		Set<BasicBlock> initSet = new ArraySet<BasicBlock>(n);
 		for (int i = 0; i < n; i++) {
-			BasicBlock bb = rpo.getBasicBlock(i);
+			BasicBlock bb = rpo.get(i);
 			initSet.add(bb);
 		}
 		for (int i = 0; i < n; i++) {
-			BasicBlock bb = rpo.getBasicBlock(i);
+			BasicBlock bb = rpo.get(i);
 			if (bb != exit)
 				pdomMap.put(bb, initSet);
 		}
@@ -61,7 +60,7 @@ public class RelPostDomBB extends ProgramRel implements IMethodVisitor {
 		while (true) {
 			changed = false;
 			for (int i = n - 1; i >= 0; i--) {
-				BasicBlock bb = rpo.getBasicBlock(i);
+				BasicBlock bb = rpo.get(i);
 				if (bb == exit)
 					continue;
 				Set<BasicBlock> oldPdom = pdomMap.get(bb);

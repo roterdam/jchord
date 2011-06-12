@@ -21,8 +21,8 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (i,m) such that m is the resolved
- * method of method invocation statement i of kind
- * <tt>INVK_VIRTUAL</tt> or <tt>INVK_INTERFACE</tt>.
+ * method of method invocation quad i of kind {@code INVK_VIRTUAL} or
+ * {@code INVK_INTERFACE}.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

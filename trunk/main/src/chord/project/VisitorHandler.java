@@ -51,7 +51,6 @@ import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Return.THROW_A;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
 import joeq.Compiler.Quad.Operator.Monitor.MONITOREXIT;
-import joeq.Util.Templates.ListIterator;
 
 /**
  * Utility for registering and executing a set of tasks
@@ -110,11 +109,8 @@ public class VisitorHandler {
 		}
 	}
 	private void visitInsts(ControlFlowGraph cfg) {
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-				it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				Quad q = it2.nextQuad();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				if (ivs != null) {
 					for (IInstVisitor iv : ivs)
 						iv.visit(q);

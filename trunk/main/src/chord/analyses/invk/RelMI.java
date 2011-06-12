@@ -14,7 +14,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,i) such that method m contains
- * method invocation statement i.
+ * method invocation quad i.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

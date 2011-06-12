@@ -12,7 +12,6 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
-import joeq.Util.Templates.ListIterator;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
@@ -37,8 +36,7 @@ public class RelPP extends ProgramRel implements IMethodVisitor {
 		if (m.isAbstract())
 			return;
 		ControlFlowGraph cfg = m.getCFG();
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bq = it.nextBasicBlock();
+		for (BasicBlock bq : cfg.reversePostOrder()) {
 			int n = bq.size();
 			Inst y = (n == 0) ? bq : bq.getQuad(0);
 			int yIdx = domP.indexOf(y);

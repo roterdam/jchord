@@ -13,8 +13,7 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing all method invocation statements whose
- * target is an instance method.
+ * Relation containing all method invocation quads whose target is an instance method.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

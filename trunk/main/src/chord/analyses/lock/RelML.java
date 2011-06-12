@@ -15,7 +15,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,l) such that method m contains
- * synchronized statement l.
+ * lock acquisition point l.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

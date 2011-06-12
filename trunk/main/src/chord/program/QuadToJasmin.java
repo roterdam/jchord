@@ -6,6 +6,7 @@ import java.io.PrintStream;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -30,12 +31,12 @@ import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.ExceptionHandler;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.RegisterFactory;
-import joeq.Util.Templates.ListIterator;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
 import joeq.Compiler.Quad.Operand.Const4Operand;
@@ -378,13 +379,13 @@ public class QuadToJasmin {
 		if (currentBB.size() > 0 && isCondBranch(currentBB.getLastQuad())) return false;
 		
 		visitedBBSet.add(currentBB.getID());
-		joeq.Util.Templates.List.BasicBlock successors = currentBB.getSuccessors();
+		List<BasicBlock> successors = currentBB.getSuccessors();
 		if (successors.size() == 1) {
-			return destineToCycle(visitedBBSet, successors.getBasicBlock(0));	
+			return destineToCycle(visitedBBSet, successors.get(0));	
 		}
 		
 		for (int i=0; i < successors.size(); i++) {
-			BasicBlock child = successors.getBasicBlock(i);
+			BasicBlock child = successors.get(i);
 			if (visitedBBSet.contains(child.getID())) continue;
 			if (!destineToCycle((HashSet<Integer>) visitedBBSet.clone(),child)) return false;
 		}
@@ -400,22 +401,22 @@ public class QuadToJasmin {
 		
 		// get a list of basic blocks
 		ControlFlowGraph cfg = m.getCFG();
-		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.reversePostOrder(cfg.entry());				
+		List<BasicBlock> basicBlockList = cfg.reversePostOrder();
 		int numBasicBlocks = basicBlockList.size();		
 		
 		// add goto if the next block in the list is not a fall-through successor
 		for (int i=0; i<numBasicBlocks; i++) {
-			BasicBlock bb = basicBlockList.getBasicBlock(i);
+			BasicBlock bb = basicBlockList.get(i);
 			if (bb.isEntry() || bb.isExit()) continue;
 			
-			BasicBlock next_bb = i+1 < numBasicBlocks ? basicBlockList.getBasicBlock(i+1) : null;			
+			BasicBlock next_bb = i+1 < numBasicBlocks ? basicBlockList.get(i+1) : null;			
 			
 			if ( (bb.size() == 0 || isCondBranch(bb.getLastQuad()))
 					&& (next_bb == null || bb.getFallthroughSuccessor().getID() != next_bb.getID()) ) {			
 				TargetOperand target = null;
 				if (bb.size() == 0) {
 					// if this bb is empty for some reason (e.g. all statements are sliced out)
-					joeq.Util.Templates.List.BasicBlock successors = bb.getSuccessors();
+					List<BasicBlock> successors = bb.getSuccessors();
 					if (successors.size() == 1) {
 						if (next_bb != null && 
 								bb.getFallthroughSuccessor().getID() == next_bb.getID()) {
@@ -423,7 +424,7 @@ public class QuadToJasmin {
 							continue;
 						} else {
 							// Otherwise, use the successor as the target of goto 
-							target = new TargetOperand(successors.getBasicBlock(0));
+							target = new TargetOperand(successors.get(0));
 						}
 					} else {
 						// We need to be careful such that we don't create a cycle.
@@ -431,7 +432,7 @@ public class QuadToJasmin {
 						// method or conditional branch. 
 						assert successors.size() > 1 : bb;
 						for (int j=0; j < successors.size(); j++) {							
-							BasicBlock successor = successors.getBasicBlock(j);
+							BasicBlock successor = successors.get(j);
 							HashSet<Integer> set = new HashSet<Integer>();
 							set.add(bb.getID());
 							if (!destineToCycle(set, successor)) {
@@ -488,7 +489,7 @@ public class QuadToJasmin {
 			BasicBlock entry = cfg.entry();
 			assert entry.getSuccessors().size() == 1;
 			BasicBlock newBB = cfg.createBasicBlock(1, 1, 1, null);
-			BasicBlock orgSuccessor = entry.getSuccessors().getBasicBlock(0);
+			BasicBlock orgSuccessor = entry.getSuccessors().get(0);
 			newBB.addSuccessor(orgSuccessor);
 			orgSuccessor.removePredecessor(entry);
 			orgSuccessor.addPredecessor(newBB);
@@ -498,19 +499,15 @@ public class QuadToJasmin {
 		}
 		
 		// get a list of basic blocks
-		joeq.Util.Templates.List.BasicBlock basicBlockList = cfg.reversePostOrder(cfg.entry());				
+		List<BasicBlock> basicBlockList = cfg.reversePostOrder();
 		int numBasicBlocks = basicBlockList.size();
 		
 		// add goto if the next block in the list is not a fall-through successor
 		addGotoToBB(m);
 		
 		// Collect Phi operands info
-		for (ListIterator.BasicBlock it = basicBlockList.basicBlockIterator();
-		it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {				
-				Quad q = it2.nextQuad();
+		for (BasicBlock bb : basicBlockList) {
+				for (Quad q : bb.getQuads()) {
 				if (q.getOperator() instanceof Phi) {
 					RegisterOperand dst = Phi.getDest(q);
 					BasicBlockTableOperand bbto = Phi.getPreds(q);
@@ -538,7 +535,7 @@ public class QuadToJasmin {
 		numBasicBlocks = basicBlockList.size();
 
 		for (int i=0; i<numBasicBlocks; i++) {
-			BasicBlock bb = basicBlockList.getBasicBlock(i);
+			BasicBlock bb = basicBlockList.get(i);
 			current_BB = bb;
 						
 			Quad lastQuad = bb.getLastQuad();
@@ -549,23 +546,23 @@ public class QuadToJasmin {
 				StringBuffer sb = new StringBuffer();
 				
 				sb.append("\t(in: ");
-				ListIterator.BasicBlock bbi = bb.getPredecessors().basicBlockIterator();
+				Iterator<BasicBlock> bbi = bb.getPredecessors().iterator();
 				if (!bbi.hasNext()) sb.append("<none>");
 				else {
-					sb.append(bbi.nextBasicBlock().toString());
+					sb.append(bbi.next().toString());
 					while (bbi.hasNext()) {
 						sb.append(", ");
-						sb.append(bbi.nextBasicBlock().toString());
+						sb.append(bbi.next().toString());
 					}
 				}
 				sb.append(", out: ");
-				bbi = bb.getSuccessors().basicBlockIterator();
+				bbi = bb.getSuccessors().iterator();
 				if (!bbi.hasNext()) sb.append("<none>");
 				else {
-					sb.append(bbi.nextBasicBlock().toString());
+					sb.append(bbi.next().toString());
 					while (bbi.hasNext()) {
 						sb.append(", ");
-						sb.append(bbi.nextBasicBlock().toString());
+						sb.append(bbi.next().toString());
 					}
 				}
 				sb.append(')');
@@ -590,8 +587,7 @@ public class QuadToJasmin {
 			}
 			
 			// Process each quad in this basic block
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {	  
-				Quad q = it2.nextQuad();
+			for (Quad q : bb.getQuads()) {
 				System.out.println(q);
 				q.accept(visitor);
 			}
@@ -615,7 +611,7 @@ public class QuadToJasmin {
 			Register reg = e.getKey();
 			int idx = e.getValue();
 			jq_Type type = visitor.regToTypeMap.containsKey(reg)?visitor.regToTypeMap.get(reg):reg.getType();
-			String endLabel = basicBlockList.getBasicBlock(numBasicBlocks-1).toString().split("\\s+")[0] + "_END";
+			String endLabel = basicBlockList.get(numBasicBlocks-1).toString().split("\\s+")[0] + "_END";
 			put(".var " + idx + " is " + reg + " " 
 					+ type.getDesc() + " from BB0 to "
 					+ endLabel);
@@ -638,12 +634,9 @@ public class QuadToJasmin {
 		}
 		
 		// Exception Handlers
-		ListIterator.ExceptionHandler iter = cfg.getExceptionHandlers().exceptionHandlerIterator();
-		while(iter.hasNext()) {
-			joeq.Compiler.Quad.ExceptionHandler handler = iter.nextExceptionHandler();
-			joeq.Util.Templates.List.BasicBlock handledBBList = handler.getHandledBasicBlocks();
-			for (joeq.Util.Templates.ListIterator.BasicBlock bbIter = handledBBList.basicBlockIterator();  bbIter.hasNext();) {
-				BasicBlock handledBB = bbIter.nextBasicBlock();
+		for (ExceptionHandler handler : cfg.getExceptionHandlers()) {
+			List<BasicBlock> handledBBList = handler.getHandledBasicBlocks();
+			for (BasicBlock handledBB : handledBBList) {
 				put(".catch " + handler.getExceptionType().getName().replace(".", "/")
 						+ " from " + handledBB.toString() + " to " + handledBB.toString() + "_END" + " using " 
 						+ handler.getEntry());
@@ -679,7 +672,15 @@ public class QuadToJasmin {
 				}
 			}
 		}
-		
+
+		private void processOperand(Operand op) {
+			if (op instanceof RegisterOperand) {
+				RegisterOperand regOp = (RegisterOperand)op;					
+				if (regOp.getRegister().getNumber() >= 0 && !(regOp.getType() instanceof jq_NullType)) {
+					regToTypeMap.put(regOp.getRegister(), regOp.getType());
+				}
+			}								
+		}
 		/**
 		 * Collects type information of the used registers
 		 */
@@ -687,18 +688,10 @@ public class QuadToJasmin {
 			if (IncludeQuad) {
 				QuadToJasmin.putInst("; " + q);
 			}
-
-			joeq.Util.Templates.List.Operand opList = q.getAllOperands();
-			ListIterator.Operand iter = opList.operandIterator();
-			while(iter.hasNext()) {
-				Operand op = iter.nextOperand();
-				if (op instanceof RegisterOperand) {
-					RegisterOperand regOp = (RegisterOperand)op;					
-					if (regOp.getRegister().getNumber() >= 0 && !(regOp.getType() instanceof jq_NullType)) {
-						regToTypeMap.put(regOp.getRegister(), regOp.getType());
-					}
-				}								
-			}
+			processOperand(q.getOp1());
+			processOperand(q.getOp2());
+			processOperand(q.getOp3());
+			processOperand(q.getOp4());
 		}
 
 		public void visitNew(Quad d) {

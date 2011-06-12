@@ -9,14 +9,13 @@ package chord.analyses.basicblock;
 import java.util.List;
 
 import joeq.Compiler.Quad.BasicBlock;
-import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 import chord.analyses.basicblock.DomB;
 
 /**
- * Relation containing each pair of basic blocks (b1,b2) in each method
- * such that b1 is immediate postdominator of b2.
+ * Relation containing each pair of basic blocks (b1,b2)
+ * such that b2 is immediate successor of b1. 
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -30,7 +29,7 @@ public class RelSuccBB extends ProgramRel {
 		int numB = domB.size();
 		for (int bIdx = 0; bIdx < numB; bIdx++) {
 			BasicBlock bb = domB.get(bIdx);
-			List<BasicBlock> succs = bb.getSuccessorsList();
+			List<BasicBlock> succs = bb.getSuccessors();
 			for (BasicBlock bb2 : succs) {
 				int bIdx2 = domB.indexOf(bb2);
 				assert (bIdx2 >= 0);

@@ -22,7 +22,7 @@ import chord.analyses.method.DomM;
 
 /**
  * Domain of all lock release points, including monitorexit
- * statements and exit basic blocks of synchronized methods.
+ * quads and exit basic blocks of synchronized methods.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

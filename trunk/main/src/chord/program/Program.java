@@ -14,8 +14,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Arrays;
@@ -32,44 +30,23 @@ import chord.util.tuple.object.Pair;
 import chord.util.IndexSet;
 import chord.util.ProcessExecutor;
 import chord.util.Utils;
-
- 
 import chord.runtime.BasicEventHandler;
 import chord.instr.BasicInstrumentor;
 
-import joeq.Class.Classpath;
 import joeq.Class.jq_Reference.jq_NullType;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
-import joeq.Util.Templates.ListIterator;
 import joeq.Main.HostedVM;
-import joeq.UTF.Utf8;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Reference;
-import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operand;
-import joeq.Compiler.Quad.Operand.ParamListOperand;
-import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operator.Move;
-import joeq.Compiler.Quad.Operator.CheckCast;
-import joeq.Compiler.Quad.Operator.ALoad;
-import joeq.Compiler.Quad.Operator.AStore;
-import joeq.Compiler.Quad.Operator.Getfield;
-import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
-import joeq.Compiler.Quad.Operator.Monitor;
-import joeq.Compiler.Quad.Operator.New;
-import joeq.Compiler.Quad.Operator.NewArray;
-import joeq.Compiler.Quad.Operator.Putfield;
-import joeq.Compiler.Quad.Operator.Putstatic;
-import joeq.Main.Helper;
 
 /**
  * Quadcode intermediate representation of a Java program.
@@ -79,8 +56,6 @@ import joeq.Main.Helper;
 public class Program {
 	private static final String LOADING_CLASS =
 		"INFO: Program: Loading class %s.";
-	private static final String EXCLUDING_CLASS =
-		"WARN: Program: Excluding class %s from analysis scope; reason follows.";
 	private static final String MAIN_CLASS_NOT_DEFINED =
 		"ERROR: Program: Property chord.main.class must be set to specify the main class of program to be analyzed.";
 	private static final String MAIN_METHOD_NOT_FOUND =
@@ -304,10 +279,10 @@ public class Program {
 		List<Pair<Quad, List<jq_Reference>>> resolvedConNewInstSites;
 		List<Pair<Quad, List<jq_Reference>>> resolvedAryNewInstSites;
 		if (s == null) {
-			resolvedClsForNameSites = Collections.EMPTY_LIST;
-			resolvedObjNewInstSites = Collections.EMPTY_LIST;
-			resolvedConNewInstSites = Collections.EMPTY_LIST;
-			resolvedAryNewInstSites = Collections.EMPTY_LIST;
+			resolvedClsForNameSites = Collections.emptyList();
+			resolvedObjNewInstSites = Collections.emptyList();
+			resolvedConNewInstSites = Collections.emptyList();
+			resolvedAryNewInstSites = Collections.emptyList();
 		} else {
 			resolvedClsForNameSites = loadResolvedSites(in);
 			resolvedObjNewInstSites = loadResolvedSites(in);
@@ -393,10 +368,9 @@ public class Program {
 		}
 	}
 
-	private static Comparator comparator = new Comparator() {
-		public int compare(Object o1, Object o2) {
-			jq_Type t1 = (jq_Type) o1;
-			jq_Type t2 = (jq_Type) o2;
+	private static Comparator<jq_Type> comparator = new Comparator<jq_Type>() {
+		@Override
+		public int compare(jq_Type t1, jq_Type t2) {
 			String s1 = t1.getName();
 			String s2 = t2.getName();
 			return s1.compareTo(s2);
@@ -784,11 +758,8 @@ public class Program {
 		System.out.println("Method: " + m);
 		if (!m.isAbstract()) {
 			ControlFlowGraph cfg = m.getCFG();
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-					it.hasNext();) {
-				BasicBlock bb = it.nextBasicBlock();
-				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();						
+			for (BasicBlock bb : cfg.reversePostOrder()) {
+				for (Quad q : bb.getQuads()) {
 					int bci = q.getBCI();
 					System.out.println("\t" + bci + "#" + q.getID());
 				}

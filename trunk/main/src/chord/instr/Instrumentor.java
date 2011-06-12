@@ -33,7 +33,6 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Util.Templates.ListIterator;
 
 import java.util.Map;
 
@@ -445,8 +444,7 @@ public class Instrumentor extends BasicInstrumentor {
 			ControlFlowGraph cfg = currMethod.getCFG();
 			bciToInstrMap.clear();
 			if (genQuadEvent || genBasicBlockEvent) {
-				for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-					BasicBlock bb = it.nextBasicBlock();
+				for (BasicBlock bb : cfg.reversePostOrder()) {
 					if (bb.isEntry() || bb.isExit())
 						continue;
 					if (genBasicBlockEvent) {

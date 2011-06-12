@@ -28,14 +28,19 @@ import chord.project.analyses.ProgramRel;
 	name = "MmethRet",
 	sign = "M0,Z0,V1:M0_V1_Z0"
 )
-public class RelMmethRet extends ProgramRel
-		implements IReturnInstVisitor {
+public class RelMmethRet extends ProgramRel implements IReturnInstVisitor {
 	private static Integer ZERO = new Integer(0);
 	private jq_Method ctnrMethod;
+
+	@Override
 	public void visit(jq_Class c) { }
+
+	@Override
 	public void visit(jq_Method m) {
 		ctnrMethod = m;
 	}
+
+	@Override
 	public void visitReturnInst(Quad q) {
 		Operand rx = Return.getSrc(q);
 		// note: rx is null if this method returns void

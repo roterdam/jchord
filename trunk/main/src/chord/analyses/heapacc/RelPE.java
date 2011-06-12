@@ -12,10 +12,9 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (p,e) such that the statement
- * at program point p is a heap access statement e that
- * accesses (reads or writes) an instance field, a static field,
- * or an array element.
+ * Relation containing each tuple (p,e) such that the quad at program point p is
+ * a heap-accessing quad e that accesses (reads or writes) an instance field, a
+ * static field, or an array element.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

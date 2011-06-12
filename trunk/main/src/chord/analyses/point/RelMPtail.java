@@ -15,8 +15,7 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (m,p) such that statement p is
- * the unique exit basic block of method m.
+ * Relation containing each tuple (m,p) such that p is the unique exit basic block of method m.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

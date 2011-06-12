@@ -21,8 +21,8 @@ import chord.project.Config;
 import chord.project.analyses.ProgramDom;
 
 /**
- * Domain of statements that access (read or write) an
- * instance field, a static field, or an array element.
+ * Domain of quads that access (read or write) an instance field,
+ * a static field, or an array element.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

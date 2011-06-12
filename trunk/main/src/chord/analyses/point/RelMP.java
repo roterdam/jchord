@@ -14,8 +14,7 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (m,p) such that method m
- * contains program point p.
+ * Relation containing each tuple (m,p) such that method m contains program point p.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

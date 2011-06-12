@@ -22,7 +22,6 @@ import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator.Invoke;
 
 import chord.util.tuple.object.Pair;
-import chord.program.Program;
 import chord.program.Location;
 import chord.analyses.alias.ICICG;
 import chord.analyses.invk.DomI;
@@ -215,8 +214,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				// method entry or method exit
 				if (bb.isEntry()) {
 					if (isForward) {
-						for (Object o : bb.getSuccessorsList()) {
-							BasicBlock bb2 = (BasicBlock) o;
+						for (BasicBlock bb2 : bb.getSuccessors()) {
 							Quad q2;
 							int q2Idx;
 							if (bb2.size() == 0) {
@@ -238,8 +236,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 					if (isForward) {
 						processExit(m, pe);
 					} else {
-						for (Object o : bb.getPredecessorsList()) {
-							BasicBlock bb2 = (BasicBlock) o;
+						for (BasicBlock bb2 : bb.getPredecessors()) {
 							Quad q2;
 							int q2Idx;
 							int n = bb2.size();
@@ -394,7 +391,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 			if (DEBUG) System.out.println("\tYes, not adding");
 			return;
 		}
-		Program program = Program.g();
 		for (Quad q2 : getCallers(m)) {
 			jq_Method m2 = q2.getMethod();
 			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
@@ -481,8 +477,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				return;
 			}
 			boolean isFirst = true;
-			for (Object o : bb.getSuccessorsList()) {
-				BasicBlock bb2 = (BasicBlock) o;
+			for (BasicBlock bb2 : bb.getSuccessors()) {
 				int q2Idx;
 				Quad q2;
 				if (bb2.size() == 0) {
@@ -515,8 +510,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				return;
 			}
 			boolean isFirst = true;
-			for (Object o : bb.getPredecessorsList()) {
-				BasicBlock bb2 = (BasicBlock) o;
+			for (BasicBlock bb2 : bb.getPredecessors()) {
 				int q2Idx;
 				Quad q2;
 				int n = bb2.size();

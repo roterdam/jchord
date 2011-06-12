@@ -14,9 +14,8 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (m,e) such that method m contains
- * statement e that accesses (reads or writes) an instance field, a
- * static field, or an array element.
+ * Relation containing each tuple (m,e) such that method m contains quad e that accesses
+ * (reads or writes) an instance field, a static field, or an array element.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

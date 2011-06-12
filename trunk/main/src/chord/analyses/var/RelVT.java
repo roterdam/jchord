@@ -6,20 +6,13 @@
  */
 package chord.analyses.var;
 
-import java.util.Map;
-import java.util.HashMap;
-
 import chord.program.Program;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
-import chord.project.analyses.ProgramDom;
-import chord.util.ArraySet;
-import chord.project.Chord;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -29,7 +22,6 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Reference;
-import joeq.Util.Templates.ListIterator;
 
 /**
  * Relation containing each tuple (v,t) such that local variable v of reference type has type t.
@@ -63,10 +55,8 @@ public class RelVT extends ProgramRel implements IMethodVisitor {
 				add(v, t);
 			}
 		}
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				Quad q = it2.nextQuad();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				process(q.getOp1());
 				process(q.getOp2());
 				process(q.getOp3());

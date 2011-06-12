@@ -14,7 +14,6 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator.Invoke;
-import joeq.Util.Templates.ListIterator;
 
 import chord.util.ArraySet;
 import chord.bddbddb.Rel.RelView;
@@ -151,11 +150,8 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 		Ctxt ctxt1 = origNode.val0;
 		jq_Method meth2 = destNode.val1;
 		Ctxt ctxt2 = destNode.val0;
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-				it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				Quad q = it2.nextQuad();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				Operator op = q.getOperator();
 				if (op instanceof Invoke && calls(ctxt1, q, ctxt2, meth2))
 					invks.add(q);
