@@ -3,8 +3,11 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Set;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
@@ -17,8 +20,6 @@ import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Main.jq;
 import joeq.Runtime.TypeCheck;
 import joeq.UTF.Utf8;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.UnmodifiableList;
 
 /**
  * CompilationState
@@ -48,7 +49,7 @@ public abstract class CompilationState implements CompilationConstants {
     
     public abstract jq_Type getOrCreateType(Utf8 desc);
 
-    public List.jq_Class getThrownExceptions(Quad q) {
+    public List<jq_Class> getThrownExceptions(Quad q) {
         return q.getOperator().getThrownExceptions();
     }
     
@@ -142,17 +143,13 @@ public abstract class CompilationState implements CompilationConstants {
         /* (non-Javadoc)
          * @see joeq.Compiler.CompilationState#getThrownExceptions(Quad)
          */
-        public List.jq_Class getThrownExceptions(Quad q) {
+        public List<jq_Class> getThrownExceptions(Quad q) {
             if (q.getOperator() == CheckCast.CHECKCAST.INSTANCE) {
-                return new UnmodifiableList.jq_Class(PrimordialClassLoader
-                        .getJavaLangClassCastException());
+                return Collections.singletonList(PrimordialClassLoader.getJavaLangClassCastException());
             }
             if (ASSUME_CORRECT_EXCEPTIONS && q.getOperator() instanceof Invoke) {
-                jq_Method m = (jq_Method) resolve(Invoke.getMethod(q)
-                        .getMethod());
-                UnmodifiableList.jq_Class exclist;
-                exclist = (UnmodifiableList.jq_Class) cachedThrownExcListByMethod
-                        .get(m);
+                jq_Method m = (jq_Method) resolve(Invoke.getMethod(q).getMethod());
+                List<jq_Class> exclist = cachedThrownExcListByMethod.get(m);
                 if (exclist != null)
                     return exclist;
                 /*
@@ -168,21 +165,21 @@ public abstract class CompilationState implements CompilationConstants {
                 int exclistLength = defaultThrowables.length;
                 if (exc != null)
                     exclistLength += exc.length;
-                jq_Class[] tlist = new jq_Class[exclistLength];
-                System.arraycopy(defaultThrowables, 0, tlist, 0,
-                        defaultThrowables.length);
+                exclist = new ArrayList<jq_Class>(exclistLength);
+                for (jq_Class c : defaultThrowables)
+                	exclist.add(c);
                 if (exc != null)
-                    System.arraycopy(exc, 0, tlist, defaultThrowables.length,
-                            exc.length);
+                    for (jq_Class c : exc)
+                    	exclist.add(c);
                 // potential for memory savings here: could sort and intern
                 // identical exclists
-                cachedThrownExcListByMethod.put(m,
-                        exclist = new UnmodifiableList.jq_Class(tlist));
+                cachedThrownExcListByMethod.put(m, exclist);
                 return exclist;
             }
             return super.getThrownExceptions(q);
         }
-        private static HashMap/* <jq_Method, UnmodifiableList.jq_Class> */cachedThrownExcListByMethod = new HashMap();
+        private static HashMap<jq_Method, List<jq_Class>> cachedThrownExcListByMethod =
+        	new HashMap<jq_Method, List<jq_Class>>();
         private static final jq_Class[] defaultThrowables = new jq_Class[]{
                 PrimordialClassLoader.getJavaLangRuntimeException(),
                 PrimordialClassLoader.getJavaLangError()};

@@ -14,10 +14,10 @@ import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Putstatic;
-import joeq.Interpreter.QuadInterpreter;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.UnmodifiableList;
 import jwutil.strings.Strings;
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.io.Serializable;
 
@@ -81,49 +81,6 @@ public class Quad implements Inst, Serializable {
         return new Quad(id_number, method, operator, op1, op2, op3, op4);
     }
     
-    public UnmodifiableList.Operand getAllOperands() {
-        int k = 0;
-        if (operand1 != null) k += 1;
-        if (operand2 != null) k += 2;
-        if (operand3 != null) k += 4;
-        if (operand4 != null) k += 8;
-        switch (k) {
-            case 0 :
-                return UnmodifiableList.Operand.EMPTY;
-            case 1 :
-                return new UnmodifiableList.Operand(operand1);
-            case 2 :
-                return new UnmodifiableList.Operand(operand2);
-            case 3 :
-                return new UnmodifiableList.Operand(operand1, operand2);
-            case 4 :
-                return new UnmodifiableList.Operand(operand3);
-            case 5 :
-                return new UnmodifiableList.Operand(operand1, operand3);
-            case 6 :
-                return new UnmodifiableList.Operand(operand2, operand3);
-            case 7 :
-                return new UnmodifiableList.Operand(operand1, operand2, operand3);
-            case 8 :
-                return new UnmodifiableList.Operand(operand4);
-            case 9 :
-                return new UnmodifiableList.Operand(operand1, operand4);
-            case 10 :
-                return new UnmodifiableList.Operand(operand2, operand4);
-            case 11 :
-                return new UnmodifiableList.Operand(operand1, operand2, operand4);
-            case 12 :
-                return new UnmodifiableList.Operand(operand3, operand4);
-            case 13 :
-                return new UnmodifiableList.Operand(operand1, operand3, operand4);
-            case 14 :
-                return new UnmodifiableList.Operand(operand2, operand3, operand4);
-            case 15 :
-            default:
-                return new UnmodifiableList.Operand(operand1, operand2, operand3, operand4);
-        }
-    }
-    
     /** Return the operator for this quad. */
     public Operator getOperator() { return operator; }
     
@@ -136,25 +93,24 @@ public class Quad implements Inst, Serializable {
     /** Returns a list of the types of exceptions that this quad can throw.
      * Note that types in this list are not exact, therefore subtypes of the
      * returned types may also be thrown. */
-    public List.jq_Class getThrownExceptions() {
+    public List<jq_Class> getThrownExceptions() {
         if (operator == Return.THROW_A.INSTANCE) {
             Operand op = Return.getSrc(this);
             if (op instanceof RegisterOperand) {
                 // use the operand type.
-                return new UnmodifiableList.jq_Class((jq_Class)((RegisterOperand)op).getType());
+            	List<jq_Class> l = new ArrayList<jq_Class>(1);
+                l.add((jq_Class)((RegisterOperand)op).getType());
+                return l;
             }
         }
         return joeq.Compiler.CompilationState.DEFAULT.getThrownExceptions(this);
     }
 
     /** Returns a list of the registers defined by this quad. */
-    public List.RegisterOperand getDefinedRegisters() { return this.operator.getDefinedRegisters(this); }
+    public List<RegisterOperand> getDefinedRegisters() { return this.operator.getDefinedRegisters(this); }
     /** Returns a list of the registers used by this quad. */
-    public List.RegisterOperand getUsedRegisters() { return this.operator.getUsedRegisters(this); }
+    public List<RegisterOperand> getUsedRegisters() { return this.operator.getUsedRegisters(this); }
     
-    /** Interprets this quad, modifying the given interpreter state. */
-    public void interpret(QuadInterpreter s) { this.operator.interpret(this, s); }
-
     public jq_Field getField() {
         if (operator instanceof ALoad || operator instanceof AStore)
             return null;

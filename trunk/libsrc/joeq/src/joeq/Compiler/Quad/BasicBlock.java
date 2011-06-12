@@ -3,18 +3,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Ret;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.ListIterator;
-import joeq.Util.Templates.ListWrapper;
-import joeq.Util.Templates.UnmodifiableList;
-import jwutil.collections.BackwardIterator;
 import jwutil.strings.Strings;
 import jwutil.util.Assert;
 import java.io.Serializable;
@@ -46,11 +44,11 @@ public class BasicBlock implements Serializable, Inst {
     /** Unique id number for this basic block. */
     private int id_number;
     /** List of instructions. */
-    private final java.util.List/*<Quad>*/ instructions;
+    private final List<Quad> instructions;
     /** List of successor basic blocks. */
-    private final java.util.List/*<BasicBlock>*/ successors;
+    private final List<BasicBlock> successors;
     /** List of predecessor basic blocks. */
-    private final java.util.List/*<BasicBlock>*/ predecessors;
+    private final List<BasicBlock> predecessors;
     
     /** List of exception handlers for this basic block. */
     private ExceptionHandlerList exception_handler_list;
@@ -79,7 +77,7 @@ public class BasicBlock implements Serializable, Inst {
         this.id_number = 0;
         this.instructions = null;
         this.predecessors = null;
-        this.successors = new java.util.ArrayList(1);
+        this.successors = new ArrayList<BasicBlock>(1);
         this.exception_handler_list = null;
     }
     // Private constructor for the exit node.
@@ -87,7 +85,7 @@ public class BasicBlock implements Serializable, Inst {
         this.id_number = 1;
         this.instructions = null;
         this.successors = null;
-        this.predecessors = new java.util.ArrayList(numOfExits);
+        this.predecessors = new ArrayList<BasicBlock>(numOfExits);
         this.exception_handler_list = null;
     }
     /** Create new basic block with no exception handlers.
@@ -104,9 +102,9 @@ public class BasicBlock implements Serializable, Inst {
     private BasicBlock(int id, int numOfPredecessors, int numOfSuccessors, int numOfInstructions,
                        ExceptionHandlerList ehs) {
         this.id_number = id;
-        this.predecessors = new java.util.ArrayList(numOfPredecessors);
-        this.successors = new java.util.ArrayList(numOfSuccessors);
-        this.instructions = new java.util.ArrayList(numOfInstructions);
+        this.predecessors = new ArrayList<BasicBlock>(numOfPredecessors);
+        this.successors = new ArrayList<BasicBlock>(numOfSuccessors);
+        this.instructions = new ArrayList<Quad>(numOfInstructions);
         this.exception_handler_list = ehs;
     }
 
@@ -117,40 +115,26 @@ public class BasicBlock implements Serializable, Inst {
      * @return  true if this is the exit basic block. */
     public boolean isExit() { return successors == null; }
     
-    /** Returns an iterator over the quads in this basic block in forward order.
-     * @return  an iterator over the quads in this basic block in forward order. */
-    public ListIterator.Quad iterator() {
-        if (instructions == null) return ListWrapper.Quad.EmptyIterator.INSTANCE;
-        return new ListWrapper.Quad.Iterator(instructions.listIterator());
-    }
-    
-    /** Returns an iterator over the quads in this basic block in backward order.
-     * @return  an iterator over the quads in this basic block in backward order. */
-    public ListIterator.Quad backwardIterator() {
-        if (instructions == null) return ListWrapper.Quad.EmptyIterator.INSTANCE;
-        return new ListWrapper.Quad.Iterator(new BackwardIterator(instructions.listIterator()));
+    public Iterator<Quad> iterator() {
+    	return getQuads().iterator();
     }
 
+    /** Returns an iterator over the quads in this basic block in forward order.
+     * @return  an iterator over the quads in this basic block in forward order. */
+    public List<Quad> getQuads() {
+        if (instructions == null) return Collections.emptyList();
+        return instructions;
+    }
+    
     /** Visit all of the quads in this basic block in forward order
      * with the given quad visitor.
      * @see  QuadVisitor
      * @param qv  QuadVisitor to visit the quads with. */
     public void visitQuads(QuadVisitor qv) {
-        for (ListIterator.Quad i = iterator(); i.hasNext(); ) {
-            Quad q = i.nextQuad();
-            q.accept(qv);
-        }
-    }
-    
-    /** Visit all of the quads in this basic block in backward order
-     * with the given quad visitor.
-     * @see  QuadVisitor
-     * @param qv  QuadVisitor to visit the quads with. */
-    public void backwardVisitQuads(QuadVisitor qv) {
-        for (ListIterator.Quad i = backwardIterator(); i.hasNext(); ) {
-            Quad q = i.nextQuad();
-            q.accept(qv);
-        }
+    	if (instructions != null) {
+	        for (Quad q : instructions)
+	            q.accept(qv);
+    	}
     }
     
     /** Returns the number of quads in this basic block.
@@ -161,12 +145,12 @@ public class BasicBlock implements Serializable, Inst {
     }
     
     public Quad getQuad(int i) {
-        return (Quad)instructions.get(i);
+        return instructions.get(i);
     }
     
     public Quad getLastQuad() {
         if (size() == 0) return null;
-        return (Quad)instructions.get(instructions.size()-1);
+        return instructions.get(instructions.size()-1);
     }
 
     public int getQuadIndex(Quad q) {
@@ -174,7 +158,7 @@ public class BasicBlock implements Serializable, Inst {
     }
     
     public Quad removeQuad(int i) {
-        return (Quad)instructions.remove(i);
+        return instructions.remove(i);
     }
     
     public boolean removeQuad(Quad q) {
@@ -281,25 +265,17 @@ public class BasicBlock implements Serializable, Inst {
 
     /** Returns a list of the successors of this basic block.
      * @return  a list of the successors of this basic block. */
-    public List.BasicBlock getSuccessors() {
-        if (successors == null) return UnmodifiableList.BasicBlock.getEmptyList();
-        return new ListWrapper.BasicBlock(successors);
+    public List<BasicBlock> getSuccessors() {
+        if (successors == null) return Collections.emptyList();
+        return successors;
     }
-	public java.util.List getSuccessorsList() {
-		if (successors == null) return Collections.emptyList();
-		return successors;
-	}
     
-    /** Returns an list of the predecessors of this basic block.
-     * @return  an iterator of the predecessors of this basic block. */
-    public List.BasicBlock getPredecessors() {
-        if (predecessors == null) return UnmodifiableList.BasicBlock.getEmptyList();
-        return new ListWrapper.BasicBlock(predecessors);
-    }
-	public java.util.List getPredecessorsList() {
+    /** Returns a list of the predecessors of this basic block.
+     * @return  a list of the predecessors of this basic block. */
+    public List<BasicBlock> getPredecessors() {
 		if (predecessors == null) return Collections.emptyList();
 		return predecessors;
-	}
+    }
     
     void addExceptionHandler_first(ExceptionHandlerList eh) {
         eh.getHandler().addHandledBasicBlock(this);
@@ -349,15 +325,14 @@ public class BasicBlock implements Serializable, Inst {
      * @return  the unique id number for this basic block. */
     public int getID() { return id_number; }
 
-    public List.BasicBlock getExceptionHandlerEntries() {
-        if (exception_handler_list == null) return UnmodifiableList.BasicBlock.getEmptyList();
-        java.util.ArrayList result = new java.util.ArrayList(exception_handler_list.size());
-        for (ListIterator.ExceptionHandler i = exception_handler_list.exceptionHandlerIterator();
-             i.hasNext(); ) {
-            ExceptionHandler eh = i.nextExceptionHandler();
+    public List<BasicBlock> getExceptionHandlerEntries() {
+        if (exception_handler_list == null) return Collections.emptyList();
+        List<BasicBlock> result = new ArrayList<BasicBlock>(exception_handler_list.size());
+        for (Iterator<ExceptionHandler> i = exception_handler_list.iterator(); i.hasNext(); ) {
+            ExceptionHandler eh = i.next();
             result.add(eh.getEntry());
         }
-        return new ListWrapper.BasicBlock(result);
+        return result;
     }
     
     /** Returns true if this basic block has been marked as an exception handler
@@ -383,15 +358,15 @@ public class BasicBlock implements Serializable, Inst {
     }
     
     public void appendQuadBeforeBranchOrPEI(Quad c) {
-        java.util.ListIterator li = instructions.listIterator();
-        while (li.hasNext()) li.next();
-        while (li.hasPrevious()) {
-            Quad q = (Quad) li.previous();
+        int n = instructions.size();
+        int i = n - 1;
+        for (; i >= 0; i--) {
+        	Quad q = instructions.get(i);
             if (q.getOperator() instanceof Operator.Branch) continue;
             if (!q.getThrownExceptions().isEmpty()) continue;
             break;
         }
-        li.add(c);
+        instructions.add(i + 1, c);
     }
     
     /** Returns the name of this basic block.
@@ -412,10 +387,10 @@ public class BasicBlock implements Serializable, Inst {
         appendQuadBeforeBranchOrPEI(c);
         RegisterOperand aux = null;
         RegisterOperand lhs = Move.getDest(c);
-        java.util.ListIterator li = this.instructions.listIterator();
+        Iterator<Quad> li = this.instructions.iterator();
         while (li.next() != c) ;
         while (li.hasNext()) {
-            Quad i = (Quad) li.next();
+            Quad i = li.next();
             for (Iterator os = i.getUsedRegisters().iterator(); os.hasNext(); ) {
                 Operand op = (Operand) os.next();
                 if (lhs.isSimilar(op)) {
@@ -437,27 +412,27 @@ public class BasicBlock implements Serializable, Inst {
         StringBuffer sb = new StringBuffer();
         sb.append(toString());
         sb.append("\t(in: ");
-        ListIterator.BasicBlock bbi = getPredecessors().basicBlockIterator();
+        Iterator<BasicBlock> bbi = getPredecessors().iterator();
         if (!bbi.hasNext()) sb.append("<none>");
         else {
-            sb.append(bbi.nextBasicBlock().toString());
+            sb.append(bbi.next().toString());
             while (bbi.hasNext()) {
                 sb.append(", ");
-                sb.append(bbi.nextBasicBlock().toString());
+                sb.append(bbi.next().toString());
             }
         }
         sb.append(", out: ");
-        bbi = getSuccessors().basicBlockIterator();
+        bbi = getSuccessors().iterator();
         if (!bbi.hasNext()) sb.append("<none>");
         else {
-            sb.append(bbi.nextBasicBlock().toString());
+            sb.append(bbi.next().toString());
             while (bbi.hasNext()) {
                 sb.append(", ");
-                sb.append(bbi.nextBasicBlock().toString());
+                sb.append(bbi.next().toString());
             }
         }
         sb.append(')');
-        ListIterator.ExceptionHandler ehi = getExceptionHandlers().exceptionHandlerIterator();
+        Iterator<ExceptionHandler> ehi = getExceptionHandlers().iterator();
         if (ehi.hasNext()) {
             sb.append(Strings.lineSep+"\texception handlers: ");
             sb.append(ehi.next().toString());
@@ -467,9 +442,9 @@ public class BasicBlock implements Serializable, Inst {
             }
         }
         sb.append(Strings.lineSep);
-        ListIterator.Quad qi = iterator();
+        Iterator<Quad> qi = iterator();
         while (qi.hasNext()) {
-            sb.append(qi.nextQuad().toString());
+            sb.append(qi.next().toString());
             sb.append(Strings.lineSep);
         }
         sb.append(Strings.lineSep);

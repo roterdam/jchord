@@ -3,26 +3,20 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import joeq.Class.jq_Method;
-import joeq.Compiler.ProgramLocation.BCProgramLocation;
 import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TargetOperand;
-import joeq.Compiler.Quad.Operator.New;
-import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.ListIterator;
-import joeq.Util.Templates.ListWrapper;
-import joeq.Util.Templates.UnmodifiableList;
 import jwutil.collections.Filter;
 import jwutil.collections.FilterIterator;
 import jwutil.graphs.Graph;
@@ -54,7 +48,7 @@ public class ControlFlowGraph implements Graph, Serializable {
     /* Reference to the end node of this control flow graph. */
     private final EntryOrExitBasicBlock end_node;
     /* List of exception handlers for this control flow graph. */
-    private final java.util.List/*<ExceptionHandler>*/ exception_handlers;
+    private final List<ExceptionHandler> exception_handlers;
     
     /* Register factory that we use on this control flow graph. */
     private final RegisterFactory rf;
@@ -74,7 +68,7 @@ public class ControlFlowGraph implements Graph, Serializable {
         this.method = method;
         start_node = EntryOrExitBasicBlock.createStartNode(method);
         end_node = EntryOrExitBasicBlock.createEndNode(method, numOfExits);
-        exception_handlers = new java.util.ArrayList(numOfExceptionHandlers);
+        exception_handlers = new ArrayList<ExceptionHandler>(numOfExceptionHandlers);
         this.rf = rf;
         bb_counter = 1; quad_counter = 0; // MAYUR: changed from 0 to 1
     }
@@ -121,8 +115,7 @@ public class ControlFlowGraph implements Graph, Serializable {
      * @param ehs  set of exception handlers for this basic block.
      * @return  the newly created basic block.
      */
-    public BasicBlock createBasicBlock(int numOfPredecessors, int numOfSuccessors, int numOfInstructions,
-                                       ExceptionHandlerList ehs) {
+    public BasicBlock createBasicBlock(int numOfPredecessors, int numOfSuccessors, int numOfInstructions, ExceptionHandlerList ehs) {
         return BasicBlock.createBasicBlock(++bb_counter, numOfPredecessors, numOfSuccessors, numOfInstructions, ehs);
     }
     
@@ -138,11 +131,8 @@ public class ControlFlowGraph implements Graph, Serializable {
     
     public int getNumberOfQuads() {
         int total = 0;
-        ListIterator.BasicBlock i = reversePostOrderIterator();
-        while (i.hasNext()) {
-            BasicBlock bb = i.nextBasicBlock();
+        for (BasicBlock bb : reversePostOrder())
             total += bb.size();
-        }
         return total;
     }
 
@@ -163,46 +153,6 @@ public class ControlFlowGraph implements Graph, Serializable {
     public JSRInfo getJSRInfo(BasicBlock bb) {
         return (JSRInfo) jsr_map.get(bb);
     }
-    
-    /**
-     * Returns an iteration of the basic blocks in this graph in reverse post order.
-     * 
-     * @return  an iteration of the basic blocks in this graph in reverse post order.
-     */
-    public ListIterator.BasicBlock reversePostOrderIterator() {
-        return reversePostOrderIterator(start_node);
-    }
-    
-    /**
-     * Returns an iteration of the basic blocks in the reversed graph in reverse post order.
-     * The reversed graph is the graph where all edges are reversed.
-     * 
-     * @return  an iteration of the basic blocks in the reversed graph in reverse post order.
-     */
-    public ListIterator.BasicBlock reversePostOrderOnReverseGraphIterator() {
-        return reversePostOrderOnReverseGraph(end_node).basicBlockIterator();
-    }
-    
-    /**
-     * Returns an iteration of the basic blocks in the reversed graph in post order.
-     * The reversed graph is the graph where all edges are reversed.
-     * 
-     * @return  an iteration of the basic blocks in the reversed graph in post order.
-     */
-    public ListIterator.BasicBlock postOrderOnReverseGraphIterator() {
-        return postOrderOnReverseGraph(end_node).basicBlockIterator();
-    }
-    
-    /**
-     * Returns an iteration of the basic blocks in this graph reachable from the given
-     * basic block in reverse post order, starting from the given basic block.
-     * 
-     * @param start_bb  basic block to start reverse post order from.
-     * @return  an iteration of the basic blocks in this graph reachable from the given basic block in reverse post order.
-     */
-    public ListIterator.BasicBlock reversePostOrderIterator(BasicBlock start_bb) {
-        return reversePostOrder(start_bb).basicBlockIterator();
-    }
 
     /**
      * Visits all of the basic blocks in this graph with the given visitor.
@@ -210,25 +160,28 @@ public class ControlFlowGraph implements Graph, Serializable {
      * @param bbv  visitor to visit each basic block with.
      */
     public void visitBasicBlocks(BasicBlockVisitor bbv) {
-        for (ListIterator.BasicBlock i=reversePostOrderIterator(); i.hasNext(); ) {
-            BasicBlock bb = i.nextBasicBlock();
+        for (BasicBlock bb : reversePostOrder())
             bbv.visitBasicBlock(bb);
-        }
     }
     
+    public List<BasicBlock> reversePostOrder() {
+        return reversePostOrder(start_node);
+    }
+
+    public List<BasicBlock> reversePostOrderOnReverseGraph() {
+    	return reversePostOrderOnReverseGraph(end_node);
+    }
     /**
      * Returns a list of basic blocks in reverse post order, starting at the given basic block.
      * 
      * @param start_bb  basic block to start from.
      * @return  a list of basic blocks in reverse post order, starting at the given basic block.
      */
-    public List.BasicBlock reversePostOrder(BasicBlock start_bb) {
-        java.util.LinkedList/*<BasicBlock>*/ result = new java.util.LinkedList();
+    private List<BasicBlock> reversePostOrder(BasicBlock start_bb) {
+        List<BasicBlock> result = new ArrayList<BasicBlock>();
         boolean[] visited = new boolean[bb_counter+1];
         reversePostOrder_helper(start_bb, visited, result, true);
-        BasicBlock[] bb = new BasicBlock[result.size()];
-        bb = (BasicBlock[])result.toArray(bb);
-        return new UnmodifiableList.BasicBlock(bb);
+        return result;
     }
 
     /**
@@ -237,13 +190,11 @@ public class ControlFlowGraph implements Graph, Serializable {
      * @param start_bb  basic block to start from.
      * @return  a list of basic blocks of the reversed graph in reverse post order, starting at the given basic block.
      */
-    public List.BasicBlock reversePostOrderOnReverseGraph(BasicBlock start_bb) {
-        java.util.LinkedList/*<BasicBlock>*/ result = new java.util.LinkedList();
+    private List<BasicBlock> reversePostOrderOnReverseGraph(BasicBlock start_bb) {
+        List<BasicBlock> result = new ArrayList<BasicBlock>();
         boolean[] visited = new boolean[bb_counter+1];
         reversePostOrder_helper(start_bb, visited, result, false);
-        BasicBlock[] bb = new BasicBlock[result.size()];
-        bb = (BasicBlock[])result.toArray(bb);
-        return new UnmodifiableList.BasicBlock(bb);
+        return result;
     }
     
     /**
@@ -252,47 +203,39 @@ public class ControlFlowGraph implements Graph, Serializable {
      * @param start_bb  basic block to start from.
      * @return  a list of basic blocks of the reversed graph in post order, starting at the given basic block.
      */
-    public List.BasicBlock postOrderOnReverseGraph(BasicBlock start_bb) {
-        java.util.LinkedList/*<BasicBlock>*/ result = new java.util.LinkedList();
+    public List<BasicBlock> postOrderOnReverseGraph(BasicBlock start_bb) {
+        List<BasicBlock> result = new ArrayList<BasicBlock>();
         boolean[] visited = new boolean[bb_counter+1];
         reversePostOrder_helper(start_bb, visited, result, false);
         java.util.Collections.reverse(result);
-        BasicBlock[] bb = new BasicBlock[result.size()];
-        bb = (BasicBlock[])result.toArray(bb);
-        return new UnmodifiableList.BasicBlock(bb);
+        return result;
     }
     
     /** Helper function to compute reverse post order. */
-    private void reversePostOrder_helper(BasicBlock b, boolean[] visited, java.util.LinkedList result, boolean direction) {
+    private void reversePostOrder_helper(BasicBlock b, boolean[] visited, List<BasicBlock> result, boolean direction) {
         if (visited[b.getID()]) return;
         visited[b.getID()] = true;
-        List.BasicBlock bbs = direction ? b.getSuccessors() : b.getPredecessors();
-        ListIterator.BasicBlock bbi = bbs.basicBlockIterator();
-        while (bbi.hasNext()) {
-            BasicBlock b2 = bbi.nextBasicBlock();
+        List<BasicBlock> bbs = direction ? b.getSuccessors() : b.getPredecessors();
+        for (BasicBlock b2 : bbs)
             reversePostOrder_helper(b2, visited, result, direction);
-        }
         if (direction) {
-            ListIterator.ExceptionHandler ehi = b.getExceptionHandlers().exceptionHandlerIterator();
-            while (ehi.hasNext()) {
-                ExceptionHandler eh = ehi.nextExceptionHandler();
+            List<ExceptionHandler> ehl = b.getExceptionHandlers();
+            for (ExceptionHandler eh : ehl) {
                 BasicBlock b2 = eh.getEntry();
                 reversePostOrder_helper(b2, visited, result, direction);
             }
         } else {
             if (b.isExceptionHandlerEntry()) {
-                java.util.Iterator ex_handlers = getExceptionHandlersMatchingEntry(b);
+                Iterator<ExceptionHandler> ex_handlers = getExceptionHandlersMatchingEntry(b);
                 while (ex_handlers.hasNext()) {
-                    ExceptionHandler eh = (ExceptionHandler)ex_handlers.next();
-                    ListIterator.BasicBlock handled = eh.getHandledBasicBlocks().basicBlockIterator();
-                    while (handled.hasNext()) {
-                        BasicBlock bb = handled.nextBasicBlock();
+                    ExceptionHandler eh = ex_handlers.next();
+                    List<BasicBlock> handled = eh.getHandledBasicBlocks();
+                    for (BasicBlock bb : handled)
                         reversePostOrder_helper(bb, visited, result, direction);
-                    }
                 }
             }
         }
-        result.addFirst(b);
+        result.add(0, b);
     }
 
     void addExceptionHandler(ExceptionHandler eh) {
@@ -302,8 +245,8 @@ public class ControlFlowGraph implements Graph, Serializable {
     /**
      * Return the list of exception handlers in this control flow graph.
      */
-    public List.ExceptionHandler getExceptionHandlers() {
-        return new ListWrapper.ExceptionHandler(exception_handlers);
+    public List<ExceptionHandler> getExceptionHandlers() {
+        return exception_handlers;
     }
 
     /**
@@ -312,7 +255,7 @@ public class ControlFlowGraph implements Graph, Serializable {
      * @param b  basic block to check exception handlers against.
      * @return  an iterator of the exception handlers with the given entry point.
      */
-    public java.util.Iterator getExceptionHandlersMatchingEntry(BasicBlock b) {
+    public Iterator<ExceptionHandler> getExceptionHandlersMatchingEntry(BasicBlock b) {
         final BasicBlock bb = b;
         return new FilterIterator(exception_handlers.iterator(),
             new Filter() {
@@ -331,11 +274,8 @@ public class ControlFlowGraph implements Graph, Serializable {
     public String fullDump() {
         StringBuffer sb = new StringBuffer();
         sb.append("Control flow graph for "+method+":"+Strings.lineSep);
-        ListIterator.BasicBlock i = reversePostOrderIterator();
-        while (i.hasNext()) {
-            BasicBlock bb = i.nextBasicBlock();
+        for (BasicBlock bb : reversePostOrder())
             sb.append(bb.fullDump());
-        }
         sb.append("Exception handlers: "+exception_handlers);
         sb.append(Strings.lineSep+"Register factory: "+rf);
         return sb.toString();
@@ -346,11 +286,8 @@ public class ControlFlowGraph implements Graph, Serializable {
         if (that_eh != null) return that_eh;
         map.put(this_eh, that_eh = new ExceptionHandler(this_eh.getExceptionType()));
         that_eh.setEntry(copier(map, this_eh.getEntry()));
-        for (ListIterator.BasicBlock li =
-                 this_eh.getHandledBasicBlocks().basicBlockIterator();
-             li.hasNext(); ) {
-            that_eh.addHandledBasicBlock(copier(map, li.nextBasicBlock()));
-        }
+        for (BasicBlock bb : this_eh.getHandledBasicBlocks())
+        	that_eh.addHandledBasicBlock(copier(map, bb));
         return that_eh;
     }
 
@@ -416,17 +353,14 @@ public class ControlFlowGraph implements Graph, Serializable {
         map.put(this_bb, that_bb);
         ExceptionHandlerList that_ehl = copier(map, this_bb.getExceptionHandlers());
         that_bb.setExceptionHandlerList(that_ehl);
-        for (ListIterator.BasicBlock bbs = this_bb.getSuccessors().basicBlockIterator();
-             bbs.hasNext(); ) {
-            that_bb.addSuccessor(copier(map, bbs.nextBasicBlock()));
+        for (BasicBlock bbs : this_bb.getSuccessors()) {
+            that_bb.addSuccessor(copier(map, bbs));
         }
-        for (ListIterator.BasicBlock bbs = this_bb.getPredecessors().basicBlockIterator();
-             bbs.hasNext(); ) {
-            that_bb.addPredecessor(copier(map, bbs.nextBasicBlock()));
+        for (BasicBlock bbs : this_bb.getPredecessors()) {
+            that_bb.addPredecessor(copier(map, bbs));
         }
-        for (ListIterator.Quad qs = this_bb.iterator();
-             qs.hasNext(); ) {
-            that_bb.appendQuad(copier(map, qs.nextQuad()));
+        for (Quad q : this_bb.getQuads()) {
+            that_bb.appendQuad(copier(map, q));
         }
         return that_bb;
     }
@@ -452,49 +386,23 @@ public class ControlFlowGraph implements Graph, Serializable {
         correspondenceMap.put(from.entry(), that.entry());
         correspondenceMap.put(from.exit(), that.exit());
 
-        for (ListIterator.ExceptionHandler exs = from.getExceptionHandlers().exceptionHandlerIterator();
-             exs.hasNext(); ) {
-            that.addExceptionHandler(copier(correspondenceMap, exs.nextExceptionHandler()));
+        for (ExceptionHandler exs : from.getExceptionHandlers()) {
+            that.addExceptionHandler(copier(correspondenceMap, exs));
         }
 
         that.entry().addSuccessor(copier(correspondenceMap, from.entry().getFallthroughSuccessor()));
-        for (ListIterator.BasicBlock bbs = from.exit().getPredecessors().basicBlockIterator();
-             bbs.hasNext(); ) {
-            that.exit().addPredecessor(copier(correspondenceMap, bbs.nextBasicBlock()));
+        for (BasicBlock bbs : from.exit().getPredecessors()) {
+        	that.exit().addPredecessor(copier(correspondenceMap, bbs));
         }
 
         that.bb_counter = this.bb_counter;
         that.quad_counter = this.quad_counter;
-        
-//        Map calleeMap = CodeCache.getBCMap(from.getMethod());
-//        Map callerMap = CodeCache.getBCMap(this.getMethod());
-//        
-//        Map newCallerMap = new HashMap();
-//        for(Iterator iter = map.entrySet().iterator(); iter.hasNext();) {
-//            Map.Entry e = (Entry) iter.next();
-//            Quad old_quad = (Quad) e.getKey();
-//            Quad new_quad = (Quad) e.getValue();
-//            
-//            Object bc = null;
-//            if((bc = callerMap.get(old_quad)) != null) {
-//                newCallerMap.put(new_quad, bc);
-//            } else 
-//            if((bc = calleeMap.get(old_quad)) != null) {
-//                newCallerMap.put(new_quad, bc);
-//            } else {
-//                Assert.UNREACHABLE();
-//            } 
-//        }
-//        CodeCache
-     
         return that;
     }
 
     public void appendExceptionHandlers(ExceptionHandlerList ehl) {
         if (ehl == null || ehl.size() == 0) return;
-        ListIterator.BasicBlock l = reversePostOrderIterator();
-        while (l.hasNext()) {
-            BasicBlock bb = l.nextBasicBlock();
+        for (BasicBlock bb : reversePostOrder()) {
             if (bb.isEntry() || bb.isExit()) continue;
             bb.appendExceptionHandlerList(ehl);
         }
@@ -517,9 +425,8 @@ public class ControlFlowGraph implements Graph, Serializable {
     public boolean removeUnreachableBasicBlocks() {
         Collection allBasicBlocks = new HashSet(reversePostOrder(entry()));
         boolean change = false;
-        for (Iterator i = reversePostOrderIterator(); i.hasNext(); ) {
-            BasicBlock b = (BasicBlock) i.next();
-            if (b.getPredecessors().retainAll(allBasicBlocks))
+        for (BasicBlock bb : reversePostOrder()) {
+            if (bb.getPredecessors().retainAll(allBasicBlocks))
                 change = true;
         }
         for (Iterator i = exception_handlers.iterator(); i.hasNext(); ) {

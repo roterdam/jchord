@@ -3,17 +3,16 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.util.Iterator;
 import java.util.NoSuchElementException;
-import joeq.Util.Templates.ListIterator;
 
 /**
- * Iterator for iterating through exception handlers.  Compatible with ListIterator.
- * @see  joeq.Util.Templates.ListIterator
+ * Iterator for iterating through exception handlers.
  * @see  ExceptionHandler
  * @author  John Whaley <jwhaley@alum.mit.edu>
  * @version  $Id: ExceptionHandlerIterator.java,v 1.12 2004/09/22 22:17:27 joewhaley Exp $
  */
-public class ExceptionHandlerIterator implements ListIterator.ExceptionHandler {
+public class ExceptionHandlerIterator implements Iterator<ExceptionHandler> {
 
     private final ExceptionHandlerList root;
     private ExceptionHandlerList current;
@@ -30,7 +29,7 @@ public class ExceptionHandlerIterator implements ListIterator.ExceptionHandler {
     /** Returns the next element of this iterator.  Use nextExceptionHandler to avoid the cast.
      * @see  #nextExceptionHandler()
      * @return  the next element of this iterator. */
-    public Object next() { return nextExceptionHandler(); }
+    public ExceptionHandler next() { return nextExceptionHandler(); }
     /** Returns the next element of this iterator, avoiding the cast.
      * @see  #next()
      * @return  the next element of this iterator. */

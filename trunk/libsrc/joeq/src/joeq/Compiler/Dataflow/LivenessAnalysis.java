@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -15,11 +16,10 @@ import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.ListIterator;
 import jwutil.graphs.EdgeGraph;
 import jwutil.graphs.Graph;
 import jwutil.graphs.ReverseGraph;
@@ -59,21 +59,19 @@ public class LivenessAnalysis extends Problem {
         emptySet = new UnionBitVectorFact(bitVectorSize);
         emptyTF = new GenKillTransferFunction(bitVectorSize);
         
-        List.BasicBlock list = cfg.reversePostOrder(cfg.entry());
-        for (ListIterator.BasicBlock i = list.basicBlockIterator(); i.hasNext(); ) {
-            BasicBlock bb = i.nextBasicBlock();
+        for (BasicBlock bb : cfg.reversePostOrder()) {
             BitString gen = new BitString(bitVectorSize);
             BitString kill = new BitString(bitVectorSize);
-            for (ListIterator.Quad j = bb.backwardIterator(); j.hasNext(); ) {
-                Quad q = j.nextQuad();
-                for (ListIterator.RegisterOperand k = q.getDefinedRegisters().registerOperandIterator(); k.hasNext(); ) {
-                    Register r = k.nextRegisterOperand().getRegister();
+            for (int j = bb.size() - 1; j >= 0; j--) {
+                Quad q = bb.getQuad(j);
+                for (RegisterOperand k : q.getDefinedRegisters()) {
+                	Register r = k.getRegister();
                     int index = r.getNumber() + 1;
                     kill.set(index);
                     gen.clear(index);
                 }
-                for (ListIterator.RegisterOperand k = q.getUsedRegisters().registerOperandIterator(); k.hasNext(); ) {
-                    Register r = k.nextRegisterOperand().getRegister();
+                for (RegisterOperand k : q.getUsedRegisters()) {
+                    Register r = k.getRegister();
                     int index = r.getNumber() + 1;
                     gen.set(index);
                 }
@@ -172,7 +170,7 @@ public class LivenessAnalysis extends Problem {
 
     public boolean isLiveAtOut(BasicBlock bb, Register r) {
         if (bb.getNumberOfSuccessors() > 0)
-            bb = bb.getSuccessors().getBasicBlock(0);
+            bb = bb.getSuccessors().get(0);
         BitVectorFact f = (BitVectorFact) mySolver.getDataflowValue(bb);
         if (f == null) throw new RuntimeException(bb.toString()+" reg "+r);
         return f.fact.get(r.getNumber()+1);

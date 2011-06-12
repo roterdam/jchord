@@ -3,7 +3,7 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
-import joeq.Util.Templates.ListIterator;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
 import jwutil.collections.IndexMap;
 
 /**
@@ -17,13 +17,11 @@ public class RegisterNumberVisitor extends QuadVisitor.EmptyVisitor {
     IndexMap m = new IndexMap("Register numbers");
 
     public void visitQuad(Quad q) {
-        for (ListIterator.RegisterOperand i = q.getDefinedRegisters().registerOperandIterator();
-            i.hasNext(); ) {
-            m.get(i.nextRegisterOperand().getRegister());
+        for (RegisterOperand ro : q.getDefinedRegisters()) {
+            m.get(ro.getRegister());
         }
-        for (ListIterator.RegisterOperand i = q.getUsedRegisters().registerOperandIterator();
-            i.hasNext(); ) {
-            m.get(i.nextRegisterOperand().getRegister());
+        for (RegisterOperand ro : q.getUsedRegisters()) {
+            m.get(ro.getRegister());
         }
     }
 

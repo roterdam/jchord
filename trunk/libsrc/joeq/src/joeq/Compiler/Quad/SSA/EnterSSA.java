@@ -22,7 +22,6 @@ import joeq.Compiler.Quad.ExceptionHandler;
 import joeq.Compiler.Quad.ExceptionHandlerList;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.BytecodeToQuad.jq_ReturnAddressType;
 import joeq.Compiler.Quad.Dominators.DominatorNode;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -67,8 +66,7 @@ public class EnterSSA implements ControlFlowGraphVisitor {
     public void visitCFG(ControlFlowGraph ir) {
         this.ir = ir;
         this.basic_blocks = new BasicBlock[ir.getNumberOfBasicBlocks()];
-        for (Iterator i = ir.reversePostOrderIterator(); i.hasNext(); ) {
-            BasicBlock bb = (BasicBlock) i.next();
+        for (BasicBlock bb : ir.reversePostOrder()) {
             this.basic_blocks[bb.getID()] = bb;
         }
         this.dominators = new Dominators(true);
@@ -100,9 +98,7 @@ public class EnterSSA implements ControlFlowGraphVisitor {
         if (ir.getExceptionHandlers().isEmpty())
             return;
         Set needed = new HashSet(4);
-        Iterator blocks = ir.reversePostOrderIterator();
-        while (blocks.hasNext()) {
-            BasicBlock block = (BasicBlock) blocks.next();
+        for (BasicBlock block : ir.reversePostOrder()) {
             ExceptionHandlerList ehl = block.getExceptionHandlers();
             if (!ehl.isEmpty()) {
                 Quad pei = block.getLastQuad();
@@ -201,13 +197,11 @@ public class EnterSSA implements ControlFlowGraphVisitor {
         for (int i = 0; i < result.length; i++)
             result[i] = new BitString(nBlocks);
         // loop over each basic block
-        for (Iterator e = ir.reversePostOrderIterator(); e.hasNext();) {
-            BasicBlock bb = (BasicBlock) e.next();
+        for (BasicBlock bb : ir.reversePostOrder()) {
             if (DEBUG) System.out.println("Visiting "+bb);
             int bbNumber = bb.getID();
             // visit each instruction in the basic block
-            for (Iterator ie = bb.iterator(); ie.hasNext(); ) {
-                Quad s = (Quad) ie.next();
+            for (Quad s : bb.getQuads()) {
                 // record each def in the instruction
                 // skip SSA defs
                 for (Iterator j = s.getDefinedRegisters().iterator(); j.hasNext(); ) {
@@ -375,12 +369,10 @@ public class EnterSSA implements ControlFlowGraphVisitor {
     private void search(BasicBlock X, Stack[] S) {
         if (DEBUG)
             System.out.println("SEARCH " + X);
-        for (Iterator ie = X.iterator(); ie.hasNext(); ) {
-            Quad A = (Quad) ie.next();
+        for (Quad A : X.getQuads()) {
             if (!(A.getOperator() instanceof Phi)) {
                 // replace each use
-                for (Iterator u = A.getUsedRegisters().iterator(); u.hasNext(); ) {
-                    RegisterOperand rop = (RegisterOperand) u.next();
+                for (RegisterOperand rop : A.getUsedRegisters()) {
                     Register r1 = rop.getRegister();
                     if (r1.isSSA()) continue;
                     if (r1.isPhysical()) continue;
@@ -396,9 +388,8 @@ public class EnterSSA implements ControlFlowGraphVisitor {
                 }
             }
             // replace each def
-            for (Iterator d = A.getDefinedRegisters().iterator(); d.hasNext(); ) {
-                RegisterOperand rop = (RegisterOperand) d.next();
-                Register r1 = rop.getRegister();
+            for (RegisterOperand rop : A.getDefinedRegisters()) {
+            	Register r1 = rop.getRegister();
                 if (r1.isSSA()) continue;
                 if (r1.isPhysical()) continue;
                 if (r1.isGuard()) continue;
@@ -419,13 +410,10 @@ public class EnterSSA implements ControlFlowGraphVisitor {
             int j = numPredProcessed[Y.getID()]++;
             if (Y.isExit())
                 continue;
-            Iterator ss = Y.iterator();
-            if (!ss.hasNext()) continue;
             // replace use USE in each PHI instruction
             if (DEBUG)
                 System.out.println(" Predecessor: " + j);
-            while (ss.hasNext()) {
-                Quad s = (Quad) ss.next();
+            for (Quad s : Y.getQuads()) {
                 if (!(s.getOperator() instanceof Phi)) break;
                 Operand val = Phi.getSrc(s, j);
                 if (val instanceof RegisterOperand) {
@@ -458,8 +446,7 @@ public class EnterSSA implements ControlFlowGraphVisitor {
         } // end of third loop
         if (DEBUG)
             System.out.println("SEARCH (fourth loop) " + X);
-        for (Iterator a = X.iterator(); a.hasNext(); ) {
-            Quad A = (Quad) a.next();
+        for (Quad A : X.getQuads()) {
             // loop over each def
             for (Iterator d = A.getDefinedRegisters().iterator(); d.hasNext(); ) {
                 RegisterOperand newOp = (RegisterOperand) d.next();
@@ -597,14 +584,15 @@ public class EnterSSA implements ControlFlowGraphVisitor {
             Register r = (Register) i.next();
             r.setSSA();
         }
-        for (QuadIterator i = new QuadIterator(cfg); i.hasNext(); ) {
-            Quad q = i.nextQuad();
-            for (Iterator j = q.getDefinedRegisters().iterator(); j.hasNext(); ) {
-                RegisterOperand rop = (RegisterOperand) j.next();
-                Register r = rop.getRegister();
-                boolean change = defined.add(r);
-                if (!change) r.clearSSA();
-            }
+        for (BasicBlock bb : cfg.reversePostOrder()) {
+        	for (int k = 0; k < bb.size(); k++) {
+        		Quad q = bb.getQuad(k);
+	            for (RegisterOperand rop : q.getDefinedRegisters()) {
+	                Register r = rop.getRegister();
+	                boolean change = defined.add(r);
+	                if (!change) r.clearSSA();
+	            }
+        	}
         }
         if (DEBUG) {
             System.out.println("Defined registers: "+defined);
