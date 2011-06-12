@@ -20,7 +20,7 @@ OBJECT_OUTPUT_OPTION = -o$(space)
 ifeq (${OS},Windows_NT)
   CFLAGS = $(M32_FLAG) -fPIC -Wall -O2 -mno-cygwin
   LINK = dllwrap
-  LINKFLAGS = $(M32_FLAG) -lm -s --target=i386-mingw32 --add-underscore --driver-name gcc -mno-cygwin
+  LINKFLAGS = $(M32_FLAG) -s --target=i386-mingw32 --add-underscore --driver-name gcc -mno-cygwin
   BUDDY_LIB_NAME = $(DIST_DIR)/buddy.dll
 else
   CFLAGS = $(M32_FLAG) -fPIC -DSPECIALIZE_RELPROD -DSPECIALIZE_AND -DSPECIALIZE_OR -DSMALL_NODES -O2 -fomit-frame-pointer
