@@ -295,7 +295,7 @@
 	-->
 
 	<target name="javadoc" depends="compile-j-part" description="Generate Javadoc.">
-		<javadoc destdir="javadoc" classpath="chord.jar">
+		<javadoc destdir="javadoc" classpath="chord.jar" useexternalfile="true">
 			<fileset dir="src">
 				<include name="**/*.java"/>
 			</fileset>
