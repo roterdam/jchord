@@ -18,7 +18,7 @@ import chord.project.ClassicProject;
 import chord.project.analyses.ProgramDom;
 
 /**
- * Domain of method invocation statements.
+ * Domain of method invocation quads.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

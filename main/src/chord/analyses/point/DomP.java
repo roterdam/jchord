@@ -7,12 +7,10 @@
 package chord.analyses.point;
 
 import joeq.Class.jq_Method;
-import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
-import joeq.Util.Templates.ListIterator;
 import chord.analyses.method.DomM;
 
 import chord.project.Chord;
@@ -21,16 +19,16 @@ import chord.project.Config;
 import chord.project.analyses.ProgramDom;
 
 /**
- * Domain of simple statements.
+ * Domain of quads.
  * <p>
- * The 0th element in this domain is the statement at the unique
- * entry point of the main method of the program.
+ * The 0th element in this domain is the unique entry basic block
+ * of the main method of the program.
  * <p>
- * The statements of each method in the program are assigned
- * contiguous indices in this domain, with the statements at the
- * unique entry and exit points of each method being assigned
- * the smallest and largest indices, respectively, of all
- * indices assigned to statements in that method.
+ * The quads of each method in the program are assigned contiguous
+ * indices in this domain, with the unique basic blocks at the
+ * entry and exit of each method being assigned the smallest and
+ * largest indices, respectively, of all indices assigned to quads
+ * in that method.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -48,19 +46,15 @@ public class DomP extends ProgramDom<Inst> {
 			if (m.isAbstract())
 				continue;
 			ControlFlowGraph cfg = m.getCFG();
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-					it.hasNext();) {
-				BasicBlock bb = it.nextBasicBlock();
+			for (BasicBlock bb : cfg.reversePostOrder()) {
 				int n = bb.size();
 				if (n == 0) {
 					// assert (bb.isEntry() || bb.isExit());
 					add(bb);
 					continue;
 				}
-				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();
+				for (Quad q : bb.getQuads())
 					add(q);
-				}
 			}
 		}
 	}

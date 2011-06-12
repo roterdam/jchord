@@ -23,7 +23,7 @@ import chord.project.analyses.ProgramRel;
 import chord.util.SetUtils;
 
 /**
- * Context-insensitive may alias analysis.
+ * Context-insensitive points-to analysis.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

@@ -16,16 +16,6 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
-import joeq.Compiler.Quad.RegisterFactory;
-import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.Operator;
-import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operand;
-import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operand.ParamListOperand;
-import joeq.Class.jq_Type;
-import joeq.Util.Templates.ListIterator;
 
 /**
  * Domain of local variables of reference type.

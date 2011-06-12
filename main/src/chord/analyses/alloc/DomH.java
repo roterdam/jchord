@@ -19,7 +19,6 @@ import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Compiler.Quad.Operator.Invoke;
-import joeq.Util.Templates.ListIterator;
 
 import chord.util.tuple.object.Pair;
 import chord.project.Chord;
@@ -69,11 +68,8 @@ public class DomH extends ProgramDom<Object> {
 			if (m.isAbstract())
 				continue;
 			ControlFlowGraph cfg = m.getCFG();
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-					it.hasNext();) {
-				BasicBlock bb = it.nextBasicBlock();
-				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();
+			for (BasicBlock bb : cfg.reversePostOrder()) {
+				for (Quad q : bb.getQuads()) {
 					Operator op = q.getOperator();
 					if (op instanceof New || op instanceof NewArray ||
 							op instanceof MultiNewArray) 

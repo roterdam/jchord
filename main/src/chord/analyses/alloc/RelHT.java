@@ -29,7 +29,7 @@ import chord.project.Messages;
 
 /**
  * Relation containing each tuple (h,t) such that object allocation quad h
- * allocates objects of non-array type t.
+ * allocates objects of type t.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -40,6 +40,8 @@ import chord.project.Messages;
 public class RelHT extends ProgramRel {
 	private DomH domH;
 	private DomT domT;
+
+	@Override
 	public void fill() {
 		domH = (DomH) doms[0];
 		domT = (DomT) doms[1];
@@ -75,6 +77,7 @@ public class RelHT extends ProgramRel {
 		processResolvedNewInstSites(reflect.getResolvedConNewInstSites());
 		processResolvedNewInstSites(reflect.getResolvedAryNewInstSites());
 	}
+
 	private void processResolvedNewInstSites(List<Pair<Quad, List<jq_Reference>>> l) {
 		for (Pair<Quad, List<jq_Reference>> p : l) {
 			Quad q = p.val0;

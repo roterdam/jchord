@@ -16,7 +16,6 @@ import joeq.Compiler.Quad.ControlFlowGraph;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
-import joeq.Util.Templates.ListIterator;
 
 /**
  * Domain of basic blocks.
@@ -36,9 +35,7 @@ public class DomB extends ProgramDom<BasicBlock> implements IMethodVisitor {
 		if (m.isAbstract())
 			return;
 		ControlFlowGraph cfg = m.getCFG();
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-				it.hasNext();) {
-			BasicBlock b = it.nextBasicBlock();
+		for (BasicBlock b : cfg.reversePostOrder()) {
 			basicBlockToMethodMap.put(b, m);
 			getOrAdd(b);
 		}

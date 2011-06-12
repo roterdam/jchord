@@ -21,7 +21,7 @@ import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Context-sensitive may alias analysis.
+ * Context-sensitive points-to analysis.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

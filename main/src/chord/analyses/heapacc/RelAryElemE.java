@@ -14,8 +14,8 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each statement that accesses (reads or writes)
- * an array element (as opposed to an instance or static field).
+ * Relation containing each quad that accesses (reads or writes) an array element
+ * (as opposed to an instance or static field).
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

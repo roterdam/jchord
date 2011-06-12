@@ -27,15 +27,13 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (e,l) such that statement e
- * that accesses (reads or writes) an instance field, a
- * static field, or an array element is lexically enclosed in
- * the synchronized block or synchronized method that acquires
- * the lock at point l.
+ * Relation containing each tuple (e,l) such that quad e that accesses
+ * (reads or writes) an instance field, a static field, or an array element
+ * is lexically enclosed in the synchronized block or synchronized
+ * method that acquires the lock at point l.
  * <p>
- * A statement may be lexically enclosed in multiple synchronized
- * blocks but in at most one synchronized method (i.e. its
- * containing method).
+ * A quad may be lexically enclosed in multiple synchronized blocks but in
+ * at most one synchronized method (i.e. its containing method).
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

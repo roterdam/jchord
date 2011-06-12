@@ -28,9 +28,7 @@ import joeq.Compiler.Quad.Operator.CheckCast;
 import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Util.Templates.ListIterator;
 
-import chord.program.Program;
 import chord.util.ArraySet;
 import chord.util.tuple.object.Pair;
 
@@ -83,10 +81,8 @@ public class StaticReflectResolver {
 	protected void initForNameAndNewInstSites() {
 		forNameSites.clear();
 		newInstSites.clear();
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				Quad q = it2.nextQuad();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {
 					jq_Method n = Invoke.getMethod(q).getMethod();
@@ -134,10 +130,8 @@ public class StaticReflectResolver {
 		changed = true;
 		while (changed) {
 			changed = false;
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-				BasicBlock bb = it.nextBasicBlock();
-				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();
+			for (BasicBlock bb : cfg.reversePostOrder()) {
+				for (Quad q : bb.getQuads()) {
 					Operator op = q.getOperator();
 					if (op instanceof Move || op instanceof CheckCast) {
 						Register l = Move.getDest(q).getRegister();
@@ -205,10 +199,8 @@ public class StaticReflectResolver {
 		changed = true;
 		while (changed) {
 			changed = false;
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-				BasicBlock bb = it.nextBasicBlock();
-				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();
+			for (BasicBlock bb : cfg.reversePostOrder()) {
+				for (Quad q : bb.getQuads()) {
 					Operator op = q.getOperator();
 					if (op instanceof Move || op instanceof CheckCast) {
 						Operand ro = Move.getSrc(q);
@@ -265,10 +257,8 @@ public class StaticReflectResolver {
 		RegisterFactory rf = cfg.getRegisterFactory();
 		for (int i = 0; i < numArgs; i++)
 			abortedVars.add(rf.get(i));
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				Quad q = it2.nextQuad();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				Operator op = q.getOperator();
 				if (op instanceof Move || op instanceof CheckCast || op instanceof Phi)
 					continue;
@@ -283,10 +273,8 @@ public class StaticReflectResolver {
 					if (isResolved)
 						continue;
 				}
-				ListIterator.RegisterOperand it3 =
-					q.getDefinedRegisters().registerOperandIterator();
-				while (it3.hasNext()) {
-					Register r = it3.nextRegisterOperand().getRegister();
+				for (RegisterOperand ro : q.getDefinedRegisters()) {
+					Register r = ro.getRegister();
 					abortedVars.add(r);
 				}
 			}

@@ -18,7 +18,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (i,m) such that m is the resolved method of
- * method invocation statement i of kind {@code INVK_STATIC}.
+ * method invocation quad i of kind {@code INVK_STATIC}.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

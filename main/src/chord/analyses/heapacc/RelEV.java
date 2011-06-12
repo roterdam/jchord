@@ -19,9 +19,9 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (e,v) such that statement e
- * accesses (reads or writes) an instance field or array element
- * of an object denoted by local variable v.
+ * Relation containing each tuple (e,v) such that quad e accesses
+ * (reads or writes) an instance field or array element of an
+ * object denoted by local variable v.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

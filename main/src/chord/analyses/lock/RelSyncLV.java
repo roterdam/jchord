@@ -16,8 +16,8 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (l,v) such that monitorenter
- * statement l is synchronized on variable v.
+ * Relation containing each tuple (l,v) such that monitorenter quad l
+ * is synchronized on variable v.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

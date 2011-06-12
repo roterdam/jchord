@@ -16,7 +16,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,h) such that method m contains
- * object allocation statement h.
+ * object allocation quad h.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

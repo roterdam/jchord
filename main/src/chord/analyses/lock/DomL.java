@@ -22,7 +22,7 @@ import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of all lock acquire points, including monitorenter
- * statements and entry basic blocks of synchronized methods.
+ * quads and entry basic blocks of synchronized methods.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

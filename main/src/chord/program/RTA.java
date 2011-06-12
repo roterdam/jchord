@@ -7,14 +7,10 @@
 package chord.program;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.Collections;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
@@ -26,43 +22,29 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_NameAndDesc;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Type;
-import joeq.Class.Classpath;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.RegisterFactory;
-import joeq.Compiler.Quad.Operand.ParamListOperand;
-import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
-import joeq.Compiler.Quad.Operator.CheckCast;
-import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Putstatic;
-import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
-import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
-import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.HostedVM;
-import joeq.Util.Templates.ListIterator;
 
 import chord.project.Messages;
 import chord.project.Config;
 import chord.program.reflect.CastBasedStaticReflect;
 import chord.program.reflect.DynamicReflectResolver;
 import chord.program.reflect.StaticReflectResolver;
-import chord.analyses.invk.StubRewrite;
-import chord.analyses.method.RelExtraEntryPoints;
 import chord.util.IndexSet;
 import chord.util.Timer;
-import chord.util.ArraySet;
-import chord.util.Utils;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -177,14 +159,6 @@ public class RTA implements ScopeBuilder {
 		if (reflect == null)
 			build();
 		return reflect;
-	}
-
-	private static void print(List<Pair<String, List<String>>> l) {
-		for (Pair<String, List<String>> p : l) {
-			System.out.println(p.val0 + " -> ");
-			for (String s : p.val1)
-				System.out.println("\t" + s);
-		}
 	}
 
 	protected void build() {
@@ -386,10 +360,8 @@ public class RTA implements ScopeBuilder {
 				processResolvedObjNewInstSite(p.val0, p.val1);
 		}
 		ControlFlowGraph cfg = m.getCFG();
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				Quad q = it2.nextQuad();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				if (DEBUG) System.out.println("Quad: " + q);
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {

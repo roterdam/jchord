@@ -14,7 +14,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (t,m) such that method m is
- * declared in type t.
+ * defined in type t.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

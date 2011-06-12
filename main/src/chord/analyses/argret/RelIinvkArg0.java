@@ -19,8 +19,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (i,v) such that local variable v
- * is the 0th argument variable of method invocation statement i,
- * if i has >= 0 arguments.
+ * is the 0th argument variable of method invocation quad i.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -29,6 +28,7 @@ import chord.project.analyses.ProgramRel;
 	sign = "I0,V1:I0_V1"
 )
 public class RelIinvkArg0 extends ProgramRel {
+	@Override
 	public void fill() {
 		DomI domI = (DomI) doms[0];
 		DomV domV = (DomV) doms[1];

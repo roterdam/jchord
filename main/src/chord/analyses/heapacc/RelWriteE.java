@@ -13,8 +13,8 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing all statements that write to an instance
- * field, static field, or array element.
+ * Relation containing all quads that write to an instance field,
+ * a static field, or an array element.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

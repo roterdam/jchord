@@ -12,8 +12,8 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (p,i) such that the statement
- * at program point p is method invocation statement i.
+ * Relation containing each tuple (p,i) such that the quad at program point p
+ * is method invocation quad i.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */

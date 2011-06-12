@@ -9,8 +9,6 @@ package chord.program;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Collections;
 import java.util.Set;
 
 import joeq.Class.PrimordialClassLoader;
@@ -36,7 +34,6 @@ import joeq.Compiler.Quad.Operator.Invoke.InvokeInterface;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
 import joeq.Main.HostedVM;
-import joeq.Util.Templates.ListIterator;
 
 import chord.project.Config;
 import chord.project.Messages;
@@ -123,10 +120,8 @@ public class CHA implements ScopeBuilder {
 	}
 
 	private void processCFG(ControlFlowGraph cfg) {
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
-			for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-				Quad q = it2.nextQuad();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {
 					if (DEBUG) System.out.println("Quad: " + q);

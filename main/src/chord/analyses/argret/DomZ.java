@@ -16,11 +16,11 @@ import chord.project.analyses.ProgramDom;
 
 /**
  * Domain of argument and return variable positions of methods
- * and method invocation statements.
+ * and method invocation quads.
  * <p>
  * Let N be the largest number of arguments or return variables
- * of any method or method invocation statement.  Then, this
- * domain contains elements 0, 1, ..., N-1 in order.
+ * of any method or method invocation quad.  Then, this domain
+ * contains elements 0, 1, ..., N-1 in order.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
