@@ -3,12 +3,13 @@
 // Licensed under the terms of the GNU LGPL; see COPYING for details.
 package joeq.Compiler.Quad;
 
+import java.util.AbstractList;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
+
 import joeq.Class.jq_Class;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.ListIterator;
-import joeq.Util.Templates.ListWrapper;
 import java.io.Serializable;
 
 /**
@@ -23,7 +24,7 @@ import java.io.Serializable;
  * @version  $Id: ExceptionHandlerList.java,v 1.13 2004/09/22 22:17:26 joewhaley Exp $
  */
 
-public class ExceptionHandlerList extends java.util.AbstractList implements List.ExceptionHandler, Serializable {
+public class ExceptionHandlerList extends AbstractList<ExceptionHandler> implements List<ExceptionHandler>, Serializable {
 
     /** The exception handler. */
     private ExceptionHandler exception_handler;
@@ -71,8 +72,8 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
     /** Returns the list of exception handlers in this list that MAY catch the given exception type.
      * @return  the list of handlers that may catch the exception type
      */
-    public List.ExceptionHandler mayCatch(jq_Class exType) {
-        java.util.List list = new java.util.LinkedList();
+    public List<ExceptionHandler> mayCatch(jq_Class exType) {
+        List<ExceptionHandler> list = new ArrayList<ExceptionHandler>();
         ExceptionHandlerList p = this;
         while (p != null) {
             if (p.getHandler().mustCatch(exType)) {
@@ -81,15 +82,15 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
             if (p.getHandler().mayCatch(exType)) list.add(p.getHandler());
             p = p.getParent();
         }
-        return new ListWrapper.ExceptionHandler(list);
+        return list;
     }
     
     /** Returns the list of exception handlers in this list that MAY catch the given exception type.
      * @return  the list of handlers that may catch the exception type
      */
-    public List.ExceptionHandler mayCatch(Collection exTypes) {
-        java.util.List list = new java.util.LinkedList();
-        java.util.List eTypes = new java.util.LinkedList(exTypes);
+    public List<ExceptionHandler> mayCatch(Collection exTypes) {
+        List<ExceptionHandler> list = new ArrayList<ExceptionHandler>();
+        List eTypes = new ArrayList(exTypes);
         ExceptionHandlerList p = this;
         outer:
         while (p != null) {
@@ -107,19 +108,18 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
             }
             p = p.getParent();
         }
-        return new ListWrapper.ExceptionHandler(list);
+        return list;
     }
     
     /** Return an iteration over the handlers in this set (and the handlers in parent sets).
      * Handlers are returned in the correct order (this set, followed by parent sets.)
      * @return  an iteration over the handlers in this set (and the handlers in parent sets) in correct order. */
-    public ListIterator.ExceptionHandler exceptionHandlerIterator() {
+    public Iterator<ExceptionHandler> exceptionHandlerIterator() {
         return new ExceptionHandlerIterator(this);
     }
-    public java.util.Iterator iterator() { return exceptionHandlerIterator(); }
-    public java.util.ListIterator listIterator() { return exceptionHandlerIterator(); }
+    public Iterator<ExceptionHandler> iterator() { return exceptionHandlerIterator(); }
     
-    public joeq.Compiler.Quad.ExceptionHandler getExceptionHandler(int index) {
+    public ExceptionHandler getExceptionHandler(int index) {
         if (index < 0) throw new IndexOutOfBoundsException();
         ExceptionHandlerList p = this;
         while (--index >= 0) {
@@ -129,7 +129,7 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
         return p.exception_handler;
     }
     
-    public Object get(int index) { return getExceptionHandler(index); }
+    public ExceptionHandler get(int index) { return getExceptionHandler(index); }
     
     public int size() {
         int size = 0;
@@ -144,9 +144,9 @@ public class ExceptionHandlerList extends java.util.AbstractList implements List
     public static ExceptionHandlerList getEmptyList() { return EMPTY; }
     public static final ExceptionHandlerList EMPTY = new ExceptionHandlerList(null) {
         public int size() { return 0; }
-        public ListIterator.ExceptionHandler exceptionHandlerIterator() { return ExceptionHandlerIterator.getEmptyIterator(); }
+        public Iterator<ExceptionHandler> exceptionHandlerIterator() { return ExceptionHandlerIterator.getEmptyIterator(); }
         public ExceptionHandler mustCatch(jq_Class exType) { return null; }
-        public List.ExceptionHandler mayCatch(jq_Class exType) { return getEmptyList(); }
+        public List<ExceptionHandler> mayCatch(jq_Class exType) { return getEmptyList(); }
     };
     
 }

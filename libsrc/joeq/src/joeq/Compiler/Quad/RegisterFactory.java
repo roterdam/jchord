@@ -25,7 +25,7 @@ import java.io.Serializable;
  */
 public class RegisterFactory implements Iterable, Serializable {
 
-    private final ArrayList/*<Register>*/ registers;
+    private final ArrayList<Register> registers;
     
     private final Map/*<Pair<jq_Type,Integer>,Register>*/ stackNumbering;
     private final Map/*<Pair<jq_Type,Integer>,Register>*/ localNumbering;

@@ -16,11 +16,11 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
 import joeq.Compiler.BytecodeAnalysis.Bytecodes;
+import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.QuadIterator;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.UTF.Utf8;
 import jwutil.io.ByteSequence;
@@ -121,7 +121,7 @@ public abstract class ProgramLocation implements Textualizable {
         }
         
         public jq_Type getResultType() {
-            return q.getDefinedRegisters().getRegisterOperand(0).getType();
+            return q.getDefinedRegisters().get(0).getType();
         }
         
         public boolean isCall() {
@@ -397,101 +397,6 @@ public abstract class ProgramLocation implements Textualizable {
                     return -1;
             }
         }
-        /*
-        public CallTargets getCallTargets() {
-            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
-            byte[] bc = ((jq_Method) super.m).getBytecode();
-            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = jwutil.util.Convert.twoBytesToChar(bc, bcIndex+1);
-            byte type;
-            jq_Method method;
-            switch (bc[bcIndex]) {
-                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
-                    type = BytecodeVisitor.INVOKE_VIRTUAL;
-                    // fallthrough
-                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
-                    type = BytecodeVisitor.INVOKE_SPECIAL;
-                    // fallthrough
-                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
-                    method = clazz.getCPasInstanceMethod(cpi);
-                    type = BytecodeVisitor.INVOKE_INTERFACE;
-                    break;
-                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
-                    method = clazz.getCPasStaticMethod(cpi);
-                    type = BytecodeVisitor.INVOKE_STATIC;
-                    break;
-                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = joeq.Runtime.Arrays._multinewarray;
-                    type = BytecodeVisitor.INVOKE_STATIC;
-                    break;
-                default:
-                    return null;
-            }
-            return CallTargets.getTargets(clazz, method, type, true);
-        }
-        public CallTargets getCallTargets(AndersenReference klass, boolean exact) {
-            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
-            byte[] bc = ((jq_Method) super.m).getBytecode();
-            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = jwutil.util.Convert.twoBytesToChar(bc, bcIndex+1);
-            byte type;
-            jq_Method method;
-            switch (bc[bcIndex]) {
-                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
-                    type = BytecodeVisitor.INVOKE_VIRTUAL;
-                    // fallthrough
-                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
-                    type = BytecodeVisitor.INVOKE_SPECIAL;
-                    // fallthrough
-                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
-                    method = clazz.getCPasInstanceMethod(cpi);
-                    type = BytecodeVisitor.INVOKE_INTERFACE;
-                    break;
-                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
-                    method = clazz.getCPasStaticMethod(cpi);
-                    type = BytecodeVisitor.INVOKE_STATIC;
-                    break;
-                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = joeq.Runtime.Arrays._multinewarray;
-                    type = BytecodeVisitor.INVOKE_STATIC;
-                    break;
-                default:
-                    return null;
-            }
-            return CallTargets.getTargets(clazz, method, type, (jq_Reference) klass, exact, true);
-        }
-        public CallTargets getCallTargets(java.util.Set receiverTypes, boolean exact) {
-            jq_Class clazz = ((jq_Method) super.m).getDeclaringClass();
-            byte[] bc = ((jq_Method) super.m).getBytecode();
-            if (bc == null || bcIndex < 0 || bcIndex+2 >= bc.length) return null;
-            char cpi = jwutil.util.Convert.twoBytesToChar(bc, bcIndex+1);
-            byte type;
-            jq_Method method;
-            switch (bc[bcIndex]) {
-                case (byte) jq_ClassFileConstants.jbc_INVOKEVIRTUAL:
-                    type = BytecodeVisitor.INVOKE_VIRTUAL;
-                    // fallthrough
-                case (byte) jq_ClassFileConstants.jbc_INVOKESPECIAL:
-                    type = BytecodeVisitor.INVOKE_SPECIAL;
-                    // fallthrough
-                case (byte) jq_ClassFileConstants.jbc_INVOKEINTERFACE:
-                    method = clazz.getCPasInstanceMethod(cpi);
-                    type = BytecodeVisitor.INVOKE_INTERFACE;
-                    break;
-                case (byte) jq_ClassFileConstants.jbc_INVOKESTATIC:
-                    method = clazz.getCPasStaticMethod(cpi);
-                    type = BytecodeVisitor.INVOKE_STATIC;
-                    break;
-                case (byte) jq_ClassFileConstants.jbc_MULTIANEWARRAY:
-                    method = joeq.Runtime.Arrays._multinewarray;
-                    type = BytecodeVisitor.INVOKE_STATIC;
-                    break;
-                default:
-                    return null;
-            }
-            return CallTargets.getTargets(clazz, method, type, receiverTypes, exact, true);
-        }
-        */
         
         public void write(Textualizer t) throws IOException {
             t.writeString("bc "+bcIndex+" ");
@@ -597,9 +502,10 @@ public abstract class ProgramLocation implements Textualizable {
         if (s.equals("quad")) {
             if (m.getBytecode() == null) return null;
             ControlFlowGraph cfg = CodeCache.getCode(m);
-            for (QuadIterator i = new QuadIterator(cfg); i.hasNext(); ) {
-                Quad q = i.nextQuad();
-                if (q.getID() == id) return new QuadProgramLocation(m, q);
+            for (BasicBlock bb : cfg.reversePostOrder()) {
+            	for (Quad q : bb.getQuads()) {
+            		if (q.getID() == id) return new QuadProgramLocation(m, q);
+            	}
             }
         }
         return null;

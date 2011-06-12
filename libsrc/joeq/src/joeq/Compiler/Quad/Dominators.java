@@ -6,10 +6,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
+
 import joeq.Class.jq_Method;
 import joeq.Class.jq_MethodVisitor;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.ListIterator;
 import jwutil.graphs.Navigator;
 import jwutil.graphs.Traversals;
 import jwutil.math.BitString;
@@ -59,19 +59,19 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
             dominators[i] = new BitString(dominators.length);
             dominators[i].setAll();
         }
-        List.BasicBlock rpo;
+        List<BasicBlock> rpo;
         if (direction)
-            rpo = cfg.reversePostOrder(cfg.entry());
+            rpo = cfg.reversePostOrder();
         else
-            rpo = cfg.reversePostOrderOnReverseGraph(cfg.exit());
+            rpo = cfg.reversePostOrderOnReverseGraph();
         for (;;) {
             if (TRACE) System.out.println("Iterating over "+rpo);
             change = false;
-            ListIterator.BasicBlock rpo_i = rpo.basicBlockIterator();
-            BasicBlock first = rpo_i.nextBasicBlock(); // skip first node.
+            Iterator<BasicBlock> rpo_i = rpo.iterator();
+            BasicBlock first = rpo_i.next(); // skip first node.
             bbs[first.getID()] = first;
             while (rpo_i.hasNext()) {
-                BasicBlock bb = rpo_i.nextBasicBlock();
+                BasicBlock bb = rpo_i.next();
                 this.visitBasicBlock(bb);
             }
             if (!change) break;
@@ -86,28 +86,27 @@ public class Dominators extends jq_MethodVisitor.EmptyVisitor implements BasicBl
         if (TRACE) System.out.println("Visiting: "+bb);
         bbs[bb.getID()] = bb;
         temp.setAll();
-        ListIterator.BasicBlock preds = direction?bb.getPredecessors().basicBlockIterator():
-                                                  bb.getSuccessors().basicBlockIterator();
+        Iterator<BasicBlock> preds = direction ? bb.getPredecessors().iterator() : bb.getSuccessors().iterator();
         while (preds.hasNext()) {
-            BasicBlock pred = preds.nextBasicBlock();
+            BasicBlock pred = preds.next();
             if (TRACE) System.out.println("Visiting pred: "+pred);
             temp.and(dominators[pred.getID()]);
         }
         if (direction) {
             if (bb.isExceptionHandlerEntry()) {
-                Iterator it = cfg.getExceptionHandlersMatchingEntry(bb);
+                Iterator<ExceptionHandler> it = cfg.getExceptionHandlersMatchingEntry(bb);
                 while (it.hasNext()) {
-                    ExceptionHandler eh = (ExceptionHandler)it.next();
-                    preds = eh.getHandledBasicBlocks().basicBlockIterator();
+                    ExceptionHandler eh = it.next();
+                    preds = eh.getHandledBasicBlocks().iterator();
                     while (preds.hasNext()) {
-                        BasicBlock pred = preds.nextBasicBlock();
+                        BasicBlock pred = preds.next();
                         if (TRACE) System.out.println("Visiting ex pred: "+pred);
                         temp.and(dominators[pred.getID()]);
                     }
                 }
             }
         } else {
-            ListIterator.ExceptionHandler it = bb.getExceptionHandlers().exceptionHandlerIterator();
+            Iterator<ExceptionHandler> it = bb.getExceptionHandlers().iterator();
             while (it.hasNext()) {
                 ExceptionHandler eh = (ExceptionHandler)it.next();
                 BasicBlock pred = eh.getEntry();

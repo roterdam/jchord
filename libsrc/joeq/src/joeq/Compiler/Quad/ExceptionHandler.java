@@ -6,9 +6,9 @@ package joeq.Compiler.Quad;
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
 import joeq.Runtime.TypeCheck;
-import joeq.Util.Templates.List;
-import joeq.Util.Templates.ListWrapper;
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Exception handler for basic blocks.  Each exception handler handles a type of
@@ -30,7 +30,7 @@ public class ExceptionHandler implements Serializable {
     /** Type of exception that this exception handler catches. */
     private jq_Class exception_type;
     /** List of handled basic blocks. */
-    private java.util.List/*<BasicBlock>*/ handled_blocks;
+    private List<BasicBlock> handled_blocks;
     /** Exception handler entry point. */
     private BasicBlock entry;
     
@@ -43,7 +43,7 @@ public class ExceptionHandler implements Serializable {
             this.exception_type = PrimordialClassLoader.getJavaLangThrowable();
         else
             this.exception_type = ex_type;
-        this.handled_blocks = new java.util.ArrayList(numOfHandledBlocks);
+        this.handled_blocks = new ArrayList<BasicBlock>(numOfHandledBlocks);
         this.entry = entry;
     }
     ExceptionHandler(jq_Class ex_type) {
@@ -51,7 +51,7 @@ public class ExceptionHandler implements Serializable {
             this.exception_type = PrimordialClassLoader.getJavaLangThrowable();
         else
             this.exception_type = ex_type;
-        this.handled_blocks = new java.util.ArrayList();
+        this.handled_blocks = new ArrayList<BasicBlock>();
     }
 
     /** Returns the type of exception that this exception handler catches.
@@ -59,7 +59,7 @@ public class ExceptionHandler implements Serializable {
     public jq_Class getExceptionType() { return exception_type; }
     /** Returns an iteration of the handled basic blocks.
      * @return  an iteration of the handled basic blocks. */
-    public List.BasicBlock getHandledBasicBlocks() { return new ListWrapper.BasicBlock(handled_blocks); }
+    public List<BasicBlock> getHandledBasicBlocks() { return handled_blocks; }
     /** Returns the entry point for this exception handler.
      * @return  the entry point for this exception handler. */
     public BasicBlock getEntry() { return entry; }

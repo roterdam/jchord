@@ -18,26 +18,19 @@ import joeq.Main.jq;
 import joeq.UTF.Utf8;
 import jwutil.util.Assert;
 import jwutil.util.Convert;
-import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.Operand.AConstOperand;
-import joeq.Compiler.Quad.Operand.TypeOperand;
-import joeq.Compiler.Quad.Operand.IConstOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Return;
-import joeq.Compiler.Quad.Operator.Return.RETURN_V;
-import joeq.Compiler.Quad.Operator.Return.RETURN_A;
 import joeq.Compiler.Quad.SSA.EnterSSA;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Compiler.Quad.Operand;
-import joeq.Util.Templates.ListIterator;
 import joeq.Compiler.Quad.ICFGBuilder;
 
 /*
@@ -656,11 +649,8 @@ public abstract class jq_Method extends jq_Member {
 					liveRefVars.add(v);
 				}
 			}
-			for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-					it.hasNext();) {
-				BasicBlock bb = it.nextBasicBlock();
-				for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-					Quad q = it2.nextQuad();
+			for (BasicBlock bb : cfg.reversePostOrder()) {
+				for (Quad q : bb.getQuads()) {
 					process(q.getOp1(), q);
 					process(q.getOp2(), q);
 					process(q.getOp3(), q);
