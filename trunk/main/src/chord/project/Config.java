@@ -61,7 +61,6 @@ public class Config {
 
 	public final static boolean buildScope = Utils.buildBoolProperty("chord.build.scope", false);
 	public final static String runAnalyses = System.getProperty("chord.run.analyses", "");
-	public final static String printMethods = System.getProperty("chord.print.methods", "").replace('#', '$');
 	public final static String printClasses = System.getProperty("chord.print.classes", "").replace('#', '$');
 	public final static boolean printAllClasses = Utils.buildBoolProperty("chord.print.all.classes", false);
 	public final static String printRels = System.getProperty("chord.print.rels", "");
@@ -193,7 +192,6 @@ public class Config {
 		System.out.println("chord.build.scope: " + buildScope);
 		System.out.println("chord.run.analyses: " + runAnalyses);
 		System.out.println("chord.print.all.classes: " + printAllClasses);
-		System.out.println("chord.print.methods: " + printMethods);
 		System.out.println("chord.print.classes: " + printClasses);
 		System.out.println("chord.print.rels: " + printRels);
 		System.out.println("chord.print.project: " + printProject);
