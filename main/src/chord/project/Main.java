@@ -79,11 +79,6 @@ public class Main {
 			for (String className : printClasses)
 				program.printClass(className);
 		}
-		String[] printMethods = Utils.toArray(Config.printMethods);
-		if (printMethods.length > 0) {
-			for (String methodSign : printMethods)
-				program.printMethod(methodSign);
-		}
 		String[] analysisNames = Utils.toArray(Config.runAnalyses);
 		if (analysisNames.length > 0) {
 			project.run(analysisNames);
