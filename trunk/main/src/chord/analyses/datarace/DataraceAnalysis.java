@@ -15,7 +15,7 @@ import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
-import chord.analyses.alias.CSAliasAnalysis;
+import chord.analyses.alias.CSPAAnalysis;
 import chord.analyses.alias.CSObj;
 import chord.analyses.alias.Ctxt;
 import chord.analyses.alias.CtxtsAnalysis;
@@ -90,7 +90,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 	private DomH domH;
 	private DomC domC;
 	private DomL domL;
-	private CSAliasAnalysis hybridAnalysis;
+	private CSPAAnalysis hybridAnalysis;
 	private ThrSenAbbrCSCGAnalysis thrSenAbbrCSCGAnalysis;
 
 	private Execution X;
@@ -108,7 +108,7 @@ public class DataraceAnalysis extends JavaAnalysis {
 		domH = (DomH) ClassicProject.g().getTrgt("H");
 		domC = (DomC) ClassicProject.g().getTrgt("C");
 		domL = (DomL) ClassicProject.g().getTrgt("L");
-		hybridAnalysis = (CSAliasAnalysis) ClassicProject.g().getTrgt("cs-alias-java");
+		hybridAnalysis = (CSPAAnalysis) ClassicProject.g().getTrgt("cs-alias-java");
 		thrSenAbbrCSCGAnalysis = (ThrSenAbbrCSCGAnalysis)
 			ClassicProject.g().getTrgt("thrsen-abbr-cscg-java");
 	}
