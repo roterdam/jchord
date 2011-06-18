@@ -24,7 +24,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,v,f) such that method m contains
- * a statement of the form <tt>v = f</tt>.
+ * a quad of the form <tt>v = f</tt>.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -32,8 +32,7 @@ import chord.project.analyses.ProgramRel;
 	name = "MgetStatFldInst",
 	sign = "M0,V0,F0:F0_M0_V0"
 )
-public class RelMgetStatFldInst extends ProgramRel
-		implements IHeapInstVisitor {
+public class RelMgetStatFldInst extends ProgramRel implements IHeapInstVisitor {
 	private DomM domM;
 	private DomV domV;
 	private DomF domF;

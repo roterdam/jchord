@@ -34,8 +34,7 @@ import chord.project.analyses.ProgramRel;
 	name = "PputInstFldInst",
 	sign = "P0,V0,F0,V1:F0_P0_V0xV1"
 )
-public class RelPputInstFldInst extends ProgramRel
-		implements IHeapInstVisitor {
+public class RelPputInstFldInst extends ProgramRel implements IHeapInstVisitor {
 	private DomP domP;
 	private DomV domV;
 	private DomF domF;
@@ -73,19 +72,22 @@ public class RelPputInstFldInst extends ProgramRel
 			if (f.getType().isReferenceType()) {
 				Operand rx = Putfield.getSrc(q);
 				if (rx instanceof RegisterOperand) {
-					RegisterOperand ro = (RegisterOperand) rx;
-					Register r = ro.getRegister();
-					RegisterOperand bo = (RegisterOperand) Putfield.getBase(q);
-					Register b = bo.getRegister();
-					int pIdx = domP.indexOf(q);
-					assert (pIdx >= 0);
-					int bIdx = domV.indexOf(b);
-					assert (bIdx >= 0);
-					int rIdx = domV.indexOf(r);
-					assert (rIdx >= 0);
-					int fIdx = domF.indexOf(f);
-					assert (fIdx >= 0);
-					add(pIdx, bIdx, fIdx, rIdx);
+					Operand bx = Putfield.getBase(q);
+					if (bx instanceof RegisterOperand) {
+						RegisterOperand bo = (RegisterOperand) bx;
+						Register b = bo.getRegister();
+						RegisterOperand ro = (RegisterOperand) rx;
+						Register r = ro.getRegister();
+						int pIdx = domP.indexOf(q);
+						assert (pIdx >= 0);
+						int bIdx = domV.indexOf(b);
+						assert (bIdx >= 0);
+						int rIdx = domV.indexOf(r);
+						assert (rIdx >= 0);
+						int fIdx = domF.indexOf(f);
+						assert (fIdx >= 0);
+						add(pIdx, bIdx, fIdx, rIdx);
+					}
 				}
 			}
 		}

@@ -27,7 +27,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,b,f,v) such that method m
- * contains a statement of the form <tt>b.f = v</tt>.
+ * contains a quad of the form <tt>b.f = v</tt>.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -35,8 +35,7 @@ import chord.project.analyses.ProgramRel;
 	name = "MputInstFldInst",
 	sign = "M0,V0,F0,V1:F0_M0_V0xV1"
 )
-public class RelMputInstFldInst extends ProgramRel
-		implements IHeapInstVisitor {
+public class RelMputInstFldInst extends ProgramRel implements IHeapInstVisitor {
 	private DomM domM;
 	private DomV domV;
 	private DomF domF;
@@ -62,10 +61,10 @@ public class RelMputInstFldInst extends ProgramRel
 					Register b = bo.getRegister();
 					int mIdx = domM.indexOf(ctnrMethod);
 					assert (mIdx >= 0);
-					int rIdx = domV.indexOf(r);
-					assert (rIdx >= 0);
 					int bIdx = domV.indexOf(b);
 					assert (bIdx >= 0);
+					int rIdx = domV.indexOf(r);
+					assert (rIdx >= 0);
 					int fIdx = 0;
 					add(mIdx, bIdx, fIdx, rIdx);
 				}
@@ -80,8 +79,8 @@ public class RelMputInstFldInst extends ProgramRel
 					Operand bx = Putfield.getBase(q);
 					if (bx instanceof RegisterOperand) {
 						RegisterOperand bo = (RegisterOperand) bx;
-						RegisterOperand ro = (RegisterOperand) rx;
 						Register b = bo.getRegister();
+						RegisterOperand ro = (RegisterOperand) rx;
 						Register r = ro.getRegister();
 						int mIdx = domM.indexOf(ctnrMethod);
 						assert (mIdx >= 0);
