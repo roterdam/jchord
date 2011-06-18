@@ -16,7 +16,6 @@ import chord.bddbddb.Rel.RelView;
 import chord.util.SetUtils;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
@@ -28,7 +27,7 @@ import chord.project.analyses.ProgramRel;
 @Chord(
 	name = "cs-alias-java"
 )
-public class CSAliasAnalysis extends JavaAnalysis {
+public class CSPAAnalysis extends JavaAnalysis {
 	private ProgramRel relCVC;
 	private ProgramRel relFC;
 	private ProgramRel relCFC;

@@ -16,7 +16,6 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.bddbddb.Rel.RelView;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
@@ -31,7 +30,7 @@ import chord.util.SetUtils;
 	name = "cipa-java",
 	consumes = { "VH", "FH", "HFH" }
 )
-public class CIAliasAnalysis extends JavaAnalysis {
+public class CIPAAnalysis extends JavaAnalysis {
 	private ProgramRel relVH;
 	private ProgramRel relFH;
 	private ProgramRel relHFH;
