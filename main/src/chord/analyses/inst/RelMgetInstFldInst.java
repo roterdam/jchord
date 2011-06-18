@@ -14,7 +14,6 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operand.FieldOperand;
 import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.RegisterFactory.Register;
@@ -28,7 +27,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (m,v,b,f) such that method m
- * contains a statement of the form <tt>v = b.f</tt>.
+ * contains a quad of the form <tt>v = b.f</tt>.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -36,8 +35,7 @@ import chord.project.analyses.ProgramRel;
 	name = "MgetInstFldInst",
 	sign = "M0,V0,V1,F0:F0_M0_V0xV1"
 )
-public class RelMgetInstFldInst extends ProgramRel
-		implements IHeapInstVisitor {
+public class RelMgetInstFldInst extends ProgramRel implements IHeapInstVisitor {
 	private DomM domM;
 	private DomV domV;
 	private DomF domF;

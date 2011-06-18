@@ -23,7 +23,7 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (p,v,f) such that the statement
+ * Relation containing each tuple (p,v,f) such that the quad
  * at program point p is of the form <tt>v = f</tt>.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -32,8 +32,7 @@ import chord.project.analyses.ProgramRel;
 	name = "PgetStatFldInst",
 	sign = "P0,V0,F0:F0_P0_V0"
 )
-public class RelPgetStatFldInst extends ProgramRel
-		implements IHeapInstVisitor {
+public class RelPgetStatFldInst extends ProgramRel implements IHeapInstVisitor {
 	private DomP domP;
 	private DomV domV;
 	private DomF domF;
