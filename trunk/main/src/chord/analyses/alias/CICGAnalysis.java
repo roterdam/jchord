@@ -9,7 +9,6 @@ package chord.analyses.alias;
 import chord.analyses.method.DomM;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.project.Project;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
@@ -43,8 +42,7 @@ public class CICGAnalysis extends JavaAnalysis {
 	 */
 	public ICICG getCallGraph() {
 		if (callGraph == null) {
-			callGraph = new CICG(domM, relRootM, relReachableM,
-				relIM, relMM);
+			callGraph = new CICG(domM, relRootM, relReachableM, relIM, relMM);
 		}
 		return callGraph;
 	}
