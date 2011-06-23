@@ -9,10 +9,6 @@ package test;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class T extends java.lang.Thread {
-	static Object p;
-	static {
-		p = new Object();
-	}
     public static void main(String[] a) {
         B b1 = new B();
         B b2 = new B();
