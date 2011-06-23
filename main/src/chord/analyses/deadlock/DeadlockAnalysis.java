@@ -42,15 +42,15 @@ import chord.util.SetUtils;
  * Static deadlock analysis.
  * <p>
  * Outputs relation 'deadlock' containing each tuple (a1,l1,l2,a2,l3,l4) denoting a possible
- * deadlock between abstract thread a1, which acquires abstract lock l1 followed by abstract lock l2,
- * and abstract thread a2, which acquires abstract lock l3 followed by abstract lock l4.
+ * deadlock between abstract thread a1, which acquires a lock at l1 followed by a lock at l2,
+ * and abstract thread a2, which acquires a lock at l3 followed by a lock at l4.
  * <p>
  * Recognized system properties:
  * <ul>
- *   <li>chord.exclude.escaping (default is false).</li>
- *   <li>chord.exclude.parallel (default is false).</li>
- *   <li>chord.exclude.nonreent (default is false).</li>
- *   <li>chord.exclude.nongrded (default is false).</li>
+ *   <li>chord.deadlock.exclude.escaping (default is false).</li>
+ *   <li>chord.deadlock.exclude.parallel (default is false).</li>
+ *   <li>chord.deadlock.exclude.nonreent (default is false).</li>
+ *   <li>chord.deadlock.exclude.nongrded (default is false).</li>
  *   <li>chord.print.results (default is false).</li>
  * </ul>
  * 
@@ -69,10 +69,10 @@ public class DeadlockAnalysis extends JavaAnalysis {
 	private final Map<jq_Method, Set<jq_Method>> MMmap = new HashMap<jq_Method, Set<jq_Method>>();
 
 	public void run() {
-		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
-		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");
-		boolean excludeNonreent = Boolean.getBoolean("chord.exclude.nonreent");
-		boolean excludeNongrded = Boolean.getBoolean("chord.exclude.nongrded");
+		boolean excludeParallel = Boolean.getBoolean("chord.deadlock.exclude.parallel");
+		boolean excludeEscaping = Boolean.getBoolean("chord.deadlock.exclude.escaping");
+		boolean excludeNonreent = Boolean.getBoolean("chord.deadlock.exclude.nonreent");
+		boolean excludeNongrded = Boolean.getBoolean("chord.deadlock.exclude.nongrded");
 
 		domA = (DomA) ClassicProject.g().getTrgt("A");
 		domH = (DomH) ClassicProject.g().getTrgt("H");
