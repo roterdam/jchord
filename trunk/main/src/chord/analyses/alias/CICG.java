@@ -16,6 +16,12 @@ import chord.analyses.method.DomM;
 import chord.project.analyses.ProgramRel;
 import chord.util.SetUtils;
 import chord.util.graph.AbstractGraph;
+import chord.util.ArraySet;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.Operator;
+import joeq.Compiler.Quad.Operator.Invoke;
 
 /**
  * Implementation of a context-insensitive call graph.
@@ -103,7 +109,16 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
 		return SetUtils.iterableToSet(res, view.size());
 	}
 	public Set<Quad> getLabels(jq_Method srcMeth, jq_Method dstMeth) {
-		throw new UnsupportedOperationException();
+        Set<Quad> invks = new ArraySet<Quad>();
+        ControlFlowGraph cfg = srcMeth.getCFG();
+        for (BasicBlock bb : cfg.reversePostOrder()) {
+            for (Quad q : bb.getQuads()) {
+                Operator op = q.getOperator();
+                if (op instanceof Invoke && calls(q, dstMeth))
+                    invks.add(q);
+            }
+        }
+        return invks;
 	}
 	public boolean calls(Quad invk, jq_Method meth) {
 		if (!relIM.isOpen())
