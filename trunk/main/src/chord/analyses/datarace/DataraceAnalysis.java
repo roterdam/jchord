@@ -50,20 +50,20 @@ import chord.util.tuple.object.Trio;
 /**
  * Static datarace analysis.
  * <p>
- * Outputs relation 'datarace' containing each tuple (a1,c1,e1,a2,c2,e2) denoting a possible race
- * between abstract threads a1 and a2 executing accesses e1 and e2, respectively, in abstract contexts
- * c1 and c2 of the methods containing those accesses, respectively.
+ * Outputs relation 'datarace' containing each tuple (a1,e1,a2,e2) denoting a possible race between abstract threads
+ * a1 and a2 executing accesses e1 and e2, respectively.
  * <p>
  * Recognized system properties:
  * <ul>
- *   <li>chord.exclude.escaping (default is false).</li>
- *   <li>chord.exclude.parallel (default is false).</li>
- *   <li>chord.exclude.nongrded (default is false).</li>
- *   <li>chord.print.results (default is false).</li>
+ *   <li>chord.datarace.exclude.init (default is true): Suppress checking races on accesses in constructors.</li>
+ *   <li>chord.datarace.exclude.eqth (default is true): Suppress checking races between the same abstract thread.</li>
+ *   <li>chord.datarace.exclude.escaping (default is false): Suppress the thread-escape analysis stage.</li>
+ *   <li>chord.datarace.exclude.parallel (default is false): Suppress the may-happen-in-parallel analysis stage.</li>
+ *   <li>chord.datarace.exclude.nongrded (default is false): Suppress the lockset analysis stage.</li>
+ *   <li>chord.print.results (default is false): Print race results in HTML.</li>
  * </ul>
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
- * @author Omer Tripp (omertrip@post.tau.ac.il)
  */
 @Chord(name="datarace-java")
 public class DataraceAnalysis extends JavaAnalysis {
@@ -88,9 +88,9 @@ public class DataraceAnalysis extends JavaAnalysis {
 	}
 
 	public void run() {
-		boolean excludeParallel = Boolean.getBoolean("chord.exclude.parallel");
-		boolean excludeEscaping = Boolean.getBoolean("chord.exclude.escaping");
-		boolean excludeNongrded = Boolean.getBoolean("chord.exclude.nongrded");
+		boolean excludeParallel = Boolean.getBoolean("chord.datarace.exclude.parallel");
+		boolean excludeEscaping = Boolean.getBoolean("chord.datarace.exclude.escaping");
+		boolean excludeNongrded = Boolean.getBoolean("chord.datarace.exclude.nongrded");
 
 		init();
 
