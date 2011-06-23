@@ -28,18 +28,14 @@ import chord.util.tuple.object.Pair;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
-		implements ICSCG {
+public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>> implements ICSCG {
 	protected DomM domM;
 	protected ProgramRel relRootCM;
 	protected ProgramRel relReachableCM;
 	protected ProgramRel relCICM;
 	protected ProgramRel relCMCM;
-	public CSCG(DomM domM,
-			ProgramRel relRootCM,
-			ProgramRel relReachableCM,
-			ProgramRel relCICM,
-			ProgramRel relCMCM) {
+	public CSCG(DomM domM, ProgramRel relRootCM, ProgramRel relReachableCM,
+			ProgramRel relCICM, ProgramRel relCMCM) {
 		this.domM = domM;
 		this.relRootCM = relRootCM;
 		this.relReachableCM = relReachableCM;
@@ -49,18 +45,14 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 	public Set<Pair<Ctxt, jq_Method>> getNodes() {
 		if (!relReachableCM.isOpen())
 			relReachableCM.load();
-		Iterable<Pair<Ctxt, jq_Method>> res =
-			relReachableCM.getAry2ValTuples();
-		return SetUtils.iterableToSet(
-				res, relReachableCM.size());
+		Iterable<Pair<Ctxt, jq_Method>> res = relReachableCM.getAry2ValTuples();
+		return SetUtils.iterableToSet(res, relReachableCM.size());
 	}
 	public Set<Pair<Ctxt, jq_Method>> getRoots() {
 		if (!relRootCM.isOpen())
 			relRootCM.load();
-		Iterable<Pair<Ctxt, jq_Method>> res =
-			relRootCM.getAry2ValTuples();
-		return SetUtils.iterableToSet(
-				res, relRootCM.size());
+		Iterable<Pair<Ctxt, jq_Method>> res = relRootCM.getAry2ValTuples();
+		return SetUtils.iterableToSet(res, relRootCM.size());
 	}
 	public Set<Pair<Ctxt, jq_Method>> getPreds(Pair<Ctxt, jq_Method> cm) {
 		if (!relCMCM.isOpen())
@@ -68,10 +60,8 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 		RelView view = relCMCM.getView();
 		view.selectAndDelete(2, cm.val0);
 		view.selectAndDelete(3, cm.val1);
-		Iterable<Pair<Ctxt, jq_Method>> res =
-			view.getAry2ValTuples();
-		return SetUtils.iterableToSet(
-				res, view.size());
+		Iterable<Pair<Ctxt, jq_Method>> res = view.getAry2ValTuples();
+		return SetUtils.iterableToSet(res, view.size());
 	}
 	public Set<Pair<Ctxt, jq_Method>> getSuccs(Pair<Ctxt, jq_Method> cm) {
 		if (!relCMCM.isOpen())
@@ -79,10 +69,8 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 		RelView view = relCMCM.getView();
 		view.selectAndDelete(0, cm.val0);
 		view.selectAndDelete(1, cm.val1);
-		Iterable<Pair<Ctxt, jq_Method>> res =
-			view.getAry2ValTuples();
-		return SetUtils.iterableToSet(
-				res, view.size());
+		Iterable<Pair<Ctxt, jq_Method>> res = view.getAry2ValTuples();
+		return SetUtils.iterableToSet(res, view.size());
 	}
 	public boolean hasNode(Pair<Ctxt, jq_Method> node) {
 		if (!relReachableCM.isOpen())
@@ -139,11 +127,7 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 			CMs.add(cm);
 		return CMs;
 	}
-	/* (non-Javadoc)
-	 * @see chord.util.graph.ILabeledGraph#getLabels(java.lang.Object, java.lang.Object)
-	 */
-	public Set<Quad> getLabels(Pair<Ctxt, jq_Method> origNode,
-			Pair<Ctxt, jq_Method> destNode) {
+	public Set<Quad> getLabels(Pair<Ctxt, jq_Method> origNode, Pair<Ctxt, jq_Method> destNode) {
 		jq_Method meth1 = origNode.val1;
 		Set<Quad> invks = new ArraySet<Quad>();
 		ControlFlowGraph cfg = meth1.getCFG();
@@ -159,12 +143,10 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 		}
 		return invks;
 	}
-	public boolean hasEdge(Pair<Ctxt, jq_Method> node1,
-			Pair<Ctxt, jq_Method> node2) {
+	public boolean hasEdge(Pair<Ctxt, jq_Method> node1, Pair<Ctxt, jq_Method> node2) {
 		if (!relCMCM.isOpen())
 			relCMCM.load();
-		return relCMCM.contains(node1.val0, node1.val1,
-				node2.val0, node2.val1);
+		return relCMCM.contains(node1.val0, node1.val1, node2.val0, node2.val1);
 	}
 	public int numRoots() {
 		if (!relRootCM.isOpen())
@@ -184,8 +166,7 @@ public class CSCG extends AbstractGraph<Pair<Ctxt, jq_Method>>
 		view.selectAndDelete(3, node.val1);
 		return view.size();
 	}
-	public boolean calls(Ctxt origCtxt, Quad origInvk,
-			Ctxt destCtxt, jq_Method destMeth) {
+	public boolean calls(Ctxt origCtxt, Quad origInvk, Ctxt destCtxt, jq_Method destMeth) {
 		if (!relCICM.isOpen())
 			relCICM.load();
 		return relCICM.contains(origCtxt, origInvk, destCtxt, destMeth);
