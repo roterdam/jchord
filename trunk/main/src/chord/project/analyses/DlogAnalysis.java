@@ -35,9 +35,8 @@ import chord.util.Utils;
 import gnu.trove.TIntArrayList;
 
 /**
- * Generic implementation of a Dlog task (a program analysis
- * expressed in Datalog and solved using BDD-based solver
- * <a href="http://bddbddb.sourceforge.net/">bddbddb</a>).
+ * Generic implementation of a Dlog task (a program analysis expressed in Datalog and
+ * solved using BDD-based solver <a href="http://bddbddb.sourceforge.net/">bddbddb</a>).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -51,17 +50,14 @@ public class DlogAnalysis extends JavaAnalysis {
 	private boolean hasNoErrors = true;
 	// number of line currently being parsed in the datalog program
 	private int lineNum;
-	// bdd ordering of all domains specified using .bddvarorder in
-	// the datalog program
+	// bdd ordering of all domains specified using .bddvarorder in the datalog program
 	private String order;
-	// ordered list of all domains specified using .bddvarorder in
-	// the datalog program
+	// ordered list of all domains specified using .bddvarorder in the datalog program
 	private List<String> minorDomNames;
 	// may return null
 	/**
 	 * Provides the name of this Datalog analysis.
-	 * It is specified via a line of the form "# name=..." in the
-	 * file containing the analysis.
+	 * It is specified via a line of the form "# name=..." in the file containing the analysis.
 	 * 
 	 * @return	The name of this Datalog analysis.
 	 */
@@ -79,7 +75,7 @@ public class DlogAnalysis extends JavaAnalysis {
 	/**
 	 * Parses the Datalog analysis in the specified file.
 	 * 
-	 * @param	fileName	A file containing a Datalog analysis.
+	 * @param	fileName A file containing a Datalog analysis.
 	 * 
 	 * @return	true iff the Datalog analysis parses successfully.
 	 */
@@ -97,8 +93,7 @@ public class DlogAnalysis extends JavaAnalysis {
 			Messages.log(ex.getMessage());
 			return false;
 		}
-		Pattern p = Pattern.compile(
-			"(\\w)+\\((\\w)+:(\\w)+(,(\\w)+:(\\w)+)*\\)((input)|(output))");
+		Pattern p = Pattern.compile("(\\w)+\\((\\w)+:(\\w)+(,(\\w)+:(\\w)+)*\\)((input)|(output))");
 		for (lineNum = 1; true; lineNum++) {
 			String s;
 			try {
@@ -140,8 +135,7 @@ public class DlogAnalysis extends JavaAnalysis {
 				String[] a = order.split("_|x");
 				for (String minorDomName : a) {
 					if (minorDomNames.contains(minorDomName)) {
-						error("Domain name '" + minorDomName +
-							"' occurs multiple times in .bddvarorder; " +
+						error("Domain name '" + minorDomName + "' occurs multiple times in .bddvarorder; " +
 							"considering first occurrence.");
 					} else {
 						minorDomNames.add(minorDomName);
@@ -220,13 +214,11 @@ public class DlogAnalysis extends JavaAnalysis {
 					index = Integer.parseInt(domName.substring(j + 1, i));
 				}
 				if (relMinorDomNames.contains(minorDomName)) {
-					error("Domain name '" + minorDomName +
-						"' occurs multiple times in declaration of " +
+					error("Domain name '" + minorDomName + "' occurs multiple times in declaration of " +
 						"relation '" + relName + "'");
 					ignore = true;
 				} else if (!minorDomNames.contains(minorDomName)) {
-					error("Domain name '" + domName +
-						"' in declaration of relation '" + relName +
+					error("Domain name '" + domName + "' in declaration of relation '" + relName +
 						"' does not occur in .bddvarorder");
 					ignore = true;
 				} else {
@@ -284,8 +276,7 @@ public class DlogAnalysis extends JavaAnalysis {
 		return subOrder;
 	}
 	private void error(String errMsg) {
-		System.err.println("ERROR: " + fileName + ": line " +
-			lineNum + ": " + errMsg);
+		Messages.log("ERROR: " + fileName + ": line " + lineNum + ": " + errMsg);
 		hasNoErrors = false;
 	}
 	/**
@@ -328,31 +319,25 @@ public class DlogAnalysis extends JavaAnalysis {
 		}
 	}
 	/**
-	 * Provides the names of all domains of relations
-	 * consumed/produced by this Datalog analysis.
+	 * Provides the names of all domains of relations consumed/produced by this Datalog analysis.
 	 * 
-	 * @return	The names of all domains of relations
-	 *			consumed/produced by this Datalog analysis.
+	 * @return	The names of all domains of relations consumed/produced by this Datalog analysis.
 	 */
 	public Set<String> getDomNames() {
 		return majorDomNames;
 	}
 	/**
-	 * Provides the names and signatures of all relations consumed
-	 * by this Datalog analysis.
+	 * Provides the names and signatures of all relations consumed by this Datalog analysis.
 	 * 
-	 * @return	The names and signatures of all relations consumed
-	 *			by this Datalog analysis.
+	 * @return	The names and signatures of all relations consumed by this Datalog analysis.
 	 */
 	public Map<String, RelSign> getConsumedRels() {
 		return consumedRels;
 	}
 	/**
-	 * Provides the names and signatures of all relations produced
-	 * by this Datalog analysis.
+	 * Provides the names and signatures of all relations produced by this Datalog analysis.
 	 * 
-	 * @return	The names and signatures of all relations produced
-	 *			 by this Datalog analysis.
+	 * @return	The names and signatures of all relations produced by this Datalog analysis.
 	 */
 	public Map<String, RelSign> getProducedRels() {
 		return producedRels;
