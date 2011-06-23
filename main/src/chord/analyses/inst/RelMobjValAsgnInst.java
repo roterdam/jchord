@@ -15,6 +15,7 @@ import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import chord.project.Messages;
 import chord.analyses.alloc.DomH;
 import chord.analyses.method.DomM;
 import chord.analyses.var.DomV;
@@ -46,23 +47,20 @@ public class RelMobjValAsgnInst extends ProgramRel {
 			RegisterOperand vo;
 			if (op instanceof New)
 				vo = New.getDest(q);
-			else if(op instanceof NewArray)
+			else if (op instanceof NewArray)
 				vo = NewArray.getDest(q);
-			else if(op instanceof Invoke)
-			  vo = Invoke.getDest(q);
-		 else if(op instanceof MultiNewArray)
-			vo = NewArray.getDest(q);
+			else if (op instanceof Invoke)
+				vo = Invoke.getDest(q);
+			else if (op instanceof MultiNewArray)
+				vo = NewArray.getDest(q);
 			else {
-			  System.err.println("WARN: in RelMobjValAsgnInst saw H element with op type " + op.toString());
-			  vo = null;
+				Messages.fatal("Unknown quad in domain H: " + q);
+				vo = null;
 			}
 			Register v = vo.getRegister();
-
 			int vIdx = domV.indexOf(v);
-//	assert (vIdx >= 0);
-
-			if(vIdx >= 0)
-		add(mIdx, vIdx, hIdx);
-	}
+			if (vIdx >= 0)
+				add(mIdx, vIdx, hIdx);
+		}
 	}
 }
