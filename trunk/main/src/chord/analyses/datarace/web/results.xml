@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE results SYSTEM "results.dtd" [
   <!ENTITY dataracelist SYSTEM "dataracelist.xml">
-  <!ENTITY TCElist SYSTEM "TCElist.xml">
+  <!ENTITY TElist SYSTEM "TElist.xml">
   <!ENTITY Olist SYSTEM "Olist.xml">
-  <!ENTITY Clist SYSTEM "Clist.xml">
   <!ENTITY Alist SYSTEM "Alist.xml">
   <!ENTITY Hlist SYSTEM "Hlist.xml">
   <!ENTITY Ilist SYSTEM "Ilist.xml">
@@ -14,9 +13,8 @@
 ]>
 <results>
 &dataracelist;
-&TCElist;
+&TElist;
 &Olist;
-&Clist;
 &Alist;
 &Hlist;
 &Ilist;

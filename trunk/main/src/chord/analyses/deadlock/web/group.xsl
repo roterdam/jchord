@@ -1,12 +1,11 @@
 <xsl:stylesheet
-   version="2.0"
-   xmlns="http://www.w3.org/1999/xhtml"
-   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-   xmlns:chord="http://chord.stanford.edu/">
+	version="2.0"
+	xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
+	xmlns:chord="http://chord.stanford.edu/">
 
 <xsl:include href="A.xsl"/>
 <xsl:include href="O.xsl"/>
-<xsl:include href="C.xsl"/>
 
 <xsl:function name="chord:printThrd">
     <xsl:param name="Telem"/>
@@ -16,14 +15,12 @@
 </xsl:function>
 
 <xsl:function name="chord:printLock">
-    <xsl:param name="Celem"/>
     <xsl:param name="Lelem"/>
     <xsl:param name="Oelem"/>
 	<xsl:variable name="file" select="$Lelem/@file"/>
 	<xsl:variable name="line" select="$Lelem/@line"/>
 	<td>Lock held at <a href="{$file}.html#{$line}">
 		<xsl:value-of select="$file"/>:<xsl:value-of select="$line"/></a> <br/>
-		in context <xsl:apply-templates select="$Celem"/> <br/>
 		allocated at <xsl:apply-templates select="$Oelem"/>
 	</td>
 </xsl:function>
@@ -59,10 +56,6 @@
 			<xsl:copy-of select="chord:printThrd($T1elem)"/>
 			<xsl:copy-of select="chord:printThrd($T2elem)"/>
 		</tr>
-		<xsl:variable name="C1elem" select="id(@C1id)"/>
-		<xsl:variable name="C2elem" select="id(@C2id)"/>
-		<xsl:variable name="C3elem" select="id(@C3id)"/>
-		<xsl:variable name="C4elem" select="id(@C4id)"/>
 		<xsl:variable name="M1elem" select="id(@M1id)"/>
 		<xsl:variable name="M2elem" select="id(@M2id)"/>
 		<xsl:variable name="M3elem" select="id(@M3id)"/>
@@ -76,36 +69,30 @@
 		<xsl:variable name="L3elem" select="id(@L3id)"/>
 		<xsl:variable name="L4elem" select="id(@L4id)"/>
 		<tr>
-			<xsl:copy-of select="chord:printLock($C1elem, $L1elem, $O1elem)"/>
-			<xsl:copy-of select="chord:printLock($C3elem, $L3elem, $O3elem)"/>
+			<xsl:copy-of select="chord:printLock($L1elem, $O1elem)"/>
+			<xsl:copy-of select="chord:printLock($L3elem, $O3elem)"/>
 		</tr>
 		<tr>
-			<xsl:copy-of select="chord:printLock($C2elem, $L2elem, $O2elem)"/>
-			<xsl:copy-of select="chord:printLock($C4elem, $L4elem, $O4elem)"/>
+			<xsl:copy-of select="chord:printLock($L2elem, $O2elem)"/>
+			<xsl:copy-of select="chord:printLock($L4elem, $O4elem)"/>
 		</tr>
 		<tr>
 			<td>
-				<xsl:variable name="T1Cid" select="id(@T1id)/@Cid"/>
 				<xsl:variable name="T1Mid" select="id(@T1id)/@Mid"/>
-				<xsl:variable name="C1id" select="@C1id"/>
 				<xsl:variable name="M1id" select="@M1id"/>
-				<xsl:variable name="C2id" select="@C2id"/>
 				<xsl:variable name="M2id" select="@M2id"/>
-				[<a href="path_{$T1Cid}_{$T1Mid}_{$C1id}_{$M1id}.html">Shortest path from thread root to first lock</a>]
-				<xsl:if test="$M1id != $M2id or $C1id != $C2id">
-					[<a href="path_{$C1id}_{$M1id}_{$C2id}_{$M2id}.html">Shortest path from first lock to second lock</a>]
+				[<a href="path_{$T1Mid}_{$M1id}.html">Shortest path from thread root to first lock</a>]
+				<xsl:if test="$M1id != $M2id">
+					[<a href="path_{$M1id}_{$M2id}.html">Shortest path from first lock to second lock</a>]
 				</xsl:if>
 			</td>
 			<td>
-				<xsl:variable name="T2Cid" select="id(@T2id)/@Cid"/>
 				<xsl:variable name="T2Mid" select="id(@T2id)/@Mid"/>
-				<xsl:variable name="C3id" select="@C3id"/>
 				<xsl:variable name="M3id" select="@M3id"/>
-				<xsl:variable name="C4id" select="@C4id"/>
 				<xsl:variable name="M4id" select="@M4id"/>
-				[<a href="path_{$T2Cid}_{$T2Mid}_{$C3id}_{$M3id}.html">Shortest path from thread root to first lock</a>]
-				<xsl:if test="$M3id != $M4id or $C3id != $C4id">
-					[<a href="path_{$C3id}_{$M3id}_{$C4id}_{$M4id}.html">Shortest path from first lock to second lock</a>]
+				[<a href="path_{$T2Mid}_{$M3id}.html">Shortest path from thread root to first lock</a>]
+				<xsl:if test="$M3id != $M4id">
+					[<a href="path_{$M3id}_{$M4id}.html">Shortest path from first lock to second lock</a>]
 				</xsl:if>
 			</td>
 		</tr>

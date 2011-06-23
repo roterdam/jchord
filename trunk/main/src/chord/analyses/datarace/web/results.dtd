@@ -1,5 +1,4 @@
 <!ENTITY % Olist SYSTEM "Olist.dtd">
-<!ENTITY % Clist SYSTEM "Clist.dtd">
 <!ENTITY % Alist SYSTEM "Alist.dtd">
 <!ENTITY % Hlist SYSTEM "Hlist.dtd">
 <!ENTITY % Ilist SYSTEM "Ilist.dtd">
@@ -7,20 +6,19 @@
 <!ENTITY % Elist SYSTEM "Elist.dtd">
 <!ENTITY % Flist SYSTEM "Flist.dtd">
 <!ENTITY % Llist SYSTEM "Llist.dtd">
-<!ELEMENT results (dataracelist, TCElist, Olist, Clist, Alist, Hlist, Ilist, Mlist, Elist, Flist, Llist)>
+<!ELEMENT results (dataracelist, TElist, Olist, Alist, Hlist, Ilist, Mlist, Elist, Flist, Llist)>
 <!ELEMENT dataracelist (datarace)*>
 <!ELEMENT datarace EMPTY> 
 <!ATTLIST datarace
 	Fid		IDREF	#IMPLIED
 	Oid		IDREF	#IMPLIED
-	TCE1id	IDREF	#REQUIRED
-	TCE2id	IDREF	#REQUIRED>
-<!ELEMENT TCElist (TCE)*>
-<!ELEMENT TCE (path)*>
-<!ATTLIST TCE
+	TE1id	IDREF	#REQUIRED
+	TE2id	IDREF	#REQUIRED>
+<!ELEMENT TElist (TE)*>
+<!ELEMENT TE (path)*>
+<!ATTLIST TE
 	id		ID		#REQUIRED
 	Tid		IDREF	#REQUIRED
-	Cid		IDREF	#REQUIRED
 	Eid		IDREF	#REQUIRED>
 <!ELEMENT lock EMPTY>
 <!ATTLIST lock
@@ -30,14 +28,12 @@
 <!ELEMENT truncated EMPTY>
 <!ELEMENT elem		EMPTY>
 <!ATTLIST elem
-	Iid		IDREF	#REQUIRED
-	Cid		IDREF	#REQUIRED>
+	Iid		IDREF	#REQUIRED>
 <!ELEMENT lock		EMPTY>
 <!ATTLIST lock
 	Lid		IDREF	#REQUIRED
 	Oid		IDREF	#REQUIRED>
 %Olist;
-%Clist;
 %Alist;
 %Hlist;
 %Ilist;

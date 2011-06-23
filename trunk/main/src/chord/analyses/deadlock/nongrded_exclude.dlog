@@ -7,15 +7,15 @@
 # name=deadlock-nongrded-exclude-dlog
 
 .include "A.dom"
-.include "N.dom"
+.include "L.dom"
 
-.bddvarorder A0xA1_N0_N1
+.bddvarorder A0xA1_L0_L1
 
 ###
 # Relations
 ###
 
-guarded(t1:A0,t2:A1,n1:N0,n3:N1) output
+guarded(t1:A0,t2:A1,l1:L0,l3:L1) output
 
 ###
 # Constraints

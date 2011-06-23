@@ -4,11 +4,9 @@
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 <xsl:import href="M.xsl"/>
-<xsl:import href="C.xsl"/>
 
 <xsl:template match="A">
-    <xsl:apply-templates select="id(@Mid)"/> <br/>
-    Context: <xsl:apply-templates select="id(@Cid)"/>
+    <xsl:apply-templates select="id(@Mid)"/>
 </xsl:template>
 
 </xsl:stylesheet>

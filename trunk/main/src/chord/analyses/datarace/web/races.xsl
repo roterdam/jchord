@@ -8,14 +8,14 @@
 
 <xsl:template match="/">
 	<xsl:for-each select="results/dataracelist/datarace">
-		<xsl:variable name="tce1id" select="@TCE1id"/>
-		<xsl:variable name="tce2id" select="@TCE2id"/>
+		<xsl:variable name="te1id" select="@TE1id"/>
+		<xsl:variable name="te2id" select="@TE2id"/>
 		<xsl:variable name="m_filename"
-			select="concat('race_', $tce1id, '_', $tce2id, '.html')"/>
+			select="concat('race_', $te1id, '_', $te2id, '.html')"/>
 		<xsl:variable name="l_filename"
-			select="concat('path_', $tce1id, '.html')"/>
+			select="concat('path_', $te1id, '.html')"/>
 		<xsl:variable name="r_filename"
-			select="concat('path_', $tce2id, '.html')"/>
+			select="concat('path_', $te2id, '.html')"/>
 		<xsl:result-document href="{$m_filename}">
 			<html>
 				<head>

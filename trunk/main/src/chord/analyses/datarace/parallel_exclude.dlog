@@ -7,16 +7,15 @@
 # name=datarace-parallel-exclude-dlog
 
 .include "A.dom"
-.include "C.dom"
 .include "E.dom"
 
-.bddvarorder E0_A0xA1_C0
+.bddvarorder E0_A0xA1
 
 ###
 # Relations
 ###
 
-mhe(c:C0,e:E0,t1:A0,t2:A1) output
+mhe(e:E0,t1:A0,t2:A1) output
 
-mhe(_,_,_,_).
+mhe(_,_,_).
 

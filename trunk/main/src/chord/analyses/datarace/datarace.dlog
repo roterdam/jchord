@@ -8,71 +8,90 @@
 
 .include "A.dom"
 .include "F.dom"
-.include "C.dom"
 .include "E.dom"
+.include "H.dom"
+.include "M.dom"
+.include "L.dom"
 
-.bddvarorder F0_E0_E1_A0xA1_C0xC1xC2
+.bddvarorder L0_F0_E0_E1_M0_A0xA1_H0
 
 ###
 # Relations
 ###
 
-rdOrWrTCEF(t:A0,c:C0,e:E0,f:F0) input
-onlyWrTCEF(t:A0,c:C0,e:E0,f:F0) input
-startingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
-
-###
-
-statF(f:F0) input
+writeE(e:E0) input
+ME(m:M0,e:E0) input
 EF(e:E0,f:F0) input
+statF(f:F0) input
+reachableAM(a:A0,m:M0) input
+checkExcludedM(m:M0) input
+excludeInitM(1) input
+
 statE(e:E0)
-CEC(c:C0,e:E0,o:C1) input
-escapingRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+rdOrWrAEF(a:A0,e:E0,f:F0)
+onlyWrAEF(a:A0,e:E0,f:F0)
+relevantAM(a:A0,m:M0)
+relevantAE(a:A0,e:E0)
 
 ###
 
-mhe(c:C0,e:E0,t1:A0,t2:A1) input
-parallelRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+startingRace(a1:A0,e1:E0,a2:A1,e2:E1)
 
 ###
 
-guardedE(t:A0,c:C0,e:E0,o:C1) input
-unlikelyRaceHext(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1)
+EH(e:E0,h:H0) input
+escapingRace(a1:A0,e1:E0,a2:A1,e2:E1) output
 
-ctxtInsStartingRace(e1:E0,e2:E1) output
-datarace(t1:A0,c1:C0,e1:E0,t2:A1,c2:C1,e2:E1) output
+###
+
+mhe(e:E0,a1:A0,a2:A1) input
+parallelRace(a1:A0,e1:E0,a2:A1,e2:E1) output
+
+###
+
+syncLH(l:L,h:H) input
+unlockedE(t:A0,e:E0,o:H0) input
+guardedE(t:A0,e:E0,o:H0)
+unlikelyRace(a1:A0,e1:E0,a2:A1,e2:E1) output
+
+ultimateRace(a1:A0,e1:E0,a2:A1,e2:E1) output
+raceEEH(e1:E0,e2:E1,h:H0) output
 
 ###
 # Constraints
 ###
 
-startingRaceHext(t1,c1,e1,t2,c2,e2) :- onlyWrTCEF(t1,c1,e1,f), rdOrWrTCEF(t2,c2,e2,f), e1 < e2.
-startingRaceHext(t1,c1,e1,t2,c2,e2) :- rdOrWrTCEF(t1,c1,e1,f), onlyWrTCEF(t2,c2,e2,f), e1 < e2.
-startingRaceHext(t1,c1,e1,t2,c2,e2) :- onlyWrTCEF(t1,c1,e1,f), onlyWrTCEF(t2,c2,e2,f), \
-	e1 = e2, c1 < c2.
-startingRaceHext(t1,c1,e1,t2,c2,e2) :- onlyWrTCEF(t1,c1,e1,f), onlyWrTCEF(t2,c2,e2,f), \
-	e1 = e2, c1 = c2, t1 <= t2.
-ctxtInsStartingRace(e1,e2) :- startingRaceHext(_,_,e1,_,_,e2).
+relevantAM(a,m) :- reachableAM(a,m), !checkExcludedM(m).
+
+relevantAE(a,e) :- relevantAM(a,m), ME(m,e).
+
+rdOrWrAEF(a,e,f) :- relevantAE(a,e), EF(e,f).
+onlyWrAEF(a,e,f) :- relevantAE(a,e), EF(e,f), writeE(e).
+
+startingRace(a1,e1,a2,e2) :- onlyWrAEF(a1,e1,f), rdOrWrAEF(a2,e2,f), e1 < e2.
+startingRace(a1,e1,a2,e2) :- rdOrWrAEF(a1,e1,f), onlyWrAEF(a2,e2,f), e1 < e2.
+startingRace(a1,e1,a2,e2) :- onlyWrAEF(a1,e1,f), onlyWrAEF(a2,e2,f), e1 = e2, a1 <= a2.
 
 ###
 
 statE(e) :- EF(e,f), statF(f).
 
-escapingRaceHext(t1,c1,e1,t2,c2,e2) :- startingRaceHext(t1,c1,e1,t2,c2,e2), \
-	CEC(c1,e1,o), CEC(c2,e2,o).
-escapingRaceHext(t1,c1,e1,t2,c2,e2) :- startingRaceHext(t1,c1,e1,t2,c2,e2), \
-	statE(e1), statE(e2).
+escapingRace(a1,e1,a2,e2) :- startingRace(a1,e1,a2,e2), EH(e1,h), EH(e2,h).
+escapingRace(a1,e1,a2,e2) :- startingRace(a1,e1,a2,e2), statE(e1), statE(e2).
 
 ###
 
-parallelRaceHext(t1,c1,e1,t2,c2,e2) :- escapingRaceHext(t1,c1,e1,t2,c2,e2), \
-	mhe(c1,e1,t1,t2), mhe(c2,e2,t2,t1).
+parallelRace(a1,e1,a2,e2) :- escapingRace(a1,e1,a2,e2), mhe(e1,a1,a2), mhe(e2,a2,a1).
 
 ###
 
-unlikelyRaceHext(t1,c1,e1,t2,c2,e2) :- parallelRaceHext(t1,c1,e1,t2,c2,e2), \
-	guardedE(t1,c1,e1,o), guardedE(t2,c2,e2,o).
+syncH(h) :- syncLH(_,h).
+guardedE(t,e,h) :- relevantAE(t,e), syncH(h), !unlockedE(t,e,h).
 
-datarace(t1,c1,e1,t2,c2,e2) :- parallelRaceHext(t1,c1,e1,t2,c2,e2), \
-	!unlikelyRaceHext(t1,c1,e1,t2,c2,e2).
+unlikelyRace(a1,e1,a2,e2) :- parallelRace(a1,e1,a2,e2), guardedE(a1,e1,h), guardedE(a2,e2,h).
+unlikelyRace(a1,e1,a2,e2) :- parallelRace(a1,e1,a2,e2), a1=a2.
+
+ultimateRace(a1,e1,a2,e2) :- parallelRace(a1,e1,a2,e2), !unlikelyRace(a1,e1,a2,e2).
+
+raceEEH(e1,e2,h) :- ultimateRace(_,e1,_,e2), EH(e1,h), EH(e2,h).
 
