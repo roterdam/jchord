@@ -12,14 +12,14 @@ import chord.util.Utils;
 
 public class TrgtParser {
 	private static final String DOM_NAMES_INCONSISTENT = 
-		"ERROR: Project builder: Relation '%s' declared with different domain names '%s' and '%s' in '%s' and '%s' respectively.";
+		"ERROR: TrgtParser: Relation '%s' declared with different domain names '%s' and '%s' in '%s' and '%s' respectively.";
 	private static final String DOM_ORDERS_INCONSISTENT = 
-		"WARN: Project builder: Relation '%s' declared with different domain orders '%s' and '%s' in '%s' and '%s' respectively.";
-	private static final String RELATION_SIGN_UNKNOWN = "ERROR: Project builder: Sign of relation '%s' unknown.";
-	private static final String RELATION_ORDER_UNKNOWN = "ERROR: Project builder: Order of relation '%s' unknown.";
-	private static final String TARGET_TYPE_UNKNOWN = "ERROR: Project builder: Type of target '%s' unknown.";
+		"WARN: TrgtParser: Relation '%s' declared with different domain orders '%s' and '%s' in '%s' and '%s' respectively.";
+	private static final String RELATION_SIGN_UNKNOWN = "ERROR: TrgtParser: Sign of relation '%s' unknown.";
+	private static final String RELATION_ORDER_UNKNOWN = "ERROR: TrgtParser: Order of relation '%s' unknown.";
+	private static final String TARGET_TYPE_UNKNOWN = "ERROR: TrgtParser: Type of target '%s' unknown.";
 	private static final String TARGET_TYPE_INCONSISTENT =
-		"ERROR: Project builder: Target '%s' declared with inconsistent types '%s' and '%s' in '%s' and '%s' respectively.";
+		"ERROR: TrgtParser: Target '%s' declared with inconsistent types '%s' and '%s' in '%s' and '%s' respectively.";
 
 	private final Map<String, Set<TrgtInfo>> nameToTrgtInfosMap;
 	private final Map<String, Class> nameToTrgtTypeMap =
