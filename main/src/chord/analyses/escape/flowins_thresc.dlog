@@ -8,51 +8,35 @@
 
 .include "M.dom"
 .include "V.dom"
-.include "C.dom"
+.include "H.dom"
 .include "P.dom"
 .include "Z.dom"
 .include "F.dom"
 .include "E.dom"
-.include "T.dom"
 
-.bddvarorder E0_M0xP0_V0_C0_F0_C1_Z0_T0
+.bddvarorder E0_M0xP0_V0_H0_F0_H1_Z0
 
 ###
 # Relations
 ###
 
-CVC(c1:C0,v:V0,c2:C1) input
-FC(f:F,c:C) input
-CFC(c1:C,f:F,c2:C) input
+VH(v:V0,h:H0) input
+FH(f:F,h:H) input
+HFH(h1:H0,f:F0,h2:H1) input
 MmethArg(m:M,z:Z,v:V) input
-escO(o:C) output
 MV(m:M,v:V) input
 MP(m:M,p:P) input
 EV(e:E,v:V) input
-escCPVO(c:C,p:P,v:V,o:C) output
-reachableCM(c:C,m:M) input
-ME(m:M,e:E) input
-checkExcludedT(t:T) input
-TM(t:T,m:M) input
-
-escCE(c:C,e:E)
-flowinsVisitedE(e:E) output
-flowinsEscE(e:E) output
-flowinsLocE(e:E) output
-queryE(e:E) output
+escH(o:H) output
+escPVH(p:P,v:V,h:H) output
 
 ###
 # Constraints
 ###
 
-escO(o) :- FC(_,o).
-escO(o) :- MmethArg(1,0,v), CVC(_,v,o).
-escO(o2) :- CFC(o1,_,o2), escO(o1).
+escH(h) :- FH(_,h).
+escH(h) :- MmethArg(1,0,v), VH(v,h).
+escH(h2) :- HFH(h1,_,h2), escH(h1).
 
-escCPVO(c,p,v,o) :- CVC(c,v,o), MV(m,v), MP(m,p), escO(o). split
-escCE(c,e) :- EV(e,v), CVC(c,v,o), escO(o).
+escPVH(p,v,h) :- VH(v,h), MV(m,v), MP(m,p), escH(h). split
 
-queryE(e) :- !checkExcludedT(t), TM(t,m), ME(m,e), EV(e,_). # All queries we care about
-flowinsVisitedE(e) :- queryE(e), ME(m,e), reachableCM(_,m). # Things which are local
-flowinsEscE(e) :- queryE(e), escCE(_,e). # Escaping
-flowinsLocE(e) :- queryE(e), !flowinsEscE(e). # Local = not escaping

@@ -1,9 +1,8 @@
 <?xml version="1.0"?>
 <!DOCTYPE results SYSTEM "results.dtd" [
   <!ENTITY deadlocklist SYSTEM "deadlocklist.xml">
-  <!ENTITY CMCMlist SYSTEM "CMCMlist.xml">
+  <!ENTITY MMlist SYSTEM "MMlist.xml">
   <!ENTITY Olist SYSTEM "Olist.xml">
-  <!ENTITY Clist SYSTEM "Clist.xml">
   <!ENTITY Alist SYSTEM "Alist.xml">
   <!ENTITY Hlist SYSTEM "Hlist.xml">
   <!ENTITY Ilist SYSTEM "Ilist.xml">
@@ -12,9 +11,8 @@
 ]>
 <results>
 &deadlocklist;
-&CMCMlist;
+&MMlist;
 &Olist;
-&Clist;
 &Alist;
 &Hlist;
 &Ilist;

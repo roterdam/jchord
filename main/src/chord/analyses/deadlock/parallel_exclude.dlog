@@ -7,19 +7,19 @@
 # name=deadlock-parallel-exclude-dlog
 
 .include "A.dom"
-.include "N.dom"
+.include "L.dom"
 
-.bddvarorder A0xA1_N0_N1
+.bddvarorder A0xA1_L0_L1
 
 ###
 # Relations
 ###
 
-mhpTNTN(t1:A0,n1:N0,t2:A1,n2:N1) output
+mhpTLTL(t1:A0,l1:L0,t2:A1,l2:L1) output
 
 ###
 # Constraints
 ###
 
-mhpTNTN(_,_,_,_).
+mhpTLTL(_,_,_,_).
 

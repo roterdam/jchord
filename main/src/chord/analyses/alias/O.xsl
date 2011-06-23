@@ -3,11 +3,11 @@
 	xmlns="http://www.w3.org/1999/xhtml"
 	xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
-<xsl:import href="C.xsl"/>
+<xsl:import href="H.xsl"/>
 
 <xsl:template match="O">
 	<xsl:text>{</xsl:text>
-		<xsl:for-each select="id(@Cids)">
+		<xsl:for-each select="id(@Hids)">
    			<xsl:apply-templates select="."/>
 			<xsl:if test="position()!=last()">
 				<xsl:text>, </xsl:text>

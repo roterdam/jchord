@@ -10,12 +10,9 @@ import joeq.Class.jq_Method;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.program.Program;
-import chord.analyses.alias.Ctxt;
-import chord.analyses.alias.DomC;
 import chord.analyses.method.DomM;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
-import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Pair;
 
 /**
@@ -45,44 +42,39 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "threads-java",
-	consumes = { "threadC" },
-	produces = { "A", "threadACM" },
-	namesOfSigns = { "threadACM" },
-	signs = { "A0,C0,M0:A0_M0_C0" },
+	name = "thread-java",
+	consumes = { "threadM" },
+	produces = { "A", "threadAM" },
+	namesOfSigns = { "threadAM" },
+	signs = { "A0,M0:A0_M0" },
 	namesOfTypes = { "A" },
 	types = { DomA.class }
 )
-public class ThreadsAnalysis extends JavaAnalysis {
+public class ThreadAnalysis extends JavaAnalysis {
 	public void run() {
+		ClassicProject project = ClassicProject.g();
 		Program program = Program.g();
-		DomC domC = (DomC) ClassicProject.g().getTrgt("C");
-		DomM domM = (DomM) ClassicProject.g().getTrgt("M");
-		DomA domA = (DomA) ClassicProject.g().getTrgt("A");
+		DomM domM = (DomM) project.getTrgt("M");
+		DomA domA = (DomA) project.getTrgt("A");
 		domA.clear();
 		domA.add(null);
 		jq_Method mainMeth = program.getMainMethod();
-		Ctxt epsilon = domC.get(0);
-		domA.add(new Pair<Ctxt, jq_Method>(epsilon, mainMeth));
-		jq_Method threadStartMeth = program.getThreadStartMethod();
-		if (threadStartMeth != null) {
-			ProgramRel relThreadC = (ProgramRel) ClassicProject.g().getTrgt("threadC");
-			relThreadC.load();
-			Iterable<Ctxt> tuples = relThreadC.getAry1ValTuples();
-			for (Ctxt c : tuples) {
-				domA.add(new Pair<Ctxt, jq_Method>(c, threadStartMeth));
-			}
-			relThreadC.close();
-		}
+		domA.add(mainMeth);
+		ProgramRel relThreadM = (ProgramRel) project.getTrgt("threadM");
+		relThreadM.load();
+		Iterable<jq_Method> tuples = relThreadM.getAry1ValTuples();
+		for (jq_Method m : tuples)
+			domA.add(m);
+		relThreadM.close();
 		domA.save();
-		ProgramRel relThreadACM = (ProgramRel) ClassicProject.g().getTrgt("threadACM");
-		relThreadACM.zero();
-		for (int a = 1; a < domA.size(); a++) {
-			Pair<Ctxt, jq_Method> cm = domA.get(a);
-			int c = domC.indexOf(cm.val0);
-			int m = domM.indexOf(cm.val1);
-			relThreadACM.add(a, c, m);
+		ProgramRel relThreadAM = (ProgramRel) project.getTrgt("threadAM");
+		relThreadAM.zero();
+		for (int aIdx = 1; aIdx < domA.size(); aIdx++) {
+			jq_Method m = domA.get(aIdx);
+			int mIdx = domM.indexOf(m);
+			relThreadAM.add(aIdx, mIdx);
 		}
-		relThreadACM.save();
+		relThreadAM.save();
 	}
 }
+

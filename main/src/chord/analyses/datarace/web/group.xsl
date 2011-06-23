@@ -6,7 +6,6 @@
 
 <xsl:include href="A.xsl"/>
 <xsl:include href="E.xsl"/>
-<xsl:include href="C.xsl"/>
 <xsl:include href="F.xsl"/>
 <xsl:include href="O.xsl"/>
 
@@ -51,25 +50,19 @@
 		</tr>
 		<xsl:for-each select="current-group()">
 			<tr>
-				<xsl:variable name="TCE1id" select="@TCE1id"/>
-				<xsl:variable name="TCE2id" select="@TCE2id"/>
-				<xsl:variable name="TCE1elem" select="id($TCE1id)"/>
-				<xsl:variable name="TCE2elem" select="id($TCE2id)"/>
-				<xsl:variable name="T1elem" select="id($TCE1elem/@Tid)"/>
-				<xsl:variable name="C1elem" select="id($TCE1elem/@Cid)"/>
-				<xsl:variable name="E1elem" select="id($TCE1elem/@Eid)"/>
-				<xsl:variable name="T2elem" select="id($TCE2elem/@Tid)"/>
-				<xsl:variable name="C2elem" select="id($TCE2elem/@Cid)"/>
-				<xsl:variable name="E2elem" select="id($TCE2elem/@Eid)"/>
-				<td><a href="race_{$TCE1id}_{$TCE2id}.html"><xsl:value-of select="$group_id"/>.<xsl:value-of select="position()"/></a></td>
+				<xsl:variable name="TE1id" select="@TE1id"/>
+				<xsl:variable name="TE2id" select="@TE2id"/>
+				<xsl:variable name="TE1elem" select="id($TE1id)"/>
+				<xsl:variable name="TE2elem" select="id($TE2id)"/>
+				<xsl:variable name="T1elem" select="id($TE1elem/@Tid)"/>
+				<xsl:variable name="E1elem" select="id($TE1elem/@Eid)"/>
+				<xsl:variable name="T2elem" select="id($TE2elem/@Tid)"/>
+				<xsl:variable name="E2elem" select="id($TE2elem/@Eid)"/>
+				<td><a href="race_{$TE1id}_{$TE2id}.html"><xsl:value-of select="$group_id"/>.<xsl:value-of select="position()"/></a></td>
                 <td><xsl:apply-templates select="$T1elem"/></td>
-				<td><xsl:apply-templates select="$E1elem"/> <br/>
-                    Context: <xsl:apply-templates select="$C1elem"/> <br/>
-				</td>
+				<td><xsl:apply-templates select="$E1elem"/></td>
                 <td><xsl:apply-templates select="$T2elem"/></td>
-				<td><xsl:apply-templates select="$E2elem"/> <br/>
-                	Context: <xsl:apply-templates select="$C2elem"/> <br/>
-				</td>
+				<td><xsl:apply-templates select="$E2elem"/></td>
 			</tr>
 		</xsl:for-each>
 	</xsl:for-each-group>

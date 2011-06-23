@@ -8,12 +8,8 @@ package chord.analyses.thread;
 
 import joeq.Class.jq_Method;
 import chord.project.ClassicProject;
-import chord.project.Project;
 import chord.project.analyses.ProgramDom;
-import chord.analyses.alias.Ctxt;
-import chord.analyses.alias.DomC;
 import chord.analyses.method.DomM;
-import chord.util.tuple.object.Pair;
 
 /**
  * Domain of abstract threads.
@@ -26,18 +22,12 @@ import chord.util.tuple.object.Pair;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public class DomA extends ProgramDom<Pair<Ctxt, jq_Method>> {
-	private DomC domC;
+public class DomA extends ProgramDom<jq_Method> {
 	private DomM domM;
-	public String toXMLAttrsString(Pair<Ctxt, jq_Method> aVal) {
-		if (domC == null)
-			domC = (DomC) ClassicProject.g().getTrgt("C");
-		if (domM == null)
-			domM = (DomM) ClassicProject.g().getTrgt("M");
-		if (aVal == null)
-			return "";
-		int c = domC.indexOf(aVal.val0);
-		int m = domM.indexOf(aVal.val1);
-		return "Cid=\"C" + c + "\" Mid=\"M" + m + "\"";
+	public String toXMLAttrsString(jq_Method m) {
+		if (m == null) return "";
+		if (domM == null) domM = (DomM) ClassicProject.g().getTrgt("M");
+		int mIdx = domM.indexOf(m);
+		return "Mid=\"M" + mIdx + "\"";
 	}
 }

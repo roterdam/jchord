@@ -170,8 +170,10 @@ import chord.util.graph.MutableGraph;
 	produces = { "C", "CC", "CH", "CI", "epsilonV", "epsilonM", "kcfaSenM", "kobjSenM", "ctxtCpyM",
 		"refinableCH", "refinableCI", "refinableM", "refinableV"
 	},
-	namesOfTypes = { "C" },
-	types = { DomC.class }
+	namesOfTypes = { "refinableCH", "refinableCI", "refinableM", "refinableV", "C" },
+	types = { ProgramRel.class, ProgramRel.class, ProgramRel.class, ProgramRel.class, DomC.class },
+	namesOfSigns = { "refinableCH", "refinableCI", "refinableM", "refinableV" },
+	signs = { "C0,H0:H0_C0", "C0,I0:I0_C0", "M0:M0", "V0:V0" }
 )
 public class CtxtsAnalysis extends JavaAnalysis {
 	private static final boolean percy = System.getProperty("percy", "false").equals("true");

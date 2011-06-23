@@ -7,20 +7,20 @@
 # name=datarace-nongrded-exclude-dlog
 
 .include "A.dom"
-.include "C.dom"
+.include "H.dom"
 .include "E.dom"
 
-.bddvarorder E0_A0_C0xC1
+.bddvarorder E0_A0_H0
 
 ###
 # Relations
 ###
 
-guardedE(t:A0,c1:C0,e:E0,c2:C1) output
+unlockedE(t:A0,e:E0,h:H0) output
 
 ###
 # Constraints
 ###
 
-guardedE(t,_,_,_) :- t<0.
+unlockedE(_,_,_).
 

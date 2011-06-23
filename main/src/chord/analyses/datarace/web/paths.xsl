@@ -6,17 +6,14 @@
 <xsl:include href="I.xsl"/>
 <xsl:include href="E.xsl"/>
 <xsl:include href="O.xsl"/>
-<xsl:include href="C.xsl"/>
 
 <xsl:output omit-xml-declaration="yes"/>
 
 <xsl:template match="/">
-	<xsl:for-each select="results/TCElist/TCE">
-		<xsl:variable name="tceid" select="@id"/>
-		<xsl:variable name="cid" select="@Cid"/>
+	<xsl:for-each select="results/TElist/TE">
+		<xsl:variable name="teid" select="@id"/>
 		<xsl:variable name="eid" select="@Eid"/>
-		<xsl:variable name="filename"
-			select="concat('path_', $tceid, '.html')"/>
+		<xsl:variable name="filename" select="concat('path_', $teid, '.html')"/>
 		<xsl:result-document href="{$filename}">
 			<td style="width:50%">
 			<xsl:for-each select="path">
@@ -44,8 +41,7 @@
 							<xsl:when test="name()='elem'">
 								<xsl:text disable-output-escaping="yes">&lt;/td&gt;&lt;td&gt;</xsl:text>
 								<xsl:variable name="Ielem" select="id(@Iid)"/>
-								<xsl:apply-templates select="$Ielem"/> <br/>
-								Context: <xsl:apply-templates select="id(@Cid)"/>
+								<xsl:apply-templates select="$Ielem"/> 
 								<xsl:text disable-output-escaping="yes">&lt;/td&gt;&lt;/tr&gt;&lt;tr&gt;&lt;td&gt;</xsl:text>
 							</xsl:when>
 							<xsl:otherwise>
@@ -71,8 +67,7 @@
 						<xsl:apply-templates select="id(@Oid)"/> <br/>
 					</xsl:for-each>
 					<xsl:text disable-output-escaping="yes">&lt;/td&gt;&lt;td&gt;</xsl:text>
-						<xsl:apply-templates select="id($eid)"/> <br/>
-							Context: <xsl:apply-templates select="id($cid)"/>
+						<xsl:apply-templates select="id($eid)"/>
 					<xsl:text disable-output-escaping="yes">&lt;/td&gt;&lt;/tr&gt;</xsl:text>
 				</table>
 			</xsl:for-each>
