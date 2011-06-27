@@ -26,8 +26,8 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (p,b,f,v) such that the quad
- * at program point p is of the form <tt>b.f = v</tt>.
+ * Relation containing each tuple (p,u,b,f) such that the quad
+ * at program point p is of the form <tt>u = b.f</tt>.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
