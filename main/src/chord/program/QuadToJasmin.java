@@ -340,7 +340,7 @@ public class QuadToJasmin {
 		if (src != null) {			
 			jq_Type type = src.getType();
 			if ( type == null) type = dst.getType();
-			Quad q = Operator.Move.create(-1, m, dst.getRegister(), src.getRegister(), type);
+			Quad q = Operator.Move.create(-1, bb, dst.getRegister(), src.getRegister(), type);
 			s.add(q);
 		} else {
 			// in this case, the register is never defined along
@@ -447,7 +447,7 @@ public class QuadToJasmin {
 					target = new TargetOperand(bb.getFallthroughSuccessor());
 				} else continue;
 				assert target != null;
-				bb.appendQuad(Operator.Goto.create(-1, m, Operator.Goto.GOTO.INSTANCE, target));
+				bb.appendQuad(Operator.Goto.create(-1, bb, Operator.Goto.GOTO.INSTANCE, target));
 			}
 		}
 	}
