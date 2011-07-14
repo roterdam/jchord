@@ -39,6 +39,6 @@ public class IntPair implements java.io.Serializable {
 		return idx0 + idx1;
 	}
 	public String toString() {
-		return "fst: " + idx0 + " snd: " + idx1;
+		return "<" + idx0 + "," + idx1 + ">";
 	}
 }
