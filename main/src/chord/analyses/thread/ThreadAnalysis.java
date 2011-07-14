@@ -43,7 +43,7 @@ import chord.util.tuple.object.Pair;
  */
 @Chord(
 	name = "thread-java",
-	consumes = { "threadM" },
+	consumes = { "nonMainThreadM" },
 	produces = { "A", "threadAM" },
 	namesOfSigns = { "threadAM" },
 	signs = { "A0,M0:A0_M0" },
@@ -60,7 +60,7 @@ public class ThreadAnalysis extends JavaAnalysis {
 		domA.add(null);
 		jq_Method mainMeth = program.getMainMethod();
 		domA.add(mainMeth);
-		ProgramRel relThreadM = (ProgramRel) project.getTrgt("threadM");
+		ProgramRel relThreadM = (ProgramRel) project.getTrgt("nonMainThreadM");
 		relThreadM.load();
 		Iterable<jq_Method> tuples = relThreadM.getAry1ValTuples();
 		for (jq_Method m : tuples)

@@ -22,6 +22,7 @@ MI(m:M0,i:I0) input
 threadStartI(i:I0) input
 
 reachableAM(t:A0,m:M0) output
+threadReachableM(m:M0) output
 
 ###
 # Constraints
@@ -29,4 +30,6 @@ reachableAM(t:A0,m:M0) output
 
 reachableAM(t,m) :- threadAM(t,m).
 reachableAM(t,n) :- reachableAM(t,m), MI(m,i), IM(i,n), !threadStartI(i).
+
+threadReachableM(m) :- reachableAM(_,m).
 

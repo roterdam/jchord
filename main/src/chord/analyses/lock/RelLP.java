@@ -11,44 +11,41 @@ import gnu.trove.TIntArrayList;
 import java.util.HashSet;
 import java.util.Set;
 
-
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Monitor;
 import joeq.Compiler.Quad.Operator.Monitor.MONITORENTER;
-import chord.analyses.invk.DomI;
+import chord.analyses.point.DomP;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (l,i) such that method invocation quad i
- * is lexically enclosed in the synchronized block or synchronized method
- * that acquires the lock at point l.
+ * Relation containing each tuple (l,p) such that quad p is lexically enclosed in the
+ * synchronized block or synchronized method that acquires the lock at point l.
  * <p>
- * A quad may be lexically enclosed in multiple synchronized blocks but in
- * at most one synchronized method (i.e. its containing method).
- * 
+ * A quad may be lexically enclosed in multiple synchronized blocks but in at most one
+ * synchronized method (i.e. its containing method).
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "LI",
-	sign = "L0,I0:L0_I0"
+	name = "LP",
+	sign = "L0,P0:L0_P0"
 )
-public class RelLI extends ProgramRel implements IMethodVisitor {
+public class RelLP extends ProgramRel implements IMethodVisitor {
 	private Set<BasicBlock> visited = new HashSet<BasicBlock>();
-	private DomI domI;
+	private DomP domP;
 	private DomL domL;
 	public void init() {
 		domL = (DomL) doms[0];
-		domI = (DomI) doms[1];
+		domP = (DomP) doms[1];
 	}
-	public void visit(jq_Class c) {	}
+	public void visit(jq_Class c) { }
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
@@ -86,10 +83,10 @@ public class RelLI extends ProgramRel implements IMethodVisitor {
 						locks2.add(locks.get(j));
 					locks = locks2;
 				}
-			} else if (op instanceof Invoke && k > 0) {
-				int iIdx = domI.indexOf(q);
-				assert (iIdx >= 0);
-				add(locks.get(k - 1), iIdx);
+			} else if (k > 0) {
+				int pIdx = domP.indexOf(q);
+				assert (pIdx >= 0);
+				add(locks.get(k - 1), pIdx);
 			}
 		}
 		for (Object o : bb.getSuccessors()) {
