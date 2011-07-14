@@ -38,17 +38,17 @@ import chord.bddbddb.Dom;
  */
 public class ClassicProject extends Project {
 	private static final String CANNOT_INSTANTIATE_TASK =
-		"ERROR: ClassicProject: Cannot instantiate task '%s': %s";
+		"ERROR: ClassicProject: Cannot instantiate task '%s': %s.";
 	private static final String CANNOT_INSTANTIATE_TRGT =
-		"ERROR: ClassicProject: Cannot instantiate trgt '%s': %s";
+		"ERROR: ClassicProject: Cannot instantiate trgt '%s': %s.";
 	private static final String MULTIPLE_TASKS_PRODUCING_TRGT =
-		"ERROR: ClassicProject: Multiple tasks (%s) producing target '%s'; include exactly one of them via -Dchord.run.analyses";
+		"ERROR: ClassicProject: Multiple tasks (%s) producing target '%s'; include exactly one of them via property 'chord.run.analyses'.";
 	private static final String TASK_PRODUCING_TRGT_NOT_FOUND =
-		"ERROR: ClassicProject: No task producing target '%s' found in project";
+		"ERROR: ClassicProject: No task producing target '%s' found in project.";
 	private static final String TASK_NOT_FOUND =
-		"ERROR: ClassicProject: Task named '%s' not found in project";
+		"ERROR: ClassicProject: Task named '%s' not found in project.";
 	private static final String TRGT_NOT_FOUND =
-		"ERROR: ClassicProject: Target named '%s' not found in produces/consumes field of any task in project";
+		"ERROR: ClassicProject: Target named '%s' not found in project.";
 
 	private ClassicProject() { }
 
@@ -80,35 +80,28 @@ public class ClassicProject extends Project {
 			abort();
 
 		// build nameToTaskMap
-		Map<String, Class<ITask>> nameToJavaTaskMap =
-			taskParser.getNameToJavaTaskMap();
-		Map<String, DlogAnalysis> nameToDlogTaskMap =
-			taskParser.getNameToDlogTaskMap();
+		Map<String, Class<ITask>> nameToJavaTaskMap = taskParser.getNameToJavaTaskMap();
+		Map<String, DlogAnalysis> nameToDlogTaskMap = taskParser.getNameToDlogTaskMap();
 		if (!buildNameToTaskMap(nameToJavaTaskMap, nameToDlogTaskMap))
 			abort();
 
-		Map<String, Set<TrgtInfo>> nameToTrgtInfosMap =
-			taskParser.getNameToTrgtInfosMap();
+		Map<String, Set<TrgtInfo>> nameToTrgtInfosMap = taskParser.getNameToTrgtInfosMap();
 		TrgtParser trgtParser = new TrgtParser(nameToTrgtInfosMap);
 		if (!trgtParser.run())
 			abort();
 
 		// build nameToTrgtMap
-		Map<String, Class> nameToTrgtTypeMap =
-			trgtParser.getNameToTrgtTypeMap();
+		Map<String, Class> nameToTrgtTypeMap = trgtParser.getNameToTrgtTypeMap();
 		if (!buildNameToTrgtMap(nameToTrgtTypeMap))
 			abort();
 
 		// set signs and doms of program relation targets
-		Map<String, RelSign> nameToTrgtSignMap =
-			trgtParser.getNameToTrgtSignMap();
+		Map<String, RelSign> nameToTrgtSignMap = trgtParser.getNameToTrgtSignMap();
 		setRelSignsAndDoms(nameToTrgtSignMap);
 
 		// build auxiliary maps between targets and tasks
-		Map<String, List<String>> nameToConsumeNamesMap =
-			taskParser.getNameToConsumeNamesMap();
-		Map<String, List<String>> nameToProduceNamesMap =
-			taskParser.getNameToProduceNamesMap();
+		Map<String, List<String>> nameToConsumeNamesMap = taskParser.getNameToConsumeNamesMap();
+		Map<String, List<String>> nameToProduceNamesMap = taskParser.getNameToProduceNamesMap();
 		buildDerivedMaps(nameToConsumeNamesMap, nameToProduceNamesMap);
 
 		isBuilt = true;
@@ -287,10 +280,8 @@ public class ClassicProject extends Project {
 			trgtToProducingTasksMap.put(trgt, producerTasks);
 		}
 		for (ITask task : nameToTaskMap.values()) {
-			List<String> consumedNames =
-				taskNameToConsumeNamesMap.get(task.getName());
-			List<Object> consumedTrgts =
-				new ArrayList<Object>(consumedNames.size());
+			List<String> consumedNames = taskNameToConsumeNamesMap.get(task.getName());
+			List<Object> consumedTrgts = new ArrayList<Object>(consumedNames.size());
 			for (String name : consumedNames) {
 				Object trgt = nameToTrgtMap.get(name);
 				assert (trgt != null);
@@ -299,8 +290,7 @@ public class ClassicProject extends Project {
 				consumerTasks.add(task);
 			}
 			taskToConsumedTrgtsMap.put(task, consumedTrgts);
-			List<String> producedNames =
-				taskNameToProduceNamesMap.get(task.getName());
+			List<String> producedNames = taskNameToProduceNamesMap.get(task.getName());
 			List <Object> producedTrgts =
 				new ArrayList<Object>(producedNames.size());
 			for (String name : producedNames) {
