@@ -34,7 +34,7 @@ threadAllocIH1(i:I0,h:H0)
 threadStartIH0(i:I0,h:H0)
 
 threadIM(i:I0,m:M0) output
-threadM(m:M0) output
+nonMainThreadM(m:M0) output
 
 ###
 # Constraints
@@ -51,4 +51,4 @@ threadStartIH0(i,h) :- threadStartI(i), IinvkArg(i,0,v), VH(v,h), !excludeThread
 
 threadIM(i,m) :- threadStartIH0(i,h), runCHA(h,m), !threadRunM(m).
 threadIM(i,n) :- threadStartIH0(i,h), runCHA(h,m), threadRunM(m), threadAllocIH0(i2,h), threadAllocIH1(i2,h2), runCHA(h2,n).
-threadM(m) :- threadIM(_,m).
+nonMainThreadM(m) :- threadIM(_,m).
