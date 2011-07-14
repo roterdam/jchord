@@ -57,7 +57,7 @@ public class Instrumentor extends BasicInstrumentor {
 	private static final String DUPLICATE_IN_DOMAIN =
 		 "ERROR: Instrumentor: Map for domain '%s' already contains '%s'";
 	private static final String NO_BCI_IN_BASIC_BLOCK =
-		"ERROR: Instrumentor: Could not find bytecode index of first instruction in basic block '%s' of method '%s'";
+		"WARN: Instrumentor: Could not find bytecode index of first instruction in basic block '%s' of method '%s'";
 	private static final String THROWABLE_CLASS_NOT_FOUND =
 		"ERROR: Instrumentor: Could not find class java.lang.Throwable";
 
@@ -366,8 +366,8 @@ public class Instrumentor extends BasicInstrumentor {
 			if (bci != -1)
 				return bci;
 		}
-		Messages.fatal(NO_BCI_IN_BASIC_BLOCK, b, m);
-		return 0;
+		Messages.log(NO_BCI_IN_BASIC_BLOCK, b, m);
+		return -1;
 	}
 
 	// order must be tail -> head -> rest
@@ -449,9 +449,12 @@ public class Instrumentor extends BasicInstrumentor {
 						continue;
 					if (genBasicBlockEvent) {
 						int bId = domB.indexOf(bb);
-						assert (bId != -1);
-						String instr = basicBlockEventCall + bId + ");";
+						if (bId == -1)
+							throw new CannotCompileException("Cannot find index of basic block " + bb + " in domain B");
 						int bci = getBCI(bb, currMethod);
+						if (bci == -1)
+							throw new CannotCompileException("Cannot find index of basic block " + bb + " in bytecode");
+						String instr = basicBlockEventCall + bId + ");";
 						attachInstrToBCIAft(instr, bci);
 					}
 					if (genQuadEvent) {
@@ -459,10 +462,12 @@ public class Instrumentor extends BasicInstrumentor {
 						for (int i = 0; i < n; i++) {
 							Quad q = bb.getQuad(i);
 							if (isRelevant(q)) {
-								int bci = q.getBCI();
-								assert (bci != -1);
 								int pId = domP.indexOf(q);
-								assert (pId != -1);
+								if (pId == -1)
+									throw new CannotCompileException("Cannot find index of quad " + q + " in domain P");
+								int bci = q.getBCI();
+								if (bci == -1)
+									throw new CannotCompileException("Cannot find index of quad " + q + " in bytecode");
 								String instr = quadEventCall + pId + ");";
 								attachInstrToBCIAft(instr, bci);
 							}
