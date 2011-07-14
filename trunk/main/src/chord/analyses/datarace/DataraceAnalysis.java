@@ -20,9 +20,7 @@ import chord.analyses.alias.DomO;
 import chord.analyses.alias.ICICG;
 import chord.analyses.thread.ThrSenCICGAnalysis;
 import chord.analyses.alloc.DomH;
-import chord.util.Execution;
 import chord.analyses.thread.DomA;
-import chord.bddbddb.Rel.PairIterable;
 import chord.bddbddb.Rel.RelView;
 import chord.analyses.field.DomF;
 import chord.analyses.heapacc.DomE;
@@ -32,9 +30,7 @@ import chord.analyses.method.DomM;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ClassicProject;
-import chord.project.Messages;
 import chord.project.OutDirUtils;
-import chord.project.Project;
 import chord.project.Config;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramDom;
@@ -43,9 +39,7 @@ import chord.util.ArraySet;
 import chord.util.SetUtils;
 import chord.util.graph.IPathVisitor;
 import chord.util.graph.ShortestPathBuilder;
-import chord.util.tuple.object.Hext;
 import chord.util.tuple.object.Pair;
-import chord.util.tuple.object.Trio;
 
 /**
  * Static datarace analysis.
@@ -162,7 +156,8 @@ public class DataraceAnalysis extends JavaAnalysis {
 		relLE.load();
 		relSyncLH.load();
 
-		final Map<jq_Method, ShortestPathBuilder> srcNodeToSPB = new HashMap<jq_Method, ShortestPathBuilder>();
+		final Map<jq_Method, ShortestPathBuilder<jq_Method>> srcNodeToSPB =
+			new HashMap<jq_Method, ShortestPathBuilder<jq_Method>>();
 
 		final IPathVisitor<jq_Method> visitor = new IPathVisitor<jq_Method>() {
 			public String visit(jq_Method srcM, jq_Method dstM) {
@@ -220,9 +215,9 @@ public class DataraceAnalysis extends JavaAnalysis {
 					mIdx + "\" Oid=\"O" + oIdx + "\"/>");
 			}
 			view.free();
-			ShortestPathBuilder spb = srcNodeToSPB.get(srcM);
+			ShortestPathBuilder<jq_Method> spb = srcNodeToSPB.get(srcM);
 			if (spb == null) {
-				spb = new ShortestPathBuilder(thrSenCICG, srcM, visitor);
+				spb = new ShortestPathBuilder<jq_Method>(thrSenCICG, srcM, visitor);
 				srcNodeToSPB.put(srcM, spb);
 			}
 			String path = spb.getShortestPathTo(dstM);
