@@ -15,7 +15,6 @@ import java.io.PrintWriter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -59,121 +58,49 @@ import chord.util.graph.MutableGraph;
 /**
  * Analysis for pre-computing abstract contexts.
  * <p>
- * The goal of this analysis is to translate client-specified inputs concerning the desired
- * kind of context sensitivity into relations that are subsequently consumed by
- * context-sensitive points-to and call-graph analyses.
+ * The goal of this analysis is to translate client-specified inputs concerning the desired kind of context sensitivity
+ * into relations that are subsequently consumed by context-sensitive points-to and call-graph analyses.
  * <p>
  * This analysis allows:
  * <ul>
- *   <li>
- *     each method to be analyzed using a different kind of context sensitivity, namely, one
- *     of context insensitivity, k-CFA, k-object-sensitivity, and copy-context-sensitivity;
- *   </li>
- *   <li>
- *     each local variable to be analyzed context sensitively or insensitively; and
- *   </li>
- *   <li>
- *     a different 'k' value to be used for each object allocation site and method call site.
- *   </li>
- * </ul>
- * This analysis can be called multiple times and in each invocation it can incorporate
- * feedback from a client to adjust the precision of the points-to information and call graph
- * computed subsequently by the points-to and call-graph analyses.  Clients can indicate in
- * each invocation:
- * <ul>
- *   <li>
- *     Which methods must be analyzed context sensitively (in addition to those already being
- *     analyzed context sensitively in the previous invocation of this analysis) and using
- *     what kind of context sensitivity; the remaining methods will be analyzed context
- *     insensitively (that is, in the lone 'epsilon' context).
- *   </li>
- *   <li>
- *     Which local variables of reference type must be analyzed context sensitively (in
- *     addition to those already being analyzed context sensitively in the previous
- *     invocation of this analysis); the remaining ones will be analyzed context insensitively
- *     (that is, their points-to information will be tracked in the lone 'epsilon' context).
- *   </li>
- *   <li>
- *     The object allocation sites and method call sites whose 'k' values must be incremented
- *     (over those used in the previous invocation of this analysis).
- *   </li>
+ *   <li>each method to be analyzed using a different kind of context sensitivity, namely, one of context insensitivity,
+ *		 k-CFA, k-object-sensitivity, and copy-context-sensitivity;</li>
+ *   <li>each local variable to be analyzed context sensitively or insensitively; and</li>
+ *   <li>a different 'k' value to be used for each object allocation site and method call site.</li>
  * </ul>
  * Recognized system properties:
  * <ul>
- *   <li>
- *     chord.inst.ctxt.kind: the kind of context sensitivity to use for each instance method
- *     (and all its locals).  It may be 'ci' (context insensitive), 'cs' (k-CFA), or 'co'
- *     (k-object-sensitive).  It is 'ci' by default.
- *   </li>
- *   <li>
- *     chord.stat.ctxt.kind: the kind of context sensitivity to use for each static method
- *     (and all its locals).  It may be 'ci' (context insensitive), 'cs' (k-CFA), or 'co'
- *     (copy-context-sensitive).  It is 'ci' by default.
- *   </li>
- *   <li>
- *     chord.ctxt.kind: the kind of context sensitivity to use for each method (and all its
- *     locals).  It may be one of 'ci', 'cs', or 'co', and serves as shorthand for
- *     properties chord.inst.ctxt.kind and chord.stat.ctxt.kind.
- *   </li>
- *   <li>
- *     chord.kobj.k and chord.kcfa.k: the 'k' value to use for each object allocation site
- *     and each method call site, respectively.  It is 1 by default.
- *   </li>
+ *   <li>chord.inst.ctxt.kind: the kind of context sensitivity to use for each instance method (and all its locals).
+ *       One of 'ci' (context insensitive), 'cs' (k-CFA), or 'co' (k-object-sensitive).  Default is 'ci'.</li>
+ *   <li>chord.stat.ctxt.kind: the kind of context sensitivity to use for each static method (and all its locals).
+ *       One of 'ci' (context insensitive), 'cs' (k-CFA), or 'co' (copy-context-sensitive).  Default is 'ci'.</li>
+ *   <li>chord.ctxt.kind: the kind of context sensitivity to use for each method (and all its locals).
+ *       One of 'ci', 'cs', or 'co'.  Serves as shorthand for properties chord.inst.ctxt.kind and chord.stat.ctxt.kind.</li>
+ *   <li>chord.kobj.k and chord.kcfa.k: the 'k' value to use for each object allocation site and each method call site,
+ *       respectively.  Default is 1.</li>
  * </ul>
- * 
- * 
+ * <p>
  * This analysis outputs the following domains and relations:
  * <ul>
- *   <li>
- *     C: domain containing all abstract contexts
- *   </li>
- *   <li>
- *     CC: relation containing each pair (c,c2) such that c2 is all but the last element of
- *     context c
- *   </li>
- *   <li>
- *     CH: relation containing each (c,h) such that object allocation site h is the last
- *     element of abstract context c
- *   </li>
- *   <li>
- *     CI: relation containing each (c,i) such that call site i is the last element of abstract
- *     context c
- *   </li>
- *   <li>
- *     CVC: relation containing each (c,v,o) such that local v might point to object o in
- *     context c of its declaring method.
- *   </li>
- *   <li>
- *     CFC: relation containing each (o1,f,o2) such that instance field f of object o1 might
- *     point to object o2
- *   </li>
- *   <li>
- *     FC: relation containing each (f,o) such that static field f may point to object o
- *   </li>
- *   <li>
- *     CICM: relation containing each (c,i,c2,m) if invocation i in context c can reach
- *     method m (in context c2)
- *   </li>
- *   <li>
- *     rootCM: relation containing each (c,m) such that method m is an entry method in context c
- *   </li>
- *   <li>
- *     reachableCM: relation containing each (c,m) such that method m can be called in context c
- *   </li>
+ *   <li>C: domain containing all abstract contexts</li>
+ *   <li>CC: each (c,c2) such that c2 is all but the last element of context c</li>
+ *   <li>CH: each (c,h) such that object allocation site h is the last element of abstract context c</li>
+ *   <li>CI: each (c,i) such that call site i is the last element of abstract context c</li>
+ *   <li>CVC: each (c,v,o) such that local v might point to object o in context c of its declaring method</li>
+ *   <li>CFC: each (o1,f,o2) such that instance field f of object o1 might point to object o2</li>
+ *   <li>FC: each (f,o) such that static field f may point to object o</li>
+ *   <li>CICM: each (c,i,c2,m) if invocation i in context c can reach method m (in context c2)</li>
+ *   <li>rootCM: each (c,m) such that method m is an entry method in context c</li>
+ *   <li>reachableCM: each (c,m) such that method m can be called in context c</li>
  * </ul>
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-	name = "ctxts-java",
-	consumes = { "IM", "VH" },
-	produces = { "C", "CC", "CH", "CI", "epsilonV", "epsilonM", "kcfaSenM", "kobjSenM", "ctxtCpyM",
-		"refinableCH", "refinableCI", "refinableM", "refinableV"
-	},
-	namesOfTypes = { "refinableCH", "refinableCI", "refinableM", "refinableV", "C" },
-	types = { ProgramRel.class, ProgramRel.class, ProgramRel.class, ProgramRel.class, DomC.class },
-	namesOfSigns = { "refinableCH", "refinableCI", "refinableM", "refinableV" },
-	signs = { "C0,H0:H0_C0", "C0,I0:I0_C0", "M0:M0", "V0:V0" }
+@Chord(name = "ctxts-java",
+	   consumes = { "IM", "VH" },
+	   produces = { "C", "CC", "CH", "CI", "epsilonV", "epsilonM", "kcfaSenM", "kobjSenM", "ctxtCpyM" },
+	   namesOfTypes = { "C" },
+	   types = { DomC.class }
 )
 public class CtxtsAnalysis extends JavaAnalysis {
 	private static final boolean percy = System.getProperty("percy", "false").equals("true");
@@ -215,11 +142,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	private int instCtxtKind;
 	private int statCtxtKind;
 
-	private int maxIters;
-	private int currIter;
-	
-	private boolean isInitialized = false;
-
 	private DomV domV;
 	private DomM domM;
 	private DomI domI;
@@ -232,16 +154,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	private ProgramRel relCC;
 	private ProgramRel relCH;
 	private ProgramRel relCI;
-
-	private ProgramRel relRefineH;
-	private ProgramRel relRefineM;
-	private ProgramRel relRefineI;
-	private ProgramRel relRefineV;
-	
-	private ProgramRel relRefinableM;
-	private ProgramRel relRefinableV;
-	private ProgramRel relRefinableCI;
-	private ProgramRel relRefinableCH;
 	
 	private ProgramRel relEpsilonM;
 	private ProgramRel relKcfaSenM;
@@ -254,74 +166,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	public static int[] global_kobjValue; // indexed by domH
 	public static int[] global_kcfaValue; // indexed by domI
 
-	private void init() {
-		if (isInitialized) return;
-		domV = (DomV) ClassicProject.g().getTrgt("V");
-		domI = (DomI) ClassicProject.g().getTrgt("I");
-		domM = (DomM) ClassicProject.g().getTrgt("M");
-		domH = (DomH) ClassicProject.g().getTrgt("H");
-		domC = (DomC) ClassicProject.g().getTrgt("C");
-
-		relIM = (ProgramRel) ClassicProject.g().getTrgt("IM");
-		relVH = (ProgramRel) ClassicProject.g().getTrgt("VH");
-		
-		relRefineH = (ProgramRel) ClassicProject.g().getTrgt("refineH");
-		relRefineI = (ProgramRel) ClassicProject.g().getTrgt("refineI");
-		relRefineM = (ProgramRel) ClassicProject.g().getTrgt("refineM");
-		relRefineV = (ProgramRel) ClassicProject.g().getTrgt("refineV");
-		relRefinableM = (ProgramRel) ClassicProject.g().getTrgt("refinableM");
-		relRefinableV = (ProgramRel) ClassicProject.g().getTrgt("refinableV");
-		relRefinableCH = (ProgramRel) ClassicProject.g().getTrgt("refinableCH");
-		relRefinableCI = (ProgramRel) ClassicProject.g().getTrgt("refinableCI");
-		
-		relCC = (ProgramRel) ClassicProject.g().getTrgt("CC");
-		relCH = (ProgramRel) ClassicProject.g().getTrgt("CH");
-		relCI = (ProgramRel) ClassicProject.g().getTrgt("CI");
-		relEpsilonM = (ProgramRel) ClassicProject.g().getTrgt("epsilonM");
-		relKcfaSenM = (ProgramRel) ClassicProject.g().getTrgt("kcfaSenM");
-		relKobjSenM = (ProgramRel) ClassicProject.g().getTrgt("kobjSenM");
-		relCtxtCpyM = (ProgramRel) ClassicProject.g().getTrgt("ctxtCpyM");
-		relEpsilonV = (ProgramRel) ClassicProject.g().getTrgt("epsilonV");
-
-		mainMeth = Program.g().getMainMethod();
-		
-		maxIters = Integer.getInteger("chord.max.iters", 0);
-		
-		String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
-		Config.check(ctxtKindStr, new String[] { "ci", "cs", "co" }, "chord.ctxt.kind");
-		String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
-		Config.check(instCtxtKindStr, new String[] { "ci", "cs", "co" }, "chord.inst.ctxt.kind");
-		String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
-		Config.check(statCtxtKindStr, new String[] { "ci", "cs", "co" }, "chord.stat.ctxt.kind");
-		if (instCtxtKindStr.equals("ci")) {
-			instCtxtKind = CTXTINS;
-		} else if (instCtxtKindStr.equals("cs")) {
-			instCtxtKind = KCFASEN;
-		} else
-			instCtxtKind = KOBJSEN;
-		if (statCtxtKindStr.equals("ci")) {
-			statCtxtKind = CTXTINS;
-		} else if (statCtxtKindStr.equals("cs")) {
-			statCtxtKind = KCFASEN;
-		} else
-			statCtxtKind = CTXTCPY;
-
-		kobjK = Integer.getInteger("chord.kobj.k", 1);
-		assert (kobjK > 0);
-		kcfaK = Integer.getInteger("chord.kcfa.k", 1);
-		// assert (kobjK <= kcfaK+1)
-		
-		if (maxIters > 0) {
-			assert (instCtxtKind == KOBJSEN ||
-				instCtxtKind == KCFASEN ||
-				statCtxtKind == KCFASEN);
-		}
-		isInitialized  = true;
-	}
-	
 	private int getCtxtKind(jq_Method m) {
-		if (m == mainMeth || m instanceof jq_ClassInitializer ||
-				m.isAbstract())
+		if (m == mainMeth || m instanceof jq_ClassInitializer || m.isAbstract())
 			return CTXTINS;
 		return m.isStatic() ? statCtxtKind : instCtxtKind;
 	}
@@ -457,75 +303,112 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	}
 
 	public void run() {
-		if (percy) X = Execution.v();	
-		init();
+		domV = (DomV) ClassicProject.g().getTrgt("V");
+		domI = (DomI) ClassicProject.g().getTrgt("I");
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		domH = (DomH) ClassicProject.g().getTrgt("H");
+		domC = (DomC) ClassicProject.g().getTrgt("C");
+
+		relIM = (ProgramRel) ClassicProject.g().getTrgt("IM");
+		relVH = (ProgramRel) ClassicProject.g().getTrgt("VH");
+		
+		relCC = (ProgramRel) ClassicProject.g().getTrgt("CC");
+		relCH = (ProgramRel) ClassicProject.g().getTrgt("CH");
+		relCI = (ProgramRel) ClassicProject.g().getTrgt("CI");
+		relEpsilonM = (ProgramRel) ClassicProject.g().getTrgt("epsilonM");
+		relKcfaSenM = (ProgramRel) ClassicProject.g().getTrgt("kcfaSenM");
+		relKobjSenM = (ProgramRel) ClassicProject.g().getTrgt("kobjSenM");
+		relCtxtCpyM = (ProgramRel) ClassicProject.g().getTrgt("ctxtCpyM");
+		relEpsilonV = (ProgramRel) ClassicProject.g().getTrgt("epsilonV");
+
+		mainMeth = Program.g().getMainMethod();
+		
+		String ctxtKindStr = System.getProperty("chord.ctxt.kind", "ci");
+		Config.check(ctxtKindStr, new String[] { "ci", "cs", "co" }, "chord.ctxt.kind");
+		String instCtxtKindStr = System.getProperty("chord.inst.ctxt.kind", ctxtKindStr);
+		Config.check(instCtxtKindStr, new String[] { "ci", "cs", "co" }, "chord.inst.ctxt.kind");
+		String statCtxtKindStr = System.getProperty("chord.stat.ctxt.kind", ctxtKindStr);
+		Config.check(statCtxtKindStr, new String[] { "ci", "cs", "co" }, "chord.stat.ctxt.kind");
+		if (instCtxtKindStr.equals("ci")) {
+			instCtxtKind = CTXTINS;
+		} else if (instCtxtKindStr.equals("cs")) {
+			instCtxtKind = KCFASEN;
+		} else
+			instCtxtKind = KOBJSEN;
+		if (statCtxtKindStr.equals("ci")) {
+			statCtxtKind = CTXTINS;
+		} else if (statCtxtKindStr.equals("cs")) {
+			statCtxtKind = KCFASEN;
+		} else
+			statCtxtKind = CTXTCPY;
+
+		kobjK = Integer.getInteger("chord.kobj.k", 1);
+		assert (kobjK > 0);
+		kcfaK = Integer.getInteger("chord.kcfa.k", 1);
+		// assert (kobjK <= kcfaK+1)
 
 		int numV = domV.size();
 		int numM = domM.size();
 		int numA = domH.getLastI() + 1;
-		int numH = domH.size();
 		int numI = domI.size();
 
-		if (currIter == 0 || (global_kcfaValue != null || global_kobjValue != null)) {
-			isCtxtSenV = new boolean[numV];
-			// Set the context-sensitivity of various methods
-			methKind = new int[numM];
-			for (int mIdx = 0; mIdx < numM; mIdx++) {
-				jq_Method mVal = domM.get(mIdx);
-				methKind[mIdx] = (maxIters > 0) ? CTXTINS : getCtxtKind(mVal);
-			}
-			// Based on context-sensitivity of methods, set the context-sensitivity of variables inside the method
-			for (int mIdx = 0; mIdx < numM; mIdx++) {
-				if (methKind[mIdx] != CTXTINS) {
-					jq_Method m = domM.get(mIdx);
-					ControlFlowGraph cfg = m.getCFG();
-					RegisterFactory rf = cfg.getRegisterFactory();
-					for (Object o : rf) {
-						Register v = (Register) o;
-						if (v.getType().isReferenceType()) {
-							int vIdx = domV.indexOf(v);
-							// locals unused by any quad in cfg are not in domain V
-							if (vIdx != -1)
-								isCtxtSenV[vIdx] = true;
-						}
+		isCtxtSenV = new boolean[numV];
+		// Set the context-sensitivity of various methods
+		methKind = new int[numM];
+		for (int mIdx = 0; mIdx < numM; mIdx++) {
+			jq_Method mVal = domM.get(mIdx);
+			methKind[mIdx] = getCtxtKind(mVal);
+		}
+		// Set the context sensitivity of variables inside each method based on
+		// the context sensitivity of that method
+		for (int mIdx = 0; mIdx < numM; mIdx++) {
+			if (methKind[mIdx] != CTXTINS) {
+				jq_Method m = domM.get(mIdx);
+				ControlFlowGraph cfg = m.getCFG();
+				RegisterFactory rf = cfg.getRegisterFactory();
+				for (Object o : rf) {
+					Register v = (Register) o;
+					if (v.getType().isReferenceType()) {
+						int vIdx = domV.indexOf(v);
+						// locals unused by any quad in cfg are not in domain V
+						if (vIdx != -1)
+							isCtxtSenV[vIdx] = true;
 					}
 				}
 			}
-			kobjValue = new int[numA];
-			HtoM = new int[numA]; // Which method is h located in?
-			HtoQ = new Quad[numA];
-			for (int i = 1; i < numA; i++) {
-				kobjValue[i] = kobjK;
-				Quad site = (Quad) domH.get(i);
-				jq_Method m = site.getMethod();
-				HtoM[i] = domM.indexOf(m);
-				HtoQ[i] = site;
-			}
-			kcfaValue = new int[numI];
-			ItoM = new int[numI]; // Which method is i located in?
-			ItoQ = new Quad[numI];
-			for (int i = 0; i < numI; i++) {
-				kcfaValue[i] = kcfaK;
-				Quad invk = domI.get(i);
-				jq_Method m = invk.getMethod();
-				ItoM[i] = domM.indexOf(m);
-				ItoQ[i] = invk;
-			}
+		}
+		kobjValue = new int[numA];
+		HtoM = new int[numA]; // Which method is h located in?
+		HtoQ = new Quad[numA];
+		for (int i = 1; i < numA; i++) {
+			kobjValue[i] = kobjK;
+			Quad site = (Quad) domH.get(i);
+			jq_Method m = site.getMethod();
+			HtoM[i] = domM.indexOf(m);
+			HtoQ[i] = site;
+		}
+		kcfaValue = new int[numI];
+		ItoM = new int[numI]; // Which method is i located in?
+		ItoQ = new Quad[numI];
+		for (int i = 0; i < numI; i++) {
+			kcfaValue[i] = kcfaK;
+			Quad invk = domI.get(i);
+			jq_Method m = invk.getMethod();
+			ItoM[i] = domM.indexOf(m);
+			ItoQ[i] = invk;
+		}
 
-			if (percy) {
-				setAdaptiveValues();
+		if (percy) {
+			setAdaptiveValues();
 
-				if (global_kcfaValue != null) {
-					System.out.println("Using global_kcfaValue");
-					System.arraycopy(global_kcfaValue, 0, kcfaValue, 0, kcfaValue.length);
-				}
-				if (global_kobjValue != null) {
-					System.out.println("Using global_kobjValue");
-					System.arraycopy(global_kobjValue, 0, kobjValue, 0, kobjValue.length);
-				}
+			if (global_kcfaValue != null) {
+				System.out.println("Using global_kcfaValue");
+				System.arraycopy(global_kcfaValue, 0, kcfaValue, 0, kcfaValue.length);
 			}
-		} else {
-			refine();
+			if (global_kobjValue != null) {
+				System.out.println("Using global_kobjValue");
+				System.arraycopy(global_kobjValue, 0, kobjValue, 0, kobjValue.length);
+			}
 		}
 
 		validate();
@@ -543,32 +426,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 		methToRcvSites = new TIntArrayList[numM];
 		methToClrMeths = new Set[numM];
 
-		if (maxIters > 0) {
-			int[] histogramI = new int[maxIters + 1];
-			for (int i = 0; i < numI; i++) {
-				histogramI[kcfaValue[i]]++;
-			}
-			for (int i = 0; i <= maxIters; i++) {
-				System.out.println("I " + i + " " + histogramI[i]);
-			}
-		
-			int[] histogramH = new int[maxIters + 1];
-			for (int i = 0; i < numH; i++) {
-				histogramH[kobjValue[i]]++;
-			}
-			for (int i = 0; i <= maxIters; i++) {
-				Messages.log("H " + i + " " + histogramH[i]);
-			}
-
-			// Output values
-			PrintWriter out = OutDirUtils.newPrintWriter("inputs.dat");
-			for (int h = 0; h < numH; h++)
-				if (kobjValue[h] > 0) out.println("H"+h+" " + kobjValue[h]);
-			for (int i = 0; i < numI; i++)
-				if (kcfaValue[i] > 0) out.println("I"+i+" " + kcfaValue[i]);
-			out.close();
-		}
-		
 		// Do the heavy crunching
 		doAnalysis();
 
@@ -604,12 +461,8 @@ public class CtxtsAnalysis extends JavaAnalysis {
 
 		int numC = domC.size();
 
-		boolean isLastIter = (currIter == maxIters);
-		
 		relCC.zero();
 		relCI.zero();
-		if (!isLastIter)
-			relRefinableCI.zero();
 		for (int iIdx = 0; iIdx < numI; iIdx++) {
 			Quad invk = (Quad) domI.get(iIdx);
 			jq_Method meth = invk.getMethod();
@@ -620,21 +473,14 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Quad[] newElems = combine(k, invk, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
-				if (!isLastIter && newElems.length < oldElems.length + 1) {
-					relRefinableCI.add(oldCtxt, invk);
-				}
 				relCI.add(newCtxt, invk);
 			}
 		}
 		relCI.save();
-		if (!isLastIter)
-			relRefinableCI.save();
 
 		assert (domC.size() == numC);
 
 		relCH.zero();
-		if (!isLastIter)
-			relRefinableCH.zero();
 		for (int hIdx = 1; hIdx < numA; hIdx++) {
 			Quad inst = (Quad) domH.get(hIdx);
 			jq_Method meth = inst.getMethod();
@@ -646,15 +492,10 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				Quad[] newElems = combine(k, inst, oldElems);
 				Ctxt newCtxt = domC.setCtxt(newElems);
 				relCC.add(oldCtxt, newCtxt);
-				if (!isLastIter && newElems.length < oldElems.length + 1) {
-					relRefinableCH.add(oldCtxt, inst);
-				}
 				relCH.add(newCtxt, inst);
 			}
 		}
 		relCH.save();
-		if (!isLastIter)
-			relRefinableCH.save();
 
 		assert (domC.size() == numC);
 
@@ -694,75 +535,6 @@ public class CtxtsAnalysis extends JavaAnalysis {
 				relEpsilonV.add(v);
 		}
 		relEpsilonV.save();
-		
-		relRefinableV.zero();
-		for (int v = 0; v < numV; v++) {
-			if (!isCtxtSenV[v]) {
-				Register var = domV.get(v);
-				jq_Method meth = domV.getMethod(var);
-				if (getCtxtKind(meth) != CTXTINS) {
-					relRefinableV.add(var);
-				}
-			}
-		}
-		relRefinableV.save();
-		
-		relRefinableM.zero();
-		for (int m = 0; m < numM; m++) {
-			if (methKind[m] == CTXTINS) {
-				jq_Method meth = domM.get(m);
-				if (getCtxtKind(meth) != CTXTINS) {
-					relRefinableM.add(m);
-				}
-			}
-		}
-		relRefinableM.save();
-
-		currIter++;
-	}
-
-	private void refine() {
-		relRefineH.load();
-		Iterable<Quad> heapInsts =
-			relRefineH.getAry1ValTuples();
-		for (Quad inst : heapInsts) {
-			int hIdx = domH.indexOf(inst);
-			kobjValue[hIdx]++;
-		}
-		relRefineH.close();
-		relRefineI.load();
-		Iterable<Quad> invkInsts =
-			relRefineI.getAry1ValTuples();
-		for (Quad inst : invkInsts) {
-			int iIdx = domI.indexOf(inst);
-			kcfaValue[iIdx]++;
-		}
-		relRefineI.close();
-		relRefineV.load();
-		Iterable<Register> vars = relRefineV.getAry1ValTuples();
-		for (Register var : vars) {
-			int v = domV.indexOf(var);
-			assert (!isCtxtSenV[v]);
-			isCtxtSenV[v] = true;
-		}
-		relRefineV.close();
-		relRefineM.load();
-		Iterable<jq_Method> meths = relRefineM.getAry1ValTuples();
-		for (jq_Method meth : meths) {
-			int m = domM.indexOf(meth);
-			assert (methKind[m] == CTXTINS);
-			methKind[m] = getCtxtKind(meth);
-			assert (methKind[m] != CTXTINS);
-		}
-		relRefineM.close();
-	}
-	
-	private static boolean contains(Quad[] elems, Quad q) {
-		for (Quad e : elems) {
-			if (e == q)
-				return true;
-		}
-		return false;
 	}
 
 	private void validate() {
@@ -861,12 +633,13 @@ public class CtxtsAnalysis extends JavaAnalysis {
 	}
 
 	// Compute all the contexts that each method can be called in
-	private void process(Set<jq_Method> roots,
-			Map<jq_Method, Set<jq_Method>> methToPredsMap) {
+	private void process(Set<jq_Method> roots, Map<jq_Method, Set<jq_Method>> methToPredsMap) {
 		IGraph<jq_Method> graph = new MutableGraph<jq_Method>(roots, methToPredsMap, null);
 		List<Set<jq_Method>> sccList = graph.getTopSortedSCCs();
-		if (Config.verbose >= 2) System.out.println("numSCCs: " + sccList.size());
-		for (int i = 0; i < sccList.size(); i++) { // For each SCC...
+		int n = sccList.size();
+		if (Config.verbose >= 2)
+			System.out.println("numSCCs: " + n);
+		for (int i = 0; i < n; i++) { // For each SCC...
 			Set<jq_Method> scc = sccList.get(i);
 			if (Config.verbose >= 2)
 				System.out.println("Processing SCC #" + i + " of size: " + scc.size());
