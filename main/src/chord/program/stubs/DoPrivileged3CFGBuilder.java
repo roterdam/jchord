@@ -18,12 +18,10 @@ import joeq.Compiler.Quad.Operand.MethodOperand;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Return.RETURN_A;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Compiler.Quad.Operand;
 
 /**
  * Stub for static method "Object doPrivileged(PrivilegedAction action, AccessControlContext context)"
@@ -47,12 +45,12 @@ public class DoPrivileged3CFGBuilder implements ICFGBuilder {
 		RegisterOperand to = new RegisterOperand(t0, ot);
 		ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
         MethodOperand mo = new MethodOperand(run);
-        Quad q1 = Invoke.create(0, m, Invoke.INVOKEINTERFACE_V.INSTANCE, null, mo, 1);
+		BasicBlock bb = cfg.createBasicBlock(1, 1, 2, null);
+        Quad q1 = Invoke.create(0, bb, Invoke.INVOKEINTERFACE_V.INSTANCE, null, mo, 1);
         Invoke.setParam(q1, 0, ro);
         Invoke.setDest(q1, to);
-        Quad q2 = Return.create(1, m, RETURN_A.INSTANCE);
+        Quad q2 = Return.create(1, bb, RETURN_A.INSTANCE);
         Return.setSrc(q2, to);
-		BasicBlock bb = cfg.createBasicBlock(1, 1, 2, null);
 		bb.appendQuad(q1);
 		bb.appendQuad(q2);
 		BasicBlock entry = cfg.entry();

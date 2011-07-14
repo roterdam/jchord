@@ -13,25 +13,13 @@ import joeq.Class.jq_Class;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.MethodOperand;
-import joeq.Compiler.Quad.Operand.AConstOperand;
-import joeq.Compiler.Quad.Operand.TypeOperand;
-import joeq.Compiler.Quad.Operand.IConstOperand;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Invoke;
-import joeq.Compiler.Quad.Operator.CheckCast;
-import joeq.Compiler.Quad.Operator.CheckCast.CHECKCAST;
-import joeq.Compiler.Quad.Operator.ALoad;
-import joeq.Compiler.Quad.Operator.ALoad.ALOAD_A;
-import joeq.Compiler.Quad.Operator.AStore;
-import joeq.Compiler.Quad.Operator.AStore.ASTORE_A;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Return.RETURN_V;
-import joeq.Compiler.Quad.Operator.Return.RETURN_A;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Compiler.Quad.Operand;
 
 /**
  * Stub for instance method "void start()" in class java.lang.Thread.
@@ -50,10 +38,10 @@ public class ThreadStartCFGBuilder implements ICFGBuilder {
 		ControlFlowGraph cfg = new ControlFlowGraph(m, 1, 0, rf);
 		RegisterOperand ro = new RegisterOperand(r, c);
 		MethodOperand mo = new MethodOperand(run);
-		Quad q1 = Invoke.create(0, m, Invoke.INVOKEVIRTUAL_V.INSTANCE, null, mo, 1);
-		Invoke.setParam(q1, 0, ro);
-		Quad q2 = Return.create(1, m, RETURN_V.INSTANCE);
 		BasicBlock bb = cfg.createBasicBlock(1, 1, 2, null);
+		Quad q1 = Invoke.create(0, bb, Invoke.INVOKEVIRTUAL_V.INSTANCE, null, mo, 1);
+		Invoke.setParam(q1, 0, ro);
+		Quad q2 = Return.create(1, bb, RETURN_V.INSTANCE);
 		bb.appendQuad(q1);
 		bb.appendQuad(q2);
 		BasicBlock entry = cfg.entry();
