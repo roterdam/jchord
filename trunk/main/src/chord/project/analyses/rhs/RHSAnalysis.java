@@ -125,7 +125,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		return targets;
 	}
 
-	private int timeout = Integer.getInteger("chord.rhs.timeout", 300000);
+	private int timeout = Integer.getInteger("chord.rhs.timeout", 0);
 	private Alarm alarm;
 
 	protected void done() {
@@ -417,7 +417,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	private void addPathEdge(Location loc, PE pe) {
 		if (DEBUG) System.out.println("\tChecking if " + loc + " has PE: " + pe);
 		Quad q = loc.q;
-		Inst i = (q != null) ? q : loc.bb;
+		Inst i = (q != null) ? q : (Inst) loc.bb;
 		Set<PE> peSet = pathEdges.get(i);
 		PE peToAdd = pe;
 		if (peSet == null) {
