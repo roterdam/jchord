@@ -10,6 +10,7 @@ import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import chord.program.visitors.IMethodVisitor;
@@ -38,7 +39,7 @@ public class RelPP extends ProgramRel implements IMethodVisitor {
 		ControlFlowGraph cfg = m.getCFG();
 		for (BasicBlock bq : cfg.reversePostOrder()) {
 			int n = bq.size();
-			Inst y = (n == 0) ? bq : bq.getQuad(0);
+			Inst y = (n == 0) ? (Inst) bq : bq.getQuad(0);
 			int yIdx = domP.indexOf(y);
 			assert (yIdx >= 0);
 			if (n != 0) {
@@ -54,7 +55,7 @@ public class RelPP extends ProgramRel implements IMethodVisitor {
 			for (Object bo : bq.getPredecessors()) {
 				BasicBlock bp = (BasicBlock) bo;
 				int l = bp.size();
-				Inst x = (l == 0) ? bp : bp.getQuad(l - 1);
+				Inst x = (l == 0) ? (Inst) bp : bp.getQuad(l - 1);
 				int xIdx = domP.indexOf(x);
 				assert (xIdx >= 0);
 				add(xIdx, yIdx);

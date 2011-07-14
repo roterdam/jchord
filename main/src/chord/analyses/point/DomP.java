@@ -9,6 +9,7 @@ package chord.analyses.point;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
 import chord.analyses.method.DomM;
@@ -49,8 +50,8 @@ public class DomP extends ProgramDom<Inst> {
 			for (BasicBlock bb : cfg.reversePostOrder()) {
 				int n = bb.size();
 				if (n == 0) {
-					// assert (bb.isEntry() || bb.isExit());
-					add(bb);
+					assert (bb.isEntry() || bb.isExit());
+					add((Inst) bb);
 					continue;
 				}
 				for (Quad q : bb.getQuads())
