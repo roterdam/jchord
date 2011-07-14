@@ -146,8 +146,8 @@ public class DataraceAnalysis extends JavaAnalysis {
 		out.println("</dataracelist>");
 		out.close();
 
-		ClassicProject.g().runTask("LI");
-		ClassicProject.g().runTask("LE");
+		ClassicProject.g().runTask("LI-dlog");
+		ClassicProject.g().runTask("LE-dlog");
 		ClassicProject.g().runTask("syncLH-dlog");
 		final ProgramRel relLI = (ProgramRel) ClassicProject.g().getTrgt("LI");
 		final ProgramRel relLE = (ProgramRel) ClassicProject.g().getTrgt("LE");
