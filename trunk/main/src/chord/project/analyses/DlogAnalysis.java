@@ -276,7 +276,7 @@ public class DlogAnalysis extends JavaAnalysis {
 		return subOrder;
 	}
 	private void error(String errMsg) {
-		Messages.log("ERROR: " + fileName + ": line " + lineNum + ": " + errMsg);
+		Messages.log("ERROR: DlogAnalysis: " + fileName + ": line " + lineNum + ": " + errMsg);
 		hasNoErrors = false;
 	}
 	/**
