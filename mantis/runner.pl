@@ -4,6 +4,7 @@ use strict;
 use Getopt::Long;
 use File::Path qw(make_path);
 use Cwd;
+use Cwd 'abs_path';
 
 my $cur_dir = getcwd;
 my $main_class;
@@ -29,12 +30,18 @@ if (!$main_class) {
 }
 if (!$prog_dir) {
 	die "Expected -prog_dir=<program dir name>\n";
+} else {
+	$prog_dir = abs_path($prog_dir);
 }
 if (!$data_dir) {
 	die "Expected -data_dir=<input data dir name>\n";
+} else {
+	$data_dir = abs_path($data_dir);
 }
 if (!$out_dir) {
 	die "Expected -out_dir=<output dir name>\n";
+} else {
+	$out_dir = abs_path($out_dir);
 }
 
 make_path $out_dir;

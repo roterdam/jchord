@@ -34,7 +34,6 @@ import joeq.Compiler.Quad.Operator.IntIfCmp;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Util.Templates.ListIterator;
 
 /**
  * 1. Instruments all classes not excluded by property chord.scope.exclude.
@@ -171,7 +170,7 @@ public class MantisInstrumentor extends BasicInstrumentor {
 	private final List<FldInfo> fldInfosList = new ArrayList<FldInfo>();
 	private final TIntObjectHashMap<String> bciToInstrMap = new TIntObjectHashMap<String>();
 	private String currClsNameStr;
-	private CtClass[] mantisClasses;
+	private CtClass[] mantisClasses = new CtClass[2];
     private int currMantisClassId;
     private int numFldsInCurrMantisClass;
 
@@ -186,9 +185,7 @@ public class MantisInstrumentor extends BasicInstrumentor {
 	}
 
     private void ensure(int nf) {
-        if (mantisClasses == null)
-            mantisClasses = new CtClass[2];
-        else if (numFldsInCurrMantisClass + nf > maxFldsPerMantisClass) {
+        if (numFldsInCurrMantisClass + nf > maxFldsPerMantisClass) {
             int nc = mantisClasses.length;
             if (currMantisClassId == nc - 1) {
                 CtClass[] newMantisClasses = new CtClass[nc * 2];
@@ -212,6 +209,7 @@ public class MantisInstrumentor extends BasicInstrumentor {
 
 	@Override
 	public CtClass edit(CtClass clazz) throws CannotCompileException {
+		System.out.println("XXX: " + clazz.getName());
 		currClsNameStr = clazz.getName().replace('.', '_').replace('$', '_');
 		return super.edit(clazz);
 	}
@@ -236,8 +234,7 @@ public class MantisInstrumentor extends BasicInstrumentor {
 		assert (mIdx >= 0);
 		ControlFlowGraph cfg = meth.getCFG();
 		bciToInstrMap.clear();
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
 			int n = bb.size();
 			for (int i = 0; i < n; i++) {
 				Quad q = bb.getQuad(i);
