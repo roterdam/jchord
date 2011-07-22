@@ -24,7 +24,6 @@ import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Invoke.InvokeStatic;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Util.Templates.ListIterator;
 
 /**
  * Relation containing each tuple (p0,p1) such that p0 is a head of <init>
@@ -62,8 +61,7 @@ public class RelSupInit extends ProgramRel {
 	
 	private void search(BasicBlock bb, Set<Register> r0Clones, Set<Quad> quads) {
 		if (!visitedBB.add(bb) || bb.isExit()) return;
-		for (ListIterator.Quad it = bb.iterator(); it.hasNext();) {
-			Quad q = it.nextQuad();
+		for (Quad q : bb.getQuads()) {
 			Operator operator = q.getOperator();
 			if (operator instanceof Move) {
 				Operand src = Move.getSrc(q);

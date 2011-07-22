@@ -2,6 +2,7 @@ package chord.slicer;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.List;
 
 import joeq.Class.jq_Array;
 import joeq.Class.jq_Class;
@@ -19,7 +20,6 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Util.Templates.ListIterator;
 
 import chord.analyses.method.DomM;
 import chord.program.Program;
@@ -126,12 +126,8 @@ public class QuadSlice extends JavaAnalysis {
 		if (init.getDeclaringClass().getSuperclass() == null) return null;
 		ControlFlowGraph cfg = init.getCFG();		
 		BasicBlock entry = cfg.entry();
-		ListIterator.BasicBlock bbIter = cfg.reversePostOrderIterator();
-		while (bbIter.hasNext()) {
-			BasicBlock bb = bbIter.nextBasicBlock();
-			ListIterator.Quad quadIter = bb.iterator();
-			while (quadIter.hasNext()) {
-				Quad q = quadIter.nextQuad();				
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				if (relSupInitPP.contains(entry,q))
 					return q;				
 			}
@@ -162,17 +158,13 @@ public class QuadSlice extends JavaAnalysis {
 			formalArgs.add(rf.get(i));
 		}
 
-		ListIterator.BasicBlock bbIter = cfg.reversePostOrderIterator();
 		Set<Register> registersUsedNotDefined = new HashSet<Register>();
 		Set<Register> registersDefinedBeforeUse = new HashSet<Register>();
-		while (bbIter.hasNext()) {
-			BasicBlock bb = bbIter.nextBasicBlock();
-			ListIterator.Quad quadIter = bb.iterator();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
 			Set<Quad> quadsToRemove = new HashSet<Quad>();
 			registersDefinedBeforeUse.clear();
 			// find out quads that are not in slice
-			while (quadIter.hasNext()) {
-				Quad q = quadIter.nextQuad();
+			for (Quad q : bb.getQuads()) {
 				Operator operator = q.getOperator();
 				// We keep all return statements and exception saving statements	
 				if (!relPSlice.contains(q) 
@@ -182,19 +174,19 @@ public class QuadSlice extends JavaAnalysis {
 					quadsToRemove.add(q);										
 				} else {
 					// Check if any of used register has not been defined.
-					joeq.Util.Templates.List.RegisterOperand usedRegList = q.getUsedRegisters();
+					List<RegisterOperand> usedRegList = q.getUsedRegisters();
 					int size = usedRegList.size();
 					for (int i=0; i < size; i++) {
-						RegisterOperand ro = usedRegList.getRegisterOperand(i);
+						RegisterOperand ro = usedRegList.get(i);
 						if (!registersDefinedBeforeUse.contains(ro.getRegister())) {
 							registersUsedNotDefined.add(ro.getRegister());
 						}
 					}
 
-					joeq.Util.Templates.List.RegisterOperand definedRegList = q.getDefinedRegisters();
+					List<RegisterOperand> definedRegList = q.getDefinedRegisters();
 					size = definedRegList.size();
 					for (int i=0; i < size; i++) {
-						RegisterOperand ro = definedRegList.getRegisterOperand(i);
+						RegisterOperand ro = definedRegList.get(i);
 						registersDefinedBeforeUse.add(ro.getRegister());
 					}
 
@@ -213,7 +205,7 @@ public class QuadSlice extends JavaAnalysis {
 			BasicBlock entry = cfg.entry();
 			assert entry.getSuccessors().size() == 1;
 			BasicBlock newBB = cfg.createBasicBlock(1, 1, registersUsedNotDefined.size(), null);
-			BasicBlock orgSuccessor = entry.getSuccessors().getBasicBlock(0);
+			BasicBlock orgSuccessor = entry.getSuccessors().get(0);
 			newBB.addSuccessor(orgSuccessor);
 			orgSuccessor.removePredecessor(entry);
 			orgSuccessor.addPredecessor(newBB);
@@ -224,7 +216,7 @@ public class QuadSlice extends JavaAnalysis {
 				if (!formalArgs.contains(reg)) {
 					Operator.Move opMove = Operator.Move.getMoveOp(reg.getType());
 					Operand src = getInitialVal(reg.getType());						
-					Quad q = Operator.Move.create(cfg.getNewQuadID(), m, opMove, new RegisterOperand(reg, reg.getType()), src);
+					Quad q = Operator.Move.create(cfg.getNewQuadID(), newBB, opMove, new RegisterOperand(reg, reg.getType()), src);
 					newBB.addAtEnd(cfg, q);
 				}
 			}
