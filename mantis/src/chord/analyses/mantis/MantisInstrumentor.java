@@ -170,7 +170,7 @@ public class MantisInstrumentor extends BasicInstrumentor {
 	private final List<FldInfo> fldInfosList = new ArrayList<FldInfo>();
 	private final TIntObjectHashMap<String> bciToInstrMap = new TIntObjectHashMap<String>();
 	private String currClsNameStr;
-	private CtClass[] mantisClasses = new CtClass[2];
+	private CtClass[] mantisClasses;
     private int currMantisClassId;
     private int numFldsInCurrMantisClass;
 
@@ -185,7 +185,9 @@ public class MantisInstrumentor extends BasicInstrumentor {
 	}
 
     private void ensure(int nf) {
-        if (numFldsInCurrMantisClass + nf > maxFldsPerMantisClass) {
+		if (mantisClasses == null)
+			mantisClasses = new CtClass[2];
+		else if (numFldsInCurrMantisClass + nf > maxFldsPerMantisClass) {
             int nc = mantisClasses.length;
             if (currMantisClassId == nc - 1) {
                 CtClass[] newMantisClasses = new CtClass[nc * 2];
@@ -209,7 +211,6 @@ public class MantisInstrumentor extends BasicInstrumentor {
 
 	@Override
 	public CtClass edit(CtClass clazz) throws CannotCompileException {
-		System.out.println("XXX: " + clazz.getName());
 		currClsNameStr = clazz.getName().replace('.', '_').replace('$', '_');
 		return super.edit(clazz);
 	}
