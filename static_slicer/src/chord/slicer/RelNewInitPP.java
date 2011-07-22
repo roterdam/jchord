@@ -20,7 +20,6 @@ import chord.program.visitors.INewInstVisitor;
 import chord.project.Chord;
 import chord.project.Config;
 import chord.project.analyses.ProgramRel;
-import joeq.Util.Templates.ListIterator;
 
 /**
  * Relation containing each tuple(p0, p1) such that p0 is a "new" operation 
@@ -64,8 +63,7 @@ public class RelNewInitPP extends ProgramRel implements INewInstVisitor {
 	private void search(BasicBlock bb, HashSet<BasicBlock> visitedBB,
 			HashMap<Quad,HashSet<Register>> registerAliasMap, HashSet<Register> wholeRegs) {
 		if (!visitedBB.add(bb)) return;
-		for (ListIterator.Quad iter = bb.iterator(); iter.hasNext();) {
-			Quad q = iter.nextQuad();
+		for (Quad q : bb.getQuads()) {
 			if (q.getOperator() instanceof Operator.New) {
 				Register reg = New.getDest(q).getRegister();
 				HashSet<Register> set = new HashSet<Register>();
@@ -102,7 +100,7 @@ public class RelNewInitPP extends ProgramRel implements INewInstVisitor {
 		}
 
 		if (bb.getSuccessors().size() == 1) {
-			BasicBlock successor = bb.getSuccessors().getBasicBlock(0);
+			BasicBlock successor = bb.getSuccessors().get(0);
 			if (!visitedBB.contains(successor)) {
 				search(successor, visitedBB, registerAliasMap, wholeRegs);
 			}

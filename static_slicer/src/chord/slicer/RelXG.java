@@ -21,11 +21,9 @@ import chord.util.tuple.object.Trio;
 public class RelXG extends ProgramRel{
 	
 	public void fill(){
-		DomX domX = (DomX)doms[0];
+		DomX domX = (DomX) doms[0];
 		
-		Iterator<Trio<Object, Inst, Integer>> iter = domX.iterator();
-		while(iter.hasNext()){			
-			Trio<Object, Inst, Integer> x = iter.next();
+		for (Trio<Object, Inst, Integer> x : domX) {
 			Object o = x.val0;
 			if(o instanceof jq_Field){
 				jq_Field field = (jq_Field)o;

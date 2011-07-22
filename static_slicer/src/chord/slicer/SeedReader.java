@@ -84,19 +84,12 @@ public class SeedReader extends ProgramRel {
 
 	private void searchFieldAccess(jq_Method m, jq_Field f) {
 		assert (f.isStatic());
-		joeq.Util.Templates.ListIterator.BasicBlock bbIter = m.getCFG().reversePostOrderIterator();
-		while (bbIter.hasNext()) {
-			BasicBlock bb = bbIter.nextBasicBlock();
-			joeq.Util.Templates.ListIterator.Quad quadIter = bb.iterator();
-			while (quadIter.hasNext()) {
-				Quad q = quadIter.nextQuad();
-
+		for (BasicBlock bb : m.getCFG().reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
 				if (arrayTypeSeed && registerSet.size() > 0) {
 					// register is overwritten
-					joeq.Util.Templates.ListIterator.RegisterOperand iter
-					= q.getDefinedRegisters().registerOperandIterator();
-					while (iter.hasNext()) {
-						Register defined = iter.nextRegisterOperand().getRegister();
+					for (RegisterOperand ro : q.getDefinedRegisters()) {
+						Register defined = ro.getRegister();
 						registerSet.remove(defined.getNumber());
 					}
 				}

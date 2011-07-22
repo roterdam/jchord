@@ -10,6 +10,7 @@ import chord.project.ClassicProject;
 import chord.project.analyses.ProgramRel;
 import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.object.Pair;
+import java.util.List;
 
 /**
  * Relation containing tuple (p1,p2) such that p1 has a control dependency on p2.
@@ -38,11 +39,9 @@ public class RelCtrlDepPP extends ProgramRel {
 			int b1Idx = tuple.idx1;
 			BasicBlock b0 = domB.get(b0Idx);
 			BasicBlock b1 = domB.get(b1Idx);
-			joeq.Util.Templates.ListIterator.Quad quadIter = b0.iterator();
 			if(!b1.isEntry() && !b1.isExit()) {
 				Quad last = b1.getLastQuad();
-				while(quadIter.hasNext()) {
-					Quad q = quadIter.nextQuad();
+				for (Quad q : b0.getQuads()) {
 					add(q,last);
 				}
 			}
@@ -56,10 +55,10 @@ public class RelCtrlDepPP extends ProgramRel {
 		for (Pair<jq_Method, BasicBlock> pair : tuples) {
 			BasicBlock xb = pair.val1;
 			assert xb.isExit() : xb.fullDump();
-			joeq.Util.Templates.List.BasicBlock bblist = xb.getPredecessors();
+			List<BasicBlock> bblist = xb.getPredecessors();
 			int size = bblist.size();
 			for (int i=0; i < size; i++) {
-				BasicBlock bb = bblist.getBasicBlock(i);
+				BasicBlock bb = bblist.get(i);
 				Quad q = bb.getLastQuad();
 				assert q.getOperator() instanceof Operator.Return;
 				add(xb,q);				
