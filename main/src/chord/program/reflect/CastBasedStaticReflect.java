@@ -125,7 +125,7 @@ public class CastBasedStaticReflect extends StaticReflectResolver {
 		}
 		Set<Quad> oldS = newInstReflSites.get(retOp.getRegister());
 
-			//a call to a reflection methon
+			//a call to a reflection method
 		if(newInstSites.contains(q)) {
 			if(oldS == null) {
 				ArraySet<Quad> set = new ArraySet<Quad>();
