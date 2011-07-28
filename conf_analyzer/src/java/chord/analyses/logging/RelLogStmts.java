@@ -94,6 +94,10 @@ public class RelLogStmts extends JavaAnalysis {
 				relInfo.add(iid);
 			else if(methname.equals("debug"))
 				relDebug.add(iid);
+			else if(methname.equals("trace"))	//FIXME: could break these into separate relations
+				relDebug.add(iid);
+			else if(methname.equals("fatal"))
+				relError.add(iid);
 		} else if(classname.equals("rice.environment.logging.Logger") && methname.equals("log"))
 			relInfo.add(iid);
 		else if(classname.equals("jchord.project.Messages") && methname.equals("log"))

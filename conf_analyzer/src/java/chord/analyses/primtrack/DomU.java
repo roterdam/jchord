@@ -2,6 +2,7 @@ package chord.analyses.primtrack;
 
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
@@ -13,7 +14,6 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Util.Templates.ListIterator;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
@@ -55,10 +55,9 @@ public class DomU extends ProgramDom<Register> implements IMethodVisitor {
                 addVar(v);
             }
         }
-        for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-            BasicBlock bb = it.nextBasicBlock();
-            for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-                Quad q = it2.nextQuad();
+        for (BasicBlock bb: cfg.reversePostOrder()) {
+            for (Iterator<Quad> it2 = bb.iterator(); it2.hasNext();) {
+                Quad q = it2.next();
                 process(q.getOp1());
                 process(q.getOp2());
                 process(q.getOp3());

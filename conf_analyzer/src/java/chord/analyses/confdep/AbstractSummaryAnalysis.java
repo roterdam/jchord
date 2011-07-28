@@ -10,7 +10,6 @@ import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.*;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-import joeq.Util.Templates.ListIterator;
 import java.util.*;
 
 /**
@@ -158,11 +157,9 @@ public abstract class AbstractSummaryAnalysis extends JavaAnalysis {
     boolean changed = true;
     while (changed) {
       changed = false;
-      for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator();
-          it.hasNext();) {
-        BasicBlock bb = it.nextBasicBlock();
-        for (ListIterator.Quad it2 = bb.iterator(); it2.hasNext();) {
-          Quad q = it2.nextQuad();
+      for (BasicBlock bb: cfg.reversePostOrder()) {
+        for (Iterator<Quad> it2 = bb.iterator(); it2.hasNext();) {
+          Quad q = it2.next();
           Operator op = q.getOperator();
           if (op instanceof Move || op instanceof CheckCast) {
             Operand ro = Move.getSrc(q);

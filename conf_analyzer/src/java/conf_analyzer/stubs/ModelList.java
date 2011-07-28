@@ -101,6 +101,8 @@ public class ModelList<E> implements List<E>, Queue<E>, Deque<E>, SortedSet<E>, 
 		// TODO Auto-generated method stub
 		return false;
 	}
+	
+	public void ensureCapacity(int i) {}
 
 	@Override
 	public E get(int index) {

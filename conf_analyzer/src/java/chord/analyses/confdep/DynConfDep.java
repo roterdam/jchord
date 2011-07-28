@@ -8,6 +8,7 @@ import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Config;
 import chord.project.analyses.*;
+import chord.util.Utils;
 import chord.util.tuple.object.Pair;
 import java.io.*;
 import java.util.HashMap;
@@ -75,7 +76,7 @@ public class DynConfDep extends BasicDynamicAnalysis {
   boolean retrace = false;
   @Override
   public void initAllPasses() {
-  	retrace = Config.buildBoolProperty("retrace_conf", false);
+  	retrace = Utils.buildBoolProperty("retrace_conf", false);
   	if(!retrace) {
   		results.delete();
   		System.out.println("DynConfDep starting execution; clearing buffer file.");

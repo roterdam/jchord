@@ -46,6 +46,9 @@ public class ConfDefines {
     hadoopConfOptMethods.add("getStringCollection");
     hadoopConfOptMethods.add("getStrings");
     hadoopConfOptMethods.add("getTrimmedStrings");//in Cloudera's distribution
+    hadoopConfOptMethods.add("getTrimmedStringCollection"); //ditto
+    hadoopConfOptMethods.add("getInstances"); //ditto
+
     hadoopConfOptMethods.add("getClasses");
     hadoopConfOptMethods.add("getLocalPath");
     
