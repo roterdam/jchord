@@ -308,17 +308,19 @@ public class RTA implements ScopeBuilder {
 			repeat = true;
 		if (r instanceof jq_Class) {
 			jq_Class c = (jq_Class) r;
-			jq_Method n = c.getInitializer(new jq_NameAndDesc("<init>", "()V"));
-			if (n != null) {
-				visitMethod(n);
-				reflectiveCtors.add(n);
+			
+		//two cases: call was Constructor.newInstance or call was Class.newInstance
+		//Static reflection analysis folds these together, so we pull them apart here
+			String cName =Invoke.getMethod(q).getMethod().getDeclaringClass().getName();
+			if(cName.equals("java.lang.reflect.Constructor")) {
+				processResolvedConNewInstSite(q, r);
+			} else {
+				jq_Method n = c.getInitializer(new jq_NameAndDesc("<init>", "()V"));
+				if (n != null) {
+					visitMethod(n);
+					reflectiveCtors.add(n);
+				}
 			}
-			//This is mostly not an interesting case. Turns out that it can happen if
-			//the reflection analysis is imprecise; e.g. cast-based will identify subclasses
-			//without a suitable ctor. So we just ignore it quietly for now.
-//			else
-//				Messages.log("NOTE: RTA.processResolvedObjNewInstSite can't find ctor for " + c+
-//						"invoked at line " + q.getLineNumber() + " of " + q.getMethod());
 		}
 	}
 
