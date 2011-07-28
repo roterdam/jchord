@@ -43,8 +43,8 @@ public class ExplainMyLogs extends JavaAnalysis{
 
 		ClassicProject project = ClassicProject.g();
 
-		miniStrings = Config.buildBoolProperty("useMiniStrings", false);
-		boolean miniDatadep = Config.buildBoolProperty("explainlogs.minidatadep", false);
+		miniStrings = Utils.buildBoolProperty("useMiniStrings", false);
+		boolean miniDatadep = Utils.buildBoolProperty("explainlogs.minidatadep", false);
 
 		if(!justStatic()) {
 			System.out.println("refusing to run ExplainMyLogs with nontrivial ConfDeps set up");

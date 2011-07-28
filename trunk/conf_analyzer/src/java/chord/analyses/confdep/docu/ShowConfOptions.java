@@ -105,8 +105,8 @@ public class ShowConfOptions extends JavaAnalysis {
       inScopePrefixes = new String[] {""};
     
     ClassicProject project = ClassicProject.g();
-    miniStrings = Config.buildBoolProperty("useMiniStrings", false);
-    boolean argGuesses = Config.buildBoolProperty("argGuesses", false);
+    miniStrings = Utils.buildBoolProperty("useMiniStrings", false);
+    boolean argGuesses = Utils.buildBoolProperty("argGuesses", false);
     
     project.runTask("cipa-0cfa-arr-dlog");
     project.runTask("findconf-dlog");
@@ -525,7 +525,7 @@ public class ShowConfOptions extends JavaAnalysis {
       Class<?> cl = eType.getJavaLangClassObject();
       if(cl == null)
         continue;
-      if(cl.getEnumConstants() == null) {
+      if(cl.getEnumConstants() == null || cl.getEnumConstants().length == 0) {
       	System.err.println("WARN: no enum constants for " + t.val0 + " of type " + t.val1.getName());
       	continue;
       }

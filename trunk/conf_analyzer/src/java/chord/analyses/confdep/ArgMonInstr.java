@@ -5,6 +5,7 @@ import javassist.*;
 import javassist.expr.*;
 import chord.instr.Instrumentor;
 import chord.project.Config;
+import chord.util.Utils;
 
 /**
  * Code to insert calls to DynConfDepRuntime and similar.
@@ -30,7 +31,7 @@ public class ArgMonInstr extends Instrumentor {
 		methodCallAftEventCallSuper = rtClassName + ".afterMethodCall(";
 		methodCallBefEventCallSuper = rtClassName + ".beforeMethodCall(";
 
-		HANDLE_EXCEPTIONS = Config.buildBoolProperty("confdep.dyn.catchexceptions", false);
+		HANDLE_EXCEPTIONS = Utils.buildBoolProperty("confdep.dyn.catchexceptions", false);
 	}
 
 	/*

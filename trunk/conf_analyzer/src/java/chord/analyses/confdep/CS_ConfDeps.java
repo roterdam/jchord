@@ -12,6 +12,7 @@ import chord.analyses.var.DomV;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Config;
+import chord.util.Utils;
 
 /**
  * Context-sensitive version of ConfDeps
@@ -26,8 +27,8 @@ public class CS_ConfDeps extends ConfDeps {
 	public void run() {
 		ClassicProject Project = ClassicProject.g();
 
-		fakeExec = Config.buildBoolProperty("programUnchanged", false);
-		lookAtLogs = Config.buildBoolProperty(CONFDEP_SCANLOGS_OPT, true);
+		fakeExec = Utils.buildBoolProperty("programUnchanged", false);
+		lookAtLogs = Utils.buildBoolProperty(CONFDEP_SCANLOGS_OPT, true);
 		String dynamism = System.getProperty(CONFDEP_DYNAMIC_OPT, "static");
 		if(dynamism.equals("static")) {
 			STATIC = true;
@@ -43,8 +44,8 @@ public class CS_ConfDeps extends ConfDeps {
 			System.err.println("ERR: " + CONFDEP_DYNAMIC_OPT + " must be 'static', 'dynamic-track', or dynamic-load");
 			System.exit(-1);
 		}
-		boolean miniStrings = Config.buildBoolProperty("useMiniStrings", false);
-		boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", false);
+		boolean miniStrings = Utils.buildBoolProperty("useMiniStrings", false);
+		boolean dumpIntermediates = Utils.buildBoolProperty("dumpArgTaints", false);
 
 		//Can't really use external entrypoints here anyway
 		//		boolean wideCallModel = Config.buildBoolProperty("externalCallsReachEverything", true);

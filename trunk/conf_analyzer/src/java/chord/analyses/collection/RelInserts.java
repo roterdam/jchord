@@ -12,8 +12,8 @@ import chord.analyses.invk.DomI;
 import chord.analyses.var.DomV;
 import chord.program.visitors.IInvokeInstVisitor;
 import chord.project.Chord;
-import chord.project.Config;
 import chord.project.analyses.ProgramRel;
+import chord.util.Utils;
 
 /**
  * (i,u,v) if instruction i inserts v into u
@@ -32,7 +32,7 @@ public class RelInserts extends ProgramRel implements IInvokeInstVisitor {
   
   static boolean MAP_PUT = false;
   static {
-    MAP_PUT = Config.buildBoolProperty("putIsInsert", false);
+    MAP_PUT = Utils.buildBoolProperty("putIsInsert", false);
   }
   public void init() {
     domI = (DomI) doms[0];

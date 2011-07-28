@@ -5,7 +5,6 @@ import java.util.*;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.*;
-import joeq.Util.Templates.ListIterator;
 import chord.analyses.invk.DomI;
 import chord.analyses.primtrack.UniqueBQ;
 import chord.program.visitors.IMethodVisitor;
@@ -41,8 +40,7 @@ public class RelExceptionDeps extends ProgramRel implements IMethodVisitor {
     
     //need to find set of blocks on the regular path
     Set<BasicBlock> nonExceptionPath = new HashSet<BasicBlock>();
-		for (ListIterator.BasicBlock it = cfg.reversePostOrderIterator(); it.hasNext();) {
-			BasicBlock bb = it.nextBasicBlock();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
 			nonExceptionPath.add(bb);
 		}
     

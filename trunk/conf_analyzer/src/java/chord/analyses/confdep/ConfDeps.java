@@ -22,6 +22,7 @@ import chord.project.OutDirUtils;
 import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
+import chord.util.Utils;
 import chord.util.tuple.integer.*;
 import chord.util.tuple.object.*;
 import chord.analyses.confdep.optnames.DomOpts;
@@ -60,8 +61,8 @@ public class ConfDeps extends JavaAnalysis {
 	public void run() {
 		ClassicProject Project = ClassicProject.g();
 
-		fakeExec = Config.buildBoolProperty("programUnchanged", false);
-		lookAtLogs = Config.buildBoolProperty(CONFDEP_SCANLOGS_OPT, true);
+		fakeExec = Utils.buildBoolProperty("programUnchanged", false);
+		lookAtLogs = Utils.buildBoolProperty(CONFDEP_SCANLOGS_OPT, true);
 		String dynamism = System.getProperty(CONFDEP_DYNAMIC_OPT, "static");
 		if(dynamism.equals("static")) {
 			STATIC = true;
@@ -77,12 +78,12 @@ public class ConfDeps extends JavaAnalysis {
 			System.err.println("ERR: " + CONFDEP_DYNAMIC_OPT + " must be 'static', 'dynamic-track', or dynamic-load");
 			System.exit(-1);
 		}
-		boolean miniStrings = Config.buildBoolProperty("useMiniStrings", false);
-		boolean dumpIntermediates = Config.buildBoolProperty("dumpArgTaints", false);
+		boolean miniStrings = Utils.buildBoolProperty("useMiniStrings", false);
+		boolean dumpIntermediates = Utils.buildBoolProperty("dumpArgTaints", false);
 
 		slurpDoms();
 
-		boolean wideCallModel = Config.buildBoolProperty("externalCallsReachEverything", true);
+		boolean wideCallModel = Utils.buildBoolProperty("externalCallsReachEverything", true);
 		if(!wideCallModel)
 			makeEmptyRelation(Project, "externalThis");
 

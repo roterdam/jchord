@@ -34,8 +34,7 @@ public class DomStrConst extends ProgramDom<String> implements IInstVisitor {
 
   @Override
   public void visit(Quad q) {
-
-    for (Object op : q.getAllOperands()) {
+    for (Object op :q.getAllOperands()) {
       Operand operand = (Operand) op;
       if (operand instanceof Operand.AConstOperand) {
         Object wrapped = ((Operand.AConstOperand) operand).getWrapped();
