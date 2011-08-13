@@ -136,12 +136,12 @@ public class EnterSSA implements ControlFlowGraphVisitor {
             jq_Type type = registerOp.getType();
             Register register = registerOp.getRegister();
             Register temp = ir.getRegisterFactory().makeReg(register);
-            inBlock.addQuad(0, Move.create(ir.getNewQuadID(), ir.getMethod(), register, temp, type));
+            inBlock.addQuad(0, Move.create(ir.getNewQuadID(), inBlock, register, temp, type));
             live.setLiveAtIn(inBlock, temp);
             Iterator outBlocks = inBlock.getPredecessors().iterator();
             while (outBlocks.hasNext()) {
                 BasicBlock outBlock = (BasicBlock) outBlocks.next();
-                Quad x = Move.create(ir.getNewQuadID(), ir.getMethod(), temp, register, type);
+                Quad x = Move.create(ir.getNewQuadID(), outBlock, temp, register, type);
                 outBlock.addAtEnd(ir, x);
                 live.setKilledAtIn(outBlock, temp);
             }
@@ -311,15 +311,13 @@ public class EnterSSA implements ControlFlowGraphVisitor {
         int n = bb.getNumberOfPredecessors();
         Iterator in = bb.getPredecessors().iterator();
         jq_Type type = null;
-        Quad s = Phi.create(ir.getNewQuadID(), ir.getMethod(), Phi.PHI.INSTANCE, new RegisterOperand(r, type), n);
+        Quad s = Phi.create(ir.getNewQuadID(), bb, Phi.PHI.INSTANCE, new RegisterOperand(r, type), n);
         for (int i = 0; i < n; i++) {
             RegisterOperand junk = new RegisterOperand(r, type);
             Phi.setSrc(s, i, junk);
             BasicBlock pred = (BasicBlock) in.next();
             Phi.setPred(s, i, pred);
         }
-        //s.position = ir.gc.inlineSequence;
-        //s.bcIndex = SSA_SYNTH_BCI;
         return s;
     }
     

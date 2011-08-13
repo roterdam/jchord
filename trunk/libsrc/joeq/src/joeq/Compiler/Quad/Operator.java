@@ -5,7 +5,6 @@ package joeq.Compiler.Quad;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Class;
-import joeq.Class.jq_Method;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
 import joeq.Compiler.BytecodeAnalysis.BytecodeVisitor;
@@ -245,14 +244,14 @@ public abstract class Operator implements Serializable {
     
     public abstract static class Move extends Operator {
         
-        public static Quad create(int id, jq_Method m, Move operator, RegisterOperand dst, Operand src) {
-            return new Quad(id, m, operator, dst, src);
+        public static Quad create(int id, BasicBlock bb, Move operator, RegisterOperand dst, Operand src) {
+            return new Quad(id, bb, operator, dst, src);
         }
-        public static Quad create(int id, jq_Method m, Register r1, Register r2, jq_Type t) {
+        public static Quad create(int id, BasicBlock bb, Register r1, Register r2, jq_Type t) {
             Move mv = getMoveOp(t);
             RegisterOperand o1 = new RegisterOperand(r1, t);
             RegisterOperand o2 = new RegisterOperand(r2, t);
-            Quad s = create(id, m, mv, o1, o2);
+            Quad s = create(id, bb, mv, o1, o2);
             return s;
         }
         public static Move getMoveOp(jq_Type type) {
@@ -310,8 +309,8 @@ public abstract class Operator implements Serializable {
     }
 
     public abstract static class Phi extends Operator {
-        public static Quad create(int id, jq_Method m, Phi operator, RegisterOperand res, int length) {
-            return new Quad(id, m, operator, res, 
+        public static Quad create(int id, BasicBlock bb, Phi operator, RegisterOperand res, int length) {
+            return new Quad(id, bb, operator, res, 
                     new ParamListOperand(new RegisterOperand[length]), 
                     new BasicBlockTableOperand(new BasicBlock[length]));
         }
@@ -349,8 +348,8 @@ public abstract class Operator implements Serializable {
     
     public abstract static class Binary extends Operator {
         
-        public static Quad create(int id, jq_Method m, Binary operator, RegisterOperand dst, Operand src1, Operand src2) {
-            return new Quad(id, m, operator, dst, src1, src2);
+        public static Quad create(int id, BasicBlock bb, Binary operator, RegisterOperand dst, Operand src1, Operand src2) {
+            return new Quad(id, bb, operator, dst, src1, src2);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc1(Quad q) { return q.getOp2(); }
@@ -576,8 +575,8 @@ public abstract class Operator implements Serializable {
 
     public abstract static class Unary extends Operator {
         
-        public static Quad create(int id, jq_Method m, Unary operator, RegisterOperand dst, Operand src1) {
-            return new Quad(id, m, operator, dst, src1);
+        public static Quad create(int id, BasicBlock bb, Unary operator, RegisterOperand dst, Operand src1) {
+            return new Quad(id, bb, operator, dst, src1);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
@@ -736,8 +735,8 @@ public abstract class Operator implements Serializable {
 
     public abstract static class ALoad extends Operator {
         
-        public static Quad create(int id, jq_Method m, ALoad operator, RegisterOperand dst, Operand base, Operand ind, Operand guard) {
-            return new Quad(id, m, operator, dst, base, ind, guard);
+        public static Quad create(int id, BasicBlock bb, ALoad operator, RegisterOperand dst, Operand base, Operand ind, Operand guard) {
+            return new Quad(id, bb, operator, dst, base, ind, guard);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getBase(Quad q) { return q.getOp2(); }
@@ -818,8 +817,8 @@ public abstract class Operator implements Serializable {
     
     public abstract static class AStore extends Operator {
         
-        public static Quad create(int id, jq_Method m, AStore operator, Operand val, Operand base, Operand ind, Operand guard) {
-            return new Quad(id, m, operator, val, base, ind, guard);
+        public static Quad create(int id, BasicBlock bb, AStore operator, Operand val, Operand base, Operand ind, Operand guard) {
+            return new Quad(id, bb, operator, val, base, ind, guard);
         }
         public static Operand getValue(Quad q) { return q.getOp1(); }
         public static Operand getBase(Quad q) { return q.getOp2(); }
@@ -902,8 +901,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class IntIfCmp extends Branch {
-        public static Quad create(int id, jq_Method m, IntIfCmp operator, Operand op0, Operand op1, ConditionOperand cond, TargetOperand target) {
-            return new Quad(id, m, operator, op0, op1, cond, target);
+        public static Quad create(int id, BasicBlock bb, IntIfCmp operator, Operand op0, Operand op1, ConditionOperand cond, TargetOperand target) {
+            return new Quad(id, bb, operator, op0, op1, cond, target);
         }
         public static Operand getSrc1(Quad q) { return q.getOp1(); }
         public static Operand getSrc2(Quad q) { return q.getOp2(); }
@@ -940,8 +939,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class Goto extends Branch {
-        public static Quad create(int id, jq_Method m, Goto operator, TargetOperand target) {
-            return new Quad(id, m, operator, target);
+        public static Quad create(int id, BasicBlock bb, Goto operator, TargetOperand target) {
+            return new Quad(id, bb, operator, target);
         }
         public static TargetOperand getTarget(Quad q) { return (TargetOperand)q.getOp1(); }
         public static void setTarget(Quad q, TargetOperand o) { q.setOp1(o); }
@@ -960,8 +959,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class Jsr extends Branch {
-        public static Quad create(int id, jq_Method m, Jsr operator, RegisterOperand loc, TargetOperand target, TargetOperand successor) {
-            return new Quad(id, m, operator, loc, target, successor);
+        public static Quad create(int id, BasicBlock bb, Jsr operator, RegisterOperand loc, TargetOperand target, TargetOperand successor) {
+            return new Quad(id, bb, operator, loc, target, successor);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static TargetOperand getTarget(Quad q) { return (TargetOperand)q.getOp2(); }
@@ -985,8 +984,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class Ret extends Branch {
-        public static Quad create(int id, jq_Method m, Ret operator, RegisterOperand loc) {
-            return new Quad(id, m, operator, loc);
+        public static Quad create(int id, BasicBlock bb, Ret operator, RegisterOperand loc) {
+            return new Quad(id, bb, operator, loc);
         }
         public static RegisterOperand getTarget(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static void setTarget(Quad q, RegisterOperand o) { q.setOp1(o); }
@@ -1006,8 +1005,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class TableSwitch extends Branch {
-        public static Quad create(int id, jq_Method m, TableSwitch operator, Operand val, IConstOperand low, TargetOperand def, int length) {
-            return new Quad(id, m, operator, val, low, def, new BasicBlockTableOperand(new BasicBlock[length]));
+        public static Quad create(int id, BasicBlock bb, TableSwitch operator, Operand val, IConstOperand low, TargetOperand def, int length) {
+            return new Quad(id, bb, operator, val, low, def, new BasicBlockTableOperand(new BasicBlock[length]));
         }
         public static void setTarget(Quad q, int i, BasicBlock t) {
             ((BasicBlockTableOperand)q.getOp4()).set(i, t);
@@ -1038,8 +1037,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class LookupSwitch extends Branch {
-        public static Quad create(int id, jq_Method m, LookupSwitch operator, Operand val, TargetOperand def, int length) {
-            return new Quad(id, m, operator, val, def, new IntValueTableOperand(new int[length]), new BasicBlockTableOperand(new BasicBlock[length]));
+        public static Quad create(int id, BasicBlock bb, LookupSwitch operator, Operand val, TargetOperand def, int length) {
+            return new Quad(id, bb, operator, val, def, new IntValueTableOperand(new int[length]), new BasicBlockTableOperand(new BasicBlock[length]));
         }
         public static void setMatch(Quad q, int i, int t) {
             ((IntValueTableOperand)q.getOp3()).set(i, t);
@@ -1075,11 +1074,11 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class Return extends Operator {
-        public static Quad create(int id, jq_Method m, Return operator, Operand val) {
-            return new Quad(id, m, operator, val);
+        public static Quad create(int id, BasicBlock bb, Return operator, Operand val) {
+            return new Quad(id, bb, operator, val);
         }
-        public static Quad create(int id, jq_Method m, Return operator) {
-            return new Quad(id, m, operator);
+        public static Quad create(int id, BasicBlock bb, Return operator) {
+            return new Quad(id, bb, operator);
         }
         public static Operand getSrc(Quad q) { return q.getOp1(); }
         public static void setSrc(Quad q, Operand o) { q.setOp1(o); }
@@ -1143,8 +1142,8 @@ public abstract class Operator implements Serializable {
     }
 
     public abstract static class Getstatic extends Operator {
-        public static Quad create(int id, jq_Method m, Getstatic operator, RegisterOperand dst, FieldOperand field) {
-            return new Quad(id, m, operator, dst, field);
+        public static Quad create(int id, BasicBlock bb, Getstatic operator, RegisterOperand dst, FieldOperand field) {
+            return new Quad(id, bb, operator, dst, field);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static FieldOperand getField(Quad q) { return (FieldOperand)q.getOp2(); }
@@ -1343,8 +1342,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class Putstatic extends Operator {
-        public static Quad create(int id, jq_Method m, Putstatic operator, Operand src, FieldOperand field) {
-            return new Quad(id, m, operator, src, field);
+        public static Quad create(int id, BasicBlock bb, Putstatic operator, Operand src, FieldOperand field) {
+            return new Quad(id, bb, operator, src, field);
         }
         public static Operand getSrc(Quad q) { return q.getOp1(); }
         public static FieldOperand getField(Quad q) { return (FieldOperand)q.getOp2(); }
@@ -1533,8 +1532,8 @@ public abstract class Operator implements Serializable {
     }
 
     public abstract static class Getfield extends Operator {
-        public static Quad create(int id, jq_Method m, Getfield operator, RegisterOperand dst, Operand base, FieldOperand field, Operand guard) {
-            return new Quad(id, m, operator, dst, base, field, guard);
+        public static Quad create(int id, BasicBlock bb, Getfield operator, RegisterOperand dst, Operand base, FieldOperand field, Operand guard) {
+            return new Quad(id, bb, operator, dst, base, field, guard);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getBase(Quad q) { return q.getOp2(); }
@@ -1738,8 +1737,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class Putfield extends Operator {
-        public static Quad create(int id, jq_Method m, Putfield operator, Operand base, FieldOperand field, Operand src, Operand guard) {
-            return new Quad(id, m, operator, base, field, src, guard);
+        public static Quad create(int id, BasicBlock bb, Putfield operator, Operand base, FieldOperand field, Operand src, Operand guard) {
+            return new Quad(id, bb, operator, base, field, src, guard);
         }
         public static Operand getBase(Quad q) { return q.getOp1(); }
         public static FieldOperand getField(Quad q) { return (FieldOperand)q.getOp2(); }
@@ -1932,8 +1931,8 @@ public abstract class Operator implements Serializable {
     }
 
     public abstract static class NullCheck extends Operator {
-        public static Quad create(int id, jq_Method m, NullCheck operator, Operand dst, Operand src) {
-            return new Quad(id, m, operator, dst, src);
+        public static Quad create(int id, BasicBlock bb, NullCheck operator, Operand dst, Operand src) {
+            return new Quad(id, bb, operator, dst, src);
         }
         public static Operand getDest(Quad q) { return q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
@@ -1961,8 +1960,8 @@ public abstract class Operator implements Serializable {
     }
 
     public abstract static class ZeroCheck extends Operator {
-        public static Quad create(int id, jq_Method m, ZeroCheck operator, Operand dst, Operand src) {
-            return new Quad(id, m, operator, dst, src);
+        public static Quad create(int id, BasicBlock bb, ZeroCheck operator, Operand dst, Operand src) {
+            return new Quad(id, bb, operator, dst, src);
         }
         public static Operand getDest(Quad q) { return q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
@@ -1996,8 +1995,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class BoundsCheck extends Operator {
-        public static Quad create(int id, jq_Method m, BoundsCheck operator, Operand ref, Operand idx, Operand guard) {
-            return new Quad(id, m, operator, ref, idx, guard);
+        public static Quad create(int id, BasicBlock bb, BoundsCheck operator, Operand ref, Operand idx, Operand guard) {
+            return new Quad(id, bb, operator, ref, idx, guard);
         }
         public static Operand getRef(Quad q) { return q.getOp1(); }
         public static Operand getIndex(Quad q) { return q.getOp2(); }
@@ -2027,8 +2026,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class StoreCheck extends Operator {
-        public static Quad create(int id, jq_Method m, StoreCheck operator, Operand ref, Operand elem, Operand guard) {
-            return new Quad(id, m, operator, ref, elem, guard);
+        public static Quad create(int id, BasicBlock bb, StoreCheck operator, Operand ref, Operand elem, Operand guard) {
+            return new Quad(id, bb, operator, ref, elem, guard);
         }
         public static Operand getRef(Quad q) { return q.getOp1(); }
         public static Operand getElement(Quad q) { return q.getOp2(); }
@@ -2059,8 +2058,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class Invoke extends Operator {
-        public static Quad create(int id, jq_Method m, Invoke operator, RegisterOperand res, MethodOperand mo, int length) {
-            return new Quad(id, m, operator, res, mo, new ParamListOperand(new RegisterOperand[length]));
+        public static Quad create(int id, BasicBlock bb, Invoke operator, RegisterOperand res, MethodOperand mo, int length) {
+            return new Quad(id, bb, operator, res, mo, new ParamListOperand(new RegisterOperand[length]));
         }
         public static void setParam(Quad q, int i, RegisterOperand t) {
             ((ParamListOperand)q.getOp3()).set(i, t);
@@ -2357,8 +2356,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class New extends Operator {
-        public static Quad create(int id, jq_Method m, New operator, RegisterOperand res, TypeOperand type) {
-            return new Quad(id, m, operator, res, type);
+        public static Quad create(int id, BasicBlock bb, New operator, RegisterOperand res, TypeOperand type) {
+            return new Quad(id, bb, operator, res, type);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static TypeOperand getType(Quad q) { return (TypeOperand)q.getOp2(); }
@@ -2386,8 +2385,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class NewArray extends Operator {
-        public static Quad create(int id, jq_Method m, NewArray operator, RegisterOperand res, Operand size, TypeOperand type) {
-            return new Quad(id, m, operator, res, size, type);
+        public static Quad create(int id, BasicBlock bb, NewArray operator, RegisterOperand res, Operand size, TypeOperand type) {
+            return new Quad(id, bb, operator, res, size, type);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSize(Quad q) { return q.getOp2(); }
@@ -2417,8 +2416,8 @@ public abstract class Operator implements Serializable {
     }
 
     public abstract static class MultiNewArray extends Operator {
-        public static Quad create(int id, jq_Method m, MultiNewArray operator, RegisterOperand res, int dims, TypeOperand type) {
-            return new Quad(id, m, operator, res, new ParamListOperand(new RegisterOperand[dims]), type);
+        public static Quad create(int id, BasicBlock bb, MultiNewArray operator, RegisterOperand res, int dims, TypeOperand type) {
+            return new Quad(id, bb, operator, res, new ParamListOperand(new RegisterOperand[dims]), type);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static ParamListOperand getParamList(Quad q) { return (ParamListOperand)q.getOp2(); }
@@ -2456,8 +2455,8 @@ public abstract class Operator implements Serializable {
 	}
     
     public abstract static class CheckCast extends Operator {
-        public static Quad create(int id, jq_Method m, CheckCast operator, RegisterOperand res, Operand val, TypeOperand type) {
-            return new Quad(id, m, operator, res, val, type);
+        public static Quad create(int id, BasicBlock bb, CheckCast operator, RegisterOperand res, Operand val, TypeOperand type) {
+            return new Quad(id, bb, operator, res, val, type);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
@@ -2488,8 +2487,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class InstanceOf extends Operator {
-        public static Quad create(int id, jq_Method m, InstanceOf operator, RegisterOperand res, Operand val, TypeOperand type) {
-            return new Quad(id, m, operator, res, val, type);
+        public static Quad create(int id, BasicBlock bb, InstanceOf operator, RegisterOperand res, Operand val, TypeOperand type) {
+            return new Quad(id, bb, operator, res, val, type);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
@@ -2519,8 +2518,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class ALength extends Operator {
-        public static Quad create(int id, jq_Method m, ALength operator, RegisterOperand res, Operand val) {
-            return new Quad(id, m, operator, res, val);
+        public static Quad create(int id, BasicBlock bb, ALength operator, RegisterOperand res, Operand val) {
+            return new Quad(id, bb, operator, res, val);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
@@ -2544,8 +2543,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class Monitor extends Operator {
-        public static Quad create(int id, jq_Method m, Monitor operator, Operand val) {
-            return new Quad(id, m, operator, null, val);
+        public static Quad create(int id, BasicBlock bb, Monitor operator, Operand val) {
+            return new Quad(id, bb, operator, null, val);
         }
         public static Operand getSrc(Quad q) { return q.getOp2(); }
         public static void setSrc(Quad q, Operand o) { q.setOp2(o); }
@@ -2577,8 +2576,8 @@ public abstract class Operator implements Serializable {
     }
     
     public abstract static class MemLoad extends Operator {
-        public static Quad create(int id, jq_Method m, MemLoad operator, RegisterOperand dst, Operand addr) {
-            return new Quad(id, m, operator, dst, addr);
+        public static Quad create(int id, BasicBlock bb, MemLoad operator, RegisterOperand dst, Operand addr) {
+            return new Quad(id, bb, operator, dst, addr);
         }
         public static RegisterOperand getDest(Quad q) { return (RegisterOperand)q.getOp1(); }
         public static Operand getAddress(Quad q) { return q.getOp2(); }
@@ -2622,8 +2621,8 @@ public abstract class Operator implements Serializable {
     }
 
     public abstract static class MemStore extends Operator {
-        public static Quad create(int id, jq_Method m, MemStore operator, Operand addr, Operand val) {
-            return new Quad(id, m, operator, null, addr, val);
+        public static Quad create(int id, BasicBlock bb, MemStore operator, Operand addr, Operand val) {
+            return new Quad(id, bb, operator, null, addr, val);
         }
         public static Operand getAddress(Quad q) { return q.getOp2(); }
         public static Operand getValue(Quad q) { return q.getOp3(); }
@@ -2667,77 +2666,77 @@ public abstract class Operator implements Serializable {
     
     public abstract static class Special extends Operator {
         
-        public static Quad create(int id, jq_Method m, GET_EXCEPTION operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, GET_EXCEPTION operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
-        public static Quad create(int id, jq_Method m, GET_BASE_POINTER operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, GET_BASE_POINTER operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
-        public static Quad create(int id, jq_Method m, GET_STACK_POINTER operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, GET_STACK_POINTER operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
-        public static Quad create(int id, jq_Method m, GET_THREAD_BLOCK operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, GET_THREAD_BLOCK operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
-        public static Quad create(int id, jq_Method m, SET_THREAD_BLOCK operator, Operand val) {
-            return new Quad(id, m, operator, null, val);
+        public static Quad create(int id, BasicBlock bb, SET_THREAD_BLOCK operator, Operand val) {
+            return new Quad(id, bb, operator, null, val);
         }
-        public static Quad create(int id, jq_Method m, ALLOCA operator, RegisterOperand res, Operand val) {
-            return new Quad(id, m, operator, res, val);
+        public static Quad create(int id, BasicBlock bb, ALLOCA operator, RegisterOperand res, Operand val) {
+            return new Quad(id, bb, operator, res, val);
         }
-        public static Quad create(int id, jq_Method m, NOP operator) {
-            return new Quad(id, m, operator, null, null);
+        public static Quad create(int id, BasicBlock bb, NOP operator) {
+            return new Quad(id, bb, operator, null, null);
         }
-        public static Quad create(int id, jq_Method m, ATOMICADD_I operator, Operand loc, Operand val) {
-            return new Quad(id, m, operator, null, loc, val);
+        public static Quad create(int id, BasicBlock bb, ATOMICADD_I operator, Operand loc, Operand val) {
+            return new Quad(id, bb, operator, null, loc, val);
         }
-        public static Quad create(int id, jq_Method m, ATOMICSUB_I operator, Operand loc, Operand val) {
-            return new Quad(id, m, operator, null, loc, val);
+        public static Quad create(int id, BasicBlock bb, ATOMICSUB_I operator, Operand loc, Operand val) {
+            return new Quad(id, bb, operator, null, loc, val);
         }
-        public static Quad create(int id, jq_Method m, ATOMICAND_I operator, Operand loc, Operand val) {
-            return new Quad(id, m, operator, null, loc, val);
+        public static Quad create(int id, BasicBlock bb, ATOMICAND_I operator, Operand loc, Operand val) {
+            return new Quad(id, bb, operator, null, loc, val);
         }
-        public static Quad create(int id, jq_Method m, ATOMICCAS4 operator, RegisterOperand res, Operand loc, Operand val1, Operand val2) {
-            return new Quad(id, m, operator, res, loc, val1, val2);
+        public static Quad create(int id, BasicBlock bb, ATOMICCAS4 operator, RegisterOperand res, Operand loc, Operand val1, Operand val2) {
+            return new Quad(id, bb, operator, res, loc, val1, val2);
         }
-        public static Quad create(int id, jq_Method m, ATOMICCAS8 operator, RegisterOperand res, Operand loc, Operand val1, Operand val2) {
-            return new Quad(id, m, operator, res, loc, val1, val2);
+        public static Quad create(int id, BasicBlock bb, ATOMICCAS8 operator, RegisterOperand res, Operand loc, Operand val1, Operand val2) {
+            return new Quad(id, bb, operator, res, loc, val1, val2);
         }
-        public static Quad create(int id, jq_Method m, LONG_JUMP operator, Operand ip, Operand fp, Operand sp, Operand eax) {
-            return new Quad(id, m, operator, ip, fp, sp, eax);
+        public static Quad create(int id, BasicBlock bb, LONG_JUMP operator, Operand ip, Operand fp, Operand sp, Operand eax) {
+            return new Quad(id, bb, operator, ip, fp, sp, eax);
         }
-        public static Quad create(int id, jq_Method m, POP_FP32 operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, POP_FP32 operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
-        public static Quad create(int id, jq_Method m, POP_FP64 operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, POP_FP64 operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
-        public static Quad create(int id, jq_Method m, PUSH_FP32 operator, Operand val) {
-            return new Quad(id, m, operator, null, val);
+        public static Quad create(int id, BasicBlock bb, PUSH_FP32 operator, Operand val) {
+            return new Quad(id, bb, operator, null, val);
         }
-        public static Quad create(int id, jq_Method m, PUSH_FP64 operator, Operand val) {
-            return new Quad(id, m, operator, null, val);
+        public static Quad create(int id, BasicBlock bb, PUSH_FP64 operator, Operand val) {
+            return new Quad(id, bb, operator, null, val);
         }
-        public static Quad create(int id, jq_Method m, GET_EAX operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, GET_EAX operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
-        public static Quad create(int id, jq_Method m, PUSHARG_I operator, Operand val) {
-            return new Quad(id, m, operator, null, val);
+        public static Quad create(int id, BasicBlock bb, PUSHARG_I operator, Operand val) {
+            return new Quad(id, bb, operator, null, val);
         }
-        public static Quad create(int id, jq_Method m, PUSHARG_P operator, Operand val) {
-            return new Quad(id, m, operator, null, val);
+        public static Quad create(int id, BasicBlock bb, PUSHARG_P operator, Operand val) {
+            return new Quad(id, bb, operator, null, val);
         }
-        public static Quad create(int id, jq_Method m, INVOKE_L operator, RegisterOperand res, Operand val) {
-            return new Quad(id, m, operator, res, val);
+        public static Quad create(int id, BasicBlock bb, INVOKE_L operator, RegisterOperand res, Operand val) {
+            return new Quad(id, bb, operator, res, val);
         }
-        public static Quad create(int id, jq_Method m, INVOKE_P operator, RegisterOperand res, Operand val) {
-            return new Quad(id, m, operator, res, val);
+        public static Quad create(int id, BasicBlock bb, INVOKE_P operator, RegisterOperand res, Operand val) {
+            return new Quad(id, bb, operator, res, val);
         }
-        public static Quad create(int id, jq_Method m, ISEQ operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, ISEQ operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
-        public static Quad create(int id, jq_Method m, ISGE operator, RegisterOperand res) {
-            return new Quad(id, m, operator, res);
+        public static Quad create(int id, BasicBlock bb, ISGE operator, RegisterOperand res) {
+            return new Quad(id, bb, operator, res);
         }
         public static Operand getOp1(Quad q) { return q.getOp1(); }
         public static Operand getOp2(Quad q) { return q.getOp2(); }

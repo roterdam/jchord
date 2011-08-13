@@ -4,6 +4,7 @@ import joeq.Class.jq_Method;
 
 public interface Inst {
 	public jq_Method getMethod();
+	public BasicBlock getBasicBlock();
 	public int getLineNumber();
 	public String toByteLocStr();
 	public String toJavaLocStr();

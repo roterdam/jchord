@@ -17,6 +17,7 @@ import joeq.Compiler.Quad.Operator.Putstatic;
 import jwutil.strings.Strings;
 
 import java.util.ArrayList;
+import java.util.AbstractList;
 import java.util.List;
 import java.util.Map;
 import java.io.Serializable;
@@ -33,29 +34,29 @@ public class Quad implements Inst, Serializable {
     private Operand operand1, operand2, operand3, operand4;
     /** Id number for this quad.  THIS NUMBER HOLDS NO MEANING WHATSOEVER.  It is just used for printing. */
     private int id_number;
-    private jq_Method method;
+    private BasicBlock bb;
 
     /** Creates new Quad */
-    Quad(int id, jq_Method m, Operator operator) {
-        this.id_number = id; method = m; this.operator = operator;
+    Quad(int id, BasicBlock b, Operator operator) {
+        this.id_number = id; bb = b; this.operator = operator;
     }
-    Quad(int id, jq_Method m, Operator operator, Operand operand1) {
-        this.id_number = id; method = m; this.operator = operator; this.operand1 = operand1;
+    Quad(int id, BasicBlock b, Operator operator, Operand operand1) {
+        this.id_number = id; bb = b; this.operator = operator; this.operand1 = operand1;
         if (operand1 != null) operand1.attachToQuad(this);
     }
-    Quad(int id, jq_Method m, Operator operator, Operand operand1, Operand operand2) {
-        this.id_number = id; method = m; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2;
+    Quad(int id, BasicBlock b, Operator operator, Operand operand1, Operand operand2) {
+        this.id_number = id; bb = b; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2;
         if (operand1 != null) operand1.attachToQuad(this);
         if (operand2 != null) operand2.attachToQuad(this);
     }
-    Quad(int id, jq_Method m, Operator operator, Operand operand1, Operand operand2, Operand operand3) {
-        this.id_number = id; method = m; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2; this.operand3 = operand3;
+    Quad(int id, BasicBlock b, Operator operator, Operand operand1, Operand operand2, Operand operand3) {
+        this.id_number = id; bb = b; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2; this.operand3 = operand3;
         if (operand1 != null) operand1.attachToQuad(this);
         if (operand2 != null) operand2.attachToQuad(this);
         if (operand3 != null) operand3.attachToQuad(this);
     }
-    Quad(int id, jq_Method m, Operator operator, Operand operand1, Operand operand2, Operand operand3, Operand operand4) {
-        this.id_number = id; method = m; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2; this.operand3 = operand3; this.operand4 = operand4;
+    Quad(int id, BasicBlock b, Operator operator, Operand operand1, Operand operand2, Operand operand3, Operand operand4) {
+        this.id_number = id; bb = b; this.operator = operator; this.operand1 = operand1; this.operand2 = operand2; this.operand3 = operand3; this.operand4 = operand4;
         if (operand1 != null) operand1.attachToQuad(this);
         if (operand2 != null) operand2.attachToQuad(this);
         if (operand3 != null) operand3.attachToQuad(this);
@@ -78,9 +79,65 @@ public class Quad implements Inst, Serializable {
         Operand op2 = (operand2!=null)?operand2.copy():null;
         Operand op3 = (operand3!=null)?operand3.copy():null;
         Operand op4 = (operand4!=null)?operand4.copy():null;
-        return new Quad(id_number, method, operator, op1, op2, op3, op4);
+        return new Quad(id_number, bb, operator, op1, op2, op3, op4);
     }
     
+    private static class OperandList extends AbstractList<Operand> implements List<Operand> {
+        private final Operand[] a;
+		public OperandList(Operand c) { a = new Operand[] { c }; }
+        public OperandList(Operand c1, Operand c2) { a = new Operand[] { c1, c2 }; }
+        public OperandList(Operand c1, Operand c2, Operand c3) { a = new Operand[] { c1, c2, c3 }; }
+        public OperandList(Operand c1, Operand c2, Operand c3, Operand c4) { a = new Operand[] { c1, c2, c3, c4 }; }
+        public OperandList(Operand[] c) { a = c; }
+        public int size() { return a.length; }
+        public Operand get(int index) { return a[index]; }
+        public static final OperandList EMPTY = new OperandList(new Operand[0]);
+        public static OperandList getEmptyList() { return EMPTY; }
+    }
+
+    public List<Operand> getAllOperands() {
+        int k = 0;
+        if (operand1 != null) k += 1;
+        if (operand2 != null) k += 2;
+        if (operand3 != null) k += 4;
+        if (operand4 != null) k += 8;
+        switch (k) {
+            case 0 :
+                return OperandList.EMPTY;
+            case 1 :
+                return new OperandList(operand1);
+            case 2 :
+                return new OperandList(operand2);
+            case 3 :
+               return new OperandList(operand1, operand2);
+            case 4 :
+               return new OperandList(operand3);
+            case 5 :
+               return new OperandList(operand1, operand3);
+            case 6 :
+               return new OperandList(operand2, operand3);
+            case 7 :
+               return new OperandList(operand1, operand2, operand3);
+            case 8 :
+               return new OperandList(operand4);
+            case 9 :
+               return new OperandList(operand1, operand4);
+            case 10 :
+               return new OperandList(operand2, operand4);
+            case 11 :
+               return new OperandList(operand1, operand2, operand4);
+            case 12 :
+               return new OperandList(operand3, operand4);
+            case 13 :
+               return new OperandList(operand1, operand3, operand4);
+            case 14 :
+               return new OperandList(operand2, operand3, operand4);
+            case 15 :
+            default:
+               return new OperandList(operand1, operand2, operand3, operand4);
+        }
+    }
+
     /** Return the operator for this quad. */
     public Operator getOperator() { return operator; }
     
@@ -125,13 +182,14 @@ public class Quad implements Inst, Serializable {
         throw new RuntimeException();
     }
 
-	public jq_Method getMethod() { return method; }
+	public jq_Method getMethod() { return bb.getMethod(); }
+	public BasicBlock getBasicBlock() { return bb; }
 	public int getLineNumber() {
         int bci = getBCI();
-        return (bci == -1) ? 0 : method.getLineNumber(bci);
+        return (bci == -1) ? 0 : getBasicBlock().getMethod().getLineNumber(bci);
     }
 	public int getBCI() {
-        Map<Quad, Integer> map = method.getBCMap();
+        Map<Quad, Integer> map = getBasicBlock().getMethod().getBCMap();
         if (map != null) {
             Integer bci = map.get(this);
             if (bci != null)
@@ -141,6 +199,7 @@ public class Quad implements Inst, Serializable {
 	}
 	public String toByteLocStr() {
         int bci = getBCI();
+        jq_Method method = getBasicBlock().getMethod();
         String mName = method.getName().toString();
         String mDesc = method.getDesc().toString();
         String cName = method.getDeclaringClass().getName();
@@ -148,7 +207,7 @@ public class Quad implements Inst, Serializable {
 			"!" + mName + ":" + mDesc + "@" + cName;
 	}
 	public String toJavaLocStr() {
-        jq_Class c = method.getDeclaringClass();
+        jq_Class c = getBasicBlock().getMethod().getDeclaringClass();
         String fileName = c.getSourceFileName();
         int lineNumber = getLineNumber();
         return fileName + ":" + lineNumber;

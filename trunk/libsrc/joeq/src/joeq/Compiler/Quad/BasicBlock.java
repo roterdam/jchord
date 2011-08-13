@@ -17,7 +17,6 @@ import jwutil.strings.Strings;
 import jwutil.util.Assert;
 import java.io.Serializable;
 
-
 /**
  * Represents a basic block in the quad intermediate representation.
  * Basic blocks are single-entry regions, but not necessarily single-exit regions
@@ -39,10 +38,12 @@ import java.io.Serializable;
  * @version  $Id: BasicBlock.java,v 1.23 2006/02/25 05:49:42 livshits Exp $
  */
 
-public class BasicBlock implements Serializable, Inst {
+public class BasicBlock implements Serializable, Iterable<Quad> {
 
     /** Unique id number for this basic block. */
     private int id_number;
+    /** Containing method. */
+    private jq_Method method;
     /** List of instructions. */
     private final List<Quad> instructions;
     /** List of successor basic blocks. */
@@ -63,26 +64,21 @@ public class BasicBlock implements Serializable, Inst {
     /** This basic block ends in a 'ret'. */
     private static final int ENDS_IN_RET = 0x4;
     
-	// TODO: remove these once you remove implemented interface Inst from above
-	// and make it EntryOrExitBasicBlock's declared interface
-	public jq_Method getMethod() { throw new RuntimeException(); }
-	public String toByteLocStr() { throw new RuntimeException(); }
-	public String toJavaLocStr() { throw new RuntimeException(); }
-	public String toLocStr() { throw new RuntimeException(); }
-	public String toVerboseStr() { throw new RuntimeException(); }
-	public int getLineNumber() { throw new RuntimeException(); }
+	public jq_Method getMethod() { return method; }
 
     // Private constructor for the entry node.
-    protected BasicBlock() {
+    protected BasicBlock(jq_Method m) {
         this.id_number = 0;
+        this.method = m;
         this.instructions = null;
         this.predecessors = null;
         this.successors = new ArrayList<BasicBlock>(1);
         this.exception_handler_list = null;
     }
     // Private constructor for the exit node.
-    protected BasicBlock(int numOfExits) {
+    protected BasicBlock(jq_Method m, int numOfExits) {
         this.id_number = 1;
+        this.method = m;
         this.instructions = null;
         this.successors = null;
         this.predecessors = new ArrayList<BasicBlock>(numOfExits);
@@ -90,21 +86,22 @@ public class BasicBlock implements Serializable, Inst {
     }
     /** Create new basic block with no exception handlers.
      * Only to be called by ControlFlowGraph. */
-    static BasicBlock createBasicBlock(int id, int numOfPredecessors, int numOfSuccessors, int numOfInstructions) {
-        return new BasicBlock(id, numOfPredecessors, numOfSuccessors, numOfInstructions, null);
+    static BasicBlock createBasicBlock(int id, jq_Method m, int numPreds, int numSuccs, int numInstrs) {
+        return new BasicBlock(id, m, numPreds, numSuccs, numInstrs, null);
     }
     /** Create new basic block with the given exception handlers.
      * Only to be called by ControlFlowGraph. */
-    static BasicBlock createBasicBlock(int id, int numOfPredecessors, int numOfSuccessors, int numOfInstructions, ExceptionHandlerList ehs) {
-        return new BasicBlock(id, numOfPredecessors, numOfSuccessors, numOfInstructions, ehs);
+    static BasicBlock createBasicBlock(int id, jq_Method m, int numPreds, int numSuccs, int numInstrs,
+    		ExceptionHandlerList ehs) {
+        return new BasicBlock(id, m, numPreds, numSuccs, numInstrs, ehs);
     }
     /** Private constructor for internal nodes. */
-    private BasicBlock(int id, int numOfPredecessors, int numOfSuccessors, int numOfInstructions,
-                       ExceptionHandlerList ehs) {
+    private BasicBlock(int id, jq_Method m, int numPreds, int numSuccs, int numInstrs, ExceptionHandlerList ehs) {
         this.id_number = id;
-        this.predecessors = new ArrayList<BasicBlock>(numOfPredecessors);
-        this.successors = new ArrayList<BasicBlock>(numOfSuccessors);
-        this.instructions = new ArrayList<Quad>(numOfInstructions);
+        this.method = m;
+        this.predecessors = new ArrayList<BasicBlock>(numPreds);
+        this.successors = new ArrayList<BasicBlock>(numSuccs);
+        this.instructions = new ArrayList<Quad>(numInstrs);
         this.exception_handler_list = ehs;
     }
 
@@ -396,7 +393,7 @@ public class BasicBlock implements Serializable, Inst {
                 if (lhs.isSimilar(op)) {
                     if (aux == null) {
                         aux = ir.getRegisterFactory().makeRegOp(lhs.getRegister(), lhs.getType());
-                        Quad m = Move.create(ir.getNewQuadID(), ir.getMethod(), aux.getRegister(), lhs.getRegister(), lhs.getType());
+                        Quad m = Move.create(ir.getNewQuadID(), this, aux.getRegister(), lhs.getRegister(), lhs.getType());
                         int index = instructions.indexOf(c);
                         instructions.add(index, m);
                     }
