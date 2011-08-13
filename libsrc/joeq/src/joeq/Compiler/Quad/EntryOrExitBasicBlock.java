@@ -3,13 +3,14 @@ package joeq.Compiler.Quad;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 
-public class EntryOrExitBasicBlock extends BasicBlock {
+public class EntryOrExitBasicBlock extends BasicBlock implements Inst {
 	private final jq_Method method;
 	public EntryOrExitBasicBlock(jq_Method m) {
+		super(m);
 		method = m;
 	}
 	public EntryOrExitBasicBlock(jq_Method m, int numOfPredecessors) {
-		super(numOfPredecessors);
+		super(m, numOfPredecessors);
 		method = m;
 	}
     /** Creates new entry node. Only to be called by ControlFlowGraph. */
@@ -20,7 +21,7 @@ public class EntryOrExitBasicBlock extends BasicBlock {
     static EntryOrExitBasicBlock createEndNode(jq_Method m, int numOfPredecessors) {
         return new EntryOrExitBasicBlock(m, numOfPredecessors);
     }
-	public jq_Method getMethod() { return method; }
+	public BasicBlock getBasicBlock() { return this; }
     public int getLineNumber() {
 		return 0;	// TODO
 	}

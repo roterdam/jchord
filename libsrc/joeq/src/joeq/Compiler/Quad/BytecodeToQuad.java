@@ -55,16 +55,13 @@ import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
-import joeq.Compiler.Quad.Operator.NullCheck;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Ret;
 import joeq.Compiler.Quad.Operator.Return;
 import joeq.Compiler.Quad.Operator.Special;
-import joeq.Compiler.Quad.Operator.StoreCheck;
 import joeq.Compiler.Quad.Operator.TableSwitch;
 import joeq.Compiler.Quad.Operator.Unary;
-import joeq.Compiler.Quad.Operator.ZeroCheck;
 import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.Main.jq;
 import joeq.Memory.Address;
@@ -96,7 +93,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     private RegisterFactory rf;
     
     private boolean[] visited;
-    private boolean uncond_branch;
     private LinkedList regenerate;
 
     private HashMap quad2bci = new HashMap();
@@ -141,7 +137,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             int n_pred = bc_bb.getNumberOfPredecessors();
             int n_succ = bc_bb.getNumberOfSuccessors();
             int n_inst = bc_bb.getEnd() - bc_bb.getStart() + 1; // estimate
-            quad_bbs[i] = BasicBlock.createBasicBlock(i, n_pred, n_succ, n_inst);
+            quad_bbs[i] = BasicBlock.createBasicBlock(i, method, n_pred, n_succ, n_inst);
         }
         this.quad_cfg.updateBBcounter(quad_bbs.length);
 
@@ -226,21 +222,16 @@ public class BytecodeToQuad extends BytecodeVisitor {
         this.quad_bb = quad_bbs[bc_bb.id];
         for (Iterator i = this.quad_bb.iterator(); i.hasNext(); ) {
             Object o = i.next();
-            Object old = this.quad2bci.remove(o);
-            if (old == null) {
-                // GET_EXCEPTION has no bytecode index.
-                //System.out.println(o+" was not in bcmap.");
-            }
+            this.quad2bci.remove(o);
         }
         this.quad_bb.removeAllQuads();
         this.bc_bb = bc_bb;
-        this.uncond_branch = false;
         this.current_state.overwriteWith(start_states[bc_bb.id]);
         if (this.quad_bb.isExceptionHandlerEntry()) {
             // TODO: find non-exceptional branches to exception handler entries and split the basic block.
             jq_Type type = ((RegisterOperand)this.current_state.peekStack(0)).getType();
             RegisterOperand t = getStackRegister(type, 0);
-            this.quad_bb.appendQuad(Special.create(quad_cfg.getNewQuadID(), method, Special.GET_EXCEPTION.INSTANCE, t));
+            quad_bb.appendQuad(Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.GET_EXCEPTION.INSTANCE, t));
         }
         if (TRACE) this.current_state.dumpState();
         this.endBasicBlock = false;
@@ -315,7 +306,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             }
             jq_Type type = getTypeOf(op);
             RegisterOperand t = getStackRegister(type, i);
-            Quad q = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type), t, op);
+            Quad q = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type), t, op);
             appendQuad(q);
             current_state.pokeStack(i, t.copy());
         }
@@ -337,7 +328,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 RegisterOperand rop = (RegisterOperand)op;
                 RegisterOperand t = getStackRegister(type, i);
                 t.setFlags(rop.getFlags()); t.scratchObject = rop.scratchObject;
-                Quad q = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type), t, rop);
+                Quad q = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type), t, rop);
                 appendQuad(q);
                 current_state.pokeStack(i, t.copy());
             }
@@ -460,7 +451,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         if (type.getReferenceSize() == 8) current_state.setLocalDual(i, local_value);
         else current_state.setLocal(i, local_value);
-        Quad q = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type), op0, op1);
+        Quad q = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type), op0, op1);
         appendQuad(q);
     }
     public void visitISTORE(int i) {
@@ -502,7 +493,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             Assert._assert(!t.isAddressType());
         }
         RegisterOperand r = getStackRegister(t);
-        Quad q = ALoad.create(quad_cfg.getNewQuadID(), method, operator, r, ref, index, null);
+        Quad q = ALoad.create(quad_cfg.getNewQuadID(), quad_bb, operator, r, ref, index, null);
         appendQuad(q);
         current_state.push(r.copy(), t);
     }
@@ -538,7 +529,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         jq_Type t = getArrayElementTypeOf(ref);
         ALoad operator = t.isAddressType()?(ALoad)ALoad.ALOAD_P.INSTANCE:ALoad.ALOAD_A.INSTANCE;
         RegisterOperand r = getStackRegister(t);
-        Quad q = ALoad.create(quad_cfg.getNewQuadID(), method, operator, r, ref, index, null);
+        Quad q = ALoad.create(quad_cfg.getNewQuadID(), quad_bb, operator, r, ref, index, null);
         appendQuad(q);
         current_state.push(r.copy(), t);
     }
@@ -572,7 +563,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             if (performCheckStore((RegisterOperand)ref, val)) return;
             Assert._assert(!t.isAddressType());
         }
-        Quad q = AStore.create(quad_cfg.getNewQuadID(), method, operator, val, ref, index, null);
+        Quad q = AStore.create(quad_cfg.getNewQuadID(), quad_bb, operator, val, ref, index, null);
         appendQuad(q);
     }
     public void visitIASTORE() {
@@ -611,7 +602,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             // perform checkstore
             if (performCheckStore((RegisterOperand)ref, val)) return;
         }
-        Quad q = AStore.create(quad_cfg.getNewQuadID(), method, operator, val, ref, index, null);
+        Quad q = AStore.create(quad_cfg.getNewQuadID(), quad_bb, operator, val, ref, index, null);
         appendQuad(q);
     }
     public void visitBASTORE() {
@@ -640,7 +631,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         int d = current_state.getStackSize();
         jq_Type type = getTypeOf(op);
         RegisterOperand t = new RegisterOperand(rf.getOrCreateStack(d+1, type), type);
-        Quad q = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type), t, op);
+        Quad q = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type), t, op);
         appendQuad(q);
         current_state.push(op.copy(), type);
         current_state.push(t.copy(), type);
@@ -652,13 +643,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
         jq_Type type1 = getTypeOf(op1);
         jq_Type type2 = getTypeOf(op2);
         RegisterOperand t1 = new RegisterOperand(rf.getOrCreateStack(d+2, type1), type1);
-        Quad q1 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type1), t1, op1);
+        Quad q1 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type1), t1, op1);
         appendQuad(q1);
         RegisterOperand t2 = new RegisterOperand(rf.getOrCreateStack(d+1, type2), type2);
-        Quad q2 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type2), t2, op2);
+        Quad q2 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type2), t2, op2);
         appendQuad(q2);
         RegisterOperand t3 = new RegisterOperand(rf.getOrCreateStack(d, type1), type1);
-        Quad q3 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type1), t3, t1.copy());
+        Quad q3 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type1), t3, t1.copy());
         appendQuad(q3);
         current_state.push(t3.copy(), type1);
         current_state.push(t2.copy(), type2);
@@ -676,21 +667,21 @@ public class BytecodeToQuad extends BytecodeVisitor {
         int d = current_state.getStackSize();
         jq_Type type1 = getTypeOf(op1);
         RegisterOperand t1 = new RegisterOperand(rf.getOrCreateStack(d+3, type1), type1);
-        Quad q1 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type1), t1, op1);
+        Quad q1 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type1), t1, op1);
         appendQuad(q1);
         RegisterOperand t2 = null; jq_Type type2 = null;
         if (op2 != DummyOperand.DUMMY) {
             type2 = getTypeOf(op2);
             t2 = new RegisterOperand(rf.getOrCreateStack(d+2, type2), type2);
-            Quad q2 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type2), t2, op2);
+            Quad q2 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type2), t2, op2);
             appendQuad(q2);
         }
         jq_Type type3 = getTypeOf(op3);
         RegisterOperand t3 = new RegisterOperand(rf.getOrCreateStack(d+1, type3), type3);
-        Quad q3 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type3), t3, op3);
+        Quad q3 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type3), t3, op3);
         appendQuad(q3);
         RegisterOperand t4 = new RegisterOperand(rf.getOrCreateStack(d, type1), type1);
-        Quad q4 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type1), t4, t1.copy());
+        Quad q4 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type1), t4, t1.copy());
         appendQuad(q4);
         current_state.push(t4.copy(), type1);
         current_state.push(t3.copy(), type3);
@@ -707,12 +698,12 @@ public class BytecodeToQuad extends BytecodeVisitor {
         if (op1 != DummyOperand.DUMMY) {
             type1 = getTypeOf(op1);
             t1 = new RegisterOperand(rf.getOrCreateStack(d+3, type1), type1);
-            Quad q1 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type1), t1, op1);
+            Quad q1 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type1), t1, op1);
             appendQuad(q1);
         }
         jq_Type type2 = getTypeOf(op2);
         RegisterOperand t2 = new RegisterOperand(rf.getOrCreateStack(d+2, type2), type2);
-        Quad q2 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(type2), t2, op2);
+        Quad q2 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(type2), t2, op2);
         appendQuad(q2);
         current_state.push(t2.copy(), type2);
         if (op1 != DummyOperand.DUMMY)
@@ -760,7 +751,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         RegisterOperand r = getStackRegister(tr);
-        Quad q = Binary.create(quad_cfg.getNewQuadID(), method, operator, r, op1, op2);
+        Quad q = Binary.create(quad_cfg.getNewQuadID(), quad_bb, operator, r, op1, op2);
         appendQuad(q);
         current_state.push(r.copy(), tr);
     }
@@ -825,7 +816,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void UNOPhelper(Unary operator, jq_Type tr, jq_Type t1) {
         Operand op1 = current_state.pop(t1);
         RegisterOperand r = getStackRegister(tr);
-        Quad q = Unary.create(quad_cfg.getNewQuadID(), method, operator, r, op1);
+        Quad q = Unary.create(quad_cfg.getNewQuadID(), quad_bb, operator, r, op1);
         appendQuad(q);
         current_state.push(r.copy(), tr);
     }
@@ -892,7 +883,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Operand op1 = current_state.getLocal_I(i);
         replaceLocalsOnStack(i, jq_Primitive.INT);
         RegisterOperand op0 = makeLocal(i, jq_Primitive.INT);
-        Quad q = Binary.create(quad_cfg.getNewQuadID(), method, Binary.ADD_I.INSTANCE, op0, op1, new IConstOperand(v));
+        Quad q = Binary.create(quad_cfg.getNewQuadID(), quad_bb, Binary.ADD_I.INSTANCE, op0, op1, new IConstOperand(v));
         appendQuad(q);
         current_state.setLocal(i, op0.copy());
     }
@@ -976,7 +967,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(target).id];
         ConditionOperand cond = new ConditionOperand(op);
-        Quad q = IntIfCmp.create(quad_cfg.getNewQuadID(), method, IntIfCmp.IFCMP_I.INSTANCE, op0, new IConstOperand(0), cond, new TargetOperand(target_bb));
+        Quad q = IntIfCmp.create(quad_cfg.getNewQuadID(), quad_bb, IntIfCmp.IFCMP_I.INSTANCE, op0, new IConstOperand(0), cond, new TargetOperand(target_bb));
         appendQuad(q);
     }
     public void visitIFREF(byte op, int target) {
@@ -989,7 +980,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         jq_Type t = getTypeOf(op0);
         IntIfCmp operator = t.isAddressType()?(IntIfCmp)IntIfCmp.IFCMP_P.INSTANCE:IntIfCmp.IFCMP_A.INSTANCE;
         Operand op1 = t.isAddressType()?(Operand)new PConstOperand(null):new AConstOperand(null);
-        Quad q = IntIfCmp.create(quad_cfg.getNewQuadID(), method, operator, op0, op1, cond, new TargetOperand(target_bb));
+        Quad q = IntIfCmp.create(quad_cfg.getNewQuadID(), quad_bb, operator, op0, op1, cond, new TargetOperand(target_bb));
         appendQuad(q);
     }
     public void visitIFCMP(byte op, int target) {
@@ -999,7 +990,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(target).id];
         ConditionOperand cond = new ConditionOperand(op);
-        Quad q = IntIfCmp.create(quad_cfg.getNewQuadID(), method, IntIfCmp.IFCMP_I.INSTANCE, op0, op1, cond, new TargetOperand(target_bb));
+        Quad q = IntIfCmp.create(quad_cfg.getNewQuadID(), quad_bb, IntIfCmp.IFCMP_I.INSTANCE, op0, op1, cond, new TargetOperand(target_bb));
         appendQuad(q);
     }
     public void visitIFREFCMP(byte op, int target) {
@@ -1027,15 +1018,14 @@ public class BytecodeToQuad extends BytecodeVisitor {
         } else {
             operator = IntIfCmp.IFCMP_A.INSTANCE;
         }
-        Quad q = IntIfCmp.create(quad_cfg.getNewQuadID(), method, operator, op0, op1, cond, new TargetOperand(target_bb));
+        Quad q = IntIfCmp.create(quad_cfg.getNewQuadID(), quad_bb, operator, op0, op1, cond, new TargetOperand(target_bb));
         appendQuad(q);
     }
     public void visitGOTO(int target) {
         super.visitGOTO(target);
-        this.uncond_branch = true;
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(target).id];
-        Quad q = Goto.create(quad_cfg.getNewQuadID(), method, Goto.GOTO.INSTANCE, new TargetOperand(target_bb));
+        Quad q = Goto.create(quad_cfg.getNewQuadID(), quad_bb, Goto.GOTO.INSTANCE, new TargetOperand(target_bb));
         appendQuad(q);
     }
     java.util.Map jsr_states = new java.util.HashMap();
@@ -1047,7 +1037,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitJSR(int target) {
         super.visitJSR(target);
-        this.uncond_branch = true;
         joeq.Compiler.BytecodeAnalysis.BasicBlock target_bcbb = bc_cfg.getBasicBlockByBytecodeIndex(target);
         BasicBlock target_bb = quad_bbs[target_bcbb.id];
         BasicBlock successor_bb = quad_bbs[bc_bb.id+1];
@@ -1058,7 +1047,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             // in case the return address is stored into a local variable.
             current_state.push_A(new AConstOperand(null));
             saveStackIntoRegisters();
-            Quad q = Goto.create(quad_cfg.getNewQuadID(), method, Goto.GOTO.INSTANCE, new TargetOperand(target_bb));
+            Quad q = Goto.create(quad_cfg.getNewQuadID(), quad_bb, Goto.GOTO.INSTANCE, new TargetOperand(target_bb));
             appendQuad(q);
             return;
         }
@@ -1068,7 +1057,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         this.quad_cfg.addJSRInfo(q_jsrinfo);
         saveStackIntoRegisters();
         RegisterOperand op0 = getStackRegister(jq_ReturnAddressType.INSTANCE);
-        Quad q = Jsr.create(quad_cfg.getNewQuadID(), method, Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
+        Quad q = Jsr.create(quad_cfg.getNewQuadID(), quad_bb, Jsr.JSR.INSTANCE, op0, new TargetOperand(target_bb), new TargetOperand(successor_bb));
         appendQuad(q);
         joeq.Compiler.BytecodeAnalysis.BasicBlock next_bb = bc_cfg.getBasicBlock(bc_bb.id+1);
         joeq.Compiler.BytecodeAnalysis.BasicBlock ret_bb = jsrinfo.exit_block;
@@ -1088,10 +1077,9 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitRET(int i) {
         super.visitRET(i);
-        this.uncond_branch = true;
         saveStackIntoRegisters();
         RegisterOperand op0 = makeLocal(i, jq_ReturnAddressType.INSTANCE);
-        Quad q = Ret.create(quad_cfg.getNewQuadID(), method, Ret.RET.INSTANCE, op0);
+        Quad q = Ret.create(quad_cfg.getNewQuadID(), quad_bb, Ret.RET.INSTANCE, op0);
         appendQuad(q);
         current_state.setLocal(i, null);
         endsWithRET = true;
@@ -1139,12 +1127,11 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitTABLESWITCH(int default_target, int low, int high, int[] targets) {
         super.visitTABLESWITCH(default_target, low, high, targets);
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_I();
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(default_target).id];
         Assert._assert(high-low+1 == targets.length);
-        Quad q = TableSwitch.create(quad_cfg.getNewQuadID(), method, TableSwitch.TABLESWITCH.INSTANCE, op0, new IConstOperand(low),
+        Quad q = TableSwitch.create(quad_cfg.getNewQuadID(), quad_bb, TableSwitch.TABLESWITCH.INSTANCE, op0, new IConstOperand(low),
                                     new TargetOperand(target_bb), targets.length);
         for (int i = 0; i < targets.length; ++i) {
             target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(targets[i]).id];
@@ -1154,11 +1141,10 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitLOOKUPSWITCH(int default_target, int[] values, int[] targets) {
         super.visitLOOKUPSWITCH(default_target, values, targets);
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_I();
         saveStackIntoRegisters();
         BasicBlock target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(default_target).id];
-        Quad q = LookupSwitch.create(quad_cfg.getNewQuadID(), method, LookupSwitch.LOOKUPSWITCH.INSTANCE, op0, new TargetOperand(target_bb), values.length);
+        Quad q = LookupSwitch.create(quad_cfg.getNewQuadID(), quad_bb, LookupSwitch.LOOKUPSWITCH.INSTANCE, op0, new TargetOperand(target_bb), values.length);
         for (int i = 0; i < values.length; ++i) {
             LookupSwitch.setMatch(q, i, values[i]);
             target_bb = quad_bbs[bc_cfg.getBasicBlockByBytecodeIndex(targets[i]).id];
@@ -1168,39 +1154,34 @@ public class BytecodeToQuad extends BytecodeVisitor {
     }
     public void visitIRETURN() {
         super.visitIRETURN();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_I();
-        Quad q = Return.create(quad_cfg.getNewQuadID(), method, Return.RETURN_I.INSTANCE, op0);
+        Quad q = Return.create(quad_cfg.getNewQuadID(), quad_bb, Return.RETURN_I.INSTANCE, op0);
         appendQuad(q);
         current_state.clearStack();
     }
     public void visitLRETURN() {
         super.visitLRETURN();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_L();
-        Quad q = Return.create(quad_cfg.getNewQuadID(), method, Return.RETURN_L.INSTANCE, op0);
+        Quad q = Return.create(quad_cfg.getNewQuadID(), quad_bb, Return.RETURN_L.INSTANCE, op0);
         appendQuad(q);
         current_state.clearStack();
     }
     public void visitFRETURN() {
         super.visitFRETURN();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_F();
-        Quad q = Return.create(quad_cfg.getNewQuadID(), method, Return.RETURN_F.INSTANCE, op0);
+        Quad q = Return.create(quad_cfg.getNewQuadID(), quad_bb, Return.RETURN_F.INSTANCE, op0);
         appendQuad(q);
         current_state.clearStack();
     }
     public void visitDRETURN() {
         super.visitDRETURN();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_D();
-        Quad q = Return.create(quad_cfg.getNewQuadID(), method, Return.RETURN_D.INSTANCE, op0);
+        Quad q = Return.create(quad_cfg.getNewQuadID(), quad_bb, Return.RETURN_D.INSTANCE, op0);
         appendQuad(q);
         current_state.clearStack();
     }
     public void visitARETURN() {
         super.visitARETURN();
-        this.uncond_branch = true;
         // could be A or R
         Operand op0 = current_state.pop();
         jq_Type t = getTypeOf(op0);
@@ -1213,14 +1194,13 @@ public class BytecodeToQuad extends BytecodeVisitor {
         } else {
             operator = t.isAddressType()?(Return)Return.RETURN_P.INSTANCE:Return.RETURN_A.INSTANCE;
         }
-        Quad q = Return.create(quad_cfg.getNewQuadID(), method, operator, op0);
+        Quad q = Return.create(quad_cfg.getNewQuadID(), quad_bb, operator, op0);
         appendQuad(q);
         current_state.clearStack();
     }
     public void visitVRETURN() {
         super.visitVRETURN();
-        this.uncond_branch = true;
-        Quad q = Return.create(quad_cfg.getNewQuadID(), method, Return.RETURN_V.INSTANCE);
+        Quad q = Return.create(quad_cfg.getNewQuadID(), quad_bb, Return.RETURN_V.INSTANCE);
         appendQuad(q);
         current_state.clearStack();
     }
@@ -1230,7 +1210,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Getstatic operator = dynlink?oper1:oper2;
         jq_Type t = f.getType();
         RegisterOperand op0 = getStackRegister(t);
-        Quad q = Getstatic.create(quad_cfg.getNewQuadID(), method, operator, op0, new FieldOperand(f));
+        Quad q = Getstatic.create(quad_cfg.getNewQuadID(), quad_bb, operator, op0, new FieldOperand(f));
         appendQuad(q);
         current_state.push(op0.copy(), t);
     }
@@ -1278,7 +1258,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Putstatic operator = dynlink?oper1:oper2;
         jq_Type t = f.getType();
         Operand op0 = current_state.pop(t);
-        Quad q = Putstatic.create(quad_cfg.getNewQuadID(), method, operator, op0, new FieldOperand(f));
+        Quad q = Putstatic.create(quad_cfg.getNewQuadID(), quad_bb, operator, op0, new FieldOperand(f));
         appendQuad(q);
     }
     public void visitIPUTSTATIC(jq_StaticField f) {
@@ -1331,7 +1311,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         jq_Type t = f.getType();
         RegisterOperand op0 = getStackRegister(t);
         Getfield operator = dynlink?oper1:oper2;
-        Quad q = Getfield.create(quad_cfg.getNewQuadID(), method, operator, op0, op1, new FieldOperand(f), null);
+        Quad q = Getfield.create(quad_cfg.getNewQuadID(), quad_bb, operator, op0, op1, new FieldOperand(f), null);
         appendQuad(q);
         current_state.push(op0.copy(), t);
     }
@@ -1384,7 +1364,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         Putfield operator = dynlink?oper1:oper2;
-        Quad q = Putfield.create(quad_cfg.getNewQuadID(), method, operator, op1, new FieldOperand(f), op0, null);
+        Quad q = Putfield.create(quad_cfg.getNewQuadID(), quad_bb, operator, op1, new FieldOperand(f), op0, null);
         appendQuad(q);
     }
     public void visitIPUTFIELD(jq_InstanceField f) {
@@ -1463,105 +1443,105 @@ public class BytecodeToQuad extends BytecodeVisitor {
         if (name == poke) {
             Operand val = current_state.pop_P();
             Operand loc = current_state.pop_P();
-            q = MemStore.create(quad_cfg.getNewQuadID(), method, MemStore.POKE_P.INSTANCE, loc, val);
+            q = MemStore.create(quad_cfg.getNewQuadID(), quad_bb, MemStore.POKE_P.INSTANCE, loc, val);
         } else if (name == poke1) {
             Operand val = current_state.pop_I();
             Operand loc = current_state.pop_P();
-            q = MemStore.create(quad_cfg.getNewQuadID(), method, MemStore.POKE_1.INSTANCE, loc, val);
+            q = MemStore.create(quad_cfg.getNewQuadID(), quad_bb, MemStore.POKE_1.INSTANCE, loc, val);
         } else if (name == poke2) {
             Operand val = current_state.pop_I();
             Operand loc = current_state.pop_P();
-            q = MemStore.create(quad_cfg.getNewQuadID(), method, MemStore.POKE_2.INSTANCE, loc, val);
+            q = MemStore.create(quad_cfg.getNewQuadID(), quad_bb, MemStore.POKE_2.INSTANCE, loc, val);
         } else if (name == poke4) {
             Operand val = current_state.pop_I();
             Operand loc = current_state.pop_P();
-            q = MemStore.create(quad_cfg.getNewQuadID(), method, MemStore.POKE_4.INSTANCE, loc, val);
+            q = MemStore.create(quad_cfg.getNewQuadID(), quad_bb, MemStore.POKE_4.INSTANCE, loc, val);
         } else if (name == poke8) {
             Operand val = current_state.pop_L();
             Operand loc = current_state.pop_P();
-            q = MemStore.create(quad_cfg.getNewQuadID(), method, MemStore.POKE_8.INSTANCE, loc, val);
+            q = MemStore.create(quad_cfg.getNewQuadID(), quad_bb, MemStore.POKE_8.INSTANCE, loc, val);
         } else if (name == peek) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(Address._class);
-            q = MemLoad.create(quad_cfg.getNewQuadID(), method, MemLoad.PEEK_P.INSTANCE, res, loc);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), quad_bb, MemLoad.PEEK_P.INSTANCE, res, loc);
             current_state.push_P(res.copy());
         } else if (name == peek1) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.BYTE);
-            q = MemLoad.create(quad_cfg.getNewQuadID(), method, MemLoad.PEEK_1.INSTANCE, res, loc);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), quad_bb, MemLoad.PEEK_1.INSTANCE, res, loc);
             current_state.push_I(res.copy());
         } else if (name == peek2) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.SHORT);
-            q = MemLoad.create(quad_cfg.getNewQuadID(), method, MemLoad.PEEK_2.INSTANCE, res, loc);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), quad_bb, MemLoad.PEEK_2.INSTANCE, res, loc);
             current_state.push_I(res.copy());
         } else if (name == peek4) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = MemLoad.create(quad_cfg.getNewQuadID(), method, MemLoad.PEEK_4.INSTANCE, res, loc);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), quad_bb, MemLoad.PEEK_4.INSTANCE, res, loc);
             current_state.push_I(res.copy());
         } else if (name == peek8) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.LONG);
-            q = MemLoad.create(quad_cfg.getNewQuadID(), method, MemLoad.PEEK_8.INSTANCE, res, loc);
+            q = MemLoad.create(quad_cfg.getNewQuadID(), quad_bb, MemLoad.PEEK_8.INSTANCE, res, loc);
             current_state.push_L(res.copy());
         } else if (name == offset) {
             Operand val = current_state.pop_I();
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(Address._class);
-            q = Binary.create(quad_cfg.getNewQuadID(), method, Binary.ADD_P.INSTANCE, res, loc, val);
+            q = Binary.create(quad_cfg.getNewQuadID(), quad_bb, Binary.ADD_P.INSTANCE, res, loc, val);
             current_state.push_P(res.copy());
         } else if (name == align) {
             Operand val = current_state.pop_I();
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(Address._class);
-            q = Binary.create(quad_cfg.getNewQuadID(), method, Binary.ALIGN_P.INSTANCE, res, loc, val);
+            q = Binary.create(quad_cfg.getNewQuadID(), quad_bb, Binary.ALIGN_P.INSTANCE, res, loc, val);
             current_state.push_P(res.copy());
         } else if (name == difference) {
             Operand val = current_state.pop_P();
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = Binary.create(quad_cfg.getNewQuadID(), method, Binary.SUB_P.INSTANCE, res, loc, val);
+            q = Binary.create(quad_cfg.getNewQuadID(), quad_bb, Binary.SUB_P.INSTANCE, res, loc, val);
             current_state.push_I(res.copy());
         } else if (name == alloca) {
             Operand amt = current_state.pop_I();
             RegisterOperand res = getStackRegister(StackAddress._class);
-            q = Special.create(quad_cfg.getNewQuadID(), method, Special.ALLOCA.INSTANCE, res, amt);
+            q = Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.ALLOCA.INSTANCE, res, amt);
             current_state.push_P(res.copy());
         } else if (name == isNull) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.BOOLEAN);
-            q = Unary.create(quad_cfg.getNewQuadID(), method, Unary.ISNULL_P.INSTANCE, res, loc);
+            q = Unary.create(quad_cfg.getNewQuadID(), quad_bb, Unary.ISNULL_P.INSTANCE, res, loc);
             current_state.push_I(res.copy());
         } else if (name == addressOf) {
             Operand loc = current_state.pop_A();
             RegisterOperand res = getStackRegister(Address._class);
-            q = Unary.create(quad_cfg.getNewQuadID(), method, Unary.OBJECT_2ADDRESS.INSTANCE, res, loc);
+            q = Unary.create(quad_cfg.getNewQuadID(), quad_bb, Unary.OBJECT_2ADDRESS.INSTANCE, res, loc);
             current_state.push_P(res.copy());
         } else if (name == address32) {
             Operand loc = current_state.pop_I();
             RegisterOperand res = getStackRegister(Address._class);
-            q = Unary.create(quad_cfg.getNewQuadID(), method, Unary.INT_2ADDRESS.INSTANCE, res, loc);
+            q = Unary.create(quad_cfg.getNewQuadID(), quad_bb, Unary.INT_2ADDRESS.INSTANCE, res, loc);
             current_state.push_P(res.copy());
         } else if (name == asObject) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(PrimordialClassLoader.getJavaLangObject());
-            q = Unary.create(quad_cfg.getNewQuadID(), method, Unary.ADDRESS_2OBJECT.INSTANCE, res, loc);
+            q = Unary.create(quad_cfg.getNewQuadID(), quad_bb, Unary.ADDRESS_2OBJECT.INSTANCE, res, loc);
             current_state.push_A(res.copy());
         } else if (name == asReferenceType) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Reference._class);
-            q = Unary.create(quad_cfg.getNewQuadID(), method, Unary.ADDRESS_2OBJECT.INSTANCE, res, loc);
+            q = Unary.create(quad_cfg.getNewQuadID(), quad_bb, Unary.ADDRESS_2OBJECT.INSTANCE, res, loc);
             current_state.push_A(res.copy());
         } else if (name == to32BitValue) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = Unary.create(quad_cfg.getNewQuadID(), method, Unary.ADDRESS_2INT.INSTANCE, res, loc);
+            q = Unary.create(quad_cfg.getNewQuadID(), quad_bb, Unary.ADDRESS_2INT.INSTANCE, res, loc);
             current_state.push_I(res.copy());
         } else if (name == stringRep) {
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = Unary.create(quad_cfg.getNewQuadID(), method, Unary.ADDRESS_2INT.INSTANCE, res, loc);
+            q = Unary.create(quad_cfg.getNewQuadID(), quad_bb, Unary.ADDRESS_2INT.INSTANCE, res, loc);
             current_state.push_I(res.copy());
             appendQuad(q);
             
@@ -1579,37 +1559,37 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         } else if (name == getBasePointer) {
             RegisterOperand res = getStackRegister(StackAddress._class);
-            q = Special.create(quad_cfg.getNewQuadID(), method, Special.GET_BASE_POINTER.INSTANCE, res);
+            q = Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.GET_BASE_POINTER.INSTANCE, res);
             current_state.push_P(res.copy());
         } else if (name == getStackPointer) {
             RegisterOperand res = getStackRegister(StackAddress._class);
-            q = Special.create(quad_cfg.getNewQuadID(), method, Special.GET_STACK_POINTER.INSTANCE, res);
+            q = Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.GET_STACK_POINTER.INSTANCE, res);
             current_state.push_P(res.copy());
         } else if (name == atomicAdd) {
             Operand val = current_state.pop_I();
             Operand loc = current_state.pop_P();
-            q = Special.create(quad_cfg.getNewQuadID(), method, Special.ATOMICADD_I.INSTANCE, loc, val);
+            q = Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.ATOMICADD_I.INSTANCE, loc, val);
         } else if (name == atomicSub) {
             Operand val = current_state.pop_I();
             Operand loc = current_state.pop_P();
-            q = Special.create(quad_cfg.getNewQuadID(), method, Special.ATOMICSUB_I.INSTANCE, loc, val);
+            q = Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.ATOMICSUB_I.INSTANCE, loc, val);
         } else if (name == atomicAnd) {
             Operand val = current_state.pop_I();
             Operand loc = current_state.pop_P();
-            q = Special.create(quad_cfg.getNewQuadID(), method, Special.ATOMICAND_I.INSTANCE, loc, val);
+            q = Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.ATOMICAND_I.INSTANCE, loc, val);
         } else if (name == atomicCas4) {
             Operand val2 = current_state.pop_I();
             Operand val1 = current_state.pop_I();
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.INT);
-            q = Special.create(quad_cfg.getNewQuadID(), method, Special.ATOMICCAS4.INSTANCE, res, loc, val1, val2);
+            q = Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.ATOMICCAS4.INSTANCE, res, loc, val1, val2);
             current_state.push_I(res.copy());
         } else if (name == atomicCas8) {
             Operand val2 = current_state.pop_L();
             Operand val1 = current_state.pop_L();
             Operand loc = current_state.pop_P();
             RegisterOperand res = getStackRegister(jq_Primitive.LONG);
-            q = Special.create(quad_cfg.getNewQuadID(), method, Special.ATOMICCAS8.INSTANCE, res, loc, val1, val2);
+            q = Special.create(quad_cfg.getNewQuadID(), quad_bb, Special.ATOMICCAS8.INSTANCE, res, loc, val1, val2);
             current_state.push_L(res.copy());
         } else {
             // TODO
@@ -1636,7 +1616,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         RegisterOperand result;
         if (returnType == jq_Primitive.VOID) result = null;
         else result = getStackRegister(returnType, f.getParamWords()-1);
-        Quad q = Invoke.create(quad_cfg.getNewQuadID(), method, oper, result, new MethodOperand(f), paramTypes.length);
+        Quad q = Invoke.create(quad_cfg.getNewQuadID(), quad_bb, oper, result, new MethodOperand(f), paramTypes.length);
         Operand op = null;
         for (int i = paramTypes.length; --i >= 0; ) {
             jq_Type ptype = paramTypes[i];
@@ -1645,7 +1625,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
             if (op instanceof RegisterOperand) rop = (RegisterOperand)op;
             else {
                 rop = getStackRegister(ptype);
-                Quad q2 = Move.create(quad_cfg.getNewQuadID(), method, Move.getMoveOp(ptype), (RegisterOperand) rop.copy(), op);
+                Quad q2 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.getMoveOp(ptype), (RegisterOperand) rop.copy(), op);
                 appendQuad(q2);
             }
             Invoke.setParam(q, i, rop);
@@ -1970,7 +1950,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitNEW(jq_Type f) {
         super.visitNEW(f);
         RegisterOperand res = getStackRegister(f);
-        Quad q = New.create(quad_cfg.getNewQuadID(), method, New.NEW.INSTANCE, res, new TypeOperand(f));
+        Quad q = New.create(quad_cfg.getNewQuadID(), quad_bb, New.NEW.INSTANCE, res, new TypeOperand(f));
         appendQuad(q);
         current_state.push_A(res.copy());
     }
@@ -1978,7 +1958,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         super.visitNEWARRAY(f);
         Operand size = current_state.pop_I();
         RegisterOperand res = getStackRegister(f);
-        Quad q = NewArray.create(quad_cfg.getNewQuadID(), method, NewArray.NEWARRAY.INSTANCE, res, size, new TypeOperand(f));
+        Quad q = NewArray.create(quad_cfg.getNewQuadID(), quad_bb, NewArray.NEWARRAY.INSTANCE, res, size, new TypeOperand(f));
         appendQuad(q);
         mergeStateWithAllExHandlers(false);
         current_state.push_A(res.copy());
@@ -1986,7 +1966,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     public void visitMULTINEWARRAY(jq_Type f, char dim) {
         super.visitMULTINEWARRAY(f, dim);
         RegisterOperand result = getStackRegister(f, dim-1);
-        Quad q = MultiNewArray.create(quad_cfg.getNewQuadID(), method, MultiNewArray.MULTINEWARRAY.INSTANCE, result, dim, new TypeOperand(f));
+        Quad q = MultiNewArray.create(quad_cfg.getNewQuadID(), quad_bb, MultiNewArray.MULTINEWARRAY.INSTANCE, result, dim, new TypeOperand(f));
         for (int i=0; i<dim; i++) {
             Operand op = current_state.pop_I();
 			RegisterOperand rop;
@@ -1994,7 +1974,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
 				rop = (RegisterOperand)op;
             else {
                 rop = getStackRegister(jq_Primitive.INT);
-                Quad q2 = Move.create(quad_cfg.getNewQuadID(), method, Move.MOVE_I.INSTANCE, (RegisterOperand) rop.copy(), op);
+                Quad q2 = Move.create(quad_cfg.getNewQuadID(), quad_bb, Move.MOVE_I.INSTANCE, (RegisterOperand) rop.copy(), op);
                 appendQuad(q2);
             }
             MultiNewArray.setParam(q, dim-i-1, rop);
@@ -2008,7 +1988,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Operand op = current_state.pop(); // could be P or A
         RegisterOperand res = getStackRegister(f);
         if (!f.isAddressType()) {
-            Quad q = CheckCast.create(quad_cfg.getNewQuadID(), method, CheckCast.CHECKCAST.INSTANCE, res, op, new TypeOperand(f));
+            Quad q = CheckCast.create(quad_cfg.getNewQuadID(), quad_bb, CheckCast.CHECKCAST.INSTANCE, res, op, new TypeOperand(f));
             appendQuad(q);
             mergeStateWithAllExHandlers(false);
             current_state.push_A(res.copy());
@@ -2021,7 +2001,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         Assert._assert(!f.isAddressType(), method.toString());
         Operand op = current_state.pop_A();
         RegisterOperand res = getStackRegister(jq_Primitive.BOOLEAN);
-        Quad q = InstanceOf.create(quad_cfg.getNewQuadID(), method, InstanceOf.INSTANCEOF.INSTANCE, res, op, new TypeOperand(f));
+        Quad q = InstanceOf.create(quad_cfg.getNewQuadID(), quad_bb, InstanceOf.INSTANCEOF.INSTANCE, res, op, new TypeOperand(f));
         appendQuad(q);
         current_state.push_I(res.copy());
     }
@@ -2034,15 +2014,14 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return;
         }
         RegisterOperand res = getStackRegister(jq_Primitive.INT);
-        Quad q = ALength.create(quad_cfg.getNewQuadID(), method, ALength.ARRAYLENGTH.INSTANCE, res, op);
+        Quad q = ALength.create(quad_cfg.getNewQuadID(), quad_bb, ALength.ARRAYLENGTH.INSTANCE, res, op);
         appendQuad(q);
         current_state.push_I(res.copy());
     }
     public void visitATHROW() {
         super.visitATHROW();
-        this.uncond_branch = true;
         Operand op0 = current_state.pop_A();
-        Quad q = Return.create(quad_cfg.getNewQuadID(), method, Return.THROW_A.INSTANCE, op0);
+        Quad q = Return.create(quad_cfg.getNewQuadID(), quad_bb, Return.THROW_A.INSTANCE, op0);
         appendQuad(q);
         current_state.clearStack();
     }
@@ -2050,7 +2029,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         super.visitMONITOR(op);
         Operand op0 = current_state.pop_A();
         Monitor oper = op==MONITOR_ENTER ? (Monitor)Monitor.MONITORENTER.INSTANCE : (Monitor)Monitor.MONITOREXIT.INSTANCE;
-        Quad q = Monitor.create(quad_cfg.getNewQuadID(), method, oper, op0);
+        Quad q = Monitor.create(quad_cfg.getNewQuadID(), quad_bb, oper, op0);
         appendQuad(q);
         mergeStateWithAllExHandlers(false);
     }
@@ -2063,7 +2042,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 return false;
             } else {
 				// MAYUR
-                // Quad q = NullCheck.create(quad_cfg.getNewQuadID(), method, NullCheck.NULL_CHECK.INSTANCE, null, op.copy());
+                // Quad q = NullCheck.create(quad_cfg.getNewQuadID(), quad_bb, NullCheck.NULL_CHECK.INSTANCE, null, op.copy());
                 // appendQuad(q);
 				mergeStateWithNullPtrExHandler(false);
 				return false;
@@ -2077,7 +2056,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
 		}
         RegisterOperand guard = makeGuardReg();
 		// MAYUR
-        // Quad q = NullCheck.create(quad_cfg.getNewQuadID(), method, NullCheck.NULL_CHECK.INSTANCE, guard, rop.copy());
+        // Quad q = NullCheck.create(quad_cfg.getNewQuadID(), quad_bb, NullCheck.NULL_CHECK.INSTANCE, guard, rop.copy());
         // appendQuad(q);
         mergeStateWithNullPtrExHandler(false);
         setCurrentGuard(guard);
@@ -2102,7 +2081,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
     
     boolean performBoundsCheck(Operand ref, Operand index) {
 		// MAYUR
-        // Quad q = BoundsCheck.create(quad_cfg.getNewQuadID(), method, BoundsCheck.BOUNDS_CHECK.INSTANCE, ref.copy(), index.copy(), getCurrentGuard());
+        // Quad q = BoundsCheck.create(quad_cfg.getNewQuadID(), quad_bb, BoundsCheck.BOUNDS_CHECK.INSTANCE, ref.copy(), index.copy(), getCurrentGuard());
         // appendQuad(q);
         mergeStateWithArrayBoundsExHandler(false);
         return false;
@@ -2133,7 +2112,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 return false;
         }
 		// MAYUR
-        // Quad q = StoreCheck.create(quad_cfg.getNewQuadID(), method, StoreCheck.ASTORE_CHECK.INSTANCE, ref.copy(), elem.copy(), getCurrentGuard());
+        // Quad q = StoreCheck.create(quad_cfg.getNewQuadID(), quad_bb, StoreCheck.ASTORE_CHECK.INSTANCE, ref.copy(), elem.copy(), getCurrentGuard());
         // appendQuad(q);
         mergeStateWithObjArrayStoreExHandler(false);
         return false;
@@ -2147,7 +2126,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 return false;
             } else {
 				// MAYUR
-				// Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), method, ZeroCheck.ZERO_CHECK_I.INSTANCE, null, op.copy());
+				// Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), quad_bb, ZeroCheck.ZERO_CHECK_I.INSTANCE, null, op.copy());
                 // appendQuad(q);
 				mergeStateWithArithExHandler(false);
 				return false;
@@ -2160,7 +2139,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 return false;
             } else {
 				// MAYUR
-                // Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), method, ZeroCheck.ZERO_CHECK_L.INSTANCE, null, op.copy());
+                // Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), quad_bb, ZeroCheck.ZERO_CHECK_L.INSTANCE, null, op.copy());
                 // appendQuad(q);
 				mergeStateWithArithExHandler(false);
 				return false;
@@ -2173,13 +2152,6 @@ public class BytecodeToQuad extends BytecodeVisitor {
             return false;
         }
         RegisterOperand guard = makeGuardReg();
-        ZeroCheck oper = null;
-        if (rop.getType() == jq_Primitive.LONG) oper = ZeroCheck.ZERO_CHECK_L.INSTANCE;
-        else if (rop.getType().isIntLike()) oper = ZeroCheck.ZERO_CHECK_I.INSTANCE;
-        else Assert.UNREACHABLE("Zero check on "+rop+" type "+rop.getType());
-		// MAYUR
-        // Quad q = ZeroCheck.create(quad_cfg.getNewQuadID(), method, oper, guard, rop.copy());
-        // appendQuad(q);
         mergeStateWithArithExHandler(false);
         setCurrentGuard(guard);
         setGuard(rop, guard);

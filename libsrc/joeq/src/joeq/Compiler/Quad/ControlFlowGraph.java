@@ -106,17 +106,17 @@ public class ControlFlowGraph implements Graph, Serializable {
      * Create a new basic block in this control flow graph.  The new basic block
      * is given a new, unique id number.
      * 
-     * @param numOfPredecessors  number of predecessor basic blocks that this
+     * @param numPreds  number of predecessor basic blocks that this
                                  basic block is expected to have.
-     * @param numOfSuccessors  number of successor basic blocks that this
+     * @param numSuccs  number of successor basic blocks that this
                                basic block is expected to have.
-     * @param numOfInstructions  number of instructions that this basic block
+     * @param numInstrs  number of instructions that this basic block
                                  is expected to have.
      * @param ehs  set of exception handlers for this basic block.
      * @return  the newly created basic block.
      */
-    public BasicBlock createBasicBlock(int numOfPredecessors, int numOfSuccessors, int numOfInstructions, ExceptionHandlerList ehs) {
-        return BasicBlock.createBasicBlock(++bb_counter, numOfPredecessors, numOfSuccessors, numOfInstructions, ehs);
+    public BasicBlock createBasicBlock(int numPreds, int numSuccs, int numInstrs, ExceptionHandlerList ehs) {
+        return BasicBlock.createBasicBlock(++bb_counter, this.method, numPreds, numSuccs, numInstrs, ehs);
     }
     
     /** Use with care after renumbering basic blocks. */
@@ -346,10 +346,9 @@ public class ControlFlowGraph implements Graph, Serializable {
     private BasicBlock copier(Map map, BasicBlock this_bb) {
         BasicBlock that_bb = (BasicBlock)map.get(this_bb);
         if (that_bb != null) return that_bb;
-        that_bb = BasicBlock.createBasicBlock(++this.bb_counter,
-                                              this_bb.getNumberOfPredecessors(),
-                                              this_bb.getNumberOfSuccessors(),
-                                              this_bb.size());
+        that_bb = BasicBlock.createBasicBlock(++this.bb_counter, this.method,
+        	this_bb.getNumberOfPredecessors(), this_bb.getNumberOfSuccessors(),
+        	this_bb.size());
         map.put(this_bb, that_bb);
         ExceptionHandlerList that_ehl = copier(map, this_bb.getExceptionHandlers());
         that_bb.setExceptionHandlerList(that_ehl);

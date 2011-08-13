@@ -494,14 +494,14 @@ public abstract class jq_Method extends jq_Member {
     		rf.getOrCreateLocal(i, t);
 		}
 		cfg = new ControlFlowGraph(this, 1, 0, rf);
+		BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
 		Quad q;
 		if (getReturnType().isReferenceType()) {
-    		q = Return.create(1, this, Return.RETURN_V.INSTANCE);
+    		q = Return.create(1, bb, Return.RETURN_V.INSTANCE);
 		} else {
-			q = Return.create(1, this, Return.RETURN_A.INSTANCE);
+			q = Return.create(1, bb, Return.RETURN_A.INSTANCE);
 			Return.setSrc(q, new AConstOperand(null));
 		}
-		BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
 		bb.appendQuad(q);
 		BasicBlock entry = cfg.entry();
 		BasicBlock exit = cfg.exit();
