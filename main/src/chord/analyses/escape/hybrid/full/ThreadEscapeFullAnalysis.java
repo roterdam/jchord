@@ -11,8 +11,11 @@ import gnu.trove.TObjectIntHashMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Iterator;
 import java.util.Set;
 import java.io.PrintWriter;
+import java.io.File;
+import java.io.IOException;
 
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
@@ -21,6 +24,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -58,6 +62,7 @@ import chord.analyses.invk.DomI;
 import chord.analyses.method.DomM;
 import chord.analyses.var.DomV;
 import chord.project.Chord;
+import chord.project.Config;
 import chord.project.ClassicProject;
 import chord.util.ArraySet;
 import chord.util.Timer;
@@ -92,6 +97,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private DomE domE;
 	private int varId[];
 	private TObjectIntHashMap<jq_Method> methToNumVars = new TObjectIntHashMap<jq_Method>();
+	private TObjectIntHashMap<jq_Method> methToFstVar  = new TObjectIntHashMap<jq_Method>();
 	private ICICG cicg;
 
 	private Set<Quad> allEscEs = new HashSet<Quad>();
@@ -162,6 +168,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			jq_Method m = domV.getMethod(v);
 			int n = m.getLiveRefVars().size();
 			methToNumVars.put(m, n);
+			methToFstVar.put(m, vIdx);
 			// System.out.println("Method: " + m);
 			for (int i = 0; i < n; i++) {
 				varId[vIdx + i] = i;
@@ -172,6 +179,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 		init();
 
+		PrintWriter w = OutDirUtils.newPrintWriter("main.html");
+		w.println("<html><head></head><body>");
+		int pass = 0;
 		for (Map.Entry<Set<Quad>, Set<Quad>> entry : hs2esMap.entrySet()) {
 			currHs = entry.getKey();
 			currLocEs = entry.getValue();
@@ -196,16 +206,23 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			} catch (ThrEscException ex) {
 				// do nothing
 			}
-			// printSummaries();
 			for (Quad q : currLocEs)
-				System.out.println("LOC: " + q.toVerboseStr());
+				w.println("LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>");
 			for (Quad q : currEscEs)
-				System.out.println("ESC: " + q.toVerboseStr());
+				w.println("ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>");
 			allLocEs.addAll(currLocEs);
 			allEscEs.addAll(currEscEs);
+			try {
+				printResults(pass);
+			} catch (IOException ex) {
+				throw new RuntimeException(ex);
+			}
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
+			pass++;
 		}
+		w.println("</body></html>");
+		w.close();
 
 		done();
 
@@ -261,6 +278,105 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
         OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xsl");
         OutDirUtils.runSaxon("results.xml", "results.xsl");
         Program.g().HTMLizeJavaSrcFiles();
+	}
+
+	private String toHTMLStr(jq_Method m) {
+		String s = m.toString().replace("<", "&lt;").replace(">", "&gt;");
+		return "<a href=\"" + domM.indexOf(m) + ".html\">" + s + "</a>";
+	}
+
+	private String toHTMLStr(int pass, jq_Method m) {
+		String s = m.toString().replace("<", "&lt;").replace(">", "&gt;");
+		return "<a href=\"" + pass + "/" + domM.indexOf(m) + ".html\">" + s + "</a>";
+	}
+
+	private void printResults(int pass) throws IOException {
+		File dir = new File(Config.outDirName, Integer.toString(pass));
+		dir.mkdir();
+        for (jq_Method m : summEdges.keySet()) {
+			PrintWriter w = OutDirUtils.newPrintWriter(pass + "/" + domM.indexOf(m) + ".html"); 
+			w.println("<html><head></head><body>");
+            w.println("Method: " + toHTMLStr(m) + "<br>");
+			w.println("<br>Callers:<br>");
+			for (Quad q : cicg.getCallers(m)) {
+				jq_Method m2 = q.getMethod();
+				w.println(q.getID() + ": " + toHTMLStr(m2) + "<br>");
+			}
+			w.println("<br>Summary Edges:");
+            Set<Edge> seSet = summEdges.get(m);
+			w.print(toString(seSet, m));
+			ControlFlowGraph cfg = m.getCFG();
+			w.println("<pre>");
+			w.println("Register Factory: " + cfg.getRegisterFactory());
+			for (BasicBlock bb : cfg.reversePostOrder()) {
+				Iterator<BasicBlock> bbi;
+				String s = bb.toString() + "(in: ";
+				bbi = bb.getPredecessors().iterator();
+				if (!bbi.hasNext()) s += "none";
+				else {
+					s += bbi.next();
+					while (bbi.hasNext()) s += ", " + bbi.next();
+				}
+				s += ", out: ";
+				bbi = bb.getSuccessors().iterator();
+				if (!bbi.hasNext()) s += "none";
+				else {
+					s += bbi.next();
+					while (bbi.hasNext()) s += ", " + bbi.next();
+				}
+				s += ")";
+				for (Quad q : bb.getQuads()) {
+					s += "\n" + q;
+					if (q.getOperator() instanceof Invoke) {
+						Set<jq_Method> tgts = cicg.getTargets(q);
+						for (jq_Method m2 : tgts)
+							s += "\n" + toHTMLStr(m2);
+					}
+				}
+				w.println(s);
+			}
+			w.println("</pre>");
+            for (BasicBlock bb : m.getCFG().reversePostOrder()) {
+                if (bb.isEntry() || bb.isExit()) {
+                    w.println(bb.isEntry() ? "ENTRY:" : "EXIT:");
+                    Set<Edge> peSet = pathEdges.get(bb);
+					w.println(toString(peSet, m));
+                } else {
+                    for (Quad q : bb) {
+                        w.println(q.getID() + ":");
+                    	Set<Edge> peSet = pathEdges.get(q);
+						w.println(toString(peSet, m));
+                    }
+                }
+            }
+			w.println("</body>");
+			w.close();
+        }
+	}
+
+	private String toString(Set<Edge> peSet, jq_Method m) {
+		if (peSet == null)
+			return "No edges<br>";
+		String s = "";
+		for (Edge pe : peSet)
+			s += "<pre>" + toString(pe, m) + "</pre>";
+		return s;
+	}
+
+	private String toString(Edge pe, jq_Method m) {
+		SrcNode s = pe.srcNode;
+		DstNode d = pe.dstNode;
+		Obj[] se = s.env;
+		Obj[] de = d.env;
+		ArraySet<FldObj> sh = s.heap;
+		ArraySet<FldObj> dh = d.heap;
+		int fstVidx = methToFstVar.get(m);
+		int n = se.length;
+		String seStr = toString(se, fstVidx);
+		String shStr = toString(sh);
+		String deStr = toString(de, fstVidx);
+		String dhStr = toString(dh);
+		return "(" + seStr + "," + shStr + ") -> (" + deStr + "," + dhStr + ")";
 	}
 
 	private String getXML(ArraySet<Quad> hs) {
@@ -766,8 +882,8 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			if (pts == Obj.ONLY_ESC || pts == Obj.BOTH) {
 				currLocEs.remove(q);
 				currEscEs.add(q);
-				if (currLocEs.size() == 0)
-					throw new ThrEscException();
+				// if (currLocEs.size() == 0)
+				//	throw new ThrEscException();
 			}
 		}
 	}
@@ -889,13 +1005,41 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		for (FldObj fo : heap) {
 			String o;
 			if (fo.isLoc)
-				o = fo.isEsc ? "*" : "L";
+				o = fo.isEsc ? "*=" : "L=";
 			else
-				o = fo.isEsc ? "E" : "N";
-			String x = "<" + fo.f + "," + o + ">";
+				o = fo.isEsc ? "E=" : "N=";
+			String f = fo.f == null ? "null" : (fo.f.getName() + "@" + fo.f.getDeclaringClass().getName());
+			String x = o + f;
 			s = (s == null) ? x : (s + "," + x);
 		}
 		if (s == null) return "[]";
+		return "[" + s + "]";
+	}
+
+	public String toString(Obj[] env, int fstVidx) {
+		String onlyLoc = "";
+		String onlyEsc = "";
+		String both = "";
+		for (int i = 0; i < env.length; i++) {
+			Obj o = env[i];
+			switch (o) {
+			case EMTY: break;
+			case ONLY_LOC: onlyLoc += domV.get(fstVidx + i) + ","; break;
+			case ONLY_ESC: onlyEsc += domV.get(fstVidx + i) + ","; break;
+			case BOTH: both += domV.get(fstVidx + i) + ","; break;
+			}
+		}
+		String s = both.equals("") ? "" : "*=" + both.substring(0, both.length() - 1);
+		if (!onlyLoc.equals("")) {
+			String t = "L=" + onlyLoc.substring(0, onlyLoc.length() - 1);
+			if (!s.equals("")) s += " ";
+			s += t;
+		}
+		if (!onlyEsc.equals("")) {
+			String t = "E=" + onlyEsc.substring(0, onlyEsc.length() - 1);
+			if (!s.equals("")) s += " ";
+			s += t;
+		}
 		return "[" + s + "]";
 	}
 }
