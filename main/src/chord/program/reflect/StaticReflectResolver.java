@@ -69,7 +69,6 @@ public class StaticReflectResolver {
 		resolvedObjNewInstSites.clear();
 		cfg = m.getCFG();
 		initForNameAndNewInstSites();
-		//		System.out.println("processing " + m.getName() + " found " + )
 		if (forNameSites.isEmpty())
 			return;
 		numArgs = m.getParamTypes().length;
@@ -247,7 +246,6 @@ public class StaticReflectResolver {
 
 	protected void processReturn(Quad q) {
 	}
-
 
 	protected void processCheckCast(Register l, Register r, Quad q) {
 		//for benefit of subclasses

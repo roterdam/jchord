@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.lang.NoClassDefFoundError;
 
 import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Array;
@@ -63,7 +64,7 @@ public class RTA implements ScopeBuilder {
 
 	public static final boolean DEBUG = false;
 
-	private final String reflectKind; // [none|static|dynamic]
+	private final String reflectKind; // [none|static|static_cast|dynamic]
 
 	/////////////////////////
 
@@ -146,8 +147,7 @@ public class RTA implements ScopeBuilder {
 	 */
 	@Override
 	public IndexSet<jq_Method> getMethods() {
-		if (methods == null)
-			build();
+		if (methods == null) build();
 		return methods;
 	}
 
@@ -156,8 +156,7 @@ public class RTA implements ScopeBuilder {
 	 */
 	@Override
 	public Reflect getReflect() {
-		if (reflect == null)
-			build();
+		if (reflect == null) build();
 		return reflect;
 	}
 
@@ -180,17 +179,12 @@ public class RTA implements ScopeBuilder {
 			reflectiveCtors = new LinkedHashSet<jq_Method>();
 			staticReflectResolver = new CastBasedStaticReflect(reachableAllocClasses, staticReflectResolved);
 		} else if (reflectKind.equals("dynamic")) {
-			DynamicReflectResolver dynamicReflectResolver =
-				new DynamicReflectResolver();
+			DynamicReflectResolver dynamicReflectResolver = new DynamicReflectResolver();
 			dynamicReflectResolver.run();
-			dynamicResolvedClsForNameSites =
-				dynamicReflectResolver.getResolvedClsForNameSites();
-			dynamicResolvedObjNewInstSites =
-				dynamicReflectResolver.getResolvedObjNewInstSites();
-			dynamicResolvedConNewInstSites =
-				dynamicReflectResolver.getResolvedConNewInstSites();
-			dynamicResolvedAryNewInstSites =
-				dynamicReflectResolver.getResolvedAryNewInstSites();
+			dynamicResolvedClsForNameSites = dynamicReflectResolver.getResolvedClsForNameSites();
+			dynamicResolvedObjNewInstSites = dynamicReflectResolver.getResolvedObjNewInstSites();
+			dynamicResolvedConNewInstSites = dynamicReflectResolver.getResolvedConNewInstSites();
+			dynamicResolvedAryNewInstSites = dynamicReflectResolver.getResolvedAryNewInstSites();
 			reflectiveCtors = new LinkedHashSet<jq_Method>();
 		}
 		 
@@ -232,10 +226,12 @@ public class RTA implements ScopeBuilder {
 				if (DEBUG) System.out.println("Processing CFG of " + m);
 				processMethod(m);
 			}
+
 			if (staticReflectResolver != null) {
 				staticReflectResolver.startedNewIter();
 			}
 		}
+
 		timer.done();
 		if (Config.verbose >= 1) {
 			System.out.println("LEAVE: RTA");
@@ -243,7 +239,6 @@ public class RTA implements ScopeBuilder {
 		}
 		staticReflectResolver = null; // no longer in use; stop referencing it
 	}
-
 
 	/**
 	 * Invoked by RTA before starting iterations. A hook so subclasses can
@@ -277,30 +272,32 @@ public class RTA implements ScopeBuilder {
 		}
 	}
 
+	private static boolean isClassDefined(Quad q, jq_Reference r) {
+		try {
+			r.load(); // triggers NoClassDefFoundError if not found. Do this before adding to reflect.
+			return true;
+		} catch(NoClassDefFoundError e) {
+			String qpos = q.getMethod().getDeclaringClass() + " " +  q.getMethod() + ":" + q.getLineNumber(); 
+			Messages.log(qpos + " references class "+ r + " via reflection. Class not found in classpath");
+			return false;
+		}
+	}
+
 	/*
 	 * It can happen that we see Class.forName("something not in classpath").
 	 * Should handle this gracefully.
 	 */
 	private void processResolvedClsForNameSite(Quad q, jq_Reference r) {
-		try {
-			r.load(); //triggers NoClassDefFoundError if not found. Do this before adding to reflect.
+		if (isClassDefined(q, r)) {
 			reflect.addResolvedClsForNameSite(q, r);
 			visitClass(r);
-		} catch(NoClassDefFoundError e) {
-			String qpos = q.getMethod().getDeclaringClass() + " " +  q.getMethod() + ":" + q.getLineNumber(); 
-			System.out.println(qpos + " references class "+ r + " via reflection. Class not found in classpath");
 		}
 	}
 
 	private void processResolvedObjNewInstSite(Quad q, jq_Reference r) {
-		try {
-			r.load();
-		} catch(NoClassDefFoundError e) {
-			String qpos = q.getMethod().getDeclaringClass() + " " +  q.getMethod() + ":" + q.getLineNumber(); 
-			System.out.println(qpos + " references class "+ r + " via reflection. Class not found in classpath");
+		if (!isClassDefined(q, r))
 			return;
-		}
-		
+
 		reflect.addResolvedObjNewInstSite(q, r);
 		visitClass(r);
 		if (reachableAllocClasses.add(r) ||
@@ -325,6 +322,8 @@ public class RTA implements ScopeBuilder {
 	}
 
 	private void processResolvedAryNewInstSite(Quad q, jq_Reference r) {
+		if (!isClassDefined(q, r))
+			return;
 		reflect.addResolvedAryNewInstSite(q, r);
 		visitClass(r);
 		if (reachableAllocClasses.add(r))
@@ -332,6 +331,8 @@ public class RTA implements ScopeBuilder {
 	}
 
 	private void processResolvedConNewInstSite(Quad q, jq_Reference r) {
+		if (!isClassDefined(q, r))
+			return;
 		reflect.addResolvedConNewInstSite(q, r);
 		visitClass(r);
 		if (reachableAllocClasses.add(r))
@@ -516,8 +517,7 @@ public class RTA implements ScopeBuilder {
 		if (classes.add(r)) {
 			r.prepare();
 			if (DEBUG) System.out.println("\tAdding class: " + r);
-			if (r instanceof jq_Array)
-				return;
+			if (r instanceof jq_Array) return;
 			jq_Class c = (jq_Class) r;
 			jq_Class d = c.getSuperclass();
 			if (d == null)
@@ -529,11 +529,9 @@ public class RTA implements ScopeBuilder {
 		}
 	}
 	
-	
 	protected void visitClass(jq_Reference r) {
 		prepareClass(r);
-		if (r instanceof jq_Array)
-			return;
+		if (r instanceof jq_Array) return;
 		jq_Class c = (jq_Class) r;
 		visitClinits(c);
 	}
