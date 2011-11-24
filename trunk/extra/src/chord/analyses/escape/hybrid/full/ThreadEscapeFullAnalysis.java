@@ -179,8 +179,9 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 
 		init();
 
-		PrintWriter w = OutDirUtils.newPrintWriter("main.html");
-		w.println("<html><head></head><body>");
+		boolean HTMLize = Boolean.getBoolean("chord.escape.html");
+
+		String html = "";
 		int pass = 0;
 		for (Map.Entry<Set<Quad>, Set<Quad>> entry : hs2esMap.entrySet()) {
 			currHs = entry.getKey();
@@ -207,22 +208,24 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				// do nothing
 			}
 			for (Quad q : currLocEs)
-				w.println("LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>");
+				html += "LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
 			for (Quad q : currEscEs)
-				w.println("ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>");
+				html += "ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
 			allLocEs.addAll(currLocEs);
 			allEscEs.addAll(currEscEs);
-			try {
-				printResults(pass);
-			} catch (IOException ex) {
-				throw new RuntimeException(ex);
-			}
+			// printSummaries();
+			if (HTMLize)
+				printEdges(pass);
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 			pass++;
 		}
-		w.println("</body></html>");
-		w.close();
+
+		if (HTMLize) {
+			PrintWriter w = OutDirUtils.newPrintWriter("main.html");
+			w.println("<html><head></head><body>" + html + "</body></html>");
+			w.close();
+		}
 
 		done();
 
@@ -236,48 +239,50 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			out.println(e.toVerboseStr());
 		out.close();
 
-        domE.saveToXMLFile();
-        domH.saveToXMLFile();
-        domM.saveToXMLFile();
+		if (Config.printResults) {
+			domE.saveToXMLFile();
+			domH.saveToXMLFile();
+			domM.saveToXMLFile();
 
-		Map<Quad, String> map = new HashMap<Quad, String>();
-		ProgramRel relEscE = (ProgramRel) ClassicProject.g().getTrgt("dynEscE");
-		relEscE.load();
-		Iterable<Quad> escEtuples = relEscE.getAry1ValTuples();
-		for (Quad e : escEtuples)
-			map.put(e, "<pathEsc Eid=\"E" + domE.indexOf(e) + "\"/>");
-		relEscE.close();
+			Map<Quad, String> map = new HashMap<Quad, String>();
+			ProgramRel relEscE = (ProgramRel) ClassicProject.g().getTrgt("dynEscE");
+			relEscE.load();
+			Iterable<Quad> escEtuples = relEscE.getAry1ValTuples();
+			for (Quad e : escEtuples)
+				map.put(e, "<pathEsc Eid=\"E" + domE.indexOf(e) + "\"/>");
+			relEscE.close();
 
-		for (Quad e : allEscEs) {
-			ArraySet<Quad> hs = e2hsMap.get(e);
-			map.put(e, "<fullEsc Eid=\"E" + domE.indexOf(e) + "\" Hids=\"" + getXML(hs) + "\"/>");
+			for (Quad e : allEscEs) {
+				ArraySet<Quad> hs = e2hsMap.get(e);
+				map.put(e, "<fullEsc Eid=\"E" + domE.indexOf(e) + "\" Hids=\"" + getXML(hs) + "\"/>");
+			}
+			for (Quad e : allLocEs) {
+				ArraySet<Quad> hs = e2hsMap.get(e);
+				map.put(e, "<fullLoc Eid=\"E" + domE.indexOf(e) + "\" Hids=\"" + getXML(hs) + "\"/>");
+			}
+
+			out = OutDirUtils.newPrintWriter("escapelist.xml");
+			out.println("<escapelist>");
+			for (int e = 0; e < domE.size(); e++) {
+				String s = map.get(domE.get(e));
+				if (s != null)
+					out.println(s);
+			}
+			out.println("</escapelist>");
+			out.close();
+
+			OutDirUtils.copyResourceByName("web/style.css");
+			OutDirUtils.copyResourceByName("chord/analyses/method/Mlist.dtd");
+			OutDirUtils.copyResourceByName("chord/analyses/heapacc/Elist.dtd");
+			OutDirUtils.copyResourceByName("chord/analyses/heapacc/E.xsl");
+			OutDirUtils.copyResourceByName("chord/analyses/alloc/Hlist.dtd");
+			OutDirUtils.copyResourceByName("chord/analyses/alloc/H.xsl");
+			OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xml");
+			OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.dtd");
+			OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xsl");
+			OutDirUtils.runSaxon("results.xml", "results.xsl");
+			Program.g().HTMLizeJavaSrcFiles();
 		}
-		for (Quad e : allLocEs) {
-			ArraySet<Quad> hs = e2hsMap.get(e);
-			map.put(e, "<fullLoc Eid=\"E" + domE.indexOf(e) + "\" Hids=\"" + getXML(hs) + "\"/>");
-		}
-
-        out  = OutDirUtils.newPrintWriter("escapelist.xml");
-        out.println("<escapelist>");
-		for (int e = 0; e < domE.size(); e++) {
-			String s = map.get(domE.get(e));
-			if (s != null)
-				out.println(s);
-		}
-		out.println("</escapelist>");
-		out.close();
-
-        OutDirUtils.copyResourceByName("web/style.css");
-        OutDirUtils.copyResourceByName("chord/analyses/method/Mlist.dtd");
-        OutDirUtils.copyResourceByName("chord/analyses/heapacc/Elist.dtd");
-        OutDirUtils.copyResourceByName("chord/analyses/heapacc/E.xsl");
-        OutDirUtils.copyResourceByName("chord/analyses/alloc/Hlist.dtd");
-        OutDirUtils.copyResourceByName("chord/analyses/alloc/H.xsl");
-        OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xml");
-        OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.dtd");
-        OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xsl");
-        OutDirUtils.runSaxon("results.xml", "results.xsl");
-        Program.g().HTMLizeJavaSrcFiles();
 	}
 
 	private String toHTMLStr(jq_Method m) {
@@ -290,7 +295,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		return "<a href=\"" + pass + "/" + domM.indexOf(m) + ".html\">" + s + "</a>";
 	}
 
-	private void printResults(int pass) throws IOException {
+	private void printEdges(int pass) {
 		File dir = new File(Config.outDirName, Integer.toString(pass));
 		dir.mkdir();
         for (jq_Method m : summEdges.keySet()) {

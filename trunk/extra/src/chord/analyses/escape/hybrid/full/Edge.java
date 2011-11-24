@@ -30,6 +30,7 @@ public class Edge implements IEdge {
 		return srcNode.equals(srcNode2);
 	}
 	public boolean mergeWith(IEdge pe2) {
+		System.out.println("CALLED");
 		DstNode dstNode1 = this.dstNode;
 		DstNode dstNode2 = ((Edge) pe2).dstNode;
 		boolean isRetn1 = dstNode1.isRetn;
@@ -64,6 +65,10 @@ public class Edge implements IEdge {
 				// at this point there are only two cases:
 				// pts1=LOC and pts2=ESC|BOTH
 				// pts1=ESC and pts2=LOC|BOTH
+				if ((pts1 == Obj.ONLY_LOC && pts2 == Obj.ONLY_ESC) ||
+					(pts2 == Obj.ONLY_LOC && pts1 == Obj.ONLY_ESC)) {
+						System.out.println("BAD MERGE");
+				}
 				pts1 = Obj.BOTH;
 			}
 			if (env3 == null) {
