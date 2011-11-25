@@ -25,12 +25,102 @@ public class Edge implements IEdge {
 		srcNode = s;
 		dstNode = d;
 	}
-	public boolean matchesSrcNodeOf(IEdge pe2) {
+	@Override
+	public boolean canMerge(IEdge pe2) {
 		SrcNode srcNode2 = ((Edge) pe2).srcNode;
-		return srcNode.equals(srcNode2);
+		if (!srcNode.equals(srcNode2))
+			return false;
+		if (ThreadEscapeFullAnalysis.joinKind != JoinKind.PJOIN)
+			return true;
+		DstNode dstNode1 = this.dstNode;
+		DstNode dstNode2 = ((Edge) pe2).dstNode;
+		boolean isRetn1 = dstNode1.isRetn;
+		boolean isRetn2 = dstNode2.isRetn;
+		assert (isRetn1 == isRetn2);
+		boolean isKill1 = dstNode1.isKill;
+		boolean isKill2 = dstNode2.isKill;
+		if (isKill1 != isKill2)
+			return false;
+        Obj[] env1 = dstNode1.env;
+        Obj[] env2 = dstNode2.env;
+        int n = env1.length;
+        assert (n == env2.length);
+		// 'bigger' remains 0 as long as dstNode1 == dstNode2
+		// it's value switches to 1 when dstNode1 < dstNode2
+		// it's value switches to 2 when dstNode2 > dstNode1
+		// we return false if both 1 and 2 above hold
+		int bigger = 0;
+        for (int i = 0; i < n; i++) {
+			Obj pts1 = env1[i];
+            Obj pts2 = env2[i];
+			if (pts1 == pts2) continue;
+			if (pts1 == Obj.EMTY || pts2 == Obj.BOTH) {
+				if (bigger == 1) return false;
+				bigger = 2;
+				continue;
+			}
+			if (pts2 == Obj.EMTY || pts1 == Obj.BOTH) {
+				if (bigger == 2) return false;
+				bigger = 1;
+				continue;
+			}
+			return false;
+		}
+        ArraySet<FldObj> heap1 = dstNode1.heap;
+        ArraySet<FldObj> heap2 = dstNode2.heap;
+		if (heap1.equals(heap2))
+			return true;
+		int n1 = heap1.size();
+		int n2 = heap2.size();
+        for (int i = 0; i < n1; i++) {
+            FldObj fo1 = heap1.get(i);
+            jq_Field f = fo1.f;
+            boolean found = false;
+            for (int j = 0; j < n2; j++) {
+                FldObj fo2 = heap2.get(j);
+                if (fo2.f == f) {
+                    boolean isLoc1 = fo1.isLoc;
+                    boolean isEsc1 = fo1.isEsc;
+                    boolean isLoc2 = fo2.isLoc;
+                    boolean isEsc2 = fo2.isEsc;
+                    if (isLoc1 == isLoc2 && isEsc1 == isEsc2) {
+                        ;
+					} else if (isLoc1 && isEsc1) {
+						if (bigger == 2) return false;
+						bigger = 1;
+					} else if (isLoc2 && isEsc2) {
+						if (bigger == 1) return false;
+						bigger = 2;
+					} else
+						return false;
+                    found = true;
+                    break;
+                }
+            }
+			if (!found) {
+				if (bigger == 2) return false;
+				bigger = 1;
+			}
+		}
+        for (int j = 0; j < n2; j++) {
+            FldObj fo2 = heap2.get(j);
+            jq_Field f = fo2.f;
+            boolean found = false;
+            for (int i = 0; i < n1; i++) {
+                FldObj fo1 = heap1.get(i);
+                if (fo1.f == f) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+				return (bigger == 1) ? false : true;
+			}
+        }
+		return true;
 	}
+	@Override
 	public boolean mergeWith(IEdge pe2) {
-		System.out.println("CALLED");
 		DstNode dstNode1 = this.dstNode;
 		DstNode dstNode2 = ((Edge) pe2).dstNode;
 		boolean isRetn1 = dstNode1.isRetn;
@@ -65,10 +155,6 @@ public class Edge implements IEdge {
 				// at this point there are only two cases:
 				// pts1=LOC and pts2=ESC|BOTH
 				// pts1=ESC and pts2=LOC|BOTH
-				if ((pts1 == Obj.ONLY_LOC && pts2 == Obj.ONLY_ESC) ||
-					(pts2 == Obj.ONLY_LOC && pts1 == Obj.ONLY_ESC)) {
-						System.out.println("BAD MERGE");
-				}
 				pts1 = Obj.BOTH;
 			}
 			if (env3 == null) {
@@ -161,3 +247,23 @@ public class Edge implements IEdge {
 		return srcNode + ";" + dstNode;
 	}
 }
+
+/*
+           if (bigger != 3) {
+               if (pts1 == Obj.EMTY) {
+                   if (pts2 != Obj.EMTY)
+                       bigger = (bigger == 1) ? 3 : 2;
+               } else if (pts1 == Obj.BOTH) {
+                   if (pts2 != Obj.BOTH)
+                       bigger = (bigger == 2) ? 3 : 1;
+               }
+               if (pts2 == Obj.EMTY) {
+                   if (pts1 != Obj.EMTY)
+                       bigger = (bigger == 2) ? 3 : 1;
+               } else if (pts2 == Obj.BOTH) {
+                   if (pts1 != Obj.BOTH)
+                       bigger = (bigger == 1) ? 3 : 2;
+               }
+           }
+*/
+

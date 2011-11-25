@@ -51,6 +51,7 @@ import chord.util.tuple.object.Pair;
 import chord.util.tuple.integer.IntPair;
 import chord.program.Program;
 import chord.program.Location;
+import chord.project.Messages;
 import chord.project.analyses.ProgramRel;
 import chord.project.analyses.rhs.TimeoutException;
 import chord.project.analyses.rhs.ForwardRHSAnalysis;
@@ -76,8 +77,10 @@ import chord.project.OutDirUtils;
  * Produces files shape_fullEscE.txt, shape_fullLocE.txt, and results.html
  *
  * Relevant system properties:
+ * chord.escape.join.kind = [lossy|pjoin|naive] (default = lossy)
  * chord.escape.optimize = [true|false] (default = true)
- * chord.rhs.timeout = N (default = 300000)
+ * chord.rhs.timeout = N milliseconds (default = 0)
+ * chord.escape.html = [true|false] (default = false)
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -88,7 +91,8 @@ import chord.project.OutDirUtils;
 public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet<FldObj>(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
-	private final boolean optimizeSummaries;
+	public static JoinKind joinKind;
+	private final boolean optimizeSumms;
 	private DomM domM;
 	private DomI domI;
 	private DomV domV;
@@ -110,7 +114,18 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private jq_Method threadStartMethod;
 
 	public ThreadEscapeFullAnalysis() {
- 		optimizeSummaries = System.getProperty("chord.escape.optimize", "true").equals("true");
+ 		String joinKindStr = System.getProperty("chord.escape.join.kind", "lossy");
+		if (joinKindStr.equals("lossy"))
+			joinKind = JoinKind.LOSSY;
+		else if (joinKindStr.equals("pjoin"))
+		 	joinKind = JoinKind.PJOIN;
+		else if (joinKindStr.equals("naive"))
+			joinKind = JoinKind.NAIVE;
+		else
+			Messages.fatal("Unknown value for property chord.escape.join.kind: " + joinKindStr);
+ 		optimizeSumms = System.getProperty("chord.escape.optimize", "true").equals("true");
+		System.out.println("chord.escape.join.kind=" + joinKind);
+		System.out.println("chord.escape.optimize=" + optimizeSumms);
 	}
 
 	@Override
@@ -399,8 +414,13 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public boolean doMerge() {
-		return true;
+	public boolean mayMerge() {
+		return joinKind != JoinKind.NAIVE;
+	}
+
+	@Override
+	public boolean mustMerge() {
+		return joinKind == JoinKind.LOSSY;
 	}
 
 	@Override
@@ -461,7 +481,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			int numVars = methToNumVars.get(m2);
 			Obj[] env = new Obj[numVars];
 			int z = 0;
-			boolean allEsc = optimizeSummaries ? true : false;
+			boolean allEsc = optimizeSumms ? true : false;
 			for (int i = 0; i < numArgs; i++) {
 				RegisterOperand ao = args.get(i);
 				if (ao.getType().isReferenceType()) {
@@ -538,7 +558,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		Obj[] tgtSrcEnv = tgtSrcNode.env;
         ParamListOperand args = Invoke.getParamList(q);
         int numArgs = args.length();
-		boolean allEsc = optimizeSummaries ? true : false;
+		boolean allEsc = optimizeSumms ? true : false;
         for (int i = 0, fIdx = 0; i < numArgs; i++) {
             RegisterOperand ao = args.get(i);
             if (ao.getType().isReferenceType()) {
@@ -887,8 +907,8 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			if (pts == Obj.ONLY_ESC || pts == Obj.BOTH) {
 				currLocEs.remove(q);
 				currEscEs.add(q);
-				// if (currLocEs.size() == 0)
-				//	throw new ThrEscException();
+				if (currLocEs.size() == 0)
+					throw new ThrEscException();
 			}
 		}
 	}

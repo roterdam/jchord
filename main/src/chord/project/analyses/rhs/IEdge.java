@@ -22,7 +22,7 @@ public interface IEdge {
 	 * @return		true iff the source node of <code>edge</code>
 	 *				is identical to the source node of this edge.
 	 */
-	public boolean matchesSrcNodeOf(IEdge edge);
+	public boolean canMerge(IEdge edge);
 	/**
 	 * Merges the given path or summary edge with this edge.
 	 * This edge is mutated but the given edge is not.  The source

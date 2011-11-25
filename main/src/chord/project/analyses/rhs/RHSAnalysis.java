@@ -30,6 +30,7 @@ import chord.project.ClassicProject;
 import chord.project.analyses.JavaAnalysis;
 import chord.util.ArraySet;
 import chord.util.Alarm;
+import chord.project.Messages;
 
 /**
  * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive
@@ -51,8 +52,16 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	protected Map<jq_Method, Set<Quad>> callersMap = new HashMap<jq_Method, Set<Quad>>();
 	protected Map<Quad, Set<jq_Method>> targetsMap = new HashMap<Quad, Set<jq_Method>>();
 	protected boolean isInited;
-	protected final boolean doMerge = doMerge();
+	protected final boolean mustMerge = mustMerge();
+	protected final boolean mayMerge = mayMerge();
 	protected final boolean isForward = isForward();
+
+	protected RHSAnalysis() {
+		if (mustMerge && !mayMerge) {
+			Messages.fatal("Cannot create RHS analysis '" + getName() + 
+				"' with mustMerge but without mayMerge.");
+		}
+	}
 
 	// get the initial set of path edges
 	public abstract Set<Pair<Location, PE>> getInitPathEdges();
@@ -90,7 +99,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	 * @return	true iff (path or summary) edges with the same source
 	 *			state and different target states should be merged.
 	 */
-	public abstract boolean doMerge();
+	public abstract boolean mayMerge();
+	public abstract boolean mustMerge();
 
 	/**
 	 * Determines whether this analysis is a forward analysis (as opposed
@@ -225,7 +235,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 								q2Idx = 0;
 							}
 							Location loc2 = new Location(m, bb2, q2Idx, q2);
-							PE pe2 = doMerge ? getCopy(pe) : pe;
+							PE pe2 = mayMerge ? getCopy(pe) : pe;
 							addPathEdge(loc2, pe2);
 						}
 					} else {
@@ -248,7 +258,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 								q2Idx = n - 1;
 							}
 							Location loc2 = new Location(m, bb2, q2Idx, q2);
-							PE pe2 = doMerge ? getCopy(pe) : pe;
+							PE pe2 = mayMerge ? getCopy(pe) : pe;
 							addPathEdge(loc2, pe2);
 						}
 					}
@@ -259,7 +269,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				if (op instanceof Invoke) {
 					Set<jq_Method> targets = getTargets(q);
 					if (targets.isEmpty()) {
-						PE pe2 = doMerge ? getCopy(pe) : pe;
+						PE pe2 = mayMerge ? getCopy(pe) : pe;
 						propagatePEtoPE(m, bb, loc.qIdx, pe2);
 					} else {
 						for (jq_Method m2 : targets) {
@@ -278,8 +288,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 								if (DEBUG) System.out.println("\tTesting SE: " + se);
 								if (propagateSEtoPE(pe, loc, m2, se)) {
 									if (DEBUG) System.out.println("\tMatched");
-									if (doMerge)
+									if (mustMerge) {
+										// this was only SE; stop looking for more
 										break;
+									}
 								} else {
 									if (DEBUG) System.out.println("\tDid not match");
 								}
@@ -305,10 +317,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 			summEdges.put(m, seSet);
 			seSet.add(se);
 			if (DEBUG) System.out.println("\tNo, adding it as first SE");
-		} else if (doMerge) {
+		} else if (mayMerge) {
 			boolean matched = false;
 			for (SE se2 : seSet) {
-				if (se2.matchesSrcNodeOf(se)) {
+				if (se2.canMerge(se)) {
 					if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
 					boolean changed = se2.mergeWith(se);
 					if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
@@ -365,10 +377,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 			summEdges.put(m, seSet);
 			seSet.add(se);
 			if (DEBUG) System.out.println("\tNo, adding it as first SE");
-		} else if (doMerge) {
+		} else if (mayMerge) {
 			boolean matched = false;
 			for (SE se2 : seSet) {
-				if (se2.matchesSrcNodeOf(se)) {
+				if (se2.canMerge(se)) {
 					if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
 					boolean changed = se2.mergeWith(se);
 					if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
@@ -427,10 +439,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				invkQuadToLoc.put(q, loc);
 			peSet.add(pe);
 			if (DEBUG) System.out.println("\tNo, adding it as first PE");
-		} else if (doMerge) {
+		} else if (mayMerge) {
 			boolean matched = false;
 			for (PE pe2 : peSet) {
-				if (pe2.matchesSrcNodeOf(pe)) {
+				if (pe2.canMerge(pe)) {
 					if (DEBUG) System.out.println("\tNo, but matches PE: " + pe2);
 					boolean changed = pe2.mergeWith(pe);
 					if (DEBUG) System.out.println("\tNew PE after merge: " + pe2); 
@@ -489,7 +501,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				}
 				Location loc2 = new Location(m, bb2, q2Idx, q2);
 				PE pe2;
-				if (!doMerge)
+				if (!mayMerge)
 					pe2 = pe;
 				else {
 					if (isFirst) {
@@ -523,7 +535,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 				}
 				Location loc2 = new Location(m, bb2, q2Idx, q2);
 				PE pe2;
-				if (!doMerge)
+				if (!mayMerge)
 					pe2 = pe;
 				else {
 					if (isFirst) {
