@@ -199,6 +199,13 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		String html = "";
 		int pass = 0;
 		for (Map.Entry<Set<Quad>, Set<Quad>> entry : hs2esMap.entrySet()) {
+			Edge.fail1 = 0;
+			Edge.fail2 = 0;
+			Edge.fail3 = 0;
+			Edge.fail4 = 0;
+			Edge.fail5 = 0;
+			Edge.fail6 = 0;
+			Edge.fail7 = 0;
 			currHs = entry.getKey();
 			currLocEs = entry.getValue();
 			currEscEs.clear();
@@ -216,6 +223,15 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			try {
 				runPass();
 			} catch (TimeoutException ex) {
+				System.out.println(
+					"fail1=" + Edge.fail1 +
+					"fail2=" + Edge.fail2 +
+					"fail3=" + Edge.fail3 +
+					"fail4=" + Edge.fail4 +
+					"fail5=" + Edge.fail5 +
+					"fail6=" + Edge.fail6 +
+					"fail7=" + Edge.fail7
+				);
 				for (Quad q : currLocEs)
 					currEscEs.add(q);
 				currLocEs.clear();
