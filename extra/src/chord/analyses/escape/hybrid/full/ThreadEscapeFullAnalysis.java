@@ -211,30 +211,28 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			System.out.println("currHs:");
 			for (Quad q : currHs)
 				System.out.println("\t" + q.toVerboseStr());
-			if (pass == 5) {
-				Timer timer = new Timer("thresc-shape-timer");
-				timer.init();
-				try {
-					runPass();
-				} catch (TimeoutException ex) {
-					for (Quad q : currLocEs)
-						currEscEs.add(q);
-					currLocEs.clear();
-				} catch (ThrEscException ex) {
-					// do nothing
-				}
+			Timer timer = new Timer("thresc-shape-timer");
+			timer.init();
+			try {
+				runPass();
+			} catch (TimeoutException ex) {
 				for (Quad q : currLocEs)
-					html += "LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
-				for (Quad q : currEscEs)
-					html += "ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
-				allLocEs.addAll(currLocEs);
-				allEscEs.addAll(currEscEs);
-				// printSummaries();
-				if (HTMLize)
-					printEdges(pass);
-				timer.done();
-				System.out.println(timer.getInclusiveTimeStr());
+					currEscEs.add(q);
+				currLocEs.clear();
+			} catch (ThrEscException ex) {
+				// do nothing
 			}
+			for (Quad q : currLocEs)
+				html += "LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
+			for (Quad q : currEscEs)
+				html += "ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
+			allLocEs.addAll(currLocEs);
+			allEscEs.addAll(currEscEs);
+			// printSummaries();
+			if (HTMLize)
+				printEdges(pass);
+			timer.done();
+			System.out.println(timer.getInclusiveTimeStr());
 			pass++;
 		}
 
