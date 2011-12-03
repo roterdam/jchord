@@ -21,6 +21,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator.Invoke;
 
+import gnu.trove.TObjectIntHashMap;
 import chord.util.tuple.object.Pair;
 import chord.program.Location;
 import chord.analyses.alias.ICICG;
@@ -48,7 +49,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	protected DomI domI;
 	protected DomM domM;
 	protected ICICG cicg;
-	protected Map<Quad, Location> invkQuadToLoc = new HashMap<Quad, Location>();
+	protected TObjectIntHashMap<Inst> quadToRPOid;
+	protected Map<Quad, Location> invkQuadToLoc;
 	protected Map<jq_Method, Set<Quad>> callersMap = new HashMap<jq_Method, Set<Quad>>();
 	protected Map<Quad, Set<jq_Method>> targetsMap = new HashMap<Quad, Set<jq_Method>>();
 	protected boolean isInited;
@@ -155,6 +157,25 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		domM = (DomM) ClassicProject.g().getTrgt("M");
 		ClassicProject.g().runTask(domM);
 		cicg = getCallGraph();
+		quadToRPOid = new TObjectIntHashMap<Inst>();
+		invkQuadToLoc = new HashMap<Quad, Location>();
+		for (jq_Method m : cicg.getNodes()) {
+			if (m.isAbstract()) continue;
+			ControlFlowGraph cfg = m.getCFG();
+			quadToRPOid.put(cfg.entry(), 0);
+			int rpoId = 1;
+			for (BasicBlock bb : cfg.reversePostOrder()) {
+				for (int i = 0; i < bb.size(); i++) {
+					Quad q = bb.getQuad(i);
+					quadToRPOid.put(q, rpoId++);
+					if (q.getOperator() instanceof Invoke) {
+						Location loc = new Location(m, bb, i, q);
+						invkQuadToLoc.put(q, loc);
+					}
+				}
+			}
+			quadToRPOid.put(cfg.exit(), rpoId);
+		}
 		isInited = true;
 	}
 
@@ -183,14 +204,21 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 
 	protected void printSummaries() {
 		for (jq_Method m : summEdges.keySet()) {
-			System.out.println("Summaries of method " + m);
+			System.out.println("SE of " + m);
 			Set<SE> seSet = summEdges.get(m);
 			if (seSet != null) {
 				for (SE se : seSet)
-					System.out.println("\t" + se);
+					System.out.println("\tSE " + se);
 			}
 		}
-		System.out.println();
+		for (Inst i : pathEdges.keySet()) {
+			System.out.println("PE of " + i);
+			Set<PE> peSet = pathEdges.get(i);
+			if (peSet != null) {
+				for (PE pe : peSet)
+					System.out.println("\tPE " + pe);
+			}
+		}
 	}
 		
 	protected jq_Method currentMethod;
@@ -207,8 +235,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 			}
 			if (DEBUG) {
 				System.out.println("WORKLIST:");
-				for (Pair<Location, PE> pair : workList)
-					System.out.println("\t" + pair);
+				for (Pair<Location, PE> pair : workList) {
+					Location loc = pair.val0;
+					Inst i = (loc.q == null) ? (Inst) loc.bb : loc.q;
+					int id = quadToRPOid.get(i);
+					System.out.println("\t" + pair + " " + id);
+				}
 			}
 			int last = workList.size() - 1;
 			Pair<Location, PE> pair = workList.remove(last);
@@ -435,8 +467,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		if (peSet == null) {
 			peSet = new HashSet<PE>();
 			pathEdges.put(i, peSet);
-			if (q != null && (q.getOperator() instanceof Invoke))
-				invkQuadToLoc.put(q, loc);
 			peSet.add(pe);
 			if (DEBUG) System.out.println("\tNo, adding it as first PE");
 		} else if (mayMerge) {
@@ -473,9 +503,20 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 			return;
 		}
 		assert (peToAdd != null);
-		if (DEBUG) System.out.println("\tAlso adding to worklist");
 		Pair<Location, PE> pair = new Pair<Location, PE>(loc, peToAdd);
-		workList.add(pair);
+		jq_Method m = loc.m;
+		int rpoId = quadToRPOid.get(i);
+		int j = workList.size() - 1;
+		for (; j >= 0; j--) {
+			Location loc2 = workList.get(j).val0;
+			if (loc2.m != m) break;
+			Inst i2 = (loc2.q != null) ? loc2.q : (Inst) loc2.bb;
+			int rpoId2 = quadToRPOid.get(i2);
+			if (rpoId2 > rpoId)
+				break;
+		}
+		if (DEBUG) System.out.println("\tAlso adding to worklist at " + (j + 1));
+		workList.add(j + 1, pair);
 	}
 
 	private void propagatePEtoPE(jq_Method m, BasicBlock bb, int qIdx, PE pe) {
