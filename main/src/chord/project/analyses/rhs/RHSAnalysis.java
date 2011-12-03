@@ -34,15 +34,12 @@ import chord.util.Alarm;
 import chord.project.Messages;
 
 /**
- * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive
- * dataflow analysis.
+ * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive dataflow analysis.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
-		extends JavaAnalysis {
+public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends JavaAnalysis {
 	protected static boolean DEBUG = false;
-
 	protected List<Pair<Location, PE>> workList = new ArrayList<Pair<Location, PE>>();
 	protected Map<Inst, Set<PE>> pathEdges = new HashMap<Inst, Set<PE>>();
 	protected Map<jq_Method, Set<SE>> summEdges = new HashMap<jq_Method, Set<SE>>();
@@ -54,14 +51,17 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	protected Map<jq_Method, Set<Quad>> callersMap = new HashMap<jq_Method, Set<Quad>>();
 	protected Map<Quad, Set<jq_Method>> targetsMap = new HashMap<Quad, Set<jq_Method>>();
 	protected boolean isInited;
+	private int timeout = Integer.getInteger("chord.rhs.timeout", 0);
+	private Alarm alarm;
+	protected final boolean useBFS = useBFS();
 	protected final boolean mustMerge = mustMerge();
 	protected final boolean mayMerge = mayMerge();
-	protected final boolean isForward = isForward();
+	protected jq_Method currentMethod;
+	protected BasicBlock currentBB;
 
 	protected RHSAnalysis() {
 		if (mustMerge && !mayMerge) {
-			Messages.fatal("Cannot create RHS analysis '" + getName() + 
-				"' with mustMerge but without mayMerge.");
+			Messages.fatal("Cannot create RHS analysis '" + getName() + "' with mustMerge but without mayMerge.");
 		}
 	}
 
@@ -73,16 +73,14 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	public abstract PE getInitPathEdge(Quad q, jq_Method m, PE pe);
 
 	// get outgoing path edge(s) from q, given incoming path edge pe into q.
-	//  q is guaranteed to not be an invoke statement, return statement,
-	// entry basic block, or exit basic block
+	// q is guaranteed to not be an invoke statement, return statement, entry basic block, or exit basic block
 	// the set returned can be reused by client
 	public abstract PE getMiscPathEdge(Quad q, PE pe);
  
 	// q is an invoke statement and m is the target method.
-	// get path edge to successor of q given path edge into q and summary
-	// edge of a target method m of the call site q
-	// returns null if the path edge into q is not compatible with the
-	// summary edge
+	// get path edge to successor of q given path edge into q and summary edge of
+	// a target method m of the call site q.
+	// returns null if the path edge into q is not compatible with the summary edge.
 	public abstract PE getInvkPathEdge(Quad q, PE clrPE, jq_Method m, SE tgtSE);
 
 	public abstract PE getCopy(PE pe);
@@ -93,24 +91,18 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 	public abstract SE getSummaryEdge(jq_Method m, PE pe);
 
 	/**
-	 * Determines whether this analysis should merge path edges at each
-	 * program point that have the same source state but different
-	 * target states and, likewise, summary edges of each method that
-	 * have the same source state and different target states.
+	 * Determines whether this analysis should merge path edges at each program point that
+	 * have the same source state but different target states and, likewise, summary edges
+	 * of each method that have the same source state and different target states.
 	 *
-	 * @return	true iff (path or summary) edges with the same source
-	 *			state and different target states should be merged.
+	 * @return	true iff (path or summary) edges with the same source state and different
+	 *			target states should be merged.
 	 */
 	public abstract boolean mayMerge();
+
 	public abstract boolean mustMerge();
 
-	/**
-	 * Determines whether this analysis is a forward analysis (as opposed
-	 * to a backward analysis.
-	 *
-	 * @return	true iff this analysis is a forward analysis.
-	 */
-	public abstract boolean isForward();
+	public boolean useBFS() { return true; }
 
 	/**
 	 * Provides the call graph to be used by the analysis.
@@ -136,9 +128,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		}
 		return targets;
 	}
-
-	private int timeout = Integer.getInteger("chord.rhs.timeout", 0);
-	private Alarm alarm;
 
 	protected void done() {
 		if (timeout > 0)
@@ -181,9 +170,9 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 
 	/**
 	 * Run an instance of the analysis afresh.
-	 * Clients may call this method multiple times from their {@link #run()}
-	 * method.  Clients must override method {@link #getInitPathEdges()} to
-	 * return a new "seed" each time they call this method.
+	 * Clients may call this method multiple times from their {@link #run()} method.
+	 * Clients must override method {@link #getInitPathEdges()} to return a new "seed"
+	 * each time they call this method.
 	 */
 	protected void runPass() throws TimeoutException {
 		init();
@@ -221,9 +210,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		}
 	}
 		
-	protected jq_Method currentMethod;
-	protected BasicBlock currentBB;
-
 	/**
 	 * Propagate forward or backward until fixpoint is reached.
 	 */
@@ -255,45 +241,23 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 			if (q == null) {
 				// method entry or method exit
 				if (bb.isEntry()) {
-					if (isForward) {
-						for (BasicBlock bb2 : bb.getSuccessors()) {
-							Quad q2;
-							int q2Idx;
-							if (bb2.size() == 0) {
-								q2 = null;
-								q2Idx = -1;
-							} else {
-								q2 = bb2.getQuad(0);
-								q2Idx = 0;
-							}
-							Location loc2 = new Location(m, bb2, q2Idx, q2);
-							PE pe2 = mayMerge ? getCopy(pe) : pe;
-							addPathEdge(loc2, pe2);
+					for (BasicBlock bb2 : bb.getSuccessors()) {
+						Quad q2;
+						int q2Idx;
+						if (bb2.size() == 0) {
+							q2 = null;
+							q2Idx = -1;
+						} else {
+							q2 = bb2.getQuad(0);
+							q2Idx = 0;
 						}
-					} else {
-						processEntry(m, pe);
+						Location loc2 = new Location(m, bb2, q2Idx, q2);
+						PE pe2 = mayMerge ? getCopy(pe) : pe;
+						addPathEdge(loc2, pe2);
 					}
 				} else {
 					assert (bb.isExit());
-					if (isForward) {
-						processExit(m, pe);
-					} else {
-						for (BasicBlock bb2 : bb.getPredecessors()) {
-							Quad q2;
-							int q2Idx;
-							int n = bb2.size();
-							if (n == 0) {
-								q2 = null;
-								q2Idx = -1;
-							} else {
-								q2 = bb2.getQuad(n - 1);
-								q2Idx = n - 1;
-							}
-							Location loc2 = new Location(m, bb2, q2Idx, q2);
-							PE pe2 = mayMerge ? getCopy(pe) : pe;
-							addPathEdge(loc2, pe2);
-						}
-					}
+					processExit(m, pe);
 				}
 			} else {
 				// invoke or misc quad
@@ -307,8 +271,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 						for (jq_Method m2 : targets) {
 							if (DEBUG) System.out.println("\tTarget: " + m2);
 							PE pe2 = getInitPathEdge(q, m2, pe);
-							ControlFlowGraph cfg2 = m2.getCFG();
-							BasicBlock bb2 = isForward ? cfg2.entry() : cfg2.exit();
+							BasicBlock bb2 = m2.getCFG().entry();
 							Location loc2 = new Location(m2, bb2, -1, null);
 							addPathEdge(loc2, pe2);
 							Set<SE> seSet = summEdges.get(m2);
@@ -338,67 +301,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		}
 	}
 
-	// called by backward analysis
-	private void processEntry(jq_Method m, PE pe) {
-		SE se = getSummaryEdge(m, pe);
-		Set<SE> seSet = summEdges.get(m);
-		if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
-		SE seToAdd = se;
-		if (seSet == null) {
-			seSet = new HashSet<SE>();
-			summEdges.put(m, seSet);
-			seSet.add(se);
-			if (DEBUG) System.out.println("\tNo, adding it as first SE");
-		} else if (mayMerge) {
-			boolean matched = false;
-			for (SE se2 : seSet) {
-				if (se2.canMerge(se)) {
-					if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
-					boolean changed = se2.mergeWith(se);
-					if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
-					if (!changed) {
-						if (DEBUG) System.out.println("\tExisting SE did not change");
-						return;
-					}
-					if (DEBUG) System.out.println("\tExisting SE changed");
-					// se2 is already in summEdges(m), so no need to add it
-					seToAdd = se2;
-					matched = true;
-					break;
-				}
-			}
-			if (!matched) {
-				if (DEBUG) System.out.println("\tNo, adding");
-				seSet.add(se);
-			}
-		} else if (!seSet.add(se)) {
-			if (DEBUG) System.out.println("\tYes, not adding");
-			return;
-		}
-		for (Quad q2 : getCallers(m)) {
-			jq_Method m2 = q2.getMethod();
-			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
-			Set<PE> peSet = pathEdges.get(q2);
-			if (peSet == null)
-				continue;
-			// make a copy because propagateSEtoPE might add a
-			// path edge to this set itself
-			// TODO: fix this eventually
-			peSet = new ArraySet<PE>(peSet);
-			Location loc2 = invkQuadToLoc.get(q2);
-			for (PE pe2 : peSet) {
-				if (DEBUG) System.out.println("\tTesting PE: " + pe2);
-				boolean match = propagateSEtoPE(pe2, loc2, m, seToAdd);
-				if (match) {
-					if (DEBUG) System.out.println("\tMatched");
-				} else {
-					if (DEBUG) System.out.println("\tDid not match");
-				}
-			}
-		}
-	}
-	
-	// called by forward analysis
 	private void processExit(jq_Method m, PE pe) {
 		SE se = getSummaryEdge(m, pe);
 		Set<SE> seSet = summEdges.get(m);
@@ -436,14 +338,13 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 			return;
 		}
 		for (Quad q2 : getCallers(m)) {
-			jq_Method m2 = q2.getMethod();
-			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + m2);
+			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + q2.getMethod());
 			Set<PE> peSet = pathEdges.get(q2);
 			if (peSet == null)
 				continue;
-			// make a copy because propagateSEtoPE might add a
-			// path edge to this set itself
-			// TODO: fix this eventually
+			// make a copy as propagateSEtoPE might add a path edge to this set itself;
+			// in this case we could get a ConcurrentModification exception if we don't
+			// make a copy.
 			List<PE> peList = new ArrayList<PE>(peSet);
 			Location loc2 = invkQuadToLoc.get(q2);
 			for (PE pe2 : peList) {
@@ -504,89 +405,54 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge>
 		}
 		assert (peToAdd != null);
 		Pair<Location, PE> pair = new Pair<Location, PE>(loc, peToAdd);
-		jq_Method m = loc.m;
-		int rpoId = quadToRPOid.get(i);
 		int j = workList.size() - 1;
-		for (; j >= 0; j--) {
-			Location loc2 = workList.get(j).val0;
-			if (loc2.m != m) break;
-			Inst i2 = (loc2.q != null) ? loc2.q : (Inst) loc2.bb;
-			int rpoId2 = quadToRPOid.get(i2);
-			if (rpoId2 > rpoId)
-				break;
+		if (useBFS) {
+			jq_Method m = loc.m;
+			int rpoId = quadToRPOid.get(i);
+			for (; j >= 0; j--) {
+				Location loc2 = workList.get(j).val0;
+				if (loc2.m != m) break;
+				Inst i2 = (loc2.q != null) ? loc2.q : (Inst) loc2.bb;
+				int rpoId2 = quadToRPOid.get(i2);
+				if (rpoId2 > rpoId)
+					break;
+			}
 		}
 		if (DEBUG) System.out.println("\tAlso adding to worklist at " + (j + 1));
 		workList.add(j + 1, pair);
 	}
 
 	private void propagatePEtoPE(jq_Method m, BasicBlock bb, int qIdx, PE pe) {
-		if (isForward) {
-			// forward propagate
-			if (qIdx != bb.size() - 1) {
-				int q2Idx = qIdx + 1;
-				Quad q2 = bb.getQuad(q2Idx);
-				Location loc2 = new Location(m, bb, q2Idx, q2);
-				addPathEdge(loc2, pe);
-				return;
+		if (qIdx != bb.size() - 1) {
+			int q2Idx = qIdx + 1;
+			Quad q2 = bb.getQuad(q2Idx);
+			Location loc2 = new Location(m, bb, q2Idx, q2);
+			addPathEdge(loc2, pe);
+			return;
+		}
+		boolean isFirst = true;
+		for (BasicBlock bb2 : bb.getSuccessors()) {
+			int q2Idx;
+			Quad q2;
+			if (bb2.size() == 0) {
+				q2Idx = -1;
+				q2 = null;
+			} else {
+				q2Idx = 0;
+				q2 = bb2.getQuad(0);
 			}
-			boolean isFirst = true;
-			for (BasicBlock bb2 : bb.getSuccessors()) {
-				int q2Idx;
-				Quad q2;
-				if (bb2.size() == 0) {
-					q2Idx = -1;
-					q2 = null;
-				} else {
-					q2Idx = 0;
-					q2 = bb2.getQuad(0);
-				}
-				Location loc2 = new Location(m, bb2, q2Idx, q2);
-				PE pe2;
-				if (!mayMerge)
+			Location loc2 = new Location(m, bb2, q2Idx, q2);
+			PE pe2;
+			if (!mayMerge)
+				pe2 = pe;
+			else {
+				if (isFirst) {
 					pe2 = pe;
-				else {
-					if (isFirst) {
-						pe2 = pe;
-						isFirst = false;
-					} else
-						pe2 = getCopy(pe);
-				}
-				addPathEdge(loc2, pe2);
+					isFirst = false;
+				} else
+					pe2 = getCopy(pe);
 			}
-		} else {
-			// backward propagate
-			if (qIdx != 0) {
-				int q2Idx = qIdx - 1;
-				Quad q2 = bb.getQuad(q2Idx);
-				Location loc2 = new Location(m, bb, q2Idx, q2);
-				addPathEdge(loc2, pe);
-				return;
-			}
-			boolean isFirst = true;
-			for (BasicBlock bb2 : bb.getPredecessors()) {
-				int q2Idx;
-				Quad q2;
-				int n = bb2.size();
-				if (n == 0) {
-					q2Idx = -1;
-					q2 = null;
-				} else {
-					q2Idx = n - 1;
-					q2 = bb2.getQuad(n - 1);
-				}
-				Location loc2 = new Location(m, bb2, q2Idx, q2);
-				PE pe2;
-				if (!mayMerge)
-					pe2 = pe;
-				else {
-					if (isFirst) {
-						pe2 = pe;
-						isFirst = false;
-					} else
-						pe2 = getCopy(pe);
-				}
-				addPathEdge(loc2, pe2);
-			}
+			addPathEdge(loc2, pe2);
 		}
 	}
 
