@@ -30,7 +30,7 @@ public class Edge implements IEdge {
 		SrcNode srcNode2 = ((Edge) pe2).srcNode;
 		if (!srcNode.equals(srcNode2))
 			return false;
-		if (ThreadEscapeFullAnalysis.joinKind != JoinKind.PJOIN)
+		if (ThreadEscapeFullAnalysis.join != Join.PJOIN)
 			return true;
 		DstNode dstNode1 = this.dstNode;
 		DstNode dstNode2 = ((Edge) pe2).dstNode;
