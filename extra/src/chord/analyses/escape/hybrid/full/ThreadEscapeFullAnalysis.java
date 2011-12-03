@@ -54,7 +54,7 @@ import chord.program.Location;
 import chord.project.Messages;
 import chord.project.analyses.ProgramRel;
 import chord.project.analyses.rhs.TimeoutException;
-import chord.project.analyses.rhs.ForwardRHSAnalysis;
+import chord.project.analyses.rhs.RHSAnalysis;
 import chord.bddbddb.Rel.IntPairIterable;
 import chord.analyses.heapacc.DomE;
 import chord.analyses.field.DomF;
@@ -77,9 +77,11 @@ import chord.project.OutDirUtils;
  * Produces files shape_fullEscE.txt, shape_fullLocE.txt, and results.html
  *
  * Relevant system properties:
- * chord.escape.join.kind = [lossy|pjoin|naive] (default = lossy)
+ * chord.escape.join = [lossy|pjoin|naive] (default = lossy)
+ * chord.escape.order = [bfs|dfs] (default = dfs)
  * chord.escape.optimize = [true|false] (default = true)
- * chord.rhs.timeout = N milliseconds (default = 0)
+ * chord.ssa = [true|false] (default = true)
+ * chord.rhs.timeout = N milliseconds (default = 0, no timeouts)
  * chord.escape.html = [true|false] (default = false)
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -88,11 +90,12 @@ import chord.project.OutDirUtils;
 	name = "full-thresc-java",
 	consumes = { "locEH" }
 )
-public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
+public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet<FldObj>(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
-	public static JoinKind joinKind;
+	public static Join join;
 	private static boolean optimizeSumms;
+	private static boolean useBFS;
 	private static DomM domM;
 	private static DomI domI;
 	private static DomV domV;
@@ -114,18 +117,27 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private jq_Method threadStartMethod;
 
 	static {
- 		String joinKindStr = System.getProperty("chord.escape.join.kind", "lossy");
-		if (joinKindStr.equals("lossy"))
-			joinKind = JoinKind.LOSSY;
-		else if (joinKindStr.equals("pjoin"))
-		 	joinKind = JoinKind.PJOIN;
-		else if (joinKindStr.equals("naive"))
-			joinKind = JoinKind.NAIVE;
+ 		String joinStr = System.getProperty("chord.escape.join", "lossy");
+		if (joinStr.equals("lossy"))
+			join = Join.LOSSY;
+		else if (joinStr.equals("pjoin"))
+		 	join = Join.PJOIN;
+		else if (joinStr.equals("naive"))
+			join = Join.NAIVE;
 		else
-			Messages.fatal("Unknown value for property chord.escape.join.kind: " + joinKindStr);
+			Messages.fatal("Unknown value for property chord.escape.join: " + joinStr);
+ 		String orderStr = System.getProperty("chord.escape.order", "dfs");
+		if (orderStr.equals("bfs"))
+			useBFS = true;
+		else if (orderStr.equals("dfs"))
+			useBFS = false;
+		else 
+			Messages.fatal("Unknown value for property chord.escape.order: " + orderStr);
  		optimizeSumms = System.getProperty("chord.escape.optimize", "true").equals("true");
-		System.out.println("chord.escape.join.kind=" + joinKind);
+		System.out.println("chord.escape.join=" + joinStr);
 		System.out.println("chord.escape.optimize=" + optimizeSumms);
+		System.out.println("chord.escape.order=" + orderStr);
+
 	}
 
 	@Override
@@ -414,13 +426,16 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
+	public boolean useBFS() { return useBFS; }
+
+	@Override
 	public boolean mayMerge() {
-		return joinKind != JoinKind.NAIVE;
+		return join != Join.NAIVE;
 	}
 
 	@Override
 	public boolean mustMerge() {
-		return joinKind == JoinKind.LOSSY;
+		return join == Join.LOSSY;
 	}
 
 	@Override
