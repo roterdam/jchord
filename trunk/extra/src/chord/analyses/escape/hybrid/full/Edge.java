@@ -17,7 +17,6 @@ import chord.project.analyses.rhs.IEdge;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Edge implements IEdge {
-	public static int fail1, fail2, fail3, fail4, fail5, fail6, fail7;
 	final SrcNode srcNode;
 	// dstNode is intentionally not final: it is updated when this edge
 	// is merged with another edge with matching srcNode; see mergeWith
@@ -41,7 +40,7 @@ public class Edge implements IEdge {
 		// boolean isKill1 = dstNode1.isKill;
 		// boolean isKill2 = dstNode2.isKill;
 		// if (isKill1 != isKill2) {
-		//	fail1++; return false;
+		//	return false;
 		// }
         Obj[] env1 = dstNode1.env;
         Obj[] env2 = dstNode2.env;
@@ -57,23 +56,20 @@ public class Edge implements IEdge {
             Obj pts2 = env2[i];
 			if (pts1 == pts2) continue;
 			if (pts1 == Obj.EMTY || pts2 == Obj.BOTH) {
-				if (bigger == 1) { if (pts1 == Obj.EMTY) fail2++; else fail3++; return false; }
+				if (bigger == 1) return false;
 				bigger = 2;
 				continue;
 			}
 			if (pts2 == Obj.EMTY || pts1 == Obj.BOTH) {
-				if (bigger == 2) { if (pts2 == Obj.EMTY) fail2++; else fail3++; return false; }
+				if (bigger == 2) return false;
 				bigger = 1;
 				continue;
 			}
 			if ((pts1 == Obj.ONLY_ESC && pts2 == Obj.ONLY_LOC) ||
 			    (pts2 == Obj.ONLY_ESC && pts1 == Obj.ONLY_LOC))
-				;
-			else {
-				System.out.println("FAILED");
-				throw new RuntimeException();
-			}
-			fail4++; return false;
+				return false;
+			System.out.println("FAILED");
+			throw new RuntimeException();
 		}
         ArraySet<FldObj> heap1 = dstNode1.heap;
         ArraySet<FldObj> heap2 = dstNode2.heap;
@@ -88,17 +84,17 @@ public class Edge implements IEdge {
             for (int j = 0; j < n2; j++) {
                 FldObj fo2 = heap2.get(j);
                 if (fo2.f == f) {
-                    boolean isLoc1 = fo1.isLoc;
-                    boolean isEsc1 = fo1.isEsc;
+					boolean isLoc1 = fo1.isLoc;
+					boolean isEsc1 = fo1.isEsc;
                     boolean isLoc2 = fo2.isLoc;
                     boolean isEsc2 = fo2.isEsc;
                     if (isLoc1 == isLoc2 && isEsc1 == isEsc2) {
                         ;
 					} else if (isLoc1 && isEsc1) {
-						if (bigger == 2) { fail5++; return false; }
+						if (bigger == 2) return false;
 						bigger = 1;
 					} else if (isLoc2 && isEsc2) {
-						if (bigger == 1) { fail5++; return false; }
+						if (bigger == 1) return false;
 						bigger = 2;
 					} else {
 						if ((!isLoc1 && !isEsc1) ||
@@ -106,14 +102,14 @@ public class Edge implements IEdge {
 							System.out.println("FAILED");
 							throw new RuntimeException();
 						}
-						fail6++; return false;
+						return false;
 					}
                     found = true;
                     break;
                 }
             }
 			if (!found) {
-				if (bigger == 2) { fail7++; return false; }
+				if (bigger == 2) return false;
 				bigger = 1;
 			}
 		}
@@ -129,9 +125,9 @@ public class Edge implements IEdge {
                 }
             }
             if (!found) {
-				if (bigger == 1) {
-					fail7++; return false;
-				} else
+				if (bigger == 1)
+					return false;
+				else
 					return true;
 			}
         }
@@ -265,23 +261,4 @@ public class Edge implements IEdge {
 		return srcNode + ";" + dstNode;
 	}
 }
-
-/*
-           if (bigger != 3) {
-               if (pts1 == Obj.EMTY) {
-                   if (pts2 != Obj.EMTY)
-                       bigger = (bigger == 1) ? 3 : 2;
-               } else if (pts1 == Obj.BOTH) {
-                   if (pts2 != Obj.BOTH)
-                       bigger = (bigger == 2) ? 3 : 1;
-               }
-               if (pts2 == Obj.EMTY) {
-                   if (pts1 != Obj.EMTY)
-                       bigger = (bigger == 2) ? 3 : 1;
-               } else if (pts2 == Obj.BOTH) {
-                   if (pts1 != Obj.BOTH)
-                       bigger = (bigger == 1) ? 3 : 2;
-               }
-           }
-*/
 

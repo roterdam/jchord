@@ -92,13 +92,13 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet<FldObj>(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
 	public static JoinKind joinKind;
-	private final boolean optimizeSumms;
-	private DomM domM;
-	private DomI domI;
-	private DomV domV;
-	private DomF domF;
-	private DomH domH;
-	private DomE domE;
+	private static boolean optimizeSumms;
+	private static DomM domM;
+	private static DomI domI;
+	private static DomV domV;
+	private static DomF domF;
+	private static DomH domH;
+	private static DomE domE;
 	private int varId[];
 	private TObjectIntHashMap<jq_Method> methToNumVars = new TObjectIntHashMap<jq_Method>();
 	private TObjectIntHashMap<jq_Method> methToFstVar  = new TObjectIntHashMap<jq_Method>();
@@ -113,7 +113,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
 
-	public ThreadEscapeFullAnalysis() {
+	static {
  		String joinKindStr = System.getProperty("chord.escape.join.kind", "lossy");
 		if (joinKindStr.equals("lossy"))
 			joinKind = JoinKind.LOSSY;
@@ -199,13 +199,6 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 		String html = "";
 		int pass = 0;
 		for (Map.Entry<Set<Quad>, Set<Quad>> entry : hs2esMap.entrySet()) {
-			Edge.fail1 = 0;
-			Edge.fail2 = 0;
-			Edge.fail3 = 0;
-			Edge.fail4 = 0;
-			Edge.fail5 = 0;
-			Edge.fail6 = 0;
-			Edge.fail7 = 0;
 			currHs = entry.getKey();
 			currLocEs = entry.getValue();
 			currEscEs.clear();
@@ -218,37 +211,30 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 			System.out.println("currHs:");
 			for (Quad q : currHs)
 				System.out.println("\t" + q.toVerboseStr());
-			Timer timer = new Timer("thresc-shape-timer");
-			timer.init();
-			try {
-				runPass();
-			} catch (TimeoutException ex) {
-				System.out.println(
-					"fail1=" + Edge.fail1 +
-					"fail2=" + Edge.fail2 +
-					"fail3=" + Edge.fail3 +
-					"fail4=" + Edge.fail4 +
-					"fail5=" + Edge.fail5 +
-					"fail6=" + Edge.fail6 +
-					"fail7=" + Edge.fail7
-				);
+			if (pass == 5) {
+				Timer timer = new Timer("thresc-shape-timer");
+				timer.init();
+				try {
+					runPass();
+				} catch (TimeoutException ex) {
+					for (Quad q : currLocEs)
+						currEscEs.add(q);
+					currLocEs.clear();
+				} catch (ThrEscException ex) {
+					// do nothing
+				}
 				for (Quad q : currLocEs)
-					currEscEs.add(q);
-				currLocEs.clear();
-			} catch (ThrEscException ex) {
-				// do nothing
+					html += "LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
+				for (Quad q : currEscEs)
+					html += "ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
+				allLocEs.addAll(currLocEs);
+				allEscEs.addAll(currEscEs);
+				// printSummaries();
+				if (HTMLize)
+					printEdges(pass);
+				timer.done();
+				System.out.println(timer.getInclusiveTimeStr());
 			}
-			for (Quad q : currLocEs)
-				html += "LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
-			for (Quad q : currEscEs)
-				html += "ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
-			allLocEs.addAll(currLocEs);
-			allEscEs.addAll(currEscEs);
-			// printSummaries();
-			if (HTMLize)
-				printEdges(pass);
-			timer.done();
-			System.out.println(timer.getInclusiveTimeStr());
 			pass++;
 		}
 
@@ -1049,7 +1035,7 @@ public class ThreadEscapeFullAnalysis extends ForwardRHSAnalysis<Edge, Edge> {
 				o = fo.isEsc ? "*=" : "L=";
 			else
 				o = fo.isEsc ? "E=" : "N=";
-			String f = fo.f == null ? "null" : (fo.f.getName() + "@" + fo.f.getDeclaringClass().getName());
+			int f = domF.indexOf(fo.f);
 			String x = o + f;
 			s = (s == null) ? x : (s + "," + x);
 		}
