@@ -268,7 +268,7 @@ public class Quad implements Inst, Serializable {
         return s.toString();
     }
     
-    public static final boolean DETERMINISTIC = true;
+    public static final boolean DETERMINISTIC = false;
     
     /* (non-Javadoc)
      * @see java.lang.Object#hashCode()
