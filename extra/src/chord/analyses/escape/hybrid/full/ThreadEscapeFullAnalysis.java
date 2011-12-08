@@ -78,7 +78,7 @@ import chord.project.OutDirUtils;
  *
  * Relevant system properties:
  * chord.escape.join = [lossy|pjoin|naive] (default = lossy)
- * chord.escape.order = [bfs|dfs] (default = dfs)
+ * chord.escape.order = [bfs|dfs] (default = bfs)
  * chord.escape.optimize = [true|false] (default = true)
  * chord.ssa = [true|false] (default = true)
  * chord.rhs.timeout = N milliseconds (default = 0, no timeouts)
@@ -126,7 +126,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			join = Join.NAIVE;
 		else
 			Messages.fatal("Unknown value for property chord.escape.join: " + joinStr);
- 		String orderStr = System.getProperty("chord.escape.order", "dfs");
+ 		String orderStr = System.getProperty("chord.escape.order", "bfs");
 		if (orderStr.equals("bfs"))
 			useBFS = true;
 		else if (orderStr.equals("dfs"))
@@ -235,9 +235,11 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 				// do nothing
 			}
 			for (Quad q : currLocEs)
-				html += "LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
+				System.out.println("LOC: " + q.toVerboseStr());
+				// html += "LOC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
 			for (Quad q : currEscEs)
-				html += "ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
+				System.out.println("ESC: " + q.toVerboseStr());
+				// html += "ESC: " + q.getID() + ": " + toHTMLStr(pass, q.getMethod()) + "<br>";
 			allLocEs.addAll(currLocEs);
 			allEscEs.addAll(currEscEs);
 			// printSummaries();
