@@ -9,6 +9,7 @@ import chord.analyses.alias.ICICG;
 import chord.program.Location;
 import chord.project.Chord;
 import chord.project.ClassicProject;
+import chord.project.Messages;
 import chord.project.analyses.rhs.RHSAnalysis;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
@@ -19,6 +20,14 @@ import chord.util.tuple.object.Trio;
 public class TypestateAnalysis extends RHSAnalysis<Edge, Edge> {
 	
 	private ICICG cicg;
+	
+	static{
+		String stateSpecFile = System.getProperty("chord.typestate.specfile", "typestatespec.txt");
+		if(!TypeStateParser.parseStateSpec(stateSpecFile)){
+			Messages.fatal("Problem occured while parsing state spec file:"+stateSpecFile+",Make sure that its in the required format");
+		}
+		
+	}
 	public void run() {
 		Set<Trio<Quad, Quad, ???>> queries;
 		for (each tuple in queryIHS) {

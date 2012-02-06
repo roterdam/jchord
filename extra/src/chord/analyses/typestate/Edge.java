@@ -1,7 +1,6 @@
 package chord.analyses.typestate;
 
 
-import joeq.Class.jq_Field;
 import chord.util.ArraySet;
 import chord.project.analyses.rhs.IEdge;
 
