@@ -1,0 +1,20 @@
+remember:
+* use static very sparingly (typically only for read-only strings and so on)
+* use private and final as often as possible
+* use @Override whenever possible
+* put as many asserts as possible
+
+0. remove as many static things as possible
+
+1. remove error state; if you ever arrive at a recognized function f in state S such that f neither asserts !S nor does f have a transition S -> ..., then assume state S persists
+
+2. create a bunch of standard specs from TOSEM paper and WALA source repo (Iterator, Socket, etc.)
+
+3. define chord.ts.maxdepth = 3
+
+4. create a program domain say AccPaths of the type Dom<AccessPath>
+
+5. consume a program relation TypeStateParamRel of signature (P x H x AccPaths)
+
+6. to test 4 and 5: set AccPaths = (V U F), and TypeStateParamRel to full (P x H x AccPaths)
+
