@@ -8,67 +8,65 @@ package chord.analyses.escape.hybrid.full;
 
 import gnu.trove.TObjectIntHashMap;
 
+import java.io.File;
+import java.io.PrintWriter;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Set;
-import java.io.PrintWriter;
-import java.io.File;
-import java.io.IOException;
 
-import joeq.Class.jq_Type;
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.Operand;
-import joeq.Compiler.Quad.Operator;
-import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.QuadVisitor;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
+import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
-import joeq.Compiler.Quad.Operator.Return.THROW_A;
+import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.ALoad;
 import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Getfield;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Operator.Move;
-import joeq.Compiler.Quad.Operator.New;
-import joeq.Compiler.Quad.Operator.Phi;
-import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
+import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.Operator.NewArray;
+import joeq.Compiler.Quad.Operator.Phi;
 import joeq.Compiler.Quad.Operator.Putfield;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import joeq.Compiler.Quad.Operator.Return;
+import joeq.Compiler.Quad.Operator.Return.THROW_A;
+import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.RegisterFactory.Register;
-
-import chord.analyses.escape.ThrEscException;
-import chord.analyses.alias.ICICG;
 import chord.analyses.alias.CICGAnalysis;
-import chord.util.tuple.object.Pair;
-import chord.util.tuple.integer.IntPair;
-import chord.program.Program;
-import chord.program.Location;
-import chord.project.Messages;
-import chord.project.analyses.ProgramRel;
-import chord.project.analyses.rhs.TimeoutException;
-import chord.project.analyses.rhs.RHSAnalysis;
-import chord.bddbddb.Rel.IntPairIterable;
-import chord.analyses.heapacc.DomE;
-import chord.analyses.field.DomF;
+import chord.analyses.alias.ICICG;
 import chord.analyses.alloc.DomH;
+import chord.analyses.escape.ThrEscException;
+import chord.analyses.field.DomF;
+import chord.analyses.heapacc.DomE;
 import chord.analyses.invk.DomI;
 import chord.analyses.method.DomM;
 import chord.analyses.var.DomV;
+import chord.bddbddb.Rel.IntPairIterable;
+import chord.program.Location;
+import chord.program.Program;
 import chord.project.Chord;
-import chord.project.Config;
 import chord.project.ClassicProject;
+import chord.project.Config;
+import chord.project.Messages;
+import chord.project.OutDirUtils;
+import chord.project.analyses.ProgramRel;
+import chord.project.analyses.rhs.RHSAnalysis;
+import chord.project.analyses.rhs.TimeoutException;
 import chord.util.ArraySet;
 import chord.util.Timer;
-
-import chord.project.OutDirUtils;
+import chord.util.tuple.integer.IntPair;
+import chord.util.tuple.object.Pair;
 
 /**
  * Static thread-escape analysis.
@@ -82,6 +80,7 @@ import chord.project.OutDirUtils;
  * chord.escape.optimize = [true|false] (default = true)
  * chord.ssa = [true|false] (default = true)
  * chord.rhs.timeout = N milliseconds (default = 0, no timeouts)
+ * chord.escape.rings = [true|false] (default = false)
  * chord.escape.html = [true|false] (default = false)
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -94,6 +93,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet<FldObj>(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
 	public static Join join;
+	public static boolean rings;
 	private static boolean optimizeSumms;
 	private static boolean useBFS;
 	private static DomM domM;
@@ -134,10 +134,17 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		else 
 			Messages.fatal("Unknown value for property chord.escape.order: " + orderStr);
  		optimizeSumms = System.getProperty("chord.escape.optimize", "true").equals("true");
+ 		String ringStr = System.getProperty("chord.escape.rings","false");
+ 		if(ringStr.equals("true"))
+ 			rings = true;
+ 		else if(ringStr.equals("false"))
+ 			rings = false;
+ 		else
+ 			Messages.fatal("Unknown value for property chord.escape.rings: " + ringStr);
 		System.out.println("chord.escape.join=" + joinStr);
 		System.out.println("chord.escape.optimize=" + optimizeSumms);
 		System.out.println("chord.escape.order=" + orderStr);
-
+		System.out.println("chord.escape.rings=" + ringStr);
 	}
 
 	@Override
@@ -373,12 +380,12 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
             for (BasicBlock bb : m.getCFG().reversePostOrder()) {
                 if (bb.isEntry() || bb.isExit()) {
                     w.println(bb.isEntry() ? "ENTRY:" : "EXIT:");
-                    Set<Edge> peSet = pathEdges.get(bb);
+                    Set<Edge> peSet = getPathEdge((EntryOrExitBasicBlock)bb);
 					w.println(toString(peSet, m));
                 } else {
                     for (Quad q : bb) {
                         w.println(q.getID() + ":");
-                    	Set<Edge> peSet = pathEdges.get(q);
+                    	Set<Edge> peSet = getPathEdge(q);
 						w.println(toString(peSet, m));
                     }
                 }
@@ -1083,6 +1090,11 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			s += t;
 		}
 		return "[" + s + "]";
+	}
+
+	@Override
+	public boolean keepRings() {
+		return rings;
 	}
 }
 

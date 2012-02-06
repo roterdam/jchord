@@ -6,6 +6,8 @@
  */
 package chord.analyses.escape.hybrid.full;
 
+import java.util.Arrays;
+
 import chord.util.ArraySet;
 
 /**
@@ -32,12 +34,7 @@ public class SrcNode {
 		if (!(o instanceof SrcNode))
 			return false;
 		SrcNode that = (SrcNode) o;
-		int n = env.length;
-		for (int i = 0; i < n; i++) {
-			if (env[i] != that.env[i])
-				return false;
-		}
-		return heap.equals(that.heap);
+		return Arrays.equals(env, that.env)&&heap.equals(that.heap);
 	}
 	public String toString() {
 		return "v@s=" + ThreadEscapeFullAnalysis.toString(env) +
