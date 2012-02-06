@@ -10,15 +10,10 @@ import chord.util.ArraySet;
 
 public class TypeState {
 	private static ArraySet<TypeState> validStates;
-	
-	
 	private String name;
-	
-	private static TypeState errorState;
 		
 	static{
 		validStates = new ArraySet<TypeState>();
-		errorState = null;
 	}
 	
 	private TypeState(String name)
@@ -26,14 +21,9 @@ public class TypeState {
 		this.name = name;
 	}
 	
-	public static void insertState(String name,boolean isErrorState)
+	public static void insertState(String name)
 	{
-		TypeState state = new TypeState(name);
-		if(isErrorState && errorState==null)
-		{
-			errorState = state;
-		}
-		validStates.add(state);
+		validStates.add(new TypeState(name));
 	}
 		
 	public static TypeState getState(String name)
@@ -45,12 +35,6 @@ public class TypeState {
 		}
 		return null;
 	}
-	
-	public static boolean isErrorState(TypeState currentstate)
-	{
-		return currentstate != null && errorState==currentstate;
-	}
-	
 	
 	//Overriding equals and getHashCode 
 	
