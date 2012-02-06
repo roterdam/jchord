@@ -5,9 +5,13 @@ import chord.util.ArraySet;
 import chord.project.analyses.rhs.IEdge;
 
 public class Edge implements IEdge {
-	ArraySet<AbstractState> srcNode;
+	final ArraySet<AbstractState> srcNode;
 	ArraySet<AbstractState> dstNode;
 	
+	public Edge(ArraySet<AbstractState> srcNode,ArraySet<AbstractState> dstNode){
+		this.srcNode = srcNode;
+		this.dstNode = dstNode;
+	}
 	@Override
 	public boolean canMerge(IEdge edge) {
 		// TODO Auto-generated method stub
