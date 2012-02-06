@@ -38,11 +38,13 @@ public class TypeState {
 	
 	//Overriding equals and getHashCode 
 	
-	public int hashcode()
+	@Override
+	public int hashCode()
 	{
 		return this.name.hashCode();
 	}
 	
+	@Overrides
 	public boolean equals(Object ob)
 	{
 		if(ob == this)

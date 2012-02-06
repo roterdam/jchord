@@ -25,20 +25,17 @@ import chord.analyses.method.DomM;
 @Chord(
     name = "typestate-java", consumes = "queryIHS"
 )
-public class TypestateAnalysis extends RHSAnalysis<Edge, Edge> {
+public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	
 	private ICICG cicg;
 	private static DomM domM;
 	private static DomI domI;
 	
-	static{
-		String stateSpecFile = System.getProperty("chord.typestate.specfile", "typestatespec.txt");
+	public void run() {
+		String stateSpecFile = System.getProperty("chord.ts.file", "typestatespec.txt");
 		if(!TypeStateParser.parseStateSpec(stateSpecFile)){
 			Messages.fatal("Problem occured while parsing state spec file:"+stateSpecFile+",Make sure that its in the required format");
 		}
-		
-	}
-	public void run() {
 		domI = (DomI) ClassicProject.g().getTrgt("I");
         ClassicProject.g().runTask(domI);
         domM = (DomM) ClassicProject.g().getTrgt("M");
@@ -46,6 +43,7 @@ public class TypestateAnalysis extends RHSAnalysis<Edge, Edge> {
 		Set<Trio<Quad, Quad, ???>> queries;
 		for (each tuple in queryIHS) {
 			queries.add(tuple);
+			// TODO: call runPass()
 		}
 	}
 	
@@ -142,6 +140,6 @@ public class TypestateAnalysis extends RHSAnalysis<Edge, Edge> {
 	@Override
 	public boolean mustMerge() {
 		// TODO Auto-generated method stub
-		return true;
+		return false;
 	}
 }
