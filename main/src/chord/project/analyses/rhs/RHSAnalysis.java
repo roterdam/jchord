@@ -21,6 +21,7 @@ import java.util.TreeMap;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Operator.Invoke;
@@ -73,7 +74,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 					+ "' with mustMerge but without mayMerge.");
 		}
 		if (mustMerge && keepRings) {
-			Messages.fatal("Cnnot create RHS analysis '" + getName()
+			Messages.fatal("Cannot create RHS analysis '" + getName()
 					+ "' with keepRings and mustMerge");
 		}
 	}
@@ -110,7 +111,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 
 	public Set<PE> getPathEdge(Inst inst) {
 		Set<PE> ret = new HashSet<PE>();
-		for (Map.Entry<Integer, Set<PE>> entry : pathEdges.get(inst).entrySet()) {
+		Map<Integer, Set<PE>> peSet = pathEdges.get(inst);
+		if (inst == null)
+			return ret;
+		for (Map.Entry<Integer, Set<PE>> entry : peSet.entrySet()) {
 			ret.addAll(entry.getValue());
 		}
 		return ret;
@@ -309,7 +313,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 					Set<jq_Method> targets = getTargets(q);
 					if (targets.isEmpty()) {
 						PE pe2 = mayMerge ? getCopy(pe) : pe;
-						propagatePEtoPE(m, bb, loc.qIdx, pe2, trajLength);
+						propagatePEtoPE(m, bb, loc.qIdx, pe2, newTrajLength);
 					} else {
 						for (jq_Method m2 : targets) {
 							if (DEBUG)
@@ -327,7 +331,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 							for (SE se : seSet) {
 								if (DEBUG)
 									System.out.println("\tTesting SE: " + se);
-								if (propagateSEtoPE(pe, trajLength, loc, m2, se)) {
+								if (propagateSEtoPE(pe, newTrajLength, loc, m2,
+										se)) {
 									if (DEBUG)
 										System.out.println("\tMatched");
 									if (mustMerge) {
@@ -483,6 +488,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 									System.out
 											.println("\tExisting PE did not change but its trajectory length changed");
 								}
+							} else {// pe subsumes storedPE
+								if (DEBUG) {
+									System.out
+											.println("\tExisting PE and its trajectory length did not change");
+								}
+								return;
 							}
 						} else if (DEBUG)
 							System.out.println("\tExisting PE changed");
@@ -499,6 +510,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 				this.addPathEdgeToRings(peToMove, trajLength, rings);
 				for (int j = workList.size() - 1; j >= 0; j--) {
 					Trio<Location, PE, Integer> trio = workList.get(j);
+					if (!trio.val0.equals(loc))
+						continue;
 					PE peInWL = trio.val1;
 					if (peInWL.equals(peToMove)) {
 						trio.val2 = Math.min(trio.val2, trajLength);
@@ -596,29 +609,158 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 		PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
 		if (pe2 == null)
 			return false;
-		propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2,
-				keepRings ? trajLength + 1 : trajLength);
+		propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2, trajLength);
 		return true;
 	}
 
-	public class PEIterator implements Iterator<PE> {
-		private Trio<Inst,PE,Integer> currentTrio;
-		private Stack<Inst> callStack;
-		public PEIterator(Inst currentInst,PE currentPE, Integer currentTrajLength){
-			currentTrio = new Trio<Inst,PE,Integer>(currentInst,currentPE,currentTrajLength);
-			callStack = new Stack<Inst>();
+	public BackTraceIterator getBackTraceIterator(Inst inst, PE pe,
+			Integer trajLength) {
+		return new BackTraceIterator(inst, pe, trajLength);
+	}
+
+	/**
+	 * The backward trace iterator.
+	 * 
+	 * @author xin
+	 * 
+	 */
+	public class BackTraceIterator implements Iterator<Trio<Inst, PE, Integer>> {
+		private Trio<Inst, PE, Integer> currentTrio;
+		private Stack<Trio<Inst, PE, Integer>> callStack;
+
+		public BackTraceIterator(Inst currentInst, PE currentPE,
+				Integer currentTrajLength) {
+			if (keepRings == false)
+				Messages.fatal("Cannot create a backward trace iterator when no rings are kept to record the trajactory length.");
+			currentTrio = new Trio<Inst, PE, Integer>(currentInst, currentPE,
+					currentTrajLength);
+			callStack = new Stack<Trio<Inst, PE, Integer>>();
 		}
+
 		@Override
 		public boolean hasNext() {
-			return currentTrio.val2!=0;
+			return currentTrio.val2 != 0;
 		}
 
 		@Override
-		public PE next() {
-			// TODO Auto-generated method stub
-			return null;
+		public Trio<Inst, PE, Integer> next() {
+			Inst inst = currentTrio.val0;
+			PE pe = currentTrio.val1;
+			Integer trajLength = currentTrio.val2;
+			BasicBlock bb = inst.getBasicBlock();
+			if (bb.isEntry()) {
+				if (!callStack.isEmpty()) {
+					currentTrio = callStack.pop();
+					return currentTrio;
+				}
+				Set<Quad> callers = getCallers(inst.getMethod());
+				for (Quad invoke : callers) {
+					Map<Integer, Set<PE>> ring = pathEdges.get(invoke);
+					Set<PE> pes = ring.get(trajLength);// well, I make the
+														// invoke statement
+														// share the same length
+														// with the entry of the
+														// method
+					if (pes != null && pes.size() != 0)
+						for (PE storedPE : pes) {
+							if (getInitPathEdge(invoke, inst.getMethod(),
+									storedPE).equals(pe)) {
+								currentTrio = new Trio<Inst, PE, Integer>(
+										invoke, storedPE, trajLength);
+								return currentTrio;
+							}
+						}
+				}
+			}
+			if (bb.isExit() || bb.getQuadIndex((Quad) inst) == 0) {
+				for (BasicBlock predecessor : bb.getPredecessors()) {
+					if (predecessor.isEntry()) {
+						Map<Integer, Set<PE>> ring = pathEdges.get(predecessor);
+						Set<PE> pes = ring.get(trajLength - 1);
+						if (pes != null) {
+							for (PE storedPE : pes)
+								if (storedPE.equals(pe)) {
+									currentTrio = new Trio<Inst, PE, Integer>(
+											(EntryOrExitBasicBlock) predecessor,
+											storedPE, trajLength - 1);
+									return currentTrio;
+								}
+						}
+					}
+					Quad lastQuad = predecessor.getLastQuad();
+					Trio<Inst,PE,Integer> trio = processQuad(lastQuad,pe,trajLength);
+					if(trio!=null){
+						currentTrio = trio;
+						return currentTrio;
+					}
+				}
+			}
+			Quad pre = bb.getQuad(bb.getQuadIndex((Quad)inst)-1);
+			currentTrio = processQuad(pre,pe,trajLength);
+			return currentTrio;
 		}
-
+		/**
+		 * pre is the quad before current inst
+		 * pe is the PathEdge before current inst.
+		 * trajLength is the shortest trajactory length of pe
+		 * This method will see if there is a path edge on pre which is the predecessor of pe on the backward trace
+		 *  
+		 * @return the trio contains the predecessor path edge, otherwise, null.
+		 */
+		private Trio<Inst,PE,Integer> processQuad(Quad pre,PE pe,Integer trajLength){
+			Map<Integer, Set<PE>> ring = pathEdges.get(pre);
+			Set<PE> pes = ring.get(trajLength - 1);
+			Trio<Inst,PE,Integer> ret = null;
+			if(pes==null)
+				return ret;
+			if (pre.getOperator() instanceof Invoke) {
+				Set<jq_Method> targets = getTargets(pre);
+					for (PE storedPE : pes) {
+						if (targets == null || targets.isEmpty()) {
+							if (storedPE.equals(pe)) {
+								ret = new Trio<Inst, PE, Integer>(
+										pre, storedPE,
+										trajLength - 1);
+								return ret;
+							}
+						}
+						for (jq_Method m : targets) {
+							for (SE se : summEdges.get(m)) {
+								PE invkPE = getInvkPathEdge(pre,
+										storedPE, m, se);
+								if (invkPE != null && invkPE.equals(pe)) {
+									Trio<Inst, PE, Integer> invkTrio = new Trio<Inst, PE, Integer>(
+											pre, storedPE,
+											trajLength - 1);
+									callStack.push(invkTrio);
+									Inst exit = m.getCFG().exit();
+									for (Map.Entry<Integer, Set<PE>> exitRing : pathEdges
+											.get(exit).entrySet()) {
+										for (PE exitPE : exitRing
+												.getValue()) {
+											if (getSummaryEdge(m,
+													exitPE).equals(se)) {
+												ret = new Trio<Inst, PE, Integer>(
+														exit,
+														exitPE,
+														exitRing.getKey());
+												return ret;
+											}
+										}
+									}
+								}
+							}
+						}// end the iteration of possible methods called
+					}
+			}//end the case of invoke
+			for(PE storedPE:pes){//normal case
+				if(getMiscPathEdge(pre,storedPE).equals(pe)){
+					ret = new Trio<Inst,PE,Integer>(pre,storedPE,trajLength-1);
+					return ret;
+				}
+			}
+			return ret;
+		}
 		@Override
 		public void remove() {
 			throw new UnsupportedOperationException(
