@@ -380,12 +380,12 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
             for (BasicBlock bb : m.getCFG().reversePostOrder()) {
                 if (bb.isEntry() || bb.isExit()) {
                     w.println(bb.isEntry() ? "ENTRY:" : "EXIT:");
-                    Set<Edge> peSet = getPathEdge((EntryOrExitBasicBlock)bb);
+                    Map<Integer,Set<Edge>> peSet = pathEdges.get((EntryOrExitBasicBlock)bb);
 					w.println(toString(peSet, m));
                 } else {
                     for (Quad q : bb) {
                         w.println(q.getID() + ":");
-                    	Set<Edge> peSet = getPathEdge(q);
+                        Map<Integer,Set<Edge>> peSet = pathEdges.get(q);
 						w.println(toString(peSet, m));
                     }
                 }
@@ -395,6 +395,16 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
         }
 	}
 
+	private String toString(Map<Integer,Set<Edge>> peSet, jq_Method m){
+		if (peSet == null)
+			return "No edges<br>";
+		String s = "";
+		for (Map.Entry<Integer, Set<Edge>> entry:peSet.entrySet())
+			for(Edge pe:entry.getValue())
+			s += "<pre>" + toString(pe, m) +"[trajLength = "+entry.getKey()+"]"+ "</pre>";
+		return s;
+	}
+	
 	private String toString(Set<Edge> peSet, jq_Method m) {
 		if (peSet == null)
 			return "No edges<br>";
