@@ -280,7 +280,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 			jq_Method m = loc.m;
 			BasicBlock bb = loc.bb;
 			int trajLength = trio.val2;
-			int newTrajLength = this.keepRings ? trio.val2 + 1 : trio.val2;
+			int newTrajLength = this.keepRings ? trajLength + 1 : trajLength;
 			currentMethod = m;
 			currentBB = bb;
 			if (DEBUG)
@@ -321,7 +321,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 							PE pe2 = getInitPathEdge(q, m2, pe);
 							BasicBlock bb2 = m2.getCFG().entry();
 							Location loc2 = new Location(m2, bb2, -1, null);
-							addPathEdge(loc2, pe2, trajLength);
+							addPathEdge(loc2, pe2, newTrajLength);
 							Set<SE> seSet = summEdges.get(m2);
 							if (seSet == null) {
 								if (DEBUG)
@@ -417,7 +417,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 				for (PE pe2 : entry.getValue()) {
 					if (DEBUG)
 						System.out.println("\tTesting PE: " + pe2);
-					boolean match = propagateSEtoPE(pe2, entry.getKey(), loc2,
+					boolean match = propagateSEtoPE(pe2, keepRings?entry.getKey()+1:entry.getKey(), loc2,
 							m, seToAdd);
 					if (match) {
 						if (DEBUG)
@@ -506,7 +506,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 			}
 			if (matched == true) {
 				assert (peToMove != null && toMovePETrajLength != null);
-				rings.get(toMovePETrajLength).remove(peToMove);
+				Set<PE> oriPES = rings.get(toMovePETrajLength);
+				oriPES.remove(peToMove);
+				if(oriPES.size()==0)
+					rings.remove(toMovePETrajLength);
 				this.addPathEdgeToRings(peToMove, trajLength, rings);
 				for (int j = workList.size() - 1; j >= 0; j--) {
 					Trio<Location, PE, Integer> trio = workList.get(j);
@@ -656,17 +659,13 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 				Set<Quad> callers = getCallers(inst.getMethod());
 				for (Quad invoke : callers) {
 					Map<Integer, Set<PE>> ring = pathEdges.get(invoke);
-					Set<PE> pes = ring.get(trajLength);// well, I make the
-														// invoke statement
-														// share the same length
-														// with the entry of the
-														// method
+					Set<PE> pes = ring.get(trajLength-1);
 					if (pes != null && pes.size() != 0)
 						for (PE storedPE : pes) {
 							if (getInitPathEdge(invoke, inst.getMethod(),
 									storedPE).equals(pe)) {
 								currentTrio = new Trio<Inst, PE, Integer>(
-										invoke, storedPE, trajLength);
+										invoke, storedPE, trajLength-1);
 								return currentTrio;
 							}
 						}
