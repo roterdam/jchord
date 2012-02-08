@@ -11,14 +11,28 @@ import joeq.Compiler.Quad.Quad;
 public class AbstractState {
 	final Quad alloc;
 	final TypeState ts;
+	Boolean unique;
  	// mustSet is never null and is always immutable
-	final ArraySet<AccessPath> mustSet; 
+	final ArraySet<AccessPath> mustSet;
+	Boolean may;
 	public AbstractState(Quad a, TypeState t, ArraySet<AccessPath> ms) {
 		this.alloc = a;
 		this.ts = t;
 		assert (ms != null);
 		this.mustSet = ms;
+		unique = true;
+		may = false;
 	}
+	
+	public AbstractState(Quad a, TypeState t, ArraySet<AccessPath> ms,Boolean uni,Boolean m) {
+		this.alloc = a;
+		this.ts = t;
+		assert (ms != null);
+		this.mustSet = ms;
+		unique = uni;
+		may = m;
+	}
+	
 	@Override
 	public int hashCode() {
 		return alloc.hashCode() ^ mustSet.hashCode();

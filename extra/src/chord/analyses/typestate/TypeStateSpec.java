@@ -19,29 +19,29 @@ public class TypeStateSpec {
 
 	// Might need to change if we can have transition from one state to more
 	// than one state
-	private static HashMap<String, HashMap<TypeState, TypeState>> methodTransitions;
-	private static HashMap<String, ArraySet<TypeState>> methodAssertions;
-	private static String typeOfObject;
-	private static TypeState initialState;
-	private static TypeState errorState;
+	private HashMap<String, HashMap<TypeState, TypeState>> methodTransitions;
+	private HashMap<String, ArraySet<TypeState>> methodAssertions;
+	private String typeOfObject;
+	private TypeState initialState;
+	private TypeState errorState;
 	
-	static {
+	public TypeStateSpec(){
+		methodTransitions = new HashMap<String, HashMap<TypeState,TypeState>>();
 		methodAssertions = new HashMap<String, ArraySet<TypeState>>();
-		methodTransitions = new HashMap<String, HashMap<TypeState, TypeState>>();
 		typeOfObject = null;
 		initialState = null;
-
+		errorState = null;
 	}
-
-	public static String getObjecttype(){
+	
+	public String getObjecttype(){
 		return typeOfObject;
 	}
 	
-	public static TypeState getInitialState() {
+	public TypeState getInitialState() {
 		return initialState;
 	}
 	
-	public static TypeState getErrorState(){
+	public TypeState getErrorState(){
 		return errorState;
 	}
 	
@@ -55,7 +55,7 @@ public class TypeStateSpec {
 	 * @param sourceState
 	 * @return target TypeState
 	 */
-	public static TypeState getTargetState(String methodName,TypeState sourceState){
+	public TypeState getTargetState(String methodName,TypeState sourceState){
 		TypeState targetState = sourceState;
 		if(!sourceState.equals(errorState) && isMethodOfInterest(methodName)){
 			if(methodAssertions.containsKey(methodName))
@@ -86,7 +86,7 @@ public class TypeStateSpec {
 	 * @param methodName
 	 * @return
 	 */
-	public static HashMap<TypeState,TypeState> getMethodTransitions(String methodName){
+	public HashMap<TypeState,TypeState> getMethodTransitions(String methodName){
 		if(!methodTransitions.containsKey(methodName)){
 			return null;
 		}
@@ -98,7 +98,7 @@ public class TypeStateSpec {
 	 * @param methodName
 	 * @return will return the set of assertion states
 	 */
-	public static ArraySet<TypeState> getMethodAssertions(String methodName){
+	public ArraySet<TypeState> getMethodAssertions(String methodName){
 		if(!methodAssertions.containsKey(methodName)){
 			return null;
 		}
@@ -111,7 +111,7 @@ public class TypeStateSpec {
 	 * @param methodName
 	 * @return true if the method has atleast one transition or assertion defined else false
 	 */
- 	public static Boolean isMethodOfInterest(String methodName){
+ 	public Boolean isMethodOfInterest(String methodName){
 		return methodAssertions.containsKey(methodName) || methodTransitions.containsKey(methodName);
 	}
 
@@ -124,7 +124,7 @@ public class TypeStateSpec {
 	 * @param targetState
 	 * @return true if the transition is new else false
 	 */
-	public static Boolean addMethodTransition(String methodName,
+	public Boolean addMethodTransition(String methodName,
 			TypeState sourceState, TypeState targetState) {
 		HashMap<TypeState, TypeState> targetStateMap = methodTransitions
 				.get(methodName);
@@ -146,7 +146,7 @@ public class TypeStateSpec {
 	 * @param assertState
 	 * @return
 	 */
-	public static Boolean addMethodAssertion(String methodName,
+	public Boolean addMethodAssertion(String methodName,
 			TypeState assertState) {
 		ArraySet<TypeState> targetSet = methodAssertions.get(methodName);
 		if (targetSet == null) {
@@ -166,7 +166,7 @@ public class TypeStateSpec {
 	 * @param typeName
 	 * @param startState
 	 */
-	public static void addStartInfo(String typeName,TypeState startState){
+	public void addStartInfo(String typeName,TypeState startState){
 		initialState = startState;
 		typeOfObject = typeName;
 	}
@@ -176,7 +176,7 @@ public class TypeStateSpec {
 	 * 
 	 * @param error
 	 */
-	public static void addErrorState(TypeState error){
+	public void addErrorState(TypeState error){
 		errorState = error;
 	}
 }

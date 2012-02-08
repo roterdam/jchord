@@ -44,7 +44,7 @@ public class TypeState {
 		return this.name.hashCode();
 	}
 	
-	@Overrides
+	@Override
 	public boolean equals(Object ob)
 	{
 		if(ob == this)

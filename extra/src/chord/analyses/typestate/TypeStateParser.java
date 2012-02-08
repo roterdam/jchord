@@ -27,12 +27,12 @@ import java.io.IOException;
  */
 
 public class TypeStateParser {
-	private static String methodTransitionsStart = "MethodTransitions";
-	private static String methodAssertionsStart = "Asserts";
-	private static String delimiter = "-";
-	private static String commentPrefix = "//";
-	private static String initState = "init";
-	private static String errorStateName = "Error";
+	private static final String methodTransitionsStart = "MethodTransitions";
+	private static final String methodAssertionsStart = "Asserts";
+	private static final String delimiter = "-";
+	private static final String commentPrefix = "//";
+	private static final String initState = "init";
+	private static final String errorStateName = "Error";
 	
 	
 	/***
@@ -41,15 +41,17 @@ public class TypeStateParser {
 	 * @param fileName
 	 * @return true if parsing is success full else false
 	 */
-	public static Boolean parseStateSpec(String fileName)
+	public static TypeStateSpec parseStateSpec(String fileName)
 	{
 		Boolean isFileGood = false;
+		TypeStateSpec sp = null;
 		try {
 			BufferedReader reader = new BufferedReader(new FileReader(fileName));
 			String currentLine = null;
 			Boolean inMethodTransitions = false;
 			Boolean inMethodAssertions = false;
 			Boolean parsingError = true;
+			sp = new TypeStateSpec();
 			while((currentLine = reader.readLine())!=null){
 				currentLine = currentLine.trim();
 				if(currentLine.startsWith(commentPrefix))
@@ -90,12 +92,12 @@ public class TypeStateParser {
 					
 					if(splitStrings[1].equals(initState))
 					{
-						TypeStateSpec.addStartInfo(splitStrings[0], TypeState.getState(splitStrings[2]));
+						sp.addStartInfo(splitStrings[0], TypeState.getState(splitStrings[2]));
 					}
 					else
 					{
 						TypeState.insertState(splitStrings[1]);
-						TypeStateSpec.addMethodTransition(splitStrings[0], TypeState.getState(splitStrings[1]), TypeState.getState(splitStrings[1]));
+						sp.addMethodTransition(splitStrings[0], TypeState.getState(splitStrings[1]), TypeState.getState(splitStrings[1]));
 					}
 				}
 				if(inMethodAssertions && !currentLine.isEmpty())
@@ -115,7 +117,7 @@ public class TypeStateParser {
 							break;
 						}
 						TypeState.insertState(splitStrings[i]);
-						TypeStateSpec.addMethodAssertion(splitStrings[0],TypeState.getState(splitStrings[i]));
+						sp.addMethodAssertion(splitStrings[0],TypeState.getState(splitStrings[i]));
 					}
 					if(parsingError)
 					{
@@ -124,10 +126,10 @@ public class TypeStateParser {
 					
 				}				
 			}
-			if((inMethodAssertions || inMethodTransitions) && !parsingError && TypeStateSpec.getInitialState() != null){
+			if((inMethodAssertions || inMethodTransitions) && !parsingError && sp.getInitialState() != null){
 				isFileGood = true;
 				TypeState.insertState(errorStateName);
-				TypeStateSpec.addErrorState(TypeState.getState(errorStateName));
+				sp.addErrorState(TypeState.getState(errorStateName));
 			}
 			
 		} catch (FileNotFoundException e) {
@@ -135,6 +137,6 @@ public class TypeStateParser {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		return isFileGood;
+		return isFileGood?sp:null;
 	}
 }
