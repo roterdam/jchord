@@ -5,10 +5,10 @@ import chord.util.ArraySet;
 import chord.project.analyses.rhs.IEdge;
 
 public class Edge implements IEdge {
-	final AbstractState srcNode;
-	AbstractState dstNode;
+	final ArraySet<AbstractState> srcNode;
+	ArraySet<AbstractState> dstNode;
 	
-	public Edge(AbstractState srcNode, AbstractState dstNode) {
+	public Edge(ArraySet<AbstractState> srcNode,ArraySet<AbstractState> dstNode){
 		this.srcNode = srcNode;
 		this.dstNode = dstNode;
 	}

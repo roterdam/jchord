@@ -2,13 +2,25 @@ package chord.analyses.typestate;
 
 import java.util.Set;
 
+import org.hsqldb.lib.StringConverter;
+
+import soot.JastAddJ.Access;
+
 import com.sun.org.apache.bcel.internal.generic.Type;
 
 import jdd.util.Array;
 
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.QuadVisitor;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
+import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.New;
+import joeq.UTF.Utf8;
 import chord.analyses.alias.CICGAnalysis;
 import chord.analyses.alias.ICICG;
 import chord.program.Location;
@@ -21,21 +33,37 @@ import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
 import chord.analyses.invk.DomI;
 import chord.analyses.method.DomM;
+import chord.analyses.var.DomV;
+
+//This is required to determine if the quad is allocating object of desired type
+import chord.analyses.alloc.DomH;
+import chord.analyses.alloc.RelHT;
+import chord.analyses.escape.hybrid.full.DstNode;
+
+import chord.project.analyses.ProgramRel;
+
 
 @Chord(
     name = "typestate-java", consumes = "queryIHS"
 )
-public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
+public class TypestateAnalysis extends RHSAnalysis<Edge, Edge> {
 	
 	private ICICG cicg;
 	private static DomM domM;
 	private static DomI domI;
+	private static DomV domV;
+	private static DomH domH;
+	private TypeStateSpec sp;
+	
+	private MyQuadVisitor qv = new MyQuadVisitor();
 	
 	public void run() {
-		String stateSpecFile = System.getProperty("chord.ts.file", "typestatespec.txt");
-		if(!TypeStateParser.parseStateSpec(stateSpecFile)){
+		String stateSpecFile = System.getProperty("chord.typestate.specfile", "typestatespec.txt");
+		
+		if( (sp = TypeStateParser.parseStateSpec(stateSpecFile))==null){
 			Messages.fatal("Problem occured while parsing state spec file:"+stateSpecFile+",Make sure that its in the required format");
 		}
+		qv.sp = sp;
 		domI = (DomI) ClassicProject.g().getTrgt("I");
         ClassicProject.g().runTask(domI);
         domM = (DomM) ClassicProject.g().getTrgt("M");
@@ -43,7 +71,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		Set<Trio<Quad, Quad, ???>> queries;
 		for (each tuple in queryIHS) {
 			queries.add(tuple);
-			// TODO: call runPass()
 		}
 	}
 	
@@ -116,7 +143,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		//How to handle New ?
 		if(needToAnalyze(m)){
 			//if this method is of interest then try to apply summary
-		} else if(TypeStateSpec.isMethodOfInterest(m.getName().toString())){
+		} else if(sp.isMethodOfInterest(m.getName().toString())){
 			//here depending on the possible state transitions
 			//of method m, set the state of the object pointed by q
 			//either to one of the target state or error state (if asserts fail)
@@ -140,6 +167,136 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	@Override
 	public boolean mustMerge() {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
 }
+class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
+	
+	ArraySet<AbstractState> istate;
+	ArraySet<AbstractState> ostate;
+	TypeStateSpec sp;
+	
+	@Override
+	public void visitMove(Quad q) {
+		//TODO:
+		//Need to take care of inheritance
+		//Like moving from child class to base class where base class object can access
+		//functions that cause state transitions
+		
+		ostate = istate;
+		assert(istate!=null);
+		RegisterOperand d = Move.getDest(q);
+				
+		//Check if target register is in the must access set of the abstract state access path and remove it
+		ostate = removeRegisterFromMustSet(d, ostate);
+		
+		Operand s = Move.getSrc(q);
+		if(s instanceof RegisterOperand){
+			ostate = addRegisterToTheMustSet((RegisterOperand)s,d,ostate);
+		}		
+	}
+	 
+	@Override
+	public void visitInvoke(Quad q) {
+		ostate = istate;
+				
+		Utf8 s = Invoke.getMethod(q).getMethod().getName();
+
+		//TODO:
+		//1.Get the source register.. how? //usedRegisters(0) ???
+				
+		//2.Check whether the register has any tuple in pointsto of object of the specific type
+			//2.a if the method called is one of stateTransitions method then
+				//2.b Get the pointsto set for this register
+				//2.c For each abstract state for each of the pointsto relation...
+					//2.c.a update the typestate if this register is not in must not set and register is either in must set or may bit is true
+		
+		//3. else analyse the method in called context ?
+		
+		if(sp.isMethodOfInterest(s.toString())){
+			
+		}
+		
+		
+		
+	}
+	
+	@Override
+    public void visitNew(Quad q) {
+		RegisterOperand d = New.getDest(q);
+		//TODO:
+		//1. Check if the object allocated is the object of interest
+		//2. create a new abstract state (AS) with mustset containing only this register and may bit to false
+		//3. check if any AbstractState has this quad(in case of loop)
+			//3.a if there is one already..then remove this register for its must set and add to mustnot set
+					//Set the unique bit of this state and AS to false 
+			//2.a.b else...Set the unique bit of AS to true 
+    }
+    
+	@Override
+    public void visitNewArray(Quad q) {
+    	
+    }
+	
+	@Override
+	public void visitPutfield(Quad q) {
+		
+	}
+	
+	@Override
+	public void visitGetfield(Quad q) {
+		
+	}
+	
+	private ArraySet<AbstractState> addRegisterToTheMustSet(RegisterOperand r,RegisterOperand d,ArraySet<AbstractState> state){
+		
+		ArraySet<AbstractState> outState = state;
+		for(int i=0;i<state.size();i++){
+			if(isRegisterInAccessPath(r, state.get(i).mustSet)){
+				outState.remove(i);
+				outState.add(i, copyAbsState(state.get(i)));
+				//TODO: add code to add the register 'd' to the access path
+				
+				//Because register can be present in the must set of at most one
+				//access path so break here
+				break;
+			}
+		}
+		return outState;
+	}
+	
+	private ArraySet<AbstractState> removeRegisterFromMustSet(RegisterOperand r,ArraySet<AbstractState> state){
+		ArraySet<AbstractState> outState = state;
+		for(int i=0;i<state.size();i++){
+			if(isRegisterInAccessPath(r, state.get(i).mustSet)){
+				outState.remove(i);
+				outState.add(i, copyAbsState(state.get(i)));				
+				//TODO: add code to remove the register from the access path ns.mustSet
+				
+				//Because register can be present in the must set of at most one
+				//access path so break here
+				break;
+			}
+		}
+		return outState;		
+	}
+	
+	private ArraySet<AccessPath> copyAccessPath(ArraySet<AccessPath> ap){
+		ArraySet<AccessPath> out = new ArraySet<AccessPath>();
+		out.addAll(ap);
+		return out;
+	}
+	
+	private AbstractState copyAbsState(AbstractState abs){
+		AbstractState ns= new AbstractState(abs.alloc, abs.ts, abs.mustSet);
+		return ns;
+	}
+	
+	private Boolean isRegisterInAccessPath(RegisterOperand r,ArraySet<AccessPath> ap){
+		Boolean isPresent = false;
+		//TODO:code to check if the access path contains the register
+		return isPresent;
+	}
+}
+
+
