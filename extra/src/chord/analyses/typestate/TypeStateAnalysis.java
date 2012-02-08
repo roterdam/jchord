@@ -56,13 +56,19 @@ public class TypestateAnalysis extends RHSAnalysis<Edge, Edge> {
 	private TypeStateSpec sp;
 	
 	private MyQuadVisitor qv = new MyQuadVisitor();
-	
+
+	private CIPAAnalysis cipaAnalysis;
+
 	public void run() {
 		String stateSpecFile = System.getProperty("chord.typestate.specfile", "typestatespec.txt");
 		
 		if( (sp = TypeStateParser.parseStateSpec(stateSpecFile))==null){
 			Messages.fatal("Problem occured while parsing state spec file:"+stateSpecFile+",Make sure that its in the required format");
 		}
+
+		cipaAnalysis = (CIPAAnalysis) ClassicProject.g().getTask("cipa-java");
+		ClassicProject.runTask(cipaAnalysis);
+
 		qv.sp = sp;
 		domI = (DomI) ClassicProject.g().getTrgt("I");
         ClassicProject.g().runTask(domI);
@@ -268,7 +274,7 @@ class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 	private ArraySet<AbstractState> removeRegisterFromMustSet(RegisterOperand r,ArraySet<AbstractState> state){
 		ArraySet<AbstractState> outState = state;
 		for(int i=0;i<state.size();i++){
-			if(isRegisterInAccessPath(r, state.get(i).mustSet)){
+			if (isRegisterInAccessPath(r, state.get(i).mustSet)) {
 				outState.remove(i);
 				outState.add(i, copyAbsState(state.get(i)));				
 				//TODO: add code to remove the register from the access path ns.mustSet
@@ -282,9 +288,7 @@ class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 	}
 	
 	private ArraySet<AccessPath> copyAccessPath(ArraySet<AccessPath> ap){
-		ArraySet<AccessPath> out = new ArraySet<AccessPath>();
-		out.addAll(ap);
-		return out;
+		return new ArraySet<AccessPath>(ap);
 	}
 	
 	private AbstractState copyAbsState(AbstractState abs){
