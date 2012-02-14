@@ -4,8 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -22,7 +24,7 @@ abstract class ParallelAnalysis extends JavaAnalysis implements BlackBox {
 	String masterHost;
 	int masterPort;
 	String mode; // worker or master or null
-	Client client = null;
+	JobDispatcher dispatcher = null;
 
 	protected abstract void init();
 	protected void finish(){
@@ -33,7 +35,7 @@ abstract class ParallelAnalysis extends JavaAnalysis implements BlackBox {
 	protected abstract String setMasterHost();
 	protected abstract int setMasterPort();
 	protected abstract String setMode();
-	protected abstract Client setClient();
+	protected abstract JobDispatcher setJobDispatcher();
 	
 	
 	public abstract String apply(String line);
@@ -56,18 +58,19 @@ abstract class ParallelAnalysis extends JavaAnalysis implements BlackBox {
 		
 		if (isWorker()) runWorker();
 		else{
-			client = setClient();
-			if(client == null){
+			dispatcher = setJobDispatcher();
+			if(dispatcher == null){
 				Exception e = new Exception("Client not initialized in Master");
 				throw new RuntimeException(e);
 			}
-			new Master(masterPort, client);
+			new Master(masterPort, dispatcher);
 		}
 		finish();
 	}
 	String callMaster(String line) {
 		try {
-			Socket master = new Socket(masterHost, masterPort);
+			InetAddress addrM = InetAddress.getByName(masterHost);
+			Socket master = new Socket(addrM, masterPort);
 			BufferedReader in = new BufferedReader(new InputStreamReader(master.getInputStream()));
 			PrintWriter out = new PrintWriter(master.getOutputStream(), true);
 			out.println(line);
@@ -88,6 +91,7 @@ abstract class ParallelAnalysis extends JavaAnalysis implements BlackBox {
 		while (true) {
 			X.logs("============================================================");
 			// Get a job
+			
 			String line = callMaster("GET");
 			if (line == null) { X.logs("Got null, something bad happened to master..."); this.sleep(5); }
 			else if (line.equals("WAIT")) { X.logs("Waiting..."); this.sleep(5); X.putOutput("exec.status", "waiting"); X.flushOutput(); }
@@ -116,15 +120,15 @@ class Master {
 
 	HashMap<Integer,Scenario> inprogress = new HashMap<Integer,Scenario>();
 	HashMap<String,Long> lastContact = new HashMap();
-	Client client;
+	JobDispatcher dispatcher;
 
 	final boolean waitForWorkersToExit = true;
 
 	int numWorkers() { return lastContact.size(); }
 
-	public Master(int port, Client client) {
+	public Master(int port, JobDispatcher dispatcher) {
 		this.port = port;
-		this.client = client;
+		this.dispatcher = dispatcher;
 		boolean exitFlag = false;
 
 		X.logs("MASTER: listening at port %s", port);
@@ -135,7 +139,7 @@ class Master {
 				X.putOutput("numWorkers", numWorkers());
 				X.flushOutput();
 				X.logs("============================================================");
-				boolean clientIsDone = client.isDone();
+				boolean clientIsDone = dispatcher.isDone();
 				if (clientIsDone) {
 					if (!waitForWorkersToExit || lastContact.size() == 0) break;
 					X.logs("Client is done but still waiting for %s workers to exit...", lastContact.size());
@@ -150,15 +154,15 @@ class Master {
 				String cmd = in.readLine();
 				if (cmd.equals("GET")) {
 					lastContact.put(hostname, System.currentTimeMillis()); // Only add if it's getting stuff
-					if (clientIsDone || numWorkers() > client.maxWorkersNeeded() + 1) { // 1 for extra buffer
+					if (clientIsDone || numWorkers() > dispatcher.maxWorkersNeeded() + 1) { // 1 for extra buffer
 						// If client is done or we have more workers than we need, then quit
 						out.println("EXIT");
 						lastContact.remove(hostname);
 					}
 					else {
-						Scenario reqScenario = client.createJob();
+						Scenario reqScenario = dispatcher.createJob();
 						if (reqScenario == null) {
-							X.logs("  No job, waiting (%s workers, %s workers needed)", numWorkers(), client.maxWorkersNeeded());
+							X.logs("  No job, waiting (%s workers, %s workers needed)", numWorkers(), dispatcher.maxWorkersNeeded());
 							out.println("WAIT");
 						}
 						else {
@@ -173,7 +177,7 @@ class Master {
 					out.println("Cleared workers");
 				}
 				else if (cmd.equals("SAVE")) {
-					client.saveState();
+					dispatcher.saveState();
 					out.println("Saved");
 				}
 				else if (cmd.equals("EXIT")) {
@@ -203,7 +207,7 @@ class Master {
 					else {
 						X.logs("  PUT id=%s", id);
 						scenario.decode(tokens[2]);
-						client.onJobResult(scenario);
+						dispatcher.onJobResult(scenario);
 						out.println("OK");
 					}
 				}
@@ -212,7 +216,7 @@ class Master {
 				out.close();
 			}
 			master.close();
-			client.saveState();
+			dispatcher.saveState();
 		} catch (IOException e) {
 			throw new RuntimeException(e);
 		}

@@ -17,7 +17,7 @@ import java.util.Set;
 import chord.util.Execution;
 import chord.util.Utils;
 
-public class AbstractionMinimizer implements Client {
+public class AbstractionMinimizer implements JobDispatcher {
 
 	Execution EX = Execution.v();
 	Random random = new Random();
