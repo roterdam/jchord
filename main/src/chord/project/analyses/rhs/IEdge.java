@@ -16,19 +16,26 @@ public interface IEdge {
 	/**
 	 * Determines whether the given path or summary edge can merge with this
 	 * edge. The two edges can merge iff they satisfies one of the following
-	 * conditions: 
-	 * 1. RHSAnalysis.mustMerge returns true 
-	 * 2. RHSAnalysis.mustMerge returns false but RHSAnalysis.mayMerge returns
+	 * conditions:
+	 * <ol> 
+	 * <li>RHSAnalysis.mustMerge returns true</li>
+	 * <li>RHSAnalysis.mustMerge returns false but RHSAnalysis.mayMerge returns
 	 * true; the source nodes of the two edges are identical; one of the target
-	 * node subsumes another
-	 * 
+	 * node subsumes another</li>
+	 * </ol>
 	 * @param edge
 	 *            A path or summary edge.
 	 * 
-	 * @return true iff the source node of <code>edge</code> is identical to the
-	 *         source node of this edge.
+	 * @return <ol>
+	 * <li>-1 if these two edges cannot be merged</li>
+	 * <li>0 if these two edges are identical</li>
+	 * <li>1 if these two edges can be merged, and the return value would be identical to this.</li>
+	 * <li>2 if these two edges can be merged, and the return value would be identical to the parameter</li>
+	 * <li>3 if these two edges can be merged, but there is no info about the return value</li>
+	 * </ol>
+	 * 
 	 */
-	public boolean canMerge(IEdge edge);
+	public int canMerge(IEdge edge);
 
 	/**
 	 * Merges the given path or summary edge with this edge. This edge is
@@ -41,4 +48,6 @@ public interface IEdge {
 	 * @return true iff this edge changes due to the merge.
 	 */
 	public boolean mergeWith(IEdge edge);
+	
+	public boolean matchSourse(IEdge edge);
 }
