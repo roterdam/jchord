@@ -4,20 +4,6 @@
  * All rights reserved.
  * Licensed under the terms of the New BSD License.
  *
- * Pointer analysis which performs refinement and pruning using slivers.
- *
- * An abstraction specifies a partitioning of chains (a chain is a list of allocation/call sites).
- * A sliver specifies a set of chains in one of two ways:
- *  - [h1, h2, h3] represents exactly this one sequence.
- *  - [h1, h2, h3, null] represents all sequences with the given prefix.
- * Assume that the abstraction is specified by a consistent set of slivers.
- *
- * Three operations:
- *   - EXTEND: building CH,CI,CC from a set of active slivers (prepending)
- *   - REFINE: growing slivers (appending)
- *   - COARSEN: use a type strategy
- *
- * @author Percy Liang (pliang@cs.berkeley.edu)
  */
 package chord.analyses.libanalysis;
 
@@ -495,7 +481,7 @@ public class LibAnalysis extends ParallelAnalysis {
 	}
 
 	@Override
-	protected Client setClient() {
+	protected JobDispatcher setJobDispatcher() {
 		return new AbstractionMinimizer(isScan,(Set<Query>)null,mSet,qFactory, mFactory,this,sepMajor,sepMin);
 	}
 	
