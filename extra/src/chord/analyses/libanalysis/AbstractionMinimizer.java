@@ -380,6 +380,7 @@ public class AbstractionMinimizer implements JobDispatcher {
 				if (eq(lowerX, upperX)) {
 					EX.logs("    DONE with group %s!", this);
 					done = true;
+					saveGroupState(this);
 				}
 			}
 			else {
@@ -390,6 +391,7 @@ public class AbstractionMinimizer implements JobDispatcher {
 				if (upperComplexity == 1) { // Can't do better than 1
 					EX.logs("    DONE with group %s!", this);
 					done = true;
+					saveGroupState(this);
 				}
 				else if (diff <= scanThreshold) {
 					EX.logs("    SCAN group %s now!", this);
@@ -439,7 +441,8 @@ public class AbstractionMinimizer implements JobDispatcher {
 	}
 
 	public void onJobResult(Scenario scenario) {
-		incorporateScenario(scenario, true);
+		//incorporateScenario(scenario, true);
+		incorporateScenario(scenario, false);
 		outputStatus();
 	}
 
@@ -561,13 +564,30 @@ public class AbstractionMinimizer implements JobDispatcher {
 				out.println("Queries:");
 				for (String y : g.Y) {
 					//Query q = y2queries.get(y);
-					out.println("  "+y);
+					Query q = qFactory.create(y);
+					out.println("  "+ y + "##" + q.toString());
 				}
 			}
 			out.close();
 		}
 	}
 
+	protected void saveGroupState(Group g){
+		PrintWriter out = Utils.openOutAppend(EX.path("groups_partial.txt"));
+		out.println("=== "+g);
+		out.println("Abstractions:");
+		for (int c = 0; c < C; c++)
+			if (g.upperX[c].getLevel() != bottomX[c].getLevel())
+				out.println("  "+g.upperX[c].encode() + "##" + g.upperX[c].toString());
+		out.println("Queries:");
+		for (String y : g.Y) {
+			//Query q = y2queries.get(y);
+			Query q = qFactory.create(y);
+			out.println("  "+ y + "##" + q.toString());
+		}
+		out.close();
+	}
+	
 	public int maxWorkersNeeded() {
 		// If everyone's scanning, just need one per scan
 		// Otherwise, need as many workers as we can get.
