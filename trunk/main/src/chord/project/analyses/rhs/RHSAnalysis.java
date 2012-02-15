@@ -320,6 +320,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 				// invoke or misc quad
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {
+					if(q.toString().contains("jj_add_error_token:(II)V@org.apache.lucene.queryParser.QueryParser"))
+						System.out.println("wawa");
 					Set<jq_Method> targets = getTargets(q);
 					if (targets.isEmpty()) {
 						PE pe2 = mayMerge ? getCopy(pe) : pe;
@@ -344,7 +346,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 							for (WrappedEdge<SE> se : seSet) {
 								if (DEBUG)
 									System.out.println("\tTesting SE: " + se.q.val1);
-								if (propagateSEtoPE(pe, trajLength+trajIncrease*se.q.val2, newPre,
+								if (propagateSEtoPE(pe, trajLength+trajIncrease*(se.q.val2+1), newPre,
 										loc, m2, se.q.val1)) {
 									if (DEBUG)
 										System.out.println("\tMatched");
@@ -374,7 +376,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 		if(this.keepRings){
 			for(WrappedEdge<PE> swpe: pathEdges.get(m.getCFG().entry())){
 				if(swpe.q.val1.matchSourse(wpe.q.val1)){
-					wse.q.val2 = wpe.q.val2- swpe.q.val2;
+					wse.q.val2 = wpe.q.val2- swpe.q.val2+1;
 				}
 			}
 		}
@@ -437,7 +439,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 				PE storedPE = storedWPE.q.val1;
 				if (DEBUG)
 					System.out.println("\tTesting PE: " + storedPE);
-				int newTrajLength = keepRings ? storedWPE.q.val2 + wseToAdd.q.val2
+				int newTrajLength = keepRings ? storedWPE.q.val2 + wseToAdd.q.val2+1
 						: storedWPE.q.val2;
 				WrappedEdge<PE> pre = keepRings ? storedWPE : null;
 				boolean match = propagateSEtoPE(storedPE, newTrajLength, pre,
@@ -679,7 +681,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 						return currentWPE;
 					}
 					for (jq_Method m : targets) {
-						for (WrappedEdge<SE> wse : summEdges.get(m)) {
+						Set<WrappedEdge<SE>> wseSet = summEdges.get(m);
+						if(wseSet!=null)
+						for (WrappedEdge<SE> wse : wseSet) {
+							if(preWPE.q.val2+wse.q.val2+1>currentWPE.q.val2)
+								continue;
 							PE invkPE = getInvkPathEdge(preQuad, prePE, m, wse.q.val1);
 							if (invkPE != null && invkPE.equals(pe)) {
 								callStack.push(preWPE);
@@ -695,6 +701,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 							}
 						}
 					}
+					throw new RuntimeException("Couldn't find the right summary edge, something is wrong with the forward analysis!");
 				}
 			}
 			currentWPE = preWPE;
