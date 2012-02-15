@@ -169,7 +169,7 @@ class QueryGen extends Query {
 		//}
 		
 		mod = 1;
-		String[] row = s.substring(2).split(",");
+		String[] row = s.split(",");
 		//String[] row = s.substring(2).split("||,||");
 		int c = 0;
 		for(String fields : row){
