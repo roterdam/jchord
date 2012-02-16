@@ -131,7 +131,9 @@ class QueryGen extends Query {
 	@Override public String toString() { 
 		String retStr = "";
 		for(int c = 0; c < tuple.length; c++){
-			retStr += tuple[c].toString();
+			//retStr += tuple[c].toString();
+			retStr += doms[c].toUniqueString(tuple[c]);
+			retStr += " ## ";
 		}
 		return retStr;
 		//return enc;
@@ -169,15 +171,21 @@ class QueryGen extends Query {
 		//}
 		
 		mod = 1;
-		String[] row = s.split(",");
+		String[] types = s.split(",");
 		//String[] row = s.substring(2).split("||,||");
+		if(doms==null)
+			doms = new Dom[types.length];
+		if(tuple == null)
+			tuple = new Object[types.length];
+		
 		int c = 0;
-		for(String fields : row){
-			String[] parts = fields.split(":");
+		for(String type : types){
+			String[] parts = type.split(":");
 			ProgramDom dom = (ProgramDom) ClassicProject.g().getTrgt(parts[0]);
 			Object obj = dom.get(Integer.parseInt(parts[1]));
 			doms[c] = dom;
 			tuple[c] = obj;
+			c++;
 		}
 		this.enc = s;
 		mod = 0;
