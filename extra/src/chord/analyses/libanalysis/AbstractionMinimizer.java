@@ -93,7 +93,7 @@ public class AbstractionMinimizer implements JobDispatcher {
 		EX.logs("|Y| = %s", y2queries.size());
 		EX.putOutput("numY", y2queries.size());
 		EX.putOutput("topComplexity", complexity(topX));
-
+		
 		groups.add(new Group(isScan,y2queries));
 
 		outputStatus();
