@@ -83,13 +83,14 @@ IM(i:I,m:M) output
 MM(m:M,n:M) output
 
 ##Native Method Changes
-#allV(v:V) input
-#allH(h:H) input
+allV(v:V) input
+allH(h:H) input
 libM(m:M) input
 #allVH(v:V,h:H) input
 FT(f:F,t:T) input
 LHR(m:M,h:H)
 FHfilter(f:F,h:H)
+RVH(v:V,h:H) output
 #VHN(v:V,h:H) output
 ##
 
@@ -113,6 +114,7 @@ FH(f,h) :- LHR(_,h), FHfilter(f,h).
 HFH(h1,f,h2) :- LHR(m,h1), HFH(h1,f,_), LHR(m,h2), FT(f,t), HT(h2,s), sub(s,t).
 
 #VHN(v,h) :- allV(v), allH(h), !VH(v,h).
+RVH(v,h) :- allV(v), allH(h), VH(v,h).
 ##############################################
 
 VHfilter(v,h) :- VT(v,t), HT(h,s), sub(s,t).
