@@ -54,6 +54,7 @@ import chord.analyses.alias.DomC;
 import chord.analyses.alias.CtxtsAnalysis;
 import chord.bddbddb.Dom;
 import chord.bddbddb.Rel.AryNIterable;
+import chord.bddbddb.Rel.IntPairIterable;
 import chord.bddbddb.Rel.PairIterable;
 import chord.bddbddb.Rel.TrioIterable;
 import chord.bddbddb.Rel.QuadIterable;
@@ -80,6 +81,7 @@ import chord.util.IndexMap;
 import chord.util.ArraySet;
 import chord.util.graph.IGraph;
 import chord.util.graph.MutableGraph;
+import chord.util.tuple.integer.IntPair;
 import chord.util.tuple.object.Pair;
 import chord.util.tuple.object.Trio;
 import chord.util.Utils;
@@ -133,7 +135,7 @@ class QueryGen extends Query {
 		for(int c = 0; c < tuple.length; c++){
 			//retStr += tuple[c].toString();
 			retStr += doms[c].toUniqueString(tuple[c]);
-			retStr += " ## ";
+			retStr += " # ";
 		}
 		return retStr;
 		//return enc;
@@ -493,7 +495,28 @@ public class LibAnalysis extends ParallelAnalysis {
 		return new AbstractionMinimizer(isScan,(Set<Query>)null,mSet,qFactory, mFactory,this,sepMajor,sepMin);
 	}
 	
-	protected void finishAnalysis() {  }
+	protected void finishAnalysis() {
+		DomV domV = (DomV) ClassicProject.g().getTrgt("V"); 
+		DomH domH = (DomH) ClassicProject.g().getTrgt("H");
+		if(!ClassicProject.g().isTaskDone(domV))
+			ClassicProject.g().runTask(domV);
+		if(!ClassicProject.g().isTaskDone(domH))
+			ClassicProject.g().runTask(domH);
+		
+		ClassicProject.g().resetTaskDone("allVH");
+		ClassicProject.g().runTask("allVH");
+		ProgramRel relAllVH = (ProgramRel)ClassicProject.g().getTrgt("allVH"); 
+		relAllVH.load();
+		PrintWriter out = Utils.openOut(X.path("queries_all.txt"));
+		out.println("Queries:");
+		out.println("Num:" + relAllVH.size());
+		IntPairIterable itr = relAllVH.getAry2IntTuples();
+		for(IntPair it : itr){
+			out.println("  "+ domV.toUniqueString(it.idx0) + " # " + domH.toUniqueString(it.idx1));
+		}
+		out.close();
+
+	}
 	
 	public void readQueries(ProgramRel rel, Collection<String> queries) {
 

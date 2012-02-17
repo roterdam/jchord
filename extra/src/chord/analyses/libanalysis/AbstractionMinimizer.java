@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -70,9 +71,13 @@ public class AbstractionMinimizer implements JobDispatcher {
 		Scenario bottomSOut = new Scenario(box.apply(bottomSIn.toString()),sepMaj);
 		HashSet<String> bottomY = new HashSet<String>(Arrays.asList(Query.splitQueries(bottomSOut.getOut(),sepMin)));
 		
+		saveQueries(bottomY);
+		
 		Scenario topSIn = new Scenario("1",Abstraction.concatAbstractions(encodeX(topX),sepMin),null,sepMaj);;
 		Scenario topSOut = new Scenario(box.apply(topSIn.toString()),sepMaj);
 		HashSet<String> topY = new HashSet<String>(Arrays.asList(Query.splitQueries(topSOut.getOut(),sepMin)));
+		
+		saveQueries(topY);
 		
 		EX.logs("bottom: %s tuples", bottomY.size());
 		EX.logs("top: %s tuples", topY.size());
@@ -587,6 +592,20 @@ public class AbstractionMinimizer implements JobDispatcher {
 		}
 		out.close();
 	}
+	
+	protected void saveQueries(Collection<String> Y){
+		PrintWriter out = Utils.openOutAppend(EX.path("init_queries.txt"));
+		out.println("Queries:");
+		out.println("Num:" + Y.size());
+		
+		for (String y : Y) {
+			//Query q = y2queries.get(y);
+			Query q = qFactory.create(y);
+			out.println("  "+ y + "##" + q.toString());
+		}
+		out.close();
+	}
+	
 	
 	public int maxWorkersNeeded() {
 		// If everyone's scanning, just need one per scan
