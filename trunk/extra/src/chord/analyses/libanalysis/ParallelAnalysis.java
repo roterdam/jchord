@@ -40,7 +40,7 @@ abstract class ParallelAnalysis extends JavaAnalysis implements BlackBox {
 	protected abstract void finishAnalysis();
 	protected abstract String setMasterHost();
 	protected abstract int setMasterPort();
-	protected abstract int setWorkerPort();
+	//protected abstract int setWorkerPort();
 	protected abstract String setMode();
 	protected abstract JobDispatcher setJobDispatcher();
 
