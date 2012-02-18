@@ -458,7 +458,7 @@ public class LibAnalysis extends ParallelAnalysis {
 		
 		this.masterHost              = X.getStringArg("masterHost", null);
 		this.masterPort              = X.getIntArg("masterPort", 8888);
-		this.workerPort              = X.getIntArg("workerPort", 8888);
+		//this.workerPort              = X.getIntArg("workerPort", 8888);
 		this.mode                    = X.getStringArg("mode", null);
 
 		ClassicProject.g().runTask("libM");
@@ -491,10 +491,10 @@ public class LibAnalysis extends ParallelAnalysis {
 		return this.mode;
 	}
 	
-	@Override
+	/*@Override
 	protected int setWorkerPort() {
 		return this.workerPort;
-	}
+	}*/
 
 	@Override
 	protected JobDispatcher setJobDispatcher() {
