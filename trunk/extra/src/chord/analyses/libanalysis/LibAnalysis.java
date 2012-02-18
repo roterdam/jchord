@@ -458,6 +458,7 @@ public class LibAnalysis extends ParallelAnalysis {
 		
 		this.masterHost              = X.getStringArg("masterHost", null);
 		this.masterPort              = X.getIntArg("masterPort", 8888);
+		this.workerPort              = X.getIntArg("workerPort", 8888);
 		this.mode                    = X.getStringArg("mode", null);
 
 		ClassicProject.g().runTask("libM");
@@ -489,6 +490,11 @@ public class LibAnalysis extends ParallelAnalysis {
 	protected String setMode() {
 		return this.mode;
 	}
+	
+	@Override
+	protected int setWorkerPort() {
+		return this.workerPort;
+	}
 
 	@Override
 	protected JobDispatcher setJobDispatcher() {
@@ -496,25 +502,27 @@ public class LibAnalysis extends ParallelAnalysis {
 	}
 	
 	protected void finishAnalysis() {
-		DomV domV = (DomV) ClassicProject.g().getTrgt("V"); 
-		DomH domH = (DomH) ClassicProject.g().getTrgt("H");
-		if(!ClassicProject.g().isTaskDone(domV))
-			ClassicProject.g().runTask(domV);
-		if(!ClassicProject.g().isTaskDone(domH))
-			ClassicProject.g().runTask(domH);
-		
-		ClassicProject.g().resetTaskDone("allVH");
-		ClassicProject.g().runTask("allVH");
-		ProgramRel relAllVH = (ProgramRel)ClassicProject.g().getTrgt("allVH"); 
-		relAllVH.load();
-		PrintWriter out = Utils.openOut(X.path("queries_all.txt"));
-		out.println("Queries:");
-		out.println("Num:" + relAllVH.size());
-		IntPairIterable itr = relAllVH.getAry2IntTuples();
-		for(IntPair it : itr){
-			out.println("  "+ domV.toUniqueString(it.idx0) + " # " + domH.toUniqueString(it.idx1));
+		if(isMaster()){
+			DomV domV = (DomV) ClassicProject.g().getTrgt("V"); 
+			DomH domH = (DomH) ClassicProject.g().getTrgt("H");
+			if(!ClassicProject.g().isTaskDone(domV))
+				ClassicProject.g().runTask(domV);
+			if(!ClassicProject.g().isTaskDone(domH))
+				ClassicProject.g().runTask(domH);
+			
+			ClassicProject.g().resetTaskDone("allVH");
+			ClassicProject.g().runTask("allVH");
+			ProgramRel relAllVH = (ProgramRel)ClassicProject.g().getTrgt("allVH"); 
+			relAllVH.load();
+			PrintWriter out = Utils.openOut(X.path("queries_all.txt"));
+			out.println("Queries:");
+			out.println("Num:" + relAllVH.size());
+			IntPairIterable itr = relAllVH.getAry2IntTuples();
+			for(IntPair it : itr){
+				out.println("  "+ domV.toUniqueString(it.idx0) + " # " + domH.toUniqueString(it.idx1));
+			}
+			out.close();
 		}
-		out.close();
 
 	}
 	
