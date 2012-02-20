@@ -236,8 +236,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			currHs = entry.getKey();
 			currLocEs = entry.getValue();
 			currEscEs.clear();
-			if(currHs.size()!=4)
-				continue;
 			boolean timeOut = false;
 			System.out.println("**************");
 			System.out.println("currEs:");
