@@ -62,9 +62,9 @@ import chord.project.Config;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
 import chord.project.analyses.ProgramRel;
-import chord.project.analyses.rhs.RHSAnalysis;
-import chord.project.analyses.rhs.TimeoutException;
-import chord.project.analyses.rhs.WrappedEdge;
+import chord.project.analyses.myrhs.RHSAnalysis;
+import chord.project.analyses.myrhs.TimeoutException;
+import chord.project.analyses.myrhs.WrappedEdge;
 import chord.util.ArraySet;
 import chord.util.Timer;
 import chord.util.tuple.integer.IntPair;
@@ -372,7 +372,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		if (!dir.exists())
 			dir.mkdir();
 		PrintWriter w = OutDirUtils.newPrintWriter("traces" + "/"
-				+ wpe.q.val0 + ".html");
+				+ wpe.inst + ".html");
 		w.println("<html><head></head><body>");
 		String initWPEStr = toString(wpe);
 		w.println(initWPEStr);
@@ -387,9 +387,9 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	}
 
 	private String toString(WrappedEdge<Edge> wpe) {
-		String s = wpe.q.val0.toString();
-		s += "\n<pre>" + toString(wpe.q.val1, wpe.q.val0.getMethod())
-				+ "[trajLength = " + wpe.q.val2 + "]" + "</pre>";
+		String s = wpe.inst.toString();
+		s += "\n<pre>" + toString(wpe.edge, wpe.inst.getMethod())
+				+ "[trajLength = " + wpe.pathLength + "]" + "</pre>";
 		return s;
 	}
 
@@ -468,8 +468,8 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			return "No edges<br>";
 		String s = "";
 		for (WrappedEdge<Edge> wpe : peSet){
-				s += "<pre>" + toString(wpe.q.val1, m) + "[trajLength = "
-						+ wpe.q.val2 + "]" + "</pre>";}
+				s += "<pre>" + toString(wpe.edge, m) + "[trajLength = "
+						+ wpe.pathLength + "]" + "</pre>";}
 		return s;
 	}
 
@@ -478,7 +478,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			return "No edges<br>";
 		String s = "";
 		for (WrappedEdge<Edge> pe : peSet)
-			s += "<pre>" + toString(pe.q.val1, m) + "</pre>";
+			s += "<pre>" + toString(pe.edge, m) + "</pre>";
 		return s;
 	}
 
@@ -758,7 +758,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			int bIdx = getIdx(bo);
 			Set<WrappedEdge<Edge>> peSet = pathEdges.get(q);
 				for (WrappedEdge<Edge> wpe : peSet) {
-					Obj pts = wpe.q.val1.dstNode.env[bIdx];
+					Obj pts = wpe.edge.dstNode.env[bIdx];
 					if (pts == Obj.ONLY_ESC || pts == Obj.BOTH) {
 						escEdge = wpe;
 						return;
