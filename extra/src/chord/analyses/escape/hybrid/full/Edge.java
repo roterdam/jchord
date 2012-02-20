@@ -10,7 +10,7 @@ import java.util.Set;
 
 import joeq.Class.jq_Field;
 import chord.util.ArraySet;
-import chord.project.analyses.rhs.IEdge;
+import chord.project.analyses.myrhs.IEdge;
 
 /**
  * 
