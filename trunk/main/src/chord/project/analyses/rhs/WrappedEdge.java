@@ -1,62 +1,71 @@
 package chord.project.analyses.rhs;
 
 import joeq.Compiler.Quad.Inst;
+import chord.project.analyses.myrhs.IEdge;
+import chord.project.analyses.myrhs.WrappedEdge;
 import chord.util.Utils;
 import chord.util.tuple.object.Quad;
 
-public class WrappedEdge<PE extends IEdge> {
+public class WrappedEdge<Edge extends IEdge> {
 	/**
-	 * Inst: instruction after PE
-	 * PE: the path edge
-	 * Integer: the shortest trajactory length
+	 * inst: instruction after PE
+	 * pe: the path edge
+	 * Integer: the shortest path length
 	 * WrappedEdge<PE>: the wrapped path edge predecessor
 	 */
-	public Quad<Inst, PE,Integer,WrappedEdge<PE>> q;
-	public WrappedEdge(Inst inst, PE pe, Integer trajLength, WrappedEdge<PE> provence){
-		this.q = new Quad<Inst,PE,Integer, WrappedEdge<PE>>(inst,pe,trajLength,provence);
+	public Inst inst;
+	public Edge edge;
+	public int pathLength;
+	public WrappedEdge<Edge> provence;
+	public WrappedEdge(Inst inst, Edge pe, Integer pathLength, WrappedEdge<Edge> provence){
+		this.inst = inst;
+		this.edge = pe;
+		this.pathLength= pathLength;
+		this.provence = provence;
 	}
 	
-	public int canMerge(WrappedEdge<PE> that){
-		if(q.val0 == null){
-			if(that.q.val0!=null)
+	public int canMerge(WrappedEdge<Edge> that){
+		if(inst == null){
+			if(that.inst!=null)
 				return -1;
 		}
 		else
-		if(!q.val0.equals(that.q.val0))
+		if(!inst.equals(that.inst))
 			return -1;
-		return q.val1.canMerge(that.q.val1);
+		return edge.canMerge(that.edge);
 	}
 	
-	public boolean mergeWith(WrappedEdge<PE> that){
+	public boolean mergeWith(WrappedEdge<Edge> that){
 		int canMerge = this.canMerge(that);
 		if(canMerge < 0)
 			throw new RuntimeException(this+" cannot be merged with "+that);
-		boolean changed = q.val1.mergeWith(that.q.val1);
+		boolean changed = edge.mergeWith(that.edge);
 		if(canMerge == 0){
-			if(q.val2 > that.q.val2){
-				q.val2 = that.q.val2;
-				q.val3 = that.q.val3;
+			if(pathLength > that.pathLength){
+				pathLength = that.pathLength;
+				provence = that.provence;
 				changed = true;
 			}
 		}
 		if(canMerge == 2){
-			q.val2 = that.q.val2;
-			q.val3 = that.q.val3;
+			pathLength = that.pathLength;
+			provence = that.provence;
 			changed = true;
 		}
 		return changed;
 	}
 	
+
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result;
-		if(q==null)
-		return result;
-		result += (q.val0==null?0:q.val0.hashCode())+(q.val1==null?0:q.val1.hashCode())+(q.val2==null?0:q.val2.hashCode());
+		result = prime * result + ((inst == null) ? 0 : inst.hashCode());
+		result = prime * result + pathLength;
+		result = prime * result + ((edge == null) ? 0 : edge.hashCode());
 		return result;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (this == obj)
@@ -65,15 +74,25 @@ public class WrappedEdge<PE extends IEdge> {
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		WrappedEdge that = (WrappedEdge) obj;
-			return Utils.areEqual(this.q.val0, that.q.val0) &&
-				   Utils.areEqual(this.q.val1, that.q.val1) &&
-				   Utils.areEqual(this.q.val2, that.q.val2);
+		WrappedEdge other = (WrappedEdge) obj;
+		if (inst == null) {
+			if (other.inst != null)
+				return false;
+		} else if (!inst.equals(other.inst))
+			return false;
+		if (pathLength != other.pathLength)
+			return false;
+		if (edge == null) {
+			if (other.edge != null)
+				return false;
+		} else if (!edge.equals(other.edge))
+			return false;
+		return true;
 	}
 
 	@Override
 	public String toString() {
-		return "WrappedEdge [Inst=" + q.val0 + ", PE="+q.val1+"]";
+		return "WrappedEdge [Inst=" + inst + ", PE="+edge+", path length = "+pathLength+"]";
 	}
 
 	
