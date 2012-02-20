@@ -6,51 +6,43 @@
  */
 package chord.project.analyses.rhs;
 
-import gnu.trove.TObjectIntHashMap;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
-import java.util.TreeMap;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.EntryOrExitBasicBlock;
-import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator;
-import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Inst;
+import joeq.Compiler.Quad.Operator.Invoke;
+
+import gnu.trove.TObjectIntHashMap;
+import chord.util.tuple.object.Pair;
+import chord.program.Location;
 import chord.analyses.alias.ICICG;
 import chord.analyses.invk.DomI;
 import chord.analyses.method.DomM;
-import chord.program.Location;
 import chord.project.ClassicProject;
-import chord.project.Messages;
 import chord.project.analyses.JavaAnalysis;
+import chord.util.ArraySet;
 import chord.util.Alarm;
-import chord.util.tuple.object.Pair;
-import chord.util.tuple.object.Trio;
+import chord.project.Messages;
 
 /**
- * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive
- * dataflow analysis.
+ * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive dataflow analysis.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
-		JavaAnalysis {
+public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends JavaAnalysis {
 	protected static boolean DEBUG = false;
-	protected List<Pair<Location, WrappedEdge<PE>>> workList = new ArrayList<Pair<Location, WrappedEdge<PE>>>();
-	// Here, a SortedMap of Set is used rather than a single set to represent
-	// the rings described in the Bebop paper
-	protected Map<Inst, Set<WrappedEdge<PE>>> pathEdges = new HashMap<Inst, Set<WrappedEdge<PE>>>();
-	protected Map<jq_Method, Set<WrappedEdge<SE>>> summEdges = new HashMap<jq_Method, Set<WrappedEdge<SE>>>();
+	protected List<Pair<Location, PE>> workList = new ArrayList<Pair<Location, PE>>();
+	protected Map<Inst, Set<PE>> pathEdges = new HashMap<Inst, Set<PE>>();
+	protected Map<jq_Method, Set<SE>> summEdges = new HashMap<jq_Method, Set<SE>>();
 	protected DomI domI;
 	protected DomM domM;
 	protected ICICG cicg;
@@ -64,93 +56,58 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 	protected final boolean useBFS = useBFS();
 	protected final boolean mustMerge = mustMerge();
 	protected final boolean mayMerge = mayMerge();
-	protected final boolean keepRings = keepRings();
 	protected jq_Method currentMethod;
 	protected BasicBlock currentBB;
 
 	protected RHSAnalysis() {
 		if (mustMerge && !mayMerge) {
-			Messages.fatal("Cannot create RHS analysis '" + getName()
-					+ "' with mustMerge but without mayMerge.");
-		}
-		if (mustMerge && keepRings) {
-			Messages.fatal("Cannot create RHS analysis '" + getName()
-					+ "' with keepRings and mustMerge");
+			Messages.fatal("Cannot create RHS analysis '" + getName() + "' with mustMerge but without mayMerge.");
 		}
 	}
 
 	// get the initial set of path edges
 	public abstract Set<Pair<Location, PE>> getInitPathEdges();
 
-	// get the path edge(s) in callee for target method m called from call site
-	// q
+	// get the path edge(s) in callee for target method m called from call site q
 	// with caller path edge pe
 	public abstract PE getInitPathEdge(Quad q, jq_Method m, PE pe);
 
 	// get outgoing path edge(s) from q, given incoming path edge pe into q.
-	// q is guaranteed to not be an invoke statement, return statement, entry
-	// basic block, or exit basic block
+	// q is guaranteed to not be an invoke statement, return statement, entry basic block, or exit basic block
 	// the set returned can be reused by client
 	public abstract PE getMiscPathEdge(Quad q, PE pe);
-
+ 
 	// q is an invoke statement and m is the target method.
-	// get path edge to successor of q given path edge into q and summary edge
-	// of
+	// get path edge to successor of q given path edge into q and summary edge of
 	// a target method m of the call site q.
-	// returns null if the path edge into q is not compatible with the summary
-	// edge.
+	// returns null if the path edge into q is not compatible with the summary edge.
 	public abstract PE getInvkPathEdge(Quad q, PE clrPE, jq_Method m, SE tgtSE);
 
 	public abstract PE getCopy(PE pe);
 
 	// m is a method and pe is a path edge from entry to exit of m
-	// (in case of forward analysis) or vice versa (in case of backward
-	// analysis)
+	// (in case of forward analysis) or vice versa (in case of backward analysis)
 	// that must be lifted to a summary edge
 	public abstract SE getSummaryEdge(jq_Method m, PE pe);
 
-	public Set<PE> getPathEdge(Inst inst) {
-		Set<PE> ret = new HashSet<PE>();
-		Set<WrappedEdge<PE>> peSet = pathEdges.get(inst);
-		if (peSet == null)
-			return ret;
-		for (WrappedEdge<PE> pe : peSet) {
-			ret.add(pe.q.val1);
-		}
-		return ret;
-	}
-
 	/**
-	 * Determines whether this analysis should merge path edges at each program
-	 * point that have the same source state but different target states and,
-	 * likewise, summary edges of each method that have the same source state
-	 * and different target states.
-	 * 
-	 * @return true iff (path or summary) edges with the same source state and
-	 *         different target states should be merged.
+	 * Determines whether this analysis should merge path edges at each program point that
+	 * have the same source state but different target states and, likewise, summary edges
+	 * of each method that have the same source state and different target states.
+	 *
+	 * @return	true iff (path or summary) edges with the same source state and different
+	 *			target states should be merged.
 	 */
 	public abstract boolean mayMerge();
 
 	public abstract boolean mustMerge();
 
-	/**
-	 * Determines whether this analysis should keep rings to record the length
-	 * of the shortest trajectory to reachable program point. Note if keepRings
-	 * returns True, mustMerge must return false.
-	 * 
-	 * @return true iff rings are used to keep the length of the shortest
-	 *         trajectories
-	 */
-	public abstract boolean keepRings();
-
-	public boolean useBFS() {
-		return true;
-	}
+	public boolean useBFS() { return true; }
 
 	/**
 	 * Provides the call graph to be used by the analysis.
-	 * 
-	 * @return The call graph to be used by the analysis.
+	 *
+	 * @return	The call graph to be used by the analysis.
 	 */
 	public abstract ICICG getCallGraph();
 
@@ -192,8 +149,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 		quadToRPOid = new TObjectIntHashMap<Inst>();
 		invkQuadToLoc = new HashMap<Quad, Location>();
 		for (jq_Method m : cicg.getNodes()) {
-			if (m.isAbstract())
-				continue;
+			if (m.isAbstract()) continue;
 			ControlFlowGraph cfg = m.getCFG();
 			quadToRPOid.put(cfg.entry(), 0);
 			int rpoId = 1;
@@ -213,10 +169,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 	}
 
 	/**
-	 * Run an instance of the analysis afresh. Clients may call this method
-	 * multiple times from their {@link #run()} method. Clients must override
-	 * method {@link #getInitPathEdges()} to return a new "seed" each time they
-	 * call this method.
+	 * Run an instance of the analysis afresh.
+	 * Clients may call this method multiple times from their {@link #run()} method.
+	 * Clients must override method {@link #getInitPathEdges()} to return a new "seed"
+	 * each time they call this method.
 	 */
 	protected void runPass() throws TimeoutException {
 		init();
@@ -230,10 +186,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 		for (Pair<Location, PE> pair : initPEs) {
 			Location loc = pair.val0;
 			PE pe = pair.val1;
-			Inst inst = (loc.q == null) ? (EntryOrExitBasicBlock) loc.bb
-					: loc.q;
-			WrappedEdge<PE> initWPE = new WrappedEdge<PE>(inst, pe, 0, null);
-			addPathEdge(loc, initWPE);
+			addPathEdge(loc, pe);
 		}
 		propagate();
 	}
@@ -241,22 +194,22 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 	protected void printSummaries() {
 		for (jq_Method m : summEdges.keySet()) {
 			System.out.println("SE of " + m);
-			Set<WrappedEdge<SE>> seSet = summEdges.get(m);
+			Set<SE> seSet = summEdges.get(m);
 			if (seSet != null) {
-				for (WrappedEdge<SE> se : seSet)
-					System.out.println("\tSE " + se.q.val1);
+				for (SE se : seSet)
+					System.out.println("\tSE " + se);
 			}
 		}
 		for (Inst i : pathEdges.keySet()) {
 			System.out.println("PE of " + i);
-			Set<PE> peSet = getPathEdge(i);
+			Set<PE> peSet = pathEdges.get(i);
 			if (peSet != null) {
 				for (PE pe : peSet)
 					System.out.println("\tPE " + pe);
 			}
 		}
 	}
-
+		
 	/**
 	 * Propagate forward or backward until fixpoint is reached.
 	 */
@@ -268,7 +221,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 			}
 			if (DEBUG) {
 				System.out.println("WORKLIST:");
-				for (Pair<Location, WrappedEdge<PE>> pair : workList) {
+				for (Pair<Location, PE> pair : workList) {
 					Location loc = pair.val0;
 					Inst i = (loc.q == null) ? (Inst) loc.bb : loc.q;
 					int id = quadToRPOid.get(i);
@@ -276,21 +229,15 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 				}
 			}
 			int last = workList.size() - 1;
-			Pair<Location, WrappedEdge<PE>> pair = workList.remove(last);
+			Pair<Location, PE> pair = workList.remove(last);
 			Location loc = pair.val0;
-			WrappedEdge<PE> wpe = pair.val1;
-			PE pe = wpe.q.val1;
+			PE pe = pair.val1;
 			Quad q = loc.q;
 			jq_Method m = loc.m;
 			BasicBlock bb = loc.bb;
-			int trajLength = wpe.q.val2;
-			int newTrajLength = this.keepRings ? trajLength + 1 : trajLength;
-			int trajIncrease = this.keepRings?1:0;
-			WrappedEdge<PE> newPre = this.keepRings ? wpe : null;
 			currentMethod = m;
 			currentBB = bb;
-			if (DEBUG)
-				System.out.println("Processing loc: " + loc + " PE: " + pe);
+			if (DEBUG) System.out.println("Processing loc: " + loc + " PE: " + pe);
 			if (q == null) {
 				// method entry or method exit
 				if (bb.isEntry()) {
@@ -306,286 +253,181 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 						}
 						Location loc2 = new Location(m, bb2, q2Idx, q2);
 						PE pe2 = mayMerge ? getCopy(pe) : pe;
-						Inst ninst = (q2 == null) ? (EntryOrExitBasicBlock) bb2
-								: q2;
-						WrappedEdge<PE> nwpe = new WrappedEdge<PE>(ninst, pe2,
-								newTrajLength, newPre);
-						addPathEdge(loc2, nwpe);
+						addPathEdge(loc2, pe2);
 					}
 				} else {
 					assert (bb.isExit());
-					processExit(m, wpe);
+					processExit(m, pe);
 				}
 			} else {
 				// invoke or misc quad
 				Operator op = q.getOperator();
 				if (op instanceof Invoke) {
-					if(q.toString().contains("jj_add_error_token:(II)V@org.apache.lucene.queryParser.QueryParser"))
-						System.out.println("wawa");
 					Set<jq_Method> targets = getTargets(q);
 					if (targets.isEmpty()) {
 						PE pe2 = mayMerge ? getCopy(pe) : pe;
-						propagatePEtoPE(m, bb, loc.qIdx, pe2, newTrajLength,
-								newPre);
+						propagatePEtoPE(m, bb, loc.qIdx, pe2);
 					} else {
 						for (jq_Method m2 : targets) {
-							if (DEBUG)
-								System.out.println("\tTarget: " + m2);
+							if (DEBUG) System.out.println("\tTarget: " + m2);
 							PE pe2 = getInitPathEdge(q, m2, pe);
-							EntryOrExitBasicBlock bb2 = m2.getCFG().entry();
+							BasicBlock bb2 = m2.getCFG().entry();
 							Location loc2 = new Location(m2, bb2, -1, null);
-							WrappedEdge<PE> nwpe = new WrappedEdge<PE>(bb2,
-									pe2, newTrajLength, newPre);
-							addPathEdge(loc2, nwpe);
-							Set<WrappedEdge<SE>> seSet = summEdges.get(m2);
+							addPathEdge(loc2, pe2);
+							Set<SE> seSet = summEdges.get(m2);
 							if (seSet == null) {
-								if (DEBUG)
-									System.out.println("\tSE set empty");
+								if (DEBUG) System.out.println("\tSE set empty");
 								continue;
 							}
-							for (WrappedEdge<SE> se : seSet) {
-								if (DEBUG)
-									System.out.println("\tTesting SE: " + se.q.val1);
-								if (propagateSEtoPE(pe, trajLength+trajIncrease*(se.q.val2+1), newPre,
-										loc, m2, se.q.val1)) {
-									if (DEBUG)
-										System.out.println("\tMatched");
+							for (SE se : seSet) {
+								if (DEBUG) System.out.println("\tTesting SE: " + se);
+								if (propagateSEtoPE(pe, loc, m2, se)) {
+									if (DEBUG) System.out.println("\tMatched");
 									if (mustMerge) {
-										// this was only SE; stop looking for
-										// more
+										// this was only SE; stop looking for more
 										break;
 									}
 								} else {
-									if (DEBUG)
-										System.out.println("\tDid not match");
+									if (DEBUG) System.out.println("\tDid not match");
 								}
 							}
 						}
 					}
 				} else {
 					PE pe2 = getMiscPathEdge(q, pe);
-					propagatePEtoPE(m, bb, loc.qIdx, pe2, newTrajLength, newPre);
+					propagatePEtoPE(m, bb, loc.qIdx, pe2);
 				}
 			}
 		}
 	}
 
-	private void processExit(jq_Method m, WrappedEdge<PE> wpe) {
-		SE se = getSummaryEdge(m, wpe.q.val1);
-		WrappedEdge<SE> wse = new WrappedEdge<SE>(null,se,0,null);
-		if(this.keepRings){
-			for(WrappedEdge<PE> swpe: pathEdges.get(m.getCFG().entry())){
-				if(swpe.q.val1.matchSourse(wpe.q.val1)){
-					wse.q.val2 = wpe.q.val2- swpe.q.val2+1;
-				}
-			}
-		}
-		Set<WrappedEdge<SE>> wseSet = summEdges.get(m);
-		if (DEBUG)
-			System.out.println("\tChecking if " + m + " has SE: " + se);
-		WrappedEdge<SE> wseToAdd = wse;
-		if (wseSet == null) {
-			wseSet = new HashSet<WrappedEdge<SE>>();
-			summEdges.put(m, wseSet);
-			wseSet.add(wse);
-			if (DEBUG)
-				System.out.println("\tNo, adding it as first SE");
+	private void processExit(jq_Method m, PE pe) {
+		SE se = getSummaryEdge(m, pe);
+		Set<SE> seSet = summEdges.get(m);
+		if (DEBUG) System.out.println("\tChecking if " + m + " has SE: " + se);
+		SE seToAdd = se;
+		if (seSet == null) {
+			seSet = new HashSet<SE>();
+			summEdges.put(m, seSet);
+			seSet.add(se);
+			if (DEBUG) System.out.println("\tNo, adding it as first SE");
 		} else if (mayMerge) {
 			boolean matched = false;
-			for (WrappedEdge<SE> wse2 : wseSet) {
-				if (wse2.canMerge(wse) >= 0) {
-					if (DEBUG)
-						System.out.println("\tNo, but matches SE: " + wse2.q.val1);
-					boolean changed = wse2.mergeWith(wse);
-					if (DEBUG)
-						System.out.println("\tNew SE after merge: " + wse2.q.val1);
+			for (SE se2 : seSet) {
+				if (se2.canMerge(se)) {
+					if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
+					boolean changed = se2.mergeWith(se);
+					if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
 					if (!changed) {
-						if (DEBUG)
-							System.out.println("\tExisting SE did not change");
+						if (DEBUG) System.out.println("\tExisting SE did not change");
 						return;
 					}
-					if (DEBUG)
-						System.out.println("\tExisting SE changed");
+					if (DEBUG) System.out.println("\tExisting SE changed");
 					// se2 is already in summEdges(m), so no need to add it
-					wseToAdd = wse2;
+					seToAdd = se2;
 					matched = true;
 					break;
 				}
 			}
 			if (!matched) {
-				if (DEBUG)
-					System.out.println("\tNo, adding");
-				wseSet.add(wse);
+				if (DEBUG) System.out.println("\tNo, adding");
+				seSet.add(se);
 			}
-		} else if (!wseSet.add(wse)) {
-			if (DEBUG)
-				System.out.println("\tYes, not adding");
+		} else if (!seSet.add(se)) {
+			if (DEBUG) System.out.println("\tYes, not adding");
 			return;
 		}
 		for (Quad q2 : getCallers(m)) {
-			if (DEBUG)
-				System.out.println("\tCaller: " + q2 + " in " + q2.getMethod());
-			Set<WrappedEdge<PE>> peSet = pathEdges.get(q2);
+			if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + q2.getMethod());
+			Set<PE> peSet = pathEdges.get(q2);
 			if (peSet == null)
 				continue;
-			// make a copy as propagateSEtoPE might add a path edge to this set
-			// itself;
-			// in this case we could get a ConcurrentModification exception if
-			// we don't
+			// make a copy as propagateSEtoPE might add a path edge to this set itself;
+			// in this case we could get a ConcurrentModification exception if we don't
 			// make a copy.
-			List<WrappedEdge<PE>> peList = new ArrayList<WrappedEdge<PE>>(peSet);
+			List<PE> peList = new ArrayList<PE>(peSet);
 			Location loc2 = invkQuadToLoc.get(q2);
-			for (WrappedEdge<PE> storedWPE : peList) {
-				PE storedPE = storedWPE.q.val1;
-				if (DEBUG)
-					System.out.println("\tTesting PE: " + storedPE);
-				int newTrajLength = keepRings ? storedWPE.q.val2 + wseToAdd.q.val2+1
-						: storedWPE.q.val2;
-				WrappedEdge<PE> pre = keepRings ? storedWPE : null;
-				boolean match = propagateSEtoPE(storedPE, newTrajLength, pre,
-						loc2, m, wseToAdd.q.val1);
+			for (PE pe2 : peList) {
+				if (DEBUG) System.out.println("\tTesting PE: " + pe2);
+				boolean match = propagateSEtoPE(pe2, loc2, m, seToAdd);
 				if (match) {
-					if (DEBUG)
-						System.out.println("\tMatched");
+					if (DEBUG) System.out.println("\tMatched");
 				} else {
-					if (DEBUG)
-						System.out.println("\tDid not match");
+					if (DEBUG) System.out.println("\tDid not match");
 				}
 			}
 		}
 	}
 
-	private void addPathEdgeToRings(PE pe, int trajLength,
-			Map<Integer, Set<PE>> rings) {
-		Set<PE> peSet = rings.get(trajLength);
-		if (peSet == null) {
-			peSet = new HashSet<PE>();
-			rings.put(trajLength, peSet);
-		}
-		peSet.add(pe);
-	}
-
-	private boolean isWPEinWorkList(Location loc, WrappedEdge<PE> wpe) {
-		for (Pair<Location, WrappedEdge<PE>> pair : workList) {
-			if (!pair.val0.equals(loc))
-				continue;
-			if (wpe.equals(pair.val1))
-				return true;
-		}
-		return false;
-	}
-
-	private void addPathEdge(Location loc, WrappedEdge<PE> wpe) {
-		if (DEBUG)
-			System.out.println("\tChecking if " + loc + " has PE: "
-					+ wpe.q.val1);
+	private void addPathEdge(Location loc, PE pe) {
+		if (DEBUG) System.out.println("\tChecking if " + loc + " has PE: " + pe);
 		Quad q = loc.q;
 		Inst i = (q != null) ? q : (Inst) loc.bb;
-		Set<WrappedEdge<PE>> wpes = pathEdges.get(i);
-		WrappedEdge<PE> wpeToAdd = wpe;
-		if (wpes == null) {// The first path edge of this location
-			wpes = new HashSet<WrappedEdge<PE>>();
-			pathEdges.put(i, wpes);
-			wpes.add(wpe);
-			if (DEBUG)
-				System.out.println("\tNo, adding it as first PE");
-		} else if (mayMerge) {// if mayMerge==true, the method would try to
-								// merge the new path edge with existing path
-								// edges
+		Set<PE> peSet = pathEdges.get(i);
+		PE peToAdd = pe;
+		if (peSet == null) {
+			peSet = new HashSet<PE>();
+			pathEdges.put(i, peSet);
+			peSet.add(pe);
+			if (DEBUG) System.out.println("\tNo, adding it as first PE");
+		} else if (mayMerge) {
 			boolean matched = false;
-			for (WrappedEdge<PE> storedWPE : wpes) {
-				int canMerge = storedWPE.canMerge(wpe);
-				if (canMerge == 2) {// The new path edge is bigger, this would
-									// change the current Edge
-					if (!isWPEinWorkList(loc, storedWPE))
-						continue;
-				}
-				if (canMerge >= 0) {
-					if (DEBUG)
-						System.out.println("\tNo, but matches PE: " + wpe);
-					boolean changed = storedWPE.mergeWith(wpe);
-					if (DEBUG)
-						System.out
-								.println("\tNew PE after merge: " + storedWPE);
+			for (PE pe2 : peSet) {
+				if (pe2.canMerge(pe)) {
+					if (DEBUG) System.out.println("\tNo, but matches PE: " + pe2);
+					boolean changed = pe2.mergeWith(pe);
+					if (DEBUG) System.out.println("\tNew PE after merge: " + pe2); 
 					if (!changed) {
-
-						if (DEBUG) {
-							System.out
-									.println("\tExisting PE and its trajectory length did not change");
-						}
+						if (DEBUG) System.out.println("\tExisting PE did not change");
 						return;
-					} else {
-						if (DEBUG)
-							System.out.println("\tExisting PE changed");
 					}
+					if (DEBUG) System.out.println("\tExisting PE changed");
+					// pe2 is already in pathEdges(i), so no need to add it;
+					// but it may or may not be in workList
+					for (int j = workList.size() - 1; j >= 0; j--) {
+						Pair<Location, PE> pair = workList.get(j);
+						PE pe3 = pair.val1;
+						if (pe3 == pe2)
+							return;
+					}
+					peToAdd = pe2;
 					matched = true;
 					break;
 				}
-
 			}
-			if (matched == true) {
-				for (int j = workList.size() - 1; j >= 0; j--) {
-					Pair<Location, WrappedEdge<PE>> pair = workList.get(j);
-					if (!pair.val0.equals(loc))
-						continue;
-					WrappedEdge<PE> wpeInWL = pair.val1;
-					int canMerge = wpeInWL.canMerge(wpeToAdd);
-					if (canMerge == 0) {
-						wpeInWL.mergeWith(wpeToAdd);
-						return;
-					}
-				}
-			} else {
-				if (DEBUG)
-					System.out.println("\tNo, adding");
-				wpes.add(wpe);
+			if (!matched) {
+				if (DEBUG) System.out.println("\tNo, adding");
+				peSet.add(pe);
 			}
-		} else {// Not merge at all
-			boolean ifAdded = true;
-			for (WrappedEdge<PE> storedWPE : wpes) {
-				if (storedWPE.q.val1.equals(wpe.q.val1)) {
-					ifAdded = false;
-					if (storedWPE.q.val2 > wpe.q.val2) {
-						storedWPE.q.val2 = wpe.q.val2;
-						storedWPE.q.val3 = wpe.q.val3;
-					}
-				}
-			}
-			if (!ifAdded) {
-				if (DEBUG)
-					System.out.println("\tYes, not adding");
-				return;
-			}
-			wpes.add(wpeToAdd);
+		} else if (!peSet.add(pe)) {
+			if (DEBUG) System.out.println("\tYes, not adding");
+			return;
 		}
-		assert (wpeToAdd != null);
+		assert (peToAdd != null);
+		Pair<Location, PE> pair = new Pair<Location, PE>(loc, peToAdd);
 		int j = workList.size() - 1;
 		if (useBFS) {
 			jq_Method m = loc.m;
 			int rpoId = quadToRPOid.get(i);
 			for (; j >= 0; j--) {
 				Location loc2 = workList.get(j).val0;
-				if (loc2.m != m)
-					break;
+				if (loc2.m != m) break;
 				Inst i2 = (loc2.q != null) ? loc2.q : (Inst) loc2.bb;
 				int rpoId2 = quadToRPOid.get(i2);
 				if (rpoId2 > rpoId)
 					break;
 			}
 		}
-		if (DEBUG)
-			System.out.println("\tAlso adding to worklist at " + (j + 1));
-		workList.add(j + 1, new Pair<Location, WrappedEdge<PE>>(loc, wpeToAdd));
+		if (DEBUG) System.out.println("\tAlso adding to worklist at " + (j + 1));
+		workList.add(j + 1, pair);
 	}
 
-	private void propagatePEtoPE(jq_Method m, BasicBlock bb, int qIdx, PE pe,
-			int trajLength, WrappedEdge<PE> pre) {
+	private void propagatePEtoPE(jq_Method m, BasicBlock bb, int qIdx, PE pe) {
 		if (qIdx != bb.size() - 1) {
 			int q2Idx = qIdx + 1;
 			Quad q2 = bb.getQuad(q2Idx);
 			Location loc2 = new Location(m, bb, q2Idx, q2);
-			WrappedEdge<PE> nwpe = new WrappedEdge<PE>(q2, pe, trajLength, pre);
-			addPathEdge(loc2, nwpe);
+			addPathEdge(loc2, pe);
 			return;
 		}
 		boolean isFirst = true;
@@ -610,110 +452,17 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends
 				} else
 					pe2 = getCopy(pe);
 			}
-			Inst inst = (q2 == null) ? (EntryOrExitBasicBlock) bb2 : q2;
-			WrappedEdge<PE> nwpe = new WrappedEdge<PE>(inst, pe, trajLength,
-					pre);
-			addPathEdge(loc2, nwpe);
+			addPathEdge(loc2, pe2);
 		}
 	}
 
-	private boolean propagateSEtoPE(PE clrPE, int trajLength,
-			WrappedEdge<PE> pre, Location loc, jq_Method tgtM, SE tgtSE) {
+	private boolean propagateSEtoPE(PE clrPE, Location loc, jq_Method tgtM, SE tgtSE) {
 		Quad q = loc.q;
 		PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
 		if (pe2 == null)
 			return false;
-		propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2, trajLength, pre);
+		   propagatePEtoPE(loc.m, loc.bb, loc.qIdx, pe2);
 		return true;
 	}
-
-	public BackTraceIterator getBackTraceIterator(WrappedEdge<PE> wpe) {
-		return new BackTraceIterator(wpe);
-	}
-
-	/**
-	 * The backward trace iterator.
-	 * 
-	 * @author xin
-	 * 
-	 */
-	public class BackTraceIterator implements Iterator<WrappedEdge<PE>> {
-		private WrappedEdge<PE> currentWPE;
-		private Stack<WrappedEdge<PE>> callStack;
-
-		public BackTraceIterator(WrappedEdge<PE> wpe) {
-			if (keepRings == false)
-				Messages.fatal("Cannot create a backward trace iterator when no rings are kept to record the trajactory length.");
-			currentWPE = wpe;
-			callStack = new Stack<WrappedEdge<PE>>();
-		}
-
-		@Override
-		public boolean hasNext() {
-			return currentWPE.q.val2 != 0;
-		}
-
-		@Override
-		public WrappedEdge<PE> next() {
-			if (currentWPE.q.val0 instanceof EntryOrExitBasicBlock) {
-				EntryOrExitBasicBlock bb = (EntryOrExitBasicBlock) currentWPE.q.val0;
-				if (bb.isEntry() && !callStack.empty()) {
-					currentWPE = callStack.pop();
-					return currentWPE;
-				}
-			}
-			WrappedEdge<PE> preWPE = currentWPE.q.val3;
-			PE pe = currentWPE.q.val1;
-			PE prePE = preWPE.q.val1;
-			Inst inst = currentWPE.q.val0;
-			Inst preInst = preWPE.q.val0;
-			boolean ifEntry =false;
-			if(inst instanceof BasicBlock){
-				BasicBlock bb = (BasicBlock)inst;
-				ifEntry = bb.isEntry();
-			}
-			if (!ifEntry&&preInst instanceof Quad) {
-				Quad preQuad = (Quad) preInst;
-				if (preQuad.getOperator() instanceof Invoke) {
-					Set<jq_Method> targets = getTargets(preQuad);
-					if (targets == null || targets.isEmpty()) {
-						currentWPE = preWPE;
-						return currentWPE;
-					}
-					for (jq_Method m : targets) {
-						Set<WrappedEdge<SE>> wseSet = summEdges.get(m);
-						if(wseSet!=null)
-						for (WrappedEdge<SE> wse : wseSet) {
-							if(preWPE.q.val2+wse.q.val2+1>currentWPE.q.val2)
-								continue;
-							PE invkPE = getInvkPathEdge(preQuad, prePE, m, wse.q.val1);
-							if (invkPE != null && invkPE.equals(pe)) {
-								callStack.push(preWPE);
-								Inst exit = m.getCFG().exit();
-								for (WrappedEdge<PE> exitWPE : pathEdges
-										.get(exit)) {
-									if (getSummaryEdge(m, exitWPE.q.val1)
-											.equals(wse.q.val1)&&exitWPE.q.val2<currentWPE.q.val2) {
-										currentWPE = exitWPE;
-										return currentWPE;
-									}
-								}
-							}
-						}
-					}
-					throw new RuntimeException("Couldn't find the right summary edge, something is wrong with the forward analysis!");
-				}
-			}
-			currentWPE = preWPE;
-
-			return currentWPE;
-		}
-
-		@Override
-		public void remove() {
-			throw new UnsupportedOperationException(
-					"Remove operation is not supported here!");
-		}
-
-	}
 }
+
