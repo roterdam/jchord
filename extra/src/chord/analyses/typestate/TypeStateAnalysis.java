@@ -90,6 +90,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	int maxFieldDepth;
 	int maxAPLength = 0;
 	private Edge nullEdge;
+	protected static boolean DEBUG = false;
 
 	public void run() {
 		String stateSpecFile = System.getProperty("chord.typestate.specfile",
@@ -121,7 +122,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
 		cipa = (CIPAAnalysis) ClassicProject.g().getTrgt("cipa-java");
 		ClassicProject.g().runTask(cipa);
-		RHSAnalysis.DEBUG = true;
+		RHSAnalysis.DEBUG = DEBUG;
 		qv.sp = sp;
 		qv.cipa = cipa;
 		domM = (DomM) ClassicProject.g().getTrgt("M");
@@ -143,11 +144,15 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public boolean useBFS() { return false; }
-	
+	public boolean useBFS() {
+		return false;
+	}
+
 	@Override
 	public ICICG getCallGraph() {
-		wri.println("Called getCallGraph:");
+		if (DEBUG) {
+			wri.println("Called getCallGraph:");
+		}
 		if (cicg == null) {
 			CICGAnalysis cicgAnalysis = (CICGAnalysis) ClassicProject.g()
 					.getTrgt("cicg-java");
@@ -168,14 +173,15 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 			Edge pe = nullEdge;
 			Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
 			initPEs.add(pair);
-			System.out.println("Added:" + loc + ",With PE:" + pe);
+			if (DEBUG) {
+				wri.println("Added:" + loc + ",With PE:" + pe);
+			}
 
 			// get the number of allocation sites in the method
-			int allocSites = getAllocSites(m);
+			ArraySet<Edge> allocEdges = getAllocSites(m);
 			// Add the required number of alloc edges to the start of the method
-			for (int i = 0; i < allocSites; i++) {
-				pe = new Edge(null, null, EdgeType.ALLOC);
-				pair = new Pair<Location, Edge>(loc, pe);
+			for (Edge locE : allocEdges) {
+				pair = new Pair<Location, Edge>(loc, locE);
 				initPEs.add(pair);
 			}
 		}
@@ -184,13 +190,11 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Edge getInitPathEdge(Quad q, jq_Method m, Edge pe) {
-		wri.println("Get Init Path Edge Called For:" + q.toString());
-		wri.println("For Method:" + m.toString());
-		wri.println("With Edge:" + q.toVerboseStr());
-		if (pe.dstNode != null) {
-			wri.println("With Alloc Site:" + pe.dstNode.alloc.toVerboseStr());
+		if (DEBUG) {
+			wri.println("Get Init Path Edge Called For:" + q.toString());
+			wri.println("For Method:" + m.toString());
+			wri.println("With Edge:" + q.toVerboseStr());
 		}
-
 		switch (pe.type) {
 		case NULL:
 			// Check if there is any return and assign the return register
@@ -235,11 +239,15 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 			if (sp.isMethodOfInterest(targetMethod.getName()) && isthis) {
 				newTypeState = sp.getTargetState(targetMethod.getName(),
 						pe.dstNode.ts);
-				wri.println("\nState Transition To:" + newTypeState + "\n");
+				if (DEBUG) {
+					wri.println("\nState Transition To:" + newTypeState + "\n");
+				}
 			} else {
-				wri.println("\nNot Doing State Transition for:"
-						+ targetMethod.getName() + " and this is:"
-						+ (isthis ? "true" : "false"));
+				if (DEBUG) {
+					wri.println("\nNot Doing State Transition for:"
+							+ targetMethod.getName() + " and this is:"
+							+ (isthis ? "true" : "false"));
+				}
 
 			}
 			newSrc = new AbstractState(pe.dstNode.alloc, newTypeState,
@@ -253,11 +261,14 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Edge getMiscPathEdge(Quad q, Edge pe) {
-		wri.println("Called getMiscPathEdge with:" + q.toString());
-		wri.println("With Edge:");
+		if (DEBUG) {
+			wri.println("Called getMiscPathEdge with:" + q.toString());
+			wri.println("With Edge:" + pe);
+		}
 		qv.istate = pe.dstNode;
 		qv.ostate = pe.dstNode;
 		qv.etype = pe.type;
+		qv.targetAlloc = pe.targetAlloc;
 		if (pe.type != EdgeType.NULL) {
 			q.accept(qv);
 		}
@@ -343,14 +354,17 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Edge getCopy(Edge pe) {
-		return new Edge(pe.srcNode, pe.dstNode, pe.type);
+		Edge ret = new Edge(pe.srcNode, pe.dstNode, pe.type);
+		ret.targetAlloc = pe.targetAlloc;
+		return ret;
 	}
 
 	@Override
 	public Edge getSummaryEdge(jq_Method m, Edge pe) {
-		wri.println("Get Summary Edge:");
-		if (pe.dstNode != null) {
-			wri.println("Yes!!" + pe.dstNode.alloc.toVerboseStr());
+		if (DEBUG) {
+			wri.println("Called Get Summary Edge:");
+			wri.println("For Method:" + m.toString());
+			wri.println("With Edge:" + pe);
 		}
 		switch (pe.type) {
 		case ALLOC:
@@ -382,15 +396,17 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	}
 
 	public void printSummaries() {
-		wri.println("Start HHHHHH:");
+		wri.println("Starting Summary Edges:");
 		for (jq_Method m : summEdges.keySet()) {
-			wri.println("SE of " + m);
+			wri.println("Summaray Edges of " + m + " Start");
 			Set<Edge> seSet = summEdges.get(m);
 			if (seSet != null) {
 				for (Edge se : seSet)
 					wri.println("\tSE " + se);
 			}
+			wri.println("Summaray Edges of " + m + " End");
 		}
+		wri.println("Starting Path Edges:");
 		for (Inst i : pathEdges.keySet()) {
 			wri.println("PE of " + i);
 			Set<Edge> peSet = pathEdges.get(i);
@@ -437,9 +453,9 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		}
 	}
 
-	private int getAllocSites(jq_Method targetM) {
+	private ArraySet<Edge> getAllocSites(jq_Method targetM) {
+		ArraySet<Edge> allocEdges = new ArraySet<Edge>();
 		int numH = domH.getLastI() + 1;
-		int noOfAllocSites = 0;
 		for (int hIdx = 1; hIdx < numH; hIdx++) {
 			Quad q = (Quad) domH.get(hIdx);
 			if (!isTypeInteresting(New.getType(q).getType())) {
@@ -447,10 +463,10 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 			}
 			jq_Method m = q.getMethod();
 			if (m == targetM) {
-				noOfAllocSites++;
+				allocEdges.add(new Edge(null, null, EdgeType.ALLOC, q));
 			}
 		}
-		return noOfAllocSites;
+		return allocEdges;
 	}
 
 }
@@ -462,6 +478,7 @@ class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 	TypeStateSpec sp;
 	CIPAAnalysis cipa;
 	EdgeType etype;
+	Quad targetAlloc;
 
 	@Override
 	public void visitMove(Quad q) {
@@ -511,7 +528,7 @@ class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 	@Override
 	public void visitNew(Quad q) {
 		ostate = istate;
-		if (etype == EdgeType.ALLOC && istate == null
+		if (etype == EdgeType.ALLOC && istate == null && targetAlloc == q
 				&& isTypeInteresting(New.getType(q).getType())) {
 			ArraySet<AccessPath> accessPath = new ArraySet<AccessPath>();
 			Register dest = New.getDest(q).getRegister();

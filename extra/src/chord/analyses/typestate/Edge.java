@@ -1,5 +1,5 @@
 package chord.analyses.typestate;
-
+import joeq.Compiler.Quad.Quad;
 import hj.array.lang.booleanArray;
 import chord.util.ArraySet;
 import chord.project.analyses.rhs.IEdge;
@@ -8,7 +8,7 @@ public class Edge implements IEdge {
 	final AbstractState srcNode;
 	AbstractState dstNode;
 	EdgeType type=EdgeType.ALLOC;
-	
+	Quad targetAlloc = null;
 	public Edge(AbstractState srcNode,AbstractState dstNode){
 		this.srcNode = srcNode;
 		this.dstNode = dstNode;
@@ -20,8 +20,38 @@ public class Edge implements IEdge {
 		type = edgeT;
 	}
 	
+	public Edge(AbstractState srcNode,AbstractState dstNode,EdgeType edgeT,Quad allocQuad){
+		this.srcNode = srcNode;
+		this.dstNode = dstNode;
+		assert(edgeT == EdgeType.ALLOC);
+		type = edgeT;
+		targetAlloc = allocQuad;
+	}
+	
 	public boolean canMerge(IEdge edge) {
-		return false;
+		boolean canMerge=false;
+		if(edge != null){
+			Edge targetE = (Edge)edge;
+			if(type == EdgeType.SUMMARY && targetE.type == EdgeType.SUMMARY){
+				if(srcNode == null || targetE.srcNode == null){
+					canMerge = srcNode == targetE.srcNode;
+				}
+				else{
+					canMerge = srcNode.equals(targetE.srcNode);
+				}
+				if(dstNode == null || targetE.dstNode == null){
+					canMerge = canMerge && (dstNode == targetE.dstNode);
+				}
+				else{
+					canMerge = canMerge && (dstNode.equals(targetE.dstNode));
+				}
+				
+			}
+			if(type == EdgeType.NULL && targetE.type == EdgeType.NULL){
+				canMerge = srcNode == targetE.srcNode && srcNode == null && dstNode == targetE.dstNode && dstNode == null;
+			}
+		}
+		return canMerge;
 	}
 	@Override
 	public boolean mergeWith(IEdge edge) {	
@@ -44,45 +74,13 @@ public class Edge implements IEdge {
 		else{
 			ret = ret+dstNode;
 		}
+		if(targetAlloc == null){
+			ret = ret +" Alloc is empty";
+		}
+		else{
+			ret = ret + " Alloc is:" + targetAlloc.toString();
+		}
 		return ret;
 	}
-	
-	/*
-	@Override
-	public int hashCode() {
-		int hashCode=0;
-		if(srcNode != null){
-			hashCode = hashCode ^ srcNode.hashCode();
-		}
-		if(dstNode != null){
-			hashCode = hashCode ^ dstNode.hashCode();
-		}
-		return hashCode;
-	}
-
-	@Override
-	public boolean equals(Object obj) {
-		if (this == obj)
-			return true;
-		if (!(obj instanceof Edge))
-			return false;
-		Edge that = (Edge) obj;
-		boolean areEqual = true;
-		if(this.srcNode == null || that.srcNode == null)
-		{
-			areEqual = areEqual && this.srcNode == that.srcNode;
-		}
-		else{
-			areEqual = areEqual && this.srcNode.equals(that.srcNode);
-		}		
-		if(this.dstNode == null || that.dstNode == null){
-			areEqual = areEqual && this.dstNode == that.dstNode;
-		}
-		else{
-			areEqual = areEqual && this.dstNode.equals(that.dstNode);
-		}
-		areEqual = areEqual && this.type == that.type;
-		return areEqual;
-	}*/
 }
 
