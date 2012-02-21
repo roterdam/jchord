@@ -1,5 +1,4 @@
 package chord.analyses.typestate;
-
 import java.util.Collections;
 import java.util.List;
 

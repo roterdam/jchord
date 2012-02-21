@@ -1,5 +1,4 @@
 package chord.analyses.typestate;
-
 import java.util.List;
 import joeq.Class.jq_Field;
 
