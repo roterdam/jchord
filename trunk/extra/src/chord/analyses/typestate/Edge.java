@@ -5,9 +5,13 @@ import chord.util.ArraySet;
 import chord.project.analyses.rhs.IEdge;
 
 public class Edge implements IEdge {
+	// 3 cases: <srcNode, targetAlloc, dstNode>
+    // <null, null, null> (NULL)
+	// <null, h, null|X> (ALLOC)
+	// <X, null, X> (SUMMARY)
 	final AbstractState srcNode;
-	AbstractState dstNode;
-	EdgeType type=EdgeType.ALLOC;
+	final AbstractState dstNode;
+	EdgeType type = EdgeType.ALLOC;
 	Quad targetAlloc = null;
 	public Edge(AbstractState srcNode,AbstractState dstNode){
 		this.srcNode = srcNode;
@@ -28,6 +32,7 @@ public class Edge implements IEdge {
 		targetAlloc = allocQuad;
 	}
 	
+	// TODO: move all this to equals, and also override hashCode
 	public boolean canMerge(IEdge edge) {
 		boolean canMerge=false;
 		if(edge != null){

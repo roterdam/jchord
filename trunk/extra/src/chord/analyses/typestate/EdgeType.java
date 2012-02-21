@@ -1,4 +1,6 @@
 package chord.analyses.typestate;
 public enum EdgeType {
-	ALLOC,NULL,SUMMARY
+	NULL,  // <null, null, null>
+	ALLOC, // <null, h, null|X>
+    SUMMARY  // <X, null, X'>
 }
