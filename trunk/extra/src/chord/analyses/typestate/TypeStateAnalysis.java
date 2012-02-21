@@ -1,29 +1,62 @@
 package chord.analyses.typestate;
+import hj.array.lang.booleanArray;
 
+import java.io.BufferedWriter;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.ObjectOutputStream.PutField;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+
+import javax.accessibility.AccessibleSelection;
 
 import org.hsqldb.lib.StringConverter;
 
 import soot.JastAddJ.Access;
+import soot.dava.internal.javaRep.DStaticFieldRef;
+import soot.dava.toolkits.base.AST.structuredAnalysis.MustMayInitialize;
+import soot.jimple.parser.node.AAbstractModifier;
 
+import com.sun.org.apache.bcel.internal.generic.GETSTATIC;
 import com.sun.org.apache.bcel.internal.generic.Type;
 
 import jdd.util.Array;
 
+import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operand;
+import joeq.Compiler.Quad.Operand.FieldOperand;
+import joeq.Compiler.Quad.Operand.MethodOperand;
+import joeq.Compiler.Quad.Operand.ParamListOperand;
+import joeq.Compiler.Quad.Operator.Getfield;
+import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.Operator.Invoke.InvokeVirtual;
+import joeq.Compiler.Quad.Operator.Putfield;
+import joeq.Compiler.Quad.Operator.Putstatic;
+import joeq.Compiler.Quad.Operator.Return;
+import joeq.Compiler.Quad.Operator.Return.RETURN_A;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.QuadVisitor;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.New;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 import joeq.UTF.Utf8;
+import chord.analyses.alias.CICG;
 import chord.analyses.alias.CICGAnalysis;
+import chord.analyses.alias.CIPAAnalysis;
 import chord.analyses.alias.ICICG;
 import chord.program.Location;
+import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Messages;
@@ -38,269 +71,791 @@ import chord.analyses.var.DomV;
 //This is required to determine if the quad is allocating object of desired type
 import chord.analyses.alloc.DomH;
 import chord.analyses.alloc.RelHT;
-import chord.analyses.escape.hybrid.full.DstNode;
 
 import chord.project.analyses.ProgramRel;
+import chord.project.analyses.rhs.IEdge;
 
+@Chord(name = "typestate-java")
+public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
-@Chord(
-    name = "typestate-java", consumes = "queryIHS"
-)
-public class TypestateAnalysis extends RHSAnalysis<Edge, Edge> {
-	
 	private ICICG cicg;
-	private static DomM domM;
-	private static DomI domI;
-	private static DomV domV;
-	private static DomH domH;
 	private TypeStateSpec sp;
-	
+	private CIPAAnalysis cipa;
 	private MyQuadVisitor qv = new MyQuadVisitor();
-
-	private CIPAAnalysis cipaAnalysis;
+	BufferedWriter out;
+	BufferedWriter out2;
+	private DomM domM;
+	private DomH domH;
+	PrintStream wri;
+	int maxFieldDepth;
+	int maxAPLength = 0;
+	private Edge nullEdge;
 
 	public void run() {
-		String stateSpecFile = System.getProperty("chord.typestate.specfile", "typestatespec.txt");
-		
-		if( (sp = TypeStateParser.parseStateSpec(stateSpecFile))==null){
-			Messages.fatal("Problem occured while parsing state spec file:"+stateSpecFile+",Make sure that its in the required format");
+		String stateSpecFile = System.getProperty("chord.typestate.specfile",
+				"typestatespec.txt");
+
+		if ((sp = TypeStateParser.parseStateSpec(stateSpecFile)) == null) {
+			Messages.fatal("Problem occured while parsing state spec file:"
+					+ stateSpecFile
+					+ ",Make sure that its in the required format");
 		}
 
-		cipaAnalysis = (CIPAAnalysis) ClassicProject.g().getTask("cipa-java");
-		ClassicProject.runTask(cipaAnalysis);
+		String temp = System.getProperty("chord.typestate.maxaplen", "8");
 
+		try {
+			maxAPLength = Integer.parseInt(temp);
+		} catch (NumberFormatException e) {
+			Messages.fatal("Problem occured while parsing max access path width:"
+					+ temp + ",Make sure that its an integer");
+		}
+
+		temp = System.getProperty("chord.typestate.maxfdepth", "6");
+
+		try {
+			maxFieldDepth = Integer.parseInt(temp);
+		} catch (NumberFormatException e) {
+			Messages.fatal("Problem occured while parsing max access path depth:"
+					+ maxFieldDepth + ",Make sure that its an integer");
+		}
+
+		cipa = (CIPAAnalysis) ClassicProject.g().getTrgt("cipa-java");
+		ClassicProject.g().runTask(cipa);
+		RHSAnalysis.DEBUG = true;
 		qv.sp = sp;
-		domI = (DomI) ClassicProject.g().getTrgt("I");
-        ClassicProject.g().runTask(domI);
-        domM = (DomM) ClassicProject.g().getTrgt("M");
-        ClassicProject.g().runTask(domM);
-		Set<Trio<Quad, Quad, ???>> queries;
-		for (each tuple in queryIHS) {
-			queries.add(tuple);
+		qv.cipa = cipa;
+		domM = (DomM) ClassicProject.g().getTrgt("M");
+		ClassicProject.g().runTask(domM);
+		domH = (DomH) ClassicProject.g().getTrgt("H");
+		ClassicProject.g().runTask(domH);
+
+		nullEdge = new Edge(null, null, EdgeType.NULL);
+		try {
+			wri = new PrintStream(new FileOutputStream("SummaryExplore.txt"));
+		} catch (Exception e) {
+			// TODO: handle exception
 		}
+
+		init();
+		runPass();
+		printSummaries();
+		wri.close();
 	}
+
+	@Override
+	public boolean useBFS() { return false; }
 	
-	public boolean needToAnalyze(jq_Method m){
-		boolean ret= false;
-		/* here we need to write logic to check if 'm' calls any method 
-		 * directly or transitively that changes the state (as given in the state spec)
-		 * and we also validate if method m is on of the method that cases transition in which case
-		 * we don't need to analyze it. 
-		 */
-		
-		return ret;
+	@Override
+	public ICICG getCallGraph() {
+		wri.println("Called getCallGraph:");
+		if (cicg == null) {
+			CICGAnalysis cicgAnalysis = (CICGAnalysis) ClassicProject.g()
+					.getTrgt("cicg-java");
+			ClassicProject.g().runTask(cicgAnalysis);
+			cicg = cicgAnalysis.getCallGraph();
+		}
+		return cicg;
 	}
-	
-    @Override
-    public ICICG getCallGraph() {
-        if (cicg == null) {
-            CICGAnalysis cicgAnalysis =
-                (CICGAnalysis) ClassicProject.g().getTrgt("cicg-java");
-            ClassicProject.g().runTask(cicgAnalysis);
-            cicg = cicgAnalysis.getCallGraph();
-        }
-        return cicg;
-    }
-    
-    private Edge getRootPathEdge(jq_Method m) {
-    	//Need to be more specific on what needs to be stored here
-    	return new Edge(new ArraySet<AbstractState>(), new ArraySet<AbstractState>());
-    }
-    
+
 	@Override
 	public Set<Pair<Location, Edge>> getInitPathEdges() {
 		Set<jq_Method> roots = cicg.getRoots();
-		Set<Pair<Location, Edge>> initPEs =
-			new ArraySet<Pair<Location, Edge>>();
+		Set<Pair<Location, Edge>> initPEs = new ArraySet<Pair<Location, Edge>>();
 		for (jq_Method m : roots) {
-			if(needToAnalyze(m))
-			{		
-				Edge pe = getRootPathEdge(m);
-				BasicBlock bb = m.getCFG().entry();
-				Location loc = new Location(m, bb, -1, null);
-				Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
+			BasicBlock bb = m.getCFG().entry();
+			Location loc = new Location(m, bb, -1, null);
+			// First: Add null Edge
+			Edge pe = nullEdge;
+			Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
+			initPEs.add(pair);
+			System.out.println("Added:" + loc + ",With PE:" + pe);
+
+			// get the number of allocation sites in the method
+			int allocSites = getAllocSites(m);
+			// Add the required number of alloc edges to the start of the method
+			for (int i = 0; i < allocSites; i++) {
+				pe = new Edge(null, null, EdgeType.ALLOC);
+				pair = new Pair<Location, Edge>(loc, pe);
 				initPEs.add(pair);
 			}
 		}
 		return initPEs;
 	}
+
 	@Override
 	public Edge getInitPathEdge(Quad q, jq_Method m, Edge pe) {
-		//How to handle new?
-		Edge pe2=null;
-		if(needToAnalyze(m)){
-			//if the method invocation is for the method that could possibly change the 
-			//state of object ( of the required type) then analyze it
-			
+		wri.println("Get Init Path Edge Called For:" + q.toString());
+		wri.println("For Method:" + m.toString());
+		wri.println("With Edge:" + q.toVerboseStr());
+		if (pe.dstNode != null) {
+			wri.println("With Alloc Site:" + pe.dstNode.alloc.toVerboseStr());
 		}
-		return pe2;
+
+		switch (pe.type) {
+		case NULL:
+			// Check if there is any return and assign the return register
+			// appropriately.
+			return pe;
+		case ALLOC:
+			if (pe.dstNode == null) {
+				return nullEdge;
+			}
+			break;
+		}
+		AbstractState newSrc = pe.dstNode;
+		AbstractState newDest = pe.dstNode;
+		TypeState newTypeState = null;
+		boolean isthis = false;
+
+		if (newDest != null) {
+			newTypeState = newDest.ts;
+			ArraySet<AccessPath> newMustSet = new ArraySet<AccessPath>();
+			addAllGlobalAccessPath(newMustSet, newDest.mustSet);
+			ParamListOperand args = Invoke.getParamList(q);
+			for (int i = 0; i < args.length(); i++) {
+				RegisterOperand op = args.get(i);
+				if (Helper.getIndexInAP(newDest.mustSet, op.getRegister()) >= 0) {
+					Register target = getParameterRegister(m.getLiveRefVars(),
+							i);
+					if (target != null) {
+						if (i == 0) {
+							isthis = true;
+						}
+						newMustSet.add(new RegisterAccessPath(target));
+					}
+				}
+			}
+			// Do the Typestate change depending on whether the method in
+			// interesting or not
+			jq_Method targetMethod = Invoke.getMethod(q).getMethod();
+			// Need to handle the case when we can have static methods of the
+			// same name
+			// Change the type state of only that object on which this is
+			// invoked
+			if (sp.isMethodOfInterest(targetMethod.getName()) && isthis) {
+				newTypeState = sp.getTargetState(targetMethod.getName(),
+						pe.dstNode.ts);
+				wri.println("\nState Transition To:" + newTypeState + "\n");
+			} else {
+				wri.println("\nNot Doing State Transition for:"
+						+ targetMethod.getName() + " and this is:"
+						+ (isthis ? "true" : "false"));
+
+			}
+			newSrc = new AbstractState(pe.dstNode.alloc, newTypeState,
+					newMustSet);
+			newDest = newSrc;
+
+			return new Edge(newSrc, newDest, EdgeType.SUMMARY);
+		}
+		return pe;
 	}
-	
+
 	@Override
 	public Edge getMiscPathEdge(Quad q, Edge pe) {
-		//Keep track of state depending on the type of operation suggested by quad 
-		//if its a move(or assignment) then do strong update..
-		return null;
+		wri.println("Called getMiscPathEdge with:" + q.toString());
+		wri.println("With Edge:");
+		qv.istate = pe.dstNode;
+		qv.ostate = pe.dstNode;
+		qv.etype = pe.type;
+		if (pe.type != EdgeType.NULL) {
+			q.accept(qv);
+		}
+		return qv.ostate == pe.dstNode ? pe : new Edge(pe.srcNode, qv.ostate,
+				pe.type);
 	}
-	
+
 	@Override
 	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
-		Edge pe2 = clrPE;
-		//How to handle New ?
-		if(needToAnalyze(m)){
-			//if this method is of interest then try to apply summary
-		} else if(sp.isMethodOfInterest(m.getName().toString())){
-			//here depending on the possible state transitions
-			//of method m, set the state of the object pointed by q
-			//either to one of the target state or error state (if asserts fail)
-		}		
-		return pe2;
+		switch (clrPE.type) {
+		case NULL:
+			switch (tgtSE.type) {
+			case NULL:
+				return nullEdge;
+			case SUMMARY:
+				return null;
+			case ALLOC:
+				if (tgtSE.dstNode == null || (!tgtSE.dstNode.canReturn)
+						|| (!Helper.hasAnyGlobalAccessPath(tgtSE.dstNode))) {
+					return null;
+				}
+			}
+			break;
+		case ALLOC:
+			switch (tgtSE.type) {
+			case NULL:
+				if (clrPE.dstNode == null) {
+					return clrPE;
+				}
+				return null;
+			default:
+				if (clrPE.dstNode == null || tgtSE.dstNode == null
+						|| clrPE.dstNode.alloc != tgtSE.dstNode.alloc) {
+					return null;
+				}
+			}
+			break;
+		case SUMMARY:
+			switch (tgtSE.type) {
+			case SUMMARY:
+				if (tgtSE.dstNode == null
+						|| tgtSE.dstNode.alloc != clrPE.dstNode.alloc) {
+					return null;
+				}
+				break;
+			default:
+				return null;
+			}
+		}
+
+		Register targetReturnRegister = null;
+		if (Invoke.getDest(q) != null) {
+			targetReturnRegister = Invoke.getDest(q).getRegister();
+		}
+
+		AbstractState newDest = clrPE.dstNode;
+		ArraySet<AccessPath> newAccessPath = new ArraySet<AccessPath>();
+		Quad targetAlloc = null;
+
+		switch (clrPE.type) {
+		case ALLOC:
+		case SUMMARY:
+			targetAlloc = clrPE.dstNode.alloc;
+			addAllLocalAccessPath(newAccessPath, clrPE.dstNode.mustSet);
+		case NULL:
+			if (targetReturnRegister != null) {
+				newAccessPath.add(new RegisterAccessPath(targetReturnRegister));
+			}
+			addAllGlobalAccessPath(newAccessPath, tgtSE.dstNode.mustSet);
+			if (targetAlloc != null) {
+				targetAlloc = tgtSE.dstNode.alloc;
+			}
+			break;
+		}
+		newDest = new AbstractState(targetAlloc, tgtSE.dstNode.ts,
+				newAccessPath);
+
+		EdgeType targetType = clrPE.type == EdgeType.NULL ? EdgeType.ALLOC
+				: clrPE.type;
+		return new Edge(clrPE.srcNode, newDest, targetType);
+
 	}
+
 	@Override
-	public Edge getCopy(Edge pe) {		
-		return new Edge(pe.srcNode,pe.dstNode);
+	public Edge getCopy(Edge pe) {
+		return new Edge(pe.srcNode, pe.dstNode, pe.type);
 	}
+
 	@Override
 	public Edge getSummaryEdge(jq_Method m, Edge pe) {
-		// TODO Auto-generated method stub
-		return null;
+		wri.println("Get Summary Edge:");
+		if (pe.dstNode != null) {
+			wri.println("Yes!!" + pe.dstNode.alloc.toVerboseStr());
+		}
+		switch (pe.type) {
+		case ALLOC:
+		case SUMMARY:
+			if (pe.dstNode != null) {
+				ArraySet<AccessPath> newMustSet = new ArraySet<AccessPath>();
+				addAllGlobalAccessPath(newMustSet, pe.dstNode.mustSet);
+				AbstractState newState = new AbstractState(pe.dstNode.alloc,
+						pe.dstNode.ts, newMustSet, pe.dstNode.canReturn);
+				return new Edge(pe.srcNode, newState, pe.type);
+			}
+			return pe;
+		case NULL:
+		default:
+			return pe;
+		}
 	}
+
 	@Override
 	public boolean mayMerge() {
 		// TODO Auto-generated method stub
-		return false;
+		return true;
 	}
+
 	@Override
 	public boolean mustMerge() {
 		// TODO Auto-generated method stub
-		return true;
+		return false;
 	}
+
+	public void printSummaries() {
+		wri.println("Start HHHHHH:");
+		for (jq_Method m : summEdges.keySet()) {
+			wri.println("SE of " + m);
+			Set<Edge> seSet = summEdges.get(m);
+			if (seSet != null) {
+				for (Edge se : seSet)
+					wri.println("\tSE " + se);
+			}
+		}
+		for (Inst i : pathEdges.keySet()) {
+			wri.println("PE of " + i);
+			Set<Edge> peSet = pathEdges.get(i);
+			if (peSet != null) {
+				for (Edge pe : peSet)
+					wri.println("\tPE " + pe);
+			}
+		}
+	}
+
+	private Register getParameterRegister(List<Register> listParams, int i) {
+		Register targetRegister = null;
+		for (Register r : listParams) {
+			if (r.toString().equalsIgnoreCase("R" + i)) {
+				targetRegister = r;
+				break;
+			}
+		}
+		return targetRegister;
+	}
+
+	private void addAllGlobalAccessPath(ArraySet<AccessPath> newMustSet,
+			ArraySet<AccessPath> oldMustSet) {
+		for (AccessPath ap : oldMustSet) {
+			if (ap instanceof GlobalAccessPath) {
+				newMustSet.add(ap);
+			}
+		}
+	}
+
+	private boolean isTypeInteresting(jq_Type type) {
+		if (type != null) {
+			return type.getName().equals(sp.getObjecttype());
+		}
+		return false;
+	}
+
+	private void addAllLocalAccessPath(ArraySet<AccessPath> newAccessPath,
+			ArraySet<AccessPath> mustSet) {
+		for (AccessPath ap : mustSet) {
+			if (ap instanceof RegisterAccessPath) {
+				newAccessPath.add(ap);
+			}
+		}
+	}
+
+	private int getAllocSites(jq_Method targetM) {
+		int numH = domH.getLastI() + 1;
+		int noOfAllocSites = 0;
+		for (int hIdx = 1; hIdx < numH; hIdx++) {
+			Quad q = (Quad) domH.get(hIdx);
+			if (!isTypeInteresting(New.getType(q).getType())) {
+				continue;
+			}
+			jq_Method m = q.getMethod();
+			if (m == targetM) {
+				noOfAllocSites++;
+			}
+		}
+		return noOfAllocSites;
+	}
+
 }
+
 class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
-	
-	ArraySet<AbstractState> istate;
-	ArraySet<AbstractState> ostate;
+
+	AbstractState istate;
+	AbstractState ostate;
 	TypeStateSpec sp;
-	
+	CIPAAnalysis cipa;
+	EdgeType etype;
+
 	@Override
 	public void visitMove(Quad q) {
-		//TODO:
-		//Need to take care of inheritance
-		//Like moving from child class to base class where base class object can access
-		//functions that cause state transitions
-		
 		ostate = istate;
-		assert(istate!=null);
-		RegisterOperand d = Move.getDest(q);
-				
-		//Check if target register is in the must access set of the abstract state access path and remove it
-		ostate = removeRegisterFromMustSet(d, ostate);
-		
-		Operand s = Move.getSrc(q);
-		if(s instanceof RegisterOperand){
-			ostate = addRegisterToTheMustSet((RegisterOperand)s,d,ostate);
-		}		
-	}
-	 
-	@Override
-	public void visitInvoke(Quad q) {
-		ostate = istate;
-				
-		Utf8 s = Invoke.getMethod(q).getMethod().getName();
-
-		//TODO:
-		//1.Get the source register.. how? //usedRegisters(0) ???
-				
-		//2.Check whether the register has any tuple in pointsto of object of the specific type
-			//2.a if the method called is one of stateTransitions method then
-				//2.b Get the pointsto set for this register
-				//2.c For each abstract state for each of the pointsto relation...
-					//2.c.a update the typestate if this register is not in must not set and register is either in must set or may bit is true
-		
-		//3. else analyse the method in called context ?
-		
-		if(sp.isMethodOfInterest(s.toString())){
-			
+		if (etype != EdgeType.NULL) {
+			Register destR = null;
+			if (Move.getDest(q) instanceof RegisterOperand) {
+				destR = Move.getDest(q).getRegister();
+			}
+			Register srcR = null;
+			if (Move.getSrc(q) instanceof RegisterOperand) {
+				srcR = ((RegisterOperand) Move.getSrc(q)).getRegister();
+			}
+			if (destR != null && istate != null) {
+				int index = -1;
+				ArraySet<AccessPath> newAccessPath = null;
+				while ((index = Helper.getIndexInAP(istate.mustSet, destR,
+						index)) >= 0) {
+					if (newAccessPath == null) {
+						newAccessPath = new ArraySet<AccessPath>(istate.mustSet);
+					}
+					newAccessPath.remove(istate.mustSet.get(index));
+				}
+				if (srcR != null) {
+					index = -1;
+					while ((index = Helper.getIndexInAP(istate.mustSet, srcR,
+							index)) >= 0) {
+						if (newAccessPath == null) {
+							newAccessPath = new ArraySet<AccessPath>(
+									istate.mustSet);
+						}
+						ArrayList<jq_Field> fieldList = new ArrayList<jq_Field>();
+						fieldList.addAll(istate.mustSet.get(index).fields);
+						newAccessPath.add(new RegisterAccessPath(destR,
+								fieldList));
+					}
+				}
+				if (newAccessPath != null) {
+					ostate = new AbstractState(istate.alloc, istate.ts,
+							newAccessPath);
+				}
+			}
 		}
-		
-		
-		
+
 	}
-	
+
 	@Override
-    public void visitNew(Quad q) {
-		RegisterOperand d = New.getDest(q);
-		//TODO:
-		//1. Check if the object allocated is the object of interest
-		//2. create a new abstract state (AS) with mustset containing only this register and may bit to false
-		//3. check if any AbstractState has this quad(in case of loop)
-			//3.a if there is one already..then remove this register for its must set and add to mustnot set
-					//Set the unique bit of this state and AS to false 
-			//2.a.b else...Set the unique bit of AS to true 
-    }
-    
+	public void visitNew(Quad q) {
+		ostate = istate;
+		if (etype == EdgeType.ALLOC && istate == null
+				&& isTypeInteresting(New.getType(q).getType())) {
+			ArraySet<AccessPath> accessPath = new ArraySet<AccessPath>();
+			Register dest = New.getDest(q).getRegister();
+			accessPath.add(new RegisterAccessPath(dest));
+			ostate = getNewState(q, accessPath);
+		}
+
+		// This is to remove reference of register R from the must set
+		// of incoming edge.
+		if (etype != EdgeType.NULL && istate != null) {
+			Register dest = New.getDest(q).getRegister();
+			ArraySet<AccessPath> newAccessPath = removeReference(
+					istate.mustSet, dest);
+			if (newAccessPath != null) {
+				ostate = new AbstractState(istate.alloc, istate.ts,
+						newAccessPath);
+				ostate.canReturn = istate.canReturn;
+			}
+		}
+	}
+
+	private ArraySet<AccessPath> removeReference(ArraySet<AccessPath> mustSet,
+			Register r) {
+		int index = -1;
+		ArraySet<AccessPath> newAccessPath = null;
+		while ((index = Helper.getIndexInAP(mustSet, r, index)) >= 0) {
+			if (newAccessPath == null) {
+				newAccessPath = new ArraySet<AccessPath>(mustSet);
+			}
+			newAccessPath.remove(mustSet.get(index));
+		}
+		return newAccessPath;
+	}
+
 	@Override
-    public void visitNewArray(Quad q) {
-    	
-    }
-	
+	public void visitNewArray(Quad q) {
+
+	}
+
+	@Override
+	public void visitGetstatic(Quad q) {
+		if (etype != EdgeType.NULL) {
+			jq_Field srcField = Getstatic.getField(q).getField();
+			Register destR = null;
+			ostate = istate;
+			if (Getstatic.getDest(q) != null) {
+				destR = Getstatic.getDest(q).getRegister();
+			}
+			if (destR != null && istate != null) {
+				int index = -1;
+				ArraySet<AccessPath> newMustSet = null;
+				while ((index = Helper.getIndexInAP(istate.mustSet, destR,
+						index)) >= 0) {
+					if (newMustSet == null) {
+						newMustSet = new ArraySet<AccessPath>(istate.mustSet);
+					}
+					newMustSet.remove(istate.mustSet.get(index));
+				}
+
+				while ((index = Helper.getIndexInAP(istate.mustSet, srcField,
+						index)) >= 0) {
+					if (newMustSet == null) {
+						newMustSet = new ArraySet<AccessPath>(istate.mustSet);
+					}
+					ArrayList<jq_Field> fieldList = new ArrayList<jq_Field>();
+					fieldList.addAll(istate.mustSet.get(index).fields);
+					RegisterAccessPath newPath = new RegisterAccessPath(destR,
+							fieldList);
+					newMustSet.add(newPath);
+				}
+				if (newMustSet != null) {
+					ostate = new AbstractState(istate.alloc, istate.ts,
+							newMustSet);
+				}
+			}
+		}
+	}
+
+	@Override
+	public void visitPutstatic(Quad q) {
+		ostate = istate;
+		if (etype != EdgeType.NULL) {
+			jq_Field destField = Putstatic.getField(q).getField();
+			Register srcR = null;
+			ostate = istate;
+			if (Putstatic.getSrc(q) instanceof RegisterOperand) {
+				srcR = Getstatic.getDest(q).getRegister();
+			}
+			if (srcR != null && istate != null) {
+				int index = -1;
+				ArraySet<AccessPath> newMustSet = null;
+				while ((index = Helper.getIndexInAP(istate.mustSet, destField,
+						index)) >= 0) {
+					if (newMustSet == null) {
+						newMustSet = new ArraySet<AccessPath>(istate.mustSet);
+					}
+					newMustSet.remove(istate.mustSet.get(index));
+				}
+
+				while ((index = Helper
+						.getIndexInAP(istate.mustSet, srcR, index)) >= 0) {
+					if (newMustSet == null) {
+						newMustSet = new ArraySet<AccessPath>(istate.mustSet);
+					}
+					ArrayList<jq_Field> fieldList = new ArrayList<jq_Field>();
+					fieldList.addAll(istate.mustSet.get(index).fields);
+					GlobalAccessPath newPath = new GlobalAccessPath(destField,
+							fieldList);
+					newMustSet.add(newPath);
+				}
+				if (newMustSet != null) {
+					ostate = new AbstractState(istate.alloc, istate.ts,
+							newMustSet);
+				}
+			}
+		}
+	}
+
 	@Override
 	public void visitPutfield(Quad q) {
-		
+		ostate = istate;
+		if (etype != EdgeType.NULL) {
+			Register destR = null;
+			jq_Field destF = null;
+			Register srcR = null;
+			if (Putfield.getBase(q) instanceof RegisterOperand) {
+				destR = ((RegisterOperand) Putfield.getBase(q)).getRegister();
+			}
+			destF = Putfield.getField(q).getField();
+			if (Putfield.getSrc(q) instanceof RegisterOperand) {
+				srcR = ((RegisterOperand) Putfield.getSrc(q)).getRegister();
+			}
+			if (istate != null) {
+				int index = -1;
+				ArraySet<AccessPath> newMustSet = null;
+
+				while ((index = Helper.getIndexInAP(istate.mustSet, destR,
+						destF, index)) >= 0) {
+					if (newMustSet == null) {
+						newMustSet = new ArraySet<AccessPath>(istate.mustSet);
+					}
+					newMustSet.remove(istate.mustSet.get(index));
+				}
+				while ((index = Helper
+						.getIndexInAP(istate.mustSet, srcR, index)) >= 0) {
+					ArrayList<jq_Field> fieldList = new ArrayList<jq_Field>(
+							istate.mustSet.get(index).fields);
+					fieldList.add(destF);
+					if (newMustSet == null) {
+						newMustSet = new ArraySet<AccessPath>(istate.mustSet);
+					}
+					newMustSet.add(new RegisterAccessPath(destR, fieldList));
+				}
+				if (newMustSet != null) {
+					ostate = new AbstractState(istate.alloc, istate.ts,
+							newMustSet);
+				}
+			}
+		}
 	}
-	
+
 	@Override
 	public void visitGetfield(Quad q) {
-		
-	}
-	
-	private ArraySet<AbstractState> addRegisterToTheMustSet(RegisterOperand r,RegisterOperand d,ArraySet<AbstractState> state){
-		
-		ArraySet<AbstractState> outState = state;
-		for(int i=0;i<state.size();i++){
-			if(isRegisterInAccessPath(r, state.get(i).mustSet)){
-				outState.remove(i);
-				outState.add(i, copyAbsState(state.get(i)));
-				//TODO: add code to add the register 'd' to the access path
-				
-				//Because register can be present in the must set of at most one
-				//access path so break here
-				break;
+		ostate = istate;
+		if (etype != EdgeType.NULL) {
+			Register srcR = null;
+			jq_Field srcF = null;
+			Register destR = null;
+			if (Getfield.getBase(q) instanceof RegisterOperand) {
+				srcR = ((RegisterOperand) Getfield.getBase(q)).getRegister();
+			}
+			srcF = Getfield.getField(q).getField();
+			if (Getfield.getDest(q) instanceof RegisterOperand) {
+				destR = ((RegisterOperand) Getfield.getDest(q)).getRegister();
+			}
+			ostate = istate;
+			if (istate != null) {
+				int index = -1;
+				ArraySet<AccessPath> newMustSet = null;
+				while ((index = Helper.getIndexInAP(istate.mustSet, destR,
+						index)) >= 0) {
+					if (newMustSet == null) {
+						newMustSet = new ArraySet<AccessPath>();
+						newMustSet.addAll(istate.mustSet);
+					}
+					newMustSet.remove(istate.mustSet.get(index));
+				}
+				index = -1;
+				ArraySet<AccessPath> targetSet = newMustSet == null ? istate.mustSet
+						: newMustSet;
+				while ((index = Helper.getIndexInAP(targetSet, srcR, srcF,
+						index)) >= 0) {
+					ArrayList<jq_Field> fieldList = new ArrayList<jq_Field>(
+							targetSet.get(index).fields);
+					fieldList.addAll(fieldList);
+					if (newMustSet == null) {
+						newMustSet = new ArraySet<AccessPath>();
+						newMustSet.addAll(istate.mustSet);
+					}
+					newMustSet.add(new RegisterAccessPath(destR, fieldList));
+				}
+				if (newMustSet != null) {
+					ostate = new AbstractState(istate.alloc, istate.ts,
+							newMustSet);
+				}
 			}
 		}
-		return outState;
+
 	}
-	
-	private ArraySet<AbstractState> removeRegisterFromMustSet(RegisterOperand r,ArraySet<AbstractState> state){
-		ArraySet<AbstractState> outState = state;
-		for(int i=0;i<state.size();i++){
-			if (isRegisterInAccessPath(r, state.get(i).mustSet)) {
-				outState.remove(i);
-				outState.add(i, copyAbsState(state.get(i)));				
-				//TODO: add code to remove the register from the access path ns.mustSet
-				
-				//Because register can be present in the must set of at most one
-				//access path so break here
-				break;
+
+	@Override
+	public void visitReturn(Quad q) {
+		ostate = istate;
+		if (etype != EdgeType.NULL) {
+			jq_Method targetMethod = q.getMethod();
+			jq_Type returnType = targetMethod.getReturnType();
+			if (istate != null) {
+				if (isTypeInteresting(returnType)) {
+					if (Return.getSrc(q) instanceof RegisterOperand) {
+						Register targetRegister = ((RegisterOperand) (Return
+								.getSrc(q))).getRegister();
+						// Add details of may points to
+						if (Helper.getIndexInAP(istate.mustSet, targetRegister) >= 0) {
+							ostate = new AbstractState(istate.alloc, istate.ts,
+									new ArraySet<AccessPath>(istate.mustSet),
+									true);
+						}
+					}
+				}
 			}
 		}
-		return outState;		
 	}
-	
-	private ArraySet<AccessPath> copyAccessPath(ArraySet<AccessPath> ap){
-		return new ArraySet<AccessPath>(ap);
+
+	// Helper Methods
+
+	private AbstractState getNewState(Quad q, ArraySet<AccessPath> accesPath) {
+		return new AbstractState(q, sp.getInitialState(), accesPath);
 	}
-	
-	private AbstractState copyAbsState(AbstractState abs){
-		AbstractState ns= new AbstractState(abs.alloc, abs.ts, abs.mustSet);
-		return ns;
-	}
-	
-	private Boolean isRegisterInAccessPath(RegisterOperand r,ArraySet<AccessPath> ap){
-		Boolean isPresent = false;
-		//TODO:code to check if the access path contains the register
-		return isPresent;
+
+	private boolean isTypeInteresting(jq_Type type) {
+		if (type != null) {
+			return type.getName().equals(sp.getObjecttype());
+		}
+		return false;
 	}
 }
 
+class Helper {
+	public static boolean isTypeInteresting(jq_Type type, TypeStateSpec sp) {
+		if (type != null) {
+			return type.getName().equals(sp.getObjecttype());
+		}
+		return false;
+	}
 
+	public static boolean hasAnyGlobalAccessPath(AbstractState ab) {
+		boolean canAccessGlobally = false;
+		for (AccessPath ap : ab.mustSet) {
+			if (ap instanceof GlobalAccessPath) {
+				canAccessGlobally = true;
+				break;
+			}
+		}
+		return canAccessGlobally;
+	}
+
+	public static int getIndexInAP(ArraySet<AccessPath> mustSet, Register r,
+			jq_Field f, int index) {
+		int currIn = 0;
+		for (AccessPath ap : mustSet) {
+			if (ap instanceof RegisterAccessPath) {
+				RegisterAccessPath regAP = (RegisterAccessPath) ap;
+				if (regAP.getRootRegister().equals(r)) {
+					if (!regAP.fields.isEmpty()
+							&& (regAP.fields.get(0).equals(f))
+							&& currIn > index) {
+						return currIn;
+					}
+				}
+			}
+			currIn++;
+		}
+		return -1;
+	}
+
+	public static int getIndexInAP(ArraySet<AccessPath> asSet, Register r) {
+		int index = -1;
+		for (AccessPath ap : asSet) {
+			if (ap instanceof RegisterAccessPath) {
+				if (((RegisterAccessPath) ap).getRootRegister().equals(r)) {
+					index = asSet.indexOf(ap);
+					break;
+				}
+			}
+		}
+		return index;
+	}
+
+	public static int getIndexInAP(ArraySet<AccessPath> asSet, Register r,
+			int minIndex) {
+		int index = -1;
+		int currIndex = 0;
+		for (AccessPath ap : asSet) {
+			if (ap instanceof RegisterAccessPath) {
+				if (((RegisterAccessPath) ap).getRootRegister().equals(r)
+						&& (currIndex > minIndex)) {
+					return currIndex;
+				}
+			}
+			currIndex++;
+		}
+		return index;
+	}
+
+	public static int getIndexInAP(ArraySet<AccessPath> asSet, jq_Field f,
+			int minIndex) {
+		int index = -1;
+		int currIndex = 0;
+		for (AccessPath ap : asSet) {
+			if (ap instanceof GlobalAccessPath) {
+				if (((GlobalAccessPath) ap).global == f && currIndex > minIndex) {
+					return currIndex;
+				}
+			}
+			currIndex++;
+		}
+		return index;
+	}
+
+	public static int getIndexInAP(ArraySet<AccessPath> asSet,
+			jq_Field staticField, jq_Field accessField, int minIndex) {
+		int index = -1;
+		int currIndex = 0;
+		for (AccessPath ap : asSet) {
+			if (ap instanceof GlobalAccessPath) {
+				if (((GlobalAccessPath) ap).global == staticField) {
+					if (!ap.fields.isEmpty()
+							&& ap.fields.get(0).equals(accessField)
+							&& (currIndex > minIndex))
+						return currIndex;
+				}
+			}
+			currIndex++;
+		}
+		return index;
+	}
+}
