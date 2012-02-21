@@ -102,7 +102,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 					+ ",Make sure that its in the required format");
 		}
 
-		String temp = System.getProperty("chord.typestate.maxaplen", "8");
+		String temp = System.getProperty("chord.typestate.maxaplen", "8"); // width
 
 		try {
 			maxAPLength = Integer.parseInt(temp);
@@ -144,11 +144,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public boolean useBFS() {
-		return false;
-	}
-
-	@Override
 	public ICICG getCallGraph() {
 		if (DEBUG) {
 			wri.println("Called getCallGraph:");
@@ -164,9 +159,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
 	@Override
 	public Set<Pair<Location, Edge>> getInitPathEdges() {
-		Set<jq_Method> roots = cicg.getRoots();
 		Set<Pair<Location, Edge>> initPEs = new ArraySet<Pair<Location, Edge>>();
-		for (jq_Method m : roots) {
+		for (jq_Method m : cicg.getNodes()) {
 			BasicBlock bb = m.getCFG().entry();
 			Location loc = new Location(m, bb, -1, null);
 			// First: Add null Edge
@@ -333,6 +327,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		case SUMMARY:
 			targetAlloc = clrPE.dstNode.alloc;
 			addAllLocalAccessPath(newAccessPath, clrPE.dstNode.mustSet);
+			// XXX intentional: no break
 		case NULL:
 			if (targetReturnRegister != null) {
 				newAccessPath.add(new RegisterAccessPath(targetReturnRegister));
@@ -386,7 +381,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	@Override
 	public boolean mayMerge() {
 		// TODO Auto-generated method stub
-		return true;
+		return false;
 	}
 
 	@Override

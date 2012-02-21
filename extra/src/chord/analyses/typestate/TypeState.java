@@ -10,7 +10,7 @@ import chord.util.ArraySet;
 public class TypeState {
 	private static ArraySet<TypeState> validStates;
 	private String name;
-		
+
 	static{
 		validStates = new ArraySet<TypeState>();
 	}

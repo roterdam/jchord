@@ -23,9 +23,9 @@ public abstract class AccessPath {
 		if (this == obj) return true;
 		if (!(obj instanceof AccessPath)) return false;
 		AccessPath that = (AccessPath)obj;
-		return that.fields.containsAll(this.fields) && this.fields.containsAll(that.fields);
+		return that.fields.equals(this.fields);
 	}
-	
+
 	@Override
 	public String toString(){
 		String ret = (fields.isEmpty()?"EMPTY\n":"\n");
