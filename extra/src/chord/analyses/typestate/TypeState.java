@@ -1,5 +1,4 @@
 package chord.analyses.typestate;
-
 import chord.util.ArraySet;
 
 /***
@@ -31,7 +30,7 @@ public class TypeState {
 		TypeState stateOb = new TypeState(name);
 		if(validStates.contains(stateOb))
 		{
-			validStates.get(validStates.indexOf(stateOb));
+			return validStates.get(validStates.indexOf(stateOb));
 		}
 		return null;
 	}
@@ -57,5 +56,10 @@ public class TypeState {
 		}
 		TypeState secondObject = (TypeState)ob;
 		return secondObject.name.equals(this.name);
+	}
+	
+	@Override
+	public String toString(){
+		return name;
 	}
 }
