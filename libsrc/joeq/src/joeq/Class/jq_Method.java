@@ -16,6 +16,7 @@ import joeq.ClassLib.ClassLibInterface;
 import joeq.Compiler.BytecodeAnalysis.Bytecodes;
 import joeq.Main.jq;
 import joeq.UTF.Utf8;
+import jwutil.collections.Pair;
 import jwutil.util.Assert;
 import jwutil.util.Convert;
 import joeq.Compiler.Quad.CodeCache;
@@ -686,4 +687,104 @@ public abstract class jq_Method extends jq_Member {
             }
         }
     }
+    
+    /* Code to return line number given a register in the method*/
+    private Map<Register, ArrayList<Integer> > varToLineNumsMap = null;
+    
+    public ArrayList<Integer> getLineNumber(Register v){
+    	if(varToLineNumsMap == null){
+    		varToLineNumsMap = new HashMap<RegisterFactory.Register, ArrayList<Integer>>();
+    		this.getLineNums();
+    	}
+    	return varToLineNumsMap.get(v);
+    }
+    
+    private void getLineNums() {
+		ControlFlowGraph cfg = this.getCFG();
+		RegisterFactory rf = cfg.getRegisterFactory();
+		jq_Type[] paramTypes = this.getParamTypes();
+		int numArgs = paramTypes.length;
+		for (int i = 0; i < numArgs; i++) {
+				Register v = rf.get(i);
+				getLocalLineNum(v,null);
+		}
+
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
+				processForLineNum(q);
+			}
+		}
+	}
+
+	private void processForLineNum(Quad q) {
+		for(Operand op : q.getDefinedRegisters()){
+			if (op instanceof RegisterOperand) {
+				RegisterOperand ro = (RegisterOperand) op;
+					Register v = ro.getRegister();
+					if(v.isTemp())
+						getStackLineNum(v,q);
+					else
+						getLocalLineNum(v,q);
+			} else if (op instanceof ParamListOperand) {
+				ParamListOperand ros = (ParamListOperand) op;
+				int n = ros.length();
+				for (int i = 0; i < n; i++) {
+					RegisterOperand ro = ros.get(i);
+					if (ro == null)
+						continue;
+						Register v = ro.getRegister();
+						if(v.isTemp())
+							getStackLineNum(v,q);
+						else
+							getLocalLineNum(v,q);
+				}
+			}
+		}
+	}
+
+	private void getLocalLineNum(Register v, Quad q){
+		//System.out.println(m.getCFG().fullDump());
+		int lineNum = -1;
+		if(q!=null){
+			int index = -1;
+			Map localNum = this.getCFG().getRegisterFactory().getLocalNumberingMap();
+			for(Object o: localNum.keySet()){
+				if(localNum.get(o).equals(v)){
+					//System.out.println(localNum.get(o) + ":" + v);
+					index = (Integer) ((Pair)o).right;
+					break;
+				}
+			}
+
+			jq_LocalVarTableEntry localVarTableEntry = this.getLocalVarTableEntry(q.getBCI(), index);
+			if(localVarTableEntry==null){
+				getStackLineNum(v, q);
+				return;
+			}
+			//int qbci = q.getBCI();
+			//jq_LocalVarTableEntry[] arr = m.getLocalTable();
+			//for(jq_LocalVarTableEntry var: arr)
+			//	System.out.println(var.toString());
+			lineNum = this.getLineNumber((int)(localVarTableEntry.getStartPC()));
+		}else{
+			lineNum = this.getLineNumber(0);
+		}
+		ArrayList<Integer> lineNums = varToLineNumsMap.get(v);
+		if(lineNums==null){
+			lineNums = new ArrayList<Integer>();
+			lineNums.add(lineNum);
+			varToLineNumsMap.put(v, lineNums);
+		}else
+			lineNums.add(lineNum);
+	}
+
+	private void getStackLineNum(Register v, Quad q){
+		ArrayList<Integer> lineNums = varToLineNumsMap.get(v);
+		if(lineNums==null){
+			lineNums = new ArrayList<Integer>();
+			lineNums.add(q.getLineNumber());
+			varToLineNumsMap.put(v, lineNums);
+		}else
+			lineNums.add(q.getLineNumber());
+	}
 }
