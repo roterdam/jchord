@@ -23,7 +23,8 @@ public class EntryOrExitBasicBlock extends BasicBlock implements Inst {
     }
 	public BasicBlock getBasicBlock() { return this; }
     public int getLineNumber() {
-		return 0;	// TODO
+		//return 0;	// TODO
+    	return method.getLineNumber(0);
 	}
 	public String toByteLocStr() {
 		String bci;
