@@ -569,4 +569,29 @@ public final class Utils {
 		}
 		
 	}
+	
+	public static String htmlEscape(String input)
+	{
+		HashMap<Character, String> replacements = new HashMap<Character, String>();
+		replacements.put('&', "&amp;");
+		replacements.put('>', "&gt;");
+		replacements.put('<', "&lt;");
+		replacements.put('\'', "&apos;");
+		replacements.put('\"', "&quot;");
+		replacements.put(' ', "&nbsp;");
+		
+		StringBuilder sb = new StringBuilder(input.length());
+		for (char c: input.toCharArray()) {
+		    if (replacements.containsKey(c)) {
+		        sb.append(replacements.get(c));
+		    }else {
+		        sb.append(c);
+		    }
+		}
+		
+		return sb.toString();
+		
+//	    return input.replace("&", "&amp;").replace(">", "&gt;").replace("<", "&lt;")
+//	        .replace("'", "&apos;").replaceAll("\"", "&quot;");
+	}
 }
