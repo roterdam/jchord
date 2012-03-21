@@ -546,4 +546,27 @@ public final class Utils {
 	public static boolean buildBoolProperty(String propName, boolean defaultVal) {
 		return System.getProperty(propName, Boolean.toString(defaultVal)).equals("true");
 	}
+	
+	public static String[] split(String s, String sep, boolean trimWhiteSpace, boolean noEmptyString, int limit){
+		if(trimWhiteSpace == false && noEmptyString == false){
+			return s.split(sep, limit);
+		}else if(trimWhiteSpace == false && noEmptyString == true){
+			String[] sArr = s.split("^(\\Q"+sep+"\\E)+");
+			if(sArr.length == 1 && sArr[0].length() == 0)
+				return (new String[0]);
+			else{
+				return (sArr[sArr.length - 1].split("(\\Q"+sep+"\\E)+", limit));
+			}
+		}else if(trimWhiteSpace == true && noEmptyString == false){
+			return (s.split("\\s*\\Q"+sep+"\\E\\s*", limit));
+		}else{
+			String[] sArr = s.split("^(\\s*\\Q"+sep+"\\E\\s*)+");
+			if(sArr.length == 1 && sArr[0].length() == 0)
+				return (new String[0]);
+			else{
+				return (sArr[sArr.length - 1].split("(\\s*\\Q"+sep+"\\E\\s*)+", limit));
+			}
+		}
+		
+	}
 }

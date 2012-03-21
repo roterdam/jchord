@@ -8,10 +8,14 @@ package chord.analyses.alloc;
 
 import java.util.List;
 
+import joeq.Class.PrimordialClassLoader;
 import joeq.Class.jq_Reference;
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
+import joeq.Compiler.Quad.RegisterFactory;
+import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.TypeOperand;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
@@ -19,6 +23,7 @@ import joeq.Compiler.Quad.Operator.New;
 import joeq.Compiler.Quad.Operator.NewArray;
 import joeq.Compiler.Quad.Operator.MultiNewArray;
 import joeq.Compiler.Quad.Operator.Invoke;
+import joeq.Compiler.Quad.RegisterFactory.Register;
 
 import chord.util.tuple.object.Pair;
 import chord.project.Chord;
@@ -28,6 +33,7 @@ import chord.project.ClassicProject;
 import chord.program.PhantomObjVal;
 import chord.program.PhantomClsVal;
 import chord.project.analyses.ProgramDom;
+import chord.project.analyses.ProgramRel;
 import chord.analyses.method.DomM;
 import chord.program.Reflect;
 import chord.program.Program;
@@ -41,9 +47,9 @@ import chord.program.Program;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "H",
-	consumes = { "M" }
-)
+		name = "H",
+		consumes = { "M" }
+		)
 public class DomH extends ProgramDom<Object> {
 	protected DomM domM;
 	protected int lastA;
@@ -54,6 +60,13 @@ public class DomH extends ProgramDom<Object> {
 	}
 	public int getLastI() {
 		return lastI;
+	}
+	
+	public void setLastA(int lastA) {
+		this.lastA = lastA;
+	}
+	public void setLastI(int lastI) {
+		this.lastI = lastI;
 	}
 
 	public void init() {
@@ -77,6 +90,7 @@ public class DomH extends ProgramDom<Object> {
 				}
 			}
 		}
+
 		lastA = size() - 1;
 		Reflect reflect = Program.g().getReflect();
 		processResolvedNewInstSites(reflect.getResolvedObjNewInstSites());
@@ -89,6 +103,7 @@ public class DomH extends ProgramDom<Object> {
 			}
 		}
 	}
+
 	private void processResolvedNewInstSites(List<Pair<Quad, List<jq_Reference>>> l) {
 		for (Pair<Quad, List<jq_Reference>> p : l)
 			add(p.val0);
@@ -131,7 +146,7 @@ public class DomH extends ProgramDom<Object> {
 			int line = q.getLineNumber();
 			int mIdx = domM.indexOf(m);
 			return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
-				"Mid=\"M" + mIdx + "\"" + " type=\"" + type + "\"";
+			"Mid=\"M" + mIdx + "\"" + " type=\"" + type + "\"";
 		}
 		return "";
 	}
