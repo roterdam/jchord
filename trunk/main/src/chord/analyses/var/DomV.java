@@ -13,6 +13,9 @@ import java.util.List;
 import joeq.Class.jq_Class;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.RegisterFactory.Register;
+import chord.analyses.method.DomM;
+import chord.project.ClassicProject;
+import chord.project.Config;
 import chord.program.visitors.IMethodVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramDom;
@@ -35,17 +38,24 @@ import chord.project.analyses.ProgramDom;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "V"
+	name = "V",
+	consumes = { "M" }
 )
 public class DomV extends ProgramDom<Register> implements IMethodVisitor {
-	private Map<Register, jq_Method> varToMethodMap;
+    protected DomM domM;
+	protected Map<Register, jq_Method> varToMethodMap;
+
 	public void init() {
+        domM = (DomM) (Config.classic ? ClassicProject.g().getTrgt("M") : consumes[0]);
 		varToMethodMap = new HashMap<Register, jq_Method>();
 	}
+
 	public jq_Method getMethod(Register v) {
 		return varToMethodMap.get(v);
 	}
+
 	public void visit(jq_Class c) { }
+
 	public void visit(jq_Method m) {
 		if (m.isAbstract())
 			return;
@@ -55,7 +65,13 @@ public class DomV extends ProgramDom<Register> implements IMethodVisitor {
 			add(v);
 		}
 	}
+
 	public String toUniqueString(Register v) {
 		return v + "!" + getMethod(v);
 	}
+
+    public String toXMLAttrsString(Register v) {
+        int mIdx = domM.indexOf(getMethod(v));
+		return "name=\"" + v + "\" " + "Mid=\"M" + mIdx + "\"";
+    }
 }
