@@ -756,7 +756,7 @@ public abstract class jq_Method extends jq_Member {
 				}
 			}
 
-			jq_LocalVarTableEntry localVarTableEntry = this.getLocalVarTableEntry(q.getBCI(), index);
+			jq_LocalVarTableEntry localVarTableEntry = this.getLocalVarTableEntry(q.getBCI() + 1, index);
 			if(localVarTableEntry==null){
 				getStackLineNum(v, q);
 				return;
@@ -765,7 +765,7 @@ public abstract class jq_Method extends jq_Member {
 			//jq_LocalVarTableEntry[] arr = m.getLocalTable();
 			//for(jq_LocalVarTableEntry var: arr)
 			//	System.out.println(var.toString());
-			lineNum = this.getLineNumber((int)(localVarTableEntry.getStartPC()));
+			lineNum = this.getLineNumber(((int)(localVarTableEntry.getStartPC())) - 1);
 		}else{
 			lineNum = this.getLineNumber(0);
 		}
@@ -786,5 +786,108 @@ public abstract class jq_Method extends jq_Member {
 			varToLineNumsMap.put(v, lineNums);
 		}else
 			lineNums.add(q.getLineNumber());
+	}
+	
+    /* Code to return the source name of a register in the method*/
+    private Map<Register, ArrayList<String> > varToRegNameMap = null;
+    
+    public ArrayList<String> getRegName(Register v){
+    	if(varToRegNameMap == null){
+    		varToRegNameMap = new HashMap<RegisterFactory.Register, ArrayList<String>>();
+    		this.getRegNames();
+    	}
+    	return varToRegNameMap.get(v);
+    }
+    
+    private void getRegNames() {
+		ControlFlowGraph cfg = this.getCFG();
+		RegisterFactory rf = cfg.getRegisterFactory();
+		jq_Type[] paramTypes = this.getParamTypes();
+		int numArgs = paramTypes.length;
+		for (int i = 0; i < numArgs; i++) {
+				Register v = rf.get(i);
+				getLocalRegName(v,null);
+		}
+
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			for (Quad q : bb.getQuads()) {
+				processForRegName(q);
+			}
+		}
+	}
+
+	private void processForRegName(Quad q) {
+		for(Operand op : q.getDefinedRegisters()){
+			if (op instanceof RegisterOperand) {
+				RegisterOperand ro = (RegisterOperand) op;
+					Register v = ro.getRegister();
+					if(v.isTemp())
+						getStackRegName(v,q);
+					else
+						getLocalRegName(v,q);
+			} else if (op instanceof ParamListOperand) {
+				ParamListOperand ros = (ParamListOperand) op;
+				int n = ros.length();
+				for (int i = 0; i < n; i++) {
+					RegisterOperand ro = ros.get(i);
+					if (ro == null)
+						continue;
+						Register v = ro.getRegister();
+						if(v.isTemp())
+							getStackRegName(v,q);
+						else
+							getLocalRegName(v,q);
+				}
+			}
+		}
+	}
+
+	private void getLocalRegName(Register v, Quad q){
+		//System.out.println(m.getCFG().fullDump());
+		String regName = "";
+			int index = -1;
+			Map localNum = this.getCFG().getRegisterFactory().getLocalNumberingMap();
+			for(Object o: localNum.keySet()){
+				if(localNum.get(o).equals(v)){
+					//System.out.println(localNum.get(o) + ":" + v);
+					index = (Integer) ((Pair)o).right;
+					break;
+				}
+			}
+			
+			jq_LocalVarTableEntry localVarTableEntry = null;
+			if(q!=null){
+				localVarTableEntry = this.getLocalVarTableEntry(q.getBCI()+1, index);
+			}else{
+				localVarTableEntry = this.getLocalVarTableEntry(0, index);
+			}
+			
+			if(localVarTableEntry==null){
+				getStackRegName(v, q);
+				return;
+			}
+			
+			
+			jq_NameAndDesc regNd = localVarTableEntry.getNameAndDesc();
+			regName += regNd.getName() + ":" + regNd.getDesc();
+			
+			ArrayList<String> regNames = varToRegNameMap.get(v);
+		if(regNames==null){
+			regNames = new ArrayList<String>();
+			regNames.add(regName);
+			varToRegNameMap.put(v, regNames);
+		}else
+			regNames.add(regName);
+	}
+
+	private void getStackRegName(Register v, Quad q){
+		ArrayList<String> regNames = varToRegNameMap.get(v);
+		if(regNames==null){
+			regNames = new ArrayList<String>();
+			regNames.add(v.toString());
+			varToRegNameMap.put(v, regNames);
+		}else{
+			//regNames.add(v.toString());
+		}
 	}
 }
