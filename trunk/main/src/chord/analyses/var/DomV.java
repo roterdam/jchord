@@ -72,6 +72,6 @@ public class DomV extends ProgramDom<Register> implements IMethodVisitor {
 
     public String toXMLAttrsString(Register v) {
         int mIdx = domM.indexOf(getMethod(v));
-		return "name=\"" + v + "\" " + "Mid=\"M" + mIdx + "\"";
+		return "name=\"" + getMethod(v).getRegName(v) + "\" " + "Mid=\"M" + mIdx + "\"";
     }
 }
