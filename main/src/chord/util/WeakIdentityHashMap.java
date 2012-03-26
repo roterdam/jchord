@@ -1,5 +1,3 @@
-package chord.util;
-
 /*
   * JBoss, Home of Professional Open Source
   * Copyright 2005, JBoss Inc., and individual contributors as indicated
@@ -21,6 +19,7 @@ package chord.util;
   * Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA
   * 02110-1301 USA, or see the FSF site: http://www.fsf.org.
   */
+package chord.util;
 
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;

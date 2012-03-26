@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2008-2010, Intel Corporation.
- * Copyright (c) 2006-2007, The Trustees of Stanford University.
- * All rights reserved.
- * Licensed under the terms of the New BSD License.
- */
 package chord.analyses.alias;
 
 import joeq.Compiler.Quad.Operator;
@@ -20,8 +14,7 @@ import chord.analyses.invk.DomI;
 /**
  * Domain of abstract contexts.
  * <p>
- * The 0th element in this domain denotes the distinguished
- * abstract context <tt>epsilon</tt>
+ * The 0th element in this domain denotes the distinguished abstract context <tt>epsilon</tt>
  * (see {@link chord.analyses.alias.Ctxt}).
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
@@ -50,8 +43,7 @@ public class DomC extends ProgramDom<Ctxt> {
 		for (int i = 0; i < n; i++) {
 			Quad eVal = elems[i];
 			Operator op = eVal.getOperator();
-			if (op instanceof New || op instanceof NewArray ||
-					op instanceof MultiNewArray) {
+			if (op instanceof New || op instanceof NewArray || op instanceof MultiNewArray) {
 				int hIdx = domH.indexOf(eVal);
 				s += "H" + hIdx;
 			} else if (op instanceof Invoke) {

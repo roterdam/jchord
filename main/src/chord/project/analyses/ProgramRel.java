@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2008-2010, Intel Corporation.
- * Copyright (c) 2006-2007, The Trustees of Stanford University.
- * All rights reserved.
- * Licensed under the terms of the New BSD License.
- */
 package chord.project.analyses;
 
 import java.util.List;
@@ -26,8 +20,7 @@ import chord.project.ITask;
 import CnCHJ.api.ItemCollection;
 
 /**
- * Generic implementation of a program relation (a specialized kind
- * of Java task).
+ * Generic implementation of a program relation (a specialized kind of Java task).
  * <p>
  * A program relation is a relation over one or more program domains.
  *

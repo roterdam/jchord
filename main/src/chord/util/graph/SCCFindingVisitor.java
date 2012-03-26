@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2008-2010, Intel Corporation.
- * Copyright (c) 2006-2007, The Trustees of Stanford University.
- * All rights reserved.
- * Licensed under the terms of the New BSD License.
- */
 package chord.util.graph;
 
 import java.util.List;
@@ -12,8 +6,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * A visitor over the Strongly Connected Components (SCCs) of a
- * directed graph.
+ * A visitor over the Strongly Connected Components (SCCs) of a directed graph.
  *  
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
