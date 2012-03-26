@@ -1,5 +1,6 @@
 package chord.analyses.var;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.List;
@@ -66,6 +67,21 @@ public class DomV extends ProgramDom<Register> implements IMethodVisitor {
 
     public String toXMLAttrsString(Register v) {
         int mIdx = domM.indexOf(getMethod(v));
-		return "name=\"" + getMethod(v).getRegName(v) + "\" " + "Mid=\"M" + mIdx + "\"";
+        String file = getMethod(v).getDeclaringClass().getSourceFileName();
+		ArrayList<Integer> lineArr = getMethod(v).getLineNumber(v);
+		String line = "";
+		
+		if(lineArr == null){
+			line = String.valueOf(getMethod(v).getLineNumber(0));
+		}else{
+			for(int vline : lineArr){
+				if(!line.equalsIgnoreCase(""))
+					line += ",";
+
+				line += vline;
+			}
+		}
+		
+		return "file=\"" + file + "\" " + "line=\"" + line + "\" " + "name=\"" + getMethod(v).getRegName(v) + "\" " + "Mid=\"M" + mIdx + "\"";
     }
 }

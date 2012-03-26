@@ -60,7 +60,7 @@ public class DomM extends ProgramDom<jq_Method>
 		String args = desc.substring(1, desc.indexOf(')'));
 		sign += "(" + Program.typesToStr(args) + ")";
 		String file = c.getSourceFileName();
-		int line = 0;  // TODO
+		int line = m.getLineNumber(0);  // TODO
 		return "sign=\"" + sign +
 			"\" file=\"" + file +
 			"\" line=\"" + line + "\"";
