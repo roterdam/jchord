@@ -1,10 +1,3 @@
-/*
- * Copyright (c) 2010, Ariel Rabkin and Intel Corporation.
- * You may use and modify this code, subject to the license agreement 
- * in the "COPYING" file associated with this project.
- * 
- */
-
 package chord.analyses.method;
 
 import java.io.*;

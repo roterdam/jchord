@@ -20,7 +20,6 @@ package chord.util;
 
 import java.util.Arrays;
 
-
 /**
  * A resizable, array-backed list of int primitives.
  *

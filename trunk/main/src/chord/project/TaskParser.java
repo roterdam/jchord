@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2008-2010, Intel Corporation.
- * Copyright (c) 2006-2007, The Trustees of Stanford University.
- * All rights reserved.
- * Licensed under the terms of the New BSD License.
- */
 package chord.project;
 
 import java.io.File;
@@ -198,8 +192,7 @@ public class TaskParser {
 			else
 				createTrgt(name2, type2, className);
 		}
-		for (Map.Entry<String, RelSign> e :
-				nameToSignMap.entrySet()) {
+		for (Map.Entry<String, RelSign> e : nameToSignMap.entrySet()) {
 			String name2 = e.getKey();
 			if (nameToTypeMap.containsKey(name2))
 				continue;
