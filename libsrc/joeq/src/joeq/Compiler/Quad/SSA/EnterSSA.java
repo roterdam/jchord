@@ -9,6 +9,8 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Stack;
 import joeq.Class.jq_Primitive;
 import joeq.Class.jq_Type;
@@ -53,7 +55,7 @@ public class EnterSSA implements ControlFlowGraphVisitor {
     /**
      * The set of scalar phi functions inserted
      */
-    private Set scalarPhis = new HashSet();
+    private List scalarPhis = new ArrayList();
     /**
      * For each basic block, the number of predecessors that have been
      * processed.
@@ -295,7 +297,8 @@ public class EnterSSA implements ControlFlowGraphVisitor {
     private void insertPhi(BasicBlock bb, Register r) {
         Quad s = makePhiInstruction(r, bb);
         bb.addQuad(0, s);
-        scalarPhis.add(s);
+		if (!scalarPhis.contains(s))
+        	scalarPhis.add(s);
     }
     
     /**
@@ -499,7 +502,7 @@ public class EnterSSA implements ControlFlowGraphVisitor {
     /**
      * Remove all phis that are unreachable
      */
-    private void removeAllUnreachablePhis(Set scalarPhis) {
+    private void removeAllUnreachablePhis(List scalarPhis) {
         boolean iterateAgain = false;
         do {
             iterateAgain = false;
