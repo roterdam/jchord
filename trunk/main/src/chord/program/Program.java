@@ -243,7 +243,22 @@ public class Program {
 			while ((s = in.readLine()) != null) {
 				if (s.startsWith("#"))
 					break;
+				
+				if(Utils.buildBoolProperty("chord.reflect.exclude", false)){
+					boolean excludeLine = false;
+					String cName = strToClassName(s);
+					for (String c : Config.scopeExcludeAry) {
+						if (cName.startsWith(c)){
+							excludeLine = true;
+							break;
+						}
+					}
+					if(excludeLine)
+						continue;
+				}
+				
 				Pair<Quad, List<jq_Reference>> site = strToSite(s);
+				
 				l.add(site);
 			}
 		} catch (IOException ex) {
@@ -304,6 +319,13 @@ public class Program {
 		}
 	}
 
+	private String strToClassName(String s) {
+		String[] a = s.split("->");
+		assert (a.length == 2);
+		MethodElem e = MethodElem.parse(a[0]);
+		return e.cName;
+	}
+	
 	private Pair<Quad, List<jq_Reference>> strToSite(String s) {
 		String[] a = s.split("->");
 		assert (a.length == 2);
