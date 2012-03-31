@@ -1,11 +1,11 @@
 package test;
 
 public class Test {
-	public static LockClass lock3 = null;
+	public static Lock lock3 = null;
 	public static void main(String[] args) {
-		//Test Case:Expected Pass
-		LockClass lock1 = new LockClass();
-		LockClass lock2 = new LockClass();
+/*
+		Lock lock1 = new Lock();
+		Lock lock2 = new Lock();
 		lock3 = lock1;
 		lock2.Lock();
 		lock3.Lock();
@@ -14,5 +14,15 @@ public class Test {
 			lock3.UnLock();
 			lock3.Lock();
 		}
+*/
+		A a = new A();
+		a.f.Lock();
+		a.f.UnLock();
 	}
 }
+
+class A {
+	Lock f;
+	A() { f = new Lock(); }
+}
+
