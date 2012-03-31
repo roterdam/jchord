@@ -1,6 +1,7 @@
 package chord.analyses.type;
 
 import joeq.Class.jq_Reference;
+import joeq.Class.jq_Reference.jq_NullType;
 
 import chord.analyses.invk.StubRewrite;
 import chord.program.Program;
@@ -23,6 +24,9 @@ public class RelSub extends ProgramRel {
 		Program program = Program.g();
 		IndexSet<jq_Reference> classes = program.getClasses();
 		for (jq_Reference t1 : classes) {
+			//Add NULL_TYPE as a subclass of all classes
+			add(jq_NullType.NULL_TYPE,t1);
+			
 			jq_Reference stubForT1 = StubRewrite.fakeSubtype(t1);
 			if(stubForT1 == null)
 				stubForT1 = t1;
