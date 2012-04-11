@@ -110,10 +110,8 @@ public class Config {
 	// properties specifying names of Chord's output files and directories
 
 	public static String outDirName = System.getProperty("chord.out.dir", workRel2Abs("chord_output"));
-	//public final static String outFileName = System.getProperty("chord.out.file", outRel2Abs("log.txt"));
-	//public final static String errFileName = System.getProperty("chord.err.file", outRel2Abs("log.txt"));
-	public final static String outFileName = System.getProperty("chord.out.file", null);
-	public final static String errFileName = System.getProperty("chord.err.file", null);
+	public final static String outFileName = System.getProperty("chord.out.file", outRel2Abs("log.txt"));
+	public final static String errFileName = System.getProperty("chord.err.file", outRel2Abs("log.txt"));
 	public final static String reflectFileName = System.getProperty("chord.reflect.file", outRel2Abs("reflect.txt"));
 	public final static String methodsFileName = System.getProperty("chord.methods.file", outRel2Abs("methods.txt"));
 	public final static String classesFileName = System.getProperty("chord.classes.file", outRel2Abs("classes.txt"));
