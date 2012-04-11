@@ -52,7 +52,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 	protected final boolean mayMerge = mayMerge();
 	protected jq_Method currentMethod;
 	protected BasicBlock currentBB;
-	protected Set<jq_Method> trackedMethods= new HashSet<jq_Method>();
+	protected Set<Quad> trackedInvkSites= new HashSet<Quad>();
 
 	protected RHSAnalysis() {
 		if (mustMerge && !mayMerge) {
@@ -124,8 +124,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 		return targets;
 	}
 	
-	public void setTrackedMethods(Set<jq_Method> trackedM){
-		this.trackedMethods = trackedM;
+	public void setTrackedInvkSites(Set<Quad> trackedInvkSites){
+		this.trackedInvkSites = trackedInvkSites;
 	}
 
 	protected void done() {
@@ -270,7 +270,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 						for (jq_Method m2 : targets) {
 							if (DEBUG) System.out.println("\tTarget: " + m2);
 							PE pe2 = getInitPathEdge(q, m2, pe);
-							if(trackedMethods.contains(m2)){
+							if(trackedInvkSites.contains(q)){
 								BasicBlock bb2 = m2.getCFG().exit();
 								Location loc2 = new Location(m2, bb2, -1, null);
 								addPathEdge(loc2, pe2);
