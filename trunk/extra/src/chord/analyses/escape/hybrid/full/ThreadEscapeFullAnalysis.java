@@ -62,9 +62,9 @@ import chord.project.Config;
 import chord.project.Messages;
 import chord.project.OutDirUtils;
 import chord.project.analyses.ProgramRel;
-import chord.project.analyses.myrhs.RHSAnalysis;
-import chord.project.analyses.myrhs.TimeoutException;
-import chord.project.analyses.myrhs.WrappedEdge;
+import chord.project.analyses.rhs.RHSAnalysis;
+import chord.project.analyses.rhs.TimeoutException;
+import chord.project.analyses.rhs.IEdge;
 import chord.util.ArraySet;
 import chord.util.Timer;
 import chord.util.tuple.integer.IntPair;
@@ -115,7 +115,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private Set<Quad> currLocEs = new HashSet<Quad>();
 	private Set<Quad> currEscEs = new HashSet<Quad>();
 	private MyQuadVisitor qv = new MyQuadVisitor();
-	private EscQuadVisitor eqv = new EscQuadVisitor();
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
 
@@ -271,13 +270,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			// printSummaries();
 			if (HTMLize)
 				printEdges(pass);
-			// print error traces
-			if (trace && !timeOut) {
-				for (Quad q : currEscEs) {
-					WrappedEdge<Edge> initWPE = getEscEdge(q);
-					printEscTrace(initWPE);
-				}
-			}
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 			pass++;
@@ -364,33 +356,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 				+ "</a>";
 	}
 
-	private void printEscTrace(WrappedEdge<Edge> wpe) {
-		BackTraceIterator iter = this.getBackTraceIterator(wpe);
-		File dir = new File(Config.outDirName, "traces");
-		if (!dir.exists())
-			dir.mkdir();
-		PrintWriter w = OutDirUtils.newPrintWriter("traces" + "/"
-				+ wpe.inst + ".html");
-		w.println("<html><head></head><body>");
-		String initWPEStr = toString(wpe);
-		w.println(initWPEStr);
-		System.out.println(initWPEStr);
-		while (iter.hasNext()) {
-			String trioStr = toString(iter.next());
-			w.println(trioStr);
-			System.out.println(trioStr);
-		}
-		w.println("</body></html>");
-		w.close();
-	}
-
-	private String toString(WrappedEdge<Edge> wpe) {
-		String s = wpe.inst.toString();
-		s += "\n<pre>" + toString(wpe.edge, wpe.inst.getMethod())
-				+ "[trajLength = " + wpe.pathLength + "]" + "</pre>";
-		return s;
-	}
-
 	private void printEdges(int pass) {
 		File dir = new File(Config.outDirName, Integer.toString(pass));
 		dir.mkdir();
@@ -405,8 +370,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 				w.println(q.getID() + ": " + toHTMLStr(m2) + "<br>");
 			}
 			w.println("<br>Summary Edges:");
-			Set<WrappedEdge<Edge>> seSet = summEdges.get(m);
-			w.print(toSESetString(seSet, m));
+			Set<Edge> seSet = summEdges.get(m);
 			ControlFlowGraph cfg = m.getCFG();
 			w.println("<pre>");
 			w.println("Register Factory: " + cfg.getRegisterFactory());
@@ -445,39 +409,17 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			for (BasicBlock bb : m.getCFG().reversePostOrder()) {
 				if (bb.isEntry() || bb.isExit()) {
 					w.println(bb.isEntry() ? "ENTRY:" : "EXIT:");
-					Set<WrappedEdge<Edge>> peSet = pathEdges
-							.get((EntryOrExitBasicBlock) bb);
-					w.println(toPESetString(peSet, m));
+					Set<Edge> peSet = pathEdges.get((EntryOrExitBasicBlock) bb);
 				} else {
 					for (Quad q : bb) {
 						w.println(q.getID() + ":");
-						Set<WrappedEdge<Edge>> peSet = pathEdges.get(q);
-						w.println(toPESetString(peSet, m));
+						Set<Edge> peSet = pathEdges.get(q);
 					}
 				}
 			}
 			w.println("</body>");
 			w.close();
 		}
-	}
-
-	private String toPESetString(Set<WrappedEdge<Edge>> peSet, jq_Method m) {
-		if (peSet == null)
-			return "No edges<br>";
-		String s = "";
-		for (WrappedEdge<Edge> wpe : peSet){
-				s += "<pre>" + toString(wpe.edge, m) + "[trajLength = "
-						+ wpe.pathLength + "]" + "</pre>";}
-		return s;
-	}
-
-	private String toSESetString(Set<WrappedEdge<Edge>> peSet, jq_Method m) {
-		if (peSet == null)
-			return "No edges<br>";
-		String s = "";
-		for (WrappedEdge<Edge> pe : peSet)
-			s += "<pre>" + toString(pe.edge, m) + "</pre>";
-		return s;
 	}
 
 	private String toString(Edge pe, jq_Method m) {
@@ -717,52 +659,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		DstNode clrDstNode2 = new DstNode(clrDstEnv2, clrDstHeap2, isKill
 				|| clrDstNode.isKill, false);
 		return new Edge(clrPE.srcNode, clrDstNode2);
-	}
-
-	private WrappedEdge<Edge> getEscEdge(Quad q) {
-		eqv.escEdge = null;
-		q.accept(eqv);
-		return eqv.escEdge;
-	}
-
-	class EscQuadVisitor extends QuadVisitor.EmptyVisitor {
-
-		public WrappedEdge<Edge> escEdge = null;
-
-		@Override
-		public void visitAStore(Quad obj) {
-			findEscTrio(obj, AStore.getBase(obj));
-		}
-
-		@Override
-		public void visitALoad(Quad obj) {
-			findEscTrio(obj, ALoad.getBase(obj));
-		}
-
-		@Override
-		public void visitGetfield(Quad obj) {
-			findEscTrio(obj, Getfield.getBase(obj));
-		}
-
-		@Override
-		public void visitPutfield(Quad obj) {
-			findEscTrio(obj, Putfield.getBase(obj));
-		}
-
-		private void findEscTrio(Quad q, Operand bx) {
-			if (!(bx instanceof RegisterOperand))
-				throw new RuntimeException("Register operand expected!");
-			RegisterOperand bo = (RegisterOperand) bx;
-			int bIdx = getIdx(bo);
-			Set<WrappedEdge<Edge>> peSet = pathEdges.get(q);
-				for (WrappedEdge<Edge> wpe : peSet) {
-					Obj pts = wpe.edge.dstNode.env[bIdx];
-					if (pts == Obj.ONLY_ESC || pts == Obj.BOTH) {
-						escEdge = wpe;
-						return;
-					}
-				}
-		}
 	}
 
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
@@ -1244,8 +1140,4 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		return "[" + s + "]";
 	}
 
-	@Override
-	public boolean keepRings() {
-		return rings;
-	}
 }

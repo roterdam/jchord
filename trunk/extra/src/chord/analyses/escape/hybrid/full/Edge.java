@@ -10,7 +10,7 @@ import java.util.Set;
 
 import joeq.Class.jq_Field;
 import chord.util.ArraySet;
-import chord.project.analyses.myrhs.IEdge;
+import chord.project.analyses.rhs.IEdge;
 
 /**
  * 
@@ -28,7 +28,12 @@ public class Edge implements IEdge {
 	}
 
 	@Override
-	public int canMerge(IEdge pe2) {
+	public boolean canMerge(IEdge pe2) {
+		int x = check(pe2);
+		return x != -1;
+	}
+
+	public int check(IEdge pe2) {
 		SrcNode srcNode2 = ((Edge) pe2).srcNode;
 		if (!srcNode.equals(srcNode2))
 			return -1;
@@ -273,13 +278,5 @@ public class Edge implements IEdge {
 
 	public String toString() {
 		return srcNode + ";" + dstNode;
-	}
-
-	@Override
-	public boolean matchSourse(IEdge edge) {
-		if(!(edge instanceof Edge))
-			throw new RuntimeException("edge must be an instance of Edge!");
-		Edge that = (Edge)edge;
-		return this.srcNode.equals(that.srcNode);
 	}
 }
