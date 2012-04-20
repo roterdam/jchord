@@ -19,17 +19,14 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (m,v1,v2) such that method m
- * contains a statement of the form <tt>v1 = v2</tt>.
+ * Relation containing each tuple (m,v1,v2) such that method m contains a
+ * statement of the form v1 = v2 where v1 and v2 are of reference type.
  * 
- * Includes cast and phi instructions as moves.
+ * Includes three kinds of quads: MOVE, CHECKCAST, PHI.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-	name = "MobjVarAsgnInst",
-	sign = "M0,V0,V1:M0_V0xV1"
-)
+@Chord(name = "MobjVarAsgnInst", sign = "M0,V0,V1:M0_V0xV1")
 public class RelMobjVarAsgnInst extends ProgramRel
 		implements IMoveInstVisitor, IPhiInstVisitor, ICastInstVisitor {
 	private jq_Method ctnrMethod;
@@ -52,7 +49,7 @@ public class RelMobjVarAsgnInst extends ProgramRel
 	public void visitPhiInst(Quad q) {
 		RegisterOperand lo = Phi.getDest(q);
 		jq_Type t = lo.getType();
-		if (t == null || t.isReferenceType()) {
+		if (t.isReferenceType()) {
 			Register l = lo.getRegister();
 			ParamListOperand ros = Phi.getSrcs(q);
 			int n = ros.length();
