@@ -384,6 +384,7 @@ public class RTA implements ScopeBuilder {
 					visitClass(a);
 					if (reachableAllocClasses.add(a))
 						repeat = true;
+/*
 				} else if (op instanceof Move) {
 					Operand ro = Move.getSrc(q);
 					if (ro instanceof AConstOperand) {
@@ -396,6 +397,7 @@ public class RTA implements ScopeBuilder {
 								visitClass(d);
 						}
 					}
+*/
 				}
 			}
 		}

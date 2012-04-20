@@ -19,11 +19,15 @@ import joeq.UTF.Utf8;
 import jwutil.collections.Pair;
 import jwutil.util.Assert;
 import jwutil.util.Convert;
+import joeq.Compiler.Quad.Operator.Move;
+import joeq.Compiler.Quad.Operator.Phi;
+import joeq.Compiler.Quad.Operator.Branch;
 import joeq.Compiler.Quad.CodeCache;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operand.AConstOperand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
+import joeq.Compiler.Quad.Operand.BasicBlockTableOperand;
 import joeq.Compiler.Quad.RegisterFactory;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Quad;
@@ -39,22 +43,21 @@ import joeq.Compiler.Quad.ICFGBuilder;
  * @version $Id: jq_Method.java,v 1.52 2004/09/22 22:17:28 joewhaley Exp $
  */
 public abstract class jq_Method extends jq_Member {
-	private static boolean doSSA = false;
+	enum SSAKind {
+		NONE, PHI, NO_PHI
+	};
+	private static SSAKind ssaKind = SSAKind.NONE;
 	private static boolean verbose;
 	private static String[] scopeExcludedPrefixes = new String[0];
 	private static Map<String, String> nativeCFGBuildersMap = Collections.EMPTY_MAP;
-	private static int maxVars = -1;
 
-	public static void doSSA() { doSSA = true; }
+	public static void doSSA(boolean hasPhi) { ssaKind = (hasPhi) ? SSAKind.PHI : SSAKind.NO_PHI; }
 	public static void setVerbose() { verbose = true; }
 	public static void setNativeCFGBuilders(Map<String, String> map) {
 		nativeCFGBuildersMap = map;
 	}
 	public static void exclude(String[] a) {
 		scopeExcludedPrefixes = a;
-	}
-	public static void setMaxVars(int max) {
-		maxVars = max;
 	}
 
     // Available after loading
@@ -498,10 +501,10 @@ public abstract class jq_Method extends jq_Member {
 		BasicBlock bb = cfg.createBasicBlock(1, 1, 1, null);
 		Quad q;
 		if (getReturnType().isReferenceType()) {
-    		q = Return.create(1, bb, Return.RETURN_V.INSTANCE);
-		} else {
 			q = Return.create(1, bb, Return.RETURN_A.INSTANCE);
 			Return.setSrc(q, new AConstOperand(null));
+		} else {
+    		q = Return.create(1, bb, Return.RETURN_V.INSTANCE);
 		}
 		bb.appendQuad(q);
 		BasicBlock entry = cfg.entry();
@@ -566,28 +569,77 @@ public abstract class jq_Method extends jq_Member {
 		} else {
 			try {
 				cfg = CodeCache.getCode(this);
-				if (doSSA)
+				switch (ssaKind) {
+				case NONE:
+					break;
+				case PHI:
 					(new EnterSSA()).visitCFG(cfg);
+					break;
+				case NO_PHI:
+					(new EnterSSA()).visitCFG(cfg);
+					removePhis();
+					break;
+				default:
+					break;
+				}
 				assert (cfg != null);
-				RegisterFactory rf = cfg.getRegisterFactory();
-				int numVars = rf.size();
-				if (maxVars != -1 && numVars > maxVars) {
-					if (verbose) {
-						System.err.println("WARN: too many vars (" + numVars +
-							") in method " + this + "; setting it to no-op.");
-					}
-					buildEmptyCFG();
-				}
 			} catch (Throwable ex) {
-				if (verbose) {
-					System.err.println("WARN: Failed to get CFG of method " +
-						this + "; setting it to no-op.  Error follows.");
-					ex.printStackTrace();
-				}
+				System.err.println("WARN: Failed to get CFG of method " +
+					this + "; setting it to no-op.  Error follows.");
+				ex.printStackTrace();
 				buildEmptyCFG();
 			}
 		}
         return cfg;
+	}
+
+	private void removePhis() {
+		BasicBlock entryBB = cfg.entry(), entrySuccBB = null;
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			int n = bb.size();
+			if (n == 0) continue;
+			Quad q = bb.getQuad(0);
+			if (q.getOperator() instanceof Phi) {
+				ParamListOperand ros = Phi.getSrcs(q);
+				int k = ros.length();
+				BasicBlockTableOperand bos = Phi.getPreds(q);
+				assert (bos.size() == k);
+				RegisterOperand lo = Phi.getDest(q);
+				for (int i = 0; i < k; i++) {
+					RegisterOperand ro = ros.get(i);
+					BasicBlock bb2 = bos.get(i);
+					if (bb2 == entryBB) {
+						if (entrySuccBB == null) {
+							int numSuccs = entryBB.getNumberOfSuccessors();
+							entrySuccBB = cfg.createBasicBlock(1, numSuccs, 1, null);
+						}
+						bb2 = entrySuccBB;
+					}
+					assert (bb2 != cfg.exit());
+					jq_Type t = lo.getType();
+					Move mop = (t == null) ? Move.MOVE_A.INSTANCE : Move.getMoveOp(t);
+					Quad q2 = Move.create(-1, bb2, mop,
+						(RegisterOperand) lo.copy(), (ro == null) ? null : ro.copy());
+					int n2 = bb2.size();
+					int j = n2 - 1;
+					while (j >= 0 && bb2.getQuad(j).getOperator() instanceof Branch)
+						j--;
+					bb2.addQuad(j + 1, q2);
+				}
+				Quad x = bb.removeQuad(0);
+				assert (x.getOperator() instanceof Phi);
+			}
+		}
+		if (entrySuccBB != null) {
+			for (BasicBlock bb : entryBB.getSuccessors()) {
+				entrySuccBB.addSuccessor(bb);
+				if (bb.removePredecessor(entryBB))
+					bb.addPredecessor(entrySuccBB);
+			}
+			entryBB.removeAllSuccessors();
+			entryBB.addSuccessor(entrySuccBB);
+			entrySuccBB.addPredecessor(entryBB);
+		}
 	}
 
 	public Map<Quad, Integer> getBCMap() {

@@ -313,7 +313,7 @@ public class EnterSSA implements ControlFlowGraphVisitor {
     private Quad makePhiInstruction(Register r, BasicBlock bb) {
         int n = bb.getNumberOfPredecessors();
         Iterator in = bb.getPredecessors().iterator();
-        jq_Type type = null;
+        jq_Type type = r.getType();
         Quad s = Phi.create(ir.getNewQuadID(), bb, Phi.PHI.INSTANCE, new RegisterOperand(r, type), n);
         for (int i = 0; i < n; i++) {
             RegisterOperand junk = new RegisterOperand(r, type);

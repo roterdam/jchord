@@ -34,11 +34,12 @@ public class Config {
 	public final static String scopeKind = System.getProperty("chord.scope.kind", "rta");
 	public final static String reflectKind = System.getProperty("chord.reflect.kind", "none");
 	public final static String CHkind = System.getProperty("chord.ch.kind", "static");
+	public final static String ssaKind = System.getProperty("chord.ssa.kind", "phi");
 	static {
 		check(CHkind, new String[] { "static", "dynamic" }, "chord.ch.kind");
 		check(reflectKind, new String[] { "none", "static", "dynamic", "static_cast" }, "chord.reflect.kind");
+		check(ssaKind, new String[] { "none", "phi", "nophi" }, "chord.ssa.kind");
 	}
-	public final static boolean doSSA = Utils.buildBoolProperty("chord.ssa", true);
 	public final static String DEFAULT_SCOPE_EXCLUDES = "";
 	public final static String scopeStdExcludeStr = System.getProperty("chord.std.scope.exclude", DEFAULT_SCOPE_EXCLUDES);
 	public final static String scopeExtExcludeStr = System.getProperty("chord.ext.scope.exclude", "");
@@ -176,7 +177,7 @@ public class Config {
 		System.out.println("chord.scope.kind: " + scopeKind);
 		System.out.println("chord.reflect.kind: " + reflectKind);
 		System.out.println("chord.ch.kind: " + CHkind);
-		System.out.println("chord.ssa: " + doSSA);
+		System.out.println("chord.ssa: " + ssaKind);
 		System.out.println("chord.std.scope.exclude: " + scopeStdExcludeStr);
 		System.out.println("chord.ext.scope.exclude: " + scopeExtExcludeStr);
 		System.out.println("chord.scope.exclude: " + scopeExcludeStr);

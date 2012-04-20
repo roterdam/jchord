@@ -81,8 +81,11 @@ public class Program {
 	private Program() {
 		if (Config.verbose >= 2)
 			jq_Method.setVerbose();
-		if (Config.doSSA)
-			jq_Method.doSSA();
+		String ssaKind = Config.ssaKind;
+		if (ssaKind.equals("phi"))
+			jq_Method.doSSA(true);
+		else if (ssaKind.equals("nophi"))
+			jq_Method.doSSA(false);
 		jq_Method.exclude(Config.scopeExcludeAry);
 		Map<String, String> map = new HashMap<String, String>();
 		String stubsFileName = Config.stubsFileName;
