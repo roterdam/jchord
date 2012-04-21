@@ -53,7 +53,7 @@ public class TypeStateParser {
 	public static TypeStateSpec parseStateSpec(String fileName) {
 		List<String> lines = Utils.readFileToList(fileName);
 		TypeStateSpec sp;
-		if(Utils.buildBoolProperty("chord.typestate.missinglib", false)){
+		if(Integer.getInteger("chord.missinglib.type", 0) != 0){
 			sp = new MTypeStateSpec();
 		}else{
 			sp = new TypeStateSpec();
@@ -135,7 +135,7 @@ public class TypeStateParser {
 		if (!parsingError && sp.getStartState() != null) {
 			sp.addState(errorStateName);
 			sp.addErrorState(sp.getState(errorStateName));
-			if(Utils.buildBoolProperty("chord.typestate.missinglib", false)){
+			if(Integer.getInteger("chord.missinglib.type", 0) != 0){
 				sp.addState("Best");
 				((MTypeStateSpec)sp).addBestState(sp.getState("Best"));
 			}

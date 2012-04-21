@@ -88,10 +88,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		startState = sp.getStartState();
 		errorState = sp.getErrorState();
 		
-		if(Utils.buildBoolProperty("chord.typestate.missinglib", false)){
-			bestState = ((MTypeStateSpec)sp).getBestState();
-		}
-		
 		maxDepth = Integer.getInteger("chord.typestate.maxdepth", 6);
 		assert (maxDepth >= 0);
 
@@ -265,15 +261,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 				newTS = sp.getTargetState(tgtMethod.getName(), oldDst.ts);
 				if (DEBUG) System.out.println("State Transition to: " + newTS);
 			} else if (Helper.mayPointsTo(args.get(0).getRegister(), pe.h, cipa)) {
-				
-				if(Utils.buildBoolProperty("chord.typestate.missinglib", false) && bestState == oldDst.ts){
-					newTS = bestState;
-				}else{
-					newTS = errorState;
-				}
-					
+				newTS = errorState;
 				if (DEBUG) System.out.println("State Transition to (mayPointTo): " + newTS);
-				
 			} else{
 				newTS = oldDst.ts;
 			}
@@ -405,17 +394,17 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 				return null;
 			}
 
-			// Build final must set newMS in three steps
+			// Build final must set newMS in four steps
 			// Step 1: Add all r.* paths in caller mustSet where r is neither an actual arg
 			// nor a global access path and is not modifiable in the callee via some field
+			addFallThroughAccessPaths(q, clrPE, m, tgtSE, newMS, clrMS);
 			
-			if(!(Utils.buildBoolProperty("chord.typestate.missinglib", false) &&  
-				(tgtSE.dstNode.ts == errorState || tgtSE.dstNode.ts == bestState))){
-					newMS.addAll(clrMS);
-					Helper.removeModifiableAccessPaths(methodToModFields.get(m), newMS);
-			} 
+			//Step 2: Add all local variables, i.e. paths r without any fields, in caller mustSet 
+			//where r is not added in step 1
+			Helper.removeAllExceptLocalVariables(tmpMS);
+			newMS.addAll(tmpMS);
 
-			// Step 2: Replace formals with actuals (effectively do reverse of above for loop)
+			// Step 3: Replace formals with actuals (effectively do reverse of above for loop)
 			for (int i = 0; i < args.length(); i++) {
 				Register formalReg = rf.get(i);
 				Register actualReg = args.get(i).getRegister();
@@ -426,7 +415,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 				}
 			}
 			
-			// Step 3: Add all g.* and return var; shared below with else case where clrPE.type is NULL
+			// Step 4: Add all g.* and return var; shared below with else case where clrPE.type is NULL
 		} else {
 			// When clrPE.type is NULL and tgtSE.type is ALLOC, always return with suitable mustset
 
@@ -470,6 +459,12 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		return newEdge;
 	}
 
+	//Refactored into a method to enable overloading later on
+	public void addFallThroughAccessPaths(Quad q, Edge clrPE, jq_Method m, Edge tgtSE, ArraySet<AccessPath> newMS, ArraySet<AccessPath> clrMS){
+		newMS.addAll(clrMS);
+		Helper.removeModifiableAccessPaths(methodToModFields.get(m), newMS);
+	}
+	
 	@Override
 	public Edge getCopy(Edge pe) {
 		if (DEBUG) System.out.println("Called Copy with: " + pe);
@@ -484,9 +479,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
 	@Override
 	public boolean mayMerge() {
-		if(Utils.buildBoolProperty("chord.typestate.missinglib", false)){
-			return true;
-		}
 		return false;
 	}
 

@@ -218,4 +218,14 @@ public class Helper {
     			i.remove();
     	}    	
     }
+    
+    public static void removeAllExceptLocalVariables(ArraySet<AccessPath> MS){
+    	removeAllGlobalAccessPaths(MS);
+    	for (Iterator<AccessPath> i = MS.iterator(); i.hasNext();) {
+			AccessPath ap = i.next();
+    	    if (ap.fields.size() != 0)
+                i.remove();
+        }
+    	
+    }
 }
