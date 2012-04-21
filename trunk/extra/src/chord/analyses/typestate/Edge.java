@@ -56,7 +56,7 @@ public class Edge implements IEdge {
 	 */
 	@Override
 	public boolean canMerge(IEdge e) {
-		if(Utils.buildBoolProperty("chord.typestate.missinglib", false)){
+		if(Integer.getInteger("chord.missinglib.type", 0) != 0){
 			Edge that = (Edge) e;
 			if (this.type != that.type || this.h != that.h) return false;
 			if (this.dstNode != null && that.dstNode != null) {
@@ -81,7 +81,7 @@ public class Edge implements IEdge {
 
 	@Override
 	public boolean mergeWith(IEdge e) {	
-		if(Utils.buildBoolProperty("chord.typestate.missinglib", false)){
+		if(Integer.getInteger("chord.missinglib.type", 0) != 0){
 			
 			Edge that = (Edge) e;
 			if (that.dstNode == null) {
@@ -110,7 +110,7 @@ public class Edge implements IEdge {
 			// both must be startState and one must subsume other
 			ArraySet<AccessPath> thisMS = this.dstNode.ms;
 			ArraySet<AccessPath> thatMS = that.dstNode.ms;
-			if (thisMS.containsAll(thatMS))
+			if (!thisMS.containsAll(thatMS))
 				return false;
 			this.dstNode = that.dstNode;
 			return true;
