@@ -5,6 +5,7 @@ import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.Inst;
+import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
 import chord.analyses.method.DomM;
 
@@ -32,8 +33,9 @@ import chord.project.analyses.ProgramDom;
 	consumes = { "M" }
 )
 public class DomP extends ProgramDom<Inst> {
+	protected DomM domM;
 	public void fill() {
-		DomM domM = (DomM) (Config.classic ?
+		domM = (DomM) (Config.classic ?
 			ClassicProject.g().getTrgt("M") : consumes[0]);
 		int numM = domM.size();
 		for (int mIdx = 0; mIdx < numM; mIdx++) {
@@ -68,5 +70,14 @@ public class DomP extends ProgramDom<Inst> {
 			}
 		}
 		return x + "!" + i.getMethod();
+	}
+	
+	public String toXMLAttrsString(Inst q) {
+		jq_Method m = q.getMethod();
+		String file = m.getDeclaringClass().getSourceFileName();
+		int line = q.getLineNumber();
+		int mIdx = domM.indexOf(m);
+		return "file=\"" + file + "\" " + "line=\"" + line + "\" " +
+			"Mid=\"M" + mIdx + "\"";
 	}
 }
