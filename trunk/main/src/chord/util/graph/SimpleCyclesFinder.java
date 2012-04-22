@@ -5,7 +5,7 @@ import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 
-import gnu.trove.TIntStack;
+import gnu.trove.stack.array.TIntArrayStack;
 import chord.util.ArraySet;
 import chord.util.IndexMap;
 
@@ -22,8 +22,8 @@ public class SimpleCyclesFinder<Node> {
 	private Map<Node, Set<Node>> nodeToSuccsMap; 
 	private IndexMap<Node> nodeIdxMap;
 	private int currNodeIdx;
-	private TIntStack markedStack;
-	private TIntStack pointStack;
+	private TIntArrayStack markedStack;
+	private TIntArrayStack pointStack;
 	private boolean[] mark;
 	/**
 	 * Finds all simple cycles in a given directed graph by
@@ -44,8 +44,8 @@ public class SimpleCyclesFinder<Node> {
 		this.visitor = visitor;
 	}
 	private void run() {
-		markedStack = new TIntStack();
-		pointStack = new TIntStack();
+		markedStack = new TIntArrayStack();
+		pointStack = new TIntArrayStack();
 		nodeToSuccsMap = new HashMap<Node, Set<Node>>();
 		nodeIdxMap = new IndexMap<Node>();
 		int numNodes = 0;
@@ -80,7 +80,7 @@ public class SimpleCyclesFinder<Node> {
 			if (succNodeIdx < currNodeIdx)
 				it.remove();
 			else if (succNodeIdx == currNodeIdx) {
-				int[] path = pointStack.toNativeArray();
+				int[] path = pointStack.toArray();
 				visitor.prologue();
 				for (int nodeIdx2 : path) {
 					Node node2 = nodeIdxMap.get(nodeIdx2);

@@ -124,7 +124,7 @@
 				<pathelement location="lib/javassist.jar"/>
 				<pathelement location="lib/hj.jar"/>
 				<pathelement location="lib/CnCHj.jar"/>
-				<pathelement location="lib/trove-2.0.4.jar"/>
+				<pathelement location="lib/trove-3.0.2.jar"/>
 				<pathelement location="lib/scannotation-1.0.2.jar"/>
 				<pathelement location="lib/j2h.jar"/>
 				<pathelement location="lib/saxon9.jar"/>
@@ -140,7 +140,7 @@
             <zipfileset includes="**/*.class" src="lib/javassist.jar"/>
             <zipfileset includes="**/*.class" src="lib/hj.jar"/>
             <zipfileset includes="**/*.class" src="lib/CnCHj.jar"/>
-            <zipfileset includes="**/*.class" src="lib/trove-2.0.4.jar"/>
+            <zipfileset includes="**/*.class" src="lib/trove-3.0.2.jar"/>
             <zipfileset includes="**/*.class" src="lib/scannotation-1.0.2.jar"/>
             <zipfileset includes="**/*.class" src="lib/j2h.jar"/>
             <zipfileset includes="**/*.class" src="lib/saxon9.jar"/>

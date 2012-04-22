@@ -26,7 +26,7 @@ import chord.project.IStepCollection;
 import chord.project.ModernProject;
 import chord.util.Utils;
 
-import gnu.trove.TIntArrayList;
+import gnu.trove.list.array.TIntArrayList;
 
 /**
  * Generic implementation of a Dlog task (a program analysis expressed in Datalog and
