@@ -1,6 +1,6 @@
 package chord.util.graph;
 
-import gnu.trove.TIntArrayList;
+import gnu.trove.list.array.TIntArrayList;
 
 import java.util.ArrayList;
 import java.util.HashSet;

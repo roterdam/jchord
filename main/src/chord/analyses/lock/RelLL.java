@@ -1,6 +1,6 @@
 package chord.analyses.lock;
 
-import gnu.trove.TIntArrayList;
+import gnu.trove.list.array.TIntArrayList;
 
 import java.util.HashSet;
 import java.util.Set;

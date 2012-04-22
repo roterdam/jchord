@@ -1,6 +1,6 @@
 package chord.instr;
 
-import gnu.trove.TIntObjectHashMap;
+import gnu.trove.map.hash.TIntObjectHashMap;
 import javassist.*;
 import javassist.expr.*;
 

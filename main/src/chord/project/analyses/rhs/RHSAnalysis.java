@@ -15,7 +15,7 @@ import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operator.Invoke;
 
-import gnu.trove.TObjectIntHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 import chord.util.tuple.object.Pair;
 import chord.program.Location;
 import chord.analyses.alias.ICICG;

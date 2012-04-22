@@ -1,6 +1,6 @@
 package chord.analyses.escape.dynamic;
 
-import gnu.trove.TIntHashSet;
+import gnu.trove.set.hash.TIntHashSet;
 
 import java.io.PrintWriter;
 import java.util.List;
