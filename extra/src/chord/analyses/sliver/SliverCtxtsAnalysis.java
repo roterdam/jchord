@@ -44,8 +44,10 @@ import java.util.Set;
 import java.net.Socket;
 import java.net.ServerSocket;
 
-import gnu.trove.TIntArrayList;
-import gnu.trove.TIntProcedure;
+import gnu.trove.list.array.TIntArrayList;
+import gnu.trove.map.hash.TObjectIntHashMap;
+import gnu.trove.procedure.TIntProcedure;
+import gnu.trove.procedure.TObjectIntProcedure;
 
 import joeq.Class.jq_ClassInitializer;
 import joeq.Class.jq_Class;
@@ -98,8 +100,6 @@ import chord.util.tuple.object.Trio;
 import chord.util.Utils;
 import chord.util.StopWatch;
 
-import gnu.trove.TObjectIntHashMap;
-import gnu.trove.TObjectIntProcedure;
 import static chord.analyses.sliver.GlobalInfo.G;
 
 // Specifies the abstraction

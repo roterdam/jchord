@@ -6,7 +6,7 @@
  */
 package chord.analyses.escape.hybrid.full;
 
-import gnu.trove.TObjectIntHashMap;
+import gnu.trove.map.hash.TObjectIntHashMap;
 
 import java.io.File;
 import java.io.PrintWriter;
