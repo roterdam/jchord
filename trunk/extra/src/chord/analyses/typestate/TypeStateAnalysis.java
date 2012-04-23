@@ -401,8 +401,9 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 			
 			//Step 2: Add all local variables, i.e. paths r without any fields, in caller mustSet 
 			//where r is not added in step 1
-			Helper.removeAllExceptLocalVariables(tmpMS);
-			newMS.addAll(tmpMS);
+			ArraySet<AccessPath> localMS = new ArraySet<AccessPath>(clrPE.dstNode.ms);
+			Helper.removeAllExceptLocalVariables(localMS);
+			newMS.addAll(localMS);
 
 			// Step 3: Replace formals with actuals (effectively do reverse of above for loop)
 			for (int i = 0; i < args.length(); i++) {
