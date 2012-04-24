@@ -24,6 +24,7 @@ public class Edge implements IEdge {
 	final public Quad h;
 	final public AbstractState srcNode;
 	public AbstractState dstNode;
+	final private int analysisType = Integer.getInteger("chord.missinglib.type", 0);
 
 	// used only for construction of NULL edge
 	protected Edge() {
@@ -56,7 +57,7 @@ public class Edge implements IEdge {
 	 */
 	@Override
 	public boolean canMerge(IEdge e) {
-		if(Integer.getInteger("chord.missinglib.type", 0) != 0){
+		if(analysisType != 0){
 			Edge that = (Edge) e;
 			if (this.type != that.type || this.h != that.h) return false;
 			if (this.dstNode != null && that.dstNode != null) {
@@ -81,8 +82,7 @@ public class Edge implements IEdge {
 
 	@Override
 	public boolean mergeWith(IEdge e) {	
-		if(Integer.getInteger("chord.missinglib.type", 0) != 0){
-			
+		if(analysisType != 0){
 			Edge that = (Edge) e;
 			if (that.dstNode == null) {
 				// 'that' is either NULL:<null,null,null> or ALLOC:<null,h,null>
@@ -110,7 +110,7 @@ public class Edge implements IEdge {
 			// both must be startState and one must subsume other
 			ArraySet<AccessPath> thisMS = this.dstNode.ms;
 			ArraySet<AccessPath> thatMS = that.dstNode.ms;
-			if (!thisMS.containsAll(thatMS))
+			if (!thisMS.containsAll(thatMS) || (thisMS.containsAll(thatMS) && thatMS.containsAll(thisMS)))
 				return false;
 			this.dstNode = that.dstNode;
 			return true;
