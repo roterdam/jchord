@@ -599,7 +599,7 @@ public abstract class jq_Method extends jq_Member {
 			int n = bb.size();
 			if (n == 0) continue;
 			Quad q = bb.getQuad(0);
-			if (q.getOperator() instanceof Phi) {
+			while (q.getOperator() instanceof Phi) {
 				ParamListOperand ros = Phi.getSrcs(q);
 				int k = ros.length();
 				BasicBlockTableOperand bos = Phi.getPreds(q);
@@ -628,6 +628,7 @@ public abstract class jq_Method extends jq_Member {
 				}
 				Quad x = bb.removeQuad(0);
 				assert (x.getOperator() instanceof Phi);
+				q = bb.getQuad(0);
 			}
 		}
 		if (entrySuccBB != null) {
