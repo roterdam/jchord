@@ -1,5 +1,6 @@
 package chord.analyses.typestate;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -223,7 +224,7 @@ public class Helper {
     	removeAllGlobalAccessPaths(MS);
     	for (Iterator<AccessPath> i = MS.iterator(); i.hasNext();) {
 			AccessPath ap = i.next();
-    	    if (ap.fields.size() != 0)
+    	    if (!(ap.fields == Collections.EMPTY_LIST))
                 i.remove();
         }
     	

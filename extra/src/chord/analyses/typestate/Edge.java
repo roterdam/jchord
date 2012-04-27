@@ -62,7 +62,7 @@ public class Edge implements IEdge {
 			if (this.type != that.type || this.h != that.h) return false;
 			if (this.dstNode != null && that.dstNode != null) {
 				if (this.dstNode.canReturn != that.dstNode.canReturn) return false;
-				TypeState thisTs = this.dstNode.ts;
+			/*	TypeState thisTs = this.dstNode.ts;
 				TypeState thatTs = that.dstNode.ts;
 				if (thisTs == TypeStateAnalysis.startState && thatTs == TypeStateAnalysis.startState) {
 					ArraySet<AccessPath> thisMS = this.dstNode.ms;
@@ -70,6 +70,7 @@ public class Edge implements IEdge {
 					if (!thisMS.containsAll(thatMS) && !thatMS.containsAll(thisMS))
 						return false;
 				}
+			*/	
 			}
 			return Utils.areEqual(this.srcNode, that.srcNode);
 			
@@ -95,24 +96,36 @@ public class Edge implements IEdge {
 			}
 			TypeState thisTs = this.dstNode.ts;
 			TypeState thatTs = that.dstNode.ts;
-			if (thisTs == TypeStateAnalysis.errorState)
-				return false;
+			
+			if (thisTs == TypeStateAnalysis.errorState){
+				return(this.dstNode.ms.retainAll(that.dstNode.ms));
+			}
+			
 			if (thatTs == TypeStateAnalysis.errorState) {
+				AbstractState tempState = this.dstNode;
 				this.dstNode = that.dstNode;
+				this.dstNode.ms.retainAll(tempState.ms);
 				return true;
 			}
-			if (thatTs == TypeStateAnalysis.bestState)
+			
+			//TODO:Rethink mustAlias wildcard BestCase behavior & getInitPathEdge transition
+			//with worst case method and incoming edge in best state
+			if (thatTs == TypeStateAnalysis.bestState){
 				return false;
+			}
+			
 			if (thisTs == TypeStateAnalysis.bestState) {
 				this.dstNode = that.dstNode;
 				return true;
 			}
-			// both must be startState and one must subsume other
+			
+			// both must be startState, ms is the intersection of ms's
 			ArraySet<AccessPath> thisMS = this.dstNode.ms;
 			ArraySet<AccessPath> thatMS = that.dstNode.ms;
-			if (!thisMS.containsAll(thatMS) || (thisMS.containsAll(thatMS) && thatMS.containsAll(thisMS)))
-				return false;
+			AbstractState tempState = this.dstNode;
 			this.dstNode = that.dstNode;
+			if(!this.dstNode.ms.retainAll(tempState.ms))
+				return false;
 			return true;
 			
 		}else{
