@@ -8,7 +8,11 @@ import chord.util.ArraySet;
  * @author machiry
  */
 public class AbstractState {
-	public static final ArraySet<AccessPath> emptyMS = new ArraySet<AccessPath>(0);
+	public static final ArraySet<AccessPath> emptyMS;
+	static {
+		emptyMS = new ArraySet<AccessPath>(0);
+		emptyMS.setImmutable();
+	}
 
 	public final TypeState ts;
 	public final ArraySet<AccessPath> ms;

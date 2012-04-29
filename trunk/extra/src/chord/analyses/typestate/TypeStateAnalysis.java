@@ -220,8 +220,10 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	 *   type-state of AS1 = type-state of AS
 	 *   type-state of AS2 = type-state of AS if this method is non-interesting, and the
 	 *   appropriate transitioned state otherwise.
-	 *   must-set of AS1 = must-set of AS2 = subset of must-set of AS with each actual
-	 *   reg replaced by the corresponding formal reg.
+	 *   must-set of AS1 = must-set of AS2 = subset of must-set of AS consisting of two
+	 *   kinds of access paths: those of the form v.* where v is an actual argument (now
+	 *   replaced by the corresponding formal argument), and those of the form g.* where
+	 *   g is a static field.
 	 */
 	@Override
 	public Edge getInitPathEdge(Quad q, jq_Method m, Edge pe) {
@@ -295,6 +297,10 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		return newEdge;
 	}
 
+	/**
+	 * If target method is threadStart, then only matching summary edge tgtSE is the null edge,
+	 * in which case (a copy of) the incoming path edge clrPE is returned.
+	 */
 	@Override
 	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
 		if (DEBUG) System.out.println("ENTER getInvkPathEdge: q=" + q + " clrPE=" + clrPE + " m=" + m + " tgtSE=" + tgtSE);
@@ -371,8 +377,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 			// Build this must set tmpMS in two steps
 			ArraySet<AccessPath> tmpMS = new ArraySet<AccessPath>();
 
-			// Step 1: for each r1.* where r1 is an actual arg of q, add r2.* where r2 is
-			// the corresponding formal arg
+			// Step 1: for each r1.* in caller must set where r1 is an actual arg of q,
+			// add r2.* where r2 is the corresponding formal arg
 			ArraySet<AccessPath> clrMS = new ArraySet<AccessPath>(clrPE.dstNode.ms);
 			for (int i = 0; i < args.length(); i++) {
 				Register actualReg = args.get(i).getRegister();
@@ -385,7 +391,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 				}
 			}
 
-			// Step 2: add all g.*
+			// Step 2: add all g.* in caller must set
 			Helper.addAllGlobalAccessPath(tmpMS, clrPE.dstNode.ms);
 			Helper.removeAllGlobalAccessPaths(clrMS);
 
@@ -394,16 +400,20 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 				return null;
 			}
 
-			// Build final must set newMS in four steps
-			// Step 1: Add all r.* paths in caller mustSet where r is neither an actual arg
-			// nor a global access path and is not modifiable in the callee via some field
+			// At this point we are done with tmpMS but we will still use clrMS.
+			// Build final must set newMS in four steps.
+
+			// Step 1: Add all x.* in caller must set where x is neither an actual arg nor a
+			// static field, and no instance field in "*" is modified in the callee (as per modMF)
 			addFallThroughAccessPaths(q, clrPE, m, tgtSE, newMS, clrMS);
-			
-			//Step 2: Add all local variables, i.e. paths r without any fields, in caller mustSet 
-			//where r is not added in step 1
-			ArraySet<AccessPath> localMS = new ArraySet<AccessPath>(clrPE.dstNode.ms);
-			Helper.removeAllExceptLocalVariables(localMS);
-			newMS.addAll(localMS);
+
+			// Step 2: Add all caller local variables, i.e., paths r without any fields in caller
+			// must set that were not added in step 1
+			for (Iterator<AccessPath> i = clrPE.dstNode.ms.iterator(); i.hasNext();) {
+				AccessPath ap = i.next();
+				if (ap instanceof RegisterAccessPath && ap.fields.isEmpty())
+					newMS.add(ap);
+			}
 
 			// Step 3: Replace formals with actuals (effectively do reverse of above for loop)
 			for (int i = 0; i < args.length(); i++) {
@@ -416,7 +426,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 				}
 			}
 			
-			// Step 4: Add all g.* and return var; shared below with else case where clrPE.type is NULL
+			// Step 4: Add all g.* and return var; shared below with below else case,
+			// where clrPE.type is NULL
 		} else {
 			// When clrPE.type is NULL and tgtSE.type is ALLOC, always return with suitable mustset
 
@@ -431,18 +442,16 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 				}
 			}
 			
-			/* Check if any element in tgtSE must set is accessible from caller, either via return var, a global access path
-			 *  or a formal arg access path
+			/* Check if any element in tgtSE must set is accessible from caller, either via return var,
+			 * a global access path, or a formal arg access path
 			 * 
-			 if (newMS.size() == 0 && !tgtSE.dstNode.canReturn && !Helper.hasAnyGlobalAccessPath(tgtSE.dstNode)) {
-				if (DEBUG) System.out.println("LEAVE getInvkPathEdge: null");
-				return null;
-			}
+			 * if (newMS.size() == 0 && !tgtSE.dstNode.canReturn && !Helper.hasAnyGlobalAccessPath(tgtSE.dstNode))
+			 *	return null;
 			 * else AS.canReturn is true or AS.ms has some global access path or AS.ms has path from method params
-			 * */
+			 */
 			
-			
-			// Step 2: Add all g.* and return var; shared below with the case where clrPE.type is ALLOC or FULL
+			// Step 2: Add all g.* and return var; shared below with above then case,
+			// where clrPE.type is ALLOC or FULL
 		}
 
 		Register tgtRetReg = (Invoke.getDest(q) != null) ? Invoke.getDest(q).getRegister() : null;
@@ -452,7 +461,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		
 		Helper.addAllGlobalAccessPath(newMS, tgtSE.dstNode.ms);
 			
-
 		AbstractState newDst = new AbstractState(tgtSE.dstNode.ts, newMS);
 		EdgeKind newType = (clrPE.type == EdgeKind.NULL) ? EdgeKind.ALLOC : clrPE.type;
 		Edge newEdge = new Edge(clrPE.srcNode, newDst, newType, tgtSE.h);
@@ -460,8 +468,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		return newEdge;
 	}
 
-	//Refactored into a method to enable overloading later on
-	public void addFallThroughAccessPaths(Quad q, Edge clrPE, jq_Method m, Edge tgtSE, ArraySet<AccessPath> newMS, ArraySet<AccessPath> clrMS){
+	// Refactored into a method to enable overloading later on
+	public void addFallThroughAccessPaths(Quad q, Edge clrPE, jq_Method m, Edge tgtSE, ArraySet<AccessPath> newMS, ArraySet<AccessPath> clrMS) {
 		newMS.addAll(clrMS);
 		Helper.removeModifiableAccessPaths(methodToModFields.get(m), newMS);
 	}
