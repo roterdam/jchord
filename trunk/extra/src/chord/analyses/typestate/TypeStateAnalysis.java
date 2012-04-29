@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.HashMap;
 import java.util.Set;
 import java.util.HashSet;
+import java.util.Iterator;
 
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
