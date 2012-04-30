@@ -24,7 +24,6 @@ public class Edge implements IEdge {
 	final public Quad h;
 	final public AbstractState srcNode;
 	public AbstractState dstNode;
-	final private int analysisType = Integer.getInteger("chord.missinglib.type", 0);
 
 	// used only for construction of NULL edge
 	protected Edge() {
@@ -57,82 +56,39 @@ public class Edge implements IEdge {
 	 */
 	@Override
 	public boolean canMerge(IEdge e) {
-		if(analysisType != 0){
-			Edge that = (Edge) e;
-			if (this.type != that.type || this.h != that.h) return false;
-			if (this.dstNode != null && that.dstNode != null) {
-				if (this.dstNode.canReturn != that.dstNode.canReturn) return false;
-			/*	TypeState thisTs = this.dstNode.ts;
-				TypeState thatTs = that.dstNode.ts;
-				if (thisTs == TypeStateAnalysis.startState && thatTs == TypeStateAnalysis.startState) {
-					ArraySet<AccessPath> thisMS = this.dstNode.ms;
-					ArraySet<AccessPath> thatMS = that.dstNode.ms;
-					if (!thisMS.containsAll(thatMS) && !thatMS.containsAll(thisMS))
-						return false;
-				}
-			*/	
-			}
-			return Utils.areEqual(this.srcNode, that.srcNode);
-			
-		}else{
-			
-			return false;
+		Edge that = (Edge) e;
+		if (this.type != that.type || this.h != that.h) return false;
+		if (this.dstNode != null && that.dstNode != null) {
+			if (this.dstNode.canReturn != that.dstNode.canReturn) return false;
+			TypeState thisTs = this.dstNode.ts;
+			TypeState thatTs = that.dstNode.ts;
+			if (thisTs != thatTs) return false;
+			ArraySet<AccessPath> thisMS = this.dstNode.ms;
+			ArraySet<AccessPath> thatMS = that.dstNode.ms;
+			if (!thisMS.containsAll(thatMS) && !thatMS.containsAll(thisMS))
+				return false;
 		}
-		
+		return Utils.areEqual(this.srcNode, that.srcNode);
 	}
 
 	@Override
 	public boolean mergeWith(IEdge e) {	
-		if(analysisType != 0){
-			Edge that = (Edge) e;
-			if (that.dstNode == null) {
-				// 'that' is either NULL:<null,null,null> or ALLOC:<null,h,null>
-				return false;
-			}
-			if (this.dstNode == null) {
-				// 'this' is ALLOC:<null,h,null> and 'that' is ALLOC<null,h,AS>
-				this.dstNode = that.dstNode;
-				return true;
-			}
-			TypeState thisTs = this.dstNode.ts;
-			TypeState thatTs = that.dstNode.ts;
-			
-			if (thisTs == TypeStateAnalysis.errorState){
-				return(this.dstNode.ms.retainAll(that.dstNode.ms));
-			}
-			
-			if (thatTs == TypeStateAnalysis.errorState) {
-				AbstractState tempState = this.dstNode;
-				this.dstNode = that.dstNode;
-				this.dstNode.ms.retainAll(tempState.ms);
-				return true;
-			}
-			
-			//TODO:Rethink mustAlias wildcard BestCase behavior & getInitPathEdge transition
-			//with worst case method and incoming edge in best state
-			if (thatTs == TypeStateAnalysis.bestState){
-				return false;
-			}
-			
-			if (thisTs == TypeStateAnalysis.bestState) {
-				this.dstNode = that.dstNode;
-				return true;
-			}
-			
-			// both must be startState, ms is the intersection of ms's
-			ArraySet<AccessPath> thisMS = this.dstNode.ms;
-			ArraySet<AccessPath> thatMS = that.dstNode.ms;
-			AbstractState tempState = this.dstNode;
-			this.dstNode = that.dstNode;
-			if(!this.dstNode.ms.retainAll(tempState.ms))
-				return false;
-			return true;
-			
-		}else{
-			
+		Edge that = (Edge) e;
+		if (that.dstNode == null) {
+			// 'that' is either NULL:<null,null,null> or ALLOC:<null,h,null>
 			return false;
-			
 		}
+		if (this.dstNode == null) {
+			// 'this' is ALLOC:<null,h,null> and 'that' is ALLOC<null,h,AS>
+			this.dstNode = that.dstNode;
+			return true;
+		}
+		ArraySet<AccessPath> thisMS = this.dstNode.ms;
+		ArraySet<AccessPath> thatMS = that.dstNode.ms;
+		if (thatMS.containsAll(thisMS))
+			return false;
+		this.dstNode = that.dstNode;
+		return true;
 	}
 	
 	@Override
@@ -165,4 +121,3 @@ public class Edge implements IEdge {
 			   ((dstNode != null) ? dstNode.hashCode() : 0);
 	}
 }
-
