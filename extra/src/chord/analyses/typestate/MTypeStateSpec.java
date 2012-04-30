@@ -33,7 +33,12 @@ public class MTypeStateSpec extends TypeStateSpec{
 	
 	@Override
 	public boolean isMethodOfInterest(jq_Method method) {
-		return !method.isStatic();
+		if(Integer.getInteger("chord.missinglib.type", 0) == 1){
+			return !method.isStatic();
+		}else{
+			return super.isMethodOfInterest(method);
+		}
+				
 	}
 
 	@Override
