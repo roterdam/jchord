@@ -41,6 +41,10 @@ import chord.project.Messages;
  */
 public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends JavaAnalysis {
     protected static boolean DEBUG = false;
+    protected static final String CHORD_RHS_MERGE_PROPERTY = "chord.rhs.merge";
+    protected static final String CHORD_RHS_ORDER_PROPERTY = "chord.rhs.order";
+    protected static final String CHORD_RHS_TRACE_PROPERTY = "chord.rhs.trace";
+    protected static final String CHORD_RHS_TIMEOUT_PROPERTY = "chord.rhs.timeout";
 
     protected List<Pair<Loc, PE>> workList = new ArrayList<Pair<Loc, PE>>();
     protected Map<Inst, Set<PE>> pathEdges = new HashMap<Inst, Set<PE>>();
@@ -52,10 +56,14 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     protected Map<Quad, Loc> invkQuadToLoc;
     protected Map<jq_Method, Set<Quad>> callersMap = new HashMap<jq_Method, Set<Quad>>();
     protected Map<Quad, Set<jq_Method>> targetsMap = new HashMap<Quad, Set<jq_Method>>();
+
+	protected Map<Pair<Inst, PE>, IWrappedPE<PE, SE>> wpeMap = new HashMap<Pair<Inst, PE>, IWrappedPE<PE, SE>>();
+	protected Map<Pair<jq_Method, SE>, IWrappedSE<PE, SE>> wseMap = new HashMap<Pair<jq_Method, SE>, IWrappedSE<PE, SE>>();
+
     protected boolean isInit, isDone;
 
-    protected OrderKind orderKind;
     protected MergeKind mergeKind;
+    protected OrderKind orderKind;
     protected TraceKind traceKind;
 
     private int timeout;
@@ -117,7 +125,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 	 * states.
      */
     public void setMergeKind() {
-		String s = System.getProperty("chord.rhs.merge", "lossy");
+		String s = System.getProperty(CHORD_RHS_MERGE_PROPERTY, "lossy");
 		if (s.equals("lossy"))
 			mergeKind = MergeKind.LOSSY;
 		else if (s.equals("pjoin"))
@@ -125,21 +133,21 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 		else if (s.equals("naive"))
 			mergeKind = MergeKind.NAIVE;
 		else
-			throw new RuntimeException("Unknown value for property chord.rhs.merge: " + s);
+			throw new RuntimeException("Bad value for property " + CHORD_RHS_MERGE_PROPERTY + ": " + s);
 	}
 
     public void setOrderKind() {
-		String s = System.getProperty("chord.rhs.order", "bfs");
+		String s = System.getProperty(CHORD_RHS_ORDER_PROPERTY, "bfs");
 		if (s.equals("bfs"))
 			orderKind = OrderKind.BFS;
 		else if (s.equals("dfs"))
 			orderKind = OrderKind.DFS;
 		else
-			throw new RuntimeException("Unknown value for property chord.rhs.order: " + s); 
+			throw new RuntimeException("Bad value for property " + CHORD_RHS_ORDER_PROPERTY + ": " + s);
     }
 
     public void setTraceKind() {
-		String s = System.getProperty("chord.rhs.trace", "none");
+		String s = System.getProperty(CHORD_RHS_TRACE_PROPERTY, "none");
 		if (s.equals("none"))
 			traceKind = TraceKind.NONE;
 		else if (s.equals("any"))
@@ -147,7 +155,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 		else if (s.equals("shortest"))
 			traceKind = TraceKind.SHORTEST;
 		else
-			throw new RuntimeException("Unknown value for property chord.rhs.trace: " + s);
+			throw new RuntimeException("Bad value for property " + CHORD_RHS_TRACE_PROPERTY + ": " + s);
     }
 
     public void setTimeout() {
@@ -164,7 +172,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      * while (*) {
      *   runPass();
      *   // done building path/summary edges; clients can now call:
-     *   // getPEs(i), getSEs(m), getAllPEs(), getAllSEs(), getBackTracIterator(pe), print()
+     *   // getPEs(i), getSEs(m), getAllPEs(), getAllSEs(),
+	 *   // getBackTracIterator(pe), print()
      * }
      * done();
      *********************************************************************************/
@@ -240,7 +249,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         for (Pair<Loc, PE> pair : initPEs) {
             Loc loc = pair.val0;
             PE pe = pair.val1;
-            addPathEdge(loc, pe);
+            addPathEdge(loc, pe, null, null, null, null);
         }
         propagate();
     }
@@ -350,32 +359,32 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                     processInvk(loc, pe);
                 } else {
                     PE pe2 = getMiscPathEdge(q, pe);
-                    propagatePEtoPE(loc, pe2);
+                    propagatePEtoPE(loc, pe2, pe, null, null);
                 }
             }
         }
     }
 
-    private void processInvk(Loc loc, PE pe) {
-        Quad q = (Quad) loc.i;
-        Set<jq_Method> targets = getTargets(q);
+    private void processInvk(final Loc loc, final PE pe) {
+        final Quad q = (Quad) loc.i;
+        final Set<jq_Method> targets = getTargets(q);
         if (targets.isEmpty()) {
-            PE pe2 = mayMerge ? getPECopy(pe) : pe;
-            propagatePEtoPE(loc, pe2);
+            final PE pe2 = mayMerge ? getPECopy(pe) : pe;
+            propagatePEtoPE(loc, pe2, pe, null, null);
         } else {
             for (jq_Method m2 : targets) {
                 if (DEBUG) System.out.println("\tTarget: " + m2);
-                PE pe2 = getInitPathEdge(q, m2, pe);
+                final PE pe2 = getInitPathEdge(q, m2, pe);
                 if (trackedInvkSites.contains(q)) {
-                    EntryOrExitBasicBlock bb2 = m2.getCFG().exit();
-                    Loc loc2 = new Loc(bb2, -1);
-                    addPathEdge(loc2, pe2);
+                    final EntryOrExitBasicBlock bb2 = m2.getCFG().exit();
+                    final Loc loc2 = new Loc(bb2, -1);
+                    addPathEdge(loc2, pe2, q, pe, null, null);
                 } else {
-                    EntryOrExitBasicBlock bb2 = m2.getCFG().entry();
-                    Loc loc2 = new Loc(bb2, -1);
-                    addPathEdge(loc2, pe2);
+                    final EntryOrExitBasicBlock bb2 = m2.getCFG().entry();
+                    final Loc loc2 = new Loc(bb2, -1);
+                    addPathEdge(loc2, pe2, q, pe, null, null);
                 }
-                Set<SE> seSet = summEdges.get(m2);
+                final Set<SE> seSet = summEdges.get(m2);
                 if (seSet == null) {
                     if (DEBUG) System.out.println("\tSE set empty");
                     continue;
@@ -398,8 +407,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 
     private void processEntry(EntryOrExitBasicBlock bb, PE pe) {
         for (BasicBlock bb2 : bb.getSuccessors()) {
-            Inst i2;
-            int q2Idx;
+            Inst i2; int q2Idx;
             if (bb2.size() == 0) {
                 assert (bb2.isExit());
                 i2 = (EntryOrExitBasicBlock) bb2;
@@ -410,7 +418,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
             Loc loc2 = new Loc(i2, q2Idx);
             PE pe2 = mayMerge ? getPECopy(pe) : pe;
-            addPathEdge(loc2, pe2);
+            addPathEdge(loc2, pe2, bb, pe, null, null);
         }
     }
 
@@ -434,6 +442,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                     if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
                     if (!changed) {
                         if (DEBUG) System.out.println("\tExisting SE did not change");
+						if (traceKind == TraceKind.ANY)
+							assert(wseMap.containsKey(new Pair<jq_Method, SE>(m, se2)));
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting SE changed");
@@ -449,8 +459,19 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
         } else if (!seSet.add(se)) {
             if (DEBUG) System.out.println("\tYes, not adding");
+			if (traceKind == TraceKind.ANY)
+				assert(wseMap.containsKey(new Pair<jq_Method, SE>(m, se)));
             return;
         }
+		if (traceKind == TraceKind.ANY) {
+			// System.out.println("TRACE: seToAdd=" + seToAdd + ", pe=" + pe);
+			assert (!wseMap.containsKey(seToAdd));
+			IWrappedPE<PE, SE> wpe = wpeMap.get(new Pair<Inst, PE>(bb, pe));
+			assert (wpe != null);
+			SE seCopy = getSECopy(seToAdd);
+			IWrappedSE<PE, SE> wse = new WrappedSE<PE, SE>(seCopy, wpe);
+			wseMap.put(new Pair<jq_Method, SE>(m, seCopy), wse);
+		}
         for (Quad q2 : getCallers(m)) {
             if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + q2.getMethod());
             Set<PE> peSet = pathEdges.get(q2);
@@ -473,7 +494,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
     }
 
-    private void addPathEdge(Loc loc, PE pe) {
+	// Add 'pe' as an incoming PE into loc.
+	// 'predPE' and 'predSE' are treated as the provenance of 'pe', where 'predPE' is incoming PE into 'pred'.
+	// 'predPE' is null iff 'predI' is null.
+	// 'predSE' is null iff 'predM' is null.
+	// 'loc' may be anything: entry basic block, exit basic block, invk quad, or misc quad.
+    private void addPathEdge(Loc loc, PE pe, Inst predI, PE predPE, jq_Method predM, SE predSE) {
         if (DEBUG) System.out.println("\tChecking if " + loc + " has PE: " + pe);
         Inst i = loc.i;
         Set<PE> peSet = pathEdges.get(i);
@@ -517,6 +543,27 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             return;
         }
         assert (peToAdd != null);
+		if (traceKind == TraceKind.ANY) {
+			// System.out.println("TRACE: peToAdd=" + peToAdd + ", predPE=" + predPE + ", predSE=" + predSE);
+			assert (!wpeMap.containsKey(peToAdd));
+			PE peCopy = getPECopy(peToAdd);
+			IWrappedPE<PE, SE> predWPE;
+			if (predPE == null)
+				predWPE = null;
+			else {
+				predWPE = wpeMap.get(new Pair<Inst, PE>(predI, predPE));
+				assert (predWPE != null);
+			}
+			IWrappedSE<PE, SE> predWSE;
+			if (predSE == null)
+				predWSE = null;
+			else {
+				predWSE = wseMap.get(new Pair<jq_Method, SE>(predM, predSE));
+				assert (predWSE != null);
+			}
+			IWrappedPE<PE, SE> wpe = new WrappedPE<PE, SE>(i, peCopy, predWPE, predWSE);
+			wpeMap.put(new Pair<Inst, PE>(i, peCopy), wpe);
+		}
         Pair<Loc, PE> pair = new Pair<Loc, PE>(loc, peToAdd);
         int j = workList.size() - 1;
         if (orderKind == OrderKind.BFS) {
@@ -535,20 +582,23 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         workList.add(j + 1, pair);
     }
 
-    private void propagatePEtoPE(Loc loc, PE pe) {
+	// Adds 'pe' as an incoming PE into each immediate successor of 'loc'.
+	// 'predPE' and 'predSE' are treated as the provenance of 'pe', where 'predPE' is incoming PE into 'loc'.
+	// 'predPE' is guaranteed to be non-null but 'predSE' may be null.
+    private void propagatePEtoPE(Loc loc, PE pe, PE predPE, jq_Method predM, SE predSE) {
         int qIdx = loc.qIdx;
-        BasicBlock bb = loc.i.getBasicBlock();
+		Inst i = loc.i;
+        BasicBlock bb = i.getBasicBlock();
         if (qIdx != bb.size() - 1) {
             int q2Idx = qIdx + 1;
             Quad q2 = bb.getQuad(q2Idx);
             Loc loc2 = new Loc(q2, q2Idx);
-            addPathEdge(loc2, pe);
+            addPathEdge(loc2, pe, i, predPE, predM, predSE);
             return;
         }
         boolean isFirst = true;
         for (BasicBlock bb2 : bb.getSuccessors()) {
-            Inst i2;
-            int q2Idx;
+            Inst i2; int q2Idx;
             if (bb2.size() == 0) {
 				assert (bb2.isExit());
 				i2 = (EntryOrExitBasicBlock) bb2;
@@ -568,7 +618,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                 } else
                     pe2 = getPECopy(pe);
             }
-            addPathEdge(loc2, pe2);
+            addPathEdge(loc2, pe2, i, predPE, predM, predSE);
         }
     }
 
@@ -577,7 +627,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
         if (pe2 == null)
             return false;
-        propagatePEtoPE(loc, pe2);
+        propagatePEtoPE(loc, pe2, clrPE, tgtM, tgtSE);
         return true;
     }
 }

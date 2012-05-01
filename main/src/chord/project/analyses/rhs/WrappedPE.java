@@ -6,9 +6,9 @@ import joeq.Compiler.Quad.Inst;
 public class WrappedPE<PE extends IEdge, SE extends IEdge> implements IWrappedPE<PE, SE> {
     public final Inst i;
     public final PE pe;
-    public final WrappedPE<PE, SE> wpe;
-    public final WrappedSE<PE, SE> wse;
-    public WrappedPE(Inst i, PE pe, WrappedPE<PE, SE> wpe, WrappedSE<PE, SE> wse) {
+    public final IWrappedPE<PE, SE> wpe;
+    public final IWrappedSE<PE, SE> wse;
+    public WrappedPE(Inst i, PE pe, IWrappedPE<PE, SE> wpe, IWrappedSE<PE, SE> wse) {
         this.i = i;
         this.pe = pe;
         this.wpe = wpe;

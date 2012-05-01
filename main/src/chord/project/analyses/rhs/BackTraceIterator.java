@@ -44,6 +44,8 @@ public class BackTraceIterator<PE extends IEdge, SE extends IEdge> implements It
 	@Override
 	public IWrappedPE<PE, SE> next() {
 		IWrappedPE<PE, SE> ret = currentWPE;
+		// System.out.println("XXX: " + currentWPE);
+		for (IWrappedPE<PE, SE> x : callStack) System.out.println("\t" + x);
 		Inst inst = currentWPE.getInst();
 		if (inst instanceof EntryOrExitBasicBlock) {
 			EntryOrExitBasicBlock bb = (EntryOrExitBasicBlock) inst;
@@ -54,17 +56,14 @@ public class BackTraceIterator<PE extends IEdge, SE extends IEdge> implements It
 		}
 		IWrappedSE<PE, SE> wse = currentWPE.getWSE();
 		IWrappedPE<PE, SE> wpe = currentWPE.getWPE();
-		Quad q = (Quad) wpe.getInst();
 		if (wse != null && !skipList.contains(wse.getWPE().getInst().getMethod())) {
+			Quad q = (Quad) wpe.getInst();
 			if (!(q.getOperator() instanceof Invoke)) {
 				throw new RuntimeException("Provence must be an invoke instruction!");
 			}
 			callStack.push(wpe);
 			currentWPE = wse.getWPE();
 		} else {
-			if (q.getOperator() instanceof Invoke) {
-				throw new RuntimeException("Provence cannot be an invoke instruction!");
-			}
 			currentWPE = wpe;
 		}
 		return ret;

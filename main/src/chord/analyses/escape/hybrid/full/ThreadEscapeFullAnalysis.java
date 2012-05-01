@@ -60,6 +60,9 @@ import chord.project.analyses.rhs.RHSAnalysis;
 import chord.project.analyses.rhs.TimeoutException;
 import chord.project.analyses.rhs.IEdge;
 import chord.project.analyses.rhs.MergeKind;
+import chord.project.analyses.rhs.IWrappedPE;
+import chord.project.analyses.rhs.BackTraceIterator;
+import chord.project.analyses.rhs.TraceKind;
 import chord.util.ArraySet;
 import chord.util.Timer;
 import chord.util.tuple.integer.IntPair;
@@ -82,8 +85,10 @@ import chord.util.tuple.object.Trio;
 public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet<FldObj>(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
+
 	private boolean optimizeSumms;
 	private boolean useBOTH;
+
 	private static DomM domM;
 	private static DomI domI;
 	private static DomV domV;
@@ -101,6 +106,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private Set<Quad> currLocEs = new HashSet<Quad>();
 	private Set<Quad> currEscEs = new HashSet<Quad>();
 	private MyQuadVisitor qv = new MyQuadVisitor();
+    private EscQuadVisitor eqv = new EscQuadVisitor();
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
 
@@ -228,6 +234,12 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			// printSummaries();
 			if (HTMLize)
 				printEdges(pass);
+			if (traceKind != TraceKind.NONE) {
+				for (Quad q : currEscEs) {
+					IWrappedPE<Edge, Edge> initWPE = getEscEdge(q);
+                    printEscTrace(initWPE);
+				}
+			}
 			timer.done();
 			System.out.println(timer.getInclusiveTimeStr());
 			pass++;
@@ -289,16 +301,80 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			OutDirUtils.copyResourceByName("chord/analyses/heapacc/E.xsl");
 			OutDirUtils.copyResourceByName("chord/analyses/alloc/Hlist.dtd");
 			OutDirUtils.copyResourceByName("chord/analyses/alloc/H.xsl");
-			OutDirUtils
-					.copyResourceByName("chord/analyses/escape/web/results.xml");
-			OutDirUtils
-					.copyResourceByName("chord/analyses/escape/web/results.dtd");
-			OutDirUtils
-					.copyResourceByName("chord/analyses/escape/web/results.xsl");
+			OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xml");
+			OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.dtd");
+			OutDirUtils.copyResourceByName("chord/analyses/escape/web/results.xsl");
 			OutDirUtils.runSaxon("results.xml", "results.xsl");
 			Program.g().HTMLizeJavaSrcFiles();
 		}
 	}
+
+    private void printEscTrace(IWrappedPE<Edge, Edge> wpe) {
+        BackTraceIterator<Edge, Edge> iter = this.getBackTraceIterator(wpe);
+        File dir = new File(Config.outDirName, "traces");
+        if (!dir.exists())
+            dir.mkdir();
+        PrintWriter w = OutDirUtils.newPrintWriter("traces" + "/" + domE.indexOf(wpe.getInst()) + ".html");
+        w.println("<html><head></head><body>");
+        while (iter.hasNext()) {
+            String trioStr = toString((IWrappedPE) iter.next());
+            w.println(trioStr);
+        }
+        w.println("</body></html>");
+        w.close();
+    }
+
+    private String toString(IWrappedPE<Edge, Edge> wpe) {
+        Inst inst = wpe.getInst();
+		jq_Method m = inst.getMethod();
+        String s = inst.toVerboseStr().replace("<", "&lt;").replace(">", "&gt;");
+        s += "\n<pre>" + toString(wpe.getPE(), m) +
+            // " [len = " + wpe.pathLength + ", slp = " + wpe.slPathLength + "]" +
+			"</pre>";
+        return s;
+    }
+
+    class EscQuadVisitor extends QuadVisitor.EmptyVisitor {
+        public IWrappedPE<Edge, Edge> escEdge = null;
+        @Override
+        public void visitAStore(Quad obj) {
+            findEscEdge(obj, AStore.getBase(obj));
+        }
+        @Override
+        public void visitALoad(Quad obj) {
+            findEscEdge(obj, ALoad.getBase(obj));
+        }
+        @Override
+        public void visitGetfield(Quad obj) {
+            findEscEdge(obj, Getfield.getBase(obj));
+        }
+        @Override
+        public void visitPutfield(Quad obj) {
+            findEscEdge(obj, Putfield.getBase(obj));
+        }
+        private void findEscEdge(Quad q, Operand bx) {
+            if (!(bx instanceof RegisterOperand))
+                throw new RuntimeException("Register operand expected!");
+            RegisterOperand bo = (RegisterOperand) bx;
+            int bIdx = getIdx(bo);
+            Set<Edge> peSet = pathEdges.get(q);
+            for (Edge pe : peSet) {
+                Obj pts = pe.dstNode.env[bIdx];
+                if (pts == Obj.ONLY_ESC || pts == Obj.BOTH) {
+					Pair<Inst, Edge> pair = new Pair<Inst, Edge>(q, pe);
+                    escEdge = wpeMap.get(pair);
+					assert (escEdge != null);
+                    return;
+                }
+            }
+        }
+    }
+
+    private IWrappedPE<Edge, Edge> getEscEdge(Quad q) {
+        eqv.escEdge = null;
+        q.accept(eqv);
+        return eqv.escEdge;
+    }
 
 	private String toHTMLStr(jq_Method m) {
 		String s = m.toString().replace("<", "&lt;").replace(">", "&gt;");
