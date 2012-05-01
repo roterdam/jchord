@@ -74,7 +74,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	protected jq_Method threadStartMethod;
 	public static int maxDepth;
 	protected String cipaName, cicgName;
-	public static TypeState startState, errorState, bestState;
+	public static TypeState startState, errorState;
 	private boolean alreadyRan;
 
 	// subclasses can override
