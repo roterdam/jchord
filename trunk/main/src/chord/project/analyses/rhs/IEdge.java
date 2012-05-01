@@ -29,7 +29,7 @@ public interface IEdge {
 	 * <li>3 if these two edges can be merged, but there is no info about the return value.</li>
 	 * </ol>
 	 */
-	public int canMerge(IEdge edge);
+	public int canMerge(IEdge edge, boolean mustMerge);
 
 	/**
 	 * Merges the given PE or SE with this edge. This edge is mutated but the

@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2008-2010, Intel Corporation.
- * Copyright (c) 2006-2007, The Trustees of Stanford University.
- * All rights reserved.
- * Licensed under the terms of the New BSD License.
- */
 package chord.analyses.escape.hybrid.full;
 
 import java.util.Set;
@@ -17,10 +11,6 @@ import chord.project.analyses.rhs.IEdge;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Edge implements IEdge {
-	private static Join join;
-	public static void setJoin(Join j) { join = j; }
-	public static Join getJoin() { return join; }
-
     public final SrcNode srcNode;
     // dstNode is intentionally not final: it is updated when this edge
     // is merged with another edge with matching srcNode; see mergeWith
@@ -32,11 +22,11 @@ public class Edge implements IEdge {
     }
 
     @Override
-    public int canMerge(IEdge pe2) {
+    public int canMerge(IEdge pe2, boolean mustMerge) {
         SrcNode srcNode2 = ((Edge) pe2).srcNode;
         if (!srcNode.equals(srcNode2))
             return -1;
-        if (join != Join.PJOIN)
+        if (mustMerge)
             return 3;
         DstNode dstNode1 = this.dstNode;
         DstNode dstNode2 = ((Edge) pe2).dstNode;
