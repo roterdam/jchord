@@ -54,7 +54,7 @@ import chord.analyses.invk.DomI;
 import chord.analyses.method.DomM;
 import chord.analyses.var.DomV;
 import chord.bddbddb.Rel.IntPairIterable;
-import chord.program.Location;
+import chord.program.Loc;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.ClassicProject;
@@ -220,7 +220,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			// System.out.println("Method: " + m);
 			for (int i = 0; i < n; i++) {
 				varId[vIdx + i] = i;
-				// System.out.println("\t" + domV.get(vIdx + i));
+			//	System.out.println("\t" + domV.get(vIdx + i));
 			}
 			vIdx += n;
 		}
@@ -498,15 +498,14 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public Set<Pair<Location, Edge>> getInitPathEdges() {
+	public Set<Pair<Loc, Edge>> getInitPathEdges() {
 		Set<jq_Method> roots = cicg.getRoots();
-		Set<Pair<Location, Edge>> initPEs = new ArraySet<Pair<Location, Edge>>(
-				roots.size());
+		Set<Pair<Loc, Edge>> initPEs = new ArraySet<Pair<Loc, Edge>>(roots.size());
 		for (jq_Method m : roots) {
 			Edge pe = getRootPathEdge(m);
-			BasicBlock bb = m.getCFG().entry();
-			Location loc = new Location(m, bb, -1, null);
-			Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, pe);
+			EntryOrExitBasicBlock bb = m.getCFG().entry();
+			Loc loc = new Loc(bb, -1);
+			Pair<Loc, Edge> pair = new Pair<Loc, Edge>(loc, pe);
 			initPEs.add(pair);
 		}
 		return initPEs;
@@ -587,7 +586,12 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public Edge getCopy(Edge pe) {
+	public Edge getPECopy(Edge pe) {
+		return new Edge(pe.srcNode, pe.dstNode);
+	}
+
+	@Override
+	public Edge getSECopy(Edge pe) {
 		return new Edge(pe.srcNode, pe.dstNode);
 	}
 

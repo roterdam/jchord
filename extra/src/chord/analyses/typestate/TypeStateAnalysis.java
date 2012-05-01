@@ -13,6 +13,7 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
 import joeq.Compiler.Quad.BasicBlock;
+import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -40,7 +41,7 @@ import chord.analyses.alias.ICICG;
 import chord.analyses.alloc.DomH;
 import chord.analyses.type.DomT;
 import chord.analyses.method.DomM;
-import chord.program.Location;
+import chord.program.Loc;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Messages;
@@ -178,32 +179,32 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	 * 2. for each tracked alloc site 'h' in the body of 'm': <null, h, null>
 	 */
 	@Override
-	public Set<Pair<Location, Edge>> getInitPathEdges() {
-		Set<Pair<Location, Edge>> initPEs = new ArraySet<Pair<Location, Edge>>();
-		Map<jq_Method, Location> methToEntry = new HashMap<jq_Method, Location>();
+	public Set<Pair<Loc, Edge>> getInitPathEdges() {
+		Set<Pair<Loc, Edge>> initPEs = new ArraySet<Pair<Loc, Edge>>();
+		Map<jq_Method, Loc> methToEntry = new HashMap<jq_Method, Loc>();
 		for (jq_Method m : cicg.getNodes()) {
-			BasicBlock bb = m.getCFG().entry();
-			Location loc = new Location(m, bb, -1, null);
+			EntryOrExitBasicBlock bb = m.getCFG().entry();
+			Loc loc = new Loc(bb, -1);
 			methToEntry.put(m, loc);
-			Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, Edge.NULL);
+			Pair<Loc, Edge> pair = new Pair<Loc, Edge>(loc, Edge.NULL);
 			if (DEBUG) System.out.println("getInitPathEdges: Added " + pair);
 			initPEs.add(pair);
 		}
 		for (Quad q : trackedSites) {
 			Edge edge = new Edge(null, null, EdgeKind.ALLOC, q);
 			jq_Method m = q.getMethod();
-			Location loc = methToEntry.get(m);
+			Loc loc = methToEntry.get(m);
 			if (loc == null) {
 				// ignore allocs in methods unreachable from 0cfa call graph
 				continue;
 			}
-			Pair<Location, Edge> pair = new Pair<Location, Edge>(loc, edge);
+			Pair<Loc, Edge> pair = new Pair<Loc, Edge>(loc, edge);
 			if (DEBUG) System.out.println("getInitPathEdges: Added " + pair);
 			initPEs.add(pair);
 		}
 		if (DEBUG){
 			System.out.println("===== ENTER ALL QUERIES");
-			for (Pair<Location, Edge> pair : initPEs) {
+			for (Pair<Loc, Edge> pair : initPEs) {
 				System.out.println(pair);
 			}
 			System.out.println("===== LEAVE ALL QUERIES");
@@ -476,7 +477,12 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	}
 	
 	@Override
-	public Edge getCopy(Edge pe) {
+	public Edge getPECopy(Edge pe) { return getCopy(pe); }
+
+	@Override
+	public Edge getSECopy(Edge se) { return getCopy(se); }
+
+	private Edge getCopy(Edge pe) {
 		if (DEBUG) System.out.println("Called Copy with: " + pe);
 		return (pe == Edge.NULL) ? pe : new Edge(pe.srcNode, pe.dstNode, pe.type, pe.h);
 	}

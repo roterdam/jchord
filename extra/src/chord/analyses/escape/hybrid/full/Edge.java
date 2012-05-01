@@ -28,12 +28,7 @@ public class Edge implements IEdge {
 	}
 
 	@Override
-	public boolean canMerge(IEdge pe2) {
-		int x = check(pe2);
-		return x != -1;
-	}
-
-	public int check(IEdge pe2) {
+	public int canMerge(IEdge pe2) {
 		SrcNode srcNode2 = ((Edge) pe2).srcNode;
 		if (!srcNode.equals(srcNode2))
 			return -1;

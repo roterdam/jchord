@@ -55,20 +55,20 @@ public class Edge implements IEdge {
 	 * one's destination node subsumes the other's.
 	 */
 	@Override
-	public boolean canMerge(IEdge e) {
+	public int canMerge(IEdge e) {
 		Edge that = (Edge) e;
-		if (this.type != that.type || this.h != that.h) return false;
+		if (this.type != that.type || this.h != that.h) return -1;
 		if (this.dstNode != null && that.dstNode != null) {
-			if (this.dstNode.canReturn != that.dstNode.canReturn) return false;
+			if (this.dstNode.canReturn != that.dstNode.canReturn) return -1;
 			TypeState thisTs = this.dstNode.ts;
 			TypeState thatTs = that.dstNode.ts;
-			if (thisTs != thatTs) return false;
+			if (thisTs != thatTs) return -1;
 			ArraySet<AccessPath> thisMS = this.dstNode.ms;
 			ArraySet<AccessPath> thatMS = that.dstNode.ms;
 			if (!thisMS.containsAll(thatMS) && !thatMS.containsAll(thisMS))
-				return false;
+				return -1;
 		}
-		return Utils.areEqual(this.srcNode, that.srcNode);
+		return Utils.areEqual(this.srcNode, that.srcNode) ? 0 : -1;
 	}
 
 	@Override
