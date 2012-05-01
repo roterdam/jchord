@@ -4,9 +4,9 @@ import chord.util.Utils;
 
 public class WrappedSE<PE extends IEdge, SE extends IEdge> implements IWrappedSE<PE, SE> {
     public final SE se;
-    public final WrappedPE<PE, SE> wpe;
+    public final IWrappedPE<PE, SE> wpe;
 
-    public WrappedSE(SE se, WrappedPE<PE, SE> pe) {
+    public WrappedSE(SE se, IWrappedPE<PE, SE> pe) {
         this.se = se;
         this.wpe = pe;
     }
