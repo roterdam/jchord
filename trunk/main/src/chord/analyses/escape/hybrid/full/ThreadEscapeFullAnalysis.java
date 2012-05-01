@@ -83,7 +83,6 @@ import chord.util.tuple.object.Trio;
  * chord.escape.optimize = [true|false] (default = true)<br>
  * chord.ssa = [true|false] (default = true)<br>
  * chord.rhs.timeout = N milliseconds (default = 0, no timeouts)<br>
- * chord.escape.rings = [true|false] (default = false) <br>
  * chord.escape.trace = [true|false] (default = false) <br>
  * chord.escape.html = [true|false] (default = false)
  * 
@@ -93,10 +92,10 @@ import chord.util.tuple.object.Trio;
 public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet<FldObj>(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
-	public static Join join;
-	private static boolean rings;
-	private static boolean optimizeSumms;
+	private static Join join;
 	private static boolean useBFS;
+	private static boolean optimizeSumms;
+	private static boolean useBOTH;
 	private static boolean trace;
 	private static DomM domM;
 	private static DomI domI;
@@ -118,7 +117,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
 
-	static {
+	private void config() {
 		String joinStr = System.getProperty("chord.escape.join", "lossy");
 		if (joinStr.equals("lossy"))
 			join = Join.LOSSY;
@@ -127,42 +126,48 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		else if (joinStr.equals("naive"))
 			join = Join.NAIVE;
 		else
-			Messages.fatal("Unknown value for property chord.escape.join: "
-					+ joinStr);
+			Messages.fatal("Unknown value for property chord.escape.join: " + joinStr);
+		Edge.setJoin(join);
+
 		String orderStr = System.getProperty("chord.escape.order", "bfs");
 		if (orderStr.equals("bfs"))
 			useBFS = true;
 		else if (orderStr.equals("dfs"))
 			useBFS = false;
 		else
-			Messages.fatal("Unknown value for property chord.escape.order: "
-					+ orderStr);
-		optimizeSumms = System.getProperty("chord.escape.optimize", "true")
-				.equals("true");
-		String ringStr = System.getProperty("chord.escape.rings", "false");
-		if (ringStr.equals("true"))
-			rings = true;
-		else if (ringStr.equals("false"))
-			rings = false;
-		else
-			Messages.fatal("Unknown value for property chord.escape.rings: "
-					+ ringStr);
+			Messages.fatal("Unknown value for property chord.escape.order: " + orderStr);
+
+		optimizeSumms = System.getProperty("chord.escape.optimize", "true").equals("true");
+
 		String traceStr = System.getProperty("chord.escape.trace", "false");
 		if (traceStr.equals("true"))
 			trace = true;
-		else if (ringStr.equals("false"))
+		else if (traceStr.equals("false"))
 			trace = false;
 		else
-			Messages.fatal("Unknown value for property chord.escape.rings: "
-					+ traceStr);
+			Messages.fatal("Unknown value for property chord.escape.trace: " + traceStr);
+
+        String bothStr = System.getProperty("chord.escape.both", "false");
+        if (bothStr.equals("true"))
+            useBOTH = true;
+        else if (bothStr.equals("false"))
+            useBOTH = false;
+        else
+            Messages.fatal("Unknown value for property chord.escape.both: " + bothStr);
+
+        if (!useBOTH && join == Join.LOSSY)
+            Messages.fatal("Cannot use chord.escape.both=false and chord.escape.join=lossy.");
+
 		System.out.println("chord.escape.join=" + joinStr);
-		System.out.println("chord.escape.optimize=" + optimizeSumms);
 		System.out.println("chord.escape.order=" + orderStr);
-		System.out.println("chord.escape.rings=" + ringStr);
+		System.out.println("chord.escape.optimize=" + optimizeSumms);
+		System.out.println("chord.escape.trace=" + traceStr);
+        System.out.println("chord.escape.both=" + bothStr);
 	}
 
 	@Override
 	public void run() {
+		config();
 		Program program = Program.g();
 		mainMethod = program.getMainMethod();
 		threadStartMethod = program.getThreadStartMethod();
@@ -733,6 +738,10 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 					int rIdx = getIdx(ro);
 					Obj rPts = iEnv[rIdx];
 					olPts = getObj(olPts, rPts);
+					if (!useBOTH && olPts.equals(Obj.BOTH)) {
+                        oDstNode = reset(iDstNode);
+                        return;
+					}
 				}
 			}
 			int lIdx = getIdx(lo);
@@ -867,6 +876,10 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 						boolean isEsc2 = isEsc(pts2);
 						if (isLoc == isLoc2 && isEsc == isEsc2)
 							return;
+                        if (!useBOTH && pts2 == Obj.BOTH) {
+                            oDstNode = reset(iDstNode);
+                            return;
+                        }
 						oHeap = new ArraySet<FldObj>(n);
 						for (int j = 0; j < i; j++)
 							oHeap.add(iHeap.get(j));

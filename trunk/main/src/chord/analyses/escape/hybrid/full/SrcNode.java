@@ -14,8 +14,8 @@ import chord.util.ArraySet;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class SrcNode {
-    final Obj[] env;
-    final ArraySet<FldObj> heap;
+    public final Obj[] env;
+    public final ArraySet<FldObj> heap;
     public SrcNode(Obj[] env, ArraySet<FldObj> heap) {
         this.env = env;
         this.heap = heap;

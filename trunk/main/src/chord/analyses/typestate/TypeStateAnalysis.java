@@ -64,6 +64,7 @@ import chord.program.Program;
  */
 @Chord(name = "typestate-java")
 public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
+	protected static boolean DEBUG = false;
 	protected TypeStateSpec sp;
 	protected CIPAAnalysis cipa;
 	protected ICICG cicg;
@@ -72,10 +73,18 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	protected MyQuadVisitor qv = new MyQuadVisitor();
 	protected jq_Method threadStartMethod;
 	public static int maxDepth;
-	protected static boolean DEBUG = false;
 	protected String cipaName, cicgName;
 	public static TypeState startState, errorState, bestState;
 	private boolean alreadyRan;
+
+	// subclasses can override
+	public TypeStateSpec getTypeStateSpec() {
+		String specFile = System.getProperty("chord.typestate.specfile", Config.workRel2Abs("typestatespec.txt"));
+		TypeStateSpec tss = TypeStateParser.parse(specFile);
+		if (tss == null)
+			throw new RuntimeException("Problem while parsing state spec file: " + specFile);
+		return tss;
+	}
 
 	protected void runOnce() {
         // XXX: do not compute anything here which needs to be re-computed on each call to run() below.
@@ -84,9 +93,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		alreadyRan = true;
 
         threadStartMethod = Program.g().getThreadStartMethod();
-		String specFile = System.getProperty("chord.typestate.specfile", Config.workRel2Abs("typestatespec.txt"));
-		if ((sp = TypeStateParser.parseStateSpec(specFile)) == null)
-			Messages.fatal("Problem while parsing state spec file: " + specFile);
+		sp = getTypeStateSpec();
 		startState = sp.getStartState();
 		errorState = sp.getErrorState();
 		
@@ -101,8 +108,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		CICGAnalysis cicgAnalysis = (CICGAnalysis) ClassicProject.g().getTask(cicgName);
 		ClassicProject.g().runTask(cicgAnalysis);
 		cicg = cicgAnalysis.getCallGraph();
-
-		RHSAnalysis.DEBUG = DEBUG;
 
 		// build map methodToModFields
 		{
@@ -149,14 +154,11 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 				Quad q = (Quad) domH.get(hIdx);
 				if (q.getOperator() instanceof New && trackedTypes.contains(New.getType(q).getType())) {
 					jq_Class c = q.getMethod().getDeclaringClass();
-					if (!relCheckExcludedT.contains(c)){
+					if (!relCheckExcludedT.contains(c)) {
 						trackedSites.add(q);
-						
 					}
-						
 				}
 			}
-			
 			relCheckExcludedT.close();
 		}
 	}

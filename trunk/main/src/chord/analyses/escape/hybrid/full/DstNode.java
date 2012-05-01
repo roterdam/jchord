@@ -15,10 +15,10 @@ import chord.util.ArraySet;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class DstNode {
-	final Obj[] env;
-	final ArraySet<FldObj> heap;
-	final boolean isKill;
-	final boolean isRetn;
+	public final Obj[] env;
+	public final ArraySet<FldObj> heap;
+	public final boolean isKill;
+	public final boolean isRetn;
 	public DstNode(Obj[] env, ArraySet<FldObj> heap, boolean isKill, boolean isRetn) {
 		this.env = env;
 		this.heap = heap;

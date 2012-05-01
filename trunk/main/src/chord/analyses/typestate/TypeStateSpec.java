@@ -31,7 +31,7 @@ public class TypeStateSpec {
 	protected final Map<Utf8, Set<TypeState>> asserts;
 
 	public void addState(String name) {
-        states.add(new TypeState(name));
+		states.add(new TypeState(name));
 	}
 
     public TypeState getState(String name) {
