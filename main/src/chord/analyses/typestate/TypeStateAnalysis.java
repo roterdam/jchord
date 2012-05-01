@@ -75,7 +75,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	public static int maxDepth;
 	protected String cipaName, cicgName;
 	public static TypeState startState, errorState;
-	private boolean alreadyRan;
+	private boolean isInit;
 
 	// subclasses can override
 	public TypeStateSpec getTypeStateSpec() {
@@ -86,11 +86,14 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		return tss;
 	}
 
-	protected void runOnce() {
+	@Override
+	public void init() {
         // XXX: do not compute anything here which needs to be re-computed on each call to run() below.
 
-		if (alreadyRan) return;
-		alreadyRan = true;
+		if (isInit) return;
+		isInit = true;
+
+		super.init();
 
         threadStartMethod = Program.g().getThreadStartMethod();
 		sp = getTypeStateSpec();
@@ -165,9 +168,10 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
 	@Override
 	public void run() {
-		runOnce();
+		init();
 		runPass();
-		if (DEBUG) printSummaries();
+		if (DEBUG) print();
+		done();
 	}
 
 	@Override
@@ -493,35 +497,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	public Edge getSummaryEdge(jq_Method m, Edge pe) {
 		if (DEBUG) System.out.println("\nCalled getSummaryEdge: m=" + m + " pe=" + pe);
 		return getCopy(pe);
-	}
-
-	@Override
-	public boolean mayMerge() {
-		return false;
-	}
-
-	@Override
-	public boolean mustMerge() {
-		return false;
-	}
-
-	public void printSummaries() {
-		System.out.println("=========== Summary Edges:");
-		for (jq_Method m : summEdges.keySet()) {
-			System.out.println(m);
-			Set<Edge> seSet = summEdges.get(m);
-			if (seSet != null) {
-				for (Edge se : seSet) System.out.println("\tSE " + se);
-			}
-		}
-		System.out.println("=========== Path Edges:");
-		for (Inst i : pathEdges.keySet()) {
-			System.out.println(i + " @ " + i.getMethod());
-			Set<Edge> peSet = pathEdges.get(i);
-			if (peSet != null) {
-				for (Edge pe : peSet) System.out.println("\tPE " + pe);
-			}
-		}
 	}
 
 	public class MyQuadVisitor extends QuadVisitor.EmptyVisitor {

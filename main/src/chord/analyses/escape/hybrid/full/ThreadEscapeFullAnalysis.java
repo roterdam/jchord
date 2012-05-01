@@ -1,9 +1,3 @@
-/*
- * Copyright (c) 2008-2010, Intel Corporation.
- * Copyright (c) 2006-2007, The Trustees of Stanford University.
- * All rights reserved.
- * Licensed under the terms of the New BSD License.
- */
 package chord.analyses.escape.hybrid.full;
 
 import gnu.trove.map.hash.TObjectIntHashMap;
@@ -65,6 +59,7 @@ import chord.project.analyses.ProgramRel;
 import chord.project.analyses.rhs.RHSAnalysis;
 import chord.project.analyses.rhs.TimeoutException;
 import chord.project.analyses.rhs.IEdge;
+import chord.project.analyses.rhs.MergeKind;
 import chord.util.ArraySet;
 import chord.util.Timer;
 import chord.util.tuple.integer.IntPair;
@@ -74,17 +69,12 @@ import chord.util.tuple.object.Trio;
 /**
  * Static thread-escape analysis.
  * 
- * Consumes relation locEH Produces files shape_fullEscE.txt,
- * shape_fullLocE.txt, and results.html
+ * Consumes relation locEH.
+ * Produces files shape_fullEscE.txt, shape_fullLocE.txt, and results.html.
  * 
- * Relevant system properties: chord.escape.join = [lossy|pjoin|naive] (default
- * = lossy)<br>
- * chord.escape.order = [bfs|dfs] (default = bfs)<br>
- * chord.escape.optimize = [true|false] (default = true)<br>
- * chord.ssa = [true|false] (default = true)<br>
- * chord.rhs.timeout = N milliseconds (default = 0, no timeouts)<br>
- * chord.escape.trace = [true|false] (default = false) <br>
- * chord.escape.html = [true|false] (default = false)
+ * Relevant system properties:
+ * - chord.escape.optimize = [true|false] (default = true)
+ * - chord.escape.html = [true|false] (default = false)
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -92,11 +82,8 @@ import chord.util.tuple.object.Trio;
 public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private static final ArraySet<FldObj> emptyHeap = new ArraySet<FldObj>(0);
 	private static final Obj[] emptyRetEnv = new Obj[] { Obj.EMTY };
-	private static Join join;
-	private static boolean useBFS;
-	private static boolean optimizeSumms;
-	private static boolean useBOTH;
-	private static boolean trace;
+	private boolean optimizeSumms;
+	private boolean useBOTH;
 	private static DomM domM;
 	private static DomI domI;
 	private static DomV domV;
@@ -117,57 +104,25 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	private jq_Method mainMethod;
 	private jq_Method threadStartMethod;
 
-	private void config() {
-		String joinStr = System.getProperty("chord.escape.join", "lossy");
-		if (joinStr.equals("lossy"))
-			join = Join.LOSSY;
-		else if (joinStr.equals("pjoin"))
-			join = Join.PJOIN;
-		else if (joinStr.equals("naive"))
-			join = Join.NAIVE;
-		else
-			Messages.fatal("Unknown value for property chord.escape.join: " + joinStr);
-		Edge.setJoin(join);
+	@Override
+	public void run() {
+		super.init();
 
-		String orderStr = System.getProperty("chord.escape.order", "bfs");
-		if (orderStr.equals("bfs"))
-			useBFS = true;
-		else if (orderStr.equals("dfs"))
-			useBFS = false;
-		else
-			Messages.fatal("Unknown value for property chord.escape.order: " + orderStr);
-
+		// continue configuring the analysis
 		optimizeSumms = System.getProperty("chord.escape.optimize", "true").equals("true");
-
-		String traceStr = System.getProperty("chord.escape.trace", "false");
-		if (traceStr.equals("true"))
-			trace = true;
-		else if (traceStr.equals("false"))
-			trace = false;
-		else
-			Messages.fatal("Unknown value for property chord.escape.trace: " + traceStr);
-
-        String bothStr = System.getProperty("chord.escape.both", "false");
+        String bothStr = System.getProperty("chord.escape.both", "true");
         if (bothStr.equals("true"))
             useBOTH = true;
         else if (bothStr.equals("false"))
             useBOTH = false;
         else
             Messages.fatal("Unknown value for property chord.escape.both: " + bothStr);
-
-        if (!useBOTH && join == Join.LOSSY)
-            Messages.fatal("Cannot use chord.escape.both=false and chord.escape.join=lossy.");
-
-		System.out.println("chord.escape.join=" + joinStr);
-		System.out.println("chord.escape.order=" + orderStr);
+        if (!useBOTH && mergeKind == MergeKind.LOSSY)
+            Messages.fatal("Cannot use chord.escape.both=false and chord.rhs.merge=lossy.");
 		System.out.println("chord.escape.optimize=" + optimizeSumms);
-		System.out.println("chord.escape.trace=" + traceStr);
         System.out.println("chord.escape.both=" + bothStr);
-	}
+		// finished configuring the analysis
 
-	@Override
-	public void run() {
-		config();
 		Program program = Program.g();
 		mainMethod = program.getMainMethod();
 		threadStartMethod = program.getThreadStartMethod();
@@ -230,8 +185,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			vIdx += n;
 		}
 
-		init();
-
 		boolean HTMLize = Boolean.getBoolean("chord.escape.html");
 
 		String html = "";
@@ -286,7 +239,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			w.close();
 		}
 
-		done();
+		super.done();
 
 		PrintWriter out;
 		out = OutDirUtils.newPrintWriter("shape_fullEscE.txt");
@@ -304,8 +257,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			domM.saveToXMLFile();
 
 			Map<Quad, String> map = new HashMap<Quad, String>();
-			ProgramRel relEscE = (ProgramRel) ClassicProject.g().getTrgt(
-					"dynEscE");
+			ProgramRel relEscE = (ProgramRel) ClassicProject.g().getTrgt("dynEscE");
 			relEscE.load();
 			Iterable<Quad> escEtuples = relEscE.getAry1ValTuples();
 			for (Quad e : escEtuples)
@@ -314,13 +266,11 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 
 			for (Quad e : allEscEs) {
 				ArraySet<Quad> hs = e2hsMap.get(e);
-				map.put(e, "<fullEsc Eid=\"E" + domE.indexOf(e) + "\" Hids=\""
-						+ getXML(hs) + "\"/>");
+				map.put(e, "<fullEsc Eid=\"E" + domE.indexOf(e) + "\" Hids=\"" + getXML(hs) + "\"/>");
 			}
 			for (Quad e : allLocEs) {
 				ArraySet<Quad> hs = e2hsMap.get(e);
-				map.put(e, "<fullLoc Eid=\"E" + domE.indexOf(e) + "\" Hids=\""
-						+ getXML(hs) + "\"/>");
+				map.put(e, "<fullLoc Eid=\"E" + domE.indexOf(e) + "\" Hids=\"" + getXML(hs) + "\"/>");
 			}
 
 			out = OutDirUtils.newPrintWriter("escapelist.xml");
@@ -459,25 +409,9 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 	}
 
 	@Override
-	public boolean useBFS() {
-		return useBFS;
-	}
-
-	@Override
-	public boolean mayMerge() {
-		return join != Join.NAIVE;
-	}
-
-	@Override
-	public boolean mustMerge() {
-		return join == Join.LOSSY;
-	}
-
-	@Override
 	public ICICG getCallGraph() {
 		if (cicg == null) {
-			CICGAnalysis cicgAnalysis = (CICGAnalysis) ClassicProject.g()
-					.getTrgt("cicg-java");
+			CICGAnalysis cicgAnalysis = (CICGAnalysis) ClassicProject.g().getTrgt("cicg-java");
 			ClassicProject.g().runTask(cicgAnalysis);
 			cicg = cicgAnalysis.getCallGraph();
 		}
@@ -486,8 +420,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 
 	// m is either the main method or the thread root method
 	private Edge getRootPathEdge(jq_Method m) {
-		assert (m == mainMethod || m == threadStartMethod || m.getName()
-				.toString().equals("<clinit>"));
+		assert (m == mainMethod || m == threadStartMethod || m.getName().toString().equals("<clinit>"));
 		int n = methToNumVars.get(m);
 		Obj[] env = new Obj[n];
 		for (int i = 0; i < n; i++)

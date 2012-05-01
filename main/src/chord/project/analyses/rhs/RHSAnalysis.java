@@ -30,11 +30,18 @@ import chord.project.Messages;
 
 /**
  * Implementation of the Reps-Horwitz-Sagiv algorithm for context-sensitive dataflow analysis.
- * 
+ *
+ * Relevant system properties:
+ * - chord.rhs.merge = [lossy|pjoin|naive] (default = lossy)
+ * - chord.rhs.order = [bfs|dfs] (default = bfs) 
+ * - chord.rhs.trace = [none|any|shortest] (default = none)
+ * - chord.rhs.timeout = N milliseconds (default N = 0, no timeouts)
+ *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends JavaAnalysis {
     protected static boolean DEBUG = false;
+
     protected List<Pair<Loc, PE>> workList = new ArrayList<Pair<Loc, PE>>();
     protected Map<Inst, Set<PE>> pathEdges = new HashMap<Inst, Set<PE>>();
     protected Map<jq_Method, Set<SE>> summEdges = new HashMap<jq_Method, Set<SE>>();
@@ -45,23 +52,23 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     protected Map<Quad, Loc> invkQuadToLoc;
     protected Map<jq_Method, Set<Quad>> callersMap = new HashMap<jq_Method, Set<Quad>>();
     protected Map<Quad, Set<jq_Method>> targetsMap = new HashMap<Quad, Set<jq_Method>>();
-    protected boolean isInited;
+    protected boolean isInit, isDone;
+
+    protected OrderKind orderKind;
+    protected MergeKind mergeKind;
+    protected TraceKind traceKind;
+
     private int timeout;
     private Alarm alarm;
-    protected boolean useBFS;
-    protected boolean recordTrace;
+
     protected boolean mustMerge;
     protected boolean mayMerge;
-    protected Set<Quad> trackedInvkSites= new HashSet<Quad>();
 
-    protected RHSAnalysis() {
-        if (mustMerge && !mayMerge) {
-            Messages.fatal("Cannot create RHS analysis '" + getName() + "' with mustMerge but without mayMerge.");
-        }
-        if (mustMerge && recordTrace) {
-            Messages.fatal("Cannot create RHS analysis '" + getName() + "' with recordTrace and mustMerge");
-        }
-    }
+    protected Set<Quad> trackedInvkSites = new HashSet<Quad>();
+
+	/*********************************************************************************
+	 * Methods that clients must define.
+	 *********************************************************************************/
 
     // get the initial set of path edges
     public abstract Set<Pair<Loc, PE>> getInitPathEdges();
@@ -71,13 +78,14 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     public abstract PE getInitPathEdge(Quad q, jq_Method m, PE pe);
 
     // get outgoing path edge(s) from q, given incoming path edge pe into q.
-    // q is guaranteed to not be an invoke statement, return statement, entry basic block, or exit basic block
-    // the set returned can be reused by client
+	// q is guaranteed to not be an invoke statement, return statement, entry
+	// basic block, or exit basic block.
+	// the set returned can be reused by client.
     public abstract PE getMiscPathEdge(Quad q, PE pe);
  
     // q is an invoke statement and m is the target method.
-    // get path edge to successor of q given path edge into q and summary edge of
-    // a target method m of the call site q.
+	// get path edge to successor of q given path edge into q and summary edge of a
+	// target method m of the call site q.
     // returns null if the path edge into q is not compatible with the summary edge.
     public abstract PE getInvkPathEdge(Quad q, PE clrPE, jq_Method m, SE tgtSE);
 
@@ -87,38 +95,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 
     // m is a method and pe is a path edge from entry to exit of m
     // (in case of forward analysis) or vice versa (in case of backward analysis)
-    // that must be lifted to a summary edge
+    // that must be lifted to a summary edge.
     public abstract SE getSummaryEdge(jq_Method m, PE pe);
-
-    /**
-     * Determines whether this analysis must always merge PEs at each program
-     * point that have the same source state but different target states and,
-     * likewise, SEs of each method that have the same source state but
-     * different target states.
-     *
-     * @return true iff (path or summary) edges with the same source state and
-     *         different target states should be merged.
-     */
-    public abstract boolean mayMerge();
-
-    /**
-     * mayMerge  mustMerge
-     * true      true
-     * true      false
-     * false     true       forbidden
-     * false     false
-     */
-    public abstract boolean mustMerge();
-
-    /**
-     * Specifies whether this analysis should keep metadata to generate traces.
-     * Note: if it returns true, then mustMerge must return false.
-     *
-     * @return  true if this analysis should keep metadata to generate traces.
-     */
-    public boolean recordTrace() { return false; }
-
-    public boolean useBFS() { return true; }
 
     /**
      * Provides the call graph to be used by the analysis.
@@ -127,41 +105,89 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      */
     public abstract ICICG getCallGraph();
 
-    private Set<Quad> getCallers(jq_Method m) {
-        Set<Quad> callers = callersMap.get(m);
-        if (callers == null) {
-            callers = cicg.getCallers(m);
-            callersMap.put(m, callers);
-        }
-        return callers;
+    /*********************************************************************************
+     * Methods that clients might want to override but is not mandatory; alternatively,
+     * their default behavior can be changed by setting relevant chord.rhs.* property.
+     *********************************************************************************/
+
+    /**
+	 * Determines how this analysis must merge PEs at each program point that
+	 * have the same source state but different target states and, likewise,
+	 * SEs of each method that have the same source state but different target
+	 * states.
+     */
+    public void setMergeKind() {
+		String s = System.getProperty("chord.rhs.merge", "lossy");
+		if (s.equals("lossy"))
+			mergeKind = MergeKind.LOSSY;
+		else if (s.equals("pjoin"))
+			mergeKind = MergeKind.PJOIN;
+		else if (s.equals("naive"))
+			mergeKind = MergeKind.NAIVE;
+		else
+			throw new RuntimeException("Unknown value for property chord.rhs.merge: " + s);
+	}
+
+    public void setOrderKind() {
+		String s = System.getProperty("chord.rhs.order", "bfs");
+		if (s.equals("bfs"))
+			orderKind = OrderKind.BFS;
+		else if (s.equals("dfs"))
+			orderKind = OrderKind.DFS;
+		else
+			throw new RuntimeException("Unknown value for property chord.rhs.order: " + s); 
     }
 
-    private Set<jq_Method> getTargets(Quad i) {
-        Set<jq_Method> targets = targetsMap.get(i);
-        if (targets == null) {
-            targets = cicg.getTargets(i);
-            targetsMap.put(i, targets);
-        }
-        return targets;
+    public void setTraceKind() {
+		String s = System.getProperty("chord.rhs.trace", "none");
+		if (s.equals("none"))
+			traceKind = TraceKind.NONE;
+		else if (s.equals("any"))
+			traceKind = TraceKind.ANY;
+		else if (s.equals("shortest"))
+			traceKind = TraceKind.SHORTEST;
+		else
+			throw new RuntimeException("Unknown value for property chord.rhs.trace: " + s);
     }
-    
+
+    public void setTimeout() {
+        timeout = Integer.getInteger("chord.rhs.timeout", 0);
+    }
+
     public void setTrackedInvkSites(Set<Quad> trackedInvkSites) {
         this.trackedInvkSites = trackedInvkSites;
     }
 
-    protected void done() {
-        if (timeout > 0)
-            alarm.doneAllPasses();
-    }
+    /*********************************************************************************
+     * Methods that client may call/override.  Example usage:
+	 * init();
+     * while (*) {
+     *   runPass();
+     *   // done building path/summary edges; clients can now call:
+     *   // getPEs(i), getSEs(m), getAllPEs(), getAllSEs(), getBackTracIterator(pe), print()
+     * }
+     * done();
+     *********************************************************************************/
 
-    protected void init() {
-        if (isInited)
-            return;
-        useBFS = useBFS();
-        mustMerge = mustMerge();
-        mayMerge = mayMerge();
-        recordTrace = recordTrace();
-		timeout = Integer.getInteger("chord.rhs.timeout", 0);
+    public void init() {
+        if (isInit) return;
+		isInit = true;
+
+		// start configuring the analysis
+		setMergeKind();
+		setOrderKind();
+		setTraceKind();
+        mayMerge  = (mergeKind != MergeKind.NAIVE);
+        mustMerge = (mergeKind == MergeKind.LOSSY);
+        if (mustMerge && !mayMerge) {
+            Messages.fatal("Cannot create RHS analysis '" + getName() + "' with mustMerge but without mayMerge.");
+        }
+        if (mustMerge && traceKind != TraceKind.NONE) {
+            Messages.fatal("Cannot create RHS analysis '" + getName() + "' with mustMerge and trace generation.");
+        }
+		setTimeout();
+		// done configuring the analysis
+
         if (timeout > 0) {
             alarm = new Alarm(timeout);
             alarm.initAllPasses();
@@ -190,17 +216,20 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
             quadToRPOid.put(cfg.exit(), rpoId);
         }
-        isInited = true;
+    }
+
+    public void done() {
+		if (isDone) return;
+		isDone = true;
+        if (timeout > 0)
+            alarm.doneAllPasses();
     }
 
     /**
      * Run an instance of the analysis afresh.
      * Clients may call this method multiple times from their {@link #run()} method.
-     * Clients must override method {@link #getInitPathEdges()} to return a new "seed"
-     * each time they call this method.
      */
-    protected void runPass() throws TimeoutException {
-        init();
+    public void runPass() throws TimeoutException {
         if (timeout > 0)
             alarm.initNewPass();
         // clear these sets since client may call this method multiple times
@@ -216,7 +245,31 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         propagate();
     }
 
-    protected void printSummaries() {
+    // TODO: might have to change the argument type to PE
+    public BackTraceIterator<PE,SE> getBackTraceIterator(IWrappedPE<PE, SE> wpe) {
+        if (traceKind == TraceKind.NONE) {
+            throw new RuntimeException("trace generation not enabled");
+        }
+        return new BackTraceIterator<PE,SE>(wpe);
+    }
+
+	public Set<PE> getPEs(Inst i) {
+		return pathEdges.get(i);
+	}
+
+	public Map<Inst, Set<PE>> getAllPEs() {
+		return pathEdges;
+	}
+
+	public Set<SE> getSEs(jq_Method m) {
+		return summEdges.get(m);
+	}
+
+	public Map<jq_Method, Set<SE>> getAllSEs() {
+		return summEdges;
+	}
+
+    public void print() {
         for (jq_Method m : summEdges.keySet()) {
             System.out.println("SE of " + m);
             Set<SE> seSet = summEdges.get(m);
@@ -235,8 +288,30 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
     }
         
+    /*********************************************************************************
+     * Internal methods.
+     *********************************************************************************/
+
+    private Set<Quad> getCallers(jq_Method m) {
+        Set<Quad> callers = callersMap.get(m);
+        if (callers == null) {
+            callers = cicg.getCallers(m);
+            callersMap.put(m, callers);
+        }
+        return callers;
+    }
+
+    private final Set<jq_Method> getTargets(Quad i) {
+        Set<jq_Method> targets = targetsMap.get(i);
+        if (targets == null) {
+            targets = cicg.getTargets(i);
+            targetsMap.put(i, targets);
+        }
+        return targets;
+    }
+    
     /**
-     * Propagate forward or backward until fixpoint is reached.
+     * Propagate analysis results until fixpoint is reached.
      */
     private void propagate() throws TimeoutException {
         while (!workList.isEmpty()) {
@@ -353,7 +428,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         } else if (mayMerge) {
             boolean matched = false;
             for (SE se2 : seSet) {
-                if (se2.canMerge(se) >= 0) {
+                if (se2.canMerge(se, mustMerge) >= 0) {
                     if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
                     boolean changed = se2.mergeWith(se);
                     if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
@@ -411,7 +486,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         } else if (mayMerge) {
             boolean matched = false;
             for (PE pe2 : peSet) {
-                if (pe2.canMerge(pe) >= 0) {
+                if (pe2.canMerge(pe, mustMerge) >= 0) {
                     if (DEBUG) System.out.println("\tNo, but matches PE: " + pe2);
                     boolean changed = pe2.mergeWith(pe);
                     if (DEBUG) System.out.println("\tNew PE after merge: " + pe2); 
@@ -444,7 +519,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         assert (peToAdd != null);
         Pair<Loc, PE> pair = new Pair<Loc, PE>(loc, peToAdd);
         int j = workList.size() - 1;
-        if (useBFS) {
+        if (orderKind == OrderKind.BFS) {
             jq_Method m = loc.i.getMethod();
             int rpoId = quadToRPOid.get(i);
             for (; j >= 0; j--) {
@@ -504,14 +579,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             return false;
         propagatePEtoPE(loc, pe2);
         return true;
-    }
-
-    // TODO: might have to change the argument type to PE
-    public BackTraceIterator<PE,SE> getBackTraceIterator(IWrappedPE<PE, SE> wpe) {
-        if (!this.recordTrace) {
-            throw new RuntimeException("RecordTrace must be set to be true to get BackTraceIterator!");
-        }
-        return new BackTraceIterator<PE,SE>(wpe);
     }
 }
 
