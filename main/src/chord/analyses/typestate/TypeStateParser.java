@@ -50,14 +50,9 @@ public class TypeStateParser {
 	 * @param fileName
 	 * @return true if parsing is successful and false otherwise.
 	 */
-	public static TypeStateSpec parseStateSpec(String fileName) {
+	public static TypeStateSpec parse(String fileName) {
 		List<String> lines = Utils.readFileToList(fileName);
-		TypeStateSpec sp;
-		if(Integer.getInteger("chord.missinglib.type", 0) != 0){
-			sp = new MTypeStateSpec();
-		}else{
-			sp = new TypeStateSpec();
-		}
+		TypeStateSpec sp = new TypeStateSpec();
 		boolean inUpdates = false;
 		boolean inAsserts = false;
 		boolean parsingError = false;
@@ -135,11 +130,6 @@ public class TypeStateParser {
 		if (!parsingError && sp.getStartState() != null) {
 			sp.addState(errorStateName);
 			sp.addErrorState(sp.getState(errorStateName));
-			if(Integer.getInteger("chord.missinglib.type", 0) != 0){
-				sp.addState("Best");
-				((MTypeStateSpec)sp).addBestState(sp.getState("Best"));
-			}
-			System.out.println(sp);
 			return sp;
 		}
 		return null;
