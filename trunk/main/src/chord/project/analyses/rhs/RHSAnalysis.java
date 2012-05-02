@@ -444,7 +444,9 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                     if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
                     if (!changed) {
                         if (DEBUG) System.out.println("\tExisting SE did not change");
-						updateWSE(m, se2, bb, pe);
+                        if (traceKind != TraceKind.NONE) {
+                        	updateWSE(m, se2, bb, pe);
+                        }
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting SE changed");
@@ -460,7 +462,9 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
         } else if (!seSet.add(se)) {
             if (DEBUG) System.out.println("\tYes, not adding");
-			updateWSE(m, se, bb, pe);
+            if (traceKind != TraceKind.NONE) {
+            	updateWSE(m, se, bb, pe);
+            }
             return;
         }
 		if (traceKind != TraceKind.NONE) {
