@@ -383,16 +383,14 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 
 	private String toHTMLStr(int pass, jq_Method m) {
 		String s = m.toString().replace("<", "&lt;").replace(">", "&gt;");
-		return "<a href=\"" + pass + "/" + domM.indexOf(m) + ".html\">" + s
-				+ "</a>";
+		return "<a href=\"" + pass + "/" + domM.indexOf(m) + ".html\">" + s + "</a>";
 	}
 
 	private void printEdges(int pass) {
 		File dir = new File(Config.outDirName, Integer.toString(pass));
 		dir.mkdir();
 		for (jq_Method m : summEdges.keySet()) {
-			PrintWriter w = OutDirUtils.newPrintWriter(pass + "/"
-					+ domM.indexOf(m) + ".html");
+			PrintWriter w = OutDirUtils.newPrintWriter(pass + "/" + domM.indexOf(m) + ".html");
 			w.println("<html><head></head><body>");
 			w.println("Method: " + toHTMLStr(m) + "<br>");
 			w.println("<br>Callers:<br>");

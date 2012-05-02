@@ -245,6 +245,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         workList.clear();
         summEdges.clear();
         pathEdges.clear();
+		wpeMap.clear();
+		wseMap.clear();
         Set<Pair<Loc, PE>> initPEs = getInitPathEdges();
         for (Pair<Loc, PE> pair : initPEs) {
             Loc loc = pair.val0;
@@ -521,13 +523,17 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting PE changed");
-                    // pe2 is already in pathEdges(i), so no need to add it;
-                    // but it may or may not be in workList
+                    // pe2 is already in pathEdges(i) so no need to add it; but it may or may not be in workList
                     for (int j = workList.size() - 1; j >= 0; j--) {
                         Pair<Loc, PE> pair = workList.get(j);
                         PE pe3 = pair.val1;
-                        if (pe3 == pe2)
+                        if (pe3 == pe2) {
+							assert (loc.equals(pair.val0));
+							if (traceKind == TraceKind.ANY) {
+								recordWPE(i, pe2, predI, predPE, predM, predSE);
+							}
                             return;
+						}
                     }
                     peToAdd = pe2;
                     matched = true;
@@ -544,25 +550,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
         assert (peToAdd != null);
 		if (traceKind == TraceKind.ANY) {
-			// System.out.println("TRACE: peToAdd=" + peToAdd + ", predPE=" + predPE + ", predSE=" + predSE);
-			assert (!wpeMap.containsKey(peToAdd));
-			PE peCopy = getPECopy(peToAdd);
-			IWrappedPE<PE, SE> predWPE;
-			if (predPE == null)
-				predWPE = null;
-			else {
-				predWPE = wpeMap.get(new Pair<Inst, PE>(predI, predPE));
-				assert (predWPE != null);
-			}
-			IWrappedSE<PE, SE> predWSE;
-			if (predSE == null)
-				predWSE = null;
-			else {
-				predWSE = wseMap.get(new Pair<jq_Method, SE>(predM, predSE));
-				assert (predWSE != null);
-			}
-			IWrappedPE<PE, SE> wpe = new WrappedPE<PE, SE>(i, peCopy, predWPE, predWSE);
-			wpeMap.put(new Pair<Inst, PE>(i, peCopy), wpe);
+			recordWPE(i, peToAdd, predI, predPE, predM, predSE);
 		}
         Pair<Loc, PE> pair = new Pair<Loc, PE>(loc, peToAdd);
         int j = workList.size() - 1;
@@ -581,6 +569,28 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         if (DEBUG) System.out.println("\tAlso adding to worklist at " + (j + 1));
         workList.add(j + 1, pair);
     }
+
+	private void recordWPE(Inst i, PE peToAdd, Inst predI, PE predPE, jq_Method predM, SE predSE) {
+		// System.out.println("TRACE: peToAdd=" + peToAdd + ", predPE=" + predPE + ", predSE=" + predSE);
+		assert (!wpeMap.containsKey(peToAdd));
+		PE peCopy = getPECopy(peToAdd);
+		IWrappedPE<PE, SE> predWPE;
+		if (predPE == null)
+			predWPE = null;
+		else {
+			predWPE = wpeMap.get(new Pair<Inst, PE>(predI, predPE));
+			assert (predWPE != null);
+		}
+		IWrappedSE<PE, SE> predWSE;
+		if (predSE == null)
+			predWSE = null;
+		else {
+			predWSE = wseMap.get(new Pair<jq_Method, SE>(predM, predSE));
+			assert (predWSE != null);
+		}
+		IWrappedPE<PE, SE> wpe = new WrappedPE<PE, SE>(i, peCopy, predWPE, predWSE);
+		wpeMap.put(new Pair<Inst, PE>(i, peCopy), wpe);
+	}
 
 	// Adds 'pe' as an incoming PE into each immediate successor of 'loc'.
 	// 'predPE' and 'predSE' are treated as the provenance of 'pe', where 'predPE' is incoming PE into 'loc'.
