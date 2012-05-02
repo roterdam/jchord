@@ -234,7 +234,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			// printSummaries();
 			if (HTMLize)
 				printEdges(pass);
-			if (traceKind != TraceKind.NONE) {
+			if (traceKind != TraceKind.NONE && !timeOut) {
 				for (Quad q : currEscEs) {
 					IWrappedPE<Edge, Edge> initWPE = getEscEdge(q);
                     printEscTrace(initWPE);
