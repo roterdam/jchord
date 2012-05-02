@@ -93,8 +93,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		if (isInit) return;
 		isInit = true;
 
-		super.init();
-
         threadStartMethod = Program.g().getThreadStartMethod();
 		sp = getTypeStateSpec();
 		startState = sp.getStartState();
@@ -111,6 +109,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		CICGAnalysis cicgAnalysis = (CICGAnalysis) ClassicProject.g().getTask(cicgName);
 		ClassicProject.g().runTask(cicgAnalysis);
 		cicg = cicgAnalysis.getCallGraph();
+		
+		super.init();
 
 		// build map methodToModFields
 		{
