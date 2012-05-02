@@ -4,17 +4,30 @@ import chord.util.Utils;
 import joeq.Compiler.Quad.Inst;
 
 public class WrappedPE<PE extends IEdge, SE extends IEdge> implements IWrappedPE<PE, SE> {
-    public final Inst i;
-    public final PE pe;
-    public final IWrappedPE<PE, SE> wpe;
-    public final IWrappedSE<PE, SE> wse;
-    public WrappedPE(Inst i, PE pe, IWrappedPE<PE, SE> wpe, IWrappedSE<PE, SE> wse) {
+    private final Inst i;
+    private final PE pe;
+    private IWrappedPE<PE, SE> wpe;
+    private IWrappedSE<PE, SE> wse;
+	private int len;
+
+    public WrappedPE(Inst i, PE pe, IWrappedPE<PE, SE> wpe, IWrappedSE<PE, SE> wse, int len) {
+		assert (len >= 0);
         this.i = i;
         this.pe = pe;
         this.wpe = wpe;
         this.wse = wse;
+		this.len = len;
     }
-    
+
+	public void update(IWrappedPE<PE, SE> newWPE, IWrappedSE<PE, SE> newWSE, int newLen) {
+		assert (newLen >= 0);
+		this.wpe = newWPE;
+		this.wse = newWSE;
+		this.len = newLen;
+	}
+
+	public int getLen() { return len; }
+
 	@Override
 	public Inst getInst() { return i; }
 

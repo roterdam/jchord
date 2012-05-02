@@ -3,13 +3,24 @@ package chord.project.analyses.rhs;
 import chord.util.Utils;
 
 public class WrappedSE<PE extends IEdge, SE extends IEdge> implements IWrappedSE<PE, SE> {
-    public final SE se;
-    public final IWrappedPE<PE, SE> wpe;
+    private final SE se;
+    private IWrappedPE<PE, SE> wpe;
+	private int len;
 
-    public WrappedSE(SE se, IWrappedPE<PE, SE> pe) {
+    public WrappedSE(SE se, IWrappedPE<PE, SE> pe, int len) {
+		assert (len >= 0);
         this.se = se;
         this.wpe = pe;
+		this.len = len;
     }
+
+    public void update(IWrappedPE<PE, SE> newWPE, int newLen) {
+		assert (newLen >= 0);
+        this.wpe = newWPE;
+        this.len = newLen;
+    }
+
+	public int getLen() { return len; }
 
     @Override
     public SE getSE() { return se; }

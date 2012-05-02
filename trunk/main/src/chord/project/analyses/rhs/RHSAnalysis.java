@@ -57,8 +57,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     protected Map<jq_Method, Set<Quad>> callersMap = new HashMap<jq_Method, Set<Quad>>();
     protected Map<Quad, Set<jq_Method>> targetsMap = new HashMap<Quad, Set<jq_Method>>();
 
-	protected Map<Pair<Inst, PE>, IWrappedPE<PE, SE>> wpeMap = new HashMap<Pair<Inst, PE>, IWrappedPE<PE, SE>>();
-	protected Map<Pair<jq_Method, SE>, IWrappedSE<PE, SE>> wseMap = new HashMap<Pair<jq_Method, SE>, IWrappedSE<PE, SE>>();
+	protected Map<Pair<Inst, PE>, WrappedPE<PE, SE>> wpeMap = new HashMap<Pair<Inst, PE>, WrappedPE<PE, SE>>();
+	protected Map<Pair<jq_Method, SE>, WrappedSE<PE, SE>> wseMap = new HashMap<Pair<jq_Method, SE>, WrappedSE<PE, SE>>();
 
     protected boolean isInit, isDone;
 
@@ -444,8 +444,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                     if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
                     if (!changed) {
                         if (DEBUG) System.out.println("\tExisting SE did not change");
-						if (traceKind == TraceKind.ANY)
-							assert(wseMap.containsKey(new Pair<jq_Method, SE>(m, se2)));
+						updateWSE(m, se2, bb, pe);
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting SE changed");
@@ -461,18 +460,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
         } else if (!seSet.add(se)) {
             if (DEBUG) System.out.println("\tYes, not adding");
-			if (traceKind == TraceKind.ANY)
-				assert(wseMap.containsKey(new Pair<jq_Method, SE>(m, se)));
+			updateWSE(m, se, bb, pe);
             return;
         }
-		if (traceKind == TraceKind.ANY) {
-			// System.out.println("TRACE: seToAdd=" + seToAdd + ", pe=" + pe);
-			assert (!wseMap.containsKey(seToAdd));
-			IWrappedPE<PE, SE> wpe = wpeMap.get(new Pair<Inst, PE>(bb, pe));
-			assert (wpe != null);
-			SE seCopy = getSECopy(seToAdd);
-			IWrappedSE<PE, SE> wse = new WrappedSE<PE, SE>(seCopy, wpe);
-			wseMap.put(new Pair<jq_Method, SE>(m, seCopy), wse);
+		if (traceKind != TraceKind.NONE) {
+			recordWSE(m, seToAdd, bb, pe);
 		}
         for (Quad q2 : getCallers(m)) {
             if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + q2.getMethod());
@@ -520,6 +512,9 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                     if (DEBUG) System.out.println("\tNew PE after merge: " + pe2); 
                     if (!changed) {
                         if (DEBUG) System.out.println("\tExisting PE did not change");
+						if (traceKind != TraceKind.NONE) {
+							updateWPE(i, pe2, predI, predPE, predM, predSE);
+						}
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting PE changed");
@@ -529,7 +524,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                         PE pe3 = pair.val1;
                         if (pe3 == pe2) {
 							assert (loc.equals(pair.val0));
-							if (traceKind == TraceKind.ANY) {
+							if (traceKind != TraceKind.NONE) {
 								recordWPE(i, pe2, predI, predPE, predM, predSE);
 							}
                             return;
@@ -546,10 +541,13 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
         } else if (!peSet.add(pe)) {
             if (DEBUG) System.out.println("\tYes, not adding");
+			if (traceKind != TraceKind.NONE) {
+				updateWPE(i, pe, predI, predPE, predM, predSE);
+			}
             return;
         }
         assert (peToAdd != null);
-		if (traceKind == TraceKind.ANY) {
+		if (traceKind != TraceKind.NONE) {
 			recordWPE(i, peToAdd, predI, predPE, predM, predSE);
 		}
         Pair<Loc, PE> pair = new Pair<Loc, PE>(loc, peToAdd);
@@ -570,25 +568,105 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         workList.add(j + 1, pair);
     }
 
+	// called only if traceKind != NONE
+	private void updateWSE(jq_Method m, SE seToAdd, EntryOrExitBasicBlock bb, PE predPE) {
+		assert (seToAdd != null && predPE != null);
+		Pair<jq_Method, SE> p = new Pair<jq_Method, SE>(m, seToAdd);
+		WrappedSE<PE, SE> wse = wseMap.get(p);
+		assert (wse != null);
+		if (traceKind == TraceKind.SHORTEST) {
+			int oldLen = wse.getLen();
+			Pair<Inst, PE> predP = new Pair<Inst, PE>(bb, predPE);
+			WrappedPE<PE, SE> newWPE = wpeMap.get(predP);
+			assert (newWPE != null);
+			int newLen = 1 + newWPE.getLen();
+			if (newLen < oldLen)
+				wse.update(newWPE, newLen);
+		}
+	}
+
+	// called only if traceKind != NONE
+	private void updateWPE(Inst i, PE peToAdd, Inst predI, PE predPE, jq_Method predM, SE predSE) {
+		assert (peToAdd != null);
+		// predPE and/or predSE may be null
+		Pair<Inst, PE> p = new Pair<Inst, PE>(i, peToAdd);
+		WrappedPE<PE, SE> wpe = wpeMap.get(p);
+		assert (wpe != null);
+		if (traceKind == TraceKind.SHORTEST) {
+			int oldLen = wpe.getLen();
+			if (predPE == null) {
+				assert (oldLen == 0);
+				// cannot reduce below 0, so return
+				return;
+			}
+			int newLen;
+			Pair<Inst, PE> predP = new Pair<Inst, PE>(predI, predPE);
+			WrappedPE<PE, SE> newWPE = wpeMap.get(predP);
+			assert (newWPE != null);
+			if (i instanceof EntryOrExitBasicBlock && ((EntryOrExitBasicBlock) i).isEntry())
+				newLen = 0;
+			else
+				newLen = 1 + newWPE.getLen();
+			WrappedSE<PE, SE> newWSE;
+			if (predSE != null) {
+				assert (predM != null);
+				Pair<jq_Method, SE> predN = new Pair<jq_Method, SE>(predM, predSE);
+				newWSE = wseMap.get(predN);
+				assert (newWSE != null);
+				newLen += newWSE.getLen();
+			} else {
+				assert (predM == null);
+				newWSE = null;
+			}
+			if (newLen < oldLen)
+				wpe.update(newWPE, newWSE, newLen);
+		}
+	}
+
+	// called only if traceKind != NONE
+	private void recordWSE(jq_Method m, SE seToAdd, EntryOrExitBasicBlock bb, PE predPE) {
+		assert (seToAdd != null && predPE != null);
+		assert (!wseMap.containsKey(seToAdd));
+		WrappedPE<PE, SE> wpe = wpeMap.get(new Pair<Inst, PE>(bb, predPE));
+		assert (wpe != null);
+		SE seCopy = getSECopy(seToAdd);
+		int len = 1 + wpe.getLen();
+		WrappedSE<PE, SE> wse = new WrappedSE<PE, SE>(seCopy, wpe, len);
+		wseMap.put(new Pair<jq_Method, SE>(m, seCopy), wse);
+	}
+
+	// called only if traceKind != NONE
 	private void recordWPE(Inst i, PE peToAdd, Inst predI, PE predPE, jq_Method predM, SE predSE) {
-		// System.out.println("TRACE: peToAdd=" + peToAdd + ", predPE=" + predPE + ", predSE=" + predSE);
+		assert (peToAdd != null);
+		// predPE and/or predSE may be null
 		assert (!wpeMap.containsKey(peToAdd));
 		PE peCopy = getPECopy(peToAdd);
-		IWrappedPE<PE, SE> predWPE;
-		if (predPE == null)
+		WrappedPE<PE, SE> predWPE;
+		int len;
+		if (predPE == null) {
+			assert (predI == null && predM == null && predSE == null);
 			predWPE = null;
-		else {
+			len = 0;
+		} else {
+			assert (predI != null);
 			predWPE = wpeMap.get(new Pair<Inst, PE>(predI, predPE));
 			assert (predWPE != null);
+			if (i instanceof EntryOrExitBasicBlock && ((EntryOrExitBasicBlock) i).isEntry())
+				len = 0;
+			else
+				len = 1 + predWPE.getLen();
 		}
-		IWrappedSE<PE, SE> predWSE;
-		if (predSE == null)
+		WrappedSE<PE, SE> predWSE;
+		if (predSE == null) {
+			assert (predM == null);
 			predWSE = null;
-		else {
+		} else {
+			assert (predM != null);
 			predWSE = wseMap.get(new Pair<jq_Method, SE>(predM, predSE));
 			assert (predWSE != null);
+			len += predWSE.getLen();
 		}
-		IWrappedPE<PE, SE> wpe = new WrappedPE<PE, SE>(i, peCopy, predWPE, predWSE);
+		WrappedPE<PE, SE> wpe = new WrappedPE<PE, SE>(i, peCopy, predWPE, predWSE, len);
 		wpeMap.put(new Pair<Inst, PE>(i, peCopy), wpe);
 	}
 
