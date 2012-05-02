@@ -44,8 +44,6 @@ public class BackTraceIterator<PE extends IEdge, SE extends IEdge> implements It
 	@Override
 	public IWrappedPE<PE, SE> next() {
 		IWrappedPE<PE, SE> ret = currentWPE;
-		// System.out.println("XXX: " + currentWPE);
-		for (IWrappedPE<PE, SE> x : callStack) System.out.println("\t" + x);
 		Inst inst = currentWPE.getInst();
 		if (inst instanceof EntryOrExitBasicBlock) {
 			EntryOrExitBasicBlock bb = (EntryOrExitBasicBlock) inst;
