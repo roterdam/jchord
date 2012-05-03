@@ -30,6 +30,15 @@ public class Edge implements IEdge {
             return 3;
         DstNode dstNode1 = this.dstNode;
         DstNode dstNode2 = ((Edge) pe2).dstNode;
+        if (dstNode1.isKill != dstNode2.isKill) {
+/*
+            if (dstNode1.isKill)
+                bigger = 1;
+            else
+                bigger = 2;
+*/
+			return -1;
+        }
         boolean isRetn1 = dstNode1.isRetn;
         boolean isRetn2 = dstNode2.isRetn;
         assert (isRetn1 == isRetn2);
@@ -40,16 +49,10 @@ public class Edge implements IEdge {
         int n = env1.length;
         assert (n == env2.length);
         // 'bigger' remains 0 as long as dstNode1 == dstNode2
-        // it's value switches to 1 when dstNode1 < dstNode2
+        // it's value switches to 1 when dstNode1 > dstNode2
         // it's value switches to 2 when dstNode2 > dstNode1
         // we return false if both 1 and 2 above hold
         int bigger = 0;
-        if (dstNode1.isKill ^ dstNode2.isKill) {
-            if (dstNode1.isKill)
-                bigger = 1;
-            else
-                bigger = 2;
-        }
         for (int i = 0; i < n; i++) {
             Obj pts1 = env1[i];
             Obj pts2 = env2[i];
@@ -148,10 +151,13 @@ public class Edge implements IEdge {
         boolean changed = false;
         boolean isKill1 = dstNode1.isKill;
         boolean isKill2 = dstNode2.isKill;
+/*
         if (!isKill1 && isKill2) {
-            isKill1 = true;
-            changed = true;
-        }
+			isKill1 = true;
+			changed = true;
+		}
+*/
+		assert (isKill1 == isKill2);
         // merge env's
         Obj[] env1 = dstNode1.env;
         Obj[] env2 = dstNode2.env;
