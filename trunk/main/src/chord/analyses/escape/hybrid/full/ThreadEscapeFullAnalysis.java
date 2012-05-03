@@ -590,8 +590,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		if (dstNode.isRetn)
 			se = new Edge(pe.srcNode, dstNode);
 		else {
-			dstNode = new DstNode(emptyRetEnv, dstNode.heap, dstNode.isKill,
-					true);
+			dstNode = new DstNode(emptyRetEnv, dstNode.heap, dstNode.isKill, true);
 			se = new Edge(pe.srcNode, dstNode);
 		}
 		return se;
@@ -677,10 +676,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		return new Edge(clrPE.srcNode, clrDstNode2);
 	}
 
-	public static void setDomF(DomF dom){
-		domF = dom;
-	}
-	
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 		DstNode iDstNode;
 		DstNode oDstNode;
@@ -749,7 +744,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 					int rIdx = getIdx(ro);
 					Obj rPts = iEnv[rIdx];
 					olPts = getObj(olPts, rPts);
-					if (!useBOTH && olPts.equals(Obj.BOTH)) {
+					if (!useBOTH && olPts == Obj.BOTH) {
                         oDstNode = reset(iDstNode);
                         return;
 					}
@@ -787,8 +782,6 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 			oDstNode = new DstNode(oEnv, iHeap, iDstNode.isKill, false);
 		}
 
-
-		
 		@Override
 		public void visitGetfield(Quad q) {
 			if (currLocEs.contains(q))
@@ -910,8 +903,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 					FldObj fo = new FldObj(f, isLoc, isEsc);
 					oHeap.add(fo);
 				}
-				oDstNode = new DstNode(iDstNode.env, oHeap, iDstNode.isKill,
-						false);
+				oDstNode = new DstNode(iDstNode.env, oHeap, iDstNode.isKill, false);
 			}
 		}
 
@@ -997,10 +989,9 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		}
 	}
 
-	private static Obj getPtsFromHeap(Obj bPts, jq_Field f,
-			ArraySet<FldObj> heap) {
+	private static Obj getPtsFromHeap(Obj bPts, jq_Field f, ArraySet<FldObj> heap) {
 		if (bPts == Obj.EMTY || bPts == Obj.ONLY_ESC)
-			return bPts;
+            return Obj.ONLY_ESC;  // in newest version of forward transfer functions, N.f = E
 		Obj pts = null;
 		int n = heap.size();
 		for (int i = 0; i < n; i++) {
