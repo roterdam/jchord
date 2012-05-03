@@ -438,15 +438,15 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         } else if (mayMerge) {
             boolean matched = false;
             for (SE se2 : seSet) {
-                if (se2.canMerge(se, mustMerge) >= 0) {
+				int result = se2.canMerge(se, mustMerge);
+                if (result >= 0) {
                     if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
                     boolean changed = se2.mergeWith(se);
                     if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
                     if (!changed) {
                         if (DEBUG) System.out.println("\tExisting SE did not change");
-                        if (traceKind != TraceKind.NONE) {
-                        	updateWSE(m, se2, bb, pe);
-                        }
+						if (traceKind != TraceKind.NONE && result == 0)
+							updateWSE(m, se2, bb, pe);
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting SE changed");
@@ -462,9 +462,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
         } else if (!seSet.add(se)) {
             if (DEBUG) System.out.println("\tYes, not adding");
-            if (traceKind != TraceKind.NONE) {
-            	updateWSE(m, se, bb, pe);
-            }
+			if (traceKind != TraceKind.NONE)
+				updateWSE(m, se, bb, pe);
             return;
         }
 		if (traceKind != TraceKind.NONE) {
@@ -510,15 +509,15 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         } else if (mayMerge) {
             boolean matched = false;
             for (PE pe2 : peSet) {
-                if (pe2.canMerge(pe, mustMerge) >= 0) {
+                int result = pe2.canMerge(pe, mustMerge);
+                if (result >= 0) {
                     if (DEBUG) System.out.println("\tNo, but matches PE: " + pe2);
                     boolean changed = pe2.mergeWith(pe);
                     if (DEBUG) System.out.println("\tNew PE after merge: " + pe2); 
                     if (!changed) {
                         if (DEBUG) System.out.println("\tExisting PE did not change");
-						if (traceKind != TraceKind.NONE) {
+						if (traceKind != TraceKind.NONE && result == 0)
 							updateWPE(i, pe2, predI, predPE, predM, predSE);
-						}
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting PE changed");
@@ -545,9 +544,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
         } else if (!peSet.add(pe)) {
             if (DEBUG) System.out.println("\tYes, not adding");
-			if (traceKind != TraceKind.NONE) {
+			if (traceKind != TraceKind.NONE)
 				updateWPE(i, pe, predI, predPE, predM, predSE);
-			}
             return;
         }
         assert (peToAdd != null);
