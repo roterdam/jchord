@@ -676,6 +676,10 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
 		return new Edge(clrPE.srcNode, clrDstNode2);
 	}
 
+	public static void setDomF(DomF dom){
+		domF = dom;
+	}
+	
 	class MyQuadVisitor extends QuadVisitor.EmptyVisitor {
 		DstNode iDstNode;
 		DstNode oDstNode;
