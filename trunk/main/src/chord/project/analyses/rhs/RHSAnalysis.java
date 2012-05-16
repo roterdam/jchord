@@ -745,6 +745,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 			assert (predWSE != null);
 			len += predWSE.getLen();
 		}
+		if(len < 0){
+			System.out.println("Trace length overflowed.");
+			throw new TraceOverflowException();
+			}
 		WrappedPE<PE, SE> wpe = new WrappedPE<PE, SE>(i, peCopy, predWPE, predWSE, len);
 		wpeMap.put(new Pair<Inst, PE>(i, peCopy), wpe);
 	}
