@@ -129,6 +129,8 @@ public class EnterSSA implements ControlFlowGraphVisitor {
                 }
             }
         }
+        if(needed.isEmpty())
+        	return;
         // having determine where copies should be inserted, now insert them.
         Iterator copies = needed.iterator();
         while (copies.hasNext()) {
@@ -139,15 +141,16 @@ public class EnterSSA implements ControlFlowGraphVisitor {
             Register register = registerOp.getRegister();
             Register temp = ir.getRegisterFactory().makeReg(register);
             inBlock.addQuad(0, Move.create(ir.getNewQuadID(), inBlock, register, temp, type));
-            live.setLiveAtIn(inBlock, temp);
+//            live.setLiveAtIn(inBlock, temp);
             Iterator outBlocks = inBlock.getPredecessors().iterator();
             while (outBlocks.hasNext()) {
                 BasicBlock outBlock = (BasicBlock) outBlocks.next();
                 Quad x = Move.create(ir.getNewQuadID(), outBlock, temp, register, type);
                 outBlock.addAtEnd(ir, x);
-                live.setKilledAtIn(outBlock, temp);
+//                live.setKilledAtIn(outBlock, temp);
             }
         }
+        live = LivenessAnalysis.solve(ir);
     }
     
     /**
