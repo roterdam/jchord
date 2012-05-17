@@ -687,6 +687,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 				assert (predM == null);
 				newWSE = null;
 			}
+			if(newLen < 0)
+				throw new TraceOverflowException();
 			if (newLen < oldLen)
 				wpe.update(newWPE, newWSE, newLen);
 		}
