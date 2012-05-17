@@ -71,7 +71,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	protected Map<jq_Method, Set<jq_Field>> methodToModFields;
 	protected Set<Quad> trackedSites;
 	protected MyQuadVisitor qv = new MyQuadVisitor();
-	protected jq_Method threadStartMethod;
+	// protected jq_Method threadStartMethod;
 	public static int maxDepth;
 	protected String cipaName, cicgName;
 	public static TypeState startState, errorState;
@@ -93,7 +93,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 		if (isInit) return;
 		isInit = true;
 
-        threadStartMethod = Program.g().getThreadStartMethod();
+        // threadStartMethod = Program.g().getThreadStartMethod();
 		sp = getTypeStateSpec();
 		startState = sp.getStartState();
 		errorState = sp.getErrorState();
@@ -236,7 +236,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	@Override
 	public Edge getInitPathEdge(Quad q, jq_Method m, Edge pe) {
 		if (DEBUG) System.out.println("ENTER getInitPathEdge: q=" + q + " m=" + m + " pe=" + pe);
-		if (pe == Edge.NULL || (pe.type == EdgeKind.ALLOC && pe.dstNode == null) || m == threadStartMethod) {
+		if (pe == Edge.NULL || (pe.type == EdgeKind.ALLOC && pe.dstNode == null)) {
+			// || m == threadStartMethod
 			if (DEBUG) System.out.println("LEAVE getInitPathEdge: " + Edge.NULL);
 			return Edge.NULL;
 		}
@@ -312,10 +313,11 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 	@Override
 	public Edge getInvkPathEdge(Quad q, Edge clrPE, jq_Method m, Edge tgtSE) {
 		if (DEBUG) System.out.println("ENTER getInvkPathEdge: q=" + q + " clrPE=" + clrPE + " m=" + m + " tgtSE=" + tgtSE);
-		if (m == threadStartMethod) {
-			if (tgtSE == Edge.NULL) return getCopy(clrPE);
-			return null;
-		}
+		// Mayur:
+		// if (m == threadStartMethod) {
+		//	if (tgtSE == Edge.NULL) return getCopy(clrPE);
+		//	return null;
+		// }
 		switch (clrPE.type) {
 		case NULL:
 			switch (tgtSE.type) {
