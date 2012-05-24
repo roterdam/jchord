@@ -72,7 +72,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     protected boolean mustMerge;
     protected boolean mayMerge;
 
-    protected Set<Quad> trackedInvkSites = new HashSet<Quad>();
+    protected Map<Quad,Set<jq_Method>> trackedInvkSites = new HashMap<Quad,Set<jq_Method>>();
 
 	/*********************************************************************************
 	 * Methods that clients must define.
@@ -162,7 +162,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         timeout = Integer.getInteger("chord.rhs.timeout", 0);
     }
 
-    public void setTrackedInvkSites(Set<Quad> trackedInvkSites) {
+    public void setTrackedInvkSites(Map<Quad,Set<jq_Method>> trackedInvkSites) {
         this.trackedInvkSites = trackedInvkSites;
     }
 
@@ -377,14 +377,19 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             for (jq_Method m2 : targets) {
                 if (DEBUG) System.out.println("\tTarget: " + m2);
                 final PE pe2 = getInitPathEdge(q, m2, pe);
-                if (trackedInvkSites.contains(q)) {
-                    final EntryOrExitBasicBlock bb2 = m2.getCFG().exit();
-                    final Loc loc2 = new Loc(bb2, -1);
-                    addPathEdge(loc2, pe2, q, pe, null, null);
+                boolean skip = false; 
+                Set<jq_Method> trackedMethods = trackedInvkSites.get(q);
+                if (trackedMethods != null) 
+                	if(trackedMethods.contains(m2)) 
+                		skip = true;
+                if(skip){
+                	final EntryOrExitBasicBlock bb2 = m2.getCFG().exit();
+                	final Loc loc2 = new Loc(bb2, -1);
+                	addPathEdge(loc2, pe2, q, pe, null, null);
                 } else {
-                    final EntryOrExitBasicBlock bb2 = m2.getCFG().entry();
-                    final Loc loc2 = new Loc(bb2, -1);
-                    addPathEdge(loc2, pe2, q, pe, null, null);
+                	final EntryOrExitBasicBlock bb2 = m2.getCFG().entry();
+                	final Loc loc2 = new Loc(bb2, -1);
+                	addPathEdge(loc2, pe2, q, pe, null, null);
                 }
                 final Set<SE> seSet = summEdges.get(m2);
                 if (seSet == null) {
