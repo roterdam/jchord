@@ -1,7 +1,7 @@
 package chord.program;
 
 public enum TypeKind {
-	INTERFACE,
-	ABSTRACT_CLASS,
-	CONCRETE_CLASS
+    INTERFACE,
+    ABSTRACT_CLASS,
+    CONCRETE_CLASS
 };

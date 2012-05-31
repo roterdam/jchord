@@ -16,23 +16,23 @@ import chord.util.IndexSet;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "checkExcludedT",
-	sign = "T0:T0"
+    name = "checkExcludedT",
+    sign = "T0:T0"
 )
 public class RelCheckExcludedT extends ProgramRel {
-	public void fill() {
-		DomT domT = (DomT) doms[0];
-		Program program = Program.g();
-		IndexSet<jq_Reference> classes = program.getClasses();
-		String[] checkExcludeAry = Config.checkExcludeAry;
-		for (jq_Reference c : classes) {
-			String cName = c.getName();
-			for (String prefix : checkExcludeAry) {
-				if (cName.startsWith(prefix)) {
-					add(c);
-					break;
-				}
-			}
-		}
-	}
+    public void fill() {
+        DomT domT = (DomT) doms[0];
+        Program program = Program.g();
+        IndexSet<jq_Reference> classes = program.getClasses();
+        String[] checkExcludeAry = Config.checkExcludeAry;
+        for (jq_Reference c : classes) {
+            String cName = c.getName();
+            for (String prefix : checkExcludeAry) {
+                if (cName.startsWith(prefix)) {
+                    add(c);
+                    break;
+                }
+            }
+        }
+    }
 }

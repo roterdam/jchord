@@ -17,11 +17,11 @@ import chord.analyses.method.DomM;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class DomA extends ProgramDom<jq_Method> {
-	private DomM domM;
-	public String toXMLAttrsString(jq_Method m) {
-		if (m == null) return "";
-		if (domM == null) domM = (DomM) ClassicProject.g().getTrgt("M");
-		int mIdx = domM.indexOf(m);
-		return "Mid=\"M" + mIdx + "\"";
-	}
+    private DomM domM;
+    public String toXMLAttrsString(jq_Method m) {
+        if (m == null) return "";
+        if (domM == null) domM = (DomM) ClassicProject.g().getTrgt("M");
+        int mIdx = domM.indexOf(m);
+        return "Mid=\"M" + mIdx + "\"";
+    }
 }

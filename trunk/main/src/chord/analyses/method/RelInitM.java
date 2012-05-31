@@ -14,13 +14,13 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "initM",
-	sign = "M0"
+    name = "initM",
+    sign = "M0"
 )
 public class RelInitM extends ProgramRel implements IMethodVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (m instanceof jq_Initializer)
-			add(m);
-	}
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        if (m instanceof jq_Initializer)
+            add(m);
+    }
 }

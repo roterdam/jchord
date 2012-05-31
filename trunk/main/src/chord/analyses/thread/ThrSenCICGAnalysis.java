@@ -13,15 +13,15 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "thrsen-cicg-java",
-	consumes = { "thrSenRootM", "thrSenReachableM", "thrSenIM", "thrSenMM" }
+    name = "thrsen-cicg-java",
+    consumes = { "thrSenRootM", "thrSenReachableM", "thrSenIM", "thrSenMM" }
 )
 public class ThrSenCICGAnalysis extends CICGAnalysis {
-	public void run() {
-		domM = (DomM) ClassicProject.g().getTrgt("M");
-		relRootM = (ProgramRel) ClassicProject.g().getTrgt("thrSenRootM");
-		relReachableM = (ProgramRel) ClassicProject.g().getTrgt("thrSenReachableM");
-		relIM = (ProgramRel) ClassicProject.g().getTrgt("thrSenIM");
-		relMM = (ProgramRel) ClassicProject.g().getTrgt("thrSenMM");
-	}
+    public void run() {
+        domM = (DomM) ClassicProject.g().getTrgt("M");
+        relRootM = (ProgramRel) ClassicProject.g().getTrgt("thrSenRootM");
+        relReachableM = (ProgramRel) ClassicProject.g().getTrgt("thrSenReachableM");
+        relIM = (ProgramRel) ClassicProject.g().getTrgt("thrSenIM");
+        relMM = (ProgramRel) ClassicProject.g().getTrgt("thrSenMM");
+    }
 }

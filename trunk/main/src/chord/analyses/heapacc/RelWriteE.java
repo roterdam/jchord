@@ -13,18 +13,18 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "writeE",
-	sign = "E0"
+    name = "writeE",
+    sign = "E0"
 )
 public class RelWriteE extends ProgramRel {
-	public void fill() {
-		DomE domE = (DomE) doms[0];
-		int numE = domE.size();
-		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad e = (Quad) domE.get(eIdx);
-			Operator op = e.getOperator();
-			if (op.isWrHeapInst())
-				add(eIdx);
-		}
-	}
+    public void fill() {
+        DomE domE = (DomE) doms[0];
+        int numE = domE.size();
+        for (int eIdx = 0; eIdx < numE; eIdx++) {
+            Quad e = (Quad) domE.get(eIdx);
+            Operator op = e.getOperator();
+            if (op.isWrHeapInst())
+                add(eIdx);
+        }
+    }
 }

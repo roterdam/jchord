@@ -16,24 +16,24 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "syncLV",
-	sign = "L0,V0:L0_V0"
+    name = "syncLV",
+    sign = "L0,V0:L0_V0"
 )
 public class RelSyncLV extends ProgramRel {
-	public void fill() {
-		DomL domL = (DomL) doms[0];
-		int numL = domL.size();
-		for (int lIdx = 0; lIdx < numL; lIdx++) {
-			Inst i = domL.get(lIdx);
-			if (i instanceof Quad) {
-				Quad q = (Quad) i;
-				Operand op = Monitor.getSrc(q);
-				if (op instanceof RegisterOperand) {
-					RegisterOperand ro = (RegisterOperand) op;
-					Register v = ro.getRegister();
-					add(q, v);
-				}
-			}
-		}
-	}
+    public void fill() {
+        DomL domL = (DomL) doms[0];
+        int numL = domL.size();
+        for (int lIdx = 0; lIdx < numL; lIdx++) {
+            Inst i = domL.get(lIdx);
+            if (i instanceof Quad) {
+                Quad q = (Quad) i;
+                Operand op = Monitor.getSrc(q);
+                if (op instanceof RegisterOperand) {
+                    RegisterOperand ro = (RegisterOperand) op;
+                    Register v = ro.getRegister();
+                    add(q, v);
+                }
+            }
+        }
+    }
 }

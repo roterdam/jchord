@@ -13,20 +13,20 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "MI",
-	sign = "M0,I0:I0xM0"
+    name = "MI",
+    sign = "M0,I0:I0xM0"
 )
 public class RelMI extends ProgramRel {
-	public void fill() {
-		DomM domM = (DomM) doms[0];
-		DomI domI = (DomI) doms[1];
-		int numI = domI.size();
-		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			Quad q = (Quad) domI.get(iIdx);
-			jq_Method m = q.getMethod();
-			int mIdx = domM.indexOf(m);
-			assert (mIdx >= 0);
-			add(mIdx, iIdx);
-		}
-	}
+    public void fill() {
+        DomM domM = (DomM) doms[0];
+        DomI domI = (DomI) doms[1];
+        int numI = domI.size();
+        for (int iIdx = 0; iIdx < numI; iIdx++) {
+            Quad q = (Quad) domI.get(iIdx);
+            jq_Method m = q.getMethod();
+            int mIdx = domM.indexOf(m);
+            assert (mIdx >= 0);
+            add(mIdx, iIdx);
+        }
+    }
 }

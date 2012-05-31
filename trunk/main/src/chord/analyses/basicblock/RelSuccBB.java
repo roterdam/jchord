@@ -14,21 +14,21 @@ import chord.analyses.basicblock.DomB;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "succBB",
-	sign = "B0,B1:B0xB1"
+    name = "succBB",
+    sign = "B0,B1:B0xB1"
 )
 public class RelSuccBB extends ProgramRel {
-	public void fill() {
-		DomB domB = (DomB) doms[0];
-		int numB = domB.size();
-		for (int bIdx = 0; bIdx < numB; bIdx++) {
-			BasicBlock bb = domB.get(bIdx);
-			List<BasicBlock> succs = bb.getSuccessors();
-			for (BasicBlock bb2 : succs) {
-				int bIdx2 = domB.indexOf(bb2);
-				assert (bIdx2 >= 0);
-				add(bIdx, bIdx2);
-			}
-		}
-	}
+    public void fill() {
+        DomB domB = (DomB) doms[0];
+        int numB = domB.size();
+        for (int bIdx = 0; bIdx < numB; bIdx++) {
+            BasicBlock bb = domB.get(bIdx);
+            List<BasicBlock> succs = bb.getSuccessors();
+            for (BasicBlock bb2 : succs) {
+                int bIdx2 = domB.indexOf(bb2);
+                assert (bIdx2 >= 0);
+                add(bIdx, bIdx2);
+            }
+        }
+    }
 }

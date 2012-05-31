@@ -12,13 +12,13 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "instM",
-	sign = "M0"
+    name = "instM",
+    sign = "M0"
 )
 public class RelInstM extends ProgramRel implements IMethodVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (!m.isStatic())
-			add(m);
-	}
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        if (!m.isStatic())
+            add(m);
+    }
 }

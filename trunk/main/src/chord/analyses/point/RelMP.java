@@ -13,16 +13,16 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "MP",
-	sign = "M0,P0:M0xP0"
+    name = "MP",
+    sign = "M0,P0:M0xP0"
 )
 public class RelMP extends ProgramRel implements IInstVisitor {
-	private jq_Method ctnrMethod;
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		ctnrMethod = m;
-	}
-	public void visit(Quad q) {
-		add(ctnrMethod, q);
-	}
+    private jq_Method ctnrMethod;
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        ctnrMethod = m;
+    }
+    public void visit(Quad q) {
+        add(ctnrMethod, q);
+    }
 }

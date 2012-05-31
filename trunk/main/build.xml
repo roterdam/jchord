@@ -2,7 +2,7 @@
 <!--
 	Main build file for Chord
 -->
-<project name="chord" default="help">
+<project name="chord" default="compile">
 	<taskdef resource="net/sf/antcontrib/antlib.xml" classpath="lib/ant-contrib.jar"/>
 
 	<!--
@@ -16,7 +16,7 @@
 		===============================================================
 		Primary Targets:
 		===============================================================
-		compile   Compile Chord
+		compile   Compile Chord sources and build chord.jar (default)
 		run       Run Chord
 		          Optional properties:
 		          - chord.main.class (main class of analyzed program)

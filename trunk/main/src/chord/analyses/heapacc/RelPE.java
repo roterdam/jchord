@@ -13,19 +13,19 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "PE",
-	sign = "P0,E0:E0_P0"
+    name = "PE",
+    sign = "P0,E0:E0_P0"
 )
 public class RelPE extends ProgramRel {
-	public void fill() {
-		DomP domP = (DomP) doms[0];
-		DomE domE = (DomE) doms[1];
-		int numE = domE.size();
-		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad e = (Quad) domE.get(eIdx);
-			int pIdx = domP.indexOf(e);
-			assert (pIdx >= 0);
-			add(pIdx, eIdx);
-		}
-	}
+    public void fill() {
+        DomP domP = (DomP) doms[0];
+        DomE domE = (DomE) doms[1];
+        int numE = domE.size();
+        for (int eIdx = 0; eIdx < numE; eIdx++) {
+            Quad e = (Quad) domE.get(eIdx);
+            int pIdx = domP.indexOf(e);
+            assert (pIdx >= 0);
+            add(pIdx, eIdx);
+        }
+    }
 }

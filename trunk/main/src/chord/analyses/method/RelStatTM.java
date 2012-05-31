@@ -13,15 +13,15 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "staticTM",
-	sign = "T0,M0:M0_T0"
+    name = "staticTM",
+    sign = "T0,M0:M0_T0"
 )
 public class RelStatTM extends ProgramRel implements IMethodVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (m.isStatic()) {
-			jq_Class t = m.getDeclaringClass();
-			add(t, m);
-		}
-	}
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        if (m.isStatic()) {
+            jq_Class t = m.getDeclaringClass();
+            add(t, m);
+        }
+    }
 }

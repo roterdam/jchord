@@ -13,17 +13,17 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "staticTF",
-	sign = "T0,F0:F0_T0"
+    name = "staticTF",
+    sign = "T0,F0:F0_T0"
 )
 public class RelStatTF extends ProgramRel implements IFieldVisitor {
-	private jq_Class ctnrClass;
-	public void visit(jq_Class c) {
-		ctnrClass = c;
-	}
-	public void visit(jq_Field f) {
-		if (f.isStatic()) {
-			add(ctnrClass, f);
-		}
-	}
+    private jq_Class ctnrClass;
+    public void visit(jq_Class c) {
+        ctnrClass = c;
+    }
+    public void visit(jq_Field f) {
+        if (f.isStatic()) {
+            add(ctnrClass, f);
+        }
+    }
 }

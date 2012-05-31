@@ -14,17 +14,17 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "MPhead",
-	sign = "M0,P0:M0xP0"
+    name = "MPhead",
+    sign = "M0,P0:M0xP0"
 )
 public class RelMPhead extends ProgramRel
-		implements IMethodVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (m.isAbstract())
-			return;
-		ControlFlowGraph cfg = m.getCFG();
-		EntryOrExitBasicBlock be = cfg.entry();
-		add(m, be);
-	}
+        implements IMethodVisitor {
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        if (m.isAbstract())
+            return;
+        ControlFlowGraph cfg = m.getCFG();
+        EntryOrExitBasicBlock be = cfg.entry();
+        add(m, be);
+    }
 }

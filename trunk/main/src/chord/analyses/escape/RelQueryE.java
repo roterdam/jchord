@@ -11,8 +11,8 @@ import chord.project.analyses.ProgramRel;
 
 @Chord(name = "queryE", sign = "E0:E0", consumes = { "checkExcludedE" })
 public class RelQueryE extends ProgramRel {
-	@Override
-	public void fill() {
+    @Override
+    public void fill() {
         ProgramRel relCheckExcludedE = (ProgramRel) ClassicProject.g().getTrgt("checkExcludedE");
         relCheckExcludedE.load();
         DomE domE = (DomE) doms[0];
@@ -21,8 +21,8 @@ public class RelQueryE extends ProgramRel {
             if (op instanceof Getstatic || op instanceof Putstatic)
                 continue;
             if (!relCheckExcludedE.contains(q))
-            	add(q);
-		}
+                add(q);
+        }
         relCheckExcludedE.close();
-	}
+    }
 }

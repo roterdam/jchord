@@ -18,17 +18,17 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(name = "PobjVarCastInst", sign = "P0,V0,V1:P0_V0xV1")
 public class RelPobjVarCastInst extends ProgramRel implements ICastInstVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) { }
-	public void visitCastInst(Quad q) {
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) { }
+    public void visitCastInst(Quad q) {
         Operand rx = CheckCast.getSrc(q);
         if (rx instanceof RegisterOperand) {
-			RegisterOperand ro = (RegisterOperand) rx;
-			if (ro.getType().isReferenceType()) {
-				Register r = ro.getRegister();
-				Register l = CheckCast.getDest(q).getRegister();
-				add(q, l, r);
-			}
+            RegisterOperand ro = (RegisterOperand) rx;
+            if (ro.getType().isReferenceType()) {
+                Register r = ro.getRegister();
+                Register l = CheckCast.getDest(q).getRegister();
+                add(q, l, r);
+            }
         }
     }
 }

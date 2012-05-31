@@ -14,19 +14,19 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "aryElemE",
-	sign = "E0"
+    name = "aryElemE",
+    sign = "E0"
 )
 public class RelAryElemE extends ProgramRel {
-	public void fill() {
-		DomE domE = (DomE) doms[0];
-		int numE = domE.size();
-		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad e = (Quad) domE.get(eIdx);
-			Operator op = e.getOperator();
-			if (op instanceof ALoad || op instanceof AStore) {
-				add(eIdx);
-			}
-		}
-	}
+    public void fill() {
+        DomE domE = (DomE) doms[0];
+        int numE = domE.size();
+        for (int eIdx = 0; eIdx < numE; eIdx++) {
+            Quad e = (Quad) domE.get(eIdx);
+            Operator op = e.getOperator();
+            if (op instanceof ALoad || op instanceof AStore) {
+                add(eIdx);
+            }
+        }
+    }
 }

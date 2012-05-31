@@ -14,17 +14,17 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "MPtail",
-	sign = "M0,P0:M0xP0"
+    name = "MPtail",
+    sign = "M0,P0:M0xP0"
 )
 public class RelMPtail extends ProgramRel
-		implements IMethodVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (m.isAbstract())
-			return;
-		ControlFlowGraph cfg = m.getCFG();
-		EntryOrExitBasicBlock bx = cfg.exit();
-		add(m, bx);
-	}
+        implements IMethodVisitor {
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        if (m.isAbstract())
+            return;
+        ControlFlowGraph cfg = m.getCFG();
+        EntryOrExitBasicBlock bx = cfg.exit();
+        add(m, bx);
+    }
 }

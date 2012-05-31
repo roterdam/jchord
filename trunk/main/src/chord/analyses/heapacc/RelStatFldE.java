@@ -14,19 +14,19 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "statFldE",
-	sign = "E0"
+    name = "statFldE",
+    sign = "E0"
 )
 public class RelStatFldE extends ProgramRel {
-	public void fill() {
-		DomE domE = (DomE) doms[0];
-		int numE = domE.size();
-		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad e = (Quad) domE.get(eIdx);
-			Operator op = e.getOperator();
-			if (op instanceof Getstatic || op instanceof Putstatic) {
-				add(eIdx);
-			}
-		}
-	}
+    public void fill() {
+        DomE domE = (DomE) doms[0];
+        int numE = domE.size();
+        for (int eIdx = 0; eIdx < numE; eIdx++) {
+            Quad e = (Quad) domE.get(eIdx);
+            Operator op = e.getOperator();
+            if (op instanceof Getstatic || op instanceof Putstatic) {
+                add(eIdx);
+            }
+        }
+    }
 }

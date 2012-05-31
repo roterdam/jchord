@@ -11,32 +11,32 @@ import joeq.Compiler.Quad.EntryOrExitBasicBlock;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Loc {
-	// qIdx != -1 <=> i is instanceof Quad and qIdx denotes 0-based index in its containing basic block
-	// qIdx == -1 <=> i is instanceof EntryOrExitBasicBlock
-	public final Inst i;
-	public final int qIdx;
+    // qIdx != -1 <=> i is instanceof Quad and qIdx denotes 0-based index in its containing basic block
+    // qIdx == -1 <=> i is instanceof EntryOrExitBasicBlock
+    public final Inst i;
+    public final int qIdx;
 
-	public Loc(Inst i, int qIdx) {
-		if (qIdx == -1)
-			assert (i instanceof EntryOrExitBasicBlock);
-		else {
-			assert (qIdx >= 0);
-			assert (i instanceof Quad);
-		}
-		this.i = i;
-		this.qIdx = qIdx;
-	}
+    public Loc(Inst i, int qIdx) {
+        if (qIdx == -1)
+            assert (i instanceof EntryOrExitBasicBlock);
+        else {
+            assert (qIdx >= 0);
+            assert (i instanceof Quad);
+        }
+        this.i = i;
+        this.qIdx = qIdx;
+    }
 
-	public int hashCode() { return i.hashCode(); }
+    public int hashCode() { return i.hashCode(); }
 
-	public boolean equals(Object o) {
-		if (!(o instanceof Loc)) return false;
-		Loc that = (Loc) o;
-		return this.i == that.i;
-	}
+    public boolean equals(Object o) {
+        if (!(o instanceof Loc)) return false;
+        Loc that = (Loc) o;
+        return this.i == that.i;
+    }
 
-	public String toString() {
-		return "<" + i.getMethod() + ", " + i + ">";
-	}
+    public String toString() {
+        return "<" + i.getMethod() + ", " + i + ">";
+    }
 }
 

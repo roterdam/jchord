@@ -18,18 +18,18 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(name = "PobjVarMoveInst", sign = "P0,V0,V1:P0_V0xV1")
 public class RelPobjVarMoveInst extends ProgramRel implements IMoveInstVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) { }
-	public void visitMoveInst(Quad q) {
-		Operand rx = Move.getSrc(q);
-		if (rx instanceof RegisterOperand) {
-			RegisterOperand ro = (RegisterOperand) rx;
-			if (ro.getType().isReferenceType()) {
-				Register r = ro.getRegister();
-				Register l = Move.getDest(q).getRegister();
-				add(q, l, r);
-			}
-		}
-	}
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) { }
+    public void visitMoveInst(Quad q) {
+        Operand rx = Move.getSrc(q);
+        if (rx instanceof RegisterOperand) {
+            RegisterOperand ro = (RegisterOperand) rx;
+            if (ro.getType().isReferenceType()) {
+                Register r = ro.getRegister();
+                Register l = Move.getDest(q).getRegister();
+                add(q, l, r);
+            }
+        }
+    }
 }
 

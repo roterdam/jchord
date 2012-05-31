@@ -17,32 +17,32 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "statIM",
-	sign = "I0,M0:I0xM0"
+    name = "statIM",
+    sign = "I0,M0:I0xM0"
 )
 public class RelStatIM extends ProgramRel {
-	private static final String NOT_FOUND =
-		"WARN: RelStatIM: Target %s of call site %s not in domain M; skipping.";
-	public void fill() {
-		DomI domI = (DomI) doms[0];
-		DomM domM = (DomM) doms[1];
-		int numI = domI.size();
-		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			Quad i = (Quad) domI.get(iIdx);
-			Operator op = i.getOperator();
-			if (op instanceof InvokeStatic) {
-				jq_Method m = InvokeStatic.getMethod(i).getMethod();
-				if (m.isStatic()) {
-					m = StubRewrite.maybeReplaceCallDest(i.getMethod(), m);
-					int mIdx = domM.indexOf(m);
-					if (mIdx >= 0)
-						add(iIdx, mIdx);
-					else if (Config.verbose >= 2)
-						Messages.log(NOT_FOUND, m, i.toLocStr());
-				}
-			}
-		}
-	}
-	
+    private static final String NOT_FOUND =
+        "WARN: RelStatIM: Target %s of call site %s not in domain M; skipping.";
+    public void fill() {
+        DomI domI = (DomI) doms[0];
+        DomM domM = (DomM) doms[1];
+        int numI = domI.size();
+        for (int iIdx = 0; iIdx < numI; iIdx++) {
+            Quad i = (Quad) domI.get(iIdx);
+            Operator op = i.getOperator();
+            if (op instanceof InvokeStatic) {
+                jq_Method m = InvokeStatic.getMethod(i).getMethod();
+                if (m.isStatic()) {
+                    m = StubRewrite.maybeReplaceCallDest(i.getMethod(), m);
+                    int mIdx = domM.indexOf(m);
+                    if (mIdx >= 0)
+                        add(iIdx, mIdx);
+                    else if (Config.verbose >= 2)
+                        Messages.log(NOT_FOUND, m, i.toLocStr());
+                }
+            }
+        }
+    }
+    
 
 }

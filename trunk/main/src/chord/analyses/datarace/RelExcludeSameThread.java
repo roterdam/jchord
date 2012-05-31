@@ -9,12 +9,12 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "excludeSameThread",
-	sign = "K0:K0"
+    name = "excludeSameThread",
+    sign = "K0:K0"
 )
 public class RelExcludeSameThread extends ProgramRel {
-	public void fill() {
-		if (System.getProperty("chord.datarace.exclude.eqth", "true").equals("true"))
-			add(1);
-	}
+    public void fill() {
+        if (System.getProperty("chord.datarace.exclude.eqth", "true").equals("true"))
+            add(1);
+    }
 }

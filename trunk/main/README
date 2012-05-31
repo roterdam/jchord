@@ -10,7 +10,7 @@ BINARY INSTALLATION
 ===================
 
 To obtain Chord's pre-built binaries, download and uncompress file
-http://jchord.googlecode.com/files/chord-bin-2.0.tar.gz.  It primarily contains
+http://jchord.googlecode.com/files/chord-bin-2.1.tar.gz.  It primarily contains
 the following files:
 
 - chord.jar, which contains the class files of Chord and of libraries used by
@@ -34,12 +34,12 @@ SOURCE INSTALLATION
 ===================
 
 To obtain Chord's source code, download and uncompress file
-http://jchord.googlecode.com/files/chord-src-2.0.tar.gz.  It contains Chord's
+http://jchord.googlecode.com/files/chord-src-2.1.tar.gz.  It contains Chord's
 source code and jars of libraries used by Chord.
 
 If you also want the source code of libraries used by Chord (e.g., joeq,
 javassist, bddbddb, etc.), download and uncompress file
-http://jchord.googlecode.com/files/chord-libsrc-2.0.tar.gz.
+http://jchord.googlecode.com/files/chord-libsrc-2.1.tar.gz.
 
 Alternatively, you can obtain the latest development snapshot from the SVN
 repository by running the following command:
@@ -55,7 +55,7 @@ sub-directories, you can check out specific sub-directories:
 - test/ contains Chord's regression tests.
 - many more; these might eventually move into main/.
 
-Files chord-2.0-src.tar.gz and chord-2.0-libsrc.tar.gz mentioned above are
+Files chord-2.1-src.tar.gz and chord-2.1-libsrc.tar.gz mentioned above are
 essentially stable releases of the main/ and libsrc/ directories, respectively.
 
 =========================

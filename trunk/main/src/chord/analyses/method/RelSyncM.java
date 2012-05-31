@@ -12,13 +12,13 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "syncM",
-	sign = "M0"
+    name = "syncM",
+    sign = "M0"
 )
 public class RelSyncM extends ProgramRel implements IMethodVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (m.isSynchronized())
-			add(m);
-	}
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        if (m.isSynchronized())
+            add(m);
+    }
 }

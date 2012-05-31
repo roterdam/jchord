@@ -57,8 +57,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     protected Map<jq_Method, Set<Quad>> callersMap = new HashMap<jq_Method, Set<Quad>>();
     protected Map<Quad, Set<jq_Method>> targetsMap = new HashMap<Quad, Set<jq_Method>>();
 
-	protected Map<Pair<Inst, PE>, WrappedPE<PE, SE>> wpeMap = new HashMap<Pair<Inst, PE>, WrappedPE<PE, SE>>();
-	protected Map<Pair<jq_Method, SE>, WrappedSE<PE, SE>> wseMap = new HashMap<Pair<jq_Method, SE>, WrappedSE<PE, SE>>();
+    protected Map<Pair<Inst, PE>, WrappedPE<PE, SE>> wpeMap = new HashMap<Pair<Inst, PE>, WrappedPE<PE, SE>>();
+    protected Map<Pair<jq_Method, SE>, WrappedSE<PE, SE>> wseMap = new HashMap<Pair<jq_Method, SE>, WrappedSE<PE, SE>>();
 
     protected boolean isInit, isDone;
 
@@ -74,9 +74,9 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 
     protected Map<Quad,Set<jq_Method>> trackedInvkSites = new HashMap<Quad,Set<jq_Method>>();
 
-	/*********************************************************************************
-	 * Methods that clients must define.
-	 *********************************************************************************/
+    /*********************************************************************************
+     * Methods that clients must define.
+     *********************************************************************************/
 
     // get the initial set of path edges
     public abstract Set<Pair<Loc, PE>> getInitPathEdges();
@@ -86,14 +86,14 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     public abstract PE getInitPathEdge(Quad q, jq_Method m, PE pe);
 
     // get outgoing path edge(s) from q, given incoming path edge pe into q.
-	// q is guaranteed to not be an invoke statement, return statement, entry
-	// basic block, or exit basic block.
-	// the set returned can be reused by client.
+    // q is guaranteed to not be an invoke statement, return statement, entry
+    // basic block, or exit basic block.
+    // the set returned can be reused by client.
     public abstract PE getMiscPathEdge(Quad q, PE pe);
  
     // q is an invoke statement and m is the target method.
-	// get path edge to successor of q given path edge into q and summary edge of a
-	// target method m of the call site q.
+    // get path edge to successor of q given path edge into q and summary edge of a
+    // target method m of the call site q.
     // returns null if the path edge into q is not compatible with the summary edge.
     public abstract PE getInvkPathEdge(Quad q, PE clrPE, jq_Method m, SE tgtSE);
 
@@ -119,43 +119,43 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      *********************************************************************************/
 
     /**
-	 * Determines how this analysis must merge PEs at each program point that
-	 * have the same source state but different target states and, likewise,
-	 * SEs of each method that have the same source state but different target
-	 * states.
+     * Determines how this analysis must merge PEs at each program point that
+     * have the same source state but different target states and, likewise,
+     * SEs of each method that have the same source state but different target
+     * states.
      */
     public void setMergeKind() {
-		String s = System.getProperty(CHORD_RHS_MERGE_PROPERTY, "lossy");
-		if (s.equals("lossy"))
-			mergeKind = MergeKind.LOSSY;
-		else if (s.equals("pjoin"))
-			mergeKind = MergeKind.PJOIN;
-		else if (s.equals("naive"))
-			mergeKind = MergeKind.NAIVE;
-		else
-			throw new RuntimeException("Bad value for property " + CHORD_RHS_MERGE_PROPERTY + ": " + s);
-	}
+        String s = System.getProperty(CHORD_RHS_MERGE_PROPERTY, "lossy");
+        if (s.equals("lossy"))
+            mergeKind = MergeKind.LOSSY;
+        else if (s.equals("pjoin"))
+            mergeKind = MergeKind.PJOIN;
+        else if (s.equals("naive"))
+            mergeKind = MergeKind.NAIVE;
+        else
+            throw new RuntimeException("Bad value for property " + CHORD_RHS_MERGE_PROPERTY + ": " + s);
+    }
 
     public void setOrderKind() {
-		String s = System.getProperty(CHORD_RHS_ORDER_PROPERTY, "bfs");
-		if (s.equals("bfs"))
-			orderKind = OrderKind.BFS;
-		else if (s.equals("dfs"))
-			orderKind = OrderKind.DFS;
-		else
-			throw new RuntimeException("Bad value for property " + CHORD_RHS_ORDER_PROPERTY + ": " + s);
+        String s = System.getProperty(CHORD_RHS_ORDER_PROPERTY, "bfs");
+        if (s.equals("bfs"))
+            orderKind = OrderKind.BFS;
+        else if (s.equals("dfs"))
+            orderKind = OrderKind.DFS;
+        else
+            throw new RuntimeException("Bad value for property " + CHORD_RHS_ORDER_PROPERTY + ": " + s);
     }
 
     public void setTraceKind() {
-		String s = System.getProperty(CHORD_RHS_TRACE_PROPERTY, "none");
-		if (s.equals("none"))
-			traceKind = TraceKind.NONE;
-		else if (s.equals("any"))
-			traceKind = TraceKind.ANY;
-		else if (s.equals("shortest"))
-			traceKind = TraceKind.SHORTEST;
-		else
-			throw new RuntimeException("Bad value for property " + CHORD_RHS_TRACE_PROPERTY + ": " + s);
+        String s = System.getProperty(CHORD_RHS_TRACE_PROPERTY, "none");
+        if (s.equals("none"))
+            traceKind = TraceKind.NONE;
+        else if (s.equals("any"))
+            traceKind = TraceKind.ANY;
+        else if (s.equals("shortest"))
+            traceKind = TraceKind.SHORTEST;
+        else
+            throw new RuntimeException("Bad value for property " + CHORD_RHS_TRACE_PROPERTY + ": " + s);
     }
 
     public void setTimeout() {
@@ -168,24 +168,24 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 
     /*********************************************************************************
      * Methods that client may call/override.  Example usage:
-	 * init();
+     * init();
      * while (*) {
      *   runPass();
      *   // done building path/summary edges; clients can now call:
      *   // getPEs(i), getSEs(m), getAllPEs(), getAllSEs(),
-	 *   // getBackTracIterator(pe), print()
+     *   // getBackTracIterator(pe), print()
      * }
      * done();
      *********************************************************************************/
 
     public void init() {
         if (isInit) return;
-		isInit = true;
+        isInit = true;
 
-		// start configuring the analysis
-		setMergeKind();
-		setOrderKind();
-		setTraceKind();
+        // start configuring the analysis
+        setMergeKind();
+        setOrderKind();
+        setTraceKind();
         mayMerge  = (mergeKind != MergeKind.NAIVE);
         mustMerge = (mergeKind == MergeKind.LOSSY);
         if (mustMerge && !mayMerge) {
@@ -194,8 +194,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         if (mustMerge && traceKind != TraceKind.NONE) {
             Messages.fatal("Cannot create RHS analysis '" + getName() + "' with mustMerge and trace generation.");
         }
-		setTimeout();
-		// done configuring the analysis
+        setTimeout();
+        // done configuring the analysis
 
         if (timeout > 0) {
             alarm = new Alarm(timeout);
@@ -228,8 +228,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     }
 
     public void done() {
-		if (isDone) return;
-		isDone = true;
+        if (isDone) return;
+        isDone = true;
         if (timeout > 0)
             alarm.doneAllPasses();
     }
@@ -245,8 +245,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         workList.clear();
         summEdges.clear();
         pathEdges.clear();
-		wpeMap.clear();
-		wseMap.clear();
+        wpeMap.clear();
+        wseMap.clear();
         Set<Pair<Loc, PE>> initPEs = getInitPathEdges();
         for (Pair<Loc, PE> pair : initPEs) {
             Loc loc = pair.val0;
@@ -264,21 +264,21 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         return new BackTraceIterator<PE,SE>(wpe);
     }
 
-	public Set<PE> getPEs(Inst i) {
-		return pathEdges.get(i);
-	}
+    public Set<PE> getPEs(Inst i) {
+        return pathEdges.get(i);
+    }
 
-	public Map<Inst, Set<PE>> getAllPEs() {
-		return pathEdges;
-	}
+    public Map<Inst, Set<PE>> getAllPEs() {
+        return pathEdges;
+    }
 
-	public Set<SE> getSEs(jq_Method m) {
-		return summEdges.get(m);
-	}
+    public Set<SE> getSEs(jq_Method m) {
+        return summEdges.get(m);
+    }
 
-	public Map<jq_Method, Set<SE>> getAllSEs() {
-		return summEdges;
-	}
+    public Map<jq_Method, Set<SE>> getAllSEs() {
+        return summEdges;
+    }
 
     public void print() {
         for (jq_Method m : summEdges.keySet()) {
@@ -380,16 +380,16 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                 boolean skip = false; 
                 Set<jq_Method> trackedMethods = trackedInvkSites.get(q);
                 if (trackedMethods != null) 
-                	if(trackedMethods.contains(m2)) 
-                		skip = true;
+                    if(trackedMethods.contains(m2)) 
+                        skip = true;
                 if(skip){
-                	final EntryOrExitBasicBlock bb2 = m2.getCFG().exit();
-                	final Loc loc2 = new Loc(bb2, -1);
-                	addPathEdge(loc2, pe2, q, pe, null, null);
+                    final EntryOrExitBasicBlock bb2 = m2.getCFG().exit();
+                    final Loc loc2 = new Loc(bb2, -1);
+                    addPathEdge(loc2, pe2, q, pe, null, null);
                 } else {
-                	final EntryOrExitBasicBlock bb2 = m2.getCFG().entry();
-                	final Loc loc2 = new Loc(bb2, -1);
-                	addPathEdge(loc2, pe2, q, pe, null, null);
+                    final EntryOrExitBasicBlock bb2 = m2.getCFG().entry();
+                    final Loc loc2 = new Loc(bb2, -1);
+                    addPathEdge(loc2, pe2, q, pe, null, null);
                 }
                 final Set<SE> seSet = summEdges.get(m2);
                 if (seSet == null) {
@@ -443,15 +443,15 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         } else if (mayMerge) {
             boolean matched = false;
             for (SE se2 : seSet) {
-				int result = se2.canMerge(se, mustMerge);
+                int result = se2.canMerge(se, mustMerge);
                 if (result >= 0) {
                     if (DEBUG) System.out.println("\tNo, but matches SE: " + se2);
                     boolean changed = se2.mergeWith(se);
                     if (DEBUG) System.out.println("\tNew SE after merge: " + se2);
                     if (!changed) {
                         if (DEBUG) System.out.println("\tExisting SE did not change");
-						if (traceKind != TraceKind.NONE && result == 0)
-							updateWSE(m, se2, bb, pe);
+                        if (traceKind != TraceKind.NONE && result == 0)
+                            updateWSE(m, se2, bb, pe);
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting SE changed");
@@ -467,13 +467,13 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
         } else if (!seSet.add(se)) {
             if (DEBUG) System.out.println("\tYes, not adding");
-			if (traceKind != TraceKind.NONE)
-				updateWSE(m, se, bb, pe);
+            if (traceKind != TraceKind.NONE)
+                updateWSE(m, se, bb, pe);
             return;
         }
-		if (traceKind != TraceKind.NONE) {
-			recordWSE(m, seToAdd, bb, pe);
-		}
+        if (traceKind != TraceKind.NONE) {
+            recordWSE(m, seToAdd, bb, pe);
+        }
         for (Quad q2 : getCallers(m)) {
             if (DEBUG) System.out.println("\tCaller: " + q2 + " in " + q2.getMethod());
             Set<PE> peSet = pathEdges.get(q2);
@@ -496,11 +496,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
     }
 
-	// Add 'pe' as an incoming PE into loc.
-	// 'predPE' and 'predSE' are treated as the provenance of 'pe', where 'predPE' is incoming PE into 'pred'.
-	// 'predPE' is null iff 'predI' is null.
-	// 'predSE' is null iff 'predM' is null.
-	// 'loc' may be anything: entry basic block, exit basic block, invk quad, or misc quad.
+    // Add 'pe' as an incoming PE into loc.
+    // 'predPE' and 'predSE' are treated as the provenance of 'pe', where 'predPE' is incoming PE into 'pred'.
+    // 'predPE' is null iff 'predI' is null.
+    // 'predSE' is null iff 'predM' is null.
+    // 'loc' may be anything: entry basic block, exit basic block, invk quad, or misc quad.
     private void addPathEdge(Loc loc, PE pe, Inst predI, PE predPE, jq_Method predM, SE predSE) {
         if (DEBUG) System.out.println("\tChecking if " + loc + " has PE: " + pe);
         Inst i = loc.i;
@@ -521,8 +521,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                     if (DEBUG) System.out.println("\tNew PE after merge: " + pe2); 
                     if (!changed) {
                         if (DEBUG) System.out.println("\tExisting PE did not change");
-						if (traceKind != TraceKind.NONE && result == 0)
-							updateWPE(i, pe2, predI, predPE, predM, predSE);
+                        if (traceKind != TraceKind.NONE && result == 0)
+                            updateWPE(i, pe2, predI, predPE, predM, predSE);
                         return;
                     }
                     if (DEBUG) System.out.println("\tExisting PE changed");
@@ -531,12 +531,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                         Pair<Loc, PE> pair = workList.get(j);
                         PE pe3 = pair.val1;
                         if (pe3 == pe2) {
-							assert (loc.equals(pair.val0));
-							if (traceKind != TraceKind.NONE) {
-								recordWPE(i, pe2, predI, predPE, predM, predSE);
-							}
+                            assert (loc.equals(pair.val0));
+                            if (traceKind != TraceKind.NONE) {
+                                recordWPE(i, pe2, predI, predPE, predM, predSE);
+                            }
                             return;
-						}
+                        }
                     }
                     peToAdd = pe2;
                     matched = true;
@@ -549,14 +549,14 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             }
         } else if (!peSet.add(pe)) {
             if (DEBUG) System.out.println("\tYes, not adding");
-			if (traceKind != TraceKind.NONE)
-				updateWPE(i, pe, predI, predPE, predM, predSE);
+            if (traceKind != TraceKind.NONE)
+                updateWPE(i, pe, predI, predPE, predM, predSE);
             return;
         }
         assert (peToAdd != null);
-		if (traceKind != TraceKind.NONE) {
-			recordWPE(i, peToAdd, predI, predPE, predM, predSE);
-		}
+        if (traceKind != TraceKind.NONE) {
+            recordWPE(i, peToAdd, predI, predPE, predM, predSE);
+        }
         Pair<Loc, PE> pair = new Pair<Loc, PE>(loc, peToAdd);
         int j = workList.size() - 1;
         if (orderKind == OrderKind.BFS) {
@@ -564,7 +564,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             int rpoId = quadToRPOid.get(i);
             for (; j >= 0; j--) {
                 Loc loc2 = workList.get(j).val0;
-				Inst i2 = loc2.i;
+                Inst i2 = loc2.i;
                 if (i2.getMethod() != m) break;
                 int rpoId2 = quadToRPOid.get(i2);
                 if (rpoId2 > rpoId)
@@ -575,12 +575,12 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         workList.add(j + 1, pair);
     }
 
-	// Adds 'pe' as an incoming PE into each immediate successor of 'loc'.
-	// 'predPE' and 'predSE' are treated as the provenance of 'pe', where 'predPE' is incoming PE into 'loc'.
-	// 'predPE' is guaranteed to be non-null but 'predSE' may be null.
+    // Adds 'pe' as an incoming PE into each immediate successor of 'loc'.
+    // 'predPE' and 'predSE' are treated as the provenance of 'pe', where 'predPE' is incoming PE into 'loc'.
+    // 'predPE' is guaranteed to be non-null but 'predSE' may be null.
     private void propagatePEtoPE(Loc loc, PE pe, PE predPE, jq_Method predM, SE predSE) {
         int qIdx = loc.qIdx;
-		Inst i = loc.i;
+        Inst i = loc.i;
         BasicBlock bb = i.getBasicBlock();
         if (qIdx != bb.size() - 1) {
             int q2Idx = qIdx + 1;
@@ -593,8 +593,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         for (BasicBlock bb2 : bb.getSuccessors()) {
             Inst i2; int q2Idx;
             if (bb2.size() == 0) {
-				assert (bb2.isExit());
-				i2 = (EntryOrExitBasicBlock) bb2;
+                assert (bb2.isExit());
+                i2 = (EntryOrExitBasicBlock) bb2;
                 q2Idx = -1;
             } else {
                 i2 = bb2.getQuad(0);
@@ -628,136 +628,136 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      * Provenance record/update methods.
      *********************************************************************************/
 
-	/**
-	 * Potentially updates provenance of given SE.
-	 * Pre-condition: traceKind != NONE.
-	 * (m, seToAdd): the SE whose provenance will be potentially updated.
-	 * (bb, predPE): the new provenance of the SE.
-	 * Replace the old provenance with the new provenance if traceKind is SHORTEST
-	 * and new provenance has shorter length than old provenance.
-	 */
-	private void updateWSE(jq_Method m, SE seToAdd, EntryOrExitBasicBlock bb, PE predPE) {
-		assert (seToAdd != null && predPE != null);
-		Pair<jq_Method, SE> p = new Pair<jq_Method, SE>(m, seToAdd);
-		WrappedSE<PE, SE> wse = wseMap.get(p);
-		assert (wse != null);
-		if (traceKind == TraceKind.SHORTEST) {
-			int oldLen = wse.getLen();
-			Pair<Inst, PE> predP = new Pair<Inst, PE>(bb, predPE);
-			WrappedPE<PE, SE> newWPE = wpeMap.get(predP);
-			assert (newWPE != null);
-			int newLen = 1 + newWPE.getLen();
-			if (newLen < oldLen)
-				wse.update(newWPE, newLen);
-		}
-	}
+    /**
+     * Potentially updates provenance of given SE.
+     * Pre-condition: traceKind != NONE.
+     * (m, seToAdd): the SE whose provenance will be potentially updated.
+     * (bb, predPE): the new provenance of the SE.
+     * Replace the old provenance with the new provenance if traceKind is SHORTEST
+     * and new provenance has shorter length than old provenance.
+     */
+    private void updateWSE(jq_Method m, SE seToAdd, EntryOrExitBasicBlock bb, PE predPE) {
+        assert (seToAdd != null && predPE != null);
+        Pair<jq_Method, SE> p = new Pair<jq_Method, SE>(m, seToAdd);
+        WrappedSE<PE, SE> wse = wseMap.get(p);
+        assert (wse != null);
+        if (traceKind == TraceKind.SHORTEST) {
+            int oldLen = wse.getLen();
+            Pair<Inst, PE> predP = new Pair<Inst, PE>(bb, predPE);
+            WrappedPE<PE, SE> newWPE = wpeMap.get(predP);
+            assert (newWPE != null);
+            int newLen = 1 + newWPE.getLen();
+            if (newLen < oldLen)
+                wse.update(newWPE, newLen);
+        }
+    }
 
-	/**
-	 * Potentially updates provenance of given PE.
-	 * Pre-condition: traceKind != NONE.
-	 * (i, peToAdd): the PE whose provenance will be potentially updated.
-	 * (predI, predPE, predM, predSE): the new provenance of the PE.
-	 * Replace the old provenance with the new provenance if traceKind is SHORTEST
-	 * and new provenance has shorter length than old provenance.
-	 */
-	private void updateWPE(Inst i, PE peToAdd, Inst predI, PE predPE, jq_Method predM, SE predSE) {
-		assert (peToAdd != null);
-		// predPE and/or predSE may be null
-		Pair<Inst, PE> p = new Pair<Inst, PE>(i, peToAdd);
-		WrappedPE<PE, SE> wpe = wpeMap.get(p);
-		assert (wpe != null);
-		if (traceKind == TraceKind.SHORTEST) {
-			int oldLen = wpe.getLen();
-			if (predPE == null) {
-				assert (oldLen == 0);
-				// cannot reduce below 0, so return
-				return;
-			}
-			int newLen;
-			Pair<Inst, PE> predP = new Pair<Inst, PE>(predI, predPE);
-			WrappedPE<PE, SE> newWPE = wpeMap.get(predP);
-			assert (newWPE != null);
-			if (i instanceof EntryOrExitBasicBlock && ((EntryOrExitBasicBlock) i).isEntry())
-				newLen = 0;
-			else
-				newLen = 1 + newWPE.getLen();
-			WrappedSE<PE, SE> newWSE;
-			if (predSE != null) {
-				assert (predM != null);
-				Pair<jq_Method, SE> predN = new Pair<jq_Method, SE>(predM, predSE);
-				newWSE = wseMap.get(predN);
-				assert (newWSE != null);
-				newLen += newWSE.getLen();
-			} else {
-				assert (predM == null);
-				newWSE = null;
-			}
-			if(newLen < 0)
-				throw new TraceOverflowException();
-			if (newLen < oldLen)
-				wpe.update(newWPE, newWSE, newLen);
-		}
-	}
+    /**
+     * Potentially updates provenance of given PE.
+     * Pre-condition: traceKind != NONE.
+     * (i, peToAdd): the PE whose provenance will be potentially updated.
+     * (predI, predPE, predM, predSE): the new provenance of the PE.
+     * Replace the old provenance with the new provenance if traceKind is SHORTEST
+     * and new provenance has shorter length than old provenance.
+     */
+    private void updateWPE(Inst i, PE peToAdd, Inst predI, PE predPE, jq_Method predM, SE predSE) {
+        assert (peToAdd != null);
+        // predPE and/or predSE may be null
+        Pair<Inst, PE> p = new Pair<Inst, PE>(i, peToAdd);
+        WrappedPE<PE, SE> wpe = wpeMap.get(p);
+        assert (wpe != null);
+        if (traceKind == TraceKind.SHORTEST) {
+            int oldLen = wpe.getLen();
+            if (predPE == null) {
+                assert (oldLen == 0);
+                // cannot reduce below 0, so return
+                return;
+            }
+            int newLen;
+            Pair<Inst, PE> predP = new Pair<Inst, PE>(predI, predPE);
+            WrappedPE<PE, SE> newWPE = wpeMap.get(predP);
+            assert (newWPE != null);
+            if (i instanceof EntryOrExitBasicBlock && ((EntryOrExitBasicBlock) i).isEntry())
+                newLen = 0;
+            else
+                newLen = 1 + newWPE.getLen();
+            WrappedSE<PE, SE> newWSE;
+            if (predSE != null) {
+                assert (predM != null);
+                Pair<jq_Method, SE> predN = new Pair<jq_Method, SE>(predM, predSE);
+                newWSE = wseMap.get(predN);
+                assert (newWSE != null);
+                newLen += newWSE.getLen();
+            } else {
+                assert (predM == null);
+                newWSE = null;
+            }
+            if(newLen < 0)
+                throw new TraceOverflowException();
+            if (newLen < oldLen)
+                wpe.update(newWPE, newWSE, newLen);
+        }
+    }
 
-	/**
-	 * Initializes provenance of given SE.
-	 * Pre-condition: traceKind != NONE.
-	 * (m, seToAdd): the SE whose provenance will be initialized.
-	 * (bb, predPE): the provenance of the SE.
-	 */
-	private void recordWSE(jq_Method m, SE seToAdd, EntryOrExitBasicBlock bb, PE predPE) {
-		assert (seToAdd != null && predPE != null);
-		assert (!wseMap.containsKey(seToAdd));
-		WrappedPE<PE, SE> wpe = wpeMap.get(new Pair<Inst, PE>(bb, predPE));
-		assert (wpe != null);
-		SE seCopy = getSECopy(seToAdd);
-		int len = 1 + wpe.getLen();
-		WrappedSE<PE, SE> wse = new WrappedSE<PE, SE>(seCopy, wpe, len);
-		wseMap.put(new Pair<jq_Method, SE>(m, seCopy), wse);
-	}
+    /**
+     * Initializes provenance of given SE.
+     * Pre-condition: traceKind != NONE.
+     * (m, seToAdd): the SE whose provenance will be initialized.
+     * (bb, predPE): the provenance of the SE.
+     */
+    private void recordWSE(jq_Method m, SE seToAdd, EntryOrExitBasicBlock bb, PE predPE) {
+        assert (seToAdd != null && predPE != null);
+        assert (!wseMap.containsKey(seToAdd));
+        WrappedPE<PE, SE> wpe = wpeMap.get(new Pair<Inst, PE>(bb, predPE));
+        assert (wpe != null);
+        SE seCopy = getSECopy(seToAdd);
+        int len = 1 + wpe.getLen();
+        WrappedSE<PE, SE> wse = new WrappedSE<PE, SE>(seCopy, wpe, len);
+        wseMap.put(new Pair<jq_Method, SE>(m, seCopy), wse);
+    }
 
-	/**
-	 * Initializes provenance of given PE.
-	 * Pre-condition: traceKind != NONE.
-	 * (i, peToAdd): the PE whose provenance will be initialized.
-	 * (predI, predPE, predM, predSE): the provenance of the PE.
-	 */
-	private void recordWPE(Inst i, PE peToAdd, Inst predI, PE predPE, jq_Method predM, SE predSE) {
-		assert (peToAdd != null);
-		// predPE and/or predSE may be null
-		assert (!wpeMap.containsKey(peToAdd));
-		PE peCopy = getPECopy(peToAdd);
-		WrappedPE<PE, SE> predWPE;
-		int len;
-		if (predPE == null) {
-			assert (predI == null && predM == null && predSE == null);
-			predWPE = null;
-			len = 0;
-		} else {
-			assert (predI != null);
-			predWPE = wpeMap.get(new Pair<Inst, PE>(predI, predPE));
-			assert (predWPE != null);
-			if (i instanceof EntryOrExitBasicBlock && ((EntryOrExitBasicBlock) i).isEntry())
-				len = 0;
-			else
-				len = 1 + predWPE.getLen();
-		}
-		WrappedSE<PE, SE> predWSE;
-		if (predSE == null) {
-			assert (predM == null);
-			predWSE = null;
-		} else {
-			assert (predM != null);
-			predWSE = wseMap.get(new Pair<jq_Method, SE>(predM, predSE));
-			assert (predWSE != null);
-			len += predWSE.getLen();
-		}
-		if(len < 0){
-			System.out.println("Trace length overflowed.");
-			throw new TraceOverflowException();
-			}
-		WrappedPE<PE, SE> wpe = new WrappedPE<PE, SE>(i, peCopy, predWPE, predWSE, len);
-		wpeMap.put(new Pair<Inst, PE>(i, peCopy), wpe);
-	}
+    /**
+     * Initializes provenance of given PE.
+     * Pre-condition: traceKind != NONE.
+     * (i, peToAdd): the PE whose provenance will be initialized.
+     * (predI, predPE, predM, predSE): the provenance of the PE.
+     */
+    private void recordWPE(Inst i, PE peToAdd, Inst predI, PE predPE, jq_Method predM, SE predSE) {
+        assert (peToAdd != null);
+        // predPE and/or predSE may be null
+        assert (!wpeMap.containsKey(peToAdd));
+        PE peCopy = getPECopy(peToAdd);
+        WrappedPE<PE, SE> predWPE;
+        int len;
+        if (predPE == null) {
+            assert (predI == null && predM == null && predSE == null);
+            predWPE = null;
+            len = 0;
+        } else {
+            assert (predI != null);
+            predWPE = wpeMap.get(new Pair<Inst, PE>(predI, predPE));
+            assert (predWPE != null);
+            if (i instanceof EntryOrExitBasicBlock && ((EntryOrExitBasicBlock) i).isEntry())
+                len = 0;
+            else
+                len = 1 + predWPE.getLen();
+        }
+        WrappedSE<PE, SE> predWSE;
+        if (predSE == null) {
+            assert (predM == null);
+            predWSE = null;
+        } else {
+            assert (predM != null);
+            predWSE = wseMap.get(new Pair<jq_Method, SE>(predM, predSE));
+            assert (predWSE != null);
+            len += predWSE.getLen();
+        }
+        if(len < 0){
+            System.out.println("Trace length overflowed.");
+            throw new TraceOverflowException();
+            }
+        WrappedPE<PE, SE> wpe = new WrappedPE<PE, SE>(i, peCopy, predWPE, predWSE, len);
+        wpeMap.put(new Pair<Inst, PE>(i, peCopy), wpe);
+    }
 }
 

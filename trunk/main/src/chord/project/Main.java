@@ -13,7 +13,7 @@ import chord.util.Utils;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class Main {
-	public static void main(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         File outFile;
         {
             String outFileName = Config.outFileName;
@@ -53,42 +53,42 @@ public class Main {
         if (errStream != null && errStream != outStream)
             errStream.close();
     }
-	private static void run() {
-		Timer timer = new Timer("chord");
-		timer.init();
-		String initTime = timer.getInitTimeStr();
-		if (Config.verbose >= 0)
-			System.out.println("Chord run initiated at: " + initTime);
-		if (Config.verbose >= 2)
-			Config.print();
-		Program program = Program.g();
-		Project project = Project.g();
-		if (Config.buildScope) {
-			program.build();
-		}
-		if (Config.printAllClasses)
-			program.printAllClasses();
-		String[] printClasses = Utils.toArray(Config.printClasses);
-		if (printClasses.length > 0) {
-			for (String className : printClasses)
-				program.printClass(className);
-		}
-		String[] analysisNames = Utils.toArray(Config.runAnalyses);
-		if (analysisNames.length > 0) {
-			project.run(analysisNames);
-		}
-		String[] relNames = Utils.toArray(Config.printRels);
-		if (relNames.length > 0) {
-			project.printRels(relNames);
-		}
-		if (Config.printProject) {
-			project.print();
-		}
-		timer.done();
-		String doneTime = timer.getDoneTimeStr();
-		if (Config.verbose >= 0) {
-			System.out.println("Chord run completed at: " + doneTime);
-			System.out.println("Total time: " + timer.getInclusiveTimeStr());
-		}
-	}
+    private static void run() {
+        Timer timer = new Timer("chord");
+        timer.init();
+        String initTime = timer.getInitTimeStr();
+        if (Config.verbose >= 0)
+            System.out.println("Chord run initiated at: " + initTime);
+        if (Config.verbose >= 2)
+            Config.print();
+        Program program = Program.g();
+        Project project = Project.g();
+        if (Config.buildScope) {
+            program.build();
+        }
+        if (Config.printAllClasses)
+            program.printAllClasses();
+        String[] printClasses = Utils.toArray(Config.printClasses);
+        if (printClasses.length > 0) {
+            for (String className : printClasses)
+                program.printClass(className);
+        }
+        String[] analysisNames = Utils.toArray(Config.runAnalyses);
+        if (analysisNames.length > 0) {
+            project.run(analysisNames);
+        }
+        String[] relNames = Utils.toArray(Config.printRels);
+        if (relNames.length > 0) {
+            project.printRels(relNames);
+        }
+        if (Config.printProject) {
+            project.print();
+        }
+        timer.done();
+        String doneTime = timer.getDoneTimeStr();
+        if (Config.verbose >= 0) {
+            System.out.println("Chord run completed at: " + doneTime);
+            System.out.println("Total time: " + timer.getInclusiveTimeStr());
+        }
+    }
 }

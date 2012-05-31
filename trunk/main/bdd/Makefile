@@ -1,21 +1,17 @@
-#
-# Makefile to create Java JNI library.
-# On Windows, uses Cygwin b20.1 tools with Mingw runtime. 
-# 
 # Things you may need to change, or redefine on the command line:
 #   JDK_ROOT     -- location where you installed JDK
 #   M32_FLAG     -- "-m32" if using 32-bit JVM on 64-bit machine
 
 BUDDY_SRC = buddy/src
 DIST_DIR = ..
-JNI_H_DIR = $(shell find $(JDK_ROOT) -name jni.h -exec dirname '{}' \;)
-INCLUDES = -I. -I$(BUDDY_SRC) -I$(BUDDY_SRC)/.. -I$(JNI_H_DIR)
-JNI_MD_H_DIR = $(shell find $(JDK_ROOT) -name jni_md.h -exec dirname '{}' \;)
-ifneq (x$(JNI_MD_H_DIR),x)
-	INCLUDES += -I$(JNI_MD_H_DIR)
+ifdef JDK_ROOT
+	JNI_H_DIR = $(shell find $(JDK_ROOT) -name jni.h -exec dirname '{}' \;)
+	INCLUDES = -I. -I$(BUDDY_SRC) -I$(BUDDY_SRC)/.. -I$(JNI_H_DIR)
+	JNI_MD_H_DIR = $(shell find $(JDK_ROOT) -name jni_md.h -exec dirname '{}' \;)
+	ifneq (x$(JNI_MD_H_DIR),x)
+		INCLUDES += -I$(JNI_MD_H_DIR)
+	endif
 endif
-DLL_OUTPUT_OPTION = -o$(space)
-OBJECT_OUTPUT_OPTION = -o$(space)
 
 ifeq (${OS},Windows_NT)
   CFLAGS = $(M32_FLAG) -fPIC -Wall -O2 -mno-cygwin
@@ -45,12 +41,12 @@ BUDDY_OBJS = $(BUDDY_SRCS:.c=.o)
 default: $(BUDDY_LIB_NAME)
 
 $(BUDDY_LIB_NAME): $(BUDDY_OBJS)
-	$(LINK) $(DLL_OUTPUT_OPTION)$@ $(BUDDY_OBJS) $(LINKFLAGS)
+	$(LINK) -o $@ $(BUDDY_OBJS) $(LINKFLAGS)
 
 buddy_jni.o: $(BUDDY_H)
 
 .c.o:
-	$(CC) $(CFLAGS) $(INCLUDES) -c $(OBJECT_OUTPUT_OPTION)$@ $<
+	$(CC) $(CFLAGS) $(INCLUDES) -c -o $@ $<
 
 clean:
 	$(RM) -f $(BUDDY_OBJS) $(BUDDY_LIB_NAME)

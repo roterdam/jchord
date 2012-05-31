@@ -13,13 +13,13 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "FT",
-	sign = "F0,T0:T0_F0"
+    name = "FT",
+    sign = "F0,T0:T0_F0"
 )
 public class RelFT extends ProgramRel implements IFieldVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Field f) {
-		jq_Type t = f.getType();
-		add(f, t);
-	}
+    public void visit(jq_Class c) { }
+    public void visit(jq_Field f) {
+        jq_Type t = f.getType();
+        add(f, t);
+    }
 }

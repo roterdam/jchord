@@ -37,7 +37,7 @@ public class Edge implements IEdge {
             else
                 bigger = 2;
 */
-			return -1;
+            return -1;
         }
         boolean isRetn1 = dstNode1.isRetn;
         boolean isRetn2 = dstNode2.isRetn;
@@ -153,11 +153,11 @@ public class Edge implements IEdge {
         boolean isKill2 = dstNode2.isKill;
 /*
         if (!isKill1 && isKill2) {
-			isKill1 = true;
-			changed = true;
-		}
+            isKill1 = true;
+            changed = true;
+        }
 */
-		assert (isKill1 == isKill2);
+        assert (isKill1 == isKill2);
         // merge env's
         Obj[] env1 = dstNode1.env;
         Obj[] env2 = dstNode2.env;

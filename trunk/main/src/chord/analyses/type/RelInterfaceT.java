@@ -11,13 +11,13 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "interfaceT",
-	sign = "T0"
+    name = "interfaceT",
+    sign = "T0"
 )
 public class RelInterfaceT extends ProgramRel
-		implements IClassVisitor {
-	public void visit(jq_Class c) {
-		if (c.isInterface())
-			add(c);
-	}
+        implements IClassVisitor {
+    public void visit(jq_Class c) {
+        if (c.isInterface())
+            add(c);
+    }
 }

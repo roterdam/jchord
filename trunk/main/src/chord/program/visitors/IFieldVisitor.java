@@ -8,10 +8,10 @@ import joeq.Class.jq_Field;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public interface IFieldVisitor extends IClassVisitor {
-	/**
-	 * Visits all fields of all classes in the program.
-	 * 
-	 * @param	f	A field.
-	 */
-	public void visit(jq_Field f);
+    /**
+     * Visits all fields of all classes in the program.
+     * 
+     * @param f A field.
+     */
+    public void visit(jq_Field f);
 }

@@ -8,10 +8,10 @@ import joeq.Class.jq_Method;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public interface IMethodVisitor extends IClassVisitor {
-	/**
-	 * Visits all methods of all classes in the program.
-	 * 
-	 * @param	m	A method.
-	 */
-	public void visit(jq_Method m);
+    /**
+     * Visits all methods of all classes in the program.
+     * 
+     * @param m A method.
+     */
+    public void visit(jq_Method m);
 }

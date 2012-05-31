@@ -14,20 +14,20 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "ME",
-	sign = "M0,E0:E0_M0"
+    name = "ME",
+    sign = "M0,E0:E0_M0"
 )
 public class RelME extends ProgramRel {
-	public void fill() {
-		DomM domM = (DomM) doms[0];
-		DomE domE = (DomE) doms[1];
-		int numE = domE.size();
-		for (int hIdx = 0; hIdx < numE; hIdx++) {
-			Quad q = (Quad) domE.get(hIdx);
-			jq_Method m = q.getMethod();
-			int mIdx = domM.indexOf(m);
-			assert (mIdx >= 0);
-			add(mIdx, hIdx);
-		}
-	}
+    public void fill() {
+        DomM domM = (DomM) doms[0];
+        DomE domE = (DomE) doms[1];
+        int numE = domE.size();
+        for (int hIdx = 0; hIdx < numE; hIdx++) {
+            Quad q = (Quad) domE.get(hIdx);
+            jq_Method m = q.getMethod();
+            int mIdx = domM.indexOf(m);
+            assert (mIdx >= 0);
+            add(mIdx, hIdx);
+        }
+    }
 }

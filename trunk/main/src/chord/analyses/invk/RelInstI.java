@@ -12,18 +12,18 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "instI",
-	sign = "I0"
+    name = "instI",
+    sign = "I0"
 )
 public class RelInstI extends ProgramRel {
-	public void fill() {
-		DomI domI = (DomI) doms[0];
-		int numI = domI.size();
-		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			Quad q = (Quad) domI.get(iIdx);
-			jq_Method m = Invoke.getMethod(q).getMethod();
-			if (!m.isStatic())
-				add(iIdx);
-		}
-	}
+    public void fill() {
+        DomI domI = (DomI) doms[0];
+        int numI = domI.size();
+        for (int iIdx = 0; iIdx < numI; iIdx++) {
+            Quad q = (Quad) domI.get(iIdx);
+            jq_Method m = Invoke.getMethod(q).getMethod();
+            if (!m.isStatic())
+                add(iIdx);
+        }
+    }
 }

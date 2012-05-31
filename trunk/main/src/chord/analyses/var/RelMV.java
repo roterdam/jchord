@@ -15,15 +15,15 @@ import chord.analyses.var.DomV;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "MV",
-	sign = "M0,V0:M0_V0"
+    name = "MV",
+    sign = "M0,V0:M0_V0"
 )
 public class RelMV extends ProgramRel {
-	public void fill() {
-		DomV domV = (DomV) doms[1];
-		for (Register v : domV) {
-			jq_Method m = domV.getMethod(v);
-			add(m, v);
-		}
-	}
+    public void fill() {
+        DomV domV = (DomV) doms[1];
+        for (Register v : domV) {
+            jq_Method m = domV.getMethod(v);
+            add(m, v);
+        }
+    }
 }

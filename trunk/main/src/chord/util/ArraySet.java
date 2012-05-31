@@ -8,14 +8,11 @@ import java.util.Iterator;
 /**
  * Array-based implementation of a set.
  * <p>
- * Provides O(n) membership testing as opposed to O(1) provided by a
- * hash set.
+ * Provides O(n) membership testing as opposed to O(1) provided by a hash set.
  * <p>
- * This implementation must be used for small sets for which its O(n)
- * membership testing penalty is less than the overhead of creating
- * and maintaining a hash set.
+ * This implementation must be used for small sets for which its O(n) membership testing penalty is less than the overhead of creating and maintaining a hash set.
  * 
- * @param    <T>    The type of objects in the set.
+ * @param <T> The type of objects in the set.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -33,22 +30,21 @@ public class ArraySet<T> extends ArrayList<T> implements Set<T> {
         isImmutable = true;
     }
     /**
-     * Adds a given value to the set without checking if it already
-     * exists in the set.
+     * Adds a given value to the set without checking if it already exists in the set.
      * 
-     * @param    e    A value to be added to the set.
+     * @param e A value to be added to the set.
      */
     public void addForcibly(T e) {
         if (isImmutable) throw new UnsupportedOperationException("Mutating immutable array set");
         super.add(e);
     }
-	@Override
+    @Override
     public boolean add(T e) {
         if (isImmutable) throw new UnsupportedOperationException("Mutating immutable array set");
         if (contains(e)) return false;
         return super.add(e);
     }
-	@Override
+    @Override
     public boolean addAll(Collection<? extends T> c) {
         if (isImmutable) throw new UnsupportedOperationException("Mutating immutable array set");
         boolean modified = false;
@@ -57,7 +53,7 @@ public class ArraySet<T> extends ArrayList<T> implements Set<T> {
         }
         return modified;
     }
-	@Override
+    @Override
     public boolean equals(Object o) {
         if (o == this) return true;
         if (!(o instanceof Set)) return false;
@@ -69,7 +65,7 @@ public class ArraySet<T> extends ArrayList<T> implements Set<T> {
         }
         return true;
     }
-	@Override
+    @Override
     public int hashCode() {
         int h = 0;
         for (T e : this) {
@@ -77,25 +73,25 @@ public class ArraySet<T> extends ArrayList<T> implements Set<T> {
         }
         return h;
     }
-	@Override
-	public void clear() {
+    @Override
+    public void clear() {
         if (isImmutable) throw new UnsupportedOperationException("Mutating immutable array set");
-		super.clear();
-	}
-	@Override
-	public boolean remove(Object e) {
+        super.clear();
+    }
+    @Override
+    public boolean remove(Object e) {
         if (isImmutable) throw new UnsupportedOperationException("Mutating immutable array set");
-		return super.remove(e);
-	}
-	@Override
-	public boolean removeAll(Collection<?> c) {
+        return super.remove(e);
+    }
+    @Override
+    public boolean removeAll(Collection<?> c) {
         if (isImmutable) throw new UnsupportedOperationException("Mutating immutable array set");
-		return super.removeAll(c);
-	}
-	@Override
-	public boolean retainAll(Collection<?> c) {
+        return super.removeAll(c);
+    }
+    @Override
+    public boolean retainAll(Collection<?> c) {
         if (isImmutable) throw new UnsupportedOperationException("Mutating immutable array set");
-		return super.retainAll(c);
-	}
+        return super.retainAll(c);
+    }
 }
 
