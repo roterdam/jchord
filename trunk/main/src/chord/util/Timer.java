@@ -69,10 +69,14 @@ public class Timer {
         checkDoneDate();
         return DateFormat.getDateTimeInstance().format(doneDate);
     }
-    public String getInclusiveTimeStr() {
-        checkInitDate();
+    public long getInclusiveTime(){
+    	checkInitDate();
         checkDoneDate();
         long elapsedInclusiveTime = doneDate.getTime() - initDate.getTime();
+        return elapsedInclusiveTime;
+    }
+    public String getInclusiveTimeStr() {
+        long elapsedInclusiveTime = getInclusiveTime();
         return getTimeStr(elapsedInclusiveTime);
     }
     public String getExclusiveTimeStr() {
