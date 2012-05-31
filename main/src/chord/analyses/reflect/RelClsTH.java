@@ -17,19 +17,19 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "clsTH",
-	sign = "T0,H0:H0_T0"
+    name = "clsTH",
+    sign = "T0,H0:H0_T0"
 )
 public class RelClsTH extends ProgramRel {
-	public void fill() {
-		DomT domT = (DomT) doms[0];
-		DomH domH = (DomH) doms[1];
-		for (jq_Reference r : Program.g().getClasses()) {
-			int tIdx = domT.indexOf(r);
-			assert (tIdx >= 0);
-			int hIdx = domH.indexOf(new PhantomClsVal(r));
-			assert (hIdx >= 0);
-			add(tIdx, hIdx);
-		}
-	}
+    public void fill() {
+        DomT domT = (DomT) doms[0];
+        DomH domH = (DomH) doms[1];
+        for (jq_Reference r : Program.g().getClasses()) {
+            int tIdx = domT.indexOf(r);
+            assert (tIdx >= 0);
+            int hIdx = domH.indexOf(new PhantomClsVal(r));
+            assert (hIdx >= 0);
+            add(tIdx, hIdx);
+        }
+    }
 }

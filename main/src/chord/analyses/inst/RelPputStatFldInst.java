@@ -24,38 +24,38 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "PputStatFldInst",
-	sign = "P0,F0,V0:F0_P0_V0"
+    name = "PputStatFldInst",
+    sign = "P0,F0,V0:F0_P0_V0"
 )
 public class RelPputStatFldInst extends ProgramRel implements IHeapInstVisitor {
-	private DomP domP;
-	private DomF domF;
-	private DomV domV;
-	public void init() {
-		domP = (DomP) doms[0];
-		domF = (DomF) doms[1];
-		domV = (DomV) doms[2];
-	}
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) { }
-	public void visitHeapInst(Quad q) {
-		Operator op = q.getOperator();
-		if (op instanceof Putstatic) {
-			jq_Field f = Putstatic.getField(q).getField();
-			if (f.getType().isReferenceType()) {
-				Operand rx = Putstatic.getSrc(q);
-				if (rx instanceof RegisterOperand) {
-					RegisterOperand ro = (RegisterOperand) rx;
-					Register r = ro.getRegister();
-					int pIdx = domP.indexOf(q);
-					assert (pIdx >= 0);
-					int rIdx = domV.indexOf(r);
-					assert (rIdx >= 0);
-					int fIdx = domF.indexOf(f);
-					assert (fIdx >= 0);
-					add(pIdx, fIdx, rIdx);
-				}
-			}
-		}
-	}
+    private DomP domP;
+    private DomF domF;
+    private DomV domV;
+    public void init() {
+        domP = (DomP) doms[0];
+        domF = (DomF) doms[1];
+        domV = (DomV) doms[2];
+    }
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) { }
+    public void visitHeapInst(Quad q) {
+        Operator op = q.getOperator();
+        if (op instanceof Putstatic) {
+            jq_Field f = Putstatic.getField(q).getField();
+            if (f.getType().isReferenceType()) {
+                Operand rx = Putstatic.getSrc(q);
+                if (rx instanceof RegisterOperand) {
+                    RegisterOperand ro = (RegisterOperand) rx;
+                    Register r = ro.getRegister();
+                    int pIdx = domP.indexOf(q);
+                    assert (pIdx >= 0);
+                    int rIdx = domV.indexOf(r);
+                    assert (rIdx >= 0);
+                    int fIdx = domF.indexOf(f);
+                    assert (fIdx >= 0);
+                    add(pIdx, fIdx, rIdx);
+                }
+            }
+        }
+    }
 }

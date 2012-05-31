@@ -20,38 +20,38 @@ import joeq.Class.*;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class DynamicBuilder implements ScopeBuilder {
-	private IndexSet<jq_Method> methods;
+    private IndexSet<jq_Method> methods;
 
-	@Override
-	public IndexSet<jq_Method> getMethods() {
-		if (methods != null)
-			return methods;
-		Program program = Program.g();
-		List<String> classNames = program.getDynamicallyLoadedClasses();
-		HostedVM.initialize();
-		methods = new IndexSet<jq_Method>();
-		for (String s : classNames) {
-			jq_Class c = (jq_Class) program.loadClass(s);
-			for (jq_Method m : c.getDeclaredStaticMethods()) {
-				if (!m.isAbstract())
-					m.getCFG();
-				methods.add(m);
-			}
-			for (jq_Method m : c.getDeclaredInstanceMethods()) {
-				if (!m.isAbstract())
-					m.getCFG();
-				methods.add(m);
-			}
-		}
-		return methods;
-	}
+    @Override
+    public IndexSet<jq_Method> getMethods() {
+        if (methods != null)
+            return methods;
+        Program program = Program.g();
+        List<String> classNames = program.getDynamicallyLoadedClasses();
+        HostedVM.initialize();
+        methods = new IndexSet<jq_Method>();
+        for (String s : classNames) {
+            jq_Class c = (jq_Class) program.loadClass(s);
+            for (jq_Method m : c.getDeclaredStaticMethods()) {
+                if (!m.isAbstract())
+                    m.getCFG();
+                methods.add(m);
+            }
+            for (jq_Method m : c.getDeclaredInstanceMethods()) {
+                if (!m.isAbstract())
+                    m.getCFG();
+                methods.add(m);
+            }
+        }
+        return methods;
+    }
 
-	/*
-	 * Returns an empty reflect. Dynamic scope doesn't do reflection analysis.
-	 * Instead, Program.java uses the concrete classes that got created at run time.
-	 */
-	@Override
-	public Reflect getReflect() {
-		return new Reflect();
-	}
+    /*
+     * Returns an empty reflect. Dynamic scope doesn't do reflection analysis.
+     * Instead, Program.java uses the concrete classes that got created at run time.
+     */
+    @Override
+    public Reflect getReflect() {
+        return new Reflect();
+    }
 }

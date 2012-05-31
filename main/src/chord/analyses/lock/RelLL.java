@@ -27,66 +27,66 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "LL",
-	sign = "L0,L1:L0xL1"
+    name = "LL",
+    sign = "L0,L1:L0xL1"
 )
 public class RelLL extends ProgramRel implements IMethodVisitor {
-	private Set<BasicBlock> visited = new HashSet<BasicBlock>();
-	private DomL domL;
-	public void init() {
-		domL = (DomL) doms[0];
-	}
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (m.isAbstract())
-			return;
-		ControlFlowGraph cfg = m.getCFG();
-		BasicBlock entry = cfg.entry();
-		TIntArrayList locks = new TIntArrayList();
-		if (m.isSynchronized()) {
-			int lIdx = domL.indexOf(entry);
-			assert (lIdx >= 0);
-			locks.add(lIdx);
-		}
-		process(entry, locks);
-		visited.clear();
-	}
-	private void process(BasicBlock bb, TIntArrayList locks) {
-		int n = bb.size();
-		int k = locks.size();
-		for (int i = 0; i < n; i++) {
-			Quad q = bb.getQuad(i);
-			Operator op = q.getOperator();
-			if (op instanceof Monitor) {
-				if (op instanceof MONITORENTER) {
-					int lIdx = domL.indexOf(q);
-					assert (lIdx >= 0);
-					TIntArrayList locks2 = new TIntArrayList(k + 1);
-					if (k > 0) {
-						int lIdx2 = locks.get(k - 1);
-						for (int j = 0; j < k - 1; j++)
-							locks2.add(locks.get(j));
-						locks2.add(lIdx2);
-						add(lIdx2, lIdx);
-					}
-					locks2.add(lIdx);
-					locks = locks2;
-					k++;
-				} else {
-					k--;
-					TIntArrayList locks2 = new TIntArrayList(k);
-					for (int j = 0; j < k; j++)
-						locks2.add(locks.get(j));
-					locks = locks2;
-				}
-			}
-		}
-		for (Object o : bb.getSuccessors()) {
-			BasicBlock bb2 = (BasicBlock) o;
-			if (!visited.contains(bb2)) {
-				visited.add(bb2);
-				process(bb2, locks);
-			}
-		}
-	}
+    private Set<BasicBlock> visited = new HashSet<BasicBlock>();
+    private DomL domL;
+    public void init() {
+        domL = (DomL) doms[0];
+    }
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        if (m.isAbstract())
+            return;
+        ControlFlowGraph cfg = m.getCFG();
+        BasicBlock entry = cfg.entry();
+        TIntArrayList locks = new TIntArrayList();
+        if (m.isSynchronized()) {
+            int lIdx = domL.indexOf(entry);
+            assert (lIdx >= 0);
+            locks.add(lIdx);
+        }
+        process(entry, locks);
+        visited.clear();
+    }
+    private void process(BasicBlock bb, TIntArrayList locks) {
+        int n = bb.size();
+        int k = locks.size();
+        for (int i = 0; i < n; i++) {
+            Quad q = bb.getQuad(i);
+            Operator op = q.getOperator();
+            if (op instanceof Monitor) {
+                if (op instanceof MONITORENTER) {
+                    int lIdx = domL.indexOf(q);
+                    assert (lIdx >= 0);
+                    TIntArrayList locks2 = new TIntArrayList(k + 1);
+                    if (k > 0) {
+                        int lIdx2 = locks.get(k - 1);
+                        for (int j = 0; j < k - 1; j++)
+                            locks2.add(locks.get(j));
+                        locks2.add(lIdx2);
+                        add(lIdx2, lIdx);
+                    }
+                    locks2.add(lIdx);
+                    locks = locks2;
+                    k++;
+                } else {
+                    k--;
+                    TIntArrayList locks2 = new TIntArrayList(k);
+                    for (int j = 0; j < k; j++)
+                        locks2.add(locks.get(j));
+                    locks = locks2;
+                }
+            }
+        }
+        for (Object o : bb.getSuccessors()) {
+            BasicBlock bb2 = (BasicBlock) o;
+            if (!visited.contains(bb2)) {
+                visited.add(bb2);
+                process(bb2, locks);
+            }
+        }
+    }
 }

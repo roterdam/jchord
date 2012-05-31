@@ -36,39 +36,39 @@ import chord.util.tuple.object.Pair;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "thread-java",
-	consumes = { "nonMainThreadM" },
-	produces = { "A", "threadAM" },
-	namesOfSigns = { "threadAM" },
-	signs = { "A0,M0:A0_M0" },
-	namesOfTypes = { "A" },
-	types = { DomA.class }
+    name = "thread-java",
+    consumes = { "nonMainThreadM" },
+    produces = { "A", "threadAM" },
+    namesOfSigns = { "threadAM" },
+    signs = { "A0,M0:A0_M0" },
+    namesOfTypes = { "A" },
+    types = { DomA.class }
 )
 public class ThreadAnalysis extends JavaAnalysis {
-	public void run() {
-		ClassicProject project = ClassicProject.g();
-		Program program = Program.g();
-		DomM domM = (DomM) project.getTrgt("M");
-		DomA domA = (DomA) project.getTrgt("A");
-		domA.clear();
-		domA.add(null);
-		jq_Method mainMeth = program.getMainMethod();
-		domA.add(mainMeth);
-		ProgramRel relThreadM = (ProgramRel) project.getTrgt("nonMainThreadM");
-		relThreadM.load();
-		Iterable<jq_Method> tuples = relThreadM.getAry1ValTuples();
-		for (jq_Method m : tuples)
-			domA.add(m);
-		relThreadM.close();
-		domA.save();
-		ProgramRel relThreadAM = (ProgramRel) project.getTrgt("threadAM");
-		relThreadAM.zero();
-		for (int aIdx = 1; aIdx < domA.size(); aIdx++) {
-			jq_Method m = domA.get(aIdx);
-			int mIdx = domM.indexOf(m);
-			relThreadAM.add(aIdx, mIdx);
-		}
-		relThreadAM.save();
-	}
+    public void run() {
+        ClassicProject project = ClassicProject.g();
+        Program program = Program.g();
+        DomM domM = (DomM) project.getTrgt("M");
+        DomA domA = (DomA) project.getTrgt("A");
+        domA.clear();
+        domA.add(null);
+        jq_Method mainMeth = program.getMainMethod();
+        domA.add(mainMeth);
+        ProgramRel relThreadM = (ProgramRel) project.getTrgt("nonMainThreadM");
+        relThreadM.load();
+        Iterable<jq_Method> tuples = relThreadM.getAry1ValTuples();
+        for (jq_Method m : tuples)
+            domA.add(m);
+        relThreadM.close();
+        domA.save();
+        ProgramRel relThreadAM = (ProgramRel) project.getTrgt("threadAM");
+        relThreadAM.zero();
+        for (int aIdx = 1; aIdx < domA.size(); aIdx++) {
+            jq_Method m = domA.get(aIdx);
+            int mIdx = domM.indexOf(m);
+            relThreadAM.add(aIdx, mIdx);
+        }
+        relThreadAM.save();
+    }
 }
 

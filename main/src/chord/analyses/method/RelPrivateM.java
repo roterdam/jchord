@@ -13,14 +13,13 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "privateM",
-	sign = "M0"
+    name = "privateM",
+    sign = "M0"
 )
-public class RelPrivateM extends ProgramRel
-		implements IMethodVisitor {
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		if (m.isPrivate())
-			add(m);
-	}
+public class RelPrivateM extends ProgramRel implements IMethodVisitor {
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        if (m.isPrivate())
+            add(m);
+    }
 }

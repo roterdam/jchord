@@ -18,27 +18,27 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "IinvkArg0",
-	sign = "I0,V1:I0_V1"
+    name = "IinvkArg0",
+    sign = "I0,V1:I0_V1"
 )
 public class RelIinvkArg0 extends ProgramRel {
-	@Override
-	public void fill() {
-		DomI domI = (DomI) doms[0];
-		DomV domV = (DomV) doms[1];
-		int numI = domI.size();
-		for (int iIdx = 0; iIdx < numI; iIdx++) {
-			Quad q = (Quad) domI.get(iIdx);
-			ParamListOperand l = Invoke.getParamList(q);
-			if (l.length() > 0) {
-				RegisterOperand vo = l.get(0);
-				Register v = vo.getRegister();
-				if (v.getType().isReferenceType()) {
-					int vIdx = domV.indexOf(v);
-					assert (vIdx >= 0);
-					add(iIdx, vIdx);
-				}
-			}
-		}
-	}
+    @Override
+    public void fill() {
+        DomI domI = (DomI) doms[0];
+        DomV domV = (DomV) doms[1];
+        int numI = domI.size();
+        for (int iIdx = 0; iIdx < numI; iIdx++) {
+            Quad q = (Quad) domI.get(iIdx);
+            ParamListOperand l = Invoke.getParamList(q);
+            if (l.length() > 0) {
+                RegisterOperand vo = l.get(0);
+                Register v = vo.getRegister();
+                if (v.getType().isReferenceType()) {
+                    int vIdx = domV.indexOf(v);
+                    assert (vIdx >= 0);
+                    add(iIdx, vIdx);
+                }
+            }
+        }
+    }
 }

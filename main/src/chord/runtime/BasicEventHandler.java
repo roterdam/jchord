@@ -26,61 +26,61 @@ import chord.util.ByteBufferedFile;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 public class BasicEventHandler {
-	/**
-	 * Flag determining when it is safe to start handling events at runtime.
-	 * It is false when the JVM starts.  It is set to true in the
-	 * {@link #init(String)} method which is called by the handler for the
-	 * JVMTI event "VMInit" (see file main/src/agent/chord_instr_agent.cpp
-	 * for the definition of this handler).
-	 */
-	protected static boolean trace = false;
-	/**
-	 * Unique ID given to each object created at runtime.
-	 * ID 0 is reserved for null and ID 1 is reserved for the hypothetical
-	 * lone object of a hypothetical class all of whose instance fields
-	 * are static fields in other real classes.
-	 */
-	protected static int currentId = 2;
+    /**
+     * Flag determining when it is safe to start handling events at runtime.
+     * It is false when the JVM starts.  It is set to true in the
+     * {@link #init(String)} method which is called by the handler for the
+     * JVMTI event "VMInit" (see file main/src/agent/chord_instr_agent.cpp
+     * for the definition of this handler).
+     */
+    protected static boolean trace = false;
+    /**
+     * Unique ID given to each object created at runtime.
+     * ID 0 is reserved for null and ID 1 is reserved for the hypothetical
+     * lone object of a hypothetical class all of whose instance fields
+     * are static fields in other real classes.
+     */
+    protected static int currentId = 2;
 
-	protected static WeakIdentityHashMap objmap;
+    protected static WeakIdentityHashMap objmap;
 
-	// Note: CALLER MUST SYNCHRONIZE!
-	public static int getObjectId(Object o) {
-		if (o == null)
-			return 0;
-		Object val = objmap.get(o);
-		if (val == null) {
-			val = currentId++;
-			objmap.put(o, val);
-		}
-		return (Integer) val;
-	}
+    // Note: CALLER MUST SYNCHRONIZE!
+    public static int getObjectId(Object o) {
+        if (o == null)
+            return 0;
+        Object val = objmap.get(o);
+        if (val == null) {
+            val = currentId++;
+            objmap.put(o, val);
+        }
+        return (Integer) val;
+    }
 
-	public static long getPrimitiveId(int oId, int fId) {
-		// We must add 1 below so that we never assign to a field an
-		// identifier smaller than (1 << 32).
-		long l = oId + 1;
-		l = l << 32;
-		return l + fId;
-	}
+    public static long getPrimitiveId(int oId, int fId) {
+        // We must add 1 below so that we never assign to a field an
+        // identifier smaller than (1 << 32).
+        long l = oId + 1;
+        l = l << 32;
+        return l + fId;
+    }
 
-	/**
-	 * Method signaling the start of event handling by a dynamic analysis.
-	 *
-	 * See the documentation of this class for more details.
-	 */
-	public synchronized static void init(String args) {
-		objmap = new WeakIdentityHashMap();
-		trace = true;
-	}
+    /**
+     * Method signaling the start of event handling by a dynamic analysis.
+     *
+     * See the documentation of this class for more details.
+     */
+    public synchronized static void init(String args) {
+        objmap = new WeakIdentityHashMap();
+        trace = true;
+    }
 
-	/**
-	 * Method signaling the end of event handling by a dynamic analysis.
-	 *
-	 * See the documentation of this class for more details.
-	 */
-	public synchronized static void done() {
-		trace = false;
-	}
+    /**
+     * Method signaling the end of event handling by a dynamic analysis.
+     *
+     * See the documentation of this class for more details.
+     */
+    public synchronized static void done() {
+        trace = false;
+    }
 }
 

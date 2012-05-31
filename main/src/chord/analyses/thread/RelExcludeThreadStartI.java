@@ -9,25 +9,25 @@ import chord.project.analyses.ProgramRel;
 
 @Chord(name="excludeThreadStartI", sign="I0:I0", consumes = { "threadStartI" })
 public class RelExcludeThreadStartI extends ProgramRel {
-	private static final String[] threadExcludeAry;
-	static {
-		String threadExcludeStr = System.getProperty("chord.thread.exclude", "sun.,java.");
-		threadExcludeAry = Utils.toArray(threadExcludeStr);
-	}
-	@Override
-	public void fill() {
-		ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("threadStartI");
-		rel.load();
-		Iterable<Quad> tuples = rel.getAry1ValTuples();
-		for (Quad q : tuples) {
-			String c = q.getMethod().getDeclaringClass().getName();
-			for (String c2 : threadExcludeAry) {
-				if (c.startsWith(c2)) {
-					add(q);
-					break;
-				}
-			}
-		}
-		rel.close();
-	}
+    private static final String[] threadExcludeAry;
+    static {
+        String threadExcludeStr = System.getProperty("chord.thread.exclude", "sun.,java.");
+        threadExcludeAry = Utils.toArray(threadExcludeStr);
+    }
+    @Override
+    public void fill() {
+        ProgramRel rel = (ProgramRel) ClassicProject.g().getTrgt("threadStartI");
+        rel.load();
+        Iterable<Quad> tuples = rel.getAry1ValTuples();
+        for (Quad q : tuples) {
+            String c = q.getMethod().getDeclaringClass().getName();
+            for (String c2 : threadExcludeAry) {
+                if (c.startsWith(c2)) {
+                    add(q);
+                    break;
+                }
+            }
+        }
+        rel.close();
+    }
 }

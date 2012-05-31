@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import chord.util.tuple.object.Pair;
 import chord.util.ByteBufferedFile;
-import chord.util.ReadException;
 import chord.project.analyses.BasicDynamicAnalysis;
 import chord.project.Chord;
 import chord.project.Config;
@@ -60,7 +59,7 @@ public class DynamicReflectResolver extends BasicDynamicAnalysis {
 	}
 
 	@Override
-	public void handleEvent(ByteBufferedFile buffer) throws IOException, ReadException {
+	public void handleEvent(ByteBufferedFile buffer) throws IOException {
 		byte opcode = buffer.getByte();
 		switch (opcode) {
 		case ReflectEventKind.CLS_FOR_NAME_CALL:

@@ -10,29 +10,28 @@ import java.util.Set;
  *  
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-
 public class SCCFindingVisitor<Node> implements IGraphEntityVisitor<Node> {
-	private final List<Set<Node>> sccList;
-	private Set<Node> currSCC;
-	public SCCFindingVisitor() {
-		sccList = new ArrayList<Set<Node>>();
-	}
-	public void prologue() {
-		currSCC = new HashSet<Node>();
-		sccList.add(currSCC);
-	}
-	public void visit(Node node) {
-		currSCC.add(node);
-	}
-	public void epilogue() {
-		// do nothing
-	}
-	/**
-	 * Provides all SCCs of the directed graph.
-	 *
-	 * @return	All SCCs of the directed graph.
-	 */ 
-	public List<Set<Node>> getSCCs() {
-		return sccList;
-	}
+    private final List<Set<Node>> sccList;
+    private Set<Node> currSCC;
+    public SCCFindingVisitor() {
+        sccList = new ArrayList<Set<Node>>();
+    }
+    public void prologue() {
+        currSCC = new HashSet<Node>();
+        sccList.add(currSCC);
+    }
+    public void visit(Node node) {
+        currSCC.add(node);
+    }
+    public void epilogue() {
+        // do nothing
+    }
+    /**
+     * Provides all SCCs of the directed graph.
+     *
+     * @return All SCCs of the directed graph.
+     */ 
+    public List<Set<Node>> getSCCs() {
+        return sccList;
+    }
 }

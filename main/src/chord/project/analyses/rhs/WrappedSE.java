@@ -5,22 +5,22 @@ import chord.util.Utils;
 public class WrappedSE<PE extends IEdge, SE extends IEdge> implements IWrappedSE<PE, SE> {
     private final SE se;
     private IWrappedPE<PE, SE> wpe;
-	private int len;
+    private int len;
 
     public WrappedSE(SE se, IWrappedPE<PE, SE> pe, int len) {
-		assert (len >= 0);
+        assert (len >= 0);
         this.se = se;
         this.wpe = pe;
-		this.len = len;
+        this.len = len;
     }
 
     public void update(IWrappedPE<PE, SE> newWPE, int newLen) {
-		assert (newLen >= 0);
+        assert (newLen >= 0);
         this.wpe = newWPE;
         this.len = newLen;
     }
 
-	public int getLen() { return len; }
+    public int getLen() { return len; }
 
     @Override
     public SE getSE() { return se; }
@@ -41,7 +41,7 @@ public class WrappedSE<PE extends IEdge, SE extends IEdge> implements IWrappedSE
         if (this == obj) return true;
         if (!(obj instanceof WrappedSE)) return false;
         WrappedSE that = (WrappedSE) obj;
-		return Utils.areEqual(this.se, that.se);
+        return Utils.areEqual(this.se, that.se);
     }
     @Override
     public String toString() {

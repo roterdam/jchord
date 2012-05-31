@@ -13,26 +13,26 @@ import chord.util.IndexSet;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "T"
+    name = "T"
 )
 public class DomT extends ProgramDom<jq_Type> {
-	public void fill() {
-		Program program = Program.g();
-		IndexSet<jq_Type> types = program.getTypes();
-		for (jq_Type t : types)
-			add(t);
-	}
-	public String toXMLAttrsString(jq_Type t) {
-		String name = t.getName();
-		String file;
-		if (t instanceof jq_Class) {
-			jq_Class c = (jq_Class) t;
-			file = c.getSourceFileName();
-		} else
-			file = "";
-		int line = 0;  // TODO
-		return "name=\"" + name +
-			"\" file=\"" + file +
-			"\" line=\"" + line + "\"";
-	}
+    public void fill() {
+        Program program = Program.g();
+        IndexSet<jq_Type> types = program.getTypes();
+        for (jq_Type t : types)
+            add(t);
+    }
+    public String toXMLAttrsString(jq_Type t) {
+        String name = t.getName();
+        String file;
+        if (t instanceof jq_Class) {
+            jq_Class c = (jq_Class) t;
+            file = c.getSourceFileName();
+        } else
+            file = "";
+        int line = 0;  // TODO
+        return "name=\"" + name +
+            "\" file=\"" + file +
+            "\" line=\"" + line + "\"";
+    }
 }

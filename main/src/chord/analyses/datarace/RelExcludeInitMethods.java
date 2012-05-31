@@ -9,12 +9,12 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "excludeInitMethods",
-	sign = "K0:K0"
+    name = "excludeInitMethods",
+    sign = "K0:K0"
 )
 public class RelExcludeInitMethods extends ProgramRel {
-	public void fill() {
-		if (System.getProperty("chord.datarace.exclude.init", "true").equals("true"))
-			add(1);
-	}
+    public void fill() {
+        if (System.getProperty("chord.datarace.exclude.init", "true").equals("true"))
+            add(1);
+    }
 }

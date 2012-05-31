@@ -26,60 +26,60 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "PgetInstFldInst",
-	sign = "P0,V0,V1,F0:F0_P0_V0xV1"
+    name = "PgetInstFldInst",
+    sign = "P0,V0,V1,F0:F0_P0_V0xV1"
 )
 public class RelPgetInstFldInst extends ProgramRel implements IHeapInstVisitor {
-	private DomP domP;
-	private DomV domV;
-	private DomF domF;
-	public void init() {
-		domP = (DomP) doms[0];
-		domV = (DomV) doms[1];
-		domF = (DomF) doms[3];
-	}
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) { }
-	public void visitHeapInst(Quad q) {
-		Operator op = q.getOperator();
-		if (op instanceof ALoad) {
-			if (((ALoad) op).getType().isReferenceType()) {
-				RegisterOperand lo = ALoad.getDest(q);
-				Register l = lo.getRegister();
-				RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
-				Register b = bo.getRegister();
-				int pIdx = domP.indexOf(q);
-				assert (pIdx >= 0);
-				int lIdx = domV.indexOf(l);
-				assert (lIdx >= 0);
-				int bIdx = domV.indexOf(b);
-				assert (bIdx >= 0);
-				int fIdx = 0;
-				add(pIdx, lIdx, bIdx, fIdx);
-			}
-			return;
-		}
-		if (op instanceof Getfield) {
-			jq_Field f = Getfield.getField(q).getField();
-			if (f.getType().isReferenceType()) {
-				Operand bx = Getfield.getBase(q);
-				if (bx instanceof RegisterOperand) {
-					RegisterOperand bo = (RegisterOperand) bx;
-					Register b = bo.getRegister();
-					RegisterOperand lo = Getfield.getDest(q);
-					Register l = lo.getRegister();
-					int pIdx = domP.indexOf(q);
-					assert (pIdx >= 0);
-					int bIdx = domV.indexOf(b);
-					assert (bIdx >= 0);
-					int lIdx = domV.indexOf(l);
-					assert (lIdx >= 0);
-					int fIdx = domF.indexOf(f);
-					assert (fIdx >= 0);
-					add(pIdx, lIdx, bIdx, fIdx);
-				} else
-					assert (bx instanceof AConstOperand);
-			}
-		}
-	}
+    private DomP domP;
+    private DomV domV;
+    private DomF domF;
+    public void init() {
+        domP = (DomP) doms[0];
+        domV = (DomV) doms[1];
+        domF = (DomF) doms[3];
+    }
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) { }
+    public void visitHeapInst(Quad q) {
+        Operator op = q.getOperator();
+        if (op instanceof ALoad) {
+            if (((ALoad) op).getType().isReferenceType()) {
+                RegisterOperand lo = ALoad.getDest(q);
+                Register l = lo.getRegister();
+                RegisterOperand bo = (RegisterOperand) ALoad.getBase(q);
+                Register b = bo.getRegister();
+                int pIdx = domP.indexOf(q);
+                assert (pIdx >= 0);
+                int lIdx = domV.indexOf(l);
+                assert (lIdx >= 0);
+                int bIdx = domV.indexOf(b);
+                assert (bIdx >= 0);
+                int fIdx = 0;
+                add(pIdx, lIdx, bIdx, fIdx);
+            }
+            return;
+        }
+        if (op instanceof Getfield) {
+            jq_Field f = Getfield.getField(q).getField();
+            if (f.getType().isReferenceType()) {
+                Operand bx = Getfield.getBase(q);
+                if (bx instanceof RegisterOperand) {
+                    RegisterOperand bo = (RegisterOperand) bx;
+                    Register b = bo.getRegister();
+                    RegisterOperand lo = Getfield.getDest(q);
+                    Register l = lo.getRegister();
+                    int pIdx = domP.indexOf(q);
+                    assert (pIdx >= 0);
+                    int bIdx = domV.indexOf(b);
+                    assert (bIdx >= 0);
+                    int lIdx = domV.indexOf(l);
+                    assert (lIdx >= 0);
+                    int fIdx = domF.indexOf(f);
+                    assert (fIdx >= 0);
+                    add(pIdx, lIdx, bIdx, fIdx);
+                } else
+                    assert (bx instanceof AConstOperand);
+            }
+        }
+    }
 }

@@ -15,15 +15,15 @@ import java.lang.annotation.RetentionPolicy;
 @Target(ElementType.TYPE)
 @Inherited
 public @interface Chord {
-	String name() default "";	// may be empty
-	String sign() default "";	// if non-empty then annotated class must be a subclass of ProgramRel
-								// format e.g.: "M0,F0,V0:M0_V0xF0" or just "M0,F0,V0"
-	String prescriber() default "";
-	String[] consumes() default { };
-	String[] produces() default { };
-	String[] controls() default { };
-	String[] namesOfTypes() default { };
-	Class [] types() default { };
-	String[] namesOfSigns() default { };
-	String[] signs() default { };
+    String name() default "";    // may be empty
+    String sign() default "";    // if non-empty then annotated class must be a subclass of ProgramRel
+                                // format e.g.: "M0,F0,V0:M0_V0xF0" or just "M0,F0,V0"
+    String prescriber() default "";
+    String[] consumes() default { };
+    String[] produces() default { };
+    String[] controls() default { };
+    String[] namesOfTypes() default { };
+    Class [] types() default { };
+    String[] namesOfSigns() default { };
+    String[] signs() default { };
 };

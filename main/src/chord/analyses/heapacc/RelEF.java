@@ -14,20 +14,20 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-	name = "EF",
-	sign = "E0,F0:F0_E0"
+    name = "EF",
+    sign = "E0,F0:F0_E0"
 )
 public class RelEF extends ProgramRel {
-	public void fill() {
-		DomE domE = (DomE) doms[0];
-		DomF domF = (DomF) doms[1];
-		int numE = domE.size();
-		for (int eIdx = 0; eIdx < numE; eIdx++) {
-			Quad e = domE.get(eIdx);
-			jq_Field f = e.getField();
-			int fIdx = domF.indexOf(f);
-			assert (fIdx >= 0);
-			add(eIdx, fIdx);
-		}
-	}
+    public void fill() {
+        DomE domE = (DomE) doms[0];
+        DomF domF = (DomF) doms[1];
+        int numE = domE.size();
+        for (int eIdx = 0; eIdx < numE; eIdx++) {
+            Quad e = domE.get(eIdx);
+            jq_Field f = e.getField();
+            int fIdx = domF.indexOf(f);
+            assert (fIdx >= 0);
+            add(eIdx, fIdx);
+        }
+    }
 }

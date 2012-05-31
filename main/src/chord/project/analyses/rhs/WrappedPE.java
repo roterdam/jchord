@@ -8,36 +8,36 @@ public class WrappedPE<PE extends IEdge, SE extends IEdge> implements IWrappedPE
     private final PE pe;
     private IWrappedPE<PE, SE> wpe;
     private IWrappedSE<PE, SE> wse;
-	private int len;
+    private int len;
 
     public WrappedPE(Inst i, PE pe, IWrappedPE<PE, SE> wpe, IWrappedSE<PE, SE> wse, int len) {
-		assert (len >= 0);
+        assert (len >= 0);
         this.i = i;
         this.pe = pe;
         this.wpe = wpe;
         this.wse = wse;
-		this.len = len;
+        this.len = len;
     }
 
-	public void update(IWrappedPE<PE, SE> newWPE, IWrappedSE<PE, SE> newWSE, int newLen) {
-		assert (newLen >= 0);
-		this.wpe = newWPE;
-		this.wse = newWSE;
-		this.len = newLen;
-	}
+    public void update(IWrappedPE<PE, SE> newWPE, IWrappedSE<PE, SE> newWSE, int newLen) {
+        assert (newLen >= 0);
+        this.wpe = newWPE;
+        this.wse = newWSE;
+        this.len = newLen;
+    }
 
-	public int getLen() { return len; }
+    public int getLen() { return len; }
 
-	@Override
-	public Inst getInst() { return i; }
+    @Override
+    public Inst getInst() { return i; }
 
-	@Override
+    @Override
     public PE getPE() { return pe; }
 
-	@Override
+    @Override
     public IWrappedPE<PE, SE> getWPE() { return wpe; }
 
-	@Override
+    @Override
     public IWrappedSE<PE, SE> getWSE() { return wse; }
 
     @Override
@@ -52,9 +52,9 @@ public class WrappedPE<PE extends IEdge, SE extends IEdge> implements IWrappedPE
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
-		if (!(obj instanceof WrappedPE)) return false;
+        if (!(obj instanceof WrappedPE)) return false;
         WrappedPE that = (WrappedPE) obj;
-		return this.i == that.i && Utils.areEqual(this.pe, that.pe);
+        return this.i == that.i && Utils.areEqual(this.pe, that.pe);
     }
 
     @Override

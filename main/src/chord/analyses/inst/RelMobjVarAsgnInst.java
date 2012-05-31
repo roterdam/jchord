@@ -28,50 +28,50 @@ import chord.project.analyses.ProgramRel;
  */
 @Chord(name = "MobjVarAsgnInst", sign = "M0,V0,V1:M0_V0xV1")
 public class RelMobjVarAsgnInst extends ProgramRel
-		implements IMoveInstVisitor, IPhiInstVisitor, ICastInstVisitor {
-	private jq_Method ctnrMethod;
-	public void visit(jq_Class c) { }
-	public void visit(jq_Method m) {
-		ctnrMethod = m;
-	}
-	public void visitMoveInst(Quad q) {
-		Operand rx = Move.getSrc(q);
-		if (rx instanceof RegisterOperand) {
-			RegisterOperand ro = (RegisterOperand) rx;
-			if (ro.getType().isReferenceType()) {
-				Register r = ro.getRegister();
-				RegisterOperand lo = Move.getDest(q);
-				Register l = lo.getRegister();
-				add(ctnrMethod, l, r);
-			}
-		}
-	}
-	public void visitPhiInst(Quad q) {
-		RegisterOperand lo = Phi.getDest(q);
-		jq_Type t = lo.getType();
-		if (t.isReferenceType()) {
-			Register l = lo.getRegister();
-			ParamListOperand ros = Phi.getSrcs(q);
-			int n = ros.length();
-			for (int i = 0; i < n; i++) {
-				RegisterOperand ro = ros.get(i);
-				if (ro != null) {
-					Register r = ro.getRegister();
-					add(ctnrMethod, l, r);
-				}
-			}
-		}
-	}
-	public void visitCastInst(Quad q) {
-		Operand rx = CheckCast.getSrc(q);
-		if (rx instanceof RegisterOperand) {
-			RegisterOperand ro = (RegisterOperand) rx;
-			if (ro.getType().isReferenceType()) {
-				Register r = ro.getRegister();
-				RegisterOperand lo = CheckCast.getDest(q);
-				Register l = lo.getRegister();
-				add(ctnrMethod, l, r);
-			}
-		}
-	}
+        implements IMoveInstVisitor, IPhiInstVisitor, ICastInstVisitor {
+    private jq_Method ctnrMethod;
+    public void visit(jq_Class c) { }
+    public void visit(jq_Method m) {
+        ctnrMethod = m;
+    }
+    public void visitMoveInst(Quad q) {
+        Operand rx = Move.getSrc(q);
+        if (rx instanceof RegisterOperand) {
+            RegisterOperand ro = (RegisterOperand) rx;
+            if (ro.getType().isReferenceType()) {
+                Register r = ro.getRegister();
+                RegisterOperand lo = Move.getDest(q);
+                Register l = lo.getRegister();
+                add(ctnrMethod, l, r);
+            }
+        }
+    }
+    public void visitPhiInst(Quad q) {
+        RegisterOperand lo = Phi.getDest(q);
+        jq_Type t = lo.getType();
+        if (t.isReferenceType()) {
+            Register l = lo.getRegister();
+            ParamListOperand ros = Phi.getSrcs(q);
+            int n = ros.length();
+            for (int i = 0; i < n; i++) {
+                RegisterOperand ro = ros.get(i);
+                if (ro != null) {
+                    Register r = ro.getRegister();
+                    add(ctnrMethod, l, r);
+                }
+            }
+        }
+    }
+    public void visitCastInst(Quad q) {
+        Operand rx = CheckCast.getSrc(q);
+        if (rx instanceof RegisterOperand) {
+            RegisterOperand ro = (RegisterOperand) rx;
+            if (ro.getType().isReferenceType()) {
+                Register r = ro.getRegister();
+                RegisterOperand lo = CheckCast.getDest(q);
+                Register l = lo.getRegister();
+                add(ctnrMethod, l, r);
+            }
+        }
+    }
 }
