@@ -38,7 +38,16 @@ public final class Utils {
     public final static String LIST_SEPARATOR = ",|:|;";
     public final static String PATH_SEPARATOR = File.pathSeparator + "|;";
     private static final String[] EMPTY_STRING_ARRAY = new String[0];
-
+    private static HashMap<Character, String> replacements = new HashMap<Character, String>();
+    static{
+    replacements.put('&', "&amp;");
+    replacements.put('>', "&gt;");
+    replacements.put('<', "&lt;");
+    replacements.put('\'', "&apos;");
+    replacements.put('\"', "&quot;");
+    replacements.put(' ', "&nbsp;");
+    }
+    
     /**
      * Just disables an instance creation of this utility class.
      *
@@ -566,14 +575,6 @@ public final class Utils {
     }
     
     public static String htmlEscape(String input) {
-        HashMap<Character, String> replacements = new HashMap<Character, String>();
-        replacements.put('&', "&amp;");
-        replacements.put('>', "&gt;");
-        replacements.put('<', "&lt;");
-        replacements.put('\'', "&apos;");
-        replacements.put('\"', "&quot;");
-        replacements.put(' ', "&nbsp;");
-        
         StringBuilder sb = new StringBuilder(input.length());
         for (char c: input.toCharArray()) {
             if (replacements.containsKey(c)) {
