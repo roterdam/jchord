@@ -8,17 +8,17 @@ import chord.util.Utils;
 import joeq.Class.jq_Class;
 
 /**
- * Relation containing each type t the prefix of whose name is contained in the value of system property chord.check.exclude.
+ * Relation containing each type t the prefix of whose name is not contained in the value of system property chord.check.exclude.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(
-    name = "checkExcludedT",
+    name = "checkIncludedT",
     sign = "T0:T0"
 )
-public class RelCheckExcludedT extends ProgramRel implements IClassVisitor {
+public class RelCheckIncludedT extends ProgramRel implements IClassVisitor {
     public void visit(jq_Class c) {
-        if (Utils.prefixMatch(c.getName(), Config.checkExcludeAry))
+        if (!Utils.prefixMatch(c.getName(), Config.checkExcludeAry))
 			add(c);
     }
 }
