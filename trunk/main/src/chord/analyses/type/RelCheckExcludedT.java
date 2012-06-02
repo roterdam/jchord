@@ -1,17 +1,14 @@
 package chord.analyses.type;
 
-import joeq.Class.jq_Reference;
-import chord.analyses.type.DomT;
-import chord.program.Program;
+import chord.program.visitors.IClassVisitor;
 import chord.project.Chord;
 import chord.project.Config;
 import chord.project.analyses.ProgramRel;
-import chord.util.IndexSet;
+import chord.util.Utils;
+import joeq.Class.jq_Class;
 
 /**
- * Relation containing each type t the prefix of whose name
- * is contained in the value of system property
- * <tt>chord.check.exclude</tt>.
+ * Relation containing each type t the prefix of whose name is contained in the value of system property chord.check.exclude.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -19,20 +16,9 @@ import chord.util.IndexSet;
     name = "checkExcludedT",
     sign = "T0:T0"
 )
-public class RelCheckExcludedT extends ProgramRel {
-    public void fill() {
-        DomT domT = (DomT) doms[0];
-        Program program = Program.g();
-        IndexSet<jq_Reference> classes = program.getClasses();
-        String[] checkExcludeAry = Config.checkExcludeAry;
-        for (jq_Reference c : classes) {
-            String cName = c.getName();
-            for (String prefix : checkExcludeAry) {
-                if (cName.startsWith(prefix)) {
-                    add(c);
-                    break;
-                }
-            }
-        }
+public class RelCheckExcludedT extends ProgramRel implements IClassVisitor {
+    public void visit(jq_Class c) {
+        if (Utils.prefixMatch(c.getName(), Config.checkExcludeAry))
+			add(c);
     }
 }
