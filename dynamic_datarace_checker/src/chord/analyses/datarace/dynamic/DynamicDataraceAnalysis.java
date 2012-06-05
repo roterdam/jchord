@@ -149,7 +149,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			return instrScheme;
 		instrScheme = new InstrScheme();
 		instrScheme.setEnterMainMethodEvent(true);
-        instrScheme.setNewEvent(true, true, true, true, true);
+        instrScheme.setBefNewEvent(true, true, true);
         instrScheme.setNewArrayEvent(true, true, true);
 		instrScheme.setThreadStartEvent(true, true, true);
 		instrScheme.setThreadJoinEvent(true, true, true);
@@ -174,8 +174,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	public void initAllPasses() { }
 
 	private void processOptions() {
-		checkCombined = System.getProperty("chord.dynrace.combined",
-			"false").equals("true");
+		checkCombined = System.getProperty("chord.dynrace.combined", "false").equals("true");
 		String checkStr = System.getProperty("chord.dynrace.check", "aetl");
 		for (char c : checkStr.toCharArray()) {
 			if (c == 'a')
@@ -187,24 +186,20 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 			else if (c == 'l')
 				checkL = true;
 			else {
-				Messages.fatal("Invalid value for chord.dynrace.check: " +
-					checkStr);
+				Messages.fatal("Invalid value for chord.dynrace.check: " + checkStr);
 			}
 		}
 
-		String thrKindStr =
-			System.getProperty("chord.dynrace.thr", "concrete");
+		String thrKindStr = System.getProperty("chord.dynrace.thr", "concrete");
 		if (thrKindStr.equals("concrete"))
 			thrKind = ThrKind.CONCRETE;
 		else if (thrKindStr.equals("abstract"))
 			thrKind = ThrKind.ABSTRACT;
 		else {
-			Messages.fatal("Invalid value for chord.dynrace.thr: " +
-				thrKindStr);
+			Messages.fatal("Invalid value for chord.dynrace.thr: " + thrKindStr);
 		}
 
-		String aliasingCheckKindStr =
-			System.getProperty("chord.dynrace.alias", "concrete");
+		String aliasingCheckKindStr = System.getProperty("chord.dynrace.alias", "concrete");
 		if (aliasingCheckKindStr.equals("weak_concrete"))
 			aliasingCheckKind = AliasingCheckKind.WEAK_CONCRETE;
 		else if (aliasingCheckKindStr.equals("concrete"))
@@ -212,23 +207,19 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 		else if (aliasingCheckKindStr.equals("abstract"))
 			aliasingCheckKind = AliasingCheckKind.ABSTRACT;
 		else {
-			Messages.fatal("Invalid value for chord.dynrace.alias: " +
-				aliasingCheckKindStr);
+			Messages.fatal("Invalid value for chord.dynrace.alias: " + aliasingCheckKindStr);
 		}
 
-		String escapingCheckKindStr =
-			System.getProperty("chord.dynrace.esc", "weak_concrete");
+		String escapingCheckKindStr = System.getProperty("chord.dynrace.esc", "weak_concrete");
 		if (escapingCheckKindStr.equals("weak_concrete"))
 			escapingCheckKind = EscapingCheckKind.WEAK_CONCRETE;
 		else if (escapingCheckKindStr.equals("concrete"))
 			escapingCheckKind = EscapingCheckKind.CONCRETE;
 		else {
-			Messages.fatal("Invalid value for chord.dynrace.esc: " +
-				escapingCheckKindStr);
+			Messages.fatal("Invalid value for chord.dynrace.esc: " + escapingCheckKindStr);
 		}
 
-		modelJoin = System.getProperty("chord.dynrace.join",
-			"true").equals("true");
+		modelJoin = System.getProperty("chord.dynrace.join", "true").equals("true");
 	}
 
 	@Override
@@ -239,8 +230,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 
 		modelJoin = checkT && modelJoin;
 
-		needAbsObjs = (aliasingCheckKind == AliasingCheckKind.ABSTRACT) ||
-			(thrKind == ThrKind.ABSTRACT);
+		needAbsObjs = (aliasingCheckKind == AliasingCheckKind.ABSTRACT) || (thrKind == ThrKind.ABSTRACT);
 
 		domM = (DomM) ClassicProject.g().getTrgt("M");
 		domE = (DomE) ClassicProject.g().getTrgt("E");
@@ -605,7 +595,7 @@ public class DynamicDataraceAnalysis extends DynamicAnalysis {
 	}
 
 	@Override
-	public void processAftNew(int h, int i, int o) {
+	public void processAftNew(int h, int t, int o) {
 		// do nothing
 	}
 
