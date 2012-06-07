@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 
 import joeq.Class.jq_Method;
+import joeq.Class.jq_Class;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
 import joeq.Compiler.Quad.Operator.Move;
 import joeq.Compiler.Quad.Operator.Ret;
@@ -38,7 +39,7 @@ import java.io.Serializable;
  * @version  $Id: BasicBlock.java,v 1.23 2006/02/25 05:49:42 livshits Exp $
  */
 
-public class BasicBlock implements Serializable, Iterable<Quad> {
+public class BasicBlock implements Serializable, Iterable<Quad>, Inst {
 
     /** Unique id number for this basic block. */
     private int id_number;
@@ -64,7 +65,14 @@ public class BasicBlock implements Serializable, Iterable<Quad> {
     /** This basic block ends in a 'ret'. */
     private static final int ENDS_IN_RET = 0x4;
     
-	public jq_Method getMethod() { return method; }
+    /** Creates new entry node. Only to be called by ControlFlowGraph. */
+    static BasicBlock createStartNode(jq_Method m) {
+        return new BasicBlock(m);
+    }
+    /** Creates new exit node */
+    static BasicBlock createEndNode(jq_Method m, int numOfPredecessors) {
+        return new BasicBlock(m, numOfPredecessors);
+    }
 
     // Private constructor for the entry node.
     protected BasicBlock(jq_Method m) {
@@ -75,6 +83,7 @@ public class BasicBlock implements Serializable, Iterable<Quad> {
         this.successors = new ArrayList<BasicBlock>(1);
         this.exception_handler_list = null;
     }
+
     // Private constructor for the exit node.
     protected BasicBlock(jq_Method m, int numOfExits) {
         this.id_number = 1;
@@ -84,6 +93,7 @@ public class BasicBlock implements Serializable, Iterable<Quad> {
         this.predecessors = new ArrayList<BasicBlock>(numOfExits);
         this.exception_handler_list = null;
     }
+
     /** Create new basic block with no exception handlers.
      * Only to be called by ControlFlowGraph. */
     static BasicBlock createBasicBlock(int id, jq_Method m, int numPreds, int numSuccs, int numInstrs) {
@@ -141,6 +151,45 @@ public class BasicBlock implements Serializable, Iterable<Quad> {
         return instructions.size();
     }
     
+	@Override
+	public jq_Method getMethod() { return method; }
+
+	@Override
+    public BasicBlock getBasicBlock() { return this; }
+
+	@Override
+    public int getLineNumber() {
+		if (isEntry())
+        	return method.getLineNumber(0);
+		return -1;
+    }
+
+	@Override
+    public String toByteLocStr() {
+        String bci = "BB" + id_number;
+        String mName = method.getName().toString();
+        String mDesc = method.getDesc().toString();
+        String cName = method.getDeclaringClass().getName();
+        return bci + "!" + mName + ":" + mDesc + "@" + cName;
+    }
+
+	@Override
+    public String toJavaLocStr() {
+        jq_Class c = method.getDeclaringClass();
+        String fileName = c.getSourceFileName();
+        return fileName + ":" + getLineNumber();
+    }
+
+	@Override
+    public String toLocStr() {
+        return toByteLocStr() + " (" + toJavaLocStr() + ")";
+    }
+
+	@Override
+    public String toVerboseStr() {
+        return toByteLocStr() + " (" + toJavaLocStr() + ") [" + toString() + "]";
+    }
+
     public Quad getQuad(int i) {
         return instructions.get(i);
     }

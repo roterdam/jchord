@@ -40,18 +40,17 @@ import chord.program.Program;
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-        name = "H",
-        consumes = { "M" }
-        )
+@Chord(name = "H", consumes = { "M" })
 public class DomH extends ProgramDom<Object> {
     protected DomM domM;
     protected int lastA;
     protected int lastI;
     private static boolean PHANTOM_CLASSES = true;
+
     public int getLastA() {
         return lastA;
     }
+
     public int getLastI() {
         return lastI;
     }
@@ -59,14 +58,18 @@ public class DomH extends ProgramDom<Object> {
     public void setLastA(int lastA) {
         this.lastA = lastA;
     }
+
     public void setLastI(int lastI) {
         this.lastI = lastI;
     }
 
+    @Override
     public void init() {
         domM = (DomM) (Config.classic ? ClassicProject.g().getTrgt("M") : consumes[0]);
         PHANTOM_CLASSES = Utils.buildBoolProperty("chord.add.phantom.classes", false);
     }
+
+    @Override
     public void fill() {
         int numM = domM.size();
         add(null);    
@@ -101,18 +104,6 @@ public class DomH extends ProgramDom<Object> {
         for (Pair<Quad, List<jq_Reference>> p : l)
             add(p.val0);
     }
-    public String toUniqueString(Object o) {
-        if (o instanceof Quad) {
-            Quad q = (Quad) o;
-            return q.toByteLocStr();
-        }
-        if (o instanceof PhantomClsVal) {
-            jq_Reference r = ((PhantomClsVal) o).r;
-            return r.getName() + "@phantom_cls";
-        }
-        assert (o == null);
-        return "null";
-    }
 
     public static String getType(Quad q) {
         Operator op = q.getOperator();
@@ -130,6 +121,21 @@ public class DomH extends ProgramDom<Object> {
         return (to != null) ? to.getType().getName() : "null";
     }
 
+    @Override
+    public String toUniqueString(Object o) {
+        if (o instanceof Quad) {
+            Quad q = (Quad) o;
+            return q.toByteLocStr();
+        }
+        if (o instanceof PhantomClsVal) {
+            jq_Reference r = ((PhantomClsVal) o).r;
+            return r.getName() + "@phantom_cls";
+        }
+        assert (o == null);
+        return "null";
+    }
+
+    @Override
     public String toXMLAttrsString(Object o) {
         if (o instanceof Quad) {
             Quad q = (Quad) o;

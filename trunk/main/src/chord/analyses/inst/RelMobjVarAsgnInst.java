@@ -27,8 +27,7 @@ import chord.project.analyses.ProgramRel;
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(name = "MobjVarAsgnInst", sign = "M0,V0,V1:M0_V0xV1")
-public class RelMobjVarAsgnInst extends ProgramRel
-        implements IMoveInstVisitor, IPhiInstVisitor, ICastInstVisitor {
+public class RelMobjVarAsgnInst extends ProgramRel implements IMoveInstVisitor, IPhiInstVisitor, ICastInstVisitor {
     private jq_Method ctnrMethod;
     public void visit(jq_Class c) { }
     public void visit(jq_Method m) {

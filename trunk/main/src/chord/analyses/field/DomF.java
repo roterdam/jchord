@@ -9,27 +9,30 @@ import chord.project.analyses.ProgramDom;
 /**
  * Domain of fields.
  * <p>
- * The 0th element in this domain (null) denotes a distinguished
- * hypothetical field that is regarded as accessed whenever an
- * array element is accessed.  This field can be used by analyses
- * that do not distinguish between different elements of the
- * same array.
+ * The 0th element in this domain (null) denotes a distinguished hypothetical
+ * field that is regarded as accessed whenever an array element is accessed.
+ * This field can be used by analyses that do not distinguish between different
+ * elements of the same array.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-    name = "F"
-)
+@Chord(name = "F")
 public class DomF extends ProgramDom<jq_Field> implements IFieldVisitor {
+    @Override
     public void init() {
-        // Reserve index 0 for the distinguished hypothetical field 
-        // representing all array elements
+        // Reserve index 0 for the distinguished hypothetical field representing all array elements
         getOrAdd(null);
     }
+
+    @Override
     public void visit(jq_Class c) { }
+
+    @Override
     public void visit(jq_Field f) {
         getOrAdd(f);
     }
+
+    @Override
     public String toXMLAttrsString(jq_Field f) {
         String sign;
         String file;

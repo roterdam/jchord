@@ -14,6 +14,8 @@ import joeq.Compiler.Quad.Quad;
  */
 public class DomO extends ProgramDom<CIObj> {
     private DomH domH;
+
+    @Override
     public String toXMLAttrsString(CIObj oVal) {
         if (domH == null)
             domH = (DomH) ClassicProject.g().getTrgt("H");

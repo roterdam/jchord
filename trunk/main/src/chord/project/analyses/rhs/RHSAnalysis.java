@@ -9,7 +9,6 @@ import java.util.Set;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.ControlFlowGraph;
 import joeq.Compiler.Quad.Quad;
@@ -344,15 +343,17 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             PE pe = pair.val1;
             Inst i = loc.i;
             if (DEBUG) System.out.println("Processing loc: " + loc + " PE: " + pe);
-            if (i instanceof EntryOrExitBasicBlock) {
-                // method entry or method exit
-                EntryOrExitBasicBlock bb = (EntryOrExitBasicBlock) i;
+            if (i instanceof BasicBlock) {
+                // i is either method entry basic block, method exit basic block, or an empty basic block
+                BasicBlock bb = (BasicBlock) i;
                 if (bb.isEntry()) {
                     processEntry(bb, pe);
-                } else {
-                    assert (bb.isExit());
+                } else if (bb.isExit()) {
                     processExit(bb, pe);
-                }
+                } else {
+					final PE pe2 = mayMerge ? getPECopy(pe) : pe;
+                    propagatePEtoPE(loc, pe2, pe, null, null);
+				}
             } else {
                 Quad q = (Quad) i;
                 // invoke or misc quad
@@ -380,15 +381,15 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                 boolean skip = false; 
                 Set<jq_Method> trackedMethods = trackedInvkSites.get(q);
                 if (trackedMethods != null) 
-                    if(trackedMethods.contains(m2)) 
+                    if (trackedMethods.contains(m2)) 
                         skip = true;
-                if(skip){
-                    final EntryOrExitBasicBlock bb2 = m2.getCFG().exit();
-                    final Loc loc2 = new Loc(bb2, -1);
+                if (skip) {
+                    BasicBlock bb2 = m2.getCFG().exit();
+                    Loc loc2 = new Loc(bb2, -1);
                     addPathEdge(loc2, pe2, q, pe, null, null);
                 } else {
-                    final EntryOrExitBasicBlock bb2 = m2.getCFG().entry();
-                    final Loc loc2 = new Loc(bb2, -1);
+                    BasicBlock bb2 = m2.getCFG().entry();
+                    Loc loc2 = new Loc(bb2, -1);
                     addPathEdge(loc2, pe2, q, pe, null, null);
                 }
                 final Set<SE> seSet = summEdges.get(m2);
@@ -412,12 +413,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
     }
 
-    private void processEntry(EntryOrExitBasicBlock bb, PE pe) {
+    private void processEntry(BasicBlock bb, PE pe) {
         for (BasicBlock bb2 : bb.getSuccessors()) {
             Inst i2; int q2Idx;
             if (bb2.size() == 0) {
-                assert (bb2.isExit());
-                i2 = (EntryOrExitBasicBlock) bb2;
+                i2 = (BasicBlock) bb2;
                 q2Idx = -1;
             } else {
                 i2 = bb2.getQuad(0);
@@ -429,7 +429,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
     }
 
-    private void processExit(EntryOrExitBasicBlock bb, PE pe) {
+    private void processExit(BasicBlock bb, PE pe) {
         jq_Method m = bb.getMethod();
         SE se = getSummaryEdge(m, pe);
         Set<SE> seSet = summEdges.get(m);
@@ -592,9 +592,8 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         boolean isFirst = true;
         for (BasicBlock bb2 : bb.getSuccessors()) {
             Inst i2; int q2Idx;
-            if (bb2.size() == 0) {
-                assert (bb2.isExit());
-                i2 = (EntryOrExitBasicBlock) bb2;
+            if (bb2.size() == 0) { 
+                i2 = (BasicBlock) bb2;
                 q2Idx = -1;
             } else {
                 i2 = bb2.getQuad(0);
@@ -636,7 +635,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      * Replace the old provenance with the new provenance if traceKind is SHORTEST
      * and new provenance has shorter length than old provenance.
      */
-    private void updateWSE(jq_Method m, SE seToAdd, EntryOrExitBasicBlock bb, PE predPE) {
+    private void updateWSE(jq_Method m, SE seToAdd, BasicBlock bb, PE predPE) {
         assert (seToAdd != null && predPE != null);
         Pair<jq_Method, SE> p = new Pair<jq_Method, SE>(m, seToAdd);
         WrappedSE<PE, SE> wse = wseMap.get(p);
@@ -677,7 +676,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             Pair<Inst, PE> predP = new Pair<Inst, PE>(predI, predPE);
             WrappedPE<PE, SE> newWPE = wpeMap.get(predP);
             assert (newWPE != null);
-            if (i instanceof EntryOrExitBasicBlock && ((EntryOrExitBasicBlock) i).isEntry())
+            if (i instanceof BasicBlock && ((BasicBlock) i).isEntry())
                 newLen = 0;
             else
                 newLen = 1 + newWPE.getLen();
@@ -705,7 +704,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      * (m, seToAdd): the SE whose provenance will be initialized.
      * (bb, predPE): the provenance of the SE.
      */
-    private void recordWSE(jq_Method m, SE seToAdd, EntryOrExitBasicBlock bb, PE predPE) {
+    private void recordWSE(jq_Method m, SE seToAdd, BasicBlock bb, PE predPE) {
         assert (seToAdd != null && predPE != null);
         assert (!wseMap.containsKey(seToAdd));
         WrappedPE<PE, SE> wpe = wpeMap.get(new Pair<Inst, PE>(bb, predPE));
@@ -737,7 +736,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             assert (predI != null);
             predWPE = wpeMap.get(new Pair<Inst, PE>(predI, predPE));
             assert (predWPE != null);
-            if (i instanceof EntryOrExitBasicBlock && ((EntryOrExitBasicBlock) i).isEntry())
+            if (i instanceof BasicBlock && ((BasicBlock) i).isEntry())
                 len = 0;
             else
                 len = 1 + predWPE.getLen();

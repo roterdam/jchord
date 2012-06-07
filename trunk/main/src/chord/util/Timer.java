@@ -70,7 +70,7 @@ public class Timer {
         return DateFormat.getDateTimeInstance().format(doneDate);
     }
     public long getInclusiveTime(){
-    	checkInitDate();
+        checkInitDate();
         checkDoneDate();
         long elapsedInclusiveTime = doneDate.getTime() - initDate.getTime();
         return elapsedInclusiveTime;

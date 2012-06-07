@@ -2,15 +2,14 @@ package chord.analyses.lock;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
-import joeq.Compiler.Quad.EntryOrExitBasicBlock;
+import joeq.Compiler.Quad.BasicBlock;
 import chord.analyses.method.DomM;
 import chord.program.Program;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (l,m) such that method m is
- * synchronized on the lock it acquires at point l.
+ * Relation containing each tuple (l,m) such that method m is synchronized on the lock it acquires at point l.
  *
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
@@ -25,7 +24,7 @@ public class RelSyncLM extends ProgramRel {
         int numL = domL.size();
         for (int lIdx = 0; lIdx < numL; lIdx++) {
             Inst i = domL.get(lIdx);
-            if (i instanceof EntryOrExitBasicBlock) {
+            if (i instanceof BasicBlock) {
                 jq_Method m = i.getMethod();
                 int mIdx = domM.indexOf(m);
                 assert (mIdx >= 0);

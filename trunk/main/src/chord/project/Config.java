@@ -38,7 +38,7 @@ public class Config {
     static {
         check(CHkind, new String[] { "static", "dynamic" }, "chord.ch.kind");
         check(reflectKind, new String[] { "none", "static", "dynamic", "static_cast" }, "chord.reflect.kind");
-        check(ssaKind, new String[] { "none", "phi", "nophi" }, "chord.ssa.kind");
+        check(ssaKind, new String[] { "none", "phi", "nophi", "nomove", "nomovephi" }, "chord.ssa.kind");
     }
     public final static String DEFAULT_SCOPE_EXCLUDES = "";
     public final static String scopeStdExcludeStr = System.getProperty("chord.std.scope.exclude", DEFAULT_SCOPE_EXCLUDES);

@@ -44,9 +44,9 @@ public class ControlFlowGraph implements Graph, Serializable {
     /* Method that this control flow graph represents. May be null for synthetic methods. */
     private final jq_Method method;
     /* Reference to the start node of this control flow graph. */
-    private final EntryOrExitBasicBlock start_node;
+    private final BasicBlock start_node;
     /* Reference to the end node of this control flow graph. */
-    private final EntryOrExitBasicBlock end_node;
+    private final BasicBlock end_node;
     /* List of exception handlers for this control flow graph. */
     private final List<ExceptionHandler> exception_handlers;
     
@@ -66,8 +66,8 @@ public class ControlFlowGraph implements Graph, Serializable {
      */
     public ControlFlowGraph(jq_Method method, int numOfExits, int numOfExceptionHandlers, RegisterFactory rf) {
         this.method = method;
-        start_node = EntryOrExitBasicBlock.createStartNode(method);
-        end_node = EntryOrExitBasicBlock.createEndNode(method, numOfExits);
+        start_node = BasicBlock.createStartNode(method);
+        end_node = BasicBlock.createEndNode(method, numOfExits);
         exception_handlers = new ArrayList<ExceptionHandler>(numOfExceptionHandlers);
         this.rf = rf;
         bb_counter = 1; quad_counter = 0; // MAYUR: changed from 0 to 1
@@ -78,14 +78,14 @@ public class ControlFlowGraph implements Graph, Serializable {
      * 
      * @return  the entry node.
      */
-    public EntryOrExitBasicBlock entry() { return start_node; }
+    public BasicBlock entry() { return start_node; }
     
     /**
      * Returns the exit node.
      * 
      * @return  the exit node.
      */
-    public EntryOrExitBasicBlock exit() { return end_node; }
+    public BasicBlock exit() { return end_node; }
 
     /**
      * Returns the method this control flow graph represents.
@@ -362,41 +362,6 @@ public class ControlFlowGraph implements Graph, Serializable {
             that_bb.appendQuad(copier(map, q));
         }
         return that_bb;
-    }
-
-    /**
-     * Merges the given control flow graph into this control flow graph.
-     * Doesn't modify the given control flow graph.  A copy of the
-     * given control flow graph (with appropriate renumberings) is
-     * returned.
-     */
-    public static Map/*<Object, Object>*/ correspondenceMap = null; 
-    public ControlFlowGraph merge(ControlFlowGraph from) {
-        int nLocal = this.rf.numberOfLocalRegisters() + from.rf.numberOfLocalRegisters();
-        int nStack = this.rf.numberOfStackRegisters() + from.rf.numberOfStackRegisters();
-        RegisterFactory that_rf = new RegisterFactory(nStack, nLocal);
-        correspondenceMap = from.rf.deepCopyInto(that_rf);
-        this.rf.addAll(that_rf);
-        ControlFlowGraph that = new ControlFlowGraph(from.getMethod(),
-                                                     from.exit().getNumberOfPredecessors(),
-                                                     from.exception_handlers.size(),
-                                                     that_rf);
-        
-        correspondenceMap.put(from.entry(), that.entry());
-        correspondenceMap.put(from.exit(), that.exit());
-
-        for (ExceptionHandler exs : from.getExceptionHandlers()) {
-            that.addExceptionHandler(copier(correspondenceMap, exs));
-        }
-
-        that.entry().addSuccessor(copier(correspondenceMap, from.entry().getFallthroughSuccessor()));
-        for (BasicBlock bbs : from.exit().getPredecessors()) {
-        	that.exit().addPredecessor(copier(correspondenceMap, bbs));
-        }
-
-        that.bb_counter = this.bb_counter;
-        that.quad_counter = this.quad_counter;
-        return that;
     }
 
     public void appendExceptionHandlers(ExceptionHandlerList ehl) {

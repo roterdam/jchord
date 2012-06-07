@@ -15,23 +15,27 @@ import chord.project.Config;
 import chord.project.analyses.ProgramDom;
 
 /**
- * Domain of quads that access (read or write) an instance field,
- * a static field, or an array element.
+ * Domain of quads that access (read or write) an instance field, a static field, or an array element.
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-    name = "E",
-    consumes = { "M" }
-)
+@Chord(name = "E", consumes = { "M" })
 public class DomE extends ProgramDom<Quad> implements IHeapInstVisitor {
     protected DomM domM;
+
+    @Override
     public void init() {
         domM = (DomM) (Config.classic ?
             ClassicProject.g().getTrgt("M") : consumes[0]);
     }
+
+    @Override
     public void visit(jq_Class c) { }
+
+    @Override
     public void visit(jq_Method m) { }
+
+    @Override
     public void visitHeapInst(Quad q) {
         Operator op = q.getOperator();
         if (op instanceof Getfield) {
@@ -44,9 +48,13 @@ public class DomE extends ProgramDom<Quad> implements IHeapInstVisitor {
         }
         add(q);
     }
+
+    @Override
     public String toUniqueString(Quad q) {
         return q.toByteLocStr();
     }
+
+    @Override
     public String toXMLAttrsString(Quad q) {
         Operator op = q.getOperator();
         jq_Method m = q.getMethod();

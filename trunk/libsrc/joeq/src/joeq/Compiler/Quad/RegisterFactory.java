@@ -30,8 +30,6 @@ public class RegisterFactory implements Iterable, Serializable {
     private final Map/*<Pair<jq_Type,Integer>,Register>*/ stackNumbering;
     private final Map/*<Pair<jq_Type,Integer>,Register>*/ localNumbering;
     
-    //private RegisterFactory() { }
-
     /** Creates new RegisterFactory */
     public RegisterFactory(jq_Method m) {
         this(m.getMaxStack(), m.getMaxLocals());

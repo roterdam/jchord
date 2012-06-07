@@ -182,12 +182,6 @@ public class Quad implements Inst, Serializable {
         throw new RuntimeException();
     }
 
-	public jq_Method getMethod() { return bb.getMethod(); }
-	public BasicBlock getBasicBlock() { return bb; }
-	public int getLineNumber() {
-        int bci = getBCI();
-        return (bci == -1) ? 0 : getBasicBlock().getMethod().getLineNumber(bci);
-    }
 	public int getBCI() {
         Map<Quad, Integer> map = getBasicBlock().getMethod().getBCMap();
         if (map != null) {
@@ -197,6 +191,20 @@ public class Quad implements Inst, Serializable {
         }
         return -1;
 	}
+
+	@Override
+	public jq_Method getMethod() { return bb.getMethod(); }
+
+	@Override
+	public BasicBlock getBasicBlock() { return bb; }
+
+	@Override
+	public int getLineNumber() {
+        int bci = getBCI();
+        return (bci == -1) ? 0 : getBasicBlock().getMethod().getLineNumber(bci);
+    }
+
+	@Override
 	public String toByteLocStr() {
         int bci = getBCI();
         jq_Method method = getBasicBlock().getMethod();
@@ -206,18 +214,25 @@ public class Quad implements Inst, Serializable {
         return ((bci == -1) ? ("-" + id_number) : bci) +
 			"!" + mName + ":" + mDesc + "@" + cName;
 	}
+
+	@Override
 	public String toJavaLocStr() {
         jq_Class c = getBasicBlock().getMethod().getDeclaringClass();
         String fileName = c.getSourceFileName();
         int lineNumber = getLineNumber();
         return fileName + ":" + lineNumber;
 	}
+
+	@Override
 	public String toLocStr() {
         return toByteLocStr() + " (" + toJavaLocStr() + ")";
 	}
+
+	@Override
     public String toVerboseStr() {
         return toByteLocStr() + " (" + toJavaLocStr() + ") [" + toString() + "]";
     }
+
     /** Returns a string representation of this quad. */
     public String toString() {
 		String s = id_number + ": " + operator.toString();

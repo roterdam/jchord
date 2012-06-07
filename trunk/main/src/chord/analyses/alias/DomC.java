@@ -22,6 +22,7 @@ import chord.analyses.invk.DomI;
 public class DomC extends ProgramDom<Ctxt> {
     private DomH domH;
     private DomI domI;
+
     public Ctxt setCtxt(Quad[] elems) {
         Ctxt cVal = new Ctxt(elems);
         int cIdx = indexOf(cVal);
@@ -30,6 +31,8 @@ public class DomC extends ProgramDom<Ctxt> {
         getOrAdd(cVal);
         return cVal;
     }
+
+    @Override
     public String toXMLAttrsString(Ctxt cVal) {
         if (domH == null)
             domH = (DomH) ClassicProject.g().getTrgt("H");
