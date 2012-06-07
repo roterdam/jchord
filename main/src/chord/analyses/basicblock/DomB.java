@@ -16,28 +16,22 @@ import chord.project.analyses.ProgramDom;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-    name = "B"
-)
+@Chord(name = "B")
 public class DomB extends ProgramDom<BasicBlock> implements IMethodVisitor {
-    protected Map<BasicBlock, jq_Method> basicBlockToMethodMap;
-    public void init() {
-        basicBlockToMethodMap = new HashMap<BasicBlock, jq_Method>();
-    }
+    @Override
     public void visit(jq_Class c) { }
+
+    @Override
     public void visit(jq_Method m) {
         if (m.isAbstract())
             return;
         ControlFlowGraph cfg = m.getCFG();
-        for (BasicBlock b : cfg.reversePostOrder()) {
-            basicBlockToMethodMap.put(b, m);
+        for (BasicBlock b : cfg.reversePostOrder())
             getOrAdd(b);
-        }
     }
-    public jq_Method getMethod(BasicBlock b) {
-        return basicBlockToMethodMap.get(b);
-    }
+
+    @Override
     public String toUniqueString(BasicBlock b) {
-        return b.getID() + "!" + getMethod(b);
+        return b.getID() + "!" + b.getMethod();
     }
 }

@@ -13,7 +13,6 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Class.jq_Class;
 import joeq.Compiler.Quad.BasicBlock;
-import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
 import joeq.Compiler.Quad.Operand.RegisterOperand;
@@ -189,7 +188,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         Set<Pair<Loc, Edge>> initPEs = new ArraySet<Pair<Loc, Edge>>();
         Map<jq_Method, Loc> methToEntry = new HashMap<jq_Method, Loc>();
         for (jq_Method m : cicg.getNodes()) {
-            EntryOrExitBasicBlock bb = m.getCFG().entry();
+            BasicBlock bb = m.getCFG().entry();
             Loc loc = new Loc(bb, -1);
             methToEntry.put(m, loc);
             Pair<Loc, Edge> pair = new Pair<Loc, Edge>(loc, Edge.NULL);

@@ -4,6 +4,7 @@
 package joeq.Class;
 
 import java.util.List;
+import java.util.Iterator;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -44,14 +45,20 @@ import joeq.Compiler.Quad.ICFGBuilder;
  */
 public abstract class jq_Method extends jq_Member {
 	enum SSAKind {
-		NONE, PHI, NO_PHI
+		NONE, PHI, NO_PHI, NO_MOVE, NO_MOVE_PHI
 	};
 	private static SSAKind ssaKind = SSAKind.NONE;
 	private static boolean verbose;
 	private static String[] scopeExcludedPrefixes = new String[0];
 	private static Map<String, String> nativeCFGBuildersMap = Collections.EMPTY_MAP;
 
-	public static void doSSA(boolean hasPhi) { ssaKind = (hasPhi) ? SSAKind.PHI : SSAKind.NO_PHI; }
+	public static void doSSA(boolean hasPhi, boolean noMove) {
+		if (hasPhi) {
+			ssaKind = noMove ? SSAKind.NO_MOVE_PHI : SSAKind.PHI;
+		} else {
+			ssaKind = noMove ? SSAKind.NO_MOVE : SSAKind.NO_PHI;
+		}
+	}
 	public static void setVerbose() { verbose = true; }
 	public static void setNativeCFGBuilders(Map<String, String> map) {
 		nativeCFGBuildersMap = map;
@@ -579,6 +586,15 @@ public abstract class jq_Method extends jq_Member {
 					(new EnterSSA()).visitCFG(cfg);
 					removePhis();
 					break;
+				case NO_MOVE:
+					(new EnterSSA()).visitCFG(cfg);
+					removeMoves();
+					break;
+				case NO_MOVE_PHI:
+					(new EnterSSA()).visitCFG(cfg);
+					removeMoves();
+					removePhis();
+					break;
 				default:
 					break;
 				}
@@ -596,10 +612,12 @@ public abstract class jq_Method extends jq_Member {
 	private void removePhis() {
 		BasicBlock entryBB = cfg.entry(), entrySuccBB = null;
 		for (BasicBlock bb : cfg.reversePostOrder()) {
-			int n = bb.size();
-			if (n == 0) continue;
-			Quad q = bb.getQuad(0);
-			while (q.getOperator() instanceof Phi) {
+			while (true) {
+				int n = bb.size();
+				if (n == 0) break;
+				Quad q = bb.getQuad(0);
+				if (!(q.getOperator() instanceof Phi))
+					break;
 				ParamListOperand ros = Phi.getSrcs(q);
 				int k = ros.length();
 				BasicBlockTableOperand bos = Phi.getPreds(q);
@@ -618,17 +636,14 @@ public abstract class jq_Method extends jq_Member {
 					assert (bb2 != cfg.exit());
 					jq_Type t = lo.getType();
 					Move mop = (t == null) ? Move.MOVE_A.INSTANCE : Move.getMoveOp(t);
-					Quad q2 = Move.create(-1, bb2, mop,
-						(RegisterOperand) lo.copy(), (ro == null) ? null : ro.copy());
+					Quad q2 = Move.create(-1, bb2, mop, (RegisterOperand) lo.copy(), (ro == null) ? null : ro.copy());
 					int n2 = bb2.size();
 					int j = n2 - 1;
 					while (j >= 0 && bb2.getQuad(j).getOperator() instanceof Branch)
 						j--;
 					bb2.addQuad(j + 1, q2);
 				}
-				Quad x = bb.removeQuad(0);
-				assert (x.getOperator() instanceof Phi);
-				q = bb.getQuad(0);
+				bb.removeQuad(0);
 			}
 		}
 		if (entrySuccBB != null) {
@@ -640,6 +655,64 @@ public abstract class jq_Method extends jq_Member {
 			entryBB.removeAllSuccessors();
 			entryBB.addSuccessor(entrySuccBB);
 			entrySuccBB.addPredecessor(entryBB);
+		}
+	}
+
+	// presumes program is in SSA form
+	private void removeMoves() {
+		RegisterFactory rf = cfg.getRegisterFactory();
+		int numArgs = getParamTypes().length;
+		List<Quad> moves = new ArrayList<Quad>();
+		for (BasicBlock bb : cfg.reversePostOrder()) {
+			Iterator it = bb.iterator();
+			loop: while (it.hasNext()) {
+				Quad q = (Quad) it.next();
+				if (q.getOperator() instanceof Move && Move.getSrc(q) instanceof RegisterOperand) {
+					Register l = Move.getDest(q).getRegister();
+					for (int i = 0; i < numArgs; i++) {
+						if (rf.get(i) == l)
+							continue loop;
+					}
+					moves.add(q);
+				}
+			}
+		}
+		for (Quad q : moves) {
+			RegisterOperand ro = (RegisterOperand) Move.getSrc(q);
+			RegisterOperand lo = Move.getDest(q);
+			Register r = ro.getRegister();
+			Register l = lo.getRegister();
+			BasicBlock bb = q.getBasicBlock();
+			assert (bb.removeQuad(q));
+			for (BasicBlock bb2 : cfg.reversePostOrder()) {
+				Iterator it = bb2.iterator();
+				while (it.hasNext()) {
+					Quad q2 = (Quad) it.next();
+					process(q2.getOp1(), l, r, q2);
+					process(q2.getOp2(), l, r, q2);
+					process(q2.getOp3(), l, r, q2);
+					process(q2.getOp4(), l, r, q2);
+				}
+			}
+		}
+	}
+
+	private void process(Operand op, Register l, Register r, Quad q) {
+        if (op instanceof RegisterOperand) {
+			RegisterOperand ro = (RegisterOperand) op;
+			if (ro.getRegister() == l) {
+				ro.setRegister(r);
+			}
+        } else if (op instanceof ParamListOperand) {
+            ParamListOperand ros = (ParamListOperand) op;
+            int n = ros.length();
+            for (int i = 0; i < n; i++) {
+                RegisterOperand ro = ros.get(i);
+                if (ro == null) continue;
+				if (ro.getRegister() == l) {
+					ro.setRegister(r);
+				}
+			}
 		}
 	}
 
@@ -729,8 +802,7 @@ public abstract class jq_Method extends jq_Member {
             int n = ros.length();
             for (int i = 0; i < n; i++) {
                 RegisterOperand ro = ros.get(i);
-                if (ro == null)
-                    continue;
+                if (ro == null) continue;
                 jq_Type t = ro.getType();
                 if (t == null || t.isReferenceType()) {
                     Register v = ro.getRegister();
@@ -742,11 +814,11 @@ public abstract class jq_Method extends jq_Member {
     }
     
     /* Code to return line number given a register in the method*/
-    private Map<Register, ArrayList<Integer> > varToLineNumsMap = null;
+    private Map<Register, List<Integer> > varToLineNumsMap = null;
     
-    public ArrayList<Integer> getLineNumber(Register v){
-    	if(varToLineNumsMap == null){
-    		varToLineNumsMap = new HashMap<RegisterFactory.Register, ArrayList<Integer>>();
+    public List<Integer> getLineNumber(Register v) {
+    	if (varToLineNumsMap == null) {
+    		varToLineNumsMap = new HashMap<RegisterFactory.Register, List<Integer>>();
     		this.getLineNums();
     	}
     	return varToLineNumsMap.get(v);
@@ -819,34 +891,34 @@ public abstract class jq_Method extends jq_Member {
 			//for(jq_LocalVarTableEntry var: arr)
 			//	System.out.println(var.toString());
 			lineNum = this.getLineNumber(((int)(localVarTableEntry.getStartPC())) - 1);
-		}else{
+		} else {
 			lineNum = this.getLineNumber(0);
 		}
-		ArrayList<Integer> lineNums = varToLineNumsMap.get(v);
-		if(lineNums==null){
+		List<Integer> lineNums = varToLineNumsMap.get(v);
+		if (lineNums==null) {
 			lineNums = new ArrayList<Integer>();
 			lineNums.add(lineNum);
 			varToLineNumsMap.put(v, lineNums);
-		}else
+		} else
 			lineNums.add(lineNum);
 	}
 
 	private void getStackLineNum(Register v, Quad q){
-		ArrayList<Integer> lineNums = varToLineNumsMap.get(v);
-		if(lineNums==null){
+		List<Integer> lineNums = varToLineNumsMap.get(v);
+		if (lineNums==null) {
 			lineNums = new ArrayList<Integer>();
 			lineNums.add(q.getLineNumber());
 			varToLineNumsMap.put(v, lineNums);
-		}else
+		} else
 			lineNums.add(q.getLineNumber());
 	}
 	
     /* Code to return the source name of a register in the method*/
-    private Map<Register, ArrayList<String> > varToRegNameMap = null;
+    private Map<Register, List<String> > varToRegNameMap = null;
     
-    public ArrayList<String> getRegName(Register v){
-    	if(varToRegNameMap == null){
-    		varToRegNameMap = new HashMap<RegisterFactory.Register, ArrayList<String>>();
+    public List<String> getRegName(Register v) {
+    	if (varToRegNameMap == null) {
+    		varToRegNameMap = new HashMap<RegisterFactory.Register, List<String>>();
     		this.getRegNames();
     	}
     	return varToRegNameMap.get(v);
@@ -924,7 +996,7 @@ public abstract class jq_Method extends jq_Member {
 			jq_NameAndDesc regNd = localVarTableEntry.getNameAndDesc();
 			regName += regNd.getName() + ":" + regNd.getDesc();
 			
-			ArrayList<String> regNames = varToRegNameMap.get(v);
+			List<String> regNames = varToRegNameMap.get(v);
 		if(regNames==null){
 			regNames = new ArrayList<String>();
 			regNames.add(regName);
@@ -934,7 +1006,7 @@ public abstract class jq_Method extends jq_Member {
 	}
 
 	private void getStackRegName(Register v, Quad q){
-		ArrayList<String> regNames = varToRegNameMap.get(v);
+		List<String> regNames = varToRegNameMap.get(v);
 		if(regNames==null){
 			regNames = new ArrayList<String>();
 			regNames.add(v.toString());

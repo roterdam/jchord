@@ -15,7 +15,6 @@ import joeq.Class.jq_Method;
 import joeq.Class.jq_Type;
 import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.ControlFlowGraph;
-import joeq.Compiler.Quad.EntryOrExitBasicBlock;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Operand;
 import joeq.Compiler.Quad.Operand.ParamListOperand;
@@ -438,7 +437,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
             for (BasicBlock bb : m.getCFG().reversePostOrder()) {
                 if (bb.isEntry() || bb.isExit()) {
                     w.println(bb.isEntry() ? "ENTRY:" : "EXIT:");
-                    Set<Edge> peSet = pathEdges.get((EntryOrExitBasicBlock) bb);
+                    Set<Edge> peSet = pathEdges.get(bb);
                 } else {
                     for (Quad q : bb) {
                         w.println(q.getID() + ":");
@@ -515,7 +514,7 @@ public class ThreadEscapeFullAnalysis extends RHSAnalysis<Edge, Edge> {
         Set<Pair<Loc, Edge>> initPEs = new ArraySet<Pair<Loc, Edge>>(roots.size());
         for (jq_Method m : roots) {
             Edge pe = getRootPathEdge(m);
-            EntryOrExitBasicBlock bb = m.getCFG().entry();
+            BasicBlock bb = m.getCFG().entry();
             Loc loc = new Loc(bb, -1);
             Pair<Loc, Edge> pair = new Pair<Loc, Edge>(loc, pe);
             initPEs.add(pair);

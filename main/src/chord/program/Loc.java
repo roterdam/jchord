@@ -3,7 +3,7 @@ package chord.program;
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Inst;
 import joeq.Compiler.Quad.Quad;
-import joeq.Compiler.Quad.EntryOrExitBasicBlock;
+import joeq.Compiler.Quad.BasicBlock;
 
 /**
  * Representation of the location of a statement.
@@ -12,13 +12,13 @@ import joeq.Compiler.Quad.EntryOrExitBasicBlock;
  */
 public class Loc {
     // qIdx != -1 <=> i is instanceof Quad and qIdx denotes 0-based index in its containing basic block
-    // qIdx == -1 <=> i is instanceof EntryOrExitBasicBlock
+    // qIdx == -1 <=> i is instanceof BasicBlock (not necessarily entry/exit basic block)
     public final Inst i;
     public final int qIdx;
 
     public Loc(Inst i, int qIdx) {
         if (qIdx == -1)
-            assert (i instanceof EntryOrExitBasicBlock);
+            assert (i instanceof BasicBlock);
         else {
             assert (qIdx >= 0);
             assert (i instanceof Quad);

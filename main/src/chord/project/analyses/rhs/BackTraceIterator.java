@@ -6,7 +6,7 @@ import java.util.Set;
 import java.util.Stack;
 
 import joeq.Class.jq_Method;
-import joeq.Compiler.Quad.EntryOrExitBasicBlock;
+import joeq.Compiler.Quad.BasicBlock;
 import joeq.Compiler.Quad.Operator.Invoke;
 import joeq.Compiler.Quad.Quad;
 import joeq.Compiler.Quad.Inst;
@@ -45,8 +45,8 @@ public class BackTraceIterator<PE extends IEdge, SE extends IEdge> implements It
     public IWrappedPE<PE, SE> next() {
         IWrappedPE<PE, SE> ret = currentWPE;
         Inst inst = currentWPE.getInst();
-        if (inst instanceof EntryOrExitBasicBlock) {
-            EntryOrExitBasicBlock bb = (EntryOrExitBasicBlock) inst;
+        if (inst instanceof BasicBlock) {
+            BasicBlock bb = (BasicBlock) inst;
             if (bb.isEntry() && !callStack.empty()) {
                 currentWPE = callStack.pop();
                 return ret;

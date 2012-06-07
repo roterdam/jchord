@@ -12,16 +12,17 @@ import chord.util.IndexSet;
  * 
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
-@Chord(
-    name = "T"
-)
+@Chord(name = "T")
 public class DomT extends ProgramDom<jq_Type> {
+    @Override
     public void fill() {
         Program program = Program.g();
         IndexSet<jq_Type> types = program.getTypes();
         for (jq_Type t : types)
             add(t);
     }
+
+    @Override
     public String toXMLAttrsString(jq_Type t) {
         String name = t.getName();
         String file;
@@ -31,8 +32,6 @@ public class DomT extends ProgramDom<jq_Type> {
         } else
             file = "";
         int line = 0;  // TODO
-        return "name=\"" + name +
-            "\" file=\"" + file +
-            "\" line=\"" + line + "\"";
+        return "name=\"" + name + "\" file=\"" + file + "\" line=\"" + line + "\"";
     }
 }
