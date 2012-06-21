@@ -162,19 +162,28 @@ public class Helper {
     }
 	
     private static boolean traverseGraphAndCheck(MutableLabeledGraph<Object, Object> graphedHeap, ArraySet<AccessPath> ms, 
-    		Object q, List accessPath){
+    		Object q, List accessPath, Set<List<jq_Field>> pathSuffixes){
     	Set<Object> preds = graphedHeap.getPreds(q);
     	
     	if(preds.isEmpty() || preds == null){ //Reached the root node 
     		Object root = accessPath.remove(0); 
     		if(root instanceof jq_Field){
-    			GlobalAccessPath gAP = new GlobalAccessPath((jq_Field)root, (List<jq_Field>)accessPath);
-    			if(!ms.contains(gAP))
-    				return true;
+    			for(List<jq_Field> suffix : pathSuffixes){
+	    			List<jq_Field> fields = new ArrayList<jq_Field>((List<jq_Field>)accessPath);
+	    			fields.addAll(suffix);
+	    			GlobalAccessPath gAP = new GlobalAccessPath((jq_Field)root, fields);
+	    			if(!ms.contains(gAP))
+	    				return true;
+    			}
     		}else{ //RegisterAccessPath
-    			RegisterAccessPath rAP = new RegisterAccessPath((Register)root, (List<jq_Field>)accessPath);
-    			if(!ms.contains(rAP))
-    				return true;
+
+    			for(List<jq_Field> suffix : pathSuffixes){
+    				List<jq_Field> fields = new ArrayList<jq_Field>((List<jq_Field>)accessPath);
+	    			fields.addAll(suffix);
+	    			RegisterAccessPath rAP = new RegisterAccessPath((Register)root, fields);
+    				if(!ms.contains(rAP))
+    					return true;
+    			}
     		}
     		return false;
     	}else{
@@ -184,7 +193,7 @@ public class Helper {
     			for(Object f : fields) //Should always loop just once
     				modAccessPath.add(0, f);
     			
-    			if(traverseGraphAndCheck(graphedHeap, ms, pred, modAccessPath))
+    			if(traverseGraphAndCheck(graphedHeap, ms, pred, modAccessPath, pathSuffixes))
     				return true;	
     		}
     		return false;
@@ -192,11 +201,17 @@ public class Helper {
     	
     }
     
-	public static boolean isAliasMissing(ArraySet<AccessPath> ms, Register v, CIPAAnalysis cipa){
+	public static boolean isAliasMissing(ArraySet<AccessPath> ms, Register v, jq_Field f, CIPAAnalysis cipa){
+		Set<List<jq_Field>> pathSuffixes = new ArraySet<List<jq_Field>>();
+		for (AccessPath ap : ms) {
+			if(ap instanceof RegisterAccessPath)
+				if(((RegisterAccessPath)ap).var.equals(v) && ap.fields.get(0).equals(f))
+					pathSuffixes.add(ap.fields.subList(1, ap.fields.size()));
+        }
 		MutableLabeledGraph<Object, Object> graphedHeap = cipa.getGraphedHeap();
 		Set<Quad> trackedAllocs = pointsTo(v, cipa);
 		for(Quad q : trackedAllocs){
-			if(traverseGraphAndCheck(graphedHeap, ms, q, new ArrayList()))
+			if(traverseGraphAndCheck(graphedHeap, ms, q, new ArrayList(), pathSuffixes))
 				return true;
 		}
 		return false;
