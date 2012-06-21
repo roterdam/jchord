@@ -8,47 +8,49 @@ import chord.util.ArraySet;
  * @author machiry
  */
 public class AbstractState {
-    public static final ArraySet<AccessPath> emptyMS;
-    static {
-        emptyMS = new ArraySet<AccessPath>(0);
-        emptyMS.setImmutable();
-    }
+	public static final ArraySet<AccessPath> emptyMS;
+	static {
+		emptyMS = new ArraySet<AccessPath>(0);
+		emptyMS.setImmutable();
+	}
 
-    public final TypeState ts;
-    public final ArraySet<AccessPath> ms;
-    public final boolean canReturn;
+	public final TypeState ts;
+	public final ArraySet<AccessPath> ms;
+	public final boolean canReturn;
+	public final boolean may;
 
-    public AbstractState(TypeState ts, ArraySet<AccessPath> ms) {
-        this(ts, ms, false);
-    }
+	public AbstractState(boolean may, TypeState ts, ArraySet<AccessPath> ms) {
+		this(ts, ms, false, may);
+	}
 
-    public AbstractState(TypeState ts, ArraySet<AccessPath> ms, boolean ret) {
-        this.ts = ts;
-        assert (ms != null);
-        this.ms = ms;
-        canReturn = ret;
-    }
+	public AbstractState(TypeState ts, ArraySet<AccessPath> ms, boolean ret, boolean may) {
+		this.ts = ts;
+		assert (ms != null);
+		this.ms = ms;
+		canReturn = ret;
+		this.may = may;
+	}
 
-    @Override
-    public int hashCode() {
-        return ms.hashCode();
-    }
+	@Override
+	public int hashCode() {
+		return ms.hashCode();
+	}
 
-    @Override
-    public boolean equals(Object obj) {
-        if (this == obj) return true;
-        if (obj instanceof AbstractState) {
-            AbstractState that = (AbstractState) obj;
-            return ts == that.ts && canReturn == that.canReturn && ms.equals(that.ms);
-        }
-         return false;
-    }
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj instanceof AbstractState) {
+			AbstractState that = (AbstractState) obj;
+			return ts == that.ts && canReturn == that.canReturn && ms.equals(that.ms) && may == that.may;
+		}
+		return false;
+	}
 
-    @Override
-    public String toString() {
-        String ret = "ts=" + ts + ",ret=" + (canReturn ? "true" : "false") +
-            ",ms=" + (ms.isEmpty() ? "EMPTY" : "");
-        for (AccessPath ap : ms) ret += ap + ",";
-        return ret;
-    }
+	@Override
+	public String toString() {
+		String ret = "ts=" + ts + ",ret=" + (canReturn ? "true" : "false") + ",may=" + (may ? "true" : "false") + 
+				",ms=" + (ms.isEmpty() ? "EMPTY" : "");
+		for (AccessPath ap : ms) ret += ap + ",";
+		return ret;
+	}
 }

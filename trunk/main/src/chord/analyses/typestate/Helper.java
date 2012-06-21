@@ -1,11 +1,14 @@
 package chord.analyses.typestate;
 
+import java.util.List;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
+
 
 import joeq.Class.jq_Field;
 import joeq.Class.jq_Method;
@@ -14,6 +17,7 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.analyses.alias.CIObj;
 import chord.analyses.alias.CIPAAnalysis;
 import chord.util.ArraySet;
+import chord.util.graph.MutableLabeledGraph;
 import chord.util.tuple.object.Pair;
 
 public class Helper {
@@ -111,11 +115,10 @@ public class Helper {
     private static Map<Register, Set<Quad>> VpointsToMap = new HashMap<Register, Set<Quad>>();
     private static Map<jq_Field, Set<Quad>> FpointsToMap = new HashMap<jq_Field, Set<Quad>>();
     private static Map<Pair<Quad, jq_Field>, Set<Quad>> HFHMap = new HashMap<Pair<Quad, jq_Field>, Set<Quad>>();
-    
-    private static Set<Quad> temp = new HashSet<Quad>(1);
 
     private static Set<Quad> pointsTo(Set<Quad> quads, jq_Field f, CIPAAnalysis cipa) {
         Set<Quad> retQuads = new HashSet<Quad>();
+        Set<Quad> temp = new HashSet<Quad>(1);
         for(Quad q : quads){
             Pair<Quad,jq_Field> p = new Pair<Quad,jq_Field>(q,f);
             Set<Quad> pts = HFHMap.get(p);
@@ -157,7 +160,47 @@ public class Helper {
         }
         return pts;
     }
+	
+    private static boolean traverseGraphAndCheck(MutableLabeledGraph<Object, Object> graphedHeap, ArraySet<AccessPath> ms, 
+    		Object q, List accessPath){
+    	Set<Object> preds = graphedHeap.getPreds(q);
+    	
+    	if(preds.isEmpty() || preds == null){ //Reached the root node 
+    		Object root = accessPath.remove(0); 
+    		if(root instanceof jq_Field){
+    			GlobalAccessPath gAP = new GlobalAccessPath((jq_Field)root, (List<jq_Field>)accessPath);
+    			if(!ms.contains(gAP))
+    				return true;
+    		}else{ //RegisterAccessPath
+    			RegisterAccessPath rAP = new RegisterAccessPath((Register)root, (List<jq_Field>)accessPath);
+    			if(!ms.contains(rAP))
+    				return true;
+    		}
+    		return false;
+    	}else{
+    		for(Object pred: preds){
+    			List modAccessPath = new ArrayList(accessPath);
+    			Set<Object> fields = graphedHeap.getLabels(pred, q);
+    			for(Object f : fields) //Should always loop just once
+    				modAccessPath.add(0, f);
+    			
+    			if(traverseGraphAndCheck(graphedHeap, ms, pred, modAccessPath))
+    				return true;	
+    		}
+    		return false;
+    	}
+    	
+    }
     
+	public static boolean isAliasMissing(ArraySet<AccessPath> ms, Register v, CIPAAnalysis cipa){
+		MutableLabeledGraph<Object, Object> graphedHeap = cipa.getGraphedHeap();
+		Set<Quad> trackedAllocs = pointsTo(v, cipa);
+		for(Quad q : trackedAllocs){
+			if(traverseGraphAndCheck(graphedHeap, ms, q, new ArrayList()))
+				return true;
+		}
+		return false;
+	}
 
     
     public static ArraySet<AccessPath> removeReference(ArraySet<AccessPath> oldMS, Register r) {
