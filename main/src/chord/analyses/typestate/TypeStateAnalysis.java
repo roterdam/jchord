@@ -269,7 +269,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             if (isthis) {
                 newTS = sp.getTargetState(tgtMethod.getName(), oldDst.ts);
                 if (DEBUG) System.out.println("State Transition to: " + newTS);
-            } else if (Helper.mayPointsTo(args.get(0).getRegister(), pe.h, cipa)) {
+            } else if (Helper.mayPointsTo(args.get(0).getRegister(), pe.h, cipa) && oldDst.may) {
                 newTS = errorState;
                 if (DEBUG) System.out.println("State Transition to (mayPointTo): " + newTS);
             } else{
@@ -282,8 +282,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             }
         }
 
-        AbstractState newSrc = new AbstractState(oldDst.ts, newMS);
-        AbstractState newDst = new AbstractState(newTS, newMS);
+        AbstractState newSrc = new AbstractState(oldDst.may, oldDst.ts, newMS);
+		AbstractState newDst = new AbstractState(oldDst.may, newTS, newMS);
         Edge newEdge = new Edge(newSrc, newDst, EdgeKind.FULL, pe.h);
         if (DEBUG) System.out.println("LEAVE getInitPathEdge: " + newEdge);
         return newEdge;
@@ -469,8 +469,15 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         }
         
         Helper.addAllGlobalAccessPath(newMS, tgtSE.dstNode.ms);
+        
+        /*
+         * If clrPE is of type NULL & tgSE is of type ALLOC, propagate the edge only if newMS is not empty or
+         * tgtSE has may-bit true at the exit of the callee method
+         */
+        if(clrPE.type == EdgeKind.NULL && tgtSE.type == EdgeKind.ALLOC && newMS.isEmpty() && !tgtSE.dstNode.may)
+        	return null;
             
-        AbstractState newDst = new AbstractState(tgtSE.dstNode.ts, newMS);
+        AbstractState newDst = new AbstractState(tgtSE.dstNode.may, tgtSE.dstNode.ts, newMS);
         EdgeKind newType = (clrPE.type == EdgeKind.NULL) ? EdgeKind.ALLOC : clrPE.type;
         Edge newEdge = new Edge(clrPE.srcNode, newDst, newType, tgtSE.h);
         if (DEBUG) System.out.println("LEAVE getInvkPathEdge: " + newEdge);
@@ -523,7 +530,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 }
             }
             if (newMS != null)
-                ostate = new AbstractState(istate.ts, newMS);
+                ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
 
         @Override
@@ -545,7 +552,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 }
             }
             if (newMS != null)
-                ostate = new AbstractState(istate.ts, newMS);
+                ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
 
         @Override
@@ -556,14 +563,14 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                     ArraySet<AccessPath> newMS = new ArraySet<AccessPath>(1);
                     Register dstR = New.getDest(q).getRegister();
                     newMS.add(new RegisterAccessPath(dstR));
-                    ostate = new AbstractState(sp.getStartState(), newMS);
+                    ostate = new AbstractState(false, sp.getStartState(), newMS);
                 }
             } else {
                 // edge is ALLOC:<null, h, AS> or FULL:<AS', h, AS>
                 Register dstR = New.getDest(q).getRegister();
                 ArraySet<AccessPath> newMS = Helper.removeReference(istate.ms, dstR);
                 if (newMS != null)
-                    ostate = new AbstractState(istate.ts, newMS);
+                    ostate = new AbstractState(istate.may, istate.ts, newMS);
             }
         }
 
@@ -573,7 +580,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             Register dstR = NewArray.getDest(q).getRegister();
             ArraySet<AccessPath> newMS = Helper.removeReference(istate.ms, dstR);
             if (newMS != null)
-                ostate = new AbstractState(istate.ts, newMS);
+                ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
 
         @Override
@@ -582,7 +589,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             Register dstR = MultiNewArray.getDest(q).getRegister();
             ArraySet<AccessPath> newMS = Helper.removeReference(istate.ms, dstR);
             if (newMS != null)
-                ostate = new AbstractState(istate.ts, newMS);
+                ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
         
         @Override
@@ -591,7 +598,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             Register dstR = ALoad.getDest(q).getRegister();
             ArraySet<AccessPath> newMS = Helper.removeReference(istate.ms, dstR);
             if (newMS != null)
-                ostate = new AbstractState(istate.ts, newMS);
+                ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
 
         @Override
@@ -606,7 +613,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 newMS.add(new RegisterAccessPath(dstR, oldMS.get(i).fields));
             }
             if (newMS != null) 
-                ostate = new AbstractState(istate.ts, newMS);
+                ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
 
         @Override
@@ -623,7 +630,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 }
             }
             if (newMS != null) 
-                ostate = new AbstractState(istate.ts, newMS);
+                ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
 
         @Override
@@ -653,8 +660,14 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                     newMS.add(new RegisterAccessPath(dstR, fields));
                 }
             }
-            if (newMS != null)
-                ostate = new AbstractState(istate.ts, newMS);
+            if (newMS != null){
+            	if(istate.may)
+            		ostate = new AbstractState(true, istate.ts, newMS);
+            	else{	
+            		boolean may = Helper.isAliasMissing(newMS, dstR, cipa);
+            		ostate = new AbstractState(may, istate.ts, newMS);
+            	}
+            }
         }
         
         @Override
@@ -675,7 +688,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 }
             }
             if (newMS != null)
-                ostate = new AbstractState(istate.ts, newMS);
+                ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
 
         @Override
@@ -687,7 +700,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             if (Return.getSrc(q) instanceof RegisterOperand) {
                 Register tgtR = ((RegisterOperand) (Return.getSrc(q))).getRegister();
                 if (Helper.getIndexInAP(istate.ms, tgtR) >= 0) {
-                    ostate = new AbstractState(istate.ts, istate.ms, true);
+                    ostate = new AbstractState(istate.ts, istate.ms, true, istate.may);
                 }
             }
         }
