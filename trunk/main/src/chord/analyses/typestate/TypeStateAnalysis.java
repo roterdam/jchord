@@ -633,10 +633,29 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 ostate = new AbstractState(istate.may, istate.ts, newMS);
         }
 
+        /*
+         * Outgoing APmust' is computed as follows:
+         * Step 1: Capture effect of v.f = null, by removing all e.f.y from APmust such that may-alias(e, v)
+         * Step 2: Capture effect of v.f = u as follows:
+         *  Step 2.1: Whenever APmust contains u.y, add v.f.y
+         *  Step 2.2: Remove any access paths added in Step 2.1 that exceed access-path-depth parameter.
+         * 
+         * Outgoing may-bit is computed as follows:(Checking if all aliased paths are present in the ms is
+         * 											redundant since Step 1 deletes all aliased paths from the ms)
+         * If incoming may-bit is true, then it remains true.  But if it is false, then:
+         * Case 1: If nothing is removed in Step 1 and Step 2.2, then it remains false.
+         * Case 2: If something is removed in Step 2.2, then clearly it becomes true.
+         * Case 3: If nothing is removed in Step 2.2, and only v.f is removed in Step 1, then may-bit remains false.
+         * Case 4: If nothing is removed in Step 2.2, and something other than v.f is removed in Step 1, then may-bit becomes true.
+         */
         @Override
         public void visitPutfield(Quad q) {
             if (istate == null) return;
             if (!(Putfield.getBase(q) instanceof RegisterOperand)) return;
+            
+            boolean deleteAlias = false;
+            boolean deleteDepthExceed = false;
+            
             Register dstR = ((RegisterOperand) Putfield.getBase(q)).getRegister();
             jq_Field dstF = Putfield.getField(q).getField();
             ArraySet<AccessPath> oldMS = istate.ms;
@@ -647,12 +666,22 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                     newMS.remove(ap);
                 }
             }
+            
+            if(newMS != null){
+            	ArrayList<jq_Field> definedField = new ArrayList<jq_Field>();
+            	RegisterAccessPath definedAP = new RegisterAccessPath(dstR, definedField);
+            	if(newMS.size() != oldMS.size() - 1 || !oldMS.contains(definedAP))
+            		deleteAlias = true;
+            }
+            
             if (Putfield.getSrc(q) instanceof RegisterOperand) {
                 Register srcR = ((RegisterOperand) Putfield.getSrc(q)).getRegister();
                 for (int i = -1; (i = Helper.getIndexInAP(oldMS, srcR, i)) >= 0;) {
                     AccessPath oldAP = oldMS.get(i);
-                    if (oldAP.fields.size() == maxDepth)
+                    if (oldAP.fields.size() == maxDepth){
+                    	deleteDepthExceed = true;
                         continue; 
+                    }
                     List<jq_Field> fields = new ArrayList<jq_Field>();
                     fields.add(dstF);
                     fields.addAll(oldAP.fields);
@@ -664,7 +693,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             	if(istate.may)
             		ostate = new AbstractState(true, istate.ts, newMS);
             	else{	
-            		boolean may = Helper.isAliasMissing(newMS, dstR, cipa);
+            		//boolean may = Helper.isAliasMissing(newMS, dstR, dstF, cipa);
+            		boolean may = deleteAlias | deleteDepthExceed;
             		ostate = new AbstractState(may, istate.ts, newMS);
             	}
             }
