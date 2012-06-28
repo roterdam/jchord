@@ -669,6 +669,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             
             if(newMS != null){
             	ArrayList<jq_Field> definedField = new ArrayList<jq_Field>();
+            	definedField.add(dstF);
             	RegisterAccessPath definedAP = new RegisterAccessPath(dstR, definedField);
             	if(newMS.size() != oldMS.size() - 1 || !oldMS.contains(definedAP))
             		deleteAlias = true;
