@@ -260,9 +260,10 @@ public class Helper {
         }
     }
  
-    public static void removeModifiableAccessPaths(Set<jq_Field> modFields, ArraySet<AccessPath> MS) {
-        if (modFields == null)
-            return;
+    public static boolean removeModifiableAccessPaths(Set<jq_Field> modFields, ArraySet<AccessPath> MS) {
+        boolean modified = false;
+    	if (modFields == null)
+            return modified;
         
         for (Iterator<AccessPath> i = MS.iterator(); i.hasNext();) {
             AccessPath ap = i.next();
@@ -273,9 +274,13 @@ public class Helper {
                     break;
                 }
             }
-            if (mod)
+            if (mod){
                 i.remove();
-        }        
+                modified = true;
+            }
+        }
+        
+        return modified;
     }
     
     public static void removeAllExceptLocalVariables(ArraySet<AccessPath> MS){

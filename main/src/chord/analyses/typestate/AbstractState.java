@@ -17,7 +17,7 @@ public class AbstractState {
 	public final TypeState ts;
 	public final ArraySet<AccessPath> ms;
 	public final boolean canReturn;
-	public final boolean may;
+	public boolean may;
 
 	public AbstractState(boolean may, TypeState ts, ArraySet<AccessPath> ms) {
 		this(ts, ms, false, may);

@@ -86,9 +86,21 @@ public class Edge implements IEdge {
         }
         ArraySet<AccessPath> thisMS = this.dstNode.ms;
         ArraySet<AccessPath> thatMS = that.dstNode.ms;
-        if (thatMS.containsAll(thisMS))
-            return false;
+        boolean thisMay = this.dstNode.may;
+        boolean thatMay = that.dstNode.may;
+        
+        if (thatMS.containsAll(thisMS)){
+        	if(thisMay)
+        		return false;
+        	else if(!thatMay && thisMS.containsAll(thatMS)){
+        		return false;
+        	}else{
+        		this.dstNode.may = true;
+        		return true;
+        	}
+        }
         this.dstNode = that.dstNode;
+        this.dstNode.may = true;
         return true;
     }
     
