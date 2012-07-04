@@ -380,6 +380,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         ArraySet<AccessPath> newMS = new ArraySet<AccessPath>();
         ParamListOperand args = Invoke.getParamList(q);
         RegisterFactory rf = m.getCFG().getRegisterFactory();
+        boolean removedViaModMF = false;
 
         if (clrPE.type == EdgeKind.ALLOC || clrPE.type == EdgeKind.FULL) {
             // Compare must sets; they should be equal in order to apply summary
@@ -414,7 +415,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
 
             // Step 1: Add all x.* in caller must set where x is neither an actual arg nor a
             // static field, and no instance field in "*" is modified in the callee (as per modMF)
-            addFallThroughAccessPaths(q, clrPE, m, tgtSE, newMS, clrMS);
+            removedViaModMF = addFallThroughAccessPaths(q, clrPE, m, tgtSE, newMS, clrMS);
 
             // Step 2: Add all caller local variables, i.e., paths r without any fields in caller
             // must set that were not added in step 1
@@ -477,7 +478,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         if(clrPE.type == EdgeKind.NULL && tgtSE.type == EdgeKind.ALLOC && newMS.isEmpty() && !tgtSE.dstNode.may)
         	return null;
             
-        AbstractState newDst = new AbstractState(tgtSE.dstNode.may, tgtSE.dstNode.ts, newMS);
+        AbstractState newDst = new AbstractState(tgtSE.dstNode.may | removedViaModMF, tgtSE.dstNode.ts, newMS);
         EdgeKind newType = (clrPE.type == EdgeKind.NULL) ? EdgeKind.ALLOC : clrPE.type;
         Edge newEdge = new Edge(clrPE.srcNode, newDst, newType, tgtSE.h);
         if (DEBUG) System.out.println("LEAVE getInvkPathEdge: " + newEdge);
@@ -485,9 +486,9 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
     }
 
     // Refactored into a method to enable overloading later on
-    public void addFallThroughAccessPaths(Quad q, Edge clrPE, jq_Method m, Edge tgtSE, ArraySet<AccessPath> newMS, ArraySet<AccessPath> clrMS) {
+    public boolean addFallThroughAccessPaths(Quad q, Edge clrPE, jq_Method m, Edge tgtSE, ArraySet<AccessPath> newMS, ArraySet<AccessPath> clrMS) {
         newMS.addAll(clrMS);
-        Helper.removeModifiableAccessPaths(methodToModFields.get(m), newMS);
+        return(Helper.removeModifiableAccessPaths(methodToModFields.get(m), newMS));
     }
     
     @Override
