@@ -102,6 +102,39 @@ public class CIPAAnalysis extends JavaAnalysis {
         return new CIObj(pts);
     }
     
+    public boolean doesAliasExist(Quad q){
+    	int aliases = 0;
+    	{	
+    		if (!relFH.isOpen())
+    			relFH.load();
+    		RelView view = relFH.getView();
+    		view.selectAndDelete(1, q);
+    		aliases = view.size();
+    		view.free();
+    		if(aliases > 1) return true;
+    	}
+    	{
+    		if (!relVH.isOpen())
+    			relVH.load();
+    		RelView view = relVH.getView();
+    		view.selectAndDelete(1, q);
+    		aliases += view.size();
+    		view.free();
+    		if(aliases > 1) return true;
+    	}
+    	{
+    		if (!relHFH.isOpen())
+    			relHFH.load();
+    		RelView view = relHFH.getView();
+    		view.selectAndDelete(2, q);
+    		aliases += view.size();
+    		view.free();
+    		if(aliases > 1) return true;
+    	}
+    	
+    	return false;
+    }
+    
     /**
      * Generates a mutable labeled graph from the VH, FH & HFH relations
      * @return Labeled heap graph
