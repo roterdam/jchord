@@ -344,7 +344,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 if (DEBUG) System.out.println("LEAVE getInvkPathEdge: null");
                 return null;
             case FULL:
-                if (clrPE.dstNode == null || clrPE.h != tgtSE.h || clrPE.dstNode.ts != tgtSE.srcNode.ts) {
+                if (clrPE.dstNode == null || clrPE.h != tgtSE.h || clrPE.dstNode.ts != tgtSE.srcNode.ts 
+                || clrPE.dstNode.may != tgtSE.srcNode.may) {
                     if (DEBUG) System.out.println("LEAVE getInvkPathEdge: null");
                     return null;
                 }
@@ -358,7 +359,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         case FULL:
             switch (tgtSE.type) {
             case FULL:
-                if (clrPE.h != tgtSE.h || clrPE.dstNode.ts != tgtSE.srcNode.ts) {
+                if (clrPE.h != tgtSE.h || clrPE.dstNode.ts != tgtSE.srcNode.ts || clrPE.dstNode.may != tgtSE.srcNode.may) {
                     if (DEBUG) System.out.println("LEAVE getInvkPathEdge: null");
                     return null;
                 }
@@ -478,7 +479,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         if(clrPE.type == EdgeKind.NULL && tgtSE.type == EdgeKind.ALLOC && newMS.isEmpty() && !tgtSE.dstNode.may)
         	return null;
             
-        AbstractState newDst = new AbstractState(tgtSE.dstNode.may | removedViaModMF, tgtSE.dstNode.ts, newMS);
+        AbstractState newDst = new AbstractState(tgtSE.dstNode.may || removedViaModMF, tgtSE.dstNode.ts, newMS);
         EdgeKind newType = (clrPE.type == EdgeKind.NULL) ? EdgeKind.ALLOC : clrPE.type;
         Edge newEdge = new Edge(clrPE.srcNode, newDst, newType, tgtSE.h);
         if (DEBUG) System.out.println("LEAVE getInvkPathEdge: " + newEdge);
@@ -648,6 +649,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
          * Case 2: If something is removed in Step 2.2, then clearly it becomes true.
          * Case 3: If nothing is removed in Step 2.2, and only v.f is removed in Step 1, then may-bit remains false.
          * Case 4: If nothing is removed in Step 2.2, and something other than v.f is removed in Step 1, then may-bit becomes true.
+         * Case 5: If nothing is removed in Step 1, but there exists at least one 'e' such that v aliases with e, then may-bit becomes true. 
          */
         @Override
         public void visitPutfield(Quad q) {
@@ -656,6 +658,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             
             boolean deleteAlias = false;
             boolean deleteDepthExceed = false;
+            boolean deleteSelf =false;
             
             Register dstR = ((RegisterOperand) Putfield.getBase(q)).getRegister();
             jq_Field dstF = Putfield.getField(q).getField();
@@ -674,6 +677,8 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             	RegisterAccessPath definedAP = new RegisterAccessPath(dstR, definedField);
             	if(newMS.size() != oldMS.size() - 1 || !oldMS.contains(definedAP))
             		deleteAlias = true;
+            	if(oldMS.contains(definedAP))
+            		deleteSelf = true;
             }
             
             if (Putfield.getSrc(q) instanceof RegisterOperand) {
@@ -696,7 +701,9 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             		ostate = new AbstractState(true, istate.ts, newMS);
             	else{	
             		//boolean may = Helper.isAliasMissing(newMS, dstR, dstF, cipa);
-            		boolean may = deleteAlias | deleteDepthExceed;
+            		boolean may = deleteAlias || deleteDepthExceed;
+            		if(!may && !deleteSelf)
+            			may = Helper.doesAliasExist(dstR, cipa);
             		ostate = new AbstractState(may, istate.ts, newMS);
             	}
             }

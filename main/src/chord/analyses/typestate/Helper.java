@@ -217,6 +217,15 @@ public class Helper {
 		return false;
 	}
 
+	public static boolean doesAliasExist(Register v, CIPAAnalysis cipa){
+		MutableLabeledGraph<Object, Object> graphedHeap = cipa.getGraphedHeap();
+		Set<Quad> trackedAllocs = pointsTo(v, cipa);
+		for(Quad q : trackedAllocs){
+			if(graphedHeap.getPreds(q).size() > 1)
+				return true;
+		}
+		return false;
+	}
     
     public static ArraySet<AccessPath> removeReference(ArraySet<AccessPath> oldMS, Register r) {
         ArraySet<AccessPath> newMS = null;
