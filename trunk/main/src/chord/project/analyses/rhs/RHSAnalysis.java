@@ -368,7 +368,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
     }
 
-    private void processInvk(final Loc loc, final PE pe) {
+    protected void processInvk(final Loc loc, final PE pe) {
         final Quad q = (Quad) loc.i;
         final Set<jq_Method> targets = getTargets(q);
         if (targets.isEmpty()) {
@@ -429,7 +429,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
     }
 
-    private void processExit(BasicBlock bb, PE pe) {
+    protected void processExit(BasicBlock bb, PE pe) {
         jq_Method m = bb.getMethod();
         SE se = getSummaryEdge(m, pe);
         Set<SE> seSet = summEdges.get(m);
