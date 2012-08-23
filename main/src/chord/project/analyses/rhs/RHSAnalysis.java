@@ -302,7 +302,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      * Internal methods.
      *********************************************************************************/
 
-    private Set<Quad> getCallers(jq_Method m) {
+    protected Set<Quad> getCallers(jq_Method m) {
         Set<Quad> callers = callersMap.get(m);
         if (callers == null) {
             callers = cicg.getCallers(m);
@@ -311,7 +311,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         return callers;
     }
 
-    private final Set<jq_Method> getTargets(Quad i) {
+    protected final Set<jq_Method> getTargets(Quad i) {
         Set<jq_Method> targets = targetsMap.get(i);
         if (targets == null) {
             targets = cicg.getTargets(i);
@@ -501,7 +501,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     // 'predPE' is null iff 'predI' is null.
     // 'predSE' is null iff 'predM' is null.
     // 'loc' may be anything: entry basic block, exit basic block, invk quad, or misc quad.
-    private void addPathEdge(Loc loc, PE pe, Inst predI, PE predPE, jq_Method predM, SE predSE) {
+    protected void addPathEdge(Loc loc, PE pe, Inst predI, PE predPE, jq_Method predM, SE predSE) {
         if (DEBUG) System.out.println("\tChecking if " + loc + " has PE: " + pe);
         Inst i = loc.i;
         Set<PE> peSet = pathEdges.get(i);
@@ -578,7 +578,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     // Adds 'pe' as an incoming PE into each immediate successor of 'loc'.
     // 'predPE' and 'predSE' are treated as the provenance of 'pe', where 'predPE' is incoming PE into 'loc'.
     // 'predPE' is guaranteed to be non-null but 'predSE' may be null.
-    private void propagatePEtoPE(Loc loc, PE pe, PE predPE, jq_Method predM, SE predSE) {
+    protected void propagatePEtoPE(Loc loc, PE pe, PE predPE, jq_Method predM, SE predSE) {
         int qIdx = loc.qIdx;
         Inst i = loc.i;
         BasicBlock bb = i.getBasicBlock();
@@ -614,7 +614,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         }
     }
 
-    private boolean propagateSEtoPE(PE clrPE, Loc loc, jq_Method tgtM, SE tgtSE) {
+    protected boolean propagateSEtoPE(PE clrPE, Loc loc, jq_Method tgtM, SE tgtSE) {
         Quad q = (Quad) loc.i;
         PE pe2 = getInvkPathEdge(q, clrPE, tgtM, tgtSE);
         if (pe2 == null)
@@ -635,7 +635,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      * Replace the old provenance with the new provenance if traceKind is SHORTEST
      * and new provenance has shorter length than old provenance.
      */
-    private void updateWSE(jq_Method m, SE seToAdd, BasicBlock bb, PE predPE) {
+    protected void updateWSE(jq_Method m, SE seToAdd, BasicBlock bb, PE predPE) {
         assert (seToAdd != null && predPE != null);
         Pair<jq_Method, SE> p = new Pair<jq_Method, SE>(m, seToAdd);
         WrappedSE<PE, SE> wse = wseMap.get(p);
@@ -704,7 +704,7 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
      * (m, seToAdd): the SE whose provenance will be initialized.
      * (bb, predPE): the provenance of the SE.
      */
-    private void recordWSE(jq_Method m, SE seToAdd, BasicBlock bb, PE predPE) {
+    protected void recordWSE(jq_Method m, SE seToAdd, BasicBlock bb, PE predPE) {
         assert (seToAdd != null && predPE != null);
         assert (!wseMap.containsKey(seToAdd));
         WrappedPE<PE, SE> wpe = wpeMap.get(new Pair<Inst, PE>(bb, predPE));
