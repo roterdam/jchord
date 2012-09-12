@@ -84,7 +84,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             throw new RuntimeException("Problem while parsing state spec file: " + specFile);
         return tss;
     }
-
+    
     @Override
     public void init() {
         // XXX: do not compute anything here which needs to be re-computed on each call to run() below.
@@ -565,7 +565,10 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                     ArraySet<AccessPath> newMS = new ArraySet<AccessPath>(1);
                     Register dstR = New.getDest(q).getRegister();
                     newMS.add(new RegisterAccessPath(dstR));
-                    ostate = new AbstractState(false, sp.getStartState(), newMS);
+                    if(Utils.buildBoolProperty("chord.typestate.usemaybit", true))
+                    	ostate = new AbstractState(false, sp.getStartState(), newMS);
+                    else
+                    	ostate = new AbstractState(true, sp.getStartState(), newMS);
                 }
             } else {
                 // edge is ALLOC:<null, h, AS> or FULL:<AS', h, AS>
