@@ -71,8 +71,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
     protected boolean mustMerge;
     protected boolean mayMerge;
 
-    protected Map<Quad,Set<jq_Method>> trackedInvkSites = new HashMap<Quad,Set<jq_Method>>();
-
     /*********************************************************************************
      * Methods that clients must define.
      *********************************************************************************/
@@ -159,10 +157,6 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
 
     public void setTimeout() {
         timeout = Integer.getInteger("chord.rhs.timeout", 0);
-    }
-
-    public void setTrackedInvkSites(Map<Quad,Set<jq_Method>> trackedInvkSites) {
-        this.trackedInvkSites = trackedInvkSites;
     }
 
     /*********************************************************************************
@@ -320,6 +314,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         return targets;
     }
     
+    protected boolean skipMethod(Quad q, jq_Method m, PE pe){
+    	return false;
+    }
+    
     /**
      * Propagate analysis results until fixpoint is reached.
      */
@@ -378,15 +376,10 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
             for (jq_Method m2 : targets) {
                 if (DEBUG) System.out.println("\tTarget: " + m2);
                 final PE pe2 = getInitPathEdge(q, m2, pe);
-                boolean skip = false; 
-                Set<jq_Method> trackedMethods = trackedInvkSites.get(q);
-                if (trackedMethods != null) 
-                    if (trackedMethods.contains(m2)) 
-                        skip = true;
-                if (skip) {
-                    BasicBlock bb2 = m2.getCFG().exit();
-                    Loc loc2 = new Loc(bb2, -1);
-                    addPathEdge(loc2, pe2, q, pe, null, null);
+                
+                if (skipMethod(q, m2, pe2)) {
+                	final PE pe3 = mayMerge ? getPECopy(pe) : pe;
+                    propagatePEtoPE(loc, pe3, pe, null, null);
                 } else {
                     BasicBlock bb2 = m2.getCFG().entry();
                     Loc loc2 = new Loc(bb2, -1);

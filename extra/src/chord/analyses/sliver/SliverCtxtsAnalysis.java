@@ -935,8 +935,10 @@ public class SliverCtxtsAnalysis extends JavaAnalysis implements BlackBox {
       X.logs("Setting global_kobjValue and global_kcfaValue");
       Set<Query> queries = new HashSet();
       HashMap<Quad,Integer> lengths = decodeAbstractionQueries(line, null, queries);
-      int[] kobjValue = CtxtsAnalysis.global_kobjValue = new int[G.domH.size()];
-      int[] kcfaValue = CtxtsAnalysis.global_kcfaValue = new int[G.domI.size()];
+//      int[] kobjValue = CtxtsAnalysis.global_kobjValue = new int[G.domH.size()];
+//      int[] kcfaValue = CtxtsAnalysis.global_kcfaValue = new int[G.domI.size()];
+      int[] kobjValue = new int[G.domH.size()];
+      int[] kcfaValue = new int[G.domI.size()];
       for (Quad q : lengths.keySet()) {
         if (G.isAlloc(q))
           kobjValue[G.domH.indexOf(q)] = lengths.get(q);
