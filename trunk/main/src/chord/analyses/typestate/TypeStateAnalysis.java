@@ -465,10 +465,16 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             // where clrPE.type is ALLOC or FULL
         }
 
+        //Though we add the return var to the new mustset, we ignore accesspaths of the form returVar.*;
+        //leading to some imprecision
         Register tgtRetReg = (Invoke.getDest(q) != null) ? Invoke.getDest(q).getRegister() : null;
-        if (tgtSE.dstNode.canReturn && tgtRetReg != null) {
-            newMS.add(new RegisterAccessPath(tgtRetReg));
+        if(tgtRetReg != null){
+        	newMS = Helper.removeReference(newMS, tgtRetReg);
+        	if (tgtSE.dstNode.canReturn) {
+                newMS.add(new RegisterAccessPath(tgtRetReg));
+            }
         }
+        
         
         Helper.addAllGlobalAccessPath(newMS, tgtSE.dstNode.ms);
         
