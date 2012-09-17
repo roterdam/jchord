@@ -31,7 +31,7 @@ public class Helper {
 
     public static int getIndexInAP(ArraySet<AccessPath> ms, Register r) {
         for (AccessPath ap : ms) {
-            if (ap instanceof RegisterAccessPath && ((RegisterAccessPath) ap).var == r)
+            if (ap instanceof RegisterAccessPath && ((RegisterAccessPath) ap).var == r && ap.fields.isEmpty())
                 return ms.indexOf(ap);
         }
         return -1;
