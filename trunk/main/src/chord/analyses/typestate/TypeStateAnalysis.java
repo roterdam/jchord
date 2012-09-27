@@ -252,7 +252,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         for (int i = 0; i < args.length(); i++) {
             Register actualReg = args.get(i).getRegister();
             Register formalReg = rf.get(i);
-            for (int j = -1; (j = Helper.getIndexInAP(oldMS, actualReg, j)) >= 0;) {
+            for (int j = -1; (j = Helper.getPrefixIndexInAP(oldMS, actualReg, j)) >= 0;) {
                 AccessPath oldAP = oldMS.get(j);
                 AccessPath newAP = new RegisterAccessPath(formalReg, oldAP.fields);
                 newMS.add(newAP);
@@ -394,7 +394,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             for (int i = 0; i < args.length(); i++) {
                 Register actualReg = args.get(i).getRegister();
                 Register formalReg = rf.get(i);
-                for (int j = -1; (j = Helper.getIndexInAP(clrPE.dstNode.ms, actualReg, j)) >= 0;) {
+                for (int j = -1; (j = Helper.getPrefixIndexInAP(clrPE.dstNode.ms, actualReg, j)) >= 0;) {
                     AccessPath oldAP = clrPE.dstNode.ms.get(j);
                     AccessPath newAP = new RegisterAccessPath(formalReg, oldAP.fields);
                     tmpMS.add(newAP);
@@ -430,7 +430,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             for (int i = 0; i < args.length(); i++) {
                 Register formalReg = rf.get(i);
                 Register actualReg = args.get(i).getRegister();
-                for (int j = -1; (j = Helper.getIndexInAP(tgtSE.dstNode.ms, formalReg, j)) >= 0;) {
+                for (int j = -1; (j = Helper.getPrefixIndexInAP(tgtSE.dstNode.ms, formalReg, j)) >= 0;) {
                     AccessPath oldAP = tgtSE.dstNode.ms.get(j);
                     AccessPath newAP = new RegisterAccessPath(actualReg, oldAP.fields);
                     newMS.add(newAP);
@@ -446,7 +446,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             for (int i = 0; i < args.length(); i++) {
                 Register formalReg = rf.get(i);
                 Register actualReg = args.get(i).getRegister();
-                for (int j = -1; (j = Helper.getIndexInAP(tgtSE.dstNode.ms, formalReg, j)) >= 0;) {
+                for (int j = -1; (j = Helper.getPrefixIndexInAP(tgtSE.dstNode.ms, formalReg, j)) >= 0;) {
                     AccessPath oldAP = tgtSE.dstNode.ms.get(j);
                     AccessPath newAP = new RegisterAccessPath(actualReg, oldAP.fields);
                     newMS.add(newAP);
@@ -519,7 +519,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             ArraySet<AccessPath> newMS = Helper.removeReference(oldMS, dstR);
             if (Move.getSrc(q) instanceof RegisterOperand) {
                 Register srcR = ((RegisterOperand) Move.getSrc(q)).getRegister();
-                for (int i = -1; (i = Helper.getIndexInAP(oldMS, srcR, i)) >= 0;) {
+                for (int i = -1; (i = Helper.getPrefixIndexInAP(oldMS, srcR, i)) >= 0;) {
                     if (newMS == null) newMS = new ArraySet<AccessPath>(oldMS);
                     newMS.add(new RegisterAccessPath(dstR, oldMS.get(i).fields));
                 }
@@ -541,7 +541,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 RegisterOperand ro = ros.get(i);
                 if (ro == null) continue;
                 Register srcR = ((RegisterOperand) ro).getRegister();
-                for (int j = -1; (j = Helper.getIndexInAP(oldMS, srcR, j)) >= 0;) {
+                for (int j = -1; (j = Helper.getPrefixIndexInAP(oldMS, srcR, j)) >= 0;) {
                     if (newMS == null) newMS = new ArraySet<AccessPath>(oldMS);
                     newMS.add(new RegisterAccessPath(dstR, oldMS.get(j).fields));
                 }
@@ -606,7 +606,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             jq_Field srcF = Getstatic.getField(q).getField();
             ArraySet<AccessPath> oldMS = istate.ms;
             ArraySet<AccessPath> newMS = Helper.removeReference(oldMS, dstR);
-            for (int i = -1; (i = Helper.getIndexInAP(oldMS, srcF, i)) >= 0;) {
+            for (int i = -1; (i = Helper.getPrefixIndexInAP(oldMS, srcF, i)) >= 0;) {
                 if (newMS == null) newMS = new ArraySet<AccessPath>(oldMS);
                 newMS.add(new RegisterAccessPath(dstR, oldMS.get(i).fields));
             }
@@ -622,7 +622,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             ArraySet<AccessPath> newMS = Helper.removeReference(oldMS, dstF);
             if (Putstatic.getSrc(q) instanceof RegisterOperand) {
                 Register srcR = ((RegisterOperand) Putstatic.getSrc(q)).getRegister();
-                for (int i = -1; (i = Helper.getIndexInAP(oldMS, srcR, i)) >= 0;) {
+                for (int i = -1; (i = Helper.getPrefixIndexInAP(oldMS, srcR, i)) >= 0;) {
                     if (newMS == null) newMS = new ArraySet<AccessPath>(oldMS);
                     newMS.add(new GlobalAccessPath(dstF, oldMS.get(i).fields));
                 }
@@ -679,7 +679,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
             
             if (Putfield.getSrc(q) instanceof RegisterOperand) {
                 Register srcR = ((RegisterOperand) Putfield.getSrc(q)).getRegister();
-                for (int i = -1; (i = Helper.getIndexInAP(oldMS, srcR, i)) >= 0;) {
+                for (int i = -1; (i = Helper.getPrefixIndexInAP(oldMS, srcR, i)) >= 0;) {
                     AccessPath oldAP = oldMS.get(i);
                     if (oldAP.fields.size() == maxDepth){
                     	deleteDepthExceed = true;
@@ -715,7 +715,7 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 Register srcR = ((RegisterOperand) Getfield.getBase(q)).getRegister();
                 jq_Field srcF = Getfield.getField(q).getField();
                 // when stmt is x=y.f, we add x.* if y.f.* is in the must set
-                for (int i = -1; (i = Helper.getIndexInAP(oldMS, srcR, srcF, i)) >= 0;) {
+                for (int i = -1; (i = Helper.getPrefixIndexInAP(oldMS, srcR, srcF, i)) >= 0;) {
                     List<jq_Field> fields = new ArrayList<jq_Field>(oldMS.get(i).fields);
                     fields.remove(0);
                     if (newMS == null) newMS = new ArraySet<AccessPath>(oldMS);

@@ -37,7 +37,7 @@ public class Helper {
         return -1;
     }
 
-    public static int getIndexInAP(ArraySet<AccessPath> ms, Register r, int minIndex) {
+    public static int getPrefixIndexInAP(ArraySet<AccessPath> ms, Register r, int minIndex) {
         int currIndex = 0;
         for (AccessPath ap : ms) {
             if (currIndex > minIndex && ap instanceof RegisterAccessPath && ((RegisterAccessPath) ap).var == r)
@@ -47,7 +47,7 @@ public class Helper {
         return -1;
     }
 
-    public static int getIndexInAP(ArraySet<AccessPath> ms, jq_Field g, int minIndex) {
+    public static int getPrefixIndexInAP(ArraySet<AccessPath> ms, jq_Field g, int minIndex) {
         int currIndex = 0;
         for (AccessPath ap : ms) {
             if (currIndex > minIndex && ap instanceof GlobalAccessPath && ((GlobalAccessPath) ap).global == g)
@@ -57,7 +57,7 @@ public class Helper {
         return -1;
     }
 
-    public static int getIndexInAP(ArraySet<AccessPath> ms, Register r, jq_Field f, int minIndex) {
+    public static int getPrefixIndexInAP(ArraySet<AccessPath> ms, Register r, jq_Field f, int minIndex) {
         int currIndex = 0;
         for (AccessPath ap : ms) {
             if (currIndex > minIndex && ap instanceof RegisterAccessPath) {
@@ -70,7 +70,7 @@ public class Helper {
         return -1;
     }
 
-    public static int getIndexInAP(ArraySet<AccessPath> ms, jq_Field g, jq_Field f, int minIndex) {
+    public static int getPrefixIndexInAP(ArraySet<AccessPath> ms, jq_Field g, jq_Field f, int minIndex) {
         int currIndex = 0;
         for (AccessPath ap : ms) {
             if (currIndex > minIndex && ap instanceof GlobalAccessPath) {
@@ -229,7 +229,7 @@ public class Helper {
     public static ArraySet<AccessPath> removeReference(ArraySet<AccessPath> oldMS, Register r) {
         ArraySet<AccessPath> newMS = null;
         int i = -1;
-        while ((i = getIndexInAP(oldMS, r, i)) >= 0) {
+        while ((i = getPrefixIndexInAP(oldMS, r, i)) >= 0) {
             if (newMS == null) newMS = new ArraySet<AccessPath>(oldMS);
             newMS.remove(oldMS.get(i));
         }
@@ -239,7 +239,7 @@ public class Helper {
     public static ArraySet<AccessPath> removeReference(ArraySet<AccessPath> oldMS, jq_Field g) {
         ArraySet<AccessPath> newMS = null;
         int i = -1;
-        while ((i = getIndexInAP(oldMS, g, i)) >= 0) {
+        while ((i = getPrefixIndexInAP(oldMS, g, i)) >= 0) {
             if (newMS == null) newMS = new ArraySet<AccessPath>(oldMS);
             newMS.remove(oldMS.get(i));
         }
