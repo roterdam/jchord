@@ -8,6 +8,8 @@ import joeq.Class.jq_Field;
 
 public class RegisterAccessPath extends AccessPath {
     public final Register var; // non-null
+    
+    public boolean isRet = false;
 
     public RegisterAccessPath(Register v, List<jq_Field> fields) {
         super(fields);

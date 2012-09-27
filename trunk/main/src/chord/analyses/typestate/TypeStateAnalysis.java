@@ -453,16 +453,6 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
                 }
             }
             
-            /* Check if any element in tgtSE must set is accessible from caller, either via return var,
-             * a global access path, or a formal arg access path
-             * 
-             * if (newMS.size() == 0 && !tgtSE.dstNode.canReturn && !Helper.hasAnyGlobalAccessPath(tgtSE.dstNode))
-             *    return null;
-             * else AS.canReturn is true or AS.ms has some global access path or AS.ms has path from method params
-             */
-            
-            // Step 2: Add all g.* and return var; shared below with above then case,
-            // where clrPE.type is ALLOC or FULL
         }
 
         //Though we add the return var to the new mustset, we ignore accesspaths of the form returVar.*;
@@ -478,14 +468,11 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         
         Helper.addAllGlobalAccessPath(newMS, tgtSE.dstNode.ms);
         
-        /*
-         * If clrPE is of type NULL & tgSE is of type ALLOC, propagate the edge only if newMS is not empty or
-         * tgtSE has may-bit true at the exit of the callee method
-         */
-        if(clrPE.type == EdgeKind.NULL && tgtSE.type == EdgeKind.ALLOC && newMS.isEmpty() && !tgtSE.dstNode.may)
-        	return null;
+        //TODO decide whether to drop edges like <h,{}>
+//        if(clrPE.type == EdgeKind.NULL && tgtSE.type == EdgeKind.ALLOC && newMS.isEmpty())
+//        	return null;
             
-        AbstractState newDst = new AbstractState(tgtSE.dstNode.may || removedViaModMF, tgtSE.dstNode.ts, newMS);
+        AbstractState newDst = new AbstractState(true, tgtSE.dstNode.ts, newMS);
         EdgeKind newType = (clrPE.type == EdgeKind.NULL) ? EdgeKind.ALLOC : clrPE.type;
         Edge newEdge = new Edge(clrPE.srcNode, newDst, newType, tgtSE.h);
         if (DEBUG) System.out.println("LEAVE getInvkPathEdge: " + newEdge);
