@@ -82,7 +82,8 @@ public abstract class Abstraction {
 			if (old_a != null) { // There was an old abstraction there already
 				if (old_a.equals(a)) return; // Haven't changed the abstraction
 				TIntArrayList os = a2os.get(old_a);
-				if (os != null) os.remove(os.indexOf(o));
+				//In trove 3.02, TIntArrayList.remove(i) removes the value=i, rather than the ith element
+				if (os != null) os.remove(o);
 			}
 			TIntArrayList L = a2os.get(a);
 			if (L == null) a2os.put(a, L = new TIntArrayList());

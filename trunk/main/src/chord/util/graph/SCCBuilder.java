@@ -59,7 +59,8 @@ public class SCCBuilder<Node> {
             Node w;
             do {
                 w = stk.remove(n);
-                idxStk.remove(n);
+              //In trove 3.02, TIntArrayList.remove(i) removes the value=i, rather than the ith element
+                idxStk.removeAt(n);
                 visitor.visit(w);
                 n--;
             } while (w != v);
