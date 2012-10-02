@@ -366,7 +366,8 @@ public abstract class LabelBasedAbstraction extends Abstraction {
 					assert (L != null);
 					int i = L.indexOf(b);
 					assert (i >= 0);
-					L.remove(i);
+					//In trove 3.02, TIntArrayList.remove(i) removes the value=i, rather than the ith element
+					L.removeAt(i);
 				}
 			}
 		}
