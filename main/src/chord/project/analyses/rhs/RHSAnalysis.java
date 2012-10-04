@@ -314,7 +314,11 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
         return targets;
     }
     
-    protected boolean skipMethod(Quad q, jq_Method m, PE pe){
+    protected boolean skipMethod(Quad q, jq_Method m, PE predPe, PE pe){
+    	return false;
+    }
+    
+    protected boolean jumpToMethodEnd(Quad q, jq_Method m, PE predPe, PE pe){
     	return false;
     }
     
@@ -377,9 +381,13 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                 if (DEBUG) System.out.println("\tTarget: " + m2);
                 final PE pe2 = getInitPathEdge(q, m2, pe);
                 
-                if (skipMethod(q, m2, pe2)) {
+                if (skipMethod(q, m2, pe, pe2)) {
                 	final PE pe3 = mayMerge ? getPECopy(pe) : pe;
                     propagatePEtoPE(loc, pe3, pe, null, null);
+                } else if(jumpToMethodEnd(q, m2, pe, pe2)){
+                	BasicBlock bb2 = m2.getCFG().exit();
+                    Loc loc2 = new Loc(bb2, -1);
+                    addPathEdge(loc2, pe2, q, pe, null, null);
                 } else {
                     BasicBlock bb2 = m2.getCFG().entry();
                     Loc loc2 = new Loc(bb2, -1);
