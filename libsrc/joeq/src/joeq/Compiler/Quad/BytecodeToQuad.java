@@ -141,6 +141,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
         }
         this.quad_cfg.updateBBcounter(quad_bbs.length);
 
+ /*		NOTE: Skipping Exceptions       
         // add exception handlers.
         for (int i=exs.length-1; i>=0; --i) {
             jq_TryCatchBC ex = exs[i];
@@ -161,6 +162,7 @@ public class BytecodeToQuad extends BytecodeVisitor {
                 ehs = bb.addExceptionHandler(ehs);
             }
         }
+*/        
         this.start_states = new AbstractState[quad_bbs.length];
         for (int i=0; i<quad_bbs.length; ++i) {
             joeq.Compiler.BytecodeAnalysis.BasicBlock bc_bb = bc_cfg.getBasicBlock(i);
