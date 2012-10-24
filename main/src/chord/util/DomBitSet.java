@@ -25,6 +25,11 @@ public class DomBitSet<E> implements Set<E> {
 		bitSet = new BitSet(dom.size());
 	}
 
+	public DomBitSet(DomBitSet<E> that){
+		this.dom = that.dom;
+		this.bitSet = (BitSet)that.bitSet.clone();
+	}
+	
 	@Override
 	public int size() {
 		return bitSet.cardinality();
