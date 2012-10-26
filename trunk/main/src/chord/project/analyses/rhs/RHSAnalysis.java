@@ -385,9 +385,20 @@ public abstract class RHSAnalysis<PE extends IEdge, SE extends IEdge> extends Ja
                 	final PE pe3 = mayMerge ? getPECopy(pe) : pe;
                     propagatePEtoPE(loc, pe3, pe, null, null);
                 } else if(jumpToMethodEnd(q, m2, pe, pe2)){
-                	BasicBlock bb2 = m2.getCFG().exit();
+                	BasicBlock bb2 = m2.getCFG().entry();
                     Loc loc2 = new Loc(bb2, -1);
+                    int initWorkListSize = workList.size();
                     addPathEdge(loc2, pe2, q, pe, null, null);
+                    int finalWorkListSize = workList.size();
+                    if(initWorkListSize != finalWorkListSize){
+                    	//This operation is safe since any entry added to the worklist will necessarily be at the last
+                    	//position irrespective of BFS or DFS updates
+                    	Pair<Loc,PE> entryP = workList.remove(finalWorkListSize - 1); 
+                    	BasicBlock bb3 = m2.getCFG().exit();
+                        Loc loc3 = new Loc(bb3, -1);
+                    	PE pe3 = mayMerge ? getPECopy(entryP.val1) : entryP.val1;
+                        addPathEdge(loc3, pe3, bb2, entryP.val1, null, null);
+                    }                    
                 } else {
                     BasicBlock bb2 = m2.getCFG().entry();
                     Loc loc2 = new Loc(bb2, -1);
