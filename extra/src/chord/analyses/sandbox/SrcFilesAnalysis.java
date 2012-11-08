@@ -56,6 +56,7 @@ public class SrcFilesAnalysis extends JavaAnalysis {
 		Set<jq_Class> seenClasses = new HashSet<jq_Class>();
 		long numBytecodes = 0;
 		for (jq_Method m : methods) {
+			if(m.isExcluded()) continue;
 			byte[] bc = m.getBytecode();
 			if (bc != null) {
 				numBytecodes += bc.length;
