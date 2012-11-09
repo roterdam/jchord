@@ -19,6 +19,7 @@ import chord.program.Program;
 import chord.analyses.method.DomM;
 import chord.project.Chord;
 import chord.project.ClassicProject;
+import chord.project.Config;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
 
@@ -56,14 +57,17 @@ public class SrcFilesAnalysis extends JavaAnalysis {
 		Set<jq_Class> seenClasses = new HashSet<jq_Class>();
 		long numBytecodes = 0;
 		for (jq_Method m : methods) {
-			if(m.isExcluded()) continue;
+			jq_Class c = m.getDeclaringClass();
+		/*	if(Utils.prefixMatch(c.getName(), Config.checkExcludeAry))
+				continue;
+		*/	
 			byte[] bc = m.getBytecode();
 			if (bc != null) {
 				numBytecodes += bc.length;
 				System.out.println("METHOD: " + m + " " + bc.length);
 			} else	
 				System.out.println("METHOD: " + m + " 0");
-			jq_Class c = m.getDeclaringClass();
+			
 			if (seenClasses.add(c)) {
 				if (c.getName().contains("$"))
 					continue;
