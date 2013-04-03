@@ -107,6 +107,7 @@ public class Config {
 
     public final static boolean useBuddy =Utils.buildBoolProperty("chord.use.buddy", false);
     public final static String bddbddbMaxHeap = System.getProperty("chord.bddbddb.max.heap", "1024m");
+    public final static String bddCodeFragmentFolder = System.getProperty("chord.bddbddb.codeFragment.out", "");
 
     // properties specifying names of Chord's output files and directories
 

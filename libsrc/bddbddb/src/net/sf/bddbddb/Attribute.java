@@ -45,7 +45,7 @@ public class Attribute {
      * @param domain  domain of attribute
      * @param options  options for attribute
      */
-    Attribute(String name, Domain domain, String options) {
+    public Attribute(String name, Domain domain, String options) {
         this.attributeName = name;
         this.attributeDomain = domain;
         this.attributeOptions = options;
