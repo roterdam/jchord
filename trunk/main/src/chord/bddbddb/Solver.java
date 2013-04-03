@@ -24,7 +24,7 @@ public class Solver {
             "-ea",
             "-Xmx" + Config.bddbddbMaxHeap,
             "-cp",
-            Config.mainDirName + File.separator + "chord.jar",
+            Config.mainDirName + File.separator + "chord.jar" + File.pathSeparatorChar + Config.bddCodeFragmentFolder,
             "-Dverbose=" + Config.verbose,
             Config.useBuddy ? ("-Djava.library.path=" + Config.mainDirName) : "-Dbdd=j",
             "-Dbasedir=" + Config.bddbddbWorkDirName,
