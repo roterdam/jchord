@@ -596,6 +596,16 @@ public class Rel {
                 checkRange(val, domIdx);
             }
         }
+        
+        /**
+         * Xin: Don't use this method, always use selectAndDelete. It will fill in garbage
+         * values to domIdx after the selection. For example, if you want to select (v1,h1)
+         * from VH using v = v1, the relView will become (v*,h1).
+         * 
+         * @param domIdx
+         * @param idx
+         */
+        @Deprecated
         public void select(int domIdx, int idx) {
             assert (keptDoms[domIdx]);
             try {
