@@ -406,12 +406,16 @@ public class ControlFlowGraph implements Graph, Serializable {
             if (allBasicBlocks2.containsAll(allBasicBlocks)) {
                 return change;
             }
+            change = true;
             allBasicBlocks.removeAll(allBasicBlocks2);
             BasicBlock bb = (BasicBlock) allBasicBlocks.iterator().next();
             System.out.println("Infinite loop discovered in "+this.getMethod()+", linking "+bb+" to exit.");
             bb.addSuccessor(exit());
             exit().addPredecessor(bb);
             allBasicBlocks = new HashSet(reversePostOrder(entry()));
+            
+            //Fix added: If infinite loop exists, remove dangling predecessors
+            exit().getPredecessors().retainAll(allBasicBlocks);
         }
     }
     
