@@ -13,18 +13,17 @@ import joeq.Compiler.Quad.RegisterFactory.Register;
 import chord.analyses.alloc.DomH;
 import chord.analyses.point.DomP;
 import chord.analyses.var.DomV;
+import chord.program.visitors.IMoveInstVisitor;
 import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
- * Relation containing each tuple (p,v,h) such that the statement at program
- * point p is an object allocation statement h which assigns to local variable
- * v.
- * 
+ * Relation containing each tuple (p,v) such that the statement at program
+ * point p local reference variable v is assigned null.
  * @author Mayur Naik (mhn@cs.stanford.edu)
  */
 @Chord(name = "PobjNullAsgnInst", sign = "P0,V0:P0_V0")
-public class RelPobjNullAsgnInst extends ProgramRel {
+public class RelPobjNullAsgnInst extends ProgramRel implements IMoveInstVisitor {
 	public void visit(jq_Class c) {
 	}
 
