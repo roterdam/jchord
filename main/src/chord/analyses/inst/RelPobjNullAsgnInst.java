@@ -19,8 +19,10 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * Relation containing each tuple (p,v) such that the statement at program
- * point p local reference variable v is assigned null.
- * @author Mayur Naik (mhn@cs.stanford.edu)
+ * point p is an assignment statement where null is assigned to local
+ *  reference variable v.
+ * 
+ * @author Xin Zhang
  */
 @Chord(name = "PobjNullAsgnInst", sign = "P0,V0:P0_V0")
 public class RelPobjNullAsgnInst extends ProgramRel implements IMoveInstVisitor {

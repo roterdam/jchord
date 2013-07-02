@@ -13,8 +13,10 @@ import chord.project.Chord;
 import chord.project.analyses.ProgramRel;
 
 /**
+ * Relation containing each tuple (p,v) such that the statement at program
+ * point p is a return statement where reference variable v is returned.
  *
- * @author Mayur Naik (mhn@cs.stanford.edu)
+ * @author Ravi Mangal
  */
 @Chord(name = "PobjRetInst", sign = "P0,V0:P0_V0")
 public class RelPobjRetInst extends ProgramRel implements IReturnInstVisitor {
