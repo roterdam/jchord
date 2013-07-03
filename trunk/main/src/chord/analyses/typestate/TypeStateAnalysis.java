@@ -459,7 +459,9 @@ public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
         //leading to some imprecision
         Register tgtRetReg = (Invoke.getDest(q) != null) ? Invoke.getDest(q).getRegister() : null;
         if(tgtRetReg != null){
-        	newMS = Helper.removeReference(newMS, tgtRetReg);
+        	//New Fix (07/03/2013)
+        	ArraySet<AccessPath> newMSWithoutRef = Helper.removeReference(newMS, tgtRetReg);
+        	if (newMSWithoutRef != null) newMS = newMSWithoutRef;
         	if (tgtSE.dstNode.canReturn) {
                 newMS.add(new RegisterAccessPath(tgtRetReg));
             }
