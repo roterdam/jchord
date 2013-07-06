@@ -2,6 +2,8 @@ package chord.analyses.heapacc;
 
 import joeq.Compiler.Quad.Operator;
 import joeq.Compiler.Quad.Quad;
+import joeq.Compiler.Quad.Operator.ALoad;
+import joeq.Compiler.Quad.Operator.AStore;
 import joeq.Compiler.Quad.Operator.Getstatic;
 import joeq.Compiler.Quad.Operator.Putstatic;
 import chord.project.Chord;
@@ -24,7 +26,7 @@ public class RelInstFldE extends ProgramRel {
         for (int eIdx = 0; eIdx < numE; eIdx++) {
             Quad e = (Quad) domE.get(eIdx);
             Operator op = e.getOperator();
-            if (!(op instanceof Getstatic) && !(op instanceof Putstatic))
+            if (!(op instanceof Getstatic) && !(op instanceof Putstatic) && !(op instanceof ALoad) && !(op instanceof AStore))
                 add(eIdx);
         }
     }
