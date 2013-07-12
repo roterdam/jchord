@@ -60,6 +60,8 @@ import chord.program.Program;
  *    chord.typestate.maxdepth (default value: 6)
  * 3. Alloc sites to exclude from queries
  *    chord.check.exclude (default value: JDK libraries)
+ * 4. Whether use of may-bit is enabled or not in the analysis
+ *    chord.typestate.usemaybit (default value: true)
  */
 @Chord(name = "typestate-java")
 public class TypeStateAnalysis extends RHSAnalysis<Edge, Edge> {
