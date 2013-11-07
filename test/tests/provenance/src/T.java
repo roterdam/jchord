@@ -2,19 +2,26 @@ public class T {
 	C c;
 	public static void main(String args[]){
 		T t1 = new T();
-		T t2 = new T();
-		C c1 = new C();
-		t1.put(c1);
-		C c2 = new C1();
-		t2.put(c2);
-		C c3 = t1.get();
-		c3.m();
+		t1.id(t1);
+		t1.id(t1);
+		t1.id(t1);
 	}
 	void put(C c){
 		this.c = c;
 	}
 	C get(){
 		return c;
+	}
+	void impossi(){
+		c.m();
+	}
+	T id(T t){
+		T ret = id2(t);
+		return ret;
+	}
+	T id2(T t){
+		T ret = t;
+		return ret;
 	}
 }
 

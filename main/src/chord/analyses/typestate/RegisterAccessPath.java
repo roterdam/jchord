@@ -24,7 +24,7 @@ public class RegisterAccessPath extends AccessPath {
 
     @Override
     public int hashCode() {
-        return 31 * var.hashCode() + super.hashCode();
+        return 31 * var.hashCode() + super.hashCode()+(this.isRet?17:0);
     }
 
     @Override
@@ -32,13 +32,13 @@ public class RegisterAccessPath extends AccessPath {
         if (this == obj) return true;
         if (obj instanceof RegisterAccessPath) {
             RegisterAccessPath that = (RegisterAccessPath) obj;
-            return var == that.var && fields.equals(that.fields);
+            return var == that.var && fields.equals(that.fields)&&this.isRet == that.isRet;
         }
         return false;
     }
 
     @Override
     public String toString() {
-        return var + super.toString();
+        return var + super.toString()+"(isRet = "+isRet+")";
     }
 }
