@@ -77,6 +77,13 @@ public class ByteBufferedFile {
         oStream.close();
         oStream = null;
     }
+    // Can be called any time to flush the data in the buffer to the file.
+    // Does not close the file and sets the curPos to 0
+    public void softFlush() throws IOException {
+        oStream.write(buffer, 0, curPos);
+        oStream.flush();
+        curPos = 0;
+    }
     public void putByte(byte v) throws IOException {
         if (curPos >= fileBlockSize)
             write();
