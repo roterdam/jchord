@@ -18,6 +18,7 @@ public class ReflectEventHandler extends TraceEventHandler {
 					buffer.putByte(ReflectEventKind.CLS_FOR_NAME_CALL);
 					buffer.putString(q);
 					buffer.putString(c);
+					buffer.softFlush();
 				} catch (IOException ex) { throw new RuntimeException(ex); }
 				trace = true;
 			}
@@ -31,6 +32,7 @@ public class ReflectEventHandler extends TraceEventHandler {
 					buffer.putByte(ReflectEventKind.OBJ_NEW_INST_CALL);
 					buffer.putString(q);
 					buffer.putString(c);
+					buffer.softFlush();
 				} catch (IOException ex) { throw new RuntimeException(ex); }
 				trace = true;
 			}
@@ -44,6 +46,7 @@ public class ReflectEventHandler extends TraceEventHandler {
 					buffer.putByte(ReflectEventKind.CON_NEW_INST_CALL);
 					buffer.putString(q);
 					buffer.putString(c);
+					buffer.softFlush();
 				} catch (IOException ex) { throw new RuntimeException(ex); }
 				trace = true;
 			}
@@ -57,6 +60,7 @@ public class ReflectEventHandler extends TraceEventHandler {
 					buffer.putByte(ReflectEventKind.ARY_NEW_INST_CALL);
 					buffer.putString(q);
 					buffer.putString(c + "[]");
+					buffer.softFlush();
 				} catch (IOException ex) { throw new RuntimeException(ex); }
 				trace = true;
 			}
