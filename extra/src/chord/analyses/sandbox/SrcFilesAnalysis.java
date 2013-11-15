@@ -58,9 +58,8 @@ public class SrcFilesAnalysis extends JavaAnalysis {
 		long numBytecodes = 0;
 		for (jq_Method m : methods) {
 			jq_Class c = m.getDeclaringClass();
-		/*	if(Utils.prefixMatch(c.getName(), Config.checkExcludeAry))
+			if(Utils.prefixMatch(c.getName(), Config.checkExcludeAry))
 				continue;
-		*/	
 			byte[] bc = m.getBytecode();
 			if (bc != null) {
 				numBytecodes += bc.length;

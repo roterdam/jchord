@@ -5,6 +5,8 @@ public class T {
 		t1.id(t1);
 		t1.id(t1);
 		t1.id(t1);
+		t1.recur(t1,6);
+		t1.loop(t1);
 	}
 	void put(C c){
 		this.c = c;
@@ -22,6 +24,27 @@ public class T {
 	T id2(T t){
 		T ret = t;
 		return ret;
+	}
+	
+	T recur(T t, int i){
+		if(i >0){
+			T temp = t;
+			return recur(temp,i-1);
+		}
+		else{
+			T temp = t;
+			return temp;
+			}
+	}
+	
+	T loop(T t){
+		T current = t;
+		T next = null;
+		for(int i = 0;i < 1000;i++){
+			next = current;
+			current = next;
+		}
+		return next;
 	}
 }
 
