@@ -22,6 +22,7 @@ my $chord_incubator_dir = "$chord_main_dir/../extra";
 my $pjbench_dir = &getenv("PJBENCH");
 
 my $dacapo_dir = "dacapo/benchmarks/";
+my $ashes_dir = "ashesJSuite/benchmarks/";
 
 # Map from program name to program directory relative to $pjbench_dir
 my %benchmarks = (
@@ -48,10 +49,24 @@ my %benchmarks = (
     "pmd" => "$dacapo_dir/pmd/",
     "sunflow" => "$dacapo_dir/sunflow/",
     "xalan" => "$dacapo_dir/xalan/",
+    "gj" => "$ashes_dir/gj/",
+    "javasrc-p" => "$ashes_dir/javasrc-p/",
+    "jpat-p" => "$ashes_dir/jpat-p/",
+    "kawa-c" => "$ashes_dir/kawa-c/",
+    "rhino-a" => "$ashes_dir/rhino-a/",
+    "sablecc-j" => "$ashes_dir/sablecc-j/",
+    "sablecc-w" => "$ashes_dir/sablecc-w/",
+    "schroeder-m" => "$ashes_dir/schroeder-m/",
+    "schroeder-s" => "$ashes_dir/schroeder-s/",
+    "soot-c" => "$ashes_dir/soot-c/",
+    "soot-j" => "$ashes_dir/soot-j/",
+    "symjpack-t" => "$ashes_dir/symjpack-t/",
+    "toba-s" => "$ashes_dir/toba-s/",
 );
+
 my @programs = keys %benchmarks;
 
-my @analyses = ("thresc_hybrid", "thresc_metaback", "typestate_metaback","pointsto_libanalysis", "mustalias_libanalysis", "mustalias", "mustalias-td", "infernet", "mustalias-tdbu", "cg-prune", "typeEnvCFA", "allocEnvCFA", "0cfa", "allocEnvCFAClients", "kCFAClients", "provenance-instr", "print-polysite", "provenance-temp");
+my @analyses = ("thresc_hybrid", "thresc_metaback", "typestate_metaback","pointsto_libanalysis", "mustalias_libanalysis", "mustalias", "mustalias-td", "infernet", "mustalias-tdbu", "cg-prune", "typeEnvCFA", "allocEnvCFA", "0cfa", "allocEnvCFAClients", "kCFAClients", "provenance-instr", "print-polysite", "provenance-temp", "bytecode-count-total", "bytecode-count-app");
 
 # Lowest priority options, but still higher than $chord_main_dir/chord.properties
 my @global_options = (
@@ -335,6 +350,21 @@ my %local_options_map = (
 	    "-Dchord.run.analyses=cipa-0cfa-dlog,cspa-kcfa-refined-dlog_XZ89_,polysite-dlog_XZ89_,provenance-temp",
 	    "-Dchord.provenance.instrConfig=$chord_incubator_dir/src/chord/analyses/provenance/kcfa/cspa-kcfa-refined-dlog_XZ89_.config,$chord_incubator_dir/src/chord/analyses/provenance/monosite/polysite-dlog_XZ89_.config",
 	],
+    "bytecode-count-total" =>
+    	[
+		"-Dchord.run.analyses=cipa-0cfa-dlog,src-files-java",
+		"-Dchord.check.exclude=",
+		"-Dchord.scope.reuse=false",
+	   	 "-Dchord.reflect.kind=dynamic",
+	],
+    "bytecode-count-app" =>
+    	[
+		"-Dchord.run.analyses=cipa-0cfa-dlog,src-files-java",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher.,org.",
+		"-Dchord.scope.reuse=false",
+		"-Dchord.reflect.kind=dynamic",
+	],
+
 );
 
 # Higher priority options, but lower than @cmdline_options below, which are highest.
@@ -407,6 +437,46 @@ my %bench_options_map = (
 		"-Dchord.check.exclude=java,com,sun,sunw,javax,launcher"
 	    ]
 
+
+   	},
+    "bytecode-count-total" =>
+   	{
+	    "toba-s" => [
+		"-Dchord.reflect.kind=none"
+	    ],
+	    "kawa-c" => [
+		"-Dchord.reflect.kind=none"
+ 	    ]
+    },
+    "bytecode-count-app" =>
+   	{
+		"lusearch" => [
+			"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+		],
+		"luindex" => [
+			"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+		],
+		"avrora" => [
+			"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+		],
+		"hsqldb" => [
+			"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+		],
+		"antlr" => [
+			"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+		],
+		"batik" => [
+			"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+		],
+		"rhino-a" => [
+			"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+		],
+		"toba-s" => [
+			"-Dchord.reflect.kind=none"
+		],
+		"kawa-c" => [
+			"-Dchord.reflect.kind=none"
+		]
 
    	}
 
