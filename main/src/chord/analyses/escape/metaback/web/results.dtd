@@ -1,8 +1,8 @@
 <!ENTITY % Hlist SYSTEM "Hlist.dtd">
 <!ENTITY % Mlist SYSTEM "Mlist.dtd">
 <!ENTITY % Elist SYSTEM "Elist.dtd">
-<!ELEMENT results (escapelist, Hlist, Mlist, Elist)>
-<!ELEMENT escapelist (provenQs,impoQs,timedQs,explodedQs,iterExceedQs)>
+<!ELEMENT results (resultlist, Hlist, Mlist, Elist)>
+<!ELEMENT resultlist (provenQs,impoQs,timedQs,explodedQs,iterExceedQs)>
 <!ELEMENT provenQs (group)*> 
 <!ELEMENT group (LHS, (Query)*)>
 <!ELEMENT LHS (H)*>

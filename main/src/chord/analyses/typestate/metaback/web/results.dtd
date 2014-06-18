@@ -3,7 +3,7 @@
 <!ENTITY % Mlist SYSTEM "Mlist.dtd">
 <!ENTITY % Ilist SYSTEM "Ilist.dtd">
 <!ELEMENT results (resultlist, Hlist, Vlist, Mlist, Ilist)>
-<!ELEMENT escapelist (provenQs,impoQs,timedQs,explodedQs,iterExceedQs)>
+<!ELEMENT resultlist (provenQs,impoQs,timedQs,explodedQs,iterExceedQs)>
 <!ELEMENT provenQs (group)*> 
 <!ELEMENT group (TVS, (Query)*)>
 <!ELEMENT TVS (V)*>
