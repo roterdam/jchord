@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE results SYSTEM "results.dtd" [
-  <!ENTITY escapelist SYSTEM "escapelist.xml">
+  <!ENTITY escapelist SYSTEM "anaresult.xml">
   <!ENTITY Hlist SYSTEM "Hlist.xml">
   <!ENTITY Mlist SYSTEM "Mlist.xml">
   <!ENTITY Elist SYSTEM "Elist.xml">
