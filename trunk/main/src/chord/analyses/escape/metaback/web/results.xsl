@@ -7,7 +7,7 @@
 <xsl:include href="H.xsl"/>
 <xsl:include href="M.xsl"/>
 
-<xsl:template match="/results/escapelist">
+<xsl:template match="/results/resultlist">
     <xsl:result-document href="results.html">
 	<html>
 	<head>
