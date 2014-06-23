@@ -156,6 +156,7 @@
 				<include name="**/*.xsl"/>
 				<include name="**/*.xml"/>
 				<include name="**/*.dtd"/>
+				<include name="**/*.config"/>
 			</fileset>
 			<manifest>
 				<attribute name="Main-Class" value="chord.project.Boot"/>
