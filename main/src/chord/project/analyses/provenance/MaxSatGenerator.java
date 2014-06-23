@@ -72,7 +72,7 @@ public class MaxSatGenerator {
 		this.model = model;
 		this.queryWeight = queryWeight;
 		String mifuFileName = System.getProperty("chord.provenance.mifu", "mifumax");
-		this.mifuPath = System.getenv("CHORD_INCUBATOR") + File.separator + "src" + File.separator +
+		this.mifuPath = System.getenv("CHORD_MAIN") + File.separator + "src" + File.separator +
 				"chord" + File.separator + "project" + File.separator + "analyses" + File.separator +
 				"provenance" + File.separator + mifuFileName;
 	}

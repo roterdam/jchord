@@ -129,10 +129,10 @@ public class KOBJRefiner extends JavaAnalysis {
 		System.setProperty("chord.ctxt.kind", "co");
 		System.setProperty("chord.kobj.khighest", "" + max);
 		System.setProperty("chord.kcfa.khighest", "" + max);
-		String chordIncu = System.getenv("CHORD_INCUBATOR");
-		String kinitConfig = chordIncu + File.separator + "src/chord/analyses/provenance/kobj/kobj-bit-init-dlog_XZ89_.config";
-		String kobjConfig = chordIncu + File.separator + "src/chord/analyses/provenance/kobj/pro-cspa-kobj-dlog_XZ89_.config";
-		String clientConfig = chordIncu + File.separator + clientConfigPath;
+		String chordMain = System.getenv("CHORD_MAIN");
+		String kinitConfig = chordMain + File.separator + "src/chord/analyses/provenance/kobj/kobj-bit-init-dlog_XZ89_.config";
+		String kobjConfig = chordMain + File.separator + "src/chord/analyses/provenance/kobj/pro-cspa-kobj-dlog_XZ89_.config";
+		String clientConfig = chordMain + File.separator + clientConfigPath;
 		configFiles = new String[]{ kinitConfig, kobjConfig, clientConfig };
 
 		IKRel = (ProgramRel) ClassicProject.g().getTrgt("IK");

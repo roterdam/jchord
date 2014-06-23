@@ -124,10 +124,10 @@ public class KCFARefiner extends JavaAnalysis {
 		System.setProperty("chord.ctxt.kind", "cs");
 		System.setProperty("chord.kobj.khighest", "" + max);
 		System.setProperty("chord.kcfa.khighest", "" + max);
-		String chordIncu = System.getenv("CHORD_INCUBATOR");
-		String kinitConfig = chordIncu + File.separator + "src/chord/analyses/provenance/kcfa/kcfa-bit-init-dlog_XZ89_.config";
-		String kcfaConfig = chordIncu + File.separator + "src/chord/analyses/provenance/kcfa/pro-cspa-kcfa-dlog_XZ89_.config";
-		String clientConfig = chordIncu + File.separator + clientConfigPath;
+		String chordMain = System.getenv("CHORD_MAIN");
+		String kinitConfig = chordMain + File.separator + "src/chord/analyses/provenance/kcfa/kcfa-bit-init-dlog_XZ89_.config";
+		String kcfaConfig = chordMain + File.separator + "src/chord/analyses/provenance/kcfa/pro-cspa-kcfa-dlog_XZ89_.config";
+		String clientConfig = chordMain + File.separator + clientConfigPath;
 		configFiles = new String[]{ kinitConfig, kcfaConfig, clientConfig };
 
 		OKRel = (ProgramRel) ClassicProject.g().getTrgt("OK");
