@@ -2,11 +2,13 @@ public class T {
 	C c;
 	public static void main(String args[]){
 		T t1 = new T();
-		t1.id(t1);
-		t1.id(t1);
-		t1.id(t1);
-		t1.recur(t1,6);
-		t1.loop(t1);
+		T t2 = new T();
+		C c1 = new C();
+		C1 c2 = new C1();
+		t1.put(c1);
+		t2.put(c2);
+		C c = t2.get();
+		c.m();
 	}
 	void put(C c){
 		this.c = c;

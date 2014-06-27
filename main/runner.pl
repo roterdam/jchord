@@ -65,7 +65,7 @@ my %benchmarks = (
 );
 my @programs = keys %benchmarks;
 
-my @analyses = ("thresc_hybrid", "thresc_metaback", "typestate_metaback","mustalias", "mustalias-td",  "mustalias-tdbu","mustalias-bu", "provenance-instr", "provenance-kcfa", "provenance-kobj", "provenance-typestate");
+my @analyses = ("thresc_hybrid", "thresc_metaback", "typestate_metaback","mustalias", "mustalias-td",  "mustalias-tdbu","mustalias-bu", "provenance-instr", "provenance-kcfa", "provenance-kobj", "provenance-typestate", "refinegen-kobj");
 
 # Lowest priority options, but still higher than $chord_main_dir/chord.properties
 my @global_options = (
@@ -244,6 +244,16 @@ my %local_options_map = (
         "-Dchord.reuse.scope=false",
 	"-Dchord.reflect.kind=dynamic",
 
+     ],
+     	"refinegen-kobj" =>
+     [
+      	"-Dchord.run.analyses=kobj-gen",
+	"-Dchord.scope.exclude=com.,sun.",
+        "-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher.,org.",
+	"-Dchord.max.heap=16g",
+        "-Dchord.reflect.exclude=true",
+        "-Dchord.reuse.scope=false",
+	"-Dchord.reflect.kind=dynamic",
      ],
      	"provenance-kobj" =>
      [
@@ -476,6 +486,45 @@ my %bench_options_map = (
 		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
 	    ]
 
+
+   	},
+"refinegen-kobj" =>
+   	{
+    	    "lusearch" => [
+	    	"-Dchord.max.heap=64000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+		 "luindex" => [
+	    	"-Dchord.max.heap=64000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "avrora" => [
+	   	"-Dchord.max.heap=64000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "hsqldb" => [
+	    	"-Dchord.max.heap=16000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "antlr" => [
+	    	"-Dchord.max.heap=64000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "batik" => [
+	    	"-Dchord.max.heap=16000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "sunflow" => [
+	    	"-Dchord.max.heap=16000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "rhino-a" => [
+	   	"-Dchord.max.heap=64000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+		"schroeder-m" => [
+	    	"-Dchord.max.heap=64000m",
+	    ],
 
    	},
 "provenance-kobj" =>
