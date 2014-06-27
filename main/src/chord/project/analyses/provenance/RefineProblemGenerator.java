@@ -40,6 +40,8 @@ public abstract class RefineProblemGenerator extends JavaAnalysis {
 			
 			pw.println("query tuples: ");
 			
+			sumInputWeight++;
+			
 			ProgramRel qRel = (ProgramRel) ClassicProject.g().getTrgt(this.getQueryRelation());
 			qRel.load();
 			for(int[] indices : qRel.getAryNIntTuples()){
