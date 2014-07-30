@@ -6,6 +6,7 @@ import java.io.PrintWriter;
 import java.util.List;
 import java.util.Set;
 
+import chord.bddbddb.Dom;
 import chord.project.ClassicProject;
 import chord.project.Config;
 import chord.project.ITask;
@@ -25,28 +26,44 @@ public abstract class RefineProblemGenerator extends JavaAnalysis {
 		try {
 			PrintWriter pw = new PrintWriter(new File(Config.outDirName + File.separator + out));
 			int sumInputWeight = 0;
-			pw.println("Input tuples: ");
+			pw.println("// Domains: ");
+			for(String domName : this.getDoms()){
+				Dom d = (Dom)ClassicProject.g().getTrgt(domName);
+				for(int i = 0 ; i < d.size(); i++){
+					pw.println("dom_"+d.getName()+"("+ i +")");
+				}
+			}
+			pw.println("// Input tuples: ");
 			for(String inputRelName : this.getInputRelations()){
 				ProgramRel inRel = (ProgramRel) ClassicProject.g().getTrgt(inputRelName);
+				if(!ClassicProject.g().isTrgtDone(inRel)){
+					ClassicProject.g().getTaskProducingTrgt(inRel).run();
+				}
 				inRel.load();
 				for(int[] indices : inRel.getAryNIntTuples()){
 					Tuple t = new Tuple(inRel,indices);
 					int tw = this.getWeight(t);
-					if(tw >= 0)
+					if(tw >= 0){
 						sumInputWeight += tw;
-					pw.println(t+" "+tw);
+						pw.println(tw+" "+t);
+					}else{
+						pw.println(t);
+					}
 				}
 			}
 			
-			pw.println("query tuples: ");
-			
-			sumInputWeight++;
-			
-			ProgramRel qRel = (ProgramRel) ClassicProject.g().getTrgt(this.getQueryRelation());
-			qRel.load();
-			for(int[] indices : qRel.getAryNIntTuples()){
-				Tuple t = new Tuple(qRel,indices);
-				pw.println(t+" "+sumInputWeight);
+			String queryRelation = this.getQueryRelation();
+			if(queryRelation != null){
+				pw.println("// query tuples: ");
+
+				sumInputWeight++; //weight for query tuple = sum of others + 1
+
+				ProgramRel qRel = (ProgramRel) ClassicProject.g().getTrgt(this.getQueryRelation());
+				qRel.load();
+				for(int[] indices : qRel.getAryNIntTuples()){
+					Tuple t = new Tuple(qRel,indices);
+					pw.println(t+" "+sumInputWeight);
+				}
 			}
 			
 			pw.flush();
@@ -61,6 +78,8 @@ public abstract class RefineProblemGenerator extends JavaAnalysis {
 	 * @return
 	 */
 	public abstract Set<String> getInputRelations();
+	
+	public abstract Set<String> getDoms();
 	
 	public abstract String getQueryRelation();
 

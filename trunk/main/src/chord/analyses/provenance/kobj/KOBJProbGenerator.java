@@ -77,6 +77,9 @@ public class KOBJProbGenerator extends RefineProblemGenerator {
 		HKRel.save();
 		allowHRel.save();
 		denyHRel.save();
+		ClassicProject.g().setTaskDone(HKRel);
+		ClassicProject.g().setTaskDone(allowHRel);
+		ClassicProject.g().setTaskDone(denyHRel);
 
 		OKRel.zero();
 		allowORel.zero();
@@ -91,6 +94,9 @@ public class KOBJProbGenerator extends RefineProblemGenerator {
 		OKRel.save();
 		allowORel.save();
 		denyORel.save();
+		ClassicProject.g().setTaskDone(OKRel);
+		ClassicProject.g().setTaskDone(allowORel);
+		ClassicProject.g().setTaskDone(denyORel);
 	}
 	private void setHK(Quad q, int k){
 		HKRel.add(q,k);
@@ -118,8 +124,8 @@ public class KOBJProbGenerator extends RefineProblemGenerator {
 		ret.add("initCOC");
 		ret.add("initCHC");
 		ret.add("truncCKC");
-		ret.add("HK");
-		ret.add("OK");
+//		ret.add("HK");
+//		ret.add("OK");
 		ret.add("roots");
 		ret.add("IM");
 		ret.add("VH");
@@ -177,24 +183,30 @@ public class KOBJProbGenerator extends RefineProblemGenerator {
 			ret.add("checkExcludedI");
 		}
 		else
-			throw new RuntimeException("Unknown client type: "+client);
+			if(client.equals("downcast")){
+				ret.add("checkExcludedM");
+				ret.add("McheckCastInst");
+			}
+			else
+				throw new RuntimeException("Unknown client type: "+client);
 		return ret;
 	}
 
 	@Override
 	public String getQueryRelation() {
-		if(client.equals("polysite"))
-			return "polySite";
-		else
-			throw new RuntimeException("Unknown client type: "+client);
+//		if(client.equals("polysite"))
+//			return "polySite";
+//		else
+//			throw new RuntimeException("Unknown client type: "+client);
+		return null;
 	}
 
 	@Override
 	public int getWeight(Tuple t) {
-		String relName = t.getRelName();
-		if(relName.equals("DenyO")||relName.equals("DenyH"))
-			 return 1;
-		return -1;
+//		String relName = t.getRelName();
+//		if(relName.equals("DenyO")||relName.equals("DenyH"))
+//			 return 1;
+		return 1;
 	}
 
 	@Override
@@ -203,13 +215,30 @@ public class KOBJProbGenerator extends RefineProblemGenerator {
 		tasks.add(ClassicProject.g().getTask("cipa-0cfa-dlog"));
 		tasks.add(ClassicProject.g().getTask("simple-pro-ctxts-java"));
 		tasks.add(ClassicProject.g().getTask("pro-argCopy-dlog"));
-		tasks.add(ClassicProject.g().getTask("kobj-bit-init-dlog"));
-		tasks.add(ClassicProject.g().getTask("pro-cspa-kobj-dlog"));
-		if(client.equals("polysite"))
-			tasks.add(ClassicProject.g().getTask("polysite-dlog"));
-		else
-			throw new RuntimeException("Unknown client "+client);
+//		tasks.add(ClassicProject.g().getTask("objNewInstIM-java"));
+//		tasks.add(ClassicProject.g().getTask("kobj-bit-init-dlog"));
+//		tasks.add(ClassicProject.g().getTask("pro-cspa-kobj-dlog"));
+//		if(client.equals("polysite"))
+//			tasks.add(ClassicProject.g().getTask("polysite-dlog"));
+//		else
+//			throw new RuntimeException("Unknown client "+client);
 		return tasks;
+	}
+
+	@Override
+	public Set<String> getDoms() {
+		Set<String> ret = new HashSet<String>();
+		ret.add("I");
+		ret.add("H");
+		ret.add("M");		
+		ret.add("K");
+		ret.add("V");
+		ret.add("C");
+
+		ret.add("T");
+		ret.add("F");
+		ret.add("Z");
+		return ret;
 	}
 
 }

@@ -32,7 +32,7 @@ import chord.project.analyses.ProgramRel;
 
 /**
  * A simple datalog instrumentor using John Whaley's BDDSolver. Because he
- * didn't separate the parser nicely from the solver, a program need to be
+ * didn't separate the parser nicely from the solver, a program needs to be
  * provided to fool the solver. Usage: ant -Dchord.work.dir=<benchmark>
  * -Dchord.run.analyses=provenance-instr 
  * -Dchord.provenance.dlog=<dlog-name>
