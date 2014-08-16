@@ -39,6 +39,8 @@ HM(h:H, m:M)
 
 CHC_1(c:C, h:H, c:C)
 CHC_2(c:C, h:H, c:C)
+COC_1(c:C, h:H, c:C)
+COC_2(c:C, h:H, c:C)
 
 CM(c:C, m:M) output
 CHC(c:C, h:H, c:C) output
