@@ -115,9 +115,9 @@ public class KOBJRefiner extends JavaAnalysis {
 			clientConfigPath = "src/chord/analyses/provenance/race/pro-datarace-dlog_XZ89_.config";
 			queryRelName = "racePairs";
 		}else if (client.equals("pts")){
-			this.client = 2;
-			clientFile = "pro-downcast-dlog_XZ89_";
-			clientConfigPath = "src/chord/analyses/provenance/downcast/pro-downcast-dlog_XZ89_.config";
+			this.client = 3;
+			clientFile = "pro-pts-dlog_XZ89_";
+			clientConfigPath = "src/chord/analyses/provenance/pts/pro-pts-dlog_XZ89_.config";
 			queryRelName = "ptsVH";
 		}else
 			throw new RuntimeException("Unknown client: " + this.client);
