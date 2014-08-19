@@ -9,4 +9,4 @@ checkExcludedM(m:M0) input
 MV(m:M0,v:V0) input
 checkExcludedV(v:V0) output
 
-checkExcludedV(v) :- MH(m,h), checkExcludedM(m).
+checkExcludedV(v) :- MV(m,v), checkExcludedM(m).
