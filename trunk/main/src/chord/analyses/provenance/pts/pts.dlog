@@ -13,14 +13,13 @@
 ###
 
 reachableCM(c:C,m:M) input
-checkExcludedM(m:M) input
+checkExcludedH(h:H) input
+checkExcludedV(v:V) input
 CVC(c:C,v:V,o:C) input
 CH(c:C,h:H) input
 MV(m:M, v:V) input
 MH(m:M, h:H) input
 
-checkExcludedV(v:V)
-checkExcludedH(h:H)
 reachableV(v:V)
 reachableH(h:H)
 
@@ -28,8 +27,5 @@ ptsVH(v:V,h:H) output
 
 reachableV(v) :- MV(m,v),reachableCM(_,m).
 reachableH(h) :- MH(m,h),reachableCM(_,m).
-
-checkExcludedV(v) :- MV(m,v), checkExcludedM(m).
-checkExcludedH(h) :- MH(m,h), checkExcludedM(m).
 
 ptsVH(v,h) :- CVC(_,v,o), CH(o,h), !checkExcludedV(v), !checkExcludedH(h), reachableV(v), reachableH(h).
