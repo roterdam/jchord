@@ -77,6 +77,11 @@ public class MaxSatGenerator {
 				"provenance" + File.separator + mifuFileName;
 	}
 
+	public List<LookUpRule> getRules() {
+		initRules();
+		return this.rules;
+	}
+	
 	private void initRules() {
 		if (rules == null) {
 			rules = new ArrayList<LookUpRule>();
