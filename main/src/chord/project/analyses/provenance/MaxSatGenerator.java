@@ -77,11 +77,6 @@ public class MaxSatGenerator {
 				"chord" + File.separator + "project" + File.separator + "analyses" + File.separator +
 				"provenance" + File.separator + mifuFileName;
 	}
-
-	public List<LookUpRule> getRules() {
-		initRules();
-		return this.rules;
-	}
 	
 	private void initRules() {
 		if (rules == null) {
