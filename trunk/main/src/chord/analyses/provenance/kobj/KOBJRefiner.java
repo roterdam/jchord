@@ -15,21 +15,16 @@ import joeq.Compiler.Quad.Quad;
 import chord.analyses.alloc.DomH;
 import chord.analyses.argret.DomK;
 import chord.analyses.invk.DomI;
-import chord.bddbddb.Rel.IntAryNIterable;
 import chord.project.Chord;
 import chord.project.ClassicProject;
 import chord.project.Config;
 import chord.project.ITask;
 import chord.project.analyses.JavaAnalysis;
 import chord.project.analyses.ProgramRel;
-import chord.project.analyses.provenance.ConstraintItem;
 import chord.project.analyses.provenance.DefaultModel;
-import chord.project.analyses.provenance.LookUpRule;
 import chord.project.analyses.provenance.MaxSatGenerator;
 import chord.project.analyses.provenance.Model;
 import chord.project.analyses.provenance.Tuple;
-import chord.util.tuple.object.Pair;
-import chord.util.tuple.object.Trio;
 
 /**
  * A general class to run experiments based on k-obj analysis.
@@ -228,55 +223,6 @@ public class KOBJRefiner extends JavaAnalysis {
 		debugPW.close();
 		statPW.flush();
 		statPW.close();
-	}
-	
-	/*
-	 * Get all the tuples involved in the derivation of given query tuple
-	 * queryT.
-	 */
-	public Set<Tuple> getProvenance(Tuple queryT) {
-		MaxSatGenerator tempGen = createMaxSatGenerator(new PTHandler(ifMono,false), MaxSatGenerator.QUERY_MAX);
-		List<LookUpRule> rules = tempGen.getRules();
-		Set<Tuple> provTuples = new HashSet<Tuple>();
-		Set<ConstraintItem> constraints = new HashSet<ConstraintItem>();
-		constraints = lookup(queryT, provTuples, rules);
-		Set<ConstraintItem> currentConstraints = new HashSet<ConstraintItem>(constraints);
-		Set<ConstraintItem> consToAdd = new HashSet<ConstraintItem>();
-		boolean changed = false;
-		do {
-			changed = false;
-			consToAdd.clear();
-			for (ConstraintItem ci : currentConstraints) {
-				for (Tuple t : ci.subTuples) {
-					Set<ConstraintItem> subCons = lookup(t, provTuples, rules);
-					if(!subCons.isEmpty()) {
-						changed = true;
-						consToAdd.addAll(subCons);
-					}
-				}
-			}
-			currentConstraints.clear();
-			currentConstraints.addAll(consToAdd);
-		//	currentConstraints.removeAll(constraints);
-			constraints.addAll(consToAdd);
-		} while (changed);
-		return provTuples;
-	}
-	
-	private Set<ConstraintItem> lookup(Tuple t, Set<Tuple> provTuples, List<LookUpRule> rules) {
-		Set<ConstraintItem> ret = new HashSet<ConstraintItem>();
-		if (provTuples.contains(t))//Some optimization, we don't want to query the tuple again
-			return ret;
-		else
-			provTuples.add(t);
-		for (LookUpRule rule : rules) {
-			if (rule.match(t)) {
-				List<ConstraintItem> items = rule.lookUp(t);
-				if (items != null)
-					ret.addAll(items);
-			}
-		}
-		return ret;
 	}
 	
 	private MaxSatGenerator createMaxSatGenerator(PTHandler ptHandler, int queryWeight) {
