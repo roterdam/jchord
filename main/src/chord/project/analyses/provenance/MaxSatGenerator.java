@@ -21,6 +21,7 @@ import java.util.Set;
 import java.util.TimerTask;
 
 import chord.project.Config;
+import chord.util.ProcessExecutor;
 import chord.util.Timer;
 import chord.util.tuple.object.Pair;
 
@@ -295,68 +296,13 @@ public class MaxSatGenerator {
 			cmd[1] = consFile.getAbsolutePath();
 			// cmd[2] = "&>";
 			// cmd[3] = result.getAbsolutePath();
-			System.out.println("Start the solver.");
-		
-			
-		/*	Timer t = new Timer();
-			t.init();
-			Process p = Runtime.getRuntime().exec(cmd);
-			BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			String line;
-			PrintWriter rpw = new PrintWriter(result);
-			while ((line = in.readLine()) != null) {
-				rpw.println(line);
-			}
-			in.close();
-			rpw.flush();
-			rpw.close();
-			p.waitFor();
-			System.out.println("Exit from solver.");
-			if(p.exitValue() != 0)
-				throw new RuntimeException("The solver did not terminate normally");
-			t.done();
-			System.out.println("Solver exclusive time: "+t.getExclusiveTimeStr());
-		*/	
+			System.out.println("Start the solver.");	
 			
 			Timer t = new Timer();
 			t.init();
 
-			ProcessBuilder pb = new ProcessBuilder(cmd[0],cmd[1]);
-			pb.redirectErrorStream(true);
-			final Process p = pb.start();
-			final BufferedReader in = new BufferedReader(new InputStreamReader(p.getInputStream()));
-			final PrintWriter rpw = new PrintWriter(result);
-
-			Thread th = new Thread() {
-				public void run() {
-					try {
-						String line;
-						while ((line = in.readLine()) != null) {
-							rpw.println(line);
-						}
-						in.close();
-						rpw.flush(); rpw.close();
-					} catch (Exception e) {
-						fail("Error in writing solver output to file");
-					}
-				}
-			};
-			th.start();
-
-			if (p.waitFor() != 0) fail("The solver did not terminate normally");
-
-			th.join();
-			if(p != null){
-				if(p.getOutputStream() != null){
-					p.getOutputStream().close();
-				}
-				if(p.getErrorStream() != null){
-					p.getErrorStream().close();
-				}
-				if(p.getInputStream() != null){
-					p.getInputStream().close();
-				}
-				p.destroy();
+			if (ProcessExecutor.executeWithRedirect(cmd, result, -1) != 0) {
+				fail("The solver did not terminate normally.");
 			}
 
 			t.done();
