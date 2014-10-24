@@ -105,6 +105,7 @@ public abstract class Solver {
     Collection/*<Relation>*/ relationsToPrintTuples;
     Collection/*<Relation>*/ relationsToPrintSize;
     Collection/*<Dot>*/ dotGraphsToDump;
+    Collection/*<Relation>*/ relationsToPreLoad;
 
     /**
      * Create a new inference rule.
@@ -209,6 +210,7 @@ public abstract class Solver {
         relationsToPrintTuples = new LinkedList();
         relationsToPrintSize = new LinkedList();
         dotGraphsToDump = new LinkedList();
+        relationsToPreLoad = new LinkedList();
     }
 
     /**
@@ -558,6 +560,7 @@ public abstract class Solver {
         relationsToPrintSize.remove(r);
         relationsToPrintTuples.remove(r);
         nameToRelation.remove(r.name);
+        relationsToPreLoad.remove(r);
     }
 
     boolean includeRelationInComeFromQuery(Relation r, boolean includeDerivations) {
@@ -870,6 +873,14 @@ public abstract class Solver {
                 out.println("WARNING: Cannot load tuples " + r + ": " + x.toString());
             }
         }
+        for (Iterator i = relationsToPreLoad.iterator(); i.hasNext();) {
+            Relation r = (Relation) i.next();
+            try {
+                r.load();
+            } catch (IOException x) {
+                out.println("WARNING: Cannot load bdd " + r + ": " + x.toString());
+            }
+        }
     }
 
     /**
@@ -1069,6 +1080,15 @@ class RuleSorter implements Comparator {
      */
     public Collection getRelationsToSave() {
         return relationsToDump;
+    }
+    
+    /**
+     * Return the collection of relations to preload.
+     * 
+     * @return  the collection of relations to preload.
+     */
+    public Collection getRelationsToPreLoad() {
+        return relationsToPreLoad;
     }
     
     /**
