@@ -484,7 +484,12 @@ public class DatalogParser {
         while (st.hasMoreTokens()) {
             String option = nextToken(st);
             Matcher constraintMatcher = constraintPattern.matcher(option);
-            if (option.equals("output")) {
+            if (option.equals("preload")) {
+                solver.relationsToPreLoad.add(r);
+            } else if (option.equals("preloadOutput")) {
+                solver.relationsToPreLoad.add(r);
+                solver.relationsToDump.add(r);
+            } else if (option.equals("output")) {
                 solver.relationsToDump.add(r);
             } else if (option.equals("outputtuples")) {
                 solver.relationsToDumpTuples.add(r);
