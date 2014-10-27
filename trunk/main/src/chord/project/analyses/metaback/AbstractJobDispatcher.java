@@ -321,6 +321,27 @@ public abstract class AbstractJobDispatcher implements JobDispatcher {
 			out.flush();
 
 			out.close();
+						
+			out = Utils.openOut(EX.path("proven_queries.txt"));
+			for(Map.Entry<Abstraction, Set<Query>> entry: provenQs.entrySet()){
+				for(Query q:entry.getValue())
+					out.println(q.encode());
+			}
+			
+			out.flush();
+			out.close();
+			
+			out = Utils.openOut(EX.path("unproven_queries.txt"));
+			for (Query q : impossiQs)
+				out.println(q.encode());
+			for (Query q : timedQs)
+				out.println(q.encode());
+			for (Query q : explodedQs)
+				out.println(q.encode());
+			for (Query q : iterExceedQs)
+				out.println(q.encode());
+			out.flush();
+			out.close();
 					
 			if (this.xmlToHtmlTask != null) {
 				ClassicProject.g().resetTaskDone(this.xmlToHtmlTask);
