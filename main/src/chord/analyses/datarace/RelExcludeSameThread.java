@@ -16,5 +16,7 @@ public class RelExcludeSameThread extends ProgramRel {
     public void fill() {
         if (System.getProperty("chord.datarace.exclude.eqth", "true").equals("true"))
             add(1);
+        else
+        	add(0);
     }
 }
