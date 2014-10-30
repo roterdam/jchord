@@ -104,6 +104,23 @@ public class Tuple {
 		return sb.toString();
 	}
 	
+	
+	public String toSummaryString(){
+		StringBuilder sb = new StringBuilder("");
+		sb.append(relation.getName());
+		sb.append("#");
+		for(int i = 0; i < domIndices.length; i++){
+			if(i!=0)
+				sb.append('#');
+			if (domIndices[i] == 0 && (domains[i].getName().equals("F") || domains[i].getName().equals("H")))
+				sb.append("null");
+			else
+				sb.append(domains[i].get(domIndices[i]).toString());
+		}
+		sb.append("");
+		return sb.toString();
+	}
+	
 	public String toVerboseString(){
 		StringBuilder sb = new StringBuilder("");
 		sb.append(this.toString());
