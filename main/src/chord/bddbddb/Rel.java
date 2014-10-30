@@ -1585,6 +1585,40 @@ public class Rel {
             throw new RuntimeException(ex);
         }
     }
+    
+    
+    public boolean contains(int idx0, int idx1, int idx2) {
+        if (bdd == null)
+            throw new RuntimeException("");
+        try {
+            return !bdd.id().andWith(
+                domBdds[0].ithVar(idx0).andWith(
+                domBdds[1].ithVar(idx1).andWith(
+                domBdds[2].ithVar(idx2)))).isZero();
+        } catch (BDDException ex) {
+            checkRange(idx0, 0);
+            checkRange(idx1, 1);
+            checkRange(idx2, 2);
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public void remove(int idx0, int idx1, int idx2) {
+        if (bdd == null)
+            throw new RuntimeException("");
+        try {
+            bdd.andWith(
+                domBdds[0].ithVar(idx0).andWith(
+                domBdds[1].ithVar(idx1).andWith(
+                domBdds[2].ithVar(idx2))).not());
+        } catch (BDDException ex) {
+            checkRange(idx0, 0);
+            checkRange(idx1, 1);
+            checkRange(idx2, 2);
+            throw new RuntimeException(ex);
+        }
+    }
+    
     public <T0,T1,T2> TrioIterable<T0,T1,T2> getAry3ValTuples() {
         if (bdd == null)
             throw new RuntimeException("");
@@ -1659,6 +1693,43 @@ public class Rel {
             throw new RuntimeException(ex);
         }
     }
+    
+    public boolean contains(int idx0, int idx1, int idx2, int idx3) {
+        if (bdd == null)
+            throw new RuntimeException("");
+        try {
+            return !bdd.id().andWith(
+                domBdds[0].ithVar(idx0).andWith(
+                domBdds[1].ithVar(idx1).andWith(
+                domBdds[2].ithVar(idx2).andWith(
+                domBdds[3].ithVar(idx3))))).isZero();
+        } catch (BDDException ex) {
+            checkRange(idx0, 0);
+            checkRange(idx1, 1);
+            checkRange(idx2, 2);
+            checkRange(idx3, 3);
+            throw new RuntimeException(ex);
+        }
+    }
+    
+    public void remove(int idx0, int idx1, int idx2, int idx3) {
+        if (bdd == null)
+            throw new RuntimeException("");
+        try {
+            bdd.andWith(
+                domBdds[0].ithVar(idx0).andWith(
+                domBdds[1].ithVar(idx1).andWith(
+                domBdds[2].ithVar(idx2).andWith(
+                domBdds[3].ithVar(idx3)))).not());
+        } catch (BDDException ex) {
+            checkRange(idx0, 0);
+            checkRange(idx1, 1);
+            checkRange(idx2, 2);
+            checkRange(idx3, 3);
+            throw new RuntimeException(ex);
+        }
+    }
+    
     public <T0,T1,T2,T3> QuadIterable<T0,T1,T2,T3> getAry4ValTuples() {
         if (bdd == null)
             throw new RuntimeException("");
