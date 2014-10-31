@@ -105,19 +105,13 @@ public class Tuple {
 	}
 	
 	
-	public String toSummaryString(){
+	public String toSummaryString(String sep){
 		StringBuilder sb = new StringBuilder("");
 		sb.append(relation.getName());
-		sb.append("#");
 		for(int i = 0; i < domIndices.length; i++){
-			if(i!=0)
-				sb.append('#');
-			if (domIndices[i] == 0 && (domains[i].getName().equals("F") || domains[i].getName().equals("H")))
-				sb.append("null");
-			else
-				sb.append(domains[i].get(domIndices[i]).toString());
+			sb.append(sep);
+			sb.append(domains[i].toUniqueString(domIndices[i]));
 		}
-		sb.append("");
 		return sb.toString();
 	}
 	
