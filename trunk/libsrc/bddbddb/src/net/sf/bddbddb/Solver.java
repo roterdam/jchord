@@ -443,9 +443,25 @@ public abstract class Solver {
         String solverName = SystemProperties.getProperty("solver", "net.sf.bddbddb.BDDSolver");
         Solver dis;
         dis = (Solver) Class.forName(solverName).newInstance();
+        long startTime = System.currentTimeMillis();
+        
         dis.load(inputFilename);
+        
+        long loadTime = System.currentTimeMillis() - startTime;
+        startTime = System.currentTimeMillis();
+        
         dis.run();
+        
+        long runTime = System.currentTimeMillis() - startTime;
+        startTime = System.currentTimeMillis();
+        
         dis.save();
+        
+        long saveTime = System.currentTimeMillis() - startTime;
+        
+        System.out.println("DLOG LOAD TIME: " + loadTime/1000 + " seconds");
+        System.out.println("DLOG RUN TIME: " + runTime/1000 + " seconds");
+        System.out.println("DLOG SAVE TIME: " + saveTime/1000 + " seconds");
     }
 
     /**
