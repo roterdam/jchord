@@ -173,7 +173,7 @@ public class AliasUtilities {
 	
 	public static FieldBitSet union(FieldBitSet l, FieldBitSet r){
 		FieldBitSet ret = new FieldBitSet(l);
-		ret.or(r);
+		ret.addAll(r);
 		return ret;
 	}
 }
