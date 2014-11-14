@@ -4,19 +4,22 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import joeq.Class.jq_Field;
 import chord.analyses.field.DomF;
 
-public class FieldBitSet extends BitSet implements Set<jq_Field> {
-public static DomF domF;
+public class FieldBitSet implements Set<jq_Field> {
+	public static DomF domF;
+	protected BitSet bitSet;
+
 	public FieldBitSet(){
-		super(domF.size());
+		bitSet = new BitSet(domF.size());
 	}
 	public FieldBitSet(Set<jq_Field> notInFSet) {
 		this();
 		if(notInFSet instanceof FieldBitSet){
-			FieldBitSet fbs = (FieldBitSet)notInFSet;;
+			FieldBitSet fbs = (FieldBitSet)notInFSet;
 			this.addAll(fbs);
 			return;
 		}
@@ -29,7 +32,7 @@ public static DomF domF;
 			return false;
 		jq_Field f = (jq_Field)o;
 		int fIndx = domF.indexOf(f);
-		return this.get(fIndx);
+		return bitSet.get(fIndx);
 	}
 
 	@Override
@@ -50,9 +53,9 @@ public static DomF domF;
 	@Override
 	public boolean add(jq_Field e) {
 		int fIndx = domF.indexOf(e);
-		if(this.get(fIndx))
+		if(bitSet.get(fIndx))
 			return false;
-		this.set(fIndx);
+		bitSet.set(fIndx);
 		return true;
 	}
 
@@ -62,8 +65,8 @@ public static DomF domF;
 			return false;
 		jq_Field f = (jq_Field)o;
 		int fIndx = domF.indexOf(f);
-		if(this.get(fIndx)){
-			this.set(fIndx);
+		if(bitSet.get(fIndx)){
+			bitSet.set(fIndx);
 			return true;
 		}
 		return false;
@@ -72,32 +75,30 @@ public static DomF domF;
 	@Override
 	public boolean containsAll(Collection<?> c) {
 		if(c instanceof FieldBitSet){
-			FieldBitSet fbs = (FieldBitSet)c;
-			FieldBitSet cCopy = (FieldBitSet)fbs.clone();
-			cCopy.andNot(this);
-			if(cCopy.isEmpty())
+			BitSet cBitSetCopy = (BitSet)((FieldBitSet)c).bitSet.clone();
+			cBitSetCopy.andNot(bitSet);
+			if(cBitSetCopy.isEmpty())
 				return true;
 			return false;
 		}
 		throw new UnsupportedOperationException();
 	}
 
-	
-	
 	public boolean intersects(FieldBitSet set) {
-		FieldBitSet cCopy = (FieldBitSet)set.clone();
-		cCopy.and(this);
-		if(cCopy.isEmpty())
+		BitSet cBitSetCopy = (BitSet)set.bitSet.clone();
+		cBitSetCopy.and(bitSet);
+		if(cBitSetCopy.isEmpty())
 			return false;
 		return true;
 	}
+
 	@Override
 	public boolean addAll(Collection<? extends jq_Field> c) {
 		if(c instanceof FieldBitSet){
-			FieldBitSet fbs = (FieldBitSet)c;;
-			FieldBitSet thisCopy = (FieldBitSet)this.clone();
-			this.or(fbs);
-			return !this.equals(thisCopy);
+			BitSet cBitSet = (BitSet)((FieldBitSet)c).bitSet;
+			BitSet bitSetCopy = (BitSet)bitSet.clone();
+			bitSet.or(cBitSet);
+			return !bitSet.equals(bitSetCopy);
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -105,10 +106,10 @@ public static DomF domF;
 	@Override
 	public boolean retainAll(Collection<?> c) {
 		if(c instanceof FieldBitSet){
-			FieldBitSet fbs = (FieldBitSet)c;;
-			FieldBitSet thisCopy = (FieldBitSet)this.clone();
-			this.and(fbs);
-			return !this.equals(thisCopy);
+			BitSet cBitSet = (BitSet)((FieldBitSet)c).bitSet;
+			BitSet bitSetCopy = (BitSet)bitSet.clone();
+			bitSet.and(cBitSet);
+			return !bitSet.equals(bitSetCopy);
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -116,10 +117,10 @@ public static DomF domF;
 	@Override
 	public boolean removeAll(Collection<?> c) {
 		if(c instanceof FieldBitSet){
-			FieldBitSet fbs = (FieldBitSet)c;;
-			FieldBitSet thisCopy = (FieldBitSet)this.clone();
-			this.andNot(fbs);
-			return !this.equals(thisCopy);
+			BitSet cBitSet = (BitSet)((FieldBitSet)c).bitSet;
+			BitSet bitSetCopy = (BitSet)bitSet.clone();
+			bitSet.andNot(cBitSet);
+			return !bitSet.equals(bitSetCopy);
 		}
 		throw new UnsupportedOperationException();
 	}
@@ -128,19 +129,28 @@ public static DomF domF;
 	public String toString() {
 		StringBuffer sv = new StringBuffer();
 		sv.append("FieldBitSet [");
-		int startIndex = super.nextSetBit(0);
+		int startIndex = bitSet.nextSetBit(0);
 		while(startIndex >= 0){
 			sv.append(domF.get(startIndex)+",");
-			startIndex = super.nextSetBit(startIndex+1);
+			startIndex = bitSet.nextSetBit(startIndex+1);
 		}
 		sv.append("]");
 		return sv.toString();
 	}
+
 	@Override
 	public int size() {
-		return this.cardinality();
+		return bitSet.cardinality();
 	}
 
-	
+	@Override
+	public void clear() {
+		bitSet.clear();
+	}
+
+	@Override
+	public boolean isEmpty() {
+		return bitSet.isEmpty();
+	}
 	
 }
