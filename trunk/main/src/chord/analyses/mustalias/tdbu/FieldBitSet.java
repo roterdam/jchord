@@ -4,7 +4,6 @@ import java.util.BitSet;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import joeq.Class.jq_Field;
 import chord.analyses.field.DomF;
