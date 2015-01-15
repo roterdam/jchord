@@ -533,9 +533,9 @@ my %bench_options_map = (
 	    	"-Dchord.max.heap=64000m",
 		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
 	    ],
-		 "luindex" => [
-	    	"-Dchord.max.heap=64000m",
-		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    "luindex" => [
+		    "-Dchord.max.heap=64000m",
+		    "-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
 	    ],
 	    "avrora" => [
 	   	"-Dchord.max.heap=64000m",
@@ -550,19 +550,37 @@ my %bench_options_map = (
 		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
 	    ],
 	    "batik" => [
-	    	"-Dchord.max.heap=16000m",
+	    	"-Dchord.max.heap=64000m",
 		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
 	    ],
 	    "sunflow" => [
-	    	"-Dchord.max.heap=16000m",
+	    	"-Dchord.max.heap=64000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "bloat" => [
+	    	"-Dchord.max.heap=64000m",
+	    ],
+	    "chart" => [
+	    	"-Dchord.max.heap=64000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "fop" => [
+	    	"-Dchord.max.heap=64000m",
+		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
+	    ],
+	    "pmd" => [
+	    	"-Dchord.max.heap=64000m",
+	    ],
+	    "xalan" => [
+	    	"-Dchord.max.heap=64000m",
 		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
 	    ],
 	    "rhino-a" => [
 	   	"-Dchord.max.heap=64000m",
 		"-Dchord.check.exclude=java.,com.,sun.,sunw.,javax.,launcher."
 	    ],
-		"schroeder-m" => [
-	    	"-Dchord.max.heap=64000m",
+	    "schroeder-m" => [
+		    "-Dchord.max.heap=64000m",
 	    ],
 
    	},
