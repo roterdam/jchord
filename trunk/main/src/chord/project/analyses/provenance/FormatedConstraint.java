@@ -29,4 +29,8 @@ public class FormatedConstraint{
 		}
 		return sb.toString();
 	}
+	
+	public int[] getConstraint(){
+		return this.constraint;
+	}
 }
