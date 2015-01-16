@@ -1875,6 +1875,28 @@ public class Rel {
             checkRange(idx5, 5);
         }
     }
+    public void add(int idx0, int idx1, int idx2, int idx3, int idx4, int idx5, int idx6) {
+        if (bdd == null)
+            throw new RuntimeException("");
+        try {
+            bdd.orWith(
+                domBdds[0].ithVar(idx0).andWith(
+                domBdds[1].ithVar(idx1).andWith(
+                domBdds[2].ithVar(idx2).andWith(
+                domBdds[3].ithVar(idx3).andWith(
+                domBdds[4].ithVar(idx4).andWith(
+                domBdds[5].ithVar(idx5).andWith(
+                domBdds[6].ithVar(idx6))))))));
+        } catch (BDDException ex) {
+            checkRange(idx0, 0);
+            checkRange(idx1, 1);
+            checkRange(idx2, 2);
+            checkRange(idx3, 3);
+            checkRange(idx4, 4);
+            checkRange(idx5, 5);
+            checkRange(idx6, 6);
+        }
+    }
     public <T0,T1,T2,T3,T4,T5> boolean contains(T0 val0, T1 val1, T2 val2, T3 val3, T4 val4, T5 val5) {
         if (bdd == null)
             throw new RuntimeException("");
