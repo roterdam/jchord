@@ -4,7 +4,7 @@ import java.util.Set;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
-
+import chord.util.ArraySet;
 import chord.util.graph.ILabeledGraph;
 
 /**
@@ -22,6 +22,14 @@ public interface ICICG extends ILabeledGraph<jq_Method, Quad> {
      */
     public Set<jq_Method> getTargets(Quad invk);
     /**
+     * Provides an ordered set of all methods that may be called by a given call site.
+     * 
+     * @param invk A call site.
+     * 
+     * @return The ordered set of all methods that may be called by call site <tt>invk</tt>.
+     */
+    public ArraySet<jq_Method> getTargetsOrdered(Quad invk);
+    /**
      * Provides the set of all call sites that may call a given method.
      * 
      * @param meth A method.
@@ -29,6 +37,14 @@ public interface ICICG extends ILabeledGraph<jq_Method, Quad> {
      * @return The set of all call sites that may call method <tt>meth</tt>.
      */
     public Set<Quad> getCallers(jq_Method meth);
+    /**
+     * Provides an ordered set of all call sites that may call a given method.
+     * 
+     * @param meth A method.
+     * 
+     * @return The ordered set of all call sites that may call method <tt>meth</tt>.
+     */
+    public ArraySet<Quad> getCallersOrdered(jq_Method meth);
     /**
      * Determines whether a given call site may call a given method.
      * 
@@ -38,4 +54,10 @@ public interface ICICG extends ILabeledGraph<jq_Method, Quad> {
      * @return true iff call site <tt>invk</tt> may call method <tt>meth</tt>.
      */
     public boolean calls(Quad invk, jq_Method meth);
+    /**
+     * Provides an ordered set of all nodes in the CICG.
+     * 
+     * @return The ordered set of all nodes in the CICG.
+     */
+    public ArraySet<jq_Method> getNodesOrdered();
 }
