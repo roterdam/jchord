@@ -4,7 +4,6 @@ import java.util.Set;
 
 import joeq.Class.jq_Method;
 import joeq.Compiler.Quad.Quad;
-
 import chord.bddbddb.Rel.RelView;
 import chord.analyses.method.DomM;
 import chord.project.analyses.ProgramRel;
@@ -47,6 +46,17 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
             invks.add(invk);
         return invks;
     }
+    public ArraySet<Quad> getCallersOrdered(jq_Method meth) {
+        if (!relIM.isOpen())
+            relIM.load();
+        RelView view = relIM.getView();
+        view.selectAndDelete(1, meth);
+        Iterable<Quad> res = view.getAry1ValTuples();
+        ArraySet<Quad> invks = new ArraySet<Quad>(view.size());
+        for (Quad invk : res)
+            invks.add(invk);
+        return invks;
+    }
     public Set<jq_Method> getTargets(Quad invk) {
         if (!relIM.isOpen())
             relIM.load();
@@ -54,6 +64,17 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
         view.selectAndDelete(0, invk);
         Iterable<jq_Method> res = view.getAry1ValTuples();
         Set<jq_Method> meths = SetUtils.newSet(view.size());
+        for (jq_Method meth : res)
+            meths.add(meth);
+        return meths;
+    }
+    public ArraySet<jq_Method> getTargetsOrdered(Quad invk) {
+        if (!relIM.isOpen())
+            relIM.load();
+        RelView view = relIM.getView();
+        view.selectAndDelete(0, invk);
+        Iterable<jq_Method> res = view.getAry1ValTuples();
+        ArraySet<jq_Method> meths = new ArraySet<jq_Method>(view.size());
         for (jq_Method meth : res)
             meths.add(meth);
         return meths;
@@ -85,6 +106,14 @@ public class CICG extends AbstractGraph<jq_Method> implements ICICG {
             relReachableM.load();
         Iterable<jq_Method> res = relReachableM.getAry1ValTuples();
         return SetUtils.iterableToSet(res, relReachableM.size());
+    }
+    public ArraySet<jq_Method> getNodesOrdered() {
+        if (!relReachableM.isOpen())
+            relReachableM.load();
+        Iterable<jq_Method> res = relReachableM.getAry1ValTuples();
+        ArraySet<jq_Method> as = new ArraySet<jq_Method>(relReachableM.size());
+        for (jq_Method m  : res) as.add(m);
+        return as;
     }
     public Set<jq_Method> getPreds(jq_Method meth) {
         if (!relMM.isOpen())
